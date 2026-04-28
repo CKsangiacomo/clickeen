@@ -22,7 +22,7 @@ import type { Env } from '../types';
 import { loadAccountAssetManifestByIdentity } from './assets';
 import {
   buildLocaleMirrorPayload,
-  generateLocaleOpsWithSanfrancisco,
+  generateAccountWidgetL10nOps,
   loadOverlayOps,
   normalizeReadyLocales,
 } from './account-localization';
@@ -116,6 +116,23 @@ function diffL10nSnapshots(args: {
       .filter((path) => !Object.prototype.hasOwnProperty.call(args.current, path))
       .sort(),
   };
+}
+
+function buildApprovedTranslationItems(args: {
+  snapshot: Record<string, string>;
+  allowlist: Array<{ path: string; type?: string }>;
+}): Array<{ path: string; type: 'string' | 'richtext'; value: string }> {
+  return args.allowlist.flatMap((entry) => {
+    const value = args.snapshot[entry.path];
+    if (typeof value !== 'string') return [];
+    return [
+      {
+        path: entry.path,
+        type: entry.type === 'richtext' ? 'richtext' : 'string',
+        value,
+      },
+    ];
+  });
 }
 
 function buildLiveLocalePolicy(args: {
@@ -286,10 +303,10 @@ export async function syncAccountInstance(args: {
   );
   const generatedBaseOpsByLocale = new Map<string, LocalizationOp[]>();
   const incompleteLocales = new Set<string>();
-  const localeAllowlist = localizationAllowlist.map((entry) => ({
-    path: entry.path,
-    type: entry.type === 'richtext' ? 'richtext' : 'string',
-  })) as Array<{ path: string; type: 'string' | 'richtext' }>;
+  const translationItems = buildApprovedTranslationItems({
+    snapshot: baseTextPack,
+    allowlist: localizationAllowlist,
+  });
 
   if (
     localesWithSourceOps.length > 0 &&
@@ -298,15 +315,14 @@ export async function syncAccountInstance(args: {
       snapshotDiff.changedPaths.length > 0 ||
       snapshotDiff.removedPaths.length > 0)
   ) {
-    const incremental = await generateLocaleOpsWithSanfrancisco({
+    const incremental = await generateAccountWidgetL10nOps({
       env: args.env,
       policyProfile: args.accountAuthz.profile,
       widgetType: saved.value.pointer.widgetType,
-      config: saved.value.config,
-      allowlist: localeAllowlist,
+      items: translationItems,
       baseLocale,
       targetLocales: localesWithSourceOps,
-      existingBaseOpsByLocale: Object.fromEntries(
+      existingOpsByLocale: Object.fromEntries(
         localesWithSourceOps.map((locale) => [
           locale,
           existingLocaleOverlays.get(locale)?.baseOps ?? [],
@@ -328,15 +344,14 @@ export async function syncAccountInstance(args: {
   }
 
   if (localesNeedingFullGeneration.length > 0) {
-    const full = await generateLocaleOpsWithSanfrancisco({
+    const full = await generateAccountWidgetL10nOps({
       env: args.env,
       policyProfile: args.accountAuthz.profile,
       widgetType: saved.value.pointer.widgetType,
-      config: saved.value.config,
-      allowlist: localeAllowlist,
+      items: translationItems,
       baseLocale,
       targetLocales: localesNeedingFullGeneration,
-      existingBaseOpsByLocale: Object.fromEntries(
+      existingOpsByLocale: Object.fromEntries(
         localesNeedingFullGeneration.map((locale) => [locale, []]),
       ) as Record<string, LocalizationOp[]>,
       changedPaths: null,

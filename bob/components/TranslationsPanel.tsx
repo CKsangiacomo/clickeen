@@ -100,7 +100,7 @@ export function TranslationsPanel({
               ? 'Checking translations...'
               : translationsError
                 ? 'Translations unavailable'
-              : translationsData?.status === 'accepted' || translationsData?.status === 'working'
+              : translationsData?.status === 'queued' || translationsData?.status === 'working'
                 ? 'Translations preparing'
                 : translationsData?.status === 'failed'
                   ? 'Translations failed'

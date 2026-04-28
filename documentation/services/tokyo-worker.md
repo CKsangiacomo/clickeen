@@ -36,6 +36,7 @@ Current auth rule:
 - Product asset control routes execute from Roma through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. Tokyo-worker does not re-read membership/tier/account status on those paths.
 - Product asset upload is account-owned only. Tokyo-worker does not accept widget-scoped upload identity (`x-public-id` / `x-widget-type`) on that path.
 - Product render/l10n authoring control routes execute from Roma through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. The explicit instance-sync route also receives the caller's Berlin bearer so Tokyo-worker can read account locale policy/settings, but authz still comes from the capsule and Tokyo-worker does not rediscover membership/role from Berlin.
+- Account-widget l10n generation calls San Francisco through the private `SANFRANCISCO_L10N` Cloudflare service binding. It does not use `SANFRANCISCO_BASE_URL`, a bearer token, or `CK_INTERNAL_SERVICE_JWT`.
 - Shared-secret `CK_INTERNAL_SERVICE_JWT` is not part of the asset lane.
 - Local internal tool routes may use `TOKYO_DEV_JWT` only when they also send an explicit allowed `x-ck-internal-service`.
 - There is no generic trusted-token bypass on account routes.
@@ -98,7 +99,8 @@ Current runtime contract:
 - Explicit Tokyo-worker sync converges overlay artifacts from that saved widget `l10n` block.
 - Tokyo maintains current locale artifacts, but Builder readiness does not infer truth from public/live pointers.
 - Builder Translations reads consume only the saved widget `l10n` block plus matching current text pointers for the same `baseFingerprint`. Reads do not live-read Berlin or queue internals on panel open.
-- Bob/Roma product-path save does not inline LLM generation or live-surface convergence. It records saved widget `l10n.status` and then triggers queue delivery. If queue handoff or later execution fails, Tokyo-worker persists `failed` on that saved pointer instead of leaving fake infinite progress behind.
+- Bob/Roma product-path save does not inline LLM generation or live-surface convergence. It records saved widget `l10n.status` as `queued` when non-base locales are requested, then triggers queue delivery. Queue execution moves the status through `working` to `ready` or `failed`. If queue handoff or later execution fails, Tokyo-worker persists `failed` on that saved pointer instead of leaving fake infinite progress behind.
+- During generation, Tokyo-worker sends San Francisco only the full approved current text item index, existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and policy profile. San Francisco never receives the widget config or localization allowlist for account-widget generation.
 - When a new save writes a new `generationId` for an instance, queued older generations are ignored.
 - If locale generation for the latest save does not return current ops for a requested locale, Tokyo-worker does not publish that locale as current-ready for the new `baseFingerprint`.
 - For published instances, Tokyo-worker advances the live locale policy with the current-ready locale subset only. A missing locale drops out of public serving until current artifacts exist again.

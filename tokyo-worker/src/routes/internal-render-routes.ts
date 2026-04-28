@@ -174,7 +174,7 @@ export async function tryHandleInternalRenderRoutes(
     );
     const generationId = crypto.randomUUID();
     const nonBaseLocales = requestedLocales.filter((locale) => locale !== normalizedBaseLocale);
-    const translationStatus = nonBaseLocales.length > 0 ? 'accepted' : 'ready';
+    const translationStatus = nonBaseLocales.length > 0 ? 'queued' : 'ready';
     const finishedAt = translationStatus === 'ready' ? new Date().toISOString() : null;
 
     const statusPointer = await writeSavedRenderL10nStatus({

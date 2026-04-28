@@ -7,7 +7,7 @@ export type TranslationsPreviewData = {
   baseLocale: string;
   requestedLocales: string[];
   readyLocales: string[];
-  status: 'accepted' | 'working' | 'ready' | 'failed';
+  status: 'queued' | 'working' | 'ready' | 'failed';
   failedLocales: Array<{ locale: string; reasonKey: string; detail?: string }>;
 };
 
@@ -47,7 +47,7 @@ function normalizePreviewData(payload: unknown): TranslationsPreviewData | null 
       )
     : [];
   const status =
-    record.status === 'accepted' ||
+    record.status === 'queued' ||
     record.status === 'working' ||
     record.status === 'ready' ||
     record.status === 'failed'

@@ -9,7 +9,7 @@ export type AccountTranslationsPanelPayload = {
   baseLocale: string;
   requestedLocales: string[];
   readyLocales: string[];
-  status: 'accepted' | 'working' | 'ready' | 'failed';
+  status: 'queued' | 'working' | 'ready' | 'failed';
   failedLocales: Array<{ locale: string; reasonKey: string; detail?: string }>;
   baseFingerprint: string;
   generationId: string;
@@ -62,7 +62,7 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
         .filter((entry): entry is string => Boolean(entry))
     : [];
   const status =
-    raw.status === 'accepted' || raw.status === 'working' || raw.status === 'ready' || raw.status === 'failed'
+    raw.status === 'queued' || raw.status === 'working' || raw.status === 'ready' || raw.status === 'failed'
       ? raw.status
       : null;
   const failedLocales = Array.isArray(raw.failedLocales)

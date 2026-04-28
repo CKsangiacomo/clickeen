@@ -6,7 +6,7 @@ export {
 } from './account-localization-utils';
 export { buildLocaleMirrorPayload } from './account-localization-mirror';
 export {
-  generateLocaleOpsWithSanfrancisco,
+  generateAccountWidgetL10nOps,
   handleGetAccountTranslationsPanel,
   loadBerlinAccountL10nState,
   loadAccountTranslationsPanelData,

@@ -64,7 +64,7 @@ function BuilderShell() {
 
   useEffect(() => {
     if (!translationsEnabled || translationsLoading) return undefined;
-    if (translationsData?.status !== 'accepted' && translationsData?.status !== 'working') {
+    if (translationsData?.status !== 'queued' && translationsData?.status !== 'working') {
       translationRefreshAttemptsRef.current = 0;
       return undefined;
     }

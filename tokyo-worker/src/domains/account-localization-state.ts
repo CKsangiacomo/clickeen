@@ -8,7 +8,7 @@ import {
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import { normalizeLocaleToken, type AllowlistEntry } from '@clickeen/l10n';
 import { json } from '../http';
-import type { Env } from '../types';
+import type { AccountWidgetL10nItem, Env } from '../types';
 import {
   accountInstanceL10nLivePointerKey,
   normalizeTextPointer,
@@ -88,72 +88,44 @@ export async function loadOverlayOps(args: {
   };
 }
 
-export async function generateLocaleOpsWithSanfrancisco(args: {
+export async function generateAccountWidgetL10nOps(args: {
   env: Env;
   policyProfile: RomaAccountAuthzCapsulePayload['profile'];
   widgetType: string;
-  config: Record<string, unknown>;
-  allowlist: Array<{ path: string; type: 'string' | 'richtext' }>;
+  items: AccountWidgetL10nItem[];
   baseLocale: string;
   targetLocales: string[];
-  existingBaseOpsByLocale: Record<string, LocalizationOp[]>;
+  existingOpsByLocale: Record<string, LocalizationOp[]>;
   changedPaths?: string[] | null;
   removedPaths?: string[];
 }): Promise<Map<string, LocalizationOp[]>> {
   if (!args.targetLocales.length) return new Map();
 
-  const sanfranciscoBaseUrl = String(args.env.SANFRANCISCO_BASE_URL || '')
-    .trim()
-    .replace(/\/+$/, '');
-  if (!sanfranciscoBaseUrl) {
-    throw new Error('tokyo_sanfrancisco_base_missing');
-  }
-  const token = String(args.env.CK_INTERNAL_SERVICE_JWT || '').trim();
-  if (!token) {
-    throw new Error('tokyo_internal_service_jwt_missing');
+  const binding = args.env.SANFRANCISCO_L10N;
+  if (!binding || typeof binding.generateAccountWidgetL10nOps !== 'function') {
+    throw new Error('tokyo_sanfrancisco_l10n_binding_missing');
   }
 
-  const response = await fetch(
-    `${sanfranciscoBaseUrl}/v1/l10n/account/ops/generate`,
-    {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${token}`,
-        'content-type': 'application/json',
-        accept: 'application/json',
-        'cache-control': 'no-store',
-      },
-      cache: 'no-store',
-      body: JSON.stringify({
-        policyProfile: args.policyProfile,
-        widgetType: args.widgetType,
-        config: args.config,
-        allowlist: args.allowlist,
-        baseLocale: args.baseLocale,
-        targetLocales: args.targetLocales,
-        existingBaseOpsByLocale: args.existingBaseOpsByLocale,
-        changedPaths: args.changedPaths ?? null,
-        removedPaths: args.removedPaths ?? [],
-      }),
-    },
-  );
-
-  const payload = (await response.json().catch(() => null)) as
+  const payload = (await binding.generateAccountWidgetL10nOps({
+    policyProfile: args.policyProfile,
+    widgetType: args.widgetType,
+    items: args.items,
+    baseLocale: args.baseLocale,
+    targetLocales: args.targetLocales,
+    existingOpsByLocale: args.existingOpsByLocale,
+    changedPaths: args.changedPaths ?? null,
+    removedPaths: args.removedPaths ?? [],
+  }).catch((error) => {
+    throw new Error(
+      `tokyo_sanfrancisco_l10n_rpc_failed:${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  })) as
     | {
         results?: unknown;
-        error?: { message?: unknown; detail?: unknown };
       }
     | null;
-
-  if (!response.ok) {
-    const detail =
-      typeof payload?.error?.detail === 'string'
-        ? payload.error.detail
-        : typeof payload?.error?.message === 'string'
-          ? payload.error.message
-          : `sanfrancisco_l10n_http_${response.status}`;
-    throw new Error(detail);
-  }
 
   const out = new Map<string, LocalizationOp[]>();
   if (!Array.isArray(payload?.results)) return out;
@@ -162,7 +134,7 @@ export async function generateLocaleOpsWithSanfrancisco(args: {
     if (!isRecord(entry)) continue;
     const locale = normalizeLocaleToken(entry.locale);
     if (!locale) continue;
-    if (typeof entry.error === 'string' && entry.error.trim()) continue;
+    if (entry.ok !== true) continue;
     out.set(locale, normalizeLocalizationOps(entry.ops));
   }
 
@@ -179,7 +151,7 @@ export async function loadAccountTranslationsPanelData(args: {
   baseLocale: string;
   requestedLocales: string[];
   readyLocales: string[];
-  status: 'accepted' | 'working' | 'ready' | 'failed';
+  status: 'queued' | 'working' | 'ready' | 'failed';
   failedLocales: Array<{ locale: string; reasonKey: string; detail?: string }>;
   baseFingerprint: string;
   generationId: string;
@@ -230,7 +202,7 @@ export async function loadAccountTranslationsPanelData(args: {
   const status =
     missingLocales.length === 0
       ? 'ready'
-      : storedStatus === 'accepted' || storedStatus === 'working'
+      : storedStatus === 'queued' || storedStatus === 'working'
         ? storedStatus
         : 'failed';
   const failedLocales =

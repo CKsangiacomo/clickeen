@@ -8,7 +8,7 @@
 - `GET /healthz`
 - Queue consumers for agent jobs.
 - HTTP endpoints for AI outcomes.
-- `POST /v1/l10n/account/ops/generate` (internal auth; account-mode locale ops generation for Tokyo-worker explicit instance sync)
+- Private WorkerEntrypoint method `generateAccountWidgetL10nOps` for Tokyo-worker account-widget locale ops generation.
 
 ## Dependencies
 - Tokyo-worker (account-mode explicit instance-sync caller)
@@ -52,6 +52,7 @@ Health contract:
 
 ## Entrypoint posture
 - `sanfrancisco/src/index.ts` is now a thin route shell.
+- The default export is a Cloudflare `WorkerEntrypoint` so Tokyo-worker can call private worker methods without a public HTTP route.
 - Extracted runtime modules own:
   - internal auth helpers: `sanfrancisco/src/internalAuth.ts`
   - concurrency limiting: `sanfrancisco/src/concurrency.ts`
@@ -69,6 +70,11 @@ Health contract:
 ## Account-mode l10n flow (active)
 - Triggered by explicit Tokyo-worker instance sync after Roma create/locale-management/publish flows request reconciliation.
 - Tokyo owns saved-config l10n identity/staleness; San Francisco is generation-only.
+- Tokyo-worker calls the private `generateAccountWidgetL10nOps` worker method through its `SANFRANCISCO_L10N` service binding.
+- There is no public account-widget generation HTTP route and no `CK_INTERNAL_SERVICE_JWT` on this path.
+- Request payloads contain only approved text items (`path`, `type`, `value`), existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and policy profile.
+- San Francisco does not receive widget configs, localization allowlists, account ids, storage paths, live pointer state, or publication state for account-widget generation.
+- Incremental generation translates only changed current item paths when possible and preserves existing ops for unchanged current paths.
 - Returns set-only locale ops to Tokyo-worker.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext safety validation enforces placeholder parity, HTML tag parity, and anchor integrity (text-bearing link + href parity); failed richtext parity falls back to segment translation.
@@ -85,7 +91,6 @@ Health contract:
 - Provider: OpenAI via shared policy router (curated profile default: `gpt-5.2`; env overrides still apply).
 
 ## Rules
-- Reject invalid allowlist paths.
 - Active account-mode l10n returns set-only locale ops to Tokyo-worker; San Francisco does not own Tokyo overlay writes.
 - Agent writes must not invent or depend on a `layer=user` authoring surface. The active instance-localization path returns locale ops only; Tokyo/Tokyo-worker owns readiness and publication.
 

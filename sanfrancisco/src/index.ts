@@ -1,4 +1,5 @@
 import { listAiAgents, resolveAiAgent } from '@clickeen/ck-policy';
+import { WorkerEntrypoint } from 'cloudflare:workers';
 import { executeCsWidgetCopilot } from './agents/csWidgetCopilot';
 import { executeDebugGrantProbe } from './agents/debugGrantProbe';
 import { executeSdrCopilot } from './agents/sdrCopilot';
@@ -9,7 +10,11 @@ import { HttpError, json, noStore, readJson, isRecord } from './http';
 import {
   handlePragueStringsTranslate,
 } from './l10n-routes';
-import { handleAccountL10nOpsGenerate } from './l10n-account-routes';
+import {
+  generateAccountWidgetL10nOps,
+  type AccountWidgetL10nGenerateRequest,
+  type AccountWidgetL10nGenerateResponse,
+} from './l10n-account-routes';
 import {
   handlePersonalizationOnboardingCreate,
   handlePersonalizationOnboardingStatus,
@@ -173,26 +178,23 @@ async function handleOutcome(request: Request, env: Env): Promise<Response> {
   return noStore(json({ ok: true }));
 }
 
-export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
+  async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
 
     try {
-      if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') return okHealth(env);
-      if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, env, ctx);
-      if (request.method === 'POST' && url.pathname === '/v1/outcome') return await handleOutcome(request, env);
+      if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') return okHealth(this.env);
+      if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, this.env, this.ctx);
+      if (request.method === 'POST' && url.pathname === '/v1/outcome') return await handleOutcome(request, this.env);
       if (request.method === 'POST' && url.pathname === '/v1/personalization/onboarding') {
-        return await handlePersonalizationOnboardingCreate(request, env, ctx);
+        return await handlePersonalizationOnboardingCreate(request, this.env, this.ctx);
       }
       const onboardingStatusMatch = url.pathname.match(/^\/v1\/personalization\/onboarding\/([^/]+)$/);
       if (onboardingStatusMatch && request.method === 'GET') {
         const jobId = decodeURIComponent(onboardingStatusMatch[1]);
-        return await handlePersonalizationOnboardingStatus(request, env, jobId);
+        return await handlePersonalizationOnboardingStatus(request, this.env, jobId);
       }
-      if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') return await handlePragueStringsTranslate(request, env);
-      if (request.method === 'POST' && url.pathname === '/v1/l10n/account/ops/generate') {
-        return await handleAccountL10nOpsGenerate(request, env);
-      }
+      if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') return await handlePragueStringsTranslate(request, this.env);
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     } catch (err: unknown) {
@@ -200,25 +202,31 @@ export default {
       console.error('[sanfrancisco] Unhandled error', err);
       return noStore(json({ error: { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Unhandled error' } }, { status: 500 }));
     }
-  },
+  }
 
-  async queue(batch: MessageBatch<InteractionEvent | SanfranciscoCommandMessage>, env: Env): Promise<void> {
+  async queue(batch: MessageBatch<InteractionEvent | SanfranciscoCommandMessage>): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
-    await ensureD1Schema(env);
+    await ensureD1Schema(this.env);
     for (const msg of batch.messages) {
       const body = msg.body;
       if (isSanfranciscoCommandMessage(body)) {
         try {
-          await handleQueuedSanfranciscoCommand(body, env);
+          await handleQueuedSanfranciscoCommand(body, this.env);
         } catch (err) {
           console.error('[sanfrancisco] command message failed', err);
         }
         continue;
       }
       const e = body as InteractionEvent;
-      const key = `logs/${env.ENVIRONMENT ?? 'unknown'}/${e.agentId}/${today}/${e.requestId}.json`;
-      await env.SF_R2.put(key, JSON.stringify(e), { httpMetadata: { contentType: 'application/json' } });
-      await indexCopilotEvent(env, e);
+      const key = `logs/${this.env.ENVIRONMENT ?? 'unknown'}/${e.agentId}/${today}/${e.requestId}.json`;
+      await this.env.SF_R2.put(key, JSON.stringify(e), { httpMetadata: { contentType: 'application/json' } });
+      await indexCopilotEvent(this.env, e);
     }
-  },
-};
+  }
+
+  async generateAccountWidgetL10nOps(
+    request: AccountWidgetL10nGenerateRequest,
+  ): Promise<AccountWidgetL10nGenerateResponse> {
+    return generateAccountWidgetL10nOps(request, this.env);
+  }
+}

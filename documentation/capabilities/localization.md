@@ -114,11 +114,13 @@ Where the write plane fits (current repo snapshot):
 - When overlay/base state changes and the instance is published/servable, Tokyo-worker rebuilds the full text pack and publishes it:
   - `fullPack = baseSnapshot + localeOps`
 
-**Generation + mirroring (current after PRD 54)**
+**Generation + mirroring (current after PRD 80)**
 
 - Tokyo computes the canonical base text snapshot/fingerprint from the widget allowlist (`tokyo/product/widgets/<widgetType>/localization.json`) when the saved authoring config is written.
-- Tokyo-worker reads Tokyo-owned l10n identity/artifact state and calls San Francisco `POST /v1/l10n/account/ops/generate` only when explicit instance sync needs new locale ops.
-- Roma forwards the caller capsule/bearer to Tokyo-worker; Tokyo-worker sends the already-minted account `policyProfile` with the San Francisco request, and San Francisco derives the `l10n.instance.v1` AI profile/provider lane from `@clickeen/ck-policy` rather than defaulting to a generic paid path.
+- Tokyo-worker extracts the full approved current text item index (`path`, `type`, `value`) from that snapshot before generation.
+- Tokyo-worker calls San Francisco through the private `SANFRANCISCO_L10N` worker binding only when explicit instance sync needs new locale ops.
+- Tokyo-worker sends San Francisco approved items, requested target locales, existing locale ops, changed paths, removed paths, and the account `policyProfile`. It does not send widget config or allowlists.
+- San Francisco derives the `l10n.instance.v1` AI profile/provider lane from `@clickeen/ck-policy`, translates only requested changed items when possible, preserves unchanged existing ops for current item paths, and removes only explicitly removed paths.
 - San Francisco returns set-only locale ops.
 - Tokyo-worker persists those overlay rows in the canonical Tokyo l10n plane.
 - Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane, and Tokyo-worker reads that account-locale truth directly from Berlin during explicit sync execution.
@@ -128,6 +130,7 @@ Where the write plane fits (current repo snapshot):
 - While the `Translations` panel is open, Bob reads one Roma same-origin translations route backed by Tokyo-worker. That payload is `baseLocale`, `requestedLocales`, `readyLocales`, `status`, `failedLocales`, `baseFingerprint`, `generationId`, and `updatedAt`.
 - After Save succeeds, Bob may re-read that same route once to show current Tokyo truth.
 - Builder does not own an always-on localization convergence loop. If the Translations panel is open and the route says translations are still preparing, Builder may perform a small bounded recheck of that same Tokyo-backed status read.
+- Account-widget l10n statuses are only `queued`, `working`, `ready`, and `failed`. `queued` means Tokyo saved the current instance and handed off translation work; `working` includes bounded queue retries; `failed` is shown honestly instead of fake endless progress.
 - The Translations panel presents one global readiness answer from `status`.
 - The panel locale chooser represents the account's current display languages only when `status` is `ready`. Partial current-ready locale sets remain backend safety state, not user-facing product state.
 - Lower-tier language upsell copy in Builder comes from the policy cap carried in the Roma open-editor payload.
@@ -314,7 +317,7 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
 
 1. Author base copy in `tokyo/prague/pages/*/*.json`.
 2. Update allowlists under `prague/content/allowlists/v1/**` when new copy paths are added.
-3. Generate overlays via `node scripts/prague-l10n/translate.mjs` (requires San Francisco; local uses `sanfrancisco-local`, cloud-dev uses `sanfrancisco-dev` with `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`).
+3. Generate overlays via `node scripts/prague-l10n/translate.mjs` (requires San Francisco; local uses `sanfrancisco-local`, cloud-dev uses `sanfrancisco-dev` with `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`). This is Prague website-string localization only; account-widget l10n does not use this shared secret path.
 4. Verify overlays via `pnpm prague:l10n:verify`.
 5. Publish overlays to Tokyo/R2:
    - Cloud-dev/prod (remote R2): `node scripts/prague-sync.mjs --publish --remote`
@@ -341,10 +344,11 @@ Apply:
 
 ### 2) Generate overlays (current)
 
-1. Roma triggers Tokyo-worker sync only from explicit create/locale-settings/publish flows when locale artifacts need to converge.
-2. San Francisco generates locale ops when needed.
-3. Tokyo-worker writes overlay rows and base snapshots to Tokyo.
-4. If the instance is live, Tokyo-worker publishes text packs + live pointers to Tokyo/R2.
+1. Roma triggers Tokyo-worker sync only from explicit save/create/locale-settings/publish flows when locale artifacts need to converge.
+2. Tokyo-worker extracts approved current text items and calls San Francisco through `SANFRANCISCO_L10N` only when locale ops are missing or changed.
+3. San Francisco translates only those approved items and returns set-only locale ops; it does not read or write Tokyo state.
+4. Tokyo-worker writes overlay rows and base snapshots to Tokyo.
+5. If the instance is live, Tokyo-worker publishes text packs + live pointers to Tokyo/R2.
 
 User overrides (interactive):
 

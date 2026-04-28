@@ -28,7 +28,7 @@ export type LocalePolicy = {
   };
 };
 
-export type SavedRenderL10nStatus = 'accepted' | 'working' | 'ready' | 'failed';
+export type SavedRenderL10nStatus = 'queued' | 'working' | 'ready' | 'failed';
 
 export type SavedRenderL10nFailure = {
   locale: string;
@@ -235,7 +235,7 @@ function normalizeLocaleList(value: unknown): string[] {
 }
 
 function normalizeSavedL10nStatus(value: unknown): SavedRenderL10nStatus | null {
-  return value === 'accepted' || value === 'working' || value === 'ready' || value === 'failed'
+  return value === 'queued' || value === 'working' || value === 'ready' || value === 'failed'
     ? value
     : null;
 }

@@ -9,8 +9,8 @@ import {
   type AiProvider,
   type PolicyProfile,
 } from '@clickeen/ck-policy';
-import { HttpError, isRecord, noStore, readJson, json } from './http';
-import { assertInternalAuth, asTrimmedString } from './internalAuth';
+import { HttpError, isRecord } from './http';
+import { asTrimmedString } from './internalAuth';
 import type { AIGrant, Env, Usage } from './types';
 import {
   MAX_TOTAL_INPUT_CHARS,
@@ -20,7 +20,6 @@ import {
   buildSystemPrompt,
   buildUserPrompt,
   chunkTranslationEntries,
-  collectTranslatableEntries,
   executeTranslationModel,
   deleteMergedByPathOrPattern,
   expandPathPatterns,
@@ -30,14 +29,45 @@ import {
   parseTranslationResult,
   restoreMaskedRichtextTags,
   translateRichtextWithSegmentFallback,
-  type AllowlistEntry,
   type RichtextMaskPlan,
   type TranslationItem,
 } from './agents/l10nTranslationCore';
 
 type LocalizationOp = { op: 'set'; path: string; value: string };
 
-function normalizePolicyProfile(value: unknown): PolicyProfile | null {
+export type AccountWidgetL10nGenerateRequest = {
+  widgetType: string;
+  baseLocale: string;
+  targetLocales: string[];
+  items: Array<{
+    path: string;
+    type: 'string' | 'richtext';
+    value: string;
+  }>;
+  existingOpsByLocale: Record<string, LocalizationOp[]>;
+  changedPaths: string[] | null;
+  removedPaths: string[];
+  policyProfile: PolicyProfile;
+};
+
+export type AccountWidgetL10nGenerateResponse = {
+  results: Array<
+    | {
+        locale: string;
+        ok: true;
+        ops: LocalizationOp[];
+        usage?: Usage;
+      }
+    | {
+        locale: string;
+        ok: false;
+        ops: LocalizationOp[];
+        error: string;
+      }
+  >;
+};
+
+export function normalizePolicyProfile(value: unknown): PolicyProfile | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
   if (
@@ -51,17 +81,6 @@ function normalizePolicyProfile(value: unknown): PolicyProfile | null {
   return null;
 }
 
-function normalizeAllowlist(raw: unknown): AllowlistEntry[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .filter((entry) => isRecord(entry) && typeof entry.path === 'string')
-    .map((entry) => ({
-      path: String(entry.path || '').trim(),
-      type: entry.type === 'richtext' ? ('richtext' as const) : ('string' as const),
-    }))
-    .filter((entry) => entry.path);
-}
-
 function normalizeOps(raw: unknown): LocalizationOp[] {
   if (!Array.isArray(raw)) return [];
   return raw
@@ -72,6 +91,24 @@ function normalizeOps(raw: unknown): LocalizationOp[] {
       value: typeof entry.value === 'string' ? entry.value : '',
     }))
     .filter((entry) => entry.path);
+}
+
+function normalizeTranslationItems(raw: unknown): TranslationItem[] | null {
+  if (!Array.isArray(raw)) return null;
+  const items = raw
+    .filter((entry) => isRecord(entry) && typeof entry.path === 'string')
+    .map((entry) => ({
+      path: String(entry.path || '').trim(),
+      type: entry.type === 'richtext' ? ('richtext' as const) : ('string' as const),
+      value: typeof entry.value === 'string' ? entry.value : '',
+    }))
+    .filter((entry) => entry.path);
+  const seen = new Set<string>();
+  return items.filter((entry) => {
+    if (seen.has(entry.path)) return false;
+    seen.add(entry.path);
+    return true;
+  });
 }
 
 function normalizePathList(raw: unknown): string[] | null {
@@ -126,7 +163,7 @@ function buildInternalGrant(args: {
     throw new HttpError(503, {
       code: 'PROVIDER_ERROR',
       provider: 'sanfrancisco',
-      message: `No configured model provider for account l10n generation (${baseAi.profile})`,
+      message: `No model provider credentials for account l10n generation (${baseAi.profile})`,
     });
   }
 
@@ -172,7 +209,7 @@ function buildInternalGrant(args: {
   };
 }
 
-async function generateLocaleOps(args: {
+export async function generateAccountWidgetLocaleOps(args: {
   env: Env;
   grant: AIGrant;
   widgetType: string;
@@ -324,29 +361,15 @@ async function generateLocaleOps(args: {
   return { ops, ...(usage ? { usage } : {}) };
 }
 
-export async function handleAccountL10nOpsGenerate(
-  request: Request,
+export async function generateAccountWidgetL10nOps(
+  request: AccountWidgetL10nGenerateRequest,
   env: Env,
-): Promise<Response> {
-  const environment = asTrimmedString(env.ENVIRONMENT);
-  if (environment !== 'local' && environment !== 'dev') {
-    throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
-  }
-
-  assertInternalAuth(request, env);
-
-  const body = await readJson(request);
-  if (!isRecord(body)) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: 'body must be an object' });
-  }
-
-  const widgetType = asTrimmedString(body.widgetType);
-  const config = isRecord(body.config) ? (body.config as Record<string, unknown>) : null;
-  const allowlist = normalizeAllowlist(body.allowlist);
-  const baseLocale = normalizeLocaleToken(body.baseLocale) ?? null;
-  const policyProfile = normalizePolicyProfile(body.policyProfile);
-
-  const targetLocalesRaw = Array.isArray(body.targetLocales) ? body.targetLocales : [];
+): Promise<AccountWidgetL10nGenerateResponse> {
+  const widgetType = asTrimmedString(request.widgetType);
+  const baseLocale = normalizeLocaleToken(request.baseLocale) ?? null;
+  const policyProfile = normalizePolicyProfile(request.policyProfile);
+  const entries = normalizeTranslationItems(request.items);
+  const targetLocalesRaw = Array.isArray(request.targetLocales) ? request.targetLocales : [];
   const targetLocales = Array.from(
     new Set(
       targetLocalesRaw
@@ -361,16 +384,10 @@ export async function handleAccountL10nOpsGenerate(
       message: 'Missing required field: widgetType',
     });
   }
-  if (!config) {
+  if (!entries) {
     throw new HttpError(400, {
       code: 'BAD_REQUEST',
-      message: 'Missing required field: config',
-    });
-  }
-  if (!allowlist.length) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Missing required field: allowlist',
+      message: 'Missing required field: items',
     });
   }
   if (!baseLocale) {
@@ -386,23 +403,21 @@ export async function handleAccountL10nOpsGenerate(
     });
   }
   if (!targetLocales.length) {
-    return noStore(json({ ok: true, results: [] }));
+    return { results: [] };
   }
 
-  const changedPaths = normalizePathList(body.changedPaths);
-  const removedPaths = normalizePathList(body.removedPaths) ?? [];
-  const existingBaseOpsByLocale = isRecord(body.existingBaseOpsByLocale)
-    ? (body.existingBaseOpsByLocale as Record<string, unknown>)
+  const changedPaths = normalizePathList(request.changedPaths);
+  const removedPaths = normalizePathList(request.removedPaths) ?? [];
+  const existingOpsByLocale = isRecord(request.existingOpsByLocale)
+    ? (request.existingOpsByLocale as Record<string, unknown>)
     : {};
-
-  const entries = collectTranslatableEntries(config, allowlist, true);
   const grant = buildInternalGrant({ env, policyProfile });
 
   const results = await Promise.all(
     targetLocales.map(async (locale) => {
-      const existingOps = normalizeOps(existingBaseOpsByLocale[locale]);
+      const existingOps = normalizeOps(existingOpsByLocale[locale]);
       try {
-        const generated = await generateLocaleOps({
+        const generated = await generateAccountWidgetLocaleOps({
           env,
           grant,
           widgetType,
@@ -415,12 +430,14 @@ export async function handleAccountL10nOpsGenerate(
 
         return {
           locale,
+          ok: true as const,
           ops: generated.ops,
           ...(generated.usage ? { usage: generated.usage } : {}),
         };
       } catch (error) {
         return {
           locale,
+          ok: false as const,
           ops: existingOps,
           error: error instanceof Error ? error.message : String(error),
         };
@@ -428,5 +445,5 @@ export async function handleAccountL10nOpsGenerate(
     }),
   );
 
-  return noStore(json({ ok: true, results }));
+  return { results };
 }

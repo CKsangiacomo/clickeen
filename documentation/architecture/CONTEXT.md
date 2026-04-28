@@ -142,6 +142,7 @@ In the browser the active account-mode host path is:
 Bob does not URL-bootstrap account mode. Account editing is host-only.
 
 Localization is separate from Builder authoring: account locale policy lives in Roma Settings, and translation/runtime locale convergence happens downstream from the one widget save path.
+For account-widget localization, Tokyo-worker owns the saved pointer, base snapshot, approved text extraction, queue state, overlay writes, and public projection. San Francisco is a private worker-bound translation executor: it receives approved text items and returns set-only locale ops, with no account storage, widget config, allowlist, or publication authority.
 
 Between open and save:
 
