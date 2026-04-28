@@ -2,8 +2,6 @@ import { HttpError, isRecord } from './http';
 import { asTrimmedString } from './internalAuth';
 import type { Env, InteractionEvent, OutcomeAttachRequest } from './types';
 
-let d1SchemaReady = false;
-
 const OUTCOME_EVENTS = new Set([
   'upgrade_clicked',
   'upgrade_completed',
@@ -41,7 +39,6 @@ export function isOutcomeAttachRequest(value: unknown): value is OutcomeAttachRe
   const occurredAtMs = (value as any).occurredAtMs;
   const timeToDecisionMs = (value as any).timeToDecisionMs;
   const accountIdHash = (value as any).accountIdHash;
-  const workspaceIdHash = (value as any).workspaceIdHash;
 
   if (!requestId) return false;
   if (!sessionId) return false;
@@ -52,7 +49,6 @@ export function isOutcomeAttachRequest(value: unknown): value is OutcomeAttachRe
     return false;
   }
   if (accountIdHash !== undefined && (typeof accountIdHash !== 'string' || !accountIdHash.trim())) return false;
-  if (workspaceIdHash !== undefined && (typeof workspaceIdHash !== 'string' || !workspaceIdHash.trim())) return false;
 
   return true;
 }
@@ -91,80 +87,6 @@ export async function verifyOutcomeSignature(args: { request: Request; env: Env;
   const expected = await hmacSha256Base64Url(secret, `outcome.v1.${args.bodyText}`);
   if (!timingSafeEqual(provided, expected)) {
     throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid signature' });
-  }
-}
-
-export async function ensureD1Schema(env: Env): Promise<void> {
-  if (d1SchemaReady) return;
-  try {
-    await env.SF_D1.prepare(
-      `CREATE TABLE IF NOT EXISTS copilot_events_v1 (
-        requestId TEXT PRIMARY KEY NOT NULL,
-        day TEXT NOT NULL,
-        occurredAtMs INTEGER NOT NULL,
-        runtimeEnv TEXT,
-        envStage TEXT,
-        sessionId TEXT,
-        instancePublicId TEXT,
-        agentId TEXT NOT NULL,
-        widgetType TEXT,
-        intent TEXT,
-        outcome TEXT,
-        hasUrl INTEGER,
-        controlCount INTEGER,
-        opsCount INTEGER,
-        uniquePathsTouched INTEGER,
-        scopesTouched TEXT,
-        ctaAction TEXT,
-        promptVersion TEXT,
-        policyVersion TEXT,
-        dictionaryHash TEXT,
-        aiProfile TEXT,
-        taskClass TEXT,
-        provider TEXT,
-        model TEXT,
-        latencyMs INTEGER
-      )`,
-    ).run();
-
-    const maybeAddColumn = async (sql: string) => {
-      try {
-        await env.SF_D1.prepare(sql).run();
-      } catch {
-        // best-effort migration; ignore if the column already exists
-      }
-    };
-    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN sessionId TEXT`);
-    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN instancePublicId TEXT`);
-    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN aiProfile TEXT`);
-    await maybeAddColumn(`ALTER TABLE copilot_events_v1 ADD COLUMN taskClass TEXT`);
-
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_agent ON copilot_events_v1(day, agentId)`).run();
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_stage ON copilot_events_v1(day, envStage)`).run();
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_widget ON copilot_events_v1(day, widgetType)`).run();
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_session ON copilot_events_v1(day, sessionId)`).run();
-    await env.SF_D1.prepare(
-      `CREATE INDEX IF NOT EXISTS idx_copilot_events_v1_day_intent_outcome ON copilot_events_v1(day, intent, outcome)`,
-    ).run();
-
-    await env.SF_D1.prepare(
-      `CREATE TABLE IF NOT EXISTS copilot_outcomes_v1 (
-        requestId TEXT NOT NULL,
-        event TEXT NOT NULL,
-        day TEXT NOT NULL,
-        occurredAtMs INTEGER NOT NULL,
-        sessionId TEXT NOT NULL,
-        timeToDecisionMs INTEGER,
-        accountIdHash TEXT,
-        workspaceIdHash TEXT,
-        PRIMARY KEY (requestId, event)
-      )`,
-    ).run();
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_outcomes_v1_day_event ON copilot_outcomes_v1(day, event)`).run();
-    await env.SF_D1.prepare(`CREATE INDEX IF NOT EXISTS idx_copilot_outcomes_v1_request ON copilot_outcomes_v1(requestId)`).run();
-    d1SchemaReady = true;
-  } catch (err) {
-    console.error('[sanfrancisco] ensureD1Schema failed', err);
   }
 }
 
@@ -278,13 +200,12 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
 }
 
 export async function persistOutcomeAttach(env: Env, body: OutcomeAttachRequest): Promise<void> {
-  await ensureD1Schema(env);
   const day = toIsoDay(body.occurredAtMs);
   try {
     await env.SF_D1.prepare(
       `INSERT OR REPLACE INTO copilot_outcomes_v1
-      (requestId, event, day, occurredAtMs, sessionId, timeToDecisionMs, accountIdHash, workspaceIdHash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      (requestId, event, day, occurredAtMs, sessionId, timeToDecisionMs, accountIdHash)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         body.requestId,
@@ -294,7 +215,6 @@ export async function persistOutcomeAttach(env: Env, body: OutcomeAttachRequest)
         body.sessionId,
         body.timeToDecisionMs ?? null,
         body.accountIdHash ?? null,
-        body.workspaceIdHash ?? null,
       )
       .run();
   } catch (err) {

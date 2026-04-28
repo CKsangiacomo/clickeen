@@ -58,7 +58,6 @@ export type OutcomeAttachRequest = {
   occurredAtMs: number;
   timeToDecisionMs?: number;
   accountIdHash?: string;
-  workspaceIdHash?: string;
 };
 
 export type SanfranciscoCommandName =

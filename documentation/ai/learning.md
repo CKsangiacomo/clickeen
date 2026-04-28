@@ -63,7 +63,7 @@ R2 is the long-term “truth” for replay / offline analysis.
 
 ### 2.2 D1: queryable indexes
 
-San Francisco maintains two D1 tables (created on demand in code):
+San Francisco maintains two D1 tables. Their schema is owned by San Francisco D1 migrations, not runtime Worker boot code:
 
 #### `copilot_events_v1`
 One row per `requestId` with “learning features” extracted from the raw event:
@@ -82,7 +82,6 @@ One row per `(requestId, event)`:
 - `day`, `occurredAtMs`, `sessionId`
 - `timeToDecisionMs` (for keep/undo)
 - `accountIdHash` (optional, for cohort analysis)
-- `workspaceIdHash` (legacy, optional; pre account-only tenancy pivot)
 
 ## 3) Versioning (so improvements are attributable)
 

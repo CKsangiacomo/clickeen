@@ -17,6 +17,7 @@ id = "f1abe003b9a8434699175b0c1ccd2603"
 binding = "SF_D1"
 database_name = "sanfrancisco_d1_dev"
 database_id = "9ee059a3-538f-4b71-b2ea-f04b33e4897a"
+migrations_dir = "migrations"
 
 [[r2_buckets]]
 binding = "SF_R2"
@@ -48,6 +49,7 @@ id = "f1abe003b9a8434699175b0c1ccd2603"
 binding = "SF_D1"
 database_name = "sanfrancisco_d1_dev"
 database_id = "9ee059a3-538f-4b71-b2ea-f04b33e4897a"
+migrations_dir = "migrations"
 
 [[env.local.r2_buckets]]
 binding = "SF_R2"

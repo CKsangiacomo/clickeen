@@ -22,7 +22,6 @@ import {
   isSanfranciscoCommandMessage,
 } from './personalization-jobs';
 import {
-  ensureD1Schema,
   indexCopilotEvent,
   isOutcomeAttachRequest,
   persistOutcomeAttach,
@@ -206,7 +205,6 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
 
   async queue(batch: MessageBatch<InteractionEvent | SanfranciscoCommandMessage>): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
-    await ensureD1Schema(this.env);
     for (const msg of batch.messages) {
       const body = msg.body;
       if (isSanfranciscoCommandMessage(body)) {
