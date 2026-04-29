@@ -79,8 +79,7 @@ function BuilderShell() {
   }, [translationsData?.status, translationsEnabled, translationsLoading]);
 
   const previewableTranslationLocales = useMemo(() => {
-    if (translationsData?.status !== 'ready') return [];
-    return translationsData.readyLocales;
+    return translationsData?.readyLocales ?? [];
   }, [translationsData]);
 
   useEffect(() => {

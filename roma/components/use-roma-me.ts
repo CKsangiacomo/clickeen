@@ -61,9 +61,6 @@ export type RomaMeResponse = {
   } | null;
   activeAccount?: RomaActiveAccount | null;
   accounts: RomaAccountSummary[];
-  defaults: {
-    accountId: string | null;
-  };
   authz?: {
     accountCapsule?: string | null;
     accountId?: string | null;
@@ -75,7 +72,7 @@ export type RomaMeResponse = {
     entitlements?: {
       flags?: Record<string, boolean>;
       caps?: Record<string, number | null>;
-      budgets?: Record<string, { max: number | null; used?: number | null }>;
+      budgets?: Record<string, { max: number | null }>;
     } | null;
   } | null;
 };
@@ -92,7 +89,7 @@ export type RomaAuthzPolicy = {
   role: 'viewer' | 'editor' | 'admin' | 'owner';
   flags: Record<string, boolean>;
   caps: Record<string, number | null>;
-  budgets: Record<string, { max: number | null; used: number }>;
+  budgets: Record<string, { max: number | null }>;
 };
 
 function normalizeAccountId(value: unknown): string | null {
@@ -173,8 +170,7 @@ export function resolveAccountPolicyFromRomaAuthz(data: RomaMeResponse | null, a
     budgets: Object.fromEntries(
       Object.entries(entitlements.budgets ?? {}).flatMap(([key, entry]) => {
         if (!entry) return [];
-        const used = typeof entry.used === 'number' && Number.isFinite(entry.used) ? Math.max(0, Math.trunc(entry.used)) : 0;
-        return [[key, { max: entry.max ?? null, used }] as const];
+        return [[key, { max: entry.max ?? null }] as const];
       }),
     ),
   };

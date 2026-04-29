@@ -69,9 +69,6 @@ export type BerlinBootstrapPayload = {
   profile: BerlinUserProfilePayload;
   activeAccount: BerlinAccountContext;
   accounts: BerlinAccountContext[];
-  defaults: {
-    accountId: string | null;
-  };
   connectors: BerlinConnectorSummaryPayload;
   authz: null | {
     accountCapsule: string;
@@ -84,7 +81,7 @@ export type BerlinBootstrapPayload = {
     entitlements: {
       flags: Record<string, boolean>;
       caps: Record<string, number | null>;
-      budgets: Record<string, { max: number | null; used?: number | null }>;
+      budgets: Record<string, { max: number | null }>;
     };
   };
 };

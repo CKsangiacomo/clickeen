@@ -1,9 +1,11 @@
 # PRD 070B — Tiered Translation Truth and Runtime Closure
 
-Status: READY TO EXECUTE AFTER PRD 070A BOUNDARY CLOSURE
+Status: EXECUTED
 Date: 2026-03-15
 Owner: Product Dev Team
 Priority: P0 (product truth + commercial truth)
+
+Execution closure: 2026-04-29 hygiene pass verified the live product lane follows the PRD 070 translation truth model. Roma owns desired locale intent, Tokyo/Tokyo-worker own current-fingerprint ready truth, San Francisco generation is invoked through the private worker boundary, Venice consumes ready locales only, and Bob reads the Tokyo-backed status payload without reinterpreting policy. The remaining UI-truth residue was removed: the Bob Translations panel now shows allowed/ready counts plus per-locale `Base` / `Ready` / `Not ready` / `Failed` state, exposes each ready locale immediately even while other locales are still working, and no longer carries commercial upsell copy inside translation readiness.
 
 Execution dependency:
 - PRD 070B required PRD 070A to close the product boundary first.

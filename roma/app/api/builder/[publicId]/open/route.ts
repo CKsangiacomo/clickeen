@@ -56,7 +56,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   const result = await loadBuilderOpenEnvelope({
-    accessToken: session.accessToken,
     accountId: authz.payload.accountId,
     publicId,
     accountCapsule: authz.token,

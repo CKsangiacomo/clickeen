@@ -382,8 +382,8 @@ function buildManifest(parsed, provenance, contentType, bodyBytes, originalFilen
 }
 
 function createRemoteHeaders(accountId) {
-  const token = resolveFirstRootEnvValue(['TOKYO_DEV_JWT', 'CK_INTERNAL_SERVICE_JWT']);
-  if (!token) throw new Error('Missing TOKYO_DEV_JWT or CK_INTERNAL_SERVICE_JWT');
+  const token = resolveFirstRootEnvValue(['TOKYO_DEV_JWT']);
+  if (!token) throw new Error('Missing TOKYO_DEV_JWT');
   const headers = new Headers();
   headers.set('authorization', `Bearer ${token}`);
   headers.set('x-account-id', accountId);

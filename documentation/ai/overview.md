@@ -134,7 +134,7 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
 - `POST /v1/outcome` (outcome attach, signed by the calling Clickeen backend surface)
   - `POST /v1/personalization/onboarding` (internal legacy route name for post-signup account-context carry-forward; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`)
   - `GET /v1/personalization/onboarding/:jobId` (internal legacy route name; polls the same post-signup account-context carry-forward job; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`)
-  - `POST /v1/l10n/account/ops/generate` (internal Tokyo-worker instance-sync path; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`)
+  - Account-widget l10n ops generation (Tokyo-worker calls San Francisco through the private `SANFRANCISCO_L10N` service binding; no public HTTP route and no shared-secret bearer)
   - `POST /v1/l10n/translate` (local + cloud-dev only; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`; `ENVIRONMENT in {local,dev}`)
 - Cloudflare bindings:
   - `SF_KV` (sessions + job records)

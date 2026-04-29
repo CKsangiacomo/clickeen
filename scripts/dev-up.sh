@@ -363,18 +363,8 @@ if [ -f "$ROOT_DIR/.env.local" ]; then
   set +a
 fi
 
-CK_INTERNAL_SERVICE_JWT_FILE="$ROOT_DIR/Execution_Pipeline_Docs/internal.service.jwt"
-if [ -z "${CK_INTERNAL_SERVICE_JWT:-}" ] && [ -f "$CK_INTERNAL_SERVICE_JWT_FILE" ]; then
-  CK_INTERNAL_SERVICE_JWT="$(cat "$CK_INTERNAL_SERVICE_JWT_FILE")"
-fi
-if [ -z "${CK_INTERNAL_SERVICE_JWT:-}" ]; then
-  echo "[dev-up] Missing CK_INTERNAL_SERVICE_JWT."
-  echo "[dev-up] Set CK_INTERNAL_SERVICE_JWT in $ROOT_DIR/.env.local (recommended) or create $CK_INTERNAL_SERVICE_JWT_FILE."
-  exit 1
-fi
-
 if [ -z "${TOKYO_DEV_JWT:-}" ]; then
-  TOKYO_DEV_JWT="$CK_INTERNAL_SERVICE_JWT"
+  TOKYO_DEV_JWT="clickeen-local-dev-token"
 fi
 
 echo "[dev-up] Ensuring Supabase local DB is running"
@@ -455,7 +445,6 @@ echo "[dev-up] Starting Tokyo Worker (8791)"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY")
   VARS+=(--var "TOKYO_L10N_HTTP_BASE:$TOKYO_URL")
   VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
-  VARS+=(--var "CK_INTERNAL_SERVICE_JWT:$CK_INTERNAL_SERVICE_JWT")
   VARS+=(--var "BERLIN_BASE_URL:$BERLIN_URL")
   start_detached "$LOG_DIR/tokyo-worker.dev.log" pnpm exec wrangler dev --local --env local --port 8791 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$TOKYO_WORKER_INSPECTOR_PORT" \
     "${VARS[@]}"
@@ -476,7 +465,6 @@ echo "[dev-up] Starting Berlin Worker (3005)"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_ANON_KEY:$SUPABASE_ANON_KEY_VALUE")
   VARS+=(--var "BERLIN_ISSUER:$BERLIN_ISSUER")
   VARS+=(--var "BERLIN_AUDIENCE:$BERLIN_AUDIENCE")
-  VARS+=(--var "CK_INTERNAL_SERVICE_JWT:$CK_INTERNAL_SERVICE_JWT")
   start_detached "$LOG_DIR/berlin.dev.log" pnpm exec wrangler dev --local --env local --port 3005 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$BERLIN_INSPECTOR_PORT" \
     "${VARS[@]}"
   BERLIN_PID="$STARTED_PID"
@@ -504,7 +492,7 @@ prewarm_bob_routes
 echo "[dev-up] Starting DevStudio (5173)"
 (
   cd "$ROOT_DIR/admin"
-  start_detached "$LOG_DIR/devstudio.dev.log" env CI=1 PORT=5173 CK_INTERNAL_SERVICE_JWT="$CK_INTERNAL_SERVICE_JWT" TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" pnpm dev
+  start_detached "$LOG_DIR/devstudio.dev.log" env CI=1 PORT=5173 TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" pnpm dev
   DEVSTUDIO_PID="$STARTED_PID"
   echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
   register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"

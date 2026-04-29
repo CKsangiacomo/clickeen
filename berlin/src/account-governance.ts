@@ -165,9 +165,6 @@ export async function handleOwnerTransfer(args: {
   return json({
     ok: true,
     account,
-    defaults: {
-      accountId: state.value.defaultAccount?.accountId ?? null,
-    },
   });
 }
 

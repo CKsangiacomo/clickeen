@@ -72,7 +72,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const currentInstance = await loadTokyoAccountInstanceDocument({
     accountId,
     publicId,
-    tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
   if (!currentInstance.ok) {
@@ -86,7 +85,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const liveStatus = await loadTokyoAccountInstanceLiveStatus({
     accountId,
     publicId,
-    tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
   if (!liveStatus.ok) {
@@ -160,7 +158,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const publishedStates = await loadTokyoAccountInstanceServeStates({
       accountId,
       publicIds: accountInstancePublicIds.publicIds,
-      tokyoAccessToken: current.value.accessToken,
       accountCapsule: current.value.authzToken,
     });
     if (!publishedStates.ok) {
@@ -231,7 +228,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   try {
     await syncAccountInstanceLiveSurface({
-      accessToken: current.value.accessToken,
       accountId,
       publicId,
       accountCapsule: current.value.authzToken,

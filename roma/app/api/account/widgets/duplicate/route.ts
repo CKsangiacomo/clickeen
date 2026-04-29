@@ -7,7 +7,6 @@ import {
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
 import { enqueueAccountInstanceSync } from '@roma/lib/account-instance-sync';
-import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import {
   createAccountInstanceRow,
   deleteAccountInstanceRow,
@@ -61,7 +60,6 @@ function classifyDuplicateSourcePublicId(publicId: string): 'user' | 'main' | 'c
 async function rollbackDuplicateCreate(args: {
   accountId: string;
   publicId: string;
-  tokyoAccessToken: string;
   berlinAccessToken: string;
 }) {
   const [michaelRollback, tokyoRollback] = await Promise.allSettled([
@@ -71,8 +69,6 @@ async function rollbackDuplicateCreate(args: {
       berlinAccessToken: args.berlinAccessToken,
     }),
     deleteSavedConfigFromTokyo({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      tokyoAccessToken: args.tokyoAccessToken,
       accountId: args.accountId,
       publicId: args.publicId,
     }),
@@ -89,7 +85,6 @@ async function rollbackDuplicateCreate(args: {
 async function loadDuplicateSource(args: {
   accountId: string;
   publicId: string;
-  tokyoAccessToken: string;
   berlinAccessToken: string;
   accountCapsule?: string | null;
 }): Promise<
@@ -135,7 +130,6 @@ async function loadDuplicateSource(args: {
   const source = await loadTokyoAccountInstanceDocument({
     accountId: sourceCore.row.accountId,
     publicId: args.publicId,
-    tokyoAccessToken: args.tokyoAccessToken,
     accountCapsule: args.accountCapsule,
   });
   if (!source.ok) {
@@ -194,7 +188,6 @@ export async function POST(request: NextRequest) {
   const source = await loadDuplicateSource({
     accountId,
     publicId: sourcePublicId,
-    tokyoAccessToken: current.value.accessToken,
     berlinAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
@@ -249,8 +242,6 @@ export async function POST(request: NextRequest) {
   const publicId = createUserInstancePublicId(source.value.widgetType);
   try {
     await writeSavedConfigToTokyo({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      tokyoAccessToken: current.value.accessToken,
       accountId,
       publicId,
       accountCapsule: current.value.authzToken,
@@ -296,7 +287,6 @@ export async function POST(request: NextRequest) {
     await rollbackDuplicateCreate({
       accountId,
       publicId,
-      tokyoAccessToken: current.value.accessToken,
       berlinAccessToken: current.value.accessToken,
     });
     const status = createdRow.status === 401 ? 401 : createdRow.status;
@@ -328,7 +318,6 @@ export async function POST(request: NextRequest) {
     await rollbackDuplicateCreate({
       accountId,
       publicId,
-      tokyoAccessToken: current.value.accessToken,
       berlinAccessToken: current.value.accessToken,
     });
     return withSession(
@@ -350,7 +339,6 @@ export async function POST(request: NextRequest) {
   const created = createdRow.row;
   try {
     await enqueueAccountInstanceSync({
-      accessToken: current.value.accessToken,
       accountId,
       publicId,
       accountCapsule: current.value.authzToken,
@@ -368,7 +356,6 @@ export async function POST(request: NextRequest) {
     await rollbackDuplicateCreate({
       accountId,
       publicId,
-      tokyoAccessToken: current.value.accessToken,
       berlinAccessToken: current.value.accessToken,
     });
     return withSession(

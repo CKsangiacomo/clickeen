@@ -1,9 +1,11 @@
 # 070A Account Management Best-Practice Execution Plan
 
-Status: EXECUTING
+Status: EXECUTED
 Date: 2026-03-16
 Owner: Product Dev Team
 Depends on: `070A__PRD__Product_Boundary_Closure.md`
+
+Execution closure: 2026-04-29 hygiene pass completed the remaining account-management cuts in the live product path. Berlin bootstrap is read-only and exposes explicit `activeAccount`; signed authz capsules carry stable authz maxima only, with no locale state and no live `used` counters; capsule signing is Berlin-owned asymmetric signing; Roma proactively refreshes authz and uses centralized browser account request helpers; Bob account mode opens only from Roma host truth; Tokyo/Tokyo-worker account product routes use Roma service identity plus account capsule and no longer carry Berlin end-user JWT/shared-secret fallback. Live budget usage remains intentionally outside the signed capsule and is read/enforced at the canonical owner for SaaS usage displays and limits.
 
 ---
 
@@ -615,4 +617,3 @@ Remove old contracts after the runtime is clean.
 9. Tokyo-worker product account routes no longer accept end-user JWT fallback.
 10. Account-capsule browser transport in Roma is centralized.
 11. Active docs describe exactly that world.
-

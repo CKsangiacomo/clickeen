@@ -28,7 +28,6 @@ export type SanFranciscoL10nBinding = Fetcher & {
 export type Env = {
   ENV_STAGE?: string;
   TOKYO_DEV_JWT: string;
-  CK_INTERNAL_SERVICE_JWT?: string;
   TOKYO_PUBLIC_BASE_URL?: string;
   TOKYO_R2: R2Bucket;
   USAGE_KV?: KVNamespace;

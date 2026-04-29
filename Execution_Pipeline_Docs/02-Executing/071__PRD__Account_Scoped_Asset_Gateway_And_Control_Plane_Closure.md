@@ -1,13 +1,36 @@
 # PRD 071 — Account-Scoped Asset Gateway and Control-Plane Closure
 
-Status: EXECUTED IN CODE (local boundary/build closure complete; cloud-dev binding/deploy verify pending)
+Status: LOCAL CLOSURE PASS COMPLETE (current-account boundary executed; cloud-dev deploy/upload smoke still pending)
 Date: 2026-03-17
 Owner: Product Dev Team
 Priority: P0 (core account infrastructure)
 Depends on:
 - `070A__PRD__Product_Boundary_Closure.md`
+- `072__PRD__Roma_Boring_SaaS_Shell__Current_Account_Truth_And_Direct_Product_Flows.md`
 
 ---
+
+## 2026-04-29 closure note
+
+PRD 071's surviving product intent is correct: Roma is the account-facing asset gateway, Tokyo-worker is the only asset authority, public immutable bytes are served from `/assets/v/:assetRef`, and browser/product callers never supply account identity directly to Tokyo-worker.
+
+One route-shape detail in the original PRD is superseded by PRD 072. PRD 071 originally proposed explicit account-id product routes such as `/api/accounts/:accountId/assets`. PRD 072 established Roma as a single-current-account product shell, so the executed product contract is:
+
+- `GET /api/account/assets`
+- `POST /api/account/assets/upload`
+- `POST /api/account/assets/resolve`
+- `DELETE /api/account/assets/:assetId`
+
+That is not a weakening of PRD 071. It is the cleaner final form: the browser talks to the current-account Roma route, Roma resolves the signed current-account capsule server-side, and Tokyo-worker receives trusted internal account context from Roma over the `TOKYO_ASSET_CONTROL` service binding.
+
+Closure status after local inspection:
+
+- root `roma/app/api/assets/*` routes are gone
+- Roma/Bob/Dieter product callers use the current-account route/host-command path
+- Roma asset control-plane calls use `TOKYO_ASSET_CONTROL`, not `NEXT_PUBLIC_TOKYO_URL`
+- Roma upload rejects browser-supplied `x-account-id`
+- `2026-04-29` local upload bug fix: missing browser `content-length` is no longer treated as `0` bytes before Tokyo reads the body
+- cloud-dev still requires post-deploy verification of list/upload/delete before this PRD can move to `03-Executed`
 
 ## One-line objective
 
@@ -228,17 +251,18 @@ Everything in this PRD must make the codebase closer to that model.
 
 Final Roma product routes:
 
-- `GET /api/accounts/:accountId/assets`
-- `POST /api/accounts/:accountId/assets/upload`
-- `POST /api/accounts/:accountId/assets/resolve`
-- `DELETE /api/accounts/:accountId/assets/:assetId`
+- `GET /api/account/assets`
+- `POST /api/account/assets/upload`
+- `POST /api/account/assets/resolve`
+- `DELETE /api/account/assets/:assetId`
 
 Upload request contract on the new Roma route:
 
-- path `:accountId` is the canonical account identity
+- the signed current-account authz capsule is the canonical account identity
+- Roma resolves the account server-side
 - `x-account-id` is not part of the Roma browser/editor upload contract
-- product callers must move to the path-scoped account contract in the same execution pass
-- no dual path/header account contract is allowed on the final Roma route
+- product callers must use the current-account route contract in the same execution pass
+- no dual route/header account contract is allowed on the final Roma route
 
 Final Tokyo-worker authority routes:
 
@@ -255,6 +279,15 @@ No long-lived root product routes under `/api/assets/*` remain after cutover.
 ## Current hotspots
 
 ### Roma asset routes
+
+Executed current-account route family:
+
+- `roma/app/api/account/assets/route.ts`
+- `roma/app/api/account/assets/upload/route.ts`
+- `roma/app/api/account/assets/resolve/route.ts`
+- `roma/app/api/account/assets/[assetId]/route.ts`
+
+Deleted legacy root route family:
 
 - `roma/app/api/assets/upload/route.ts`
 - `roma/app/api/assets/[accountId]/route.ts`
@@ -347,7 +380,7 @@ Make the current live account asset lane work again before the route hard cut.
 ### Acceptance
 
 - Roma Assets page loads for the seeded account.
-- `GET /api/accounts/:accountId/assets` no longer returns `502` in cloud-dev.
+- `GET /api/account/assets` no longer returns `502` in cloud-dev.
 - Public Tokyo does not expose the asset control plane.
 
 ### Notes
@@ -431,10 +464,10 @@ Move the product surface to its true account domain.
 ### Change
 
 Create and cut over to:
-- `GET /api/accounts/:accountId/assets`
-- `POST /api/accounts/:accountId/assets/upload`
-- `POST /api/accounts/:accountId/assets/resolve`
-- `DELETE /api/accounts/:accountId/assets/:assetId`
+- `GET /api/account/assets`
+- `POST /api/account/assets/upload`
+- `POST /api/account/assets/resolve`
+- `DELETE /api/account/assets/:assetId`
 
 ### Caller move list (must move in one pass)
 
@@ -469,8 +502,8 @@ This is required because:
 - current upload route is the only asset route with explicit CORS/OPTIONS handling
 
 Upload authority rule on the new Roma route:
-- path `:accountId` is authoritative
-- the Roma upload client contract is path-scoped only
+- the signed current-account authz capsule is authoritative
+- the Roma upload client contract is current-account scoped only
 - product callers must not send `x-account-id`
 - if a caller still needs `x-account-id`, that caller has not been migrated and the execution cut is incomplete
 
@@ -532,9 +565,9 @@ Add a post-deploy smoke to `.github/workflows/cloud-dev-runtime-verify.yml` that
 
 ### Minimum smoke assertions
 
-- `GET /api/accounts/:accountId/assets?limit=1` returns `200`
-- `POST /api/accounts/:accountId/assets/upload` returns `200`
-- `DELETE /api/accounts/:accountId/assets/:assetId` returns `200` or the expected explicit precondition contract if intentionally tested
+- `GET /api/account/assets?limit=1` returns `200`
+- `POST /api/account/assets/upload` returns `200`
+- `DELETE /api/account/assets/:assetId` returns `200` or the expected explicit precondition contract if intentionally tested
 
 ### Smoke data rule
 
@@ -579,11 +612,11 @@ Docs:
 
 ## Required doc-closure item
 
-The current Roma service docs contain an asset-auth contradiction:
-- one section correctly says Roma -> Tokyo/Tokyo-worker residual product calls use `CK_INTERNAL_SERVICE_JWT` plus `x-ck-internal-service: roma.edge`
-- another section still says asset routes forward with the user session bearer
-
-PRD 071 is not done until that contradiction is removed and the executed asset auth model is documented in one way only.
+Closed locally:
+- `documentation/services/roma.md` documents one asset auth model only
+- Roma account asset routes execute through `TOKYO_ASSET_CONTROL` plus the Roma account authz capsule
+- docs do not say asset routes forward the end-user session bearer to Tokyo-worker
+- docs do not make `CK_INTERNAL_SERVICE_JWT` part of the asset lane
 
 ---
 
@@ -600,10 +633,10 @@ PRD 071 is not done until that contradiction is removed and the executed asset a
 
 ## Done means
 
-- account asset management is exposed only as account-scoped product routes in Roma
+- account asset management is exposed only as current-account product routes in Roma
 - Tokyo-worker is the only asset authority
 - public immutable bytes still serve from `/assets/v/:assetRef`
-- Bob/Dieter/Roma all consume the same account-scoped asset route contract
+- Bob/Dieter/Roma all consume the same current-account asset route contract
 - the platform/admin account works because it is an account, not because it is special
 - cloud-dev deploy verification proves the real authenticated account asset lane
 - Roma -> Tokyo-worker trust is defined as platform-native internal service identity, not as a mirrored shared-secret architecture

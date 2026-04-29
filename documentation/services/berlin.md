@@ -124,7 +124,6 @@ Internal routes:
 
 - `GET /.well-known/jwks.json`
 - `GET /internal/healthz`
-- `POST /internal/control/users/:userId/revoke-sessions`
 
 Health contract:
 
@@ -227,7 +226,6 @@ Recommended:
 - `BERLIN_ALLOWED_PROVIDERS` (default: `google`)
 - `BERLIN_FINISH_REDIRECT_URL` (cloud-dev points at Roma `/api/session/finish`)
 - `ENV_STAGE`
-- `CK_INTERNAL_SERVICE_JWT` only for the explicit internal-control route, not for Berlin/Roma Cloudflare product auth, bootstrap, Builder, or account registry paths.
 
 Legacy/compatibility:
 

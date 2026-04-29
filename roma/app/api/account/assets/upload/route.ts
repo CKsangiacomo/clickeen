@@ -25,8 +25,9 @@ export async function POST(request: NextRequest) {
   if (!gateway.ok) return gateway.response;
 
   const filename = (request.headers.get('x-filename') || '').trim() || 'upload.bin';
-  const contentLength = Number(request.headers.get('content-length') || '');
-  if (Number.isFinite(contentLength) && contentLength <= 0) {
+  const contentLengthHeader = request.headers.get('content-length');
+  const contentLength = contentLengthHeader ? Number(contentLengthHeader) : null;
+  if (contentLength !== null && Number.isFinite(contentLength) && contentLength <= 0) {
     return finalizeAccountAssetResponse({
       request,
       response: NextResponse.json(

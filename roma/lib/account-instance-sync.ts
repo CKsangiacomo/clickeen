@@ -30,7 +30,6 @@ function resolveTokyoSyncErrorDetail(payload: unknown, fallback: string): string
 
 async function postAccountInstanceSync(args: {
   path: string;
-  accessToken: string;
   accountId: string;
   publicId: string;
   accountCapsule?: string | null;
@@ -47,7 +46,6 @@ async function postAccountInstanceSync(args: {
       accountCapsule: args.accountCapsule,
       contentType: 'application/json',
     }),
-    accessToken: args.accessToken,
     body: JSON.stringify({
       live: args.live === true,
       ...(args.baseFingerprint
@@ -72,7 +70,6 @@ async function postAccountInstanceSync(args: {
 }
 
 export async function enqueueAccountInstanceSync(args: {
-  accessToken: string;
   accountId: string;
   publicId: string;
   accountCapsule?: string | null;
@@ -88,7 +85,6 @@ export async function enqueueAccountInstanceSync(args: {
 }
 
 export async function syncAccountInstanceLiveSurface(args: {
-  accessToken: string;
   accountId: string;
   publicId: string;
   accountCapsule?: string | null;

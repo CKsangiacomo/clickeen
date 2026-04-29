@@ -12,7 +12,6 @@ import {
   enqueueAccountInstanceSync,
   TokyoAccountInstanceSyncError,
 } from '@roma/lib/account-instance-sync';
-import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { deleteAccountInstanceRow, getAccountInstanceCoreRow } from '@roma/lib/michael';
 import {
   resolveCurrentAccountRouteContext,
@@ -24,7 +23,6 @@ export const runtime = 'edge';
 type RouteContext = { params: Promise<{ publicId: string }> };
 
 async function deleteTokyoMirrors(args: {
-  tokyoAccessToken: string;
   accountId: string;
   publicId: string;
   accountCapsule?: string;
@@ -32,15 +30,11 @@ async function deleteTokyoMirrors(args: {
   try {
     await Promise.all([
       deleteSavedConfigFromTokyo({
-        tokyoBaseUrl: resolveTokyoBaseUrl(),
-        tokyoAccessToken: args.tokyoAccessToken,
         accountId: args.accountId,
         publicId: args.publicId,
         accountCapsule: args.accountCapsule,
       }),
       deleteLiveSurfaceFromTokyo({
-        tokyoBaseUrl: resolveTokyoBaseUrl(),
-        tokyoAccessToken: args.tokyoAccessToken,
         accountId: args.accountId,
         publicId: args.publicId,
         accountCapsule: args.accountCapsule,
@@ -248,8 +242,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         }),
       },
     },
-    tokyoBaseUrl: resolveTokyoBaseUrl(),
-    tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
 
@@ -265,7 +257,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   const liveStatus = await loadTokyoAccountInstanceLiveStatus({
     accountId,
     publicId,
-    tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
   if (liveStatus.ok) {
@@ -280,7 +271,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   try {
     await enqueueAccountInstanceSync({
-      accessToken: current.value.accessToken,
       accountId,
       publicId,
       accountCapsule: current.value.authzToken,
@@ -436,7 +426,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   const tokyoCleanup = await deleteTokyoMirrors({
-    tokyoAccessToken: current.value.accessToken,
     accountId,
     publicId,
     accountCapsule: current.value.authzToken,

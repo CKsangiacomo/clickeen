@@ -40,7 +40,6 @@ async function loadAccountLocaleSyncTargets(args: {
   const serveStatesResult = await loadTokyoAccountInstanceServeStates({
     accountId: args.accountId,
     publicIds: publicIdsResult.publicIds,
-    tokyoAccessToken: args.accessToken,
     accountCapsule: args.accountCapsule,
   });
   if (!serveStatesResult.ok) {
@@ -59,7 +58,6 @@ async function loadAccountLocaleSyncTargets(args: {
       saved: await loadTokyoAccountInstanceDocument({
         accountId: args.accountId,
         publicId,
-        tokyoAccessToken: args.accessToken,
         accountCapsule: args.accountCapsule,
       }),
     })),
@@ -124,7 +122,6 @@ export async function runAccountLocalesSync(args: {
 
   for (const instance of syncTargets) {
     await enqueueAccountInstanceSync({
-      accessToken: args.accessToken,
       accountId: args.accountId,
       publicId: instance.publicId,
       accountCapsule: args.accountCapsule,

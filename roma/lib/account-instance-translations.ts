@@ -101,7 +101,6 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
 export async function loadAccountInstanceTranslationsPanel(args: {
   accountId: string;
   publicId: string;
-  tokyoAccessToken?: string;
   accountCapsule?: string | null;
 }): Promise<{ ok: true; value: AccountTranslationsPanelPayload } | RouteFailure> {
   const response = await fetchTokyoProductControl({
@@ -111,7 +110,6 @@ export async function loadAccountInstanceTranslationsPanel(args: {
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
     }),
-    accessToken: args.tokyoAccessToken,
   });
 
   const payload = (await response.json().catch(() => null)) as unknown;

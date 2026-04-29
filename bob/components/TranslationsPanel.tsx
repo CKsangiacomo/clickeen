@@ -7,7 +7,7 @@ import {
   resolveLocaleLabel as resolveCanonicalLocaleLabel,
 } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
-import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
+import { useWidgetSession } from '../lib/session/useWidgetSession';
 import type { TranslationsPreviewData } from './useTranslationsPreviewState';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
@@ -73,17 +73,25 @@ export function TranslationsPanel({
   translationsError: string | null;
 }) {
   const session = useWidgetSession();
-  const chrome = useWidgetSessionChrome();
-  const localeCap = chrome.policy?.caps['l10n.locales.max'];
-  const showLocaleUpsell = typeof localeCap === 'number' && Number.isFinite(localeCap);
 
   const localeOptions = useMemo(() => {
-    const locales = translationsData?.status === 'ready' ? translationsData.readyLocales : [];
+    const locales = translationsData?.readyLocales ?? [];
     return locales.map((locale) => ({
       value: locale,
       label: resolveLocaleLabel(locale),
     }));
   }, [translationsData]);
+  const requestedLocales = useMemo(() => translationsData?.requestedLocales ?? [], [translationsData]);
+  const readyLocales = useMemo(() => new Set(translationsData?.readyLocales ?? []), [translationsData]);
+  const failedLocales = useMemo(() => {
+    const failures = new Map<string, string>();
+    for (const failure of translationsData?.failedLocales ?? []) {
+      failures.set(failure.locale, failure.detail || failure.reasonKey);
+    }
+    return failures;
+  }, [translationsData]);
+  const readyCount = requestedLocales.filter((locale) => readyLocales.has(locale)).length;
+  const allowedCount = requestedLocales.length;
 
   const localeValue =
     overlayPreviewLocale && localeOptions.some((option) => option.value === overlayPreviewLocale)
@@ -107,24 +115,28 @@ export function TranslationsPanel({
                   : 'Translations not ready yet',
           },
         ];
-  const translationStatusTitle = translationsLoading
-    ? 'Checking translations'
-    : translationsError
-      ? 'Translations unavailable'
-      : translationsData?.status === 'ready'
-        ? 'Translations are ready'
-        : translationsData?.status === 'failed'
-          ? 'Translations failed'
-          : 'Translations are preparing';
-  const translationStatusBody = translationsLoading
-    ? 'Builder is checking whether this widget is ready in your account languages.'
-    : translationsError
-      ? translationsError
-      : translationsData?.status === 'ready'
-        ? 'Preview this widget in the languages available for this account.'
-        : translationsData?.status === 'failed'
-          ? 'Save again to request translation for the current widget state.'
-          : 'Translations are queued for the current widget state. Preview will unlock when they are ready.';
+  const translationStatusTitle = (() => {
+    if (translationsLoading) return 'Checking translations';
+    if (translationsError) return 'Translations unavailable';
+    if (translationsData && allowedCount > 0 && readyCount === allowedCount) {
+      return 'Translations are ready';
+    }
+    if (translationsData?.status === 'failed') return 'Translations failed';
+    return 'Translations are updating';
+  })();
+  const translationStatusBody = (() => {
+    if (translationsLoading) {
+      return 'Builder is checking whether this widget is ready in your account languages.';
+    }
+    if (translationsError) return translationsError;
+    if (translationsData?.status === 'failed') {
+      return `${allowedCount} allowed, ${readyCount} ready. Save again to request translation for the current widget state.`;
+    }
+    if (translationsData && allowedCount > 0) {
+      return `${allowedCount} allowed, ${readyCount} ready. Ready locales can be previewed now.`;
+    }
+    return 'Save to request translations for the current widget state.';
+  })();
 
   if (!session.compiled) {
     return (
@@ -151,28 +163,30 @@ export function TranslationsPanel({
           options={selectOptions}
           disabled={!selectOptions[0]?.value}
         />
-        {showLocaleUpsell ? (
-          <div className="settings-panel__note settings-panel__note--upsell">
-            <div>
-              <div className="label-s">More languages</div>
-              <div className="body-s">
-                Your current plan includes up to {localeCap} display languages. Upgrade to unlock more locales.
-              </div>
+        {requestedLocales.length ? (
+          <div className="tdmenucontent__cluster">
+            <div className="label-s label-muted">Locale readiness</div>
+            <div className="translations-panel__locale-list">
+              {requestedLocales.map((locale) => {
+                const isBase = locale === translationsData?.baseLocale;
+                const failedReason = failedLocales.get(locale);
+                const status = isBase
+                  ? 'Base'
+                  : failedReason
+                    ? 'Failed'
+                    : readyLocales.has(locale)
+                      ? 'Ready'
+                      : 'Not ready';
+                return (
+                  <div className="translations-panel__locale-row" key={locale}>
+                    <span className="body-s">{resolveLocaleLabel(locale)}</span>
+                    <span className="label-s label-muted" title={failedReason || undefined}>
+                      {status}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            <button
-              type="button"
-              className="diet-btn-txt"
-              data-size="sm"
-              data-variant="neutral"
-              onClick={() =>
-                chrome.requestUpsell(
-                  'coreui.upsell.reason.capReached',
-                  `l10n.locales.max=${localeCap}`,
-                )
-              }
-            >
-              <span className="diet-btn-txt__label">Upgrade plan</span>
-            </button>
           </div>
         ) : null}
       </div>

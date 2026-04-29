@@ -30,7 +30,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
   const result = await loadAccountInstanceTranslationsPanel({
     accountId,
     publicId,
-    tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
 

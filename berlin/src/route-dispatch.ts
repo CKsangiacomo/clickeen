@@ -38,7 +38,6 @@ import {
 } from './routes-account';
 import {
   handleHealthz,
-  handleInternalRevokeUserSessions,
   handleJwks,
   handleLogout,
   handleRefresh,
@@ -79,12 +78,6 @@ const BERLIN_ROUTES: BerlinRoute[] = [
   exact('/internal/healthz', {
     GET: () => handleHealthz(),
   }),
-  {
-    pattern: /^\/internal\/control\/users\/([^/]+)\/revoke-sessions$/,
-    methods: {
-      POST: ({ request, env, match }) => handleInternalRevokeUserSessions(request, env, capture(match, 1)),
-    },
-  },
   exact('/.well-known/jwks.json', {
     GET: ({ env }) => handleJwks(env),
   }),

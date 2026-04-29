@@ -496,11 +496,6 @@ export async function buildBootstrapPayload(args: {
     const signingContextPromise = resolveSigningContext(args.env);
 
     const policy = resolvePolicy({ profile: activeAccount.tier, role: activeAccount.role });
-    const bootstrapEntitlements = {
-      flags: policy.flags,
-      caps: policy.caps,
-      budgets: policy.budgets,
-    };
     const signedEntitlements = {
       flags: policy.flags,
       caps: policy.caps,
@@ -550,7 +545,6 @@ export async function buildBootstrapPayload(args: {
         profile: args.state.profile,
         activeAccount,
         accounts: args.state.accounts,
-        defaults: { accountId: activeAccount.accountId },
         connectors: summarizeConnectorState({
           identities: identities.value,
         }),
@@ -562,7 +556,7 @@ export async function buildBootstrapPayload(args: {
           authzVersion,
           issuedAt: new Date(nowSec * 1000).toISOString(),
           expiresAt: new Date(expiresSec * 1000).toISOString(),
-          entitlements: bootstrapEntitlements,
+          entitlements: signedEntitlements,
         },
       },
     };

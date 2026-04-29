@@ -70,7 +70,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const currentInstance = await loadTokyoAccountInstanceDocument({
       accountId: current.value.authzPayload.accountId,
       publicId,
-      tokyoAccessToken: current.value.accessToken,
       accountCapsule: current.value.authzToken,
     });
     if (!currentInstance.ok) {

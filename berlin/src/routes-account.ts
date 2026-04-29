@@ -248,9 +248,6 @@ export async function handleAccounts(request: Request, env: Env): Promise<Respon
 
   return json({
     accounts: resolved.state.accounts,
-    defaults: {
-      accountId: resolved.state.defaultAccount?.accountId ?? null,
-    },
   });
 }
 
@@ -308,9 +305,6 @@ export async function handleAccountCreate(request: Request, env: Env): Promise<R
   return json(
     {
       account,
-      defaults: {
-        accountId,
-      },
       isActive: true,
     },
     { status: provisioned.created ? 201 : 200 },
@@ -333,9 +327,6 @@ export async function handleAccountById(
 
   return json({
     account,
-    defaults: {
-      accountId: resolved.state.defaultAccount?.accountId ?? null,
-    },
     isActive: resolved.state.defaultAccount?.accountId === accountId,
   });
 }

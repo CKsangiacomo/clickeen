@@ -84,8 +84,6 @@ function resolveSavedInstanceDisplayName(args: {
 }
 
 async function loadSavedInstanceFromTokyo(args: {
-  tokyoControlBaseUrl?: string;
-  tokyoAccessToken?: string;
   accountId: string;
   publicId: string;
   accountCapsule?: string | null;
@@ -107,8 +105,6 @@ async function loadSavedInstanceFromTokyo(args: {
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
     method: 'GET',
     headers,
-    baseUrl: args.tokyoControlBaseUrl,
-    accessToken: args.tokyoAccessToken,
   });
 
   if (response.status === 404) {
@@ -198,9 +194,6 @@ async function loadSavedInstanceFromTokyo(args: {
 }
 
 export async function writeSavedConfigToTokyo(args: {
-  tokyoBaseUrl: string;
-  tokyoControlBaseUrl?: string;
-  tokyoAccessToken?: string;
   accountId: string;
   publicId: string;
   accountCapsule?: string | null;
@@ -228,8 +221,6 @@ export async function writeSavedConfigToTokyo(args: {
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
     method: 'PUT',
     headers,
-    baseUrl: args.tokyoControlBaseUrl,
-    accessToken: args.tokyoAccessToken,
     body: JSON.stringify({
       widgetType: args.widgetType,
       config: args.config,
@@ -259,9 +250,6 @@ export async function writeSavedConfigToTokyo(args: {
 }
 
 export async function deleteSavedConfigFromTokyo(args: {
-  tokyoBaseUrl: string;
-  tokyoControlBaseUrl?: string;
-  tokyoAccessToken?: string;
   accountId: string;
   publicId: string;
   accountCapsule?: string | null;
@@ -277,8 +265,6 @@ export async function deleteSavedConfigFromTokyo(args: {
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
     method: 'DELETE',
     headers,
-    baseUrl: args.tokyoControlBaseUrl,
-    accessToken: args.tokyoAccessToken,
   });
 
   if (!response.ok && response.status !== 404) {
@@ -290,9 +276,6 @@ export async function deleteSavedConfigFromTokyo(args: {
 }
 
 export async function deleteLiveSurfaceFromTokyo(args: {
-  tokyoBaseUrl: string;
-  tokyoControlBaseUrl?: string;
-  tokyoAccessToken?: string;
   accountId: string;
   publicId: string;
   accountCapsule?: string | null;
@@ -308,8 +291,6 @@ export async function deleteLiveSurfaceFromTokyo(args: {
     path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/live.json`,
     method: 'DELETE',
     headers,
-    baseUrl: args.tokyoControlBaseUrl,
-    accessToken: args.tokyoAccessToken,
   });
 
   if (!response.ok) {
@@ -323,8 +304,6 @@ export async function deleteLiveSurfaceFromTokyo(args: {
 export async function loadTokyoAccountInstanceDocument<TRow extends AccountInstanceCoreRow>(args: {
   accountId: string;
   publicId: string;
-  tokyoControlBaseUrl?: string;
-  tokyoAccessToken?: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
@@ -335,8 +314,6 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
   | RouteFailure
 > {
   const saved = await loadSavedInstanceFromTokyo({
-    tokyoControlBaseUrl: args.tokyoControlBaseUrl,
-    tokyoAccessToken: args.tokyoAccessToken,
     accountId: args.accountId,
     publicId: args.publicId,
     internalServiceName: args.internalServiceName,
@@ -369,8 +346,6 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
 export async function loadTokyoAccountInstanceLiveStatus(args: {
   accountId: string;
   publicId: string;
-  tokyoControlBaseUrl?: string;
-  tokyoAccessToken?: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
@@ -380,8 +355,6 @@ export async function loadTokyoAccountInstanceLiveStatus(args: {
   const states = await loadTokyoAccountInstanceServeStates({
     accountId: args.accountId,
     publicIds: [args.publicId],
-    tokyoControlBaseUrl: args.tokyoControlBaseUrl,
-    tokyoAccessToken: args.tokyoAccessToken,
     accountCapsule: args.accountCapsule,
     internalServiceName: args.internalServiceName,
   });
@@ -398,8 +371,6 @@ export async function loadTokyoAccountInstanceLiveStatus(args: {
 export async function loadTokyoAccountInstanceServeStates(args: {
   accountId: string;
   publicIds: string[];
-  tokyoControlBaseUrl?: string;
-  tokyoAccessToken?: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
@@ -440,8 +411,6 @@ export async function loadTokyoAccountInstanceServeStates(args: {
     path: '/__internal/renders/instances/serve-state.json',
     method: 'POST',
     headers,
-    baseUrl: args.tokyoControlBaseUrl,
-    accessToken: args.tokyoAccessToken,
     body: JSON.stringify({ publicIds }),
   });
 
@@ -533,9 +502,6 @@ export async function saveAccountInstanceDirect(args: {
       desiredLocales: string[];
     } | null;
   } | null;
-  tokyoBaseUrl: string;
-  tokyoControlBaseUrl?: string;
-  tokyoAccessToken?: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
@@ -544,9 +510,6 @@ export async function saveAccountInstanceDirect(args: {
 > {
   try {
     const write = await writeSavedConfigToTokyo({
-      tokyoBaseUrl: args.tokyoBaseUrl,
-      tokyoControlBaseUrl: args.tokyoControlBaseUrl,
-      tokyoAccessToken: args.tokyoAccessToken,
       accountId: args.accountId,
       publicId: args.publicId,
       internalServiceName: args.internalServiceName,

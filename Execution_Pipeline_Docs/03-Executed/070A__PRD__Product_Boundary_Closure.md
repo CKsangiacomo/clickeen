@@ -1,10 +1,15 @@
 # PRD 070A — Product Boundary Closure and Paris Justification
 
-Status: EXECUTING
+Status: EXECUTED
 Date: 2026-03-15
 Owner: Product Dev Team
 Priority: P0 (architecture prerequisite for PRD 070B)
 
+Final closure record:
+- 2026-04-29 hygiene pass verified that Paris is no longer on the account product path.
+- Roma owns customer product API routes and hosts Bob through the explicit `ck:open-editor` contract.
+- Bob delegates account commands back to the Roma host and does not discover account truth directly.
+- Paris remains only as the documented residual health stub and package/dev health surface; deleting Paris entirely is a separate product/platform decision, not part of this closure.
 
 
 ## One-line objective

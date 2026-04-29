@@ -17,7 +17,6 @@ type AccountBaseLocaleLockResult =
 export async function loadAccountBaseLocaleLockState(args: {
   accountId: string;
   berlinAccessToken: string;
-  tokyoAccessToken: string;
   accountCapsule?: string | null;
 }): Promise<AccountBaseLocaleLockResult> {
   try {
@@ -28,7 +27,6 @@ export async function loadAccountBaseLocaleLockState(args: {
       const saved = await loadTokyoAccountInstanceDocument({
         accountId: args.accountId,
         publicId,
-        tokyoAccessToken: args.tokyoAccessToken,
         accountCapsule: args.accountCapsule,
       });
       if (!saved.ok) {

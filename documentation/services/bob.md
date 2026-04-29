@@ -473,9 +473,9 @@ Current product truth:
 - When `Translations` is open, Bob reads one Roma/Tokyo-backed translations status payload.
 - After Save succeeds, Bob may refresh that same payload once to show current Tokyo truth.
 - If translations are still preparing while the panel is open, Bob may perform a small bounded recheck of that same status payload. Bob does not own always-on localization convergence loops.
-- The Translations panel shows one global readiness answer. It does not expose per-locale readiness to users.
-- Translation preview locale selection unlocks only when the current account locale set is ready for the latest saved widget.
-- Lower-tier language upsell copy comes from the account policy in the Roma open-editor payload.
+- The Translations panel shows allowed and ready counts from the status payload, plus per-locale `Base` / `Ready` / `Not ready` / `Failed` truth.
+- Translation preview locale selection unlocks for each locale as soon as Tokyo reports that locale ready for the current saved widget.
+- Commercial upsell copy stays outside the translation-readiness panel.
 
 Reference:
 

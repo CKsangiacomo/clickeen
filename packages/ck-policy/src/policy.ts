@@ -10,7 +10,7 @@ type ResolvePolicyArgs = {
 export type PolicyEntitlementsSnapshot = {
   flags?: Record<string, boolean> | null;
   caps?: Record<string, number | null> | null;
-  budgets?: Record<string, { max: number | null; used?: number | null } | null> | null;
+  budgets?: Record<string, { max: number | null } | null> | null;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -35,14 +35,6 @@ function assertFiniteNumber(value: unknown, path: string): number {
     throw new Error(`[ck-policy] Invalid entitlements snapshot at ${path}`);
   }
   return value;
-}
-
-function assertNonNegativeInteger(value: unknown, path: string): number {
-  const numeric = assertFiniteNumber(value, path);
-  if (!Number.isInteger(numeric) || numeric < 0) {
-    throw new Error(`[ck-policy] Invalid entitlements snapshot at ${path}`);
-  }
-  return numeric;
 }
 
 function createTotalPolicyBase(args: ResolvePolicyArgs): Policy {
@@ -147,18 +139,14 @@ export function assertPolicyEntitlementsSnapshot(
               if (!isRecord(entry)) {
                 throw new Error(`[ck-policy] Invalid entitlements snapshot at entitlements.budgets.${key}`);
               }
-              assertAllowedKeys(entry, ['max', 'used'], `entitlements.budgets.${key}`);
+              assertAllowedKeys(entry, ['max'], `entitlements.budgets.${key}`);
               const max =
                 entry.max === null || typeof entry.max === 'undefined'
                   ? entry.max ?? null
                   : assertFiniteNumber(entry.max, `entitlements.budgets.${key}.max`);
-              const used =
-                typeof entry.used === 'undefined' || entry.used === null
-                  ? undefined
-                  : assertNonNegativeInteger(entry.used, `entitlements.budgets.${key}.used`);
-              return [key, typeof used === 'undefined' ? { max } : { max, used }];
+              return [key, { max }];
             }),
-          ) as Record<string, { max: number | null; used?: number | null }>;
+          ) as Record<string, { max: number | null }>;
         })();
 
   return {
@@ -194,9 +182,6 @@ export function resolvePolicyFromEntitlementsSnapshot(
     if (!next) continue;
     if (next.max === null || typeof next.max === 'number') {
       policy.budgets[key].max = next.max;
-    }
-    if (typeof next.used === 'number' && Number.isFinite(next.used)) {
-      policy.budgets[key].used = Math.max(0, Math.trunc(next.used));
     }
   }
 

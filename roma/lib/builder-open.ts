@@ -10,7 +10,6 @@ export type BuilderOpenEnvelope = {
 };
 
 export async function loadBuilderOpenEnvelope(args: {
-  accessToken: string;
   accountId: string;
   publicId: string;
   accountCapsule?: string | null;
@@ -29,7 +28,6 @@ export async function loadBuilderOpenEnvelope(args: {
   const instance = await loadTokyoAccountInstanceDocument({
     accountId: args.accountId,
     publicId: args.publicId,
-    tokyoAccessToken: args.accessToken,
     accountCapsule: args.accountCapsule,
   });
   if (!instance.ok) {

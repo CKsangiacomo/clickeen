@@ -258,9 +258,9 @@ async function loadPlatformRows(client, platformAccountId) {
 }
 
 function createTokyoHeaders(accountId) {
-  const token = resolveFirstRootEnvValue(['TOKYO_DEV_JWT', 'CK_INTERNAL_SERVICE_JWT']);
+  const token = resolveFirstRootEnvValue(['TOKYO_DEV_JWT']);
   if (!token) {
-    throw new Error('Missing TOKYO_DEV_JWT or CK_INTERNAL_SERVICE_JWT');
+    throw new Error('Missing TOKYO_DEV_JWT');
   }
   return {
     authorization: `Bearer ${token}`,

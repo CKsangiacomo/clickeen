@@ -591,8 +591,5 @@ export async function handleInvitationAccept(args: {
     ok: true,
     accountId: acceptedInvitation.value.accountId,
     account,
-    defaults: {
-      accountId: state.value.defaultAccount?.accountId ?? null,
-    },
   });
 }

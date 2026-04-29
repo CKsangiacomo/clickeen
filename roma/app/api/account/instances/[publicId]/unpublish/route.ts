@@ -4,7 +4,6 @@ import {
   loadTokyoAccountInstanceDocument,
   loadTokyoAccountInstanceLiveStatus,
 } from '@roma/lib/account-instance-direct';
-import { resolveTokyoBaseUrl } from '@roma/lib/env/tokyo';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -32,7 +31,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const currentInstance = await loadTokyoAccountInstanceDocument({
     accountId,
     publicId,
-    tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
   if (!currentInstance.ok) {
@@ -46,7 +44,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const liveStatus = await loadTokyoAccountInstanceLiveStatus({
     accountId,
     publicId,
-    tokyoAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
   if (!liveStatus.ok) {
@@ -67,8 +64,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   try {
     await deleteLiveSurfaceFromTokyo({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      tokyoAccessToken: current.value.accessToken,
       accountId,
       publicId,
       accountCapsule: current.value.authzToken,

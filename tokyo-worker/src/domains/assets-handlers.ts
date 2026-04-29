@@ -18,7 +18,6 @@ import {
 import { json } from '../http';
 import {
   assertRomaAccountCapsuleAuth,
-  assertProductAccountAuth,
   INTERNAL_SERVICE_HEADER,
   requireDevAuth,
   TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
@@ -123,11 +122,6 @@ async function resolveUploadTierAndAuthorization(args: {
   return { ok: true, accountAuthz: capsule };
 }
 
-function isInternalAccountAssetControlPath(req: Request): boolean {
-  const pathname = new URL(req.url).pathname.replace(/\/+$/, '') || '/';
-  return pathname === '/__internal/assets/upload' || pathname.startsWith('/__internal/assets/');
-}
-
 function resolveTokyoAssetPublicBaseUrl(env: Env, req: Request): string {
   const configured =
     typeof env.TOKYO_PUBLIC_BASE_URL === 'string' ? env.TOKYO_PUBLIC_BASE_URL.trim() : '';
@@ -153,11 +147,9 @@ async function resolveAccountAssetAuthorization(args: {
     return authErr ? { ok: false, response: authErr } : { ok: true, accountAuthz: null };
   }
 
-  const auth = isInternalAccountAssetControlPath(args.req)
-    ? await assertRomaAccountCapsuleAuth(args.req, args.env, {
-        requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
-      })
-    : await assertProductAccountAuth(args.req, args.env);
+  const auth = await assertRomaAccountCapsuleAuth(args.req, args.env, {
+    requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
+  });
   if (!auth.ok) return { ok: false, response: auth.response };
 
   const authorized = await resolveUploadTierAndAuthorization({

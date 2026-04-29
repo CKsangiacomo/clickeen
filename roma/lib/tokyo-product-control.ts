@@ -50,38 +50,16 @@ export async function fetchTokyoProductControl(args: {
   method: string;
   headers?: HeadersInit;
   body?: BodyInit;
-  baseUrl?: string | null;
-  accessToken?: string | null;
 }): Promise<Response> {
   const path = args.path.startsWith('/') ? args.path : `/${args.path}`;
-  const baseUrl = String(args.baseUrl || '').trim().replace(/\/+$/, '');
-  const accessToken = String(args.accessToken || '').trim();
-  if (baseUrl) {
-    if (!accessToken) {
-      throw new Error('[Roma] Missing Tokyo product control access token');
-    }
-    const headers = new Headers(args.headers);
-    headers.set('authorization', `Bearer ${accessToken}`);
-    return fetch(`${baseUrl}${path}`, {
-      method: args.method,
-      headers,
-      cache: 'no-store',
-      ...(args.body !== undefined ? { body: args.body } : {}),
-    });
-  }
-
   const binding = resolveTokyoProductControlBinding();
-  const headers = new Headers(args.headers);
-  if (accessToken) {
-    headers.set('authorization', `Bearer ${accessToken}`);
-  }
   const target = new URL(
     path,
     TOKYO_PRODUCT_CONTROL_ORIGIN,
   );
   return binding.fetch(target.toString(), {
     method: args.method,
-    headers,
+    headers: args.headers,
     cache: 'no-store',
     ...(args.body !== undefined ? { body: args.body } : {}),
   });

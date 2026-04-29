@@ -7,7 +7,6 @@ import {
   deleteSavedConfigFromTokyo,
   writeSavedConfigToTokyo,
 } from './account-instance-direct';
-import { resolveTokyoBaseUrl } from './env/tokyo';
 
 export type AccountInstanceCreateError = {
   kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE' | 'INTERNAL';
@@ -47,7 +46,6 @@ async function rollbackCreate(args: {
     writeSavedConfigRollback({
       accountId: args.accountId,
       publicId: args.publicId,
-      accessToken: args.accessToken,
       accountCapsule: args.accountCapsule,
     }),
   ]);
@@ -63,12 +61,9 @@ async function rollbackCreate(args: {
 async function writeSavedConfigRollback(args: {
   accountId: string;
   publicId: string;
-  accessToken: string;
   accountCapsule?: string | null;
 }) {
   await deleteSavedConfigFromTokyo({
-    tokyoBaseUrl: resolveTokyoBaseUrl(),
-    tokyoAccessToken: args.accessToken,
     accountId: args.accountId,
     publicId: args.publicId,
     accountCapsule: args.accountCapsule,
@@ -129,8 +124,6 @@ export async function createAccountInstance(args: {
 
   try {
     await writeSavedConfigToTokyo({
-      tokyoBaseUrl: resolveTokyoBaseUrl(),
-      tokyoAccessToken: args.accessToken,
       accountId: args.accountId,
       publicId: args.publicId,
       accountCapsule: args.accountCapsule,

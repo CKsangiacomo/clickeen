@@ -26,7 +26,7 @@ type BerlinFinishPayload = {
 };
 
 type BootstrapPayload = {
-  defaults?: {
+  activeAccount?: {
     accountId?: unknown;
   };
   authz?: {
@@ -121,7 +121,7 @@ async function fetchBootstrap(
 
   return {
     ok: true,
-    accountId: resolveAccountId(payload?.defaults?.accountId),
+    accountId: resolveAccountId(payload?.activeAccount?.accountId),
     accountCapsule:
       typeof payload?.authz?.accountCapsule === 'string' && payload.authz.accountCapsule.trim()
         ? payload.authz.accountCapsule.trim()

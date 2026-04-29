@@ -131,13 +131,13 @@ Where the write plane fits (current repo snapshot):
 - After Save succeeds, Bob may re-read that same route once to show current Tokyo truth.
 - Builder does not own an always-on localization convergence loop. If the Translations panel is open and the route says translations are still preparing, Builder may perform a small bounded recheck of that same Tokyo-backed status read.
 - Account-widget l10n statuses are only `queued`, `working`, `ready`, and `failed`. `queued` means Tokyo saved the current instance and handed off translation work; `working` includes bounded queue retries; `failed` is shown honestly instead of fake endless progress.
-- The Translations panel presents one global readiness answer from `status`.
-- The panel locale chooser represents the account's current display languages only when `status` is `ready`. Partial current-ready locale sets remain backend safety state, not user-facing product state.
-- Lower-tier language upsell copy in Builder comes from the policy cap carried in the Roma open-editor payload.
+- The Translations panel presents allowed and ready counts from `requestedLocales` and `readyLocales`, plus per-locale `Base` / `Ready` / `Not ready` / `Failed` truth.
+- The panel locale chooser exposes each currently ready locale immediately. Partial current-ready locale sets are user-facing truth; one missing locale must not block locales Tokyo has already made ready for the current fingerprint.
+- Commercial upsell copy stays outside the translation-readiness panel.
 - When a newer save writes a new `generationId` for the same instance, queued older generations are ignored.
 - If Tokyo cannot hand follow-up localization work to the queue, Tokyo-worker marks saved widget `l10n.status` as `failed` instead of letting Builder show fake progress.
 - If locale generation does not return current ops for a locale requested by the latest save, Tokyo-worker does not publish that locale as current-ready for the new `baseFingerprint`.
-- Builder preview locale selection uses the same readiness truth. Incomplete locale sets never enter the Builder locale chooser as a partial readiness list.
+- Builder preview locale selection uses the same readiness truth. Incomplete locale sets enter the Builder locale chooser only for locales that are already current-ready.
 - On explicit Tokyo-worker sync, the pipeline reconciles Tokyo against that desired set for the current `baseFingerprint`:
   - if Tokyo already has the locale artifact for that exact fingerprint, skip
   - if Tokyo does not have it, generate and write it

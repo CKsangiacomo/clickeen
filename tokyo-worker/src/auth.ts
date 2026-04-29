@@ -125,42 +125,6 @@ export async function assertRomaAccountCapsuleAuth(
   };
 }
 
-export async function assertProductAccountAuth(req: Request, env: Env): Promise<ProductAccountAuthResult> {
-  const expected = (env.CK_INTERNAL_SERVICE_JWT || '').trim();
-  if (!expected) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.misconfigured' } }, { status: 500 }),
-    };
-  }
-
-  const internalServiceId = normalizeInternalServiceId(req.headers.get(INTERNAL_SERVICE_HEADER));
-  if (internalServiceId !== TOKYO_INTERNAL_SERVICE_ROMA_EDGE) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID', detail: 'internal_service_invalid' } }, { status: 403 }),
-    };
-  }
-
-  const token = asBearerToken(req.headers.get('authorization'));
-  if (!token) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } }, { status: 401 }),
-    };
-  }
-  if (!timingSafeEqual(token, expected)) {
-    return {
-      ok: false,
-      response: json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 }),
-    };
-  }
-
-  return assertRomaAccountCapsuleAuth(req, env, {
-    requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
-  });
-}
-
 export function requireDevAuth(
   req: Request,
   env: Env,

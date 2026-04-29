@@ -13,7 +13,6 @@ import {
 export async function loadAccountWidgetCatalog(args: {
   accountId: string;
   berlinAccessToken: string;
-  tokyoAccessToken: string;
   accountCapsule?: string | null;
 }): Promise<MichaelAccountWidgetCatalogResult> {
   try {
@@ -57,7 +56,6 @@ export async function loadAccountWidgetCatalog(args: {
           .map((row) => asTrimmedString(row.publicId))
           .filter((publicId): publicId is string => Boolean(publicId)),
       ],
-      tokyoAccessToken: args.tokyoAccessToken,
       accountCapsule: args.accountCapsule,
     });
     if (!serveStatesResult.ok) {
@@ -75,7 +73,6 @@ export async function loadAccountWidgetCatalog(args: {
         const saved = await loadTokyoAccountInstanceDocument({
           accountId: args.accountId,
           publicId,
-          tokyoAccessToken: args.tokyoAccessToken,
           accountCapsule: args.accountCapsule,
         });
         if (!saved.ok) {

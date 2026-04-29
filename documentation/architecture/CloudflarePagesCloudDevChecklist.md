@@ -151,7 +151,6 @@ These values remain outside git by design. Keep the inventory true; do not store
 
 Worker secrets:
 - Berlin: `SUPABASE_SERVICE_ROLE_KEY`
-- Tokyo-worker: `CK_INTERNAL_SERVICE_JWT`
 - San Francisco: `AI_GRANT_HMAC_SECRET`, `CK_INTERNAL_SERVICE_JWT`
 
 Pages secrets:

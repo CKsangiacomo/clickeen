@@ -1,4 +1,4 @@
-import { asBearerToken, claimAsNumber, claimAsString } from './helpers';
+import { claimAsNumber, claimAsString } from './helpers';
 import { authError, json } from './http';
 import { readJsonBody, resolveRefreshTokenFromRequest } from './auth-request';
 import { rotateRefreshRti, resolvePrincipalSession } from './auth-session';
@@ -109,31 +109,6 @@ export async function handleLogout(request: Request, env: Env): Promise<Response
 
   await revokeSessionBySid(env, verified.payload.sid);
   return json({ ok: true, revokedScope: 'sid', sid: verified.payload.sid });
-}
-
-function isTrustedInternalControlRequest(request: Request, env: Env): boolean {
-  const expected =
-    typeof env.CK_INTERNAL_SERVICE_JWT === 'string' ? env.CK_INTERNAL_SERVICE_JWT.trim() : '';
-  if (!expected) return false;
-  const marker = String(request.headers.get('x-ck-internal-service') || '')
-    .trim()
-    .toLowerCase();
-  if (marker !== 'devstudio.local') return false;
-  const token = asBearerToken(request.headers.get('authorization'));
-  return token === expected;
-}
-
-export async function handleInternalRevokeUserSessions(request: Request, env: Env, userId: string): Promise<Response> {
-  if (!isTrustedInternalControlRequest(request, env)) {
-    return authError('coreui.errors.auth.forbidden', 403, 'internal_control_auth_required');
-  }
-
-  const revokedCount = await revokeSessionsByUserId(env, userId);
-  return json({
-    ok: true,
-    userId,
-    revokedCount,
-  });
 }
 
 export async function handleJwks(env: Env): Promise<Response> {
