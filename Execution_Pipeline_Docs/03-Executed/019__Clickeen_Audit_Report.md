@@ -5,15 +5,14 @@ Sources: The requested /mnt/data/*.md files are not present in this environment.
 
 ## Executive Summary (Top 10 Risks)
 1. P0 - Ops allowlist can be bypassed and ops apply can write arbitrary paths (client-supplied controls + setAt creates missing objects).
-2. P0 - Provider keys are used outside San Francisco (Pitch worker), violating the AI execution boundary.
-3. P0 - Copilot budgets are enforced client-side only; Paris grants are not tied to tier/usage, so caps can be bypassed.
-4. P1 - Venice contains widget-specific logic (FAQ schema + deep-link behavior), violating "widget files = truth".
-5. P1 - Paris public instance endpoint is callable directly; Venice-only front door is not enforced in code.
-6. P1 - AI grant budgets enforce maxTokens/timeout only; maxCostUsd is unused and maxRequests is best-effort.
-7. P1 - URL fetch in sdrWidgetCopilot lacks DNS-level SSRF protection; public URL fetch remains risky.
-8. P1 - Asset uploads have no size limits and weak auth gating; potential cost/abuse.
-9. P1 - Outcome events for signup/upgrade are defined but not emitted anywhere; learning attribution incomplete.
-10. P2 - AI endpoints return HTTP 200 on failures and load-time sanitization hides violations, weakening fail-fast behavior.
+2. P0 - Copilot budgets are enforced client-side only; Paris grants are not tied to tier/usage, so caps can be bypassed.
+3. P1 - Venice contains widget-specific logic (FAQ schema + deep-link behavior), violating "widget files = truth".
+4. P1 - Paris public instance endpoint is callable directly; Venice-only front door is not enforced in code.
+5. P1 - AI grant budgets enforce maxTokens/timeout only; maxCostUsd is unused and maxRequests is best-effort.
+6. P1 - URL fetch in sdrWidgetCopilot lacks DNS-level SSRF protection; public URL fetch remains risky.
+7. P1 - Asset uploads have no size limits and weak auth gating; potential cost/abuse.
+8. P1 - Outcome events for signup/upgrade are defined but not emitted anywhere; learning attribution incomplete.
+9. P2 - AI endpoints return HTTP 200 on failures and load-time sanitization hides violations, weakening fail-fast behavior.
 
 ## Findings by Category
 
@@ -59,11 +58,6 @@ Files: `bob/app/api/assets/upload/route.ts` POST, `tokyo-worker/src/index.ts` ha
 Why: No explicit payload size limits. Large uploads can blow bandwidth/R2 costs and degrade edge performance.
 Fix: Enforce max content length, reject oversized payloads, and validate content types.
 
-#### B5. Pitch LLM calls are uncapped (P1)
-Files: `pitch/src/answer.ts` openaiAnswerFromSources/handlePitchAnswer, `pitch/src/search.ts`, `pitch/src/upsert.ts`
-Why: Calls to OpenAI are uncapped and not under AI grant budgets, creating unbounded cost paths.
-Fix: Move pitch LLM calls behind SF grants or add explicit caps and rate limits.
-
 ### C) Learning Gaps
 #### C1. Missing version stamps for some agents (P1)
 Files: `sanfrancisco/src/agents/sdrCopilot.ts` executeSdrCopilot, `sanfrancisco/src/agents/editorFaqAnswer.ts` executeEditorFaqAnswer, `sanfrancisco/src/index.ts` indexCopilotEvent
@@ -86,27 +80,22 @@ Why: A golden set exists but no repo evidence of CI enforcement. Regression prot
 Fix: Add CI job that runs `pnpm eval:copilot` against a fixed fixture set.
 
 ### D) Security / Boundary Gaps
-#### D1. Provider keys outside San Francisco (P0)
-Files: `pitch/src/answer.ts`, `pitch/src/search.ts`, `pitch/src/upsert.ts`
-Why: Non-negotiable boundary says provider keys only in SF; pitch uses OpenAI directly.
-Fix: Route pitch LLM calls through San Francisco with signed grants; remove OpenAI keys from pitch worker.
-
-#### D2. Paris public instance endpoint bypasses Venice front door (P1)
+#### D1. Paris public instance endpoint bypasses Venice front door (P1)
 Files: `paris/src/index.ts` handleGetInstance, `venice/app/r/[publicId]/route.ts`
 Why: Third-party embeds should hit Venice only; Paris is publicly callable by any browser.
 Fix: Require Venice-only tokens/headers, or enforce Cloudflare firewall rules to block direct browser access.
 
-#### D3. SSRF guard incomplete (P1)
+#### D2. SSRF guard incomplete (P1)
 Files: `sanfrancisco/src/agents/sdrWidgetCopilot.ts` isBlockedFetchUrl
 Why: Blocking direct IPs is insufficient; DNS rebinding can still reach private networks.
 Fix: Resolve DNS server-side and block private ranges; consider an allowlist or proxy.
 
-#### D4. San Francisco fallback targets dev domains (P1)
+#### D3. San Francisco fallback targets dev domains (P1)
 Files: `bob/app/api/ai/sdr-copilot/route.ts` SANFRANCISCO_FALLBACKS
 Why: Production requests could leak to dev environments if SANFRANCISCO_BASE_URL is misconfigured.
 Fix: Remove dev fallbacks in production or gate them behind NODE_ENV.
 
-#### D5. Asset upload endpoint lacks auth (P1)
+#### D4. Asset upload endpoint lacks auth (P1)
 Files: `bob/app/api/assets/upload/route.ts` POST
 Why: Endpoint only validates workspaceId; if Tokyo dev auth is disabled or misconfigured, uploads are unauthenticated.
 Fix: Require signed upload grants or workspace auth; propagate auth to Tokyo worker.
@@ -154,7 +143,6 @@ Fix: Validate l10n ops against widget controls before applying.
 | `sanfrancisco/src/agents/sdrWidgetCopilot.ts` | LLM calls (1-2) | Partial | maxTokens/timeout; no maxCostUsd |
 | `sanfrancisco/src/agents/sdrCopilot.ts` | LLM calls | Partial | maxTokens/timeout |
 | `sanfrancisco/src/agents/editorFaqAnswer.ts` | LLM calls | Partial | maxTokens/timeout |
-| `pitch/src/answer.ts` | LLM calls | No | no grant budgets |
 | `sanfrancisco/src/agents/sdrWidgetCopilot.ts` | URL fetch | Partial | size/time capped; DNS not guarded |
 | `bob/app/api/ai/sdr-copilot/route.ts` | Copilot requests | No | per-instance in-memory rate limit only |
 | `bob/app/api/assets/upload/route.ts` | Asset uploads | No | no size limit |
@@ -165,15 +153,14 @@ Fix: Validate l10n ops against widget controls before applying.
 - Budget enforcement (grants + runtime): 1/5 (client-side only; maxCostUsd unused)
 - Outcome attribution (events + versioning): 2/5 (missing meta for some agents; signup/upgrade events absent)
 - Regression protection (golden set): 2/5 (script exists, not enforced by CI in repo)
-- Boundary/security (provider keys only in SF): 1/5 (pitch uses OpenAI directly)
+- Boundary/security (provider keys only in SF): 2/5 (centralized for surviving product AI paths; other boundary risks remain)
 - Global scalability (Cloudflare/caching/front-door): 3/5 (edge-first design, but front-door rules not enforced in code)
 
 ## Prioritized Action Plan (Next 2 Weeks)
 1. P0 - Enforce controls allowlist at apply time in Bob and remove client-supplied allowlist trust (reject unknown paths, require controls hash or server-compiled controls).
-2. P0 - Move pitch LLM calls behind SF grants (or fold pitch into SF), removing provider keys from pitch.
-3. P0 - Enforce copilot budgets server-side (Paris/SF) using policy tiers and usage counters.
-4. P1 - Remove widget-specific logic from Venice; move schema + deep-link behavior into tokyo/widgets assets.
-5. P1 - Add server-side SSRF protection (DNS resolution + private IP block) for page fetch.
-6. P1 - Add size limits and auth on asset upload endpoints.
-7. P1 - Add outcome emission for signup/upgrade and include prompt/policy/dictionary hashes in all agent results.
-8. P2 - Add caching for widget limits in Paris and centralize rate limiting in SF/Paris.
+2. P0 - Enforce copilot budgets server-side (Paris/SF) using policy tiers and usage counters.
+3. P1 - Remove widget-specific logic from Venice; move schema + deep-link behavior into tokyo/widgets assets.
+4. P1 - Add server-side SSRF protection (DNS resolution + private IP block) for page fetch.
+5. P1 - Add size limits and auth on asset upload endpoints.
+6. P1 - Add outcome emission for signup/upgrade and include prompt/policy/dictionary hashes in all agent results.
+7. P2 - Add caching for widget limits in Paris and centralize rate limiting in SF/Paris.

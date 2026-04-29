@@ -130,12 +130,8 @@ export type Env = {
   AMAZON_BEDROCK_REGION?: string;
   AMAZON_BEDROCK_ENDPOINT?: string;
   AMAZON_BEDROCK_MODEL_ID?: string;
-  PITCH_SERVICE_KEY?: string;
-  PITCH_MODEL?: string;
   SF_KV: KVNamespace;
   SF_EVENTS?: Queue<InteractionEvent>;
   SF_D1: D1Database;
   SF_R2: R2Bucket;
-  // Cloudflare Vectorize binding (typed loosely to avoid depending on Vectorize TS types).
-  PITCH_DOCS?: any;
 };

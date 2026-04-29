@@ -62,25 +62,6 @@ const alternates = [
           </section>
 
           <section class="ck-stack" style="gap: var(--space-2);">
-            <h2 class="heading-3" style="margin: 0;">Custom GPT actions (Pitch Agent)</h2>
-            <p class="body-xxl" style="margin: 0;">
-              If you use a Clickeen Custom GPT that calls our API via “Actions”, your prompt and related metadata may be sent to our
-              Pitch Worker endpoint to retrieve relevant documentation and produce a response with citations.
-            </p>
-            <ul class="body-xxl" style="margin: 0; padding-left: 1.25rem;">
-              <li>
-                <strong>What is sent:</strong> your query (and optional locale/top_k parameters).
-              </li>
-              <li>
-                <strong>What it is used for:</strong> retrieving relevant passages and generating an answer grounded in those sources.
-              </li>
-              <li>
-                <strong>Third parties:</strong> our Pitch Worker may call an LLM provider (e.g. OpenAI) to generate responses.
-              </li>
-            </ul>
-          </section>
-
-          <section class="ck-stack" style="gap: var(--space-2);">
             <h2 class="heading-3" style="margin: 0;">Data retention</h2>
             <p class="body-xxl" style="margin: 0;">
               We aim to minimize retained personal data. Operational logs may be retained for security, reliability, and audit

@@ -96,7 +96,6 @@ Every service section below is an instance of this pattern. Tokyo stores immutab
 | **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | SSR embed runtime, pixel, loader                                        | ✅ Active   |
 | **Paris**         | `paris/`        | Cloudflare Workers                   | Residual health stub + non-product residue                              | ✅ Active   |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
-| **Pitch**         | `pitch/`        | Cloudflare Workers                   | Investor pitch agent (internal)                                         | ✅ Internal |
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
 | **Dieter**        | `dieter/`       | (build artifact)                     | Design system: tokens, 16+ components                                   | ✅ Active   |
 | **Tokyo**         | `tokyo/`        | Cloudflare R2                        | Widget definitions (runtime + contracts), Dieter assets, shared runtime | ✅ Active   |
