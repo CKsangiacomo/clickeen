@@ -1,6 +1,6 @@
 # PRD 071 — Account-Scoped Asset Gateway and Control-Plane Closure
 
-Status: LOCAL CLOSURE PASS COMPLETE (current-account boundary executed; cloud-dev deploy/upload smoke still pending)
+Status: EXECUTED
 Date: 2026-03-17
 Owner: Product Dev Team
 Priority: P0 (core account infrastructure)
@@ -30,7 +30,7 @@ Closure status after local inspection:
 - Roma asset control-plane calls use `TOKYO_ASSET_CONTROL`, not `NEXT_PUBLIC_TOKYO_URL`
 - Roma upload rejects browser-supplied `x-account-id`
 - `2026-04-29` local upload bug fix: missing browser `content-length` is no longer treated as `0` bytes before Tokyo reads the body
-- cloud-dev still requires post-deploy verification of list/upload/delete before this PRD can move to `03-Executed`
+- cloud-dev post-deploy authenticated smoke is green: bootstrap `200`, asset list `200`, upload `200`, delete `200`
 
 ## One-line objective
 
