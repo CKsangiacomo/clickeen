@@ -52,13 +52,25 @@ export function validateUploadFilename(
 ): { ok: true; filename: string } | { ok: false; detail: string } {
   const raw = String(filename || '').trim();
   if (!raw) return { ok: false, detail: 'filename required' };
-  if (raw.length > 180) return { ok: false, detail: 'filename too long (max 180 chars)' };
   if (raw === '.' || raw === '..') return { ok: false, detail: 'filename reserved' };
   if (raw.includes('/') || raw.includes('\\')) return { ok: false, detail: 'path separators are not allowed' };
-  if (/\s/.test(raw)) return { ok: false, detail: 'spaces are not allowed' };
-  if (/[?#%]/.test(raw)) return { ok: false, detail: 'url-reserved characters are not allowed' };
-  if (!/^[A-Za-z0-9._-]+$/.test(raw)) return { ok: false, detail: 'unsupported characters in filename' };
-  return { ok: true, filename: raw };
+
+  const ascii = raw.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+  const safe = ascii
+    .replace(/[^A-Za-z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^\.+/, '')
+    .replace(/^[._-]+|[._-]+$/g, '');
+  if (!safe || safe === '.' || safe === '..') return { ok: true, filename: 'asset.bin' };
+
+  const extMatch = safe.match(/(\.[A-Za-z0-9]{1,8})$/);
+  const ext = extMatch ? extMatch[1] : '';
+  const candidateStem = (ext ? safe.slice(0, -ext.length) : safe).replace(/[._-]+$/g, '') || 'asset';
+  const candidate = `${candidateStem}${ext}`;
+  if (candidate.length <= 180) return { ok: true, filename: candidate };
+
+  const maxStemLength = Math.max(1, 180 - ext.length);
+  return { ok: true, filename: `${candidateStem.slice(0, maxStemLength)}${ext}` };
 }
 
 const ACCOUNT_ASSET_CANONICAL_PREFIX = 'accounts/';

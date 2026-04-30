@@ -493,7 +493,7 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
       assetId,
       key,
       source,
-      originalFilename: filename,
+      originalFilename: filenameRaw,
       normalizedFilename: filename,
       contentType,
       assetType,
