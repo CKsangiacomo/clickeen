@@ -1114,12 +1114,9 @@ Both returned green.
 
 CI verification:
 
-- The full Cut 5 gate requires applying the Supabase migration.
-- This workspace does not have the Supabase CLI, `psql`, Docker, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD_CLOUD_DEV`, or `SUPABASE_PROJECT_REF_CLOUD_DEV` available to apply or verify the migration locally or against cloud-dev.
-- The accepted verification path was GitHub CI on `main`: `.github/workflows/cloud-dev-workers.yml` applies `supabase/migrations/**` through `supabase db push --linked --include-all --yes` before deploying Berlin.
+- SUPERSEDED: this original CI interpretation was wrong. The later 2026-04-27 and 2026-05-01 notes below are the surviving truth.
 - Commit `6d90405695171089b36a6176722bb0b9a09b29aa` pushed to `github/main`.
-- `cloud-dev workers deploy` completed successfully for that commit, proving migration apply and Berlin deploy passed.
-- `cloud-dev roma app verify` completed successfully for that commit.
+- `cloud-dev workers deploy` and `cloud-dev roma app verify` completed successfully for that commit, but they did not prove migration apply.
 - Cut 6 may start.
 
 ### 2026-04-27 Cut 5 Temporary Login Repair
@@ -1167,6 +1164,25 @@ Verification:
 
 - `rg "loadLoginIdentity|writeLoginIdentity|loadExistingUserProfile|upsertUserProfile|resolveNewProductUserId|racedIdentity|racedProfile|on_conflict.*login_identities|/rest/v1/login_identities\\?" berlin/src/account-reconcile.ts -g '!node_modules'` -> empty
 - `corepack pnpm exec tsc -p berlin/tsconfig.json --noEmit` -> PASS
+
+### 2026-05-01 CI Migration Ownership Correction
+
+Status: GREEN
+
+The cloud-dev GitHub workflows briefly tried to apply Supabase migrations before Cloudflare deploy. That did not match the real operating model: GitHub deploys Cloudflare apps/workers, while Supabase migrations are applied deliberately from an authenticated operator/agent environment and committed as schema history.
+
+Correction:
+
+- Removed automatic Supabase migration apply from `cloud-dev roma app verify`.
+- Removed automatic Supabase migration apply from `cloud-dev workers deploy`.
+- Removed `supabase/migrations/**` as a trigger for those Cloudflare workflows.
+- Removed unused GitHub Supabase deploy secret requirements from the cloud-dev checklist.
+
+Why:
+
+- Earlier successful migration commits were not proof that GitHub owned migrations. The workflow used shallow checkout history, could not diff the previous SHA, and skipped migration apply.
+- Once checkout history was fixed, the workflows surfaced missing Supabase deploy secrets and failed on migration-only commits.
+- The clean boundary is simple: apply DB migrations intentionally, verify them, then let GitHub deploy Cloudflare code.
 
 ---
 

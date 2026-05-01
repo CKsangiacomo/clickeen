@@ -159,13 +159,11 @@ Pages secrets:
 CI secrets/vars:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
-- `SUPABASE_ACCESS_TOKEN`
-- `SUPABASE_DB_PASSWORD_CLOUD_DEV`
-- `SUPABASE_PROJECT_REF_CLOUD_DEV`
+- No Supabase deploy secrets are required by GitHub Actions. Supabase migrations are applied deliberately from an authenticated operator/agent environment, then committed as schema history.
 
 Rules:
 - Bob and Roma host/base-URL vars belong in app-local `wrangler.toml`.
-- Bob and Roma Supabase project values belong in dashboard/runtime env and matching CI env, not committed repo literals.
+- Bob and Roma Supabase runtime values belong in the Cloudflare dashboard/runtime env, not committed repo literals.
 - Roma asset control requires the `TOKYO_ASSET_CONTROL` service binding to target `tokyo-assets-dev`; the asset lane no longer depends on Roma/Tokyo-worker shared-secret parity.
 - Roma product control requires the `TOKYO_PRODUCT_CONTROL` service binding to target `tokyo-assets-dev`; Builder open/save/l10n authoring no longer depend on public Tokyo shared-secret HTTP.
 - Worker and Pages secrets stay live-only, but any new secret must be documented here with owning service and purpose.
