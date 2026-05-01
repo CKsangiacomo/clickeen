@@ -37,7 +37,6 @@ export type Env = {
   BERLIN_BASE_URL?: string;
   BERLIN_JWKS_URL?: string;
   SANFRANCISCO_L10N?: SanFranciscoL10nBinding;
-  TOKYO_L10N_HTTP_BASE?: string;
   CLOUDFLARE_ZONE_ID?: string;
   CLOUDFLARE_API_TOKEN?: string;
 };

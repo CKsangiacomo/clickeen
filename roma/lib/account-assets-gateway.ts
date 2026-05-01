@@ -24,14 +24,6 @@ export function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
-export function isWidgetPublicId(value: string): boolean {
-  return /^[a-z0-9][a-z0-9_-]*$/i.test(value);
-}
-
-export function isWidgetType(value: string): boolean {
-  return /^[a-z0-9][a-z0-9_-]*$/i.test(value);
-}
-
 function withNoStore(response: NextResponse): NextResponse {
   response.headers.set('cache-control', 'no-store');
   response.headers.set('cdn-cache-control', 'no-store');

@@ -45,7 +45,7 @@ Asset metadata model:
 
 - Blob bytes live in Tokyo R2 under `accounts/{accountId}/assets/{assetId}/blob/{filename}`.
 - Per-asset manifest JSON lives in Tokyo R2 under `accounts/{accountId}/assets/{assetId}/manifest.json`.
-- Manifest stores one canonical immutable blob key (`assetRef`) per asset.
+- Manifest stores one Tokyo-private canonical blob key per asset.
 - There is no Michael/Supabase asset table contract in the active runtime.
 - Upload contract rejects legacy variant mode (`x-variant` -> `422 coreui.errors.assets.variantUnsupported`).
 - Upload contract rejects unsafe filenames (`422 coreui.errors.filename.invalid`) instead of rewriting names server-side.
@@ -79,7 +79,7 @@ Tokyo-worker serves R2 objects under stable paths (these are what Venice proxies
 - `DELETE /__internal/renders/instances/:publicId/saved.json`
 - `POST /__internal/renders/instances/:publicId/sync`
 - `POST /__internal/renders/instances/serve-state.json`
-- `GET /__internal/l10n/instances/:publicId/translations`
+- `GET /__internal/account/instances/:publicId/translations`
 
 Current runtime contract:
 

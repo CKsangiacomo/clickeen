@@ -405,7 +405,7 @@ if [ -z "${SUPABASE_ANON_KEY_VALUE:-}" ]; then
 fi
 
 echo "[dev-up] Runtime data target: local Supabase"
-echo "[dev-up] Skipping local persona seed (local auth bootstrap is deprecated; DevStudio/Bob are tool-trusted)"
+echo "[dev-up] No persona seed: DevStudio is toolbench-only; product auth belongs to Roma/Berlin"
 
 TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
 BERLIN_URL=${BERLIN_URL:-http://localhost:3005}
@@ -443,7 +443,6 @@ echo "[dev-up] Starting Tokyo Worker (8791)"
 (
   cd "$ROOT_DIR/tokyo-worker"
   VARS=(--var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY")
-  VARS+=(--var "TOKYO_L10N_HTTP_BASE:$TOKYO_URL")
   VARS+=(--var "TOKYO_DEV_JWT:$TOKYO_DEV_JWT")
   VARS+=(--var "BERLIN_BASE_URL:$BERLIN_URL")
   start_detached "$LOG_DIR/tokyo-worker.dev.log" pnpm exec wrangler dev --local --env local --port 8791 --persist-to "$WRANGLER_PERSIST_DIR" --inspector-port "$TOKYO_WORKER_INSPECTOR_PORT" \

@@ -18,9 +18,9 @@ const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.db.writeFailed': 'Saving changes failed. Please try again.',
   'coreui.errors.payload.invalid': 'Builder received an invalid response. Please try again.',
   'coreui.errors.builder.command.hostUnavailable':
-    'Builder lost its connection to the workspace. Please reopen this widget.',
+    'Builder lost its connection to the account host. Please reopen this widget.',
   'coreui.errors.builder.command.hostOnly':
-    'Builder account editing must run through the workspace host. Please reopen this widget.',
+    'Builder account editing must run through the account host. Please reopen this widget.',
   'coreui.errors.builder.command.timeout': 'Saving took too long. Please try again.',
   'coreui.errors.builder.open.invalidRequest': 'Builder received an invalid open request.',
   'coreui.errors.builder.open.failed': 'Builder could not open this widget. Please try again.',

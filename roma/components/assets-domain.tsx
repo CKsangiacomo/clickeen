@@ -21,7 +21,7 @@ type DeletePreconditionPayload = {
 };
 
 type PendingDelete = {
-  assetRef: string;
+  assetId: string;
   filename: string;
   usageCount: number;
 };
@@ -89,7 +89,12 @@ function resolveDeleteErrorCopy(reason: string): string {
   return resolveAssetErrorCopy(normalized, 'Asset delete failed. Please try again.');
 }
 
-async function requestDeleteAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, assetId: string, confirmInUse: boolean): Promise<DeleteAssetPayload> {
+async function requestDeleteAsset(
+  accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
+  accountId: string,
+  assetId: string,
+  confirmInUse: boolean,
+): Promise<DeleteAssetPayload> {
   const search = confirmInUse ? '?confirmInUse=1' : '';
   const response = await accountApi.fetchRaw(`/api/account/assets/${encodeURIComponent(assetId)}${search}`, {
     method: 'DELETE',
@@ -102,7 +107,7 @@ async function requestDeleteAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, 
     error.payload = (payload as DeletePreconditionPayload | null) ?? null;
     throw error;
   }
-  return (payload as DeleteAssetPayload) ?? { accountId: '', assetId, deleted: true };
+  return (payload as DeleteAssetPayload) ?? { accountId, assetId, deleted: true };
 }
 
 async function requestUploadAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, file: File, source: string): Promise<AccountAssetRecord> {
@@ -196,7 +201,7 @@ export function AssetsDomain() {
       setDeletingAssetId(asset.assetId);
       setDeleteError(null);
       try {
-        await requestDeleteAsset(accountApi, asset.assetId, confirmInUse);
+        await requestDeleteAsset(accountApi, accountId, asset.assetId, confirmInUse);
         setPendingDelete(null);
         await refreshAssets();
       } catch (err) {
@@ -208,7 +213,7 @@ export function AssetsDomain() {
           typed.payload.error?.reasonKey === 'coreui.errors.asset.inUseConfirmRequired'
         ) {
           setPendingDelete({
-            assetRef: asset.assetRef,
+            assetId: asset.assetId,
             filename: asset.filename,
             usageCount:
               typeof typed.payload.usageCount === 'number' && Number.isFinite(typed.payload.usageCount) ? Math.max(0, Math.trunc(typed.payload.usageCount)) : 0,
@@ -226,7 +231,7 @@ export function AssetsDomain() {
 
   const handleConfirmDelete = useCallback(async () => {
     if (!pendingDelete) return;
-    const asset = (assets ?? []).find((entry) => entry.assetRef === pendingDelete.assetRef);
+    const asset = (assets ?? []).find((entry) => entry.assetId === pendingDelete.assetId);
     if (!asset) return;
     await deleteAsset(asset, true);
   }, [assets, deleteAsset, pendingDelete]);
@@ -413,7 +418,7 @@ export function AssetsDomain() {
           </thead>
           <tbody>
             {assetRows.map((asset) => (
-              <tr key={asset.assetRef}>
+              <tr key={asset.assetId}>
                 <td className="body-s">{asset.filename}</td>
                 <td className="body-s">{asset.assetType}</td>
                 <td className="body-s">{asset.contentType}</td>

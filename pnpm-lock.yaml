@@ -45,6 +45,9 @@ importers:
 
   admin:
     dependencies:
+      '@clickeen/ck-contracts':
+        specifier: workspace:*
+        version: link:../packages/ck-contracts
       '@clickeen/ck-policy':
         specifier: workspace:*
         version: link:../packages/ck-policy
@@ -271,6 +274,9 @@ importers:
 
   sanfrancisco:
     dependencies:
+      '@clickeen/ck-contracts':
+        specifier: workspace:*
+        version: link:../packages/ck-contracts
       '@clickeen/ck-policy':
         specifier: workspace:*
         version: link:../packages/ck-policy

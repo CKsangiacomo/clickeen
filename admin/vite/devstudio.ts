@@ -1,11 +1,5 @@
 import type { Plugin } from 'vite';
 
-type DevstudioPluginOptions = {
-  rootDir: string;
-  internalServiceId: string;
-  platformAccountId: string;
-};
-
 function writeJson(res: any, status: number, body: unknown) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -13,7 +7,7 @@ function writeJson(res: any, status: number, body: unknown) {
   res.end(JSON.stringify(body));
 }
 
-export function createDevstudioPlugins(_options: DevstudioPluginOptions): Plugin[] {
+export function createDevstudioPlugins(): Plugin[] {
   return [
     {
       name: 'devstudio-route-fallback',

@@ -37,7 +37,7 @@ function encodeHtmlEntities(value: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function normalizeJsonHtmlAttr(raw: string): string {
+function normalizeJsonAttrValue(raw: string): string {
   const trimmed = String(raw || '').trim();
   if (!trimmed) return '';
 
@@ -49,23 +49,6 @@ function normalizeJsonHtmlAttr(raw: string): string {
     return encodeHtmlEntities(JSON.stringify(parsed));
   } catch {
     // Still ensure the attribute remains valid HTML even if the payload isn't valid JSON.
-    return encodeHtmlEntities(decodedTwice);
-  }
-}
-
-function normalizeJsonDataAttr(raw: string): string {
-  const trimmed = String(raw || '').trim();
-  if (!trimmed) return '';
-
-  // Support inputs that are already entity-encoded or even double-encoded (e.g. &amp;quot;).
-  const decodedTwice = decodeHtmlEntities(decodeHtmlEntities(trimmed));
-
-  try {
-    const parsed = JSON.parse(decodedTwice) as unknown;
-    // This string is injected into HTML attribute context (e.g. data-i18n-params="..."),
-    // so it must be entity-encoded to avoid breaking quotes.
-    return encodeHtmlEntities(JSON.stringify(parsed));
-  } catch {
     return encodeHtmlEntities(decodedTwice);
   }
 }
@@ -242,29 +225,29 @@ export async function buildContext(
   const reorderMode = attrs.reorderMode || attrs['reorder-mode'] || (merged.reorderMode as string) || 'inline';
   const reorderThreshold = attrs.reorderThreshold || attrs['reorder-threshold'] || (merged.reorderThreshold as string) || '';
   const defaultItemRaw = attrs.defaultItem || attrs['default-item'] || (merged.defaultItem as string) || '';
-  const defaultItem = normalizeJsonHtmlAttr(defaultItemRaw);
+  const defaultItem = normalizeJsonAttrValue(defaultItemRaw);
   let labelKey = attrs.labelKey || attrs['label-key'] || (merged.labelKey as string) || '';
   const labelParamsRaw = attrs.labelParams || attrs['label-params'] || (merged.labelParams as string) || '';
-  let labelParams = normalizeJsonDataAttr(labelParamsRaw);
+  let labelParams = normalizeJsonAttrValue(labelParamsRaw);
   const addLabel = attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item';
   let addLabelKey = attrs.addLabelKey || attrs['add-label-key'] || (merged.addLabelKey as string) || '';
   const addLabelParamsRaw = attrs.addLabelParams || attrs['add-label-params'] || (merged.addLabelParams as string) || '';
-  let addLabelParams = normalizeJsonDataAttr(addLabelParamsRaw);
+  let addLabelParams = normalizeJsonAttrValue(addLabelParamsRaw);
   const addOpen = attrs.addOpen || attrs['add-open'] || (merged.addOpen as string) || '';
   let reorderLabelKey =
     attrs.reorderLabelKey || attrs['reorder-label-key'] || (merged.reorderLabelKey as string) || '';
   const reorderLabelParamsRaw =
     attrs.reorderLabelParams || attrs['reorder-label-params'] || (merged.reorderLabelParams as string) || '';
-  let reorderLabelParams = normalizeJsonDataAttr(reorderLabelParamsRaw);
+  let reorderLabelParams = normalizeJsonAttrValue(reorderLabelParamsRaw);
   let reorderTitleKey =
     attrs.reorderTitleKey || attrs['reorder-title-key'] || (merged.reorderTitleKey as string) || '';
   const reorderTitleParamsRaw =
     attrs.reorderTitleParams || attrs['reorder-title-params'] || (merged.reorderTitleParams as string) || '';
-  let reorderTitleParams = normalizeJsonDataAttr(reorderTitleParamsRaw);
+  let reorderTitleParams = normalizeJsonAttrValue(reorderTitleParamsRaw);
   const rowPath = attrs.rowPath || attrs['row-path'] || (merged.rowPath as string) || '';
   const metaPath = attrs.metaPath || attrs['meta-path'] || (merged.metaPath as string) || '';
   const columnsRaw = attrs.columns || (merged.columns as string) || '';
-  const columns = columnsRaw ? normalizeJsonHtmlAttr(columnsRaw) : '';
+  const columns = columnsRaw ? normalizeJsonAttrValue(columnsRaw) : '';
   const title = attrs.title || (merged.title as string) || label;
   const emptyLabel = attrs.emptyLabel || attrs['empty-label'] || (merged.emptyLabel as string) || '';
   const idBase = pathAttr || label || `${component}-${size}`;
@@ -356,16 +339,16 @@ export async function buildContext(
     const isRepeater = component === 'repeater';
     const isObjectManager = component === 'object-manager';
 
-    const singularItemParam = normalizeJsonDataAttr(
+    const singularItemParam = normalizeJsonAttrValue(
       JSON.stringify({ item: { $t: itemKey, count: 1 } }),
     );
-    const pluralItemParam = normalizeJsonDataAttr(
+    const pluralItemParam = normalizeJsonAttrValue(
       JSON.stringify({ item: { $t: itemKey, count: 2 } }),
     );
 
     if (!labelKey && !hasLabelAttr && label === 'Items') {
       labelKey = itemKey;
-      labelParams = normalizeJsonDataAttr(JSON.stringify({ count: 2 }));
+      labelParams = normalizeJsonAttrValue(JSON.stringify({ count: 2 }));
     }
 
     if (!addLabelKey && !hasAddLabelAttr && (addLabel === 'Add item' || addLabel === 'Add object')) {

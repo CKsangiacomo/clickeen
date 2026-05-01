@@ -144,12 +144,12 @@ async function createProviderLoginStart(args: {
       url: string;
       transaction: OAuthTransaction;
     }
-  | { ok: false; response: Response }
+  | { ok: false; response: Response; reason: string }
 > {
   const provider = normalizeProvider(args.providerRaw);
   if (!provider) {
     logAuthFlow(args.request, 'warn', 'auth.provider.start.rejected', { reasonKey: 'coreui.errors.auth.provider.invalid' });
-    return { ok: false, response: validationError('coreui.errors.auth.provider.invalid') };
+    return { ok: false, response: validationError('coreui.errors.auth.provider.invalid'), reason: 'coreui.errors.auth.provider.invalid' };
   }
 
   const intent = normalizeIntent(args.intentRaw);
@@ -158,7 +158,7 @@ async function createProviderLoginStart(args: {
       provider,
       reasonKey: 'coreui.errors.auth.intent.invalid',
     });
-    return { ok: false, response: validationError('coreui.errors.auth.intent.invalid') };
+    return { ok: false, response: validationError('coreui.errors.auth.intent.invalid'), reason: 'coreui.errors.auth.intent.invalid' };
   }
 
   const nextPath = normalizeNextPath(args.nextRaw);
@@ -167,7 +167,7 @@ async function createProviderLoginStart(args: {
       provider,
       reasonKey: 'coreui.errors.auth.next.invalid',
     });
-    return { ok: false, response: validationError('coreui.errors.auth.next.invalid') };
+    return { ok: false, response: validationError('coreui.errors.auth.next.invalid'), reason: 'coreui.errors.auth.next.invalid' };
   }
 
   const allowed = parseAllowedProviders(args.env);
@@ -176,7 +176,11 @@ async function createProviderLoginStart(args: {
       provider,
       reasonKey: 'coreui.errors.auth.provider.notEnabled',
     });
-    return { ok: false, response: authError('coreui.errors.auth.provider.notEnabled', 422, `provider=${provider}`) };
+    return {
+      ok: false,
+      response: authError('coreui.errors.auth.provider.notEnabled', 422, `provider=${provider}`),
+      reason: 'coreui.errors.auth.provider.notEnabled',
+    };
   }
 
   logAuthFlow(args.request, 'info', 'auth.provider.start.begin', {
@@ -210,7 +214,11 @@ async function createProviderLoginStart(args: {
       reasonKey: 'berlin.errors.auth.config_missing',
       detailCode: 'missing_oauth_state_store',
     });
-    return { ok: false, response: authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_state_store') };
+    return {
+      ok: false,
+      response: authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_state_store'),
+      reason: 'berlin.errors.auth.config_missing',
+    };
   }
 
   const oauth = buildProviderAuthorizeUrl(args.env, {
@@ -228,6 +236,7 @@ async function createProviderLoginStart(args: {
     return {
       ok: false,
       response: authError(oauth.reason, oauth.status, safeDetail(oauth.detail, 'provider_authorize_url_failed')),
+      reason: oauth.reason,
     };
   }
 
@@ -237,31 +246,6 @@ async function createProviderLoginStart(args: {
   });
 
   return { ok: true, provider, url: oauth.url, transaction };
-}
-
-export async function handleProviderLoginStart(request: Request, env: Env): Promise<Response> {
-  const body = await readJsonBody(request);
-  const started = await createProviderLoginStart({
-    request,
-    env,
-    providerRaw: body?.provider,
-    intentRaw: body?.intent,
-    nextRaw: body?.next,
-    hasIntent: Boolean(body && Object.prototype.hasOwnProperty.call(body, 'intent')),
-    hasNext: Boolean(body && Object.prototype.hasOwnProperty.call(body, 'next')),
-  });
-  if (!started.ok) return started.response;
-
-  return json({
-    ok: true,
-    provider: started.provider,
-    url: started.url,
-    expiresAt: new Date(started.transaction.expiresAt * 1000).toISOString(),
-    continuation: {
-      intent: started.transaction.intent || 'signin',
-      next: started.transaction.next || '/home',
-    },
-  });
 }
 
 export async function handleProviderLoginRedirectStart(
@@ -279,7 +263,11 @@ export async function handleProviderLoginRedirectStart(
     hasIntent: url.searchParams.has('intent'),
     hasNext: url.searchParams.has('next'),
   });
-  if (!started.ok) return started.response;
+  if (!started.ok) {
+    const loginRedirectUrl = resolveLoginErrorRedirectUrl(env, started.reason);
+    if (loginRedirectUrl) return redirect(loginRedirectUrl);
+    return started.response;
+  }
   return redirect(started.url);
 }
 

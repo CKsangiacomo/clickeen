@@ -21,13 +21,11 @@ export type AssetRef = {
 
 export type ResolvedAssetMaterialization = {
   assetId: string;
-  assetRef: string;
   url: string;
 };
 
 export type AccountAssetRecord = {
   assetId: string;
-  assetRef: string;
   assetType: string;
   filename: string;
   contentType: string;
@@ -37,7 +35,6 @@ export type AccountAssetRecord = {
 
 export type ResolvedAccountAsset = {
   assetId: string;
-  assetRef: string;
   url: string;
 };
 
@@ -142,8 +139,8 @@ export declare function collectConfigMediaAssetIds(config: unknown): string[];
 export declare function materializeConfigMedia(
   config: unknown,
   resolvedAssets:
-    | Map<string, { assetId?: unknown; assetRef?: unknown; url?: unknown }>
-    | Record<string, { assetId?: unknown; assetRef?: unknown; url?: unknown } | undefined>
+    | Map<string, { assetId?: unknown; url?: unknown }>
+    | Record<string, { assetId?: unknown; url?: unknown } | undefined>
     | null
     | undefined,
 ): unknown;

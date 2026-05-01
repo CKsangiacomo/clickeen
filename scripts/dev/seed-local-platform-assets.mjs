@@ -537,7 +537,7 @@ async function resolveRemoteAssetsBySavedSnapshots(remoteBase, accountId, rows, 
       if (!neededAssetIds.has(parsed.assetId) || assetsById.has(parsed.assetId)) continue;
       assetsById.set(parsed.assetId, {
         assetId: parsed.assetId,
-        assetRef: parsed.key,
+        url: parsed.pathname,
       });
     }
   }
@@ -645,24 +645,24 @@ async function main() {
         continue;
       }
       const resolved = resolvedRemoteAssets.get(assetId);
-      const rawRef = typeof resolved?.assetRef === 'string' ? resolved.assetRef.trim() : '';
-      const parsed = rawRef ? parseAccountAssetBlobKey(rawRef) : null;
+      const rawUrl = typeof resolved?.url === 'string' ? resolved.url.trim() : '';
+      const parsed = rawUrl ? parseAccountAssetRef(rawUrl) : null;
       if (!parsed) {
         failures += 1;
-        issues.push(`invalid resolved asset ref ${assetId} (${provenance.publicId}:${provenance.path})`);
+        issues.push(`invalid resolved asset url ${assetId} (${provenance.publicId}:${provenance.path})`);
         continue;
       }
       if (parsed.accountId !== args.platformAccountId) {
         failures += 1;
         issues.push(
-          `unexpected owner ${parsed.accountId} for ${provenance.publicId}:${provenance.path} (${rawRef})`,
+          `unexpected owner ${parsed.accountId} for ${provenance.publicId}:${provenance.path} (${rawUrl})`,
         );
         continue;
       }
       if (/^00000000-0000-0000-0000-000000000000$/i.test(parsed.assetId)) {
         failures += 1;
         issues.push(
-          `zero asset id in ${provenance.publicId}:${provenance.path} (${rawRef})`,
+          `zero asset id in ${provenance.publicId}:${provenance.path} (${rawUrl})`,
         );
         continue;
       }

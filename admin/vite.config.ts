@@ -4,14 +4,6 @@ import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import { createDevstudioPlugins } from './vite/devstudio';
 
-const ROOT_DIR = path.resolve(__dirname, '..');
-const PLATFORM_ACCOUNT_ID = String(
-  process.env.CK_PLATFORM_ACCOUNT_ID || '00000000-0000-0000-0000-000000000100',
-)
-  .trim()
-  .toLowerCase();
-const DEVSTUDIO_INTERNAL_SERVICE_ID = 'devstudio.local';
-
 export default defineConfig({
   build: {
     chunkSizeWarningLimit: 2000,
@@ -36,11 +28,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    ...createDevstudioPlugins({
-      rootDir: ROOT_DIR,
-      internalServiceId: DEVSTUDIO_INTERNAL_SERVICE_ID,
-      platformAccountId: PLATFORM_ACCOUNT_ID,
-    }),
+    ...createDevstudioPlugins(),
     {
       name: 'local-edit-entitlements-matrix',
       configureServer(server) {

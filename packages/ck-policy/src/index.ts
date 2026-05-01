@@ -4,6 +4,5 @@ export * from './matrix';
 export * from './policy';
 export * from './gate';
 export * from './limits';
-export * from './ai';
 export * from './authz-capsule';
 export * from './jwks';

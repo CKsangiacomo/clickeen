@@ -154,7 +154,7 @@ Worker secrets:
 - San Francisco: `AI_GRANT_HMAC_SECRET`, `CK_INTERNAL_SERVICE_JWT`
 
 Pages secrets:
-- Roma: `CK_INTERNAL_SERVICE_JWT` (San Francisco only; Roma -> Tokyo/Tokyo-worker product control now uses service bindings)
+- Roma: no `CK_INTERNAL_SERVICE_JWT` required for the active account product path; Roma -> Tokyo/Tokyo-worker product control uses service bindings and account-widget l10n generation runs through Tokyo-worker -> San Francisco `SANFRANCISCO_L10N`
 
 CI secrets/vars:
 - `CLOUDFLARE_API_TOKEN`

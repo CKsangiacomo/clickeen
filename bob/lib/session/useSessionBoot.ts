@@ -11,7 +11,13 @@ import {
   type SessionState,
   serializeInstanceDataSignature,
 } from './sessionTypes';
-import { normalizeSessionConfig } from './normalizeSessionConfig';
+
+function cloneSessionConfig(config: Record<string, unknown>): Record<string, unknown> {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(config) as Record<string, unknown>;
+  }
+  return JSON.parse(JSON.stringify(config)) as Record<string, unknown>;
+}
 
 export function useSessionBoot(args: {
   setState: Dispatch<SetStateAction<SessionState>>;
@@ -41,10 +47,7 @@ export function useSessionBoot(args: {
             error: 'coreui.errors.instance.config.invalid',
           };
         }
-        const resolved = normalizeSessionConfig({
-          compiled,
-          config: rawInstanceData as Record<string, unknown>,
-        });
+        const resolved = cloneSessionConfig(rawInstanceData as Record<string, unknown>);
         const savedInstanceDataSignature = serializeInstanceDataSignature(resolved);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
 
@@ -133,9 +136,6 @@ export function useSessionBoot(args: {
           return;
         }
 
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[useWidgetSession] load-instance payload', data);
-        }
         void loadInstance(data).then((result) => {
           if (result.ok) {
             postToParent(

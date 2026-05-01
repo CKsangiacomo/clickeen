@@ -8,7 +8,6 @@ export type TranslationsPreviewData = {
   requestedLocales: string[];
   readyLocales: string[];
   status: 'queued' | 'working' | 'ready' | 'failed';
-  failedLocales: Array<{ locale: string; reasonKey: string; detail?: string }>;
 };
 
 type ErrorPayload = {
@@ -53,17 +52,6 @@ function normalizePreviewData(payload: unknown): TranslationsPreviewData | null 
     record.status === 'failed'
       ? record.status
       : null;
-  const failedLocales = Array.isArray(record.failedLocales)
-    ? record.failedLocales.flatMap((entry) => {
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return [];
-        const payload = entry as Record<string, unknown>;
-        const locale = asTrimmedString(payload.locale);
-        const reasonKey = asTrimmedString(payload.reasonKey);
-        if (!locale || !reasonKey) return [];
-        const detail = asTrimmedString(payload.detail);
-        return [{ locale, reasonKey, ...(detail ? { detail } : {}) }];
-      })
-    : [];
 
   if (!baseLocale || !requestedLocales.includes(baseLocale) || !status) return null;
   if (!readyLocales.includes(baseLocale)) return null;
@@ -73,7 +61,6 @@ function normalizePreviewData(payload: unknown): TranslationsPreviewData | null 
     requestedLocales,
     readyLocales,
     status,
-    failedLocales,
   };
 }
 

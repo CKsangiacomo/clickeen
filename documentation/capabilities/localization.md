@@ -28,7 +28,7 @@ This prevents “fan-out” (e.g. `wgt_curated_... .fr/.de/.es`) and keeps cachi
 
 ### Instance kinds (authoritative)
 
-- **Curated**: Clickeen-owned instances used for Prague embeds and template pickers.
+- **Curated**: Clickeen-owned listed instances used for Prague embeds and starter galleries.
 - **User**: Account-owned instances created by users (often by cloning curated).
 
 Curated + user instances localize within the account’s **active locales** (EN implied), bounded by tier entitlements and subject policy.
@@ -120,7 +120,7 @@ Where the write plane fits (current repo snapshot):
 - Tokyo-worker extracts the full approved current text item index (`path`, `type`, `value`) from that snapshot before generation.
 - Tokyo-worker calls San Francisco through the private `SANFRANCISCO_L10N` worker binding only when explicit instance sync needs new locale ops.
 - Tokyo-worker sends San Francisco approved items, requested target locales, existing locale ops, changed paths, removed paths, and the account `policyProfile`. It does not send widget config or allowlists.
-- San Francisco derives the `l10n.instance.v1` AI profile/provider lane from `@clickeen/ck-policy`, translates only requested changed items when possible, preserves unchanged existing ops for current item paths, and removes only explicitly removed paths.
+- San Francisco derives the `l10n.instance.v1` AI profile/provider lane from `@clickeen/ck-contracts`, translates only requested changed items when possible, preserves unchanged existing ops for current item paths, and removes only explicitly removed paths.
 - San Francisco returns set-only locale ops.
 - Tokyo-worker persists those overlay rows in the canonical Tokyo l10n plane.
 - Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane, and Tokyo-worker reads that account-locale truth directly from Berlin during explicit sync execution.

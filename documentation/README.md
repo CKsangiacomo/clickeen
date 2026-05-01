@@ -97,7 +97,7 @@ This repo is operated by **1 human architect + multiple AI dev teams**. The syst
 
 ---
 
-## End-to-End Journey (widget folder → Roma/DevStudio/Bob/Prague)
+## End-to-End Journey (widget folder → Roma, DevStudio, Bob, Prague)
 
 Local runtime:
 
@@ -138,11 +138,12 @@ Invariant:
 Instances are data (not code) and live in Michael/Tokyo. Assets live in Tokyo.
 
 1. **Roma + Bob handle account user-instance flows**:
-   - Roma Widgets/Templates create/duplicate/delete user instances through Roma same-origin routes.
+   - Roma Widgets create/duplicate/delete user instances through current-account same-origin routes.
+   - Listed/duplicable starter instances replace the old standalone Templates product architecture.
    - Bob save writes base config via account `PUT`.
 2. **DevStudio Local does not host widget authoring**.
    - Curated/main verification remains an internal toolbench concern only.
-   - Widget editing belongs to Roma-hosted or other explicit Bob surfaces, not hidden DevStudio routes.
+   - Widget editing belongs to Roma-hosted Builder, not hidden DevStudio routes.
 3. **Assets** referenced in configs point at local Tokyo in canonical local development (`http://localhost:4000`).
 
 ### C) Cloud-dev propagation (explicit)

@@ -1,4 +1,4 @@
-import type { AiGrantPolicy } from '@clickeen/ck-policy';
+import type { AiGrantPolicy } from '@clickeen/ck-contracts/ai';
 
 export type GrantSubject =
   | { kind: 'user'; userId: string; accountId: string }

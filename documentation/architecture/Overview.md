@@ -190,7 +190,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - Roma uses named same-origin account routes and injects short-lived authz headers:
   - `x-ck-authz-capsule` for account-scoped calls
 - Roma serves Berlin-backed account member reads on same-origin routes (`GET /api/account/team` and `GET /api/account/team/members/:memberId`).
-- Roma Builder embeds Bob with `boot=message` and sends explicit `ck:open-editor` payloads after `bob:session-ready`.
+- Roma Builder embeds Bob and sends one explicit `ck:open-editor` payload after `bob:session-ready`.
 
 #### DevStudio (Local toolbench)
 
@@ -271,7 +271,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **Hard security rule:**
 
-- `CK_INTERNAL_SERVICE_JWT` is a server-only internal bearer for Roma -> San Francisco calls and residual non-product internal surfaces only. Roma -> Tokyo/Tokyo-worker account product control now uses private Cloudflare service bindings instead of shared-secret HTTP.
+- `CK_INTERNAL_SERVICE_JWT` is a server-only internal bearer for residual San Francisco tooling surfaces only. Roma -> Tokyo/Tokyo-worker account product control uses private Cloudflare service bindings, and account-widget l10n generation uses the Tokyo-worker -> San Francisco `SANFRANCISCO_L10N` binding instead of shared-secret HTTP.
 
 **Local auth rule:**
 
@@ -338,7 +338,7 @@ Non-negotiable:
 - **Secrets isolation**:
   - Provider keys live only in San Francisco.
   - Supabase service role lives only in Berlin/Tokyo-worker where explicitly required.
-  - `CK_INTERNAL_SERVICE_JWT` stays server-only and must never be exposed client-side. Roma -> Tokyo/Tokyo-worker account product control now uses private Cloudflare service bindings; Roma still uses `CK_INTERNAL_SERVICE_JWT` for San Francisco internal calls.
+  - `CK_INTERNAL_SERVICE_JWT` stays server-only and must never be exposed client-side. Roma -> Tokyo/Tokyo-worker account product control now uses private Cloudflare service bindings; account-widget l10n generation uses the private Tokyo-worker -> San Francisco service binding and does not use this shared secret.
 - **Caching**:
   - Tokyo assets are long-cacheable when versioned; avoid cache on `spec.json` when iterating in dev.
   - Venice serves short-cache shell HTML, `no-store` live pointers, and immutable fingerprinted packs/assets.
@@ -395,7 +395,7 @@ Non-negotiable:
 
 - Roma does not rely on Bob URL-bootstrap for normal Builder opens.
 - Roma resolves selected instance from URL path (`/builder/:publicId`) and keeps that as the single active selection source.
-- Roma preloads instance + compiled payload, then opens Bob via `ck:open-editor` in message mode (`boot=message`) and waits for ack/applied/fail responses.
+- Roma preloads the instance + compiled payload, then opens Bob via one `ck:open-editor` message and waits only for Bob to confirm it applied the open payload or report a real open failure.
 
 ### AI Copilot Flow (Current)
 
@@ -433,13 +433,13 @@ On the active account authoring path, the widget document exists in exactly 2 pl
 **The Pattern:**
 
 ```
-1. Load:    GET /api/builder/:publicId/open  → Roma gets the saved widget and message-boots Bob once
+1. Load:    GET /api/builder/:publicId/open  → Roma gets the saved widget and opens Bob once
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
 4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:publicId?subject=account` → commits the one widget document to Tokyo and returns immediately
 ```
 
-In Roma message-boot account flows, the host performs the initial load call and sends Bob one resolved `ck:open-editor` payload. Save returns through that same Roma account boundary.
+In Roma account flows, the host performs the initial load call and sends Bob one resolved `ck:open-editor` payload. Save returns through that same Roma account boundary.
 
 Builder no longer mounts a localization authoring lane on this path. Translation and runtime convergence are downstream follow-up work, not part of the user meaning of Save.
 

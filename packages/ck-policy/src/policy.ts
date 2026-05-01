@@ -187,3 +187,18 @@ export function resolvePolicyFromEntitlementsSnapshot(
 
   return policy;
 }
+
+export function isPolicyEntitled(policy: Policy, key: string): boolean {
+  if (key in policy.flags) {
+    return policy.flags[key] === true;
+  }
+  if (key in policy.caps) {
+    const value = policy.caps[key];
+    return value != null && Number.isFinite(value) && value > 0;
+  }
+  if (key in policy.budgets) {
+    const max = policy.budgets[key]?.max;
+    return max == null || (Number.isFinite(max) && max > 0);
+  }
+  return false;
+}

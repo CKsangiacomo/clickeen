@@ -109,12 +109,12 @@ Together they:
 - Never auto-picks a different instance when `publicId` is missing.
 - Replies with terminal `bob:open-editor-applied` or `bob:open-editor-failed` for the current host request.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
-- Local Bob is tool-trusted only for explicit internal tool flows: there is **no local browser-login shortcut** and hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma account routes. Bob must not treat a trusted local token as sufficient authority on account product paths. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
-- Bob must not auto-upgrade a trusted local end-user token into Michael service-role access inside shared helpers or normal product routes.
+- Local Bob may run as an editor runtime for debugging, but it is not a product account shell. Hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma account routes. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
+- Bob must not auto-upgrade any local end-user token into Michael service-role access inside shared helpers or normal product routes.
 
 ### Builder boot (current)
 
-Shared Builder boot is message-only. Roma opens Bob with one explicit `ck:open-editor` payload. Shared Builder core no longer models `subjectMode`, URL boot, or alternate account authoring modes.
+Shared Builder opens through one host message. Roma opens Bob with one explicit `ck:open-editor` payload. Shared Builder core no longer models runtime subject switching or alternate account authoring modes.
 
 ### Hybrid dev (Roma in cloud, Bob local)
 
@@ -136,7 +136,7 @@ Bob still receives one policy object with the open payload. In the shared Builde
 
 Core base-config lifecycle per open session:
 
-1. One core instance load performed by the host in account message boot before Bob receives `ck:open-editor`.
+1. One core instance load performed by the host before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
 3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instance/:publicId` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
    Bob sends the current document metadata back with the save (`widgetType`, `displayName`, `source`, `meta`, `config`) so Roma/Tokyo do not reconstruct sibling identity from the previously saved row.
@@ -151,7 +151,7 @@ Copilot account path:
 
 Within Bob, explicit save ownership stays in `useSessionSaving.ts`. Builder no longer mounts a localization overlay/session subsystem on the active account editing path.
 
-Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on caching strategy, but account Builder still opens through one Roma message-boot envelope.
+Compiled payload fetch (`GET /api/widgets/[widgetname]/compiled`) can be done by host or Bob depending on caching strategy, but account Builder still opens through one Roma host-open envelope.
 
 ---
 

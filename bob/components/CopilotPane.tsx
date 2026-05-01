@@ -1,16 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WidgetOp } from '../lib/ops';
 import type { CopilotMessage } from '../lib/copilot/types';
 import { useWidgetSession, useWidgetSessionChrome, useWidgetSessionCopilot } from '../lib/session/useWidgetSession';
-import {
-  labelAiModel,
-  labelAiProvider,
-  resolveAiAgent,
-  resolveAiPolicyCapsule,
-  resolveWidgetCopilotAgentId,
-  WIDGET_COPILOT_AGENT_IDS,
-} from '@clickeen/ck-policy';
-import type { AiProvider } from '@clickeen/ck-policy';
 
 function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
@@ -58,7 +49,7 @@ function normalizeAssistantText(text: string): string {
   if (looksLikeHtml(candidate)) return 'Copilot is temporarily unavailable (received an HTML error page). Please try again in a moment.';
   if (candidate === 'Unhandled error') return 'Copilot hit a backend timeout. Please try again (or ask for a smaller, single change).';
   if (candidate.toLowerCase().includes('empty model response')) {
-    return 'Copilot got an empty response from the model provider. Please try again, or switch model/provider in Copilot AI.';
+    return 'Copilot got an empty response. Please try again with a smaller, more specific request.';
   }
   if (candidate.toLowerCase().includes('execution timeout')) return 'Copilot timed out. Please try again (or ask for a smaller, single change).';
   return candidate;
@@ -88,223 +79,35 @@ function newId(): string {
 
 function initialCopilotMessage(widgetType: string): string {
   const label = titleCase(widgetType) || 'widget';
-  return `You’re editing a ${label} widget in your workspace. Ask me for a concrete content, layout, styling, or settings change and I’ll stage it for review.`;
-}
-
-type RawAiSelection = { provider: string; model: string };
-type AiSelection = { provider: AiProvider; model: string };
-
-function clampAiSelection(
-  selection: RawAiSelection | null,
-  policy: ReturnType<typeof resolveAiPolicyCapsule>,
-): AiSelection {
-  const providerCandidate = selection?.provider ? String(selection.provider).trim() : '';
-  const modelCandidate = selection?.model ? String(selection.model).trim() : '';
-  const allowedProviders = policy.allowedProviders ?? [];
-  const provider = allowedProviders.includes(providerCandidate as AiProvider) ? (providerCandidate as AiProvider) : policy.defaultProvider;
-  const providerPolicy = policy.models?.[provider];
-  const defaultModel = providerPolicy?.defaultModel ?? '';
-  const allowedModels = providerPolicy?.allowed ?? [];
-  const model = allowedModels.includes(modelCandidate) ? modelCandidate : defaultModel;
-  return { provider, model };
-}
-
-function aiStorageKey(args: { accountId?: string | null; subject: 'account' }): string {
-  const accountId =
-    typeof args.accountId === 'string' && args.accountId.trim() ? args.accountId.trim() : 'local';
-  return `ck:ai.settings.v1:${args.subject}:${accountId}`;
-}
-
-function readStoredAiSelection(key: string): RawAiSelection | null {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as any;
-    const provider = typeof parsed?.provider === 'string' ? parsed.provider.trim() : '';
-    const model = typeof parsed?.model === 'string' ? parsed.model.trim() : '';
-    if (!provider) return null;
-    return { provider, model };
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredAiSelection(key: string, value: AiSelection) {
-  try {
-    localStorage.setItem(key, JSON.stringify({ provider: value.provider, model: value.model }));
-  } catch {
-    // best-effort
-  }
-}
-
-function AccountCopilotAiSettings(args: {
-  aiPolicy: NonNullable<ReturnType<typeof resolveAiPolicyCapsule>>;
-  aiSelection: AiSelection;
-  accountId: string | null;
-  setAiSelection: (value: AiSelection) => void;
-}) {
-  const { aiPolicy, aiSelection, accountId, setAiSelection } = args;
-  return (
-    <div
-      style={{
-        padding: 'var(--space-3)',
-        paddingBottom: 'var(--space-2)',
-        borderBottom: '1px solid var(--color-system-gray-5)',
-        background: 'var(--color-system-white)',
-      }}
-    >
-      <div className="label-s label-muted" style={{ marginBottom: 'var(--space-2)' }}>
-        Copilot AI
-      </div>
-      <div style={{ display: 'grid', gap: 'var(--space-2)', gridTemplateColumns: '1fr 1fr' }}>
-        {aiPolicy.allowProviderChoice ? (
-          <div className="diet-textfield" data-size="md">
-            <label className="diet-textfield__control">
-              <span className="diet-textfield__display-label label-s">Provider</span>
-              <select
-                className="diet-textfield__field body-s"
-                value={aiSelection.provider}
-                onChange={(event) => {
-                  const nextProvider = event.target.value;
-                  const clamped = clampAiSelection({ provider: nextProvider, model: '' }, aiPolicy);
-                  setAiSelection(clamped);
-                  writeStoredAiSelection(aiStorageKey({ accountId, subject: 'account' }), clamped);
-                }}
-              >
-                {aiPolicy.allowedProviders.map((provider) => (
-                  <option key={provider} value={provider}>
-                    {labelAiProvider(provider)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        ) : (
-          <div className="diet-textfield" data-size="md">
-            <label className="diet-textfield__control">
-              <span className="diet-textfield__display-label label-s">Provider</span>
-              <input className="diet-textfield__field body-s" value={labelAiProvider(aiSelection.provider)} readOnly />
-            </label>
-          </div>
-        )}
-
-        {aiPolicy.allowModelChoice && (aiPolicy.models?.[aiSelection.provider]?.allowed?.length ?? 0) > 1 ? (
-          <div className="diet-textfield" data-size="md">
-            <label className="diet-textfield__control">
-              <span className="diet-textfield__display-label label-s">Model</span>
-              <select
-                className="diet-textfield__field body-s"
-                value={aiSelection.model}
-                onChange={(event) => {
-                  const next: AiSelection = { provider: aiSelection.provider, model: event.target.value };
-                  const clamped = clampAiSelection(next, aiPolicy);
-                  setAiSelection(clamped);
-                  writeStoredAiSelection(aiStorageKey({ accountId, subject: 'account' }), clamped);
-                }}
-              >
-                {(aiPolicy.models?.[aiSelection.provider]?.allowed ?? []).map((model) => (
-                  <option key={model} value={model}>
-                    {labelAiModel(model)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        ) : (
-          <div className="diet-textfield" data-size="md">
-            <label className="diet-textfield__control">
-              <span className="diet-textfield__display-label label-s">Model</span>
-              <input className="diet-textfield__field body-s" value={labelAiModel(aiSelection.model)} readOnly />
-            </label>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return `You’re editing a ${label} widget in your account. Ask me for a concrete content, layout, styling, or settings change and I’ll stage it for review.`;
 }
 
 type CopilotSurfaceContract = {
   initialMessage: (widgetType: string) => string;
   pendingMessageText: (message: string) => string;
   pendingNudge: string;
-  resolveRequestContext: () => Promise<{
-    provider?: string;
-    model?: string;
-  }>;
-  settings: ReactNode;
 };
 
 type SharedCopilotPaneProps = {
   session: WidgetSessionValue;
-  widgetCopilotAgentId: string | null;
   surfaceContract: CopilotSurfaceContract;
 };
 
 export function AccountCopilotPane() {
   const session = useWidgetSession();
-  const chrome = useWidgetSessionChrome();
-  const accountId = null;
-  const policyProfile = chrome.policy?.profile ?? null;
-  const widgetCopilotAgentId = useMemo(
-    () => (policyProfile ? resolveWidgetCopilotAgentId({ policyProfile }) : null),
-    [policyProfile],
-  );
-
-  const aiPolicy = useMemo(() => {
-    if (!policyProfile || !widgetCopilotAgentId) return null;
-    const resolved = resolveAiAgent(widgetCopilotAgentId);
-    if (!resolved) return null;
-    return resolveAiPolicyCapsule({ entry: resolved.entry, policyProfile });
-  }, [policyProfile, widgetCopilotAgentId]);
-
-  const [aiSelection, setAiSelection] = useState<AiSelection | null>(null);
-  useEffect(() => {
-    if (!aiPolicy) return;
-    const key = aiStorageKey({ accountId, subject: 'account' });
-    const stored = readStoredAiSelection(key);
-    const next = clampAiSelection(stored, aiPolicy);
-    setAiSelection(next);
-  }, [aiPolicy, accountId]);
-
-  const showAiSettings = useMemo(() => {
-    if (!widgetCopilotAgentId || widgetCopilotAgentId !== WIDGET_COPILOT_AGENT_IDS.cs) return false;
-    if (!aiPolicy || !aiSelection) return false;
-    if (aiPolicy.allowProviderChoice) return true;
-    const allowedModels = aiPolicy.models?.[aiSelection.provider]?.allowed ?? [];
-    return Boolean(aiPolicy.allowModelChoice && allowedModels.length > 1);
-  }, [aiPolicy, aiSelection, widgetCopilotAgentId]);
-
-  const settingsNode = useMemo(() => {
-    if (!showAiSettings || !aiPolicy || !aiSelection) return null;
-    return (
-      <AccountCopilotAiSettings
-        aiPolicy={aiPolicy}
-        aiSelection={aiSelection}
-        accountId={accountId}
-        setAiSelection={setAiSelection}
-      />
-    );
-  }, [accountId, aiPolicy, aiSelection, showAiSettings]);
 
   const surfaceContract = useMemo<CopilotSurfaceContract>(() => {
-    const selection =
-      aiPolicy && widgetCopilotAgentId === WIDGET_COPILOT_AGENT_IDS.cs ? clampAiSelection(aiSelection, aiPolicy) : null;
     return {
       initialMessage: (widgetType) => initialCopilotMessage(widgetType),
       pendingMessageText: (message) => `${message}\n\nWant to keep this change?`,
       pendingNudge: 'Keep or Undo? (Use the buttons above, or type “keep” / “undo”.)',
-      resolveRequestContext: async () => ({
-        ...(selection?.provider ? { provider: selection.provider } : {}),
-        ...(selection?.model ? { model: selection.model } : {}),
-      }),
-      settings: settingsNode,
     };
-  }, [aiPolicy, aiSelection, settingsNode, widgetCopilotAgentId]);
+  }, []);
 
-  return <SharedCopilotPane session={session} widgetCopilotAgentId={widgetCopilotAgentId} surfaceContract={surfaceContract} />;
+  return <SharedCopilotPane session={session} surfaceContract={surfaceContract} />;
 }
 
-function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: SharedCopilotPaneProps) {
+function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps) {
   const chrome = useWidgetSessionChrome();
   const copilot = useWidgetSessionCopilot();
   const compiled = session.compiled;
@@ -501,7 +304,7 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
         ],
       });
     }
-    if (!sessionId || !widgetCopilotAgentId) {
+    if (!sessionId) {
       pushMessage({ role: 'assistant', text: 'Copilot session not ready. Please try again in a moment.' });
       return;
     }
@@ -518,19 +321,14 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
     pushMessage({ role: 'user', text: prompt });
 
     try {
-      const requestContext = await surfaceContract.resolveRequestContext();
       const res = await session.apiFetch('/api/ai/widget-copilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          agentId: widgetCopilotAgentId,
           prompt,
           currentConfig: session.instanceData,
           controls: controlsForAi,
           sessionId,
-          subject: 'account',
-          ...(requestContext.provider ? { provider: requestContext.provider } : {}),
-          ...(requestContext.model ? { model: requestContext.model } : {}),
         }),
       });
 
@@ -589,8 +387,6 @@ function SharedCopilotPane({ session, widgetCopilotAgentId, surfaceContract }: S
       }}
       aria-label="Copilot"
     >
-      {surfaceContract.settings}
-
       <div
         ref={listRef}
         style={{

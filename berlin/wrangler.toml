@@ -13,7 +13,6 @@ head_sampling_rate = 1
 [vars]
 BERLIN_ISSUER = "https://berlin-dev.clickeen.workers.dev"
 BERLIN_AUDIENCE = "clickeen.product"
-BERLIN_LOGIN_CALLBACK_URL = "https://berlin-dev.clickeen.workers.dev/auth/login/provider/callback"
 BERLIN_GOOGLE_CALLBACK_URL = "https://berlin.dev.clickeen.com/auth/login/google/callback"
 BERLIN_FINISH_REDIRECT_URL = "https://roma.dev.clickeen.com/api/session/finish"
 BERLIN_ALLOWED_PROVIDERS = "google"

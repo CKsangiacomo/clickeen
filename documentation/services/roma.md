@@ -14,7 +14,7 @@ Roma is the authenticated product shell for account users. It owns:
 - Active account context resolution
 - Account-scoped Team list and member-detail UI over Berlin-owned membership contracts
 - Lightweight catalog/list APIs for product UX
-- Bob editor orchestration via explicit message boot
+- Bob editor orchestration via explicit host-open message
 
 Roma is a host/orchestrator. Bob remains the editor kernel.
 
@@ -125,7 +125,7 @@ Client fetch behavior:
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
 - Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/account/widgets`, `/api/account/assets*`, `/api/account/team*`, `/api/account/locales`, Builder/account routes).
 - Roma -> Tokyo/Tokyo-worker product control calls now execute through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
-- Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`; Roma does not infer or probe internal service hosts.
+- Roma -> San Francisco Copilot/outcome calls require explicit `SANFRANCISCO_BASE_URL`; Copilot uses a Roma-minted grant and outcome writes use HMAC signing. Roma does not use `CK_INTERNAL_SERVICE_JWT` for account-widget l10n generation.
 - Roma no longer calls Berlin for a Michael/PostgREST token. Account registry reads/writes go through Berlin product endpoints with the current Berlin bearer, while Tokyo/Tokyo-worker remain the saved-document and serve-state owners.
 
 ## Bob orchestration contract (Roma Builder)
@@ -135,7 +135,7 @@ Client fetch behavior:
 1. Resolve active Roma workspace context + target `publicId`.
 2. Load one Builder-open envelope from Roma same-origin (`GET /api/builder/:publicId/open`), which resolves the saved authoring revision server-side.
 3. Load compiled payload (`/api/widgets/:widgetname/compiled`).
-4. Wait for Bob `bob:session-ready` (`boot=message`).
+4. Wait for Bob `bob:session-ready`.
 5. Send `ck:open-editor` with `requestId`, `widgetname`, `compiled`, `instanceData`, `policy`, `publicId`, `label`, `source`, and `meta`.
 6. Wait for terminal open result (`bob:open-editor-applied` or `bob:open-editor-failed`).
 
@@ -143,7 +143,7 @@ This is the governing product-path authoring flow for the 075 authoring simplifi
 
 Notes:
 
-- Bob account mode is message-boot only. Bob does not recover host asset context from iframe URL params on the account Builder path. Explicit URL boot remains only for non-account surfaces.
+- Bob account mode is host-open only. Bob does not recover host asset context from iframe URL params on the account Builder path.
 - Builder-open is document-only. Roma does not pull publish/live-plane status into the Bob editor envelope.
 - Roma no longer uses one mixed helper for both Builder-open document loading and publish/serve-state lookup. Builder-open loads the saved document only; widgets-domain/account routes that need serve-state ask the Tokyo live plane separately.
 - Invalid saved-document failures now surface at the Tokyo saved-document control boundary. Roma forwards that boundary result to Builder instead of re-validating the same saved payload again on read.
@@ -200,7 +200,7 @@ Assets domain behavior:
 - Roma widget/assets list surfaces no longer rely on fixed client-side `200/500` caps; Michael pages account widget catalogs internally and Tokyo-worker asset inventory already returns the full account manifest.
 - Account asset upload is same-origin Roma product traffic. The active product path no longer exposes wildcard CORS on `/api/account/assets/upload`.
 - Roma exposes private non-asset product control routes to Tokyo-worker through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Public Tokyo HTTP is no longer the Builder open/save authoring seam.
-- Asset inventory/upload payloads expose `assetId` and canonical `assetRef` only; delivery URL comes from `/api/account/assets/resolve`, and Roma delete uses `assetId` directly instead of reverse-parsing it from the ref.
+- Asset inventory/upload payloads expose `assetId` and metadata only; delivery URL comes from `/api/account/assets/resolve`, and Roma delete uses `assetId` directly.
 - Builder save writes the instance through the Tokyo/Tokyo-worker boundary. Save success now requires Tokyo-worker to write the current saved widget `l10n` status on the saved pointer; LLM generation and R2/runtime artifact convergence still run after save. `published` / `unpublished` does not change the meaning of Save; it only changes whether Venice may publicly serve the instance.
 - While Builder `Translations` is open, Bob reads one Roma same-origin route: `GET /api/account/instances/:publicId/translations`. Roma stays read-only on that path and relays Tokyo-worker's current `baseLocale`, `requestedLocales`, `readyLocales`, `status`, `failedLocales`, `baseFingerprint`, `generationId`, and `updatedAt` truth.
 - When account locale settings change, Roma now fans that locale intent out across all account-owned saved instances, not just published ones:

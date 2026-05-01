@@ -128,16 +128,14 @@ export function isUuid(raw) {
 export function normalizeAccountAssetRecord(raw) {
   if (!isRecord(raw)) return null;
   const assetId = asTrimmedString(raw.assetId);
-  const assetRef = asTrimmedString(raw.assetRef);
   const assetType = asTrimmedString(raw.assetType);
   const filename = asTrimmedString(raw.filename);
   const contentType = asTrimmedString(raw.contentType);
   const createdAt = asTrimmedString(raw.createdAt);
   const sizeBytes = Number(raw.sizeBytes);
-  if (!isUuid(assetId) || !assetRef || !filename) return null;
+  if (!isUuid(assetId) || !filename) return null;
   return {
     assetId,
-    assetRef,
     assetType: assetType || 'other',
     filename,
     contentType: contentType || 'application/octet-stream',
@@ -149,10 +147,9 @@ export function normalizeAccountAssetRecord(raw) {
 export function normalizeResolvedAccountAsset(raw) {
   if (!isRecord(raw)) return null;
   const assetId = asTrimmedString(raw.assetId);
-  const assetRef = asTrimmedString(raw.assetRef);
   const url = asTrimmedString(raw.url);
-  if (!isUuid(assetId) || !assetRef || !url) return null;
-  return { assetId, assetRef, url };
+  if (!isUuid(assetId) || !url) return null;
+  return { assetId, url };
 }
 
 export function parseAccountAssetRef(raw) {
@@ -337,24 +334,11 @@ export function normalizeWidgetLocaleSwitcherSettings(raw) {
 function normalizeResolvedAssetSource(entry) {
   if (!isRecord(entry)) return null;
   const directUrl = typeof entry.url === 'string' ? entry.url.trim() : '';
-  if (directUrl) {
-    const parsed = parseAccountAssetRef(directUrl);
-    if (parsed) {
-      return {
-        assetId: parsed.assetId,
-        assetRef: parsed.key,
-        url: parsed.pathname,
-      };
-    }
-  }
-
-  const assetRef = typeof entry.assetRef === 'string' ? entry.assetRef.trim() : '';
-  const parsed = assetRef ? parseAccountAssetBlobKey(assetRef) : null;
+  const parsed = directUrl ? parseAccountAssetRef(directUrl) : null;
   if (!parsed) return null;
   return {
     assetId: parsed.assetId,
-    assetRef: parsed.key,
-    url: directUrl || parsed.pathname,
+    url: directUrl,
   };
 }
 

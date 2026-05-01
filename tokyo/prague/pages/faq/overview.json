@@ -32,8 +32,8 @@
       "id": "minibob",
       "type": "minibob",
       "copy": {
-        "heading": "Watch your FAQ build itself",
-        "subhead": "Enter your website URL and we'll write questions and answers for you instantly.",
+        "heading": "Preview a live FAQ",
+        "subhead": "See a real Clickeen widget in action, then create a free account to customize your own.",
         "cta": "Make this widget yours"
       },
       "mode": "extraction"

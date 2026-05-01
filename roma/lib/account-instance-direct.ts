@@ -3,6 +3,7 @@ import {
   fetchTokyoProductControl,
 } from './tokyo-product-control';
 import { formatCuratedDisplayName } from './michael-shared';
+import { validateWidgetConfigContract, type WidgetConfigContractResult } from './widget-config-contract';
 
 // Roma's direct instance path is the server boundary for one boring product flow: open the saved document from Tokyo and save it back.
 
@@ -71,6 +72,48 @@ function resolveTokyoControlErrorDetail(
   return fallback;
 }
 
+function buildTokyoRouteFailure(args: {
+  response: Response;
+  payload: unknown;
+  fallbackDetail: string;
+  fallbackReasonKey: string;
+}): RouteFailure {
+  const detail = resolveTokyoControlErrorDetail(args.payload, args.fallbackDetail);
+  if (args.response.status === 401) {
+    return { ok: false, status: 401, error: { kind: 'AUTH', reasonKey: detail, detail } };
+  }
+  if (args.response.status === 403) {
+    return { ok: false, status: 403, error: { kind: 'DENY', reasonKey: detail, detail } };
+  }
+  if (args.response.status === 422) {
+    return { ok: false, status: 422, error: { kind: 'VALIDATION', reasonKey: detail, detail } };
+  }
+  return {
+    ok: false,
+    status: 502,
+    error: {
+      kind: 'UPSTREAM_UNAVAILABLE',
+      reasonKey: args.fallbackReasonKey,
+      detail,
+    },
+  };
+}
+
+function buildWidgetConfigContractFailure(
+  contract: Extract<WidgetConfigContractResult, { ok: false }>,
+): RouteFailure {
+  return {
+    ok: false,
+    status: 422,
+    error: {
+      kind: 'VALIDATION',
+      reasonKey: contract.reasonKey,
+      paths: contract.issues.map((issue) => issue.path),
+      detail: contract.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '),
+    },
+  };
+}
+
 function resolveSavedInstanceDisplayName(args: {
   publicId: string;
   source?: 'account' | 'curated';
@@ -112,49 +155,12 @@ async function loadSavedInstanceFromTokyo(args: {
   }
   const payload = (await response.json()) as TokyoSavedInstancePayload;
   if (!response.ok) {
-    const detail = resolveTokyoControlErrorDetail(payload, `tokyo_saved_config_http_${response.status}`);
-    if (response.status === 401) {
-      return {
-        ok: false,
-        status: 401,
-        error: {
-          kind: 'AUTH',
-          reasonKey: detail,
-          detail,
-        },
-      };
-    }
-    if (response.status === 403) {
-      return {
-        ok: false,
-        status: 403,
-        error: {
-          kind: 'DENY',
-          reasonKey: detail,
-          detail,
-        },
-      };
-    }
-    if (response.status === 422) {
-      return {
-        ok: false,
-        status: 422,
-        error: {
-          kind: 'VALIDATION',
-          reasonKey: detail,
-          detail,
-        },
-      };
-    }
-    return {
-      ok: false,
-      status: 502,
-      error: {
-        kind: 'UPSTREAM_UNAVAILABLE',
-        reasonKey: 'coreui.errors.db.readFailed',
-        detail,
-      },
-    };
+    return buildTokyoRouteFailure({
+      response,
+      payload,
+      fallbackDetail: `tokyo_saved_config_http_${response.status}`,
+      fallbackReasonKey: 'coreui.errors.db.readFailed',
+    });
   }
   const saved = payload as {
     publicId: string;
@@ -333,6 +339,13 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
       },
     };
   }
+  const contract = validateWidgetConfigContract({
+    widgetType: saved.value.row.widgetType,
+    config: saved.value.config,
+  });
+  if (!contract.ok) {
+    return buildWidgetConfigContractFailure(contract);
+  }
 
   return {
     ok: true,
@@ -416,49 +429,12 @@ export async function loadTokyoAccountInstanceServeStates(args: {
 
   const payload = (await response.json().catch(() => null)) as TokyoServeStatesPayload | null;
   if (!response.ok) {
-    const detail = resolveTokyoControlErrorDetail(payload, `tokyo_live_status_http_${response.status}`);
-    if (response.status === 401) {
-      return {
-        ok: false,
-        status: 401,
-        error: {
-          kind: 'AUTH',
-          reasonKey: detail,
-          detail,
-        },
-      };
-    }
-    if (response.status === 403) {
-      return {
-        ok: false,
-        status: 403,
-        error: {
-          kind: 'DENY',
-          reasonKey: detail,
-          detail,
-        },
-      };
-    }
-    if (response.status === 422) {
-      return {
-        ok: false,
-        status: 422,
-        error: {
-          kind: 'VALIDATION',
-          reasonKey: detail,
-          detail,
-        },
-      };
-    }
-    return {
-      ok: false,
-      status: 502,
-      error: {
-        kind: 'UPSTREAM_UNAVAILABLE',
-        reasonKey: 'coreui.errors.db.readFailed',
-        detail,
-      },
-    };
+    return buildTokyoRouteFailure({
+      response,
+      payload,
+      fallbackDetail: `tokyo_live_status_http_${response.status}`,
+      fallbackReasonKey: 'coreui.errors.db.readFailed',
+    });
   }
 
   const serveStatesRecord =
@@ -508,6 +484,14 @@ export async function saveAccountInstanceDirect(args: {
   | { ok: true; previousBaseFingerprint: string | null; baseFingerprint: string | null }
   | RouteFailure
 > {
+  const contract = validateWidgetConfigContract({
+    widgetType: args.widgetType,
+    config: args.config,
+  });
+  if (!contract.ok) {
+    return buildWidgetConfigContractFailure(contract);
+  }
+
   try {
     const write = await writeSavedConfigToTokyo({
       accountId: args.accountId,

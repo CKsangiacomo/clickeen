@@ -269,6 +269,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     });
   }
 
+  let translationFollowup:
+    | { ok: true }
+    | { ok: false; reasonKey: string; detail: string; status: number } = { ok: true };
+
   try {
     await enqueueAccountInstanceSync({
       accountId,
@@ -288,30 +292,25 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
+    translationFollowup = {
+      ok: false,
+      reasonKey: 'coreui.errors.translations.acceptanceFailed',
+      detail,
+      status: error instanceof TokyoAccountInstanceSyncError ? error.status : 502,
+    };
     console.error('[roma account instance current route] translation acceptance failed after save', {
       accountId,
       publicId,
       detail,
     });
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.translations.acceptanceFailed',
-            detail,
-          },
-        },
-        { status: error instanceof TokyoAccountInstanceSyncError ? error.status : 502 },
-      ),
-      current.value.setCookies,
-    );
   }
 
   return withSession(
     request,
-    NextResponse.json({ ok: true }),
+    NextResponse.json({
+      ok: true,
+      translationFollowup,
+    }),
     current.value.setCookies,
   );
 }

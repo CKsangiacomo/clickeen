@@ -215,10 +215,8 @@ function isAccountAssetBlobKeyForAccount(key: string, accountId: string): boolea
 function serializeAccountAssetRecord(
   manifest: AccountAssetManifest,
 ): Record<string, unknown> {
-  const assetRef = String(manifest.key || '').trim();
   return {
     assetId: manifest.assetId,
-    assetRef,
     assetType: manifest.assetType,
     contentType: manifest.contentType,
     sizeBytes: manifest.sizeBytes,
@@ -231,10 +229,10 @@ function serializeResolvedAccountAsset(
   manifest: AccountAssetManifest,
   origin: string,
 ): Record<string, unknown> {
-  const assetRef = String(manifest.key || '').trim();
+  const blobKey = String(manifest.key || '').trim();
   return {
     ...serializeAccountAssetRecord(manifest),
-    url: `${origin}${buildAccountAssetPublicPath(assetRef)}`,
+    url: `${origin}${buildAccountAssetPublicPath(blobKey)}`,
   };
 }
 
@@ -380,20 +378,20 @@ async function sweepResidualAssetBlobs(args: {
 }
 
 async function buildAccountAssetMirrorIntegrity(env: Env, accountId: string): Promise<AssetMirrorIntegritySnapshot> {
-  const [assetRefs, r2Keys] = await Promise.all([
+  const [storedBlobRefs, r2Keys] = await Promise.all([
     loadAccountAssetBlobIdentitiesByAccount(env, accountId),
     listAccountAssetR2Keys(env, accountId),
   ]);
   const dbKeySet = new Set<string>();
-  assetRefs.forEach((ref) => dbKeySet.add(ref.r2Key));
+  storedBlobRefs.forEach((ref) => dbKeySet.add(ref.r2Key));
   const r2KeySet = new Set<string>(r2Keys);
 
-  const missingInR2 = assetRefs.filter((ref) => !r2KeySet.has(ref.r2Key));
+  const missingInR2 = storedBlobRefs.filter((ref) => !r2KeySet.has(ref.r2Key));
   const orphanInR2 = r2Keys.filter((key) => !dbKeySet.has(key));
 
   return {
     ok: missingInR2.length === 0 && orphanInR2.length === 0,
-    dbBlobCount: assetRefs.length,
+    dbBlobCount: storedBlobRefs.length,
     r2ObjectCount: r2Keys.length,
     missingInR2Count: missingInR2.length,
     orphanInR2Count: orphanInR2.length,
@@ -512,7 +510,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   return json(
     {
       assetId,
-      assetRef: key,
       filename,
       assetType,
       contentType,

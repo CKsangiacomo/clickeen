@@ -1,7 +1,7 @@
 STATUS: REFERENCE — MUST MATCH RUNTIME
 This document is the operational spec for the San Francisco worker: bindings, deploy shape, endpoints, limits, and runbooks.
 Runtime code + deployed Cloudflare bindings are operational truth; any mismatch here is a P0 doc bug and must be updated immediately.
-Last synced to repository runtime: March 14, 2026.
+Last synced to repository runtime: April 30, 2026.
 
 # San Francisco — Infrastructure & Operations
 
@@ -41,7 +41,7 @@ Bindings (Cloudflare primitives):
 Worker vars/secrets:
 - `ENVIRONMENT`: loose environment label used in logs and the `/healthz` response (`dev`, `prod`, etc)
 - `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret for Clickeen grant verification + outcome signatures
-- `CK_INTERNAL_SERVICE_JWT` (secret): internal bearer token for San Francisco internal endpoints (`/v1/l10n*`, `/v1/personalization/*`)
+- `CK_INTERNAL_SERVICE_JWT` (secret): internal bearer token for residual San Francisco HTTP tooling endpoints (`/v1/personalization/*` and Prague string translation in local/cloud-dev). Account-widget l10n generation does not use this secret.
 - `DEEPSEEK_API_KEY` (secret, optional): required only when an execution reaches the model provider
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
@@ -60,7 +60,7 @@ Provider split (Tiered Execution):
 - **Paid Premium**: higher-capability defaults (OpenAI `gpt-5.2`) with policy + agent constraints
 - **Curated/Internal**: OpenAI curated set (`gpt-5.2` default)
 - **Prague strings L10n**: OpenAI via policy router
-- **Account-mode instance l10n**: Roma sends minted `policyProfile`; San Francisco derives `l10n.instance.v1` profile/provider policy from `@clickeen/ck-policy` and then intersects it with env-configured providers
+- **Account-widget instance l10n**: Tokyo-worker calls San Francisco through the private `generateAccountWidgetL10nOps` WorkerEntrypoint method with Roma-derived `policyProfile`; San Francisco derives `l10n.instance.v1` profile/provider policy from `@clickeen/ck-contracts` and then intersects it with env-configured providers
 
 ## 3) HTTP endpoints
 
@@ -105,16 +105,19 @@ Purpose: poll post-signup account-context carry-forward job status.
 Auth:
 - `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
 
-### `POST /v1/l10n/account/ops/generate`
-Purpose: generate account-mode locale ops for Tokyo-worker explicit instance-sync flows.
+### Private WorkerEntrypoint `generateAccountWidgetL10nOps`
+Purpose: generate account-widget locale ops for Tokyo-worker explicit instance-sync flows.
 
-Auth:
-- `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
+Boundary:
+- Tokyo-worker calls this through the private `SANFRANCISCO_L10N` Cloudflare service binding.
+- There is no public account-widget l10n generation HTTP route.
+- This path does not use `CK_INTERNAL_SERVICE_JWT`, `SANFRANCISCO_BASE_URL`, or a bearer-token fallback.
 
 Contract:
-- Tokyo-worker must send the already-minted account `policyProfile`.
-- San Francisco must derive the `l10n.instance.v1` AI profile/provider policy from that truth instead of hardcoding a generic paid path.
-- San Francisco may reduce that provider set only by env reality: providers not configured in the current environment are removed from the allowed set.
+- Tokyo-worker sends only approved current text items (`path`, `type`, `value`), existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and the account `policyProfile`.
+- San Francisco does not receive widget config, localization allowlists, account ids, storage paths, live pointer state, or publication state.
+- San Francisco derives the `l10n.instance.v1` AI profile/provider policy from `policyProfile` and may reduce that provider set only by env reality: providers not configured in the current environment are removed from the allowed set.
+- Incremental generation translates only changed current item paths when possible and preserves existing ops for unchanged current paths.
 
 ### `POST /v1/l10n/translate` (local + cloud-dev)
 Purpose: translate Prague system-owned base content (prague-l10n pipeline).
@@ -155,7 +158,7 @@ This allows:
 
 ### D1 (queryable indexes)
 
-San Francisco creates/extends schema on demand (best-effort) and writes:
+San Francisco D1 schema is owned by `sanfrancisco/migrations/`, not Worker boot code. Runtime writes:
 
 - `copilot_events_v1`
   - one row per interaction (by `requestId`)
@@ -164,7 +167,7 @@ San Francisco creates/extends schema on demand (best-effort) and writes:
   - one row per `(requestId, event)`
   - used for conversion + UX outcome attribution
 
-Note: schema creation is not meant to be a “migration system”; it’s a pragmatic dev-stage bootstrap. If D1 schema needs to be hardened, add explicit migrations and stop doing best-effort `ALTER TABLE` in hot path.
+If D1 schema is missing or stale, migrations must be applied before deploy/runtime verification. Worker code does not create or alter telemetry tables at request time.
 
 ## 5) Limits and budgets
 
@@ -180,7 +183,7 @@ Agent executions are constrained by the grant:
 The owning backend surface is expected to cap these budgets server-side so the client can’t request arbitrarily large execution windows.
 
 Canonical runtime budget source:
-- `packages/ck-policy/src/ai.ts` (`budgetsByProfile` per agent)
+- `packages/ck-contracts/src/ai.js` (`budgetsByProfile` per agent)
 - `roma/lib/ai/account-copilot.ts` (account-mode grant clamp caps)
 
 Budget matrix (`maxTokens / timeoutMs / maxRequests`):

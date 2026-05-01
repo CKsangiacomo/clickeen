@@ -83,15 +83,8 @@ export function TranslationsPanel({
   }, [translationsData]);
   const requestedLocales = useMemo(() => translationsData?.requestedLocales ?? [], [translationsData]);
   const readyLocales = useMemo(() => new Set(translationsData?.readyLocales ?? []), [translationsData]);
-  const failedLocales = useMemo(() => {
-    const failures = new Map<string, string>();
-    for (const failure of translationsData?.failedLocales ?? []) {
-      failures.set(failure.locale, failure.detail || failure.reasonKey);
-    }
-    return failures;
-  }, [translationsData]);
   const readyCount = requestedLocales.filter((locale) => readyLocales.has(locale)).length;
-  const allowedCount = requestedLocales.length;
+  const activeLocaleCount = requestedLocales.length;
 
   const localeValue =
     overlayPreviewLocale && localeOptions.some((option) => option.value === overlayPreviewLocale)
@@ -109,7 +102,7 @@ export function TranslationsPanel({
               : translationsError
                 ? 'Translations unavailable'
               : translationsData?.status === 'queued' || translationsData?.status === 'working'
-                ? 'Translations preparing'
+                ? 'Translations updating'
                 : translationsData?.status === 'failed'
                   ? 'Translations failed'
                   : 'Translations not ready yet',
@@ -118,7 +111,7 @@ export function TranslationsPanel({
   const translationStatusTitle = (() => {
     if (translationsLoading) return 'Checking translations';
     if (translationsError) return 'Translations unavailable';
-    if (translationsData && allowedCount > 0 && readyCount === allowedCount) {
+    if (translationsData && activeLocaleCount > 0 && readyCount === activeLocaleCount) {
       return 'Translations are ready';
     }
     if (translationsData?.status === 'failed') return 'Translations failed';
@@ -130,10 +123,10 @@ export function TranslationsPanel({
     }
     if (translationsError) return translationsError;
     if (translationsData?.status === 'failed') {
-      return `${allowedCount} allowed, ${readyCount} ready. Save again to request translation for the current widget state.`;
+      return `Clickeen could not finish every active language yet. ${readyCount} ready languages can be previewed now.`;
     }
-    if (translationsData && allowedCount > 0) {
-      return `${allowedCount} allowed, ${readyCount} ready. Ready locales can be previewed now.`;
+    if (translationsData && activeLocaleCount > 0) {
+      return `${readyCount} of ${activeLocaleCount} active languages are ready. Ready languages can be previewed now.`;
     }
     return 'Save to request translations for the current widget state.';
   })();
@@ -163,32 +156,6 @@ export function TranslationsPanel({
           options={selectOptions}
           disabled={!selectOptions[0]?.value}
         />
-        {requestedLocales.length ? (
-          <div className="tdmenucontent__cluster">
-            <div className="label-s label-muted">Locale readiness</div>
-            <div className="translations-panel__locale-list">
-              {requestedLocales.map((locale) => {
-                const isBase = locale === translationsData?.baseLocale;
-                const failedReason = failedLocales.get(locale);
-                const status = isBase
-                  ? 'Base'
-                  : failedReason
-                    ? 'Failed'
-                    : readyLocales.has(locale)
-                      ? 'Ready'
-                      : 'Not ready';
-                return (
-                  <div className="translations-panel__locale-row" key={locale}>
-                    <span className="body-s">{resolveLocaleLabel(locale)}</span>
-                    <span className="label-s label-muted" title={failedReason || undefined}>
-                      {status}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
       </div>
     </div>
   );

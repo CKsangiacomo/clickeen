@@ -1,5 +1,4 @@
 import { getAt } from '../../lib/utils/paths';
-import { getClusterBody } from './dom';
 
 export type ShowIfAst =
   | { type: 'path'; value: string }
@@ -217,10 +216,6 @@ function parseShowIf(raw: string): ShowIfAst | null {
   return parseOr();
 }
 
-function normalizeValue(value: unknown): unknown {
-  return value;
-}
-
 function resolveValue(node: ShowIfAst, data: Record<string, unknown>): unknown {
   if (node.type === 'path') return getAt<unknown>(data, node.value);
   if (node.type === 'literal') return node.value;
@@ -241,22 +236,6 @@ function hasLinksInValue(value: unknown, seen: Set<unknown> = new Set()): boolea
 }
 
 function evalCall(node: Extract<ShowIfAst, { type: 'call' }>, data: Record<string, unknown>): unknown {
-  if (node.name === 'contains') {
-    const hay = node.args[0] ? resolveValue(node.args[0], data) : '';
-    const needle = node.args[1] ? resolveValue(node.args[1], data) : '';
-    const hayText =
-      typeof hay === 'string'
-        ? hay
-        : (() => {
-            try {
-              return JSON.stringify(hay) ?? '';
-            } catch {
-              return '';
-            }
-          })();
-    const needleText = typeof needle === 'string' ? needle : String(needle ?? '');
-    return hayText.includes(needleText);
-  }
   if (node.name === 'hasLinks') {
     const values = node.args.map((arg) => resolveValue(arg, data));
     return values.some((value) => hasLinksInValue(value));
@@ -280,13 +259,13 @@ function evalAst(node: ShowIfAst, data: Record<string, unknown>): boolean {
     case 'or':
       return evalAst(node.left, data) || evalAst(node.right, data);
     case 'eq': {
-      const leftVal = normalizeValue(resolveValue(node.left, data));
-      const rightVal = normalizeValue(resolveValue(node.right, data));
+      const leftVal = resolveValue(node.left, data);
+      const rightVal = resolveValue(node.right, data);
       return leftVal === rightVal;
     }
     case 'neq': {
-      const leftVal = normalizeValue(resolveValue(node.left, data));
-      const rightVal = normalizeValue(resolveValue(node.right, data));
+      const leftVal = resolveValue(node.left, data);
+      const rightVal = resolveValue(node.right, data);
       return leftVal !== rightVal;
     }
     default:
@@ -330,68 +309,5 @@ export function applyShowIfVisibility(entries: ShowIfEntry[], data: Record<strin
       ) || entry.el;
     hideTarget.toggleAttribute('hidden', !isVisible);
     hideTarget.setAttribute('style', isVisible ? '' : 'display: none;');
-  });
-}
-
-function collectShowIfPaths(raw: string): string[] {
-  if (!raw.trim()) return [];
-  try {
-    return tokenizeShowIf(raw)
-      .filter((tok): tok is { t: 'path'; v: string } => tok.t === 'path')
-      .map((tok) => tok.v);
-  } catch {
-    return [];
-  }
-}
-
-export function autoNestShowIfDependentClusters(scope: HTMLElement) {
-  const topLevelClusters = Array.from(scope.querySelectorAll<HTMLElement>(':scope > .tdmenucontent__cluster'));
-  if (topLevelClusters.length < 2) return;
-
-  const clusterOrder = new Map<HTMLElement, number>();
-  const pathOwner = new Map<string, HTMLElement>();
-
-  const registerClusterPaths = (cluster: HTMLElement) => {
-    const paths = Array.from(cluster.querySelectorAll<HTMLElement>('[data-bob-path]'))
-      .map((el) => el.getAttribute('data-bob-path'))
-      .filter((path): path is string => Boolean(path && path.trim()));
-    paths.forEach((path) => pathOwner.set(path, cluster));
-  };
-
-  const findControllingCluster = (cluster: HTMLElement): HTMLElement | null => {
-    const showIfNodes = [
-      ...(cluster.hasAttribute('data-bob-showif') ? [cluster] : []),
-      ...Array.from(cluster.querySelectorAll<HTMLElement>('[data-bob-showif]')),
-    ];
-
-    let controller: HTMLElement | null = null;
-    let bestOrder = -1;
-
-    showIfNodes.forEach((node) => {
-      const raw = node.getAttribute('data-bob-showif') || '';
-      collectShowIfPaths(raw).forEach((path) => {
-        const owner = pathOwner.get(path);
-        if (!owner) return;
-        const order = clusterOrder.get(owner);
-        if (order == null) return;
-        if (order > bestOrder) {
-          bestOrder = order;
-          controller = owner;
-        }
-      });
-    });
-
-    return controller;
-  };
-
-  topLevelClusters.forEach((cluster, idx) => {
-    const controller = findControllingCluster(cluster);
-    if (controller && controller !== cluster && !controller.contains(cluster)) {
-      const body = getClusterBody(controller);
-      (body ?? controller).appendChild(cluster);
-    }
-
-    clusterOrder.set(cluster, idx);
-    registerClusterPaths(cluster);
   });
 }

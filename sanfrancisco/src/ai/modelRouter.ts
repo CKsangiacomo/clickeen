@@ -1,4 +1,4 @@
-import { resolveAiAgent } from '@clickeen/ck-policy';
+import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { HttpError } from '../http';
 import type { AIGrant, Env } from '../types';
 

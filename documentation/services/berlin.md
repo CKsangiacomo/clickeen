@@ -83,11 +83,6 @@ Canonical public auth/session routes:
 - `POST /auth/logout`
 - `GET /v1/session/bootstrap`
 
-Legacy/compatibility auth routes:
-
-- `POST /auth/login/provider/start`
-- `GET /auth/login/provider/callback`
-
 Residual public account-management routes:
 
 - `GET /v1/me`
@@ -226,10 +221,6 @@ Recommended:
 - `BERLIN_ALLOWED_PROVIDERS` (default: `google`)
 - `BERLIN_FINISH_REDIRECT_URL` (cloud-dev points at Roma `/api/session/finish`)
 - `ENV_STAGE`
-
-Legacy/compatibility:
-
-- `BERLIN_LOGIN_CALLBACK_URL` configures the old generic provider callback route, `/auth/login/provider/callback`.
 
 Optional key rotation:
 

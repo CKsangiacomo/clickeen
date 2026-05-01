@@ -1,13 +1,15 @@
 import {
   isPolicyEntitled,
-  resolveAiAgent,
-  resolveAiBudgets,
-  resolveAiPolicyCapsule,
   resolvePolicyFromEntitlementsSnapshot,
-  resolveWidgetCopilotRequestedAgentId,
   type BudgetKey,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
+import {
+  resolveAiAgent,
+  resolveAiBudgets,
+  resolveAiPolicyCapsule,
+  type AiGrantPolicy,
+} from '@clickeen/ck-contracts/ai';
 import { readAccountBudgetUsed, type RomaUsageKv } from '../account-budget-usage';
 import { readAccountStorageBytesUsed } from '../account-storage-usage';
 import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
@@ -27,7 +29,7 @@ type AIGrant = {
     maxRequests?: number;
   };
   mode: 'editor' | 'ops';
-  ai?: ReturnType<typeof resolveAiPolicyCapsule>;
+  ai?: AiGrantPolicy;
   trace?: {
     sessionId?: string;
     instancePublicId?: string;
@@ -43,6 +45,7 @@ const OUTCOME_EVENTS = new Set([
   'ux_undo',
 ] as const);
 const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
+export const ACCOUNT_WIDGET_COPILOT_AGENT_ID = 'cs.widget.copilot.v1';
 
 function resolveAiGrantSecret(): string {
   const fromRequestContext = getOptionalCloudflareRequestContext<{ env?: { AI_GRANT_HMAC_SECRET?: string } }>()
@@ -99,10 +102,7 @@ async function mintGrant(grant: AIGrant, secret: string): Promise<string> {
 export async function issueAccountCopilotGrant(args: {
   authz: RomaAccountAuthzCapsulePayload;
   accountCapsule?: string | null;
-  agentId: string;
   mode?: 'editor' | 'ops';
-  requestedProvider?: string;
-  requestedModel?: string;
   trace?: { sessionId?: string; instancePublicId?: string };
   budgets?: { maxTokens?: number; timeoutMs?: number; maxRequests?: number };
   usageKv?: RomaUsageKv | null;
@@ -116,11 +116,7 @@ export async function issueAccountCopilotGrant(args: {
     entitlements: args.authz.entitlements ?? null,
   });
 
-  const normalizedAgentId = resolveWidgetCopilotRequestedAgentId({
-    requestedAgentId: args.agentId,
-    policyProfile: args.authz.profile,
-  });
-  const resolvedAgent = normalizedAgentId ? resolveAiAgent(normalizedAgentId) : null;
+  const resolvedAgent = resolveAiAgent(ACCOUNT_WIDGET_COPILOT_AGENT_ID);
   if (!resolvedAgent) {
     return { ok: false, status: 422, reasonKey: 'coreui.errors.ai.agent.invalid' };
   }
@@ -174,8 +170,6 @@ export async function issueAccountCopilotGrant(args: {
   const ai = resolveAiPolicyCapsule({
     entry,
     policyProfile: args.authz.profile,
-    requestedProvider: args.requestedProvider,
-    requestedModel: args.requestedModel,
     isCurated: false,
   });
 

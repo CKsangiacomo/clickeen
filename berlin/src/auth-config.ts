@@ -44,18 +44,6 @@ export function resolveIssuer(env: Env): string {
   return (configured || DEFAULT_ISSUER).replace(/\/+$/, '');
 }
 
-export function resolveLoginCallbackUrl(env: Env): string {
-  const configured = typeof env.BERLIN_LOGIN_CALLBACK_URL === 'string' ? env.BERLIN_LOGIN_CALLBACK_URL.trim() : '';
-  if (configured) {
-    try {
-      return new URL(configured).toString();
-    } catch {
-      throw new Error('[berlin] Invalid BERLIN_LOGIN_CALLBACK_URL');
-    }
-  }
-  return `${resolveIssuer(env)}/auth/login/provider/callback`;
-}
-
 export function resolveFinishRedirectUrl(env: Env): string | null {
   const configured = typeof env.BERLIN_FINISH_REDIRECT_URL === 'string' ? env.BERLIN_FINISH_REDIRECT_URL.trim() : '';
   if (configured) {
@@ -65,18 +53,7 @@ export function resolveFinishRedirectUrl(env: Env): string | null {
       throw new Error('[berlin] Invalid BERLIN_FINISH_REDIRECT_URL');
     }
   }
-
-  const loginCallback = typeof env.BERLIN_LOGIN_CALLBACK_URL === 'string' ? env.BERLIN_LOGIN_CALLBACK_URL.trim() : '';
-  if (!loginCallback) return null;
-  try {
-    const fallback = new URL(loginCallback);
-    fallback.pathname = '/api/session/finish';
-    fallback.search = '';
-    fallback.hash = '';
-    return fallback.toString();
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 export function resolveLoginErrorRedirectUrl(env: Env, reasonKey: string): string | null {

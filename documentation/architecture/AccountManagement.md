@@ -4,11 +4,11 @@ STATUS: CANONICAL CURRENT MODEL
 
 This file is the canonical account-management model for Clickeen.
 
-It defines the runtime boundary that Berlin, Roma, DevStudio, Bob, Michael, and Paris must converge to. PRD 064/065/066/067 are historical snapshots only. Forward-looking correction and hardening work now starts from PRD 068.
+It defines the runtime boundary that Berlin, Roma, DevStudio, Bob, Michael, and Paris must converge to. PRD 064/065/066/067/068/072 are historical snapshots only; forward-looking correction and hardening work starts from this canonical model plus the currently executing PRD for the affected surface.
 
 For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./Overview.md).
 Current status:
-- PRD 072 is the active Roma account-shell correction PRD.
+- PRD 072 is executed. Roma's customer shell now uses the current-account `/api/account/*` route family for normal product flows.
 - PRD 068 is the latest completed account-management correction snapshot before PRD 072.
 - PRD 076 corrected Berlin's auth boundary: Berlin is the identity-to-session boundary and owns login-time account truth, not the permanent home for every account-management workflow.
 
@@ -17,6 +17,7 @@ Historical snapshots:
 - [PRD 065](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/065__PRD__Berlin_Account_Management_Level_Up__Boundary_Closure_and_Commercial_Truth.md)
 - [PRD 066](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/066__PRD__DevStudio_Internal_Control_Plane__Berlin_VS_Separate_Admin_Authority.md)
 - [PRD 067](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/067__PRD__Internal_Control_Plane.md)
+- [PRD 072](/Users/pietro_macpro_home/clickeen/Execution_Pipeline_Docs/03-Executed/072__PRD__Roma_Boring_SaaS_Shell__Current_Account_Truth_And_Direct_Product_Flows.md)
 
 ---
 

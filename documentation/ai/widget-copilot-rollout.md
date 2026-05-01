@@ -4,20 +4,17 @@ This file keeps rollout history, but the current runtime owner shape is now:
 - account-mode Builder Copilot: Roma-owned backend routes
 - Prague demo: not a live Copilot execution surface
 - Paris: no `/api/ai/*` ownership
-- Account Builder widget copilot: `widget.copilot.v1` -> `cs.widget.copilot.v1`
+- Account Builder widget copilot: one Roma-owned account path using `cs.widget.copilot.v1`
 
 ## Purpose
 
-This runbook captures the rollout status for widget copilot routing:
-- `widget.copilot.v1` alias
-- current CS canonical ID on the live account product path
-- environment verification (local vs cloud-dev)
+This runbook captures the rollout status for the account Builder Copilot path and environment verification.
 
 ## Canonical routing contract
 
-- Request alias: `widget.copilot.v1`
 - Backend grant resolution on the live account path:
   - account Builder -> `cs.widget.copilot.v1`
+- Bob does not choose the AI provider, model, or agent. Roma mints the account grant from account policy and the single account Copilot contract.
 
 ## Environment behavior matrix
 
@@ -40,7 +37,7 @@ Post-deploy findings:
 ## Release package scope (CS routing + role-scoped policy split)
 
 Core runtime files:
-- `packages/ck-policy/src/ai.ts`
+- `packages/ck-contracts/src/ai.js`
 - `roma/lib/ai/account-copilot.ts`
 - `sanfrancisco/src/index.ts`
 - `sanfrancisco/src/agents/widgetCopilotCore.ts`

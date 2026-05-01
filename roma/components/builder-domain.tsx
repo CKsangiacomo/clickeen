@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRomaAccountApi } from './account-api';
-import { getCompiledWidget, normalizeCompiledWidgetType } from './compiled-widget-cache';
+import { getCompiledWidget } from './compiled-widget-cache';
 import { useRomaAccountContext } from './roma-account-context';
 
 type BuilderDomainProps = {
@@ -130,7 +130,6 @@ function buildRomaBuilderRoute(args: { publicId: string }): string {
 function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
   publicId: string;
-  body?: unknown;
 }): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
   const publicId = String(args.publicId || '').trim();
   if (!publicId) return null;
@@ -205,7 +204,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
   const currentUrl = pathname;
   const pathPublicId = useMemo(() => decodeBuilderPathPublicId(pathname), [pathname]);
 
-  // Active account authoring truth: Roma hosts one current-account Builder session and opens Bob through one explicit message-boot contract.
+  // Active account authoring truth: Roma hosts one current-account Builder session and opens Bob with one explicit payload.
   const bobSrc = useMemo(() => {
     return new URL('/bob', `${bobBaseUrl}/`).toString();
   }, [bobBaseUrl]);
@@ -234,7 +233,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       const route = resolveBobAccountCommandRequest({
         command: args.command,
         publicId: args.publicId,
-        body: args.body,
       });
       const reply = (payload: Omit<HostAccountCommandResultMessage, 'type'>) => {
         const message: HostAccountCommandResultMessage = {
@@ -406,12 +404,9 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
     setOpenError(null);
 
     try {
-      const compileFetchStartedAt = performance.now();
       const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(`/api/builder/${encodeURIComponent(activePublicId)}/open`);
       const widgetType = builderOpen.widgetType;
-      const normalizedInstanceWidgetType = normalizeCompiledWidgetType(widgetType);
-      const compiledResult = await getCompiledWidget(widgetType);
-      const compiled = compiledResult.payload;
+      const { payload: compiled } = await getCompiledWidget(widgetType);
 
       if (openSeq !== openDispatchSeqRef.current) return;
 
@@ -437,14 +432,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         openSeq,
       });
       if (openSeq !== openDispatchSeqRef.current) return;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[RomaBuilder] instance open timing', {
-          publicId: resolvedPublicId,
-          widgetType: normalizedInstanceWidgetType,
-          compiledSource: compiledResult.source,
-          elapsedMs: Math.round(performance.now() - compileFetchStartedAt),
-        });
-      }
       setOpenError(null);
     } catch (error) {
       if (openSeq !== openDispatchSeqRef.current) return;

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { WIDGET_COPILOT_AGENT_ALIAS, WIDGET_COPILOT_AGENT_IDS } from '@clickeen/ck-policy';
 import {
   executeCopilotOnSanFrancisco,
   issueAccountCopilotGrant,
@@ -10,11 +9,6 @@ import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/cu
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ publicId: string }> };
-
-const ALLOWED_WIDGET_COPILOT_AGENT_IDS = new Set<string>([
-  WIDGET_COPILOT_AGENT_ALIAS,
-  WIDGET_COPILOT_AGENT_IDS.cs,
-] as const);
 
 function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
@@ -47,10 +41,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const prompt = asTrimmedString(payload?.prompt);
     const sessionId = asTrimmedString(payload?.sessionId);
-    const requestedAgentId = asTrimmedString(payload?.agentId) || WIDGET_COPILOT_AGENT_ALIAS;
-    const subject = asTrimmedString(payload?.subject);
-    const provider = asTrimmedString(payload?.provider) || undefined;
-    const model = asTrimmedString(payload?.model) || undefined;
     const currentConfig = payload?.currentConfig;
     const controls = payload?.controls;
 
@@ -59,10 +49,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (!sessionId) issues.push({ path: 'sessionId', message: 'sessionId is required' });
     if (!isRecord(currentConfig)) issues.push({ path: 'currentConfig', message: 'currentConfig must be an object' });
     if (!Array.isArray(controls)) issues.push({ path: 'controls', message: 'controls must be an array' });
-    if (subject && subject !== 'account') issues.push({ path: 'subject', message: 'subject must be account' });
-    if (!ALLOWED_WIDGET_COPILOT_AGENT_IDS.has(requestedAgentId)) {
-      issues.push({ path: 'agentId', message: 'agentId must be widget.copilot.v1 or cs.widget.copilot.v1' });
-    }
     if (issues.length) {
       return withSession(request, NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 }), current.value.setCookies);
     }
@@ -84,10 +70,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const issued = await issueAccountCopilotGrant({
       authz: current.value.authzPayload,
       accountCapsule: current.value.authzToken,
-      agentId: requestedAgentId,
       mode: 'ops',
-      requestedProvider: provider,
-      requestedModel: model,
       trace: { sessionId, instancePublicId: publicId },
       budgets: { maxTokens: 650, timeoutMs: 45_000, maxRequests: 2 },
       usageKv: current.value.usageKv,

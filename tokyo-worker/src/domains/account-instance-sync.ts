@@ -184,7 +184,7 @@ async function materializeRuntimeConfigPack(args: {
     throw new Error('tokyo_public_base_missing');
   }
 
-  const assetsById = new Map<string, { assetId: string; assetRef: string; url: string }>();
+  const assetsById = new Map<string, { assetId: string; url: string }>();
 
   for (const assetId of assetIds) {
     const manifest = await loadAccountAssetManifestByIdentity(args.env, args.accountId, assetId);
@@ -193,7 +193,6 @@ async function materializeRuntimeConfigPack(args: {
     }
     assetsById.set(assetId, {
       assetId,
-      assetRef: manifest.key,
       url: `${publicBaseUrl}${buildAccountAssetPublicPath(manifest.key)}`,
     });
   }

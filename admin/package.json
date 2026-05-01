@@ -33,6 +33,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@clickeen/ck-contracts": "workspace:*",
     "@clickeen/ck-policy": "workspace:*",
     "@clickeen/l10n": "workspace:*",
     "gsap": "^3.13.0"

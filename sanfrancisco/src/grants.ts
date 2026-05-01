@@ -1,4 +1,4 @@
-import type { AiGrantPolicy, AiProfile, AiProvider } from '@clickeen/ck-policy';
+import type { AiGrantPolicy, AiProfile, AiProvider } from '@clickeen/ck-contracts/ai';
 import type { AIGrant } from './types';
 import { HttpError, asNumber, asString, isRecord } from './http';
 

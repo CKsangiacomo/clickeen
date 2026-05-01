@@ -7,8 +7,8 @@ import {
   resolveAiPolicyCapsule,
   type AiGrantPolicy,
   type AiProvider,
-  type PolicyProfile,
-} from '@clickeen/ck-policy';
+} from '@clickeen/ck-contracts/ai';
+import type { PolicyProfile } from '@clickeen/ck-policy';
 import { HttpError, isRecord } from './http';
 import { asTrimmedString } from './internalAuth';
 import type { AIGrant, Env, Usage } from './types';

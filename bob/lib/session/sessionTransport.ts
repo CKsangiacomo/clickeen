@@ -5,7 +5,6 @@ import {
   type BobAccountCommandMessage,
   type HostAccountCommandResultMessage,
   type SessionMeta,
-  type SessionState,
 } from './sessionTypes';
 
 export type ExecuteAccountCommandArgs = {
@@ -31,7 +30,7 @@ function createHostUnavailableResponse(): Response {
     {
       error: {
         reasonKey: 'coreui.errors.builder.command.hostUnavailable',
-        message: 'Builder lost its connection to the workspace host.',
+        message: 'Builder lost its connection to the account host.',
       },
     },
     { status: 409 },
@@ -46,13 +45,9 @@ function createJsonResponse(status: number, payload: unknown): Response {
 }
 
 export function useSessionTransport(args: {
-  stateRef: MutableRefObject<SessionState>;
   metaRef: MutableRefObject<SessionMeta>;
 }) {
   const hostOriginRef = useRef<string | null>(null);
-  const nativeFetchRef = useRef<typeof fetch | null>(
-    typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : null,
-  );
 
   const normalizeInputUrl = useCallback((input: RequestInfo | URL): string => {
     const raw =
@@ -160,11 +155,6 @@ export function useSessionTransport(args: {
 
   const accountAssets = useRef<AccountAssetsTransport | null>(null);
 
-  const fetchDirect = useCallback((input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const nativeFetch = nativeFetchRef.current ?? fetch.bind(globalThis);
-    return nativeFetch(input, init);
-  }, []);
-
   const dispatchHostedAssetCommand = useCallback(
     async (commandArgs: {
       command: Extract<BobAccountCommand, 'list-assets' | 'resolve-assets' | 'upload-asset'>;
@@ -243,10 +233,9 @@ export function useSessionTransport(args: {
         { status: 409 },
       );
     }
-    return fetchDirect(input, init);
+    return fetch(input, init);
   }, [
     args.metaRef,
-    fetchDirect,
     dispatchHostAccountCommand,
     normalizeInputUrl,
     readRequestJsonBody,

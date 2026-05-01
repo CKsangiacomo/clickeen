@@ -7,6 +7,7 @@ import {
   deleteSavedConfigFromTokyo,
   writeSavedConfigToTokyo,
 } from './account-instance-direct';
+import { validateWidgetConfigContract } from './widget-config-contract';
 
 export type AccountInstanceCreateError = {
   kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE' | 'INTERNAL';
@@ -121,6 +122,22 @@ export async function createAccountInstance(args: {
     };
   }
   const config = args.config as Record<string, unknown>;
+  const contract = validateWidgetConfigContract({
+    widgetType: args.widgetType,
+    config,
+  });
+  if (!contract.ok) {
+    return {
+      ok: false,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: contract.reasonKey,
+        paths: contract.issues.map((issue) => issue.path),
+        detail: contract.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '),
+      },
+    };
+  }
 
   try {
     await writeSavedConfigToTokyo({

@@ -1,4 +1,4 @@
-import { listAiAgents, resolveAiAgent } from '@clickeen/ck-policy';
+import { listAiAgents, resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { executeCsWidgetCopilot } from './agents/csWidgetCopilot';
 import { executeDebugGrantProbe } from './agents/debugGrantProbe';

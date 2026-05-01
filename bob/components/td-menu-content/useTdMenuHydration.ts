@@ -12,12 +12,7 @@ import {
   type DieterAssets,
 } from './dom';
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
-import {
-  applyShowIfVisibility,
-  autoNestShowIfDependentClusters,
-  buildShowIfEntries,
-  type ShowIfEntry,
-} from './showIf';
+import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './showIf';
 
 export function useTdMenuHydration(args: {
   containerRef: MutableRefObject<HTMLDivElement | null>;
@@ -51,7 +46,6 @@ export function useTdMenuHydration(args: {
     if (!container) return;
 
     container.innerHTML = panelHtml || '';
-    autoNestShowIfDependentClusters(container);
     applyGroupHeaders(container);
     container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
       const body = getClusterBody(cluster);

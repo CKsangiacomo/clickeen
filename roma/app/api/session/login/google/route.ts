@@ -78,32 +78,8 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const upstream = await fetch(`${berlinBase}/auth/login/provider/start`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    cache: 'no-store',
-    body: JSON.stringify({
-      provider: 'google',
-      intent,
-      next: nextPath,
-    }),
-  });
-
-  const payload = (await upstream.json().catch(() => null)) as Record<string, unknown> | null;
-  const oauthUrl = payload && typeof payload.url === 'string' ? payload.url.trim() : '';
-  if (!upstream.ok || !oauthUrl) {
-    const reasonKey =
-      payload && typeof payload.error === 'object' && payload.error
-        ? (payload.error as Record<string, unknown>).reasonKey
-        : null;
-    const normalizedReason = typeof reasonKey === 'string' ? reasonKey : 'coreui.errors.auth.login_failed';
-    return NextResponse.redirect(resolveLoginUrl(request, { error: normalizedReason }), {
-      headers: CACHE_HEADERS,
-    });
-  }
-
-  return NextResponse.redirect(oauthUrl, { headers: CACHE_HEADERS });
+  const loginUrl = new URL('/auth/login/google/start', berlinBase);
+  loginUrl.searchParams.set('next', nextPath);
+  loginUrl.searchParams.set('intent', intent);
+  return NextResponse.redirect(loginUrl, { headers: CACHE_HEADERS });
 }

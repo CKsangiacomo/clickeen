@@ -42,7 +42,6 @@ type AccountAssetsResolveResponse = {
 
 type AccountAssetUploadResponse = {
   assetId?: unknown;
-  assetRef?: unknown;
   assetType?: unknown;
   filename?: unknown;
   url?: unknown;

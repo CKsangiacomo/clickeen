@@ -10,7 +10,7 @@ For platform context see [Overview.md](./Overview.md), [CONTEXT.md](./CONTEXT.md
 
 1. One asset belongs to one account. Full stop.
 2. Assets are immutable. No replace-in-place behavior exists.
-3. New file means new asset id/ref.
+3. New file means new asset id.
 4. Asset management is intentionally small: upload, list, use, delete.
 5. Runtime serves exactly what config references. No fallback/healing.
 6. Uploads are single-mode only. No variant parameter exists in the contract.
@@ -34,7 +34,7 @@ Manifest must carry:
 - `contentType`
 - `sizeBytes` (exact bytes)
 - `sha256`
-- `key` (canonical immutable assetRef)
+- `key` (private canonical blob key)
 - provenance fields (`publicId`, `widgetType`, `source`)
 
 ---
@@ -79,8 +79,8 @@ Rules:
    - unsafe path/url chars are rejected
    - no rename/rewrite policy is applied server-side
 4. Blob is written once; manifest is written once.
-5. Upload response returns immutable asset identity (`assetId` + canonical `assetRef`), exact size (`sizeBytes`), MIME (`contentType`), and `assetType`.
-6. Tokyo owns runtime asset resolution (`assetId -> assetRef -> /assets/account/...`) for materialized config packs and other runtime artifacts.
+5. Upload response returns immutable asset identity (`assetId`), exact size (`sizeBytes`), MIME (`contentType`), and `assetType`.
+6. Tokyo owns runtime asset resolution (`assetId -> /assets/account/...`) for materialized config packs and other runtime artifacts.
 
 ---
 
@@ -116,14 +116,13 @@ Rules:
 
 ## Hard-Cut Closure Checklist (Executed Order)
 
-1. Lock final contract in one place (this doc): `assetRef`, `assetType`, exact response shape, and operations (`upload/list/use/delete`) only.
+1. Lock final contract in one place (this doc): `assetId`, `assetType`, exact response shape, and operations (`upload/list/use/delete`) only.
 2. Remove transitional runtime behavior that violated the hard-cut contract.
-3. Use single-asset manifest semantics only (`key` as canonical `assetRef`, no runtime variants/version links).
+3. Use single-asset manifest semantics only (`key` as Tokyo-private blob key, no runtime variants/version links).
 4. Upload path is original-only, rejects `x-variant`, classifies/stores `assetType`, and stores exact `sizeBytes`.
-5. Read path resolves canonical immutable `assetRef` only.
+5. Read path resolves canonical immutable account asset paths only.
 6. List path returns only:
    - `assetId`
-   - `assetRef`
    - `assetType`
    - `contentType`
    - `sizeBytes`

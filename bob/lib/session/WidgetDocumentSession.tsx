@@ -43,7 +43,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
   const metaRef = useRef(chrome.meta);
   metaRef.current = chrome.meta;
 
-  const transport = useSessionTransport({ stateRef, metaRef });
+  const transport = useSessionTransport({ metaRef });
   const editing = useSessionEditing({
     state,
     setState,

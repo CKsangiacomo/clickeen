@@ -27,6 +27,11 @@ import { typographySections, getTypographySampleText } from './data/typography';
 import {
   CAPABILITY_META,
   isPolicyEntitled,
+  resolvePolicy,
+  getEntitlementsMatrix,
+  type PolicyProfile,
+} from '@clickeen/ck-policy';
+import {
   labelAiModel,
   listAiAgents,
   listAiModelsForUi,
@@ -36,12 +41,9 @@ import {
   resolveAiPolicyCapsule,
   resolveAiDefaultProvider,
   resolveAiProfile,
-  resolvePolicy,
   type AiProfile,
   type AiProvider,
-  getEntitlementsMatrix,
-  type PolicyProfile,
-} from '@clickeen/ck-policy';
+} from '@clickeen/ck-contracts/ai';
 import type { AccountAssetsClient } from '@dieter/components/shared/account-assets';
 
 const entitlements = getEntitlementsMatrix();

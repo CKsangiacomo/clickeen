@@ -44,8 +44,8 @@ Current program state:
    - Phase 3 slice 3: `dieter/components/dropdown-fill/dropdown-fill.ts` decomposition
 2. blocked:
    - none
-3. deferred out of this PRD and tracked in `EVERGREEN_BACKLOG.md`:
-   - widget copilot re-separation beyond the current shared core, including clearer SDR vs CS runtime differentiation, is deferred to future agent work and tracked in `EVERGREEN_BACKLOG.md`
+3. deferred out of this PRD and tracked in `Execution_Pipeline_Docs/01-Planning/EVERGREEN_BACKLOG.md`:
+   - widget copilot re-separation beyond the current shared core, including clearer SDR vs CS runtime differentiation, is deferred to future agent work and tracked in `Execution_Pipeline_Docs/01-Planning/EVERGREEN_BACKLOG.md`
    - `tokyo/widgets/shared/typography.js` split remains deferred because a real split would currently require changing the widget shared-runtime loading contract
    - deeper `account-state.ts` split unless a stronger responsibility boundary emerges
    - any further Dieter/showcase cleanup unless it becomes an active blocker
@@ -64,7 +64,7 @@ Current program state:
    - CS-only control-dump guard behavior
 3. Follow-up intentionally deferred out of this PRD:
    - the current shared `widgetCopilotCore.ts` reduces duplicate LOC but does not fully differentiate SDR and CS runtime behavior
-   - that deeper agent-level differentiation belongs to future agent work, not this LOC-cleanup PRD, and is tracked in `EVERGREEN_BACKLOG.md`
+   - that deeper agent-level differentiation belongs to future agent work, not this LOC-cleanup PRD, and is tracked in `Execution_Pipeline_Docs/01-Planning/EVERGREEN_BACKLOG.md`
 4. Phase 1 slice 2 is landed:
    - `bob/lib/session/sessionTypes.ts` extracted for session state, host-message, and default session contracts
    - `bob/lib/session/sessionPolicy.ts` extracted for pure bootstrap/policy helpers
@@ -274,7 +274,7 @@ Rule:
 4. Generated or compiled artifacts are not hand-edited as primary source-of-truth fixes.
 5. Active runtime contracts and docs must stay true during every extraction.
 6. If a file is large because it is generated, fix the generator/source strategy, not the generated blob manually.
-7. If a needed item is intentionally postponed, it must be added to [EVERGREEN_BACKLOG.md](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/EVERGREEN_BACKLOG.md) with its source PRD and promotion trigger.
+7. If a needed item is intentionally postponed, it must be added to [EVERGREEN_BACKLOG.md](/Users/pietro_macpro_home/clickeen/Execution_Pipeline_Docs/01-Planning/EVERGREEN_BACKLOG.md) with its source PRD and promotion trigger.
 
 ---
 
@@ -413,7 +413,7 @@ Acceptance:
 1. low-ROI showcase cleanup does not block the high-value runtime cleanup
 2. generated icon catalogs are clearly treated as generated assets, not hand-edited work surfaces
 3. any deferred item moved into execution has a clear responsibility-based split rationale
-4. postponed work from this phase is recorded in [EVERGREEN_BACKLOG.md](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/02-Executing/EVERGREEN_BACKLOG.md)
+4. postponed work from this phase is recorded in [EVERGREEN_BACKLOG.md](/Users/pietro_macpro_home/clickeen/Execution_Pipeline_Docs/01-Planning/EVERGREEN_BACKLOG.md)
 
 ---
 

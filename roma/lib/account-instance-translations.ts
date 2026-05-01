@@ -10,7 +10,6 @@ export type AccountTranslationsPanelPayload = {
   requestedLocales: string[];
   readyLocales: string[];
   status: 'queued' | 'working' | 'ready' | 'failed';
-  failedLocales: Array<{ locale: string; reasonKey: string; detail?: string }>;
   baseFingerprint: string;
   generationId: string;
   updatedAt: string;
@@ -65,16 +64,6 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
     raw.status === 'queued' || raw.status === 'working' || raw.status === 'ready' || raw.status === 'failed'
       ? raw.status
       : null;
-  const failedLocales = Array.isArray(raw.failedLocales)
-    ? raw.failedLocales.flatMap((entry) => {
-        if (!isRecord(entry)) return [];
-        const locale = asTrimmedString(entry.locale);
-        const reasonKey = asTrimmedString(entry.reasonKey);
-        if (!locale || !reasonKey) return [];
-        const detail = asTrimmedString(entry.detail);
-        return [{ locale, reasonKey, ...(detail ? { detail } : {}) }];
-      })
-    : [];
   const baseFingerprint = asTrimmedString(raw.baseFingerprint);
   const generationId = asTrimmedString(raw.generationId);
   const updatedAt = asTrimmedString(raw.updatedAt);
@@ -91,7 +80,6 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
     requestedLocales: Array.from(new Set(requestedLocales)),
     readyLocales: Array.from(new Set(readyLocales)),
     status,
-    failedLocales,
     baseFingerprint,
     generationId,
     updatedAt,
@@ -104,7 +92,7 @@ export async function loadAccountInstanceTranslationsPanel(args: {
   accountCapsule?: string | null;
 }): Promise<{ ok: true; value: AccountTranslationsPanelPayload } | RouteFailure> {
   const response = await fetchTokyoProductControl({
-    path: `/__internal/l10n/instances/${encodeURIComponent(args.publicId)}/translations`,
+    path: `/__internal/account/instances/${encodeURIComponent(args.publicId)}/translations`,
     method: 'GET',
     headers: buildTokyoProductControlHeaders({
       accountId: args.accountId,

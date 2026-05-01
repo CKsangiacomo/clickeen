@@ -5,7 +5,6 @@ import {
   handleFinish,
   handleProviderLoginCallback,
   handleProviderLoginRedirectStart,
-  handleProviderLoginStart,
 } from './routes-login';
 import {
   handleAccountById,
@@ -80,12 +79,6 @@ const BERLIN_ROUTES: BerlinRoute[] = [
   }),
   exact('/.well-known/jwks.json', {
     GET: ({ env }) => handleJwks(env),
-  }),
-  exact('/auth/login/provider/start', {
-    POST: ({ request, env }) => handleProviderLoginStart(request, env),
-  }),
-  exact('/auth/login/provider/callback', {
-    GET: ({ request, env }) => handleProviderLoginCallback(request, env),
   }),
   {
     pattern: /^\/auth\/login\/([^/]+)\/start$/,

@@ -1,7 +1,6 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
-import { json } from '../http';
 import type { Env } from '../types';
-import { normalizePublicId, normalizeSha256Hex } from '../asset-utils';
+import { normalizeSha256Hex } from '../asset-utils';
 import { writeMetaPack, writeTextPack } from './render';
 
 type LayerKind = 'locale';
@@ -17,7 +16,6 @@ type LayerIndex = {
 };
 
 const L10N_LAYER_ALLOWED = new Set<LayerKind>(['locale']);
-const L10N_PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
 const UTF8_ENCODER = new TextEncoder();
 
 function encodeJson(payload: unknown): Uint8Array {
@@ -26,10 +24,6 @@ function encodeJson(payload: unknown): Uint8Array {
 
 function layerIndexKey(accountId: string, publicId: string): string {
   return `accounts/${accountId}/instances/${publicId}/l10n/index.json`;
-}
-
-function layerBaseSnapshotKey(accountId: string, publicId: string, baseFingerprint: string): string {
-  return `accounts/${accountId}/instances/${publicId}/l10n/bases/${baseFingerprint}.snapshot.json`;
 }
 
 function layerOverlayPrefix(accountId: string, publicId: string, layer: LayerKind, layerKey: string): string {
@@ -73,42 +67,6 @@ function normalizeGeoTargets(raw: unknown): string[] | null {
     .filter((value) => /^[A-Z]{2}$/.test(value));
   if (!out.length) return null;
   return Array.from(new Set(out));
-}
-
-function hasProhibitedSegment(pathStr: string): boolean {
-  return String(pathStr || '')
-    .split('.')
-    .some((segment) => segment && L10N_PROHIBITED_SEGMENTS.has(segment));
-}
-
-function normalizeL10nOps(raw: unknown): { ok: true; ops: L10nOp[] } | { ok: false; detail: string } {
-  if (!Array.isArray(raw)) {
-    return { ok: false, detail: 'ops must be an array' };
-  }
-
-  const ops: L10nOp[] = [];
-  for (let index = 0; index < raw.length; index += 1) {
-    const entry = raw[index];
-    if (!isRecord(entry)) {
-      return { ok: false, detail: `ops[${index}] must be an object` };
-    }
-    if (entry.op !== 'set') {
-      return { ok: false, detail: `ops[${index}].op must be "set"` };
-    }
-    const path = asTrimmedString(entry.path);
-    if (!path) {
-      return { ok: false, detail: `ops[${index}].path is required` };
-    }
-    if (hasProhibitedSegment(path)) {
-      return { ok: false, detail: `ops[${index}].path contains prohibited segment` };
-    }
-    if (typeof entry.value !== 'string') {
-      return { ok: false, detail: `ops[${index}].value must be a string` };
-    }
-    ops.push({ op: 'set', path, value: entry.value });
-  }
-
-  return { ok: true, ops };
 }
 
 function normalizeTextPack(raw: unknown): Record<string, string> | null {
@@ -273,186 +231,4 @@ export async function upsertL10nOverlay(args: {
       metaPack,
     });
   }
-}
-
-export async function deleteL10nOverlay(args: {
-  env: Env;
-  accountId: string;
-  publicId: string;
-  layer: LayerKind;
-  layerKey: string;
-  baseFingerprint?: string | null;
-  textPack?: Record<string, string> | null;
-  metaPack?: Record<string, unknown> | null;
-}): Promise<void> {
-  await deletePrefix(args.env, layerOverlayPrefix(args.accountId, args.publicId, args.layer, args.layerKey));
-
-  const index = await loadIndex(args.env, args.accountId, args.publicId);
-  const currentEntry = index.layers[args.layer];
-  if (currentEntry) {
-    const nextKeys = currentEntry.keys.filter((value) => value !== args.layerKey);
-    if (nextKeys.length === 0) {
-      delete index.layers[args.layer];
-    } else {
-      const nextEntry: LayerIndexEntry = { keys: nextKeys };
-      if (args.layer === 'locale' && currentEntry.geoTargets) {
-        const nextGeoTargets = { ...currentEntry.geoTargets };
-        delete nextGeoTargets[args.layerKey];
-        if (Object.keys(nextGeoTargets).length > 0) nextEntry.geoTargets = nextGeoTargets;
-      }
-      index.layers[args.layer] = nextEntry;
-    }
-    await writeIndex(args.env, args.accountId, index);
-  }
-
-  const textPack = normalizeTextPack(args.textPack);
-  const baseFingerprint = normalizeSha256Hex(args.baseFingerprint);
-  if (textPack && baseFingerprint) {
-    await writeTextPack(args.env, {
-      v: 1,
-      kind: 'write-text-pack',
-      publicId: args.publicId,
-      accountId: args.accountId,
-      locale: args.layerKey,
-      baseFingerprint,
-      textPack,
-    });
-  }
-
-  const metaPack = normalizeMetaPack(args.metaPack);
-  if (metaPack) {
-    await writeMetaPack(args.env, {
-      v: 1,
-      kind: 'write-meta-pack',
-      publicId: args.publicId,
-      accountId: args.accountId,
-      locale: args.layerKey,
-      metaPack,
-    });
-  }
-}
-
-export async function handleWriteL10nBaseSnapshot(
-  req: Request,
-  env: Env,
-  accountId: string,
-  publicId: string,
-  baseFingerprint: string,
-): Promise<Response> {
-  const payload = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!isRecord(payload)) {
-    return json(
-      { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalidPayload' } },
-      { status: 422 },
-    );
-  }
-  const snapshot = isRecord(payload.snapshot) ? payload.snapshot : null;
-  if (!snapshot) {
-    return json(
-      { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalidSnapshot' } },
-      { status: 422 },
-    );
-  }
-
-  const normalizedSnapshot: Record<string, string> = {};
-  for (const [path, value] of Object.entries(snapshot)) {
-    const normalizedPath = asTrimmedString(path);
-    if (!normalizedPath || typeof value !== 'string') continue;
-    normalizedSnapshot[normalizedPath] = value;
-  }
-
-  await putJson(env, layerBaseSnapshotKey(accountId, publicId, baseFingerprint), {
-    v: 1,
-    publicId,
-    baseFingerprint,
-    snapshot: normalizedSnapshot,
-  });
-
-  return json({ publicId, baseFingerprint, written: true });
-}
-
-export async function handleUpsertL10nOverlay(
-  req: Request,
-  env: Env,
-  accountId: string,
-  publicId: string,
-  layer: LayerKind,
-  layerKey: string,
-): Promise<Response> {
-  const payload = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!isRecord(payload) || payload.v !== 1) {
-    return json(
-      { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.invalidPayload' } },
-      { status: 422 },
-    );
-  }
-
-  const baseFingerprint = normalizeSha256Hex(payload.baseFingerprint);
-  if (!baseFingerprint) {
-    return json(
-      { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.l10n.baseFingerprintInvalid' } },
-      { status: 422 },
-    );
-  }
-  const normalizedOps = normalizeL10nOps(payload.ops);
-  if (!normalizedOps.ok) {
-    return json(
-      {
-        error: {
-          kind: 'VALIDATION',
-          reasonKey: 'tokyo.errors.l10n.invalidOps',
-          detail: normalizedOps.detail,
-        },
-      },
-      { status: 422 },
-    );
-  }
-
-  const geoTargets = layer === 'locale' ? normalizeGeoTargets(payload.geoTargets) : null;
-  await upsertL10nOverlay({
-    env,
-    accountId,
-    publicId,
-    layer,
-    layerKey,
-    baseFingerprint,
-    baseUpdatedAt: asTrimmedString(payload.baseUpdatedAt),
-    ops: normalizedOps.ops,
-    geoTargets,
-    textPack: normalizeTextPack(payload.textPack),
-    metaPack: normalizeMetaPack(payload.metaPack),
-  });
-
-  return json({
-    publicId,
-    layer,
-    layerKey,
-    baseFingerprint,
-    written: true,
-  });
-}
-
-export async function handleDeleteL10nOverlay(
-  req: Request,
-  env: Env,
-  accountId: string,
-  publicId: string,
-  layer: LayerKind,
-  layerKey: string,
-): Promise<Response> {
-  const payload = req.headers.get('content-length')
-    ? ((await req.json().catch(() => null)) as Record<string, unknown> | null)
-    : null;
-  await deleteL10nOverlay({
-    env,
-    accountId,
-    publicId,
-    layer,
-    layerKey,
-    baseFingerprint: asTrimmedString(payload?.baseFingerprint),
-    textPack: normalizeTextPack(payload?.textPack),
-    metaPack: normalizeMetaPack(payload?.metaPack),
-  });
-
-  return json({ publicId, layer, layerKey, deleted: true });
 }
