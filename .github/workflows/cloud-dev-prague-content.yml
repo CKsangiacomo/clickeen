@@ -26,7 +26,6 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       SANFRANCISCO_BASE_URL: ${{ secrets.SANFRANCISCO_BASE_URL }}
-      PARIS_DEV_JWT: ${{ secrets.PARIS_DEV_JWT }}
       TOKYO_R2_BUCKET: tokyo-assets-dev
 
       PUBLIC_BOB_URL: https://bob.dev.clickeen.com

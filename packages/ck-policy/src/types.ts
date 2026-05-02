@@ -1,5 +1,5 @@
-export type WorkspaceTier = 'free' | 'tier1' | 'tier2' | 'tier3';
-export type PolicyProfile = WorkspaceTier;
+export type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3';
+export type PolicyProfile = AccountTier;
 export type MemberRole = 'viewer' | 'editor' | 'admin' | 'owner';
 
 export type EntitlementKind = 'flag' | 'cap' | 'budget';

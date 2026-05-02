@@ -1,14 +1,13 @@
 export declare const WIDGET_PUBLIC_ID_MAIN_RE: RegExp;
-export declare const WIDGET_PUBLIC_ID_CURATED_RE: RegExp;
+export declare const WIDGET_PUBLIC_ID_SYSTEM_RE: RegExp;
 export declare const WIDGET_PUBLIC_ID_USER_RE: RegExp;
 export declare const WIDGET_PUBLIC_ID_RE: RegExp;
 export declare const UUID_RE: RegExp;
 export declare const ACCOUNT_ASSET_PATH_RE: RegExp;
 
-export declare const WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN: string;
 export declare const ACCOUNT_ASSET_PATH_PATTERN: string;
 
-export type WidgetPublicIdKind = 'main' | 'curated' | 'user';
+export type WidgetPublicIdKind = 'main' | 'system' | 'user';
 export type AssetRefKind = 'account';
 export type AssetRef = {
   accountId: string;
@@ -111,8 +110,7 @@ export declare function normalizeWidgetPublicId(raw: unknown): string | null;
 export declare function classifyWidgetPublicId(raw: unknown): WidgetPublicIdKind | null;
 export declare function isWidgetPublicId(raw: unknown): raw is string;
 export declare function isMainWidgetPublicId(raw: unknown): boolean;
-export declare function isCuratedWidgetPublicId(raw: unknown): boolean;
-export declare function isCuratedOrMainWidgetPublicId(raw: unknown): boolean;
+export declare function isSystemInstancePublicId(raw: unknown): boolean;
 export declare function isUserWidgetPublicId(raw: unknown): boolean;
 export declare function isUuid(raw: unknown): boolean;
 export declare function normalizeAccountAssetRecord(raw: unknown): AccountAssetRecord | null;

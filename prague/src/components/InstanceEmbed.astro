@@ -28,9 +28,9 @@ const widgetType = (() => {
     return raw.slice('wgt_main_'.length);
   }
 
-  // Handle curated instances: wgt_curated_widgetname
-  if (raw.startsWith('wgt_curated_')) {
-    const rest = raw.slice('wgt_curated_'.length);
+  // Handle system instances: wgt_system_widgetname
+  if (raw.startsWith('wgt_system_')) {
+    const rest = raw.slice('wgt_system_'.length);
     const dot = rest.indexOf('.');
     return dot === -1 ? rest : rest.slice(0, dot);
   }

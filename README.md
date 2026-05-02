@@ -6,7 +6,6 @@ This repo contains the full Clickeen widget platform:
 - **admin/** — DevStudio tooling and component showcase (Vite). Internal toolbench for local verification and internal tools.
 - **dieter/** — Design system (tokens, CSS, web components). Built assets are served from **tokyo/**.
 - **tokyo/** — Local CDN stub serving Dieter assets and built widgets.
-- **paris/** — Residual API worker surface for published-instance and non-product paths.
 - **roma/** — Product shell app (workspace domains + Builder orchestration into Bob).
 - **documentation/** — Platform and architecture notes.
 
@@ -32,7 +31,7 @@ This repo contains the full Clickeen widget platform:
 ```bash
 pnpm install
 pnpm build:dieter       # builds Dieter into tokyo/product/dieter
-./scripts/dev-up.sh     # starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Paris (3001), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), (+ SF 3002 when enabled)
+./scripts/dev-up.sh     # starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), (+ SF 3002 when enabled)
 ```
 
 To force a full workspace rebuild before starting dev servers:
@@ -42,7 +41,7 @@ To force a full workspace rebuild before starting dev servers:
 ```
 
 Useful scripts:
-- `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`
+- `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:venice`
 - `pnpm build` (after `pnpm build:dieter`)
 - `pnpm lint`, `pnpm typecheck`, `pnpm test`
 

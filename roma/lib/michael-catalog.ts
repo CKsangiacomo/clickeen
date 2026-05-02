@@ -18,7 +18,7 @@ export async function loadAccountWidgetCatalog(args: {
   try {
     const registry = await fetchBerlinProductJson<{
       accountPublicIds?: unknown;
-      curatedInstances?: unknown;
+      listedInstances?: unknown;
       widgetTypes?: unknown;
       containment?: unknown;
     }>({
@@ -40,22 +40,18 @@ export async function loadAccountWidgetCatalog(args: {
           .map((publicId) => asTrimmedString(publicId))
           .filter((publicId): publicId is string => Boolean(publicId))
       : [];
-    const registryCuratedInstances = Array.isArray(registry.value.curatedInstances)
-      ? (registry.value.curatedInstances as Array<{
+    const registryListedInstances = Array.isArray(registry.value.listedInstances)
+      ? (registry.value.listedInstances as Array<{
           publicId?: unknown;
           widgetType?: unknown;
           displayName?: unknown;
+          status?: unknown;
         }>)
       : [];
 
     const serveStatesResult = await loadTokyoAccountInstanceServeStates({
       accountId: args.accountId,
-      publicIds: [
-        ...accountPublicIds,
-        ...registryCuratedInstances
-          .map((row) => asTrimmedString(row.publicId))
-          .filter((publicId): publicId is string => Boolean(publicId)),
-      ],
+      publicIds: accountPublicIds,
       accountCapsule: args.accountCapsule,
     });
     if (!serveStatesResult.ok) {
@@ -110,7 +106,7 @@ export async function loadAccountWidgetCatalog(args: {
       result.ok && result.value ? [result.value] : [],
     );
 
-    const curatedInstances: MichaelListedWidgetInstance[] = registryCuratedInstances.map((row) => {
+    const listedInstances: MichaelListedWidgetInstance[] = registryListedInstances.map((row) => {
       const publicId = asTrimmedString(row.publicId) ?? 'unknown';
       const widgetType = asTrimmedString(row.widgetType) ?? 'unknown';
       if (widgetType !== 'unknown') widgetTypeSet.add(widgetType.toLowerCase());
@@ -118,7 +114,7 @@ export async function loadAccountWidgetCatalog(args: {
         publicId,
         widgetType,
         displayName: asTrimmedString(row.displayName) ?? publicId,
-        status: serveStates[publicId] ?? 'unpublished',
+        status: row.status === 'published' ? 'published' : 'unpublished',
       };
     });
 
@@ -136,7 +132,7 @@ export async function loadAccountWidgetCatalog(args: {
     return {
       ok: true,
       accountInstances,
-      curatedInstances,
+      listedInstances,
       widgetTypes: Array.from(widgetTypeSet).sort((a, b) => a.localeCompare(b)),
       containment,
     };

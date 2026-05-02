@@ -26,7 +26,7 @@ This doc describes the **current Venice runtime** after the PRD 79 storage pivot
 **Purpose:** Public embed origin for third‑party sites.
 
 **Non-negotiable contract (PRD 54):**
-- `GET /e/:publicId` and `GET /r/:publicId` do **0** calls to Paris/Supabase.
+- `GET /e/:publicId` and `GET /r/:publicId` do **0** calls to Supabase.
 - They serve **only** what is present in Tokyo/R2.
 - They do **no** request-time healing, fallback, or “deciding what should exist”.
 - `GET /api/instance/:publicId` is also Tokyo-only and public-live only.

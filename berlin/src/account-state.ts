@@ -17,7 +17,7 @@ import type {
   BerlinIdentityPayload,
   BerlinUserPayload,
   BerlinUserProfilePayload,
-  WorkspaceTier,
+  AccountTier,
 } from './account-state.types';
 import { loadUserContactMethods } from './contact-methods';
 import { enc, toBase64Url } from './helpers';
@@ -104,7 +104,7 @@ function normalizeRole(value: unknown): MemberRole | null {
   }
 }
 
-function normalizeTier(value: unknown): WorkspaceTier | null {
+function normalizeTier(value: unknown): AccountTier | null {
   switch (value) {
     case 'free':
     case 'tier1':

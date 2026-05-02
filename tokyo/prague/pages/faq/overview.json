@@ -16,8 +16,8 @@
         "headline": "One FAQ widget. All your answers. Any language.",
         "subheadline": "Design it your way, publish once, and every live FAQ on your site updates with the latest answers."
       },
-      "curatedRef": {
-        "publicId": "wgt_curated_faq_lightblurs_generic"
+      "systemInstanceRef": {
+        "publicId": "wgt_system_faq_lightblurs_generic"
       }
     },
     {
@@ -81,8 +81,8 @@
         "title": "The world is your oyster",
         "subtitle": "Welcome every website visitor like a local. Instant, natural translations for a global audience."
       },
-      "curatedRef": {
-        "publicId": "wgt_curated_faq_lightblurs_generic"
+      "systemInstanceRef": {
+        "publicId": "wgt_system_faq_lightblurs_generic"
       }
     },
     {
@@ -115,8 +115,8 @@
         "headline": "Total design control",
         "subheadline": "Radius. Shadows. Borders. Spacing. Tune every property in our visual editor without writing a single line of CSS."
       },
-      "curatedRef": {
-        "publicId": "wgt_curated_faq_minimal_whitegreen_museum"
+      "systemInstanceRef": {
+        "publicId": "wgt_system_faq_minimal_whitegreen_museum"
       }
     },
     {

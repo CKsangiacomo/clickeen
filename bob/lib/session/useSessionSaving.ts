@@ -60,7 +60,6 @@ export function useSessionSaving(args: {
           widgetType,
           config,
           displayName: meta?.label ?? null,
-          source: meta?.source,
           meta: meta?.meta ?? null,
         },
       });

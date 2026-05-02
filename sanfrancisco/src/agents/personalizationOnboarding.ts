@@ -16,7 +16,6 @@ export type PersonalizationOnboardingInput = {
 
 export type PersonalizationOnboardingResult = {
   businessProfile: Record<string, unknown>;
-  recommendations?: Record<string, unknown>;
   confidence: number;
   sourcesUsed: string[];
   notes?: string[];
@@ -163,7 +162,6 @@ function buildSystemPrompt(locale: string): string {
     'Return JSON shape:',
     '{',
     '  "businessProfile": { "name": string, "category": string, "description"?: string, "nap"?: object, "hours"?: object, "services"?: string[], "toneHints"?: string[] },',
-    '  "recommendations"?: { "templates"?: any[], "defaultCopyPackId"?: string },',
     '  "confidence": number,',
     '  "sourcesUsed": string[],',
     '  "notes"?: string[]',
@@ -299,8 +297,6 @@ export async function executePersonalizationOnboarding(args: {
 
   const rawProfile = sanitizeValue((parsed as any).businessProfile) as Record<string, unknown> | null;
   const businessProfile = rawProfile && isRecord(rawProfile) ? rawProfile : {};
-  const rawRecommendations = sanitizeValue((parsed as any).recommendations) as Record<string, unknown> | null;
-  const recommendations = rawRecommendations && isRecord(rawRecommendations) ? rawRecommendations : undefined;
 
   const confidence = clampConfidence((parsed as any).confidence, pages.length ? 0.6 : 0.35);
   const sourcesSeed: string[] = [];
@@ -313,7 +309,6 @@ export async function executePersonalizationOnboarding(args: {
 
   const result: PersonalizationOnboardingResult = {
     businessProfile,
-    ...(recommendations ? { recommendations } : {}),
     confidence,
     sourcesUsed,
     ...(finalNotes.length ? { notes: finalNotes } : {}),

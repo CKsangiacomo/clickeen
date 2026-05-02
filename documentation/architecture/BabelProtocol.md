@@ -407,7 +407,7 @@ function applyOps(config: object, ops: Array<{ op: string; path: string; value: 
 
 **Enforcement:**
 
-- Paris/San Francisco validate ops against the allowlist at publish/generation time.
+- Tokyo-worker/San Francisco validate ops against the allowlist at publish/generation time.
 - Runtime enforces current-fingerprint match and prohibited path segments.
 
 ---

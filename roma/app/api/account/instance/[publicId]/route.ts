@@ -74,15 +74,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const authoritativeSource: 'account' | 'curated' =
-    publicIdKind === 'main' || publicIdKind === 'curated' ? 'curated' : 'account';
-
   let body:
     | {
         widgetType?: string;
         config?: Record<string, unknown>;
         displayName?: string | null;
-        source?: 'account' | 'curated';
         meta?: Record<string, unknown> | null;
       }
     | null = null;
@@ -92,7 +88,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           widgetType?: string;
           config?: Record<string, unknown>;
           displayName?: string | null;
-          source?: 'account' | 'curated';
           meta?: Record<string, unknown> | null;
         }
       | null;
@@ -109,7 +104,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
   const config = body?.config;
-  const source = body?.source;
   const displayName =
     body && Object.prototype.hasOwnProperty.call(body, 'displayName')
       ? typeof body.displayName === 'string'
@@ -127,26 +121,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           : undefined
       : undefined;
   if (!widgetType || !config || typeof config !== 'object' || Array.isArray(config)) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (source !== undefined && source !== 'account' && source !== 'curated') {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (source !== undefined && source !== authoritativeSource) {
     return withSession(
       request,
       NextResponse.json(
@@ -230,8 +204,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     publicId,
     widgetType,
     config,
-    displayName: authoritativeSource === 'curated' ? null : displayName,
-    source: authoritativeSource,
+    displayName,
     meta,
     l10n: {
       summary: {
@@ -345,15 +318,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const sourceIsCurated = publicIdKind === 'main' || publicIdKind === 'curated';
-  if (sourceIsCurated && current.value.authzPayload.accountIsPlatform !== true) {
-    return withSession(
-      request,
-      NextResponse.json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }),
-      current.value.setCookies,
-    );
-  }
-
   const existing = await getAccountInstanceCoreRow(accountId, publicId, current.value.accessToken);
   if (!existing.ok) {
     return withSession(
@@ -382,7 +346,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     );
   }
 
-  if (sourceIsCurated && existing.row.accountId !== accountId) {
+  if (existing.row.accountId !== accountId) {
     return withSession(
       request,
       NextResponse.json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }),
@@ -442,7 +406,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     NextResponse.json({
       accountId,
       publicId,
-      source: existing.row.source === 'curated' ? 'curated' : 'account',
       deleted: true,
       tokyoCleanupApplied: tokyoCleanup.ok,
     }),

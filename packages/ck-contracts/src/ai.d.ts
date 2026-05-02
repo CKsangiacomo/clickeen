@@ -1,5 +1,5 @@
 export type AiProvider = 'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon';
-export type AiProfile = 'free_low' | 'paid_standard' | 'paid_premium' | 'curated_premium';
+export type AiProfile = 'free_low' | 'paid_standard' | 'paid_premium' | 'system_premium';
 export type AiPolicyProfile = 'free' | 'tier1' | 'tier2' | 'tier3';
 export type AiExecutionSurface = 'execute' | 'endpoint';
 
@@ -77,7 +77,6 @@ export declare function resolveWidgetCopilotRequestedAgentId(args: {
 export declare function resolveAiProfile(args: {
   policyProfile: AiPolicyProfile;
   taskClass: string;
-  isCurated?: boolean;
 }): AiProfile;
 export declare function resolveAiAllowedProviders(
   entry: AiRegistryEntry,
@@ -104,5 +103,4 @@ export declare function resolveAiPolicyCapsule(args: {
   policyProfile: AiPolicyProfile;
   requestedProvider?: string;
   requestedModel?: string;
-  isCurated?: boolean;
 }): AiGrantPolicy;

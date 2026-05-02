@@ -1,12 +1,12 @@
 import type { MemberRole, PolicyProfile } from '@clickeen/ck-policy';
 import type { BerlinContactMethodsPayload } from './contact-methods';
 
-type WorkspaceTier = PolicyProfile;
+type AccountTier = PolicyProfile;
 
 type LifecycleNotice = {
   tierChangedAt: string | null;
-  tierChangedFrom: WorkspaceTier | null;
-  tierChangedTo: WorkspaceTier | null;
+  tierChangedFrom: AccountTier | null;
+  tierChangedTo: AccountTier | null;
   tierDropDismissedAt: string | null;
   tierDropEmailSentAt: string | null;
 };
@@ -49,7 +49,7 @@ export type BerlinAccountContext = {
   slug: string;
   status: string;
   isPlatform: boolean;
-  tier: WorkspaceTier;
+  tier: AccountTier;
   websiteUrl: string | null;
   membershipVersion: string | null;
   lifecycleNotice: LifecycleNotice;
@@ -74,7 +74,7 @@ export type BerlinBootstrapPayload = {
     accountCapsule: string;
     accountId: string;
     role: MemberRole;
-    profile: WorkspaceTier;
+    profile: AccountTier;
     authzVersion: string;
     issuedAt: string;
     expiresAt: string;
@@ -86,4 +86,4 @@ export type BerlinBootstrapPayload = {
   };
 };
 
-export type { WorkspaceTier };
+export type { AccountTier };

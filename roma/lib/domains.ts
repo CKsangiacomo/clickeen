@@ -18,7 +18,7 @@ export type RomaDomainDefinition = {
 };
 
 export const ROMA_DOMAINS: readonly RomaDomainDefinition[] = [
-  { key: 'home', label: 'Home', href: '/home', description: 'Workspace overview and quick actions.' },
+  { key: 'home', label: 'Home', href: '/home', description: 'Account overview and quick actions.' },
   { key: 'profile', label: 'User Settings', href: '/profile', description: 'Person-scoped settings for the signed-in user.' },
   { key: 'widgets', label: 'Widgets', href: '/widgets', description: 'Create and manage widgets.' },
   { key: 'builder', label: 'Builder', href: '/builder', description: 'Edit widget instances in Bob.' },

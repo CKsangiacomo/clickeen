@@ -94,7 +94,6 @@ Every service section below is an instance of this pattern. Tokyo stores immutab
 | **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
 | **DevStudio**     | `admin/`        | Local Vite                           | Internal toolbench for platform curation, verification, and local utility pages | ✅ Internal |
 | **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | SSR embed runtime, pixel, loader                                        | ✅ Active   |
-| **Paris**         | `paris/`        | Cloudflare Workers                   | Residual health stub + non-product residue                              | ✅ Active   |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
 | **Dieter**        | `dieter/`       | (build artifact)                     | Design system: tokens, 16+ components                                   | ✅ Active   |
@@ -134,7 +133,6 @@ Each release proceeds in 3 steps:
 | **Bob**           | `https://bob.dev.clickeen.com`               | `https://app.clickeen.com`          |
 | **Roma**          | `https://roma.dev.clickeen.com`              | `https://app.clickeen.com`          |
 | **Prague**        | `https://prague.dev.clickeen.com` (optional) | `https://clickeen.com`              |
-| **Paris**         | `https://paris.dev.clickeen.com`             | `https://paris.clickeen.com`        |
 | **Venice**        | `https://venice.dev.clickeen.com`            | `https://embed.clickeen.com`        |
 | **Tokyo**         | `https://tokyo.dev.clickeen.com`             | `https://tokyo.clickeen.com`        |
 | **San Francisco** | `https://sanfrancisco.dev.clickeen.com`      | `https://sanfrancisco.clickeen.com` |
@@ -151,7 +149,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 | Primitive         | Used by                                                   | Why                                                      |
 | ----------------- | --------------------------------------------------------- | -------------------------------------------------------- |
 | **Pages**         | Prague, Bob, Roma                                          | Static + Next.js-style app surfaces; simple deploy model |
-| **Workers**       | Paris (stub), Tokyo-worker, Venice, San Francisco         | Edge HTTP services; consistent global runtime            |
+| **Workers**       | Tokyo-worker, Venice, San Francisco         | Edge HTTP services; consistent global runtime            |
 | **R2**            | Tokyo (assets), San Francisco (raw logs)                  | Cheap object storage, zero egress for CDN patterns       |
 | **KV**            | San Francisco (sessions), Atlas (read-only runtime cache) | Hot key/value state, TTLs                                |
 | **D1**            | San Francisco (indexes)                                   | Queryable learning metadata; low-ops SQL                 |
@@ -199,28 +197,11 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - In local development, DevStudio is a local Vite toolbench for static/internal verification pages; removed widget-authoring and company-plane action lanes must not be reintroduced there.
 - There is no canonical Cloudflare DevStudio runtime. DevStudio is local-only.
 
-#### Paris (Workers)
-
-- Residual health-only Worker stub.
-- Public endpoints are under `/api/*`.
-- Shipped in this repo snapshot:
-  - Health only: `GET /api/healthz`
-  - Core account instance open/save now lives only in Bob/Roma same-origin routes; Paris no longer exposes customer account instance routes.
-  - Locale/editor endpoints are Roma-owned and are not mounted in Paris.
-  - Roma starter/listed-instance discovery is Roma-owned through `GET /api/account/widgets`; Paris no longer mounts those routes.
-  - Roma widget commands stay explicit (`POST /api/account/widgets/duplicate`, `DELETE /api/account/instance/:publicId`).
-  - Paris no longer mounts AI endpoints in the product path under 070A.
-  - Venice serves the public instance payload route (`GET /api/instance/:publicId`) for public live/demo use, assembled by Tokyo-worker from Tokyo live truth.
-- Current cloud-dev account rule:
-  - Account creation is Berlin-owned; Paris no longer mounts account creation.
-  - Instance routing uses `publicId` prefix: `wgt_main_*` marks the instance shown first in MiniBob, `wgt_curated_*` marks other starter instances, `wgt_*_u_*` marks instances in user accounts.
-- Product-path base-config writes persist through Bob/Roma same-origin routes to Tokyo. In product terms, `Save` hands the instance to Tokyo-worker so Tokyo-worker can reconcile the instance and its derived artifacts. `Publish` / `Unpublish` remains the separate Widgets-domain action that flips whether Venice may publicly serve the instance.
-
 #### Venice (Workers)
 
 - Public embed surface (third-party websites only talk to Venice).
 - Runtime reads only Tokyo live pointers + fingerprinted config/text/widget bytes.
-- Public `/e/:publicId` and `/r/:publicId` do **0** Paris/Supabase calls at request time.
+- Public `/e/:publicId` and `/r/:publicId` do **0** Supabase calls at request time.
 - Public snapshot serving is revision-coherent: Venice reads one published revision and never mixes artifacts from previous revisions.
 - If a locale artifact is missing in the current revision, Venice returns unavailable for that locale (no serve-time locale fallback).
 - Public `/e/:publicId` and `/r/:publicId` serve snapshots from published pointers only (no public dynamic fallback). Dynamic rendering is restricted to controlled internal bypass.
@@ -281,8 +262,8 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **DNS & custom domains**
 
-- `bob.dev`, `roma.dev`, `paris.dev`, `tokyo.dev`, `venice.dev`, and `sanfrancisco.dev` point at the corresponding Pages/Workers deployments.
-- Production domains (`app`, `paris`, `tokyo`, `embed`, `sanfrancisco`) are configured similarly.
+- `bob.dev`, `roma.dev`, `tokyo.dev`, `venice.dev`, and `sanfrancisco.dev` point at the corresponding Pages/Workers deployments.
+- Production domains (`app`, `tokyo`, `embed`, `sanfrancisco`) are configured similarly.
 
 **Pages build settings**
 
@@ -318,7 +299,6 @@ Canonical machine-health endpoints:
 
 | Surface       | Canonical URL                                              | Expected shape                                                       | Owner         |
 | ------------- | ---------------------------------------------------------- | -------------------------------------------------------------------- | ------------- |
-| Paris         | `https://paris.dev.clickeen.com/api/healthz`               | `{ "up": true }`                                                     | Paris         |
 | Berlin        | `https://berlin-dev.clickeen.workers.dev/internal/healthz` | `{ "ok": true, "service": "berlin" }`                                | Berlin        |
 | Tokyo-worker  | `https://tokyo.dev.clickeen.com/healthz`                   | `{ "up": true }`                                                     | Tokyo-worker  |
 | San Francisco | `https://sanfrancisco.dev.clickeen.com/healthz`            | `{ "ok": true, "service": "sanfrancisco", "env": "...", "ts": ... }` | San Francisco |
@@ -608,7 +588,7 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 All third-party embed traffic terminates at Venice:
 
-- Browsers **never** call Paris directly
+- Browsers call Venice for public embeds
 - Venice fetches only Tokyo live pointers and immutable runtime bytes
 - Tokyo-worker publishes those bytes ahead of time during explicit sync/publish flows
 - If required Tokyo bytes are missing, Venice returns unavailable instead of healing or falling back
@@ -643,7 +623,7 @@ Visitor loads embed → Venice GET /e/:publicId
 
 ```
 Submission proxy path hard-cut in this repo snapshot.
-`POST /s/:publicId` and Paris `/api/submit/:publicId` are not active runtime contracts.
+`POST /s/:publicId` is not an active runtime contract.
 ```
 
 ---

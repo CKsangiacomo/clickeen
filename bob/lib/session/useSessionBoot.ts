@@ -61,7 +61,6 @@ export function useSessionBoot(args: {
           baseLocale,
           widgetname: compiled.widgetname,
           label: nextLabel,
-          source: message.source,
           meta: message.meta ?? null,
         });
         setState((prev) => ({

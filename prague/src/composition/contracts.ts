@@ -30,7 +30,7 @@ export const BLOCK_CONTRACTS: Record<string, BlockContract> = {
     purpose: 'Two-column layout with content and visual',
     regions: {
       content: 'Narrative copy and actions',
-      visual: 'Curated widget or media preview',
+      visual: 'System instance or media preview',
     },
     constraints: {
       'content should include CTA group': true,

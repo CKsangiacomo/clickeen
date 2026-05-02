@@ -2,7 +2,7 @@
 
 This is the technical reference for working in the Clickeen codebase. For strategy and vision, see `documentation/strategy/WhyClickeen.md`.
 
-**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, ad‑hoc fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Locale overlays are exposed only when current for the active base fingerprint; missing current overlays are system failures, not something runtime consumers soften or hide. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/product/widgets/*`), defaults (`spec.json` -> `defaults`), and curated local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high‑impact changes, still use safety rails (feature flags, rollback switches, and data‑safety checks) when a change can affect runtime behavior.
+**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, ad‑hoc fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Locale overlays are exposed only when current for the active base fingerprint; missing current overlays are system failures, not something runtime consumers soften or hide. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/product/widgets/*`), defaults (`spec.json` -> `defaults`), and system/admin-owned local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high‑impact changes, still use safety rails (feature flags, rollback switches, and data‑safety checks) when a change can affect runtime behavior.
 
 **Debugging order (when something is unclear):**
 
@@ -93,7 +93,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Surviving repo source lives in `tokyo/product/widgets/{widgetType}/`
 - Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
 - Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `limits.json`, `localization.json`, `layers/*.allowlist.json`
-- Platform-controlled; **not stored in Michael** and **not served from Paris**
+- Platform-controlled; **not stored in Michael**
 
 **Instance** = THE ACCOUNT-OWNED DATA
 
@@ -101,7 +101,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Owns saved config, display metadata, asset refs, base locale, l10n state, overlay ops, generated packs, and publish/live state
 - Stored in Michael:
   - Account registry residue: `widget_instances` with `widget_id` (FK to `widgets`)
-  - Clickeen-listed starter residue during cutover: `curated_widget_instances` with `widget_type`
+  - System/admin-owned starters as normal `widget_instances` rows
 - Product-path account open resolves the saved authoring revision from Tokyo; Michael remains the registry/shell plane during cutover, while instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
 - On the active account authoring path, user-facing instance identity (`widgetType`, `displayName`, `source`, `meta`) is Tokyo-owned. Michael `widget_instances.display_name` may still exist as storage residue during cutover, but Widgets/Builder product contracts must not read or write identity truth from it.
 - Michael `widget_instances.config` may still exist as inert schema residue for user-instance rows, but the active product path must not persist or read a second live widget document there.
@@ -133,7 +133,7 @@ For the 075 authoring simplification track, this account-mode Roma -> Bob -> Tok
 5. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute policy on each open/save call; the signed capsule carries stable authz truth, while live mutable counters are enforced at the canonical owner when needed.
 6. **Localization/live follow-up**: translation and locale convergence remain downstream work owned outside the Builder save loop. Product-path save does not own that work.
 
-On the real product path, editor routes are account-mode routes. If non-account/demo/helper route shapes still exist in code while being reduced, they do not define shared editor semantics or account authoring truth. On `account` product routes, policy/entitlement truth comes from the bootstrap authz capsule, not a fresh Paris policy resolution.
+On the real product path, editor routes are account-mode routes. If non-account/demo/helper route shapes still exist in code while being reduced, they do not define shared editor semantics or account authoring truth. On `account` product routes, policy/entitlement truth comes from the bootstrap authz capsule.
 
 In the browser the active account-mode host path is:
 
@@ -147,9 +147,9 @@ For account-widget localization, Tokyo-worker owns the saved pointer, base snaps
 Between open and save:
 
 - Base config edits happen in Bob's React state (in memory)
-- Preview updates via postMessage (no Paris API calls for base config)
-- Core account instance open does not require Paris
-- Core account instance persistence does not proxy Paris
+- Preview updates via postMessage
+- Core account instance open stays on Roma/Bob/Tokyo product routes
+- Core account instance persistence stays on Roma/Bob/Tokyo product routes
 - ZERO database writes for base config during normal product open/save
 - Base config is not required to be English; Builder authors the account `baseLocale`, and translation to other locales is async follow-up work after save while overlay preview remains read-only inspection.
 - No demo/non-account surface writes durable account widget truth.
@@ -175,7 +175,7 @@ Between open and save:
 
 1. Clickeen team authors the starter instances in Builder, under the admin account.
 2. One instance per widget may be shown first in MiniBob (`wgt_main_{widgetType}` in current runtime naming).
-3. Other starter instances use `wgt_curated_{widgetType}_{styleSlug}` in current runtime naming.
+3. Other starter instances use `wgt_system_{widgetType}_{styleSlug}` in current runtime naming.
 4. These instances are published/listed and surfaced as starters.
 5. User browses gallery -> clicks "Use this" -> clones to their account as a user instance.
 6. User customizes their copy freely (full ToolDrawer access).
@@ -190,14 +190,14 @@ Between open and save:
 **Naming convention for Clickeen starters:**
 
 ```
-  wgt_main_{widgetType}
-wgt_curated_{widgetType}_{styleSlug}
+wgt_main_{widgetType}
+wgt_system_{widgetType}_{styleSlug}
 Examples:
   wgt_main_faq
-  wgt_curated_faq_lightblurs_generic
+  wgt_system_faq_lightblurs_generic
 ```
 
-**Publishing semantics:** `published` / `unpublished` is a Tokyo instance serve-state concept. Curated rows may still carry `status` residue in Michael schema during cutover, but that column is not canonical authority and not a user-facing gate.
+**Publishing semantics:** `published` / `unpublished` is a Tokyo instance serve-state concept. Michael rows may still carry `status` residue during cutover, but that column is not canonical authority and not a user-facing gate.
 
 Listed metadata lives alongside the instance (not in the publicId):
 
@@ -222,7 +222,6 @@ instance.meta = {
 | **Roma**          | Current-account product shell + Builder host orchestration      | Cloudflare Pages (Next.js)      | `roma/`         |
 | **DevStudio**     | Internal toolbench for platform curation, verification, and local utility pages | Local Vite toolbench            | `admin/`        |
 | **Venice**        | SSR embed runtime                                               | Cloudflare Pages (Next.js Edge) | `venice/`       |
-| **Paris**         | Residual health stub + non-product residue; not on the product authoring path | Cloudflare Workers              | `paris/`        |
 | **San Francisco** | AI Workforce OS (agents, learning)                              | Workers (D1/KV/R2/Queues)       | `sanfrancisco/` |
 | **Michael**       | Database                                                        | Supabase Postgres               | `supabase/`     |
 | **Dieter**        | Design system                                                   | Build artifacts in Tokyo        | `dieter/`       |
@@ -240,13 +239,11 @@ instance.meta = {
 
 **DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, verification, and small local utility pages. The old local DevStudio widget-authoring lane is removed. DevStudio must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 
-**Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice; Paris is private.
-
-**Paris** — Residual Cloudflare Worker boundary. Today it is a health stub plus a small amount of non-product residue. It is not on the account-mode product path, not an auth/session authority, and not the owner of account localization state, account widget save/publish sync, or public embed payload assembly.
+**Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice.
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
-**Michael** — Supabase PostgreSQL database. Stores user/account instance registry rows (`widget_instances`), transitional listed starter registry rows (`curated_widget_instances` during cutover), submissions, users, usage events. RLS enforced for user tables. Starters use `wgt_main_*` and `wgt_curated_*` in current naming, but the surviving product model is listed/duplicable instances, not a separate content class.
+**Michael** — Supabase PostgreSQL database. Stores account instance registry rows (`widget_instances`), submissions, users, and usage events. RLS enforced for user tables. Starters are normal admin-owned/system instances using `wgt_main_*` and `wgt_system_*`; there is no separate starter content class.
 
 **Tokyo** — Asset storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, public projections, and account-owned upload blobs.
 
@@ -373,7 +370,6 @@ Canonical reference:
 | Bob     | ✅ Active | Compiler, ToolDrawer, Account, Ops engine                                                                     |
 | Roma    | ✅ Active | Domain shell, account bootstrap, widgets/builder orchestration                                                |
 | Tokyo   | ✅ Active | FAQ widget with shared modules                                                                                |
-| Paris   | ✅ Active | Residual health stub and non-product residue only                                                             |
 | Venice  | ✅ Active | SSR embed runtime (published-only), loader, asset proxy (usage/submissions are stubbed in this repo snapshot) |
 | Dieter  | ✅ Active | 16+ components, tokens, typography                                                                            |
 | Michael | ✅ Active | Supabase Postgres with RLS                                                                                    |
@@ -410,7 +406,6 @@ pnpm build                      # Build all packages
 # Development
 bash scripts/dev-up.sh          # Canonical local DevStudio operating lane (Tokyo/Tokyo-worker/Berlin/Bob/DevStudio)
 pnpm dev:bob                    # Bob only
-pnpm dev:paris                  # Paris only
 pnpm dev:admin                  # DevStudio only
 
 # Quality
@@ -441,13 +436,13 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 ### Environments (Canonical)
 
-| Environment           | Bob                     | Roma                            | Paris                  | Tokyo                   | San Francisco                  | DevStudio               |
-| --------------------- | ----------------------- | ------------------------------- | ---------------------- | ----------------------- | ------------------------------ | ----------------------- |
-| **Local**             | `http://localhost:3000` | `https://roma.dev.clickeen.com` | `—`                    | `http://localhost:4000` | `—`                            | `http://localhost:5173` |
-| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com`   | `https://roma.dev.clickeen.com` | `https://paris.dev.clickeen.com`                 | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `— local only`                       |
-| **UAT**                     | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://paris.clickeen.com`                     | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
-| **Limited GA**              | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://paris.clickeen.com`                     | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
-| **GA**                      | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://paris.clickeen.com`                     | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
+| Environment           | Bob                     | Roma                            | Tokyo                   | San Francisco                  | DevStudio               |
+| --------------------- | ----------------------- | ------------------------------- | ----------------------- | ------------------------------ | ----------------------- |
+| **Local**             | `http://localhost:3000` | `https://roma.dev.clickeen.com` | `http://localhost:4000` | `—`                            | `http://localhost:5173` |
+| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com`   | `https://roma.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `— local only`                       |
+| **UAT**                     | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
+| **Limited GA**              | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
+| **GA**                      | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
 
 UAT / Limited GA / GA are **release stages** (account-level exposure controls), not separate infrastructure.
 

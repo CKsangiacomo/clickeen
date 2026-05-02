@@ -16,7 +16,6 @@ type BerlinRegistryRow = {
   accountId?: unknown;
   widgetType?: unknown;
   meta?: unknown;
-  source?: unknown;
 };
 
 function normalizeRegistryRow(row: BerlinRegistryRow | null, fallbackPublicId: string): NonNullable<Extract<MichaelAccountInstanceResult, { ok: true }>['row']> | null {
@@ -25,7 +24,6 @@ function normalizeRegistryRow(row: BerlinRegistryRow | null, fallbackPublicId: s
   const accountId = asTrimmedString(row.accountId);
   const widgetType = asTrimmedString(row.widgetType);
   if (!widgetId || !accountId || !widgetType) return null;
-  const source = row.source === 'curated' ? 'curated' : 'account';
   const meta =
     row.meta && typeof row.meta === 'object' && !Array.isArray(row.meta)
       ? (row.meta as Record<string, unknown>)
@@ -38,7 +36,6 @@ function normalizeRegistryRow(row: BerlinRegistryRow | null, fallbackPublicId: s
     accountId,
     widgetType,
     meta,
-    source,
   };
 }
 

@@ -8,7 +8,6 @@
     "berlin",
     "bob",
     "dieter",
-    "paris",
     "prague",
     "roma",
     "sanfrancisco",
@@ -29,7 +28,6 @@
     "dev:bob": "pnpm --filter @clickeen/bob dev",
     "dev:admin": "pnpm --filter @clickeen/devstudio dev",
     "dev:berlin": "pnpm --filter @clickeen/berlin dev",
-    "dev:paris": "pnpm --filter @clickeen/paris dev",
     "dev:prague": "pnpm --filter @clickeen/prague dev",
     "dev:roma": "pnpm --filter @clickeen/roma dev",
     "dev:sanfrancisco": "pnpm --filter @clickeen/sanfrancisco dev",
@@ -44,6 +42,7 @@
     "build:prague:global": "pnpm prague:l10n:translate && pnpm prague:l10n:verify && pnpm build:prague",
     "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs",
     "prague:sync": "node scripts/prague-sync.mjs --publish --local",
+    "health:product-path": "node scripts/health/product-path-smoke.mjs",
     "dev:seed:platform": "node scripts/dev/seed-local-platform-state.mjs",
     "dev:seed:platform:assets": "node scripts/dev/seed-local-platform-assets.mjs"
   },

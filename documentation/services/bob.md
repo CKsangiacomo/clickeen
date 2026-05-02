@@ -512,7 +512,7 @@ Important boundary:
 - Roma product starter/listed-instance discovery is Roma-owned through `/api/account/widgets`.
 - DevStudio local must not use Roma starter routes for instance discovery.
 
-Bob editor routes are explicit and non-`/api/paris`:
+Bob editor routes are explicit:
 
 - `bob/app/api/ai/widget-copilot/route.ts`
 - `bob/app/api/ai/outcome/route.ts`

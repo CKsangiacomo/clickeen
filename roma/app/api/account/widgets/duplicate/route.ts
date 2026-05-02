@@ -19,17 +19,10 @@ import {
 
 export const runtime = 'edge';
 
-type DuplicateSource =
-  | {
-      widgetType: string;
-      config: Record<string, unknown>;
-      source: 'account';
-    }
-  | {
-      widgetType: string;
-      config: Record<string, unknown>;
-      source: 'curated';
-    };
+type DuplicateSource = {
+  widgetType: string;
+  config: Record<string, unknown>;
+};
 
 function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -48,12 +41,12 @@ function createUserInstancePublicId(widgetType: string): string {
   return `wgt_${stem}_u_${suffix}`;
 }
 
-function classifyDuplicateSourcePublicId(publicId: string): 'user' | 'main' | 'curated' | null {
+function classifyDuplicateSourcePublicId(publicId: string): 'user' | 'main' | 'system' | null {
   const normalized = publicId.trim().toLowerCase();
   if (!normalized.startsWith('wgt_')) return null;
   if (normalized.includes('_u_')) return 'user';
   if (normalized.startsWith('wgt_main_')) return 'main';
-  if (normalized.startsWith('wgt_curated_')) return 'curated';
+  if (normalized.startsWith('wgt_system_')) return 'system';
   return null;
 }
 
@@ -130,7 +123,7 @@ async function loadDuplicateSource(args: {
   const source = await loadTokyoAccountInstanceDocument({
     accountId: sourceCore.row.accountId,
     publicId: args.publicId,
-    accountCapsule: args.accountCapsule,
+    accountCapsule: sourceCore.row.accountId === args.accountId ? args.accountCapsule : undefined,
   });
   if (!source.ok) {
     return {
@@ -149,7 +142,6 @@ async function loadDuplicateSource(args: {
     value: {
       widgetType: source.value.row.widgetType,
       config: source.value.config,
-      source: sourceCore.row.source === 'account' ? 'account' : 'curated',
     },
   };
 }
@@ -248,7 +240,6 @@ export async function POST(request: NextRequest) {
       widgetType: source.value.widgetType,
       config: source.value.config,
       displayName: null,
-      source: 'account',
       meta: null,
       l10n: {
         summary: {
@@ -383,7 +374,6 @@ export async function POST(request: NextRequest) {
         publicId: created.publicId,
         widgetType: created.widgetType,
         status: 'unpublished',
-        source: source.value.source,
       },
       { status: 201 },
     ),

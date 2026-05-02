@@ -1,9 +1,9 @@
-import { isUuid } from '@clickeen/ck-contracts';
+import { classifyWidgetPublicId, isUuid } from '@clickeen/ck-contracts';
 import {
   normalizePublicId,
   normalizeSha256Hex,
 } from '../asset-utils';
-import { assertRomaAccountCapsuleAuth, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '../auth';
+import { assertRomaAccountCapsuleAuth, INTERNAL_SERVICE_HEADER, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '../auth';
 import { json } from '../http';
 import {
   deleteSavedRenderConfig,
@@ -413,13 +413,20 @@ export async function tryHandleInternalRenderRoutes(
     }
 
     if (req.method === 'GET') {
-      const authErr = await authorizeSavedRenderControlRequest({
-        req,
-        env,
-        accountId,
-        minRole: 'viewer',
-      });
-      if (authErr) return respond(authErr);
+      const publicIdKind = classifyWidgetPublicId(publicId);
+      const internalServiceId = String(req.headers.get(INTERNAL_SERVICE_HEADER) || '').trim().toLowerCase();
+      const isRomaListedRead =
+        internalServiceId === TOKYO_INTERNAL_SERVICE_ROMA_EDGE &&
+        (publicIdKind === 'main' || publicIdKind === 'system');
+      if (!isRomaListedRead) {
+        const authErr = await authorizeSavedRenderControlRequest({
+          req,
+          env,
+          accountId,
+          minRole: 'viewer',
+        });
+        if (authErr) return respond(authErr);
+      }
       const saved = await readSavedRenderConfig({ env, publicId: publicId!, accountId });
       if (!saved.ok && saved.kind === 'NOT_FOUND') {
         return respond(
@@ -472,7 +479,6 @@ export async function tryHandleInternalRenderRoutes(
         widgetType: body.widgetType as string,
         config: body.config as Record<string, unknown>,
         displayName: body.displayName,
-        source: body.source,
         meta: body.meta,
         ...(l10n !== undefined ? { l10n } : {}),
       });

@@ -55,7 +55,7 @@
     {
       "op": "set",
       "path": "strings.localeShowcase.subtitle",
-      "value": "Parehong curated na widget. Tatlong locale. Isang codepath."
+      "value": "Parehong system instance. Tatlong locale. Isang codepath."
     },
     {
       "op": "set",

@@ -27,7 +27,6 @@ documentation/
 │   ├── devstudio.md         # Internal toolbench
 │   ├── tokyo.md             # Asset CDN
 │   ├── tokyo-worker.md      # Asset uploads + l10n publisher
-│   ├── paris.md             # API/database
 │   ├── sanfrancisco.md      # AI workforce OS
 │   ├── venice.md            # Embed runtime
 │   ├── michael.md           # Database schema
@@ -90,7 +89,7 @@ Use `documentation/` for authoritative behavior; use `Execution_Pipeline_Docs/` 
 
 This repo is operated by **1 human architect + multiple AI dev teams**. The system is modular and contract-driven so AIs can work in parallel safely.
 
-- **Modular surfaces:** widgets in `tokyo/product/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `paris/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
+- **Modular surfaces:** widgets in `tokyo/product/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
 - **Explicit contracts:** `spec.json`, `agent.md`, `*.allowlist.json`, PRDs, and service docs define what is safe to change. If it is not in a contract, assume it is unsafe.
 - **Automation intent:** local changes are designed to propagate through the local DevStudio operating lane automatically. Cloud-dev propagation is explicit (promote/deploy).
 - **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.

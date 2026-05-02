@@ -43,7 +43,6 @@ export type SavedRenderPointer = {
   accountId: string;
   widgetType: string;
   displayName: string | null;
-  source: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
   configFp: string;
   updatedAt: string;

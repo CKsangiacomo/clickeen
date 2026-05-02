@@ -13,7 +13,6 @@ export async function writeSavedRenderConfig(args: {
   widgetType: string;
   config: Record<string, unknown>;
   displayName?: unknown;
-  source?: unknown;
   meta?: unknown;
   l10n?:
     | {
@@ -36,8 +35,6 @@ export async function writeSavedRenderConfig(args: {
 
   const displayName =
     typeof args.displayName === 'string' ? args.displayName.trim() || null : null;
-  const source =
-    args.source === 'curated' ? 'curated' : 'account';
   const meta =
     args.meta === null
       ? null
@@ -75,7 +72,6 @@ export async function writeSavedRenderConfig(args: {
     accountId,
     widgetType,
     displayName,
-    source,
     meta,
     configFp,
     updatedAt: new Date().toISOString(),

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { classifyWidgetPublicId } from '@clickeen/ck-contracts';
 import {
   loadTokyoAccountInstanceDocument,
   saveAccountInstanceDirect,
@@ -34,17 +33,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  if (classifyWidgetPublicId(publicId) !== 'user') {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
-        { status: 403 },
-      ),
-      current.value.setCookies,
-    );
-  }
-
   let body: { displayName?: unknown } | null = null;
   try {
     body = (await request.json()) as { displayName?: unknown } | null;
@@ -119,7 +107,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     widgetType: currentInstance.value.row.widgetType,
     config: currentInstance.value.config,
     displayName,
-    source: currentInstance.value.row.source,
     meta: currentInstance.value.row.meta ?? null,
     accountCapsule: current.value.authzToken,
   });

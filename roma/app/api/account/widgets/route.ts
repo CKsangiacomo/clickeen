@@ -9,7 +9,7 @@ type WidgetInstance = {
   widgetType: string;
   displayName: string;
   status: 'published' | 'unpublished';
-  source: 'account' | 'curated';
+  listed: boolean;
   actions: {
     edit: boolean;
     duplicate: boolean;
@@ -54,11 +54,9 @@ export async function GET(request: NextRequest) {
   }
 
   const canMutate = current.value.authzPayload.role !== 'viewer';
-  const canMutateCurated = canMutate && current.value.authzPayload.accountIsPlatform;
-
   const accountInstances: WidgetInstance[] = widgetCatalog.accountInstances.map((instance) => ({
     ...instance,
-    source: 'account',
+    listed: false,
     actions: {
       edit: true,
       duplicate: canMutate,
@@ -69,13 +67,13 @@ export async function GET(request: NextRequest) {
     },
   }));
 
-  const curatedInstances: WidgetInstance[] = widgetCatalog.curatedInstances.map((instance) => ({
+  const listedInstances: WidgetInstance[] = widgetCatalog.listedInstances.map((instance) => ({
     ...instance,
-    source: 'curated',
+    listed: true,
     actions: {
-      edit: true,
+      edit: false,
       duplicate: canMutate,
-      delete: canMutateCurated,
+      delete: false,
       rename: false,
       publish: false,
       unpublish: false,
@@ -89,7 +87,7 @@ export async function GET(request: NextRequest) {
         accountId,
       },
       widgetTypes: widgetCatalog.widgetTypes,
-      instances: [...accountInstances, ...curatedInstances],
+      instances: [...accountInstances, ...listedInstances],
     }),
     current.value.setCookies,
   );

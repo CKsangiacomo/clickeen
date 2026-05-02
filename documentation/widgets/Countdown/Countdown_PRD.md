@@ -6,7 +6,7 @@ STATUS: PRD
 Renders a configurable countdown / personal countdown / number counter with optional CTA and “after end” behavior, edited in Bob and rendered deterministically in the embed.
 
 ## 0) Non-negotiables (Architecture)
-1. **Starter designs are instances**: curated designs are Clickeen-owned instances that users clone.
+1. **Starter designs are instances**: system instances are Clickeen-owned instances that users clone.
 2. **No silent fixups**: editor + runtime must not invent state, merge defaults, coerce invalid values, or generate IDs at render time.
 3. **Deterministic render**: the same instance state produces the same output every time.
 4. **CSS-first variants**: variants are driven by `data-*` + CSS variables; JS only sets attributes/vars and updates text/visibility.

@@ -24,7 +24,7 @@ Canonical routes in this repo snapshot:
 Prague is strict: these env vars are required at build/runtime (because they are used in `*.astro`):
 
 - `PUBLIC_TOKYO_URL` — base URL for Tokyo assets (Dieter + widget specs + i18n)
-- `PUBLIC_VENICE_URL` — base URL for Venice embed runtime (used for curated instance iframes)
+- `PUBLIC_VENICE_URL` — base URL for Venice embed runtime (used for system instance iframes)
 
 Optional:
 

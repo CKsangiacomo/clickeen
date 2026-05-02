@@ -183,7 +183,7 @@ function buildAccountStateById(rows) {
 async function loadPlatformRows(client, platformAccountId) {
   const headers = createSupabaseHeaders(client);
   const baseUrl = client.base.replace(/\/+$/, '');
-  const [accounts, widgets, accountRows, curatedRows] = await Promise.all([
+  const [accounts, widgets, accountRows] = await Promise.all([
     loadJsonFromSupabase(baseUrl, headers, '/rest/v1/accounts?select=id,l10n_locales,l10n_policy&limit=500'),
     loadJsonFromSupabase(baseUrl, headers, `/rest/v1/widgets?select=id,type&limit=${DEFAULT_PAGE_SIZE}`),
     loadJsonFromSupabase(
@@ -191,12 +191,7 @@ async function loadPlatformRows(client, platformAccountId) {
       headers,
       `/rest/v1/widget_instances?select=public_id,display_name,widget_id,account_id,config&account_id=eq.${encodeURIComponent(
         platformAccountId,
-      )}&order=created_at.asc&limit=${DEFAULT_PAGE_SIZE}`,
-    ),
-    loadJsonFromSupabase(
-      baseUrl,
-      headers,
-      `/rest/v1/curated_widget_instances?select=public_id,widget_type,owner_account_id,config,meta&order=created_at.asc&limit=${DEFAULT_PAGE_SIZE}`,
+        )}&order=created_at.asc&limit=${DEFAULT_PAGE_SIZE}`,
     ),
   ]);
 
@@ -224,31 +219,7 @@ async function loadPlatformRows(client, platformAccountId) {
       widgetType,
       config: row.config,
       displayName: asTrimmedString(row?.display_name) || publicId,
-      source: 'account',
       meta: null,
-      baseLocale: accountState.baseLocale,
-      desiredLocales: accountState.desiredLocales,
-    });
-  }
-
-  for (const row of curatedRows) {
-    const publicId = asTrimmedString(row?.public_id);
-    const accountId = asTrimmedString(row?.owner_account_id)?.toLowerCase();
-    const widgetType = asTrimmedString(row?.widget_type);
-    const accountState = accountId ? accountStateById.get(accountId) : null;
-    const meta =
-      row?.meta === null || row?.meta === undefined ? null : isRecord(row?.meta) ? row.meta : null;
-    if (!publicId || !accountId || !widgetType || !accountState || !isRecord(row?.config)) {
-      continue;
-    }
-    rows.push({
-      publicId,
-      accountId,
-      widgetType,
-      config: row.config,
-      displayName: null,
-      source: 'curated',
-      meta,
       baseLocale: accountState.baseLocale,
       desiredLocales: accountState.desiredLocales,
     });
@@ -281,7 +252,6 @@ async function writeLocalSavedSnapshot(args) {
         widgetType: args.row.widgetType,
         config: args.row.config,
         displayName: args.row.displayName,
-        source: args.row.source,
         meta: args.row.meta,
         l10n: {
           summary: {
@@ -342,7 +312,6 @@ async function materializeLocalSavedState(args) {
       saved?.l10n?.summary?.desiredLocales,
       row.baseLocale,
     );
-    const savedDisplayName = asTrimmedString(saved?.displayName);
     if (!savedBaseFingerprint) {
       throw new Error(`saved snapshot missing baseFingerprint for ${row.publicId}`);
     }
@@ -355,9 +324,6 @@ async function materializeLocalSavedState(args) {
       throw new Error(
         `saved desiredLocales mismatch for ${row.publicId} (${savedDesiredLocales.join(',')} != ${row.desiredLocales.join(',')})`,
       );
-    }
-    if (row.source === 'curated' && savedDisplayName) {
-      throw new Error(`curated saved snapshot carries displayName truth for ${row.publicId}`);
     }
     await verifyBaseSnapshot(args.localBase, row.publicId, savedBaseFingerprint);
   }

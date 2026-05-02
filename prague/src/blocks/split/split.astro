@@ -15,7 +15,7 @@ type Props = {
   primaryCta: { label: string; href: string };
   secondaryCta?: { label: string; href: string };
   actionGroup?: ActionGroup;
-  curatedRef?: {
+  systemInstanceRef?: {
     publicId: string;
     locale: string;
     title?: string;
@@ -24,7 +24,7 @@ type Props = {
   layout: string;
 };
 
-const { headline, subheadline, primaryCta, secondaryCta, actionGroup, curatedRef, layout } = Astro.props;
+const { headline, subheadline, primaryCta, secondaryCta, actionGroup, systemInstanceRef, layout } = Astro.props;
 const resolvedLayout = assertSplitLayout(layout, 'split.layout');
 const isStacked = resolvedLayout === 'stacked';
 const isReverse = resolvedLayout === 'visual-left';
@@ -77,15 +77,15 @@ const headerPrimitives = assertPrimitives(
         </div>
 
         <div class="ck-splitCreative__visual" aria-hidden="true">
-          {curatedRef ? (
+          {systemInstanceRef ? (
             <InstanceEmbed
-              publicId={curatedRef.publicId}
-              locale={curatedRef.locale}
-              title={curatedRef.title ?? 'Widget preview'}
-              embedMode={curatedRef.embedMode}
+              publicId={systemInstanceRef.publicId}
+              locale={systemInstanceRef.locale}
+              title={systemInstanceRef.title ?? 'Widget preview'}
+              embedMode={systemInstanceRef.embedMode}
             />
           ) : (
-            <div class="ck-media ck-splitCreative__stub">Missing curatedRef.publicId</div>
+            <div class="ck-media ck-splitCreative__stub">Missing systemInstanceRef.publicId</div>
           )}
         </div>
       </div>
@@ -107,15 +107,15 @@ const headerPrimitives = assertPrimitives(
         </div>
 
         <div class="ck-split__b ck-splitCreative__visual" aria-hidden="true">
-          {curatedRef ? (
+          {systemInstanceRef ? (
             <InstanceEmbed
-              publicId={curatedRef.publicId}
-              locale={curatedRef.locale}
-              title={curatedRef.title ?? 'Widget preview'}
-              embedMode={curatedRef.embedMode}
+              publicId={systemInstanceRef.publicId}
+              locale={systemInstanceRef.locale}
+              title={systemInstanceRef.title ?? 'Widget preview'}
+              embedMode={systemInstanceRef.embedMode}
             />
           ) : (
-            <div class="ck-media ck-splitCreative__stub">Missing curatedRef.publicId</div>
+            <div class="ck-media ck-splitCreative__stub">Missing systemInstanceRef.publicId</div>
           )}
         </div>
       </div>

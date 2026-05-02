@@ -170,7 +170,6 @@ export async function issueAccountCopilotGrant(args: {
   const ai = resolveAiPolicyCapsule({
     entry,
     policyProfile: args.authz.profile,
-    isCurated: false,
   });
 
   const traceRaw = args.trace ?? {};

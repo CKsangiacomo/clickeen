@@ -143,7 +143,7 @@ Required non-visual blocks:
 
 Notes:
 - Page JSON is the **single source of truth** for layout + base copy; overlays overwrite `blocks[].copy` at runtime.
-- Visual embeds are explicit: use `curatedRef.publicId` on blocks that should embed a curated instance.
+- Visual embeds are explicit: use `systemInstanceRef.publicId` on blocks that should embed a system instance.
 
 Localization is applied via page JSON + ops overlays:
 - overlays: `tokyo/prague/l10n/widgets/{widget}/locale/{locale}/{baseFingerprint}.ops.json`
@@ -154,7 +154,7 @@ Localization is applied via page JSON + ops overlays:
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.
-- Curated embeds are validated against the current public instance/runtime contract; missing curated instances fail fast in dev/build.
+- System instance embeds are validated against the current public instance/runtime contract; missing system instances fail fast in dev/build.
 
 ---
 
@@ -189,7 +189,7 @@ Demo locale visibility contract:
 
 - Widget marketing pages are JSON-only in this repo snapshot: no markdown crawling, no build-time parsing heuristics.
 - Builds fail fast when the per-widget page contract is broken (missing required JSON/copy).
-- Curated embeds (visual widget instances inside Prague blocks) remain locale-free; locale is passed as a query param and/or applied via overlays at runtime.
+- System instance embeds (visual widget instances inside Prague blocks) remain locale-free; locale is passed as a query param and/or applied via overlays at runtime.
 - For canonical `/{market}/{locale}/...` URLs, Prague must not vary indexable content by request IP/cookies/experiment keys; market-bound geo overlays are derived from `prague/src/markets/markets.json`.
 
 ---

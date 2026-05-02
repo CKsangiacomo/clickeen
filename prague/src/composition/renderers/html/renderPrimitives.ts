@@ -107,7 +107,7 @@ function renderPrimitive(primitive: Primitive, options: RenderOptions): string {
       const placeholderClass = options.widgetPlaceholderClass || DEFAULT_WIDGET_PLACEHOLDER;
       return `<div class="${escapeHtml(
         joinClasses(placeholderClass, primitive.className),
-      )}" data-curated-ref="${escapeHtml(primitive.curatedRef || '')}"${attrsToString(primitive.attrs)}></div>`;
+      )}" data-system-instance-ref="${escapeHtml(primitive.systemInstanceRef || '')}"${attrsToString(primitive.attrs)}></div>`;
     }
     case 'stack': {
       const baseClass = primitive.direction === 'horizontal' ? 'ck-row' : 'ck-stack';

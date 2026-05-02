@@ -11,7 +11,6 @@ export type MichaelAccountInstanceResult =
         accountId: string;
         widgetType: string;
         meta?: Record<string, unknown> | null;
-        source?: 'account' | 'curated';
       } | null;
     }
   | {
@@ -59,7 +58,7 @@ export type MichaelAccountWidgetCatalogResult =
   | {
       ok: true;
       accountInstances: MichaelListedWidgetInstance[];
-      curatedInstances: MichaelListedWidgetInstance[];
+      listedInstances: MichaelListedWidgetInstance[];
       widgetTypes: string[];
       containment: {
         active: boolean;
@@ -104,12 +103,6 @@ export function asTrimmedString(value: unknown): string | null {
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-export function formatCuratedDisplayName(meta: unknown, fallback: string): string {
-  if (!meta || typeof meta !== 'object' || Array.isArray(meta)) return fallback;
-  const record = meta as Record<string, unknown>;
-  return asTrimmedString(record.styleName ?? record.name ?? record.title) || fallback;
 }
 
 export function parseJsonTextOrNull(text: string): unknown | null {

@@ -188,25 +188,6 @@ importers:
 
   packages/l10n: {}
 
-  paris:
-    dependencies:
-      '@clickeen/ck-contracts':
-        specifier: workspace:*
-        version: link:../packages/ck-contracts
-      '@clickeen/ck-policy':
-        specifier: workspace:*
-        version: link:../packages/ck-policy
-      '@clickeen/l10n':
-        specifier: workspace:*
-        version: link:../packages/l10n
-    devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20251228.0
-        version: 4.20251228.0
-      wrangler:
-        specifier: ^4.54.0
-        version: 4.54.0(@cloudflare/workers-types@4.20251228.0)
-
   prague:
     dependencies:
       '@astrojs/cloudflare':

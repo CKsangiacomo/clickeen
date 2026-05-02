@@ -49,9 +49,6 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      # Paris is a residual health stub and its clickeen.com route is currently
-      # managed outside this workflow because the GitHub Cloudflare token does not
-      # have the zone-route scope required to mutate it.
       - name: Deploy berlin-dev
         run: pnpm -C berlin run deploy
 

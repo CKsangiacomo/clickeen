@@ -59,7 +59,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'headline', type: 'string' },
       { key: 'subheadline', type: 'string' },
     ],
-    meta: ['visual', 'curatedRef', 'items'],
+    meta: ['visual', 'systemInstanceRef', 'items'],
   },
   split: {
     type: 'split',
@@ -68,7 +68,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'headline', type: 'string' },
       { key: 'subheadline', type: 'string' },
     ],
-    meta: ['curatedRef', 'layout', 'copy'],
+    meta: ['systemInstanceRef', 'layout', 'copy'],
   },
   'split-carousel': {
     type: 'split-carousel',
@@ -148,7 +148,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'title', type: 'string' },
       { key: 'subtitle', type: 'string' },
     ],
-    meta: ['curatedRef'],
+    meta: ['systemInstanceRef'],
   },
   'embed-carousel': {
     type: 'embed-carousel',
@@ -214,13 +214,13 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
       throw new Error(`[prague] ${pagePath}: block "${type}" visual must be boolean or object`);
     }
   }
-  if (contract.meta.includes('curatedRef') && block.curatedRef != null) {
-    if (typeof block.curatedRef !== 'object' || Array.isArray(block.curatedRef)) {
-      throw new Error(`[prague] ${pagePath}: block "${type}" curatedRef must be an object`);
+  if (contract.meta.includes('systemInstanceRef') && block.systemInstanceRef != null) {
+    if (typeof block.systemInstanceRef !== 'object' || Array.isArray(block.systemInstanceRef)) {
+      throw new Error(`[prague] ${pagePath}: block "${type}" systemInstanceRef must be an object`);
     }
-    const publicId = (block.curatedRef as { publicId?: unknown }).publicId;
+    const publicId = (block.systemInstanceRef as { publicId?: unknown }).publicId;
     if (publicId != null && typeof publicId !== 'string') {
-      throw new Error(`[prague] ${pagePath}: block "${type}" curatedRef.publicId must be a string`);
+      throw new Error(`[prague] ${pagePath}: block "${type}" systemInstanceRef.publicId must be a string`);
     }
   }
   if (contract.meta.includes('layout') && (block as any).layout != null) {

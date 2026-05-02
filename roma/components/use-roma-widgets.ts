@@ -5,7 +5,7 @@ export type WidgetInstance = {
   widgetType: string;
   displayName: string;
   status: 'published' | 'unpublished';
-  source: 'account' | 'curated';
+  listed: boolean;
   actions: {
     edit: boolean;
     duplicate: boolean;
@@ -21,7 +21,7 @@ type RawWidgetInstance = {
   widgetType?: string | null;
   displayName?: string | null;
   status?: string | null;
-  source?: string | null;
+  listed?: boolean | null;
   actions?: {
     edit?: boolean | null;
     duplicate?: boolean | null;
@@ -54,7 +54,7 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
   const widgetType = normalizeWidgetType(raw.widgetType);
   const displayName = String(raw.displayName || '').trim() || DEFAULT_INSTANCE_DISPLAY_NAME;
   const status = raw.status === 'published' ? 'published' : 'unpublished';
-  const source = raw.source === 'curated' ? 'curated' : 'account';
+  const listed = raw.listed === true;
   const actions = raw.actions && typeof raw.actions === 'object' ? raw.actions : null;
 
   return {
@@ -62,7 +62,7 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
     widgetType,
     displayName,
     status,
-    source,
+    listed,
     actions: {
       edit: actions?.edit !== false,
       duplicate: actions?.duplicate !== false,

@@ -4,7 +4,7 @@ STATUS: CANONICAL CURRENT MODEL
 
 This file is the canonical account-management model for Clickeen.
 
-It defines the runtime boundary that Berlin, Roma, DevStudio, Bob, Michael, and Paris must converge to. PRD 064/065/066/067/068/072 are historical snapshots only; forward-looking correction and hardening work starts from this canonical model plus the currently executing PRD for the affected surface.
+It defines the runtime boundary that Berlin, Roma, DevStudio, Bob, and Michael must converge to. PRD 064/065/066/067/068/072 are historical snapshots only; forward-looking correction and hardening work starts from this canonical model plus the currently executing PRD for the affected surface.
 
 For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./Overview.md).
 Current status:
@@ -342,12 +342,12 @@ Rules:
 | Account/member UX | Roma |
 | Internal toolbench (curation/authoring/verification) | DevStudio |
 | Editor account consumption | Bob |
-| Account management runtime | Paris: none |
-| Instance/l10n orchestration after account truth is resolved | Paris |
+| Account management runtime | Berlin + Roma |
+| Instance/l10n orchestration after account truth is resolved | Tokyo-worker |
 
 Hard rule:
 - no product surface reads account-management truth directly from Michael
-- Paris must not remain on account-management runtime paths after PRD 65 cutover
+- account-management runtime paths stay behind Berlin/Roma product boundaries
 
 ---
 

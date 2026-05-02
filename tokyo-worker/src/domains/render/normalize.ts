@@ -118,12 +118,6 @@ export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | 
   const accountId = normalizePublicId(payload.accountId) ?? '';
   const widgetType = typeof payload.widgetType === 'string' ? payload.widgetType.trim() : '';
   const displayNameRaw = typeof payload.displayName === 'string' ? payload.displayName.trim() : '';
-  const source =
-    payload.source === 'curated'
-      ? 'curated'
-      : payload.source === 'account' || payload.source === undefined
-        ? 'account'
-        : null;
   const meta =
     payload.meta && typeof payload.meta === 'object' && !Array.isArray(payload.meta)
       ? (payload.meta as Record<string, unknown>)
@@ -163,7 +157,7 @@ export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | 
     typeof l10nRaw?.lastError === 'string' ? l10nRaw.lastError.trim() : '';
   const configFp = normalizeFingerprint(payload.configFp) ?? '';
   const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
-  if (!publicId || !accountId || !widgetType || !source || !configFp || !updatedAt) return null;
+  if (!publicId || !accountId || !widgetType || !configFp || !updatedAt) return null;
   const l10nStatus =
     baseFingerprint && generationId && status && l10nUpdatedAt
       ? {
@@ -183,7 +177,6 @@ export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | 
     accountId,
     widgetType,
     displayName: displayNameRaw || null,
-    source,
     meta,
     configFp,
     updatedAt,

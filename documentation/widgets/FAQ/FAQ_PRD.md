@@ -25,7 +25,7 @@ Layout choices (inside the same Type):
 - When `layout.type = multicolumn` (“Cards”), cards packing is controlled by `layout.cardsLayout = grid | masonry`.
 
 ## 0) Non-negotiables (Architecture)
-1. **Starter designs are instances**: curated designs are Clickeen-owned instances that users clone.
+1. **Starter designs are instances**: system instances are Clickeen-owned instances that users clone.
 2. **Editor is strict**: no silent fixups, no coercing bad values, no inventing missing state.
 3. **Deterministic render**: the same instance state produces the same output every time.
 4. **Scoped runtime**: runtime queries inside the widget root (no global selectors for internals).

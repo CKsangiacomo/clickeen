@@ -35,7 +35,6 @@ export type SessionMeta = {
   baseLocale?: string;
   widgetname?: string;
   label?: string;
-  source?: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
 } | null;
 
@@ -55,7 +54,6 @@ export type EditorOpenMessage = {
   policy?: Policy;
   publicId?: string;
   label?: string;
-  source?: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
 };
 

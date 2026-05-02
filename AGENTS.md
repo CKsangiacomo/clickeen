@@ -57,14 +57,13 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 - `roma/` – Next.js current-account product shell and Builder host orchestration; the real authoring path begins here.
 - `admin/` – Vite-based DevStudio showcase; docs generated via `scripts/`.
 - `dieter/` – Design system source (tokens, CSS, web components, `*.spec.json` fixtures).
-- `paris/` – Cloudflare Worker residue/health surface; not part of the real account authoring path.
 - `venice/` – Next.js Edge embed runtime (Cloudflare Pages).
 - `prague/` – Astro marketing + SEO + demo/funnel surface (Cloudflare Pages); not account authoring truth.
 - `documentation/` stores product/architecture context; `scripts/` has build helpers; `tokyo/` serves built Dieter assets for local use.
 
 ### Build, Test, and Development Commands
 - Install: `pnpm install` (workspace root).
-- Dev: `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:paris`, `pnpm dev:venice`; `pnpm dev` runs them together via Turbo.
+- Dev: `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:venice`; `pnpm dev` runs them together via Turbo.
 - Build: `pnpm build:dieter` first, then `pnpm build` (Turbo fan-out).
 - Lint/Typecheck: `pnpm lint`, `pnpm typecheck`; per-app linting with `pnpm --filter @clickeen/bob lint` or `.../devstudio lint`.
 - Tests: `pnpm test` (Turbo) or targeted `pnpm --filter @clickeen/devstudio test`.
@@ -84,7 +83,7 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 ### Commit & Pull Request Guidelines
 - Use conventional-style messages seen in history (`feat: ...`, `chore: ...`, `fix: ...`); include scope when helpful (e.g., `feat(bob): add widget toolbar`).
 - PRs need a concise summary, linked issue/PRD, screenshots or recordings for UI changes, and notes on env or migration steps.
-- Call out Dieter token changes and downstream impact (Bob/Admin/Paris) in the description.
+- Call out Dieter token changes and downstream impact (Bob/Admin/Roma/Venice) in the description.
 - Update relevant docs (`documentation/architecture/CONTEXT.md`, feature PRDs) when behavior shifts.
 
 ### Security & Configuration Tips

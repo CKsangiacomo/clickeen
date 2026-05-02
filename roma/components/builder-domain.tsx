@@ -67,7 +67,6 @@ type BobOpenEditorMessage = {
   widgetname: string;
   compiled: unknown;
   instanceData: Record<string, unknown>;
-  source?: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
   policy?: unknown;
 };
@@ -79,7 +78,6 @@ type BuilderOpenResponse = {
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
-  source?: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
 };
 
@@ -422,7 +420,6 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         widgetname: widgetType,
         compiled,
         instanceData: config,
-        source: builderOpen.source,
         meta: builderOpen.meta ?? null,
         policy: accountPolicy,
       };

@@ -123,7 +123,7 @@ export const CAPABILITY_META: Record<CapabilityKey, CapabilityMeta> = {
   },
   'widgets.types.max': {
     label: 'Widget types',
-    description: 'Maximum distinct widget types per workspace.',
+    description: 'Maximum distinct widget types per account.',
   },
   'uploads.size.max': {
     label: 'Upload size max',

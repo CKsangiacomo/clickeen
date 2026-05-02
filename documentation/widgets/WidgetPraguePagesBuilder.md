@@ -28,7 +28,7 @@ This doc is intentionally operational. It is not a creative brainstorm doc.
 Before writing any page JSON, collect:
 
 1. `widgetType`
-2. Curated instance public IDs available for the widget (`wgt_main_*`, `wgt_curated_*`)
+2. System instance public IDs available for the widget (`wgt_main_*`, `wgt_system_*`)
 3. Widget-specific claim bank (from `WidgetGTMStrategy.md` section 5)
 4. Platform claims selected for this widget
 5. Source PRD for the widget
@@ -120,7 +120,7 @@ Create a compact internal object before page writing:
       "rationale": "Mobile-first questions on menu, allergens, and opening hours."
     }
   ],
-  "curatedRefs": ["wgt_curated_faq_lightblurs_generic"]
+  "systemInstanceRefs": ["wgt_system_faq_lightblurs_generic"]
 }
 ```
 
@@ -280,7 +280,7 @@ Because Prague copy is localized across many locales:
 2. Block contract validity (required fields present).
 3. Claim audit complete (no unsupported strong claims).
 4. Localization-safe style pass done.
-5. Curated refs resolve to real instances.
+5. System instance refs resolve to real instances.
 
 Recommended local checks:
 - `node scripts/prague-l10n/verify.mjs`

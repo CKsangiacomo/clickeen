@@ -1,14 +1,14 @@
 import { validateBlockMeta, validateBlockStrings } from './blockRegistry';
-import { isCuratedWidgetPublicId } from '@clickeen/ck-contracts';
+import { isSystemInstancePublicId } from '@clickeen/ck-contracts';
 import { loadPraguePageContent, loadPraguePageContentWithMeta, type PragueOverlayContext, type PragueOverlayMeta } from './pragueL10n';
 
-const CURATED_VALIDATE =
-  process.env.PRAGUE_VALIDATE_CURATED === '1' ||
-  (process.env.NODE_ENV === 'development' && process.env.PRAGUE_VALIDATE_CURATED !== '0');
-const CURATED_VALIDATE_STRICT =
-  process.env.PRAGUE_VALIDATE_CURATED_STRICT === '1' ||
-  (process.env.NODE_ENV === 'production' && process.env.PRAGUE_VALIDATE_CURATED === '1');
-const CURATED_VALIDATION_CACHE = new Map<string, Promise<void>>();
+const SYSTEM_INSTANCE_VALIDATE =
+  process.env.PRAGUE_VALIDATE_SYSTEM_INSTANCE === '1' ||
+  (process.env.NODE_ENV === 'development' && process.env.PRAGUE_VALIDATE_SYSTEM_INSTANCE !== '0');
+const SYSTEM_INSTANCE_VALIDATE_STRICT =
+  process.env.PRAGUE_VALIDATE_SYSTEM_INSTANCE_STRICT === '1' ||
+  (process.env.NODE_ENV === 'production' && process.env.PRAGUE_VALIDATE_SYSTEM_INSTANCE === '1');
+const SYSTEM_INSTANCE_VALIDATION_CACHE = new Map<string, Promise<void>>();
 
 function buildPageBase(args: { pageId: string; pagePath: string; blocks: unknown[] }) {
   const baseBlocks: Record<string, { copy: Record<string, unknown> }> = {};
@@ -36,21 +36,21 @@ function resolveVeniceBaseUrl(): string | null {
   return null;
 }
 
-async function assertCuratedInstanceExists(args: { publicId: string; pagePath: string }): Promise<void> {
-  if (!CURATED_VALIDATE) return;
+async function assertSystemInstanceExists(args: { publicId: string; pagePath: string }): Promise<void> {
+  if (!SYSTEM_INSTANCE_VALIDATE) return;
   const baseUrl = resolveVeniceBaseUrl();
   if (!baseUrl) {
-    throw new Error('[prague] Curated validation requires PUBLIC_VENICE_URL.');
+    throw new Error('[prague] System instance validation requires PUBLIC_VENICE_URL.');
   }
 
   const publicId = args.publicId;
-  if (!isCuratedWidgetPublicId(publicId)) {
+  if (!isSystemInstancePublicId(publicId)) {
     throw new Error(
-      `[prague] ${args.pagePath}: curatedRef.publicId must match wgt_curated_[a-z0-9][a-z0-9_-]*, got "${publicId}"`,
+      `[prague] ${args.pagePath}: systemInstanceRef.publicId must match wgt_system_[a-z0-9][a-z0-9_-]*, got "${publicId}"`,
     );
   }
 
-  const cached = CURATED_VALIDATION_CACHE.get(publicId);
+  const cached = SYSTEM_INSTANCE_VALIDATION_CACHE.get(publicId);
   if (cached) return cached;
 
   const task = (async () => {
@@ -61,38 +61,38 @@ async function assertCuratedInstanceExists(args: { publicId: string; pagePath: s
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       const detail = message ? ` (${message})` : '';
-      const warning = `[prague] ${args.pagePath}: curated validation skipped (Venice unreachable) for ${publicId}${detail}`;
-      if (CURATED_VALIDATE_STRICT) throw new Error(warning);
+      const warning = `[prague] ${args.pagePath}: system instance validation skipped (Venice unreachable) for ${publicId}${detail}`;
+      if (SYSTEM_INSTANCE_VALIDATE_STRICT) throw new Error(warning);
       console.warn(warning);
       return;
     }
     if (res.ok) return;
     if (res.status !== 404) {
-      throw new Error(`[prague] Curated validation failed for ${publicId} (${res.status})`);
+      throw new Error(`[prague] System instance validation failed for ${publicId} (${res.status})`);
     }
 
-    const message = `[prague] ${args.pagePath}: curated instance ${publicId} not found (seed curated_widget_instances or apply migrations).`;
-    if (CURATED_VALIDATE_STRICT) throw new Error(message);
+    const message = `[prague] ${args.pagePath}: listed instance ${publicId} not found in Venice.`;
+    if (SYSTEM_INSTANCE_VALIDATE_STRICT) throw new Error(message);
     console.warn(message);
   })();
 
-  CURATED_VALIDATION_CACHE.set(publicId, task);
+  SYSTEM_INSTANCE_VALIDATION_CACHE.set(publicId, task);
   return task;
 }
 
-async function validateCuratedRefs(args: { pagePath: string; blocks: unknown[] }): Promise<void> {
-  if (!CURATED_VALIDATE) return;
-  const curatedIds = args.blocks
+async function validateSystemInstanceRefs(args: { pagePath: string; blocks: unknown[] }): Promise<void> {
+  if (!SYSTEM_INSTANCE_VALIDATE) return;
+  const systemInstanceIds = args.blocks
     .map((block) => {
       if (!block || typeof block !== 'object' || Array.isArray(block)) return null;
-      const curatedRef = (block as any).curatedRef;
-      if (!curatedRef || typeof curatedRef !== 'object' || Array.isArray(curatedRef)) return null;
-      const publicId = String((curatedRef as any).publicId || '').trim();
+      const systemInstanceRef = (block as any).systemInstanceRef;
+      if (!systemInstanceRef || typeof systemInstanceRef !== 'object' || Array.isArray(systemInstanceRef)) return null;
+      const publicId = String((systemInstanceRef as any).publicId || '').trim();
       return publicId ? publicId : null;
     })
     .filter((value): value is string => Boolean(value));
-  if (curatedIds.length === 0) return;
-  await Promise.all(curatedIds.map((publicId) => assertCuratedInstanceExists({ publicId, pagePath: args.pagePath })));
+  if (systemInstanceIds.length === 0) return;
+  await Promise.all(systemInstanceIds.map((publicId) => assertSystemInstanceExists({ publicId, pagePath: args.pagePath })));
 }
 
 function isRealWidgetDir(name: string): boolean {
@@ -164,7 +164,7 @@ export async function loadWidgetPageJsonForLocale(
     throw new Error(`[prague] Invalid localized blocks for ${pagePath}`);
   }
 
-  await validateCuratedRefs({ pagePath, blocks: baseBlocks });
+  await validateSystemInstanceRefs({ pagePath, blocks: baseBlocks });
 
   const mergedBlocks = baseBlocks.map((block: any) => {
     if (!block || typeof block !== 'object' || Array.isArray(block)) {
@@ -219,7 +219,7 @@ export async function loadWidgetPageJsonForLocaleWithOverlayMeta(
     throw new Error(`[prague] Invalid localized blocks for ${pagePath}`);
   }
 
-  await validateCuratedRefs({ pagePath, blocks: baseBlocks });
+  await validateSystemInstanceRefs({ pagePath, blocks: baseBlocks });
 
   const mergedBlocks = baseBlocks.map((block: any) => {
     if (!block || typeof block !== 'object' || Array.isArray(block)) {

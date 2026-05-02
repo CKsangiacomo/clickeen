@@ -1,7 +1,7 @@
 ---
 import type { Primitive } from '../../core/schemas';
 
-type RenderWidget = (args: { curatedRef: string; className?: string; locale?: string }) => any;
+type RenderWidget = (args: { systemInstanceRef: string; className?: string; locale?: string }) => any;
 const { primitives, locale, renderWidget } = Astro.props as {
   primitives: Primitive[];
   locale?: string;
@@ -93,7 +93,7 @@ const sanitizeAttrs = (attrs?: Record<string, string>) => {
           return <video class={className} src={primitive.src} controls playsinline {...attrs} />;
         }
         if (renderWidget) {
-          return renderWidget({ curatedRef: primitive.curatedRef || '', className: primitive.className, locale });
+          return renderWidget({ systemInstanceRef: primitive.systemInstanceRef || '', className: primitive.className, locale });
         }
         return <div class={className}>Missing widget renderer</div>;
       }

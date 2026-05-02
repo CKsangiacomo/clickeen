@@ -2,7 +2,6 @@ import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
 } from './tokyo-product-control';
-import { formatCuratedDisplayName } from './michael-shared';
 import { validateWidgetConfigContract, type WidgetConfigContractResult } from './widget-config-contract';
 
 // Roma's direct instance path is the server boundary for one boring product flow: open the saved document from Tokyo and save it back.
@@ -28,7 +27,6 @@ export type AccountInstanceCoreRow = {
   accountId: string;
   widgetType: string;
   meta?: Record<string, unknown> | null;
-  source?: 'account' | 'curated';
 };
 
 export type AccountInstanceLiveStatus = 'published' | 'unpublished';
@@ -38,7 +36,6 @@ type TokyoSavedInstancePayload = {
   accountId?: unknown;
   widgetType?: unknown;
   displayName?: unknown;
-  source?: unknown;
   meta?: unknown;
   updatedAt?: unknown;
   config?: unknown;
@@ -116,14 +113,15 @@ function buildWidgetConfigContractFailure(
 
 function resolveSavedInstanceDisplayName(args: {
   publicId: string;
-  source?: 'account' | 'curated';
   displayName: unknown;
   meta: unknown;
 }): string | null {
-  if (args.source === 'curated') {
-    return formatCuratedDisplayName(args.meta, args.publicId);
+  const displayName = asTrimmedString(args.displayName);
+  if (displayName) return displayName;
+  if (isRecord(args.meta)) {
+    return asTrimmedString(args.meta.styleName ?? args.meta.name ?? args.meta.title) ?? null;
   }
-  return asTrimmedString(args.displayName);
+  return null;
 }
 
 async function loadSavedInstanceFromTokyo(args: {
@@ -167,15 +165,10 @@ async function loadSavedInstanceFromTokyo(args: {
     accountId: string;
     widgetType: string;
     displayName?: unknown;
-    source?: unknown;
     meta?: unknown;
     updatedAt?: unknown;
     config: Record<string, unknown>;
   };
-  const source =
-    saved.source === 'account' || saved.source === 'curated'
-      ? saved.source
-      : undefined;
 
   return {
     ok: true,
@@ -184,7 +177,6 @@ async function loadSavedInstanceFromTokyo(args: {
         publicId: saved.publicId,
         displayName: resolveSavedInstanceDisplayName({
           publicId: saved.publicId,
-          source,
           displayName: saved.displayName,
           meta: saved.meta,
         }),
@@ -192,7 +184,6 @@ async function loadSavedInstanceFromTokyo(args: {
         accountId: saved.accountId,
         widgetType: saved.widgetType,
         meta: isRecord(saved.meta) ? (saved.meta as Record<string, unknown>) : null,
-        source,
       },
       config: saved.config,
     },
@@ -206,7 +197,6 @@ export async function writeSavedConfigToTokyo(args: {
   widgetType: string;
   config: Record<string, unknown>;
   displayName?: string | null;
-  source?: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
   l10n?: {
     summary?: {
@@ -231,7 +221,6 @@ export async function writeSavedConfigToTokyo(args: {
       widgetType: args.widgetType,
       config: args.config,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
-      ...(args.source ? { source: args.source } : {}),
       ...(args.meta !== undefined ? { meta: args.meta } : {}),
       ...(args.l10n !== undefined ? { l10n: args.l10n } : {}),
     }),
@@ -470,7 +459,6 @@ export async function saveAccountInstanceDirect(args: {
   widgetType: string;
   config: Record<string, unknown>;
   displayName?: string | null;
-  source?: 'account' | 'curated';
   meta?: Record<string, unknown> | null;
   l10n?: {
     summary?: {
@@ -501,7 +489,6 @@ export async function saveAccountInstanceDirect(args: {
       widgetType: args.widgetType,
       config: args.config,
       displayName: args.displayName,
-      source: args.source,
       meta: args.meta,
       l10n: args.l10n,
     });

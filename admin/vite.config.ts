@@ -347,8 +347,8 @@ export default defineConfig({
             const containsNonPersistableUrl = (value: string): boolean => {
               return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
             };
-            const containsLegacyTokyoAssetUrl = (value: string): boolean => {
-              const isLegacyPath = (candidate: string): boolean => {
+            const rejectsLegacyTokyoAssetUrl = (value: string): boolean => {
+              const isRejectedLegacyPath = (candidate: string): boolean => {
                 const trimmed = String(candidate || '').trim();
                 if (!trimmed) return false;
                 if (/^\/(?:workspace-assets|curated-assets|assets\/accounts|assets\/v)\//i.test(trimmed))
@@ -363,9 +363,9 @@ export default defineConfig({
                 }
               };
 
-              if (isLegacyPath(value)) return true;
+              if (isRejectedLegacyPath(value)) return true;
               const m = value.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
-              return Boolean(m?.[2] && isLegacyPath(m[2]));
+              return Boolean(m?.[2] && isRejectedLegacyPath(m[2]));
             };
 
             const issues: Array<{ path: string; message: string }> = [];
@@ -377,7 +377,7 @@ export default defineConfig({
                     message:
                       'non-persistable URL scheme found (data:/blob:). Persist stable URLs/keys only.',
                   });
-                } else if (containsLegacyTokyoAssetUrl(node)) {
+                } else if (rejectsLegacyTokyoAssetUrl(node)) {
                   issues.push({
                     path: nodePath,
                     message:

@@ -15,7 +15,6 @@ import EmbedCarousel from '../blocks/embed-carousel/embed-carousel.astro';
 import FeatureExplorer from '../blocks/feature-explorer/feature-explorer.astro';
 import MobileShowcase from '../blocks/mobile-showcase/mobile-showcase.astro';
 import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
-import LocalCuratedDrawer from './LocalCuratedDrawer.astro';
 import { pragueT } from '../lib/i18n';
 import { getPragueMarket } from '../lib/markets';
 import { normalizeLocaleToken } from '@clickeen/l10n';
@@ -33,7 +32,7 @@ type Block = {
   visual?: { image?: string };
   links?: any;
   align?: string;
-  curatedRef?: { publicId?: string; embedMode?: string };
+  systemInstanceRef?: { publicId?: string; embedMode?: string };
 };
 
 type Props = {
@@ -45,33 +44,14 @@ type Props = {
   primaryCta: { label: string; href: string };
 };
 
-type CuratedSlot = {
-  blockId: string;
-  blockType: string;
-  target: 'block' | 'item' | 'item-public-id';
-  itemIndex?: number;
-  label: string;
-  currentPublicId: string;
-};
-
-type CuratedBlock = {
-  blockId: string;
-  blockType: string;
-  blockIndex: number;
-  label: string;
-  slots: CuratedSlot[];
-};
-
 const { blocks, widget, market, locale, activeSubpage = 'overview', primaryCta } = Astro.props;
-const localHosts = new Set(['localhost', '127.0.0.1', '::1']);
-const localCuratedDrawerEnabled = import.meta.env.DEV && localHosts.has(Astro.url.hostname);
 const hasExplicitLocaleShowcase = blocks.some((b) => b && b.type === 'locale-showcase');
 const explicitShowcasePublicId =
-  blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.curatedRef?.publicId === 'string')?.curatedRef?.publicId ??
+  blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.systemInstanceRef?.publicId === 'string')?.systemInstanceRef?.publicId ??
   null;
 const showcasePublicId =
   explicitShowcasePublicId ??
-  blocks.find((b) => b && b.curatedRef && typeof b.curatedRef.publicId === 'string')?.curatedRef?.publicId ??
+  blocks.find((b) => b && b.systemInstanceRef && typeof b.systemInstanceRef.publicId === 'string')?.systemInstanceRef?.publicId ??
   `wgt_main_${widget}`;
 const defaultShowcaseTitle = await pragueT(locale, 'prague.localeShowcase.title');
 const defaultShowcaseSubtitle = await pragueT(locale, 'prague.localeShowcase.subtitle');
@@ -114,83 +94,6 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[] }): str
     .replace('{lang2}', trailingLanguages)
     .replace('{more}', String(more));
 }
-
-function asPublicId(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
-}
-
-function hasOwnKey(value: unknown, key: string): boolean {
-  if (!value || typeof value !== 'object') return false;
-  return Object.prototype.hasOwnProperty.call(value, key);
-}
-
-function collectCuratedBlocks(inputBlocks: Block[]): CuratedBlock[] {
-  const curatedBlocks: CuratedBlock[] = [];
-
-  inputBlocks.forEach((block, blockIndex) => {
-    if (!block || typeof block !== 'object') return;
-    const blockId = String(block.id || '').trim();
-    const blockType = String(block.type || '').trim();
-    if (!blockId || !blockType) return;
-
-    const slots: CuratedSlot[] = [];
-
-    if (hasOwnKey(block, 'curatedRef')) {
-      const blockCuratedPublicId = asPublicId((block as any)?.curatedRef?.publicId);
-      slots.push({
-        blockId,
-        blockType,
-        target: 'block',
-        label: 'Block instance',
-        currentPublicId: blockCuratedPublicId,
-      });
-    }
-
-    const items = Array.isArray((block as any).items) ? ((block as any).items as any[]) : [];
-    items.forEach((item, itemIndex) => {
-      if (!item || typeof item !== 'object') return;
-      if (hasOwnKey(item, 'curatedRef')) {
-        const itemPublicId = asPublicId((item as any)?.curatedRef?.publicId);
-        const itemTitle = typeof (item as any)?.curatedRef?.title === 'string' ? String((item as any).curatedRef.title).trim() : '';
-        const itemLabelSuffix = itemTitle ? ` (${itemTitle})` : '';
-        slots.push({
-          blockId,
-          blockType,
-          target: 'item',
-          itemIndex,
-          label: `Item ${itemIndex + 1}${itemLabelSuffix}`,
-          currentPublicId: itemPublicId,
-        });
-        return;
-      }
-
-      if (hasOwnKey(item, 'publicId')) {
-        const directPublicId = asPublicId((item as any).publicId);
-        slots.push({
-          blockId,
-          blockType,
-          target: 'item-public-id',
-          itemIndex,
-          label: `Item ${itemIndex + 1}`,
-          currentPublicId: directPublicId,
-        });
-      }
-    });
-
-    curatedBlocks.push({
-      blockId,
-      blockType,
-      blockIndex,
-      label: `${blockType} block`,
-      slots,
-    });
-  });
-
-  return curatedBlocks;
-}
-
-const localCuratedBlocks = collectCuratedBlocks(blocks);
-const localCuratedSlotCount = localCuratedBlocks.reduce((sum, block) => sum + block.slots.length, 0);
 ---
 
 {blocks.map((block) => {
@@ -211,28 +114,28 @@ const localCuratedSlotCount = localCuratedBlocks.reduce((sum, block) => sum + bl
     }
     case 'hero': {
       const copy = block.copy ?? {};
-      const curatedPublicId = block.curatedRef?.publicId;
-      const curatedEmbedModeRaw =
-        block.curatedRef && typeof block.curatedRef.embedMode === 'string' ? String(block.curatedRef.embedMode) : '';
-      const curatedEmbedMode = curatedEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
+      const systemInstancePublicId = block.systemInstanceRef?.publicId;
+      const systemInstanceEmbedModeRaw =
+        block.systemInstanceRef && typeof block.systemInstanceRef.embedMode === 'string' ? String(block.systemInstanceRef.embedMode) : '';
+      const systemInstanceEmbedMode = systemInstanceEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
       const explicitHeroItems = Array.isArray((block as any).items) ? ((block as any).items as any[]) : [];
       const mappedHeroItems = explicitHeroItems.map((item: any) => {
-        const itemLocale = typeof item?.curatedRef?.locale === 'string' ? item.curatedRef.locale.trim() : '';
+        const itemLocale = typeof item?.systemInstanceRef?.locale === 'string' ? item.systemInstanceRef.locale.trim() : '';
         return {
           ...item,
-          curatedRef: item.curatedRef ? { ...item.curatedRef, locale: itemLocale || locale } : item.curatedRef,
+          systemInstanceRef: item.systemInstanceRef ? { ...item.systemInstanceRef, locale: itemLocale || locale } : item.systemInstanceRef,
         };
       });
-      const heroPreviewPublicId = curatedPublicId || showcasePublicId;
+      const heroPreviewPublicId = systemInstancePublicId || showcasePublicId;
       const overviewHeroLocales = [normalizeLocaleToken(locale) ?? 'en'];
       const autoOverviewHeroItems =
         activeSubpage === 'overview' && mappedHeroItems.length === 0 && heroPreviewPublicId
           ? overviewHeroLocales.map((code) => ({
-              curatedRef: {
+              systemInstanceRef: {
                 publicId: heroPreviewPublicId,
                 locale: code,
                 title: `${widget} overview ${code}`,
-                embedMode: curatedEmbedMode,
+                embedMode: systemInstanceEmbedMode,
               },
             }))
           : [];
@@ -249,9 +152,9 @@ const localCuratedSlotCount = localCuratedBlocks.reduce((sum, block) => sum + bl
           subheadline={dynamicOverviewSubheadline || String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
-          curatedRef={
-            curatedPublicId
-              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: curatedEmbedMode }
+          systemInstanceRef={
+            systemInstancePublicId
+              ? { publicId: systemInstancePublicId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: systemInstanceEmbedMode }
               : undefined
           }
           items={resolvedHeroItems}
@@ -263,10 +166,10 @@ const localCuratedSlotCount = localCuratedBlocks.reduce((sum, block) => sum + bl
     }
     case 'split': {
       const copy = block.copy ?? {};
-      const curatedPublicId = block.curatedRef?.publicId;
-      const curatedEmbedModeRaw =
-        block.curatedRef && typeof block.curatedRef.embedMode === 'string' ? String(block.curatedRef.embedMode) : '';
-      const curatedEmbedMode = curatedEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
+      const systemInstancePublicId = block.systemInstanceRef?.publicId;
+      const systemInstanceEmbedModeRaw =
+        block.systemInstanceRef && typeof block.systemInstanceRef.embedMode === 'string' ? String(block.systemInstanceRef.embedMode) : '';
+      const systemInstanceEmbedMode = systemInstanceEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
       const layout = typeof (block as any).layout === 'string' ? (block as any).layout : '';
       rendered = (
         <Split
@@ -275,9 +178,9 @@ const localCuratedSlotCount = localCuratedBlocks.reduce((sum, block) => sum + bl
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
           layout={layout}
-          curatedRef={
-            curatedPublicId
-              ? { publicId: curatedPublicId, locale, title: `${widget} ${activeSubpage} split`, embedMode: curatedEmbedMode }
+          systemInstanceRef={
+            systemInstancePublicId
+              ? { publicId: systemInstancePublicId, locale, title: `${widget} ${activeSubpage} split`, embedMode: systemInstanceEmbedMode }
               : undefined
           }
         />
@@ -295,10 +198,10 @@ const localCuratedSlotCount = localCuratedBlocks.reduce((sum, block) => sum + bl
           secondaryCta={undefined}
           layout={layout}
           items={((block as any).items ?? []).map((item: any) => {
-            const itemLocale = typeof item?.curatedRef?.locale === 'string' ? item.curatedRef.locale.trim() : '';
+            const itemLocale = typeof item?.systemInstanceRef?.locale === 'string' ? item.systemInstanceRef.locale.trim() : '';
             return {
               ...item,
-              curatedRef: item.curatedRef ? { ...item.curatedRef, locale: itemLocale || locale } : item.curatedRef,
+              systemInstanceRef: item.systemInstanceRef ? { ...item.systemInstanceRef, locale: itemLocale || locale } : item.systemInstanceRef,
             };
           })}
         />
@@ -467,6 +370,3 @@ const localCuratedSlotCount = localCuratedBlocks.reduce((sum, block) => sum + bl
 
   return rendered;
 })}
-{localCuratedDrawerEnabled && localCuratedBlocks.length > 0 && localCuratedSlotCount > 0 ? (
-  <LocalCuratedDrawer widget={widget} page={activeSubpage} blocks={localCuratedBlocks} />
-) : null}

@@ -246,15 +246,11 @@ function collectLogicalAssetIds(node, provenance, found, pathPrefix = '') {
 }
 
 async function loadPlatformRows(client, platformAccountId) {
-  const [widgets, accountRows, curatedRows] = await Promise.all([
+  const [widgets, accountRows] = await Promise.all([
     supabaseFetchJson(client, `/rest/v1/widgets?select=id,type&order=type.asc&limit=${DEFAULT_PAGE_SIZE}`),
     supabaseFetchJson(
       client,
       `/rest/v1/widget_instances?select=public_id,display_name,widget_id,config&account_id=eq.${encodeURIComponent(platformAccountId)}&order=created_at.asc&limit=${DEFAULT_PAGE_SIZE}`,
-    ),
-    supabaseFetchJson(
-      client,
-      `/rest/v1/curated_widget_instances?select=public_id,widget_type,config,meta&owner_account_id=eq.${encodeURIComponent(platformAccountId)}&order=created_at.asc&limit=${DEFAULT_PAGE_SIZE}`,
     ),
   ]);
 
@@ -272,24 +268,10 @@ async function loadPlatformRows(client, platformAccountId) {
     const widgetType = widgetTypeById.get(asTrimmedString(row?.widget_id) || '') || null;
     if (!publicId || !widgetType || !row?.config || typeof row.config !== 'object') continue;
     rows.push({
-      source: 'account',
       publicId,
       widgetType,
       config: row.config,
       displayName: asTrimmedString(row?.display_name) || publicId,
-    });
-  }
-
-  for (const row of Array.isArray(curatedRows) ? curatedRows : []) {
-    const publicId = asTrimmedString(row?.public_id);
-    const widgetType = asTrimmedString(row?.widget_type);
-    if (!publicId || !widgetType || !row?.config || typeof row.config !== 'object') continue;
-    rows.push({
-      source: 'curated',
-      publicId,
-      widgetType,
-      config: row.config,
-      displayName: publicId,
     });
   }
 
@@ -523,7 +505,6 @@ async function resolveRemoteAssetsBySavedSnapshots(remoteBase, accountId, rows, 
     collectAccountAssetRefs(
       remoteConfig,
       {
-        source: row.source,
         publicId: row.publicId,
         widgetType: row.widgetType,
         displayName: row.displayName,
@@ -559,7 +540,6 @@ async function main() {
     collectAccountAssetRefs(
       row.config,
       {
-        source: row.source,
         publicId: row.publicId,
         widgetType: row.widgetType,
         displayName: row.displayName,
@@ -569,7 +549,6 @@ async function main() {
     collectLogicalAssetIds(
       row.config,
       {
-        source: row.source,
         publicId: row.publicId,
         widgetType: row.widgetType,
         displayName: row.displayName,

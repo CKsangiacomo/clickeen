@@ -13,6 +13,7 @@ The schema is defined by:
 - `supabase/migrations/20260213160000__accounts_asset_domain_phase0.sql`
 - `supabase/migrations/20260304090000__account_only_tenancy.sql`
 - `supabase/migrations/20260304120000__prd55_storage_eviction_cutover.sql`
+- `supabase/migrations/20260502123000__system_instance_public_ids.sql`
 
 If this document conflicts with those files, the SQL wins.
 
@@ -30,7 +31,7 @@ Core columns:
 
 ### `widget_instances`
 
-One row per **user instance**. During PRD 61 cutover, this is the registry/metadata row for account-owned instances; active product config truth lives in Tokyo.
+One row per account-owned instance. During PRD 61 cutover, this is the registry/metadata row for user instances, main instances, and admin-owned system instances; active product config truth lives in Tokyo.
 
 Core columns:
 
@@ -39,7 +40,7 @@ Core columns:
 - `account_id` (uuid) — FK to `accounts.id` (instances are account-owned)
 - `public_id` (text) — the **only** identifier that crosses system boundaries
 - `display_name` (text, nullable) — account-facing instance label (defaults to `public_id` when missing)
-- `kind` (text) — `user` (listed starter/baseline cutover rows still live in `curated_widget_instances`)
+- `kind` (text) — `user` | `system`
 - `status` (text) — `published` | `unpublished` (schema residue during cutover; not canonical serve-state authority)
 - `config` (jsonb) — required object, no longer used as active product config truth
 
@@ -54,21 +55,8 @@ Current cutover note:
 
 Guardrails:
 
-- `widget_instances_user_public_id_only` constraint (NOT VALID) blocks new `wgt_main_*` / `wgt_curated_*` writes.
-
-### `curated_widget_instances` (starter registry residue)
-
-One row per **Clickeen-authored** starter/baseline instance during the current cutover.
-
-Core columns:
-
-- `id` (uuid) — internal (never exposed outside DB/services)
-- `public_id` (text) — the **only** identifier that crosses system boundaries
-- `widget_type` (text) — denormalized widget type (validated against Tokyo registry at write time)
-- `kind` (text) — `baseline` | `curated` (legacy enum names; product language is listed starter/baseline)
-- `status` (text) — `published` | `unpublished` (schema residue during cutover; not canonical serve-state authority)
-- `owner_account_id` (uuid) — FK to `accounts.id` (starter rows are owned by a platform account; runtime policy keys off `accounts.is_platform` plus row ownership, not a hardcoded seed id)
-- `config` (jsonb) — required object, no longer used as active product config truth
+- `widget_instances_public_id_format` allows only `wgt_main_*`, `wgt_system_*`, and `wgt_*_u_*`.
+- `curated_widget_instances` was migration residue and is removed by the system-instance cutover migration.
 
 ### `accounts`
 
@@ -133,17 +121,17 @@ This table exists even if the full UI/UX ships later.
 
 - **No partial configs**: `config` is required and must be a JSON object (not `null`, not an array).
 - **No legacy states**: if a Michael status column still exists during cutover, only `published` / `unpublished` are allowed values (no `draft`, no `inactive`). That column is not the canonical serve-state owner.
-- **No separate starter content model**: starter designs are instances. The remaining `curated_widget_instances` table is cutover residue, not a surviving product noun.
+- **No separate starter content model**: starter designs are normal admin-owned/system instances in `widget_instances`.
 - **Account-owned uploads**: every uploaded asset manifest is account-scoped; ownership is never inferred from scope names.
 
 ## Instance Taxonomy (3 kinds of instances)
 
 Clickeen uses one system (“instances”) but we still need a consistent taxonomy so tooling can filter and present them.
 
-This taxonomy is encoded in `public_id` across two tables:
+This taxonomy is encoded in `public_id` in `widget_instances`:
 
-- `curated_widget_instances` → `wgt_main_*` and `wgt_curated_*`
-- `widget_instances` → `wgt_*_u_*`
+- `wgt_main_*` and `wgt_system_*` are system instances.
+- `wgt_*_u_*` are user instances.
 
 ### A) Main instance (baseline)
 
@@ -167,7 +155,7 @@ These are instances created by Clickeen (via Bob) that serve as starter designs 
 
 **Naming**
 
-- `wgt_curated_{widgetType}_{styleSlug}`
+- `wgt_system_{widgetType}_{styleSlug}`
 
 Where:
 
@@ -176,12 +164,12 @@ Where:
 
 Examples:
 
-- `wgt_curated_faq_lightblurs_generic`
-- `wgt_curated_countdown_starter`
-- `wgt_curated_logoshowcase_brutalist`
+- `wgt_system_faq_lightblurs_generic`
+- `wgt_system_countdown_starter`
+- `wgt_system_logoshowcase_brutalist`
 
 **Metadata**
-Starter instances also store metadata in `curated_widget_instances.meta` during the cutover:
+Starter instances store metadata alongside the instance:
 
 ```
 {
@@ -206,22 +194,22 @@ Examples:
 
 ### Migration note (no legacy)
 
-Legacy `wgt_curated_{curatedKey}.{locale}` rows must not exist.
+Legacy `wgt_system_{systemKey}.{locale}` rows must not exist.
 
 The canonical migration is:
 
-- `supabase/migrations/20260116090000__public_id_prefixes.sql`
+- `supabase/migrations/20260502123000__system_instance_public_ids.sql`
 
 It:
 
-- renames the known curated/main instances to the new prefixes, and
+- moves old starter rows into `widget_instances`,
+- renames `wgt_curated_*` to `wgt_system_*`,
+- drops the old starter table, and
 - re-adds the `widget_instances_public_id_format` constraint to forbid locale suffixes going forward.
 
 ## Listed Starter Instances
 
-Clickeen does not.
-
-What the product surfaces as starter designs are account-owned instances from the admin/platform account. During the current Michael cutover, the DB registry residue for those rows is `curated_widget_instances`, but the product model is still listed/duplicable instances. The gallery is simply a filtered view of those listed starter instances. It is not keyed off the Tokyo `published` / `unpublished` serve flag, because starter discovery is not public-serving authority.
+What the product surfaces as starter designs are account-owned instances from the admin/platform account. The gallery is simply a filtered view of listed system instances. It is not keyed off the Tokyo `published` / `unpublished` serve flag, because starter discovery is not public-serving authority.
 
 ## Local Dev (Docker Supabase)
 
@@ -258,6 +246,6 @@ Michael seeds one deterministic platform account:
 
 Today this seeded platform account owns:
 
-- `curated_widget_instances` cutover residue (baseline + listed starter designs)
+- system instances (baseline + listed starter designs)
 - local platform verification/state used by internal tooling
 - the current cloud-dev product/runtime account context after PRD 60

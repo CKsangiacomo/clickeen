@@ -2,7 +2,7 @@
 import InstanceEmbed from './InstanceEmbed.astro';
 
 type CarouselItem = {
-  curatedRef: {
+  systemInstanceRef: {
     publicId: string;
     locale: string;
     title?: string;
@@ -25,16 +25,16 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
         <div class="ck-carousel__track" id={id}>
           {items.concat(items[0]).map((item, index) => (
             <div class="ck-carousel__item" data-index={index}>
-              {item.curatedRef ? (
+              {item.systemInstanceRef ? (
                 <InstanceEmbed
-                  publicId={item.curatedRef.publicId}
-                  locale={item.curatedRef.locale}
-                  title={item.curatedRef.title ?? `Widget preview ${index + 1}`}
-                  embedMode={item.curatedRef.embedMode}
+                  publicId={item.systemInstanceRef.publicId}
+                  locale={item.systemInstanceRef.locale}
+                  title={item.systemInstanceRef.title ?? `Widget preview ${index + 1}`}
+                  embedMode={item.systemInstanceRef.embedMode}
                   loading="eager"
                 />
               ) : (
-                <div class="ck-media ck-carousel__stub">Missing curatedRef</div>
+                <div class="ck-media ck-carousel__stub">Missing systemInstanceRef</div>
               )}
             </div>
           ))}

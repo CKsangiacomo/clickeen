@@ -21,17 +21,10 @@ type WidgetRow = {
 type WidgetInstanceRow = {
   public_id?: unknown;
   display_name?: unknown;
+  status?: unknown;
   updated_at?: unknown;
   widget_id?: unknown;
   account_id?: unknown;
-};
-
-type CuratedInstanceRow = {
-  public_id?: unknown;
-  updated_at?: unknown;
-  widget_type?: unknown;
-  owner_account_id?: unknown;
-  meta?: unknown;
 };
 
 type PublishContainmentRow = {
@@ -47,18 +40,18 @@ export type BerlinRegistryInstanceRow = {
   accountId: string;
   widgetType: string;
   meta: Record<string, unknown> | null;
-  source: 'account' | 'curated';
 };
 
 export type BerlinListedRegistryInstance = {
   publicId: string;
   widgetType: string;
   displayName: string;
+  status: 'published' | 'unpublished';
 };
 
 export type BerlinAccountWidgetRegistry = {
   accountPublicIds: string[];
-  curatedInstances: BerlinListedRegistryInstance[];
+  listedInstances: BerlinListedRegistryInstance[];
   widgetTypes: string[];
   containment: {
     active: boolean;
@@ -70,15 +63,6 @@ function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
   return normalized || null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function formatCuratedDisplayName(meta: unknown, fallback: string): string {
-  if (!isRecord(meta)) return fallback;
-  return asTrimmedString(meta.styleName ?? meta.name ?? meta.title) || fallback;
 }
 
 function dbReadFailure(response: Response, payload: unknown): Response {
@@ -153,7 +137,9 @@ async function resolveWidgetIdByType(
   return { ok: true, value: widgetId };
 }
 
-async function listWidgetTypes(env: Env): Promise<Result<Set<string>>> {
+async function loadWidgetCatalog(
+  env: Env,
+): Promise<Result<{ widgetTypes: Set<string>; widgetTypeById: Map<string, string> }>> {
   const rows = await readSupabaseAdminListAll<WidgetRow>({
     env,
     pathname: '/rest/v1/widgets',
@@ -166,12 +152,16 @@ async function listWidgetTypes(env: Env): Promise<Result<Set<string>>> {
   if (!rows.ok) return rows;
 
   const widgetTypes = new Set<string>();
+  const widgetTypeById = new Map<string, string>();
   for (const row of rows.value) {
+    const id = asTrimmedString(row.id);
     const type = asTrimmedString(row.type);
     if (!type || type === 'unknown') continue;
-    widgetTypes.add(type.toLowerCase());
+    const normalized = type.toLowerCase();
+    widgetTypes.add(normalized);
+    if (id) widgetTypeById.set(id, normalized);
   }
-  return { ok: true, value: widgetTypes };
+  return { ok: true, value: { widgetTypes, widgetTypeById } };
 }
 
 async function loadPublishContainment(
@@ -207,7 +197,7 @@ export async function loadAccountWidgetRegistry(args: {
   account: BerlinAccountContext;
 }): Promise<Result<BerlinAccountWidgetRegistry>> {
   const accountId = args.account.accountId;
-  const [accountRows, curatedRows, widgetTypes, containment] = await Promise.all([
+  const [accountRows, listedRows, widgetCatalog, containment] = await Promise.all([
     readSupabaseAdminListAll<{ public_id?: unknown }>({
       env: args.env,
       pathname: '/rest/v1/widget_instances',
@@ -218,35 +208,43 @@ export async function loadAccountWidgetRegistry(args: {
       }),
       pageSize: REGISTRY_PAGE_SIZE,
     }),
-    readSupabaseAdminListAll<CuratedInstanceRow>({
+    readSupabaseAdminListAll<WidgetInstanceRow>({
       env: args.env,
-      pathname: '/rest/v1/curated_widget_instances',
+      pathname: '/rest/v1/widget_instances',
       params: new URLSearchParams({
-        select: 'public_id,widget_type,meta',
-        owner_account_id: `eq.${accountId}`,
+        select: 'public_id,display_name,status,updated_at,widget_id,account_id',
+        or: '(public_id.like.wgt_main_*,public_id.like.wgt_system_*)',
         order: 'created_at.desc,public_id.desc',
       }),
       pageSize: REGISTRY_PAGE_SIZE,
     }),
-    listWidgetTypes(args.env),
+    loadWidgetCatalog(args.env),
     loadPublishContainment(args.env, accountId),
   ]);
   if (!accountRows.ok) return accountRows;
-  if (!curatedRows.ok) return curatedRows;
-  if (!widgetTypes.ok) return widgetTypes;
+  if (!listedRows.ok) return listedRows;
+  if (!widgetCatalog.ok) return widgetCatalog;
   if (!containment.ok) return containment;
 
-  const typeSet = new Set(widgetTypes.value);
-  const curatedInstances = curatedRows.value.flatMap((row) => {
+  const typeSet = new Set(widgetCatalog.value.widgetTypes);
+  const accountPublicIds = accountRows.value
+    .map((row) => asTrimmedString(row.public_id))
+    .filter((publicId): publicId is string => Boolean(publicId));
+  const accountPublicIdSet = new Set(accountPublicIds);
+  const listedInstances: BerlinListedRegistryInstance[] = listedRows.value.flatMap((row) => {
     const publicId = asTrimmedString(row.public_id);
     if (!publicId) return [];
-    const widgetType = asTrimmedString(row.widget_type) ?? 'unknown';
+    const ownerAccountId = asTrimmedString(row.account_id);
+    if (ownerAccountId === accountId || accountPublicIdSet.has(publicId)) return [];
+    const widgetType =
+      widgetCatalog.value.widgetTypeById.get(asTrimmedString(row.widget_id) ?? '') ?? 'unknown';
     if (widgetType !== 'unknown') typeSet.add(widgetType.toLowerCase());
     return [
       {
         publicId,
         widgetType,
-        displayName: formatCuratedDisplayName(row.meta, publicId),
+        displayName: asTrimmedString(row.display_name) ?? publicId,
+        status: row.status === 'published' ? 'published' : 'unpublished',
       },
     ];
   });
@@ -254,10 +252,8 @@ export async function loadAccountWidgetRegistry(args: {
   return {
     ok: true,
     value: {
-      accountPublicIds: accountRows.value
-        .map((row) => asTrimmedString(row.public_id))
-        .filter((publicId): publicId is string => Boolean(publicId)),
-      curatedInstances,
+      accountPublicIds,
+      listedInstances,
       widgetTypes: Array.from(typeSet).sort((a, b) => a.localeCompare(b)),
       containment: containment.value,
     },
@@ -280,56 +276,16 @@ export async function getAccountInstanceRegistryRow(args: {
     };
   }
 
-  if (publicIdKind === 'main' || publicIdKind === 'curated') {
-    const params = new URLSearchParams({
-      select: 'public_id,updated_at,widget_type,owner_account_id,meta',
-      public_id: `eq.${args.publicId}`,
-      limit: '1',
-    });
-    const response = await supabaseAdminFetch(
-      args.env,
-      `/rest/v1/curated_widget_instances?${params.toString()}`,
-      { method: 'GET' },
-    );
-    const payload = await readSupabaseAdminJson<CuratedInstanceRow[] | Record<string, unknown>>(response);
-    if (!response.ok) return { ok: false, response: dbReadFailure(response, payload) };
-
-    const rows = Array.isArray(payload) ? payload : [];
-    const row = rows[0] ?? null;
-    if (!row) return { ok: true, value: null };
-
-    const widgetType = asTrimmedString(row.widget_type);
-    if (!widgetType) {
-      return {
-        ok: false,
-        response: internalError(
-          'coreui.errors.instance.invalidPayload',
-          'invalid curated_widget_instances payload',
-        ),
-      };
-    }
-
-    return {
-      ok: true,
-      value: {
-        publicId: asTrimmedString(row.public_id) ?? args.publicId,
-        displayName: formatCuratedDisplayName(row.meta, args.publicId),
-        updatedAt: asTrimmedString(row.updated_at),
-        widgetId: `curated:${widgetType}`,
-        accountId: asTrimmedString(row.owner_account_id) ?? args.account.accountId,
-        widgetType,
-        meta: isRecord(row.meta) ? row.meta : null,
-        source: 'curated',
-      },
-    };
-  }
-
   const params = new URLSearchParams({
     select: 'public_id,display_name,updated_at,widget_id,account_id',
-    account_id: `eq.${args.account.accountId}`,
     public_id: `eq.${args.publicId}`,
     limit: '1',
   });
+  if (publicIdKind === 'user') {
+    params.set('account_id', `eq.${args.account.accountId}`);
+  } else {
+    params.set('or', '(public_id.like.wgt_main_*,public_id.like.wgt_system_*)');
+  }
   const response = await supabaseAdminFetch(
     args.env,
     `/rest/v1/widget_instances?${params.toString()}`,
@@ -364,7 +320,6 @@ export async function getAccountInstanceRegistryRow(args: {
       accountId,
       widgetType: widgetType.value,
       meta: null,
-      source: 'account',
     },
   };
 }
@@ -443,7 +398,6 @@ export async function createAccountInstanceRegistryRow(args: {
       accountId,
       widgetType,
       meta: null,
-      source: 'account',
     },
   };
 }
@@ -453,17 +407,6 @@ export async function deleteAccountInstanceRegistryRow(args: {
   account: BerlinAccountContext;
   publicId: string;
 }): Promise<Result<void>> {
-  const publicIdKind = classifyWidgetPublicId(args.publicId);
-  if (publicIdKind !== 'user') {
-    return {
-      ok: false,
-      response: json(
-        { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden', detail: 'only account instances can be deleted here' } },
-        { status: 403 },
-      ),
-    };
-  }
-
   const params = new URLSearchParams({
     account_id: `eq.${args.account.accountId}`,
     public_id: `eq.${args.publicId}`,

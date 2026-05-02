@@ -7,43 +7,43 @@ const SDR_BUDGETS = {
   free_low: { maxTokens: 280, timeoutMs: 15e3, maxRequests: 1 },
   paid_standard: { maxTokens: 600, timeoutMs: 25e3, maxRequests: 2 },
   paid_premium: { maxTokens: 900, timeoutMs: 35e3, maxRequests: 2 },
-  curated_premium: { maxTokens: 1200, timeoutMs: 45e3, maxRequests: 2 }
+  system_premium: { maxTokens: 1200, timeoutMs: 45e3, maxRequests: 2 }
 };
 const SDR_WIDGET_BUDGETS = {
   free_low: { maxTokens: 650, timeoutMs: 45e3, maxRequests: 2 },
   paid_standard: { maxTokens: 900, timeoutMs: 45e3, maxRequests: 3 },
   paid_premium: { maxTokens: 1400, timeoutMs: 6e4, maxRequests: 3 },
-  curated_premium: { maxTokens: 1600, timeoutMs: 6e4, maxRequests: 3 }
+  system_premium: { maxTokens: 1600, timeoutMs: 6e4, maxRequests: 3 }
 };
 const CS_WIDGET_BUDGETS = {
   free_low: { maxTokens: 650, timeoutMs: 45e3, maxRequests: 2 },
   paid_standard: { maxTokens: 900, timeoutMs: 45e3, maxRequests: 3 },
   paid_premium: { maxTokens: 1400, timeoutMs: 6e4, maxRequests: 3 },
-  curated_premium: { maxTokens: 1600, timeoutMs: 6e4, maxRequests: 3 }
+  system_premium: { maxTokens: 1600, timeoutMs: 6e4, maxRequests: 3 }
 };
 const DEBUG_BUDGETS = {
   free_low: { maxTokens: 200, timeoutMs: 1e4, maxRequests: 1 },
   paid_standard: { maxTokens: 200, timeoutMs: 1e4, maxRequests: 1 },
   paid_premium: { maxTokens: 200, timeoutMs: 1e4, maxRequests: 1 },
-  curated_premium: { maxTokens: 200, timeoutMs: 1e4, maxRequests: 1 }
+  system_premium: { maxTokens: 200, timeoutMs: 1e4, maxRequests: 1 }
 };
 const L10N_INSTANCE_BUDGETS = {
   free_low: { maxTokens: 900, timeoutMs: 2e4, maxRequests: 1 },
   paid_standard: { maxTokens: 1200, timeoutMs: 3e4, maxRequests: 1 },
   paid_premium: { maxTokens: 1800, timeoutMs: 45e3, maxRequests: 1 },
-  curated_premium: { maxTokens: 2200, timeoutMs: 6e4, maxRequests: 1 }
+  system_premium: { maxTokens: 2200, timeoutMs: 6e4, maxRequests: 1 }
 };
 const L10N_PRAGUE_BUDGETS = {
   free_low: { maxTokens: 1500, timeoutMs: 6e4, maxRequests: 1 },
   paid_standard: { maxTokens: 1500, timeoutMs: 6e4, maxRequests: 1 },
   paid_premium: { maxTokens: 2e3, timeoutMs: 6e4, maxRequests: 1 },
-  curated_premium: { maxTokens: 2200, timeoutMs: 6e4, maxRequests: 1 }
+  system_premium: { maxTokens: 2200, timeoutMs: 6e4, maxRequests: 1 }
 };
 const PERSONALIZATION_ONBOARDING_BUDGETS = {
   free_low: { maxTokens: 900, timeoutMs: 3e4, maxRequests: 2 },
   paid_standard: { maxTokens: 1200, timeoutMs: 45e3, maxRequests: 2 },
   paid_premium: { maxTokens: 1800, timeoutMs: 6e4, maxRequests: 3 },
-  curated_premium: { maxTokens: 2200, timeoutMs: 6e4, maxRequests: 3 }
+  system_premium: { maxTokens: 2200, timeoutMs: 6e4, maxRequests: 3 }
 };
 const AI_AGENT_REGISTRY = [
   {
@@ -166,7 +166,7 @@ const PROFILE_BY_POLICY = {
   tier2: "paid_premium",
   tier3: "paid_premium"
 };
-const CURATED_TASK_CLASSES = /* @__PURE__ */ new Set(["l10n.prague.systemStrings"]);
+const SYSTEM_TASK_CLASSES = /* @__PURE__ */ new Set(["l10n.prague.systemStrings"]);
 const PROVIDER_LABELS = {
   deepseek: "DeepSeek",
   openai: "OpenAI",
@@ -231,7 +231,7 @@ const MODELS_BY_PROFILE = {
       allowed: ["amazon.nova-micro-v1:0", "amazon.nova-lite-v1:0", "amazon.nova-pro-v1:0"]
     }
   },
-  curated_premium: {
+  system_premium: {
     openai: { defaultModel: "gpt-5.2", allowed: ["gpt-5-mini", "gpt-5", "gpt-5.2", "gpt-4o"] }
   }
 };
@@ -239,7 +239,7 @@ const DEFAULT_PROVIDER_BY_PROFILE = {
   free_low: "deepseek",
   paid_standard: "openai",
   paid_premium: "openai",
-  curated_premium: "openai"
+  system_premium: "openai"
 };
 function uniqProviders(values) {
   const seen = /* @__PURE__ */ new Set();
@@ -276,8 +276,7 @@ function resolveWidgetCopilotRequestedAgentId(args) {
   return requested;
 }
 function resolveAiProfile(args) {
-  if (args.isCurated) return "curated_premium";
-  if (CURATED_TASK_CLASSES.has(args.taskClass)) return "curated_premium";
+  if (SYSTEM_TASK_CLASSES.has(args.taskClass)) return "system_premium";
   const profile = PROFILE_BY_POLICY[args.policyProfile];
   if (!profile) {
     throw new Error(`[ck-contracts] Missing AI profile mapping for policy profile: ${args.policyProfile}`);
@@ -342,8 +341,7 @@ function listAiModelsForUi(args) {
 function resolveAiPolicyCapsule(args) {
   const profile = resolveAiProfile({
     policyProfile: args.policyProfile,
-    taskClass: args.entry.taskClass,
-    isCurated: args.isCurated
+    taskClass: args.entry.taskClass
   });
   const allowedProviders = resolveAiAllowedProviders(args.entry, profile);
   if (!allowedProviders.length) {

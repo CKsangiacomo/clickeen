@@ -4,7 +4,7 @@ import { HttpError, asNumber, asString, isRecord } from './http';
 
 const AI_GRANT_ISSUER_SET = new Set<AIGrant['iss']>(['roma', 'sanfrancisco']);
 const AI_PROVIDER_SET = new Set<AiProvider>(['deepseek', 'openai', 'anthropic', 'groq', 'amazon']);
-const AI_PROFILE_SET = new Set<AiProfile>(['free_low', 'paid_standard', 'paid_premium', 'curated_premium']);
+const AI_PROFILE_SET = new Set<AiProfile>(['free_low', 'paid_standard', 'paid_premium', 'system_premium']);
 
 function isAiGrantIssuer(value: string): value is AIGrant['iss'] {
   return AI_GRANT_ISSUER_SET.has(value as AIGrant['iss']);

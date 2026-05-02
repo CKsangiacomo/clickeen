@@ -2,12 +2,11 @@ import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l
 import localesJson from '@clickeen/l10n/locales.json';
 
 export const WIDGET_PUBLIC_ID_MAIN_RE = /^wgt_main_[a-z0-9][a-z0-9_-]*$/i;
-export const WIDGET_PUBLIC_ID_CURATED_RE = /^wgt_curated_[a-z0-9][a-z0-9_-]*$/i;
+export const WIDGET_PUBLIC_ID_SYSTEM_RE = /^wgt_system_[a-z0-9][a-z0-9_-]*$/i;
 export const WIDGET_PUBLIC_ID_USER_RE = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i;
 export const WIDGET_PUBLIC_ID_RE =
-  /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_curated_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
+  /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_system_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
 
-export const WIDGET_PUBLIC_ID_CURATED_OR_MAIN_PATTERN = '^wgt_(curated|main)_[a-z0-9][a-z0-9_-]*$';
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const ACCOUNT_ASSET_PATH_RE = /^\/assets\/account\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)$/;
 export const ACCOUNT_ASSET_PATH_PATTERN = '^/assets/account/([^/?#]+)/([^/?#]+)/([^/?#]+)$';
@@ -70,7 +69,7 @@ export function classifyWidgetPublicId(raw) {
   const value = normalizeWidgetPublicId(raw);
   if (!value) return null;
   if (WIDGET_PUBLIC_ID_MAIN_RE.test(value)) return 'main';
-  if (WIDGET_PUBLIC_ID_CURATED_RE.test(value)) return 'curated';
+  if (WIDGET_PUBLIC_ID_SYSTEM_RE.test(value)) return 'system';
   if (WIDGET_PUBLIC_ID_USER_RE.test(value)) return 'user';
   return null;
 }
@@ -84,15 +83,9 @@ export function isMainWidgetPublicId(raw) {
   return value ? WIDGET_PUBLIC_ID_MAIN_RE.test(value) : false;
 }
 
-export function isCuratedWidgetPublicId(raw) {
+export function isSystemInstancePublicId(raw) {
   const value = typeof raw === 'string' ? raw.trim() : '';
-  return value ? WIDGET_PUBLIC_ID_CURATED_RE.test(value) : false;
-}
-
-export function isCuratedOrMainWidgetPublicId(raw) {
-  const value = typeof raw === 'string' ? raw.trim() : '';
-  if (!value) return false;
-  return WIDGET_PUBLIC_ID_MAIN_RE.test(value) || WIDGET_PUBLIC_ID_CURATED_RE.test(value);
+  return value ? WIDGET_PUBLIC_ID_SYSTEM_RE.test(value) : false;
 }
 
 export function isUserWidgetPublicId(raw) {
