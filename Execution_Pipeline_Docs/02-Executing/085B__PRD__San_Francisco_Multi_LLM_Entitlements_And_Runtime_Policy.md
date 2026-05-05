@@ -74,13 +74,17 @@ type AgentRuntimePolicy = {
   selectedModel?: string;
   maxTokensPerCall: number;
   maxTurnsPerThread: number;
-  monthlyTurns: number | null;
+  maxMonthlyTurns: number | null;
   maxCostUsd?: number;
   timeoutMs: number;
   tools?: string[];
   policyVersion: string;
 };
 ```
+
+`maxMonthlyTurns` is a ceiling, not a live counter.
+
+Live monthly usage state changes with every request and must stay with the account/entitlement authority. It must not be embedded as "turns remaining" inside a signed per-request grant.
 
 If the selected model is outside the policy, San Francisco rejects the request.
 
@@ -116,11 +120,14 @@ to:
 - model-picker permission
 - token ceilings
 - turn ceilings
+- monthly turn ceiling
 - cost ceiling
 - timeout
 - tool permissions
 
 The matrix may live in contracts/config, but customer entitlement truth remains outside San Francisco.
+
+Live consumption is checked before grant issuance by the account/product owner and metered after execution. San Francisco enforces the signed ceiling for the request; it does not become the account usage ledger.
 
 ### 4.3 Model Switching
 
@@ -155,6 +162,12 @@ Not allowed:
 
 Internal workforce jobs may allow broader fallback if explicitly declared in their internal runtime policy.
 
+### 4.5 Language Policy Guard
+
+This PRD does not add a new language-policy layer.
+
+If runtime policy later needs language behavior, do not bury language detection inside an agent core file. Move it to a named utility or the widget/agent contract so San Francisco remains an AI executor and not a hidden locale-policy owner.
+
 ---
 
 ## 5. Deletion Targets
@@ -164,6 +177,7 @@ Internal workforce jobs may allow broader fallback if explicitly declared in the
 - Hidden provider fallback.
 - Temporary edit-budget multipliers.
 - Any grant verifier behavior that accepts model/provider outside the signed policy.
+- Any grant shape that carries live usage counters instead of policy ceilings.
 - Any docs that describe a second AI access layer.
 
 ---
@@ -178,6 +192,7 @@ Likely code areas:
 - `sanfrancisco/src/agents/*`
 - Roma grant issuance / copilot caller code
 - account policy/entitlement read paths if runtime policy is minted there
+- inline language-detection helper code only if this PRD explicitly touches language behavior
 
 Potential caller checks:
 
@@ -226,6 +241,7 @@ Before execution:
 
 - Decide canonical `AgentRuntimePolicy`.
 - Decide where runtime policy is minted.
+- Confirm `maxMonthlyTurns` is a ceiling and live usage state remains outside the grant.
 - Decide model-picker rules.
 - Decide fallback rules per agent.
 - Decide policy versioning.
@@ -234,6 +250,7 @@ Execution is green only when:
 
 - legacy access mapping is deleted or inert
 - grants carry direct runtime policy
+- grants do not carry live usage counters
 - San Francisco rejects provider/model outside policy
 - temporary multipliers are deleted or moved into named policy
 - tests prove rejection behavior

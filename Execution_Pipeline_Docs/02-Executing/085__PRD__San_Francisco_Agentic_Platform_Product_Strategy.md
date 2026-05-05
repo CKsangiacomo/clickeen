@@ -331,12 +331,14 @@ type AgentRuntimePolicy = {
   allowModelPicker: boolean;
   maxTokensPerCall: number;
   maxTurnsPerThread: number;
-  monthlyTurns: number | null;
+  maxMonthlyTurns: number | null;
   maxCostUsd?: number;
   timeoutMs: number;
   tools?: string[];
 };
 ```
+
+`maxMonthlyTurns` is a policy ceiling, not a live "turns remaining" counter. Live usage state belongs to the account/entitlement owner, not inside a signed per-request grant.
 
 ### Recommendation
 
@@ -481,7 +483,7 @@ Delete or quarantine `sdr.copilot` and `agent.personalization.onboarding.v1` unl
 
 ### Required Future Execution Slices
 
-- Create an agent ownership table.
+- Add customer-agent ownership metadata to the existing contracts/executor registry and docs. Do not create a new database/admin surface for this.
 - Delete unowned agents and registry entries.
 - Add a contract checklist required before any new customer-facing agent can be added.
 
@@ -580,7 +582,7 @@ These are not automatic deletes yet. They require product decision.
 | `agent.personalization.onboarding.v1` | no active non-doc caller found | account-context carry-forward is a real product job |
 | `/v1/personalization/onboarding` | shared-secret HTTP tooling and legacy naming | converted to real private/internal job boundary |
 | `SanfranciscoCommandMessage` / `sf.command` | generic envelope for two commands, currently breaks outcome shape | we actually need a command bus with multiple commands |
-| `CK_INTERNAL_SERVICE_JWT` in San Francisco | shared-secret residue | local/cloud-dev tooling only, with explicit expiry/deletion plan |
+| `CK_INTERNAL_SERVICE_JWT` in San Francisco | shared-secret residue; internal auth pattern should not be copied or polished into product architecture | local/cloud-dev tooling only, with explicit expiry/deletion plan |
 | Legacy AI access mapping layer | second fake AI access system; conflicts with direct agent runtime policy | replaced by per-agent runtime policy |
 | Widget copilot parse fallback | hides invalid model output as no-op assistant response | converted to explicit typed failure/clarification |
 | Widget copilot `devMultiplier` | temporary product policy | replaced with named policy by entitlement and agent |
@@ -645,14 +647,14 @@ Fill this before execution.
 
 ### Learning
 
-- First learning loop:
-- Outcome events that matter:
+- First learning loop: default recommendation is Builder copilot quality.
+- Outcome events that matter: default recommendation is `edit_applied`, `edit_rejected`, `edit_undone`, `clarification_needed`, `invalid_output`.
 - Human review required before prompt/model promotion:
 - Storage/index owner:
 
 ### Multi-LLM By Entitlement
 
-- Canonical runtime policy shape:
+- Canonical runtime policy shape: `maxMonthlyTurns` is a policy ceiling; live usage counters stay outside the grant.
 - Normal user model choice:
 - Provider fallback policy:
 - Cost budget policy:
@@ -666,7 +668,7 @@ Fill this before execution.
 
 ### Clickeen Agentic Workforce
 
-- Internal agents to keep now:
+- Internal agents to keep now: blocked until first real internal job is named; default recommendation is the localization worker.
 - Shared-secret tooling allowed:
 - Private binding/queue requirements:
 - Human approval rules:

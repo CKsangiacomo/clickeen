@@ -8,6 +8,8 @@ This PRD removes hidden AI success behavior and product-toxic San Francisco flow
 
 It should execute before the other 085 child PRDs.
 
+This is the highest-priority 085 execution PRD because it removes active bad behavior before adding any platform surface.
+
 ---
 
 ## 1. Product Goal
@@ -99,6 +101,8 @@ Shared-secret paths are allowed only as explicitly documented local/cloud-dev to
 
 They must not carry account product runtime.
 
+If an internal shared-secret check remains temporarily for tooling, do not polish it into product architecture. The current string-equality bearer-token pattern should be treated as deletion/to-tooling-only residue, not copied into new paths.
+
 Surviving product paths must use:
 
 - signed grants
@@ -111,6 +115,8 @@ Generic command wrappers should be deleted if they exist only for unrelated one-
 
 Use a simple typed contract unless a real command bus exists with shared middleware and multiple commands.
 
+The current outcome envelope mismatch is a confirmed live bug: San Francisco expects an `sf.command` envelope while Roma sends a simpler outcome body. This PRD should delete the fake wrapper or explicitly prove a real command bus exists.
+
 ---
 
 ## 5. Deletion Targets
@@ -119,6 +125,7 @@ Use a simple typed contract unless a real command bus exists with shared middlew
 - Fail-soft parser branches.
 - Temporary edit-policy multipliers.
 - Product-like `CK_INTERNAL_SERVICE_JWT` paths.
+- String-equality internal auth patterns copied into product paths.
 - Generic command envelopes with no real command-bus need.
 - Docs that describe hidden fallback as product behavior.
 
@@ -179,6 +186,7 @@ Before execution:
 - Identify fail-soft parser branches.
 - Identify temporary multipliers.
 - Identify residual shared-secret product-like routes.
+- Identify internal auth checks that should be deleted or made tooling-only.
 - Decide typed result shape.
 - Decide user-facing failure/clarification behavior with Roma if needed.
 
@@ -187,6 +195,7 @@ Execution is green only when:
 - invalid model output no longer becomes fake success
 - temporary multipliers are deleted or moved into explicit runtime policy
 - product-like shared-secret paths are removed or tooling-only
+- internal auth residue is not copied or strengthened into a product boundary
 - generic envelopes are deleted unless justified
 - tests cover success, clarification, and failure
 - residue checks pass

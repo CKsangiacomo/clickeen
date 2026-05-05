@@ -8,6 +8,8 @@ This PRD defines the boundary for Clickeen's internal AI workforce.
 
 Internal agents can run sales, support, marketing, localization, content, and ops work. They must be governed like production workers, not experiments with broad access.
 
+Do not execute this PRD as an abstract framework. It is blocked until one real internal job is named. The recommended first job is the existing localization worker path because it already has real input, output, cost, and product value.
+
 ---
 
 ## 1. Product Goal
@@ -83,6 +85,8 @@ type InternalAgentJob = {
 };
 ```
 
+The type above is a planning shape. During execution, free-form fields such as `approvalPolicy` and `retentionPolicy` should become named enum/config values only for the first real job being implemented. Do not build a general framework before a concrete job needs it.
+
 No internal job should gain product write power through a shared-secret HTTP route.
 
 ---
@@ -92,6 +96,8 @@ No internal job should gain product write power through a shared-secret HTTP rou
 ### 4.1 Explicit Job Registry
 
 Create a registry for internal workforce jobs.
+
+Build the registry around the first real surviving job, not around imagined future workers.
 
 Required fields:
 
@@ -217,7 +223,7 @@ It lets Clickeen build an AI workforce without polluting customer-facing product
 
 Before execution:
 
-- Decide first internal workforce jobs to keep.
+- Decide first internal workforce job to keep. Default recommendation: localization worker.
 - Decide whether personalization/onboarding survives.
 - Decide whether Prague translation is tooling, internal job, or private binding.
 - Decide job registry location.
@@ -230,6 +236,7 @@ Execution is green only when:
 - shared-secret product-like internal paths are gone or explicitly tooling-only
 - tool permissions are explicit
 - audit path exists for surviving jobs
+- no generic workforce registry exists without at least one real surviving job
 
 ---
 

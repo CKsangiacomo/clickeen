@@ -92,6 +92,8 @@ The payload must include:
 
 No generic command envelope should survive unless there is a real command bus with multiple shared behaviors.
 
+The current `/v1/outcome` mismatch is a confirmed live bug, not a hypothetical risk. Execution must not proceed until Roma and San Francisco agree on one direct outcome payload shape.
+
 ### 4.2 Metering
 
 Every execution writes a small metering fact.
@@ -129,6 +131,7 @@ Examples:
 - edit applied
 - edit rejected
 - edit undone
+- invalid output
 - translation accepted
 - translation failed
 - clarification needed
@@ -137,6 +140,18 @@ Examples:
 - upgrade clicked after budget/upsell prompt
 
 Outcomes are how Clickeen learns what worked.
+
+For the first execution pass, use Builder copilot quality as the learning loop unless the decision log explicitly chooses another loop.
+
+Initial outcome names should be boring and concrete:
+
+- `edit_applied`
+- `edit_rejected`
+- `edit_undone`
+- `clarification_needed`
+- `invalid_output`
+
+Do not add broad analytics vocabulary until these are working end to end.
 
 ### 4.4 Raw Learning Payloads
 
@@ -171,6 +186,8 @@ They are used to test:
 - outcome quality
 
 Golden examples should be promoted from raw samples only after review or a defined eval threshold.
+
+Do not build a golden-example promotion workflow before the outcome contract is fixed and real outcomes exist. Golden examples are a later quality gate, not the first implementation slice.
 
 ---
 
@@ -235,8 +252,8 @@ It also supports the strategy that San Francisco is Clickeen's workforce system 
 
 Before execution:
 
-- Decide first learning loop.
-- Decide outcome event names for that loop.
+- Decide first learning loop. Default recommendation: Builder copilot quality.
+- Decide outcome event names for that loop. Default recommendation: `edit_applied`, `edit_rejected`, `edit_undone`, `clarification_needed`, `invalid_output`.
 - Decide raw payload retention window.
 - Decide D1 index shape.
 - Decide whether command envelope is deleted.

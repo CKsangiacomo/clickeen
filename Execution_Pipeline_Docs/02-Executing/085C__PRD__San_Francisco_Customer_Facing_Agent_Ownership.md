@@ -78,9 +78,11 @@ Future agents are allowed only after they have a real surface and owner.
 
 ## 4. Approach
 
-### 4.1 Agent Ownership Table
+### 4.1 Agent Ownership Registry Metadata
 
 Create a contract/doc table for customer-facing agents.
+
+This must stay boring. It should be a TypeScript registry shape and a small doc/checklist tied to the existing `AGENT_EXECUTORS` and contracts validation. Do not create a database, admin UI, or new service for agent ownership.
 
 Required fields:
 
@@ -99,6 +101,8 @@ Required fields:
 - outcome events
 - storage owner for output
 - deletion owner
+
+The existing boot-time cross-validation between contracts and `AGENT_EXECUTORS` is a good pattern and should be preserved. Ownership metadata should strengthen that registry, not bypass it.
 
 ### 4.2 Contract Checklist
 
@@ -197,11 +201,11 @@ Before execution:
 - Decide which customer-facing agents survive now.
 - Decide whether SDR is real now or future-only.
 - Decide whether personalization/onboarding is real now or future-only.
-- Decide where agent ownership table lives.
+- Decide where agent ownership metadata lives. Default recommendation: TypeScript registry metadata plus docs, not a database/admin surface.
 
 Execution is green only when:
 
-- every surviving customer-facing agent has owner table entry
+- every surviving customer-facing agent has owner metadata in the registry/doc contract
 - every deleted agent has no route, registry entry, grant issuance, caller, or live doc
 - Builder copilot still works
 - localization generation still works
