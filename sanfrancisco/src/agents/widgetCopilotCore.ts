@@ -9,13 +9,6 @@ import {
   resolveCsPrelude,
 } from './widgetCopilotCsProduct';
 import {
-  buildSdrPromptContext,
-  resolveSdrPrelude,
-  resolveSdrWebsiteSource,
-  type SdrSourcePage,
-  validateSdrOpsAgainstAllowlist,
-} from './widgetCopilotSdrProduct';
-import {
   WIDGET_COPILOT_PROMPT_PROFILE_VERSION,
   type WidgetCopilotRole,
 } from './widgetCopilotPromptProfiles';
@@ -64,7 +57,6 @@ type WidgetCopilotResult = {
     dictionaryHash?: string;
     language?: string;
     languageConfidence?: number;
-    allowlistSource?: 'sdr_allowlist' | 'localization_fallback';
   };
 };
 
@@ -74,10 +66,8 @@ type CopilotSession = {
   lastActiveAtMs: number;
   successfulEdits: number;
   turns: Array<{ role: 'user' | 'assistant'; content: string }>;
-  source?: { url: string; fetchedAtMs: number; title?: string };
   conversationLanguage?: string;
   languageConfidence?: number;
-  pendingConsent?: { kind: 'website'; url: string; askedAtMs: number };
   pendingPolicy?:
     | {
         kind: 'scope';
@@ -95,12 +85,11 @@ type CopilotSession = {
 
 const PROMPT_VERSION = 'widget.copilot.core.v2@2026-02-11';
 const POLICY_VERSION_BY_ROLE: Record<WidgetCopilotRole, string> = {
-  sdr: 'widget.copilot.policy.sdr.acquisition.v1@2026-02-11',
   cs: 'widget.copilot.policy.cs.editor.v1@2026-02-11',
 };
 
 type WidgetCopilotRuntime = {
-  agentId: 'sdr.widget.copilot.v1' | 'cs.widget.copilot.v1';
+  agentId: 'cs.widget.copilot.v1';
   role: WidgetCopilotRole;
   sessionKeyPrefix: string;
   forbidInternalControlDumpPromptLine?: boolean;
@@ -158,22 +147,6 @@ const LANGUAGE_NAME_MAP: Record<string, string> = {
 
 const LANGUAGE_CODE_SET = new Set(['en', 'es', 'fr', 'de', 'it', 'pt', 'nl', 'ru', 'ar', 'ja', 'ko', 'zh', 'he', 'hi']);
 
-const CONSENT_LEXICON: Record<string, { yes: string[]; no: string[] }> = {
-  en: { yes: ['yes', 'yep', 'yeah', 'ok', 'okay', 'sure'], no: ['no', 'nope', 'nah'] },
-  es: { yes: ['sí', 'si', 'claro', 'vale'], no: ['no'] },
-  fr: { yes: ['oui', 'daccord', "d'accord"], no: ['non'] },
-  de: { yes: ['ja', 'klar'], no: ['nein'] },
-  it: { yes: ['sì', 'si', 'va bene'], no: ['no'] },
-  pt: { yes: ['sim', 'claro'], no: ['não', 'nao'] },
-  nl: { yes: ['ja', 'oké', 'oke'], no: ['nee'] },
-  ru: { yes: ['да', 'ок', 'хорошо'], no: ['нет'] },
-  ar: { yes: ['نعم', 'موافق'], no: ['لا'] },
-  hi: { yes: ['हाँ', 'ठीक'], no: ['नहीं'] },
-  ja: { yes: ['はい', 'お願いします', 'ok', 'okay'], no: ['いいえ', 'だめ'] },
-  ko: { yes: ['네', '예', '좋아요'], no: ['아니요'] },
-  zh: { yes: ['是', '好', '可以'], no: ['不', '不要'] },
-};
-
 const UI_STRINGS: Record<
   string,
   Record<
@@ -182,68 +155,21 @@ const UI_STRINGS: Record<
   >
 > = {
   en: {
-    askWebsiteUrl: 'Share your website URL so I can personalize the widget.',
-    askConsentWebsiteRead: 'Can I read one public page from that URL to personalize your widget? (Yes/No)',
-    askBusinessBasics: 'Tell me your business and audience (1 sentence each).',
-    askSingleUrl: 'I found multiple URLs. Which single page should I use?',
-    blockedUrl: 'I can only read public https pages. That URL is not allowed.',
-    fetchFailed: 'I tried to read that page but couldn’t. Please share a working URL or paste the text.',
     cloudflareError:
       'That looks like a Cloudflare error page. Please share a working URL or paste the page text.',
-    missingAllowlist: 'This widget is not SDR-enabled yet. Try another widget or continue manually.',
-    invalidOps:
-      'I tried to apply an edit, but it didn’t match the editable fields. Please ask for a specific copy change.',
-    yesNo: 'Yes or No?',
   },
   es: {
-    askWebsiteUrl: 'Comparte tu URL para personalizar el widget.',
-    askConsentWebsiteRead: '¿Puedo leer una página pública para personalizar tu widget? (Sí/No)',
-    askBusinessBasics: 'Cuéntame tu negocio y tu audiencia (1 frase cada uno).',
-    askSingleUrl: 'Encontré varias URLs. ¿Cuál página debo usar?',
-    blockedUrl: 'Solo puedo leer páginas públicas https. Esa URL no está permitida.',
-    fetchFailed: 'Intenté leer esa página, pero falló. Comparte una URL válida o pega el texto.',
     cloudflareError:
       'Eso parece una página de error de Cloudflare. Comparte una URL válida o pega el texto.',
-    missingAllowlist: 'Este widget aún no está habilitado para SDR.',
-    invalidOps:
-      'Intenté aplicar un cambio, pero no coincide con los campos editables. Pide un cambio de texto específico.',
-    yesNo: '¿Sí o No?',
   },
   ja: {
-    askWebsiteUrl: 'サイトURLを共有してください。内容を合わせて調整します。',
-    askConsentWebsiteRead: 'そのURLの公開ページを1ページ読んでもよろしいですか？（はい/いいえ）',
-    askBusinessBasics: '事業内容と対象顧客を1文ずつ教えてください。',
-    askSingleUrl: '複数のURLが見つかりました。どのページを使いますか？',
-    blockedUrl: '公開HTTPSページのみ読み取れます。そのURLは許可されていません。',
-    fetchFailed: '読み取りに失敗しました。別のURLか本文を貼ってください。',
     cloudflareError: 'Cloudflareのエラーページのようです。別のURLか本文を貼ってください。',
-    missingAllowlist: 'このウィジェットはまだSDRに対応していません。',
-    invalidOps: '編集対象に一致しませんでした。具体的なコピー変更を指定してください。',
-    yesNo: 'はい / いいえ',
   },
   ar: {
-    askWebsiteUrl: 'شارك رابط موقعك لأقوم بتخصيص الودجت.',
-    askConsentWebsiteRead: 'هل تسمح لي بقراءة صفحة عامة واحدة للتخصيص؟ (نعم/لا)',
-    askBusinessBasics: 'عرّفني على عملك وجمهورك بجملة لكلٍ منهما.',
-    askSingleUrl: 'وجدت عدة روابط. أي صفحة يجب أن أستخدم؟',
-    blockedUrl: 'يمكنني قراءة صفحات https العامة فقط. هذا الرابط غير مسموح.',
-    fetchFailed: 'لم أتمكن من قراءة الصفحة. أرسل رابطًا صالحًا أو الصق النص.',
     cloudflareError: 'يبدو أنها صفحة خطأ من Cloudflare. أرسل رابطًا صالحًا أو الصق النص.',
-    missingAllowlist: 'هذا الودجت غير مفعّل لـ SDR بعد.',
-    invalidOps: 'حاولت التعديل لكن الحقول غير قابلة للتطابق. اطلب تغيير نص محدد.',
-    yesNo: 'نعم أم لا؟',
   },
   ru: {
-    askWebsiteUrl: 'Пришлите URL сайта, чтобы я персонализировал виджет.',
-    askConsentWebsiteRead: 'Можно прочитать одну публичную страницу для персонализации? (Да/Нет)',
-    askBusinessBasics: 'Опишите бизнес и аудиторию (по одному предложению).',
-    askSingleUrl: 'Я нашёл несколько URL. Какую страницу использовать?',
-    blockedUrl: 'Я могу читать только публичные https-страницы. Этот URL не разрешён.',
-    fetchFailed: 'Не удалось прочитать страницу. Пришлите рабочий URL или вставьте текст.',
     cloudflareError: 'Похоже на страницу ошибки Cloudflare. Пришлите рабочий URL или вставьте текст.',
-    missingAllowlist: 'Этот виджет пока не поддерживает SDR.',
-    invalidOps: 'Не удалось применить изменения. Попросите конкретное изменение текста.',
-    yesNo: 'Да или нет?',
   },
 };
 
@@ -330,21 +256,11 @@ function t(lang: string, key: keyof (typeof UI_STRINGS)['en']): string {
   return table[key] ?? UI_STRINGS.en[key];
 }
 
-function isYesNo(prompt: string, lang: string): 'yes' | 'no' | null {
-  const normalized = normalizeLocaleToken(lang);
-  const lex = CONSENT_LEXICON[normalized] ?? CONSENT_LEXICON.en;
-  const token = normalizeToken(prompt);
-  if (lex.yes.some((y) => token.includes(normalizeToken(y)))) return 'yes';
-  if (lex.no.some((n) => token.includes(normalizeToken(n)))) return 'no';
-  return null;
-}
-
-
 function buildMeta(
   intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
   outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
   role: WidgetCopilotRole,
-  extras?: Pick<NonNullable<WidgetCopilotResult['meta']>, 'language' | 'languageConfidence' | 'allowlistSource'>,
+  extras?: Pick<NonNullable<WidgetCopilotResult['meta']>, 'language' | 'languageConfidence'>,
 ): NonNullable<WidgetCopilotResult['meta']> {
   return {
     intent,
@@ -470,65 +386,6 @@ function inferScopeFromPath(controlPath: string): 'stage' | 'pod' | 'content' {
   if (controlPath.startsWith('stage.')) return 'stage';
   if (controlPath.startsWith('pod.')) return 'pod';
   return 'content';
-}
-
-function languageClarifyMessage(lang: string): string {
-  const normalized = normalizeLocaleToken(lang);
-  if (normalized.startsWith('it')) {
-    return 'Certo, posso parlare in italiano. Condividi il sito web così posso personalizzare il widget, oppure dimmi in 1–2 frasi che attività hai e a chi ti rivolgi.';
-  }
-  if (normalized.startsWith('fr')) {
-    return "D’accord, je peux répondre en français. Partagez votre site pour que je personnalise le widget, ou décrivez votre activité et votre audience en 1–2 phrases.";
-  }
-  if (normalized.startsWith('de')) {
-    return 'Alles klar, ich kann auf Deutsch antworten. Teile deine Website, damit ich das Widget personalisieren kann, oder beschreibe dein Angebot und deine Zielgruppe in 1–2 Sätzen.';
-  }
-  if (normalized.startsWith('es')) {
-    return 'Perfecto, puedo responder en español. Comparte tu web para personalizar el widget o cuéntame tu negocio y tu audiencia en 1–2 frases.';
-  }
-  if (normalized.startsWith('pt')) {
-    return 'Claro, posso responder em português. Compartilhe seu site para eu personalizar o widget ou descreva seu negócio e público em 1–2 frases.';
-  }
-  if (normalized.startsWith('nl')) {
-    return 'Prima, ik kan in het Nederlands antwoorden. Deel je website zodat ik de widget kan personaliseren, of beschrijf je bedrijf en doelgroep in 1–2 zinnen.';
-  }
-  if (normalized.startsWith('ru')) {
-    return 'Хорошо, могу отвечать по‑русски. Пришлите сайт, чтобы я персонализировал виджет, или опишите бизнес и аудиторию в 1–2 предложениях.';
-  }
-  if (normalized.startsWith('ar')) {
-    return 'حسنًا، يمكنني الرد بالعربية. شارك موقعك لأخصص الودجت، أو صف عملك وجمهورك بجملة أو جملتين.';
-  }
-  if (normalized.startsWith('ja')) {
-    return '日本語でお答えできます。サイトURLを共有してください。難しければ、事業内容と対象顧客を1〜2文で教えてください。';
-  }
-  if (normalized.startsWith('ko')) {
-    return '네, 한국어로 답할 수 있어요. 웹사이트를 공유해 주시면 위젯을 개인화할게요. 어렵다면 사업과 대상 고객을 1–2문장으로 알려주세요.';
-  }
-  if (normalized.startsWith('zh')) {
-    return '好的，我可以用中文回复。请分享你的网站以便我个性化小组件，或用1–2句话介绍你的业务和受众。';
-  }
-  if (normalized.startsWith('hi')) {
-    return 'ठीक है, मैं हिंदी में जवाब दे सकता हूँ। कृपया अपनी वेबसाइट साझा करें ताकि मैं विजेट को पर्सनलाइज़ कर सकूँ, या अपने व्यवसाय और दर्शकों के बारे में 1–2 वाक्य बताएं।';
-  }
-  return 'Got it — I can reply in that language. Share your website so I can personalize the widget, or describe your business and audience in 1–2 sentences.';
-}
-
-function looksLikeLanguageOnlyIntent(prompt: string): { language: string } | null {
-  const explicit = detectExplicitLanguage(prompt);
-  if (!explicit) return null;
-
-  const s = (prompt || '').trim().toLowerCase();
-  if (!s) return null;
-
-  // If the user is explicitly asking to translate/rewrite content, let the model handle it.
-  if (/\b(translate|traduci|tradurre|rewrite|rephrase|localize|translation)\b/i.test(s)) return null;
-
-  const wordCount = s.split(/\s+/).filter(Boolean).length;
-  if (wordCount <= 6) return { language: explicit };
-
-  // Otherwise, treat explicit language mentions as language-only unless other edit verbs appear.
-  if (/\b(edit|change|update|modify|adjust|add|remove|delete)\b/i.test(s)) return null;
-  return { language: explicit };
 }
 
 function normalizeToken(input: string): string {
@@ -898,7 +755,7 @@ export async function executeWidgetCopilotWithRuntime(
   const baseMeta = (
     intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
     outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
-    extras?: Pick<NonNullable<WidgetCopilotResult['meta']>, 'language' | 'languageConfidence' | 'allowlistSource'>,
+    extras?: Pick<NonNullable<WidgetCopilotResult['meta']>, 'language' | 'languageConfidence'>,
   ) => buildMeta(intent, outcome, runtime.role, extras);
   const languageInfo = resolveConversationLanguage(session, input.prompt);
   const conversationLanguage = languageInfo.language || 'en';
@@ -1011,99 +868,29 @@ export async function executeWidgetCopilotWithRuntime(
     };
   };
 
-  const isSdr = runtime.role === 'sdr';
-  const isCs = runtime.role === 'cs';
-  let sdrWebsiteIntent = false;
-
-  if (isSdr) {
-    const sdrPrelude = resolveSdrPrelude({
-      input,
-      session,
-      detectLanguageOnlyIntent: looksLikeLanguageOnlyIntent,
-      buildLanguageClarifyMessage: languageClarifyMessage,
+  const prelude = resolveCsPrelude({
+    conversationLanguage,
+    session,
+    input,
+    explainMessage: () => explainMessage(input),
+    dict: globalDictionary,
+  });
+  if (prelude) {
+    return returnLocalMessage({
+      message: prelude.message,
+      usageModel: prelude.usageModel,
+      intent: prelude.intent,
     });
-    if (sdrPrelude.kind === 'reply') {
-      return returnLocalMessage({
-        message: sdrPrelude.message,
-        cta: sdrPrelude.cta,
-        usageModel: sdrPrelude.usageModel,
-        intent: sdrPrelude.intent,
-        language: sdrPrelude.language,
-      });
-    }
-    sdrWebsiteIntent = sdrPrelude.websiteIntent;
-  } else if (isCs) {
-    const prelude = resolveCsPrelude({
-      conversationLanguage,
-      session,
-      input,
-      explainMessage: () => explainMessage(input),
-      dict: globalDictionary,
-    });
-    if (prelude) {
-      return returnLocalMessage({
-        message: prelude.message,
-        usageModel: prelude.usageModel,
-        intent: prelude.intent,
-      });
-    }
   }
 
   const maxTokens = getGrantMaxTokens(params.grant);
   const timeoutMs = getGrantTimeoutMs(params.grant);
 
-  let sdrAllowlistEntries: Array<{ path: string; type: 'string' | 'richtext'; role?: string }> | null = null;
-  let sdrAllowlistSource: 'sdr_allowlist' | 'localization_fallback' | undefined;
-  let sourcePage: SdrSourcePage | null = null;
-  if (isSdr && sdrWebsiteIntent) {
-    const sdrSource = await resolveSdrWebsiteSource({
-      prompt: input.prompt,
-      conversationLanguage,
-      timeoutMs,
-      session,
-      translate: t,
-      isYesNo,
-    });
-    if (sdrSource.kind === 'reply') {
-      return returnLocalMessage({
-        message: sdrSource.message,
-        usageModel: sdrSource.usageModel,
-        intent: 'clarify',
-      });
-    }
-    sourcePage = sdrSource.sourcePage;
-  }
-
-  let systemPrompt = '';
-  let user = '';
-  if (isSdr) {
-    const sdrPromptContext = await buildSdrPromptContext({
-      env,
-      widgetType: input.widgetType,
-      currentConfig: input.currentConfig,
-      prompt: input.prompt,
-      conversationLanguage,
-      sourcePage,
-      translate: t,
-    });
-    if (sdrPromptContext.kind === 'reply') {
-      return returnLocalMessage({
-        message: sdrPromptContext.message,
-        usageModel: sdrPromptContext.usageModel,
-        intent: sdrPromptContext.intent,
-      });
-    }
-    sdrAllowlistEntries = sdrPromptContext.context.allowlistEntries;
-    sdrAllowlistSource = sdrPromptContext.context.allowlistSource;
-    systemPrompt = sdrPromptContext.context.systemPrompt;
-    user = sdrPromptContext.context.userPrompt;
-  } else {
-    user = buildCsPromptPayload(input);
-    systemPrompt = buildCsSystemPrompt({
-      language: conversationLanguage,
-      forbidInternalControlDumpPromptLine: runtime.forbidInternalControlDumpPromptLine,
-    });
-  }
+  const user = buildCsPromptPayload(input);
+  const systemPrompt = buildCsSystemPrompt({
+    language: conversationLanguage,
+    forbidInternalControlDumpPromptLine: runtime.forbidInternalControlDumpPromptLine,
+  });
 
   const maxRequests = typeof params.grant.budgets?.maxRequests === 'number' ? params.grant.budgets.maxRequests : 1;
   const messages: ChatMessage[] = [{ role: 'system', content: systemPrompt }, ...session.turns, { role: 'user', content: user }];
@@ -1213,18 +1000,16 @@ export async function executeWidgetCopilotWithRuntime(
   let finalOps = ops && ops.length ? ops : undefined;
   let finalCta: WidgetCopilotResult['cta'] | undefined = cta;
   let finalMeta: WidgetCopilotResult['meta'] = baseMeta(finalOps ? 'edit' : 'clarify', finalOps ? 'ops_applied' : 'no_ops');
-  if (isCs) {
-    const finalizedCs = finalizeCsOps({
-      prompt: input.prompt,
-      forbidInternalControlDumpPromptLine: runtime.forbidInternalControlDumpPromptLine,
-      message: finalMessage,
-      ops: finalOps,
-    });
-    finalMessage = finalizedCs.message;
-    finalOps = finalizedCs.ops;
-    if (finalizedCs.overrideToClarify) {
-      finalMeta = baseMeta('clarify', 'no_ops');
-    }
+  const finalizedCs = finalizeCsOps({
+    prompt: input.prompt,
+    forbidInternalControlDumpPromptLine: runtime.forbidInternalControlDumpPromptLine,
+    message: finalMessage,
+    ops: finalOps,
+  });
+  finalMessage = finalizedCs.message;
+  finalOps = finalizedCs.ops;
+  if (finalizedCs.overrideToClarify) {
+    finalMeta = baseMeta('clarify', 'no_ops');
   }
 
   if (finalOps && finalOps.length) {
@@ -1243,43 +1028,15 @@ export async function executeWidgetCopilotWithRuntime(
       finalMeta = baseMeta('clarify', 'invalid_ops');
       session.pendingPolicy = undefined;
     } else {
-      if (isSdr && sdrAllowlistEntries) {
-        const allowlisted = validateSdrOpsAgainstAllowlist({ ops: finalOps, allowlist: sdrAllowlistEntries });
-        if (!allowlisted.ok) {
-          const details = allowlisted.issues
-            .slice(0, 3)
-            .map((i) => `- ${i.path}: ${i.message}`)
-            .join('\n');
-          finalMessage =
-            t(conversationLanguage, 'invalidOps') +
-            (details ? `\n\nDetails:\n${details}` : '');
-          finalOps = undefined;
-          finalCta = undefined;
-          finalMeta = baseMeta('clarify', 'invalid_ops');
-          session.pendingPolicy = undefined;
-        } else {
-          const policy = evaluateLightEditsPolicy({ ops: finalOps, controls: input.controls });
-          if (!policy.ok) {
-            finalMessage = policy.message;
-            finalOps = undefined;
-            finalCta = undefined;
-            finalMeta = baseMeta('clarify', 'no_ops');
-            session.pendingPolicy = policy.pendingPolicy;
-          } else {
-            session.pendingPolicy = undefined;
-          }
-        }
+      const policy = evaluateLightEditsPolicy({ ops: finalOps, controls: input.controls });
+      if (!policy.ok) {
+        finalMessage = policy.message;
+        finalOps = undefined;
+        finalCta = undefined;
+        finalMeta = baseMeta('clarify', 'no_ops');
+        session.pendingPolicy = policy.pendingPolicy;
       } else {
-        const policy = evaluateLightEditsPolicy({ ops: finalOps, controls: input.controls });
-        if (!policy.ok) {
-          finalMessage = policy.message;
-          finalOps = undefined;
-          finalCta = undefined;
-          finalMeta = baseMeta('clarify', 'no_ops');
-          session.pendingPolicy = policy.pendingPolicy;
-        } else {
-          session.pendingPolicy = undefined;
-        }
+        session.pendingPolicy = undefined;
       }
     }
   } else {
@@ -1300,10 +1057,7 @@ export async function executeWidgetCopilotWithRuntime(
     message: finalMessage,
     ...(finalOps && finalOps.length ? { ops: finalOps } : {}),
     ...(finalCta ? { cta: finalCta } : {}),
-    meta: {
-      ...finalMeta,
-      ...(isSdr && sdrAllowlistSource ? { allowlistSource: sdrAllowlistSource } : {}),
-    },
+    meta: finalMeta,
   };
 
   const usage: Usage = {

@@ -1,5 +1,5 @@
 import {
-  normalizeWidgetPublicId,
+  normalizeInstancePublicId,
   parseAccountAssetBlobKey,
   parseAccountAssetRef,
   toAccountAssetPublicPath,
@@ -172,7 +172,7 @@ export async function handleGetTokyoFontAsset(env: Env, pathname: string): Promi
   return new Response(obj.body, { status: 200, headers });
 }
 
-export const normalizePublicId = normalizeWidgetPublicId;
+export const normalizePublicId = normalizeInstancePublicId;
 
 export function normalizeWidgetType(raw: string): string | null {
   const value = String(raw || '').trim().toLowerCase();

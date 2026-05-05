@@ -31,6 +31,9 @@
     {
       "id": "minibob",
       "type": "minibob",
+      "systemInstanceRef": {
+        "publicId": "wgt_system_faq_lightblurs_generic"
+      },
       "copy": {
         "heading": "Preview a live FAQ",
         "subhead": "See a real Clickeen widget in action, then create a free account to customize your own.",

@@ -1,5 +1,5 @@
 import { validateBlockMeta, validateBlockStrings } from './blockRegistry';
-import { isSystemInstancePublicId } from '@clickeen/ck-contracts';
+import { normalizeInstancePublicId } from '@clickeen/ck-contracts';
 import { loadPraguePageContent, loadPraguePageContentWithMeta, type PragueOverlayContext, type PragueOverlayMeta } from './pragueL10n';
 
 const SYSTEM_INSTANCE_VALIDATE =
@@ -43,10 +43,10 @@ async function assertSystemInstanceExists(args: { publicId: string; pagePath: st
     throw new Error('[prague] System instance validation requires PUBLIC_VENICE_URL.');
   }
 
-  const publicId = args.publicId;
-  if (!isSystemInstancePublicId(publicId)) {
+  const publicId = normalizeInstancePublicId(args.publicId);
+  if (!publicId) {
     throw new Error(
-      `[prague] ${args.pagePath}: systemInstanceRef.publicId must match wgt_system_[a-z0-9][a-z0-9_-]*, got "${publicId}"`,
+      `[prague] ${args.pagePath}: systemInstanceRef.publicId must be a valid instance id, got "${args.publicId}"`,
     );
   }
 

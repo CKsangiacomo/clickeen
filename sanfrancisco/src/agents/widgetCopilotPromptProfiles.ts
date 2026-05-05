@@ -1,4 +1,4 @@
-export type WidgetCopilotRole = 'sdr' | 'cs';
+export type WidgetCopilotRole = 'cs';
 
 export type WidgetCopilotPromptProfile = {
   role: WidgetCopilotRole;
@@ -10,12 +10,6 @@ export type WidgetCopilotPromptProfile = {
 export const WIDGET_COPILOT_PROMPT_PROFILE_VERSION = 'widget.copilot.prompt-profiles.v1@2026-02-11';
 
 export const WIDGET_COPILOT_PROMPT_PROFILES: Record<WidgetCopilotRole, WidgetCopilotPromptProfile> = {
-  sdr: {
-    role: 'sdr',
-    intro: "You are Clickeen's SDR acquisition agent.",
-    objective: '3) After a visible win, return a conversion CTA (signup/publish/upgrade).',
-    focus: '- Keep edits minimal and conversion-focused.',
-  },
   cs: {
     role: 'cs',
     intro: "You are Clickeen's CS (Customer Success) widget copilot.",

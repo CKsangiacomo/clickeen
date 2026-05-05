@@ -63,10 +63,6 @@ declare global {
           >
         >;
       }>;
-      widgetCopilotRouting?: {
-        alias: string;
-        byTier: Partial<Record<import('@clickeen/ck-policy').PolicyProfile, string>>;
-      };
     };
   }
 }

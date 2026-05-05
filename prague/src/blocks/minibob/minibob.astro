@@ -9,9 +9,14 @@ type Props = {
   page: string;
   heading: string;
   subhead: string;
+  publicId: string;
 };
 
-const { widget, locale, heading, subhead } = Astro.props;
+const { widget, locale, heading, subhead, publicId } = Astro.props;
+
+if (!String(publicId || '').trim()) {
+  throw new Error('[prague] minibob requires an explicit systemInstanceRef.publicId');
+}
 
 const headerPrimitives = assertPrimitives(
   [
@@ -31,7 +36,6 @@ const headerPrimitives = assertPrimitives(
   'minibob.header',
 );
 
-const publicId = `wgt_main_${widget}`;
 const createHref = (() => {
   try {
     const parts = Astro.url.pathname.split('/').filter(Boolean);
@@ -59,6 +63,7 @@ const createHref = (() => {
       <InstanceEmbed
         publicId={publicId}
         locale={locale}
+        widgetType={widget}
         title="Demo widget preview"
         loading="eager"
         showShareChrome={false}

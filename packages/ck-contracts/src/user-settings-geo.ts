@@ -1,5 +1,5 @@
 // Generated from /usr/share/zoneinfo/zone.tab for PRD 65 canonical User Settings country/timezone contract.
-export const USER_SETTINGS_COUNTRY_TIMEZONES = Object.freeze({
+export const USER_SETTINGS_COUNTRY_TIMEZONES: Readonly<Record<string, readonly string[]>> = Object.freeze({
   AD: Object.freeze(['Europe/Andorra']),
   AE: Object.freeze(['Asia/Dubai']),
   AF: Object.freeze(['Asia/Kabul']),
@@ -251,33 +251,37 @@ export const USER_SETTINGS_COUNTRY_TIMEZONES = Object.freeze({
 
 export const USER_SETTINGS_COUNTRY_CODES = Object.freeze(Object.keys(USER_SETTINGS_COUNTRY_TIMEZONES));
 
-export function normalizeUserSettingsCountry(raw) {
+export function normalizeUserSettingsCountry(raw: unknown): string | null {
   const value = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
   if (!value || !Object.prototype.hasOwnProperty.call(USER_SETTINGS_COUNTRY_TIMEZONES, value)) return null;
   return value;
 }
 
-export function listUserSettingsCountries() {
+export function listUserSettingsCountries(): string[] {
   return USER_SETTINGS_COUNTRY_CODES.slice();
 }
 
-export function listUserSettingsTimezones(rawCountry) {
+export function listUserSettingsTimezones(rawCountry: unknown): string[] {
   const country = normalizeUserSettingsCountry(rawCountry);
   if (!country) return [];
   return USER_SETTINGS_COUNTRY_TIMEZONES[country].slice();
 }
 
-export function userSettingsCountryRequiresTimezoneChoice(rawCountry) {
+export function userSettingsCountryRequiresTimezoneChoice(rawCountry: unknown): boolean {
   return listUserSettingsTimezones(rawCountry).length > 1;
 }
 
-export function isUserSettingsTimezoneSupported(rawCountry, rawTimezone) {
+export function isUserSettingsTimezoneSupported(rawCountry: unknown, rawTimezone: unknown): boolean {
   const timezone = typeof rawTimezone === "string" ? rawTimezone.trim() : "";
   if (!timezone) return false;
   return listUserSettingsTimezones(rawCountry).includes(timezone);
 }
 
-export function resolveUserSettingsTimezone(rawCountry, rawTimezone, rawFallbackTimezone = null) {
+export function resolveUserSettingsTimezone(
+  rawCountry: unknown,
+  rawTimezone: unknown,
+  rawFallbackTimezone: unknown = null,
+): string | null {
   const supported = listUserSettingsTimezones(rawCountry);
   if (supported.length === 0) return null;
   const timezone = typeof rawTimezone === "string" ? rawTimezone.trim() : "";
@@ -286,4 +290,3 @@ export function resolveUserSettingsTimezone(rawCountry, rawTimezone, rawFallback
   if (fallbackTimezone && supported.includes(fallbackTimezone)) return fallbackTimezone;
   return supported[0] || null;
 }
-

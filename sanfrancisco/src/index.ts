@@ -1,9 +1,7 @@
 import { listAiAgents, resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { executeCsWidgetCopilot } from './agents/csWidgetCopilot';
-import { executeDebugGrantProbe } from './agents/debugGrantProbe';
 import { executeSdrCopilot } from './agents/sdrCopilot';
-import { executeSdrWidgetCopilot } from './agents/sdrWidgetCopilot';
 import { withInflightLimit } from './concurrency';
 import { assertCap, verifyGrant } from './grants';
 import { HttpError, json, noStore, readJson, isRecord } from './http';
@@ -57,9 +55,7 @@ type AgentExecutor = (args: { grant: AIGrant; input: unknown }, env: Env) => Pro
 
 const AGENT_EXECUTORS: Record<string, AgentExecutor> = {
   'sdr.copilot': executeSdrCopilot,
-  'sdr.widget.copilot.v1': executeSdrWidgetCopilot,
   'cs.widget.copilot.v1': executeCsWidgetCopilot,
-  'debug.grantProbe': executeDebugGrantProbe,
 };
 
 const EXECUTABLE_AGENT_IDS = new Set(

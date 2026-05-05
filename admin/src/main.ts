@@ -36,8 +36,6 @@ import {
   listAiAgents,
   listAiModelsForUi,
   listAiProviderUi,
-  WIDGET_COPILOT_AGENT_ALIAS,
-  resolveWidgetCopilotAgentId,
   resolveAiPolicyCapsule,
   resolveAiDefaultProvider,
   resolveAiProfile,
@@ -85,10 +83,8 @@ const aiAccessByTier: Partial<
 > = {};
 
 const allProviders = aiProviderUi.map((entry) => entry.provider);
-const widgetCopilotAliasByTier: Partial<Record<PolicyProfile, string>> = {};
 
 for (const policyProfile of entitlements.tiers) {
-  widgetCopilotAliasByTier[policyProfile] = resolveWidgetCopilotAgentId({ policyProfile });
   const aiProfile = resolveAiProfile({ policyProfile, taskClass: 'copilot.widget.editor' });
   const modelsByProvider = listAiModelsForUi({ profile: aiProfile, allowedProviders: allProviders }) as Partial<
     Record<AiProvider, { defaultModel: string; models: Array<{ model: string; label: string }> }>
@@ -201,10 +197,6 @@ window.__CK_AI_ACCESS__ = {
   providers: aiProviderUi,
   byTier: aiAccessByTier,
   agents: aiAgentsByTier,
-  widgetCopilotRouting: {
-    alias: WIDGET_COPILOT_AGENT_ALIAS,
-    byTier: widgetCopilotAliasByTier,
-  },
 };
 
 const appRoot = document.getElementById('app');

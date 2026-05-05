@@ -58,6 +58,9 @@
     {
       "id": "minibob",
       "type": "minibob",
+      "systemInstanceRef": {
+        "publicId": "wgt_main_logoshowcase"
+      },
       "copy": {
         "heading": "Try it live",
         "subhead": "Preview a real Clickeen widget, then create a free account to customize your own."

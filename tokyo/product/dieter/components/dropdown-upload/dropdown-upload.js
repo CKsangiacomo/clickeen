@@ -1160,7 +1160,7 @@ var Dieter = (() => {
     }
   ];
 
-  // ../packages/ck-contracts/src/user-settings-geo.js
+  // ../packages/ck-contracts/src/user-settings-geo.ts
   var USER_SETTINGS_COUNTRY_TIMEZONES = Object.freeze({
     AD: Object.freeze(["Europe/Andorra"]),
     AE: Object.freeze(["Asia/Dubai"]),
@@ -1412,7 +1412,7 @@ var Dieter = (() => {
   });
   var USER_SETTINGS_COUNTRY_CODES = Object.freeze(Object.keys(USER_SETTINGS_COUNTRY_TIMEZONES));
 
-  // ../packages/ck-contracts/src/index.js
+  // ../packages/ck-contracts/src/index.ts
   var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   var CK_ERROR_CODE = Object.freeze({
     VALIDATION: "VALIDATION",

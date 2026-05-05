@@ -1,16 +1,95 @@
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 
-export const WIDGET_PUBLIC_ID_MAIN_RE = /^wgt_main_[a-z0-9][a-z0-9_-]*$/i;
-export const WIDGET_PUBLIC_ID_SYSTEM_RE = /^wgt_system_[a-z0-9][a-z0-9_-]*$/i;
-export const WIDGET_PUBLIC_ID_USER_RE = /^wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*$/i;
-export const WIDGET_PUBLIC_ID_RE =
-  /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_system_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
+export const INSTANCE_PUBLIC_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$/;
 
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const ACCOUNT_ASSET_PATH_RE = /^\/assets\/account\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)$/;
 export const ACCOUNT_ASSET_PATH_PATTERN = '^/assets/account/([^/?#]+)/([^/?#]+)/([^/?#]+)$';
 const ACCOUNT_ASSET_KEY_RE = /^accounts\/([^/]+)\/assets\/([^/]+)\/blob\/([^/]+)$/i;
+
+type JsonRecord = Record<string, any>;
+
+export type AssetRefKind = 'account';
+export type AssetRef = {
+  accountId: string;
+  assetId: string;
+  kind: AssetRefKind;
+  filename: string;
+  key: string;
+  pathname: string;
+};
+
+export type ResolvedAssetMaterialization = {
+  assetId: string;
+  url: string;
+};
+
+export type AccountAssetRecord = {
+  assetId: string;
+  assetType: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  createdAt: string;
+};
+
+export type ResolvedAccountAsset = {
+  assetId: string;
+  url: string;
+};
+
+export type AccountAssetHostCommand = 'list-assets' | 'resolve-assets' | 'upload-asset';
+
+export type AccountL10nPolicy = {
+  v: 1;
+  baseLocale: string;
+  ip: {
+    countryToLocale: Record<string, string>;
+  };
+};
+
+export type LocalizationOp = { op: 'set'; path: string; value: string };
+
+export type AccountOverlayEntry = {
+  locale: string;
+  source: string | null;
+  baseFingerprint: string | null;
+  baseUpdatedAt: string | null;
+  hasUserOps: boolean;
+  baseOps: LocalizationOp[];
+  userOps: LocalizationOp[];
+};
+
+export type AccountLocalizationSnapshot = {
+  baseLocale: string;
+  accountLocales: string[];
+  readyLocales: string[];
+  invalidAccountLocales: string | null;
+  localeOverlays: AccountOverlayEntry[];
+  policy: AccountL10nPolicy;
+};
+
+export type WidgetLocaleSwitcherSettings = {
+  enabled: boolean;
+  byIp: boolean;
+  alwaysShowLocale: string | null;
+  attachTo: 'pod' | 'stage';
+  position:
+    | 'top-left'
+    | 'top-center'
+    | 'top-right'
+    | 'right-middle'
+    | 'bottom-right'
+    | 'bottom-center'
+    | 'bottom-left'
+    | 'left-middle';
+};
+
+export type AccountL10nValidationIssue = {
+  path: string;
+  message: string;
+};
 
 export const CK_ERROR_CODE = Object.freeze({
   VALIDATION: 'VALIDATION',
@@ -41,59 +120,37 @@ const WIDGET_LOCALE_SWITCHER_POSITION = new Set([
   'left-middle',
 ]);
 
-function failAccountL10nContract(reason) {
+function failAccountL10nContract(reason: string): never {
   throw new Error(`account_l10n_contract_invalid:${reason}`);
 }
 
-function normalizeSupportedLocaleToken(raw) {
+function normalizeSupportedLocaleToken(raw: unknown): string | null {
   const normalized = normalizeLocaleToken(raw);
   if (!normalized) return null;
   return SUPPORTED_LOCALES.has(normalized) ? normalized : null;
 }
 
-function isRecord(value) {
+function isRecord(value: unknown): value is JsonRecord {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function asTrimmedString(value) {
+function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-export function normalizeWidgetPublicId(raw) {
+export function normalizeInstancePublicId(raw: unknown): string | null {
   const value = typeof raw === 'string' ? raw.trim() : '';
   if (!value) return null;
-  return WIDGET_PUBLIC_ID_RE.test(value) ? value : null;
+  if (value === '.' || value === '..') return null;
+  if (value.includes('/') || value.includes('\\')) return null;
+  return INSTANCE_PUBLIC_ID_RE.test(value) ? value : null;
 }
 
-export function classifyWidgetPublicId(raw) {
-  const value = normalizeWidgetPublicId(raw);
-  if (!value) return null;
-  if (WIDGET_PUBLIC_ID_MAIN_RE.test(value)) return 'main';
-  if (WIDGET_PUBLIC_ID_SYSTEM_RE.test(value)) return 'system';
-  if (WIDGET_PUBLIC_ID_USER_RE.test(value)) return 'user';
-  return null;
+export function isInstancePublicId(raw: unknown): raw is string {
+  return normalizeInstancePublicId(raw) != null;
 }
 
-export function isWidgetPublicId(raw) {
-  return normalizeWidgetPublicId(raw) != null;
-}
-
-export function isMainWidgetPublicId(raw) {
-  const value = typeof raw === 'string' ? raw.trim() : '';
-  return value ? WIDGET_PUBLIC_ID_MAIN_RE.test(value) : false;
-}
-
-export function isSystemInstancePublicId(raw) {
-  const value = typeof raw === 'string' ? raw.trim() : '';
-  return value ? WIDGET_PUBLIC_ID_SYSTEM_RE.test(value) : false;
-}
-
-export function isUserWidgetPublicId(raw) {
-  const value = typeof raw === 'string' ? raw.trim() : '';
-  return value ? WIDGET_PUBLIC_ID_USER_RE.test(value) : false;
-}
-
-function decodePathPart(raw) {
+function decodePathPart(raw: unknown): string {
   try {
     return decodeURIComponent(String(raw || '')).trim();
   } catch {
@@ -101,7 +158,7 @@ function decodePathPart(raw) {
   }
 }
 
-function pathnameFromRawAssetRef(raw) {
+function pathnameFromRawAssetRef(raw: unknown): string | null {
   const value = String(raw || '').trim();
   if (!value) return null;
   if (value.startsWith('/')) return value;
@@ -113,12 +170,12 @@ function pathnameFromRawAssetRef(raw) {
   }
 }
 
-export function isUuid(raw) {
+export function isUuid(raw: unknown): boolean {
   const value = typeof raw === 'string' ? raw.trim() : '';
   return Boolean(value && UUID_RE.test(value));
 }
 
-export function normalizeAccountAssetRecord(raw) {
+export function normalizeAccountAssetRecord(raw: unknown): AccountAssetRecord | null {
   if (!isRecord(raw)) return null;
   const assetId = asTrimmedString(raw.assetId);
   const assetType = asTrimmedString(raw.assetType);
@@ -137,7 +194,7 @@ export function normalizeAccountAssetRecord(raw) {
   };
 }
 
-export function normalizeResolvedAccountAsset(raw) {
+export function normalizeResolvedAccountAsset(raw: unknown): ResolvedAccountAsset | null {
   if (!isRecord(raw)) return null;
   const assetId = asTrimmedString(raw.assetId);
   const url = asTrimmedString(raw.url);
@@ -145,7 +202,7 @@ export function normalizeResolvedAccountAsset(raw) {
   return { assetId, url };
 }
 
-export function parseAccountAssetRef(raw) {
+export function parseAccountAssetRef(raw: unknown): AssetRef | null {
   const pathname = pathnameFromRawAssetRef(raw);
   if (!pathname) return null;
 
@@ -167,7 +224,7 @@ export function parseAccountAssetRef(raw) {
   };
 }
 
-export function parseAccountAssetBlobKey(raw) {
+export function parseAccountAssetBlobKey(raw: unknown): AssetRef | null {
   const key = typeof raw === 'string' ? raw.trim().replace(/^\/+/, '') : '';
   if (!key || key.includes('..')) return null;
   const match = key.match(ACCOUNT_ASSET_KEY_RE);
@@ -187,24 +244,24 @@ export function parseAccountAssetBlobKey(raw) {
   };
 }
 
-export function isAccountAssetRef(raw) {
+export function isAccountAssetRef(raw: unknown): boolean {
   return parseAccountAssetRef(raw) != null;
 }
 
-export function isAccountAssetBlobKey(raw) {
+export function isAccountAssetBlobKey(raw: unknown): boolean {
   return parseAccountAssetBlobKey(raw) != null;
 }
 
-export function toAccountAssetPublicPath(assetKey) {
+export function toAccountAssetPublicPath(assetKey: unknown): string | null {
   const parsed = parseAccountAssetBlobKey(assetKey);
   return parsed ? parsed.pathname : null;
 }
 
-export function parseAccountLocaleListStrict(value) {
+export function parseAccountLocaleListStrict(value: unknown): string[] {
   if (!Array.isArray(value)) failAccountL10nContract('locales_missing');
   return Array.from(
     new Set(
-      value.map((entry, index) => {
+      value.map((entry: unknown, index: number) => {
         const normalized = normalizeSupportedLocaleToken(entry);
         if (!normalized) failAccountL10nContract(`locales_invalid_${index}`);
         return normalized;
@@ -213,7 +270,7 @@ export function parseAccountLocaleListStrict(value) {
   );
 }
 
-export function parseAccountL10nPolicyStrict(raw) {
+export function parseAccountL10nPolicyStrict(raw: unknown): AccountL10nPolicy {
   if (!isRecord(raw) || raw.v !== 1) failAccountL10nContract('policy_missing');
   const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale);
   if (!baseLocale) failAccountL10nContract('policy_base_locale_invalid');
@@ -221,7 +278,7 @@ export function parseAccountL10nPolicyStrict(raw) {
   if (!ipRaw) failAccountL10nContract('policy_ip_invalid');
   if (!isRecord(ipRaw.countryToLocale)) failAccountL10nContract('policy_country_map_invalid');
 
-  const countryToLocale = {};
+  const countryToLocale: Record<string, string> = {};
   for (const [countryRaw, localeRaw] of Object.entries(ipRaw.countryToLocale)) {
     const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
     const locale = normalizeSupportedLocaleToken(localeRaw);
@@ -240,9 +297,9 @@ export function parseAccountL10nPolicyStrict(raw) {
   };
 }
 
-export function normalizeLocalizationOps(raw) {
+export function normalizeLocalizationOps(raw: unknown): LocalizationOp[] {
   if (!Array.isArray(raw)) return [];
-  const out = [];
+  const out: LocalizationOp[] = [];
   for (const entry of raw) {
     if (!isRecord(entry) || entry.op !== 'set') continue;
     const path = typeof entry.path === 'string' ? entry.path.trim() : '';
@@ -252,14 +309,18 @@ export function normalizeLocalizationOps(raw) {
   return out;
 }
 
-export function validateAccountLocaleList(value, path = 'locales', options = undefined) {
+export function validateAccountLocaleList(
+  value: unknown,
+  path = 'locales',
+  options?: { allowNull?: boolean },
+): AccountL10nValidationIssue[] {
   const allowNull = options && options.allowNull === true;
   if (value == null) return allowNull ? [] : [{ path, message: 'locales must be an array' }];
   if (!Array.isArray(value)) {
     return [{ path, message: 'locales must be an array' }];
   }
 
-  const issues = [];
+  const issues: AccountL10nValidationIssue[] = [];
   value.forEach((entry, index) => {
     if (!normalizeSupportedLocaleToken(entry)) {
       issues.push({ path: `${path}[${index}]`, message: 'locale must be a supported locale token' });
@@ -268,7 +329,7 @@ export function validateAccountLocaleList(value, path = 'locales', options = und
   return issues;
 }
 
-export function validateAccountL10nPolicy(raw, path = 'policy') {
+export function validateAccountL10nPolicy(raw: unknown, path = 'policy'): AccountL10nValidationIssue[] {
   if (!isRecord(raw)) {
     return [{ path, message: 'policy must be an object' }];
   }
@@ -276,7 +337,7 @@ export function validateAccountL10nPolicy(raw, path = 'policy') {
     return [{ path: `${path}.v`, message: 'policy.v must be 1' }];
   }
 
-  const issues = [];
+  const issues: AccountL10nValidationIssue[] = [];
   if (!normalizeSupportedLocaleToken(raw.baseLocale)) {
     issues.push({ path: `${path}.baseLocale`, message: 'baseLocale must be a supported locale token' });
   }
@@ -310,7 +371,7 @@ export function validateAccountL10nPolicy(raw, path = 'policy') {
   return issues;
 }
 
-export function normalizeWidgetLocaleSwitcherSettings(raw) {
+export function normalizeWidgetLocaleSwitcherSettings(raw: unknown): WidgetLocaleSwitcherSettings {
   const payload = isRecord(raw) ? raw : {};
   const attachTo = asTrimmedString(payload.attachTo).toLowerCase();
   const position = asTrimmedString(payload.position).toLowerCase();
@@ -320,11 +381,14 @@ export function normalizeWidgetLocaleSwitcherSettings(raw) {
     enabled: payload.enabled === true,
     byIp: payload.byIp === true,
     alwaysShowLocale: alwaysShowLocale || null,
-    attachTo: WIDGET_LOCALE_SWITCHER_ATTACH.has(attachTo) ? attachTo : 'stage',
-    position: WIDGET_LOCALE_SWITCHER_POSITION.has(position) ? position : 'top-right',
+    attachTo: WIDGET_LOCALE_SWITCHER_ATTACH.has(attachTo) ? (attachTo as WidgetLocaleSwitcherSettings['attachTo']) : 'stage',
+    position: WIDGET_LOCALE_SWITCHER_POSITION.has(position)
+      ? (position as WidgetLocaleSwitcherSettings['position'])
+      : 'top-right',
   };
 }
-function normalizeResolvedAssetSource(entry) {
+
+function normalizeResolvedAssetSource(entry: unknown): ResolvedAccountAsset | null {
   if (!isRecord(entry)) return null;
   const directUrl = typeof entry.url === 'string' ? entry.url.trim() : '';
   const parsed = directUrl ? parseAccountAssetRef(directUrl) : null;
@@ -335,7 +399,7 @@ function normalizeResolvedAssetSource(entry) {
   };
 }
 
-function readResolvedAssetById(resolvedAssets, assetIdRaw) {
+function readResolvedAssetById(resolvedAssets: unknown, assetIdRaw: unknown): ResolvedAccountAsset | null {
   const assetId = typeof assetIdRaw === 'string' ? assetIdRaw.trim() : '';
   if (!assetId || !isUuid(assetId)) return null;
   if (resolvedAssets instanceof Map) {
@@ -347,7 +411,7 @@ function readResolvedAssetById(resolvedAssets, assetIdRaw) {
   return null;
 }
 
-function collectMaterializedFillAssetIds(node, out) {
+function collectMaterializedFillAssetIds(node: unknown, out: Set<string>): void {
   if (!isRecord(node)) return;
   const type = typeof node.type === 'string' ? node.type.trim().toLowerCase() : '';
 
@@ -365,7 +429,7 @@ function collectMaterializedFillAssetIds(node, out) {
   }
 }
 
-function collectMaterializedLogoAssetIds(node, out) {
+function collectMaterializedLogoAssetIds(node: unknown, out: Set<string>): void {
   if (!isRecord(node)) return;
   if (!Object.prototype.hasOwnProperty.call(node, 'logoFill')) return;
   if (!isRecord(node.asset)) return;
@@ -373,10 +437,10 @@ function collectMaterializedLogoAssetIds(node, out) {
   if (isUuid(assetId)) out.add(assetId);
 }
 
-export function collectConfigMediaAssetIds(config) {
-  const assetIds = new Set();
+export function collectConfigMediaAssetIds(config: unknown): string[] {
+  const assetIds = new Set<string>();
 
-  const visit = (node) => {
+  const visit = (node: unknown): void => {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) {
       node.forEach(visit);
@@ -394,7 +458,7 @@ export function collectConfigMediaAssetIds(config) {
   return Array.from(assetIds);
 }
 
-function materializeImageFill(fill, resolvedAssets) {
+function materializeImageFill(fill: JsonRecord, resolvedAssets: unknown): JsonRecord {
   if (!isRecord(fill.image)) return fill;
   const nextImage = { ...fill.image };
   const resolvedById = readResolvedAssetById(resolvedAssets, nextImage.assetId);
@@ -402,7 +466,7 @@ function materializeImageFill(fill, resolvedAssets) {
   return { ...fill, image: nextImage };
 }
 
-function materializeVideoFill(fill, resolvedAssets) {
+function materializeVideoFill(fill: JsonRecord, resolvedAssets: unknown): JsonRecord {
   if (!isRecord(fill.video)) return fill;
   const nextVideo = { ...fill.video };
   const resolvedById = readResolvedAssetById(resolvedAssets, nextVideo.assetId);
@@ -412,7 +476,7 @@ function materializeVideoFill(fill, resolvedAssets) {
   return { ...fill, video: nextVideo };
 }
 
-function materializeLogoAssetNode(node, resolvedAssets) {
+function materializeLogoAssetNode(node: JsonRecord, resolvedAssets: unknown): JsonRecord {
   if (!isRecord(node.asset)) return node;
   const resolvedById = readResolvedAssetById(resolvedAssets, node.asset.assetId);
   if (!resolvedById?.url) return node;
@@ -423,11 +487,11 @@ function materializeLogoAssetNode(node, resolvedAssets) {
   };
 }
 
-export function materializeConfigMedia(config, resolvedAssets) {
-  const visit = (node) => {
+export function materializeConfigMedia(config: unknown, resolvedAssets: unknown): unknown {
+  const visit = (node: unknown): unknown => {
     if (!node || typeof node !== 'object') return node;
     if (Array.isArray(node)) return node.map(visit);
-    const next = {};
+    const next: JsonRecord = {};
     for (const [key, value] of Object.entries(node)) {
       next[key] = visit(value);
     }
@@ -448,14 +512,14 @@ export function materializeConfigMedia(config, resolvedAssets) {
   return visit(config);
 }
 
-function containsNonPersistableUrl(value) {
+function containsNonPersistableUrl(value: string): boolean {
   return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
 }
 
-export function configNonPersistableUrlIssues(config) {
-  const issues = [];
+export function configNonPersistableUrlIssues(config: unknown): AccountL10nValidationIssue[] {
+  const issues: AccountL10nValidationIssue[] = [];
 
-  const visit = (node, path) => {
+  const visit = (node: unknown, path: string): void => {
     if (typeof node === 'string') {
       if (containsNonPersistableUrl(node)) {
         issues.push({
@@ -485,4 +549,4 @@ export function configNonPersistableUrlIssues(config) {
   return issues;
 }
 
-export * from './user-settings-geo.js';
+export * from './user-settings-geo';

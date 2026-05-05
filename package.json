@@ -3,17 +3,6 @@
   "private": true,
   "version": "1.0.0",
   "packageManager": "pnpm@10.15.1",
-  "workspaces": [
-    "admin",
-    "berlin",
-    "bob",
-    "dieter",
-    "prague",
-    "roma",
-    "sanfrancisco",
-    "tokyo-worker",
-    "venice"
-  ],
   "scripts": {
     "dev": "turbo dev",
     "build:i18n": "node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs",

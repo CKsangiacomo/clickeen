@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { classifyWidgetPublicId, isUuid } from '@clickeen/ck-contracts';
+import { isUuid, normalizeInstancePublicId } from '@clickeen/ck-contracts';
 import {
   deleteLiveSurfaceFromTokyo,
   deleteSavedConfigFromTokyo,
@@ -54,19 +54,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   const accountId = current.value.authzPayload.accountId;
   const { publicId: publicIdRaw } = await context.params;
-  const publicId = String(publicIdRaw || '').trim();
+  const publicId = normalizeInstancePublicId(publicIdRaw);
   if (!publicId) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.publicIdRequired' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  const publicIdKind = classifyWidgetPublicId(publicId);
-  if (!publicIdKind) {
     return withSession(
       request,
       NextResponse.json(
@@ -307,9 +296,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   const { publicId: publicIdRaw } = await context.params;
-  const publicId = String(publicIdRaw || '').trim();
-  const publicIdKind = classifyWidgetPublicId(publicId);
-  if (!publicIdKind) {
+  const publicId = normalizeInstancePublicId(publicIdRaw);
+  if (!publicId) {
     return withSession(
       request,
       NextResponse.json(

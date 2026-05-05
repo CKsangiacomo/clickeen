@@ -9,50 +9,20 @@ type Props = {
   loading?: 'lazy' | 'eager';
   embedMode?: 'iframe' | 'indexable';
   showShareChrome?: boolean;
+  widgetType?: string;
 };
 
 const { publicId, locale, localeOverride, title = 'Widget preview', loading = 'lazy', embedMode = 'iframe' } =
   Astro.props;
 
-const showShareChrome = (Astro.props as Props).showShareChrome !== false;
+const props = Astro.props as Props;
+const showShareChrome = props.showShareChrome !== false;
 const PRAGUE_EMBED_MIN_HEIGHT = 420;
 const PRAGUE_EMBED_MAX_HEIGHT = 800;
 
 const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
 
-// Extract widget type from any valid publicId format
-const widgetType = (() => {
-  const raw = String(publicId || '').trim();
-
-  if (raw.startsWith('wgt_main_')) {
-    return raw.slice('wgt_main_'.length);
-  }
-
-  // Handle system instances: wgt_system_widgetname
-  if (raw.startsWith('wgt_system_')) {
-    const rest = raw.slice('wgt_system_'.length);
-    const dot = rest.indexOf('.');
-    return dot === -1 ? rest : rest.slice(0, dot);
-  }
-
-  // Handle user instances: wgt_user_widgetname_xyz or other patterns
-  // Extract widget type from common patterns
-  const patterns = [
-    /^wgt_user_([^_]+)_/,     // wgt_user_faq_123 -> faq
-    /^wgt_([^_]+)_u_/,        // wgt_faq_u_123 -> faq
-    /^wgt_([^_]+)_/,          // wgt_faq_123 -> faq
-  ];
-
-  for (const pattern of patterns) {
-    const match = raw.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
-  }
-
-  // Fallback: Venice handles widget type internally
-  return '';
-})();
+const widgetType = typeof props.widgetType === 'string' ? props.widgetType.trim() : '';
 
 // Local-dev cache-bust only: production embeds should be CDN/snapshot cache-friendly by default.
 const tsToken = import.meta.env.DEV ? String(Date.now()) : '';
@@ -84,7 +54,7 @@ const brandSvgs = {
   class="ck-instanceEmbed"
   id={anchorId}
   data-ck-instance-id={anchorId}
-  data-ck-widget-type={widgetType}
+  data-ck-widget-type={widgetType || undefined}
   data-ck-min-height={String(PRAGUE_EMBED_MIN_HEIGHT)}
   data-ck-max-height={String(PRAGUE_EMBED_MAX_HEIGHT)}
 >

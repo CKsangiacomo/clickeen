@@ -139,7 +139,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'heading', type: 'string' },
       { key: 'subhead', type: 'string' },
     ],
-    meta: ['copy', 'mode'],
+    meta: ['copy', 'mode', 'systemInstanceRef'],
   },
   'locale-showcase': {
     type: 'locale-showcase',

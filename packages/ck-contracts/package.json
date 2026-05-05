@@ -7,13 +7,7 @@
     "@clickeen/l10n": "workspace:*"
   },
   "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js"
-    },
-    "./ai": {
-      "types": "./src/ai.d.ts",
-      "default": "./src/ai.js"
-    }
+    ".": "./src/index.ts",
+    "./ai": "./src/ai.ts"
   }
 }

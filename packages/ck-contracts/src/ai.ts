@@ -1,51 +1,80 @@
-const WIDGET_COPILOT_AGENT_ALIAS = "widget.copilot.v1";
-const WIDGET_COPILOT_AGENT_IDS = {
-  sdr: "sdr.widget.copilot.v1",
-  cs: "cs.widget.copilot.v1"
+export type AiProvider = 'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon';
+export type AiProfile = 'free_low' | 'paid_standard' | 'paid_premium' | 'system_premium';
+export type AiPolicyProfile = 'free' | 'tier1' | 'tier2' | 'tier3';
+export type AiExecutionSurface = 'execute' | 'endpoint';
+export type AiBudget = {
+  maxTokens: number;
+  timeoutMs: number;
+  maxRequests?: number;
 };
-const SDR_BUDGETS = {
+export type AiModelPolicy = {
+  defaultModel: string;
+  allowed: string[];
+};
+export type AiGrantPolicy = {
+  profile: AiProfile;
+  allowedProviders: AiProvider[];
+  defaultProvider: AiProvider;
+  models?: Partial<Record<AiProvider, AiModelPolicy>>;
+  selectedProvider?: AiProvider;
+  selectedModel?: string;
+  allowProviderChoice?: boolean;
+  allowModelChoice?: boolean;
+};
+export type AiRegistryEntry = {
+  agentId: string;
+  category: 'copilot' | 'agent';
+  taskClass: string;
+  description: string;
+  supportedProviders: AiProvider[];
+  defaultProvider: AiProvider;
+  executionSurface: AiExecutionSurface;
+  allowProviderChoice?: boolean;
+  allowModelChoice?: boolean;
+  requiredEntitlements?: string[];
+  budgetsByProfile: Record<AiProfile, AiBudget>;
+  aliases?: string[];
+};
+export type AiProviderUiMeta = {
+  provider: AiProvider;
+  label: string;
+};
+export type AiModelUiMeta = {
+  model: string;
+  label: string;
+};
+
+const SDR_BUDGETS: Record<AiProfile, AiBudget> = {
   free_low: { maxTokens: 280, timeoutMs: 15e3, maxRequests: 1 },
   paid_standard: { maxTokens: 600, timeoutMs: 25e3, maxRequests: 2 },
   paid_premium: { maxTokens: 900, timeoutMs: 35e3, maxRequests: 2 },
   system_premium: { maxTokens: 1200, timeoutMs: 45e3, maxRequests: 2 }
 };
-const SDR_WIDGET_BUDGETS = {
+const CS_WIDGET_BUDGETS: Record<AiProfile, AiBudget> = {
   free_low: { maxTokens: 650, timeoutMs: 45e3, maxRequests: 2 },
   paid_standard: { maxTokens: 900, timeoutMs: 45e3, maxRequests: 3 },
   paid_premium: { maxTokens: 1400, timeoutMs: 6e4, maxRequests: 3 },
   system_premium: { maxTokens: 1600, timeoutMs: 6e4, maxRequests: 3 }
 };
-const CS_WIDGET_BUDGETS = {
-  free_low: { maxTokens: 650, timeoutMs: 45e3, maxRequests: 2 },
-  paid_standard: { maxTokens: 900, timeoutMs: 45e3, maxRequests: 3 },
-  paid_premium: { maxTokens: 1400, timeoutMs: 6e4, maxRequests: 3 },
-  system_premium: { maxTokens: 1600, timeoutMs: 6e4, maxRequests: 3 }
-};
-const DEBUG_BUDGETS = {
-  free_low: { maxTokens: 200, timeoutMs: 1e4, maxRequests: 1 },
-  paid_standard: { maxTokens: 200, timeoutMs: 1e4, maxRequests: 1 },
-  paid_premium: { maxTokens: 200, timeoutMs: 1e4, maxRequests: 1 },
-  system_premium: { maxTokens: 200, timeoutMs: 1e4, maxRequests: 1 }
-};
-const L10N_INSTANCE_BUDGETS = {
+const L10N_INSTANCE_BUDGETS: Record<AiProfile, AiBudget> = {
   free_low: { maxTokens: 900, timeoutMs: 2e4, maxRequests: 1 },
   paid_standard: { maxTokens: 1200, timeoutMs: 3e4, maxRequests: 1 },
   paid_premium: { maxTokens: 1800, timeoutMs: 45e3, maxRequests: 1 },
   system_premium: { maxTokens: 2200, timeoutMs: 6e4, maxRequests: 1 }
 };
-const L10N_PRAGUE_BUDGETS = {
+const L10N_PRAGUE_BUDGETS: Record<AiProfile, AiBudget> = {
   free_low: { maxTokens: 1500, timeoutMs: 6e4, maxRequests: 1 },
   paid_standard: { maxTokens: 1500, timeoutMs: 6e4, maxRequests: 1 },
   paid_premium: { maxTokens: 2e3, timeoutMs: 6e4, maxRequests: 1 },
   system_premium: { maxTokens: 2200, timeoutMs: 6e4, maxRequests: 1 }
 };
-const PERSONALIZATION_ONBOARDING_BUDGETS = {
+const PERSONALIZATION_ONBOARDING_BUDGETS: Record<AiProfile, AiBudget> = {
   free_low: { maxTokens: 900, timeoutMs: 3e4, maxRequests: 2 },
   paid_standard: { maxTokens: 1200, timeoutMs: 45e3, maxRequests: 2 },
   paid_premium: { maxTokens: 1800, timeoutMs: 6e4, maxRequests: 3 },
   system_premium: { maxTokens: 2200, timeoutMs: 6e4, maxRequests: 3 }
 };
-const AI_AGENT_REGISTRY = [
+const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
   {
     agentId: "sdr.copilot",
     category: "copilot",
@@ -59,20 +88,7 @@ const AI_AGENT_REGISTRY = [
     budgetsByProfile: SDR_BUDGETS
   },
   {
-    agentId: WIDGET_COPILOT_AGENT_IDS.sdr,
-    category: "copilot",
-    taskClass: "copilot.widget.editor",
-    description: "SDR widget copilot (free-tier acquisition flows).",
-    supportedProviders: ["deepseek", "amazon"],
-    defaultProvider: "deepseek",
-    executionSurface: "execute",
-    allowProviderChoice: true,
-    allowModelChoice: true,
-    requiredEntitlements: ["budget.copilot.turns"],
-    budgetsByProfile: SDR_WIDGET_BUDGETS
-  },
-  {
-    agentId: WIDGET_COPILOT_AGENT_IDS.cs,
+    agentId: "cs.widget.copilot.v1",
     category: "copilot",
     taskClass: "copilot.widget.editor",
     description: "CS widget copilot (paid tiers).",
@@ -121,19 +137,8 @@ const AI_AGENT_REGISTRY = [
     budgetsByProfile: PERSONALIZATION_ONBOARDING_BUDGETS,
     requiredEntitlements: ["budget.personalization.runs", "budget.personalization.website.crawls"]
   },
-  {
-    agentId: "debug.grantProbe",
-    category: "agent",
-    taskClass: "ops.debug",
-    description: "Grant validation probe.",
-    supportedProviders: ["deepseek"],
-    defaultProvider: "deepseek",
-    executionSurface: "execute",
-    allowProviderChoice: false,
-    budgetsByProfile: DEBUG_BUDGETS
-  }
 ];
-const AGENT_LOOKUP = /* @__PURE__ */ new Map();
+const AGENT_LOOKUP = /* @__PURE__ */ new Map<string, AiRegistryEntry>();
 for (const entry of AI_AGENT_REGISTRY) {
   if (!entry.agentId || !entry.agentId.trim()) {
     throw new Error("[ck-contracts] AI registry entry missing agentId");
@@ -160,21 +165,21 @@ for (const entry of AI_AGENT_REGISTRY) {
     AGENT_LOOKUP.set(trimmed, entry);
   }
 }
-const PROFILE_BY_POLICY = {
+const PROFILE_BY_POLICY: Record<AiPolicyProfile, AiProfile> = {
   free: "free_low",
   tier1: "paid_standard",
   tier2: "paid_premium",
   tier3: "paid_premium"
 };
-const SYSTEM_TASK_CLASSES = /* @__PURE__ */ new Set(["l10n.prague.systemStrings"]);
-const PROVIDER_LABELS = {
+const SYSTEM_TASK_CLASSES = /* @__PURE__ */ new Set<string>(["l10n.prague.systemStrings"]);
+const PROVIDER_LABELS: Record<AiProvider, string> = {
   deepseek: "DeepSeek",
   openai: "OpenAI",
   anthropic: "Claude",
   groq: "Groq (Llama)",
   amazon: "Amazon Nova"
 };
-const MODEL_LABELS = {
+const MODEL_LABELS: Record<string, string> = {
   // DeepSeek
   "deepseek-chat": "DeepSeek Chat",
   "deepseek-reasoner": "DeepSeek Reasoner",
@@ -197,7 +202,7 @@ const MODEL_LABELS = {
   "amazon.nova-pro-v1:0": "Nova Pro",
   "amazon.nova-premier-v1:0": "Nova Premier"
 };
-const MODELS_BY_PROFILE = {
+const MODELS_BY_PROFILE: Record<AiProfile, Partial<Record<AiProvider, AiModelPolicy>>> = {
   free_low: {
     deepseek: { defaultModel: "deepseek-chat", allowed: ["deepseek-chat"] },
     amazon: { defaultModel: "nova-2-lite-v1", allowed: ["nova-2-lite-v1"] }
@@ -235,15 +240,15 @@ const MODELS_BY_PROFILE = {
     openai: { defaultModel: "gpt-5.2", allowed: ["gpt-5-mini", "gpt-5", "gpt-5.2", "gpt-4o"] }
   }
 };
-const DEFAULT_PROVIDER_BY_PROFILE = {
+const DEFAULT_PROVIDER_BY_PROFILE: Record<AiProfile, AiProvider> = {
   free_low: "deepseek",
   paid_standard: "openai",
   paid_premium: "openai",
   system_premium: "openai"
 };
-function uniqProviders(values) {
+function uniqProviders(values: AiProvider[]): AiProvider[] {
   const seen = /* @__PURE__ */ new Set();
-  const out = [];
+  const out: AiProvider[] = [];
   for (const v of values) {
     if (seen.has(v)) continue;
     seen.add(v);
@@ -251,31 +256,17 @@ function uniqProviders(values) {
   }
   return out;
 }
-function listAiAgents() {
+function listAiAgents(): AiRegistryEntry[] {
   return AI_AGENT_REGISTRY.slice();
 }
-function resolveAiAgent(agentId) {
+function resolveAiAgent(agentId: unknown): { entry: AiRegistryEntry; canonicalId: string; requestedId: string } | null {
   const requested = typeof agentId === "string" ? agentId.trim() : "";
   if (!requested) return null;
   const entry = AGENT_LOOKUP.get(requested);
   if (!entry) return null;
   return { entry, canonicalId: entry.agentId, requestedId: requested };
 }
-function isWidgetCopilotAgentId(agentId) {
-  return agentId === WIDGET_COPILOT_AGENT_IDS.sdr || agentId === WIDGET_COPILOT_AGENT_IDS.cs;
-}
-function resolveWidgetCopilotAgentId(args) {
-  return WIDGET_COPILOT_AGENT_IDS.cs;
-}
-function resolveWidgetCopilotRequestedAgentId(args) {
-  const requested = typeof args.requestedAgentId === "string" ? args.requestedAgentId.trim() : "";
-  if (!requested) return requested;
-  if (requested === WIDGET_COPILOT_AGENT_ALIAS || isWidgetCopilotAgentId(requested)) {
-    return resolveWidgetCopilotAgentId({ policyProfile: args.policyProfile });
-  }
-  return requested;
-}
-function resolveAiProfile(args) {
+function resolveAiProfile(args: { policyProfile: AiPolicyProfile; taskClass: string }): AiProfile {
   if (SYSTEM_TASK_CLASSES.has(args.taskClass)) return "system_premium";
   const profile = PROFILE_BY_POLICY[args.policyProfile];
   if (!profile) {
@@ -283,51 +274,54 @@ function resolveAiProfile(args) {
   }
   return profile;
 }
-function resolveAiAllowedProviders(entry, profile) {
-  const allowed = Object.keys(MODELS_BY_PROFILE[profile] ?? {});
+function resolveAiAllowedProviders(entry: AiRegistryEntry, profile: AiProfile): AiProvider[] {
+  const allowed = Object.keys(MODELS_BY_PROFILE[profile] ?? {}) as AiProvider[];
   const filtered = entry.supportedProviders.filter((provider) => allowed.includes(provider));
   return uniqProviders(filtered);
 }
-function resolveAiBudgets(entry, profile) {
+function resolveAiBudgets(entry: AiRegistryEntry, profile: AiProfile): AiBudget {
   const budget = entry.budgetsByProfile[profile];
   if (!budget) {
     throw new Error(`[ck-contracts] Missing AI budget for ${entry.agentId} (${profile})`);
   }
   return budget;
 }
-function resolveAiModels(profile, provider) {
+function resolveAiModels(profile: AiProfile, provider: AiProvider): AiModelPolicy | null {
   const profileConfig = MODELS_BY_PROFILE[profile] ?? null;
   if (!profileConfig) return null;
   const entry = profileConfig[provider];
   if (!entry) return null;
-  const allowed = Array.isArray(entry.allowed) ? entry.allowed.filter((m) => typeof m === "string" && m.trim()) : [];
+  const allowed = Array.isArray(entry.allowed) ? entry.allowed.filter((m: unknown): m is string => typeof m === "string" && Boolean(m.trim())) : [];
   const defaultModel = typeof entry.defaultModel === "string" ? entry.defaultModel.trim() : "";
   if (!defaultModel || allowed.length === 0) return null;
   if (!allowed.includes(defaultModel)) return null;
   return { defaultModel, allowed };
 }
-function resolveAiDefaultProvider(profile, allowedProviders) {
+function resolveAiDefaultProvider(profile: AiProfile, allowedProviders: AiProvider[]): AiProvider {
   const preferred = DEFAULT_PROVIDER_BY_PROFILE[profile] ?? "deepseek";
   if (allowedProviders.includes(preferred)) return preferred;
   return allowedProviders[0] ?? "deepseek";
 }
-function listAiProviderUi() {
-  return Object.keys(PROVIDER_LABELS).map((provider) => ({
+function listAiProviderUi(): AiProviderUiMeta[] {
+  return (Object.keys(PROVIDER_LABELS) as AiProvider[]).map((provider) => ({
     provider,
     label: PROVIDER_LABELS[provider]
   }));
 }
-function labelAiProvider(provider) {
+function labelAiProvider(provider: unknown): string {
   const key = typeof provider === "string" ? provider.trim() : "deepseek";
-  return PROVIDER_LABELS[key] ?? provider;
+  return (PROVIDER_LABELS as Record<string, string>)[key] ?? String(provider ?? "");
 }
-function labelAiModel(model) {
+function labelAiModel(model: unknown): string {
   const trimmed = typeof model === "string" ? model.trim() : "";
   if (!trimmed) return "";
   return MODEL_LABELS[trimmed] ?? trimmed;
 }
-function listAiModelsForUi(args) {
-  const out = {};
+function listAiModelsForUi(args: {
+  profile: AiProfile;
+  allowedProviders: AiProvider[];
+}): Partial<Record<AiProvider, { defaultModel: string; models: AiModelUiMeta[] }>> {
+  const out: Partial<Record<AiProvider, { defaultModel: string; models: AiModelUiMeta[] }>> = {};
   for (const provider of args.allowedProviders) {
     const policy = resolveAiModels(args.profile, provider);
     if (!policy) continue;
@@ -338,7 +332,12 @@ function listAiModelsForUi(args) {
   }
   return out;
 }
-function resolveAiPolicyCapsule(args) {
+function resolveAiPolicyCapsule(args: {
+  entry: AiRegistryEntry;
+  policyProfile: AiPolicyProfile;
+  requestedProvider?: unknown;
+  requestedModel?: unknown;
+}): AiGrantPolicy {
   const profile = resolveAiProfile({
     policyProfile: args.policyProfile,
     taskClass: args.entry.taskClass
@@ -348,15 +347,17 @@ function resolveAiPolicyCapsule(args) {
     throw new Error(`[ck-contracts] No allowed providers for ${args.entry.agentId} (${profile})`);
   }
   const defaultProvider = resolveAiDefaultProvider(profile, allowedProviders);
-  const models = Object.fromEntries(
-    allowedProviders.map((provider) => {
+  const modelEntries = allowedProviders.map((provider): [AiProvider, AiModelPolicy] | null => {
       const policy = resolveAiModels(profile, provider);
       return policy ? [provider, policy] : null;
-    }).filter(Boolean)
-  );
+    }).filter((entry): entry is [AiProvider, AiModelPolicy] => entry != null);
+  const models: Partial<Record<AiProvider, AiModelPolicy>> = Object.fromEntries(modelEntries);
   const allowProviderChoice = Boolean(args.entry.allowProviderChoice) && allowedProviders.length > 1;
   const providerCandidate = typeof args.requestedProvider === "string" ? args.requestedProvider.trim() : "";
-  const selectedProvider = allowProviderChoice && allowedProviders.includes(providerCandidate) ? providerCandidate : void 0;
+  const selectedProvider =
+    allowProviderChoice && allowedProviders.includes(providerCandidate as AiProvider)
+      ? (providerCandidate as AiProvider)
+      : void 0;
   const allowModelChoice = Boolean(args.entry.allowModelChoice);
   const modelCandidate = typeof args.requestedModel === "string" ? args.requestedModel.trim() : "";
   const modelProvider = selectedProvider ?? defaultProvider;
@@ -368,14 +369,11 @@ function resolveAiPolicyCapsule(args) {
     models,
     allowProviderChoice,
     allowModelChoice,
-    ...selectedProvider ? { selectedProvider } : {},
-    ...selectedModel ? { selectedModel } : {}
+    ...(selectedProvider ? { selectedProvider } : {}),
+    ...(selectedModel ? { selectedModel } : {})
   };
 }
 export {
-  WIDGET_COPILOT_AGENT_ALIAS,
-  WIDGET_COPILOT_AGENT_IDS,
-  isWidgetCopilotAgentId,
   labelAiModel,
   labelAiProvider,
   listAiAgents,
@@ -387,7 +385,5 @@ export {
   resolveAiDefaultProvider,
   resolveAiModels,
   resolveAiPolicyCapsule,
-  resolveAiProfile,
-  resolveWidgetCopilotAgentId,
-  resolveWidgetCopilotRequestedAgentId
+  resolveAiProfile
 };

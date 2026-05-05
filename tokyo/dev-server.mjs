@@ -23,15 +23,16 @@ import url from 'node:url';
 import crypto from 'node:crypto';
 
 // Keep the Tokyo dev stub self-contained so CI can boot it with plain `node`.
-const WIDGET_PUBLIC_ID_RE =
-  /^(?:wgt_main_[a-z0-9][a-z0-9_-]*|wgt_system_[a-z0-9][a-z0-9_-]*|wgt_[a-z0-9][a-z0-9_-]*_u_[a-z0-9][a-z0-9_-]*)$/i;
+const INSTANCE_PUBLIC_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ACCOUNT_ASSET_PATH_RE = /^\/assets\/account\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)$/;
 
-function normalizeWidgetPublicId(raw) {
+function normalizeInstancePublicId(raw) {
   const value = typeof raw === 'string' ? raw.trim() : '';
   if (!value) return null;
-  return WIDGET_PUBLIC_ID_RE.test(value) ? value : null;
+  if (value === '.' || value === '..') return null;
+  if (value.includes('/') || value.includes('\\')) return null;
+  return INSTANCE_PUBLIC_ID_RE.test(value) ? value : null;
 }
 
 function decodePathPart(raw) {
@@ -157,7 +158,7 @@ function normalizeWidgetType(raw) {
 }
 
 function normalizePublicId(raw) {
-  return normalizeWidgetPublicId(raw);
+  return normalizeInstancePublicId(raw);
 }
 
 function pickExtension({ filename, contentType }) {

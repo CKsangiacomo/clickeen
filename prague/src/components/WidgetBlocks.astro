@@ -52,12 +52,12 @@ const explicitShowcasePublicId =
 const showcasePublicId =
   explicitShowcasePublicId ??
   blocks.find((b) => b && b.systemInstanceRef && typeof b.systemInstanceRef.publicId === 'string')?.systemInstanceRef?.publicId ??
-  `wgt_main_${widget}`;
+  null;
 const defaultShowcaseTitle = await pragueT(locale, 'prague.localeShowcase.title');
 const defaultShowcaseSubtitle = await pragueT(locale, 'prague.localeShowcase.subtitle');
 const marketConfig = getPragueMarket(market);
 
-const instanceLocalesRaw = await resolveTokyoInstanceLocales(showcasePublicId).catch(() => null);
+const instanceLocalesRaw = showcasePublicId ? await resolveTokyoInstanceLocales(showcasePublicId).catch(() => null) : null;
 const fallbackInstanceLocales = marketConfig?.locales?.length ? marketConfig.locales : ['en', 'es', 'zh-hans', 'ja'];
 const instanceLocales = instanceLocalesRaw ? sortLocaleOptions(instanceLocalesRaw) : sortLocaleOptions(fallbackInstanceLocales);
 const showcaseTiles = chooseShowcaseTiles(instanceLocales);
@@ -93,6 +93,14 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[] }): str
     .replace('{lang1}', lang1)
     .replace('{lang2}', trailingLanguages)
     .replace('{more}', String(more));
+}
+
+function requireInstancePublicId(context: string, value?: string | null): string {
+  const publicId = String(value || '').trim();
+  if (!publicId) {
+    throw new Error(`[prague] ${widget}/${activeSubpage}: ${context} requires explicit systemInstanceRef.publicId`);
+  }
+  return publicId;
 }
 ---
 
@@ -293,6 +301,7 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[] }): str
     }
     case 'minibob': {
       const copy = block.copy ?? {};
+      const minibobPublicId = requireInstancePublicId('minibob', block.systemInstanceRef?.publicId);
       rendered = (
         <>
           <Minibob
@@ -301,10 +310,11 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[] }): str
             page={activeSubpage}
             heading={String(copy.heading ?? '')}
             subhead={String(copy.subhead ?? '')}
+            publicId={minibobPublicId}
           />
           {!hasExplicitLocaleShowcase ? (
             <LocaleShowcase
-              publicId={showcasePublicId}
+              publicId={minibobPublicId}
               title={defaultShowcaseTitle}
               subtitle={defaultShowcaseSubtitle}
               tiles={showcaseTileEntries}
@@ -317,12 +327,13 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[] }): str
     }
     case 'locale-showcase': {
       const copy = block.copy ?? {};
+      const localeShowcasePublicId = requireInstancePublicId('locale-showcase', block.systemInstanceRef?.publicId ?? showcasePublicId);
       const title = typeof copy.title === 'string' && copy.title.trim() ? String(copy.title) : defaultShowcaseTitle;
       const subtitle =
         typeof copy.subtitle === 'string' && copy.subtitle.trim() ? String(copy.subtitle) : defaultShowcaseSubtitle;
       rendered = (
         <LocaleShowcase
-          publicId={showcasePublicId}
+          publicId={localeShowcasePublicId}
           title={title}
           subtitle={subtitle}
           tiles={showcaseTileEntries}
