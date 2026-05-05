@@ -286,10 +286,6 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
   let opsCount: number | null = null;
   let uniquePathsTouched: number | null = null;
   let scopesTouched: string | null = null;
-  let touchedPaths: string | null = null;
-  let touchedControls: string | null = null;
-  let invalidReason: string | null = null;
-  let validationResult: string | null = null;
 
   if (isRecord(e.result)) {
     const meta = isRecord((e.result as any).meta) ? ((e.result as any).meta as any) : null;
@@ -298,26 +294,20 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
     promptVersion = meta ? asTrimmedString(meta.promptVersion) : null;
     policyVersion = meta ? asTrimmedString(meta.policyVersion) : null;
     dictionaryHash = meta ? asTrimmedString(meta.dictionaryHash) : null;
-    invalidReason = meta ? asTrimmedString(meta.invalidReason) : null;
-    validationResult = meta ? asTrimmedString(meta.validationResult) : null;
 
     const cta = isRecord((e.result as any).cta) ? ((e.result as any).cta as any) : null;
     ctaAction = cta ? asTrimmedString(cta.action) : null;
 
-    const metaTouchedPaths = meta ? readJsonStringArray(meta.touchedPaths) : [];
     const metaTouchedScopes = meta ? readJsonStringArray(meta.touchedScopes) : [];
-    const metaTouchedControls = meta ? readTouchedControls(meta.touchedControls) : [];
     const metaOpsCount = meta && typeof meta.opsCount === 'number' && Number.isFinite(meta.opsCount) ? meta.opsCount : null;
     const metaUniquePathsTouched =
       meta && typeof meta.uniquePathsTouched === 'number' && Number.isFinite(meta.uniquePathsTouched) ? meta.uniquePathsTouched : null;
 
     const opsRaw = (e.result as any).ops;
-    if (metaOpsCount != null || metaUniquePathsTouched != null || metaTouchedPaths.length > 0 || metaTouchedScopes.length > 0 || metaTouchedControls.length > 0) {
+    if (metaOpsCount != null || metaUniquePathsTouched != null || metaTouchedScopes.length > 0) {
       opsCount = metaOpsCount ?? (Array.isArray(opsRaw) ? opsRaw.length : null);
-      uniquePathsTouched = metaUniquePathsTouched ?? metaTouchedPaths.length;
-      touchedPaths = metaTouchedPaths.length ? JSON.stringify(metaTouchedPaths) : null;
+      uniquePathsTouched = metaUniquePathsTouched;
       scopesTouched = metaTouchedScopes.length ? JSON.stringify(metaTouchedScopes) : null;
-      touchedControls = metaTouchedControls.length ? JSON.stringify(metaTouchedControls) : null;
       if (!outcome) outcome = (opsCount ?? 0) > 0 ? 'ops_applied' : 'no_ops';
     } else if (Array.isArray(opsRaw)) {
       opsCount = opsRaw.length;
@@ -331,19 +321,14 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
   const provider = asTrimmedString(e.usage?.provider) ?? null;
   const model = asTrimmedString(e.usage?.model) ?? null;
   const latencyMs = typeof e.usage?.latencyMs === 'number' && Number.isFinite(e.usage.latencyMs) ? e.usage.latencyMs : null;
-  const promptTokens = typeof e.usage?.promptTokens === 'number' && Number.isFinite(e.usage.promptTokens) ? e.usage.promptTokens : null;
-  const completionTokens = typeof e.usage?.completionTokens === 'number' && Number.isFinite(e.usage.completionTokens) ? e.usage.completionTokens : null;
-  const costUsd = typeof e.usage?.costUsd === 'number' && Number.isFinite(e.usage.costUsd) ? e.usage.costUsd : null;
   const aiProfile = asTrimmedString(e.ai?.profile) ?? null;
   const taskClass = asTrimmedString(e.ai?.taskClass) ?? null;
-  const subjectHash = resolveSubjectHash(e);
-  const learningCapture = resolveLearningCaptureDecision(e).reason;
 
   try {
     await env.SF_D1.prepare(
       `INSERT OR REPLACE INTO copilot_events_v1
-      (requestId, day, occurredAtMs, runtimeEnv, envStage, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, touchedPaths, touchedControls, invalidReason, validationResult, ctaAction, promptVersion, policyVersion, dictionaryHash, aiProfile, taskClass, provider, model, latencyMs, promptTokens, completionTokens, costUsd, subjectHash, learningCapture)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (requestId, day, occurredAtMs, runtimeEnv, envStage, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptVersion, policyVersion, dictionaryHash, aiProfile, taskClass, provider, model, latencyMs)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         e.requestId,
@@ -362,10 +347,6 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
         opsCount,
         uniquePathsTouched,
         scopesTouched,
-        touchedPaths,
-        touchedControls,
-        invalidReason,
-        validationResult,
         ctaAction,
         promptVersion,
         policyVersion,
@@ -375,11 +356,6 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
         provider,
         model,
         latencyMs,
-        promptTokens,
-        completionTokens,
-        costUsd,
-        subjectHash,
-        learningCapture,
       )
       .run();
   } catch (err) {
@@ -389,12 +365,11 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
 
 export async function persistOutcomeAttach(env: Env, body: OutcomeAttachRequest): Promise<void> {
   const day = toIsoDay(body.occurredAtMs);
-  const metadataJson = body.metadata ? JSON.stringify(body.metadata) : null;
   try {
     await env.SF_D1.prepare(
       `INSERT OR REPLACE INTO copilot_outcomes_v1
-      (requestId, event, day, occurredAtMs, sessionId, timeToDecisionMs, accountIdHash, metadataJson)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      (requestId, event, day, occurredAtMs, sessionId, timeToDecisionMs, accountIdHash)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         body.requestId,
@@ -404,7 +379,6 @@ export async function persistOutcomeAttach(env: Env, body: OutcomeAttachRequest)
         body.sessionId,
         body.timeToDecisionMs ?? null,
         body.accountIdHash ?? null,
-        metadataJson,
       )
       .run();
   } catch (err) {

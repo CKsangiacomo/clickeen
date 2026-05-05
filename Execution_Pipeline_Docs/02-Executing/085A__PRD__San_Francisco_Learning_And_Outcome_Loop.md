@@ -369,8 +369,8 @@ What changed:
 - The queue writes tiny D1 facts for every execution and bounded sanitized R2 samples only under `learning/...`.
 - Full raw R2 write-for-every-execution under `logs/...` was removed from the queue consumer.
 - Telemetry no longer infers widget scope from path prefixes. Builder copilot emits touched path/control/scope/group metadata, and telemetry stores it.
-- D1 schema has migration-owned columns for learning facts and outcome metadata.
-- San Francisco deploy now applies D1 migrations before deploying the worker.
+- D1 schema stays on the existing tiny fact tables for this slice. Detailed edit-level learning lives only in bounded paid R2 samples.
+- San Francisco deploy does not depend on D1 migration permissions for this slice.
 
 Verification performed:
 
@@ -383,5 +383,5 @@ Verification performed:
 
 Remote D1/deploy note:
 
-- Local `wrangler d1 migrations list sanfrancisco_d1_dev --remote` is blocked on this machine by an inactive local Wrangler token.
-- The git deploy path now runs `wrangler d1 migrations apply sanfrancisco_d1_dev --remote` before `wrangler deploy`, using GitHub's configured Cloudflare token.
+- A first attempt to make `pnpm -C sanfrancisco run deploy` apply D1 migrations failed in GitHub because the existing deploy token can deploy Workers but is not authorized for D1 migration queries.
+- The execution was corrected to avoid a schema migration for this PRD. The deploy path is back to Worker deploy only, and PRD 85A's detailed learning facts are captured through bounded paid R2 samples.

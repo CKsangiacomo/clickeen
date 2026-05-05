@@ -633,6 +633,7 @@ Surviving state:
 - Serious paid failures/invalid outputs are always captured.
 - Free users keep only minimal operational metering/budget/abuse facts by default.
 - Raw R2 learning capture is bounded and sanitized under `learning/...`; normal executions are not dumped as one full raw object forever.
+- No new D1 schema change was required for this slice. The existing D1 tables keep tiny metering/outcome facts; detailed edit-level learning stays in sampled R2 records.
 - Telemetry stores explicit touched metadata emitted by the agent/caller and does not infer widget semantics from path prefixes.
 
 ### Recommended Execution Order
