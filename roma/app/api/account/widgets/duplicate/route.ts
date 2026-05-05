@@ -39,15 +39,6 @@ function createUserInstancePublicId(widgetType: string): string {
   return `wgt_${stem}_u_${suffix}`;
 }
 
-function classifyDuplicateSourcePublicId(publicId: string): 'user' | 'main' | 'system' | null {
-  const normalized = publicId.trim().toLowerCase();
-  if (!normalized.startsWith('wgt_')) return null;
-  if (normalized.includes('_u_')) return 'user';
-  if (normalized.startsWith('wgt_main_')) return 'main';
-  if (normalized.startsWith('wgt_system_')) return 'system';
-  return null;
-}
-
 async function loadDuplicateSource(args: {
   accountId: string;
   publicId: string;
@@ -56,19 +47,6 @@ async function loadDuplicateSource(args: {
   | { ok: true; value: DuplicateSource }
   | { ok: false; status: number; error: { kind: string; reasonKey: string; detail?: string } }
 > {
-  const publicIdKind = classifyDuplicateSourcePublicId(args.publicId);
-  if (!publicIdKind) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.payload.invalid',
-        detail: 'duplicate_source_public_id_invalid',
-      },
-    };
-  }
-
   const index = await loadTokyoAccountInstanceIndex({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
@@ -98,7 +76,10 @@ async function loadDuplicateSource(args: {
       },
     };
   }
-  if (sourceEntry.accountId !== args.accountId && !sourceEntry.duplicable) {
+  if (
+    sourceEntry.accountId !== args.accountId &&
+    (sourceEntry.listed !== true || sourceEntry.duplicable !== true)
+  ) {
     return {
       ok: false,
       status: 403,
@@ -272,6 +253,9 @@ export async function POST(request: NextRequest) {
         detail: createdRow.ok ? 'instance_projection_create_empty' : createdRow.detail,
         status: createdRow.ok ? 500 : createdRow.status,
       };
+  let projectionGapFollowup:
+    | { ok: true; gapId: string | null }
+    | { ok: false; reasonKey: string; detail?: string; status: number } = { ok: true, gapId: null };
   if (!projectionFollowup.ok) {
     console.error('[roma account widgets duplicate route] projection create failed after Tokyo duplicate', {
       accountId,
@@ -289,11 +273,19 @@ export async function POST(request: NextRequest) {
       accountCapsule: current.value.authzToken,
     });
     if (!projectionGap.ok) {
+      projectionGapFollowup = {
+        ok: false,
+        reasonKey: projectionGap.error.reasonKey,
+        detail: projectionGap.error.detail,
+        status: projectionGap.status,
+      };
       console.error('[roma account widgets duplicate route] projection gap recording failed', {
         accountId,
         publicId,
         detail: projectionGap.error.detail ?? projectionGap.error.reasonKey,
       });
+    } else {
+      projectionGapFollowup = { ok: true, gapId: projectionGap.gapId };
     }
   }
 
@@ -340,6 +332,7 @@ export async function POST(request: NextRequest) {
         widgetType: source.value.widgetType,
         status: 'unpublished',
         projectionFollowup,
+        projectionGapFollowup,
         syncFollowup,
       },
       { status: 201 },

@@ -1,4 +1,4 @@
-import { classifyWidgetPublicId, isUuid } from '@clickeen/ck-contracts';
+import { isUuid } from '@clickeen/ck-contracts';
 import type { Env } from '../../types';
 import {
   accountInstanceIndexKey,
@@ -65,8 +65,22 @@ function displayNameFromPointer(pointer: SavedRenderPointer): string {
   );
 }
 
-function kindFromPublicId(publicId: string): AccountInstanceIndexEntry['kind'] {
-  return classifyWidgetPublicId(publicId) === 'user' ? 'user' : 'system';
+function kindFromPointer(args: {
+  pointer: SavedRenderPointer;
+  meta: Record<string, unknown>;
+  platformAccountId: string;
+}): AccountInstanceIndexEntry['kind'] {
+  if (args.meta.kind === 'system') return 'system';
+  if (args.meta.kind === 'user') return 'user';
+  if (
+    args.pointer.accountId === args.platformAccountId &&
+    (args.meta.listed === true ||
+      args.meta.duplicable === true ||
+      normalizeStringList(args.meta.listedSurfaces).length > 0)
+  ) {
+    return 'system';
+  }
+  return 'user';
 }
 
 async function readServeState(args: {
@@ -101,7 +115,11 @@ async function buildEntryFromPointer(args: {
     publicId: args.pointer.publicId,
     widgetType: args.pointer.widgetType,
     displayName: displayNameFromPointer(args.pointer),
-    kind: kindFromPublicId(args.pointer.publicId),
+    kind: kindFromPointer({
+      pointer: args.pointer,
+      meta,
+      platformAccountId: resolvePlatformAccountId(args.env),
+    }),
     listed: meta.listed === true,
     duplicable: meta.duplicable === true,
     listedSurfaces: normalizeStringList(meta.listedSurfaces),
@@ -262,21 +280,7 @@ export async function readAccountInstanceIndex(args: {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' };
   }
   const raw = await loadJson(args.env, accountInstanceIndexKey(accountId));
-  if (!raw) {
-    if (args.rebuildIfMissing === false) {
-      return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.instance.indexMissing' };
-    }
-    try {
-      return { ok: true, value: await rebuildAccountInstanceIndexes(args.env, accountId) };
-    } catch (error) {
-      return {
-        ok: false,
-        kind: 'VALIDATION',
-        reasonKey: 'tokyo.errors.instance.indexInvalid',
-        detail: error instanceof Error ? error.message : String(error),
-      };
-    }
-  }
+  if (!raw) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.instance.indexMissing' };
   const index = normalizeIndexDocument(raw, accountId);
   if (!index) return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.instance.indexInvalid' };
   const invalid = await validateIndexDocument(args.env, index);
@@ -290,20 +294,8 @@ export async function readListedInstanceIndex(args: {
 }): Promise<AccountInstanceIndexReadResult> {
   const accountId = args.platformAccountId ?? resolvePlatformAccountId(args.env);
   const raw = await loadJson(args.env, accountInstanceListedIndexKey(accountId));
-  if (!raw) {
-    try {
-      await rebuildAccountInstanceIndexes(args.env, accountId);
-    } catch (error) {
-      return {
-        ok: false,
-        kind: 'VALIDATION',
-        reasonKey: 'tokyo.errors.instance.indexInvalid',
-        detail: error instanceof Error ? error.message : String(error),
-      };
-    }
-  }
-  const listedRaw = await loadJson(args.env, accountInstanceListedIndexKey(accountId));
-  const index = normalizeIndexDocument(listedRaw, accountId);
+  if (!raw) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.instance.indexMissing' };
+  const index = normalizeIndexDocument(raw, accountId);
   if (!index) return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.instance.indexInvalid' };
   const invalid = await validateIndexDocument(args.env, index);
   if (invalid) return invalid;

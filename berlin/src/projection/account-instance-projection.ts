@@ -1,4 +1,3 @@
-import { classifyWidgetPublicId } from '@clickeen/ck-contracts';
 import { type BerlinAccountContext } from '../bootstrap/types';
 import { internalError, json } from '../http';
 import {
@@ -125,8 +124,8 @@ export async function createAccountInstanceProjectionRow(args: {
   widgetType: string;
   displayName?: string | null;
 }): Promise<Result<BerlinInstanceProjectionRow | null>> {
-  const publicIdKind = classifyWidgetPublicId(args.publicId);
-  if (publicIdKind !== 'user') {
+  const publicId = asTrimmedString(args.publicId);
+  if (!publicId) {
     return {
       ok: false,
       response: json(
@@ -159,11 +158,7 @@ export async function createAccountInstanceProjectionRow(args: {
       body: JSON.stringify({
         account_id: args.account.accountId,
         widget_id: widgetId.value,
-        public_id: args.publicId,
-        status: 'unpublished',
-        display_name: asTrimmedString(args.displayName) ?? 'Untitled widget',
-        config: {},
-        kind: 'user',
+        public_id: publicId,
       }),
     },
   );

@@ -1,4 +1,4 @@
-import { classifyWidgetPublicId, isUuid } from '@clickeen/ck-contracts';
+import { isUuid } from '@clickeen/ck-contracts';
 import {
   normalizePublicId,
   normalizeSha256Hex,
@@ -597,11 +597,15 @@ export async function tryHandleInternalRenderRoutes(
     }
 
     if (req.method === 'GET') {
-      const publicIdKind = classifyWidgetPublicId(publicId);
       const internalServiceId = String(req.headers.get(INTERNAL_SERVICE_HEADER) || '').trim().toLowerCase();
       const isRomaListedRead =
         internalServiceId === TOKYO_INTERNAL_SERVICE_ROMA_EDGE &&
-        (publicIdKind === 'main' || publicIdKind === 'system');
+        publicId != null &&
+        (await isRomaListedSavedReadAllowed({
+          env,
+          accountId,
+          publicId,
+        }));
       if (!isRomaListedRead) {
         const authErr = await authorizeSavedRenderControlRequest({
           req,
@@ -757,4 +761,25 @@ export async function tryHandleInternalRenderRoutes(
   }
 
   return null;
+}
+
+async function isRomaListedSavedReadAllowed(args: {
+  env: TokyoRouteArgs['env'];
+  accountId: string;
+  publicId: string;
+}): Promise<boolean> {
+  const platformAccountId = resolvePlatformAccountId(args.env);
+  if (args.accountId !== platformAccountId) return false;
+  const listedIndex = await readListedInstanceIndex({
+    env: args.env,
+    platformAccountId,
+  });
+  if (!listedIndex.ok) return false;
+  return listedIndex.value.entries.some(
+    (entry) =>
+      entry.accountId === args.accountId &&
+      entry.publicId === args.publicId &&
+      entry.listed === true &&
+      entry.duplicable === true,
+  );
 }

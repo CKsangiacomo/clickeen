@@ -99,10 +99,9 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 - One saved configured widget owned by one account
 - Owns saved config, display metadata, asset refs, base locale, l10n state, overlay ops, generated packs, and publish/live state
-- Stored in Michael:
-  - Account registry residue: `widget_instances` with `widget_id` (FK to `widgets`)
-  - System/admin-owned starters as normal `widget_instances` rows
-- Product-path account open resolves the saved authoring revision from Tokyo; Michael remains the registry/shell plane during cutover, while instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
+- Stored in Tokyo under the owning account. `accounts/{accountId}/instances/index.json` is the product inventory.
+- Projected in Michael only for joins, support, billing/account reporting, audit, and repair. `widget_instances` must not be read as Widgets inventory, editable config, display-name truth, publish-state truth, or starter availability truth.
+- Product-path account open resolves the saved authoring revision from Tokyo; instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
 - On the active account authoring path, user-facing instance identity (`widgetType`, `displayName`, `source`, `meta`) is Tokyo-owned. Michael `widget_instances.display_name` may still exist as storage residue during cutover, but Widgets/Builder product contracts must not read or write identity truth from it.
 - Michael `widget_instances.config` may still exist as inert schema residue for user-instance rows, but the active product path must not persist or read a second live widget document there.
 - Bob holds working copy in memory as `instanceData` during editing
@@ -243,7 +242,7 @@ instance.meta = {
 
 **San Francisco** — AI Workforce Operating System. Runs all AI agents (SDR Copilot, Editor Copilot, Support Agent, etc.) that operate the company. Manages sessions, jobs, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
-**Michael** — Supabase PostgreSQL database. Stores account instance registry rows (`widget_instances`), submissions, users, and usage events. RLS enforced for user tables. Starters are normal admin-owned/system instances using `wgt_main_*` and `wgt_system_*`; there is no separate starter content class.
+**Michael** — Supabase PostgreSQL database. Stores account/user data, submissions, usage events, and projection rows for account instances (`widget_instances`). RLS enforced for user tables. It is not the product owner for widget instance inventory, editable config, display name, publish state, or starter availability.
 
 **Tokyo** — Asset storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, public projections, and account-owned upload blobs.
 

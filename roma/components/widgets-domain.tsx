@@ -15,10 +15,6 @@ type CreateInstanceArgs = {
   actionKey: string;
 };
 
-function buildMainPublicId(widgetType: string): string {
-  return `wgt_main_${widgetType}`;
-}
-
 export function WidgetsDomain() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -117,7 +113,15 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        const sourcePublicId = buildMainPublicId(normalizedWidgetType);
+        const source = widgetInstances.find(
+          (instance) =>
+            instance.widgetType === normalizedWidgetType &&
+            instance.listed === true &&
+            instance.actions.duplicate === true,
+        );
+        if (!source) {
+          throw new Error('No starter instance is available for this widget type.');
+        }
         const payload = await accountApi.fetchJson<{
           publicId?: string;
           widgetType?: string;
@@ -125,7 +129,7 @@ export function WidgetsDomain() {
           method: 'POST',
           headers: accountApi.buildHeaders({ contentType: 'application/json' }),
           body: JSON.stringify({
-            sourcePublicId,
+            sourcePublicId: source.publicId,
           }),
         });
         const createdPublicId = payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
@@ -149,7 +153,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, accountId, refreshWidgets, router],
+    [accountApi, accountId, refreshWidgets, router, widgetInstances],
   );
 
   const handleDuplicateInstance = useCallback(

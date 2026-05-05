@@ -383,6 +383,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         detail: deleteResult.detail,
         status: deleteResult.status,
       };
+  let projectionGapFollowup:
+    | { ok: true; gapId: string | null }
+    | { ok: false; reasonKey: string; detail?: string; status: number } = { ok: true, gapId: null };
   if (!projectionFollowup.ok) {
     console.error('[roma account instance current route] projection delete failed after Tokyo delete', {
       accountId,
@@ -400,11 +403,19 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       accountCapsule: current.value.authzToken,
     });
     if (!projectionGap.ok) {
+      projectionGapFollowup = {
+        ok: false,
+        reasonKey: projectionGap.error.reasonKey,
+        detail: projectionGap.error.detail,
+        status: projectionGap.status,
+      };
       console.error('[roma account instance current route] projection gap recording failed', {
         accountId,
         publicId,
         detail: projectionGap.error.detail ?? projectionGap.error.reasonKey,
       });
+    } else {
+      projectionGapFollowup = { ok: true, gapId: projectionGap.gapId };
     }
   }
 
@@ -416,6 +427,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       deleted: true,
       tokyoCleanupApplied: true,
       projectionFollowup,
+      projectionGapFollowup,
     }),
     current.value.setCookies,
   );
