@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   forwardCopilotOutcome,
+  hashCopilotAccountId,
   isValidCopilotOutcomePayload,
 } from '@roma/lib/ai/account-copilot';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../../_lib/current-account-route';
@@ -8,6 +9,10 @@ import { resolveCurrentAccountRouteContext, withSession } from '../../../../_lib
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ publicId: string }> };
+
+function isPaidLearningProfile(profile: unknown): boolean {
+  return String(profile || '').trim() !== 'free';
+}
 
 export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
@@ -33,7 +38,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const forwarded = await forwardCopilotOutcome(body);
+    if (!isPaidLearningProfile(current.value.authzPayload.profile)) {
+      return withSession(
+        request,
+        NextResponse.json({ ok: true, data: { skipped: 'free_learning_cohort' } }, { status: 200, headers: { 'cache-control': 'no-store' } }),
+        current.value.setCookies,
+      );
+    }
+
+    const forwarded = await forwardCopilotOutcome({
+      ...body,
+      accountIdHash: await hashCopilotAccountId(current.value.authzPayload.accountId),
+    });
     if (!forwarded.ok) {
       return withSession(
         request,

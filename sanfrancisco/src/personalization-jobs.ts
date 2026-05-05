@@ -6,8 +6,7 @@ import {
   type PersonalizationOnboardingInput,
   type PersonalizationOnboardingResult,
 } from './agents/personalizationOnboarding';
-import { isOutcomeAttachRequest, persistOutcomeAttach } from './telemetry';
-import type { AIGrant, Env, OutcomeAttachRequest, SanfranciscoCommandMessage, Usage } from './types';
+import type { AIGrant, Env, SanfranciscoCommandMessage, Usage } from './types';
 
 const ONBOARDING_JOB_TTL_SEC = 60 * 30;
 
@@ -45,7 +44,7 @@ export function isSanfranciscoCommandMessage(value: unknown): value is Sanfranci
   if ((value as any).v !== 1) return false;
   if ((value as any).kind !== 'sf.command') return false;
   const command = asTrimmedString((value as any).command);
-  if (command !== 'personalization.onboarding.enqueue' && command !== 'ai.outcome.attach') {
+  if (command !== 'personalization.onboarding.enqueue') {
     return false;
   }
   return isRecord((value as any).payload);
@@ -221,18 +220,6 @@ export async function handleQueuedSanfranciscoCommand(command: SanfranciscoComma
       payload: command.payload,
       dispatchMode: 'inline',
     });
-    return;
-  }
-
-  if (command.command === 'ai.outcome.attach') {
-    if (!isOutcomeAttachRequest(command.payload)) {
-      throw new HttpError(400, {
-        code: 'BAD_REQUEST',
-        message: 'Invalid ai.outcome.attach payload',
-        issues: [{ path: 'payload', message: 'Expected { requestId, sessionId, event, occurredAtMs }' }],
-      });
-    }
-    await persistOutcomeAttach(env, command.payload as OutcomeAttachRequest);
     return;
   }
 

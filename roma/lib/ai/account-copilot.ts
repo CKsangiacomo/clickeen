@@ -38,11 +38,12 @@ type AIGrant = {
 };
 
 const OUTCOME_EVENTS = new Set([
-  'upgrade_clicked',
-  'upgrade_completed',
   'cta_clicked',
-  'ux_keep',
-  'ux_undo',
+  'edit_applied',
+  'edit_rejected',
+  'edit_undone',
+  'clarification_needed',
+  'invalid_output',
 ] as const);
 const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
 export const ACCOUNT_WIDGET_COPILOT_AGENT_ID = 'cs.widget.copilot.v1';
@@ -322,11 +323,14 @@ export function isValidCopilotOutcomePayload(value: unknown): value is {
   return true;
 }
 
+export async function hashCopilotAccountId(accountId: string): Promise<string> {
+  const normalized = String(accountId || '').trim();
+  if (!normalized) return '';
+  return hmacSha256Base64Url(resolveAiGrantSecret(), `copilot.account.v1.${normalized}`);
+}
+
 export async function forwardCopilotOutcome(body: unknown): Promise<{ ok: true; upstream: unknown } | { ok: false; message: string }> {
-  const bodyText = JSON.stringify({
-    command: 'ai.outcome.attach' as const,
-    payload: body,
-  });
+  const bodyText = JSON.stringify(body);
   const signature = await hmacSha256Base64Url(resolveAiGrantSecret(), `outcome.v1.${bodyText}`);
   const baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
 

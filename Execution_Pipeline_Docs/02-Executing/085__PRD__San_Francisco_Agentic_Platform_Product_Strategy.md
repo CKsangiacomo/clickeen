@@ -78,7 +78,7 @@ Good current architecture:
 
 Current risks and cleanup candidates:
 
-- `/v1/outcome` expects an `sf.command` envelope, while Roma sends a simpler `{ command, payload }` body. The learning/outcome loop is likely broken.
+- `/v1/outcome` expects an `sf.command` envelope with `{ v: 1, kind: 'sf.command', command, payload }`, while Roma sends only `{ command, payload }`. The learning/outcome loop is confirmed broken until this contract is fixed.
 - `sdr.copilot` has no active non-documentation caller outside San Francisco/contracts.
 - `agent.personalization.onboarding.v1` has no active non-documentation caller outside San Francisco/contracts.
 - `CK_INTERNAL_SERVICE_JWT` remains for residual San Francisco HTTP tooling.
@@ -172,7 +172,7 @@ Clickeen wants agents that improve over time. Today, San Francisco logs interact
 - `/v1/execute` emits an `InteractionEvent`.
 - Queue consumer writes raw events to R2 and indexes a subset in D1.
 - Roma can send outcome events after user decisions.
-- The outcome body shape appears mismatched between Roma and San Francisco.
+- The outcome body shape is mismatched: Roma omits the `sf.command` envelope fields San Francisco currently requires.
 
 ### Decisions Needed
 
@@ -205,7 +205,8 @@ Clickeen wants agents that improve over time. Today, San Francisco logs interact
 Start boring:
 
 - Fix the outcome contract.
-- Keep raw events in R2.
+- Keep tiny execution/outcome facts in D1.
+- Keep bounded raw samples in R2 only when useful.
 - Keep small indexes in D1.
 - Add a human-reviewed golden-example promotion flow later.
 - Do not build autonomous prompt self-training yet.
@@ -224,16 +225,21 @@ San Francisco needs four different logging layers:
    - Purpose: billing, abuse detection, cost control, reliability.
 
 2. **Outcome record for every meaningful user decision**
-   - Always written when available.
+   - Written for the eligible learning cohort.
+   - Default learning cohort is paid accounts only.
    - Small.
    - Fields: `requestId`, `event`, timestamp, session/account hash, optional decision latency.
    - Purpose: connect agent behavior to product results.
+   - Free-account conversion analytics, if needed, belongs in the product analytics path, not detailed San Francisco learning capture.
 
 3. **Raw learning payloads only when useful**
    - Not every successful call forever.
-   - Keep all failures/invalid outputs for a short retention window.
-   - Keep all negative or high-signal outcomes, such as undo, reject, repeated clarification, upgrade clicked, support unresolved.
+   - Keep serious paid failures/invalid outputs for a short retention window.
+   - Keep paid negative or high-signal outcomes, such as undo, reject, repeated clarification, support unresolved.
    - Sample normal successful calls at a controlled rate per agent and entitlement cohort.
+   - Default detailed-learning rule: paid accounts only, deterministic 20% sample for normal successful calls.
+   - Free accounts get minimal cost/abuse/budget facts only by default, not detailed learning/raw payload capture.
+   - Serious failures for paid accounts are captured even outside the 20% sample.
    - Never store secrets, auth capsules, private account data, or full configs unless the agent contract explicitly redacts/minimizes them.
    - Purpose: debugging and training/evaluation material.
 
@@ -255,11 +261,25 @@ This means "log every execution" really means:
 - log only selected raw payloads for learning
 - curate a tiny set for actual prompt/model improvement
 
+Useful learning facts must describe what happened, not vague aggregate praise.
+
+For Builder copilot, a statement like "FAQ kept 88% of edits" is not enough by itself. The useful facts are:
+
+- what the user asked for
+- which controls or groups the agent touched
+- which paths changed
+- whether the edit applied, was rejected, was undone, or produced invalid output
+- why invalid output failed validation, when known
+
+San Francisco should store those compact facts. It should not infer widget meaning from path prefixes like `stage.*` or `pod.*`; the agent result/caller must emit the compact metadata, and telemetry stores it.
+
 ### Required Future Execution Slices
 
 - Fix `/v1/outcome` to accept one simple signed outcome payload.
 - Add contract tests for interaction event + outcome attach.
 - Define one first learning metric for `cs.widget.copilot.v1`.
+- Replace legacy `ux_keep`/`ux_undo` names with `edit_applied`/`edit_undone`, and add `edit_rejected` plus invalid/clarification events.
+- Delete telemetry path-scope guessing such as `inferScopeFromPath`; use explicit result metadata instead.
 - Add a small offline report script before any automatic learning system.
 - Replace one-object-per-event raw R2 writes with a bounded retention/chunking plan before high-volume launch.
 
@@ -601,6 +621,20 @@ Each child PRD owns its own scope, deletion targets, blast radius, and verificat
 - `085D__PRD__San_Francisco_Internal_Agentic_Workforce_Boundary.md`
 - `085E__PRD__San_Francisco_Strictness_And_Toxic_Flow_Removal.md`
 
+### Track A Execution State
+
+`085A__PRD__San_Francisco_Learning_And_Outcome_Loop.md` was executed on 2026-05-05 for the first Builder copilot learning loop.
+
+Surviving state:
+
+- `/v1/outcome` accepts one direct signed payload.
+- Outcome attach no longer uses the `sf.command` envelope.
+- Detailed San Francisco learning is paid-only with deterministic 20% sampling for normal successful Builder copilot executions.
+- Serious paid failures/invalid outputs are always captured.
+- Free users keep only minimal operational metering/budget/abuse facts by default.
+- Raw R2 learning capture is bounded and sanitized under `learning/...`; normal executions are not dumped as one full raw object forever.
+- Telemetry stores explicit touched metadata emitted by the agent/caller and does not infer widget semantics from path prefixes.
+
 ### Recommended Execution Order
 
 1. **085E - Strictness and toxic flow removal**
@@ -649,6 +683,9 @@ Fill this before execution.
 
 - First learning loop: default recommendation is Builder copilot quality.
 - Outcome events that matter: default recommendation is `edit_applied`, `edit_rejected`, `edit_undone`, `clarification_needed`, `invalid_output`.
+- Detailed learning capture: paid accounts only, deterministic 20% normal-success sample; serious paid failures always captured; free accounts minimal metering only by default.
+- Raw payload policy: not one R2 object for every execution forever; bounded samples/failures only.
+- Widget metadata policy: agent/caller emits compact touched-path/control/group metadata; San Francisco does not parse widget semantics from path strings.
 - Human review required before prompt/model promotion:
 - Storage/index owner:
 

@@ -45,11 +45,29 @@ export type ExecuteResponse = {
 };
 
 export type CopilotOutcomeEvent =
-  | 'upgrade_clicked'
-  | 'upgrade_completed'
   | 'cta_clicked'
-  | 'ux_keep'
-  | 'ux_undo';
+  | 'edit_applied'
+  | 'edit_rejected'
+  | 'edit_undone'
+  | 'clarification_needed'
+  | 'invalid_output';
+
+export type CopilotLearningMetadata = {
+  intent?: string;
+  touchedPaths?: string[];
+  touchedControls?: Array<{
+    path: string;
+    label?: string;
+    groupId?: string;
+    groupLabel?: string;
+  }>;
+  touchedScopes?: string[];
+  touchedGroups?: Array<{ key: string; label: string }>;
+  opsCount?: number;
+  uniquePathsTouched?: number;
+  validationResult?: 'valid' | 'invalid' | 'not_applicable';
+  invalidReason?: string;
+};
 
 export type OutcomeAttachRequest = {
   requestId: string;
@@ -58,11 +76,10 @@ export type OutcomeAttachRequest = {
   occurredAtMs: number;
   timeToDecisionMs?: number;
   accountIdHash?: string;
+  metadata?: CopilotLearningMetadata;
 };
 
-export type SanfranciscoCommandName =
-  | 'personalization.onboarding.enqueue'
-  | 'ai.outcome.attach';
+export type SanfranciscoCommandName = 'personalization.onboarding.enqueue';
 
 export type SanfranciscoCommandMessage = {
   v: 1;

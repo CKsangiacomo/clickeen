@@ -1,6 +1,8 @@
 # PRD 085A - San Francisco Learning And Outcome Loop
 
-STATUS: PRE-EXECUTION DISCUSSION
+STATUS: EXECUTED
+
+Executed: 2026-05-05
 
 Parent: `085__PRD__San_Francisco_Agentic_Platform_Product_Strategy.md`
 
@@ -80,6 +82,12 @@ The product path should be:
 
 Replace the current outcome mismatch with one simple signed outcome payload.
 
+The live bug is precise:
+
+- Roma sends `{ command: 'ai.outcome.attach', payload }`.
+- San Francisco currently requires `{ v: 1, kind: 'sf.command', command, payload }`.
+- The missing `v` and `kind` fields make outcome attach fail before learning data is written.
+
 The payload must include:
 
 - `requestId`
@@ -93,6 +101,13 @@ The payload must include:
 No generic command envelope should survive unless there is a real command bus with multiple shared behaviors.
 
 The current `/v1/outcome` mismatch is a confirmed live bug, not a hypothetical risk. Execution must not proceed until Roma and San Francisco agree on one direct outcome payload shape.
+
+Execution target:
+
+- `/v1/outcome` accepts the direct signed outcome payload.
+- Roma sends that direct payload and signs exactly that body.
+- Outcome attach no longer depends on `SanfranciscoCommandMessage` or `sf.command`.
+- Any unrelated personalization/onboarding command cleanup stays in its owning PRD unless that path is deleted in the same execution slice.
 
 ### 4.2 Metering
 
@@ -124,7 +139,13 @@ Metering must not include:
 
 ### 4.3 Outcome Facts
 
-Meaningful outcomes should be small and durable.
+Meaningful outcomes should be small and durable for the eligible learning cohort.
+
+Default learning cohort:
+
+- paid accounts only
+- free accounts get operational metering/budget/abuse counters only by default
+- free-account conversion analytics, if needed, belongs in the product analytics path, not detailed San Francisco learning capture
 
 Examples:
 
@@ -151,19 +172,56 @@ Initial outcome names should be boring and concrete:
 - `clarification_needed`
 - `invalid_output`
 
+Replace the legacy names instead of carrying both forever:
+
+- `ux_keep` becomes `edit_applied`
+- `ux_undo` becomes `edit_undone`
+
 Do not add broad analytics vocabulary until these are working end to end.
 
-### 4.4 Raw Learning Payloads
+### 4.4 Useful Learning Metadata
+
+Learning facts must explain what happened at edit level.
+
+Do not rely on vague aggregates such as "FAQ kept 88% of edits." That number is only useful if the stored fact also says what the user asked for and what the agent changed.
+
+For Builder copilot, the compact fact should include:
+
+- intent or requested change class
+- touched control paths
+- touched control/group names when available
+- touched scopes emitted by the agent/caller
+- op count
+- validation result
+- invalid-output reason when available
+- final outcome event
+
+San Francisco telemetry must not infer widget semantics from path strings. Delete path-prefix guessing such as `inferScopeFromPath`; scope/group metadata belongs in the agent result or caller payload, and telemetry stores it as a fact.
+
+### 4.5 Detailed Learning Sampling
+
+Detailed learning is not captured for every account.
+
+Default policy:
+
+- Free accounts: minimal metering only by default.
+- Paid accounts: deterministic 20% sample for normal successful AI copilot executions.
+- Paid serious failures: always capture detailed learning data, even outside the sample.
+- All accounts: retain minimal cost, budget, abuse, and reliability counters needed to run the SaaS.
+
+The sampling decision must be deterministic by stable account/request hash, so reports are reproducible and one account does not randomly flap between cohorts.
+
+### 4.6 Raw Learning Payloads
 
 Raw prompt/response payloads are not the default durable log.
 
 Keep raw payloads only for:
 
-- invalid model output
-- execution failure
-- negative outcomes
-- high-signal outcomes
-- bounded samples
+- serious paid invalid model output
+- serious paid execution failure
+- paid negative outcomes
+- paid high-signal outcomes
+- bounded paid samples
 - explicit debug sessions
 
 Raw samples need:
@@ -173,7 +231,9 @@ Raw samples need:
 - bounded R2 footprint
 - partitioned/chunked storage before scale
 
-### 4.5 Golden Examples
+Current code writes one full raw R2 object for every `/v1/execute` event. That is acceptable only as pre-GA/dev behavior. Execution must change normal successful calls to metering-only unless selected by the paid sampling/failure policy.
+
+### 4.7 Golden Examples
 
 Golden examples are small, reviewed, trusted artifacts.
 
@@ -196,6 +256,9 @@ Do not build a golden-example promotion workflow before the outcome contract is 
 - Broken outcome envelope assumptions.
 - Generic command-bus wrapper if it only supports unrelated one-off commands.
 - One-R2-object-per-execution as the long-term raw-log strategy.
+- Full raw R2 writes for normal successful calls outside the paid sampling policy.
+- `inferScopeFromPath` or any telemetry logic that guesses widget meaning from path prefixes.
+- Legacy `ux_keep`/`ux_undo` names once canonical `edit_applied`/`edit_undone` events are wired.
 - Any path where outcome ingestion cannot identify subject, agent, request, and auth.
 - Any learning path that silently mutates prompts, model choice, or runtime policy.
 
@@ -210,6 +273,7 @@ Likely code areas:
 - `sanfrancisco/src/personalization-jobs.ts`
 - `packages/ck-contracts/src/ai.ts`
 - Roma copilot outcome caller code
+- Bob copilot outcome event emitter code
 - D1 telemetry migrations if schema changes
 - R2 log writer logic
 
@@ -231,7 +295,7 @@ The best-practice shape is:
 
 - tiny metering for every execution
 - small outcomes for product learning
-- bounded raw payloads for debug/eval
+- paid-only sampled raw payloads for debug/eval, plus serious paid failures
 - curated examples for release gates
 
 This supports billing, abuse detection, reliability, and model improvement without making R2 a giant unbounded dump.
@@ -256,16 +320,20 @@ Before execution:
 - Decide outcome event names for that loop. Default recommendation: `edit_applied`, `edit_rejected`, `edit_undone`, `clarification_needed`, `invalid_output`.
 - Decide raw payload retention window.
 - Decide D1 index shape.
-- Decide whether command envelope is deleted.
+- Decide whether the unrelated personalization/onboarding command path is deleted in this slice or later. Outcome attach must not keep the command envelope either way.
 
 Execution is green only when:
 
 - outcome attach has one tested contract
 - execution and outcome share `requestId`
-- raw payload writes are bounded or explicitly pre-GA only
+- canonical outcome names are wired end to end
+- detailed learning is paid-only sampled at 20% for normal successes
+- serious paid failures are captured outside the sample
+- raw payload writes are bounded
+- telemetry no longer infers widget scopes from path prefixes
 - no learning path mutates prompt/model/policy automatically
 - typecheck passes
-- residue checks pass for deleted command/envelope names
+- residue checks pass for deleted outcome command/envelope and legacy outcome names
 
 ---
 
@@ -277,6 +345,43 @@ Required:
 - relevant `packages/ck-contracts` checks
 - outcome attach contract tests
 - interaction event ingestion tests
-- `rg` checks for deleted envelope names if removed
+- `rg` checks for deleted outcome envelope names and legacy outcome event names if removed
+- `rg` check that telemetry no longer uses path-prefix scope inference
 - git-based Cloudflare deploy after implementation
 - smoke test: one Builder copilot execution plus one outcome attach
+
+---
+
+## 11. Execution Closure - 2026-05-05
+
+Executed the first Builder copilot learning loop.
+
+What changed:
+
+- `/v1/outcome` now accepts the direct signed outcome payload. It no longer requires the `sf.command` envelope.
+- Roma signs and forwards the direct outcome body.
+- Outcome attach is no longer part of `SanfranciscoCommandMessage`; the remaining command envelope is limited to the unrelated personalization/onboarding path until its own PRD deletes or formalizes it.
+- Bob now emits canonical outcome events: `edit_applied`, `edit_undone`, and `cta_clicked`.
+- San Francisco accepts the canonical first-loop events: `edit_applied`, `edit_rejected`, `edit_undone`, `clarification_needed`, `invalid_output`, and `cta_clicked`.
+- Free accounts are excluded from detailed San Francisco learning capture by Roma.
+- Paid Builder copilot executions use deterministic 20% detailed-learning sampling for normal successful calls.
+- Serious paid failures/invalid outputs are captured outside the 20% sample.
+- The queue writes tiny D1 facts for every execution and bounded sanitized R2 samples only under `learning/...`.
+- Full raw R2 write-for-every-execution under `logs/...` was removed from the queue consumer.
+- Telemetry no longer infers widget scope from path prefixes. Builder copilot emits touched path/control/scope/group metadata, and telemetry stores it.
+- D1 schema has migration-owned columns for learning facts and outcome metadata.
+- San Francisco deploy now applies D1 migrations before deploying the worker.
+
+Verification performed:
+
+- `node scripts/verify/prd85a-learning-contract.mjs`
+- `./node_modules/.bin/tsc -p sanfrancisco/tsconfig.json --noEmit`
+- `./node_modules/.bin/tsc -p roma/tsconfig.json --noEmit`
+- `./node_modules/.bin/tsc -p bob/tsconfig.json --noEmit`
+- `cd sanfrancisco && ./node_modules/.bin/wrangler deploy --dry-run --outdir /tmp/clickeen-sanfrancisco-prd85a-dryrun`
+- `git diff --check` for touched files
+
+Remote D1/deploy note:
+
+- Local `wrangler d1 migrations list sanfrancisco_d1_dev --remote` is blocked on this machine by an inactive local Wrangler token.
+- The git deploy path now runs `wrangler d1 migrations apply sanfrancisco_d1_dev --remote` before `wrangler deploy`, using GitHub's configured Cloudflare token.

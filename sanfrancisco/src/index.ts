@@ -20,9 +20,11 @@ import {
   isSanfranciscoCommandMessage,
 } from './personalization-jobs';
 import {
+  buildLearningSample,
   indexCopilotEvent,
   isOutcomeAttachRequest,
   persistOutcomeAttach,
+  resolveLearningCaptureDecision,
   verifyOutcomeSignature,
 } from './telemetry';
 import type {
@@ -33,6 +35,7 @@ import type {
   InteractionEvent,
   OutcomeAttachRequest,
   SanfranciscoCommandMessage,
+  Usage,
 } from './types';
 
 function isExecuteRequest(value: unknown): value is ExecuteRequest {
@@ -57,6 +60,19 @@ const AGENT_EXECUTORS: Record<string, AgentExecutor> = {
   'sdr.copilot': executeSdrCopilot,
   'cs.widget.copilot.v1': executeCsWidgetCopilot,
 };
+
+function usageForExecutionFailure(grant: AIGrant, startedAtMs: number): Usage {
+  const provider = grant.ai?.selectedProvider ?? grant.ai?.defaultProvider ?? 'unknown';
+  const models = grant.ai?.models as Partial<Record<string, { defaultModel?: string }>> | undefined;
+  const model = grant.ai?.selectedModel ?? models?.[provider]?.defaultModel ?? 'unknown';
+  return {
+    provider,
+    model,
+    promptTokens: 0,
+    completionTokens: 0,
+    latencyMs: Math.max(0, Date.now() - startedAtMs),
+  };
+}
 
 const EXECUTABLE_AGENT_IDS = new Set(
   listAiAgents()
@@ -105,9 +121,7 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
     if (!executor) {
       throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${canonicalId}` });
     }
-    const executed = await executor({ grant, input: body.input }, env);
-
-    const event: InteractionEvent = {
+    const baseEvent: Omit<InteractionEvent, 'result' | 'usage'> = {
       v: 1,
       requestId,
       agentId: canonicalId,
@@ -119,17 +133,43 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
         taskClass: resolvedAgent.entry.taskClass,
       },
       input: body.input,
-      result: executed.result,
-      usage: executed.usage,
     };
 
-    if (env.SF_EVENTS) {
+    const sendEvent = (event: InteractionEvent) => {
+      if (!env.SF_EVENTS) return;
       ctx.waitUntil(
         env.SF_EVENTS.send(event).catch((err: unknown) => {
           console.error('[sanfrancisco] SF_EVENTS.send failed', err);
         }),
       );
+    };
+
+    let executed: { result: unknown; usage: Usage };
+    try {
+      executed = await executor({ grant, input: body.input }, env);
+    } catch (err) {
+      const message = err instanceof HttpError ? err.error?.message ?? err.message : err instanceof Error ? err.message : 'Unknown execution error';
+      sendEvent({
+        ...baseEvent,
+        result: {
+          message,
+          error: { message },
+          meta: {
+            outcome: 'execution_failure',
+            validationResult: 'invalid',
+            invalidReason: message,
+          },
+        },
+        usage: usageForExecutionFailure(grant, occurredAtMs),
+      });
+      throw err;
     }
+
+    sendEvent({
+      ...baseEvent,
+      result: executed.result,
+      usage: executed.usage,
+    });
 
     const response: ExecuteResponse = { requestId, agentId: canonicalId, result: executed.result, usage: executed.usage };
     return noStore(json(response));
@@ -147,21 +187,7 @@ async function handleOutcome(request: Request, env: Env): Promise<Response> {
     throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
   }
 
-  if (!isSanfranciscoCommandMessage(parsedBody)) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Expected sf.command envelope payload',
-    });
-  }
-  if (parsedBody.command !== 'ai.outcome.attach') {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: `Unsupported command "${parsedBody.command}" (expected "ai.outcome.attach")`,
-    });
-  }
-
-  const body = parsedBody.payload;
-  if (!isOutcomeAttachRequest(body)) {
+  if (!isOutcomeAttachRequest(parsedBody)) {
     throw new HttpError(400, {
       code: 'BAD_REQUEST',
       message: 'Invalid request',
@@ -169,7 +195,7 @@ async function handleOutcome(request: Request, env: Env): Promise<Response> {
     });
   }
 
-  await persistOutcomeAttach(env, body as OutcomeAttachRequest);
+  await persistOutcomeAttach(env, parsedBody as OutcomeAttachRequest);
   return noStore(json({ ok: true }));
 }
 
@@ -212,9 +238,17 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
         continue;
       }
       const e = body as InteractionEvent;
-      const key = `logs/${this.env.ENVIRONMENT ?? 'unknown'}/${e.agentId}/${today}/${e.requestId}.json`;
-      await this.env.SF_R2.put(key, JSON.stringify(e), { httpMetadata: { contentType: 'application/json' } });
       await indexCopilotEvent(this.env, e);
+      const decision = resolveLearningCaptureDecision(e);
+      if (decision.captureRaw) {
+        const key = `learning/${this.env.ENVIRONMENT ?? 'unknown'}/${e.agentId}/${today}/${e.requestId}.json`;
+        const sample = buildLearningSample(e, decision);
+        try {
+          await this.env.SF_R2.put(key, JSON.stringify(sample), { httpMetadata: { contentType: 'application/json' } });
+        } catch (err) {
+          console.error('[sanfrancisco] learning sample write failed', err);
+        }
+      }
     }
   }
 

@@ -57,6 +57,14 @@ type WidgetCopilotResult = {
     dictionaryHash?: string;
     language?: string;
     languageConfidence?: number;
+    touchedPaths?: string[];
+    touchedControls?: Array<{ path: string; label?: string; groupId?: string; groupLabel?: string }>;
+    touchedScopes?: string[];
+    touchedGroups?: Array<{ key: string; label: string }>;
+    opsCount?: number;
+    uniquePathsTouched?: number;
+    validationResult?: 'valid' | 'invalid' | 'not_applicable';
+    invalidReason?: string;
   };
 };
 
@@ -260,7 +268,7 @@ function buildMeta(
   intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
   outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
   role: WidgetCopilotRole,
-  extras?: Pick<NonNullable<WidgetCopilotResult['meta']>, 'language' | 'languageConfidence'>,
+  extras?: Partial<NonNullable<WidgetCopilotResult['meta']>>,
 ): NonNullable<WidgetCopilotResult['meta']> {
   return {
     intent,
@@ -271,6 +279,56 @@ function buildMeta(
     policyVersion: POLICY_VERSION_BY_ROLE[role],
     dictionaryHash: DICTIONARY_HASH,
     ...(extras ?? {}),
+  };
+}
+
+function summarizeOpsForLearning(args: {
+  ops: WidgetOp[] | undefined;
+  controls: ControlSummary[];
+  validationResult?: 'valid' | 'invalid' | 'not_applicable';
+  invalidReason?: string;
+}): Partial<NonNullable<WidgetCopilotResult['meta']>> {
+  const ops = args.ops && args.ops.length ? args.ops : [];
+  if (!ops.length) {
+    return {
+      opsCount: 0,
+      uniquePathsTouched: 0,
+      validationResult: args.validationResult ?? 'not_applicable',
+      ...(args.invalidReason ? { invalidReason: args.invalidReason } : {}),
+    };
+  }
+
+  const controlByPath = new Map(args.controls.map((control) => [control.path, control]));
+  const pathSet = new Set<string>();
+  const scopeSet = new Set<string>();
+  const groups = new Map<string, { key: string; label: string }>();
+  const controls = new Map<string, { path: string; label?: string; groupId?: string; groupLabel?: string }>();
+
+  for (const op of ops) {
+    pathSet.add(op.path);
+    scopeSet.add(inferScopeFromPath(op.path));
+    const control = controlByPath.get(op.path);
+    if (control) {
+      controls.set(op.path, {
+        path: op.path,
+        ...(control.label ? { label: control.label } : {}),
+        ...(control.groupId ? { groupId: control.groupId } : {}),
+        ...(control.groupLabel ? { groupLabel: control.groupLabel } : {}),
+      });
+      const group = groupForPath(op.path, args.controls);
+      if (group) groups.set(group.key, group);
+    }
+  }
+
+  return {
+    opsCount: ops.length,
+    uniquePathsTouched: pathSet.size,
+    touchedPaths: Array.from(pathSet),
+    touchedScopes: Array.from(scopeSet),
+    touchedControls: Array.from(controls.values()),
+    touchedGroups: Array.from(groups.values()),
+    validationResult: args.validationResult ?? 'valid',
+    ...(args.invalidReason ? { invalidReason: args.invalidReason } : {}),
   };
 }
 
@@ -757,6 +815,16 @@ export async function executeWidgetCopilotWithRuntime(
     outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
     extras?: Pick<NonNullable<WidgetCopilotResult['meta']>, 'language' | 'languageConfidence'>,
   ) => buildMeta(intent, outcome, runtime.role, extras);
+  const metaWithOps = (
+    intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
+    outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
+    ops: WidgetOp[] | undefined,
+    extras?: Partial<NonNullable<WidgetCopilotResult['meta']>>,
+  ) =>
+    buildMeta(intent, outcome, runtime.role, {
+      ...summarizeOpsForLearning({ ops, controls: input.controls, validationResult: ops && ops.length ? 'valid' : 'not_applicable' }),
+      ...(extras ?? {}),
+    });
   const languageInfo = resolveConversationLanguage(session, input.prompt);
   const conversationLanguage = languageInfo.language || 'en';
   if (!session.conversationLanguage || (session.conversationLanguage !== conversationLanguage && languageInfo.confidence >= 0.85)) {
@@ -798,7 +866,7 @@ export async function executeWidgetCopilotWithRuntime(
       ].slice(-10) as CopilotSession['turns'];
       await putSession(env, session, runtime.sessionKeyPrefix);
       return {
-        result: { message: msg, ops, meta: baseMeta('edit', 'ops_applied') },
+        result: { message: msg, ops, meta: metaWithOps('edit', 'ops_applied', ops) },
         usage: { provider: 'local', model: 'policy_confirm_all', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
       };
     }
@@ -817,7 +885,7 @@ export async function executeWidgetCopilotWithRuntime(
         ].slice(-10) as CopilotSession['turns'];
         await putSession(env, session, runtime.sessionKeyPrefix);
         return {
-          result: { message: msg, ops, meta: baseMeta('edit', 'ops_applied') },
+          result: { message: msg, ops, meta: metaWithOps('edit', 'ops_applied', ops) },
           usage: { provider: 'local', model: 'policy_scope_pick', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
         };
       }
@@ -837,7 +905,7 @@ export async function executeWidgetCopilotWithRuntime(
         ].slice(-10) as CopilotSession['turns'];
         await putSession(env, session, runtime.sessionKeyPrefix);
         return {
-          result: { message: msg, ops, meta: baseMeta('edit', 'ops_applied') },
+          result: { message: msg, ops, meta: metaWithOps('edit', 'ops_applied', ops) },
           usage: { provider: 'local', model: 'policy_group_pick', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
         };
       }
@@ -999,7 +1067,7 @@ export async function executeWidgetCopilotWithRuntime(
   let finalMessage = message;
   let finalOps = ops && ops.length ? ops : undefined;
   let finalCta: WidgetCopilotResult['cta'] | undefined = cta;
-  let finalMeta: WidgetCopilotResult['meta'] = baseMeta(finalOps ? 'edit' : 'clarify', finalOps ? 'ops_applied' : 'no_ops');
+  let finalMeta: WidgetCopilotResult['meta'] = metaWithOps(finalOps ? 'edit' : 'clarify', finalOps ? 'ops_applied' : 'no_ops', finalOps);
   const finalizedCs = finalizeCsOps({
     prompt: input.prompt,
     forbidInternalControlDumpPromptLine: runtime.forbidInternalControlDumpPromptLine,
@@ -1009,12 +1077,13 @@ export async function executeWidgetCopilotWithRuntime(
   finalMessage = finalizedCs.message;
   finalOps = finalizedCs.ops;
   if (finalizedCs.overrideToClarify) {
-    finalMeta = baseMeta('clarify', 'no_ops');
+    finalMeta = metaWithOps('clarify', 'no_ops', undefined);
   }
 
   if (finalOps && finalOps.length) {
     const validated = validateOpsAgainstControls({ ops: finalOps, controls: input.controls });
     if (!validated.ok) {
+      const invalidOps = finalOps;
       const details = validated.issues
         .slice(0, 3)
         .map((i) => `- ${i.path}: ${i.message}`)
@@ -1025,21 +1094,26 @@ export async function executeWidgetCopilotWithRuntime(
         (details ? `\n\nDetails:\n${details}` : '');
       finalOps = undefined;
       finalCta = undefined;
-      finalMeta = baseMeta('clarify', 'invalid_ops');
+      finalMeta = metaWithOps('clarify', 'invalid_ops', invalidOps, {
+        validationResult: 'invalid',
+        invalidReason: details || 'Ops did not match editable controls',
+      });
       session.pendingPolicy = undefined;
     } else {
       const policy = evaluateLightEditsPolicy({ ops: finalOps, controls: input.controls });
       if (!policy.ok) {
         finalMessage = policy.message;
+        finalMeta = metaWithOps('clarify', 'no_ops', finalOps);
         finalOps = undefined;
         finalCta = undefined;
-        finalMeta = baseMeta('clarify', 'no_ops');
         session.pendingPolicy = policy.pendingPolicy;
       } else {
+        finalMeta = metaWithOps('edit', 'ops_applied', finalOps);
         session.pendingPolicy = undefined;
       }
     }
   } else {
+    finalMeta = metaWithOps('clarify', finalMeta?.outcome ?? 'no_ops', undefined);
     session.pendingPolicy = undefined;
   }
 

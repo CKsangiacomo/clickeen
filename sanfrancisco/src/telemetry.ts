@@ -1,14 +1,17 @@
 import { HttpError, isRecord } from './http';
 import { asTrimmedString } from './internalAuth';
-import type { Env, InteractionEvent, OutcomeAttachRequest } from './types';
+import type { CopilotLearningMetadata, Env, InteractionEvent, OutcomeAttachRequest } from './types';
 
 const OUTCOME_EVENTS = new Set([
-  'upgrade_clicked',
-  'upgrade_completed',
   'cta_clicked',
-  'ux_keep',
-  'ux_undo',
+  'edit_applied',
+  'edit_rejected',
+  'edit_undone',
+  'clarification_needed',
+  'invalid_output',
 ]);
+
+const DETAILED_LEARNING_SAMPLE_PERCENT = 20;
 
 function toIsoDay(ms: number): string {
   try {
@@ -23,12 +26,6 @@ function promptHasUrl(input: unknown): boolean {
   const prompt = asTrimmedString(input.prompt);
   if (!prompt) return false;
   return /\bhttps?:\/\/[^\s<>"')]+/i.test(prompt) || /\b([a-z0-9-]+\.)+[a-z]{2,}(\/[^\s<>"')]+)?\b/i.test(prompt);
-}
-
-function inferScopeFromPath(controlPath: string): 'stage' | 'pod' | 'content' {
-  if (controlPath.startsWith('stage.')) return 'stage';
-  if (controlPath.startsWith('pod.')) return 'pod';
-  return 'content';
 }
 
 export function isOutcomeAttachRequest(value: unknown): value is OutcomeAttachRequest {
@@ -50,7 +47,59 @@ export function isOutcomeAttachRequest(value: unknown): value is OutcomeAttachRe
   }
   if (accountIdHash !== undefined && (typeof accountIdHash !== 'string' || !accountIdHash.trim())) return false;
 
+  const metadata = (value as any).metadata;
+  if (metadata !== undefined && !isCopilotLearningMetadata(metadata)) return false;
+
   return true;
+}
+
+function isCopilotLearningMetadata(value: unknown): value is CopilotLearningMetadata {
+  if (!isRecord(value)) return false;
+  if ((value as any).intent !== undefined && typeof (value as any).intent !== 'string') return false;
+  if ((value as any).invalidReason !== undefined && typeof (value as any).invalidReason !== 'string') return false;
+  if ((value as any).validationResult !== undefined) {
+    const validationResult = (value as any).validationResult;
+    if (validationResult !== 'valid' && validationResult !== 'invalid' && validationResult !== 'not_applicable') return false;
+  }
+  if ((value as any).opsCount !== undefined && !isFiniteNonNegativeNumber((value as any).opsCount)) return false;
+  if ((value as any).uniquePathsTouched !== undefined && !isFiniteNonNegativeNumber((value as any).uniquePathsTouched)) return false;
+  if ((value as any).touchedPaths !== undefined && !isStringArray((value as any).touchedPaths)) return false;
+  if ((value as any).touchedScopes !== undefined && !isStringArray((value as any).touchedScopes)) return false;
+  if ((value as any).touchedControls !== undefined && !isTouchedControls((value as any).touchedControls)) return false;
+  if ((value as any).touchedGroups !== undefined && !isTouchedGroups((value as any).touchedGroups)) return false;
+  return true;
+}
+
+function isFiniteNonNegativeNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+function isTouchedControls(value: unknown): value is NonNullable<CopilotLearningMetadata['touchedControls']> {
+  return (
+    Array.isArray(value) &&
+    value.every((entry) => {
+      if (!isRecord(entry)) return false;
+      if (typeof entry.path !== 'string' || !entry.path.trim()) return false;
+      if (entry.label !== undefined && typeof entry.label !== 'string') return false;
+      if (entry.groupId !== undefined && typeof entry.groupId !== 'string') return false;
+      if (entry.groupLabel !== undefined && typeof entry.groupLabel !== 'string') return false;
+      return true;
+    })
+  );
+}
+
+function isTouchedGroups(value: unknown): value is NonNullable<CopilotLearningMetadata['touchedGroups']> {
+  return (
+    Array.isArray(value) &&
+    value.every((entry) => {
+      if (!isRecord(entry)) return false;
+      return typeof entry.key === 'string' && Boolean(entry.key.trim()) && typeof entry.label === 'string' && Boolean(entry.label.trim());
+    })
+  );
 }
 
 function base64UrlEncodeBytes(bytes: Uint8Array): string {
@@ -90,6 +139,123 @@ export async function verifyOutcomeSignature(args: { request: Request; env: Env;
   }
 }
 
+function fnv1aHash(input: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function stableHashHex(input: string): string {
+  return fnv1aHash(input).toString(16).padStart(8, '0');
+}
+
+function deterministicPercent(input: string): number {
+  return fnv1aHash(input) % 100;
+}
+
+function resolveSubjectHash(e: InteractionEvent): string | null {
+  if (e.subject.kind === 'user') return `acct_${stableHashHex(e.subject.accountId)}_user_${stableHashHex(e.subject.userId)}`;
+  if (e.subject.kind === 'service') return `svc_${stableHashHex(e.subject.serviceId)}`;
+  return null;
+}
+
+function getResultMeta(e: InteractionEvent): Record<string, unknown> | null {
+  if (!isRecord(e.result)) return null;
+  return isRecord((e.result as any).meta) ? ((e.result as any).meta as Record<string, unknown>) : null;
+}
+
+function readJsonStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((entry): entry is string => typeof entry === 'string' && Boolean(entry.trim())).map((entry) => entry.trim());
+}
+
+function readTouchedControls(value: unknown): NonNullable<CopilotLearningMetadata['touchedControls']> {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(isRecord)
+    .map((entry) => ({
+      path: asTrimmedString((entry as any).path) ?? '',
+      ...(asTrimmedString((entry as any).label) ? { label: asTrimmedString((entry as any).label) as string } : {}),
+      ...(asTrimmedString((entry as any).groupId) ? { groupId: asTrimmedString((entry as any).groupId) as string } : {}),
+      ...(asTrimmedString((entry as any).groupLabel) ? { groupLabel: asTrimmedString((entry as any).groupLabel) as string } : {}),
+    }))
+    .filter((entry) => Boolean(entry.path));
+}
+
+function hasPaidLearningEntitlement(e: InteractionEvent): boolean {
+  if (e.agentId !== 'cs.widget.copilot.v1') return false;
+  if (e.subject.kind !== 'user') return false;
+  const profile = asTrimmedString(e.ai?.profile) ?? '';
+  return Boolean(profile && profile !== 'free_low');
+}
+
+function isSeriousLearningFailure(e: InteractionEvent): boolean {
+  const meta = getResultMeta(e);
+  const outcome = meta ? asTrimmedString((meta as any).outcome) : null;
+  if (outcome === 'invalid_ops' || outcome === 'execution_failure') return true;
+  if (meta && asTrimmedString((meta as any).invalidReason)) return true;
+  if (isRecord(e.result) && isRecord((e.result as any).error)) return true;
+  return false;
+}
+
+export type LearningCaptureDecision =
+  | { captureRaw: true; reason: 'paid_failure' | 'paid_sample' }
+  | { captureRaw: false; reason: 'free_or_ineligible' | 'not_sampled' };
+
+export function resolveLearningCaptureDecision(e: InteractionEvent): LearningCaptureDecision {
+  if (!hasPaidLearningEntitlement(e)) return { captureRaw: false, reason: 'free_or_ineligible' };
+  if (isSeriousLearningFailure(e)) return { captureRaw: true, reason: 'paid_failure' };
+  const seed = `${e.subject.kind}:${resolveSubjectHash(e) ?? 'unknown'}:${e.agentId}:${e.requestId}`;
+  if (deterministicPercent(seed) < DETAILED_LEARNING_SAMPLE_PERCENT) return { captureRaw: true, reason: 'paid_sample' };
+  return { captureRaw: false, reason: 'not_sampled' };
+}
+
+function sanitizeInputForLearning(input: unknown): Record<string, unknown> | null {
+  if (!isRecord(input)) return null;
+  const prompt = asTrimmedString((input as any).prompt);
+  const widgetType = asTrimmedString((input as any).widgetType);
+  const sessionId = asTrimmedString((input as any).sessionId);
+  const controls = Array.isArray((input as any).controls)
+    ? (input as any).controls
+        .filter(isRecord)
+        .map((control: Record<string, unknown>) => ({
+          path: asTrimmedString(control.path) ?? '',
+          ...(asTrimmedString(control.label) ? { label: asTrimmedString(control.label) as string } : {}),
+          ...(asTrimmedString(control.groupId) ? { groupId: asTrimmedString(control.groupId) as string } : {}),
+          ...(asTrimmedString(control.groupLabel) ? { groupLabel: asTrimmedString(control.groupLabel) as string } : {}),
+          ...(asTrimmedString(control.kind) ? { kind: asTrimmedString(control.kind) as string } : {}),
+        }))
+        .filter((control: { path: string }) => Boolean(control.path))
+    : [];
+
+  return {
+    ...(prompt ? { prompt } : {}),
+    ...(widgetType ? { widgetType } : {}),
+    ...(sessionId ? { sessionId } : {}),
+    controlCount: controls.length,
+    controls,
+  };
+}
+
+export function buildLearningSample(e: InteractionEvent, decision: Extract<LearningCaptureDecision, { captureRaw: true }>): Record<string, unknown> {
+  return {
+    v: 1,
+    captureReason: decision.reason,
+    requestId: e.requestId,
+    agentId: e.agentId,
+    occurredAtMs: e.occurredAtMs,
+    subjectHash: resolveSubjectHash(e),
+    trace: e.trace ?? null,
+    ai: e.ai ?? null,
+    input: sanitizeInputForLearning(e.input),
+    result: e.result,
+    usage: e.usage,
+  };
+}
+
 export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<void> {
   const runtimeEnv = asTrimmedString(env.ENVIRONMENT) ?? 'unknown';
   const envStage = isRecord(e.trace) ? asTrimmedString((e.trace as any).envStage) : null;
@@ -120,6 +286,10 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
   let opsCount: number | null = null;
   let uniquePathsTouched: number | null = null;
   let scopesTouched: string | null = null;
+  let touchedPaths: string | null = null;
+  let touchedControls: string | null = null;
+  let invalidReason: string | null = null;
+  let validationResult: string | null = null;
 
   if (isRecord(e.result)) {
     const meta = isRecord((e.result as any).meta) ? ((e.result as any).meta as any) : null;
@@ -128,27 +298,31 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
     promptVersion = meta ? asTrimmedString(meta.promptVersion) : null;
     policyVersion = meta ? asTrimmedString(meta.policyVersion) : null;
     dictionaryHash = meta ? asTrimmedString(meta.dictionaryHash) : null;
+    invalidReason = meta ? asTrimmedString(meta.invalidReason) : null;
+    validationResult = meta ? asTrimmedString(meta.validationResult) : null;
 
     const cta = isRecord((e.result as any).cta) ? ((e.result as any).cta as any) : null;
     ctaAction = cta ? asTrimmedString(cta.action) : null;
 
+    const metaTouchedPaths = meta ? readJsonStringArray(meta.touchedPaths) : [];
+    const metaTouchedScopes = meta ? readJsonStringArray(meta.touchedScopes) : [];
+    const metaTouchedControls = meta ? readTouchedControls(meta.touchedControls) : [];
+    const metaOpsCount = meta && typeof meta.opsCount === 'number' && Number.isFinite(meta.opsCount) ? meta.opsCount : null;
+    const metaUniquePathsTouched =
+      meta && typeof meta.uniquePathsTouched === 'number' && Number.isFinite(meta.uniquePathsTouched) ? meta.uniquePathsTouched : null;
+
     const opsRaw = (e.result as any).ops;
-    if (Array.isArray(opsRaw)) {
-      const paths = new Set<string>();
-      const scopes = new Set<string>();
-      let count = 0;
-      for (const op of opsRaw) {
-        if (!isRecord(op)) continue;
-        const path = asTrimmedString((op as any).path);
-        if (!path) continue;
-        count += 1;
-        paths.add(path);
-        scopes.add(inferScopeFromPath(path));
-      }
-      opsCount = count;
-      uniquePathsTouched = paths.size;
-      scopesTouched = JSON.stringify(Array.from(scopes));
-      if (!outcome) outcome = count > 0 ? 'ops_applied' : 'no_ops';
+    if (metaOpsCount != null || metaUniquePathsTouched != null || metaTouchedPaths.length > 0 || metaTouchedScopes.length > 0 || metaTouchedControls.length > 0) {
+      opsCount = metaOpsCount ?? (Array.isArray(opsRaw) ? opsRaw.length : null);
+      uniquePathsTouched = metaUniquePathsTouched ?? metaTouchedPaths.length;
+      touchedPaths = metaTouchedPaths.length ? JSON.stringify(metaTouchedPaths) : null;
+      scopesTouched = metaTouchedScopes.length ? JSON.stringify(metaTouchedScopes) : null;
+      touchedControls = metaTouchedControls.length ? JSON.stringify(metaTouchedControls) : null;
+      if (!outcome) outcome = (opsCount ?? 0) > 0 ? 'ops_applied' : 'no_ops';
+    } else if (Array.isArray(opsRaw)) {
+      opsCount = opsRaw.length;
+      uniquePathsTouched = null;
+      if (!outcome) outcome = opsRaw.length > 0 ? 'ops_applied' : 'no_ops';
     } else if (!outcome) {
       outcome = 'no_ops';
     }
@@ -157,14 +331,19 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
   const provider = asTrimmedString(e.usage?.provider) ?? null;
   const model = asTrimmedString(e.usage?.model) ?? null;
   const latencyMs = typeof e.usage?.latencyMs === 'number' && Number.isFinite(e.usage.latencyMs) ? e.usage.latencyMs : null;
+  const promptTokens = typeof e.usage?.promptTokens === 'number' && Number.isFinite(e.usage.promptTokens) ? e.usage.promptTokens : null;
+  const completionTokens = typeof e.usage?.completionTokens === 'number' && Number.isFinite(e.usage.completionTokens) ? e.usage.completionTokens : null;
+  const costUsd = typeof e.usage?.costUsd === 'number' && Number.isFinite(e.usage.costUsd) ? e.usage.costUsd : null;
   const aiProfile = asTrimmedString(e.ai?.profile) ?? null;
   const taskClass = asTrimmedString(e.ai?.taskClass) ?? null;
+  const subjectHash = resolveSubjectHash(e);
+  const learningCapture = resolveLearningCaptureDecision(e).reason;
 
   try {
     await env.SF_D1.prepare(
       `INSERT OR REPLACE INTO copilot_events_v1
-      (requestId, day, occurredAtMs, runtimeEnv, envStage, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptVersion, policyVersion, dictionaryHash, aiProfile, taskClass, provider, model, latencyMs)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (requestId, day, occurredAtMs, runtimeEnv, envStage, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, touchedPaths, touchedControls, invalidReason, validationResult, ctaAction, promptVersion, policyVersion, dictionaryHash, aiProfile, taskClass, provider, model, latencyMs, promptTokens, completionTokens, costUsd, subjectHash, learningCapture)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         e.requestId,
@@ -183,6 +362,10 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
         opsCount,
         uniquePathsTouched,
         scopesTouched,
+        touchedPaths,
+        touchedControls,
+        invalidReason,
+        validationResult,
         ctaAction,
         promptVersion,
         policyVersion,
@@ -192,6 +375,11 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
         provider,
         model,
         latencyMs,
+        promptTokens,
+        completionTokens,
+        costUsd,
+        subjectHash,
+        learningCapture,
       )
       .run();
   } catch (err) {
@@ -201,11 +389,12 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
 
 export async function persistOutcomeAttach(env: Env, body: OutcomeAttachRequest): Promise<void> {
   const day = toIsoDay(body.occurredAtMs);
+  const metadataJson = body.metadata ? JSON.stringify(body.metadata) : null;
   try {
     await env.SF_D1.prepare(
       `INSERT OR REPLACE INTO copilot_outcomes_v1
-      (requestId, event, day, occurredAtMs, sessionId, timeToDecisionMs, accountIdHash)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      (requestId, event, day, occurredAtMs, sessionId, timeToDecisionMs, accountIdHash, metadataJson)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         body.requestId,
@@ -215,6 +404,7 @@ export async function persistOutcomeAttach(env: Env, body: OutcomeAttachRequest)
         body.sessionId,
         body.timeToDecisionMs ?? null,
         body.accountIdHash ?? null,
+        metadataJson,
       )
       .run();
   } catch (err) {

@@ -77,6 +77,35 @@ function newId(): string {
   return crypto.randomUUID();
 }
 
+function buildOutcomeMetadata(ops: WidgetOp[] | null, controls: Array<{ path: string; label?: string; groupId?: string; groupLabel?: string }>) {
+  if (!ops || ops.length === 0) {
+    return {
+      opsCount: 0,
+      uniquePathsTouched: 0,
+      validationResult: 'not_applicable' as const,
+    };
+  }
+  const controlsByPath = new Map(controls.map((control) => [control.path, control]));
+  const paths = Array.from(new Set(ops.map((op) => op.path).filter(Boolean)));
+  return {
+    opsCount: ops.length,
+    uniquePathsTouched: paths.length,
+    touchedPaths: paths,
+    touchedControls: paths
+      .map((path) => {
+        const control = controlsByPath.get(path);
+        return {
+          path,
+          ...(control?.label ? { label: control.label } : {}),
+          ...(control?.groupId ? { groupId: control.groupId } : {}),
+          ...(control?.groupLabel ? { groupLabel: control.groupLabel } : {}),
+        };
+      })
+      .filter((entry) => Boolean(entry.path)),
+    validationResult: 'valid' as const,
+  };
+}
+
 function initialCopilotMessage(widgetType: string): string {
   const label = titleCase(widgetType) || 'widget';
   return `You’re editing a ${label} widget in your account. Ask me for a concrete content, layout, styling, or settings change and I’ll stage it for review.`;
@@ -142,10 +171,11 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   };
 
   const reportOutcome = async (args: {
-    event: 'ux_keep' | 'ux_undo' | 'cta_clicked';
+    event: 'edit_applied' | 'edit_undone' | 'cta_clicked';
     requestId: string;
     sessionId: string;
     timeToDecisionMs?: number;
+    metadata?: ReturnType<typeof buildOutcomeMetadata>;
   }) => {
     if (!args.requestId || !args.sessionId) return;
     try {
@@ -158,6 +188,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           event: args.event,
           occurredAtMs: Date.now(),
           ...(typeof args.timeToDecisionMs === 'number' ? { timeToDecisionMs: args.timeToDecisionMs } : {}),
+          ...(args.metadata ? { metadata: args.metadata } : {}),
         }),
       });
     } catch {
@@ -268,7 +299,13 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
             return;
           }
         }
-        void reportOutcome({ event: 'ux_keep', requestId: pendingRequestId, sessionId: copilotSessionId, timeToDecisionMs });
+        void reportOutcome({
+          event: 'edit_applied',
+          requestId: pendingRequestId,
+          sessionId: copilotSessionId,
+          timeToDecisionMs,
+          metadata: buildOutcomeMetadata(pendingOps, controlsForAi),
+        });
         clearPendingDecision();
         pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
         return;
@@ -276,7 +313,13 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       if (normalized === 'undo') {
         setDraft('');
         pushMessage({ role: 'user', text: prompt });
-        void reportOutcome({ event: 'ux_undo', requestId: pendingRequestId, sessionId: copilotSessionId, timeToDecisionMs });
+        void reportOutcome({
+          event: 'edit_undone',
+          requestId: pendingRequestId,
+          sessionId: copilotSessionId,
+          timeToDecisionMs,
+          metadata: buildOutcomeMetadata(pendingOpsRef.current, controlsForAi),
+        });
         clearPendingDecision();
         pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
         return;
@@ -480,10 +523,11 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
                       }
                     }
                     void reportOutcome({
-                      event: 'ux_keep',
+                      event: 'edit_applied',
                       requestId: m.requestId || '',
                       sessionId: copilotSessionId,
                       timeToDecisionMs: Math.max(0, Date.now() - m.ts),
+                      metadata: buildOutcomeMetadata(pendingOps, controlsForAi),
                     });
                     clearPendingDecision();
                     pushMessage({ role: 'assistant', text: 'Great — keeping it. What would you like to change next?' });
@@ -498,10 +542,11 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
                   type="button"
                   onClick={() => {
                     void reportOutcome({
-                      event: 'ux_undo',
+                      event: 'edit_undone',
                       requestId: m.requestId || '',
                       sessionId: copilotSessionId,
                       timeToDecisionMs: Math.max(0, Date.now() - m.ts),
+                      metadata: buildOutcomeMetadata(pendingOpsRef.current, controlsForAi),
                     });
                     clearPendingDecision();
                     pushMessage({ role: 'assistant', text: 'Ok — reverted. What should we try instead?' });
