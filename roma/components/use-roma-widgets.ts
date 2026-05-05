@@ -38,7 +38,18 @@ export type RomaWidgetsResponse = {
   instances: WidgetInstance[];
 };
 
+export type RomaWidgetsCacheEntry = {
+  data: RomaWidgetsResponse;
+  fetchedAt: number;
+};
+
+type RomaWidgetsFetchJson = <T = unknown>(url: string, init?: RequestInit & { timeoutMs?: number }) => Promise<T>;
+
 export const DEFAULT_INSTANCE_DISPLAY_NAME = 'Untitled widget';
+const ROMA_WIDGETS_CACHE_TTL_MS = 5 * 60 * 1000;
+const romaWidgetsCache = new Map<string, RomaWidgetsCacheEntry>();
+const romaWidgetsInflight = new Map<string, Promise<RomaWidgetsResponse>>();
+const romaWidgetsRequestSeq = new Map<string, number>();
 
 export function normalizeWidgetType(value: string | null | undefined): string {
   const normalized = String(value || '')
@@ -108,6 +119,76 @@ export function normalizeRomaWidgetsResponse(raw: unknown): RomaWidgetsResponse 
     widgetTypes: normalizeWidgetTypeList(record.widgetTypes),
     instances,
   };
+}
+
+export function readRomaWidgetsCache(accountId: string): RomaWidgetsCacheEntry | null {
+  const normalizedAccountId = String(accountId || '').trim();
+  if (!normalizedAccountId) return null;
+  return romaWidgetsCache.get(normalizedAccountId) ?? null;
+}
+
+export function isRomaWidgetsCacheFresh(entry: RomaWidgetsCacheEntry | null): boolean {
+  if (!entry) return false;
+  return Date.now() - entry.fetchedAt < ROMA_WIDGETS_CACHE_TTL_MS;
+}
+
+export function writeRomaWidgetsCache(data: RomaWidgetsResponse): RomaWidgetsCacheEntry {
+  const entry = {
+    data,
+    fetchedAt: Date.now(),
+  };
+  romaWidgetsCache.set(data.accountId, entry);
+  return entry;
+}
+
+export function updateRomaWidgetsCache(
+  accountId: string,
+  updater: (current: RomaWidgetsResponse) => RomaWidgetsResponse,
+): RomaWidgetsCacheEntry | null {
+  const current = readRomaWidgetsCache(accountId);
+  if (!current) return null;
+  return writeRomaWidgetsCache(updater(current.data));
+}
+
+export async function loadRomaWidgetsForAccount(args: {
+  accountId: string;
+  fetchJson: RomaWidgetsFetchJson;
+  force?: boolean;
+}): Promise<RomaWidgetsResponse> {
+  const accountId = String(args.accountId || '').trim();
+  if (!accountId) throw new Error('coreui.errors.auth.contextUnavailable');
+
+  const cached = readRomaWidgetsCache(accountId);
+  if (!args.force && cached && isRomaWidgetsCacheFresh(cached)) {
+    return cached.data;
+  }
+
+  const inFlightKey = accountId;
+  const existing = romaWidgetsInflight.get(inFlightKey);
+  if (!args.force && existing) return existing;
+
+  const requestSeq = (romaWidgetsRequestSeq.get(inFlightKey) ?? 0) + 1;
+  romaWidgetsRequestSeq.set(inFlightKey, requestSeq);
+  const request = args.fetchJson<unknown>('/api/account/widgets', { method: 'GET' }).then((payload) => {
+    const normalized = normalizeRomaWidgetsResponse(payload);
+    if (!normalized || normalized.accountId !== accountId) {
+      throw new Error('coreui.errors.payload.invalid');
+    }
+    if (romaWidgetsRequestSeq.get(inFlightKey) === requestSeq) {
+      writeRomaWidgetsCache(normalized);
+      return normalized;
+    }
+    return readRomaWidgetsCache(accountId)?.data ?? normalized;
+  });
+
+  romaWidgetsInflight.set(inFlightKey, request);
+  try {
+    return await request;
+  } finally {
+    if (romaWidgetsInflight.get(inFlightKey) === request) {
+      romaWidgetsInflight.delete(inFlightKey);
+    }
+  }
 }
 
 export function createUserInstancePublicId(widgetType: string): string {

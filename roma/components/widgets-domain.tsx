@@ -7,7 +7,17 @@ import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
 import { useRomaAccountContext } from './roma-account-context';
-import { buildBuilderRoute, DEFAULT_INSTANCE_DISPLAY_NAME, normalizeWidgetType, normalizeRomaWidgetsResponse, type WidgetInstance } from './use-roma-widgets';
+import {
+  buildBuilderRoute,
+  DEFAULT_INSTANCE_DISPLAY_NAME,
+  isRomaWidgetsCacheFresh,
+  loadRomaWidgetsForAccount,
+  normalizeWidgetType,
+  readRomaWidgetsCache,
+  updateRomaWidgetsCache,
+  type RomaWidgetsResponse,
+  type WidgetInstance,
+} from './use-roma-widgets';
 
 type CreateInstanceArgs = {
   widgetType: string;
@@ -21,49 +31,76 @@ export function WidgetsDomain() {
   const { accountContext } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const autoCreateStartedRef = useRef(false);
+  const accountId = accountContext.accountId;
+  const cachedWidgets = readRomaWidgetsCache(accountId);
 
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
-  const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>([]);
-  const [widgetTypes, setWidgetTypes] = useState<string[]>([]);
-  const [domainLoading, setDomainLoading] = useState(true);
+  const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
+  const [widgetTypes, setWidgetTypes] = useState<string[]>(() => cachedWidgets?.data.widgetTypes ?? []);
+  const [domainLoading, setDomainLoading] = useState(() => !cachedWidgets);
+  const [domainRefreshing, setDomainRefreshing] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
   const [renamingPublicId, setRenamingPublicId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
 
-  const accountId = accountContext.accountId;
   const searchIntent = useMemo(() => (searchParams.get('intent') || '').trim().toLowerCase(), [searchParams]);
   const searchWidgetType = useMemo(() => normalizeWidgetType(searchParams.get('widgetType')), [searchParams]);
   const selectedPublicId = useMemo(() => (searchParams.get('selected') || '').trim(), [searchParams]);
 
-  const refreshWidgets = useCallback(async () => {
-    setDomainLoading(true);
+  const applyWidgets = useCallback((widgets: RomaWidgetsResponse) => {
+    setWidgetInstances(widgets.instances);
+    setWidgetTypes(widgets.widgetTypes);
+  }, []);
+
+  const refreshWidgets = useCallback(async (args?: { force?: boolean }) => {
+    const force = args?.force === true;
+    const cached = readRomaWidgetsCache(accountId);
+
+    if (!force && cached) {
+      applyWidgets(cached.data);
+      setDomainLoading(false);
+      setDataError(null);
+      if (isRomaWidgetsCacheFresh(cached)) return;
+      setDomainRefreshing(true);
+    } else {
+      setDomainLoading(true);
+    }
     setDataError(null);
     try {
-      const payload = await accountApi.fetchJson<unknown>(`/api/account/widgets`, {
-        method: 'GET',
+      const normalized = await loadRomaWidgetsForAccount({
+        accountId,
+        fetchJson: accountApi.fetchJson,
+        force,
       });
-      const normalized = normalizeRomaWidgetsResponse(payload);
-      if (!normalized || normalized.accountId !== accountId) {
-        throw new Error('coreui.errors.payload.invalid');
-      }
-      setWidgetInstances(normalized.instances);
-      setWidgetTypes(normalized.widgetTypes);
+      applyWidgets(normalized);
       setDataError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      setWidgetInstances([]);
-      setWidgetTypes([]);
+      if (!cached) {
+        setWidgetInstances([]);
+        setWidgetTypes([]);
+      }
       setDataError(resolveAccountShellErrorCopy(message, 'Failed to load widgets. Please try again.'));
     } finally {
       setDomainLoading(false);
+      setDomainRefreshing(false);
     }
-  }, [accountApi, accountId]);
+  }, [accountApi.fetchJson, accountId, applyWidgets]);
 
   useEffect(() => {
+    const cached = readRomaWidgetsCache(accountId);
+    if (cached) {
+      applyWidgets(cached.data);
+      setDomainLoading(false);
+    } else {
+      setWidgetInstances([]);
+      setWidgetTypes([]);
+      setDomainLoading(true);
+    }
     void refreshWidgets();
-  }, [refreshWidgets]);
+  }, [accountId, applyWidgets, refreshWidgets]);
 
   const availableWidgetTypes = useMemo(() => {
     const values = new Set<string>();
@@ -137,7 +174,7 @@ export function WidgetsDomain() {
           throw new Error('coreui.errors.payload.invalid');
         }
         const createdType = normalizeWidgetType(payload && typeof payload.widgetType === 'string' ? payload.widgetType : normalizedWidgetType);
-        await refreshWidgets();
+        await refreshWidgets({ force: true });
         if (openBuilder) {
           router.push(
             buildBuilderRoute({
@@ -177,7 +214,7 @@ export function WidgetsDomain() {
         if (!duplicatedPublicId) {
           throw new Error('coreui.errors.payload.invalid');
         }
-        await refreshWidgets();
+        await refreshWidgets({ force: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setCreateError(resolveAccountShellErrorCopy(message, 'Duplicating the widget failed. Please try again.'));
@@ -198,7 +235,7 @@ export function WidgetsDomain() {
         await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instance/${encodeURIComponent(instance.publicId)}?subject=account`, {
           method: 'DELETE',
         });
-        await refreshWidgets();
+        await refreshWidgets({ force: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setCreateError(resolveAccountShellErrorCopy(message, 'Deleting the widget failed. Please try again.'));
@@ -222,7 +259,7 @@ export function WidgetsDomain() {
             method: 'POST',
           },
         );
-        await refreshWidgets();
+        await refreshWidgets({ force: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setCreateError(resolveAccountShellErrorCopy(message, 'Updating widget status failed. Please try again.'));
@@ -276,6 +313,10 @@ export function WidgetsDomain() {
         });
         const resolvedDisplayName = typeof payload.displayName === 'string' && payload.displayName.trim() ? payload.displayName.trim() : nextDisplayName;
         setWidgetInstances((prev) => prev.map((entry) => (entry.publicId === instance.publicId ? { ...entry, displayName: resolvedDisplayName } : entry)));
+        updateRomaWidgetsCache(accountId, (current) => ({
+          ...current,
+          instances: current.instances.map((entry) => (entry.publicId === instance.publicId ? { ...entry, displayName: resolvedDisplayName } : entry)),
+        }));
         cancelRename();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -318,7 +359,7 @@ export function WidgetsDomain() {
           {dataError ? (
             <div className="roma-inline-stack">
               <p className="body-m">{dataError}</p>
-              <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshWidgets()} disabled={domainLoading}>
+              <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshWidgets({ force: true })} disabled={domainLoading || domainRefreshing}>
                 <span className="diet-btn-txt__label body-m">Retry</span>
               </button>
             </div>

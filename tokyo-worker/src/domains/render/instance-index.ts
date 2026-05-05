@@ -5,7 +5,6 @@ import {
   accountInstanceListedIndexKey,
   accountInstanceRenderLivePointerKey,
   accountInstanceSavedConfigPackKey,
-  accountInstanceSavedPointerKey,
   accountInstancesRoot,
 } from './keys';
 import { normalizeLiveRenderPointer, normalizeSavedRenderPointer } from './normalize';
@@ -225,31 +224,6 @@ async function buildIndexDocument(env: Env, accountId: string): Promise<AccountI
   };
 }
 
-async function validateIndexDocument(env: Env, index: AccountInstanceIndexDocument): Promise<IndexFailure | null> {
-  for (const entry of index.entries) {
-    const pointerRaw = await loadJson(env, accountInstanceSavedPointerKey(entry.accountId, entry.publicId));
-    const pointer = normalizeSavedRenderPointer(pointerRaw);
-    if (!pointer || pointer.accountId !== entry.accountId || pointer.publicId !== entry.publicId) {
-      return {
-        ok: false,
-        kind: 'VALIDATION',
-        reasonKey: 'tokyo.errors.instance.indexPointerMissing',
-        detail: `${entry.accountId}:${entry.publicId}`,
-      };
-    }
-    const config = await loadJson(env, accountInstanceSavedConfigPackKey(entry.accountId, entry.publicId, pointer.configFp));
-    if (!config || typeof config !== 'object' || Array.isArray(config)) {
-      return {
-        ok: false,
-        kind: 'VALIDATION',
-        reasonKey: 'tokyo.errors.instance.indexConfigMissing',
-        detail: `${entry.accountId}:${entry.publicId}`,
-      };
-    }
-  }
-  return null;
-}
-
 export async function rebuildAccountInstanceIndexes(env: Env, accountIdRaw: string): Promise<AccountInstanceIndexDocument> {
   const accountId = normalizePublicId(accountIdRaw);
   if (!accountId || !isUuid(accountId)) throw new Error('tokyo.errors.render.invalid');
@@ -283,8 +257,6 @@ export async function readAccountInstanceIndex(args: {
   if (!raw) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.instance.indexMissing' };
   const index = normalizeIndexDocument(raw, accountId);
   if (!index) return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.instance.indexInvalid' };
-  const invalid = await validateIndexDocument(args.env, index);
-  if (invalid) return invalid;
   return { ok: true, value: index };
 }
 
@@ -297,7 +269,5 @@ export async function readListedInstanceIndex(args: {
   if (!raw) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.instance.indexMissing' };
   const index = normalizeIndexDocument(raw, accountId);
   if (!index) return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.instance.indexInvalid' };
-  const invalid = await validateIndexDocument(args.env, index);
-  if (invalid) return invalid;
   return { ok: true, value: index };
 }

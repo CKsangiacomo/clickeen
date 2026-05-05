@@ -27,12 +27,23 @@ export function RomaNav({ activeDomain, compact = false }: RomaNavProps) {
       ) : null}
       {ROMA_DOMAINS.map((domain) => {
         const isActive = domain.key === activeDomain;
+        if (isActive) {
+          return (
+            <span
+              key={domain.key}
+              aria-current="page"
+              className="roma-nav__link roma-nav__link--active"
+              title={domain.description}
+            >
+              <span className="roma-nav__label label-s">{domain.label}</span>
+            </span>
+          );
+        }
         return (
           <Link
             key={domain.key}
             href={domain.href}
-            aria-current={isActive ? 'page' : undefined}
-            className={isActive ? 'roma-nav__link roma-nav__link--active' : 'roma-nav__link'}
+            className="roma-nav__link"
             title={domain.description}
           >
             <span className="roma-nav__label label-s">{domain.label}</span>

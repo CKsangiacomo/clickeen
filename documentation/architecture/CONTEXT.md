@@ -100,6 +100,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - One saved configured widget owned by one account
 - Owns saved config, display metadata, asset refs, base locale, l10n state, overlay ops, generated packs, and publish/live state
 - Stored in Tokyo under the owning account. `accounts/{accountId}/instances/index.json` is the product inventory.
+- Tokyo instance indexes are prepared read models for product navigation. Hot list reads validate the index contract and must not perform full R2 integrity audits; save/rebuild/repair paths own deep pointer/config validation.
 - Projected in Michael only for joins, support, billing/account reporting, audit, and repair. `widget_instances` must not be read as Widgets inventory, editable config, display-name truth, publish-state truth, or starter availability truth.
 - Product-path account open resolves the saved authoring revision from Tokyo; instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
 - On the active account authoring path, user-facing instance identity (`widgetType`, `displayName`, `source`, `meta`) is Tokyo-owned. Michael `widget_instances.display_name` may still exist as storage residue during cutover, but Widgets/Builder product contracts must not read or write identity truth from it.
