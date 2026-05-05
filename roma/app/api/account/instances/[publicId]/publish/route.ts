@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   loadTokyoAccountInstanceDocument,
+  loadTokyoAccountInstanceIndex,
   loadTokyoAccountInstanceLiveStatus,
-  loadTokyoAccountInstanceServeStates,
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
@@ -12,7 +12,6 @@ import {
   TokyoAccountInstanceSyncError,
 } from '@roma/lib/account-instance-sync';
 import {
-  listAccountInstancePublicIds,
   loadAccountPublishContainment,
 } from '@roma/lib/michael';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
@@ -130,45 +129,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
         current.value.setCookies,
       );
     }
-    const accountInstancePublicIds = await listAccountInstancePublicIds(accountId, current.value.accessToken);
-    if (!accountInstancePublicIds.ok) {
-      const status =
-        accountInstancePublicIds.status === 401
-          ? 401
-          : accountInstancePublicIds.status === 403
-            ? 403
-            : 502;
-      const kind = status === 401 ? 'AUTH' : status === 403 ? 'DENY' : 'UPSTREAM_UNAVAILABLE';
-      return withSession(
-        request,
-        NextResponse.json(
-          {
-            error: {
-              kind,
-              reasonKey: accountInstancePublicIds.reasonKey,
-              detail: accountInstancePublicIds.detail,
-            },
-          },
-          { status },
-        ),
-        current.value.setCookies,
-      );
-    }
-
-    const publishedStates = await loadTokyoAccountInstanceServeStates({
+    const accountIndex = await loadTokyoAccountInstanceIndex({
       accountId,
-      publicIds: accountInstancePublicIds.publicIds,
       accountCapsule: current.value.authzToken,
     });
-    if (!publishedStates.ok) {
+    if (!accountIndex.ok) {
       return withSession(
         request,
-        NextResponse.json({ error: publishedStates.error }, { status: publishedStates.status }),
+        NextResponse.json({ error: accountIndex.error }, { status: accountIndex.status }),
         current.value.setCookies,
       );
     }
 
-    if (publishedStates.value.publishedCount >= publishedCap) {
+    if (accountIndex.value.publishedCount >= publishedCap) {
       return withSession(
         request,
         NextResponse.json(

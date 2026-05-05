@@ -1,5 +1,6 @@
 import type { Env } from '../../types';
 import { accountInstanceL10nLivePointerKey, accountInstanceL10nTextPackKey, accountInstanceRenderConfigPackKey, accountInstanceRenderLivePointerKey, accountInstanceRenderMetaLivePointerKey, accountInstanceRenderMetaPackKey, accountInstanceRoot, publicProjectionL10nLivePointerKey, publicProjectionL10nTextPackKey, publicProjectionRenderConfigPackKey, publicProjectionRenderLivePointerKey, publicProjectionRenderMetaLivePointerKey, publicProjectionRenderMetaPackKey, publicProjectionRoot } from './keys';
+import { rebuildAccountInstanceIndexes } from './instance-index';
 import { normalizeLiveRenderPointer, normalizeLocalePolicy, normalizeMetaPointer, normalizeTextPointer } from './normalize';
 import { deletePrefix, loadJson, putJson } from './storage';
 import type { EnforceLiveSurfaceJob, LiveRenderPointer, SyncLiveSurfaceJob } from './types';
@@ -70,6 +71,7 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
       deletePrefix(env, `${publicProjectionRoot(publicId)}/l10n/live/`),
       deletePrefix(env, `${publicProjectionRoot(publicId)}/meta/live/`),
     ]);
+    await rebuildAccountInstanceIndexes(env, accountId);
     return;
   }
 
@@ -121,6 +123,7 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
     putJson(env, accountLivePointerKey, next),
     putJson(env, publicLivePointerKey, next),
   ]);
+  await rebuildAccountInstanceIndexes(env, accountId);
 
   if (previousConfigFp && previousConfigFp !== configFp) {
     await env.TOKYO_R2.delete(publicProjectionRenderConfigPackKey(publicId, previousConfigFp));

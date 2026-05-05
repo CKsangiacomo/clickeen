@@ -1,6 +1,4 @@
-import { loadTokyoAccountInstanceDocument } from './account-instance-direct';
-import { listAccountInstancePublicIds } from './michael-instance-rows';
-import { michaelUnavailableResult } from './michael-shared';
+import { loadTokyoAccountInstanceIndex } from './account-instance-direct';
 
 type AccountBaseLocaleLockResult =
   | {
@@ -16,34 +14,29 @@ type AccountBaseLocaleLockResult =
 
 export async function loadAccountBaseLocaleLockState(args: {
   accountId: string;
-  berlinAccessToken: string;
   accountCapsule?: string | null;
 }): Promise<AccountBaseLocaleLockResult> {
   try {
-    const publicIds = await listAccountInstancePublicIds(args.accountId, args.berlinAccessToken);
-    if (!publicIds.ok) return publicIds;
-
-    for (const publicId of publicIds.publicIds) {
-      const saved = await loadTokyoAccountInstanceDocument({
-        accountId: args.accountId,
-        publicId,
-        accountCapsule: args.accountCapsule,
-      });
-      if (!saved.ok) {
-        return {
-          ok: false,
-          status: saved.status,
-          reasonKey: saved.error.reasonKey,
-          detail: saved.error.detail,
-        };
-      }
-      if (saved.value) {
-        return { ok: true, locked: true };
-      }
+    const index = await loadTokyoAccountInstanceIndex({
+      accountId: args.accountId,
+      accountCapsule: args.accountCapsule,
+    });
+    if (!index.ok) {
+      return {
+        ok: false,
+        status: index.status,
+        reasonKey: index.error.reasonKey,
+        detail: index.error.detail,
+      };
     }
 
-    return { ok: true, locked: false };
+    return { ok: true, locked: index.value.accountInstances.length > 0 };
   } catch (error) {
-    return michaelUnavailableResult(error);
+    return {
+      ok: false,
+      status: 502,
+      reasonKey: 'roma.errors.proxy.tokyo_unavailable',
+      detail: error instanceof Error ? error.message : String(error),
+    };
   }
 }

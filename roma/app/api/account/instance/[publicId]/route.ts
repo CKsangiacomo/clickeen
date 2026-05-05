@@ -3,7 +3,9 @@ import { classifyWidgetPublicId, isUuid } from '@clickeen/ck-contracts';
 import {
   deleteLiveSurfaceFromTokyo,
   deleteSavedConfigFromTokyo,
+  loadTokyoAccountInstanceDocument,
   loadTokyoAccountInstanceLiveStatus,
+  recordTokyoAccountInstanceProjectionGap,
   saveAccountInstanceDirect,
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
@@ -12,7 +14,7 @@ import {
   enqueueAccountInstanceSync,
   TokyoAccountInstanceSyncError,
 } from '@roma/lib/account-instance-sync';
-import { deleteAccountInstanceRow, getAccountInstanceCoreRow } from '@roma/lib/michael';
+import { deleteAccountInstanceProjectionRow } from '@roma/lib/michael';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -318,24 +320,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const existing = await getAccountInstanceCoreRow(accountId, publicId, current.value.accessToken);
-  if (!existing.ok) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: existing.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-            reasonKey: existing.reasonKey,
-            detail: existing.detail,
-          },
-        },
-        { status: existing.status === 401 ? 401 : 502 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (!existing.row) {
+  const existing = await loadTokyoAccountInstanceDocument({
+    accountId,
+    publicId,
+    accountCapsule: current.value.authzToken,
+  });
+  if (!existing.ok && existing.status === 404) {
     return withSession(
       request,
       NextResponse.json(
@@ -345,45 +335,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-
-  if (existing.row.accountId !== accountId) {
+  if (!existing.ok) {
     return withSession(
       request,
-      NextResponse.json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }),
-      current.value.setCookies,
-    );
-  }
-
-  const deleteResult = await deleteAccountInstanceRow({
-    accountId,
-    publicId,
-    berlinAccessToken: current.value.accessToken,
-  });
-  if (!deleteResult.ok) {
-    const kind =
-      deleteResult.status === 401
-        ? 'AUTH'
-        : deleteResult.status === 403
-          ? 'DENY'
-          : deleteResult.status === 422
-            ? 'VALIDATION'
-            : 'UPSTREAM_UNAVAILABLE';
-    const status =
-      deleteResult.status === 401 || deleteResult.status === 403 || deleteResult.status === 422
-        ? deleteResult.status
-        : 502;
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind,
-            reasonKey: deleteResult.reasonKey,
-            detail: deleteResult.detail,
-          },
-        },
-        { status },
-      ),
+      NextResponse.json({ error: existing.error }, { status: existing.status }),
       current.value.setCookies,
     );
   }
@@ -394,11 +349,63 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     accountCapsule: current.value.authzToken,
   });
   if (!tokyoCleanup.ok) {
-    console.error('[roma account instance current route] tokyo cleanup failed after Michael delete', {
+    console.error('[roma account instance current route] tokyo cleanup failed', {
       accountId,
       publicId,
       detail: tokyoCleanup.detail,
     });
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.db.writeFailed',
+            detail: tokyoCleanup.detail,
+          },
+        },
+        { status: 502 },
+      ),
+      current.value.setCookies,
+    );
+  }
+
+  const deleteResult = await deleteAccountInstanceProjectionRow({
+    accountId,
+    publicId,
+    berlinAccessToken: current.value.accessToken,
+  });
+  const projectionFollowup = deleteResult.ok
+    ? { ok: true as const }
+    : {
+        ok: false as const,
+        reasonKey: deleteResult.reasonKey,
+        detail: deleteResult.detail,
+        status: deleteResult.status,
+      };
+  if (!projectionFollowup.ok) {
+    console.error('[roma account instance current route] projection delete failed after Tokyo delete', {
+      accountId,
+      publicId,
+      reasonKey: projectionFollowup.reasonKey,
+      detail: projectionFollowup.detail,
+    });
+    const projectionGap = await recordTokyoAccountInstanceProjectionGap({
+      accountId,
+      publicId,
+      action: 'delete',
+      reasonKey: projectionFollowup.reasonKey,
+      detail: projectionFollowup.detail,
+      status: projectionFollowup.status,
+      accountCapsule: current.value.authzToken,
+    });
+    if (!projectionGap.ok) {
+      console.error('[roma account instance current route] projection gap recording failed', {
+        accountId,
+        publicId,
+        detail: projectionGap.error.detail ?? projectionGap.error.reasonKey,
+      });
+    }
   }
 
   return withSession(
@@ -407,7 +414,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       accountId,
       publicId,
       deleted: true,
-      tokyoCleanupApplied: tokyoCleanup.ok,
+      tokyoCleanupApplied: true,
+      projectionFollowup,
     }),
     current.value.setCookies,
   );

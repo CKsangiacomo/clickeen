@@ -2,6 +2,22 @@ export function accountInstanceRoot(accountId: string, publicId: string): string
   return `accounts/${accountId}/instances/${publicId}`;
 }
 
+export function accountInstancesRoot(accountId: string): string {
+  return `accounts/${accountId}/instances`;
+}
+
+export function accountInstanceIndexKey(accountId: string): string {
+  return `${accountInstancesRoot(accountId)}/index.json`;
+}
+
+export function accountInstanceListedIndexKey(accountId: string): string {
+  return `${accountInstancesRoot(accountId)}/listed-index.json`;
+}
+
+export function accountInstanceProjectionGapKey(accountId: string, gapId: string): string {
+  return `${accountInstancesRoot(accountId)}/projection-gaps/${gapId}.json`;
+}
+
 export function accountInstanceRenderLivePointerKey(accountId: string, publicId: string): string {
   return `${accountInstanceRoot(accountId, publicId)}/render/live/pointer.json`;
 }

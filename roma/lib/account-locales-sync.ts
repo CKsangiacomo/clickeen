@@ -1,9 +1,7 @@
 import { enqueueAccountInstanceSync, type AccountInstanceSyncIntent } from './account-instance-sync';
 import {
-  loadTokyoAccountInstanceDocument,
-  loadTokyoAccountInstanceServeStates,
+  loadTokyoAccountInstanceIndex,
 } from './account-instance-direct';
-import { listAccountInstancePublicIds } from './michael';
 
 function formatWarning(prefix: string, detail?: string | null): string {
   const normalized = typeof detail === 'string' ? detail.trim() : '';
@@ -17,93 +15,44 @@ type AccountLocaleSyncTarget = {
 
 async function loadAccountLocaleSyncTargets(args: {
   accountId: string;
-  accessToken: string;
   accountCapsule?: string | null;
 }): Promise<
   | { ok: true; targets: AccountLocaleSyncTarget[]; warnings: string[] }
   | { ok: false; warning: string }
 > {
-  const publicIdsResult = await listAccountInstancePublicIds(
-    args.accountId,
-    args.accessToken,
-  );
-  if (!publicIdsResult.ok) {
-    return {
-      ok: false,
-      warning: formatWarning(
-        'account_locales_instance_ids_unavailable',
-        publicIdsResult.detail ?? publicIdsResult.reasonKey,
-      ),
-    };
-  }
-
-  const serveStatesResult = await loadTokyoAccountInstanceServeStates({
+  const index = await loadTokyoAccountInstanceIndex({
     accountId: args.accountId,
-    publicIds: publicIdsResult.publicIds,
     accountCapsule: args.accountCapsule,
   });
-  if (!serveStatesResult.ok) {
+  if (!index.ok) {
     return {
       ok: false,
       warning: formatWarning(
-        'account_locales_serve_state_unavailable',
-        serveStatesResult.error.detail ?? serveStatesResult.error.reasonKey,
+        'account_locales_instance_index_unavailable',
+        index.error.detail ?? index.error.reasonKey,
       ),
     };
   }
 
-  const savedResults = await Promise.all(
-    publicIdsResult.publicIds.map(async (publicId) => ({
-      publicId,
-      saved: await loadTokyoAccountInstanceDocument({
-        accountId: args.accountId,
-        publicId,
-        accountCapsule: args.accountCapsule,
-      }),
-    })),
-  );
-  const warnings: string[] = [];
-  const targets: AccountLocaleSyncTarget[] = [];
-
-  for (const result of savedResults) {
-    if (result.saved.ok) {
-      targets.push({
-        publicId: result.publicId,
-        live:
-          (serveStatesResult.value.serveStates[result.publicId] ?? 'unpublished') ===
-          'published',
-      });
-      continue;
-    }
-
-    if (result.saved.status === 404) {
-      continue;
-    }
-
-    warnings.push(
-      formatWarning(
-        `account_locales_saved_document_unavailable:${result.publicId}`,
-        result.saved.error.detail ?? result.saved.error.reasonKey,
-      ),
-    );
-  }
+  const targets = index.value.accountInstances.map((instance) => ({
+    publicId: instance.publicId,
+    live: instance.publishStatus === 'published',
+  }));
 
   return {
     ok: true,
     targets,
-    warnings,
+    warnings: [],
   };
 }
 
 export async function runAccountLocalesSync(args: {
   accountId: string;
-  accessToken: string;
   accountCapsule?: string | null;
   l10nIntent: AccountInstanceSyncIntent;
 }): Promise<void> {
   const targets = await loadAccountLocaleSyncTargets({
     accountId: args.accountId,
-    accessToken: args.accessToken,
     accountCapsule: args.accountCapsule,
   });
   if (!targets.ok) {

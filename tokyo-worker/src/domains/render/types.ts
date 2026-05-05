@@ -83,6 +83,26 @@ export type SavedRenderDocumentReadResult =
 
 export type InstanceServeState = 'published' | 'unpublished';
 
+export type AccountInstanceIndexEntry = {
+  accountId: string;
+  publicId: string;
+  widgetType: string;
+  displayName: string;
+  kind: 'user' | 'system';
+  listed: boolean;
+  duplicable: boolean;
+  listedSurfaces: string[];
+  publishStatus: InstanceServeState;
+  updatedAt: string;
+};
+
+export type AccountInstanceIndexDocument = {
+  v: 1;
+  accountId: string;
+  entries: AccountInstanceIndexEntry[];
+  updatedAt: string;
+};
+
 export type L10nLivePointer = {
   v: 1;
   publicId: string;

@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  deleteSavedConfigFromTokyo,
   loadTokyoAccountInstanceDocument,
+  loadTokyoAccountInstanceIndex,
+  recordTokyoAccountInstanceProjectionGap,
   writeSavedConfigToTokyo,
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
 import { enqueueAccountInstanceSync } from '@roma/lib/account-instance-sync';
-import {
-  createAccountInstanceRow,
-  deleteAccountInstanceRow,
-  getAccountInstanceCoreRow,
-} from '@roma/lib/michael';
+import { createAccountInstanceProjectionRow } from '@roma/lib/michael';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -20,6 +17,7 @@ import {
 export const runtime = 'edge';
 
 type DuplicateSource = {
+  accountId: string;
   widgetType: string;
   config: Record<string, unknown>;
 };
@@ -50,35 +48,9 @@ function classifyDuplicateSourcePublicId(publicId: string): 'user' | 'main' | 's
   return null;
 }
 
-async function rollbackDuplicateCreate(args: {
-  accountId: string;
-  publicId: string;
-  berlinAccessToken: string;
-}) {
-  const [michaelRollback, tokyoRollback] = await Promise.allSettled([
-    deleteAccountInstanceRow({
-      accountId: args.accountId,
-      publicId: args.publicId,
-      berlinAccessToken: args.berlinAccessToken,
-    }),
-    deleteSavedConfigFromTokyo({
-      accountId: args.accountId,
-      publicId: args.publicId,
-    }),
-  ]);
-
-  if (michaelRollback.status === 'rejected' && process.env.NODE_ENV === 'development') {
-    console.warn('[roma account widgets duplicate route] failed to rollback Michael row', michaelRollback.reason);
-  }
-  if (tokyoRollback.status === 'rejected' && process.env.NODE_ENV === 'development') {
-    console.warn('[roma account widgets duplicate route] failed to rollback Tokyo saved config', tokyoRollback.reason);
-  }
-}
-
 async function loadDuplicateSource(args: {
   accountId: string;
   publicId: string;
-  berlinAccessToken: string;
   accountCapsule?: string | null;
 }): Promise<
   | { ok: true; value: DuplicateSource }
@@ -97,19 +69,26 @@ async function loadDuplicateSource(args: {
     };
   }
 
-  const sourceCore = await getAccountInstanceCoreRow(args.accountId, args.publicId, args.berlinAccessToken);
-  if (!sourceCore.ok) {
+  const index = await loadTokyoAccountInstanceIndex({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+  });
+  if (!index.ok) {
     return {
       ok: false,
-      status: sourceCore.status,
+      status: index.status,
       error: {
-        kind: sourceCore.status === 404 ? 'NOT_FOUND' : 'UPSTREAM_UNAVAILABLE',
-        reasonKey: sourceCore.reasonKey,
-        detail: sourceCore.detail,
+        kind: index.error.kind,
+        reasonKey: index.error.reasonKey,
+        detail: index.error.detail,
       },
     };
   }
-  if (!sourceCore.row) {
+
+  const sourceEntry =
+    index.value.accountInstances.find((entry) => entry.publicId === args.publicId) ??
+    index.value.listedInstances.find((entry) => entry.publicId === args.publicId);
+  if (!sourceEntry) {
     return {
       ok: false,
       status: 404,
@@ -119,11 +98,22 @@ async function loadDuplicateSource(args: {
       },
     };
   }
+  if (sourceEntry.accountId !== args.accountId && !sourceEntry.duplicable) {
+    return {
+      ok: false,
+      status: 403,
+      error: {
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.auth.forbidden',
+        detail: 'source_instance_not_duplicable',
+      },
+    };
+  }
 
   const source = await loadTokyoAccountInstanceDocument({
-    accountId: sourceCore.row.accountId,
+    accountId: sourceEntry.accountId,
     publicId: args.publicId,
-    accountCapsule: sourceCore.row.accountId === args.accountId ? args.accountCapsule : undefined,
+    accountCapsule: sourceEntry.accountId === args.accountId ? args.accountCapsule : undefined,
   });
   if (!source.ok) {
     return {
@@ -140,6 +130,7 @@ async function loadDuplicateSource(args: {
   return {
     ok: true,
     value: {
+      accountId: sourceEntry.accountId,
       widgetType: source.value.row.widgetType,
       config: source.value.config,
     },
@@ -180,7 +171,6 @@ export async function POST(request: NextRequest) {
   const source = await loadDuplicateSource({
     accountId,
     publicId: sourcePublicId,
-    berlinAccessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
   });
   if (!source.ok) {
@@ -268,66 +258,48 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const createdRow = await createAccountInstanceRow({
+  const createdRow = await createAccountInstanceProjectionRow({
     accountId,
     publicId,
     widgetType: source.value.widgetType,
     berlinAccessToken: current.value.accessToken,
   });
-  if (!createdRow.ok) {
-    await rollbackDuplicateCreate({
+  const projectionFollowup = createdRow.ok && createdRow.row
+    ? { ok: true as const }
+    : {
+        ok: false as const,
+        reasonKey: createdRow.ok ? 'coreui.errors.db.writeFailed' : createdRow.reasonKey,
+        detail: createdRow.ok ? 'instance_projection_create_empty' : createdRow.detail,
+        status: createdRow.ok ? 500 : createdRow.status,
+      };
+  if (!projectionFollowup.ok) {
+    console.error('[roma account widgets duplicate route] projection create failed after Tokyo duplicate', {
       accountId,
       publicId,
-      berlinAccessToken: current.value.accessToken,
+      reasonKey: projectionFollowup.reasonKey,
+      detail: projectionFollowup.detail,
     });
-    const status = createdRow.status === 401 ? 401 : createdRow.status;
-    const kind =
-      status === 401
-        ? 'AUTH'
-        : status === 403
-          ? 'DENY'
-          : status === 409 || status === 422
-            ? 'VALIDATION'
-            : 'UPSTREAM_UNAVAILABLE';
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind,
-            reasonKey: createdRow.reasonKey,
-            detail: createdRow.detail,
-          },
-        },
-        { status },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  if (!createdRow.row) {
-    await rollbackDuplicateCreate({
+    const projectionGap = await recordTokyoAccountInstanceProjectionGap({
       accountId,
       publicId,
-      berlinAccessToken: current.value.accessToken,
+      action: 'create',
+      reasonKey: projectionFollowup.reasonKey,
+      detail: projectionFollowup.detail,
+      status: projectionFollowup.status,
+      accountCapsule: current.value.authzToken,
     });
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'INTERNAL',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail: 'instance_create_empty',
-          },
-        },
-        { status: 500 },
-      ),
-      current.value.setCookies,
-    );
+    if (!projectionGap.ok) {
+      console.error('[roma account widgets duplicate route] projection gap recording failed', {
+        accountId,
+        publicId,
+        detail: projectionGap.error.detail ?? projectionGap.error.reasonKey,
+      });
+    }
   }
 
-  const created = createdRow.row;
+  let syncFollowup:
+    | { ok: true }
+    | { ok: false; reasonKey: string; detail: string } = { ok: true };
   try {
     await enqueueAccountInstanceSync({
       accountId,
@@ -344,25 +316,17 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    await rollbackDuplicateCreate({
+    const detail = error instanceof Error ? error.message : String(error);
+    syncFollowup = {
+      ok: false,
+      reasonKey: 'coreui.errors.translations.acceptanceFailed',
+      detail,
+    };
+    console.error('[roma account widgets duplicate route] sync follow-up failed after Tokyo duplicate', {
       accountId,
       publicId,
-      berlinAccessToken: current.value.accessToken,
+      detail,
     });
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail: error instanceof Error ? error.message : String(error),
-          },
-        },
-        { status: 502 },
-      ),
-      current.value.setCookies,
-    );
   }
 
   return withSession(
@@ -371,9 +335,12 @@ export async function POST(request: NextRequest) {
       {
         accountId,
         sourcePublicId,
-        publicId: created.publicId,
-        widgetType: created.widgetType,
+        sourceAccountId: source.value.accountId,
+        publicId,
+        widgetType: source.value.widgetType,
         status: 'unpublished',
+        projectionFollowup,
+        syncFollowup,
       },
       { status: 201 },
     ),

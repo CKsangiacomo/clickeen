@@ -1,5 +1,6 @@
 import type { Env } from '../../types';
 import { accountInstanceRenderLivePointerKey, accountInstanceSavedConfigPackKey, accountInstanceSavedPointerKey } from './keys';
+import { rebuildAccountInstanceIndexes } from './instance-index';
 import { ensureSavedRenderL10nBase } from './localization';
 import { normalizeLiveRenderPointer, normalizeSavedRenderPointer, resolveSavedRenderValidationReason } from './normalize';
 import { loadJson, putJson } from './storage';
@@ -78,6 +79,7 @@ export async function writeSavedRenderConfig(args: {
     l10n,
   };
   await putJson(args.env, accountInstanceSavedPointerKey(accountId, publicId), pointer);
+  await rebuildAccountInstanceIndexes(args.env, accountId);
   return {
     pointer,
     previousBaseFingerprint,
@@ -316,5 +318,6 @@ export async function deleteSavedRenderConfig(args: {
     args.env.TOKYO_R2.delete(accountInstanceSavedPointerKey(accountId, publicId)),
     args.env.TOKYO_R2.delete(accountInstanceSavedConfigPackKey(accountId, publicId, saved.value.pointer.configFp)),
   ]);
+  await rebuildAccountInstanceIndexes(args.env, accountId);
   return { ok: true, deleted: true };
 }

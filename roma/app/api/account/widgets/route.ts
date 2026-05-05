@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { loadAccountWidgetCatalog } from '@roma/lib/michael';
+import { loadTokyoAccountInstanceIndex } from '@roma/lib/account-instance-direct';
+import { loadAccountPublishContainment } from '@roma/lib/michael';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -20,59 +21,85 @@ type WidgetInstance = {
   };
 };
 
+function routeKind(status: number): 'AUTH' | 'DENY' | 'VALIDATION' | 'UPSTREAM_UNAVAILABLE' {
+  if (status === 401) return 'AUTH';
+  if (status === 403) return 'DENY';
+  if (status === 422) return 'VALIDATION';
+  return 'UPSTREAM_UNAVAILABLE';
+}
+
 export async function GET(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountId;
-  const widgetCatalog = await loadAccountWidgetCatalog({
-    accountId,
-    berlinAccessToken: current.value.accessToken,
-    accountCapsule: current.value.authzToken,
-  });
-  if (widgetCatalog.ok === false) {
-    const kind =
-      widgetCatalog.status === 401
-        ? 'AUTH'
-        : widgetCatalog.status === 403
-          ? 'DENY'
-          : 'UPSTREAM_UNAVAILABLE';
+  const [widgetIndex, containment] = await Promise.all([
+    loadTokyoAccountInstanceIndex({
+      accountId,
+      accountCapsule: current.value.authzToken,
+    }),
+    loadAccountPublishContainment(accountId, current.value.accessToken),
+  ]);
+  if (widgetIndex.ok === false) {
     return withSession(
       request,
       NextResponse.json(
         {
           error: {
-            kind,
-            reasonKey: widgetCatalog.reasonKey,
-            detail: widgetCatalog.detail,
+            kind: routeKind(widgetIndex.status),
+            reasonKey: widgetIndex.error.reasonKey,
+            detail: widgetIndex.error.detail,
           },
         },
-        { status: widgetCatalog.status },
+        { status: widgetIndex.status },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (containment.ok === false) {
+    const status = containment.status === 401 || containment.status === 403 ? containment.status : 502;
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: routeKind(status),
+            reasonKey: containment.reasonKey,
+            detail: containment.detail,
+          },
+        },
+        { status },
       ),
       current.value.setCookies,
     );
   }
 
   const canMutate = current.value.authzPayload.role !== 'viewer';
-  const accountInstances: WidgetInstance[] = widgetCatalog.accountInstances.map((instance) => ({
-    ...instance,
+  const accountInstances: WidgetInstance[] = widgetIndex.value.accountInstances.map((instance) => ({
+    publicId: instance.publicId,
+    widgetType: instance.widgetType,
+    displayName: instance.displayName,
+    status: instance.publishStatus,
     listed: false,
     actions: {
       edit: true,
       duplicate: canMutate,
       delete: canMutate,
       rename: true,
-      publish: canMutate && !widgetCatalog.containment.active,
-      unpublish: canMutate && instance.status === 'published',
+      publish: canMutate && !containment.containment.active,
+      unpublish: canMutate && instance.publishStatus === 'published',
     },
   }));
 
-  const listedInstances: WidgetInstance[] = widgetCatalog.listedInstances.map((instance) => ({
-    ...instance,
+  const listedInstances: WidgetInstance[] = widgetIndex.value.listedInstances.map((instance) => ({
+    publicId: instance.publicId,
+    widgetType: instance.widgetType,
+    displayName: instance.displayName,
+    status: instance.publishStatus,
     listed: true,
     actions: {
       edit: false,
-      duplicate: canMutate,
+      duplicate: canMutate && instance.duplicable,
       delete: false,
       rename: false,
       publish: false,
@@ -86,7 +113,7 @@ export async function GET(request: NextRequest) {
       account: {
         accountId,
       },
-      widgetTypes: widgetCatalog.widgetTypes,
+      widgetTypes: widgetIndex.value.widgetTypes,
       instances: [...accountInstances, ...listedInstances],
     }),
     current.value.setCookies,

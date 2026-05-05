@@ -59,7 +59,6 @@ export async function GET(request: NextRequest) {
 
     const baseLocaleLock = await loadAccountBaseLocaleLockState({
       accountId: current.value.authzPayload.accountId,
-      berlinAccessToken: current.value.accessToken,
       accountCapsule: current.value.authzToken,
     });
     if (!baseLocaleLock.ok) {
@@ -181,7 +180,6 @@ export async function PUT(request: NextRequest) {
 
     const baseLocaleLock = await loadAccountBaseLocaleLockState({
       accountId: current.value.authzPayload.accountId,
-      berlinAccessToken: current.value.accessToken,
       accountCapsule: current.value.authzToken,
     });
     if (!baseLocaleLock.ok) {
@@ -282,7 +280,6 @@ export async function PUT(request: NextRequest) {
     try {
       await runAccountLocalesSync({
         accountId: current.value.authzPayload.accountId,
-        accessToken: current.value.accessToken,
         accountCapsule: current.value.authzToken,
         l10nIntent: {
           baseLocale: refreshedAccountState.policy.baseLocale,

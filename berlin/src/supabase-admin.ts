@@ -1,4 +1,4 @@
-import { claimAsString } from './helpers';
+import { claimAsString } from './utils/claims';
 import { internalError } from './http';
 import { type Env } from './types';
 

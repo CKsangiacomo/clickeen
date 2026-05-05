@@ -36,6 +36,7 @@ export type Env = {
   SUPABASE_SERVICE_ROLE_KEY?: string;
   BERLIN_BASE_URL?: string;
   BERLIN_JWKS_URL?: string;
+  CK_PLATFORM_ACCOUNT_ID?: string;
   SANFRANCISCO_L10N?: SanFranciscoL10nBinding;
   CLOUDFLARE_ZONE_ID?: string;
   CLOUDFLARE_API_TOKEN?: string;

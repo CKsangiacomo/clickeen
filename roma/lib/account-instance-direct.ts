@@ -31,6 +31,28 @@ export type AccountInstanceCoreRow = {
 
 export type AccountInstanceLiveStatus = 'published' | 'unpublished';
 
+export type TokyoAccountInstanceIndexEntry = {
+  accountId: string;
+  publicId: string;
+  widgetType: string;
+  displayName: string;
+  kind: 'user' | 'system';
+  listed: boolean;
+  duplicable: boolean;
+  listedSurfaces: string[];
+  publishStatus: AccountInstanceLiveStatus;
+  updatedAt: string;
+};
+
+export type TokyoAccountInstanceIndex = {
+  accountId: string;
+  platformAccountId: string;
+  accountInstances: TokyoAccountInstanceIndexEntry[];
+  listedInstances: TokyoAccountInstanceIndexEntry[];
+  widgetTypes: string[];
+  publishedCount: number;
+};
+
 type TokyoSavedInstancePayload = {
   publicId?: unknown;
   accountId?: unknown;
@@ -45,6 +67,17 @@ type TokyoServeStatesPayload = {
   serveStates?: unknown;
   publishedCount?: unknown;
 };
+
+type TokyoAccountInstanceIndexPayload = {
+  accountId?: unknown;
+  platformAccountId?: unknown;
+  accountInstances?: unknown;
+  listedInstances?: unknown;
+  widgetTypes?: unknown;
+  publishedCount?: unknown;
+};
+
+type TokyoProjectionGapAction = 'create' | 'delete';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -122,6 +155,55 @@ function resolveSavedInstanceDisplayName(args: {
     return asTrimmedString(args.meta.styleName ?? args.meta.name ?? args.meta.title) ?? null;
   }
   return null;
+}
+
+function normalizeStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(
+    new Set(
+      value
+        .map((entry) => asTrimmedString(entry))
+        .filter((entry): entry is string => Boolean(entry)),
+    ),
+  );
+}
+
+function normalizeTokyoIndexEntry(raw: unknown): TokyoAccountInstanceIndexEntry | null {
+  if (!isRecord(raw)) return null;
+  const accountId = asTrimmedString(raw.accountId);
+  const publicId = asTrimmedString(raw.publicId);
+  const widgetType = asTrimmedString(raw.widgetType);
+  const displayName = asTrimmedString(raw.displayName);
+  const updatedAt = asTrimmedString(raw.updatedAt);
+  const kind = raw.kind === 'user' ? 'user' : raw.kind === 'system' ? 'system' : null;
+  const publishStatus =
+    raw.publishStatus === 'published'
+      ? 'published'
+      : raw.publishStatus === 'unpublished'
+        ? 'unpublished'
+        : null;
+  if (!accountId || !publicId || !widgetType || !displayName || !updatedAt || !kind || !publishStatus) {
+    return null;
+  }
+  return {
+    accountId,
+    publicId,
+    widgetType,
+    displayName,
+    kind,
+    listed: raw.listed === true,
+    duplicable: raw.duplicable === true,
+    listedSurfaces: normalizeStringList(raw.listedSurfaces),
+    publishStatus,
+    updatedAt,
+  };
+}
+
+function normalizeTokyoIndexEntries(raw: unknown): TokyoAccountInstanceIndexEntry[] | null {
+  if (!Array.isArray(raw)) return null;
+  const entries = raw.map((entry) => normalizeTokyoIndexEntry(entry));
+  if (entries.some((entry) => !entry)) return null;
+  return entries as TokyoAccountInstanceIndexEntry[];
 }
 
 async function loadSavedInstanceFromTokyo(args: {
@@ -451,6 +533,114 @@ export async function loadTokyoAccountInstanceServeStates(args: {
       publishedCount,
     },
   };
+}
+
+export async function loadTokyoAccountInstanceIndex(args: {
+  accountId: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+}): Promise<
+  | { ok: true; value: TokyoAccountInstanceIndex }
+  | RouteFailure
+> {
+  const headers = buildTokyoProductControlHeaders({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
+  });
+
+  const response = await fetchTokyoProductControl({
+    path: '/__internal/renders/instances/index.json',
+    method: 'GET',
+    headers,
+  });
+
+  const payload = (await response.json().catch(() => null)) as TokyoAccountInstanceIndexPayload | null;
+  if (!response.ok) {
+    return buildTokyoRouteFailure({
+      response,
+      payload,
+      fallbackDetail: `tokyo_instance_index_http_${response.status}`,
+      fallbackReasonKey: 'coreui.errors.db.readFailed',
+    });
+  }
+
+  const accountId = asTrimmedString(payload?.accountId);
+  const platformAccountId = asTrimmedString(payload?.platformAccountId);
+  const accountInstances = normalizeTokyoIndexEntries(payload?.accountInstances);
+  const listedInstances = normalizeTokyoIndexEntries(payload?.listedInstances);
+  const widgetTypes = normalizeStringList(payload?.widgetTypes).sort((left, right) => left.localeCompare(right));
+  const publishedCount =
+    typeof payload?.publishedCount === 'number' && Number.isFinite(payload.publishedCount)
+      ? Math.max(0, Math.floor(payload.publishedCount))
+      : accountInstances?.filter((entry) => entry.publishStatus === 'published').length ?? 0;
+
+  if (!accountId || !platformAccountId || !accountInstances || !listedInstances) {
+    return {
+      ok: false,
+      status: 502,
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'coreui.errors.instance.invalidPayload',
+        detail: 'invalid Tokyo instance index payload',
+      },
+    };
+  }
+
+  return {
+    ok: true,
+    value: {
+      accountId,
+      platformAccountId,
+      accountInstances,
+      listedInstances,
+      widgetTypes,
+      publishedCount,
+    },
+  };
+}
+
+export async function recordTokyoAccountInstanceProjectionGap(args: {
+  accountId: string;
+  publicId: string;
+  action: TokyoProjectionGapAction;
+  reasonKey: string;
+  detail?: string | null;
+  status?: number | null;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+}): Promise<{ ok: true; gapId: string | null } | RouteFailure> {
+  const headers = buildTokyoProductControlHeaders({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    contentType: 'application/json',
+    internalServiceName: args.internalServiceName,
+  });
+
+  const response = await fetchTokyoProductControl({
+    path: '/__internal/renders/instances/projection-gap.json',
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      publicId: args.publicId,
+      action: args.action,
+      reasonKey: args.reasonKey,
+      detail: args.detail ?? null,
+      status: args.status ?? null,
+    }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as { gapId?: unknown } | null;
+  if (!response.ok) {
+    return buildTokyoRouteFailure({
+      response,
+      payload,
+      fallbackDetail: `tokyo_projection_gap_http_${response.status}`,
+      fallbackReasonKey: 'coreui.errors.db.writeFailed',
+    });
+  }
+
+  return { ok: true, gapId: asTrimmedString(payload?.gapId) };
 }
 
 export async function saveAccountInstanceDirect(args: {

@@ -35,43 +35,6 @@ export type MichaelAccountPublishContainmentResult =
       detail?: string;
     };
 
-export type MichaelAccountInstancePublicIdsResult =
-  | {
-      ok: true;
-      publicIds: string[];
-    }
-  | {
-      ok: false;
-      status: number;
-      reasonKey: string;
-      detail?: string;
-    };
-
-export type MichaelListedWidgetInstance = {
-  publicId: string;
-  widgetType: string;
-  displayName: string;
-  status: 'published' | 'unpublished';
-};
-
-export type MichaelAccountWidgetCatalogResult =
-  | {
-      ok: true;
-      accountInstances: MichaelListedWidgetInstance[];
-      listedInstances: MichaelListedWidgetInstance[];
-      widgetTypes: string[];
-      containment: {
-        active: boolean;
-        reason: string | null;
-      };
-    }
-  | {
-      ok: false;
-      status: number;
-      reasonKey: string;
-      detail?: string;
-    };
-
 export type MichaelDeleteInstanceResult =
   | {
       ok: true;

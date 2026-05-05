@@ -2,13 +2,12 @@ import {
   asTrimmedString,
   fetchBerlinProductJson,
   michaelUnavailableResult,
-  type MichaelAccountInstancePublicIdsResult,
   type MichaelAccountInstanceResult,
   type MichaelAccountPublishContainmentResult,
   type MichaelDeleteInstanceResult,
 } from './michael-shared';
 
-type BerlinRegistryRow = {
+type BerlinProjectionRow = {
   publicId?: unknown;
   displayName?: unknown;
   updatedAt?: unknown;
@@ -18,7 +17,7 @@ type BerlinRegistryRow = {
   meta?: unknown;
 };
 
-function normalizeRegistryRow(row: BerlinRegistryRow | null, fallbackPublicId: string): NonNullable<Extract<MichaelAccountInstanceResult, { ok: true }>['row']> | null {
+function normalizeProjectionRow(row: BerlinProjectionRow | null, fallbackPublicId: string): NonNullable<Extract<MichaelAccountInstanceResult, { ok: true }>['row']> | null {
   if (!row) return null;
   const widgetId = asTrimmedString(row.widgetId);
   const accountId = asTrimmedString(row.accountId);
@@ -39,33 +38,7 @@ function normalizeRegistryRow(row: BerlinRegistryRow | null, fallbackPublicId: s
   };
 }
 
-export async function getAccountInstanceCoreRow(
-  accountId: string,
-  publicId: string,
-  accessToken: string,
-): Promise<MichaelAccountInstanceResult> {
-  try {
-    const registry = await fetchBerlinProductJson<{ row?: BerlinRegistryRow | null }>({
-      accessToken,
-      path: `/v1/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(publicId)}/registry`,
-    });
-    if (!registry.ok) return registry;
-    const row = normalizeRegistryRow(registry.value.row ?? null, publicId);
-    if (registry.value.row && !row) {
-      return {
-        ok: false,
-        status: 502,
-        reasonKey: 'coreui.errors.instance.invalidPayload',
-        detail: 'invalid Berlin instance registry payload',
-      };
-    }
-    return { ok: true, row };
-  } catch (error) {
-    return michaelUnavailableResult(error);
-  }
-}
-
-export async function createAccountInstanceRow(args: {
+export async function createAccountInstanceProjectionRow(args: {
   accountId: string;
   publicId: string;
   widgetType: string;
@@ -74,9 +47,9 @@ export async function createAccountInstanceRow(args: {
   berlinAccessToken: string;
 }): Promise<MichaelAccountInstanceResult> {
   try {
-    const registry = await fetchBerlinProductJson<{ row?: BerlinRegistryRow | null }>({
+    const projection = await fetchBerlinProductJson<{ row?: BerlinProjectionRow | null }>({
       accessToken: args.berlinAccessToken,
-      path: `/v1/accounts/${encodeURIComponent(args.accountId)}/instances/registry`,
+      path: `/v1/accounts/${encodeURIComponent(args.accountId)}/instances/projection`,
       method: 'POST',
       body: {
         publicId: args.publicId,
@@ -84,14 +57,14 @@ export async function createAccountInstanceRow(args: {
         displayName: args.displayName ?? null,
       },
     });
-    if (!registry.ok) return registry;
-    const row = normalizeRegistryRow(registry.value.row ?? null, args.publicId);
-    if (registry.value.row && !row) {
+    if (!projection.ok) return projection;
+    const row = normalizeProjectionRow(projection.value.row ?? null, args.publicId);
+    if (projection.value.row && !row) {
       return {
         ok: false,
         status: 502,
         reasonKey: 'coreui.errors.instance.invalidPayload',
-        detail: 'invalid Berlin instance registry payload',
+        detail: 'invalid Berlin instance projection payload',
       };
     }
     return { ok: true, row };
@@ -100,18 +73,18 @@ export async function createAccountInstanceRow(args: {
   }
 }
 
-export async function deleteAccountInstanceRow(args: {
+export async function deleteAccountInstanceProjectionRow(args: {
   accountId: string;
   publicId: string;
   berlinAccessToken: string;
 }): Promise<MichaelDeleteInstanceResult> {
   try {
-    const registry = await fetchBerlinProductJson<{ ok?: unknown }>({
+    const projection = await fetchBerlinProductJson<{ ok?: unknown }>({
       accessToken: args.berlinAccessToken,
-      path: `/v1/accounts/${encodeURIComponent(args.accountId)}/instances/${encodeURIComponent(args.publicId)}/registry`,
+      path: `/v1/accounts/${encodeURIComponent(args.accountId)}/instances/${encodeURIComponent(args.publicId)}/projection`,
       method: 'DELETE',
     });
-    if (!registry.ok) return registry;
+    if (!projection.ok) return projection;
     return { ok: true };
   } catch (error) {
     return michaelUnavailableResult(error);
@@ -123,41 +96,20 @@ export async function loadAccountPublishContainment(
   berlinAccessToken: string,
 ): Promise<MichaelAccountPublishContainmentResult> {
   try {
-    const registry = await fetchBerlinProductJson<{
+    const containment = await fetchBerlinProductJson<{
       containment?: { active?: unknown; reason?: unknown } | null;
     }>({
       accessToken: berlinAccessToken,
       path: `/v1/accounts/${encodeURIComponent(accountId)}/publish-containment`,
     });
-    if (!registry.ok) return registry;
+    if (!containment.ok) return containment;
     return {
       ok: true,
       containment: {
-        active: Boolean(registry.value.containment?.active),
-        reason: asTrimmedString(registry.value.containment?.reason),
+        active: Boolean(containment.value.containment?.active),
+        reason: asTrimmedString(containment.value.containment?.reason),
       },
     };
-  } catch (error) {
-    return michaelUnavailableResult(error);
-  }
-}
-
-export async function listAccountInstancePublicIds(
-  accountId: string,
-  berlinAccessToken: string,
-): Promise<MichaelAccountInstancePublicIdsResult> {
-  try {
-    const registry = await fetchBerlinProductJson<{ publicIds?: unknown }>({
-      accessToken: berlinAccessToken,
-      path: `/v1/accounts/${encodeURIComponent(accountId)}/instances/public-ids`,
-    });
-    if (!registry.ok) return registry;
-    const publicIds = Array.isArray(registry.value.publicIds)
-      ? registry.value.publicIds
-          .map((publicId) => asTrimmedString(publicId))
-          .filter((publicId): publicId is string => Boolean(publicId))
-      : [];
-    return { ok: true, publicIds };
   } catch (error) {
     return michaelUnavailableResult(error);
   }

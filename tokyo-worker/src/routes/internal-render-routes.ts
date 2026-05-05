@@ -8,7 +8,13 @@ import { json } from '../http';
 import {
   deleteSavedRenderConfig,
   enqueueTokyoMirrorJob,
+  buildAccountInstanceIndexDryRun,
   readInstanceServeState,
+  readAccountInstanceIndex,
+  readListedInstanceIndex,
+  rebuildAccountInstanceIndexes,
+  resolvePlatformAccountId,
+  accountInstanceProjectionGapKey,
   readSavedRenderConfig,
   syncLiveSurface,
   writeConfigPack,
@@ -321,6 +327,184 @@ export async function tryHandleInternalRenderRoutes(
         publishedCount,
       }),
     );
+  }
+
+  if (pathname === '/__internal/renders/instances/index.json') {
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isUuid(accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'GET') {
+      return respondMethodNotAllowed(respond);
+    }
+
+    const authErr = await authorizeSavedRenderControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+
+    const accountIndex = await readAccountInstanceIndex({ env, accountId });
+    if (!accountIndex.ok) {
+      return respond(
+        json(
+          { error: { kind: accountIndex.kind, reasonKey: accountIndex.reasonKey, detail: accountIndex.detail } },
+          { status: accountIndex.kind === 'NOT_FOUND' ? 404 : 422 },
+        ),
+      );
+    }
+
+    const platformAccountId = resolvePlatformAccountId(env);
+    let listedInstances = [] as typeof accountIndex.value.entries;
+    if (accountId !== platformAccountId) {
+      const listedIndex = await readListedInstanceIndex({ env, platformAccountId });
+      if (!listedIndex.ok) {
+        return respond(
+          json(
+            { error: { kind: listedIndex.kind, reasonKey: listedIndex.reasonKey, detail: listedIndex.detail } },
+            { status: listedIndex.kind === 'NOT_FOUND' ? 404 : 422 },
+          ),
+        );
+      }
+      listedInstances = listedIndex.value.entries.filter((entry) => entry.duplicable);
+    }
+
+    const widgetTypes = Array.from(
+      new Set(
+        [...accountIndex.value.entries, ...listedInstances]
+          .map((entry) => entry.widgetType.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    ).sort((left, right) => left.localeCompare(right));
+
+    return respond(
+      json({
+        ok: true,
+        accountId,
+        platformAccountId,
+        accountInstances: accountIndex.value.entries,
+        listedInstances,
+        widgetTypes,
+        publishedCount: accountIndex.value.entries.filter((entry) => entry.publishStatus === 'published').length,
+      }),
+    );
+  }
+
+  if (pathname === '/__internal/renders/instances/index/rebuild.json') {
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isUuid(accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'POST') {
+      return respondMethodNotAllowed(respond);
+    }
+
+    const authErr = await authorizeSavedRenderControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'editor',
+    });
+    if (authErr) return respond(authErr);
+
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const dryRun = body?.dryRun !== false;
+
+    try {
+      const index = dryRun
+        ? await buildAccountInstanceIndexDryRun(env, accountId)
+        : await rebuildAccountInstanceIndexes(env, accountId);
+      return respond(
+        json({
+          ok: true,
+          dryRun,
+          accountId,
+          entries: index.entries.length,
+          entryPublicIds: index.entries.map((entry) => entry.publicId),
+          listedEntries:
+            accountId === resolvePlatformAccountId(env)
+              ? index.entries.filter((entry) => entry.listed).length
+              : 0,
+          listedPublicIds:
+            accountId === resolvePlatformAccountId(env)
+              ? index.entries.filter((entry) => entry.listed).map((entry) => entry.publicId)
+              : [],
+        }),
+      );
+    } catch (error) {
+      return respond(
+        json(
+          {
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: 'tokyo.errors.instance.indexInvalid',
+              detail: error instanceof Error ? error.message : String(error),
+            },
+          },
+          { status: 422 },
+        ),
+      );
+    }
+  }
+
+  if (pathname === '/__internal/renders/instances/projection-gap.json') {
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isUuid(accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'POST') {
+      return respondMethodNotAllowed(respond);
+    }
+
+    const authErr = await authorizeSavedRenderControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'editor',
+    });
+    if (authErr) return respond(authErr);
+
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const publicId = normalizePublicId(body?.publicId);
+    if (!isValidScopedInstance(publicId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    const action = typeof body?.action === 'string' ? body.action.trim() : '';
+    if (action !== 'create' && action !== 'delete') {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    const reasonKey = typeof body?.reasonKey === 'string' ? body.reasonKey.trim() : '';
+    if (!reasonKey) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    const detail = typeof body?.detail === 'string' ? body.detail.trim() : null;
+    const status =
+      typeof body?.status === 'number' && Number.isFinite(body.status)
+        ? Math.max(0, Math.floor(body.status))
+        : null;
+    const createdAt = new Date().toISOString();
+    const gapId = `${Date.now().toString(36)}-${crypto.randomUUID()}`;
+    await env.TOKYO_R2.put(
+      accountInstanceProjectionGapKey(accountId, gapId),
+      JSON.stringify({
+        v: 1,
+        kind: 'instance-projection-gap',
+        accountId,
+        publicId,
+        action,
+        reasonKey,
+        detail,
+        status,
+        createdAt,
+      }),
+      {
+        httpMetadata: { contentType: 'application/json; charset=utf-8' },
+      },
+    );
+
+    return respond(json({ ok: true, gapId, createdAt }));
   }
 
   const internalRenderLivePointerMatch = pathname.match(

@@ -1,0 +1,58 @@
+import { claimAsString } from '../utils/claims';
+import { json, validationError } from '../http';
+import { findAccountContext, loadPrincipalAccountState } from './state';
+import { resolvePrincipalSession } from '../session/auth-session';
+import { type Env } from '../types';
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function denyResponse(): Response {
+  return json(
+    {
+      error: {
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.auth.forbidden',
+      },
+    },
+    { status: 403 },
+  );
+}
+
+export function normalizeUuid(value: string): string | null {
+  const normalized = String(value || '').trim();
+  if (!UUID_PATTERN.test(normalized)) return null;
+  return normalized;
+}
+
+export async function resolvePrincipalState(request: Request, env: Env) {
+  const principal = await resolvePrincipalSession(request, env);
+  if (!principal.ok) return { ok: false as const, response: principal.response };
+
+  const state = await loadPrincipalAccountState({
+    env,
+    userId: principal.userId,
+    sessionRole: claimAsString(principal.claims.role),
+  });
+  if (!state.ok) return { ok: false as const, response: state.response };
+
+  return { ok: true as const, principal, state: state.value };
+}
+
+export async function resolveAccountRouteContext(request: Request, env: Env, accountIdRaw: string) {
+  const accountId = normalizeUuid(accountIdRaw);
+  if (!accountId) return { ok: false as const, response: validationError('coreui.errors.accountId.invalid') };
+
+  const resolved = await resolvePrincipalState(request, env);
+  if (!resolved.ok) return resolved;
+
+  const account = findAccountContext(resolved.state, accountId);
+  if (!account) return { ok: false as const, response: denyResponse() };
+
+  return {
+    ok: true as const,
+    account,
+    accountId,
+    principal: resolved.principal,
+    state: resolved.state,
+  };
+}

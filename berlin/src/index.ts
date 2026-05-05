@@ -4,8 +4,8 @@ import {
   createBerlinRequestContext,
   enforceBerlinRateLimit,
   logBerlinRequestCompletion,
-} from './request-ops';
-import { BerlinAuthTicketDO, dispatchBerlinRequest, unexpectedBerlinErrorResponse } from './route-dispatch';
+} from './http/request-ops';
+import { BerlinAuthTicketDO, dispatchBerlinRequest, unexpectedBerlinErrorResponse } from './http/route-dispatch';
 
 export { BerlinAuthTicketDO };
 
