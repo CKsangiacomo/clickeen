@@ -88,15 +88,16 @@ The live bug is precise:
 - San Francisco currently requires `{ v: 1, kind: 'sf.command', command, payload }`.
 - The missing `v` and `kind` fields make outcome attach fail before learning data is written.
 
-The payload must include:
+The executed payload includes:
 
 - `requestId`
-- `agentId`
-- `subject`
-- `outcomeType`
-- `occurredAt`
-- optional compact metadata
-- signature/auth proof
+- `sessionId`
+- canonical `event`
+- `occurredAtMs`
+- optional `timeToDecisionMs`
+- optional `accountIdHash`
+- optional compact `metadata`
+- HMAC signature over the exact direct body
 
 No generic command envelope should survive unless there is a real command bus with multiple shared behaviors.
 
@@ -113,7 +114,7 @@ Execution target:
 
 Every execution writes a small metering fact.
 
-Required fields:
+Target fields over time:
 
 - `requestId`
 - `agentId`
@@ -128,6 +129,8 @@ Required fields:
 - status
 - error code
 - timestamp
+
+This execution slice did not add a new D1 migration because the existing GitHub Cloudflare deploy token can deploy Workers but cannot run D1 migration queries. The shipped state keeps the existing D1 execution fact shape and captures detailed paid learning samples in bounded R2 records. A future D1 metrics expansion must be its own migration/deploy slice.
 
 Metering must not include:
 
@@ -196,7 +199,7 @@ For Builder copilot, the compact fact should include:
 - invalid-output reason when available
 - final outcome event
 
-San Francisco telemetry must not infer widget semantics from path strings. Delete path-prefix guessing such as `inferScopeFromPath`; scope/group metadata belongs in the agent result or caller payload, and telemetry stores it as a fact.
+San Francisco telemetry must not infer widget semantics from path strings. Delete path-prefix guessing such as `inferScopeFromPath`; scope/group metadata belongs in the agent result or caller payload. In the executed slice, existing D1 facts store compact counts/scopes, and sampled R2 learning records keep the richer path/control/group metadata.
 
 ### 4.5 Detailed Learning Sampling
 
@@ -316,11 +319,11 @@ It also supports the strategy that San Francisco is Clickeen's workforce system 
 
 Before execution:
 
-- Decide first learning loop. Default recommendation: Builder copilot quality.
-- Decide outcome event names for that loop. Default recommendation: `edit_applied`, `edit_rejected`, `edit_undone`, `clarification_needed`, `invalid_output`.
-- Decide raw payload retention window.
-- Decide D1 index shape.
-- Decide whether the unrelated personalization/onboarding command path is deleted in this slice or later. Outcome attach must not keep the command envelope either way.
+- First learning loop: Builder copilot quality.
+- Outcome event names: `edit_applied`, `edit_rejected`, `edit_undone`, `clarification_needed`, `invalid_output`, plus existing `cta_clicked`.
+- Raw payload policy for this slice: paid-only 20% deterministic samples for normal successes, serious paid failures always captured, no full raw object for every execution.
+- D1 index shape for this slice: existing small D1 execution/outcome facts only; no schema migration.
+- Unrelated personalization/onboarding command path: left for its owning PRD. Outcome attach no longer uses the command envelope.
 
 Execution is green only when:
 
@@ -350,6 +353,11 @@ Required:
 - git-based Cloudflare deploy after implementation
 - smoke test: one Builder copilot execution plus one outcome attach
 
+Executed verification note:
+
+- The repository currently has no San Francisco unit-test harness. The executed slice uses `scripts/verify/prd85a-learning-contract.mjs` as the contract/residue check, plus San Francisco/Roma/Bob TypeScript checks and git-based Cloudflare deployment verification.
+- Manual authenticated Builder copilot outcome smoke remains a product QA step, not an automated CI check.
+
 ---
 
 ## 11. Execution Closure - 2026-05-05
@@ -368,7 +376,7 @@ What changed:
 - Serious paid failures/invalid outputs are captured outside the 20% sample.
 - The queue writes tiny D1 facts for every execution and bounded sanitized R2 samples only under `learning/...`.
 - Full raw R2 write-for-every-execution under `logs/...` was removed from the queue consumer.
-- Telemetry no longer infers widget scope from path prefixes. Builder copilot emits touched path/control/scope/group metadata, and telemetry stores it.
+- Telemetry no longer infers widget scope from path prefixes. Builder copilot emits touched path/control/scope/group metadata; existing D1 facts keep compact counts/scopes and sampled R2 learning records keep richer edit metadata.
 - D1 schema stays on the existing tiny fact tables for this slice. Detailed edit-level learning lives only in bounded paid R2 samples.
 - San Francisco deploy does not depend on D1 migration permissions for this slice.
 

@@ -273,15 +273,23 @@ For Builder copilot, a statement like "FAQ kept 88% of edits" is not enough by i
 
 San Francisco should store those compact facts. It should not infer widget meaning from path prefixes like `stage.*` or `pod.*`; the agent result/caller must emit the compact metadata, and telemetry stores it.
 
-### Required Future Execution Slices
+### Track A Execution State
 
-- Fix `/v1/outcome` to accept one simple signed outcome payload.
-- Add contract tests for interaction event + outcome attach.
-- Define one first learning metric for `cs.widget.copilot.v1`.
-- Replace legacy `ux_keep`/`ux_undo` names with `edit_applied`/`edit_undone`, and add `edit_rejected` plus invalid/clarification events.
-- Delete telemetry path-scope guessing such as `inferScopeFromPath`; use explicit result metadata instead.
+Completed by `085A`:
+
+- Fixed `/v1/outcome` to accept one simple signed outcome payload.
+- Defined Builder copilot quality as the first learning loop.
+- Replaced legacy `ux_keep`/`ux_undo` names with `edit_applied`/`edit_undone`.
+- Added canonical invalid/clarification outcome events.
+- Deleted telemetry path-scope guessing from the D1/R2 ingestion layer.
+- Replaced one-object-per-event raw R2 writes with paid-only bounded sampling for normal successes plus serious paid failures.
+
+Remaining Track A follow-up, not part of the executed 085A slice:
+
+- Add a proper San Francisco unit/contract test harness if we want more than static contract verification.
 - Add a small offline report script before any automatic learning system.
-- Replace one-object-per-event raw R2 writes with a bounded retention/chunking plan before high-volume launch.
+- Decide whether D1 needs a later metrics expansion for token/cost/subject-hash rollups, as its own migration/deploy slice.
+- Define raw sample retention/chunking before high-volume launch.
 
 ---
 
@@ -634,7 +642,7 @@ Surviving state:
 - Free users keep only minimal operational metering/budget/abuse facts by default.
 - Raw R2 learning capture is bounded and sanitized under `learning/...`; normal executions are not dumped as one full raw object forever.
 - No new D1 schema change was required for this slice. The existing D1 tables keep tiny metering/outcome facts; detailed edit-level learning stays in sampled R2 records.
-- Telemetry stores explicit touched metadata emitted by the agent/caller and does not infer widget semantics from path prefixes.
+- Telemetry no longer infers widget semantics from path prefixes. Rich touched path/control/group metadata is emitted by the agent/caller and retained in sampled R2 learning records; existing D1 facts keep compact counts/scopes.
 
 ### Recommended Execution Order
 
