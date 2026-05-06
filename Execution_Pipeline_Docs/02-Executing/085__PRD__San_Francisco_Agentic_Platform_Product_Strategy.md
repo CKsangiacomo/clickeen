@@ -70,21 +70,21 @@ This PRD is based on the current code inspection of:
 
 Good current architecture:
 
-- Account-widget l10n generation uses a private WorkerEntrypoint, not a public shared-secret HTTP route.
-- San Francisco receives approved text items for account-widget l10n, not account storage/config authority.
+- Account-widget translation generation uses a private WorkerEntrypoint, not a public shared-secret HTTP route.
+- San Francisco receives approved text items for account-widget translation, not account storage/config authority.
 - Grants are signed, scoped, expiring, and capability checked.
 - D1 schema is migration-owned, not created at Worker boot.
 - Raw AI interaction logs go to R2, and queryable indexes go to D1.
 
 Current risks and cleanup candidates:
 
-- `/v1/outcome` expects an `sf.command` envelope with `{ v: 1, kind: 'sf.command', command, payload }`, while Roma sends only `{ command, payload }`. The learning/outcome loop is confirmed broken until this contract is fixed.
+- `/v1/outcome` was fixed by 085A and now accepts one direct signed outcome payload. The remaining `sf.command` envelope survives only for personalization/onboarding.
 - `sdr.copilot` has no active non-documentation caller outside San Francisco/contracts.
 - `agent.personalization.onboarding.v1` has no active non-documentation caller outside San Francisco/contracts.
 - `CK_INTERNAL_SERVICE_JWT` remains for residual San Francisco HTTP tooling.
-- Current code still has a legacy AI access mapping layer. Target architecture deletes that product concept and replaces it with direct per-agent runtime policy.
+- The legacy AI access mapping layer was removed by 085B; runtime policy is now direct per-agent policy.
 - Widget copilot has fail-soft parsing that can turn invalid model output into a no-op assistant message.
-- Widget copilot has a `TEMP` edit-policy multiplier.
+- Widget copilot `TEMP` edit-policy multiplier was removed by 085B.
 - San Francisco has no local contract test suite.
 
 These are not all implementation commands yet. They are the starting evidence for the discussion.
@@ -172,7 +172,7 @@ Clickeen wants agents that improve over time. Today, San Francisco logs interact
 - `/v1/execute` emits an `InteractionEvent`.
 - Queue consumer writes raw events to R2 and indexes a subset in D1.
 - Roma can send outcome events after user decisions.
-- The outcome body shape is mismatched: Roma omits the `sf.command` envelope fields San Francisco currently requires.
+- The outcome body shape was fixed by 085A. Track A follow-up is now about reporting/test harness depth, not envelope repair.
 
 ### Decisions Needed
 
@@ -301,9 +301,7 @@ Clickeen wants accounts to access different LLMs, budgets, token windows, model 
 
 ### Current Shape
 
-The current code still uses a legacy AI access mapping layer.
-
-Target architecture: delete this conceptual layer. Legacy access labels should not survive as product language. The system should store and pass direct runtime policy instead.
+PRD 085B deleted the legacy AI access mapping layer and moved runtime decisions into direct per-agent runtime policy.
 
 San Francisco currently supports:
 
@@ -433,11 +431,11 @@ The simple target:
 
 ### Required Future Execution Slices
 
-- Delete the legacy AI access mapping abstraction from product language.
-- Add tests for runtime policy provider/model rejection.
-- Add `maxCostUsd` where high-volume generation can run, especially l10n.
-- Decide whether provider fallback is allowed per agent or globally.
-- Add a model-switch runbook: eval, canary, promote, rollback.
+- Completed by 085B: delete the legacy AI access mapping abstraction from product language.
+- Completed by 085B: add runtime-policy cost ceilings where high-volume generation can run.
+- Completed by 085B: no hidden customer-facing provider/model fallback; same-model retry only.
+- Future-only: add deeper runtime policy provider/model rejection tests if the model catalog expands.
+- Future-only: keep the model-switch runbook operationally current as providers/models change.
 
 ---
 
@@ -452,7 +450,8 @@ Customer-facing agents are part of the product experience. They need stricter co
 Clearly real:
 
 - `cs.widget.copilot.v1` - account Builder copilot
-- `l10n.instance.v1` - account-widget translation generator, private path
+- `widget.instance.translator` - account-owned widget instance translator, private path
+- `website.prague.copy.translator` - Prague website-copy translator, internal/tooling path
 
 Questionable or unowned:
 
@@ -505,13 +504,18 @@ Do not keep placeholder customer agents.
 Keep only:
 
 - Builder copilot, because it is live product
-- Account-widget l10n, because it is core product
+- `widget.instance.translator`, because account-owned widget translation is core product
+- `website.prague.copy.translator`, because Prague website copy must be translated through its own internal job, not mixed with account widgets
 
-Delete or quarantine `sdr.copilot` and `agent.personalization.onboarding.v1` unless we define their live product owner now.
+Delete `sdr.copilot` and `agent.personalization.onboarding.v1`.
+
+Rename `l10n.instance.v1` to `widget.instance.translator`. The old name is vague and hides the product subject. The surviving agent translates one saved widget instance owned by one account.
+
+Create/rename the Prague copy translation job as `website.prague.copy.translator`. Prague translation is real, but it is an internal website-copy job with its own owner/input/output boundary.
 
 ### Required Future Execution Slices
 
-- Add customer-agent ownership metadata to the existing contracts/executor registry and docs. Do not create a new database/admin surface for this.
+- Add only minimal registry ownership fields to the existing contracts/executor registry and docs: `owner`, `surface`, and `boundary` for customer-facing agents; `owner`, `jobType`, and `boundary` for internal jobs. Do not create a new database/admin surface/checklist engine for this.
 - Delete unowned agents and registry entries.
 - Add a contract checklist required before any new customer-facing agent can be added.
 
@@ -529,7 +533,7 @@ San Francisco has the start of internal jobs:
 
 - personalization/onboarding job machinery
 - Prague string translation tooling
-- l10n generation
+- account-owned widget instance translation generation
 - event logging
 
 But the platform does not yet have a clean internal workforce model.
@@ -537,7 +541,8 @@ But the platform does not yet have a clean internal workforce model.
 ### Decisions Needed
 
 1. Which internal agents are real now?
-   - localization worker
+   - `widget.instance.translator`
+   - `website.prague.copy.translator`
    - content writer
    - support triage
    - ops monitor
@@ -578,24 +583,29 @@ But the platform does not yet have a clean internal workforce model.
 
 Start with internal agents as explicit jobs, not open-ended chatbots.
 
-Every internal agent needs:
+The first real internal jobs are:
+
+- `widget.instance.translator` - translates one account-owned widget instance through the private Tokyo-worker -> San Francisco path.
+- `website.prague.copy.translator` - translates Prague website copy through explicit tooling/internal workflow.
+
+Do not build a generic internal workforce framework in this slice. Every surviving internal job only needs the fields required to prevent ambiguity:
 
 - owner
-- trigger
+- job type / trigger
 - input contract
 - output contract
-- allowed tools
-- write policy
+- boundary
 - cost policy
 - audit trail
 
-No internal agent should gain product write power through a shared-secret HTTP route.
+No internal agent should gain product write power through a shared-secret HTTP route. The current Prague translation system must be cleaned into an explicit Prague translation job boundary; account-widget translation must stay separate.
 
 ### Required Future Execution Slices
 
-- Define an internal job contract.
-- Decide whether Prague translation remains HTTP tooling or moves to private/local tooling.
-- Delete personalization/onboarding if no live owner exists.
+- Rename/formalize account-widget translation as `widget.instance.translator`.
+- Rename/formalize Prague website-copy translation as `website.prague.copy.translator`.
+- Clean the current Prague translation tooling so it is not a product-looking shared-secret route.
+- Delete personalization/onboarding.
 - Add worker-to-worker private bindings or queue patterns for any surviving internal jobs.
 
 ---
@@ -606,11 +616,13 @@ These are not automatic deletes yet. They require product decision.
 
 | Candidate | Why It Is Suspect | Keep Only If |
 | --- | --- | --- |
-| `sdr.copilot` | no active non-doc caller found | Prague/Minibob has a real live acquisition surface |
-| `agent.personalization.onboarding.v1` | no active non-doc caller found | account-context carry-forward is a real product job |
-| `/v1/personalization/onboarding` | shared-secret HTTP tooling and legacy naming | converted to real private/internal job boundary |
-| `SanfranciscoCommandMessage` / `sf.command` | generic envelope for two commands, currently breaks outcome shape | we actually need a command bus with multiple commands |
-| `CK_INTERNAL_SERVICE_JWT` in San Francisco | shared-secret residue; internal auth pattern should not be copied or polished into product architecture | local/cloud-dev tooling only, with explicit expiry/deletion plan |
+| `sdr.copilot` | no active non-doc caller found | do not keep now; future acquisition agent requires a new PRD |
+| `agent.personalization.onboarding.v1` | no active non-doc caller found; Paris/future-personalization residue | do not keep now |
+| `/v1/personalization/onboarding` | shared-secret HTTP tooling and legacy naming | delete with personalization/onboarding |
+| `SanfranciscoCommandMessage` / `sf.command` | generic envelope that only survives for onboarding | delete with personalization/onboarding |
+| `CK_INTERNAL_SERVICE_JWT` in San Francisco | shared-secret residue; internal auth pattern should not be copied or polished into product architecture | keep only for explicit Prague translation tooling until that path is cleaned |
+| `l10n.instance.v1` | vague agent name that hides the product subject | rename to `widget.instance.translator` |
+| Prague string translation route/job | real need, messy boundary | rename/formalize as `website.prague.copy.translator` and clean tooling |
 | Legacy AI access mapping layer | second fake AI access system; conflicts with direct agent runtime policy | replaced by per-agent runtime policy |
 | Widget copilot parse fallback | hides invalid model output as no-op assistant response | converted to explicit typed failure/clarification |
 | Widget copilot `devMultiplier` | temporary product policy | replaced with named policy by entitlement and agent |
@@ -646,19 +658,15 @@ Surviving state:
 
 ### Recommended Execution Order
 
+085A and 085B are already executed. Remaining execution order is:
+
 1. **085E - Strictness and toxic flow removal**
    - Stabilizes current behavior and deletes fake success paths before building more platform.
 
-2. **085A - Learning and outcome loop**
-   - Makes measurement reliable after the runtime is strict enough to trust.
-
-3. **085B - Multi-LLM entitlements and runtime policy**
-   - Establishes the clean commercial/runtime policy boundary before wider model rollout.
-
-4. **085C - Customer-facing agent ownership**
+2. **085C - Customer-facing agent ownership**
    - Deletes or formalizes customer agents once runtime policy and logging are clear.
 
-5. **085D - Internal agentic workforce boundary**
+3. **085D - Internal agentic workforce boundary**
    - Builds the broader internal workforce model after the customer-facing AI platform is disciplined.
 
 ---
@@ -707,26 +715,22 @@ Fill this before execution.
 
 ### Customer-Facing Agents
 
-- Agents to keep now:
-- Agents to delete now:
-- Agents to design later:
-- Required ownership fields:
+- Agents to keep now: `cs.widget.copilot.v1`, `widget.instance.translator`.
+- Agents to delete now: `sdr.copilot`, `agent.personalization.onboarding.v1`.
+- Agents to design later: any future acquisition/SDR/support agent requires a new PRD with a real surface owner.
+- Required ownership fields: no framework. Existing registry metadata only: `owner`, `surface`, `boundary`.
 
 ### Clickeen Agentic Workforce
 
-- Internal agents to keep now: blocked until first real internal job is named; default recommendation is the localization worker.
-- Shared-secret tooling allowed:
-- Private binding/queue requirements:
-- Human approval rules:
+- Internal agents to keep now: `widget.instance.translator`, `website.prague.copy.translator`.
+- Shared-secret tooling allowed: only temporary Prague translation tooling during cleanup; not account-widget translation and not product runtime.
+- Private binding/queue requirements: account-widget translation stays on Tokyo-worker -> San Francisco private binding; Prague translation must become an explicit internal/tooling job boundary.
+- Human approval rules: Prague generated copy is reviewed/committed through the Prague tooling workflow; account-widget translation writes only generated overlay ops for the owning account/widget instance.
 
 ---
 
 ## 12. Open Questions
 
-1. Is SDR still a real product path, or should it be deleted until Prague/Minibob needs it?
-2. Is personalization/onboarding still a real job, or was it a Paris-era leftover?
-3. Should Prague string translation remain a San Francisco HTTP tooling endpoint, or move to a private/local tool?
-4. Should internal Clickeen jobs use the same runtime policy shape with an internal account/service subject?
-5. Should provider fallback be allowed at all for customer-facing agents, or only for internal jobs?
-6. What is the first measurable learning target for Builder copilot?
-7. Which internal workforce agent should be first after localization?
+1. Future acquisition/SDR agent shape: deferred until Prague/Minibob has a real live acquisition surface.
+2. Long-term Prague translation transport: decide during the `website.prague.copy.translator` cleanup; current shared-secret tooling is not the target architecture.
+3. Next internal workforce agent after translation: deferred until translation and Builder copilot are disciplined.

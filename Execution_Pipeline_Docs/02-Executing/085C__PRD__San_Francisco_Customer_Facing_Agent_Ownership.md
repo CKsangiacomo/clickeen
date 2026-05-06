@@ -65,7 +65,7 @@ San Francisco does not own:
 Clearly real now:
 
 - `cs.widget.copilot.v1` - Builder copilot
-- `l10n.instance.v1` - account-widget localization generation
+- `widget.instance.translator` - account-owned widget instance translation
 
 Questionable or unowned:
 
@@ -74,35 +74,31 @@ Questionable or unowned:
 
 Future agents are allowed only after they have a real surface and owner.
 
+Naming decisions:
+
+- Rename `l10n.instance.v1` to `widget.instance.translator`.
+- Do not keep the vague `l10n` agent name in active code, contracts, policy, or live docs.
+- Prague translation is not this agent. Prague owns a separate internal job: `website.prague.copy.translator`.
+
 ---
 
 ## 4. Approach
 
-### 4.1 Agent Ownership Registry Metadata
+### 4.1 Minimal Agent Ownership Fields
 
-Create a contract/doc table for customer-facing agents.
+Do not create a new ownership framework.
 
-This must stay boring. It should be a TypeScript registry shape and a small doc/checklist tied to the existing `AGENT_EXECUTORS` and contracts validation. Do not create a database, admin UI, or new service for agent ownership.
+Ownership must be just enough to prevent zombie agents.
 
-Required fields:
+For customer-facing agents, add only these fields to the existing registry/docs:
 
-- `agentId`
-- product owner
-- surface owner
-- surface route/app
-- subject type
-- auth mode
-- grant issuer
-- output contract
-- write capability
-- runtime policy source
-- budget behavior
-- user-visible failure behavior
-- outcome events
-- storage owner for output
-- deletion owner
+- `owner`
+- `surface`
+- `boundary`
 
-The existing boot-time cross-validation between contracts and `AGENT_EXECUTORS` is a good pattern and should be preserved. Ownership metadata should strengthen that registry, not bypass it.
+The existing boot-time cross-validation between contracts and `AGENT_EXECUTORS` is a good pattern and should be preserved. These fields should strengthen that registry, not bypass it.
+
+No database. No admin UI. No checklist engine. No second registry service.
 
 ### 4.2 Contract Checklist
 
@@ -123,15 +119,14 @@ No customer-facing agent can be added without:
 Keep:
 
 - Builder copilot, because it is live product.
-- Account-widget localization generation, because localization is core product.
+- `widget.instance.translator`, because account-owned widget translation is core product.
 
-Delete or quarantine:
+Delete:
 
-- agents without active product surface
-- agents without owner
-- agents without caller
-- agents with only documentation references
-- agents that preserve a dead funnel/demo path
+- `sdr.copilot`
+- `agent.personalization.onboarding.v1`
+
+Future sales/acquisition/personalization agents require a new PRD with a real owner and surface.
 
 ---
 
@@ -143,6 +138,7 @@ Delete or quarantine:
 - Routes for deleted/unowned agents.
 - Docs describing deleted agents as live.
 - Tests/fixtures that keep deleted agent IDs alive.
+- All active `l10n.instance.v1` IDs, after replacing them with `widget.instance.translator`.
 
 ---
 
@@ -153,8 +149,9 @@ Likely code areas:
 - `sanfrancisco/src/agents/*`
 - `sanfrancisco/src/index.ts`
 - `packages/ck-contracts/src/ai.ts`
+- `packages/ck-policy/src/ai-runtime.ts`
 - Roma copilot caller code
-- l10n generation caller code
+- account-widget translation caller code
 - any Prague/Minibob/funnel references if SDR is deleted or quarantined
 
 Docs:
@@ -188,7 +185,7 @@ Otherwise AI becomes a pile of demos and hidden product promises.
 
 Clickeen's product moat depends on AI that works inside strict product boundaries.
 
-Builder copilot and localization are core because they directly improve widget authoring and global readiness.
+Builder copilot and `widget.instance.translator` are core because they directly improve widget authoring and global readiness.
 
 Placeholder agents create confusion, cost, and fake architecture. Deleting them makes San Francisco easier to trust and easier to extend.
 
@@ -198,15 +195,16 @@ Placeholder agents create confusion, cost, and fake architecture. Deleting them 
 
 Before execution:
 
-- Decide which customer-facing agents survive now.
-- Decide whether SDR is real now or future-only.
-- Decide whether personalization/onboarding is real now or future-only.
-- Decide where agent ownership metadata lives. Default recommendation: TypeScript registry metadata plus docs, not a database/admin surface.
+- Surviving customer-facing/product agents are decided: `cs.widget.copilot.v1` and `widget.instance.translator`.
+- Deleted now: `sdr.copilot` and `agent.personalization.onboarding.v1`.
+- Rename is decided: `l10n.instance.v1` -> `widget.instance.translator`.
+- Ownership metadata is decided: minimal existing-registry/docs fields only (`owner`, `surface`, `boundary`).
 
 Execution is green only when:
 
 - every surviving customer-facing agent has owner metadata in the registry/doc contract
 - every deleted agent has no route, registry entry, grant issuance, caller, or live doc
+- `l10n.instance.v1` has no active-code or live-doc residue
 - Builder copilot still works
 - localization generation still works
 - residue checks pass for deleted agent IDs
@@ -221,7 +219,7 @@ Required:
 - relevant `packages/ck-contracts` checks
 - Roma checks if Builder copilot contracts move
 - Tokyo-worker checks if localization contracts move
-- `rg` residue checks for deleted agent IDs
+- `rg` residue checks for deleted/renamed agent IDs: `sdr.copilot`, `agent.personalization.onboarding.v1`, `l10n.instance.v1`
 - smoke test: Builder copilot
 - smoke test: account-widget localization generation
 - git-based Cloudflare deploy after implementation

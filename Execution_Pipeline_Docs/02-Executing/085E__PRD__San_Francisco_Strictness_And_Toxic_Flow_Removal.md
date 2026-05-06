@@ -72,9 +72,9 @@ Invalid output should be:
 
 ### 4.1 Remove Fail-Soft Parsing
 
-Replace fail-soft parsing with strict result variants.
+Replace fail-soft parsing with strict results.
 
-Target shape:
+Target shape, if a shared type is needed:
 
 ```ts
 type AgentResult<T> =
@@ -86,6 +86,8 @@ type AgentResult<T> =
 The caller decides how to show the result.
 
 San Francisco must not pretend an invalid model response is a useful successful answer.
+
+Execution decision: do not build a broad AgentResult framework if the existing route error channel is enough. For Builder copilot, invalid model JSON should fail visibly through the existing San Francisco/Roma error path. A valid clarification remains a normal structured copilot response with no ops.
 
 ### 4.2 Delete Temporary Multipliers
 
@@ -115,7 +117,9 @@ Generic command wrappers should be deleted if they exist only for unrelated one-
 
 Use a simple typed contract unless a real command bus exists with shared middleware and multiple commands.
 
-The current outcome envelope mismatch is a confirmed live bug: San Francisco expects an `sf.command` envelope while Roma sends a simpler outcome body. This PRD should delete the fake wrapper or explicitly prove a real command bus exists.
+The `/v1/outcome` envelope mismatch was fixed by PRD 085A. The remaining `SanfranciscoCommandMessage` / `sf.command` envelope survives only for personalization/onboarding. It must be deleted when personalization/onboarding is deleted in 085D.
+
+No new generic command bus should be introduced.
 
 ---
 
@@ -128,6 +132,8 @@ The current outcome envelope mismatch is a confirmed live bug: San Francisco exp
 - String-equality internal auth patterns copied into product paths.
 - Generic command envelopes with no real command-bus need.
 - Docs that describe hidden fallback as product behavior.
+- Active `l10n.instance.v1` naming after the translator rename decision.
+- Active personalization/onboarding shared-secret route/job residue.
 
 ---
 
@@ -142,6 +148,8 @@ Likely code areas:
 - `packages/ck-contracts/src/ai.ts`
 - Roma Builder copilot caller code
 - tests/fixtures for copilot output
+- `packages/ck-policy/src/ai-runtime.ts`
+- docs that still describe old San Francisco agent IDs or shared-secret product routes
 
 Potential behavior changes:
 
@@ -187,8 +195,9 @@ Before execution:
 - Identify temporary multipliers.
 - Identify residual shared-secret product-like routes.
 - Identify internal auth checks that should be deleted or made tooling-only.
-- Decide typed result shape.
-- Decide user-facing failure/clarification behavior with Roma if needed.
+- Typed result shape decision: no broad framework unless required; strict San Francisco errors are acceptable for invalid model output.
+- User-facing failure behavior decision: Roma/Bob show a clear chat message; invalid model output must not be a fake assistant success.
+- Rename decisions are set: `l10n.instance.v1` -> `widget.instance.translator`, Prague translation -> `website.prague.copy.translator`.
 
 Execution is green only when:
 
@@ -197,6 +206,7 @@ Execution is green only when:
 - product-like shared-secret paths are removed or tooling-only
 - internal auth residue is not copied or strengthened into a product boundary
 - generic envelopes are deleted unless justified
+- remaining `sf.command` is deleted with personalization/onboarding or explicitly scoped only until 085D execution
 - tests cover success, clarification, and failure
 - residue checks pass
 
@@ -212,6 +222,6 @@ Required:
 - tests for valid output
 - tests for clarification
 - tests for invalid output failure
-- `rg` residue checks for deleted parser/fallback/multiplier names
+- `rg` residue checks for deleted parser/fallback/multiplier names and renamed/deleted agent IDs
 - smoke test: Builder copilot handles success and typed failure
 - git-based Cloudflare deploy after implementation

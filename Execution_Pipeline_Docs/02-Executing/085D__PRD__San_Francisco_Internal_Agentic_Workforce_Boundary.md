@@ -8,7 +8,14 @@ This PRD defines the boundary for Clickeen's internal AI workforce.
 
 Internal agents can run sales, support, marketing, localization, content, and ops work. They must be governed like production workers, not experiments with broad access.
 
-Do not execute this PRD as an abstract framework. It is blocked until one real internal job is named. The recommended first job is the existing localization worker path because it already has real input, output, cost, and product value.
+Do not execute this PRD as an abstract framework.
+
+The first real internal/product-internal jobs are now named:
+
+- `widget.instance.translator` - translates one account-owned widget instance.
+- `website.prague.copy.translator` - translates Prague website copy.
+
+The old `l10n.instance.v1` name must be replaced by `widget.instance.translator`. Prague translation must not share the account-widget translation agent.
 
 ---
 
@@ -66,7 +73,7 @@ San Francisco does not own:
 
 Internal agents run as explicit jobs.
 
-Each job must declare:
+Do not build the generic type below as a framework in this slice. It is a planning shape only:
 
 ```ts
 type InternalAgentJob = {
@@ -89,28 +96,30 @@ The type above is a planning shape. During execution, free-form fields such as `
 
 No internal job should gain product write power through a shared-secret HTTP route.
 
+For this execution, use the minimal real fields required to remove ambiguity:
+
+- `owner`
+- `jobType`
+- `boundary`
+- input contract
+- output contract
+- cost policy
+- audit path
+
 ---
 
 ## 4. Approach
 
 ### 4.1 Explicit Job Registry
 
-Create a registry for internal workforce jobs.
+Create no standalone registry service.
 
-Build the registry around the first real surviving job, not around imagined future workers.
+Use the existing AI registry/contracts plus docs. Build only around the two real surviving jobs:
 
-Required fields:
+- `widget.instance.translator`
+- `website.prague.copy.translator`
 
-- job type
-- owner
-- trigger
-- input contract
-- output contract
-- tools
-- write policy
-- approval policy
-- runtime policy
-- audit policy
+Required fields are minimal: `owner`, `jobType`, and `boundary`, plus the existing input/output/runtime policy definitions.
 
 ### 4.2 Tool Permissions
 
@@ -130,6 +139,12 @@ Examples:
 - support inbox reply draft
 
 No internal agent receives broad tool access by default.
+
+For this slice:
+
+- `widget.instance.translator` may read the translation request passed by Tokyo-worker and write only generated widget translation ops back through the existing account-widget translation flow.
+- `website.prague.copy.translator` may translate Prague website copy from explicit tooling inputs and write only to the Prague translation output workflow.
+- Personalization/onboarding receives no tools because it is deleted.
 
 ### 4.3 Job State Storage
 
@@ -168,6 +183,10 @@ Allow autonomous execution only for:
 - Internal jobs without write policy.
 - Internal jobs without audit trail.
 - Speculative workforce agents without a real current owner.
+- `agent.personalization.onboarding.v1`.
+- `/v1/personalization/onboarding`.
+- `SanfranciscoCommandMessage` / `sf.command`, once personalization/onboarding is deleted.
+- Active `l10n.instance.v1` naming after it is replaced by `widget.instance.translator`.
 
 ---
 
@@ -179,6 +198,7 @@ Likely code areas:
 - `sanfrancisco/src/personalization-jobs.ts`
 - `sanfrancisco/src/agents/*`
 - `packages/ck-contracts/src/ai.ts`
+- `packages/ck-policy/src/ai-runtime.ts`
 - San Francisco wrangler bindings if queues/private bindings are added
 - Prague translation tooling if moved or formalized
 
@@ -217,26 +237,29 @@ This PRD turns that thesis into a disciplined operating model.
 
 It lets Clickeen build an AI workforce without polluting customer-facing product paths or giving experiments broad product write access.
 
+The first step is not a broad workforce platform. It is cleaning two real translation jobs and deleting one fake personalization/onboarding job.
+
 ---
 
 ## 9. Execution Readiness Checklist
 
 Before execution:
 
-- Decide first internal workforce job to keep. Default recommendation: localization worker.
-- Decide whether personalization/onboarding survives.
-- Decide whether Prague translation is tooling, internal job, or private binding.
-- Decide job registry location.
-- Decide approval levels.
+- First internal jobs are decided: `widget.instance.translator` and `website.prague.copy.translator`.
+- Personalization/onboarding is decided: delete it.
+- Prague translation is decided: keep the need, clean the current shared-secret/script cluster into `website.prague.copy.translator`.
+- Job registry location is decided: existing contracts/policy/docs only, no new framework.
+- Approval rules are decided for this slice: Prague generated copy is reviewed/committed through the Prague tooling workflow; account-widget translation writes generated overlay ops for the owning account/widget instance.
 
 Execution is green only when:
 
 - surviving internal jobs have registry entries
 - deleted internal jobs have no routes/callers/registry entries
 - shared-secret product-like internal paths are gone or explicitly tooling-only
-- tool permissions are explicit
+- tool permissions are explicit for the two surviving translation jobs
 - audit path exists for surviving jobs
 - no generic workforce registry exists without at least one real surviving job
+- `l10n.instance.v1` has no active-code or live-doc residue after rename
 
 ---
 
@@ -247,6 +270,6 @@ Required:
 - `./node_modules/.bin/tsc -p sanfrancisco/tsconfig.json --noEmit`
 - relevant `packages/ck-contracts` checks
 - queue/private binding checks if runtime changes
-- `rg` residue checks for deleted internal routes/agent IDs/secrets
-- smoke test for surviving internal job
+- `rg` residue checks for deleted/renamed internal routes/agent IDs/secrets: `agent.personalization.onboarding.v1`, `/v1/personalization/onboarding`, `SanfranciscoCommandMessage`, `sf.command`, `l10n.instance.v1`
+- smoke test for surviving translation jobs
 - git-based Cloudflare deploy after implementation
