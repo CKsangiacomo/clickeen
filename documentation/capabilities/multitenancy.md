@@ -174,7 +174,7 @@ account
 Key boundary rules:
 - Instances, assets, locales, and membership are all account-scoped.
 - Roma asset reads are account-canonical (`/api/account/assets`).
-- Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped Paris calls.
+- Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped product-control calls.
 - Curated platform content is owned by a platform account row and remains globally readable; runtime policy must use `accounts.is_platform` plus `owner_account_id`, not `ADMIN_ACCOUNT_ID`.
 
 ---
@@ -296,7 +296,7 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 
 **Budgets (MiniBob + Free conversion gates):**
 - Budgets are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls, snapshot regenerations).
-- Budgets are **metered and enforced server-side** at the point where cost is incurred (Paris/Tokyo-worker/Venice); Bob uses the resolved policy for UX gating + upsell messaging.
+- Budgets are **metered and enforced server-side** at the point where cost is incurred (Roma/Tokyo-worker/Venice/San Francisco, depending on the cost driver); Bob uses the resolved policy for UX gating + upsell messaging.
 - Budgets are defined by the real account policy plus explicit demo-surface gates, not by a fake `minibob` subject profile and not by individual widgets.
 
 **How this appears in widget PRDs (required):**
@@ -325,12 +325,12 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 - The editor stays one product path: account opens widget, Bob edits, Roma saves.
 - Demo/funnel surfaces can evolve separately without contaminating the shared Builder core.
 
-### Paris Enforcement
+### Server-Side Enforcement
 
 Current shipped behavior:
 - Account member listing is read-only via `GET /api/account/team` and `GET /api/account/team/members/:memberId` for authorized users.
 - Publish and editor behavior use policy/entitlement enforcement already wired in runtime.
-- There is no shipped seat-cap write-path enforcement in Paris yet.
+- There is no shipped seat-cap write-path enforcement yet.
 - There is no shipped `SEAT_LIMIT_EXCEEDED` runtime error yet.
 
 Planned behavior (not shipped):

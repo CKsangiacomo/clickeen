@@ -13,7 +13,7 @@ import {
 } from '@roma/lib/account-instance-sync';
 import {
   loadAccountPublishContainment,
-} from '@roma/lib/michael';
+} from '@roma/lib/berlin-product';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';

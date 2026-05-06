@@ -1,9 +1,8 @@
 STATUS: EXECUTION RUNBOOK — WIDGET COPILOT
-Updated: March 15, 2026 (070A AI ownership cut)
+Updated: May 5, 2026 (backend boundary cleanup)
 This file keeps rollout history, but the current runtime owner shape is now:
 - account-mode Builder Copilot: Roma-owned backend routes
 - Prague demo: not a live Copilot execution surface
-- Paris: no `/api/ai/*` ownership
 - Account Builder widget copilot: one Roma-owned account path using `cs.widget.copilot.v1`
 
 ## Purpose
@@ -56,7 +55,6 @@ Documentation touched for this rollout:
 - `documentation/ai/overview.md`
 - `documentation/ai/agents/sdr-copilot.md`
 - `documentation/services/bob.md`
-- `documentation/services/paris.md`
 - `documentation/services/sanfrancisco.md`
 - `documentation/services/devstudio.md`
 - `documentation/architecture/CONTEXT.md`

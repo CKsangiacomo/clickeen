@@ -1,6 +1,6 @@
 import { resolveBerlinBaseUrl } from './env/berlin';
 
-export type MichaelAccountInstanceResult =
+export type BerlinAccountInstanceProjectionResult =
   | {
       ok: true;
       row: {
@@ -20,7 +20,7 @@ export type MichaelAccountInstanceResult =
       detail?: string;
     };
 
-export type MichaelAccountPublishContainmentResult =
+export type BerlinAccountPublishContainmentResult =
   | {
       ok: true;
       containment: {
@@ -35,7 +35,7 @@ export type MichaelAccountPublishContainmentResult =
       detail?: string;
     };
 
-export type MichaelDeleteInstanceResult =
+export type BerlinDeleteInstanceProjectionResult =
   | {
       ok: true;
     }
@@ -138,16 +138,16 @@ export async function fetchBerlinProductJson<T>(args: {
   }
 }
 
-export function michaelUnavailableResult(error: unknown): {
+export function berlinProductUnavailableResult(error: unknown): {
   ok: false;
   status: 502;
-  reasonKey: 'roma.errors.proxy.michael_unavailable';
+  reasonKey: 'roma.errors.proxy.berlin_unavailable';
   detail: string;
 } {
   return {
     ok: false,
     status: 502,
-    reasonKey: 'roma.errors.proxy.michael_unavailable',
+    reasonKey: 'roma.errors.proxy.berlin_unavailable',
     detail: error instanceof Error ? error.message : String(error),
   };
 }

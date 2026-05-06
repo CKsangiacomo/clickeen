@@ -1,13 +1,6 @@
 import type { MemberRole } from '@clickeen/ck-policy';
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeRequestRoleFromCapsule } from './account-authz-capsule';
-import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from './auth/session';
-import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
-import {
-  enforceRomaRateLimitForAccountRequest,
-  finalizeRomaObservedResponse,
-  type RomaRateLimitKv,
-} from './request-ops';
+import { resolveCurrentAccountRouteContext, withNoStore, withSession, type CurrentAccountRouteContext } from './current-account-route';
 import {
   assertTokyoAssetControlBindingAvailable,
   buildTokyoAssetControlHeaders,
@@ -17,27 +10,19 @@ import {
 type AccountAssetGatewayContext = {
   accountId: string;
   accountCapsule: string;
-  sessionSetCookies?: SessionCookieSpec[];
+  sessionSetCookies?: CurrentAccountRouteContext['setCookies'];
 };
 
 export function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
-function withNoStore(response: NextResponse): NextResponse {
-  response.headers.set('cache-control', 'no-store');
-  response.headers.set('cdn-cache-control', 'no-store');
-  response.headers.set('cloudflare-cdn-cache-control', 'no-store');
-  return response;
-}
-
 export function finalizeAccountAssetResponse(args: {
   request: NextRequest;
   response: NextResponse;
-  setCookies?: SessionCookieSpec[];
+  setCookies?: CurrentAccountRouteContext['setCookies'];
 }): NextResponse {
-  const next = withNoStore(applySessionCookies(args.response, args.request, args.setCookies));
-  return finalizeRomaObservedResponse(args.request, next);
+  return withSession(args.request, args.response, args.setCookies);
 }
 
 export function accountAssetUploadOptionsResponse() {
@@ -55,7 +40,7 @@ export function parseJsonOrNull(text: string): unknown | null {
 
 function buildErrorResponse(
   request: NextRequest,
-  setCookies: SessionCookieSpec[] | undefined,
+  setCookies: CurrentAccountRouteContext['setCookies'],
   status: number,
   error: { kind: string; reasonKey: string; detail?: string },
 ) {
@@ -66,67 +51,24 @@ function buildErrorResponse(
   });
 }
 
-function resolveUsageKvFromRequestContext() {
-  return (
-    getOptionalCloudflareRequestContext<{ env?: { USAGE_KV?: RomaRateLimitKv } }>()?.env?.USAGE_KV ??
-    null
-  );
-}
-
 export async function resolveCurrentAccountAssetGatewayContext(args: {
   request: NextRequest;
   minRole: MemberRole;
 }): Promise<{ ok: true; value: AccountAssetGatewayContext } | { ok: false; response: NextResponse }> {
-  const session = await resolveSessionBearer(args.request);
-  if (!session.ok) {
-    return {
-      ok: false,
-      response: finalizeAccountAssetResponse({
-        request: args.request,
-        response: session.response,
-      }),
-    };
-  }
-
-  const authz = await authorizeRequestRoleFromCapsule({
+  const current = await resolveCurrentAccountRouteContext({
     request: args.request,
     minRole: args.minRole,
   });
-  if (!authz.ok) {
-    return {
-      ok: false,
-      response: buildErrorResponse(
-        args.request,
-        session.setCookies,
-        authz.status,
-        authz.error,
-      ),
-    };
-  }
+  if (!current.ok) return current;
 
   try {
     assertTokyoAssetControlBindingAvailable();
-    const limited = await enforceRomaRateLimitForAccountRequest(
-      args.request,
-      authz.payload.accountId,
-      resolveUsageKvFromRequestContext(),
-    );
-    if (limited) {
-      return {
-        ok: false,
-        response: finalizeAccountAssetResponse({
-          request: args.request,
-          response: limited,
-          setCookies: session.setCookies,
-        }),
-      };
-    }
     return {
       ok: true,
       value: {
-        accountId: authz.payload.accountId,
-        accountCapsule: authz.token,
-        sessionSetCookies: session.setCookies,
+        accountId: current.value.authzPayload.accountId,
+        accountCapsule: current.value.authzToken,
+        sessionSetCookies: current.value.setCookies,
       },
     };
   } catch (error) {
@@ -135,7 +77,7 @@ export async function resolveCurrentAccountAssetGatewayContext(args: {
       ok: false,
       response: buildErrorResponse(
         args.request,
-        session.setCookies,
+        current.value.setCookies,
         500,
         { kind: 'INTERNAL', reasonKey: 'coreui.errors.misconfigured', detail },
       ),

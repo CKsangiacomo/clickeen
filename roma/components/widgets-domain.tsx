@@ -232,7 +232,7 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instance/${encodeURIComponent(instance.publicId)}?subject=account`, {
+        await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instance/${encodeURIComponent(instance.publicId)}`, {
           method: 'DELETE',
         });
         await refreshWidgets({ force: true });
@@ -254,7 +254,7 @@ export function WidgetsDomain() {
       setCreateError(null);
       try {
         await accountApi.fetchJson<{ status?: 'published' | 'unpublished' }>(
-          `/api/account/instances/${encodeURIComponent(instance.publicId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}?subject=account`,
+          `/api/account/instances/${encodeURIComponent(instance.publicId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}`,
           {
             method: 'POST',
           },

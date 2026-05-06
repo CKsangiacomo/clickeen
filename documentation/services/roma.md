@@ -132,7 +132,7 @@ Client fetch behavior:
 
 `BuilderDomain` flow:
 
-1. Resolve active Roma workspace context + target `publicId`.
+1. Resolve active Roma account context + target `publicId`.
 2. Load one Builder-open envelope from Roma same-origin (`GET /api/builder/:publicId/open`), which resolves the saved authoring revision server-side.
 3. Load compiled payload (`/api/widgets/:widgetname/compiled`).
 4. Wait for Bob `bob:session-ready`.
@@ -153,7 +153,7 @@ Notes:
 - Product-path save no longer computes localization base state inline. Tokyo-worker derives/ensures l10n base state later from explicit localization/live follow-up consumers.
 - Product-path save must stay one user action with one owner in product language: the user saves the instance, and Tokyo-worker reconciles that instance and its derived artifacts. Any transport details behind that handoff are implementation residue, not product meaning, and must not turn into a second save mode or a second user-facing workflow.
 - Roma no longer exposes a mixed `GET /api/account/instance/:publicId` reader that combines saved document truth with instance serve-state in one payload. Builder-open remains the document read boundary; widgets-domain serve-state flows ask the Tokyo live plane separately.
-- Widgets-domain account instance identity now comes from Tokyo saved documents. Canonical publish/unpublish truth is Tokyo's per-instance serve flag. Any remaining Michael status usage in widgets routes is cutover residue only and must not be treated as surviving authority.
+- Widgets-domain account instance identity now comes from Tokyo saved documents. Canonical publish/unpublish truth is Tokyo's per-instance serve flag. Michael status residue must not be treated as surviving authority.
 - Account-widget rename now reads the current Tokyo saved document and writes the renamed document back through the same Tokyo save boundary. It no longer patches Michael `display_name` as product identity truth.
 - Account create/duplicate commit the Tokyo saved document before creating the Michael row. Widgets never sees a Michael-only placeholder row before the real saved document exists, and Michael row creation no longer copies the live widget document config; schema-required Michael config is inert residue only.
 - Asset picker/upload/resolve behavior on the active Builder path now runs through the Roma current-account asset routes, delegated from Bob through one hosted account-command seam. Roma handles `list-assets`, `resolve-assets`, and `upload-asset` directly against those current-account routes and does not feed a hosted asset bridge into Bob for this path.
@@ -197,7 +197,7 @@ Assets domain behavior:
 - Roma exposes account-level asset routes (`/api/account/assets`, `/api/account/assets/resolve`, `/api/account/assets/:assetId`, `/api/account/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
 - On the active Builder path, Bob delegates asset list/resolve/upload back to these same Roma routes through the normal host account-command seam. Bob owns the explicit asset transport; Roma owns the direct current-account route handling for those commands.
 - `/api/account/usage` remains the Usage domain surface, but it now reads storage bytes from the same Tokyo-worker asset authority as `/api/account/assets`. Assets does not double-read storage truth from both routes on the same screen.
-- Roma widget/assets list surfaces no longer rely on fixed client-side `200/500` caps; Michael pages account widget catalogs internally and Tokyo-worker asset inventory already returns the full account manifest.
+- Roma widget/assets list surfaces no longer rely on fixed client-side `200/500` caps; Tokyo-worker account instance indexes and asset inventory return the current account manifests.
 - Account asset upload is same-origin Roma product traffic. The active product path no longer exposes wildcard CORS on `/api/account/assets/upload`.
 - Roma exposes private non-asset product control routes to Tokyo-worker through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Public Tokyo HTTP is no longer the Builder open/save authoring seam.
 - Asset inventory/upload payloads expose `assetId` and metadata only; delivery URL comes from `/api/account/assets/resolve`, and Roma delete uses `assetId` directly.

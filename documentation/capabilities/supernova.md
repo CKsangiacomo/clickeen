@@ -228,8 +228,8 @@ r2://supernova-assets/
 
 **Generation flow:**
 1. User requests generation (prompt or preset)
-2. Paris calls external API (Flux, Sora, etc.)
-3. Result saved to R2 with workspace-scoped key
+2. The owning backend service calls the external API (Flux, Sora, etc.)
+3. Result saved to R2 with an account-scoped key
 4. AssetId stored in widget state (`supernova.generatedAssets[]`)
 5. Venice serves from R2 with immutable cache headers
 

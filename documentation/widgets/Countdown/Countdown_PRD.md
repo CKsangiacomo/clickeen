@@ -38,7 +38,7 @@ Widget definition (the software): `tokyo/product/widgets/countdown/`
 - `widget.css` — scoped styles (Dieter tokens)
 - `widget.client.js` — deterministic `applyState(state)`
 - `agent.md` — AI editing contract (editable paths + enums + array semantics)
-- `limits.json` — entitlements caps/flags (Paris validation)
+- `limits.json` — entitlements caps/flags (server-side validation)
 - `localization.json` — locale-layer allowlist
 - `layers/*.allowlist.json` — non-locale layer allowlists (when used)
 

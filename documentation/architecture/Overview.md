@@ -348,7 +348,7 @@ Non-negotiable:
 │       │ User clicks Save                            │                   │
 │       │                                             ▼                   │
 │       └──────────────────────────────────────► ┌──────────────┐        │
-│            PUT /api/account/instance/:publicId?subject=account                      │ Tokyo saved    │      │
+│            PUT /api/account/instance/:publicId                                      │ Tokyo saved    │      │
 │                                                │   revision      │      │
 │                                                └──────┬─────────┘        │
 │                                                       │                  │
@@ -416,7 +416,7 @@ On the active account authoring path, the widget document exists in exactly 2 pl
 1. Load:    GET /api/builder/:publicId/open  → Roma gets the saved widget and opens Bob once
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:publicId?subject=account` → commits the one widget document to Tokyo and returns immediately
+4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:publicId` → commits the one widget document to Tokyo and returns immediately
 ```
 
 In Roma account flows, the host performs the initial load call and sends Bob one resolved `ck:open-editor` payload. Save returns through that same Roma account boundary.

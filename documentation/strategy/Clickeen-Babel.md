@@ -1473,7 +1473,7 @@ LOOP REPEATS (exponential growth)
 ┌─────────────────────────────────────────────────────────────┐
 │                   DYNAMIC RENDERING                          │
 │  • Request arrives (Accept-Language: fr-FR)                 │
-│  • Load base config from Michael (via Paris)                │
+│  • Load base config from the Tokyo account artifact          │
 │  • Load French overlay (l10n ops)                           │
 │  • Apply ops to base (JSONPatch-style merge)                │
 │  • Render in target format (HTML, MJML, Meta API, etc.)     │
@@ -1877,7 +1877,7 @@ Runtime note: this section is strategy/proposal only. The `/api/scrape/*` endpoi
 - Loading state with progress indicator
 - Error handling (scrape failed → fallback to template)
 
-**Paris API:**
+**Backend API:**
 - `POST /api/scrape/initiate` → validates URL, queues job, returns jobId
 - `GET /api/scrape/status/:jobId` → polls job status, returns config when complete
 - Rate limiting: 5 scrapes/day per IP (prevents abuse)
@@ -2236,7 +2236,7 @@ if (parseFloat(dailySpend || '0') >= DAILY_COST_CAP) {
 
 **Ship the website scraper MVP:**
 1. Prague: "Make This Widget Yours" button + modal
-2. Paris: Scrape API endpoints (initiate, status)
+2. Backend: Scrape API endpoints (initiate, status)
 3. San Francisco: Scraper agent (Deepseek extraction)
 4. Bob: Load pre-filled config
 

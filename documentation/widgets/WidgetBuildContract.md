@@ -26,7 +26,7 @@ STOP CONDITIONS
 - PRD missing or conflicts with this contract
 - change requires new Dieter primitive/token
 - change requires `tokyo/product/widgets/shared/*`
-- change requires Bob/Paris/Venice/Prague/Dieter edits
+- change requires Bob/Roma/Tokyo-worker/Venice/Prague/Dieter edits
 - cannot enumerate final state paths before ToolDrawer
 - cannot provide Binding Map rows for all new controls
 

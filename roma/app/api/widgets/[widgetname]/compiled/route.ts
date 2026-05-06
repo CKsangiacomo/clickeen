@@ -1,8 +1,5 @@
-import type { NextRequest } from 'next/server';
-import { GET as bobGet } from '../../../../../../bob/app/api/widgets/[widgetname]/compiled/route';
+import { getCompiledWidgetRouteResponse } from '@clickeen/bob/compiled-widget-route';
 
 export const runtime = 'edge';
 
-export function GET(req: NextRequest, ctx: { params: Promise<{ widgetname: string }> }) {
-  return bobGet(req, ctx);
-}
+export const GET = getCompiledWidgetRouteResponse;

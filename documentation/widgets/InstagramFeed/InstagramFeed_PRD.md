@@ -311,11 +311,11 @@ ToolDrawer spacing rule (authoring):
 │                                                         │
 │  1. User enters username                                │
 │     ↓                                                   │
-│  2. Bob calls Paris: GET /api/instagram/feed?user=...   │
+│  2. Bob calls the owning backend integration endpoint    │
 │     ↓                                                   │
-│  3. Paris fetches/caches from Instagram                 │
+│  3. Backend fetches/caches from Instagram               │
 │     ↓                                                   │
-│  4. Paris returns InstagramFeed data                    │
+│  4. Backend returns InstagramFeed data                  │
 │     ↓                                                   │
 │  5. Bob stores feed in instanceData.externalData        │
 │     ↓                                                   │
@@ -326,7 +326,7 @@ ToolDrawer spacing rule (authoring):
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 Paris API Endpoints
+### 3.2 Backend API Endpoints
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
@@ -681,7 +681,7 @@ Display Instagram posts from a public profile in grid, carousel, or masonry layo
 
 | Dependency | Purpose |
 |------------|---------|
-| Paris API routes (TBD; not implemented yet) | API endpoints for fetching public profiles |
+| Backend API routes (TBD; not implemented yet) | API endpoints for fetching public profiles |
 | `tokyo/product/widgets/shared/typography.js` | Typography module |
 | `tokyo/product/widgets/shared/stagePod.js` | Stage/Pod module |
 

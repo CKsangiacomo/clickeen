@@ -176,7 +176,7 @@ Behold takes a simpler, more performant approach that aligns with Clickeen's phi
 │         │                  │            │
 │         ▼                  ▼            │
 │  ┌─────────────────────────────────┐    │
-│  │     Paris API Endpoint          │    │
+│  │     Backend API Endpoint        │    │
 │  │     /api/instagram/feed         │    │
 │  └──────────────┬──────────────────┘    │
 │                 │                       │
@@ -228,5 +228,4 @@ Behold takes a simpler, more performant approach that aligns with Clickeen's phi
 | `behold-09-builder-overview.png` | Behold builder UI |
 | `behold-10-widget-types.png` | Behold widget types |
 | `behold-11-customize-panel.png` | Behold customization |
-
 

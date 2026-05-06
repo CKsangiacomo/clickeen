@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "exports": {
     "./builder": "./components/BuilderApp.tsx",
-    "./bob-app.css": "./app/bob_app.css"
+    "./bob-app.css": "./app/bob_app.css",
+    "./compiled-widget-route": "./lib/api/compiled-widget-route.ts"
   },
   "scripts": {
     "dev": "next dev",

@@ -127,7 +127,7 @@ Core account editing currently uses direct app-owned read/write paths for the on
 For the 075 authoring simplification track, this account-mode Roma -> Bob -> Tokyo chain is the governing authoring path; non-account/helper flows do not define account authoring truth.
 
 1. **Open core instance**: `GET /api/builder/:publicId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads the saved authoring revision from Tokyo through the private product-control binding, and then sends Bob one `ck:open-editor` payload.
-2. **Save**: `PUT /api/account/instance/:publicId?subject=account` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, carrying the current saved-document metadata (`widgetType`, `displayName`, `source`, `meta`) together with `config`, and return success immediately. The Tokyo commit is the save boundary.
+2. **Save**: `PUT /api/account/instance/:publicId` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, carrying the current saved-document metadata (`widgetType`, `displayName`, `source`, `meta`) together with `config`, and return success immediately. The Tokyo commit is the save boundary.
 3. **Widgets list + rename identity**: Roma reads user-instance identity for `/widgets` from Tokyo saved documents. The surviving publish/unpublish authority is Tokyo's per-instance serve flag, not a Michael status row. Rename writes that Tokyo identity directly instead of patching Michael `display_name`.
 4. **Create/duplicate**: Roma writes the Tokyo saved document before creating the Michael row, so the product never exposes a Michael-visible account widget before the real Tokyo document exists.
 5. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute policy on each open/save call; the signed capsule carries stable authz truth, while live mutable counters are enforced at the canonical owner when needed.
@@ -160,7 +160,7 @@ Between open and save:
 
 | Term           | Description                                                                                              |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
-| `publicId`     | Instance unique identifier in DB                                                                         |
+| `publicId`     | Instance unique identifier used across Tokyo saved state, live state, and projection rows                 |
 | `widgetType`   | Widget identifier referencing the definition (e.g., "faq")                                               |
 | `config`       | Persisted base instance values; active product account reads/writes use Tokyo's saved authoring snapshot |
 | `instanceData` | Working copy of config in Bob during editing                                                             |

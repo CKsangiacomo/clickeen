@@ -206,7 +206,7 @@ export function AccountLocaleSettingsCard(args: {
     };
 
     try {
-      await accountApi.fetchJson(`/api/account/locales?subject=account`, {
+      await accountApi.fetchJson('/api/account/locales', {
         method: 'PUT',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify(payload),

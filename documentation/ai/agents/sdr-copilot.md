@@ -39,7 +39,7 @@ Key properties:
 - **Ops-based edits**: Copilot returns `ops[]` (machine diffs), never "instructions".
 - **Deterministic application**: Bob applies ops as pure transforms (no coercion of widget config). It blocks only obvious protocol abuse (e.g. prototype pollution path segments).
 - **Explicit commit**: after an edit, the user must **Keep** or **Undo** (no silent commits).
-- **Budgeted + signed**: every model execution is authorized by a short-lived **AI Grant** minted by Paris and verified by San Francisco.
+- **Budgeted + signed**: every model execution is authorized by a short-lived **AI Grant** minted by the live product backend surface and verified by San Francisco.
 - **Conversion-aware**: Copilot includes CTAs (signup/upgrade) at appropriate moments without degrading the editing experience.
 
 Current runtime contract (February 26, 2026):
@@ -256,7 +256,7 @@ Response shape (success):
 
 HTTP semantics (intentional):
 - `422` for **client validation errors** (missing prompt/widgetType/controls/currentConfig/sessionId).
-- `200` with `{ "message": "..." }` for **upstream issues** (Paris/SF/provider down), to avoid noisy "Failed to load resource" console spam in Pages/DevStudio surfaces.
+- `200` with `{ "message": "..." }` for **upstream issues** (product backend/SF/provider down), to avoid noisy "Failed to load resource" console spam in Pages/DevStudio surfaces.
 
 ### 5.2 Bob API: `POST /api/ai/outcome`
 Best-effort outcome attach used by the UI:
@@ -364,7 +364,7 @@ URL read is the **primary way users personalize content**. When a user shares th
 ## 9) Learning + Regression Protection
 
 ### 9.1 Learning signals (outcomes, not "more logs")
-San Francisco logs every interaction and Paris/Bob attach outcomes:
+San Francisco logs every interaction and Roma/Bob attach outcomes:
 - edit success (ops applied)
 - undo/keep decisions
 - CTA clicks + conversions (critical for SDR effectiveness)
@@ -380,7 +380,7 @@ Current repo reality:
 
 ## 10) Rollout model
 
-San Francisco indexes events by exposure stage (`envStage`), stamped into grants by Paris (`ENV_STAGE`):
+San Francisco indexes events by exposure stage (`envStage`), stamped into grants by the issuing product backend:
 - `local` (developer machine)
 - `cloud-dev` (integration surface; can break)
 - `uat` / `limited-ga` / `ga` (release stages; production infra with controlled exposure)

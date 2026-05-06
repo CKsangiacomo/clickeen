@@ -114,7 +114,7 @@ Keeping product/persistence owners and San Francisco separate prevents:
 ## High‑Level Data Flow
 
 ### Editor agents (inside Clickeen app)
-1) Core Builder open now loads through one Roma same-origin route (`GET /api/builder/:publicId/open`) that resolves the saved authoring revision server-side for Roma's host-open flow. Account-mode save delegates back to Roma through `PUT /api/account/instance/:publicId?subject=account`. Builder no longer carries localization refresh/status commands on the active account authoring path.
+1) Core Builder open now loads through one Roma same-origin route (`GET /api/builder/:publicId/open`) that resolves the saved authoring revision server-side for Roma's host-open flow. Account-mode save delegates back to Roma through `PUT /api/account/instance/:publicId`. Builder no longer carries localization refresh/status commands on the active account authoring path.
 2) Account-mode Builder requests execute through Roma instance routes. Roma mints the short-lived AI Grant inline for that request.
 3) Bob calls San Francisco with `{ grant, agentId, input, context }`.
 4) San Francisco returns `{ ops[], usage }`.
@@ -300,9 +300,9 @@ GA roadmap (still behind the same interface):
 - Tool allowlists per agent (e.g. `tool:analyzeUrl`, `tool:searchDocs`)
 - Background execution for operational agents (queues/workers)
 
-## Limits (Paris vs San Francisco)
+## Limits (Product Policy vs San Francisco)
 
-### Paris limits (product policy)
+### Product policy limits
 Examples:
 - can the user access Copilot at all?
 - free vs paid feature gates
@@ -335,10 +335,10 @@ Execution responses must not block on logging/indexing. The queue pipeline is in
 
 ### Storage layout (shipped)
 
-- Raw event payloads (R2): `logs/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json`
+- Bounded raw learning samples (R2): `learning/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json`
 - Queryable indexes (D1):
   - `copilot_events_v1` (one row per interaction; versions + intent/outcome + basic deltas)
-  - `copilot_outcomes_v1` (one row per `requestId+event`; attached by Paris/Bob)
+  - `copilot_outcomes_v1` (one row per `requestId+event`; attached by Roma/Bob)
 
 ## Roadmap (milestones)
 
@@ -368,8 +368,8 @@ Definition of done:
   - `agentId: sdr.copilot` works end-to-end in San Francisco
   - Response is structured JSON + usage metadata (no prose-only responses)
 
-### Milestone 3 — Paris issues AI grants (anon + user)
-Status: shipped (dev grants; user/workspace grants evolve with auth)
+### Milestone 3 — Product backends issue AI grants
+Status: shipped
 
 Definition of done:
   - Clickeen backend surfaces can issue signed grants for:
@@ -397,6 +397,5 @@ Definition of done:
 - Where AI usage is recorded for billing: backend-owned ledger in Roma/Berlin, or a later aggregation pipeline.
 
 ## Links
-- Paris system PRD: `documentation/services/paris.md`
 - Bob system PRD: `documentation/services/bob.md`
 - Widget Copilot rollout runbook: `documentation/ai/widget-copilot-rollout.md`

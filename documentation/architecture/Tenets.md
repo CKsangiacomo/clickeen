@@ -320,35 +320,41 @@ If a normal product flow requires the browser to repeatedly restate "which accou
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        TOKYO                                │
-│              (Widget Definitions + Dieter)                  │
-│                                                             │
-│   widgets/           dieter/                                │
-│   ├── faq/           ├── tokens/                            │
-│   └── shared/        └── icons/                             │
+│      Widget definitions, Dieter assets, account artifacts    │
 └─────────────────────────────────────────────────────────────┘
                               │
            ┌──────────────────┼──────────────────┐
            │                  │                  │
            ▼                  ▼                  ▼
     ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-    │    BOB      │    │   VENICE    │    │   PARIS     │
-    │   Editor    │    │   Embed     │    │   API       │
+    │    BOB      │    │   VENICE    │    │TOKYO-WORKER │
+    │   Editor    │    │   Embed     │    │ Account I/O │
     │             │    │             │    │             │
-    │ Compiles    │    │ Renders     │    │ CRUD for    │
-    │ spec.json   │    │ widget.html │    │ instances   │
-    │ to UI       │    │ + CSS + JS  │    │             │
+    │ Compiles    │    │ Serves      │    │ Saves       │
+    │ spec.json   │    │ published   │    │ instances,  │
+    │ to UI       │    │ artifacts   │    │ assets,l10n │
     └──────┬──────┘    └─────────────┘    └──────┬──────┘
            │                                     │
            └─────────────────┬───────────────────┘
                              │
                              ▼
                       ┌─────────────┐
-                      │   MICHAEL   │
-                      │  (Supabase) │
+                      │    ROMA     │
+                      │ Product app │
                       │             │
-                      │ Stores      │
-                      │ instanceData│
-                      │ as JSON     │
+                      │ Opens/saves │
+                      │ account     │
+                      │ instances   │
+                      └──────┬──────┘
+                             │
+                             ▼
+                      ┌─────────────┐
+                      │   MICHAEL   │
+                      │  Supabase   │
+                      │             │
+                      │ Account DB, │
+                      │ RLS, audit, │
+                      │ projections │
                       └─────────────┘
 ```
 

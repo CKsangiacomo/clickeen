@@ -13,7 +13,7 @@ If anything is unclear or missing, stop and ask the human.
 Stop and ask if:
 - The widget type (e.g. `faq`, `logoshowcase`) is not explicitly provided.
 - There is no widget PRD or the PRD conflicts with these contracts.
-- The request requires changing shared runtime, Bob, Paris, Venice, Prague, Dieter, or any file outside `tokyo/product/widgets/{widgetType}/`.
+- The request requires changing shared runtime, Bob, Roma, Tokyo-worker, Venice, Prague, Dieter, or any file outside `tokyo/product/widgets/{widgetType}/`.
 - You need new UI primitives or tokens (must go through Dieter PRD first).
 
 ---
@@ -66,7 +66,7 @@ Do **not** create new files outside `tokyo/product/widgets/{widgetType}/`.
 ## 3) Forbidden Actions (non-negotiable)
 
 - Do not edit shared runtime (`tokyo/product/widgets/shared/*`).
-- Do not touch Bob/Paris/Venice/Prague/Dieter code.
+- Do not touch Bob/Roma/Tokyo-worker/Venice/Prague/Dieter code.
 - Do not add new fonts, colors, or tokens.
 - Do not introduce locale into any IDs or filenames.
 - Do not add “smart” fallback logic or defensive defaults.

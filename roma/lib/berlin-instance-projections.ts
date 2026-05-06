@@ -1,11 +1,11 @@
 import {
   asTrimmedString,
   fetchBerlinProductJson,
-  michaelUnavailableResult,
-  type MichaelAccountInstanceResult,
-  type MichaelAccountPublishContainmentResult,
-  type MichaelDeleteInstanceResult,
-} from './michael-shared';
+  berlinProductUnavailableResult,
+  type BerlinAccountInstanceProjectionResult,
+  type BerlinAccountPublishContainmentResult,
+  type BerlinDeleteInstanceProjectionResult,
+} from './berlin-product-shared';
 
 type BerlinProjectionRow = {
   publicId?: unknown;
@@ -17,7 +17,7 @@ type BerlinProjectionRow = {
   meta?: unknown;
 };
 
-function normalizeProjectionRow(row: BerlinProjectionRow | null, fallbackPublicId: string): NonNullable<Extract<MichaelAccountInstanceResult, { ok: true }>['row']> | null {
+function normalizeProjectionRow(row: BerlinProjectionRow | null, fallbackPublicId: string): NonNullable<Extract<BerlinAccountInstanceProjectionResult, { ok: true }>['row']> | null {
   if (!row) return null;
   const widgetId = asTrimmedString(row.widgetId);
   const accountId = asTrimmedString(row.accountId);
@@ -45,7 +45,7 @@ export async function createAccountInstanceProjectionRow(args: {
   displayName?: string | null;
   meta?: Record<string, unknown> | null;
   berlinAccessToken: string;
-}): Promise<MichaelAccountInstanceResult> {
+}): Promise<BerlinAccountInstanceProjectionResult> {
   try {
     const projection = await fetchBerlinProductJson<{ row?: BerlinProjectionRow | null }>({
       accessToken: args.berlinAccessToken,
@@ -69,7 +69,7 @@ export async function createAccountInstanceProjectionRow(args: {
     }
     return { ok: true, row };
   } catch (error) {
-    return michaelUnavailableResult(error);
+    return berlinProductUnavailableResult(error);
   }
 }
 
@@ -77,7 +77,7 @@ export async function deleteAccountInstanceProjectionRow(args: {
   accountId: string;
   publicId: string;
   berlinAccessToken: string;
-}): Promise<MichaelDeleteInstanceResult> {
+}): Promise<BerlinDeleteInstanceProjectionResult> {
   try {
     const projection = await fetchBerlinProductJson<{ ok?: unknown }>({
       accessToken: args.berlinAccessToken,
@@ -87,14 +87,14 @@ export async function deleteAccountInstanceProjectionRow(args: {
     if (!projection.ok) return projection;
     return { ok: true };
   } catch (error) {
-    return michaelUnavailableResult(error);
+    return berlinProductUnavailableResult(error);
   }
 }
 
 export async function loadAccountPublishContainment(
   accountId: string,
   berlinAccessToken: string,
-): Promise<MichaelAccountPublishContainmentResult> {
+): Promise<BerlinAccountPublishContainmentResult> {
   try {
     const containment = await fetchBerlinProductJson<{
       containment?: { active?: unknown; reason?: unknown } | null;
@@ -111,6 +111,6 @@ export async function loadAccountPublishContainment(
       },
     };
   } catch (error) {
-    return michaelUnavailableResult(error);
+    return berlinProductUnavailableResult(error);
   }
 }

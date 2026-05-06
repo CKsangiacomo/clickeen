@@ -147,14 +147,14 @@ Design intent:
 - execution must not block on logging/indexing
 - ingestion is best-effort; failures log to console and user flow continues
 
-### R2 (raw events)
+### R2 (bounded raw learning samples)
 
-Queue consumer writes the raw JSON payload into R2 using a stable key pattern:
-`logs/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json`
+Queue consumer writes bounded raw JSON samples into R2 using a stable key pattern:
+`learning/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json`
 
 This allows:
-- cheap long-term storage
-- offline analysis without inflating D1
+- bounded debug/eval storage for selected paid executions and serious paid failures
+- offline analysis without turning R2 into a full execution dump
 
 ### D1 (queryable indexes)
 
@@ -246,7 +246,7 @@ Meaning: the worker cannot verify grants or outcome signatures.
 
 Actions:
 - Set the secret in Cloudflare Worker settings (dev/prod separately).
-- Ensure Paris has the same secret (they must match).
+- Ensure every live grant/outcome issuer has the same secret configured for its environment.
 
 ### “Missing DEEPSEEK_API_KEY”
 Meaning: the execution reached a code path that requires model access.

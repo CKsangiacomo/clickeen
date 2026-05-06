@@ -14,7 +14,7 @@ import {
   enqueueAccountInstanceSync,
   TokyoAccountInstanceSyncError,
 } from '@roma/lib/account-instance-sync';
-import { deleteAccountInstanceProjectionRow } from '@roma/lib/michael';
+import { deleteAccountInstanceProjectionRow } from '@roma/lib/berlin-product';
 import {
   resolveCurrentAccountRouteContext,
   withSession,

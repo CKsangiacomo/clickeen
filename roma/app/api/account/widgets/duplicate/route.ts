@@ -8,7 +8,7 @@ import {
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
 import { enqueueAccountInstanceSync } from '@roma/lib/account-instance-sync';
-import { createAccountInstanceProjectionRow } from '@roma/lib/michael';
+import { createAccountInstanceProjectionRow } from '@roma/lib/berlin-product';
 import {
   resolveCurrentAccountRouteContext,
   withSession,

@@ -15,7 +15,7 @@ Runtime code + deployed Cloudflare bindings are operational truth; any mismatch 
 San Francisco provides the execution surface and the learning data plane:
 - it logs every interaction (best-effort, non-blocking)
 - it indexes a minimal subset for querying
-- it accepts outcome attachments from Paris/Bob (sources of truth for conversions + UX decisions)
+- it accepts outcome attachments from Roma/Bob (sources of truth for conversions + UX decisions)
 
 ## 1) The two event streams
 
@@ -37,7 +37,7 @@ This event is:
 2) written raw to `SF_R2`
 3) indexed into `SF_D1` (best-effort)
 
-### 1.2 Outcome events (Paris/Bob attach)
+### 1.2 Outcome events (Roma/Bob attach)
 
 San Francisco cannot infer conversions or UX decisions. Those are attached via `/v1/outcome`.
 
@@ -54,12 +54,12 @@ Auth:
 
 ## 2) Storage model (cheap raw + small indexes)
 
-### 2.1 R2: raw interaction payloads
+### 2.1 R2: bounded raw learning samples
 
-Raw events are stored as JSON in R2:
-`logs/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json`
+Selected paid samples and serious paid failures are stored as JSON in R2:
+`learning/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json`
 
-R2 is the long-term “truth” for replay / offline analysis.
+R2 is the bounded debug/eval store. The durable fact layer remains D1 metering and outcome rows.
 
 ### 2.2 D1: queryable indexes
 

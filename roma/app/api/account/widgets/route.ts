@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadTokyoAccountInstanceIndex } from '@roma/lib/account-instance-direct';
-import { loadAccountPublishContainment } from '@roma/lib/michael';
+import { loadAccountPublishContainment } from '@roma/lib/berlin-product';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
 export const runtime = 'edge';

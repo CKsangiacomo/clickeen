@@ -4,7 +4,7 @@ STATUS: INFORMATIVE — STRATEGY & VISION
 This page explains what we're building and why. It is not a spec.
 For technical implementation, see:
 - `documentation/architecture/CONTEXT.md` — Architecture, glossary, implementation status
-- `documentation/services/` — Service PRDs (Venice, Paris, Bob, etc.)
+- `documentation/services/` — Service PRDs (Roma, Bob, Venice, Tokyo-worker, San Francisco, etc.)
 - `documentation/widgets/` — Widget PRDs
 
 ---
@@ -584,5 +584,5 @@ This is uncharted territory. The system might plateau. Agents might not generali
 Technical implementation details live in:
 - `documentation/architecture/CONTEXT.md` — Architecture snapshot, systems, glossary
 - `documentation/architecture/Overview.md` — System boundaries and data flows
-- `documentation/services/` — System PRDs (Bob/Paris/Venice/Tokyo/Dieter/Michael/DevStudio/Prague)
+- `documentation/services/` — System PRDs (Roma/Bob/Venice/Tokyo/Tokyo-worker/Dieter/Michael/DevStudio/Prague/San Francisco)
 - `documentation/ai/` — San Francisco PRDs (overview/learning/infrastructure)

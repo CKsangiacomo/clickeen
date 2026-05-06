@@ -13,7 +13,7 @@ If anything is unclear or missing, stop and ask the human.
 Stop and ask if:
 - The widget type or target page is not explicitly provided.
 - You need a new block type or a new block layout (requires PRD + block registry update).
-- The request requires runtime changes in Prague, Bob, Paris, Venice, or Dieter.
+- The request requires runtime changes in Prague, Bob, Roma, Tokyo-worker, Venice, or Dieter.
 - You need to modify compiled outputs or overlays directly.
 
 ---
