@@ -113,7 +113,8 @@ export type InteractionEvent = {
   subject: GrantSubject;
   trace?: AIGrant['trace'];
   ai?: {
-    profile?: AiGrantPolicy['profile'];
+    policyVersion?: string;
+    learningCapture?: AiGrantPolicy['learningCapture'];
     taskClass?: string;
   };
   input: unknown;

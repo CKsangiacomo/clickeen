@@ -724,7 +724,7 @@
     const hint = document.createElement('p');
     hint.className = 'body-s entitlements-ai__hint';
     hint.textContent =
-      'Read-only. Profile-level provider/model allowlist; individual agents may further restrict. Edit in packages/ck-contracts/src/ai.js.';
+      'Read-only. Runtime policy by account tier; individual agents receive signed per-provider model policy.';
     section.appendChild(hint);
 
     const providersByKey = new Map();
@@ -926,7 +926,7 @@
 
     const hint = document.createElement('p');
     hint.className = 'body-s entitlements-ai__hint';
-    hint.textContent = 'Read-only. Shows per-agent enforcement by tier (after profile-level provider/model access).';
+    hint.textContent = 'Read-only. Shows per-agent runtime policy by tier from the same catalog/policy source production uses.';
     section.appendChild(hint);
 
     const normalizeTierLabel = (tier) => tier.replace(/\b\w/g, (c) => c.toUpperCase());
@@ -1014,8 +1014,7 @@
           ? [
               'Enabled',
               tierEntry?.defaultProviderLabel ? `default provider: ${tierEntry.defaultProviderLabel}` : '',
-              `provider choice: ${tierEntry?.allowProviderChoice ? 'enabled' : 'locked'}`,
-              `model choice: ${tierEntry?.allowModelChoice ? 'enabled' : 'locked'}`,
+              `model picker: ${tierEntry?.allowModelPicker ? 'enabled' : 'locked'}`,
             ]
               .filter(Boolean)
               .join(' · ')
@@ -1051,7 +1050,7 @@
 
         const providerKind = document.createElement('td');
         providerKind.className = 'body-s entitlements-table__desc';
-        providerKind.textContent = 'Provider access (after tier policy + agent restrictions)';
+        providerKind.textContent = 'Provider access from runtime policy';
         providerRow.appendChild(providerKind);
 
         tiers.forEach((tier) => {

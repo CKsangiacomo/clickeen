@@ -44,6 +44,18 @@ export type SessionUpsell = {
   cta: 'upgrade';
 } | null;
 
+export type CopilotModelRef = {
+  provider: string;
+  model: string;
+};
+
+export type CopilotRuntimeUi = {
+  allowModelPicker: boolean;
+  defaultModel: CopilotModelRef;
+  selectedModel?: CopilotModelRef;
+  modelOptions: Array<CopilotModelRef & { label: string }>;
+} | null;
+
 export type EditorOpenMessage = {
   type: 'ck:open-editor';
   requestId?: string;
@@ -55,6 +67,7 @@ export type EditorOpenMessage = {
   publicId?: string;
   label?: string;
   meta?: Record<string, unknown> | null;
+  copilot?: CopilotRuntimeUi;
 };
 
 export type BobSessionReadyMessage = {

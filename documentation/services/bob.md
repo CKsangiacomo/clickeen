@@ -358,7 +358,7 @@ Deployment note (verified on February 11, 2026):
 
 ### User-Facing Controls (PRD 041)
 
-- **Provider/Model Selection:** For agents and tiers that allow choice, Bob surfaces provider/model options from the policy grant metadata (for example OpenAI/Claude/DeepSeek/Groq/Amazon Nova, profile-dependent). Bob passes the selected values in the Copilot payload, and San Francisco enforces them against the grant’s `ai.profile`.
+- **Model Selection:** For agents and tiers that allow choice, Bob surfaces one combined model dropdown derived from the Roma-open runtime policy metadata. Bob passes the selected `{provider, model}` in the Copilot payload, Roma signs it only if account policy allows it, and San Francisco enforces it against the signed `AgentRuntimePolicy`.
 
 ### Copilot env vars (local + Cloud-dev)
 

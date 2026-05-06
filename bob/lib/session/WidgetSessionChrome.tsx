@@ -2,10 +2,11 @@
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import type { Policy } from '@clickeen/ck-policy';
-import { DEFAULT_PREVIEW, type SessionMeta, type SessionUpsell } from './sessionTypes';
+import { DEFAULT_PREVIEW, type CopilotRuntimeUi, type SessionMeta, type SessionUpsell } from './sessionTypes';
 
 export type WidgetSessionChromeValue = {
   policy: Policy | null;
+  copilot: CopilotRuntimeUi;
   upsell: SessionUpsell;
   preview: typeof DEFAULT_PREVIEW;
   meta: SessionMeta;
@@ -18,6 +19,7 @@ type WidgetSessionChromeControllerValue = {
   meta: SessionMeta;
   setMeta: React.Dispatch<React.SetStateAction<SessionMeta>>;
   setPolicy: React.Dispatch<React.SetStateAction<Policy | null>>;
+  setCopilot: React.Dispatch<React.SetStateAction<CopilotRuntimeUi>>;
   setUpsell: React.Dispatch<React.SetStateAction<SessionUpsell>>;
 };
 
@@ -27,6 +29,7 @@ const WidgetSessionChromeControllerContext = createContext<WidgetSessionChromeCo
 export function WidgetSessionChromeProvider({ children }: { children: ReactNode }) {
   const [meta, setMeta] = useState<SessionMeta>(null);
   const [policy, setPolicy] = useState<Policy | null>(null);
+  const [copilot, setCopilot] = useState<CopilotRuntimeUi>(null);
   const [upsell, setUpsell] = useState<SessionUpsell>(null);
   const [preview, setPreviewState] = useState(() => structuredClone(DEFAULT_PREVIEW));
 
@@ -50,6 +53,7 @@ export function WidgetSessionChromeProvider({ children }: { children: ReactNode 
   const value = useMemo<WidgetSessionChromeValue>(
     () => ({
       policy,
+      copilot,
       upsell,
       preview,
       meta,
@@ -57,7 +61,7 @@ export function WidgetSessionChromeProvider({ children }: { children: ReactNode 
       requestUpsell,
       setPreview,
     }),
-    [dismissUpsell, meta, policy, preview, requestUpsell, setPreview, upsell],
+    [copilot, dismissUpsell, meta, policy, preview, requestUpsell, setPreview, upsell],
   );
 
   const controllerValue = useMemo<WidgetSessionChromeControllerValue>(
@@ -65,6 +69,7 @@ export function WidgetSessionChromeProvider({ children }: { children: ReactNode 
       meta,
       setMeta,
       setPolicy,
+      setCopilot,
       setUpsell,
     }),
     [meta],

@@ -30,7 +30,7 @@ Health contract:
 - The live product Copilot path executes only from Roma account routes; Bob no longer owns a public Minibob copilot flow.
 - Agent routing uses the registry canonical IDs (aliases accepted).
 - Budget enforcement is centralized in `callChatCompletion` (`maxTokens`, `timeoutMs`, `maxRequests`, and `maxCostUsd` when present).
-- Provider execution retries transient upstream failures once, then falls back across eligible model candidates (and across providers when the grant does not pin `selectedProvider`).
+- Provider execution retries transient upstream failures once against the same selected/default model. It does not silently switch models or providers.
 - OpenAI responses are normalized across string/array/refusal content shapes before being treated as empty output.
 - Live product widget-copilot canonical ID:
   - `cs.widget.copilot.v1` (account Builder editor copilot)
@@ -42,11 +42,7 @@ Health contract:
 - Runtime modules are split between a shared core and thin per-agent wrappers:
   - shared core: `sanfrancisco/src/agents/widgetCopilotCore.ts`
   - CS wrapper: `sanfrancisco/src/agents/csWidgetCopilot.ts` (KV namespace `copilot:cs:session:*`)
-- **Tiered Execution:** Enforces `ai.profile` from the grant.
-  - `free_low`: `deepseek-chat` by default (agent-scoped alternatives may include Nova Lite).
-  - `paid_standard`: `gpt-4o-mini` default, with provider/model choices constrained by policy + agent support (DeepSeek, OpenAI, Anthropic, Groq, Amazon Nova).
-  - `paid_premium`: `gpt-4o` default, with higher-capability choices constrained by policy + agent support.
-  - `curated_premium`: OpenAI curated set (`gpt-5.2` default).
+- **Runtime policy execution:** Enforces the signed `AgentRuntimePolicy` from the grant: `defaultModel`, `modelsByProvider`, optional `selectedModel`, request ceilings, and learning-capture rules. Product/account policy decides the allowed model set before grant issuance.
 - Budget tracking persists to `SF_KV` per grant (requests + cost) with TTL aligned to grant expiry.
 - Contract coverage now explicitly guards grant verification, budget enforcement, provider routing, and concurrency ceilings before further AI-plane sophistication lands.
 
@@ -72,14 +68,14 @@ Health contract:
 - Tokyo owns saved-config l10n identity/staleness; San Francisco is generation-only.
 - Tokyo-worker calls the private `generateAccountWidgetL10nOps` worker method through its `SANFRANCISCO_L10N` service binding.
 - There is no public account-widget generation HTTP route and no `CK_INTERNAL_SERVICE_JWT` on this path.
-- Request payloads contain only approved text items (`path`, `type`, `value`), existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and policy profile.
+- Request payloads contain only approved text items (`path`, `type`, `value`), existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and account policy profile.
 - San Francisco does not receive widget configs, localization allowlists, account ids, storage paths, live pointer state, or publication state for account-widget generation.
 - Incremental generation translates only changed current item paths when possible and preserves existing ops for unchanged current paths.
 - Returns set-only locale ops to Tokyo-worker.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext translation uses one structured path: San Francisco extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.
-- l10n translation calls go through the shared policy router via `callChatCompletion` (same budget enforcement + provider allowlist).
-- Cost budgets (`maxCostUsd`) use the `AI_PRICE_TABLE_JSON` env var; a default deepseek price table is provided when unset.
+- l10n translation calls go through the shared policy router via `callChatCompletion` (same budget enforcement + provider/model allowlist).
+- Cost budgets (`maxCostUsd`) use provider+model prices from the shared AI model catalog. `AI_PRICE_TABLE_JSON` may override catalog prices by `provider:model` key for deployment-specific estimates.
 
 ## Prague localization translation (local + cloud-dev)
 - Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT` is `local` or `dev`; disabled elsewhere).
@@ -88,7 +84,7 @@ Health contract:
 - Prague-string prompts preserve source acronym style and do not add parenthetical acronym expansions that are absent in source text.
 - Prague-string safety validation enforces placeholder parity, HTML tag parity, and anchor integrity for richtext items.
 - Returns translated items; the caller writes overlay files under `tokyo/prague/l10n/**`.
-- Provider: OpenAI via shared policy router (curated profile default: `gpt-5.2`; env overrides still apply).
+- Provider: OpenAI via shared runtime policy router (`gpt-5.2` default in cloud-dev tooling; env overrides still apply).
 
 ## Rules
 - Active account-mode l10n returns set-only locale ops to Tokyo-worker; San Francisco does not own Tokyo overlay writes.

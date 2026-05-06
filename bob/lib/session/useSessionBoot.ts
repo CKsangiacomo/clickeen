@@ -9,6 +9,7 @@ import {
   type EditorOpenMessage,
   type SessionMeta,
   type SessionState,
+  type CopilotRuntimeUi,
   serializeInstanceDataSignature,
 } from './sessionTypes';
 
@@ -23,9 +24,10 @@ export function useSessionBoot(args: {
   setState: Dispatch<SetStateAction<SessionState>>;
   setMeta: Dispatch<SetStateAction<SessionMeta>>;
   setPolicy: Dispatch<SetStateAction<Policy | null>>;
+  setCopilot: Dispatch<SetStateAction<CopilotRuntimeUi>>;
   hostOriginRef: MutableRefObject<string | null>;
 }) {
-  const { setState, setMeta, setPolicy, hostOriginRef } = args;
+  const { setState, setMeta, setPolicy, setCopilot, hostOriginRef } = args;
   const loadInstance = useCallback(
     async (
       message: EditorOpenMessage,
@@ -50,12 +52,14 @@ export function useSessionBoot(args: {
         const resolved = cloneSessionConfig(rawInstanceData as Record<string, unknown>);
         const savedInstanceDataSignature = serializeInstanceDataSignature(resolved);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
+        const nextCopilot = (message.copilot as CopilotRuntimeUi | undefined) ?? null;
 
         if (!nextLabel) {
           nextLabel = String(message.publicId || '').trim() || 'Untitled widget';
         }
 
         setPolicy(nextPolicy);
+        setCopilot(nextCopilot);
         setMeta({
           publicId: message.publicId,
           baseLocale,
@@ -87,6 +91,7 @@ export function useSessionBoot(args: {
         }
         const messageText = err instanceof Error ? err.message : String(err);
         setPolicy(null);
+        setCopilot(null);
         setMeta(null);
         setState((prev) => ({
           ...prev,
@@ -99,7 +104,7 @@ export function useSessionBoot(args: {
         return { ok: false, error: messageText };
       }
     },
-    [setMeta, setPolicy, setState],
+    [setCopilot, setMeta, setPolicy, setState],
   );
 
   useEffect(() => {

@@ -3,8 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "dependencies": {
+    "@clickeen/ck-contracts": "workspace:*"
+  },
   "exports": {
     ".": "./src/index.ts"
   }
 }
-

@@ -184,7 +184,11 @@ importers:
         specifier: workspace:*
         version: link:../l10n
 
-  packages/ck-policy: {}
+  packages/ck-policy:
+    dependencies:
+      '@clickeen/ck-contracts':
+        specifier: workspace:*
+        version: link:../ck-contracts
 
   packages/l10n: {}
 

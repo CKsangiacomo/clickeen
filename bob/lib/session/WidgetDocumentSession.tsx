@@ -53,6 +53,7 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     setState,
     setMeta: chrome.setMeta,
     setPolicy: chrome.setPolicy,
+    setCopilot: chrome.setCopilot,
     hostOriginRef: transport.hostOriginRef,
   });
   const saving = useSessionSaving({

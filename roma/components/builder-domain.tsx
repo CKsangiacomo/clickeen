@@ -69,6 +69,7 @@ type BobOpenEditorMessage = {
   instanceData: Record<string, unknown>;
   meta?: Record<string, unknown> | null;
   policy?: unknown;
+  copilot?: unknown;
 };
 
 type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId'>;
@@ -79,6 +80,7 @@ type BuilderOpenResponse = {
   widgetType: string;
   config: Record<string, unknown>;
   meta?: Record<string, unknown> | null;
+  copilot?: unknown;
 };
 
 const BUILDER_REASON_COPY: Record<string, string> = {
@@ -422,6 +424,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         instanceData: config,
         meta: builderOpen.meta ?? null,
         policy: accountPolicy,
+        copilot: builderOpen.copilot ?? null,
       };
       await postOpenEditorAndWait({
         targetWindow,

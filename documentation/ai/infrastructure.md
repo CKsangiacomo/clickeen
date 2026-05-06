@@ -54,13 +54,13 @@ Worker vars/secrets:
 - `NOVA_MODEL` (optional): defaults to `nova-2-lite-v1`
 - `AMAZON_BEDROCK_ACCESS_KEY_ID` / `AMAZON_BEDROCK_SECRET_ACCESS_KEY` / `AMAZON_BEDROCK_REGION` (secret/var, optional): Bedrock fallback path for Amazon provider
 
-Provider split (Tiered Execution):
-- **Free account**: profile default `deepseek-chat`
-- **Paid Standard**: mixed provider access (OpenAI/Anthropic/DeepSeek/Groq/Nova) with policy + agent constraints
-- **Paid Premium**: higher-capability defaults (OpenAI `gpt-5.2`) with policy + agent constraints
-- **Curated/Internal**: OpenAI curated set (`gpt-5.2` default)
-- **Prague strings L10n**: OpenAI via policy router
-- **Account-widget instance l10n**: Tokyo-worker calls San Francisco through the private `generateAccountWidgetL10nOps` WorkerEntrypoint method with Roma-derived `policyProfile`; San Francisco derives `l10n.instance.v1` profile/provider policy from `@clickeen/ck-contracts` and then intersects it with env-configured providers
+Provider/model policy:
+- `@clickeen/ck-contracts` owns the model catalog.
+- `@clickeen/ck-policy` owns the tier + agent runtime policy matrix.
+- Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
+- San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, and request ceilings.
+- **Prague strings L10n**: OpenAI via the shared runtime policy router.
+- **Account-widget instance l10n**: Tokyo-worker calls San Francisco through the private `generateAccountWidgetL10nOps` WorkerEntrypoint method with Roma-derived `policyProfile`; San Francisco resolves `l10n.instance.v1` runtime policy from `@clickeen/ck-policy` and then intersects it with env-configured providers.
 
 ## 3) HTTP endpoints
 
@@ -116,7 +116,7 @@ Boundary:
 Contract:
 - Tokyo-worker sends only approved current text items (`path`, `type`, `value`), existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and the account `policyProfile`.
 - San Francisco does not receive widget config, localization allowlists, account ids, storage paths, live pointer state, or publication state.
-- San Francisco derives the `l10n.instance.v1` AI profile/provider policy from `policyProfile` and may reduce that provider set only by env reality: providers not configured in the current environment are removed from the allowed set.
+- San Francisco derives the `l10n.instance.v1` runtime policy from `policyProfile` and may reduce that provider set only by env reality: providers not configured in the current environment are removed from the allowed set.
 - Incremental generation translates only changed current item paths when possible and preserves existing ops for unchanged current paths.
 
 ### `POST /v1/l10n/translate` (local + cloud-dev)
@@ -183,45 +183,22 @@ Agent executions are constrained by the grant:
 The owning backend surface is expected to cap these budgets server-side so the client can’t request arbitrarily large execution windows.
 
 Canonical runtime budget source:
-- `packages/ck-contracts/src/ai.js` (`budgetsByProfile` per agent)
-- `roma/lib/ai/account-copilot.ts` (account-mode grant clamp caps)
+- `packages/ck-policy/src/ai-runtime.ts` (tier + agent runtime policy matrix)
+- `roma/lib/ai/account-copilot.ts` (account-mode grant issuance, usage reservation, and clamp caps)
 
-Budget matrix (`maxTokens / timeoutMs / maxRequests`):
+Runtime policy matrix (`maxTokens / timeoutMs / maxRequests`):
 
-| Agent | free_low | paid_standard | paid_premium | curated_premium |
+| Agent | free | tier1 | tier2 | tier3 |
 |---|---|---|---|---|
-| `sdr.widget.copilot.v1` | `650 / 45s / 2` | `900 / 45s / 3` | `1400 / 60s / 3` | `1600 / 60s / 3` |
 | `cs.widget.copilot.v1` | `650 / 45s / 2` | `900 / 45s / 3` | `1400 / 60s / 3` | `1600 / 60s / 3` |
 | `sdr.copilot` | `280 / 15s / 1` | `600 / 25s / 2` | `900 / 35s / 2` | `1200 / 45s / 2` |
 | `l10n.instance.v1` | `900 / 20s / 1` | `1200 / 30s / 1` | `1800 / 45s / 1` | `2200 / 60s / 1` |
-| `l10n.prague.strings.v1` | `1500 / 60s / 1` | `1500 / 60s / 1` | `2000 / 60s / 1` | `2200 / 60s / 1` |
+| `l10n.prague.strings.v1` | `2200 / 60s / 1` | `2200 / 60s / 1` | `2200 / 60s / 1` | `2200 / 60s / 1` |
 | `agent.personalization.onboarding.v1` | `900 / 30s / 2` | `1200 / 45s / 2` | `1800 / 60s / 3` | `2200 / 60s / 3` |
 
 `agent.personalization.onboarding.v1` is the legacy grant identifier for the same post-signup account-context carry-forward path.
-`sdr.widget.copilot.v1` remains a legacy registry entry; it is not the live account Builder copilot path.
 
-### Profile -> model policy (canonical)
-
-`free_low`:
-- `deepseek`: default `deepseek-chat` (allowed: `deepseek-chat`)
-- `amazon`: default `nova-2-lite-v1` (allowed: `nova-2-lite-v1`)
-
-`paid_standard`:
-- `openai`: default `gpt-5-mini` (allowed: `gpt-5-mini`, `gpt-4o-mini`)
-- `deepseek`: default `deepseek-chat` (allowed: `deepseek-chat`, `deepseek-reasoner`)
-- `anthropic`: default `claude-3-5-sonnet-20240620` (allowed: same)
-- `groq`: default `llama-3.3-70b-versatile` (allowed: same)
-- `amazon`: default `amazon.nova-pro-v1:0` (allowed: `amazon.nova-lite-v1:0`, `amazon.nova-pro-v1:0`)
-
-`paid_premium`:
-- `openai`: default `gpt-5.2` (allowed: `gpt-5-mini`, `gpt-5`, `gpt-5.2`, `gpt-4o`)
-- `deepseek`: default `deepseek-reasoner` (allowed: `deepseek-chat`, `deepseek-reasoner`)
-- `anthropic`: default `claude-3-5-sonnet-20240620` (allowed: same)
-- `groq`: default `llama-3.3-70b-versatile` (allowed: same)
-- `amazon`: default `amazon.nova-pro-v1:0` (allowed: `amazon.nova-micro-v1:0`, `amazon.nova-lite-v1:0`, `amazon.nova-pro-v1:0`)
-
-`curated_premium`:
-- `openai`: default `gpt-5.2` (allowed: `gpt-5-mini`, `gpt-5`, `gpt-5.2`, `gpt-4o`)
+Model policy is canonical in `packages/ck-policy/src/ai-runtime.ts` and surfaced in DevStudio from the same source. Tier 2 and Tier 3 can expose a single combined model dropdown for supported customer-facing agents; the underlying signed policy still keeps provider and model separate for enforcement.
 
 ## 6) Common failure modes (runbook)
 

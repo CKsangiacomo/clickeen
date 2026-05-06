@@ -674,12 +674,10 @@ function evaluateLightEditsPolicy(args: { ops: WidgetOp[]; controls: ControlSumm
   const isContentOnly = scopes.size === 1 && scopes.has('content');
 
   // Content personalization needs to update multiple copy fields at once.
-  // TEMP: 5x limits during dev; tighten before GA.
-  const devMultiplier = 5;
-  const maxOps = (isContentOnly ? 30 : 6) * devMultiplier;
-  const maxUniquePathsTouched = (isContentOnly ? 20 : 4) * devMultiplier;
+  const maxOps = isContentOnly ? 30 : 6;
+  const maxUniquePathsTouched = isContentOnly ? 20 : 4;
   const maxScopesTouched = 1;
-  const maxGroupsTouched = (isContentOnly ? 3 : 1) * devMultiplier;
+  const maxGroupsTouched = isContentOnly ? 3 : 1;
 
   if (opsCount > maxOps) {
     return {

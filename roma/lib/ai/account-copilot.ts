@@ -1,17 +1,18 @@
 import {
   isPolicyEntitled,
+  deriveAiRuntimePolicyUi,
+  resolveAiRuntimeBudget,
+  resolveAiRuntimePolicy,
   resolvePolicyFromEntitlementsSnapshot,
-  type BudgetKey,
+  type AgentRuntimePolicyUi,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
 import {
   resolveAiAgent,
-  resolveAiBudgets,
-  resolveAiPolicyCapsule,
   type AiGrantPolicy,
+  type AiModelRef,
 } from '@clickeen/ck-contracts/ai';
-import { readAccountBudgetUsed, type RomaUsageKv } from '../account-budget-usage';
-import { readAccountStorageBytesUsed } from '../account-storage-usage';
+import { reserveAccountBudgetUse, type RomaUsageKv } from '../account-budget-usage';
 import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
 import { resolveSanfranciscoBaseUrl } from '../env/sanfrancisco';
 
@@ -45,8 +46,8 @@ const OUTCOME_EVENTS = new Set([
   'clarification_needed',
   'invalid_output',
 ] as const);
-const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
 export const ACCOUNT_WIDGET_COPILOT_AGENT_ID = 'cs.widget.copilot.v1';
+export type AccountCopilotRuntimeUi = AgentRuntimePolicyUi;
 
 function resolveAiGrantSecret(): string {
   const fromRequestContext = getOptionalCloudflareRequestContext<{ env?: { AI_GRANT_HMAC_SECRET?: string } }>()
@@ -74,19 +75,6 @@ async function hmacSha256Base64Url(secret: string, message: string): Promise<str
   return base64UrlEncodeBytes(await hmacSha256(secret, message));
 }
 
-function clampBudget(requested: number | null, allowed: number, hardCap: number): number {
-  const allowedInt = Math.max(1, Math.floor(allowed));
-  const capped = Math.min(allowedInt, hardCap);
-  if (requested && Number.isFinite(requested) && requested > 0) {
-    return Math.min(capped, Math.floor(requested));
-  }
-  return capped;
-}
-
-function isBudgetEntitlementKey(policy: ReturnType<typeof resolvePolicyFromEntitlementsSnapshot>, key: string): key is BudgetKey {
-  return key in policy.budgets;
-}
-
 function resolveEnvStage(): string {
   const stage = String(process.env.ENV_STAGE || process.env.CF_PAGES_BRANCH || '').trim().toLowerCase();
   if (stage) return stage;
@@ -102,10 +90,8 @@ async function mintGrant(grant: AIGrant, secret: string): Promise<string> {
 
 export async function issueAccountCopilotGrant(args: {
   authz: RomaAccountAuthzCapsulePayload;
-  accountCapsule?: string | null;
-  mode?: 'editor' | 'ops';
+  selectedModel?: AiModelRef | null;
   trace?: { sessionId?: string; instancePublicId?: string };
-  budgets?: { maxTokens?: number; timeoutMs?: number; maxRequests?: number };
   usageKv?: RomaUsageKv | null;
 }): Promise<
   | { ok: true; grant: string; exp: number; agentId: string }
@@ -133,45 +119,24 @@ export async function issueAccountCopilotGrant(args: {
           detail: key,
         };
       }
-      if (isBudgetEntitlementKey(policy, key)) {
-        let used: number;
-        try {
-          used =
-            key === STORAGE_BYTES_BUDGET_KEY
-              ? await readAccountStorageBytesUsed({
-                  accountId: args.authz.accountId,
-                  accountCapsule: String(args.accountCapsule || '').trim(),
-                })
-              : await readAccountBudgetUsed(
-                  args.authz.accountId,
-                  key,
-                  args.usageKv,
-                );
-        } catch (error) {
-          return {
-            ok: false,
-            status: 503,
-            reasonKey: 'coreui.errors.auth.contextUnavailable',
-            detail: error instanceof Error ? error.message : String(error),
-          };
-        }
-        const budget = policy.budgets[key];
-        if (budget.max != null && used + 1 > budget.max) {
-          return {
-            ok: false,
-            status: 403,
-            reasonKey: 'coreui.upsell.reason.budgetExceeded',
-            detail: `${String(key)} budget exceeded (max=${budget.max}).`,
-          };
-        }
-      }
     }
   }
 
-  const ai = resolveAiPolicyCapsule({
-    entry,
-    policyProfile: args.authz.profile,
-  });
+  let ai: AiGrantPolicy;
+  try {
+    ai = resolveAiRuntimePolicy({
+      entry,
+      policyProfile: args.authz.profile,
+      selectedModel: args.selectedModel ?? undefined,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      status: 403,
+      reasonKey: 'coreui.errors.ai.model.notAllowed',
+      detail: error instanceof Error ? error.message : String(error),
+    };
+  }
 
   const traceRaw = args.trace ?? {};
   const sessionId =
@@ -181,18 +146,36 @@ export async function issueAccountCopilotGrant(args: {
       ? traceRaw.instancePublicId.trim()
       : undefined;
 
-  const budgetsRaw = args.budgets ?? {};
-  const requestedMaxTokens = typeof budgetsRaw.maxTokens === 'number' ? budgetsRaw.maxTokens : null;
-  const requestedTimeoutMs = typeof budgetsRaw.timeoutMs === 'number' ? budgetsRaw.timeoutMs : null;
-  const requestedMaxRequests = typeof budgetsRaw.maxRequests === 'number' ? budgetsRaw.maxRequests : null;
+  const baseBudgets = resolveAiRuntimeBudget(ai);
+  const maxTokens = baseBudgets.maxTokens;
+  const timeoutMs = baseBudgets.timeoutMs;
+  const maxRequests = baseBudgets.maxRequests ?? 1;
+  const maxCostUsd = typeof baseBudgets.maxCostUsd === 'number' ? baseBudgets.maxCostUsd : undefined;
 
-  const MAX_TOKENS_CAP = 1200;
-  const TIMEOUT_MS_CAP = 60_000;
-  const MAX_REQUESTS_CAP = 3;
-  const baseBudgets = resolveAiBudgets(entry, ai.profile);
-  const maxTokens = clampBudget(requestedMaxTokens, baseBudgets.maxTokens, MAX_TOKENS_CAP);
-  const timeoutMs = clampBudget(requestedTimeoutMs, baseBudgets.timeoutMs, TIMEOUT_MS_CAP);
-  const maxRequests = clampBudget(requestedMaxRequests, baseBudgets.maxRequests ?? 1, MAX_REQUESTS_CAP);
+  const copilotBudget = policy.budgets['budget.copilot.turns'];
+  try {
+    const reserved = await reserveAccountBudgetUse({
+      accountId: args.authz.accountId,
+      budgetKey: 'budget.copilot.turns',
+      max: copilotBudget?.max ?? null,
+      usageKv: args.usageKv,
+    });
+    if (!reserved.ok) {
+      return {
+        ok: false,
+        status: 403,
+        reasonKey: 'coreui.upsell.reason.budgetExceeded',
+        detail: 'budget.copilot.turns budget exceeded.',
+      };
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      status: 503,
+      reasonKey: 'coreui.errors.auth.contextUnavailable',
+      detail: error instanceof Error ? error.message : String(error),
+    };
+  }
 
   const nowSec = Math.floor(Date.now() / 1000);
   const exp = nowSec + 10 * 60;
@@ -203,8 +186,13 @@ export async function issueAccountCopilotGrant(args: {
     sub: { kind: 'user', userId: args.authz.userId, accountId: args.authz.accountId },
     exp,
     caps: [`agent:${resolvedAgent.canonicalId}`],
-    budgets: { maxTokens, timeoutMs, maxRequests },
-    mode: args.mode === 'editor' ? 'editor' : 'ops',
+    budgets: {
+      maxTokens,
+      timeoutMs,
+      maxRequests,
+      ...(typeof maxCostUsd === 'number' ? { maxCostUsd } : {}),
+    },
+    mode: 'editor',
     ai,
     trace: {
       sessionId,
@@ -215,6 +203,18 @@ export async function issueAccountCopilotGrant(args: {
 
   const grant = await mintGrant(grantPayload, resolveAiGrantSecret());
   return { ok: true, grant, exp, agentId: resolvedAgent.canonicalId };
+}
+
+export function resolveAccountCopilotRuntimeUi(args: {
+  authz: RomaAccountAuthzCapsulePayload;
+}): AccountCopilotRuntimeUi | null {
+  const resolvedAgent = resolveAiAgent(ACCOUNT_WIDGET_COPILOT_AGENT_ID);
+  if (!resolvedAgent) return null;
+  const policy = resolveAiRuntimePolicy({
+    entry: resolvedAgent.entry,
+    policyProfile: args.authz.profile,
+  });
+  return deriveAiRuntimePolicyUi(policy);
 }
 
 function asTrimmedString(value: unknown): string {

@@ -1,14 +1,13 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
   resolveAiAgent,
-  resolveAiBudgets,
-  resolveAiDefaultProvider,
-  resolveAiModels,
-  resolveAiPolicyCapsule,
   type AiGrantPolicy,
-  type AiProvider,
 } from '@clickeen/ck-contracts/ai';
-import type { PolicyProfile } from '@clickeen/ck-policy';
+import {
+  resolveAiRuntimeBudget,
+  resolveAiRuntimePolicy,
+  type PolicyProfile,
+} from '@clickeen/ck-policy';
 import { HttpError, isRecord } from './http';
 import { asTrimmedString } from './internalAuth';
 import type { AIGrant, Env, Usage } from './types';
@@ -119,22 +118,6 @@ function normalizePathList(raw: unknown): string[] | null {
   );
 }
 
-function providerHasCredentials(env: Env, provider: AiProvider): boolean {
-  if (provider === 'deepseek') return Boolean(asTrimmedString(env.DEEPSEEK_API_KEY));
-  if (provider === 'openai') return Boolean(asTrimmedString(env.OPENAI_API_KEY));
-  if (provider === 'anthropic') return Boolean(asTrimmedString(env.ANTHROPIC_API_KEY));
-  if (provider === 'groq') return Boolean(asTrimmedString(env.GROQ_API_KEY));
-  if (provider === 'amazon') {
-    return (
-      Boolean(asTrimmedString(env.NOVA_API_KEY)) ||
-      (Boolean(asTrimmedString(env.AMAZON_BEDROCK_ACCESS_KEY_ID)) &&
-        Boolean(asTrimmedString(env.AMAZON_BEDROCK_SECRET_ACCESS_KEY)) &&
-        Boolean(asTrimmedString(env.AMAZON_BEDROCK_REGION)))
-    );
-  }
-  return false;
-}
-
 function buildInternalGrant(args: {
   env: Env;
   policyProfile: PolicyProfile;
@@ -148,39 +131,11 @@ function buildInternalGrant(args: {
     });
   }
 
-  const baseAi = resolveAiPolicyCapsule({
+  const ai: AiGrantPolicy = resolveAiRuntimePolicy({
     entry: resolvedAgent.entry,
     policyProfile: args.policyProfile,
   });
-  const allowedProviders = baseAi.allowedProviders.filter((provider) =>
-    providerHasCredentials(args.env, provider),
-  );
-  if (!allowedProviders.length) {
-    throw new HttpError(503, {
-      code: 'PROVIDER_ERROR',
-      provider: 'sanfrancisco',
-      message: `No model provider credentials for account l10n generation (${baseAi.profile})`,
-    });
-  }
-
-  const defaultProvider = allowedProviders.includes(baseAi.defaultProvider)
-    ? baseAi.defaultProvider
-    : resolveAiDefaultProvider(baseAi.profile, allowedProviders);
-  const models = Object.fromEntries(
-    allowedProviders
-      .map((provider) => {
-        const policy = resolveAiModels(baseAi.profile, provider);
-        return policy ? [provider, policy] : null;
-      })
-      .filter(Boolean) as Array<[AiProvider, NonNullable<AiGrantPolicy['models']>[AiProvider]]>,
-  ) as NonNullable<AiGrantPolicy['models']>;
-  const budget = resolveAiBudgets(resolvedAgent.entry, baseAi.profile);
-  const ai: AiGrantPolicy = {
-    ...baseAi,
-    allowedProviders,
-    defaultProvider,
-    models,
-  };
+  const budget = resolveAiRuntimeBudget(ai);
 
   const nowSec = Math.floor(Date.now() / 1000);
   return {
@@ -195,6 +150,7 @@ function buildInternalGrant(args: {
       timeoutMs: budget.timeoutMs,
       // One Roma save/publication request may batch many provider calls across locales/items.
       maxRequests: 512,
+      ...(typeof budget.maxCostUsd === 'number' ? { maxCostUsd: budget.maxCostUsd } : {}),
     },
     mode: 'ops',
     ai,

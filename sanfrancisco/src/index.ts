@@ -62,12 +62,10 @@ const AGENT_EXECUTORS: Record<string, AgentExecutor> = {
 };
 
 function usageForExecutionFailure(grant: AIGrant, startedAtMs: number): Usage {
-  const provider = grant.ai?.selectedProvider ?? grant.ai?.defaultProvider ?? 'unknown';
-  const models = grant.ai?.models as Partial<Record<string, { defaultModel?: string }>> | undefined;
-  const model = grant.ai?.selectedModel ?? models?.[provider]?.defaultModel ?? 'unknown';
+  const modelRef = grant.ai?.selectedModel ?? grant.ai?.defaultModel;
   return {
-    provider,
-    model,
+    provider: modelRef?.provider ?? 'unknown',
+    model: modelRef?.model ?? 'unknown',
     promptTokens: 0,
     completionTokens: 0,
     latencyMs: Math.max(0, Date.now() - startedAtMs),
@@ -129,7 +127,8 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
       subject: grant.sub,
       trace: grant.trace,
       ai: {
-        profile: grant.ai?.profile,
+        policyVersion: grant.ai?.policyVersion,
+        learningCapture: grant.ai?.learningCapture,
         taskClass: resolvedAgent.entry.taskClass,
       },
       input: body.input,

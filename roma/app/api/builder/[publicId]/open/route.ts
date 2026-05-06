@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadBuilderOpenEnvelope } from '@roma/lib/builder-open';
+import { resolveAccountCopilotRuntimeUi } from '@roma/lib/ai/account-copilot';
 import { resolveCurrentAccountRouteContext, withSession } from '@roma/lib/current-account-route';
 
 export const runtime = 'edge';
@@ -37,5 +38,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
     );
   }
 
-  return withSession(request, NextResponse.json(result.value), current.value.setCookies);
+  return withSession(
+    request,
+    NextResponse.json({
+      ...result.value,
+      copilot: resolveAccountCopilotRuntimeUi({ authz: current.value.authzPayload }),
+    }),
+    current.value.setCookies,
+  );
 }

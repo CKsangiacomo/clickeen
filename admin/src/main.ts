@@ -27,6 +27,9 @@ import { typographySections, getTypographySampleText } from './data/typography';
 import {
   CAPABILITY_META,
   isPolicyEntitled,
+  deriveAiRuntimePolicyUi,
+  listAiRuntimePoliciesForTier,
+  resolveAiRuntimePolicy,
   resolvePolicy,
   getEntitlementsMatrix,
   type PolicyProfile,
@@ -34,12 +37,8 @@ import {
 import {
   labelAiModel,
   listAiAgents,
-  listAiModelsForUi,
+  listAiModelCatalog,
   listAiProviderUi,
-  resolveAiPolicyCapsule,
-  resolveAiDefaultProvider,
-  resolveAiProfile,
-  type AiProfile,
   type AiProvider,
 } from '@clickeen/ck-contracts/ai';
 import type { AccountAssetsClient } from '@dieter/components/shared/account-assets';
@@ -68,7 +67,6 @@ const aiAccessByTier: Partial<
     PolicyProfile,
     {
       policyProfile: PolicyProfile;
-      aiProfile: AiProfile;
       defaultProvider: AiProvider;
       defaultProviderLabel: string;
       providers: Array<{
@@ -82,36 +80,46 @@ const aiAccessByTier: Partial<
   >
 > = {};
 
-const allProviders = aiProviderUi.map((entry) => entry.provider);
-
 for (const policyProfile of entitlements.tiers) {
-  const aiProfile = resolveAiProfile({ policyProfile, taskClass: 'copilot.widget.editor' });
-  const modelsByProvider = listAiModelsForUi({ profile: aiProfile, allowedProviders: allProviders }) as Partial<
-    Record<AiProvider, { defaultModel: string; models: Array<{ model: string; label: string }> }>
-  >;
-
-  const allowedProviders = aiProviderUi
-    .map((entry) => entry.provider)
-    .filter((provider) => Boolean(modelsByProvider?.[provider]));
-
-  const defaultProvider = resolveAiDefaultProvider(aiProfile, allowedProviders);
-  const providers = aiProviderUi
-    .filter((entry) => Boolean(modelsByProvider?.[entry.provider]))
-    .map((entry) => {
-      const providerData = modelsByProvider?.[entry.provider];
-      const defaultModel = providerData?.defaultModel ?? '';
-      return {
-        provider: entry.provider,
-        label: entry.label,
-        defaultModel,
-        defaultModelLabel: labelAiModel(defaultModel),
-        models: Array.isArray(providerData?.models) ? providerData.models : [],
+  const tierPolicies = listAiRuntimePoliciesForTier(policyProfile);
+  const providersByKey = new Map<
+    AiProvider,
+    {
+      provider: AiProvider;
+      label: string;
+      defaultModel: string;
+      defaultModelLabel: string;
+      models: Array<{ model: string; label: string }>;
+    }
+  >();
+  let defaultProvider: AiProvider = 'deepseek';
+  for (const { policy } of tierPolicies) {
+    defaultProvider = policy.defaultModel.provider;
+    for (const [provider, modelPolicy] of Object.entries(policy.modelsByProvider) as Array<[AiProvider, NonNullable<typeof policy.modelsByProvider[AiProvider]>]>) {
+      const current = providersByKey.get(provider) ?? {
+        provider,
+        label: aiProviderLabelByKey.get(provider) ?? provider,
+        defaultModel: modelPolicy.defaultModel,
+        defaultModelLabel: labelAiModel(modelPolicy.defaultModel, provider),
+        models: [],
       };
-    });
+      current.defaultModel = modelPolicy.defaultModel;
+      current.defaultModelLabel = labelAiModel(modelPolicy.defaultModel, provider);
+      const seen = new Set(current.models.map((model) => model.model));
+      modelPolicy.allowed.forEach((model) => {
+        if (seen.has(model)) return;
+        seen.add(model);
+        current.models.push({ model, label: labelAiModel(model, provider) });
+      });
+      providersByKey.set(provider, current);
+    }
+  }
+  const providers = aiProviderUi
+    .map((entry) => providersByKey.get(entry.provider))
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
 
   aiAccessByTier[policyProfile] = {
     policyProfile,
-    aiProfile,
     defaultProvider,
     defaultProviderLabel: providers.find((provider) => provider.provider === defaultProvider)?.label ?? defaultProvider,
     providers,
@@ -128,13 +136,12 @@ const aiAgentsByTier = aiAgents.map((entry) => {
       PolicyProfile,
       {
         policyProfile: PolicyProfile;
-        aiProfile: AiProfile;
         enabled: boolean;
         deniedEntitlement: string | null;
-        allowProviderChoice: boolean;
-        allowModelChoice: boolean;
+        allowModelPicker: boolean;
         defaultProvider: AiProvider | '';
         defaultProviderLabel: string;
+        modelOptions: Array<{ provider: AiProvider; model: string; label: string }>;
         providers: Array<{
           provider: AiProvider;
           label: string;
@@ -150,30 +157,29 @@ const aiAgentsByTier = aiAgents.map((entry) => {
     const policy = resolvePolicy({ profile: policyProfile, role: 'editor' });
     const deniedEntitlement =
       entry.requiredEntitlements?.find((entitlement) => !isPolicyEntitled(policy, entitlement)) ?? null;
-    const capsule = resolveAiPolicyCapsule({ entry, policyProfile });
-    const providers = capsule.allowedProviders.map((provider) => {
-      const modelPolicy = capsule.models?.[provider];
+    const runtimePolicy = resolveAiRuntimePolicy({ entry, policyProfile });
+    const runtimeUi = deriveAiRuntimePolicyUi(runtimePolicy);
+    const providers = (Object.entries(runtimePolicy.modelsByProvider) as Array<[AiProvider, NonNullable<typeof runtimePolicy.modelsByProvider[AiProvider]>]>).map(([provider, modelPolicy]) => {
       const defaultModel = modelPolicy?.defaultModel ?? '';
       return {
         provider,
         label: aiProviderLabelByKey.get(provider) ?? provider,
         defaultModel,
-        defaultModelLabel: labelAiModel(defaultModel),
+        defaultModelLabel: labelAiModel(defaultModel, provider),
         models: Array.isArray(modelPolicy?.allowed)
-          ? modelPolicy!.allowed.map((model) => ({ model, label: labelAiModel(model) }))
+          ? modelPolicy!.allowed.map((model) => ({ model, label: labelAiModel(model, provider) }))
           : [],
       };
     });
 
     byTier[policyProfile] = {
       policyProfile,
-      aiProfile: capsule.profile,
       enabled: deniedEntitlement == null,
       deniedEntitlement,
-      allowProviderChoice: Boolean(capsule.allowProviderChoice),
-      allowModelChoice: Boolean(capsule.allowModelChoice),
-      defaultProvider: capsule.defaultProvider ?? '',
-      defaultProviderLabel: capsule.defaultProvider ? aiProviderLabelByKey.get(capsule.defaultProvider) ?? capsule.defaultProvider : '',
+      allowModelPicker: runtimePolicy.allowModelPicker,
+      defaultProvider: runtimePolicy.defaultModel.provider,
+      defaultProviderLabel: aiProviderLabelByKey.get(runtimePolicy.defaultModel.provider) ?? runtimePolicy.defaultModel.provider,
+      modelOptions: runtimeUi.modelOptions,
       providers,
     };
   }
@@ -195,6 +201,7 @@ const aiAgentsByTier = aiAgents.map((entry) => {
 
 window.__CK_AI_ACCESS__ = {
   providers: aiProviderUi,
+  models: listAiModelCatalog(),
   byTier: aiAccessByTier,
   agents: aiAgentsByTier,
 };

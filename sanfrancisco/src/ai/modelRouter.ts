@@ -1,6 +1,6 @@
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { HttpError } from '../http';
-import type { AIGrant, Env } from '../types';
+import type { AIGrant } from '../types';
 
 export type AiProvider = 'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon';
 
@@ -10,106 +10,57 @@ export type ModelSelection = {
   canonicalAgentId: string;
 };
 
-function asTrimmedString(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
-}
-
-function providerHasCredentials(env: Env, provider: AiProvider): boolean {
-  switch (provider) {
-    case 'deepseek':
-      return Boolean(asTrimmedString(env.DEEPSEEK_API_KEY));
-    case 'openai':
-      return Boolean(asTrimmedString(env.OPENAI_API_KEY));
-    case 'anthropic':
-      return Boolean(asTrimmedString(env.ANTHROPIC_API_KEY));
-    case 'groq':
-      return Boolean(asTrimmedString(env.GROQ_API_KEY));
-    case 'amazon':
-      return (
-        Boolean(asTrimmedString(env.NOVA_API_KEY)) ||
-        (Boolean(asTrimmedString(env.AMAZON_BEDROCK_ACCESS_KEY_ID)) &&
-          Boolean(asTrimmedString(env.AMAZON_BEDROCK_SECRET_ACCESS_KEY)) &&
-          Boolean(asTrimmedString(env.AMAZON_BEDROCK_REGION)))
-      );
-    default:
-      return false;
+function resolveProvider(grant: AIGrant): AiProvider {
+  const policy = grant.ai;
+  if (!policy) {
+    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Missing AI runtime policy' });
   }
-}
+  const selectedProvider = policy.selectedModel?.provider;
+  if (selectedProvider) return selectedProvider;
 
-function resolveProvider(args: {
-  env: Env;
-  allowedProviders: AiProvider[];
-  defaultProvider: AiProvider;
-  selectedProvider?: string;
-}): AiProvider {
-  const allowed = args.allowedProviders;
+  const allowed = Object.keys(policy.modelsByProvider) as AiProvider[];
   if (!allowed.length) {
     throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'No providers available' });
   }
 
-  const selected = asTrimmedString(args.selectedProvider);
-  if (selected) {
-    if (!allowed.includes(selected as AiProvider)) {
-      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Provider not allowed: ${selected}` });
-    }
-    return selected as AiProvider;
+  const defaultProvider = policy.defaultModel.provider;
+  if (!allowed.includes(defaultProvider)) {
+    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Provider not allowed: ${defaultProvider}` });
   }
-
-  if (allowed.includes(args.defaultProvider) && providerHasCredentials(args.env, args.defaultProvider)) {
-    return args.defaultProvider;
-  }
-  const firstAvailable = allowed.find((provider) => providerHasCredentials(args.env, provider));
-  if (firstAvailable) return firstAvailable;
-  if (allowed.includes(args.defaultProvider)) return args.defaultProvider;
-  return allowed[0]!;
+  return defaultProvider;
 }
 
 function resolveModelForProvider(args: {
-  env: Env;
   provider: AiProvider;
-  selectedModel?: string;
+  grant: AIGrant;
   grantModelPolicy?: { defaultModel: string; allowed: string[] } | null;
 }): string {
-  const modelOverride = asTrimmedString(args.selectedModel);
-  if (modelOverride) {
-    if (args.grantModelPolicy && !args.grantModelPolicy.allowed.includes(modelOverride)) {
-      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Model not allowed: ${modelOverride}` });
+  const selectedModel = args.grant.ai?.selectedModel;
+  if (selectedModel) {
+    if (selectedModel.provider !== args.provider) {
+      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Model provider mismatch: ${selectedModel.provider}` });
     }
-    return modelOverride;
+    if (!args.grantModelPolicy?.allowed.includes(selectedModel.model)) {
+      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Model not allowed: ${selectedModel.model}` });
+    }
+    return selectedModel.model;
   }
 
   if (args.grantModelPolicy) return args.grantModelPolicy.defaultModel;
-
-  if (args.provider === 'deepseek') return args.env.DEEPSEEK_MODEL ?? 'deepseek-chat';
-  if (args.provider === 'openai') return args.env.OPENAI_MODEL ?? 'gpt-5.2';
-  if (args.provider === 'groq') return args.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
-  if (args.provider === 'amazon') return args.env.NOVA_MODEL ?? args.env.AMAZON_BEDROCK_MODEL_ID ?? 'nova-2-lite-v1';
-  return args.env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20240620';
+  throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Model policy missing for provider: ${args.provider}` });
 }
 
-export function resolveModelSelection(args: { env: Env; grant: AIGrant; agentId: string }): ModelSelection {
+export function resolveModelSelection(args: { grant: AIGrant; agentId: string }): ModelSelection {
   const resolved = resolveAiAgent(args.agentId);
   if (!resolved) {
     throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Unknown agentId: ${args.agentId}` });
   }
+  const provider = resolveProvider(args.grant);
 
-  const entry = resolved.entry;
-  const allowedProviders = (args.grant.ai?.allowedProviders ?? []) as AiProvider[];
-  const selectedProvider = args.grant.ai?.selectedProvider;
-  const defaultProvider = (args.grant.ai?.defaultProvider ?? entry.defaultProvider) as AiProvider;
-
-  const provider = resolveProvider({
-    env: args.env,
-    allowedProviders,
-    defaultProvider,
-    selectedProvider,
-  });
-
-  const modelPolicy = args.grant.ai?.models?.[provider] ?? null;
+  const modelPolicy = args.grant.ai?.modelsByProvider?.[provider] ?? null;
   const model = resolveModelForProvider({
-    env: args.env,
     provider,
-    selectedModel: args.grant.ai?.selectedModel,
+    grant: args.grant,
     grantModelPolicy: modelPolicy ? { defaultModel: modelPolicy.defaultModel, allowed: modelPolicy.allowed } : null,
   });
 

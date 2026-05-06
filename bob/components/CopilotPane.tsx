@@ -147,6 +147,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
   const [draft, setDraft] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
+  const [selectedModelKey, setSelectedModelKey] = useState('');
 
   const pendingDecisionRef = useRef(false);
   const pendingOpsRef = useRef<WidgetOp[] | null>(null);
@@ -161,6 +162,24 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const thread = threadKey ? copilot.copilotThreads?.[threadKey] ?? null : null;
   const messages = useMemo(() => thread?.messages ?? [], [thread?.messages]);
   const copilotSessionId = thread?.sessionId ?? '';
+  const modelOptions = useMemo(() => chrome.copilot?.modelOptions ?? [], [chrome.copilot?.modelOptions]);
+  const defaultModel = chrome.copilot?.selectedModel ?? chrome.copilot?.defaultModel ?? null;
+  const selectedModel = useMemo(() => {
+    const key = selectedModelKey || (defaultModel ? `${defaultModel.provider}:${defaultModel.model}` : '');
+    return modelOptions.find((option) => `${option.provider}:${option.model}` === key) ?? defaultModel;
+  }, [defaultModel, modelOptions, selectedModelKey]);
+
+  useEffect(() => {
+    if (!defaultModel) {
+      setSelectedModelKey('');
+      return;
+    }
+    const defaultKey = `${defaultModel.provider}:${defaultModel.model}`;
+    setSelectedModelKey((current) => {
+      if (current && modelOptions.some((option) => `${option.provider}:${option.model}` === current)) return current;
+      return defaultKey;
+    });
+  }, [defaultModel, modelOptions]);
 
   const getPendingDecisionMessage = (): CopilotMessage | null => {
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -372,6 +391,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           currentConfig: session.instanceData,
           controls: controlsForAi,
           sessionId,
+          ...(selectedModel ? { selectedModel } : {}),
         }),
       });
 
@@ -570,6 +590,34 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           background: 'var(--color-system-white)',
         }}
       >
+        {chrome.copilot?.allowModelPicker && modelOptions.length > 1 ? (
+          <div style={{ marginBottom: 'var(--space-2)' }}>
+            <select
+              className="body-s"
+              value={selectedModelKey}
+              onChange={(event) => setSelectedModelKey(event.target.value)}
+              disabled={status === 'loading' || Boolean(uiDisabledReason)}
+              aria-label="Copilot model"
+              style={{
+                width: '100%',
+                minHeight: 'var(--control-size-md)',
+                borderRadius: 'var(--control-radius-md)',
+                border: '1px solid var(--color-system-gray-5)',
+                background: 'var(--color-system-white)',
+                padding: 'var(--space-2)',
+              }}
+            >
+              {modelOptions.map((option) => {
+                const key = `${option.provider}:${option.model}`;
+                return (
+                  <option key={key} value={key}>
+                    {option.label}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        ) : null}
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <input
             className="body-s"

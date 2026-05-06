@@ -14,12 +14,12 @@ declare global {
     __CK_ENTITLEMENTS_META__?: typeof import('@clickeen/ck-policy').CAPABILITY_META;
     __CK_AI_ACCESS__?: {
       providers?: Array<{ provider: import('@clickeen/ck-contracts/ai').AiProvider; label: string }>;
+      models?: Array<import('@clickeen/ck-contracts/ai').AiModelCatalogEntry>;
       byTier: Partial<
         Record<
           import('@clickeen/ck-policy').PolicyProfile,
           {
             policyProfile: import('@clickeen/ck-policy').PolicyProfile;
-            aiProfile: import('@clickeen/ck-contracts/ai').AiProfile;
             defaultProvider: import('@clickeen/ck-contracts/ai').AiProvider;
             defaultProviderLabel: string;
             providers: Array<{
@@ -45,13 +45,16 @@ declare global {
             import('@clickeen/ck-policy').PolicyProfile,
             {
               policyProfile: import('@clickeen/ck-policy').PolicyProfile;
-              aiProfile: import('@clickeen/ck-contracts/ai').AiProfile;
               enabled: boolean;
               deniedEntitlement: string | null;
-              allowProviderChoice: boolean;
-              allowModelChoice: boolean;
+              allowModelPicker: boolean;
               defaultProvider: import('@clickeen/ck-contracts/ai').AiProvider | '';
               defaultProviderLabel: string;
+              modelOptions: Array<{
+                provider: import('@clickeen/ck-contracts/ai').AiProvider;
+                model: string;
+                label: string;
+              }>;
               providers: Array<{
                 provider: import('@clickeen/ck-contracts/ai').AiProvider;
                 label: string;

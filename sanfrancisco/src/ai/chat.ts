@@ -1,13 +1,13 @@
 import { HttpError } from '../http';
 import {
-  assertProviderAllowed,
   getGrantMaxCostUsd,
   getGrantMaxRequests,
   getGrantMaxTokens,
   getGrantTimeoutMs,
 } from '../grants';
+import { listAiModelCatalog } from '@clickeen/ck-contracts/ai';
 import type { AIGrant, Env, Usage } from '../types';
-import { resolveModelSelection, type AiProvider, type ModelSelection } from './modelRouter';
+import { resolveModelSelection, type ModelSelection } from './modelRouter';
 import { callDeepseekChat } from '../providers/deepseek';
 import { callOpenAiChat } from '../providers/openai';
 import { callAnthropicChat } from '../providers/anthropic';
@@ -19,15 +19,19 @@ export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: stri
 type PriceEntry = { promptUsdPer1M: number; completionUsdPer1M: number };
 type BudgetState = { requests: number; costUsd: number };
 
-const DEFAULT_PRICE_TABLE: Record<string, PriceEntry> = {
-  deepseek: { promptUsdPer1M: 0.14, completionUsdPer1M: 0.28 },
-  openai: { promptUsdPer1M: 2.5, completionUsdPer1M: 10 },
-  anthropic: { promptUsdPer1M: 3, completionUsdPer1M: 15 },
-  groq: { promptUsdPer1M: 0.59, completionUsdPer1M: 0.79 },
-  amazon: { promptUsdPer1M: 0.8, completionUsdPer1M: 3.2 },
-};
+const DEFAULT_PRICE_TABLE: Record<string, PriceEntry> = Object.fromEntries(
+  listAiModelCatalog().map((entry) => [
+    `${entry.provider}:${entry.model}`,
+    { promptUsdPer1M: entry.promptUsdPer1M, completionUsdPer1M: entry.completionUsdPer1M },
+  ]),
+);
 
+// Per-grant request/cost control for this Worker isolate. Durable monthly account
+// usage stays with the account policy/Roma usage boundary, not San Francisco.
 const budgetCache = new Map<string, BudgetState>();
+
+// Parsed once per isolate from deploy-time config. This estimates request cost for
+// grant ceilings; it is not the source of truth for customer billing.
 let cachedPriceTable: Record<string, PriceEntry> | null = null;
 
 function resolvePriceTable(env: Env): Record<string, PriceEntry> {
@@ -37,12 +41,13 @@ function resolvePriceTable(env: Env): Record<string, PriceEntry> {
   if (raw) {
     try {
       const json = JSON.parse(raw) as Record<string, Partial<PriceEntry>>;
-      for (const [provider, entry] of Object.entries(json)) {
+      for (const [modelKey, entry] of Object.entries(json)) {
+        if (!modelKey.includes(':')) continue;
         const prompt = entry?.promptUsdPer1M;
         const completion = entry?.completionUsdPer1M;
         if (typeof prompt !== 'number' || !Number.isFinite(prompt) || prompt <= 0) continue;
         if (typeof completion !== 'number' || !Number.isFinite(completion) || completion <= 0) continue;
-        parsed[provider] = { promptUsdPer1M: prompt, completionUsdPer1M: completion };
+        parsed[modelKey] = { promptUsdPer1M: prompt, completionUsdPer1M: completion };
       }
     } catch (err) {
       console.error('[sanfrancisco] Invalid AI_PRICE_TABLE_JSON', err);
@@ -95,7 +100,7 @@ async function saveBudgetState(env: Env, key: string, state: BudgetState, ttlSec
 }
 
 function computeCostUsd(env: Env, usage: Usage): number | null {
-  const entry = resolvePriceTable(env)[usage.provider];
+  const entry = resolvePriceTable(env)[`${usage.provider}:${usage.model}`];
   if (!entry) return null;
   const promptTokens = usage.promptTokens;
   const completionTokens = usage.completionTokens;
@@ -103,133 +108,6 @@ function computeCostUsd(env: Env, usage: Usage): number | null {
   const promptCost = (promptTokens / 1_000_000) * entry.promptUsdPer1M;
   const completionCost = (completionTokens / 1_000_000) * entry.completionUsdPer1M;
   return promptCost + completionCost;
-}
-
-function providerHasCredentials(env: Env, provider: AiProvider): boolean {
-  switch (provider) {
-    case 'deepseek':
-      return Boolean((env.DEEPSEEK_API_KEY || '').trim());
-    case 'openai':
-      return Boolean((env.OPENAI_API_KEY || '').trim());
-    case 'anthropic':
-      return Boolean((env.ANTHROPIC_API_KEY || '').trim());
-    case 'groq':
-      return Boolean((env.GROQ_API_KEY || '').trim());
-    case 'amazon':
-      return (
-        Boolean((env.NOVA_API_KEY || '').trim()) ||
-        (Boolean((env.AMAZON_BEDROCK_ACCESS_KEY_ID || '').trim()) &&
-          Boolean((env.AMAZON_BEDROCK_SECRET_ACCESS_KEY || '').trim()) &&
-          Boolean((env.AMAZON_BEDROCK_REGION || '').trim()))
-      );
-    default:
-      return false;
-  }
-}
-
-function defaultModelForProvider(env: Env, provider: AiProvider): string {
-  if (provider === 'deepseek') return env.DEEPSEEK_MODEL ?? 'deepseek-chat';
-  if (provider === 'openai') return env.OPENAI_MODEL ?? 'gpt-5.2';
-  if (provider === 'groq') return env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
-  if (provider === 'amazon') return env.NOVA_MODEL ?? env.AMAZON_BEDROCK_MODEL_ID ?? 'nova-2-lite-v1';
-  return env.ANTHROPIC_MODEL ?? 'claude-3-5-sonnet-20240620';
-}
-
-function dedupeStrings(values: Array<string | null | undefined>): string[] {
-  const out: string[] = [];
-  const seen = new Set<string>();
-  for (const raw of values) {
-    const value = String(raw || '').trim();
-    if (!value || seen.has(value)) continue;
-    seen.add(value);
-    out.push(value);
-  }
-  return out;
-}
-
-function preferredFallbackModels(provider: AiProvider): string[] {
-  if (provider === 'openai') return ['gpt-4o-mini', 'gpt-4o'];
-  if (provider === 'amazon') return ['amazon.nova-pro-v1:0', 'nova-2-pro-v1', 'amazon.nova-lite-v1:0', 'nova-2-lite-v1'];
-  return [];
-}
-
-function buildProviderOrder(args: {
-  grant: AIGrant;
-  env: Env;
-  primary: ModelSelection;
-}): AiProvider[] {
-  const allowed = (args.grant.ai?.allowedProviders ?? [args.primary.provider]) as AiProvider[];
-  const selectedProvider = args.grant.ai?.selectedProvider;
-  if (selectedProvider) {
-    return [selectedProvider];
-  }
-
-  const ordered = dedupeStrings([
-    args.primary.provider,
-    args.grant.ai?.defaultProvider,
-    ...allowed,
-  ]) as AiProvider[];
-
-  // Keep primary first, then providers that are actually configured.
-  const primary = args.primary.provider;
-  const rest = ordered.filter((p) => p !== primary);
-  const configured = rest.filter((p) => providerHasCredentials(args.env, p));
-  const unconfigured = rest.filter((p) => !providerHasCredentials(args.env, p));
-  return [primary, ...configured, ...unconfigured];
-}
-
-function buildModelOrder(args: {
-  grant: AIGrant;
-  env: Env;
-  provider: AiProvider;
-  primary: ModelSelection;
-}): string[] {
-  const modelPolicy = args.grant.ai?.models?.[args.provider] ?? null;
-  const allowedModels = Array.isArray(modelPolicy?.allowed) ? modelPolicy!.allowed : [];
-  const selectedProvider = args.grant.ai?.selectedProvider;
-  const selectedModel = args.grant.ai?.selectedModel;
-
-  const candidates = dedupeStrings([
-    args.provider === args.primary.provider ? args.primary.model : null,
-    selectedProvider === args.provider ? selectedModel : null,
-    ...preferredFallbackModels(args.provider),
-    modelPolicy?.defaultModel,
-    ...allowedModels,
-    defaultModelForProvider(args.env, args.provider),
-  ]);
-
-  if (!allowedModels.length) return candidates.slice(0, 4);
-  return candidates.filter((m) => allowedModels.includes(m)).slice(0, 4);
-}
-
-function buildSelectionQueue(args: { grant: AIGrant; env: Env; primary: ModelSelection }): ModelSelection[] {
-  const providers = buildProviderOrder({
-    grant: args.grant,
-    env: args.env,
-    primary: args.primary,
-  });
-  const out: ModelSelection[] = [];
-  const seen = new Set<string>();
-  for (const provider of providers) {
-    const models = buildModelOrder({
-      grant: args.grant,
-      env: args.env,
-      provider,
-      primary: args.primary,
-    });
-    for (const model of models) {
-      const key = `${provider}::${model}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push({
-        provider,
-        model,
-        canonicalAgentId: args.primary.canonicalAgentId,
-      });
-      if (out.length >= 6) return out;
-    }
-  }
-  return out.length ? out : [args.primary];
 }
 
 async function callProviderForSelection(args: {
@@ -326,8 +204,7 @@ export async function callChatCompletion(args: {
   maxTokens?: number;
   timeoutMs?: number;
 }): Promise<{ content: string; usage: Usage }> {
-  const primary = resolveModelSelection({ env: args.env, grant: args.grant, agentId: args.agentId });
-  const selectionQueue = buildSelectionQueue({ grant: args.grant, env: args.env, primary });
+  const selection = resolveModelSelection({ grant: args.grant, agentId: args.agentId });
 
   const grantMaxTokens = getGrantMaxTokens(args.grant);
   const grantTimeoutMs = getGrantTimeoutMs(args.grant);
@@ -346,39 +223,28 @@ export async function callChatCompletion(args: {
 
   let result: { content: string; usage: Usage } | null = null;
   let lastError: unknown = null;
-  for (let i = 0; i < selectionQueue.length; i += 1) {
-    const selection = selectionQueue[i]!;
-    assertProviderAllowed(args.grant, selection.provider);
-
-    const retryWithinSelection = i === 0 ? 2 : 1;
-    for (let attempt = 1; attempt <= retryWithinSelection; attempt += 1) {
-      try {
-        result = await callProviderForSelection({
-          env: args.env,
-          messages: args.messages,
-          temperature,
-          maxTokens,
-          timeoutMs,
-          selection,
-        });
-        break;
-      } catch (err) {
-        lastError = err;
-        const retryable = isRetryableProviderFailure(err);
-        const canRetrySame = retryable && attempt < retryWithinSelection;
-        if (canRetrySame) {
-          await sleep(120);
-          continue;
-        }
-        const canTryNextSelection = retryable && i < selectionQueue.length - 1;
-        if (canTryNextSelection) break;
-        throw err;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      result = await callProviderForSelection({
+        env: args.env,
+        messages: args.messages,
+        temperature,
+        maxTokens,
+        timeoutMs,
+        selection,
+      });
+      break;
+    } catch (err) {
+      lastError = err;
+      if (isRetryableProviderFailure(err) && attempt < 2) {
+        await sleep(120);
+        continue;
       }
+      throw err;
     }
-    if (result) break;
   }
   if (!result && lastError) throw lastError;
-  if (!result) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: primary.provider, message: 'Empty model response' });
+  if (!result) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: selection.provider, message: 'Empty model response' });
 
   const computedCostUsd = computeCostUsd(args.env, result.usage);
   const nextCostUsd = state.costUsd + (computedCostUsd ?? 0);

@@ -63,25 +63,29 @@ Boundary (explicit ownership):
 - Policy, entitlements, and persistence live outside San Francisco in the trusted product/account owners.
 - San Francisco executes based on the AI Grant + request payload and returns structured results.
 
-## Tiered Access Control (The "AI Profile")
-As of PRD 041, LLM access is strictly tiered. The grant issuer resolves the caller's entitlement to an **AI Profile** during grant issuance:
+## Runtime Policy Access Control
+LLM access is strictly tiered, but San Francisco does not receive a hidden access label. The grant issuer resolves real account entitlements plus the agent ID into a signed `AgentRuntimePolicy` during grant issuance.
 
-| AI Profile | Target User | Default Access | Performance |
-|------------|-------------|----------------|-------------|
-| `free_low` | Free account / lowest-cost account policy | Policy default `deepseek -> deepseek-chat` | Fast, low-cost |
-| `paid_standard` | Tier 1 (Basic) | Policy default `openai -> gpt-5-mini` (plus DeepSeek, Claude Sonnet, Groq Llama, Nova where agent allows) | Balanced |
-| `paid_premium` | Tier 2+ (Pro) | Policy default `openai -> gpt-5.2` (plus DeepSeek Reasoner, Claude Sonnet, Groq Llama, Nova where agent allows) | Higher quality |
-| `curated_premium`| Internal/Special | Policy default `openai -> gpt-5.2` (OpenAI curated set) | Max capability |
+The policy contains direct execution truth:
 
-San Francisco enforces this profile by:
-1.  Receiving the `ai.profile` in the Grant.
-2.  Resolving the allowed `Provider` and `Model` list for that profile.
-3.  Rejecting requests for providers/models not allowed by the profile.
+- `defaultModel`
+- `modelsByProvider`
+- optional `selectedModel`
+- model-picker permission
+- token, turn, timeout, and cost ceilings
+- learning-capture rules
+- `policyVersion`
+
+San Francisco enforces this policy by:
+1. Verifying the signed grant.
+2. Rejecting providers/models outside `modelsByProvider`.
+3. Rejecting selected models when the account policy does not allow a picker.
+4. Enforcing request ceilings from the grant.
 
 Widget copilot routing (shipped):
 - Account Builder resolves `widget.copilot.v1` to `cs.widget.copilot.v1`
 - Callers may request the alias `widget.copilot.v1`; Roma resolves it server-side for the account route.
-- DevStudio Entitlements now exposes both profile-level model access and per-agent runtime access so provider/model differences are explicit.
+- DevStudio Entitlements exposes the model catalog and per-agent runtime policy by tier; it does not create a separate AI access truth.
 - Runtime behavior is policy-scoped by agent role (shared infra, separate behavior packs):
   - `cs.widget.copilot.v1`: in-product editor copilot (control-driven edits, task-completion clarifications, no SDR website/seller loop).
 
@@ -181,12 +185,20 @@ type AIGrant = {
   };
   mode: 'editor' | 'ops'; // editor copilots vs operational agents
   ai?: {
-    profile: 'free_low' | 'paid_standard' | 'paid_premium' | 'curated_premium';
-    allowedProviders: Array<'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon'>;
-    selectedProvider?: 'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon';
-    selectedModel?: string;
-    allowProviderChoice?: boolean;
-    allowModelChoice?: boolean;
+    agentId: string;
+    enabled: boolean;
+    defaultModel: { provider: string; model: string };
+    modelsByProvider: Record<string, { defaultModel: string; allowed: string[] }>;
+    allowModelPicker: boolean;
+    selectedModel?: { provider: string; model: string };
+    maxTokensPerCall: number;
+    maxRequestsPerGrant: number;
+    maxTurnsPerThread: number;
+    maxMonthlyTurns: number | null;
+    maxCostUsd?: number;
+    timeoutMs: number;
+    learningCapture: { rawSamplePercent: number; captureRawFailures: boolean };
+    policyVersion: string;
   };
   trace: { sessionId?: string; instancePublicId?: string };
 };
@@ -290,7 +302,7 @@ Phase‑1 (shipped orchestration surface):
   - `sdr.copilot`
   - `cs.widget.copilot.v1` (live account widget editing Copilot)
   - `debug.grantProbe` (dev only)
-- Provider/model policy is explicit per agent/profile; runtime may retry retryable upstream failures across grant-allowed selections, and returns typed errors when retries are exhausted.
+- Provider/model policy is explicit per agent and account tier. Agents retry retryable upstream failures against the same selected/default model, then return typed errors; they do not silently cross-switch providers or models.
 - No general “tool” system yet; any extra capabilities must be explicitly implemented inside the agent (for example: widget copilot includes bounded, SSRF-guarded single-page URL reads + Cloudflare HTML detection).
 - Always returns structured JSON (never “go edit X” prose), plus usage metadata.
 

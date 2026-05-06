@@ -11,8 +11,6 @@ const OUTCOME_EVENTS = new Set([
   'invalid_output',
 ]);
 
-const DETAILED_LEARNING_SAMPLE_PERCENT = 20;
-
 function toIsoDay(ms: number): string {
   try {
     return new Date(ms).toISOString().slice(0, 10);
@@ -188,8 +186,12 @@ function readTouchedControls(value: unknown): NonNullable<CopilotLearningMetadat
 function hasPaidLearningEntitlement(e: InteractionEvent): boolean {
   if (e.agentId !== 'cs.widget.copilot.v1') return false;
   if (e.subject.kind !== 'user') return false;
-  const profile = asTrimmedString(e.ai?.profile) ?? '';
-  return Boolean(profile && profile !== 'free_low');
+  const samplePercent = e.ai?.learningCapture?.rawSamplePercent;
+  const captureFailures = e.ai?.learningCapture?.captureRawFailures;
+  return Boolean(
+    (typeof samplePercent === 'number' && Number.isFinite(samplePercent) && samplePercent > 0) ||
+      captureFailures === true,
+  );
 }
 
 function isSeriousLearningFailure(e: InteractionEvent): boolean {
@@ -202,14 +204,21 @@ function isSeriousLearningFailure(e: InteractionEvent): boolean {
 }
 
 export type LearningCaptureDecision =
-  | { captureRaw: true; reason: 'paid_failure' | 'paid_sample' }
+  | { captureRaw: true; reason: 'failure' | 'sample' }
   | { captureRaw: false; reason: 'free_or_ineligible' | 'not_sampled' };
 
 export function resolveLearningCaptureDecision(e: InteractionEvent): LearningCaptureDecision {
   if (!hasPaidLearningEntitlement(e)) return { captureRaw: false, reason: 'free_or_ineligible' };
-  if (isSeriousLearningFailure(e)) return { captureRaw: true, reason: 'paid_failure' };
+  if (isSeriousLearningFailure(e) && e.ai?.learningCapture?.captureRawFailures === true) {
+    return { captureRaw: true, reason: 'failure' };
+  }
+  const samplePercent = e.ai?.learningCapture?.rawSamplePercent;
+  const boundedSamplePercent =
+    typeof samplePercent === 'number' && Number.isFinite(samplePercent)
+      ? Math.max(0, Math.min(100, samplePercent))
+      : 0;
   const seed = `${e.subject.kind}:${resolveSubjectHash(e) ?? 'unknown'}:${e.agentId}:${e.requestId}`;
-  if (deterministicPercent(seed) < DETAILED_LEARNING_SAMPLE_PERCENT) return { captureRaw: true, reason: 'paid_sample' };
+  if (deterministicPercent(seed) < boundedSamplePercent) return { captureRaw: true, reason: 'sample' };
   return { captureRaw: false, reason: 'not_sampled' };
 }
 
@@ -279,7 +288,7 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
   let intent: string | null = null;
   let outcome: string | null = null;
   let promptVersion: string | null = null;
-  let policyVersion: string | null = null;
+  let policyVersion: string | null = asTrimmedString(e.ai?.policyVersion) ?? null;
   let dictionaryHash: string | null = null;
 
   let ctaAction: string | null = null;
@@ -292,7 +301,7 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
     intent = meta ? asTrimmedString(meta.intent) : null;
     outcome = meta ? asTrimmedString(meta.outcome) : null;
     promptVersion = meta ? asTrimmedString(meta.promptVersion) : null;
-    policyVersion = meta ? asTrimmedString(meta.policyVersion) : null;
+    policyVersion = (meta ? asTrimmedString(meta.policyVersion) : null) ?? policyVersion;
     dictionaryHash = meta ? asTrimmedString(meta.dictionaryHash) : null;
 
     const cta = isRecord((e.result as any).cta) ? ((e.result as any).cta as any) : null;
@@ -321,14 +330,13 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
   const provider = asTrimmedString(e.usage?.provider) ?? null;
   const model = asTrimmedString(e.usage?.model) ?? null;
   const latencyMs = typeof e.usage?.latencyMs === 'number' && Number.isFinite(e.usage.latencyMs) ? e.usage.latencyMs : null;
-  const aiProfile = asTrimmedString(e.ai?.profile) ?? null;
   const taskClass = asTrimmedString(e.ai?.taskClass) ?? null;
 
   try {
     await env.SF_D1.prepare(
       `INSERT OR REPLACE INTO copilot_events_v1
-      (requestId, day, occurredAtMs, runtimeEnv, envStage, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptVersion, policyVersion, dictionaryHash, aiProfile, taskClass, provider, model, latencyMs)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (requestId, day, occurredAtMs, runtimeEnv, envStage, sessionId, instancePublicId, agentId, widgetType, intent, outcome, hasUrl, controlCount, opsCount, uniquePathsTouched, scopesTouched, ctaAction, promptVersion, policyVersion, dictionaryHash, taskClass, provider, model, latencyMs)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         e.requestId,
@@ -351,7 +359,6 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
         promptVersion,
         policyVersion,
         dictionaryHash,
-        aiProfile,
         taskClass,
         provider,
         model,
