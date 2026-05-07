@@ -23,9 +23,6 @@ This runbook captures the rollout status for the account Builder Copilot path an
 
 ## Cloud-dev verification findings (February 11, 2026)
 
-Pre-deploy finding (earlier same day):
-- `bob.dev` was missing `/api/ai/widget-copilot` and temporarily operating through `/api/ai/sdr-copilot` (now removed).
-
 Post-deploy findings:
 - Roma + San Francisco cloud-dev resolve policy correctly through the Roma instance route:
   - account Builder calls return `meta.promptRole = "cs"`
@@ -46,14 +43,13 @@ Core runtime files:
 - `admin/src/html/tools/entitlements.html`
 
 Current runtime note:
-- Historical SDR routing notes below are archival. The live account Builder route now uses the CS widget copilot only.
+- The live account Builder route uses the account Builder copilot only.
 
 Verification:
 - service-owned integration tests and cloud-dev runtime checks.
 
 Documentation touched for this rollout:
 - `documentation/ai/overview.md`
-- `documentation/ai/agents/sdr-copilot.md`
 - `documentation/services/bob.md`
 - `documentation/services/sanfrancisco.md`
 - `documentation/services/devstudio.md`

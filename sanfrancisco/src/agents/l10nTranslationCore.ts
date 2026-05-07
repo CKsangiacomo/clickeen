@@ -27,7 +27,7 @@ type RichtextAnchorSignature = {
   hasVisibleText: boolean;
 };
 
-export const PROMPT_VERSION = 'l10n.instance.v1@2026-03-14.1';
+export const PROMPT_VERSION = 'widget.instance.translator@2026-05-06.1';
 export const POLICY_VERSION = 'l10n.ops.v1';
 
 const MAX_BATCH_ITEMS = 80;

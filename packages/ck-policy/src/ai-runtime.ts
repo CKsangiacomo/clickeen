@@ -44,40 +44,6 @@ const PAID_CAPTURE: AgentRuntimePolicy['learningCapture'] = {
 };
 
 const AGENT_RUNTIME_MATRIX: AgentRuntimeMatrix = {
-  'sdr.copilot': {
-    free: {
-      defaultModel: { provider: 'deepseek', model: 'deepseek-chat' },
-      modelsByProvider: { deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat'] } },
-      allowModelPicker: false,
-      budget: { maxTokens: 280, timeoutMs: 15_000, maxRequests: 1 },
-      maxTurnsPerThread: 4,
-      learningCapture: LOW_CAPTURE,
-    },
-    tier1: {
-      defaultModel: { provider: 'deepseek', model: 'deepseek-chat' },
-      modelsByProvider: { deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat'] } },
-      allowModelPicker: false,
-      budget: { maxTokens: 600, timeoutMs: 25_000, maxRequests: 2 },
-      maxTurnsPerThread: 8,
-      learningCapture: PAID_CAPTURE,
-    },
-    tier2: {
-      defaultModel: { provider: 'deepseek', model: 'deepseek-chat' },
-      modelsByProvider: { deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat'] } },
-      allowModelPicker: false,
-      budget: { maxTokens: 900, timeoutMs: 35_000, maxRequests: 2 },
-      maxTurnsPerThread: 12,
-      learningCapture: PAID_CAPTURE,
-    },
-    tier3: {
-      defaultModel: { provider: 'deepseek', model: 'deepseek-chat' },
-      modelsByProvider: { deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat'] } },
-      allowModelPicker: false,
-      budget: { maxTokens: 900, timeoutMs: 35_000, maxRequests: 2 },
-      maxTurnsPerThread: 16,
-      learningCapture: PAID_CAPTURE,
-    },
-  },
   'cs.widget.copilot.v1': {
     free: {
       defaultModel: { provider: 'deepseek', model: 'deepseek-chat' },
@@ -123,7 +89,7 @@ const AGENT_RUNTIME_MATRIX: AgentRuntimeMatrix = {
       learningCapture: PAID_CAPTURE,
     },
   },
-  'l10n.instance.v1': {
+  'widget.instance.translator': {
     free: {
       defaultModel: { provider: 'deepseek', model: 'deepseek-chat' },
       modelsByProvider: { deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat'] } },
@@ -165,7 +131,7 @@ const AGENT_RUNTIME_MATRIX: AgentRuntimeMatrix = {
       learningCapture: LOW_CAPTURE,
     },
   },
-  'l10n.prague.strings.v1': {
+  'website.prague.copy.translator': {
     free: {
       defaultModel: { provider: 'openai', model: 'gpt-5.2' },
       modelsByProvider: { openai: { defaultModel: 'gpt-5.2', allowed: ['gpt-5-mini', 'gpt-5', 'gpt-5.2'] } },
@@ -195,48 +161,6 @@ const AGENT_RUNTIME_MATRIX: AgentRuntimeMatrix = {
       modelsByProvider: { openai: { defaultModel: 'gpt-5.2', allowed: ['gpt-5-mini', 'gpt-5', 'gpt-5.2'] } },
       allowModelPicker: false,
       budget: { maxTokens: 2200, timeoutMs: 60_000, maxRequests: 1, maxCostUsd: 0.15 },
-      maxTurnsPerThread: 1,
-      learningCapture: LOW_CAPTURE,
-    },
-  },
-  'agent.personalization.onboarding.v1': {
-    free: {
-      defaultModel: { provider: 'deepseek', model: 'deepseek-chat' },
-      modelsByProvider: { deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat'] } },
-      allowModelPicker: false,
-      budget: { maxTokens: 900, timeoutMs: 30_000, maxRequests: 2, maxCostUsd: 0.05 },
-      maxTurnsPerThread: 1,
-      learningCapture: LOW_CAPTURE,
-    },
-    tier1: {
-      defaultModel: { provider: 'deepseek', model: 'deepseek-chat' },
-      modelsByProvider: { deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat'] } },
-      allowModelPicker: false,
-      budget: { maxTokens: 1200, timeoutMs: 45_000, maxRequests: 2, maxCostUsd: 0.08 },
-      maxTurnsPerThread: 1,
-      learningCapture: LOW_CAPTURE,
-    },
-    tier2: {
-      defaultModel: { provider: 'openai', model: 'gpt-5-mini' },
-      modelsByProvider: {
-        deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat'] },
-        openai: { defaultModel: 'gpt-5-mini', allowed: ['gpt-5-mini'] },
-        anthropic: { defaultModel: 'claude-3-5-sonnet-20240620', allowed: ['claude-3-5-sonnet-20240620'] },
-      },
-      allowModelPicker: false,
-      budget: { maxTokens: 1800, timeoutMs: 60_000, maxRequests: 3, maxCostUsd: 0.12 },
-      maxTurnsPerThread: 1,
-      learningCapture: LOW_CAPTURE,
-    },
-    tier3: {
-      defaultModel: { provider: 'openai', model: 'gpt-5-mini' },
-      modelsByProvider: {
-        deepseek: { defaultModel: 'deepseek-chat', allowed: ['deepseek-chat'] },
-        openai: { defaultModel: 'gpt-5-mini', allowed: ['gpt-5-mini'] },
-        anthropic: { defaultModel: 'claude-3-5-sonnet-20240620', allowed: ['claude-3-5-sonnet-20240620'] },
-      },
-      allowModelPicker: false,
-      budget: { maxTokens: 2200, timeoutMs: 60_000, maxRequests: 3, maxCostUsd: 0.15 },
       maxTurnsPerThread: 1,
       learningCapture: LOW_CAPTURE,
     },

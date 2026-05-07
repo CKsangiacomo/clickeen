@@ -35,7 +35,7 @@ declare global {
       agents?: Array<{
         agentId: string;
         description: string;
-        category: 'copilot' | 'agent';
+        category: 'copilot' | 'job';
         taskClass: string;
         executionSurface: import('@clickeen/ck-contracts/ai').AiExecutionSurface;
         requiredEntitlements: string[];

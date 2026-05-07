@@ -268,7 +268,7 @@ Traditional SaaS:
 
 Clickeen:
 - Invite 50 viewers → they upgrade themselves when needed
-- SDR Copilot nudges at the right moment
+- Product prompts nudge at the right moment
 - Cost: $0.001 per conversation
 ```
 

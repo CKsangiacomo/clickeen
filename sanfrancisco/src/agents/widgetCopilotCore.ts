@@ -95,6 +95,8 @@ const PROMPT_VERSION = 'widget.copilot.core.v2@2026-02-11';
 const POLICY_VERSION_BY_ROLE: Record<WidgetCopilotRole, string> = {
   cs: 'widget.copilot.policy.cs.editor.v1@2026-02-11',
 };
+const INVALID_STRUCTURED_EDIT_MESSAGE =
+  'I had trouble generating a structured edit. Please try again, or ask for one specific change (e.g. "translate the FAQs to French").';
 
 type WidgetCopilotRuntime = {
   agentId: 'cs.widget.copilot.v1';
@@ -351,7 +353,11 @@ function looksLikeCloudflareErrorPage(text: string): { status?: number; reason: 
 }
 
 
-function parseJsonFromModel(raw: string): unknown {
+type ModelJsonParseResult =
+  | { ok: true; value: unknown }
+  | { ok: false; cleaned: string };
+
+function parseJsonFromModel(raw: string): ModelJsonParseResult {
   const trimmed = raw.trim();
   let cleaned = trimmed;
 
@@ -363,30 +369,28 @@ function parseJsonFromModel(raw: string): unknown {
   }
 
   try {
-    return JSON.parse(cleaned);
+    return { ok: true, value: JSON.parse(cleaned) };
   } catch {
     const firstObj = cleaned.indexOf('{');
     const lastObj = cleaned.lastIndexOf('}');
     if (firstObj >= 0 && lastObj > firstObj) {
       const slice = cleaned.slice(firstObj, lastObj + 1);
       try {
-        return JSON.parse(slice);
+        return { ok: true, value: JSON.parse(slice) };
       } catch {
         // continue
       }
     }
-    // Fail soft: if the model returned plain text, treat it as an assistant message and
-    // apply no ops. This avoids surfacing transient "invalid JSON" as a 502 in the UI.
-    const fallback = cleaned.trim();
-    const tooLong = fallback.length > 1200;
-    const text = (tooLong ? `${fallback.slice(0, 1200)}\n\n[truncated]` : fallback).trim();
-    return {
-      message:
-        text ||
-        'I had trouble generating a structured edit. Please try again, or ask for one specific change (e.g. “translate the FAQs to French”).',
-      _parseFallback: true,
-    };
+    return { ok: false, cleaned };
   }
+}
+
+function invalidStructuredEditError(provider: string, detail?: string): HttpError {
+  return new HttpError(502, {
+    code: 'PROVIDER_ERROR',
+    provider,
+    message: detail ? `${INVALID_STRUCTURED_EDIT_MESSAGE} ${detail}` : INVALID_STRUCTURED_EDIT_MESSAGE,
+  });
 }
 
 function isWidgetOp(value: unknown): value is WidgetOp {
@@ -977,26 +981,26 @@ export async function executeWidgetCopilotWithRuntime(
   let promptTokens = lastUsage.promptTokens;
   let completionTokens = lastUsage.completionTokens;
 
-  let parsed = parseJsonFromModel(content);
-  if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: lastUsage.provider, message: 'Model output must be an object' });
-
-  let message = (asString(parsed.message) ?? '').trim();
-  if (!message) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: lastUsage.provider, message: 'Model output missing message' });
-
-  let opsRaw = parsed.ops;
+  let parseResult = parseJsonFromModel(content);
+  let parsed = parseResult.ok && isRecord(parseResult.value) ? parseResult.value : null;
+  let message = parsed ? (asString(parsed.message) ?? '').trim() : '';
+  let opsRaw = parsed?.ops;
   let ops = Array.isArray(opsRaw) ? opsRaw.filter(isWidgetOp) : undefined;
-
-  const parseFallback = Boolean((parsed as any)?._parseFallback === true);
-  const preValidation = ops && ops.length ? validateOpsAgainstControls({ ops, controls: input.controls }) : ({ ok: true } as const);
+  const preValidation = parsed && message && ops && ops.length ? validateOpsAgainstControls({ ops, controls: input.controls }) : ({ ok: true } as const);
 
   const elapsedMs = Date.now() - overallStartedAt;
   const remainingTimeoutMs = timeoutMs - elapsedMs;
   const canRepair = maxRequests >= 2 && remainingTimeoutMs >= 4_000;
+  const needsRepair = !parseResult.ok || !parsed || !message || !preValidation.ok;
 
-  if (canRepair && (parseFallback || (!preValidation.ok))) {
+  if (canRepair && needsRepair) {
     let issueText = 'The previous response was invalid.';
-    if (parseFallback) {
+    if (!parseResult.ok) {
       issueText = 'Your previous response was not valid JSON.';
+    } else if (!parsed) {
+      issueText = 'Your previous response was valid JSON but not a JSON object.';
+    } else if (!message) {
+      issueText = 'Your previous response was missing the required message field.';
     } else if (!preValidation.ok) {
       issueText = `Validation errors:\n${preValidation.issues
         .slice(0, 6)
@@ -1041,13 +1045,19 @@ export async function executeWidgetCopilotWithRuntime(
     completionTokens += repaired.usage.completionTokens;
     content = repaired.content;
 
-    parsed = parseJsonFromModel(content);
-    if (!isRecord(parsed)) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: lastUsage.provider, message: 'Model output must be an object' });
+    parseResult = parseJsonFromModel(content);
+    if (!parseResult.ok) throw invalidStructuredEditError(lastUsage.provider);
+    parsed = isRecord(parseResult.value) ? parseResult.value : null;
+    if (!parsed) throw invalidStructuredEditError(lastUsage.provider, 'Model output must be a JSON object.');
     message = (asString(parsed.message) ?? '').trim();
-    if (!message) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: lastUsage.provider, message: 'Model output missing message' });
+    if (!message) throw invalidStructuredEditError(lastUsage.provider, 'Model output is missing a message.');
     opsRaw = parsed.ops;
     ops = Array.isArray(opsRaw) ? opsRaw.filter(isWidgetOp) : undefined;
   }
+
+  if (!parseResult.ok) throw invalidStructuredEditError(lastUsage.provider);
+  if (!parsed) throw invalidStructuredEditError(lastUsage.provider, 'Model output must be a JSON object.');
+  if (!message) throw invalidStructuredEditError(lastUsage.provider, 'Model output is missing a message.');
 
   const latencyMs = Date.now() - overallStartedAt;
 

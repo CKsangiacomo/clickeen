@@ -45,9 +45,8 @@ documentation/
 │   ├── overview.md          # San Francisco platform
 │   ├── infrastructure.md    # Cloudflare infra
 │   ├── learning.md          # How agents learn
-│   ├── widget-copilot-rollout.md # SDR/CS rollout status + verification matrix
+│   ├── widget-copilot-rollout.md # account Builder Copilot rollout status
 │   ├── agents/
-│   │   ├── sdr-copilot.md   # Widget Copilot contract (SDR + CS routing)
 │   │   ├── ux-writer.md     # UX Writer agent
 │   │   ├── gtm.md           # GTM agent
 │

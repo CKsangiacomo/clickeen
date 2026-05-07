@@ -1,6 +1,11 @@
 export type AiProvider = 'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon';
 export type AiPolicyProfile = 'free' | 'tier1' | 'tier2' | 'tier3';
 export type AiExecutionSurface = 'execute' | 'endpoint';
+export type AiAgentCategory = 'copilot' | 'job';
+export type AiRegistryBoundary =
+  | 'editor_ops_only'
+  | 'account_widget_translation_overlay'
+  | 'prague_copy_tooling_output';
 
 export type AiBudget = {
   maxTokens: number;
@@ -43,17 +48,33 @@ export type AgentRuntimePolicy = {
 
 export type AiGrantPolicy = AgentRuntimePolicy;
 
-export type AiRegistryEntry = {
+type AiRegistryBase = {
   agentId: string;
-  category: 'copilot' | 'agent';
+  category: AiAgentCategory;
   taskClass: string;
   description: string;
+  owner: string;
+  boundary: AiRegistryBoundary;
   supportedProviders: AiProvider[];
   defaultProvider: AiProvider;
   executionSurface: AiExecutionSurface;
   requiredEntitlements?: string[];
   aliases?: string[];
 };
+
+export type AiCopilotRegistryEntry = AiRegistryBase & {
+  category: 'copilot';
+  surface: string;
+  boundary: 'editor_ops_only';
+};
+
+export type AiJobRegistryEntry = AiRegistryBase & {
+  category: 'job';
+  jobType: string;
+  boundary: Exclude<AiRegistryBoundary, 'editor_ops_only'>;
+};
+
+export type AiRegistryEntry = AiCopilotRegistryEntry | AiJobRegistryEntry;
 
 export type AiProviderUiMeta = {
   provider: AiProvider;
@@ -81,51 +102,41 @@ export type AiModelUiMeta = {
 
 const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
   {
-    agentId: 'sdr.copilot',
-    category: 'copilot',
-    taskClass: 'copilot.sdr.chat',
-    description: 'Public SDR copilot for acquisition conversations.',
-    supportedProviders: ['deepseek'],
-    defaultProvider: 'deepseek',
-    executionSurface: 'execute',
-  },
-  {
     agentId: 'cs.widget.copilot.v1',
     category: 'copilot',
     taskClass: 'copilot.widget.editor',
     description: 'CS widget copilot.',
+    owner: 'roma.builder',
+    surface: 'roma.builder',
+    boundary: 'editor_ops_only',
     supportedProviders: ['deepseek', 'openai', 'anthropic', 'groq', 'amazon'],
     defaultProvider: 'openai',
     executionSurface: 'execute',
     requiredEntitlements: ['budget.copilot.turns'],
   },
   {
-    agentId: 'l10n.instance.v1',
-    category: 'agent',
+    agentId: 'widget.instance.translator',
+    category: 'job',
     taskClass: 'l10n.instance',
     description: 'Instance localization pipeline.',
+    owner: 'tokyo-worker.account-widget-l10n',
+    jobType: 'widget.instance.translation',
+    boundary: 'account_widget_translation_overlay',
     supportedProviders: ['deepseek', 'openai', 'anthropic'],
     defaultProvider: 'deepseek',
     executionSurface: 'endpoint',
   },
   {
-    agentId: 'l10n.prague.strings.v1',
-    category: 'agent',
+    agentId: 'website.prague.copy.translator',
+    category: 'job',
     taskClass: 'l10n.prague.systemStrings',
     description: 'Prague system strings translation.',
+    owner: 'prague.l10n',
+    jobType: 'website.prague.copy.translation',
+    boundary: 'prague_copy_tooling_output',
     supportedProviders: ['openai'],
     defaultProvider: 'openai',
     executionSurface: 'endpoint',
-  },
-  {
-    agentId: 'agent.personalization.onboarding.v1',
-    category: 'agent',
-    taskClass: 'personalization.onboardingProfile',
-    description: 'Onboarding personalization.',
-    supportedProviders: ['deepseek', 'openai', 'anthropic', 'groq', 'amazon'],
-    defaultProvider: 'deepseek',
-    executionSurface: 'endpoint',
-    requiredEntitlements: ['budget.personalization.runs', 'budget.personalization.website.crawls'],
   },
 ];
 

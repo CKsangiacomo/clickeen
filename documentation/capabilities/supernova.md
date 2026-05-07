@@ -36,7 +36,7 @@ This document captures planned Supernova architecture. It is not a shipped runti
 | Feature | Where It Lives | Why Not Supernova |
 |---------|----------------|-------------------|
 | Translation | Auto-translate (Tier 2+) | Localization, not design |
-| Content generation | SDR Copilot | Words, not visuals |
+| Content generation | Builder Copilot / internal jobs | Words, not visuals |
 | SEO/GEO | Tier 1+ | Indexability, not beauty |
 | Analytics | Separate feature | Data, not design |
 

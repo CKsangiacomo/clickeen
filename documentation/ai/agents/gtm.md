@@ -413,7 +413,7 @@ crons = ["0 2 * * 0"]  # Every Sunday at 2am UTC
    - Fit (does our widget solve their problem?)
 3. Generate use case objects with:
    - Headline, description, pain points
-   - Starter questions (for SDR Copilot)
+   - Starter prompts for future guided demo surfaces
    - Keywords
 
 ### 4.3 GENERATE
@@ -496,7 +496,7 @@ crons = ["0 2 * * 0"]  # Every Sunday at 2am UTC
 │          ▼                                                                  │
 │   Berlin tracks:                                                            │
 │   - Page views, time on page                                                │
-│   - Minibob opens, SDR Copilot conversations                                │
+│   - Demo engagement and signup conversions                                  │
 │   - Signup conversions                                                      │
 │   - Keyword rankings (via Search Console API)                               │
 │          │                                                                  │
@@ -615,7 +615,7 @@ crons = ["0 2 * * 0"]  # Every Sunday at 2am UTC
 | Agent | How GTM Agent integrates |
 |-------|-------------------------|
 | **UX Writer Agent** | GTM Agent generates marketing copy. UX Writer improves i18n quality. They work on different layers (GTM = strategy, UX Writer = polish). |
-| **SDR Copilot** | GTM Agent provides starter questions for each use case. SDR Copilot uses them for content-first personalization. |
+| **Builder Copilot** | GTM Agent output may inform future account-authoring suggestions, but it is not a live Builder runtime dependency. |
 
 ---
 

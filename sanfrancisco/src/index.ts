@@ -1,7 +1,6 @@
 import { listAiAgents, resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { WorkerEntrypoint } from 'cloudflare:workers';
 import { executeCsWidgetCopilot } from './agents/csWidgetCopilot';
-import { executeSdrCopilot } from './agents/sdrCopilot';
 import { withInflightLimit } from './concurrency';
 import { assertCap, verifyGrant } from './grants';
 import { HttpError, json, noStore, readJson, isRecord } from './http';
@@ -13,12 +12,6 @@ import {
   type AccountWidgetL10nGenerateRequest,
   type AccountWidgetL10nGenerateResponse,
 } from './l10n-account-routes';
-import {
-  handlePersonalizationOnboardingCreate,
-  handlePersonalizationOnboardingStatus,
-  handleQueuedSanfranciscoCommand,
-  isSanfranciscoCommandMessage,
-} from './personalization-jobs';
 import {
   buildLearningSample,
   indexCopilotEvent,
@@ -34,7 +27,6 @@ import type {
   ExecuteResponse,
   InteractionEvent,
   OutcomeAttachRequest,
-  SanfranciscoCommandMessage,
   Usage,
 } from './types';
 
@@ -57,7 +49,6 @@ function okHealth(env: Env): Response {
 type AgentExecutor = (args: { grant: AIGrant; input: unknown }, env: Env) => Promise<{ result: unknown; usage: any }>;
 
 const AGENT_EXECUTORS: Record<string, AgentExecutor> = {
-  'sdr.copilot': executeSdrCopilot,
   'cs.widget.copilot.v1': executeCsWidgetCopilot,
 };
 
@@ -108,7 +99,7 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
     }
     const canonicalId = resolvedAgent.canonicalId;
     if (resolvedAgent.entry.executionSurface !== 'execute') {
-      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `Agent not executable via /v1/execute: ${canonicalId}` });
+      throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: `AI surface not executable via /v1/execute: ${canonicalId}` });
     }
     assertCap(grant, `agent:${canonicalId}`);
 
@@ -206,14 +197,6 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
       if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') return okHealth(this.env);
       if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, this.env, this.ctx);
       if (request.method === 'POST' && url.pathname === '/v1/outcome') return await handleOutcome(request, this.env);
-      if (request.method === 'POST' && url.pathname === '/v1/personalization/onboarding') {
-        return await handlePersonalizationOnboardingCreate(request, this.env, this.ctx);
-      }
-      const onboardingStatusMatch = url.pathname.match(/^\/v1\/personalization\/onboarding\/([^/]+)$/);
-      if (onboardingStatusMatch && request.method === 'GET') {
-        const jobId = decodeURIComponent(onboardingStatusMatch[1]);
-        return await handlePersonalizationOnboardingStatus(request, this.env, jobId);
-      }
       if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') return await handlePragueStringsTranslate(request, this.env);
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
@@ -224,19 +207,10 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
     }
   }
 
-  async queue(batch: MessageBatch<InteractionEvent | SanfranciscoCommandMessage>): Promise<void> {
+  async queue(batch: MessageBatch<InteractionEvent>): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
     for (const msg of batch.messages) {
-      const body = msg.body;
-      if (isSanfranciscoCommandMessage(body)) {
-        try {
-          await handleQueuedSanfranciscoCommand(body, this.env);
-        } catch (err) {
-          console.error('[sanfrancisco] command message failed', err);
-        }
-        continue;
-      }
-      const e = body as InteractionEvent;
+      const e = msg.body;
       await indexCopilotEvent(this.env, e);
       const decision = resolveLearningCaptureDecision(e);
       if (decision.captureRaw) {

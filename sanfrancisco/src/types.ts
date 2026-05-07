@@ -79,15 +79,6 @@ export type OutcomeAttachRequest = {
   metadata?: CopilotLearningMetadata;
 };
 
-export type SanfranciscoCommandName = 'personalization.onboarding.enqueue';
-
-export type SanfranciscoCommandMessage = {
-  v: 1;
-  kind: 'sf.command';
-  command: SanfranciscoCommandName;
-  payload: Record<string, unknown>;
-};
-
 export type Usage = {
   provider: string;
   model: string;

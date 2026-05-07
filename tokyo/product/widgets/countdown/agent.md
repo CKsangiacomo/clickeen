@@ -97,6 +97,5 @@ Shared primitives:
 Only write content paths allowed by:
 - `tokyo/product/widgets/countdown/localization.json`
 - `tokyo/product/widgets/countdown/layers/user.allowlist.json`
-- `tokyo/product/widgets/countdown/sdr.allowlist.json`
 
 Forbidden path segments remain prohibited: `__proto__`, `constructor`, `prototype`.

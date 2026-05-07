@@ -724,7 +724,7 @@
     const hint = document.createElement('p');
     hint.className = 'body-s entitlements-ai__hint';
     hint.textContent =
-      'Read-only. Runtime policy by account tier; individual agents receive signed per-provider model policy.';
+      'Read-only. Runtime policy by account tier; individual copilots and jobs receive signed per-provider model policy.';
     section.appendChild(hint);
 
     const providersByKey = new Map();
@@ -921,7 +921,7 @@
 
     const heading = document.createElement('h2');
     heading.className = 'heading-3';
-    heading.textContent = 'AI Agent Runtime Access';
+    heading.textContent = 'AI Runtime Access';
     section.appendChild(heading);
 
     const hint = document.createElement('p');
@@ -954,7 +954,7 @@
     const headRow = document.createElement('tr');
 
     const nameHeader = document.createElement('th');
-    nameHeader.textContent = 'Agent / Provider';
+    nameHeader.textContent = 'Copilot / Job / Provider';
     nameHeader.className = 'label-s';
     headRow.appendChild(nameHeader);
 
@@ -997,7 +997,7 @@
       const agentKind = document.createElement('td');
       agentKind.className = 'body-s entitlements-table__desc';
       const kindParts = [
-        `${agent.category === 'copilot' ? 'Copilot' : 'Agent'} · ${agent.executionSurface}`,
+        `${agent.category === 'copilot' ? 'Copilot' : 'Job'} · ${agent.executionSurface}`,
         agent.taskClass ? `Task: ${agent.taskClass}` : '',
       ].filter(Boolean);
       if (Array.isArray(agent.requiredEntitlements) && agent.requiredEntitlements.length) {

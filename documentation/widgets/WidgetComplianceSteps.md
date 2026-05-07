@@ -7,7 +7,6 @@ Canonical contracts (must match runtime):
 - `documentation/widgets/WidgetBuildContract.md`
 - `documentation/widgets/WidgetArchitecture.md`
 - `documentation/capabilities/seo-geo.md` (only if the widget exposes SEO/GEO)
-- `documentation/widgets/sdr-allowlist-guide.md` (only if the widget supports SDR acquisition personalization)
 
 INPUTS
 - `widgetType` (explicit)
@@ -167,7 +166,7 @@ OUTPUT
 - Array ops semantics (add/remove/reorder + required `id` fields).
 - Binding Map summary (how each path affects DOM/CSS).
 - Prohibited paths:
-  - Anything outside allowlists (`localization.json`, `layers/*.allowlist.json`, `sdr.allowlist.json` as applicable).
+  - Anything outside allowlists (`localization.json`, `layers/*.allowlist.json` as applicable).
 
 GATE
 - Contract matches defaults, DOM hooks, and runtime behavior.
@@ -178,7 +177,6 @@ GATE
 OUTPUT
 - `limits.json` (unless PRD opts out).
 - `localization.json` with all translatable paths.
-- `sdr.allowlist.json` (required if the widget supports SDR acquisition personalization; fail-closed by design).
 - `layers/*.allowlist.json` only when that layer exists and is used.
 - `pages/*.json` (Prague widget pages: overview/features/examples/templates/pricing).
 

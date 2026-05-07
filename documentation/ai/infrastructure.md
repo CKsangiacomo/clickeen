@@ -22,7 +22,6 @@ This doc is meant to answer:
   - `sanfrancisco/src/internalAuth.ts`
   - `sanfrancisco/src/telemetry.ts`
   - `sanfrancisco/src/l10n-routes.ts`
-  - `sanfrancisco/src/personalization-jobs.ts`
 - Wrangler config: `sanfrancisco/wrangler.toml`
 - Deploy: Cloudflare “Workers → Deploy from Git” (root directory: `sanfrancisco`)
 
@@ -41,7 +40,7 @@ Bindings (Cloudflare primitives):
 Worker vars/secrets:
 - `ENVIRONMENT`: loose environment label used in logs and the `/healthz` response (`dev`, `prod`, etc)
 - `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret for Clickeen grant verification + outcome signatures
-- `CK_INTERNAL_SERVICE_JWT` (secret): internal bearer token for residual San Francisco HTTP tooling endpoints (`/v1/personalization/*` and Prague string translation in local/cloud-dev). Account-widget l10n generation does not use this secret.
+- `CK_INTERNAL_SERVICE_JWT` (secret): internal bearer token for the Prague string translation tooling route in local/cloud-dev only. Account-widget l10n generation does not use this secret.
 - `DEEPSEEK_API_KEY` (secret, optional): required only when an execution reaches the model provider
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
@@ -59,8 +58,8 @@ Provider/model policy:
 - `@clickeen/ck-policy` owns the tier + agent runtime policy matrix.
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, and request ceilings.
-- **Prague strings L10n**: OpenAI via the shared runtime policy router.
-- **Account-widget instance l10n**: Tokyo-worker calls San Francisco through the private `generateAccountWidgetL10nOps` WorkerEntrypoint method with Roma-derived `policyProfile`; San Francisco resolves `l10n.instance.v1` runtime policy from `@clickeen/ck-policy` and then intersects it with env-configured providers.
+- **Prague strings L10n**: `website.prague.copy.translator`, OpenAI via the Prague tooling route.
+- **Account-widget instance l10n**: `widget.instance.translator`. Tokyo-worker calls San Francisco through the private `generateAccountWidgetL10nOps` WorkerEntrypoint method with Roma-derived `policyProfile`; San Francisco resolves the runtime policy from `@clickeen/ck-policy` and then intersects it with env-configured providers.
 
 ## 3) HTTP endpoints
 
@@ -93,18 +92,6 @@ Auth:
 Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
 
-### `POST /v1/personalization/onboarding`
-Purpose: enqueue post-signup account-context carry-forward job (`/personalization/onboarding` is the current internal legacy route name).
-
-Auth:
-- `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
-
-### `GET /v1/personalization/onboarding/:jobId`
-Purpose: poll post-signup account-context carry-forward job status.
-
-Auth:
-- `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
-
 ### Private WorkerEntrypoint `generateAccountWidgetL10nOps`
 Purpose: generate account-widget locale ops for Tokyo-worker explicit instance-sync flows.
 
@@ -116,7 +103,7 @@ Boundary:
 Contract:
 - Tokyo-worker sends only approved current text items (`path`, `type`, `value`), existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and the account `policyProfile`.
 - San Francisco does not receive widget config, localization allowlists, account ids, storage paths, live pointer state, or publication state.
-- San Francisco derives the `l10n.instance.v1` runtime policy from `policyProfile` and may reduce that provider set only by env reality: providers not configured in the current environment are removed from the allowed set.
+- San Francisco derives the `widget.instance.translator` runtime policy from `policyProfile` and may reduce that provider set only by env reality: providers not configured in the current environment are removed from the allowed set.
 - Incremental generation translates only changed current item paths when possible and preserves existing ops for unchanged current paths.
 
 ### `POST /v1/l10n/translate` (local + cloud-dev)
@@ -136,7 +123,6 @@ Provider:
 KV is used for “chat thread” / short-lived session state (24h TTL).
 
 Example keys (current code):
-- `copilot:sdr:session:${sessionId}` (SDR widget copilot session)
 - `copilot:cs:session:${sessionId}` (CS widget copilot session)
 
 ### Queue (non-blocking ingestion)
@@ -191,12 +177,8 @@ Runtime policy matrix (`maxTokens / timeoutMs / maxRequests`):
 | Agent | free | tier1 | tier2 | tier3 |
 |---|---|---|---|---|
 | `cs.widget.copilot.v1` | `650 / 45s / 2` | `900 / 45s / 3` | `1400 / 60s / 3` | `1600 / 60s / 3` |
-| `sdr.copilot` | `280 / 15s / 1` | `600 / 25s / 2` | `900 / 35s / 2` | `1200 / 45s / 2` |
-| `l10n.instance.v1` | `900 / 20s / 1` | `1200 / 30s / 1` | `1800 / 45s / 1` | `2200 / 60s / 1` |
-| `l10n.prague.strings.v1` | `2200 / 60s / 1` | `2200 / 60s / 1` | `2200 / 60s / 1` | `2200 / 60s / 1` |
-| `agent.personalization.onboarding.v1` | `900 / 30s / 2` | `1200 / 45s / 2` | `1800 / 60s / 3` | `2200 / 60s / 3` |
-
-`agent.personalization.onboarding.v1` is the legacy grant identifier for the same post-signup account-context carry-forward path.
+| `widget.instance.translator` | `900 / 20s / 1` | `1200 / 30s / 1` | `1800 / 45s / 1` | `2200 / 60s / 1` |
+| `website.prague.copy.translator` | `2200 / 60s / 1` | `2200 / 60s / 1` | `2200 / 60s / 1` | `2200 / 60s / 1` |
 
 Model policy is canonical in `packages/ck-policy/src/ai-runtime.ts` and surfaced in DevStudio from the same source. Tier 2 and Tier 3 can expose a single combined model dropdown for supported customer-facing agents; the underlying signed policy still keeps provider and model separate for enforcement.
 

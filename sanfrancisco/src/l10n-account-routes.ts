@@ -122,7 +122,7 @@ function buildInternalGrant(args: {
   env: Env;
   policyProfile: PolicyProfile;
 }): AIGrant {
-  const resolvedAgent = resolveAiAgent('l10n.instance.v1');
+  const resolvedAgent = resolveAiAgent('widget.instance.translator');
   if (!resolvedAgent) {
     throw new HttpError(500, {
       code: 'PROVIDER_ERROR',
@@ -144,7 +144,7 @@ function buildInternalGrant(args: {
     jti: crypto.randomUUID(),
     sub: { kind: 'service', serviceId: 'roma.account.l10n' },
     exp: nowSec + 10 * 60,
-    caps: ['agent:l10n.instance.v1'],
+    caps: ['agent:widget.instance.translator'],
     budgets: {
       maxTokens: budget.maxTokens,
       timeoutMs: budget.timeoutMs,
@@ -245,7 +245,7 @@ export async function generateAccountWidgetLocaleOps(args: {
       const result = await executeTranslationModel({
         env: args.env,
         grant: args.grant,
-        agentId: 'l10n.instance.v1',
+        agentId: 'widget.instance.translator',
         system,
         user,
       });

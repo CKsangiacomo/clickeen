@@ -120,7 +120,7 @@ Where the write plane fits (current repo snapshot):
 - Tokyo-worker extracts the full approved current text item index (`path`, `type`, `value`) from that snapshot before generation.
 - Tokyo-worker calls San Francisco through the private `SANFRANCISCO_L10N` worker binding only when explicit instance sync needs new locale ops.
 - Tokyo-worker sends San Francisco approved items, requested target locales, existing locale ops, changed paths, removed paths, and the account `policyProfile`. It does not send widget config or allowlists.
-- San Francisco derives the `l10n.instance.v1` AI profile/provider lane from `@clickeen/ck-contracts`, translates only requested changed items when possible, preserves unchanged existing ops for current item paths, and removes only explicitly removed paths.
+- San Francisco derives the `widget.instance.translator` runtime policy from `@clickeen/ck-policy`, translates only requested changed items when possible, preserves unchanged existing ops for current item paths, and removes only explicitly removed paths.
 - San Francisco returns set-only locale ops.
 - Tokyo-worker persists those overlay rows in the canonical Tokyo l10n plane.
 - Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane, and Tokyo-worker reads that account-locale truth directly from Berlin during explicit sync execution.
@@ -188,7 +188,7 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 **Pipeline**
 
 - Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires `CK_INTERNAL_SERVICE_JWT`).
-- Provider: OpenAI for Prague strings (system-owned); instance l10n agents follow the **Tiered AI Profile** (DeepSeek for Free, OpenAI/Anthropic for Paid).
+- Provider: OpenAI for `website.prague.copy.translator`; account-widget instance l10n uses `widget.instance.translator` and follows the account runtime policy.
 - `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/prague/l10n/**`.
 - `scripts/prague-l10n/verify.mjs` is a read-only artifact validator:
   - validates index/overlay presence and schema
@@ -255,7 +255,7 @@ Example:
   "layer": "locale",
   "layer_key": "fr",
   "base_fingerprint": "sha256-hex",
-  "source": "agent",
+  "source": "job",
   "ops": [{ "op": "set", "path": "headline", "value": "..." }]
 }
 ```

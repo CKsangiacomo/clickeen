@@ -12,8 +12,7 @@ Traditional SaaS companies need full teams to operate at scale—sales, support,
 
 | Agent | Role | Replaces |
 |-------|------|----------|
-| SDR Copilot | Convert visitors in Minibob | Sales team |
-| Editor Copilot | Help users customize widgets | Product specialists |
+| Builder Copilot | Help account users customize widgets | Product specialists |
 | Support Agent | Resolve user issues | Support team |
 | Marketing Copywriter | Funnels, landing pages, PLG copy | Marketing team |
 | Content Writer | Blog, SEO, help articles | Content team |
@@ -83,11 +82,11 @@ San Francisco enforces this policy by:
 4. Enforcing request ceilings from the grant.
 
 Widget copilot routing (shipped):
-- Account Builder resolves `widget.copilot.v1` to `cs.widget.copilot.v1`
-- Callers may request the alias `widget.copilot.v1`; Roma resolves it server-side for the account route.
+- Account Builder uses `cs.widget.copilot.v1`
+- Roma mints the request grant server-side for the account route.
 - DevStudio Entitlements exposes the model catalog and per-agent runtime policy by tier; it does not create a separate AI access truth.
 - Runtime behavior is policy-scoped by agent role (shared infra, separate behavior packs):
-  - `cs.widget.copilot.v1`: in-product editor copilot (control-driven edits, task-completion clarifications, no SDR website/seller loop).
+  - `cs.widget.copilot.v1`: in-product editor copilot (control-driven edits and task-completion clarifications).
 
 Deployment status (code-synced on February 26, 2026; last cloud-dev smoke notes from February 11, 2026):
 - Local + cloud-dev target behavior: browser calls `POST /api/account/instances/:publicId/copilot` on Roma.
@@ -136,8 +135,6 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `GET /healthz`
 - `POST /v1/execute` (requires a Clickeen-signed AI Grant)
 - `POST /v1/outcome` (outcome attach, signed by the calling Clickeen backend surface)
-  - `POST /v1/personalization/onboarding` (internal legacy route name for post-signup account-context carry-forward; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`)
-  - `GET /v1/personalization/onboarding/:jobId` (internal legacy route name; polls the same post-signup account-context carry-forward job; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`)
   - Account-widget l10n ops generation (Tokyo-worker calls San Francisco through the private `SANFRANCISCO_L10N` service binding; no public HTTP route and no shared-secret bearer)
   - `POST /v1/l10n/translate` (local + cloud-dev only; `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`; `ENVIRONMENT in {local,dev}`)
 - Cloudflare bindings:
@@ -145,14 +142,11 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `SF_EVENTS` (queue for async event ingestion)
   - `SF_D1` (queryable indexes)
   - `SF_R2` (raw event storage)
-- Agent IDs currently recognized by the worker:
-  - `sdr.copilot`
+- AI surfaces currently recognized by the worker:
   - `cs.widget.copilot.v1`
-  - `l10n.instance.v1`
-  - `l10n.prague.strings.v1`
-  - `agent.personalization.onboarding.v1`
-  - `debug.grantProbe` (dev only)
-  - `POST /v1/execute` currently wires executors for: `sdr.copilot`, `cs.widget.copilot.v1`, `debug.grantProbe`.
+  - `widget.instance.translator`
+  - `website.prague.copy.translator`
+  - `POST /v1/execute` currently wires executors for: `cs.widget.copilot.v1`.
 
 This matters because the “learning loop” is not theoretical: every `/v1/execute` call enqueues an `InteractionEvent`, and the queue consumer writes raw payloads to R2 + indexes a small subset into D1.
 
@@ -176,7 +170,7 @@ type AIGrant = {
     | { kind: 'user'; userId: string; accountId: string } // Clickeen app
     | { kind: 'service'; serviceId: string }; // internal automation
   exp: number; // epoch seconds
-  caps: string[]; // allowed capabilities, e.g. ['agent:sdr.copilot']
+  caps: string[]; // allowed capabilities, e.g. ['agent:cs.widget.copilot.v1']
   budgets: {
     maxTokens: number;
     timeoutMs?: number;
@@ -268,7 +262,7 @@ Request:
 ```json
 {
   "grant": "<string>",
-  "agentId": "widget.copilot.v1",
+  "agentId": "cs.widget.copilot.v1",
   "input": {},
   "trace": { "requestId": "optional-uuid", "client": "roma|ops" }
 }
@@ -299,9 +293,7 @@ Orchestration is San Francisco’s “meat” and is built incrementally behind 
 
 Phase‑1 (shipped orchestration surface):
 - Multiple agents behind the same `/v1/execute` interface:
-  - `sdr.copilot`
   - `cs.widget.copilot.v1` (live account widget editing Copilot)
-  - `debug.grantProbe` (dev only)
 - Provider/model policy is explicit per agent and account tier. Agents retry retryable upstream failures against the same selected/default model, then return typed errors; they do not silently cross-switch providers or models.
 - No general “tool” system yet; any extra capabilities must be explicitly implemented inside the agent (for example: widget copilot includes bounded, SSRF-guarded single-page URL reads + Cloudflare HTML detection).
 - Always returns structured JSON (never “go edit X” prose), plus usage metadata.
@@ -373,11 +365,11 @@ Definition of done:
   - New service deployable exists (Cloudflare Workers).
   - Health endpoint and base `POST /v1/execute` handler exists (returns typed errors).
 
-### Milestone 2 — Ship `sdr.copilot` (Minibob)
+### Milestone 2 — Ship Builder Copilot
 Status: shipped
 
 Definition of done:
-  - `agentId: sdr.copilot` works end-to-end in San Francisco
+  - `agentId: cs.widget.copilot.v1` works end-to-end in San Francisco
   - Response is structured JSON + usage metadata (no prose-only responses)
 
 ### Milestone 3 — Product backends issue AI grants
