@@ -49,11 +49,18 @@ const OUTCOME_EVENTS = new Set([
 export const ACCOUNT_WIDGET_COPILOT_AGENT_ID = 'cs.widget.copilot.v1';
 export type AccountCopilotRuntimeUi = AgentRuntimePolicyUi;
 
+function readTrimmedSecret(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 function resolveAiGrantSecret(): string {
   const fromRequestContext = getOptionalCloudflareRequestContext<{ env?: { AI_GRANT_HMAC_SECRET?: string } }>()
     ?.env?.AI_GRANT_HMAC_SECRET;
-  const secret = typeof fromRequestContext === 'string' ? fromRequestContext.trim() : '';
-  if (secret) return secret;
+  const requestSecret = readTrimmedSecret(fromRequestContext);
+  if (requestSecret) return requestSecret;
+
+  const processSecret = readTrimmedSecret(typeof process !== 'undefined' ? process.env.AI_GRANT_HMAC_SECRET : undefined);
+  if (processSecret) return processSecret;
 
   throw new Error('[Roma] Missing AI_GRANT_HMAC_SECRET');
 }
