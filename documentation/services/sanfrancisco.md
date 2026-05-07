@@ -50,7 +50,7 @@ Health contract:
 - `sanfrancisco/src/index.ts` is now a thin route shell.
 - The default export is a Cloudflare `WorkerEntrypoint` so Tokyo-worker can call private worker methods without a public HTTP route.
 - Extracted runtime modules own:
-  - internal auth helpers: `sanfrancisco/src/internalAuth.ts`
+  - request-signature helpers: `sanfrancisco/src/signatures.ts`
   - concurrency limiting: `sanfrancisco/src/concurrency.ts`
   - telemetry and outcome persistence: `sanfrancisco/src/telemetry.ts`
   - l10n route handlers: `sanfrancisco/src/l10n-routes.ts`
@@ -59,7 +59,7 @@ Health contract:
 - Triggered by explicit Tokyo-worker instance sync after Roma create/locale-management/publish flows request reconciliation.
 - Tokyo owns saved-config l10n identity/staleness; San Francisco is generation-only.
 - Tokyo-worker calls the private `generateAccountWidgetL10nOps` worker method through its `SANFRANCISCO_L10N` service binding.
-- There is no public account-widget generation HTTP route and no `CK_INTERNAL_SERVICE_JWT` on this path.
+- There is no public account-widget generation HTTP route and no bearer-token auth on this path.
 - The internal job is `widget.instance.translator`.
 - Request payloads contain only approved text items (`path`, `type`, `value`), existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and account policy profile.
 - San Francisco does not receive widget configs, localization allowlists, account ids, storage paths, live pointer state, or publication state for account-widget generation.
@@ -72,7 +72,7 @@ Health contract:
 
 ## Prague localization translation (local + cloud-dev)
 - Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT` is `local` or `dev`; disabled elsewhere).
-- Auth: `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`.
+- Auth: `x-clickeen-signature = base64url(hmacSha256("prague-l10n.v1.<bodyJson>", AI_GRANT_HMAC_SECRET))`.
 - Used by `scripts/prague-l10n/translate.mjs` to translate Prague base content.
 - Prague-string prompts preserve source acronym style and do not add parenthetical acronym expansions that are absent in source text.
 - Prague-string safety validation enforces placeholder parity, HTML tag parity, and anchor integrity for richtext items.

@@ -16,7 +16,7 @@ Rules:
 - DevStudio is local-only and is not part of the Cloudflare Pages `cloud-dev` contract.
 - GitHub runtime verification stays unauthenticated until a real provider-based test adapter exists; do not keep public password login for smoke coverage.
 - Authenticated cloud-dev smoke is manual Google login, Roma bootstrap, Builder open/save, Widgets read, locales, assets, and logout.
-- Berlin/Roma product auth, bootstrap, Builder, account registry, Tokyo, and Tokyo-worker account-control paths must not require `CK_INTERNAL_SERVICE_JWT`. That shared secret is only for explicitly documented internal San Francisco/tooling surfaces.
+- Berlin/Roma product auth, bootstrap, Builder, account registry, Tokyo, and Tokyo-worker account-control paths must not require shared-secret bearer auth. Internal San Francisco tooling requests use signed request bodies.
 
 ## Bob
 
@@ -151,14 +151,15 @@ These values remain outside git by design. Keep the inventory true; do not store
 
 Worker secrets:
 - Berlin: `SUPABASE_SERVICE_ROLE_KEY`
-- San Francisco: `AI_GRANT_HMAC_SECRET`, `CK_INTERNAL_SERVICE_JWT`
+- San Francisco: `AI_GRANT_HMAC_SECRET`
 
 Pages secrets:
-- Roma: no `CK_INTERNAL_SERVICE_JWT` required for the active account product path; Roma -> Tokyo/Tokyo-worker product control uses service bindings and account-widget l10n generation runs through Tokyo-worker -> San Francisco `SANFRANCISCO_L10N`
+- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing. Roma -> Tokyo/Tokyo-worker product control uses service bindings and account-widget l10n generation runs through Tokyo-worker -> San Francisco `SANFRANCISCO_L10N`.
 
 CI secrets/vars:
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
+- `AI_GRANT_HMAC_SECRET` for Prague string translation request signing
 - No Supabase deploy secrets are required by GitHub Actions. Supabase migrations are applied deliberately from an authenticated operator/agent environment, then committed as schema history.
 
 Rules:

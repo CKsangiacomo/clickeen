@@ -252,7 +252,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **Hard security rule:**
 
-- `CK_INTERNAL_SERVICE_JWT` is a server-only internal bearer for residual San Francisco tooling surfaces only. Roma -> Tokyo/Tokyo-worker account product control uses private Cloudflare service bindings, and account-widget l10n generation uses the Tokyo-worker -> San Francisco `SANFRANCISCO_L10N` binding instead of shared-secret HTTP.
+- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies, while account-widget l10n generation uses the Tokyo-worker -> San Francisco `SANFRANCISCO_L10N` binding.
 
 **Local auth rule:**
 
@@ -318,7 +318,7 @@ Non-negotiable:
 - **Secrets isolation**:
   - Provider keys live only in San Francisco.
   - Supabase service role lives only in Berlin/Tokyo-worker where explicitly required.
-  - `CK_INTERNAL_SERVICE_JWT` stays server-only and must never be exposed client-side. Roma -> Tokyo/Tokyo-worker account product control now uses private Cloudflare service bindings; account-widget l10n generation uses the private Tokyo-worker -> San Francisco service binding and does not use this shared secret.
+  - Roma Copilot/outcome and Prague string-translation calls use HMAC body signatures. Roma -> Tokyo/Tokyo-worker account product control uses private Cloudflare service bindings; account-widget l10n generation uses the private Tokyo-worker -> San Francisco service binding.
 - **Caching**:
   - Tokyo assets are long-cacheable when versioned; avoid cache on `spec.json` when iterating in dev.
   - Venice serves short-cache shell HTML, `no-store` live pointers, and immutable fingerprinted packs/assets.

@@ -41,6 +41,12 @@ export function asString(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
 }
 
+export function asTrimmedString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const s = value.trim();
+  return s ? s : null;
+}
+
 export function asNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }

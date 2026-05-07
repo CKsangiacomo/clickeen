@@ -36,8 +36,7 @@ Current auth rule:
 - Product asset control routes execute from Roma through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. Tokyo-worker does not re-read membership/tier/account status on those paths.
 - Product asset upload is account-owned only. Tokyo-worker does not accept widget-scoped upload identity (`x-public-id` / `x-widget-type`) on that path.
 - Product render/l10n authoring control routes execute from Roma through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus Roma-minted `x-ck-authz-capsule`. The explicit instance-sync route also receives the caller's Berlin bearer so Tokyo-worker can read account locale policy/settings, but authz still comes from the capsule and Tokyo-worker does not rediscover membership/role from Berlin.
-- Account-widget l10n generation calls San Francisco through the private `SANFRANCISCO_L10N` Cloudflare service binding. It does not use `SANFRANCISCO_BASE_URL`, a bearer token, or `CK_INTERNAL_SERVICE_JWT`.
-- Shared-secret `CK_INTERNAL_SERVICE_JWT` is not part of the asset lane.
+- Account-widget l10n generation calls San Francisco through the private `SANFRANCISCO_L10N` Cloudflare service binding. It does not use `SANFRANCISCO_BASE_URL` or bearer-token auth.
 - Local internal tool routes may use `TOKYO_DEV_JWT` only when they also send an explicit allowed `x-ck-internal-service`.
 - There is no generic trusted-token bypass on account routes.
 

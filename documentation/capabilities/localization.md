@@ -187,7 +187,7 @@ Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website cop
 
 **Pipeline**
 
-- Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires `CK_INTERNAL_SERVICE_JWT`).
+- Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires an HMAC body signature using `AI_GRANT_HMAC_SECRET`).
 - Provider: OpenAI for `website.prague.copy.translator`; account-widget instance l10n uses `widget.instance.translator` and follows the account runtime policy.
 - `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/prague/l10n/**`.
 - `scripts/prague-l10n/verify.mjs` is a read-only artifact validator:
@@ -317,7 +317,7 @@ This is a deterministic runtime choice (for cache stability), not an identity ru
 
 1. Author base copy in `tokyo/prague/pages/*/*.json`.
 2. Update allowlists under `prague/content/allowlists/v1/**` when new copy paths are added.
-3. Generate overlays via `node scripts/prague-l10n/translate.mjs` (requires San Francisco; local uses `sanfrancisco-local`, cloud-dev uses `sanfrancisco-dev` with `SANFRANCISCO_BASE_URL` + `CK_INTERNAL_SERVICE_JWT`). This is Prague website-string localization only; account-widget l10n does not use this shared secret path.
+3. Generate overlays via `node scripts/prague-l10n/translate.mjs` (requires San Francisco; local uses `sanfrancisco-local`, cloud-dev uses `sanfrancisco-dev` with `SANFRANCISCO_BASE_URL` + `AI_GRANT_HMAC_SECRET`). This is Prague website-string localization only; account-widget l10n uses the private worker binding path.
 4. Verify overlays via `pnpm prague:l10n:verify`.
 5. Publish overlays to Tokyo/R2:
    - Cloud-dev/prod (remote R2): `node scripts/prague-sync.mjs --publish --remote`

@@ -19,7 +19,7 @@ This doc is meant to answer:
 - Entrypoint shell: `sanfrancisco/src/index.ts`
 - Extracted runtime modules:
   - `sanfrancisco/src/concurrency.ts`
-  - `sanfrancisco/src/internalAuth.ts`
+  - `sanfrancisco/src/signatures.ts`
   - `sanfrancisco/src/telemetry.ts`
   - `sanfrancisco/src/l10n-routes.ts`
 - Wrangler config: `sanfrancisco/wrangler.toml`
@@ -39,8 +39,7 @@ Bindings (Cloudflare primitives):
 
 Worker vars/secrets:
 - `ENVIRONMENT`: loose environment label used in logs and the `/healthz` response (`dev`, `prod`, etc)
-- `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret for Clickeen grant verification + outcome signatures
-- `CK_INTERNAL_SERVICE_JWT` (secret): internal bearer token for the Prague string translation tooling route in local/cloud-dev only. Account-widget l10n generation does not use this secret.
+- `AI_GRANT_HMAC_SECRET` (secret): shared HMAC secret for Clickeen grant verification, outcome signatures, and Prague string translation request signatures
 - `DEEPSEEK_API_KEY` (secret, optional): required only when an execution reaches the model provider
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
@@ -98,7 +97,7 @@ Purpose: generate account-widget locale ops for Tokyo-worker explicit instance-s
 Boundary:
 - Tokyo-worker calls this through the private `SANFRANCISCO_L10N` Cloudflare service binding.
 - There is no public account-widget l10n generation HTTP route.
-- This path does not use `CK_INTERNAL_SERVICE_JWT`, `SANFRANCISCO_BASE_URL`, or a bearer-token fallback.
+- This path does not use `SANFRANCISCO_BASE_URL` or a bearer-token fallback.
 
 Contract:
 - Tokyo-worker sends only approved current text items (`path`, `type`, `value`), existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and the account `policyProfile`.
@@ -110,7 +109,8 @@ Contract:
 Purpose: translate Prague system-owned base content (prague-l10n pipeline).
 
 Auth:
-- `Authorization: Bearer ${CK_INTERNAL_SERVICE_JWT}`
+- Header `x-clickeen-signature` must be present.
+- Signature: `base64url(hmacSha256("prague-l10n.v1.<bodyJson>", AI_GRANT_HMAC_SECRET))`
 - Available only when `ENVIRONMENT` is `local` or `dev`
 
 Provider:
@@ -227,4 +227,4 @@ Full stack (recommended):
 Useful checks:
 - `curl http://localhost:3002/healthz`
 - `curl http://localhost:3001/api/healthz`
-- For Prague strings translation, `CK_INTERNAL_SERVICE_JWT` + `OPENAI_API_KEY` must be set locally.
+- For Prague strings translation, `AI_GRANT_HMAC_SECRET` + `OPENAI_API_KEY` must be set locally.

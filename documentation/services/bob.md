@@ -523,9 +523,9 @@ Bob does not own account language policy/settings. Enabled languages, base local
 
 **Security rule (executed):**
 
-- Bob’s remaining AI/public helper routes use explicit backend calls; product auth does not use `CK_INTERNAL_SERVICE_JWT` passthrough.
+- Bob’s remaining AI/public helper routes use explicit backend calls; product auth does not use shared-secret bearer passthrough.
 - Bob does not own customer account product routes. Hosted account-mode reads/writes delegate through the Roma host message channel and use the Roma current-account contract.
-- Local `CK_INTERNAL_SERVICE_JWT` is supplied by `bash scripts/dev-up.sh` / `.env.local` only for explicit internal tooling outside Bob product-route authority. It must not be committed in Bob Pages config.
+- Local Prague string translation uses HMAC-signed San Francisco requests; Bob Pages config must not carry internal AI tooling secrets.
 
 ### Dev-up
 

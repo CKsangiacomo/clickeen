@@ -8,8 +8,7 @@ import {
   resolveAiRuntimePolicy,
   type PolicyProfile,
 } from '@clickeen/ck-policy';
-import { HttpError, isRecord } from './http';
-import { asTrimmedString } from './internalAuth';
+import { HttpError, asTrimmedString, isRecord } from './http';
 import type { AIGrant, Env, Usage } from './types';
 import {
   MAX_TOTAL_INPUT_CHARS,

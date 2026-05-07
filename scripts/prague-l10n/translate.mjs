@@ -3,6 +3,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHmac } from 'node:crypto';
 import {
   collectTranslatableEntries,
   ensureDir,
@@ -101,8 +102,16 @@ function getSfBaseUrl() {
   }
 }
 
-function getSfAuth() {
-  return String(process.env.CK_INTERNAL_SERVICE_JWT || '').trim();
+function getAiGrantSecret() {
+  return String(process.env.AI_GRANT_HMAC_SECRET || '').trim();
+}
+
+function base64UrlEncodeBuffer(buffer) {
+  return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function signPragueL10nBody({ secret, bodyText }) {
+  return base64UrlEncodeBuffer(createHmac('sha256', secret).update(`prague-l10n.v1.${bodyText}`).digest());
 }
 
 async function loadDotenvIfPresent() {
@@ -321,19 +330,20 @@ function splitTranslateBatches(items) {
 }
 
 async function translateWithSanFrancisco({ job, items }) {
-  const auth = getSfAuth();
-  if (!auth) {
-    throw new Error('[prague-l10n] Missing CK_INTERNAL_SERVICE_JWT for San Francisco auth');
+  const secret = getAiGrantSecret();
+  if (!secret) {
+    throw new Error('[prague-l10n] Missing AI_GRANT_HMAC_SECRET for San Francisco request signing');
   }
   const baseUrl = getSfBaseUrl();
   const url = `${baseUrl}/v1/l10n/translate`;
+  const bodyText = JSON.stringify({ ...job, items });
   const res = await fetch(url, {
     method: 'POST',
     headers: {
-      authorization: `Bearer ${auth}`,
       'content-type': 'application/json',
+      'x-clickeen-signature': signPragueL10nBody({ secret, bodyText }),
     },
-    body: JSON.stringify({ ...job, items }),
+    body: bodyText,
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');

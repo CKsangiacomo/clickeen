@@ -1,5 +1,5 @@
-import { HttpError, isRecord } from './http';
-import { asTrimmedString } from './internalAuth';
+import { HttpError, asTrimmedString, isRecord } from './http';
+import { verifyBodySignature } from './signatures';
 import type { CopilotLearningMetadata, Env, InteractionEvent, OutcomeAttachRequest } from './types';
 
 const OUTCOME_EVENTS = new Set([
@@ -100,41 +100,13 @@ function isTouchedGroups(value: unknown): value is NonNullable<CopilotLearningMe
   );
 }
 
-function base64UrlEncodeBytes(bytes: Uint8Array): string {
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function timingSafeEqual(a: string, b: string): boolean {
-  const aBytes = new TextEncoder().encode(a);
-  const bBytes = new TextEncoder().encode(b);
-  if (aBytes.length !== bBytes.length) return false;
-  let out = 0;
-  for (let i = 0; i < aBytes.length; i++) out |= aBytes[i] ^ bBytes[i];
-  return out === 0;
-}
-
-async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
-  return base64UrlEncodeBytes(new Uint8Array(sig));
-}
-
 export async function verifyOutcomeSignature(args: { request: Request; env: Env; bodyText: string }): Promise<void> {
-  const provided = asTrimmedString(args.request.headers.get('x-clickeen-signature'));
-  if (!provided) {
-    throw new HttpError(401, { code: 'CAPABILITY_DENIED', message: 'Missing signature' });
-  }
-  const secret = asTrimmedString(args.env.AI_GRANT_HMAC_SECRET);
-  if (!secret) {
-    throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Missing AI_GRANT_HMAC_SECRET' });
-  }
-  const expected = await hmacSha256Base64Url(secret, `outcome.v1.${args.bodyText}`);
-  if (!timingSafeEqual(provided, expected)) {
-    throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid signature' });
-  }
+  await verifyBodySignature({
+    signature: args.request.headers.get('x-clickeen-signature'),
+    secret: args.env.AI_GRANT_HMAC_SECRET,
+    message: `outcome.v1.${args.bodyText}`,
+    missingSecretMessage: 'Missing AI_GRANT_HMAC_SECRET',
+  });
 }
 
 function fnv1aHash(input: string): number {

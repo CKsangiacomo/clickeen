@@ -120,9 +120,6 @@ export type Env = {
   DEEPSEEK_API_KEY?: string;
   DEEPSEEK_BASE_URL?: string;
   DEEPSEEK_MODEL?: string;
-  CK_INTERNAL_SERVICE_JWT?: string;
-  TOKYO_BASE_URL?: string;
-  TOKYO_DEV_JWT?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
   NOVA_API_KEY?: string;
