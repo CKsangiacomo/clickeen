@@ -72,7 +72,7 @@ export async function callGroqChat(args: {
 
     const usage: Usage = {
       provider: 'groq',
-      model: responseJson.model ?? args.model,
+      model: args.model,
       promptTokens: responseJson.usage?.prompt_tokens ?? 0,
       completionTokens: responseJson.usage?.completion_tokens ?? 0,
       latencyMs,
@@ -83,4 +83,3 @@ export async function callGroqChat(args: {
     clearTimeout(timeout);
   }
 }
-

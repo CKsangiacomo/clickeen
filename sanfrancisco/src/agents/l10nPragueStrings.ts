@@ -387,7 +387,7 @@ async function openaiTranslate(args: { env: Env; system: string; user: string })
 
   const usage: Usage = {
     provider: 'openai',
-    model: responseJson.model ?? model,
+    model,
     promptTokens: responseJson.usage?.input_tokens ?? 0,
     completionTokens: responseJson.usage?.output_tokens ?? 0,
     latencyMs,

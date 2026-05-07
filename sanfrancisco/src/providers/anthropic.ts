@@ -90,7 +90,7 @@ export async function callAnthropicChat(args: {
 
     const usage: Usage = {
       provider: 'anthropic',
-      model: responseJson.model ?? args.model,
+      model: args.model,
       promptTokens: responseJson.usage?.input_tokens ?? 0,
       completionTokens: responseJson.usage?.output_tokens ?? 0,
       latencyMs,

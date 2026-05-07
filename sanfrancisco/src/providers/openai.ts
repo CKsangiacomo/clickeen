@@ -128,7 +128,7 @@ export async function callOpenAiChat(args: {
 
     const usage: Usage = {
       provider: 'openai',
-      model: responseJson.model ?? args.model,
+      model: args.model,
       promptTokens: responseJson.usage?.prompt_tokens ?? 0,
       completionTokens: responseJson.usage?.completion_tokens ?? 0,
       latencyMs,

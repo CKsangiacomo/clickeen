@@ -20,6 +20,29 @@ function cloneSessionConfig(config: Record<string, unknown>): Record<string, unk
   return JSON.parse(JSON.stringify(config)) as Record<string, unknown>;
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function materializeConfigWithDefaults(defaults: unknown, config: Record<string, unknown>): Record<string, unknown> {
+  if (!isPlainObject(defaults)) return cloneSessionConfig(config);
+  const next = cloneSessionConfig(defaults);
+
+  function mergeInto(target: Record<string, unknown>, source: Record<string, unknown>) {
+    for (const [key, value] of Object.entries(source)) {
+      const existing = target[key];
+      if (isPlainObject(existing) && isPlainObject(value)) {
+        mergeInto(existing, value);
+        continue;
+      }
+      target[key] = value;
+    }
+  }
+
+  mergeInto(next, config);
+  return next;
+}
+
 export function useSessionBoot(args: {
   setState: Dispatch<SetStateAction<SessionState>>;
   setMeta: Dispatch<SetStateAction<SessionMeta>>;
@@ -49,7 +72,7 @@ export function useSessionBoot(args: {
             error: 'coreui.errors.instance.config.invalid',
           };
         }
-        const resolved = cloneSessionConfig(rawInstanceData as Record<string, unknown>);
+        const resolved = materializeConfigWithDefaults(compiled.defaults, rawInstanceData as Record<string, unknown>);
         const savedInstanceDataSignature = serializeInstanceDataSignature(resolved);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
         const nextCopilot = (message.copilot as CopilotRuntimeUi | undefined) ?? null;

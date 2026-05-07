@@ -265,7 +265,7 @@ async function callNovaApiChat(args: {
 
     const usage: Usage = {
       provider: 'amazon',
-      model: responseJson.model ?? modelId,
+      model: args.modelId,
       promptTokens: responseJson.usage?.prompt_tokens ?? 0,
       completionTokens: responseJson.usage?.completion_tokens ?? 0,
       latencyMs,
@@ -368,7 +368,7 @@ async function callBedrockConverseChat(args: {
 
     const usage: Usage = {
       provider: 'amazon',
-      model: modelId,
+      model: args.modelId,
       promptTokens: responseJson.usage?.inputTokens ?? 0,
       completionTokens: responseJson.usage?.outputTokens ?? 0,
       latencyMs,
