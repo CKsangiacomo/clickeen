@@ -1,5 +1,5 @@
 import type { CompiledPanel, CompiledWidget, WidgetPresets } from './types';
-import { RawWidget, parseTooldrawerAttributes, parsePanels } from './compiler.shared';
+import { RawWidget, decodeHtmlEntities, parseTooldrawerAttributes, parsePanels } from './compiler.shared';
 import { buildWidgetAssets } from './compiler/assets';
 import { compileControlsFromPanels, expandTooldrawerClusters, groupKeyToLabel } from './compiler/controls';
 import { buildEditorHtmlLines } from './compiler/editor-contract';
@@ -245,8 +245,8 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   }
   const themeRegistry = rewriteAssetUrlsInDefaults(normalizedThemes as Record<string, unknown>, tokyoBase) as ThemeRegistry;
 
-  const themeOptions = themeRegistry ? buildThemeOptions(themeRegistry.themes) : undefined;
-  const themePresets = themeRegistry ? buildThemePresets(themeRegistry.themes) : undefined;
+  const themeOptions = buildThemeOptions(themeRegistry.themes);
+  const themePresets = buildThemePresets(themeRegistry.themes);
 
   const hasHeader = (widgetJson.defaults as any)?.header != null;
   const hasCta = (widgetJson.defaults as any)?.cta != null;
@@ -257,7 +257,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     ...(headerPresets ?? {}),
     ...(presetsRaw ?? {}),
   };
-  const presetsMerged = themePresets ? { ...presetsBase, ...themePresets } : presetsBase;
+  const presetsMerged = { ...presetsBase, ...themePresets };
   const presetsFinal = Object.keys(presetsMerged).length > 0 ? presetsMerged : undefined;
   const presets = presetsFinal
     ? (rewriteAssetUrlsInDefaults(presetsFinal as Record<string, unknown>, tokyoBase) as WidgetPresets)
@@ -267,7 +267,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     ...compileControlsFromPanels({
       panels: parsed.panels,
       defaults: defaultsWithAssets,
-      optionsByPath: themeOptions ? { 'appearance.theme': themeOptions } : undefined,
+      optionsByPath: { 'appearance.theme': themeOptions },
     }),
   ];
 
@@ -331,7 +331,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
           }
         }
 
-        const showIf = attrs['show-if'];
+        const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : '';
         const wrappers: string[] = [];
         const shouldWrapGroup = Boolean(groupKey);
         if (shouldWrapGroup && groupKey) {

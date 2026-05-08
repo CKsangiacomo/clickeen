@@ -1,5 +1,5 @@
 import type { CompiledControl, CompiledControlOption, CompiledPanel, ControlKind } from '../types';
-import { parseTooldrawerAttributes } from '../compiler.shared';
+import { decodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.shared';
 import { getIcon } from '../icons';
 import { getAt } from '../utils/paths';
 
@@ -22,15 +22,6 @@ export function groupKeyToLabel(key: string): string {
     podstagelayout: 'Stage/Pod layout',
   };
   return map[key] || key.replace(/-/g, ' ');
-}
-
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
 }
 
 function findTagEnd(source: string, startIndex: number): number {
@@ -97,7 +88,7 @@ export function expandTooldrawerClusters(html: string): string {
       depth -= 1;
       if (depth === 0) {
         const inner = html.slice(openEnd + 1, nextClose);
-        const showIf = attrs['show-if'];
+        const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : '';
 
         if (attrs.gap || attrs['space-after'] || attrs.spaceAfter) {
           throw new Error(

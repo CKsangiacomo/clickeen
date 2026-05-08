@@ -13,6 +13,15 @@ export type RawWidget = {
 
 export type TooldrawerAttrs = Record<string, string>;
 
+export function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
 export function parseTooldrawerAttributes(tag: string): TooldrawerAttrs {
   const attrs: TooldrawerAttrs = {};
   // Allow hyphenated names (show-if) and properly capture quoted values that may contain the other quote type.
@@ -30,14 +39,6 @@ export type WidgetUsageSets = {
 };
 
 export function collectTooldrawerTypes(markup: string, usages: WidgetUsageSets) {
-  const decodeHtmlEntities = (value: string) =>
-    value
-      .replace(/&quot;/g, '"')
-      .replace(/&apos;/g, "'")
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>');
-
   // Allow '>' inside quoted attribute values (e.g., template strings) and match both self-closing and open/close.
   const tdRegex =
     /<tooldrawer-field(?:-[a-z0-9-]+)?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
@@ -70,7 +71,7 @@ export function parsePanels(htmlLines: unknown): {
   usages: WidgetUsageSets;
 } {
   if (!Array.isArray(htmlLines)) {
-    throw new Error('[BobCompiler] widget JSON missing html array');
+    throw new Error('[BobCompiler] compiler expected generated editor HTML lines');
   }
 
   const html = htmlLines.join('\n');
@@ -101,7 +102,7 @@ export function parsePanels(htmlLines: unknown): {
   }
 
   if (panels.length === 0) {
-    throw new Error('[BobCompiler] No <bob-panel> definitions found in widget JSON');
+    throw new Error('[BobCompiler] No <bob-panel> definitions found in generated editor HTML');
   }
 
   return { panels, usages };
