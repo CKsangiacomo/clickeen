@@ -462,6 +462,10 @@
         "id": "content",
         "clusters": [
           {
+            "kind": "shared",
+            "id": "header-content"
+          },
+          {
             "nodes": [
               {
                 "kind": "field",
@@ -861,6 +865,10 @@
         "id": "layout",
         "clusters": [
           {
+            "kind": "shared",
+            "id": "header-layout"
+          },
+          {
             "nodes": [
               {
                 "kind": "field",
@@ -883,6 +891,10 @@
               }
             ],
             "label": "Placement"
+          },
+          {
+            "kind": "shared",
+            "id": "stagepod-layout"
           }
         ]
       },
@@ -1022,6 +1034,10 @@
               }
             ],
             "label": "Timer text"
+          },
+          {
+            "kind": "shared",
+            "id": "header-appearance"
           },
           {
             "nodes": [

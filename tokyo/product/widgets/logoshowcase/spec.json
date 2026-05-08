@@ -619,6 +619,10 @@
         "id": "content",
         "clusters": [
           {
+            "kind": "shared",
+            "id": "header-content"
+          },
+          {
             "nodes": [
               {
                 "kind": "field",
@@ -1014,6 +1018,10 @@
         "id": "layout",
         "clusters": [
           {
+            "kind": "shared",
+            "id": "header-layout"
+          },
+          {
             "nodes": [
               {
                 "kind": "field",
@@ -1101,6 +1109,10 @@
               }
             ],
             "label": "Widget layout"
+          },
+          {
+            "kind": "shared",
+            "id": "stagepod-layout"
           }
         ]
       },
@@ -1143,6 +1155,10 @@
                 }
               }
             ]
+          },
+          {
+            "kind": "shared",
+            "id": "header-appearance"
           },
           {
             "nodes": [

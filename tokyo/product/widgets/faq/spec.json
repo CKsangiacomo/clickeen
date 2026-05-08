@@ -594,6 +594,10 @@
         "id": "content",
         "clusters": [
           {
+            "kind": "shared",
+            "id": "header-content"
+          },
+          {
             "nodes": [
               {
                 "kind": "field",
@@ -1706,6 +1710,10 @@
         "id": "layout",
         "clusters": [
           {
+            "kind": "shared",
+            "id": "header-layout"
+          },
+          {
             "nodes": [
               {
                 "kind": "field",
@@ -2050,6 +2058,10 @@
               }
             ],
             "label": "Item layout"
+          },
+          {
+            "kind": "shared",
+            "id": "stagepod-layout"
           }
         ]
       },
@@ -2125,6 +2137,10 @@
                 }
               }
             ]
+          },
+          {
+            "kind": "shared",
+            "id": "header-appearance"
           },
           {
             "nodes": [
@@ -2950,6 +2966,10 @@
                   "size": "md",
                   "value": "{{pod.insideShadow.left}}"
                 }
+              },
+              {
+                "kind": "shared",
+                "id": "stagepod-corners"
               }
             ],
             "label": "Pod appearance"
