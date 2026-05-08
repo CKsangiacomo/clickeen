@@ -6,7 +6,7 @@ export type RawWidget = {
   displayName?: unknown;
   itemKey?: unknown;
   defaults?: Record<string, unknown>;
-  html?: unknown;
+  editor?: unknown;
   presets?: unknown;
   normalization?: unknown;
 };

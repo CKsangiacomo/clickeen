@@ -1,6 +1,6 @@
 # PRD 087 - AI-Native Widget Authoring Contract, Compiler, And Runtime Hygiene
 
-Status: PRE-EXECUTION FIRST DRAFT  
+Status: EXECUTED
 Source review: `Execution_Pipeline_Docs/01-Planning/Clickeen_codebase_review.md`  
 Owner: Clickeen product architecture  
 Last updated: 2026-05-08
@@ -26,7 +26,9 @@ Important correction from peer review: the current product problem is not simply
 
 > Bob parses an HTML-like editor DSL from widget contract files. We want that contract to become structured, explicit data.
 
-This is a first draft. Every uncertain area is marked as `OPEN`. No implementation should begin until the relevant open areas for that slice are resolved.
+Execution is complete. The exact slice decisions, deletions, verification commands, and deferred slices are captured in `087__Execution_Report.md`.
+
+Pre-GA rule: this PRD must eliminate toxic/legacy mechanisms, not preserve them behind compatibility layers. Temporary compatibility is allowed only inside a single execution branch while migrating and must not be merged as a surviving product path.
 
 ## 2. Product Model This PRD Must Preserve
 
@@ -185,9 +187,20 @@ The review correctly identifies these risks:
 
 1. The Bob compiler still has too much responsibility and still parses authoring structure from HTML-like editor DSL strings.
 2. Live theme dependency in the compiler is risky. Builder compile should not silently depend on remote Tokyo truth.
-3. `tokyo/product/widgets/shared/typography.js` is large enough to require a shared-runtime contract review.
-4. `tokyo/product/widgets/_fragments` is an empty product-folder residue and should be deleted or documented.
-5. Some large files deserve conformance review, especially `roma/lib/account-instance-direct.ts`.
+3. `tokyo/product/widgets/shared/typography.js` is a shared-runtime candidate to inspect, but size alone does not authorize implementation work.
+4. `tokyo/product/widgets/_fragments` is README-only legacy residue describing an unimplemented direction that this PRD rejects; it should be deleted.
+5. Roma direct-instance code should be touched only if Slice 0 finds a concrete mixed-responsibility product-boundary issue. Size alone is not a violation.
+
+The compiler review also identifies useful existing engineering to preserve:
+
+1. The `parsePanels -> compileControlsFromPanels` split is the right direction. The input contract should change; the idea of parsing widget authoring truth into panels and then separately compiling machine-readable controls should survive.
+2. `rewriteAssetUrlsInDefaults` rejecting non-persistable schemes such as `data:` and `blob:` at compile time is correct product-boundary enforcement.
+3. `normalizeWidgetNormalizationSpec` is the right scalable pattern for widget normalization: data-driven config, not widget-specific compiler patches.
+4. The quote-aware `findTagEnd` scanner is competent engineering, but it exists to support a legacy format that should disappear from the product path.
+
+The correct diagnosis is:
+
+> The compiler is not bad because it exists. The compiler is bad where it compensates for a bad authoring contract.
 
 ## 5. Review Findings We Must Correct Before Execution
 
@@ -198,6 +211,7 @@ The source review has stale or overbroad claims:
 3. "Move AI grant minting into ck-policy" is too broad. `ck-policy` should own pure policy truth. Runtime signing and account-session boundary work should not be moved into a pure policy package without a separate decision.
 4. Berlin auth expansion is out of scope for this PRD.
 5. Shared runtime is not inherently wrong. The problem is unclear, unversioned, oversized shared behavior.
+6. `tokyo/product/widgets/_fragments` is not empty; it contains a README that documents an old unimplemented "plain HTML fragments" direction. That makes it deletion-worthy legacy residue, not useful product documentation.
 
 ## 6. Tenets For This PRD
 
@@ -211,6 +225,8 @@ The source review has stale or overbroad claims:
 8. AI builder ergonomics are product requirements, not developer convenience.
 9. Copilot edit safety comes from the same compiled contract as manual editing.
 10. The system must be understandable from widget files without reading compiler internals.
+11. Pre-GA cleanup must hard-cut toxic legacy paths. Do not keep old paths alive just because they still work.
+12. No merged dual-contract state. `spec.json.html` and structured `spec.json.editor` must not coexist as long-lived authoring truths.
 
 ## 7. Expected Product Functionality
 
@@ -235,6 +251,8 @@ OPEN: exact browser verification steps for Builder open, edit, save, refresh, an
 
 ## 8. Target Contract Model
 
+Before any implementation, Slice 0 must resolve the OPEN decisions for Slice 1 in one batch. Execution must not start with unresolved schema, `compiled.controls`, migration, `showIf`, or theme authority decisions.
+
 ### 8.1 Structured Builder contract
 
 Target direction:
@@ -250,7 +268,10 @@ Target direction:
           {
             "id": "stage-pod",
             "label": "Stage/Pod",
-            "showIf": "stage.enabled == true",
+            "showIf": {
+              "path": "stage.enabled",
+              "op": "isTrue"
+            },
             "fields": [
               {
                 "id": "stage-background",
@@ -281,7 +302,23 @@ This is not final schema. It is the product shape we want:
 
 OPEN: final schema for repeaters, object managers, nested items, rich text, and list operations.
 
-OPEN: final `showIf` expression syntax and validation. Recommendation: keep existing simple expressions only if they can be validated fail-fast.
+OPEN: final `showIf` predicate shape and validation.
+
+Recommendation:
+
+```json
+{ "path": "layout.type", "op": "equals", "value": "accordion" }
+```
+
+Supported v1 ops should be limited to:
+
+1. `equals`
+2. `notEquals`
+3. `isTrue`
+4. `isFalse`
+5. `in`
+
+No generic expression parser. No `&&`, `||`, arithmetic, nested expression language, or string evaluation.
 
 OPEN: final localization-key shape for labels and item names.
 
@@ -321,6 +358,8 @@ The structured contract should compile into:
 
 OPEN: exact `compiled.controls` shape needed by manual editing, linked ops, and Copilot.
 
+This OPEN must be resolved in Slice 0 before Slice 1 implementation begins. `compiled.controls` is the shared safety contract for manual edits, linked ops, and Copilot ops; it cannot be invented halfway through the migration.
+
 ### 8.3 Runtime output must not change by accident
 
 `widget.html`, `widget.css`, shared runtime scripts, and `widget.client.js` continue to render saved config.
@@ -328,6 +367,25 @@ OPEN: exact `compiled.controls` shape needed by manual editing, linked ops, and 
 The first structured-contract slice should not change runtime embeds.
 
 OPEN: exact runtime parity check for FAQ after the first slice.
+
+### 8.4 Compiler behavior that must not survive the hard cut
+
+The structured contract should delete compiler behavior that only exists to make the legacy editor DSL survivable.
+
+Deletion targets after Slice 1 hard cut:
+
+1. `@slot:` injection system for shared controls.
+2. Path-prefix cluster inference such as "stage.", "pod.", "layout.item", and "behavior." label inference.
+3. Typography panel strip-and-reinject behavior.
+4. Product-path parser for legacy `spec.json.html`.
+5. Silent remote theme fallback.
+
+Surviving principle:
+
+- Shared controls must be declared by structured contract data, not injected by compiler heuristics.
+- Cluster labels must be declared by the widget contract, not inferred from path names.
+- Typography controls must be declared or generated from explicit structured contract data, not by discarding an author-defined panel.
+- Compiler strictness should enforce the new contract, not polish the old DSL.
 
 ## 9. Proposed Slices
 
@@ -344,6 +402,13 @@ Required checks:
 5. Confirm FAQ as the first reference widget or name a better one.
 6. Map what Copilot currently receives from `compiled.controls`.
 7. Map what AI builders currently need to write manually to create a widget.
+8. Resolve all Slice 1 blocking decisions:
+   - structured editor schema v1
+   - `compiled.controls` v1 shape
+   - `showIf` predicate shape
+   - hard-cut migration plan
+   - theme registry authority
+   - `gate.ts` final treatment
 
 OPEN: choose whether this evidence lives in this PRD, a separate audit appendix, or an execution report.
 
@@ -352,6 +417,7 @@ Green condition:
 - We have a current table of authoring truth sources by widget and by compiler stage.
 - We can explain the minimum files/fields an AI builder must write for one new widget.
 - We can explain the exact contract Copilot uses to edit an instance.
+- All Slice 1 blocking OPENs have explicit decisions.
 
 ### Slice 1 - Authoring Contract Boundary
 
@@ -375,7 +441,13 @@ OPEN: exact schema fields that should move from the current `spec.json.html` edi
 
 OPEN: whether existing tooldrawer tags remain as transitional markup or are deleted immediately after structured coverage exists.
 
-Recommendation for pre-GA: hard cut after one widget proves the structured contract works. Avoid carrying both systems longer than needed.
+Decision direction for pre-GA: hard cut. Build and verify the structured contract against FAQ first inside the execution branch, then migrate countdown and logoshowcase in the same execution slice, then delete `spec.json.html` from all three before merge. Do not merge a long-lived dual authoring contract.
+
+Implementation rule:
+
+- FAQ can be used as the first proving ground inside the branch.
+- The merge is not green until FAQ, countdown, and logoshowcase are all migrated.
+- A PR that lands with only FAQ migrated is not acceptable.
 
 OPEN: widget-by-widget migration order. FAQ is the recommended first executable target, but this must be confirmed by Slice 0.
 
@@ -390,9 +462,11 @@ Green condition:
 - FAQ has an explicit Builder contract with no hidden editor-control discovery from HTML-like DSL strings.
 - Compiler fails visibly if required authoring contract fields are missing.
 - Builder open/edit/save still works for FAQ.
-- Countdown and logo showcase either remain supported through clearly temporary legacy mode or are migrated in the same hard-cut slice.
+- Countdown and logo showcase are migrated in the same hard-cut slice before merge.
+- Legacy `spec.json.html` authoring DSL is deleted from all current widgets before merge.
 - `compiled.controls` for FAQ is generated from structured fields and is still sufficient for manual editing and Copilot.
 - AI builder instructions for creating FAQ-like widgets become shorter and less error-prone.
+- The compiler no longer needs `@slot:` injection or path-prefix cluster inference for the migrated widgets.
 
 ### Slice 2 - Bob Compiler Strictness
 
@@ -428,6 +502,9 @@ Green condition:
 - No fallback path creates a panel-less or control-less editor.
 - Compiler errors identify widget name, contract section, and invalid field where possible.
 - Compiler does not silently skip unknown field types, unknown paths, or malformed nested controls.
+- Compiler no longer contains product-path parsing for legacy `spec.json.html` after the hard cut.
+- Compiler no longer strips an author-defined typography panel and silently replaces it with generated structure.
+- Compiler no longer infers product labels from path prefixes.
 
 ### Slice 3 - Theme Truth And Compiler Remote Dependency
 
@@ -446,6 +523,7 @@ OPEN: surviving authority for theme registry. Options:
 Recommendation:
 
 - Prefer local, explicit, versioned theme registry for Builder compile.
+- For this PRD, choose local checked-in theme contract as the default. Remote Tokyo fetch is not allowed in the product compile path.
 
 Blast radius:
 
@@ -459,6 +537,7 @@ Green condition:
 - Theme registry missing or malformed fails visibly.
 - No soft `null` theme registry fallback remains in product compile path.
 - Theme controls remain available to Builder and Copilot only when backed by deterministic theme truth.
+- Product compile has no live remote theme fetch fallback.
 
 ### Slice 4 - Policy Gate Naming And Boundary Cleanup
 
@@ -480,7 +559,7 @@ OPEN: choose final shape:
 
 Recommendation:
 
-- Do not create a generic policy engine. Use explicit role/action helper or inline checks.
+- Do not create a generic policy engine. Inline the tiny Berlin viewer/editor role check or move it to an explicitly named Berlin role helper. Delete the misleading `gate.ts` abstraction.
 
 Blast radius:
 
@@ -491,6 +570,7 @@ Blast radius:
 Green condition:
 
 - No misleading `gate.ts` abstraction remains.
+- `packages/ck-policy/src/gate.ts` is deleted.
 - Berlin still denies viewer mutation.
 - Entitlement/limit enforcement remains owned by explicit limit helpers and route boundaries.
 
@@ -516,6 +596,8 @@ Recommendation:
 
 - Keep shared runtime, but make its contract explicit and versioned before trimming.
 - Do not move runtime behavior into `spec.json`; move only editable contract metadata into `spec.json`.
+- Minimum viable scope for this PRD is `runtimeVersion: "v1"` pinned in widget specs/manifests and serving the current shared runtime unchanged as v1. No per-file pinning, deprecation framework, or runtime-version platform in this PRD.
+- Do not execute this slice in the first wave unless Slice 0 finds a concrete shared-runtime product problem that blocks the authoring contract hard cut.
 
 Blast radius:
 
@@ -525,10 +607,13 @@ Blast radius:
 
 Green condition:
 
-- Shared runtime contract is named.
+- If Slice 0 finds no concrete shared-runtime product problem: this slice is explicitly deferred with no code changes.
+- If Slice 0 finds a blocking shared-runtime issue: the shared runtime contract is named and versioned at the smallest product boundary needed.
 - Breaking shared runtime changes cannot silently alter old widgets.
 - Typography behavior that belongs to the editable contract is not hidden only in runtime JS.
 - Shared runtime remains understandable to an AI builder creating a new widget.
+- No broad shared-runtime refactor ships before the version contract is explicit.
+- This slice is skipped or deferred if no concrete product problem is found beyond file size.
 
 ### Slice 6 - Dieter Large Component Investigation
 
@@ -585,6 +670,12 @@ OPEN: identify whether the file mixes route error mapping, Tokyo client calls, n
 
 OPEN: decide whether any split is readability-only or product-boundary enforcing.
 
+Execution rule:
+
+- Do not execute this slice as standalone meta-work.
+- Execute only if Slice 0 finds concrete mixed responsibility or a real product-boundary violation.
+- "File is large" is not a product-boundary violation.
+
 Non-goal:
 
 - Do not move widget truth to Berlin.
@@ -599,6 +690,7 @@ Blast radius:
 Green condition:
 
 - The file either stays with documented reason, or is split into clearer modules without behavior drift.
+- Any split is tied to a named product-boundary violation, not readability preference alone.
 
 ## 10. Blast Radius Table
 
@@ -613,7 +705,26 @@ Green condition:
 | Slice 6 Dieter investigation | None directly | Dieter components and Bob control usage | Read-only | Ready |
 | Slice 7 Roma boundary audit | Builder open/save path | Roma instance direct path and routes | Medium if code changes, low if audit only | OPEN |
 
-## 11. Explicit Non-Goals
+## 11. Explicit Deletion Targets
+
+Because Clickeen is pre-GA, toxic/legacy mechanisms must be deleted when replaced, not preserved.
+
+Initial deletion targets:
+
+| Target | Why delete | Owning slice | Replacement/surviving authority |
+|---|---|---|---|
+| `tokyo/product/widgets/_fragments` | README-only product-folder residue | Pre-slice cleanup | None |
+| `packages/ck-policy/src/gate.ts` | Misleading generic "gate" abstraction for a narrow Berlin role check | Slice 4 | Explicit Berlin role/action helper or inline route check |
+| `spec.json.html` editor DSL in all current widgets | HTML-like authoring DSL hostile to AI widget creation and compiler strictness | Slice 1 | Structured `spec.json.editor` |
+| Bob product-path parser for legacy `spec.json.html` | Keeps old authoring DSL alive after hard cut | Slice 2 | Contract-first structured compiler path |
+| Compiler `@slot:` injection system | Compiler-owned mini-template system hiding shared control truth | Slice 1/2 | Explicit structured shared-control declarations |
+| Compiler path-prefix label inference | Compiler infers widget semantics from paths such as `stage.`/`pod.` | Slice 1/2 | Explicit cluster labels in `spec.json.editor` |
+| Typography strip-and-reinject behavior | Compiler discards author-defined product structure and replaces it | Slice 1/2 | Explicit typography controls in structured contract |
+| Remote Tokyo theme fetch fallback in Builder compile | Non-deterministic compile truth and silent `null` theme fallback | Slice 3 | Local checked-in theme contract |
+
+Any execution report must state whether each target was deleted, moved to a named blocker, or found not applicable after evidence refresh.
+
+## 12. Explicit Non-Goals
 
 1. No Berlin auth provider expansion.
 2. No Dieter implementation changes in this PRD draft.
@@ -623,8 +734,10 @@ Green condition:
 6. No changes to Prague, Venice, or San Francisco unless a concrete dependency is discovered.
 7. No runtime behavior change hidden behind "cleanup".
 8. No long-lived dual authoring contract system unless explicitly approved.
+9. No merged compatibility layer for legacy `spec.json.html`.
+10. No remote theme fallback in Builder compile.
 
-## 12. Verification Requirements
+## 13. Verification Requirements
 
 No slice can be closed without:
 
@@ -634,6 +747,7 @@ No slice can be closed without:
 4. At least one real Builder open/save verification for a representative widget.
 5. Before/after explanation of deleted legacy behavior.
 6. Explicit list of files deleted, LOC removed, and surviving authority for each deleted concept.
+7. Explicit confirmation that no toxic/legacy path identified by the slice remains in product code.
 
 OPEN: exact automated test coverage needed for compiler malformed-contract failures.
 
@@ -641,7 +755,7 @@ OPEN: exact browser/screenshot workflow for Dieter and Builder checks if Dieter 
 
 OPEN: exact FAQ Builder open/edit/save verification steps.
 
-## 13. Initial File Targets
+## 14. Initial File Targets
 
 Investigation targets:
 
@@ -660,18 +774,18 @@ Investigation targets:
 
 OPEN: final execution file list depends on Slice 0 evidence refresh.
 
-## 14. First-Draft Recommendation
+## 15. First-Draft Recommendation
 
 The PRD should execute in this order after open areas are resolved:
 
-1. Slice 0 - evidence refresh.
-2. Slice 4 - misleading `gate` cleanup, because it is small and low risk.
-3. Delete or document `_fragments`, because it is obvious residue.
-4. Slice 1 for FAQ only after the structured contract shape is decided.
-5. Slice 2 compiler strictness only after the first structured contract works.
-6. Slice 3 theme truth cleanup.
-7. Slice 5 shared runtime contract.
-8. Slice 6 Dieter investigation only. Dieter implementation requires a follow-up PRD or approved execution slice.
-9. Slice 7 Roma audit only if evidence shows mixed responsibility.
+1. Slice 0 - evidence refresh plus one batch decision session for all Slice 1 blockers.
+2. Delete `_fragments`, because it is obvious residue.
+3. Slice 4 - delete/inline misleading `gate.ts`, because it is small and low risk.
+4. Slice 1 - hard cut FAQ, countdown, and logoshowcase to structured `spec.json.editor`; delete legacy `spec.json.html` before merge.
+5. Slice 2 - compiler strictness after the hard cut, with legacy authoring DSL parser removed from product path.
+6. Slice 3 - local deterministic theme truth; remove remote theme fallback.
+7. Slice 5 - minimum viable shared runtime version contract only if Slice 0 finds a concrete blocking product problem; otherwise defer.
+8. Slice 6 - Dieter investigation only. Dieter implementation requires a follow-up PRD or approved execution slice.
+9. Slice 7 - Roma audit only if Slice 0 evidence shows mixed responsibility.
 
 This keeps the work product-first. We remove obvious residue, then fix the authoring contract, then harden the compiler, and only then consider lower-level component or runtime changes.

@@ -1,5 +1,5 @@
 // Bob module: builds shared Stage/Pod layout fields for all widgets.
-// Widgets declare defaults.stage and defaults.pod; compiler injects these fields into the Layout panel.
+// Widgets declare shared Stage/Pod controls explicitly in spec.json.editor; this helper renders those declarations.
 
 const radiusOptions =
   '[{\"label\":\"None\",\"value\":\"none\"},{\"label\":\"Small\",\"value\":\"2xl\"},{\"label\":\"Medium\",\"value\":\"4xl\"},{\"label\":\"Large\",\"value\":\"6xl\"},{\"label\":\"X-Large\",\"value\":\"10xl\"}]'.replace(

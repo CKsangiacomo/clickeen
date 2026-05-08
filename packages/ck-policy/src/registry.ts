@@ -210,9 +210,3 @@ function assertRegistryMatchesMatrix(): void {
 
 assertRegistryMatchesMatrix();
 assertMetaMatchesRegistry();
-
-export const ACTION_KEYS = [
-  'instance.create',
-  'instance.update',
-] as const;
-export type ActionKey = (typeof ACTION_KEYS)[number];

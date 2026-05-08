@@ -33,7 +33,7 @@ If Countdown needs tier packaging beyond usage/limits, prefer limits first; only
 
 ## 1) Where the widget lives (authoritative)
 Widget definition (the software): `tokyo/product/widgets/countdown/`
-- `spec.json` — defaults + ToolDrawer markup
+- `spec.json` — defaults + structured Builder editor contract
 - `widget.html` — semantic scaffold + stable `data-role` hooks
 - `widget.css` — scoped styles (Dieter tokens)
 - `widget.client.js` — deterministic `applyState(state)`
@@ -62,7 +62,7 @@ Top-level groups:
 - `behavior.*` — backlink + small toggles
 - `actions.*` — "during" CTA + "after end" behavior
 - `seoGeo.*` — embed optimization toggle (instance setting; not tier-gated)
-- `typography.*` — roles (compiler-injected)
+- `typography.*` — roles (explicitly declared shared typography panel)
 - `stage.*`, `pod.*` — Stage/Pod v2 (desktop+mobile padding objects)
 
 Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace). It is not part of widget instance config; Copilot may use it as context.
@@ -135,11 +135,11 @@ Panels:
 - **Content**: `timer.*` (mode + settings + headline) and `actions.*` (CTA during + after-end behavior)
 - **Layout**: `layout.*` (position)
 - **Appearance**: `appearance.*` + Stage/Pod controls
-- **Typography**: `typography.*` (compiler-injected roles)
+- **Typography**: `typography.*` (explicitly declared shared typography panel)
 - **Settings**: `seoGeo.enabled` and `behavior.showBacklink`
 
 ToolDrawer spacing rule (authoring):
-- Vertical rhythm is **clusters + groups only**. Use `<tooldrawer-cluster>` to segment sections and group keys for labels.
+- Vertical rhythm is **clusters + groups only**. Use explicit cluster objects and field `groupId` values in `spec.json.editor`.
 - No custom spacing wrappers or per-control margins; only cluster/group labels add bottom margin.
 
 ### Detailed Panels from Competitor Analysis

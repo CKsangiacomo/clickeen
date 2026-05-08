@@ -52,7 +52,7 @@ items.group.large.max  | limit | sections[].faqs[]          | count-total       
 
 ## 1) Where the widget lives
 Widget definition (the software): `tokyo/product/widgets/faq/`
-- `spec.json` — defaults + ToolDrawer markup
+- `spec.json` — defaults + structured Builder editor contract
 - `widget.html` — semantic scaffold
 - `widget.css` — scoped styles (Dieter tokens)
 - `widget.client.js` — `applyState(state)` runtime
@@ -135,18 +135,18 @@ Grouped state (source of truth: `tokyo/product/widgets/faq/spec.json`):
 - `behavior.*` — accordion toggles + backlink
 - `seoGeo.*` + `seo.*` + `geo.*` — SEO/GEO controls (schema, canonical URL, deep links)
 - `context.*` — Copilot/product context stored in the canonical authored document (runtime ignores it)
-- `typography.*` — global family + per-role selections (including text colors; compiler-injected panel)
+- `typography.*` — global family + per-role selections (including text colors; explicitly declared shared typography panel)
 - `stage.*` + `pod.*` — stage/pod layout and appearance (including pod shadow)
 
-## 5) ToolDrawer panels (current)
+## 5) Builder editor panels (current)
 Panels defined in `tokyo/product/widgets/faq/spec.json`:
-- `content` — section manager + Q/A editing + global header controls (compiler-injected)
-- `layout` — widget layout + accordion behaviors + responsive columns (+ shared stage/pod layout injected by compiler)
+- `content` — section manager + Q/A editing + explicitly declared shared header controls
+- `layout` — widget layout + accordion behaviors + responsive columns + explicitly declared shared stage/pod layout
 - `appearance` — theme dropdown (global) + widget appearance + stage/pod appearance
 - `settings` — AI context (website URL) + SEO/GEO toggles + backlink
 
-ToolDrawer spacing rule (authoring):
-- Vertical rhythm is **clusters + groups only**. Use `<tooldrawer-cluster>` to segment sections and group keys for labels.
+Builder editor spacing rule (authoring):
+- Vertical rhythm is **clusters + groups only**. Use explicit cluster objects and field `groupId` values in `spec.json.editor`.
 - No custom spacing wrappers or per-control margins; only cluster/group labels add bottom margin.
 
 ## 5.0) Panel-by-panel contract (AI, deterministic)
@@ -159,7 +159,7 @@ Controls:
 - `sections[]` (object manager)
   - Section shape: `{ id, title, faqs[] }`
   - Item shape: `{ id, question, answer, defaultOpen }`
-- Global header (compiler-injected when `defaults.header` + `defaults.cta` exist):
+- Global header (declared with shared header controls when `defaults.header` + `defaults.cta` exist):
   - `header.enabled`
   - `header.title`
   - `header.showSubtitle`
@@ -183,7 +183,7 @@ Localization:
   - `sections.*.faqs.*.answer` (richtext)
 
 ### Panel: Layout (`layout`)
-Source: `tokyo/product/widgets/faq/spec.json` + compiler injection
+Source: `tokyo/product/widgets/faq/spec.json.editor`
 
 Widget layout controls (spec-defined):
 - `layout.type` (choice tiles): `accordion | list | multicolumn`
@@ -201,16 +201,16 @@ Widget layout controls (spec-defined):
   - `layout.itemPadding` (when linked)
   - `layout.itemPaddingTop|Right|Bottom|Left` (when unlinked)
 
-Header layout controls (compiler-injected when `defaults.header` + `defaults.cta` exist):
+Header layout controls (declared with shared header nodes when `defaults.header` + `defaults.cta` exist):
 - `header.placement`
 - `header.alignment`
 - `header.ctaPlacement` (show-if `cta.enabled == true`)
-- Header spacing (px; compiler-injected):
+- Header spacing (px; declared shared header controls):
   - `header.gap` (header ↔ content)
   - `header.textGap` (title ↔ subtitle; show-if `header.showSubtitle == true`)
   - `header.innerGap` (text ↔ CTA; show-if `cta.enabled == true`)
 
-Stage/Pod layout controls (compiler-injected for all widgets):
+Stage/Pod layout controls (declared with shared stage/pod nodes):
 - `pod.widthMode`, `pod.contentWidth`
 - `stage.alignment`
 - `pod.padding.desktop.*`, `pod.padding.mobile.*`
@@ -218,7 +218,7 @@ Stage/Pod layout controls (compiler-injected for all widgets):
 - `stage.padding.desktop.*`, `stage.padding.mobile.*`
 
 ### Panel: Appearance (`appearance`)
-Source: `tokyo/product/widgets/faq/spec.json` + compiler injection
+Source: `tokyo/product/widgets/faq/spec.json.editor`
 
 Widget appearance controls (spec-defined):
 - `appearance.theme` (canonical authoring theme selector; runtime ignores it)
@@ -235,7 +235,7 @@ Widget appearance controls (spec-defined):
   - `appearance.cardwrapper.radiusLinked` + radius fields
   - `appearance.cardwrapper.border`
   - `appearance.cardwrapper.shadow`
-- Header CTA (compiler-injected when `defaults.header` + `defaults.cta` exist):
+- Header CTA (declared with shared header controls when `defaults.header` + `defaults.cta` exist):
   - `appearance.ctaBackground`
   - `appearance.ctaTextColor`
   - `appearance.ctaBorder`
@@ -251,7 +251,7 @@ Widget appearance controls (spec-defined):
   - `pod.background`
   - `appearance.podBorder`
 
-Stage/Pod corner appearance (compiler-injected for all widgets):
+Stage/Pod corner appearance (declared with shared stage/pod controls):
 - `pod.shadow`
 - `pod.radiusLinked`, `pod.radius`, `pod.radiusTL|TR|BR|BL`
 
@@ -275,9 +275,9 @@ Controls:
 Entitlements enforcement:
 - Enforced by `tokyo/product/widgets/faq/limits.json`; Bob uses policy/limits for UX gating and Roma validates saved config before Tokyo writes.
 
-### Panel: Typography (`typography`, compiler-injected)
+### Panel: Typography (`typography`, explicitly declared shared panel)
 Why it exists:
-- Widgets that declare `defaults.typography.roles` get a standardized Typography panel.
+- Widgets that declare `defaults.typography.roles` must explicitly declare the standardized Typography panel in `spec.json.editor`.
 - This is the only supported place for text styling (including text colors).
 
 Controls (FAQ roles):

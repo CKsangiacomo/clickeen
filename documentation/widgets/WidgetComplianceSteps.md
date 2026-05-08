@@ -138,22 +138,23 @@ GATE
 
 ---
 
-## Step 5 - ToolDrawer (`spec.json` html[])
+## Step 5 - Builder Editor Contract (`spec.json.editor`)
 OUTPUT
 - Panels: `content`, `layout`, `appearance`, `typography`, `settings` (no extras).
-- Panels are composed of one or more `<tooldrawer-cluster>` blocks.
+- Panels are composed of one or more explicit cluster objects and field/shared nodes.
   - Use `label`/`labelKey` on clusters for meaningful collapsible section headers.
-- Controls only for bound paths; gate variant-specific controls via `show-if`.
-- No `<tooldrawer-eyebrow>` (use cluster labels instead).
+- Controls only for bound paths; gate variant-specific controls via structured `showIf`.
+- No widget-authored `<bob-panel>`, `<tooldrawer-cluster>`, `<tooldrawer-field>`, `@slot:`, or escaped editor HTML in `spec.json`.
 - Vertical rhythm is **clusters + groups only** (no manual spacing; no cluster `gap`/`space-after`).
 - Themes:
   - Appearance includes a dropdown-actions control bound to `appearance.theme`.
   - Any manual edits to theme-controlled fields must reset `appearance.theme` to `custom` (editor behavior; runtime reads only final state).
 
 Compiler notes (current codebase behavior)
-- Bob injects shared Stage/Pod layout fields when `defaults.stage` / `defaults.pod` exist.
-- Bob injects shared Header fields when `defaults.header` + `defaults.cta` exist and you didn’t define them.
-- Bob injects a standardized Typography panel when `defaults.typography.roles` exist (author-defined typography panel is stripped).
+- Bob renders shared Stage/Pod fields only when `spec.json.editor` declares the matching shared node.
+- Bob renders shared Header fields only when `spec.json.editor` declares the matching shared node.
+- Bob renders a standardized Typography panel only when `spec.json.editor` declares the `typography` shared panel and `defaults.typography.roles` exists.
+- Bob compiles theme controls from local `tokyo/product/themes/themes.json`; missing or malformed theme truth is a compiler error.
 
 GATE
 - Zero dead controls (validated via compile step in Step 8).

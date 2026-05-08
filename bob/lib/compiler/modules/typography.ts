@@ -1,5 +1,5 @@
 // Bob module: builds standardized Typography panel markup for widgets that declare typography roles.
-// Specs should declare defaults.typography.roles + defaults.typography.roleScales; the compiler injects the panel using this helper.
+// Specs declare the shared typography panel explicitly in spec.json.editor; this helper renders that declared panel.
 
 import {
   CK_TYPOGRAPHY_WEIGHT_OPTIONS,

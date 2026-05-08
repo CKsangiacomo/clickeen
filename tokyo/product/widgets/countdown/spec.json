@@ -456,114 +456,1346 @@
       "iconPlacement": "right"
     }
   },
-  "html": [
-    "<bob-panel id='content'>",
-    "  @slot:header-content",
-    "  <tooldrawer-cluster label='Timer mode'>",
-    "    <tooldrawer-field-content-timer-mode group-label='' type='choice-tiles' size='md' path='timer.mode' label='Select timer type' value='{{timer.mode}}' options='[{&quot;label&quot;:&quot;Date&quot;,&quot;value&quot;:&quot;date&quot;,&quot;icon&quot;:&quot;calendar&quot;},{&quot;label&quot;:&quot;Countdown&quot;,&quot;value&quot;:&quot;personal&quot;,&quot;icon&quot;:&quot;person&quot;},{&quot;label&quot;:&quot;Counter&quot;,&quot;value&quot;:&quot;number&quot;,&quot;icon&quot;:&quot;plus&quot;}]' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Time unit labels'>",
-    "    <tooldrawer-field-content-timer-labels group-label='' type='textfield' size='md' path='timer.labels.days' label='Days label' value='{{timer.labels.days}}' />",
-    "    <tooldrawer-field-content-timer-labels group-label='' type='textfield' size='md' path='timer.labels.hours' label='Hours label' value='{{timer.labels.hours}}' />",
-    "    <tooldrawer-field-content-timer-labels group-label='' type='textfield' size='md' path='timer.labels.minutes' label='Minutes label' value='{{timer.labels.minutes}}' />",
-    "    <tooldrawer-field-content-timer-labels group-label='' type='textfield' size='md' path='timer.labels.seconds' label='Seconds label' value='{{timer.labels.seconds}}' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Date settings' show-if=\"timer.mode == 'date'\">",
-    "    <tooldrawer-field-timer-date group-label='' type='textfield' size='md' path='timer.targetDate' label='Target date & time' value='{{timer.targetDate}}' placeholder='2026-01-20T12:00' />",
-    "    <tooldrawer-field-timer-date group-label='' type='textfield' size='md' path='timer.timezone' label='Timezone (IANA or browser)' value='{{timer.timezone}}' placeholder='browser' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Countdown settings' show-if=\"timer.mode == 'personal'\">",
-    "    <tooldrawer-field-timer-personal group-label='' type='valuefield' size='md' path='timer.timeAmount' label='Time amount' value='{{timer.timeAmount}}' />",
-    "    <tooldrawer-field-timer-personal group-label='' type='dropdown-actions' size='md' path='timer.timeUnit' label='Time unit' value='{{timer.timeUnit}}' options='[{&quot;label&quot;:&quot;Hours&quot;,&quot;value&quot;:&quot;hours&quot;},{&quot;label&quot;:&quot;Minutes&quot;,&quot;value&quot;:&quot;minutes&quot;},{&quot;label&quot;:&quot;Days&quot;,&quot;value&quot;:&quot;days&quot;},{&quot;label&quot;:&quot;Weeks&quot;,&quot;value&quot;:&quot;weeks&quot;},{&quot;label&quot;:&quot;Months&quot;,&quot;value&quot;:&quot;months&quot;}]' />",
-    "    <tooldrawer-field-timer-personal group-label='' type='dropdown-actions' size='md' path='timer.repeat' label='Repeat' value='{{timer.repeat}}' options='[{&quot;label&quot;:&quot;Never&quot;,&quot;value&quot;:&quot;never&quot;},{&quot;label&quot;:&quot;1 minute&quot;,&quot;value&quot;:&quot;1 minute&quot;},{&quot;label&quot;:&quot;5 minutes&quot;,&quot;value&quot;:&quot;5 minutes&quot;},{&quot;label&quot;:&quot;1 hour&quot;,&quot;value&quot;:&quot;1 hour&quot;},{&quot;label&quot;:&quot;1 day&quot;,&quot;value&quot;:&quot;1 day&quot;},{&quot;label&quot;:&quot;1 week&quot;,&quot;value&quot;:&quot;1 week&quot;}]' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Counter settings' show-if=\"timer.mode == 'number'\">",
-    "    <tooldrawer-field-timer-number group-label='' type='valuefield' size='md' path='timer.targetNumber' label='Target number' value='{{timer.targetNumber}}' />",
-    "    <tooldrawer-field-timer-number group-label='' type='valuefield' size='md' path='timer.startingNumber' label='Starting number' value='{{timer.startingNumber}}' />",
-    "    <tooldrawer-field-timer-number group-label='' type='valuefield' size='md' path='timer.countDuration' label='Count duration (seconds)' value='{{timer.countDuration}}' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Actions - During countdown'>",
-    "    <tooldrawer-field-actions-during group-label='' type='textfield' size='md' path='actions.during.url' label='Button URL' value='{{actions.during.url}}' placeholder='https://example.com' />",
-    "    <tooldrawer-field-actions-during group-label='' type='textfield' size='md' path='actions.during.text' label='Button text' value='{{actions.during.text}}' />",
-    "    <tooldrawer-field-actions-during group-label='' type='dropdown-actions' size='md' path='actions.during.style' label='Button style' value='{{actions.during.style}}' options='[{&quot;label&quot;:&quot;Primary&quot;,&quot;value&quot;:&quot;primary&quot;},{&quot;label&quot;:&quot;Secondary&quot;,&quot;value&quot;:&quot;secondary&quot;}]' />",
-    "    <tooldrawer-field-actions-during group-label='' type='toggle' size='md' path='actions.during.newTab' label='Open in new tab' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Actions - After countdown'>",
-    "    <tooldrawer-field-actions-after group-label='' type='dropdown-actions' size='md' path='actions.after.type' label='After timer ends' value='{{actions.after.type}}' options='[{&quot;label&quot;:&quot;Hide timer&quot;,&quot;value&quot;:&quot;hide&quot;},{&quot;label&quot;:&quot;Link&quot;,&quot;value&quot;:&quot;link&quot;}]' />",
-    "    <tooldrawer-field-actions-after group-label='' type='textfield' size='md' path='actions.after.url' label='URL' value='{{actions.after.url}}' show-if=\"actions.after.type == 'link'\" placeholder='https://example.com' />",
-    "    <tooldrawer-field-actions-after group-label='' type='textfield' size='md' path='actions.after.text' label='Link text' value='{{actions.after.text}}' show-if=\"actions.after.type == 'link'\" />",
-    "  </tooldrawer-cluster>",
-    "</bob-panel>",
-    "<bob-panel id='layout'>",
-    "  <tooldrawer-cluster label='Placement'>",
-    "    <tooldrawer-field-layout-position group-label='' type='choice-tiles' size='md' path='layout.position' label='Widget position' value='{{layout.position}}' options='[{&quot;label&quot;:&quot;Inline&quot;,&quot;value&quot;:&quot;inline&quot;,&quot;icon&quot;:&quot;line.3.horizontal.decrease.circle&quot;}]' />",
-    "  </tooldrawer-cluster>",
-    "  @slot:header-layout",
-    "  @slot:stagepod-layout",
-    "</bob-panel>",
-    "<bob-panel id='appearance'>",
-    "  <tooldrawer-cluster label='Timer text'>",
-    "    <tooldrawer-field-appearance-theme group-label='' type='dropdown-actions' size='md' path='appearance.timerStyle' label='Timer style' value='{{appearance.timerStyle}}' options='[{&quot;label&quot;:&quot;Separated&quot;,&quot;value&quot;:&quot;separated&quot;},{&quot;label&quot;:&quot;Inline&quot;,&quot;value&quot;:&quot;inline&quot;}]' />",
-    "    <tooldrawer-field-appearance-theme group-label='' type='dropdown-actions' size='md' path='appearance.timeFormat' label='Time format' value='{{appearance.timeFormat}}' options='[{&quot;label&quot;:&quot;Auto&quot;,&quot;value&quot;:&quot;auto&quot;},{&quot;label&quot;:&quot;Days, Hours, Minutes, Seconds&quot;,&quot;value&quot;:&quot;D:H:M:S&quot;},{&quot;label&quot;:&quot;Hours, Minutes, Seconds&quot;,&quot;value&quot;:&quot;H:M:S&quot;}]' />",
-    "    <tooldrawer-field-appearance-theme group-label='' type='toggle' size='md' path='appearance.showLabels' label='Show unit labels' default='true' />",
-    "    <tooldrawer-field-appearance-theme group-label='' type='dropdown-actions' size='md' path='appearance.theme' label='Theme' value='{{appearance.theme}}' />",
-    "    <tooldrawer-field-appearance-theme group-label='' type='dropdown-actions' size='md' path='appearance.animation' label='Animation' value='{{appearance.animation}}' options='[{&quot;label&quot;:&quot;Fade&quot;,&quot;value&quot;:&quot;fade&quot;}]' />",
-    "    <tooldrawer-field-appearance-settings group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.textColor' label='Text color' value='{{appearance.textColor}}' />",
-    "    <tooldrawer-field-appearance-settings group-label='' type='dropdown-actions' size='md' path='appearance.separator' label='Separator' value='{{appearance.separator}}' options='[{&quot;label&quot;:&quot;Colon&quot;,&quot;value&quot;:&quot;:&quot;},{&quot;label&quot;:&quot;Slash&quot;,&quot;value&quot;:&quot;/&quot;},{&quot;label&quot;:&quot;Dash&quot;,&quot;value&quot;:&quot;-&quot;}]' />",
-    "  </tooldrawer-cluster>",
-    "  @slot:header-appearance",
-    "  <tooldrawer-cluster label='Locale switcher' show-if=\"localeSwitcher.enabled == true\">",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.localeSwitcherBackground' label='Background' value='{{appearance.localeSwitcherBackground}}' />",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.localeSwitcherTextColor' label='Text color' value='{{appearance.localeSwitcherTextColor}}' />",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-border' size='md' path='appearance.localeSwitcherBorder' label='Border' value='{{appearance.localeSwitcherBorder}}' />",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-actions' size='md' path='appearance.localeSwitcherRadius' label='Corner radius' value='{{appearance.localeSwitcherRadius}}' options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;X-Small&quot;,&quot;value&quot;:&quot;xs&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;sm&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;md&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;lg&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;xl&quot;},{&quot;label&quot;:&quot;2X-Large&quot;,&quot;value&quot;:&quot;2xl&quot;}]' />",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='valuefield' size='md' path='appearance.localeSwitcherPaddingInline' label='Horizontal padding (px)' value='{{appearance.localeSwitcherPaddingInline}}' min='0' max='48' step='1' />",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='valuefield' size='md' path='appearance.localeSwitcherPaddingBlock' label='Vertical padding (px)' value='{{appearance.localeSwitcherPaddingBlock}}' min='0' max='32' step='1' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Timer background' show-if=\"appearance.timerStyle == 'separated'\">",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient' path='appearance.itemBackground' label='Timer tile background' value='{{appearance.itemBackground}}' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='toggle' size='md' path='appearance.cardwrapper.radiusLinked' label='Link timer tile corners' value='{{appearance.cardwrapper.radiusLinked}}' default='true' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radius' label='Corner radius' placeholder='Choose radius' value='{{appearance.cardwrapper.radius}}' show-if=\"appearance.cardwrapper.radiusLinked == true\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusTL' label='Tile top-left radius' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusTL}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusTR' label='Tile top-right radius' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusTR}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusBR' label='Tile bottom-right radius' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusBR}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusBL' label='Tile bottom-left radius' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusBL}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-border' size='md' path='appearance.cardwrapper.border' label='Timer tile border' value='{{appearance.cardwrapper.border}}' />",
-    "    <tooldrawer-field-appearance-item group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.shadow' label='Timer tile outside shadow' value='{{appearance.cardwrapper.shadow}}' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Stage/Pod'>",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.shadow' label='Stage outside shadow' value='{{stage.shadow}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='stage.insideShadow.linked' label='Link stage inside shadows' value='{{stage.insideShadow.linked}}' default='true' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='stage.insideShadow.layer' label='Inside shadow layer' value='{{stage.insideShadow.layer}}' options='[{&quot;label&quot;:&quot;Show below content&quot;,&quot;value&quot;:&quot;below-content&quot;},{&quot;label&quot;:&quot;Show above content&quot;,&quot;value&quot;:&quot;above-content&quot;}]' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.insideShadow.all' label='Stage inside shadow' value='{{stage.insideShadow.all}}' show-if=\"stage.insideShadow.linked == true\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='stage.insideShadow.top' label='Stage inside shadow (top)' value='{{stage.insideShadow.top}}' show-if=\"stage.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='stage.insideShadow.right' label='Stage inside shadow (right)' value='{{stage.insideShadow.right}}' show-if=\"stage.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='stage.insideShadow.bottom' label='Stage inside shadow (bottom)' value='{{stage.insideShadow.bottom}}' show-if=\"stage.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='stage.insideShadow.left' label='Stage inside shadow (left)' value='{{stage.insideShadow.left}}' show-if=\"stage.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='appearance.podBorder' label='Pod border' value='{{appearance.podBorder}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.shadow' label='Pod outside shadow' value='{{pod.shadow}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='pod.insideShadow.linked' label='Link pod inside shadows' value='{{pod.insideShadow.linked}}' default='true' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='pod.insideShadow.layer' label='Inside shadow layer' value='{{pod.insideShadow.layer}}' options='[{&quot;label&quot;:&quot;Show below content&quot;,&quot;value&quot;:&quot;below-content&quot;},{&quot;label&quot;:&quot;Show above content&quot;,&quot;value&quot;:&quot;above-content&quot;}]' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.insideShadow.all' label='Pod inside shadow' value='{{pod.insideShadow.all}}' show-if=\"pod.insideShadow.linked == true\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='pod.insideShadow.top' label='Pod inside shadow (top)' value='{{pod.insideShadow.top}}' show-if=\"pod.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='pod.insideShadow.right' label='Pod inside shadow (right)' value='{{pod.insideShadow.right}}' show-if=\"pod.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='pod.insideShadow.bottom' label='Pod inside shadow (bottom)' value='{{pod.insideShadow.bottom}}' show-if=\"pod.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='pod.insideShadow.left' label='Pod inside shadow (left)' value='{{pod.insideShadow.left}}' show-if=\"pod.insideShadow.linked == false\" />",
-    "    @slot:stagepod-corners",
-    "  </tooldrawer-cluster>",
-    "</bob-panel>",
-    "<bob-panel id='settings'>",
-    "  <tooldrawer-cluster label='SEO/GEO'>",
-    "    <tooldrawer-field-settings-seo-toggle group-label='' type='toggle' size='md' path='seoGeo.enabled' label='Enable SEO/GEO optimization' />",
-    "    <tooldrawer-field-settings-seo group-label='' type='toggle' size='md' path='seo.enableSchema' label='Enable schema' show-if=\"seoGeo.enabled == true\" />",
-    "    <tooldrawer-field-settings-seo group-label='' type='textfield' size='lg' path='seo.canonicalUrl' label='Canonical URL' placeholder='https://example.com/page' show-if=\"seoGeo.enabled == true\" />",
-    "    <tooldrawer-field-settings-geo group-label='' type='toggle' size='md' path='geo.enableDeepLinks' label='Enable deep links' show-if=\"seoGeo.enabled == true\" />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Clickeen Branding'>",
-    "    <tooldrawer-field-behavior-settings group-label='' type='toggle' size='md' path='behavior.showBacklink' label='Show Made with Clickeen' />",
-    "  </tooldrawer-cluster>",
-    "</bob-panel>"
-  ]
+  "editor": {
+    "panels": [
+      {
+        "id": "content",
+        "clusters": [
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "choice-tiles",
+                "groupId": "content-timer-mode",
+                "path": "timer.mode",
+                "label": "Select timer type",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.mode}}",
+                  "options": [
+                    {
+                      "label": "Date",
+                      "value": "date",
+                      "icon": "calendar"
+                    },
+                    {
+                      "label": "Countdown",
+                      "value": "personal",
+                      "icon": "person"
+                    },
+                    {
+                      "label": "Counter",
+                      "value": "number",
+                      "icon": "plus"
+                    }
+                  ]
+                }
+              }
+            ],
+            "label": "Timer mode"
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "content-timer-labels",
+                "path": "timer.labels.days",
+                "label": "Days label",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.labels.days}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "content-timer-labels",
+                "path": "timer.labels.hours",
+                "label": "Hours label",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.labels.hours}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "content-timer-labels",
+                "path": "timer.labels.minutes",
+                "label": "Minutes label",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.labels.minutes}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "content-timer-labels",
+                "path": "timer.labels.seconds",
+                "label": "Seconds label",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.labels.seconds}}"
+                }
+              }
+            ],
+            "label": "Time unit labels"
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "timer-date",
+                "path": "timer.targetDate",
+                "label": "Target date & time",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.targetDate}}",
+                  "placeholder": "2026-01-20T12:00"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "timer-date",
+                "path": "timer.timezone",
+                "label": "Timezone (IANA or browser)",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.timezone}}",
+                  "placeholder": "browser"
+                }
+              }
+            ],
+            "label": "Date settings",
+            "showIf": {
+              "path": "timer.mode",
+              "op": "equals",
+              "value": "date"
+            }
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "timer-personal",
+                "path": "timer.timeAmount",
+                "label": "Time amount",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.timeAmount}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "timer-personal",
+                "path": "timer.timeUnit",
+                "label": "Time unit",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.timeUnit}}",
+                  "options": [
+                    {
+                      "label": "Hours",
+                      "value": "hours"
+                    },
+                    {
+                      "label": "Minutes",
+                      "value": "minutes"
+                    },
+                    {
+                      "label": "Days",
+                      "value": "days"
+                    },
+                    {
+                      "label": "Weeks",
+                      "value": "weeks"
+                    },
+                    {
+                      "label": "Months",
+                      "value": "months"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "timer-personal",
+                "path": "timer.repeat",
+                "label": "Repeat",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.repeat}}",
+                  "options": [
+                    {
+                      "label": "Never",
+                      "value": "never"
+                    },
+                    {
+                      "label": "1 minute",
+                      "value": "1 minute"
+                    },
+                    {
+                      "label": "5 minutes",
+                      "value": "5 minutes"
+                    },
+                    {
+                      "label": "1 hour",
+                      "value": "1 hour"
+                    },
+                    {
+                      "label": "1 day",
+                      "value": "1 day"
+                    },
+                    {
+                      "label": "1 week",
+                      "value": "1 week"
+                    }
+                  ]
+                }
+              }
+            ],
+            "label": "Countdown settings",
+            "showIf": {
+              "path": "timer.mode",
+              "op": "equals",
+              "value": "personal"
+            }
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "timer-number",
+                "path": "timer.targetNumber",
+                "label": "Target number",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.targetNumber}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "timer-number",
+                "path": "timer.startingNumber",
+                "label": "Starting number",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.startingNumber}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "timer-number",
+                "path": "timer.countDuration",
+                "label": "Count duration (seconds)",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{timer.countDuration}}"
+                }
+              }
+            ],
+            "label": "Counter settings",
+            "showIf": {
+              "path": "timer.mode",
+              "op": "equals",
+              "value": "number"
+            }
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "actions-during",
+                "path": "actions.during.url",
+                "label": "Button URL",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{actions.during.url}}",
+                  "placeholder": "https://example.com"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "actions-during",
+                "path": "actions.during.text",
+                "label": "Button text",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{actions.during.text}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "actions-during",
+                "path": "actions.during.style",
+                "label": "Button style",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{actions.during.style}}",
+                  "options": [
+                    {
+                      "label": "Primary",
+                      "value": "primary"
+                    },
+                    {
+                      "label": "Secondary",
+                      "value": "secondary"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "actions-during",
+                "path": "actions.during.newTab",
+                "label": "Open in new tab",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              }
+            ],
+            "label": "Actions - During countdown"
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "actions-after",
+                "path": "actions.after.type",
+                "label": "After timer ends",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{actions.after.type}}",
+                  "options": [
+                    {
+                      "label": "Hide timer",
+                      "value": "hide"
+                    },
+                    {
+                      "label": "Link",
+                      "value": "link"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "actions-after",
+                "path": "actions.after.url",
+                "label": "URL",
+                "showIf": {
+                  "path": "actions.after.type",
+                  "op": "equals",
+                  "value": "link"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{actions.after.url}}",
+                  "placeholder": "https://example.com"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "actions-after",
+                "path": "actions.after.text",
+                "label": "Link text",
+                "showIf": {
+                  "path": "actions.after.type",
+                  "op": "equals",
+                  "value": "link"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{actions.after.text}}"
+                }
+              }
+            ],
+            "label": "Actions - After countdown"
+          }
+        ]
+      },
+      {
+        "id": "typography",
+        "shared": {
+          "id": "typography"
+        }
+      },
+      {
+        "id": "layout",
+        "clusters": [
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "choice-tiles",
+                "groupId": "layout-position",
+                "path": "layout.position",
+                "label": "Widget position",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{layout.position}}",
+                  "options": [
+                    {
+                      "label": "Inline",
+                      "value": "inline",
+                      "icon": "line.3.horizontal.decrease.circle"
+                    }
+                  ]
+                }
+              }
+            ],
+            "label": "Placement"
+          }
+        ]
+      },
+      {
+        "id": "appearance",
+        "clusters": [
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-theme",
+                "path": "appearance.timerStyle",
+                "label": "Timer style",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.timerStyle}}",
+                  "options": [
+                    {
+                      "label": "Separated",
+                      "value": "separated"
+                    },
+                    {
+                      "label": "Inline",
+                      "value": "inline"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-theme",
+                "path": "appearance.timeFormat",
+                "label": "Time format",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.timeFormat}}",
+                  "options": [
+                    {
+                      "label": "Auto",
+                      "value": "auto"
+                    },
+                    {
+                      "label": "Days, Hours, Minutes, Seconds",
+                      "value": "D:H:M:S"
+                    },
+                    {
+                      "label": "Hours, Minutes, Seconds",
+                      "value": "H:M:S"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "appearance-theme",
+                "path": "appearance.showLabels",
+                "label": "Show unit labels",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "default": true
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-theme",
+                "path": "appearance.theme",
+                "label": "Theme",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.theme}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-theme",
+                "path": "appearance.animation",
+                "label": "Animation",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.animation}}",
+                  "options": [
+                    {
+                      "label": "Fade",
+                      "value": "fade"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "appearance-settings",
+                "path": "appearance.textColor",
+                "label": "Text color",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color",
+                  "value": "{{appearance.textColor}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-settings",
+                "path": "appearance.separator",
+                "label": "Separator",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.separator}}",
+                  "options": [
+                    {
+                      "label": "Colon",
+                      "value": ":"
+                    },
+                    {
+                      "label": "Slash",
+                      "value": "/"
+                    },
+                    {
+                      "label": "Dash",
+                      "value": "-"
+                    }
+                  ]
+                }
+              }
+            ],
+            "label": "Timer text"
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherBackground",
+                "label": "Background",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color",
+                  "value": "{{appearance.localeSwitcherBackground}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherTextColor",
+                "label": "Text color",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color",
+                  "value": "{{appearance.localeSwitcherTextColor}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-border",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherBorder",
+                "label": "Border",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.localeSwitcherBorder}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherRadius",
+                "label": "Corner radius",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.localeSwitcherRadius}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "X-Small",
+                      "value": "xs"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "sm"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "md"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "lg"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "xl"
+                    },
+                    {
+                      "label": "2X-Large",
+                      "value": "2xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherPaddingInline",
+                "label": "Horizontal padding (px)",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.localeSwitcherPaddingInline}}",
+                  "min": 0,
+                  "max": 48,
+                  "step": 1
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherPaddingBlock",
+                "label": "Vertical padding (px)",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.localeSwitcherPaddingBlock}}",
+                  "min": 0,
+                  "max": 32,
+                  "step": 1
+                }
+              }
+            ],
+            "label": "Locale switcher",
+            "showIf": {
+              "path": "localeSwitcher.enabled",
+              "op": "isTrue"
+            }
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "appearance-item",
+                "path": "appearance.itemBackground",
+                "label": "Timer tile background",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color,gradient",
+                  "value": "{{appearance.itemBackground}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "appearance-item",
+                "path": "appearance.cardwrapper.radiusLinked",
+                "label": "Link timer tile corners",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.cardwrapper.radiusLinked}}",
+                  "default": true
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-item",
+                "path": "appearance.cardwrapper.radius",
+                "label": "Corner radius",
+                "showIf": {
+                  "path": "appearance.cardwrapper.radiusLinked",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{appearance.cardwrapper.radius}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-item",
+                "path": "appearance.cardwrapper.radiusTL",
+                "label": "Tile top-left radius",
+                "showIf": {
+                  "path": "appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{appearance.cardwrapper.radiusTL}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-item",
+                "path": "appearance.cardwrapper.radiusTR",
+                "label": "Tile top-right radius",
+                "showIf": {
+                  "path": "appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{appearance.cardwrapper.radiusTR}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-item",
+                "path": "appearance.cardwrapper.radiusBR",
+                "label": "Tile bottom-right radius",
+                "showIf": {
+                  "path": "appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{appearance.cardwrapper.radiusBR}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-item",
+                "path": "appearance.cardwrapper.radiusBL",
+                "label": "Tile bottom-left radius",
+                "showIf": {
+                  "path": "appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{appearance.cardwrapper.radiusBL}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-border",
+                "groupId": "appearance-item",
+                "path": "appearance.cardwrapper.border",
+                "label": "Timer tile border",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.cardwrapper.border}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "appearance-item",
+                "path": "appearance.cardwrapper.shadow",
+                "label": "Timer tile outside shadow",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.cardwrapper.shadow}}"
+                }
+              }
+            ],
+            "label": "Timer background",
+            "showIf": {
+              "path": "appearance.timerStyle",
+              "op": "equals",
+              "value": "separated"
+            }
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "podstageappearance",
+                "path": "stage.background",
+                "label": "Stage background",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color,gradient,image,video",
+                  "value": "{{stage.background}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.shadow",
+                "label": "Stage outside shadow",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{stage.shadow}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.linked",
+                "label": "Link stage inside shadows",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.linked}}",
+                  "default": true
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.layer",
+                "label": "Inside shadow layer",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.layer}}",
+                  "options": [
+                    {
+                      "label": "Show below content",
+                      "value": "below-content"
+                    },
+                    {
+                      "label": "Show above content",
+                      "value": "above-content"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.all",
+                "label": "Stage inside shadow",
+                "showIf": {
+                  "path": "stage.insideShadow.linked",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.all}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.top",
+                "label": "Stage inside shadow (top)",
+                "showIf": {
+                  "path": "stage.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "y",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.top}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.right",
+                "label": "Stage inside shadow (right)",
+                "showIf": {
+                  "path": "stage.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "x",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.right}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.bottom",
+                "label": "Stage inside shadow (bottom)",
+                "showIf": {
+                  "path": "stage.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "y",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.bottom}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.left",
+                "label": "Stage inside shadow (left)",
+                "showIf": {
+                  "path": "stage.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "x",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.left}}"
+                }
+              }
+            ],
+            "label": "Stage appearance"
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "podstageappearance",
+                "path": "pod.background",
+                "label": "Pod background",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color,gradient,image,video",
+                  "value": "{{pod.background}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-border",
+                "groupId": "podstageappearance",
+                "path": "appearance.podBorder",
+                "label": "Pod border",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.podBorder}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.shadow",
+                "label": "Pod outside shadow",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{pod.shadow}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.linked",
+                "label": "Link pod inside shadows",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.linked}}",
+                  "default": true
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.layer",
+                "label": "Inside shadow layer",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.layer}}",
+                  "options": [
+                    {
+                      "label": "Show below content",
+                      "value": "below-content"
+                    },
+                    {
+                      "label": "Show above content",
+                      "value": "above-content"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.all",
+                "label": "Pod inside shadow",
+                "showIf": {
+                  "path": "pod.insideShadow.linked",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.all}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.top",
+                "label": "Pod inside shadow (top)",
+                "showIf": {
+                  "path": "pod.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "y",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.top}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.right",
+                "label": "Pod inside shadow (right)",
+                "showIf": {
+                  "path": "pod.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "x",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.right}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.bottom",
+                "label": "Pod inside shadow (bottom)",
+                "showIf": {
+                  "path": "pod.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "y",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.bottom}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.left",
+                "label": "Pod inside shadow (left)",
+                "showIf": {
+                  "path": "pod.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "x",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.left}}"
+                }
+              },
+              {
+                "kind": "shared",
+                "id": "stagepod-corners"
+              }
+            ],
+            "label": "Pod appearance"
+          }
+        ]
+      },
+      {
+        "id": "settings",
+        "clusters": [
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-seo-toggle",
+                "path": "seoGeo.enabled",
+                "label": "Enable SEO/GEO optimization",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-seo",
+                "path": "seo.enableSchema",
+                "label": "Enable schema",
+                "showIf": {
+                  "path": "seoGeo.enabled",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "settings-seo",
+                "path": "seo.canonicalUrl",
+                "label": "Canonical URL",
+                "showIf": {
+                  "path": "seoGeo.enabled",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "lg",
+                  "placeholder": "https://example.com/page"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-geo",
+                "path": "geo.enableDeepLinks",
+                "label": "Enable deep links",
+                "showIf": {
+                  "path": "seoGeo.enabled",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              }
+            ],
+            "label": "SEO/GEO"
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "behavior-settings",
+                "path": "behavior.showBacklink",
+                "label": "Show Made with Clickeen",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              }
+            ],
+            "label": "Clickeen Branding"
+          }
+        ]
+      }
+    ]
+  }
 }

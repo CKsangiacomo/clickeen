@@ -27,7 +27,7 @@ STOP CONDITIONS
 - change requires new Dieter primitive/token
 - change requires `tokyo/product/widgets/shared/*`
 - change requires Bob/Roma/Tokyo-worker/Venice/Prague/Dieter edits
-- cannot enumerate final state paths before ToolDrawer
+- cannot enumerate final state paths before the Builder editor contract
 - cannot provide Binding Map rows for all new controls
 
 ---
@@ -166,13 +166,13 @@ MUST NOT
 - Use timers, randomness, or network fetches in `applyState`.
 - Heal or coerce missing state (fix the source instead).
 
-### 5) ToolDrawer
+### 5) Builder Editor Contract (`spec.json.editor`)
 MUST
 - Use only these panels: `content`, `layout`, `appearance`, `typography`, `settings`.
 - Add controls only for paths already defined in `defaults`.
-- Gate variant-specific controls via `show-if`.
-- Remove `<tooldrawer-eyebrow>`; no eyebrow under panel headers. Use optional cluster labels (`<tooldrawer-cluster label="...">`) when you need section eyebrows inside a panel.
-- Use `<tooldrawer-cluster>` as the primary grouping container. Panels MUST be composed of one or more clusters (clusters can wrap any markup/controls).
+- Gate variant-specific controls via structured `showIf`.
+- Do not put widget-authored `<bob-panel>`, `<tooldrawer-cluster>`, `<tooldrawer-field>`, `@slot:`, or escaped editor HTML in `spec.json`.
+- Panels MUST be composed of one or more explicit cluster objects and field/shared nodes.
 - Cluster header (optional): a cluster has a header only when `label`/`labelKey` is set. Bob renders it as:
   - left: Label (overline)
   - right: XS Dieter icon button (chevron) that collapses/expands the cluster body
@@ -180,7 +180,8 @@ MUST
   - top-level cluster spacing: `space-4` after each cluster (except last)
   - header → body spacing: `space-2` (only when header exists)
   - inside cluster body: `space-2` vertical gap between controls/groups
-- Group is optional and secondary. Declare a group key via the tag name `<tooldrawer-field-{groupKey} ...>`; adjacent fields with the same group key become one group. Use `group-label` only when you need a group header inside a cluster.
+- Group is optional and secondary. Declare `groupId` on field nodes; adjacent fields with the same group key become one group. Use `attrs["group-label"]` only when you need a group header inside a cluster.
+- Declare shared controls explicitly with shared nodes such as `header-content`, `header-layout`, `header-appearance`, `stagepod-layout`, `stagepod-corners`, and the `typography` shared panel.
 - Groups MUST NOT be used as a spacing/layout primitive; they exist only to add optional sub-section labels inside a cluster.
 - Define the user-facing item noun: set `itemKey` in `spec.json` (e.g., `faq.item`) and ensure the i18n bundle defines it (plural forms required).
 
@@ -190,7 +191,7 @@ MUST NOT
 
 ### 5.1) Themes (global, editor-only)
 MUST
-- Define global themes in `tokyo/themes/themes.json` (single source of truth).
+- Define global themes in `tokyo/product/themes/themes.json` (single source of truth).
 - Theme values may only touch: `stage.*`, `pod.*`, `appearance.*`, and `typography.*` (font family only).
 - Themes are always enabled: every widget must include `appearance.theme` in `defaults` and render a dropdown-actions control for it in the Appearance panel.
 - Theme selection is staged; selection previews in-editor and only "Apply theme" commits ops to instance state.

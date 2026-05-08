@@ -1,4 +1,4 @@
-import { can, resolvePolicy, type MemberRole, type PolicyProfile } from '@clickeen/ck-policy';
+import { type MemberRole, type PolicyProfile } from '@clickeen/ck-policy';
 import { claimAsString } from '../utils/claims';
 import { json, validationError } from '../http';
 import { capture, type BerlinRoute } from '../http/routing';
@@ -10,16 +10,15 @@ import {
   loadAccountPublishContainment,
 } from './account-instance-projection';
 
-function canMutateInstanceProjection(account: { tier: PolicyProfile; role: MemberRole }, action: 'instance.create' | 'instance.update'): Response | null {
-  const policy = resolvePolicy({ profile: account.tier, role: account.role });
-  const decision = can(policy, action);
-  if (decision.allow) return null;
+function canMutateInstanceProjection(account: { tier: PolicyProfile; role: MemberRole }): Response | null {
+  if (account.role !== 'viewer') return null;
+
   return json(
     {
       error: {
         kind: 'DENY',
-        reasonKey: decision.reasonKey,
-        ...(decision.detail ? { detail: decision.detail } : {}),
+        reasonKey: 'coreui.upsell.reason.role.editorRequired',
+        detail: 'This action requires an editor role.',
       },
     },
     { status: 403 },
@@ -48,7 +47,7 @@ export async function handleAccountInstanceProjectionCreate(
   const resolved = await resolveAccountRouteContext(request, env, accountIdRaw);
   if (!resolved.ok) return resolved.response;
 
-  const deny = canMutateInstanceProjection(resolved.account, 'instance.create');
+  const deny = canMutateInstanceProjection(resolved.account);
   if (deny) return deny;
 
   let payload: unknown = null;
@@ -89,7 +88,7 @@ export async function handleAccountInstanceProjectionDelete(
   const resolved = await resolveAccountRouteContext(request, env, accountIdRaw);
   if (!resolved.ok) return resolved.response;
 
-  const deny = canMutateInstanceProjection(resolved.account, 'instance.update');
+  const deny = canMutateInstanceProjection(resolved.account);
   if (deny) return deny;
 
   const deleted = await deleteAccountInstanceProjectionRow({ env, account: resolved.account, publicId });

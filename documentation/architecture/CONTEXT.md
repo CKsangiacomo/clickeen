@@ -164,7 +164,7 @@ Between open and save:
 | `widgetType`   | Widget identifier referencing the definition (e.g., "faq")                                               |
 | `config`       | Persisted base instance values; active product account reads/writes use Tokyo's saved authoring snapshot |
 | `instanceData` | Working copy of config in Bob during editing                                                             |
-| `spec.json`    | Defaults + ToolDrawer markup; compiled by Bob                                                            |
+| `spec.json`    | Defaults + structured Builder editor contract (`editor.panels`); compiled by Bob                         |
 | `agent.md`     | AI contract documenting editable paths and semantics                                                     |
 
 ### Starter Designs (Listed/Duplicable Instances)
@@ -275,7 +275,7 @@ instance.meta = {
 
 ```
 tokyo/product/widgets/{widgetType}/
-├── spec.json          # Defaults + ToolDrawer markup (<bob-panel> + <tooldrawer-field>)
+├── spec.json          # Defaults + structured Builder editor contract
 ├── widget.html        # Semantic HTML with data-role attributes
 ├── widget.css         # Scoped styles using Dieter tokens
 ├── widget.client.js   # applyState() for live DOM updates

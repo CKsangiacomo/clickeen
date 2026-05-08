@@ -588,103 +588,2457 @@
     },
     "displayCategoryTitles": false
   },
-  "html": [
-    "<bob-panel id='content'>",
-    "  @slot:header-content",
-    "  <tooldrawer-cluster>",
-    "  <tooldrawer-field-content-sections group-label='' class='diet-object-manager' type='object-manager' path='sections' add-label='Add section' reorder-label='Manage sections' reorder-title='Manage sections' label-path='title' index-token='__SECTION__' default-item='{&quot;title&quot;:&quot;All Questions&quot;,&quot;faqs&quot;:[{&quot;question&quot;:&quot;New question&quot;,&quot;answer&quot;:&quot;New answer&quot;,&quot;defaultOpen&quot;:false}]}' template='&lt;tooldrawer-field type=&quot;repeater&quot; path=&quot;sections.__SECTION__.faqs&quot; label=&quot;Questions&quot; label-key=&quot;faq.item&quot; label-params=&quot;{&amp;quot;count&amp;quot;:2}&quot; add-label=&quot;Add question&quot; add-label-key=&quot;faq.actions.addItem&quot; add-label-params=&quot;{&amp;quot;item&amp;quot;:{&amp;quot;$t&amp;quot;:&amp;quot;faq.item&amp;quot;,&amp;quot;count&amp;quot;:1}}&quot; labelPath=&quot;sections.__SECTION__.title&quot; labelInputLabel=&quot;Section&quot; labelPlaceholder=&quot;All Questions&quot; labelSize=&quot;lg&quot; default-item=&quot;{&amp;quot;question&amp;quot;:&amp;quot;New question&amp;quot;,&amp;quot;answer&amp;quot;:&amp;quot;New answer&amp;quot;,&amp;quot;defaultOpen&amp;quot;:false}&quot; template=&apos;&lt;div class=&quot;diet-repeater__item-body&quot;&gt;&lt;div class=&quot;diet-dropdown-edit diet-popover-host&quot; data-allow-links=&quot;false&quot; data-size=&quot;md&quot; data-state=&quot;closed&quot;&gt;&lt;div class=&quot;diet-dropdown-header diet-dropdown-edit__control&quot; role=&quot;button&quot; aria-haspopup=&quot;dialog&quot; aria-expanded=&quot;false&quot;&gt;&lt;span class=&quot;diet-dropdown-header-label label-s&quot;&gt;Q:&lt;/span&gt;&lt;span class=&quot;diet-dropdown-header-value body-s&quot; data-muted=&quot;true&quot; data-placeholder=&quot;Type your question&quot;&gt;Type your question&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover&quot; role=&quot;dialog&quot; aria-label=&quot;Question&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;Q:&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;textformat.size.larger&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body diet-dropdown-edit__body&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__main&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__editor body-xsmall&quot; contenteditable=&quot;true&quot;&gt;Type your question&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__palette&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__toolbarrow&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--format&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;bold&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;bold&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;italic&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;italic&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;underline&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;underline&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;strike&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;strikethrough&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;link&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;link&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;span class=&quot;diet-dropdown-edit__divider is-hidden&quot;&gt;&lt;/span&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--clear&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-format&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;arrow.counterclockwise&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-links&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;personalhotspot.slash&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__linksheet&quot; aria-hidden=&quot;true&quot;&gt;&lt;div class=&quot;diet-popaddlink diet-popover&quot; data-state=&quot;empty&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;Add URL&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger diet-popaddlink__close&quot; data-size=&quot;xs&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;multiply&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body&quot;&gt;&lt;div class=&quot;diet-textfield&quot; data-size=&quot;md&quot;&gt;&lt;label class=&quot;diet-textfield__control&quot;&gt;&lt;span class=&quot;diet-textfield__display-label label-s&quot;&gt;URL:&lt;/span&gt;&lt;input type=&quot;text&quot; class=&quot;diet-textfield__field body-s diet-popaddlink__input&quot; aria-label=&quot;URL&quot; placeholder=&quot;https://example.com&quot; /&gt;&lt;/label&gt;&lt;span class=&quot;diet-textfield__helper caption diet-popaddlink__helper&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;diet-popaddlink__actions&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-txt diet-popaddlink__apply&quot; data-size=&quot;md&quot; data-variant=&quot;primary&quot;&gt;&lt;span class=&quot;diet-btn-txt__label&quot;&gt;Apply&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;input type=&quot;hidden&quot; class=&quot;diet-dropdown-edit__field&quot; value=&quot;Type your question&quot; data-bob-path=&quot;sections.__SECTION__.faqs.__INDEX__.question&quot; /&gt;&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit diet-popover-host&quot; data-size=&quot;md&quot; data-state=&quot;closed&quot;&gt;&lt;div class=&quot;diet-dropdown-header diet-dropdown-edit__control&quot; role=&quot;button&quot; aria-haspopup=&quot;dialog&quot; aria-expanded=&quot;false&quot;&gt;&lt;span class=&quot;diet-dropdown-header-label label-s&quot;&gt;A:&lt;/span&gt;&lt;span class=&quot;diet-dropdown-header-value body-s&quot; data-muted=&quot;true&quot; data-placeholder=&quot;Type your answer&quot;&gt;Type your answer&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover&quot; role=&quot;dialog&quot; aria-label=&quot;Answer&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;A:&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;textformat.size.larger&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body diet-dropdown-edit__body&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__main&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__editor body-xsmall&quot; contenteditable=&quot;true&quot;&gt;Type your answer&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__palette&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__toolbarrow&quot;&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--format&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;bold&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;bold&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;italic&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;italic&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;underline&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;underline&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;strike&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;strikethrough&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;link&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;link&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;span class=&quot;diet-dropdown-edit__divider is-hidden&quot;&gt;&lt;/span&gt;&lt;div class=&quot;diet-dropdown-edit__group diet-dropdown-edit__group--clear&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-format&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;arrow.counterclockwise&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic&quot; data-size=&quot;sm&quot; data-variant=&quot;neutral&quot; data-command=&quot;clear-links&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;personalhotspot.slash&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;diet-dropdown-edit__linksheet&quot; aria-hidden=&quot;true&quot;&gt;&lt;div class=&quot;diet-popaddlink diet-popover&quot; data-state=&quot;empty&quot;&gt;&lt;div class=&quot;diet-popover__header&quot;&gt;&lt;span class=&quot;diet-popover__header-label label-s&quot;&gt;Add URL&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-ic diet-popover__header-trigger diet-popaddlink__close&quot; data-size=&quot;xs&quot; data-variant=&quot;neutral&quot; aria-hidden=&quot;true&quot; tabindex=&quot;-1&quot;&gt;&lt;span class=&quot;diet-btn-ic__icon&quot; data-icon=&quot;multiply&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;diet-popover__body&quot;&gt;&lt;div class=&quot;diet-textfield&quot; data-size=&quot;md&quot;&gt;&lt;label class=&quot;diet-textfield__control&quot;&gt;&lt;span class=&quot;diet-textfield__display-label label-s&quot;&gt;URL:&lt;/span&gt;&lt;input type=&quot;text&quot; class=&quot;diet-textfield__field body-s diet-popaddlink__input&quot; aria-label=&quot;URL&quot; placeholder=&quot;https://example.com&quot; /&gt;&lt;/label&gt;&lt;span class=&quot;diet-textfield__helper caption diet-popaddlink__helper&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;diet-popaddlink__actions&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;diet-btn-txt diet-popaddlink__apply&quot; data-size=&quot;md&quot; data-variant=&quot;primary&quot;&gt;&lt;span class=&quot;diet-btn-txt__label&quot;&gt;Apply&lt;/span&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;input type=&quot;hidden&quot; class=&quot;diet-dropdown-edit__field&quot; value=&quot;Type your answer&quot; data-bob-path=&quot;sections.__SECTION__.faqs.__INDEX__.answer&quot; /&gt;&lt;/div&gt;&lt;/div&gt;&apos; /&gt;' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-title-settings group-label='' type='toggle' size='md' path='displayCategoryTitles' label='Show section title' />",
-    "  </tooldrawer-cluster>",
-    "</bob-panel>",
-    "<bob-panel id='layout'>",
-    "  @slot:header-layout",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-layout-choice group-label='' type='choice-tiles' size='md' path='layout.type' label='Layout' value='{{layout.type}}' options='[{&quot;label&quot;:&quot;Accordion&quot;,&quot;value&quot;:&quot;accordion&quot;,&quot;icon&quot;:&quot;chevron.down.2&quot;},{&quot;label&quot;:&quot;List&quot;,&quot;value&quot;:&quot;list&quot;,&quot;icon&quot;:&quot;square.stack.3d.up&quot;},{&quot;label&quot;:&quot;Cards&quot;,&quot;value&quot;:&quot;multicolumn&quot;,&quot;icon&quot;:&quot;circle.grid.2x2&quot;}]' />",
-    "    <tooldrawer-field-type-settings group-label='' type='valuefield' size='md' path='layout.gap' label='Gap (px)' />",
-    "    <tooldrawer-field-type-settings group-label='' type='toggle' size='md' path='behavior.expandFirst' label='Open first question by default' show-if=\"layout.type == 'accordion'\" />",
-    "    <tooldrawer-field-type-settings group-label='' type='toggle' size='md' path='behavior.multiOpen' label='Allow multiple open' show-if=\"layout.type == 'accordion'\" />",
-    "    <tooldrawer-field-type-settings group-label='' type='toggle' size='md' path='behavior.expandAll' label='Expand all questions' show-if=\"layout.type == 'accordion'\" />",
-    "    <tooldrawer-field-type-settings group-label='' type='valuefield' size='md' path='layout.columns.desktop' label='Columns (desktop)' show-if=\"layout.type == 'multicolumn'\" />",
-    "    <tooldrawer-field-type-settings group-label='' type='valuefield' size='md' path='layout.columns.mobile' label='Columns (mobile)' show-if=\"layout.type == 'multicolumn'\" />",
-    "    <tooldrawer-field-type-settings group-label='' type='dropdown-actions' size='md' path='layout.cardsLayout' label='Cards layout' placeholder='Choose layout' value='{{layout.cardsLayout}}' show-if=\"layout.type == 'multicolumn'\" options='[{&quot;label&quot;:&quot;Grid&quot;,&quot;value&quot;:&quot;grid&quot;},{&quot;label&quot;:&quot;Masonry&quot;,&quot;value&quot;:&quot;masonry&quot;}]' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-item-spacing group-label='' type='dropdown-actions' size='md' path='layout.itemQaGapPreset' label='Q/A spacing' value='{{layout.itemQaGapPreset}}' options='[{&quot;label&quot;:&quot;X-Small&quot;,&quot;value&quot;:&quot;xs&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;s&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;m&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;l&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;xl&quot;},{&quot;label&quot;:&quot;Custom&quot;,&quot;value&quot;:&quot;custom&quot;}]' />",
-    "    <tooldrawer-field-item-spacing group-label='' type='valuefield' size='md' path='layout.itemQaGapCustom' label='Custom Q/A spacing (px)' value='{{layout.itemQaGapCustom}}' min='0' max='120' step='1' show-if=\"layout.itemQaGapPreset == 'custom'\" />",
-    "    <tooldrawer-field-item-padding group-label='' type='toggle' size='md' path='layout.itemPaddingLinked' label='Link Q&A card padding' label-key='faq.labels.linkItemPadding' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{layout.itemPaddingLinked}}' default='true' />",
-    "    <tooldrawer-field-item-padding group-label='' type='valuefield' size='md' path='layout.itemPadding' label='Q&A card padding (px)' label-key='faq.labels.itemPadding' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == true\" />",
-    "    <tooldrawer-field-item-padding group-label='' type='valuefield' size='md' path='layout.itemPaddingTop' label='Q&A card top padding (px)' label-key='faq.labels.itemPaddingTop' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == false\" />",
-    "    <tooldrawer-field-item-padding group-label='' type='valuefield' size='md' path='layout.itemPaddingRight' label='Q&A card right padding (px)' label-key='faq.labels.itemPaddingRight' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == false\" />",
-    "    <tooldrawer-field-item-padding group-label='' type='valuefield' size='md' path='layout.itemPaddingBottom' label='Q&A card bottom padding (px)' label-key='faq.labels.itemPaddingBottom' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == false\" />",
-    "    <tooldrawer-field-item-padding group-label='' type='valuefield' size='md' path='layout.itemPaddingLeft' label='Q&A card left padding (px)' label-key='faq.labels.itemPaddingLeft' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' show-if=\"layout.itemPaddingLinked == false\" />",
-    "  </tooldrawer-cluster>",
-    "</bob-panel>",
-    "<bob-panel id='appearance'>",
-    "  <tooldrawer-cluster>",
-    "    <tooldrawer-field-appearance-theme group-label='' type='dropdown-actions' size='md' path='appearance.theme' label='Theme' value='{{appearance.theme}}' />",
-    "    <tooldrawer-field-appearance-accordion group-label='' type='dropdown-actions' size='md' path='appearance.iconStyle' label='Accordion icon' placeholder='Choose icon' value='{{appearance.iconStyle}}' show-if=\"layout.type == 'accordion'\" options='[{&quot;label&quot;:&quot;Plus&quot;,&quot;value&quot;:&quot;plus&quot;},{&quot;label&quot;:&quot;Chevron&quot;,&quot;value&quot;:&quot;chevron&quot;},{&quot;label&quot;:&quot;Arrow One&quot;,&quot;value&quot;:&quot;arrow&quot;},{&quot;label&quot;:&quot;Arrow Two&quot;,&quot;value&quot;:&quot;arrowshape&quot;}]' />",
-    "    <tooldrawer-field-appearance-accordion group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.iconColor' label='Accordion icon color' value='{{appearance.iconColor}}' show-if=\"layout.type == 'accordion'\" />",
-    "  </tooldrawer-cluster>",
-    "  @slot:header-appearance",
-    "  <tooldrawer-cluster label='Locale switcher' show-if=\"localeSwitcher.enabled == true\">",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.localeSwitcherBackground' label='Background' value='{{appearance.localeSwitcherBackground}}' />",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.localeSwitcherTextColor' label='Text color' value='{{appearance.localeSwitcherTextColor}}' />",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-border' size='md' path='appearance.localeSwitcherBorder' label='Border' value='{{appearance.localeSwitcherBorder}}' />",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='dropdown-actions' size='md' path='appearance.localeSwitcherRadius' label='Corner radius' value='{{appearance.localeSwitcherRadius}}' options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;X-Small&quot;,&quot;value&quot;:&quot;xs&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;sm&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;md&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;lg&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;xl&quot;},{&quot;label&quot;:&quot;2X-Large&quot;,&quot;value&quot;:&quot;2xl&quot;}]' />",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='valuefield' size='md' path='appearance.localeSwitcherPaddingInline' label='Horizontal padding (px)' value='{{appearance.localeSwitcherPaddingInline}}' min='0' max='48' step='1' />",
-    "    <tooldrawer-field-locale-switcher-appearance group-label='' type='valuefield' size='md' path='appearance.localeSwitcherPaddingBlock' label='Vertical padding (px)' value='{{appearance.localeSwitcherPaddingBlock}}' min='0' max='32' step='1' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Links' show-if=\"hasLinks(sections)\">",
-    "    <tooldrawer-field-appearance-links group-label='' type='dropdown-actions' size='md' path='appearance.linkStyle' label='Link style' value='{{appearance.linkStyle}}' options='[{&quot;label&quot;:&quot;Underline&quot;,&quot;value&quot;:&quot;underline&quot;},{&quot;label&quot;:&quot;Highlight&quot;,&quot;value&quot;:&quot;highlight&quot;},{&quot;label&quot;:&quot;Color&quot;,&quot;value&quot;:&quot;color&quot;}]' />",
-    "    <tooldrawer-field-appearance-links group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkUnderlineColor' label='Underline color' value='{{appearance.linkUnderlineColor}}' show-if=\"appearance.linkStyle == 'underline'\" />",
-    "    <tooldrawer-field-appearance-links group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkHighlightColor' label='Highlight color' value='{{appearance.linkHighlightColor}}' show-if=\"appearance.linkStyle == 'highlight'\" />",
-    "    <tooldrawer-field-appearance-links group-label='' type='dropdown-fill' size='md' fill-modes='color' path='appearance.linkTextColor' label='Link text color' value='{{appearance.linkTextColor}}' show-if=\"appearance.linkStyle == 'color'\" />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Q&A card'>",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient' path='appearance.itemBackground' label='Q&A card background' label-key='faq.labels.itemBackground' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.itemBackground}}' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='toggle' size='md' path='appearance.cardwrapper.radiusLinked' label='Link Q&A card corners' label-key='faq.labels.linkItemCorners' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.radiusLinked}}' default='true' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radius' label='Corner radius' placeholder='Choose radius' value='{{appearance.cardwrapper.radius}}' show-if=\"appearance.cardwrapper.radiusLinked == true\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusTL' label='Q&A card top-left radius' label-key='faq.labels.itemTopLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusTL}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusTR' label='Q&A card top-right radius' label-key='faq.labels.itemTopRightRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusTR}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusBR' label='Q&A card bottom-right radius' label-key='faq.labels.itemBottomRightRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusBR}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-actions' size='md' path='appearance.cardwrapper.radiusBL' label='Q&A card bottom-left radius' label-key='faq.labels.itemBottomLeftRadius' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' placeholder='Choose radius' value='{{appearance.cardwrapper.radiusBL}}' show-if=\"appearance.cardwrapper.radiusLinked == false\" options='[{&quot;label&quot;:&quot;None&quot;,&quot;value&quot;:&quot;none&quot;},{&quot;label&quot;:&quot;Small&quot;,&quot;value&quot;:&quot;2xl&quot;},{&quot;label&quot;:&quot;Medium&quot;,&quot;value&quot;:&quot;4xl&quot;},{&quot;label&quot;:&quot;Large&quot;,&quot;value&quot;:&quot;6xl&quot;},{&quot;label&quot;:&quot;X-Large&quot;,&quot;value&quot;:&quot;10xl&quot;}]' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-border' size='md' path='appearance.cardwrapper.border' label='Q&A card border' label-key='faq.labels.itemBorder' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.border}}' />",
-    "    <tooldrawer-field-appearance-card group-label='' type='dropdown-shadow' size='md' path='appearance.cardwrapper.shadow' label='Q&A card outside shadow' label-key='faq.labels.itemOutsideShadow' label-params='{&quot;item&quot;:{&quot;$t&quot;:&quot;faq.item&quot;,&quot;count&quot;:1}}' value='{{appearance.cardwrapper.shadow}}' />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Stage/Pod'>",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.shadow' label='Stage outside shadow' value='{{stage.shadow}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='stage.insideShadow.linked' label='Link stage inside shadows' value='{{stage.insideShadow.linked}}' default='true' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='stage.insideShadow.layer' label='Inside shadow layer' value='{{stage.insideShadow.layer}}' options='[{&quot;label&quot;:&quot;Show below content&quot;,&quot;value&quot;:&quot;below-content&quot;},{&quot;label&quot;:&quot;Show above content&quot;,&quot;value&quot;:&quot;above-content&quot;}]' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.insideShadow.all' label='Stage inside shadow' value='{{stage.insideShadow.all}}' show-if=\"stage.insideShadow.linked == true\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='stage.insideShadow.top' label='Stage inside shadow (top)' value='{{stage.insideShadow.top}}' show-if=\"stage.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='stage.insideShadow.right' label='Stage inside shadow (right)' value='{{stage.insideShadow.right}}' show-if=\"stage.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='stage.insideShadow.bottom' label='Stage inside shadow (bottom)' value='{{stage.insideShadow.bottom}}' show-if=\"stage.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='stage.insideShadow.left' label='Stage inside shadow (left)' value='{{stage.insideShadow.left}}' show-if=\"stage.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='appearance.podBorder' label='Pod border' value='{{appearance.podBorder}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.shadow' label='Pod outside shadow' value='{{pod.shadow}}' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='pod.insideShadow.linked' label='Link pod inside shadows' value='{{pod.insideShadow.linked}}' default='true' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='pod.insideShadow.layer' label='Inside shadow layer' value='{{pod.insideShadow.layer}}' options='[{&quot;label&quot;:&quot;Show below content&quot;,&quot;value&quot;:&quot;below-content&quot;},{&quot;label&quot;:&quot;Show above content&quot;,&quot;value&quot;:&quot;above-content&quot;}]' />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.insideShadow.all' label='Pod inside shadow' value='{{pod.insideShadow.all}}' show-if=\"pod.insideShadow.linked == true\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='pod.insideShadow.top' label='Pod inside shadow (top)' value='{{pod.insideShadow.top}}' show-if=\"pod.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='pod.insideShadow.right' label='Pod inside shadow (right)' value='{{pod.insideShadow.right}}' show-if=\"pod.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='y' size='md' path='pod.insideShadow.bottom' label='Pod inside shadow (bottom)' value='{{pod.insideShadow.bottom}}' show-if=\"pod.insideShadow.linked == false\" />",
-    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' axis='x' size='md' path='pod.insideShadow.left' label='Pod inside shadow (left)' value='{{pod.insideShadow.left}}' show-if=\"pod.insideShadow.linked == false\" />",
-    "  </tooldrawer-cluster>",
-    "</bob-panel>",
-    "<bob-panel id='settings'>",
-    "  <tooldrawer-cluster label='SEO/GEO'>",
-    "    <tooldrawer-field-settings-seo-toggle group-label='' type='toggle' size='md' path='seoGeo.enabled' label='Enable SEO/GEO optimization' />",
-    "    <tooldrawer-field-settings-seo group-label='' type='toggle' size='md' path='seo.enableSchema' label='Enable schema' show-if=\"seoGeo.enabled == true\" />",
-    "    <tooldrawer-field-settings-seo group-label='' type='textfield' size='lg' path='seo.canonicalUrl' label='Canonical URL' placeholder='https://example.com/page' show-if=\"seoGeo.enabled == true\" />",
-    "    <tooldrawer-field-settings-geo group-label='' type='toggle' size='md' path='geo.enableDeepLinks' label='Enable deep links' show-if=\"seoGeo.enabled == true\" />",
-    "  </tooldrawer-cluster>",
-    "  <tooldrawer-cluster label='Clickeen Branding'>",
-    "    <tooldrawer-field-settings-behavior group-label='' type='toggle' size='md' path='behavior.showBacklink' label='Show Made with Clickeen' />",
-    "  </tooldrawer-cluster>",
-    "</bob-panel>"
-  ]
+  "editor": {
+    "panels": [
+      {
+        "id": "content",
+        "clusters": [
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "object-manager",
+                "groupId": "content-sections",
+                "path": "sections",
+                "template": [
+                  {
+                    "kind": "field",
+                    "type": "repeater",
+                    "path": "sections.__SECTION__.faqs",
+                    "label": "Questions",
+                    "template": [
+                      {
+                        "kind": "element",
+                        "tag": "div",
+                        "attrs": {
+                          "class": "diet-repeater__item-body"
+                        },
+                        "children": [
+                          {
+                            "kind": "element",
+                            "tag": "div",
+                            "attrs": {
+                              "class": "diet-dropdown-edit diet-popover-host",
+                              "data-allow-links": false,
+                              "data-size": "md",
+                              "data-state": "closed"
+                            },
+                            "children": [
+                              {
+                                "kind": "element",
+                                "tag": "div",
+                                "attrs": {
+                                  "class": "diet-dropdown-header diet-dropdown-edit__control",
+                                  "role": "button",
+                                  "aria-haspopup": "dialog",
+                                  "aria-expanded": false
+                                },
+                                "children": [
+                                  {
+                                    "kind": "element",
+                                    "tag": "span",
+                                    "attrs": {
+                                      "class": "diet-dropdown-header-label label-s"
+                                    },
+                                    "children": [
+                                      {
+                                        "kind": "text",
+                                        "text": "Q:"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "kind": "element",
+                                    "tag": "span",
+                                    "attrs": {
+                                      "class": "diet-dropdown-header-value body-s",
+                                      "data-muted": true,
+                                      "data-placeholder": "Type your question"
+                                    },
+                                    "children": [
+                                      {
+                                        "kind": "text",
+                                        "text": "Type your question"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "kind": "element",
+                                "tag": "div",
+                                "attrs": {
+                                  "class": "diet-popover",
+                                  "role": "dialog",
+                                  "aria-label": "Question"
+                                },
+                                "children": [
+                                  {
+                                    "kind": "element",
+                                    "tag": "div",
+                                    "attrs": {
+                                      "class": "diet-popover__header"
+                                    },
+                                    "children": [
+                                      {
+                                        "kind": "element",
+                                        "tag": "span",
+                                        "attrs": {
+                                          "class": "diet-popover__header-label label-s"
+                                        },
+                                        "children": [
+                                          {
+                                            "kind": "text",
+                                            "text": "Q:"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "kind": "element",
+                                        "tag": "button",
+                                        "attrs": {
+                                          "type": "button",
+                                          "class": "diet-btn-ic diet-popover__header-trigger",
+                                          "data-size": "sm",
+                                          "data-variant": "neutral",
+                                          "aria-hidden": true,
+                                          "tabindex": -1
+                                        },
+                                        "children": [
+                                          {
+                                            "kind": "element",
+                                            "tag": "span",
+                                            "attrs": {
+                                              "class": "diet-btn-ic__icon",
+                                              "data-icon": "textformat.size.larger"
+                                            },
+                                            "children": []
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "kind": "element",
+                                    "tag": "div",
+                                    "attrs": {
+                                      "class": "diet-popover__body diet-dropdown-edit__body"
+                                    },
+                                    "children": [
+                                      {
+                                        "kind": "element",
+                                        "tag": "div",
+                                        "attrs": {
+                                          "class": "diet-dropdown-edit__main"
+                                        },
+                                        "children": [
+                                          {
+                                            "kind": "element",
+                                            "tag": "div",
+                                            "attrs": {
+                                              "class": "diet-dropdown-edit__editor body-xsmall",
+                                              "contenteditable": true
+                                            },
+                                            "children": [
+                                              {
+                                                "kind": "text",
+                                                "text": "Type your question"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "kind": "element",
+                                            "tag": "div",
+                                            "attrs": {
+                                              "class": "diet-dropdown-edit__palette"
+                                            },
+                                            "children": [
+                                              {
+                                                "kind": "element",
+                                                "tag": "div",
+                                                "attrs": {
+                                                  "class": "diet-dropdown-edit__toolbarrow"
+                                                },
+                                                "children": [
+                                                  {
+                                                    "kind": "element",
+                                                    "tag": "div",
+                                                    "attrs": {
+                                                      "class": "diet-dropdown-edit__group diet-dropdown-edit__group--format"
+                                                    },
+                                                    "children": [
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "button",
+                                                        "attrs": {
+                                                          "type": "button",
+                                                          "class": "diet-btn-ic",
+                                                          "data-size": "sm",
+                                                          "data-variant": "neutral",
+                                                          "data-command": "bold"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "span",
+                                                            "attrs": {
+                                                              "class": "diet-btn-ic__icon",
+                                                              "data-icon": "bold"
+                                                            },
+                                                            "children": []
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "button",
+                                                        "attrs": {
+                                                          "type": "button",
+                                                          "class": "diet-btn-ic",
+                                                          "data-size": "sm",
+                                                          "data-variant": "neutral",
+                                                          "data-command": "italic"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "span",
+                                                            "attrs": {
+                                                              "class": "diet-btn-ic__icon",
+                                                              "data-icon": "italic"
+                                                            },
+                                                            "children": []
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "button",
+                                                        "attrs": {
+                                                          "type": "button",
+                                                          "class": "diet-btn-ic",
+                                                          "data-size": "sm",
+                                                          "data-variant": "neutral",
+                                                          "data-command": "underline"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "span",
+                                                            "attrs": {
+                                                              "class": "diet-btn-ic__icon",
+                                                              "data-icon": "underline"
+                                                            },
+                                                            "children": []
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "button",
+                                                        "attrs": {
+                                                          "type": "button",
+                                                          "class": "diet-btn-ic",
+                                                          "data-size": "sm",
+                                                          "data-variant": "neutral",
+                                                          "data-command": "strike"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "span",
+                                                            "attrs": {
+                                                              "class": "diet-btn-ic__icon",
+                                                              "data-icon": "strikethrough"
+                                                            },
+                                                            "children": []
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "button",
+                                                        "attrs": {
+                                                          "type": "button",
+                                                          "class": "diet-btn-ic",
+                                                          "data-size": "sm",
+                                                          "data-variant": "neutral",
+                                                          "data-command": "link"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "span",
+                                                            "attrs": {
+                                                              "class": "diet-btn-ic__icon",
+                                                              "data-icon": "link"
+                                                            },
+                                                            "children": []
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "kind": "element",
+                                                    "tag": "span",
+                                                    "attrs": {
+                                                      "class": "diet-dropdown-edit__divider is-hidden"
+                                                    },
+                                                    "children": []
+                                                  },
+                                                  {
+                                                    "kind": "element",
+                                                    "tag": "div",
+                                                    "attrs": {
+                                                      "class": "diet-dropdown-edit__group diet-dropdown-edit__group--clear"
+                                                    },
+                                                    "children": [
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "button",
+                                                        "attrs": {
+                                                          "type": "button",
+                                                          "class": "diet-btn-ic",
+                                                          "data-size": "sm",
+                                                          "data-variant": "neutral",
+                                                          "data-command": "clear-format"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "span",
+                                                            "attrs": {
+                                                              "class": "diet-btn-ic__icon",
+                                                              "data-icon": "arrow.counterclockwise"
+                                                            },
+                                                            "children": []
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "button",
+                                                        "attrs": {
+                                                          "type": "button",
+                                                          "class": "diet-btn-ic",
+                                                          "data-size": "sm",
+                                                          "data-variant": "neutral",
+                                                          "data-command": "clear-links"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "span",
+                                                            "attrs": {
+                                                              "class": "diet-btn-ic__icon",
+                                                              "data-icon": "personalhotspot.slash"
+                                                            },
+                                                            "children": []
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "kind": "element",
+                                                "tag": "div",
+                                                "attrs": {
+                                                  "class": "diet-dropdown-edit__linksheet",
+                                                  "aria-hidden": true
+                                                },
+                                                "children": [
+                                                  {
+                                                    "kind": "element",
+                                                    "tag": "div",
+                                                    "attrs": {
+                                                      "class": "diet-popaddlink diet-popover",
+                                                      "data-state": "empty"
+                                                    },
+                                                    "children": [
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "div",
+                                                        "attrs": {
+                                                          "class": "diet-popover__header"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "span",
+                                                            "attrs": {
+                                                              "class": "diet-popover__header-label label-s"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "text",
+                                                                "text": "Add URL"
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "button",
+                                                            "attrs": {
+                                                              "type": "button",
+                                                              "class": "diet-btn-ic diet-popover__header-trigger diet-popaddlink__close",
+                                                              "data-size": "xs",
+                                                              "data-variant": "neutral",
+                                                              "aria-hidden": true,
+                                                              "tabindex": -1
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "span",
+                                                                "attrs": {
+                                                                  "class": "diet-btn-ic__icon",
+                                                                  "data-icon": "multiply"
+                                                                },
+                                                                "children": []
+                                                              }
+                                                            ]
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "div",
+                                                        "attrs": {
+                                                          "class": "diet-popover__body"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "div",
+                                                            "attrs": {
+                                                              "class": "diet-textfield",
+                                                              "data-size": "md"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "label",
+                                                                "attrs": {
+                                                                  "class": "diet-textfield__control"
+                                                                },
+                                                                "children": [
+                                                                  {
+                                                                    "kind": "element",
+                                                                    "tag": "span",
+                                                                    "attrs": {
+                                                                      "class": "diet-textfield__display-label label-s"
+                                                                    },
+                                                                    "children": [
+                                                                      {
+                                                                        "kind": "text",
+                                                                        "text": "URL:"
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  {
+                                                                    "kind": "element",
+                                                                    "tag": "input",
+                                                                    "attrs": {
+                                                                      "type": "text",
+                                                                      "class": "diet-textfield__field body-s diet-popaddlink__input",
+                                                                      "aria-label": "URL",
+                                                                      "placeholder": "https://example.com"
+                                                                    },
+                                                                    "children": []
+                                                                  }
+                                                                ]
+                                                              },
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "span",
+                                                                "attrs": {
+                                                                  "class": "diet-textfield__helper caption diet-popaddlink__helper"
+                                                                },
+                                                                "children": []
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "div",
+                                                            "attrs": {
+                                                              "class": "diet-popaddlink__actions"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "button",
+                                                                "attrs": {
+                                                                  "type": "button",
+                                                                  "class": "diet-btn-txt diet-popaddlink__apply",
+                                                                  "data-size": "md",
+                                                                  "data-variant": "primary"
+                                                                },
+                                                                "children": [
+                                                                  {
+                                                                    "kind": "element",
+                                                                    "tag": "span",
+                                                                    "attrs": {
+                                                                      "class": "diet-btn-txt__label"
+                                                                    },
+                                                                    "children": [
+                                                                      {
+                                                                        "kind": "text",
+                                                                        "text": "Apply"
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                ]
+                                                              }
+                                                            ]
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "kind": "element",
+                                    "tag": "input",
+                                    "attrs": {
+                                      "type": "hidden",
+                                      "class": "diet-dropdown-edit__field",
+                                      "value": "Type your question",
+                                      "data-bob-path": "sections.__SECTION__.faqs.__INDEX__.question"
+                                    },
+                                    "children": []
+                                  }
+                                ]
+                              },
+                              {
+                                "kind": "element",
+                                "tag": "div",
+                                "attrs": {
+                                  "class": "diet-dropdown-edit diet-popover-host",
+                                  "data-size": "md",
+                                  "data-state": "closed"
+                                },
+                                "children": [
+                                  {
+                                    "kind": "element",
+                                    "tag": "div",
+                                    "attrs": {
+                                      "class": "diet-dropdown-header diet-dropdown-edit__control",
+                                      "role": "button",
+                                      "aria-haspopup": "dialog",
+                                      "aria-expanded": false
+                                    },
+                                    "children": [
+                                      {
+                                        "kind": "element",
+                                        "tag": "span",
+                                        "attrs": {
+                                          "class": "diet-dropdown-header-label label-s"
+                                        },
+                                        "children": [
+                                          {
+                                            "kind": "text",
+                                            "text": "A:"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "kind": "element",
+                                        "tag": "span",
+                                        "attrs": {
+                                          "class": "diet-dropdown-header-value body-s",
+                                          "data-muted": true,
+                                          "data-placeholder": "Type your answer"
+                                        },
+                                        "children": [
+                                          {
+                                            "kind": "text",
+                                            "text": "Type your answer"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "kind": "element",
+                                    "tag": "div",
+                                    "attrs": {
+                                      "class": "diet-popover",
+                                      "role": "dialog",
+                                      "aria-label": "Answer"
+                                    },
+                                    "children": [
+                                      {
+                                        "kind": "element",
+                                        "tag": "div",
+                                        "attrs": {
+                                          "class": "diet-popover__header"
+                                        },
+                                        "children": [
+                                          {
+                                            "kind": "element",
+                                            "tag": "span",
+                                            "attrs": {
+                                              "class": "diet-popover__header-label label-s"
+                                            },
+                                            "children": [
+                                              {
+                                                "kind": "text",
+                                                "text": "A:"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "kind": "element",
+                                            "tag": "button",
+                                            "attrs": {
+                                              "type": "button",
+                                              "class": "diet-btn-ic diet-popover__header-trigger",
+                                              "data-size": "sm",
+                                              "data-variant": "neutral",
+                                              "aria-hidden": true,
+                                              "tabindex": -1
+                                            },
+                                            "children": [
+                                              {
+                                                "kind": "element",
+                                                "tag": "span",
+                                                "attrs": {
+                                                  "class": "diet-btn-ic__icon",
+                                                  "data-icon": "textformat.size.larger"
+                                                },
+                                                "children": []
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "kind": "element",
+                                        "tag": "div",
+                                        "attrs": {
+                                          "class": "diet-popover__body diet-dropdown-edit__body"
+                                        },
+                                        "children": [
+                                          {
+                                            "kind": "element",
+                                            "tag": "div",
+                                            "attrs": {
+                                              "class": "diet-dropdown-edit__main"
+                                            },
+                                            "children": [
+                                              {
+                                                "kind": "element",
+                                                "tag": "div",
+                                                "attrs": {
+                                                  "class": "diet-dropdown-edit__editor body-xsmall",
+                                                  "contenteditable": true
+                                                },
+                                                "children": [
+                                                  {
+                                                    "kind": "text",
+                                                    "text": "Type your answer"
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "kind": "element",
+                                                "tag": "div",
+                                                "attrs": {
+                                                  "class": "diet-dropdown-edit__palette"
+                                                },
+                                                "children": [
+                                                  {
+                                                    "kind": "element",
+                                                    "tag": "div",
+                                                    "attrs": {
+                                                      "class": "diet-dropdown-edit__toolbarrow"
+                                                    },
+                                                    "children": [
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "div",
+                                                        "attrs": {
+                                                          "class": "diet-dropdown-edit__group diet-dropdown-edit__group--format"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "button",
+                                                            "attrs": {
+                                                              "type": "button",
+                                                              "class": "diet-btn-ic",
+                                                              "data-size": "sm",
+                                                              "data-variant": "neutral",
+                                                              "data-command": "bold"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "span",
+                                                                "attrs": {
+                                                                  "class": "diet-btn-ic__icon",
+                                                                  "data-icon": "bold"
+                                                                },
+                                                                "children": []
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "button",
+                                                            "attrs": {
+                                                              "type": "button",
+                                                              "class": "diet-btn-ic",
+                                                              "data-size": "sm",
+                                                              "data-variant": "neutral",
+                                                              "data-command": "italic"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "span",
+                                                                "attrs": {
+                                                                  "class": "diet-btn-ic__icon",
+                                                                  "data-icon": "italic"
+                                                                },
+                                                                "children": []
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "button",
+                                                            "attrs": {
+                                                              "type": "button",
+                                                              "class": "diet-btn-ic",
+                                                              "data-size": "sm",
+                                                              "data-variant": "neutral",
+                                                              "data-command": "underline"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "span",
+                                                                "attrs": {
+                                                                  "class": "diet-btn-ic__icon",
+                                                                  "data-icon": "underline"
+                                                                },
+                                                                "children": []
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "button",
+                                                            "attrs": {
+                                                              "type": "button",
+                                                              "class": "diet-btn-ic",
+                                                              "data-size": "sm",
+                                                              "data-variant": "neutral",
+                                                              "data-command": "strike"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "span",
+                                                                "attrs": {
+                                                                  "class": "diet-btn-ic__icon",
+                                                                  "data-icon": "strikethrough"
+                                                                },
+                                                                "children": []
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "button",
+                                                            "attrs": {
+                                                              "type": "button",
+                                                              "class": "diet-btn-ic",
+                                                              "data-size": "sm",
+                                                              "data-variant": "neutral",
+                                                              "data-command": "link"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "span",
+                                                                "attrs": {
+                                                                  "class": "diet-btn-ic__icon",
+                                                                  "data-icon": "link"
+                                                                },
+                                                                "children": []
+                                                              }
+                                                            ]
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "span",
+                                                        "attrs": {
+                                                          "class": "diet-dropdown-edit__divider is-hidden"
+                                                        },
+                                                        "children": []
+                                                      },
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "div",
+                                                        "attrs": {
+                                                          "class": "diet-dropdown-edit__group diet-dropdown-edit__group--clear"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "button",
+                                                            "attrs": {
+                                                              "type": "button",
+                                                              "class": "diet-btn-ic",
+                                                              "data-size": "sm",
+                                                              "data-variant": "neutral",
+                                                              "data-command": "clear-format"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "span",
+                                                                "attrs": {
+                                                                  "class": "diet-btn-ic__icon",
+                                                                  "data-icon": "arrow.counterclockwise"
+                                                                },
+                                                                "children": []
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "button",
+                                                            "attrs": {
+                                                              "type": "button",
+                                                              "class": "diet-btn-ic",
+                                                              "data-size": "sm",
+                                                              "data-variant": "neutral",
+                                                              "data-command": "clear-links"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "span",
+                                                                "attrs": {
+                                                                  "class": "diet-btn-ic__icon",
+                                                                  "data-icon": "personalhotspot.slash"
+                                                                },
+                                                                "children": []
+                                                              }
+                                                            ]
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "kind": "element",
+                                                    "tag": "div",
+                                                    "attrs": {
+                                                      "class": "diet-dropdown-edit__linksheet",
+                                                      "aria-hidden": true
+                                                    },
+                                                    "children": [
+                                                      {
+                                                        "kind": "element",
+                                                        "tag": "div",
+                                                        "attrs": {
+                                                          "class": "diet-popaddlink diet-popover",
+                                                          "data-state": "empty"
+                                                        },
+                                                        "children": [
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "div",
+                                                            "attrs": {
+                                                              "class": "diet-popover__header"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "span",
+                                                                "attrs": {
+                                                                  "class": "diet-popover__header-label label-s"
+                                                                },
+                                                                "children": [
+                                                                  {
+                                                                    "kind": "text",
+                                                                    "text": "Add URL"
+                                                                  }
+                                                                ]
+                                                              },
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "button",
+                                                                "attrs": {
+                                                                  "type": "button",
+                                                                  "class": "diet-btn-ic diet-popover__header-trigger diet-popaddlink__close",
+                                                                  "data-size": "xs",
+                                                                  "data-variant": "neutral",
+                                                                  "aria-hidden": true,
+                                                                  "tabindex": -1
+                                                                },
+                                                                "children": [
+                                                                  {
+                                                                    "kind": "element",
+                                                                    "tag": "span",
+                                                                    "attrs": {
+                                                                      "class": "diet-btn-ic__icon",
+                                                                      "data-icon": "multiply"
+                                                                    },
+                                                                    "children": []
+                                                                  }
+                                                                ]
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "kind": "element",
+                                                            "tag": "div",
+                                                            "attrs": {
+                                                              "class": "diet-popover__body"
+                                                            },
+                                                            "children": [
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "div",
+                                                                "attrs": {
+                                                                  "class": "diet-textfield",
+                                                                  "data-size": "md"
+                                                                },
+                                                                "children": [
+                                                                  {
+                                                                    "kind": "element",
+                                                                    "tag": "label",
+                                                                    "attrs": {
+                                                                      "class": "diet-textfield__control"
+                                                                    },
+                                                                    "children": [
+                                                                      {
+                                                                        "kind": "element",
+                                                                        "tag": "span",
+                                                                        "attrs": {
+                                                                          "class": "diet-textfield__display-label label-s"
+                                                                        },
+                                                                        "children": [
+                                                                          {
+                                                                            "kind": "text",
+                                                                            "text": "URL:"
+                                                                          }
+                                                                        ]
+                                                                      },
+                                                                      {
+                                                                        "kind": "element",
+                                                                        "tag": "input",
+                                                                        "attrs": {
+                                                                          "type": "text",
+                                                                          "class": "diet-textfield__field body-s diet-popaddlink__input",
+                                                                          "aria-label": "URL",
+                                                                          "placeholder": "https://example.com"
+                                                                        },
+                                                                        "children": []
+                                                                      }
+                                                                    ]
+                                                                  },
+                                                                  {
+                                                                    "kind": "element",
+                                                                    "tag": "span",
+                                                                    "attrs": {
+                                                                      "class": "diet-textfield__helper caption diet-popaddlink__helper"
+                                                                    },
+                                                                    "children": []
+                                                                  }
+                                                                ]
+                                                              },
+                                                              {
+                                                                "kind": "element",
+                                                                "tag": "div",
+                                                                "attrs": {
+                                                                  "class": "diet-popaddlink__actions"
+                                                                },
+                                                                "children": [
+                                                                  {
+                                                                    "kind": "element",
+                                                                    "tag": "button",
+                                                                    "attrs": {
+                                                                      "type": "button",
+                                                                      "class": "diet-btn-txt diet-popaddlink__apply",
+                                                                      "data-size": "md",
+                                                                      "data-variant": "primary"
+                                                                    },
+                                                                    "children": [
+                                                                      {
+                                                                        "kind": "element",
+                                                                        "tag": "span",
+                                                                        "attrs": {
+                                                                          "class": "diet-btn-txt__label"
+                                                                        },
+                                                                        "children": [
+                                                                          {
+                                                                            "kind": "text",
+                                                                            "text": "Apply"
+                                                                          }
+                                                                        ]
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                ]
+                                                              }
+                                                            ]
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "kind": "element",
+                                        "tag": "input",
+                                        "attrs": {
+                                          "type": "hidden",
+                                          "class": "diet-dropdown-edit__field",
+                                          "value": "Type your answer",
+                                          "data-bob-path": "sections.__SECTION__.faqs.__INDEX__.answer"
+                                        },
+                                        "children": []
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "attrs": {
+                      "label-key": "faq.item",
+                      "label-params": {
+                        "count": 2
+                      },
+                      "add-label": "Add question",
+                      "add-label-key": "faq.actions.addItem",
+                      "add-label-params": {
+                        "item": {
+                          "$t": "faq.item",
+                          "count": 1
+                        }
+                      },
+                      "labelPath": "sections.__SECTION__.title",
+                      "labelInputLabel": "Section",
+                      "labelPlaceholder": "All Questions",
+                      "labelSize": "lg",
+                      "default-item": {
+                        "question": "New question",
+                        "answer": "New answer",
+                        "defaultOpen": false
+                      }
+                    }
+                  }
+                ],
+                "attrs": {
+                  "group-label": "",
+                  "class": "diet-object-manager",
+                  "add-label": "Add section",
+                  "reorder-label": "Manage sections",
+                  "reorder-title": "Manage sections",
+                  "label-path": "title",
+                  "index-token": "__SECTION__",
+                  "default-item": {
+                    "title": "All Questions",
+                    "faqs": [
+                      {
+                        "question": "New question",
+                        "answer": "New answer",
+                        "defaultOpen": false
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "title-settings",
+                "path": "displayCategoryTitles",
+                "label": "Show section title",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "typography",
+        "shared": {
+          "id": "typography"
+        }
+      },
+      {
+        "id": "layout",
+        "clusters": [
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "choice-tiles",
+                "groupId": "layout-choice",
+                "path": "layout.type",
+                "label": "Layout",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{layout.type}}",
+                  "options": [
+                    {
+                      "label": "Accordion",
+                      "value": "accordion",
+                      "icon": "chevron.down.2"
+                    },
+                    {
+                      "label": "List",
+                      "value": "list",
+                      "icon": "square.stack.3d.up"
+                    },
+                    {
+                      "label": "Cards",
+                      "value": "multicolumn",
+                      "icon": "circle.grid.2x2"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "type-settings",
+                "path": "layout.gap",
+                "label": "Gap (px)",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "type-settings",
+                "path": "behavior.expandFirst",
+                "label": "Open first question by default",
+                "showIf": {
+                  "path": "layout.type",
+                  "op": "equals",
+                  "value": "accordion"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "type-settings",
+                "path": "behavior.multiOpen",
+                "label": "Allow multiple open",
+                "showIf": {
+                  "path": "layout.type",
+                  "op": "equals",
+                  "value": "accordion"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "type-settings",
+                "path": "behavior.expandAll",
+                "label": "Expand all questions",
+                "showIf": {
+                  "path": "layout.type",
+                  "op": "equals",
+                  "value": "accordion"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "type-settings",
+                "path": "layout.columns.desktop",
+                "label": "Columns (desktop)",
+                "showIf": {
+                  "path": "layout.type",
+                  "op": "equals",
+                  "value": "multicolumn"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "type-settings",
+                "path": "layout.columns.mobile",
+                "label": "Columns (mobile)",
+                "showIf": {
+                  "path": "layout.type",
+                  "op": "equals",
+                  "value": "multicolumn"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "type-settings",
+                "path": "layout.cardsLayout",
+                "label": "Cards layout",
+                "showIf": {
+                  "path": "layout.type",
+                  "op": "equals",
+                  "value": "multicolumn"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose layout",
+                  "value": "{{layout.cardsLayout}}",
+                  "options": [
+                    {
+                      "label": "Grid",
+                      "value": "grid"
+                    },
+                    {
+                      "label": "Masonry",
+                      "value": "masonry"
+                    }
+                  ]
+                }
+              }
+            ],
+            "label": "Widget layout"
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "item-spacing",
+                "path": "layout.itemQaGapPreset",
+                "label": "Q/A spacing",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{layout.itemQaGapPreset}}",
+                  "options": [
+                    {
+                      "label": "X-Small",
+                      "value": "xs"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "s"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "m"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "l"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "xl"
+                    },
+                    {
+                      "label": "Custom",
+                      "value": "custom"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "item-spacing",
+                "path": "layout.itemQaGapCustom",
+                "label": "Custom Q/A spacing (px)",
+                "showIf": {
+                  "path": "layout.itemQaGapPreset",
+                  "op": "equals",
+                  "value": "custom"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{layout.itemQaGapCustom}}",
+                  "min": 0,
+                  "max": 120,
+                  "step": 1
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "item-padding",
+                "path": "layout.itemPaddingLinked",
+                "label": "Link Q&A card padding",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.linkItemPadding",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  },
+                  "value": "{{layout.itemPaddingLinked}}",
+                  "default": true
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "item-padding",
+                "path": "layout.itemPadding",
+                "label": "Q&A card padding (px)",
+                "showIf": {
+                  "path": "layout.itemPaddingLinked",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemPadding",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "item-padding",
+                "path": "layout.itemPaddingTop",
+                "label": "Q&A card top padding (px)",
+                "showIf": {
+                  "path": "layout.itemPaddingLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemPaddingTop",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "item-padding",
+                "path": "layout.itemPaddingRight",
+                "label": "Q&A card right padding (px)",
+                "showIf": {
+                  "path": "layout.itemPaddingLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemPaddingRight",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "item-padding",
+                "path": "layout.itemPaddingBottom",
+                "label": "Q&A card bottom padding (px)",
+                "showIf": {
+                  "path": "layout.itemPaddingLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemPaddingBottom",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  }
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "item-padding",
+                "path": "layout.itemPaddingLeft",
+                "label": "Q&A card left padding (px)",
+                "showIf": {
+                  "path": "layout.itemPaddingLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemPaddingLeft",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  }
+                }
+              }
+            ],
+            "label": "Item layout"
+          }
+        ]
+      },
+      {
+        "id": "appearance",
+        "clusters": [
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-theme",
+                "path": "appearance.theme",
+                "label": "Theme",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.theme}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-accordion",
+                "path": "appearance.iconStyle",
+                "label": "Accordion icon",
+                "showIf": {
+                  "path": "layout.type",
+                  "op": "equals",
+                  "value": "accordion"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose icon",
+                  "value": "{{appearance.iconStyle}}",
+                  "options": [
+                    {
+                      "label": "Plus",
+                      "value": "plus"
+                    },
+                    {
+                      "label": "Chevron",
+                      "value": "chevron"
+                    },
+                    {
+                      "label": "Arrow One",
+                      "value": "arrow"
+                    },
+                    {
+                      "label": "Arrow Two",
+                      "value": "arrowshape"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "appearance-accordion",
+                "path": "appearance.iconColor",
+                "label": "Accordion icon color",
+                "showIf": {
+                  "path": "layout.type",
+                  "op": "equals",
+                  "value": "accordion"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color",
+                  "value": "{{appearance.iconColor}}"
+                }
+              }
+            ]
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherBackground",
+                "label": "Background",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color",
+                  "value": "{{appearance.localeSwitcherBackground}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherTextColor",
+                "label": "Text color",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color",
+                  "value": "{{appearance.localeSwitcherTextColor}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-border",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherBorder",
+                "label": "Border",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.localeSwitcherBorder}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherRadius",
+                "label": "Corner radius",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.localeSwitcherRadius}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "X-Small",
+                      "value": "xs"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "sm"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "md"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "lg"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "xl"
+                    },
+                    {
+                      "label": "2X-Large",
+                      "value": "2xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherPaddingInline",
+                "label": "Horizontal padding (px)",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.localeSwitcherPaddingInline}}",
+                  "min": 0,
+                  "max": 48,
+                  "step": 1
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "groupId": "locale-switcher-appearance",
+                "path": "appearance.localeSwitcherPaddingBlock",
+                "label": "Vertical padding (px)",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.localeSwitcherPaddingBlock}}",
+                  "min": 0,
+                  "max": 32,
+                  "step": 1
+                }
+              }
+            ],
+            "label": "Locale switcher",
+            "showIf": {
+              "path": "localeSwitcher.enabled",
+              "op": "isTrue"
+            }
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-links",
+                "path": "appearance.linkStyle",
+                "label": "Link style",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.linkStyle}}",
+                  "options": [
+                    {
+                      "label": "Underline",
+                      "value": "underline"
+                    },
+                    {
+                      "label": "Highlight",
+                      "value": "highlight"
+                    },
+                    {
+                      "label": "Color",
+                      "value": "color"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "appearance-links",
+                "path": "appearance.linkUnderlineColor",
+                "label": "Underline color",
+                "showIf": {
+                  "path": "appearance.linkStyle",
+                  "op": "equals",
+                  "value": "underline"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color",
+                  "value": "{{appearance.linkUnderlineColor}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "appearance-links",
+                "path": "appearance.linkHighlightColor",
+                "label": "Highlight color",
+                "showIf": {
+                  "path": "appearance.linkStyle",
+                  "op": "equals",
+                  "value": "highlight"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color",
+                  "value": "{{appearance.linkHighlightColor}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "appearance-links",
+                "path": "appearance.linkTextColor",
+                "label": "Link text color",
+                "showIf": {
+                  "path": "appearance.linkStyle",
+                  "op": "equals",
+                  "value": "color"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color",
+                  "value": "{{appearance.linkTextColor}}"
+                }
+              }
+            ],
+            "label": "Links",
+            "showIf": {
+              "call": "hasLinks",
+              "args": [
+                {
+                  "path": "sections"
+                }
+              ]
+            }
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "appearance-card",
+                "path": "appearance.itemBackground",
+                "label": "Q&A card background",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color,gradient",
+                  "label-key": "faq.labels.itemBackground",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  },
+                  "value": "{{appearance.itemBackground}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "appearance-card",
+                "path": "appearance.cardwrapper.radiusLinked",
+                "label": "Link Q&A card corners",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.linkItemCorners",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  },
+                  "value": "{{appearance.cardwrapper.radiusLinked}}",
+                  "default": true
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-card",
+                "path": "appearance.cardwrapper.radius",
+                "label": "Corner radius",
+                "showIf": {
+                  "path": "appearance.cardwrapper.radiusLinked",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{appearance.cardwrapper.radius}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-card",
+                "path": "appearance.cardwrapper.radiusTL",
+                "label": "Q&A card top-left radius",
+                "showIf": {
+                  "path": "appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemTopLeftRadius",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  },
+                  "placeholder": "Choose radius",
+                  "value": "{{appearance.cardwrapper.radiusTL}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-card",
+                "path": "appearance.cardwrapper.radiusTR",
+                "label": "Q&A card top-right radius",
+                "showIf": {
+                  "path": "appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemTopRightRadius",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  },
+                  "placeholder": "Choose radius",
+                  "value": "{{appearance.cardwrapper.radiusTR}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-card",
+                "path": "appearance.cardwrapper.radiusBR",
+                "label": "Q&A card bottom-right radius",
+                "showIf": {
+                  "path": "appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemBottomRightRadius",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  },
+                  "placeholder": "Choose radius",
+                  "value": "{{appearance.cardwrapper.radiusBR}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-card",
+                "path": "appearance.cardwrapper.radiusBL",
+                "label": "Q&A card bottom-left radius",
+                "showIf": {
+                  "path": "appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemBottomLeftRadius",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  },
+                  "placeholder": "Choose radius",
+                  "value": "{{appearance.cardwrapper.radiusBL}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-border",
+                "groupId": "appearance-card",
+                "path": "appearance.cardwrapper.border",
+                "label": "Q&A card border",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemBorder",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  },
+                  "value": "{{appearance.cardwrapper.border}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "appearance-card",
+                "path": "appearance.cardwrapper.shadow",
+                "label": "Q&A card outside shadow",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "label-key": "faq.labels.itemOutsideShadow",
+                  "label-params": {
+                    "item": {
+                      "$t": "faq.item",
+                      "count": 1
+                    }
+                  },
+                  "value": "{{appearance.cardwrapper.shadow}}"
+                }
+              }
+            ],
+            "label": "Q&A card"
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "podstageappearance",
+                "path": "stage.background",
+                "label": "Stage background",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color,gradient,image,video",
+                  "value": "{{stage.background}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.shadow",
+                "label": "Stage outside shadow",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{stage.shadow}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.linked",
+                "label": "Link stage inside shadows",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.linked}}",
+                  "default": true
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.layer",
+                "label": "Inside shadow layer",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.layer}}",
+                  "options": [
+                    {
+                      "label": "Show below content",
+                      "value": "below-content"
+                    },
+                    {
+                      "label": "Show above content",
+                      "value": "above-content"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.all",
+                "label": "Stage inside shadow",
+                "showIf": {
+                  "path": "stage.insideShadow.linked",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.all}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.top",
+                "label": "Stage inside shadow (top)",
+                "showIf": {
+                  "path": "stage.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "y",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.top}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.right",
+                "label": "Stage inside shadow (right)",
+                "showIf": {
+                  "path": "stage.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "x",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.right}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.bottom",
+                "label": "Stage inside shadow (bottom)",
+                "showIf": {
+                  "path": "stage.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "y",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.bottom}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "stage.insideShadow.left",
+                "label": "Stage inside shadow (left)",
+                "showIf": {
+                  "path": "stage.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "x",
+                  "size": "md",
+                  "value": "{{stage.insideShadow.left}}"
+                }
+              }
+            ],
+            "label": "Stage appearance"
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "groupId": "podstageappearance",
+                "path": "pod.background",
+                "label": "Pod background",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "fill-modes": "color,gradient,image,video",
+                  "value": "{{pod.background}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-border",
+                "groupId": "podstageappearance",
+                "path": "appearance.podBorder",
+                "label": "Pod border",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{appearance.podBorder}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.shadow",
+                "label": "Pod outside shadow",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{pod.shadow}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.linked",
+                "label": "Link pod inside shadows",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.linked}}",
+                  "default": true
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.layer",
+                "label": "Inside shadow layer",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.layer}}",
+                  "options": [
+                    {
+                      "label": "Show below content",
+                      "value": "below-content"
+                    },
+                    {
+                      "label": "Show above content",
+                      "value": "above-content"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.all",
+                "label": "Pod inside shadow",
+                "showIf": {
+                  "path": "pod.insideShadow.linked",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.all}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.top",
+                "label": "Pod inside shadow (top)",
+                "showIf": {
+                  "path": "pod.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "y",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.top}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.right",
+                "label": "Pod inside shadow (right)",
+                "showIf": {
+                  "path": "pod.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "x",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.right}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.bottom",
+                "label": "Pod inside shadow (bottom)",
+                "showIf": {
+                  "path": "pod.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "y",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.bottom}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "podstageappearance",
+                "path": "pod.insideShadow.left",
+                "label": "Pod inside shadow (left)",
+                "showIf": {
+                  "path": "pod.insideShadow.linked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "axis": "x",
+                  "size": "md",
+                  "value": "{{pod.insideShadow.left}}"
+                }
+              }
+            ],
+            "label": "Pod appearance"
+          }
+        ]
+      },
+      {
+        "id": "settings",
+        "clusters": [
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-seo-toggle",
+                "path": "seoGeo.enabled",
+                "label": "Enable SEO/GEO optimization",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-seo",
+                "path": "seo.enableSchema",
+                "label": "Enable schema",
+                "showIf": {
+                  "path": "seoGeo.enabled",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "groupId": "settings-seo",
+                "path": "seo.canonicalUrl",
+                "label": "Canonical URL",
+                "showIf": {
+                  "path": "seoGeo.enabled",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "lg",
+                  "placeholder": "https://example.com/page"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-geo",
+                "path": "geo.enableDeepLinks",
+                "label": "Enable deep links",
+                "showIf": {
+                  "path": "seoGeo.enabled",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              }
+            ],
+            "label": "SEO/GEO"
+          },
+          {
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-behavior",
+                "path": "behavior.showBacklink",
+                "label": "Show Made with Clickeen",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              }
+            ],
+            "label": "Clickeen Branding"
+          }
+        ]
+      }
+    ]
+  }
 }
