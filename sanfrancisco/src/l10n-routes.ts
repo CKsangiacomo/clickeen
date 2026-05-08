@@ -1,6 +1,6 @@
-import { HttpError, asTrimmedString, json, noStore, isRecord } from './http';
+import { HttpError, asTrimmedString, json, noStore } from './http';
 import { verifyBodySignature } from './signatures';
-import { executePragueStringsTranslate, isPragueStringsJob } from './agents/l10nPragueStrings';
+import { executePragueStringsTranslate, isPragueStringsTranslationRequest } from './agents/l10nPragueStrings';
 import { withInflightLimit } from './concurrency';
 import type { Env } from './types';
 
@@ -25,12 +25,11 @@ export async function handlePragueStringsTranslate(request: Request, env: Env): 
     } catch {
       throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid JSON body' });
     }
-    const payload = isRecord(body) && isRecord((body as any).job) ? (body as any).job : body;
-    if (!isPragueStringsJob(payload)) {
-      throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid l10n translate job' });
+    if (!isPragueStringsTranslationRequest(body)) {
+      throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid Prague translation request' });
     }
 
-    const result = await executePragueStringsTranslate(payload, env);
+    const result = await executePragueStringsTranslate(body, env);
     return noStore(json(result));
   });
 }

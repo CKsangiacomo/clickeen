@@ -92,7 +92,7 @@ const ACCOUNT_LOCALES_REASON_COPY: Record<string, string> = {
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
   'coreui.errors.account.locales.invalid': 'Account language settings are invalid. Please review the inputs and try again.',
   'coreui.errors.account.locales.baseLocaleLocked': 'Base language is locked after your first widget save. Changing it later requires support/migration.',
-  'coreui.upsell.reason.capReached': 'Your current plan cannot enable more languages.',
+  'coreui.upsell.reason.limitReached': 'Your current plan cannot enable more languages.',
 };
 
 function resolveAccountLocalesErrorCopy(reason: unknown, fallback: string): string {

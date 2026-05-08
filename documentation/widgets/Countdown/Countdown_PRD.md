@@ -20,16 +20,16 @@ Renders a configurable countdown / personal countdown / number counter with opti
 ### Limits mapping (initial)
 
 ```text
-key                 | kind | path(s)                        | metric/mode        | enforce                    | notes
-------------------- | ---- | ------------------------------ | ------------------ | -------------------------- | -----------------------------
+key                 | kind | path(s)                        | metric/mode         | enforce                    | notes
+------------------- | ---- | ------------------------------ | ------------------- | -------------------------- | -----------------------------
 branding.remove     | flag | behavior.showBacklink          | boolean (deny false)| load sanitize; ops+publish | Remove branding
 ```
 
-Budgets are global usage counters (no per-widget matrices):
-- `budget.copilot.turns` (Copilot send)
-- `budget.uploads.bytes` (total account storage for uploaded files; enforced at the upload boundary)
+Plan limits are global usage counters (no per-widget matrices):
+- `copilot.turns.monthly.max` (Copilot send)
+- `storage.bytes.max` (total account storage for uploaded files; enforced at the upload boundary)
 
-If Countdown needs tier packaging beyond usage/caps, prefer caps/budgets first; only introduce new flags when the capability is truly binary and user-visible.
+If Countdown needs tier packaging beyond usage/limits, prefer limits first; only introduce new flags when the capability is truly binary and user-visible.
 
 ## 1) Where the widget lives (authoritative)
 Widget definition (the software): `tokyo/product/widgets/countdown/`
@@ -38,7 +38,7 @@ Widget definition (the software): `tokyo/product/widgets/countdown/`
 - `widget.css` — scoped styles (Dieter tokens)
 - `widget.client.js` — deterministic `applyState(state)`
 - `agent.md` — AI editing contract (editable paths + enums + array semantics)
-- `limits.json` — entitlements caps/flags (server-side validation)
+- `limits.json` — entitlement limits/flags (server-side validation)
 - `localization.json` — locale-layer allowlist
 - `layers/*.allowlist.json` — non-locale layer allowlists (when used)
 
@@ -172,7 +172,7 @@ Defaults must include:
 ## 8) Additional Notes from Competitor Analysis
 - Unit controls: Show/hide individual units (days/hours/minutes/seconds); format: separated boxes or inline.
 - Separators: Customizable (colon, slash, etc.).
-- Budgets: Include `budget.copilot.turns` if AI interactions are added.
+- Limits: Include `copilot.turns.monthly.max` if AI interactions are added.
 - Localization: Default strings as above; support i18n overlays.
 
 ## Links

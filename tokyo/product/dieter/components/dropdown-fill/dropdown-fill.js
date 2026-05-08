@@ -2362,8 +2362,7 @@ var Dieter = (() => {
 
   // components/shared/account-assets.ts
   var ACCOUNT_ASSET_UPSELL_REASONS = /* @__PURE__ */ new Set([
-    "coreui.upsell.reason.budgetExceeded",
-    "coreui.upsell.reason.capReached",
+    "coreui.upsell.reason.limitReached",
     "coreui.upsell.reason.platform.uploads"
   ]);
   function asTrimmedString(value) {

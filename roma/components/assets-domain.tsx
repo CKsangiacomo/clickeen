@@ -61,8 +61,7 @@ const DELETE_REASON_COPY: Record<string, string> = {
 };
 
 const ASSET_REASON_COPY: Record<string, string> = {
-  'coreui.upsell.reason.budgetExceeded': 'This upload would exceed your account storage limit. Delete assets or upgrade storage, then try again.',
-  'coreui.upsell.reason.capReached': 'This file exceeds the per-file upload limit.',
+  'coreui.upsell.reason.limitReached': 'This exceeds your current plan limit.',
   'coreui.upsell.reason.platform.uploads': 'Uploads are not available for this account plan.',
   'coreui.errors.assets.uploadFailed': 'Asset upload failed. Please try again.',
   'coreui.errors.auth.required': 'You need to sign in again to manage assets.',
@@ -137,11 +136,11 @@ export function AssetsDomain() {
 
   const accountId = accountContext.accountId;
   const entitlements = data.authz?.entitlements ?? null;
-  const uploadSizeCapBytes = useMemo(() => {
-    const raw = entitlements?.caps?.['uploads.size.max'];
+  const uploadSizeLimitBytes = useMemo(() => {
+    const raw = entitlements?.limits?.['uploads.size.max'];
     return typeof raw === 'number' && Number.isFinite(raw) && raw > 0 ? Math.trunc(raw) : null;
-  }, [entitlements?.caps]);
-  const storageBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
+  }, [entitlements?.limits]);
+  const storageLimit = entitlements?.limits?.['storage.bytes.max'] ?? null;
 
   const [assets, setAssets] = useState<AccountAssetRecord[] | null>(null);
   const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
@@ -247,8 +246,8 @@ export function AssetsDomain() {
   const uploadSingle = useCallback(
     async (file: File) => {
       if (!accountId) return;
-      if (uploadSizeCapBytes != null && file.size > uploadSizeCapBytes) {
-        setSingleUploadError(`File exceeds per-file limit (${formatBytes(uploadSizeCapBytes)}).`);
+      if (uploadSizeLimitBytes != null && file.size > uploadSizeLimitBytes) {
+        setSingleUploadError(`File exceeds per-file limit (${formatBytes(uploadSizeLimitBytes)}).`);
         return;
       }
       setSingleUploadBusy(true);
@@ -263,7 +262,7 @@ export function AssetsDomain() {
         setSingleUploadBusy(false);
       }
     },
-    [accountApi, accountId, refreshAssets, uploadSizeCapBytes],
+    [accountApi, accountId, refreshAssets, uploadSizeLimitBytes],
   );
 
   const handleSingleFileChange = useCallback(
@@ -300,10 +299,10 @@ export function AssetsDomain() {
         const file = files[i];
         const item = initial[i];
         if (!item) continue;
-        if (uploadSizeCapBytes != null && file.size > uploadSizeCapBytes) {
+        if (uploadSizeLimitBytes != null && file.size > uploadSizeLimitBytes) {
           updateBulkItem(item.id, {
             status: 'failed',
-            error: `File exceeds per-file limit (${formatBytes(uploadSizeCapBytes)}).`,
+            error: `File exceeds per-file limit (${formatBytes(uploadSizeLimitBytes)}).`,
           });
           continue;
         }
@@ -327,7 +326,7 @@ export function AssetsDomain() {
         await refreshAssets();
       }
     },
-    [accountApi, accountId, refreshAssets, updateBulkItem, uploadSizeCapBytes],
+    [accountApi, accountId, refreshAssets, updateBulkItem, uploadSizeLimitBytes],
   );
 
   const handleBulkFileChange = useCallback(
@@ -361,9 +360,9 @@ export function AssetsDomain() {
         ) : null}
         <p className="body-m">Stored assets: {storedAssetsLabel}</p>
         <p className="body-m">
-          Storage used: {storageUsedLabel} / {storageBudget?.max == null ? 'unlimited' : formatBytes(storageBudget.max)}
+          Storage used: {storageUsedLabel} / {storageLimit == null ? 'unlimited' : formatBytes(storageLimit)}
         </p>
-        {uploadSizeCapBytes != null ? <p className="body-m">Per-file upload limit: {formatBytes(uploadSizeCapBytes)}</p> : null}
+        {uploadSizeLimitBytes != null ? <p className="body-m">Per-file upload limit: {formatBytes(uploadSizeLimitBytes)}</p> : null}
 
         <div className="roma-toolbar">
           <button

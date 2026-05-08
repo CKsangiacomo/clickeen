@@ -11,16 +11,15 @@ Use a fixed-width mapping table in a code block so it reads cleanly.
 #### Limits Mapping (per widget)
 
 ```text
-Key                      | Kind   | Path(s)                         | Metric/Mode         | Enforcement        | Notes
------------------------- | ------ | ------------------------------- | ------------------- | ------------------ | ---------------------------
-branding.remove          | flag   | behavior.showBacklink           | boolean (deny false)| load+ops+publish   | sanitize on load
-cap.group.items.small.max  | cap  | items[] / sections[]            | count               | ops+publish        | cap group binding
-cap.group.items.medium.max | cap  | items[].subitems[]              | count               | ops+publish        | cap group binding
-cap.group.items.large.max  | cap  | items[].subitems[]              | count-total         | ops+publish        | cap group binding (aggregate)
+Key                        | Kind   | Path(s)                         | Metric/Mode          | Enforcement        | Notes
+-------------------------- | ------ | ------------------------------- | -------------------- | ------------------ | ---------------------------
+branding.remove            | flag   | behavior.showBacklink           | boolean (deny false) | load+ops+publish   | sanitize on load
+items.group.small.max  | limit  | items[] / sections[]            | count                | ops+publish        | limit group binding
+items.group.medium.max | limit  | items[].subitems[]              | count                | ops+publish        | limit group binding
+items.group.large.max  | limit  | items[].subitems[]              | count-total          | ops+publish        | limit group binding (aggregate)
 ```
 
 Notes:
 - **Flags**: define deny value + optional sanitize on load (e.g., force false/empty).
-- **Caps**: enforce on ops + publish; use `count-total` when you need an aggregate.
-- **Budgets**: global usage counters or storage quotas (ex: `budget.copilot.turns`, `budget.uploads.bytes`) metered/enforced server-side at the cost boundary; PRDs may reference them, but they do not live in `limits.json`.
-- **Upsell**: implicit on any rejected cap/budget; no per-row copy.
+- **Limits**: enforce on ops + publish for widget structure; global usage counters or storage quotas (ex: `copilot.turns.monthly.max`, `storage.bytes.max`) are metered/enforced server-side at the cost boundary and do not live in widget `limits.json`.
+- **Upsell**: implicit on any rejected plan limit; no per-row copy.

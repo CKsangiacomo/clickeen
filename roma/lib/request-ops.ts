@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
-import type { RomaUsageKv } from './account-budget-usage';
+import type { RomaUsageKv } from './account-limit-usage';
 
 const RATE_LIMIT_PREFIX = 'roma:ratelimit:v1';
 const REQUEST_CONTEXTS = new WeakMap<NextRequest, RomaRequestContext>();

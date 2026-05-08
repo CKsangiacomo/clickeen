@@ -14,15 +14,15 @@ export type FlagLimit = {
   enforce?: Partial<Record<LimitContext, LimitEnforcement>>;
 };
 
-export type CapLimit = {
-  kind: 'cap';
+export type NumericLimit = {
+  kind: 'limit';
   key: string;
   path: string;
   metric: 'count' | 'count-total' | 'chars';
   enforce?: Partial<Record<LimitContext, Exclude<LimitEnforcement, 'sanitize'>>>;
 };
 
-export type LimitEntry = FlagLimit | CapLimit;
+export type LimitEntry = FlagLimit | NumericLimit;
 
 export type LimitsSpec = {
   v: 1;
@@ -36,7 +36,7 @@ export type LimitViolation = {
   detail?: string;
 };
 
-const DEFAULT_CAP_ENFORCE: Record<LimitContext, Exclude<LimitEnforcement, 'sanitize'>> = {
+const DEFAULT_LIMIT_ENFORCE: Record<LimitContext, Exclude<LimitEnforcement, 'sanitize'>> = {
   ops: 'reject',
   publish: 'reject',
   load: 'ignore',
@@ -67,7 +67,7 @@ function normalizePaths(entry: { path?: string; paths?: unknown }): string[] {
 
 function requireMatrixKind(key: string, expected: LimitEntry['kind']) {
   const matrix = getEntitlementsMatrix();
-  const entry = matrix.capabilities[key];
+  const entry = matrix.entitlements[key];
   if (!entry) {
     throw new Error(`[ck-policy] Limits spec references unknown entitlement key: ${key}`);
   }
@@ -109,18 +109,18 @@ function normalizeFlag(limit: FlagLimit): FlagLimit {
   };
 }
 
-function normalizeCap(limit: CapLimit): CapLimit {
+function normalizeNumericLimit(limit: NumericLimit): NumericLimit {
   const path = typeof limit.path === 'string' ? limit.path.trim() : '';
   if (!path) {
-    throw new Error(`[ck-policy] Cap limit ${limit.key} must specify path`);
+    throw new Error(`[ck-policy] Numeric limit ${limit.key} must specify path`);
   }
   if (limit.metric !== 'count' && limit.metric !== 'count-total' && limit.metric !== 'chars') {
-    throw new Error(`[ck-policy] Cap limit ${limit.key} has invalid metric`);
+    throw new Error(`[ck-policy] Numeric limit ${limit.key} has invalid metric`);
   }
   if ((limit.metric === 'count' || limit.metric === 'count-total') && !path.includes('[]')) {
-    throw new Error(`[ck-policy] Cap limit ${limit.key} metric ${limit.metric} requires [] in path`);
+    throw new Error(`[ck-policy] Numeric limit ${limit.key} metric ${limit.metric} requires [] in path`);
   }
-  const enforce = { ...DEFAULT_CAP_ENFORCE, ...(limit.enforce ?? {}) };
+  const enforce = { ...DEFAULT_LIMIT_ENFORCE, ...(limit.enforce ?? {}) };
   return { ...limit, path, enforce };
 }
 
@@ -145,7 +145,7 @@ export function parseLimitsSpec(raw: unknown): LimitsSpec | null {
     if (!key) {
       throw new Error('[ck-policy] limits.json entries must include key');
     }
-    if (kind !== 'flag' && kind !== 'cap') {
+    if (kind !== 'flag' && kind !== 'limit') {
       throw new Error(`[ck-policy] limits.json entry ${key} has invalid kind`);
     }
     requireMatrixKind(key, kind);
@@ -160,12 +160,12 @@ export function parseLimitsSpec(raw: unknown): LimitsSpec | null {
         enforce: entry.enforce as FlagLimit['enforce'],
       });
     }
-    return normalizeCap({
-      kind: 'cap',
+    return normalizeNumericLimit({
+      kind: 'limit',
       key,
       path: typeof entry.path === 'string' ? entry.path : '',
-      metric: entry.metric as CapLimit['metric'],
-      enforce: entry.enforce as CapLimit['enforce'],
+      metric: entry.metric as NumericLimit['metric'],
+      enforce: entry.enforce as NumericLimit['enforce'],
     });
   });
 
@@ -249,7 +249,7 @@ function setAt(obj: unknown, path: string, value: unknown): unknown {
 }
 
 function reasonKeyForLimit(limit: LimitEntry): string {
-  if (limit.kind === 'cap') return 'coreui.upsell.reason.capReached';
+  if (limit.kind === 'limit') return 'coreui.upsell.reason.limitReached';
   return 'coreui.upsell.reason.flagBlocked';
 }
 
@@ -297,9 +297,9 @@ export function evaluateLimits(args: {
       continue;
     }
 
-    const enforcement = limit.enforce?.[context] ?? DEFAULT_CAP_ENFORCE[context];
+    const enforcement = limit.enforce?.[context] ?? DEFAULT_LIMIT_ENFORCE[context];
     if (enforcement !== 'reject') continue;
-    const max = policy.caps[limit.key];
+    const max = policy.limits[limit.key];
     if (max == null || typeof max !== 'number') continue;
 
     const segments = parseSegments(limit.path);

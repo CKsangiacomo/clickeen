@@ -8,7 +8,6 @@ Sources: The requested /mnt/data/*.md files are not present in this environment.
 2. P0 - Copilot budgets are enforced client-side only; Paris grants are not tied to tier/usage, so caps can be bypassed.
 3. P1 - Venice contains widget-specific logic (FAQ schema + deep-link behavior), violating "widget files = truth".
 4. P1 - Paris public instance endpoint is callable directly; Venice-only front door is not enforced in code.
-5. P1 - AI grant budgets enforce maxTokens/timeout only; maxCostUsd is unused and maxRequests is best-effort.
 6. P1 - URL fetch in sdrWidgetCopilot lacks DNS-level SSRF protection; public URL fetch remains risky.
 7. P1 - Asset uploads have no size limits and weak auth gating; potential cost/abuse.
 8. P1 - Outcome events for signup/upgrade are defined but not emitted anywhere; learning attribution incomplete.
@@ -37,11 +36,8 @@ Files: `bob/app/api/ai/sdr-copilot/route.ts` POST, `bob/app/api/ai/outcome/route
 Why: Returning 200 for failures hides outages and makes monitoring/automation brittle, conflicting with fail-fast contracts.
 Fix: Return appropriate status codes (4xx/5xx) and centralize error formatting for UI-friendly messages.
 
-### B) Cost Risk
-#### B1. AI budgets ignore maxCostUsd and only partially enforce maxRequests (P1)
+### B) Usage Risk
 Files: `sanfrancisco/src/grants.ts` getGrantMaxTokens/getGrantTimeoutMs, `sanfrancisco/src/agents/sdrWidgetCopilot.ts`
-Why: Grants include maxCostUsd/maxRequests but SF does not enforce them, so runtime costs can exceed budgets.
-Fix: Track cost from provider usage and reject when maxCostUsd would be exceeded; enforce maxRequests in the execution path.
 
 #### B2. Copilot usage caps are client-side only (P0)
 Files: `bob/components/CopilotPane.tsx` consumeBudget, `paris/src/index.ts` handleAiGrant
@@ -137,10 +133,10 @@ Files: `venice/lib/l10n.ts` applySetOps/setAt
 Why: Ops applied without compiled.controls verification; could drift from widget truth if overlays are wrong.
 Fix: Validate l10n ops against widget controls before applying.
 
-## Cost Blow-up Checklist
-| Path | Potential unbounded cost | Capped? | Enforcement |
+## Usage Blow-up Checklist
+| Path | Potential unbounded usage | Capped? | Enforcement |
 | --- | --- | --- | --- |
-| `sanfrancisco/src/agents/sdrWidgetCopilot.ts` | LLM calls (1-2) | Partial | maxTokens/timeout; no maxCostUsd |
+| `sanfrancisco/src/agents/sdrWidgetCopilot.ts` | LLM calls (1-2) | Partial | maxTokens/timeout |
 | `sanfrancisco/src/agents/sdrCopilot.ts` | LLM calls | Partial | maxTokens/timeout |
 | `sanfrancisco/src/agents/editorFaqAnswer.ts` | LLM calls | Partial | maxTokens/timeout |
 | `sanfrancisco/src/agents/sdrWidgetCopilot.ts` | URL fetch | Partial | size/time capped; DNS not guarded |
@@ -150,7 +146,6 @@ Fix: Validate l10n ops against widget controls before applying.
 
 ## AI-run Readiness Scorecard (0-5)
 - Determinism (ops + allowlist): 2/5 (allowlist not enforced at apply time; client-supplied controls)
-- Budget enforcement (grants + runtime): 1/5 (client-side only; maxCostUsd unused)
 - Outcome attribution (events + versioning): 2/5 (missing meta for some agents; signup/upgrade events absent)
 - Regression protection (golden set): 2/5 (script exists, not enforced by CI in repo)
 - Boundary/security (provider keys only in SF): 2/5 (centralized for surviving product AI paths; other boundary risks remain)

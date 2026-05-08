@@ -129,7 +129,6 @@ type AccountWidgetL10nGenerateResponse = {
           promptTokens: number;
           completionTokens: number;
           latencyMs: number;
-          costUsd?: number;
         };
       }
     | {

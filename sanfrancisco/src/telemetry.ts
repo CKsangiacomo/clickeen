@@ -159,31 +159,15 @@ function hasPaidLearningEntitlement(e: InteractionEvent): boolean {
   if (e.agentId !== 'cs.widget.copilot.v1') return false;
   if (e.subject.kind !== 'user') return false;
   const samplePercent = e.ai?.learningCapture?.rawSamplePercent;
-  const captureFailures = e.ai?.learningCapture?.captureRawFailures;
-  return Boolean(
-    (typeof samplePercent === 'number' && Number.isFinite(samplePercent) && samplePercent > 0) ||
-      captureFailures === true,
-  );
-}
-
-function isSeriousLearningFailure(e: InteractionEvent): boolean {
-  const meta = getResultMeta(e);
-  const outcome = meta ? asTrimmedString((meta as any).outcome) : null;
-  if (outcome === 'invalid_ops' || outcome === 'execution_failure') return true;
-  if (meta && asTrimmedString((meta as any).invalidReason)) return true;
-  if (isRecord(e.result) && isRecord((e.result as any).error)) return true;
-  return false;
+  return typeof samplePercent === 'number' && Number.isFinite(samplePercent) && samplePercent > 0;
 }
 
 export type LearningCaptureDecision =
-  | { captureRaw: true; reason: 'failure' | 'sample' }
+  | { captureRaw: true; reason: 'sample' }
   | { captureRaw: false; reason: 'free_or_ineligible' | 'not_sampled' };
 
 export function resolveLearningCaptureDecision(e: InteractionEvent): LearningCaptureDecision {
   if (!hasPaidLearningEntitlement(e)) return { captureRaw: false, reason: 'free_or_ineligible' };
-  if (isSeriousLearningFailure(e) && e.ai?.learningCapture?.captureRawFailures === true) {
-    return { captureRaw: true, reason: 'failure' };
-  }
   const samplePercent = e.ai?.learningCapture?.rawSamplePercent;
   const boundedSamplePercent =
     typeof samplePercent === 'number' && Number.isFinite(samplePercent)

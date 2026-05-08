@@ -30,8 +30,7 @@ async function resolveAuthzVersion(args: {
   signingKid: string;
   signedEntitlements: {
     flags: Record<string, boolean>;
-    caps: Record<string, number | null>;
-    budgets: Record<string, { max: number | null }>;
+    limits: Record<string, number | null>;
   };
 }): Promise<string> {
   const digest = await crypto.subtle.digest(
@@ -78,10 +77,7 @@ export async function buildBootstrapPayload(args: {
     const policy = resolvePolicy({ profile: activeAccount.tier, role: activeAccount.role });
     const signedEntitlements = {
       flags: policy.flags,
-      caps: policy.caps,
-      budgets: Object.fromEntries(
-        Object.entries(policy.budgets).map(([budgetKey, entry]) => [budgetKey, { max: entry.max }]),
-      ),
+      limits: policy.limits,
     };
 
     const nowSec = Math.floor(Date.now() / 1000);

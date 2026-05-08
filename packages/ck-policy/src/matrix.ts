@@ -2,7 +2,7 @@ import rawMatrix from '../entitlements.matrix.json';
 import type { EntitlementKind, EntitlementsMatrix, PolicyProfile } from './types';
 
 const REQUIRED_TIERS: PolicyProfile[] = ['free', 'tier1', 'tier2', 'tier3'];
-const VALID_KINDS: EntitlementKind[] = ['flag', 'cap', 'budget'];
+const VALID_KINDS: EntitlementKind[] = ['flag', 'limit'];
 
 let cachedMatrix: EntitlementsMatrix | null = null;
 
@@ -23,7 +23,7 @@ function assertTier(value: unknown): PolicyProfile {
 
 function assertKind(value: unknown): EntitlementKind {
   if (typeof value !== 'string') {
-    throw new Error('[ck-policy] Entitlements matrix capability.kind must be a string');
+    throw new Error('[ck-policy] Entitlements matrix entitlement.kind must be a string');
   }
   const trimmed = value.trim() as EntitlementKind;
   if (!VALID_KINDS.includes(trimmed)) {
@@ -50,20 +50,20 @@ function assertMatrix(input: unknown): EntitlementsMatrix {
     }
   }
 
-  const capabilitiesRaw = input.capabilities;
-  if (!isRecord(capabilitiesRaw)) {
-    throw new Error('[ck-policy] Entitlements matrix capabilities must be an object');
+  const entitlementsRaw = input.entitlements;
+  if (!isRecord(entitlementsRaw)) {
+    throw new Error('[ck-policy] Entitlements matrix entitlements must be an object');
   }
 
-  const capabilities: EntitlementsMatrix['capabilities'] = {};
-  for (const [key, entry] of Object.entries(capabilitiesRaw)) {
-    if (!key.trim()) throw new Error('[ck-policy] Entitlements matrix capability keys must be non-empty strings');
+  const entitlements: EntitlementsMatrix['entitlements'] = {};
+  for (const [key, entry] of Object.entries(entitlementsRaw)) {
+    if (!key.trim()) throw new Error('[ck-policy] Entitlements matrix entitlement keys must be non-empty strings');
     if (!isRecord(entry)) {
-      throw new Error(`[ck-policy] Entitlements matrix capability ${key} must be an object`);
+      throw new Error(`[ck-policy] Entitlements matrix entitlement ${key} must be an object`);
     }
     const kind = assertKind(entry.kind);
     if (!isRecord(entry.values)) {
-      throw new Error(`[ck-policy] Entitlements matrix capability ${key} values must be an object`);
+      throw new Error(`[ck-policy] Entitlements matrix entitlement ${key} values must be an object`);
     }
     const values: Record<PolicyProfile, boolean | number | null> = {} as Record<
       PolicyProfile,
@@ -83,10 +83,10 @@ function assertMatrix(input: unknown): EntitlementsMatrix {
         values[tier] = value as number | null;
       }
     }
-    capabilities[key] = { kind, values };
+    entitlements[key] = { kind, values };
   }
 
-  return { v: 1, tiers, capabilities };
+  return { v: 1, tiers, entitlements };
 }
 
 export function getEntitlementsMatrix(): EntitlementsMatrix {

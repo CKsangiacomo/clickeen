@@ -12,7 +12,7 @@ import {
   type AiGrantPolicy,
   type AiModelRef,
 } from '@clickeen/ck-contracts/ai';
-import { reserveAccountBudgetUse, type RomaUsageKv } from '../account-budget-usage';
+import { reserveAccountLimitUse, type RomaUsageKv } from '../account-limit-usage';
 import { getOptionalCloudflareRequestContext } from '../cloudflare-request-context';
 import { resolveSanfranciscoBaseUrl } from '../env/sanfrancisco';
 
@@ -23,12 +23,10 @@ type AIGrant = {
   sub: { kind: 'user'; userId: string; accountId: string };
   exp: number;
   caps: string[];
-  budgets: {
-    maxTokens: number;
-    timeoutMs?: number;
-    maxCostUsd?: number;
-    maxRequests?: number;
-  };
+    budgets: {
+      maxTokens: number;
+      timeoutMs?: number;
+    };
   mode: 'editor' | 'ops';
   ai?: AiGrantPolicy;
   trace?: {
@@ -156,23 +154,21 @@ export async function issueAccountCopilotGrant(args: {
   const baseBudgets = resolveAiRuntimeBudget(ai);
   const maxTokens = baseBudgets.maxTokens;
   const timeoutMs = baseBudgets.timeoutMs;
-  const maxRequests = baseBudgets.maxRequests ?? 1;
-  const maxCostUsd = typeof baseBudgets.maxCostUsd === 'number' ? baseBudgets.maxCostUsd : undefined;
 
-  const copilotBudget = policy.budgets['budget.copilot.turns'];
+  const copilotTurnLimit = policy.limits['copilot.turns.monthly.max'];
   try {
-    const reserved = await reserveAccountBudgetUse({
+    const reserved = await reserveAccountLimitUse({
       accountId: args.authz.accountId,
-      budgetKey: 'budget.copilot.turns',
-      max: copilotBudget?.max ?? null,
+      limitKey: 'copilot.turns.monthly.max',
+      max: copilotTurnLimit ?? null,
       usageKv: args.usageKv,
     });
     if (!reserved.ok) {
       return {
         ok: false,
         status: 403,
-        reasonKey: 'coreui.upsell.reason.budgetExceeded',
-        detail: 'budget.copilot.turns budget exceeded.',
+        reasonKey: 'coreui.upsell.reason.limitReached',
+        detail: 'copilot.turns.monthly.max limit exceeded.',
       };
     }
   } catch (error) {
@@ -196,8 +192,6 @@ export async function issueAccountCopilotGrant(args: {
     budgets: {
       maxTokens,
       timeoutMs,
-      maxRequests,
-      ...(typeof maxCostUsd === 'number' ? { maxCostUsd } : {}),
     },
     mode: 'editor',
     ai,

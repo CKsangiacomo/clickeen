@@ -234,7 +234,7 @@ San Francisco needs four different logging layers:
 
 3. **Raw learning payloads only when useful**
    - Not every successful call forever.
-   - Keep serious paid failures/invalid outputs for a short retention window.
+   - Keep sampled invalid outputs for a short retention window.
    - Keep paid negative or high-signal outcomes, such as undo, reject, repeated clarification, support unresolved.
    - Sample normal successful calls at a controlled rate per agent and entitlement cohort.
    - Default detailed-learning rule: paid accounts only, deterministic 20% sample for normal successful calls.
@@ -282,7 +282,7 @@ Completed by `085A`:
 - Replaced legacy `ux_keep`/`ux_undo` names with `edit_applied`/`edit_undone`.
 - Added canonical invalid/clarification outcome events.
 - Deleted telemetry path-scope guessing from the D1/R2 ingestion layer.
-- Replaced one-object-per-event raw R2 writes with paid-only bounded sampling for normal successes plus serious paid failures.
+- Replaced one-object-per-event raw R2 writes with paid-only bounded sampling for normal successes.
 
 Remaining Track A follow-up, not part of the executed 085A slice:
 
@@ -341,7 +341,6 @@ Provider/model policy is currently defined in `packages/ck-contracts/src/ai.ts`,
    - allowed models/providers
    - max tokens per call
    - max turns/requests per thread
-   - max cost if relevant
    - timeout
    - tool permissions if relevant
 
@@ -358,7 +357,6 @@ type AgentRuntimePolicy = {
   maxTokensPerCall: number;
   maxTurnsPerThread: number;
   maxMonthlyTurns: number | null;
-  maxCostUsd?: number;
   timeoutMs: number;
   tools?: string[];
 };
@@ -707,7 +705,7 @@ Fill this before execution.
 
 - First learning loop: default recommendation is Builder copilot quality.
 - Outcome events that matter: default recommendation is `edit_applied`, `edit_rejected`, `edit_undone`, `clarification_needed`, `invalid_output`.
-- Detailed learning capture: paid accounts only, deterministic 20% normal-success sample; serious paid failures always captured; free accounts minimal metering only by default.
+- Detailed learning capture: paid accounts only, deterministic 20% normal-success sample; free accounts minimal metering only by default.
 - Raw payload policy: not one R2 object for every execution forever; bounded samples/failures only.
 - Widget metadata policy: agent/caller emits compact touched-path/control/group metadata; San Francisco does not parse widget semantics from path strings.
 - Human review required before prompt/model promotion:

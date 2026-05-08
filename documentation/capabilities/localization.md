@@ -41,22 +41,19 @@ Curated + user instances localize within the account’s **active locales** (EN 
 Account-mode effective localization = **entitlements** ∩ **subject policy** ∩ **account active locales**.
 
 - Entitlement keys:
-  - `l10n.locales.max` (cap; total locales including EN)
-  - `l10n.locales.custom.max` (cap; how many non‑EN locales the user can choose)
-  - `l10n.versions.max` (cap; retained overlay versions)
+  - `l10n.locales.max` (limit; translated languages the account can add; the base language is implied and not counted)
+  - `l10n.versions.max` (limit; retained overlay versions)
 - Tier rules (v1; executed):
-  - Free: EN + 1 system-chosen locale (no picker)
-  - Tier1: EN + 3 user-selected locales (total = 4)
-  - Tier2+: unlimited locales
+  - Free: base language only; no translated-language picker
+  - Tier1: up to 3 translated languages
+  - Tier2+: unlimited translated languages
 - DevStudio: uncapped
 - Account active locales source: `accounts.l10n_locales` (JSON array of **non‑EN** locales; EN is implied)
 - Account locale policy/settings are managed in Roma Settings, not inside Bob.
 
 Current free-tier materialization rule:
-- Roma materializes the single additional locale before persistence.
-- If the base locale is not `en`, the additional locale is `en`.
-- If the base locale is `en`, the additional locale is `es`.
-- Berlin persists the resulting saved locale list exactly as decided; downstream systems do not choose again.
+- Berlin persists no additional translated locales for free accounts.
+- Downstream systems do not choose or materialize locales again.
 
 ### MiniBob public contract
 

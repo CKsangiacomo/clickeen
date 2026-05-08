@@ -80,9 +80,8 @@ Deliver localization as a deterministic, budgeted, overlay-based system that sca
 2) Implement `l10n.instance.v1` agent:
    - Fetch allowlist from Tokyo; cache in KV (TTL 1h).
    - Build prompt with allowlist + base config + locale.
-   - Enforce budgets: tokens, timeout, maxCostUsd, maxRequests.
    - Validate ops (set-only, allowlisted paths, typed values).
-   - Emit logs: `promptVersion`, `policyVersion`, `locale`, `opsCount`, `cost`, `latency`.
+   - Emit logs: `promptVersion`, `policyVersion`, `locale`, `opsCount`, `latency`.
 3) Idempotency:
    - If overlay exists for `(publicId, baseUpdatedAt, locale)`, skip.
 

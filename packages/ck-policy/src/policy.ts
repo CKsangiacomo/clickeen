@@ -1,5 +1,5 @@
 import type { Policy, PolicyProfile } from './types';
-import { BUDGET_KEYS, CAP_KEYS, FLAG_KEYS } from './registry';
+import { FLAG_KEYS, PLAN_LIMIT_KEYS } from './registry';
 import { getEntitlementsMatrix } from './matrix';
 
 type ResolvePolicyArgs = {
@@ -9,8 +9,7 @@ type ResolvePolicyArgs = {
 
 export type PolicyEntitlementsSnapshot = {
   flags?: Record<string, boolean> | null;
-  caps?: Record<string, number | null> | null;
-  budgets?: Record<string, { max: number | null } | null> | null;
+  limits?: Record<string, number | null> | null;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -30,27 +29,16 @@ function assertAllowedKeys(
   }
 }
 
-function assertFiniteNumber(value: unknown, path: string): number {
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    throw new Error(`[ck-policy] Invalid entitlements snapshot at ${path}`);
-  }
-  return value;
-}
-
 function createTotalPolicyBase(args: ResolvePolicyArgs): Policy {
   const flags = Object.fromEntries(FLAG_KEYS.map((k) => [k, false])) as Policy['flags'];
-  const caps = Object.fromEntries(CAP_KEYS.map((k) => [k, 0])) as Policy['caps'];
-  const budgets = Object.fromEntries(
-    BUDGET_KEYS.map((k) => [k, { max: 0, used: 0 }])
-  ) as Policy['budgets'];
+  const limits = Object.fromEntries(PLAN_LIMIT_KEYS.map((k) => [k, 0])) as Policy['limits'];
 
   return {
     v: 1,
     profile: args.profile,
     role: args.role,
     flags,
-    caps,
-    budgets,
+    limits,
   };
 }
 
@@ -58,15 +46,13 @@ export function resolvePolicy(args: ResolvePolicyArgs): Policy {
   const policy = createTotalPolicyBase(args);
   const matrix = getEntitlementsMatrix();
 
-  const capabilities = matrix.capabilities;
-  for (const [key, entry] of Object.entries(capabilities)) {
+  const entitlements = matrix.entitlements;
+  for (const [key, entry] of Object.entries(entitlements)) {
     const value = entry.values[args.profile];
     if (entry.kind === 'flag') {
       policy.flags[key] = Boolean(value);
-    } else if (entry.kind === 'cap') {
-      policy.caps[key] = value as number | null;
     } else {
-      policy.budgets[key].max = value as number | null;
+      policy.limits[key] = value as number | null;
     }
   }
 
@@ -81,11 +67,10 @@ export function assertPolicyEntitlementsSnapshot(
     throw new Error('[ck-policy] Invalid entitlements snapshot');
   }
 
-  assertAllowedKeys(value, ['flags', 'caps', 'budgets'], 'entitlements');
+  assertAllowedKeys(value, ['flags', 'limits'], 'entitlements');
 
   const flagsRaw = value.flags;
-  const capsRaw = value.caps;
-  const budgetsRaw = value.budgets;
+  const limitsRaw = value.limits;
 
   const flags =
     typeof flagsRaw === 'undefined'
@@ -106,53 +91,28 @@ export function assertPolicyEntitlementsSnapshot(
           ) as Record<string, boolean>;
         })();
 
-  const caps =
-    typeof capsRaw === 'undefined'
+  const limits =
+    typeof limitsRaw === 'undefined'
       ? undefined
       : (() => {
-          if (capsRaw == null) return null;
-          if (!isRecord(capsRaw)) {
-            throw new Error('[ck-policy] Invalid entitlements snapshot at entitlements.caps');
+          if (limitsRaw == null) return null;
+          if (!isRecord(limitsRaw)) {
+            throw new Error('[ck-policy] Invalid entitlements snapshot at entitlements.limits');
           }
-          assertAllowedKeys(capsRaw, CAP_KEYS, 'entitlements.caps');
+          assertAllowedKeys(limitsRaw, PLAN_LIMIT_KEYS, 'entitlements.limits');
           return Object.fromEntries(
-            Object.entries(capsRaw).map(([key, entry]) => {
+            Object.entries(limitsRaw).map(([key, entry]) => {
               if (!(entry === null || (typeof entry === 'number' && Number.isFinite(entry)))) {
-                throw new Error(`[ck-policy] Invalid entitlements snapshot at entitlements.caps.${key}`);
+                throw new Error(`[ck-policy] Invalid entitlements snapshot at entitlements.limits.${key}`);
               }
               return [key, entry];
             }),
           ) as Record<string, number | null>;
         })();
 
-  const budgets =
-    typeof budgetsRaw === 'undefined'
-      ? undefined
-      : (() => {
-          if (budgetsRaw == null) return null;
-          if (!isRecord(budgetsRaw)) {
-            throw new Error('[ck-policy] Invalid entitlements snapshot at entitlements.budgets');
-          }
-          assertAllowedKeys(budgetsRaw, BUDGET_KEYS, 'entitlements.budgets');
-          return Object.fromEntries(
-            Object.entries(budgetsRaw).map(([key, entry]) => {
-              if (!isRecord(entry)) {
-                throw new Error(`[ck-policy] Invalid entitlements snapshot at entitlements.budgets.${key}`);
-              }
-              assertAllowedKeys(entry, ['max'], `entitlements.budgets.${key}`);
-              const max =
-                entry.max === null || typeof entry.max === 'undefined'
-                  ? entry.max ?? null
-                  : assertFiniteNumber(entry.max, `entitlements.budgets.${key}.max`);
-              return [key, { max }];
-            }),
-          ) as Record<string, { max: number | null }>;
-        })();
-
   return {
     ...(typeof flags === 'undefined' ? {} : { flags }),
-    ...(typeof caps === 'undefined' ? {} : { caps }),
-    ...(typeof budgets === 'undefined' ? {} : { budgets }),
+    ...(typeof limits === 'undefined' ? {} : { limits }),
   };
 }
 
@@ -170,18 +130,10 @@ export function resolvePolicyFromEntitlementsSnapshot(
     }
   }
 
-  for (const key of CAP_KEYS) {
-    const next = entitlements.caps?.[key];
+  for (const key of PLAN_LIMIT_KEYS) {
+    const next = entitlements.limits?.[key];
     if (next === null || typeof next === 'number') {
-      policy.caps[key] = next;
-    }
-  }
-
-  for (const key of BUDGET_KEYS) {
-    const next = entitlements.budgets?.[key];
-    if (!next) continue;
-    if (next.max === null || typeof next.max === 'number') {
-      policy.budgets[key].max = next.max;
+      policy.limits[key] = next;
     }
   }
 
@@ -192,13 +144,9 @@ export function isPolicyEntitled(policy: Policy, key: string): boolean {
   if (key in policy.flags) {
     return policy.flags[key] === true;
   }
-  if (key in policy.caps) {
-    const value = policy.caps[key];
-    return value != null && Number.isFinite(value) && value > 0;
-  }
-  if (key in policy.budgets) {
-    const max = policy.budgets[key]?.max;
-    return max == null || (Number.isFinite(max) && max > 0);
+  if (key in policy.limits) {
+    const value = policy.limits[key];
+    return value == null || (Number.isFinite(value) && value > 0);
   }
   return false;
 }

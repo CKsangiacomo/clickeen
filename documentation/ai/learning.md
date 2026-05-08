@@ -56,7 +56,7 @@ Auth:
 
 ### 2.1 R2: bounded raw learning samples
 
-Selected paid samples and serious paid failures are stored as JSON in R2:
+Selected paid samples are stored as JSON in R2:
 `learning/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json`
 
 R2 is the bounded debug/eval store. The durable fact layer remains D1 metering and outcome rows.

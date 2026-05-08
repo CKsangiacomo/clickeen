@@ -10,14 +10,14 @@
 
 ## 0) One‑sentence summary
 
-Move Clickeen’s monetization model from “feature flags everywhere” to “usage‑first caps + budgets”, so **every tier can see/try everything** while we stay in control of **unit economics** and abuse.
+Move Clickeen’s monetization model from “feature flags everywhere” to **usage-first limits**, so **every tier can see/try everything** while we stay in control of **unit economics** and abuse.
 
 ---
 
 ## 1) Context / Why we are doing this
 
 ### The current problem
-Today’s entitlements matrix (`config/entitlements.matrix.json`) is heavily biased toward **flags** (feature on/off) and includes many **micro caps** (text lengths, internal list shapes). This creates three issues:
+Today’s entitlements matrix (`config/entitlements.matrix.json`) is heavily biased toward **flags** (feature on/off) and includes many **micro limits** (text lengths, internal list shapes). This creates three issues:
 
 1) **Wrong upsell mechanism**
 - We want the upsell to be “how much you can use”, not “you can’t even see the feature”.
@@ -25,10 +25,10 @@ Today’s entitlements matrix (`config/entitlements.matrix.json`) is heavily bia
 
 2) **Costs are not controlled at the right layer**
 - Our real cost drivers are *throughput* and *frequency*: views, refreshes, crawls, renders, uploads, and AI turns.
-- Many existing entitlements don’t materially change cost or packaging (e.g., per‑field text length caps).
+- Many existing entitlements don’t materially change cost or packaging (e.g., per‑field text length limits).
 
 3) **Complexity explodes across the whole system**
-- Flags and widget‑specific micro caps multiply states across Bob (editor), Venice (embed), Paris (policy enforcement), Tokyo‑worker (snapshots/l10n).
+- Flags and widget‑specific micro limits multiply states across Bob (editor), Venice (embed), Paris (policy enforcement), Tokyo‑worker (snapshots/l10n).
 - This creates inconsistent enforcement, more edge cases, and a slower product loop.
 
 ### Advisor principle (translated to Clickeen)
@@ -47,20 +47,20 @@ If a constraint is a safety/validation limit that **no tier should exceed**, it 
 - Limits are expressed as “you can do it, but only up to X”.
 
 2) **Monetize on scale, not access**
-- Tiers change volume (caps) and throughput (budgets), not visibility.
+- Tiers change volume (limits) and throughput (limits), not visibility.
 
 3) **Cost control must map to real cost drivers**
 - If we can’t point to a concrete compute/storage/refresh cost, it shouldn’t be in the tier matrix.
 
-4) **Frozen Billboard is the enforcement pattern for view caps**
-- For capped tiers (Free + Tier1), when they exceed `views.monthly.max`, the widget remains visible but becomes “frozen” (snapshot, EN‑only, upgrade overlay).
+4) **Frozen Billboard is the enforcement pattern for view limits**
+- For limited tiers (Free + Tier1), when they exceed `views.monthly.max`, the widget remains visible but becomes “frozen” (snapshot, EN‑only, upgrade overlay).
 
 ### 2.1 Explicit non‑goals (to keep scope tight)
 
 - We are **not** finalizing pricing; tier values in this PRD are **defaults for v1** and are expected to be tuned.
-- We are **not** introducing widget‑specific micro‑caps in the global matrix (except where a cap is genuinely connector‑unique).
-- We are **not** changing tier names/profiles (`devstudio`, `minibob`, `free`, `tier1`, `tier2`, `tier3`) in this iteration.
-- We are **not** adding new feature surfaces; this PRD only repackages existing/near‑term capabilities into a cleaner entitlement model.
+- We are **not** introducing widget-specific micro-limits in the global matrix.
+- We are **not** changing tier names/profiles (`free`, `tier1`, `tier2`, `tier3`) in this iteration.
+- We are **not** adding new feature surfaces; this PRD only repackages existing/near‑term entitlements into a cleaner entitlement model.
 
 ---
 
@@ -68,12 +68,11 @@ If a constraint is a safety/validation limit that **no tier should exceed**, it 
 
 ### Tiers (profiles)
 The matrix must keep these profiles (existing contract):
-`devstudio`, `minibob`, `free`, `tier1`, `tier2`, `tier3`
+`free`, `tier1`, `tier2`, `tier3`
 
 ### Entitlement kinds
 - **Flag** (`boolean`): “permission to exist” — should be rare.
-- **Cap** (`number | null`): steady‑state maximum (“how much you can have”). `null` = unlimited.
-- **Budget** (`number | null`): monthly (billing period) quota (“how much you can spend”). `null` = unlimited.
+- **Limit** (`number | null`): how much the account can have or use. `null` = unlimited.
 
 ### Not an entitlement: schema constraints
 A **schema constraint** is a hard product invariant (safety/validation) that applies to *all* tiers:
@@ -82,23 +81,23 @@ A **schema constraint** is a hard product invariant (safety/validation) that app
 
 ### “Visible to all” vs “available at scale”
 - “Visible to all” means the UI and runtime behaviors exist for every tier (including Free).
-- “Available at scale” is where tiers differ: caps/budgets define *how much* the user can do before they hit an upgrade wall.
+- “Available at scale” is where tiers differ: limits define *how much* the user can do before they hit an upgrade wall.
 
 ### Period alignment (important)
-For v2, budgets/caps that are “monthly” should align to the same period used by metering enforcement:
+For v2, monthly plan limits should align to the same period used by metering enforcement:
 - Current implementation for views uses a UTC month key (e.g. `YYYY-MM`) and resets at next month UTC boundary.
-- If we later align to workspace billing cycles, we must update all monthly budgets/caps together (single source of truth).
+- If we later align to account billing cycles, we must update all monthly limits together (single source of truth).
 
 ---
 
 ## 4) Proposed design
 
 ### 4.0 Baseline product behavior (always on; not tiered)
-These capabilities should be **available to every tier** (including Free). They are *not* pricing levers; we monetize on **scale**.
+These behaviors should be **available to every tier** (including Free). They are *not* pricing levers; we monetize on **scale**.
 
 - **SEO/GEO output**: indexable embeds (schema + excerpt) are on by default (no `seoGeo.enabled` gating).
-- **Localization UI**: localization is visible and usable for everyone; tiers differ by locale counts and publish budgets.
-- **Personalization sources**: GBP/Facebook/Website are connectable by everyone; tiers differ by crawl depth and budgets.
+- **Localization UI**: localization is visible and usable for everyone; tiers differ by language/version limits.
+- **Personalization sources**: removed from current product policy; do not keep placeholder rows.
 - **Rich text links + media metadata**: allowed by default; security is handled by schema/compiler/runtime, not entitlements.
 - **Website URL context**: always allowed (it helps personalization and does not increase unit cost on its own).
 
@@ -106,15 +105,15 @@ These capabilities should be **available to every tier** (including Free). They 
 We keep only one true tier flag:
 - `branding.remove` (Tier2+ can remove branding; otherwise branding must be present)
 
-Everything else moves to caps/budgets or becomes non‑tiered validation.
+Everything else moves to limits or becomes non‑tiered validation.
 
-### 4.2 Replace widget‑specific list caps with cap groups
-We introduce generic cap groups:
-- `cap.group.items.small.max`
-- `cap.group.items.medium.max`
-- `cap.group.items.large.max`
+### 4.2 Replace widget-specific list limits with shared limit groups
+We introduce generic limit groups:
+- `items.group.small.max`
+- `items.group.medium.max`
+- `items.group.large.max`
 
-Widgets bind their “items” fields to a cap group in their `limits.json`.  
+Widgets bind their “items” fields to a limit group in their `limits.json`.
 This keeps the matrix 10× simpler while keeping binding explicit and intentional.
 
 ### 4.3 Move “text length” and “HTML length” out of entitlements
@@ -127,7 +126,7 @@ They should move into:
 
 All tiers share the same limits.
 
-### 4.4 Localization packaging: always on, capped by tier
+### 4.4 Localization packaging: always on, limited by tier
 Localization is always available; tiers control *scale*:
 
 - **Free**
@@ -143,17 +142,16 @@ Localization is always available; tiers control *scale*:
 Why this works:
 - Every user experiences “Clickeen supports my language” immediately (activation).
 - Free still has a hard, explainable limit (“EN + your market language”) that naturally drives upgrade intent.
-- Costs scale with locale count (storage + overlay fetch), so the cap is an honest unit‑economics lever.
+- Costs scale with locale count (storage + overlay fetch), so the limit is an honest unit-economics lever.
 
-This requires two caps:
+This now uses one language limit:
 - `l10n.locales.max` (total locales, including `en`)
-- `l10n.locales.custom.max` (how many non‑EN locales user can choose)
 
 ### 4.5 Personalization sources: always allowed, metered by usage
 Personalization sources (GBP, Facebook, website) are **always connectable**.
 Cost control comes from:
-- crawl depth caps, and/or
-- budgets for crawls/runs per month.
+- crawl depth limits, and/or
+- limits for crawls/runs per month.
 
 ### 4.6 Agency packaging (multi‑workspace + billing discounts)
 Goal: make agencies a first-class GTM channel **without** exploding the entitlements matrix.
@@ -190,7 +188,7 @@ We already have a tiered AI control plane:
 - `tooling/ck-policy/src/ai.ts` maps `PolicyProfile → AiProfile` (e.g. `free → free_low`, `tier3 → paid_premium`).
 - `AiProfile` determines:
   - allowed providers (`deepseek|openai|anthropic`)
-  - per-request budgets (maxTokens/timeout/requests) per agent
+  - per-request limits (maxTokens/timeout/requests) per agent
 - Paris issues grants that contain the “AI policy capsule” (`/api/ai/grant` in `paris/src/domains/ai/index.ts`).
 
 **Why this belongs in packaging:**
@@ -202,40 +200,33 @@ We already have a tiered AI control plane:
 ## 5) The new matrix (peer‑reviewable tables)
 
 Legend:
-- `∞` means unlimited (represented as `null` in `entitlements.matrix.json` for caps/budgets)
-- Budgets are **monthly** unless specified otherwise
+- `∞` means unlimited (represented as `null` in `entitlements.matrix.json` for limits)
+- Plan limits are **monthly** unless specified otherwise
 
 ### 5.1 Flags (minimal)
 
-| Capability | Token | Devstudio | Minibob | Free | Tier1 | Tier2 | Tier3 |
+| Product area | Token | Devstudio | Minibob | Free | Tier1 | Tier2 | Tier3 |
 |---|---|---:|---:|---:|---:|---:|---:|
 | Remove Clickeen branding | `branding.remove` | ✓ | × | × | × | ✓ | ✓ |
 
-### 5.2 Caps (packaging + steady‑state limits)
+### 5.2 Plan Limits
 
-| Capability | Token | Devstudio | Minibob | Free | Tier1 | Tier2 | Tier3 |
+| Product area | Token | Devstudio | Minibob | Free | Tier1 | Tier2 | Tier3 |
 |---|---|---:|---:|---:|---:|---:|---:|
 | Published widgets max | `instances.published.max` | ∞ | 0 | 1 | 1 | 5 | ∞ |
-| Monthly views cap (freeze on exceed) | `views.monthly.max` | ∞ | ∞ | 10,000 | 100,000 | ∞ | ∞ |
+| Monthly views limit (freeze on exceed) | `views.monthly.max` | ∞ | ∞ | 10,000 | 100,000 | ∞ | ∞ |
 | Locales per widget (total incl. EN) | `l10n.locales.max` | ∞ | 0 | 2 | 4 | ∞ | ∞ |
-| Custom locales (user‑selectable, excl. EN) | `l10n.locales.custom.max` | ∞ | 0 | 0 | 3 | ∞ | ∞ |
 | Overlay versions retained | `l10n.versions.max` | ∞ | 0 | 1 | 3 | 10 | 10 |
-| Website crawl depth | `personalization.sources.website.depth.max` | ∞ | 1 | 1 | 2 | 3 | 5 |
 | Upload size max (per file) | `uploads.size.max` | 100MB | 5MB | 10MB | 25MB | 100MB | 250MB |
-| Items cap group (small) | `cap.group.items.small.max` | ∞ | 5 | 5 | 10 | 25 | ∞ |
-| Items cap group (medium) | `cap.group.items.medium.max` | ∞ | 10 | 10 | 25 | 50 | ∞ |
-| Items cap group (large) | `cap.group.items.large.max` | ∞ | 25 | 25 | 50 | 100 | ∞ |
+| Items group (small) | `items.group.small.max` | ∞ | 5 | 5 | 10 | 25 | ∞ |
+| Items group (medium) | `items.group.medium.max` | ∞ | 10 | 10 | 25 | 50 | ∞ |
+| Items group (large) | `items.group.large.max` | ∞ | 25 | 25 | 50 | 100 | ∞ |
 
-### 5.3 Budgets (primary cost control)
+### 5.3 Monthly Plan Limits
 
-| Capability | Token | Devstudio | Minibob | Free | Tier1 | Tier2 | Tier3 |
+| Product area | Token | Devstudio | Minibob | Free | Tier1 | Tier2 | Tier3 |
 |---|---|---:|---:|---:|---:|---:|---:|
-| Copilot turns / month | `budget.copilot.turns` | ∞ | 4 | 20 | 100 | 300 | ∞ |
-| Uploads / month (count) | `budget.uploads.count` | ∞ | 5 | 10 | 50 | 200 | ∞ |
-| Personalization runs / month | `budget.personalization.runs` | ∞ | 10 | 20 | 100 | 300 | ∞ |
-| Website crawls / month | `budget.personalization.website.crawls` | ∞ | 5 | 10 | 30 | 100 | ∞ |
-| Snapshot regenerations / month | `budget.snapshots.regens` | ∞ | 10 | 20 | 100 | 300 | ∞ |
-| L10n publish operations / month | `budget.l10n.publishes` | ∞ | 10 | 20 | 100 | 300 | ∞ |
+| Copilot turns / month | `copilot.turns.monthly.max` | ∞ | 4 | 20 | 100 | 300 | ∞ |
 
 ### 5.4 Token reference (semantics + enforcement)
 This table is the “contract” engineers implement against. If a token can’t be tied to a real cost driver or user‑visible packaging, it shouldn’t be here.
@@ -243,26 +234,20 @@ This table is the “contract” engineers implement against. If a token can’t
 | Token | Kind | User‑visible meaning | Primary cost driver | Enforced in | When exceeded |
 |---|---|---|---|---|---|
 | `branding.remove` | flag | Can remove Clickeen backlink/branding on public embeds | Acquisition (not cost) | Venice runtime + publish enforcement | Force backlink on (no silent removal) |
-| `instances.published.max` | cap | How many published widgets a workspace can have at once | Snapshot storage + support load | Paris publish + Bob UI | Block publish; offer “unpublish or upgrade” |
-| `views.monthly.max` | cap | Monthly public embed views for Free/Tier1 | CDN/edge + rendering + abuse vector | Venice runtime (freeze), Paris usage counters | Freeze to snapshot + upgrade overlay (“Frozen Billboard”) |
-| `l10n.locales.max` | cap | Total locales per widget (incl. `en`) | Overlay fetch + storage + ops | Bob UI + Paris locale endpoints | Prevent adding more locales; upsell |
-| `l10n.locales.custom.max` | cap | User‑selectable locales (excl. `en`) | Overlay fetch + storage + ops | Bob UI + Paris locale endpoints | Free shows EN+GEO only; Tier1 caps chooser |
-| `l10n.versions.max` | cap | Versions retained for overlays | Storage + debugging overhead | Paris (persist) | Drop/GC old versions; do not block core publish |
-| `personalization.sources.website.depth.max` | cap | Crawl depth allowed for website personalization | Crawl compute + storage | Paris personalization jobs | Clamp depth; explain upgrade |
-| `uploads.size.max` | cap | Max file size per upload | Storage + bandwidth | Paris upload endpoint + Bob preflight | Reject upload; show size limit + upgrade |
-| `cap.group.items.small.max` | cap | Generic “small list” max (bound by widget spec) | Rendering + payload size | Bob + Paris publish (via limits.json) | Sanitize/reject extra items; upsell |
-| `cap.group.items.medium.max` | cap | Generic “medium list” max (bound by widget spec) | Rendering + payload size | Bob + Paris publish (via limits.json) | Sanitize/reject extra items; upsell |
-| `cap.group.items.large.max` | cap | Generic “large list” max (bound by widget spec) | Rendering + payload size | Bob + Paris publish (via limits.json) | Sanitize/reject extra items; upsell |
-| `budget.copilot.turns` | budget | Monthly AI assistant turns | AI compute | Paris (metered) + Bob UX | Block turn; “Upgrade for more turns” |
-| `budget.uploads.count` | budget | Monthly number of uploads | Storage + bandwidth | Paris (metered) | Block upload after budget; upgrade CTA |
-| `budget.personalization.runs` | budget | Monthly personalization “generate/improve” actions | AI compute + connector calls | Paris (metered) | Block run; downgrade to manual |
-| `budget.personalization.website.crawls` | budget | Monthly website crawls | Crawl compute | Paris (metered) | Block crawl; reuse last crawl; upgrade CTA |
-| `budget.snapshots.regens` | budget | Monthly snapshot regenerations (publish/update) | Rendering compute + storage | Tokyo‑worker/Paris (metered) | Reuse last snapshot; mark “stale”; upgrade CTA |
-| `budget.l10n.publishes` | budget | Monthly l10n publish ops | Overlay compute + storage | Paris (metered) | Block publish of new locales; keep existing |
+| `instances.published.max` | limit | How many published widgets an account can have at once | Snapshot storage + support load | Roma publish | Block publish; offer “unpublish or upgrade” |
+| `views.monthly.max` | limit | Monthly public embed views for Free/Tier1 | CDN/edge + rendering + abuse vector | Venice runtime (gap) | Freeze/upsell behavior |
+| `l10n.locales.max` | limit | Translated languages the account can add | Overlay fetch + storage + ops | Berlin locale endpoints | Prevent adding more languages; upsell |
+| `l10n.versions.max` | limit | Versions retained for overlays | Storage + debugging overhead | Tokyo-worker | Drop/GC old versions; do not block core publish |
+| `uploads.size.max` | limit | Max file size per upload | Storage + bandwidth | Tokyo-worker assets | Reject upload; show size limit + upgrade |
+| `storage.bytes.max` | limit | Total account asset storage | Storage + bandwidth | Tokyo-worker assets | Reject upload; show storage limit + upgrade |
+| `items.group.small.max` | limit | Generic “small list” max (bound by widget spec) | Rendering + payload size | Widget limits | Reject extra items; upsell |
+| `items.group.medium.max` | limit | Generic “medium list” max (bound by widget spec) | Rendering + payload size | Widget limits | Reject extra items; upsell |
+| `items.group.large.max` | limit | Generic “large list” max (bound by widget spec) | Rendering + payload size | Widget limits | Reject extra items; upsell |
+| `copilot.turns.monthly.max` | limit | Monthly AI assistant turns | AI compute | Roma copilot path | Block turn; “Upgrade for more turns” |
 
 ### 5.5 Copilot LLM profiles by tier (packaging)
 Copilot is tiered on two axes:
-- **Monthly usage**: `budget.copilot.turns` (entitlements matrix)
+- **Monthly usage**: `copilot.turns.monthly.max` (entitlements matrix)
 - **Quality/cost per turn**: `AiProfile` (AI control plane; already implemented)
 
 Current implementation notes:
@@ -272,7 +257,7 @@ Current implementation notes:
 
 **Proposed tier → AiProfile mapping (so tiers actually differ):**
 
-| Policy tier | AiProfile | Allowed providers | Default provider (when user doesn’t choose) | Copilot per-request budget (maxTokens/timeout/requests) | User provider choice |
+| Policy tier | AiProfile | Allowed providers | Default provider (when user doesn’t choose) | Copilot per-request limit (maxTokens/timeout/requests) | User provider choice |
 |---|---|---|---|---|---|
 | Free | `free_low` | `deepseek` | `deepseek` | 650 / 45s / 2 | No |
 | Tier1 | `paid_standard` | `deepseek`, `openai`, `anthropic` | `deepseek` (cost-optimized) | 900 / 45s / 3 | Yes |
@@ -283,7 +268,7 @@ Note: the grant can include `ai.selectedProvider` only when the user explicitly 
 
 Why this is the right lever:
 - It cleanly matches unit economics: better models cost more per token and per request.
-- It’s still “show everything”: Free has Copilot; paid tiers get higher quality and higher budgets.
+- It’s still “show everything”: Free has Copilot; paid tiers get higher quality and higher limits.
 
 ---
 
@@ -296,33 +281,33 @@ Why this is the right lever:
 
 ### 6.2 Enforcement layers (where each lever is enforced)
 
-**Caps**
-- Editor‑time: Bob blocks/sanitizes configuration to comply with caps.
-- Publish‑time: Paris rejects publish if the workspace exceeds caps (e.g., published instances limit).
-- Runtime: Venice uses caps (views cap) indirectly via PRD37 enforcement state + snapshots.
+**Limits**
+- Editor‑time: Bob blocks/sanitizes configuration to comply with limits.
+- Publish‑time: Paris rejects publish if the workspace exceeds limits (e.g., published instances limit).
+- Runtime: Venice uses plan limits (monthly views) indirectly via PRD37 enforcement state + snapshots.
 
-**Budgets**
+**Limits**
 - Server‑side only (Paris) with HMAC‑signed events from Venice/Bob where needed.
-- Budgets are never enforced from the browser directly.
+- Plan limits are never enforced from the browser directly.
 
-### 6.3 Frozen Billboard (views cap) interaction with l10n
+### 6.3 Frozen Billboard (views limit) interaction with l10n
 - Free/Tier1 exceed `views.monthly.max` → instance enters enforcement state `mode=frozen`.
 - Venice serves **frozen snapshot** (static, cached) and injects upgrade overlay.
 - Frozen snapshots are **EN only** (no locale overlays) to minimize cost and keep behavior deterministic.
 
 Why EN‑only is correct:
-- It removes overlay fetch/compute at the exact moment the account is “over budget”.
+- It removes overlay fetch/compute at the exact moment the account is “over limit”.
 - It makes frozen delivery purely static/CDN‑cacheable (lowest possible unit cost).
 - It avoids confusing states (“why is my locale stale but English changed?”) and keeps the upgrade incentive clear.
 
 ### 6.4 UX rules in Bob (the “show everything, monetize on scale” pattern)
 
-- **Nothing disappears**: features remain visible in UI for Free; when a user hits a cap/budget, the action becomes “upgrade to continue”.
+- **Nothing disappears**: features remain visible in UI for Free; when a user hits a plan limit, the action becomes “upgrade to continue”.
 - **Localization packaging**
   - Free: shows `en` + GEO locale (auto). Locale picker is present but disabled with “Upgrade to choose locales”.
   - Tier1: `en` fixed + 3 selectable locales.
   - Tier2+: unlimited.
-- **Frozen instances** (views cap exceeded)
+- **Frozen instances** (views limit exceeded)
   - Widget remains viewable in dashboard.
   - Editing actions that would increase cost are blocked (edit/publish/duplicate) with an upgrade path.
   - Unpublish remains allowed (user control).
@@ -345,24 +330,18 @@ Actions:
    - `personalization.sources.(gbp|facebook).enabled`
    - `context.websiteUrl.enabled`, `links.enabled`, `media.meta.enabled`
    - `list.*` and `text.*`
-   - legacy budgets (`budget.uploads`, `budget.edits`) replaced by explicit keys
+   - legacy limits (`limit.uploads`, `limit.edits`) replaced by explicit keys
 2) Add new keys:
-   - `l10n.locales.custom.max`
-   - `personalization.sources.website.depth.max` (rename from `.depth`)
    - `uploads.size.max`
-   - `cap.group.items.{small,medium,large}.max`
-   - `budget.uploads.count`
-   - `budget.personalization.runs`
-   - `budget.personalization.website.crawls`
-   - `budget.snapshots.regens`
-   - `budget.l10n.publishes`
+   - `storage.bytes.max`
+   - `items.group.{small,medium,large}.max`
 
 ### 7.2 Update widget `limits.json` bindings (required)
 Files:
 - `tokyo/widgets/*/limits.json`
 
 Actions:
-- Replace `list.*` keys with cap group keys.
+- Replace `list.*` keys with shared item limit keys.
 - Remove per‑tier gating for `links.enabled` and `media.meta.enabled`:
   - links/media become allowed for all tiers (enforced via validation/sanitization, not entitlements).
 - Remove per‑tier gating for `seoGeo.enabled`:
@@ -382,7 +361,7 @@ Actions:
 Files (examples; exact call sites will be updated during execution):
 - `paris/src/domains/l10n/index.ts` (remove `requirePolicyFlag(policy, 'l10n.enabled')` and layer flags)
 - `paris/src/domains/workspaces/index.ts` (locales selection should no longer be blocked by `l10n.enabled`)
-- `paris/src/domains/usage/index.ts` (locale resolution should use caps, not `l10n.enabled`)
+- `paris/src/domains/usage/index.ts` (locale resolution should use limits, not `l10n.enabled`)
 
 ### 7.5 Update Bob UI that currently depends on removed flags (required)
 Files:
@@ -398,20 +377,18 @@ Actions:
   - “EN is always included”
   - “Upgrade to add more locales”
 
-### 7.6 Budgets instrumentation + enforcement (phased)
+### 7.6 Limits instrumentation + enforcement (phased)
 We already have a signed, server‑side usage event pattern (`/api/usage`) for views.
 
 Phase 1 (v2 matrix only):
-- Add budget keys and wire them into policy (no enforcement yet) so UI can display packaging.
+- Add limit keys and wire them into policy (no enforcement yet) so UI can display packaging.
 
 Phase 2 (enforcement):
 - Extend signed usage events to cover:
   - personalization runs
   - website crawls
-  - snapshot regenerations (triggered by publish/update)
-  - l10n publish ops
 - Store counters in KV (cheap) keyed by `{periodKey, workspaceId}` (or `{publicId}` where appropriate).
-- Enforce budgets in Paris endpoints that trigger expensive work (deny or degrade with clear upgrade messaging).
+- Enforce limits in Paris endpoints that trigger expensive work (deny or degrade with clear upgrade messaging).
 
 ### 7.7 Migration mapping (old → new)
 This is the critical peer‑review section: it shows how we delete complexity without losing enforcement precision.
@@ -420,16 +397,16 @@ This is the critical peer‑review section: it shows how we delete complexity wi
 |---|---|---|
 | `seoGeo.enabled` | Baseline always on | Not a meaningful cost driver; activation win |
 | `l10n.enabled` | Baseline always on + `l10n.locales.max` | Tier on scale, not visibility |
-| `l10n.layer.*.enabled` | Baseline always on (UI visible) + future “segment budgets” if needed | Avoid flag explosion; replace with meaningful scale levers |
+| `l10n.layer.*.enabled` | Baseline always on (UI visible) + future “segment limits” if needed | Avoid flag explosion; replace with meaningful scale levers |
 | `personalization.preview.enabled` | Baseline always on | Preview is activation, not cost |
-| `personalization.onboarding.enabled` | Baseline always on | Onboarding is activation; control cost via budgets |
-| `personalization.sources.gbp.enabled` / `personalization.sources.facebook.enabled` | Baseline always on + budgets (future) | “Why block users from giving us data?” |
+| `personalization.onboarding.enabled` | Baseline always on | Onboarding is activation; control cost via limits |
+| `personalization.sources.gbp.enabled` / `personalization.sources.facebook.enabled` | Removed with personalization surface | Do not preserve fake product modes |
 | `context.websiteUrl.enabled` | Baseline always on | Low/no incremental cost; improves personalization |
 | `links.enabled` / `media.meta.enabled` | Baseline always on + sanitization | Not tier packaging; security handled elsewhere |
-| `list.*` | `cap.group.items.{small,medium,large}.max` | Stop widget‑specific micro caps in matrix |
+| `list.*` | `items.group.{small,medium,large}.max` | Stop widget‑specific micro limits in matrix |
 | `text.*` | Schema constraints in `spec.json` | Safety/validation; not tier differentiation |
-| `budget.edits` | Fold into `budget.copilot.turns` (or replace with explicit v2 key) | One AI budget primitive is easier to reason about |
-| `budget.uploads` | `budget.uploads.count` + `uploads.size.max` | Split count vs size (real cost drivers) |
+| `limit.edits` | Fold into `copilot.turns.monthly.max` | One AI turn limit is easier to reason about |
+| `limit.uploads` | `storage.bytes.max` + `uploads.size.max` | Persistent storage plus per-file size are the real product limits |
 | `views.monthly.max` | Keep | Direct cost + abuse driver; supports Frozen Billboard |
 | `instances.published.max` | Keep | Clear packaging + cost driver |
 
@@ -465,7 +442,7 @@ Files/systems (expected):
    - `views.monthly.max`: Free 10k, Tier1 100k
    - `instances.published.max`: Free/Tier1 1, Tier2 5
    - locales packaging: Free 2 (EN+GEO), Tier1 4 (EN+3 chosen), Tier2 unlimited
-3) Upload size caps: do these values match our storage economics?
+3) Upload size limits: do these values match our storage economics?
 4) Are we comfortable treating links/media metadata as baseline product behavior (non‑tiered)?
 5) Agency: do we approve the discount ladder (2 free; >2 requires 1 paid; discounts start at 3+ paid) and that agencies use a dedicated pricing calculator?
 6) Copilot: do we approve the tier→AI mapping (Tier1=`paid_standard`, Tier2+ =`paid_premium`), and do we want provider choice exposed starting in Tier1 or only Tier2+?
@@ -474,9 +451,9 @@ Files/systems (expected):
 
 ## 9) Acceptance criteria (what “done” means)
 
-1) A Free user can see and use the same feature set, but is limited by caps/budgets.
+1) A Free user can see and use the same feature set, but is limited by limits.
 2) Localization is always available; Free has EN + GEO locale (no picker); Tier1 can pick 3 locales; Tier2+ unlimited.
-3) View caps enforce Frozen Billboard (no disappearing widgets; EN‑only snapshots when frozen).
+3) View limits enforce Frozen Billboard (no disappearing widgets; EN‑only snapshots when frozen).
 4) The entitlements matrix is materially smaller in flags and no longer contains schema‑only constraints.
 5) Agency workflow works via multitenancy + billing discounts (no new entitlements keys), with a simple agency dashboard + pricing calculator.
 6) Copilot quality differs by tier via `AiProfile` mapping (Free < Tier1 < Tier2+).

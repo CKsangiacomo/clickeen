@@ -34,7 +34,6 @@ This is already partly executed in the right direction:
 - Paris already clamps budgets as documented:
   - `maxTokens = 420`
   - `timeoutMs = 12_000`
-  - `maxRequests = 2`
 - Paris now verifies `sessionToken` on the grant endpoint.
 - Paris now includes a KV throttle behind `MINIBOB_RATELIMIT_MODE`.
 
@@ -157,7 +156,6 @@ Fail-closed rules:
 ### 4.2 Budget caps (already implemented, must remain strict)
 - `maxTokens`: 420 (range 350–500)
 - `timeoutMs`: 12s (range 10–20s)
-- `maxRequests`: 2
 
 ### 4.3 KV rate limiting (thin slice to implement now)
 Goal: add a minimal, privacy-safe throttle in Paris that works at scale without adding new data models.

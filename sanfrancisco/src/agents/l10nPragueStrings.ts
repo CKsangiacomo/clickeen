@@ -2,7 +2,7 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import type { Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
 
-export type PragueStringsJob = {
+export type PragueStringsTranslationRequest = {
   v: 1;
   surface: 'prague';
   kind: 'system';
@@ -40,7 +40,7 @@ const BRACE_PLACEHOLDER_PATTERN = /\{\{[^{}]+\}\}|\{[^{}]+\}/g;
 const COLON_PLACEHOLDER_PATTERN = /(^|[^a-zA-Z0-9_])(:[a-zA-Z_][a-zA-Z0-9_]*)/g;
 const HTML_TAG_PATTERN = /<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?>/g;
 
-export function isPragueStringsJob(value: unknown): value is PragueStringsJob {
+export function isPragueStringsTranslationRequest(value: unknown): value is PragueStringsTranslationRequest {
   if (!isRecord(value)) return false;
   if (value.v !== 1) return false;
   if (value.surface !== 'prague') return false;
@@ -247,7 +247,7 @@ function assertRichtextAnchorParity(args: {
 }
 
 function assertTranslationSafety(
-  expected: PragueStringsJob['items'][number],
+  expected: PragueStringsTranslationRequest['items'][number],
   translatedValue: string,
   provider: string,
 ) {
@@ -273,7 +273,7 @@ function assertTranslationSafety(
   }
 }
 
-function buildUserPrompt(items: PragueStringsJob['items']): string {
+function buildUserPrompt(items: PragueStringsTranslationRequest['items']): string {
   return [
     'Translate the following items.',
     'Return JSON: {"items":[{"path":"...","value":"..."}, ...]}',
@@ -396,50 +396,50 @@ async function openaiTranslate(args: { env: Env; system: string; user: string })
   return { items: parsed.items, usage };
 }
 
-async function writeLog(env: Env, job: PragueStringsJob, payload: Record<string, unknown>) {
-  const key = `l10n/prague/${job.chunkKey}/${job.locale}/${job.baseUpdatedAt}.${Date.now()}.json`;
+async function writeLog(env: Env, requestPayload: PragueStringsTranslationRequest, payload: Record<string, unknown>) {
+  const key = `l10n/prague/${requestPayload.chunkKey}/${requestPayload.locale}/${requestPayload.baseUpdatedAt}.${Date.now()}.json`;
   await env.SF_R2.put(key, JSON.stringify(payload), { httpMetadata: { contentType: 'application/json' } });
 }
 
-export async function executePragueStringsTranslate(job: PragueStringsJob, env: Env): Promise<{ v: 1; locale: string; items: TranslationItem[] }> {
+export async function executePragueStringsTranslate(requestPayload: PragueStringsTranslationRequest, env: Env): Promise<{ v: 1; locale: string; items: TranslationItem[] }> {
   const startedAt = Date.now();
-  const locale = normalizeLocaleToken(job.locale);
+  const locale = normalizeLocaleToken(requestPayload.locale);
   if (!locale) {
     throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid locale' });
   }
 
-  if (job.items.length > MAX_ITEMS) {
-    throw new HttpError(400, { code: 'BAD_REQUEST', message: `Too many items (${job.items.length})` });
+  if (requestPayload.items.length > MAX_ITEMS) {
+    throw new HttpError(400, { code: 'BAD_REQUEST', message: `Too many items (${requestPayload.items.length})` });
   }
 
-  if (job.items.length === 0) {
-    await writeLog(env, job, {
+  if (requestPayload.items.length === 0) {
+    await writeLog(env, requestPayload, {
       status: 'skipped',
       reason: 'no_translatables',
       occurredAtMs: startedAt,
       locale,
-      chunkKey: job.chunkKey,
-      blockKind: job.blockKind,
+      chunkKey: requestPayload.chunkKey,
+      blockKind: requestPayload.blockKind,
     });
     return { v: 1, locale, items: [] };
   }
 
-  const totalChars = job.items.reduce((sum, item) => sum + item.value.length, 0);
+  const totalChars = requestPayload.items.reduce((sum, item) => sum + item.value.length, 0);
   if (totalChars > MAX_INPUT_CHARS) {
     throw new HttpError(400, { code: 'BAD_REQUEST', message: `Input too large (${totalChars} chars)` });
   }
 
-  const system = buildSystemPrompt(locale, job.chunkKey, job.blockKind);
-  const user = buildUserPrompt(job.items);
+  const system = buildSystemPrompt(locale, requestPayload.chunkKey, requestPayload.blockKind);
+  const user = buildUserPrompt(requestPayload.items);
 
   const { items, usage } = await openaiTranslate({ env, system, user });
 
-  if (items.length !== job.items.length) {
+  if (items.length !== requestPayload.items.length) {
     throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: 'Translation output size mismatch' });
   }
 
   for (let i = 0; i < items.length; i += 1) {
-    const expected = job.items[i];
+    const expected = requestPayload.items[i];
     const actual = items[i];
     if (!actual || actual.path !== expected.path || typeof actual.value !== 'string') {
       throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: `Unexpected path at index ${i}` });
@@ -447,16 +447,16 @@ export async function executePragueStringsTranslate(job: PragueStringsJob, env: 
     assertTranslationSafety(expected, actual.value, 'openai');
   }
 
-  await writeLog(env, job, {
+  await writeLog(env, requestPayload, {
     status: 'ok',
     occurredAtMs: startedAt,
     locale,
-    chunkKey: job.chunkKey,
-    blockKind: job.blockKind,
-    baseFingerprint: job.baseFingerprint,
-    baseUpdatedAt: job.baseUpdatedAt,
-    allowlistVersion: job.allowlistVersion,
-    allowlistHash: job.allowlistHash ?? null,
+    chunkKey: requestPayload.chunkKey,
+    blockKind: requestPayload.blockKind,
+    baseFingerprint: requestPayload.baseFingerprint,
+    baseUpdatedAt: requestPayload.baseUpdatedAt,
+    allowlistVersion: requestPayload.allowlistVersion,
+    allowlistHash: requestPayload.allowlistHash ?? null,
     promptVersion: PROMPT_VERSION,
     policyVersion: POLICY_VERSION,
     usage,

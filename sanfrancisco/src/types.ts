@@ -14,8 +14,6 @@ export type AIGrant = {
   budgets: {
     maxTokens: number;
     timeoutMs?: number;
-    maxCostUsd?: number;
-    maxRequests?: number;
   };
   mode: 'editor' | 'ops';
   ai?: AiGrantPolicy;
@@ -84,7 +82,6 @@ export type Usage = {
   model: string;
   promptTokens: number;
   completionTokens: number;
-  costUsd?: number;
   latencyMs: number;
 };
 
@@ -116,26 +113,11 @@ export type InteractionEvent = {
 export type Env = {
   ENVIRONMENT?: string;
   AI_GRANT_HMAC_SECRET: string;
-  AI_PRICE_TABLE_JSON?: string;
   DEEPSEEK_API_KEY?: string;
   DEEPSEEK_BASE_URL?: string;
   DEEPSEEK_MODEL?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
-  NOVA_API_KEY?: string;
-  NOVA_MODEL?: string;
-  NOVA_BASE_URL?: string;
-  ANTHROPIC_API_KEY?: string;
-  ANTHROPIC_MODEL?: string;
-  GROQ_API_KEY?: string;
-  GROQ_BASE_URL?: string;
-  GROQ_MODEL?: string;
-  AMAZON_BEDROCK_ACCESS_KEY_ID?: string;
-  AMAZON_BEDROCK_SECRET_ACCESS_KEY?: string;
-  AMAZON_BEDROCK_SESSION_TOKEN?: string;
-  AMAZON_BEDROCK_REGION?: string;
-  AMAZON_BEDROCK_ENDPOINT?: string;
-  AMAZON_BEDROCK_MODEL_ID?: string;
   SF_KV: KVNamespace;
   SF_EVENTS?: Queue<InteractionEvent>;
   SF_D1: D1Database;

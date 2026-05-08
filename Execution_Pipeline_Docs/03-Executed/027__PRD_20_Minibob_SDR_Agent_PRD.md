@@ -541,7 +541,6 @@ Server must ignore/override any client-provided escalation fields:
 Clamp regardless of request:
 - `maxTokens`: 350–500 (recommend 420)
 - `timeoutMs`: 10–20s
-- `maxRequests`: 1–2 (recommend 2 for repair pass)
 
 ### C.5 Rate limiting (Cloudflare + Paris; mandatory)
 **Layer 1 (Cloudflare):**

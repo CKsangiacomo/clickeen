@@ -49,11 +49,11 @@ key                  | kind | path(s)                           | metric/mode   
 branding.remove      | flag | behavior.showBacklink (TBD)       | boolean (deny false) | load sanitize; ops+publish | Remove branding
 ```
 
-Budgets are global usage counters (no per-widget matrices):
-- `budget.copilot.turns` (Copilot send)
-- `budget.uploads.bytes` (total account storage for uploaded files; if/when this widget adds uploads)
+Plan limits are global usage counters (no per-widget matrices):
+- `copilot.turns.monthly.max` (Copilot send)
+- `storage.bytes.max` (total account storage for uploaded files; if/when this widget adds uploads)
 
-If this widget needs caps (e.g., max posts or max hidden IDs), add new global cap keys in `packages/ck-policy/entitlements.matrix.json` and map them in `limits.json` (no per-widget tier tables).
+If this widget needs plan limits (e.g., max posts or max hidden IDs), add new global limit keys in `packages/ck-policy/entitlements.matrix.json` and map them in `limits.json` (no per-widget tier tables).
 
 ---
 

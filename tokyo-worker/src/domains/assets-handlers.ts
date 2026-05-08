@@ -26,7 +26,7 @@ import {
 import type { Env } from '../types';
 import { isUuid } from '@clickeen/ck-contracts';
 import {
-  UPLOAD_SIZE_CAP_KEY,
+  UPLOAD_SIZE_LIMIT_KEY,
   type AccountAssetManifest,
   type MemberRole,
   deleteAccountAssetByIdentity,
@@ -41,9 +41,8 @@ import {
   normalizeAccountAssetSource,
   persistAccountAssetMetadata,
   resolveUploadSizeLimitBytes,
-  resolveStorageBytesBudgetMax,
   roleRank,
-  STORAGE_BYTES_BUDGET_KEY,
+  STORAGE_BYTES_LIMIT_KEY,
   sumAccountAssetManifestSizeBytes,
 } from './assets';
 
@@ -185,7 +184,7 @@ async function enforceAccountStorageLimit(args: {
     if (storageBytesMax != null && nextStoredBytes > storageBytesMax) {
       return {
         ok: false,
-        response: denyEntitlement('coreui.upsell.reason.budgetExceeded', `${STORAGE_BYTES_BUDGET_KEY}=${storageBytesMax}`, 403),
+        response: denyEntitlement('coreui.upsell.reason.limitReached', `${STORAGE_BYTES_LIMIT_KEY}=${storageBytesMax}`, 403),
       };
     }
     return { ok: true };
@@ -457,27 +456,27 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
         entitlements: accountAuthz.entitlements ?? null,
       })
     : null;
-  const uploadSizeCap = policy ? policy.caps[UPLOAD_SIZE_CAP_KEY] : null;
+  const uploadSizeLimit = policy ? policy.limits[UPLOAD_SIZE_LIMIT_KEY] : null;
   const maxBytes =
-    uploadSizeCap === null || (typeof uploadSizeCap === 'number' && Number.isFinite(uploadSizeCap) && uploadSizeCap > 0)
-      ? uploadSizeCap
+    uploadSizeLimit === null || (typeof uploadSizeLimit === 'number' && Number.isFinite(uploadSizeLimit) && uploadSizeLimit > 0)
+      ? uploadSizeLimit
       : null;
-  const storageBudget = policy ? policy.budgets[STORAGE_BYTES_BUDGET_KEY]?.max ?? null : null;
+  const storageLimit = policy ? policy.limits[STORAGE_BYTES_LIMIT_KEY] ?? null : null;
   const storageBytesMax =
-    storageBudget === null || (typeof storageBudget === 'number' && Number.isFinite(storageBudget) && storageBudget >= 0)
-      ? storageBudget
+    storageLimit === null || (typeof storageLimit === 'number' && Number.isFinite(storageLimit) && storageLimit >= 0)
+      ? storageLimit
       : null;
   if (maxBytes != null && body.byteLength > maxBytes) {
-    return denyEntitlement('coreui.upsell.reason.capReached', `${UPLOAD_SIZE_CAP_KEY}=${maxBytes}`, 413);
+    return denyEntitlement('coreui.upsell.reason.limitReached', `${UPLOAD_SIZE_LIMIT_KEY}=${maxBytes}`, 413);
   }
 
-  const budgetResult = await enforceAccountStorageLimit({
+  const storageLimitResult = await enforceAccountStorageLimit({
     env,
     accountId,
     storageBytesMax,
     bodyBytes: body.byteLength,
   });
-  if (!budgetResult.ok) return budgetResult.response;
+  if (!storageLimitResult.ok) return storageLimitResult.response;
 
   const assetId = crypto.randomUUID();
   const bodySha256 = await sha256Hex(body);

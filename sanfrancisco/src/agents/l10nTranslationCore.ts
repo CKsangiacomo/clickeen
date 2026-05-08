@@ -573,9 +573,6 @@ export function mergeUsage(base: Usage | undefined, next: Usage): Usage {
     completionTokens: (base.completionTokens ?? 0) + (next.completionTokens ?? 0),
     latencyMs: (base.latencyMs ?? 0) + (next.latencyMs ?? 0),
   };
-  if (base.costUsd != null || next.costUsd != null) {
-    out.costUsd = (base.costUsd ?? 0) + (next.costUsd ?? 0);
-  }
   return out;
 }
 

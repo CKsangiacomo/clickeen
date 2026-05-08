@@ -147,9 +147,6 @@ function buildInternalGrant(args: {
     budgets: {
       maxTokens: budget.maxTokens,
       timeoutMs: budget.timeoutMs,
-      // One Roma save/publication request may batch many provider calls across locales/items.
-      maxRequests: 512,
-      ...(typeof budget.maxCostUsd === 'number' ? { maxCostUsd: budget.maxCostUsd } : {}),
     },
     mode: 'ops',
     ai,

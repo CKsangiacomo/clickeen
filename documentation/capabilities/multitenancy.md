@@ -5,7 +5,7 @@ This file focuses on tenancy, collaboration, roles, and packaging semantics.
 
 ## Core Principle
 
-Clickeen is multi-tenant from day 1 with no artificial caps on collaboration. This is the Figma model: make it easy for teams to adopt, and stickiness compounds.
+Clickeen is multi-tenant from day 1 with no artificial limits on collaboration. This is the Figma model: make it easy for teams to adopt, and stickiness compounds.
 
 ---
 
@@ -26,7 +26,7 @@ Anything else in this doc (seats, instance counts, widget type counts) is direct
 | Tier | Viewers | Editors | Widget Types | Instances | Content | Features |
 |------|---------|---------|--------------|-----------|---------|----------|
 | **Free** | ∞ | 1 | 1 | 1 | Limited | Limited |
-| **Tier 1** | ∞ | 3-5 | All | 5-10 | Higher caps | + SEO/GEO |
+| **Tier 1** | ∞ | 3-5 | All | 5-10 | higher limits | + SEO/GEO |
 | **Tier 2** | ∞ | ∞ | All | ∞ | ∞ | + Auto-translate |
 | **Tier 3** | ∞ | ∞ | All | ∞ | ∞ | + Supernova |
 
@@ -71,7 +71,7 @@ Anything else in this doc (seats, instance counts, widget type counts) is direct
 - **Viewers are always unlimited** at every tier (including Free)
 - **Viewers can comment** (feedback loop, collaboration without editing)
 - **Upgrade drivers:** instances → Tier 1, team size → Tier 2, effects → Tier 3
-- **No caps on collaboration** once you hit Tier 2
+- **No limits on collaboration** once you hit Tier 2
 
 ---
 
@@ -216,7 +216,7 @@ type Comment = {
 
 ## Tier Gating (target packaging)
 
-| Capability | Free | Tier 1 | Tier 2 | Tier 3 |
+| Product area | Free | Tier 1 | Tier 2 | Tier 3 |
 |------------|------|--------|--------|--------|
 | **Viewers** | ∞ | ∞ | ∞ | ∞ |
 | **Editors** | 1 | 3-5 | ∞ | ∞ |
@@ -294,19 +294,19 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 - Bob receives one open payload and one policy object from Roma.
 - MiniBob/demo surfaces are not shared Builder subjects and should not shape shared Bob architecture.
 
-**Budgets (MiniBob + Free conversion gates):**
-- Budgets are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls, snapshot regenerations).
-- Budgets are **metered and enforced server-side** at the point where cost is incurred (Roma/Tokyo-worker/Venice/San Francisco, depending on the cost driver); Bob uses the resolved policy for UX gating + upsell messaging.
-- Budgets are defined by the real account policy plus explicit demo-surface gates, not by a fake `minibob` subject profile and not by individual widgets.
+**Plan limits:**
+- Plan limits are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls).
+- Plan limits are **metered and enforced server-side** at the point where cost is incurred (Roma/Tokyo-worker/Venice/San Francisco, depending on the cost driver); Bob uses the resolved policy for UX gating + upsell messaging.
+- Plan limits are defined by the real account policy plus explicit demo-surface gates, not by a fake `minibob` subject profile and not by individual widgets.
 
 **How this appears in widget PRDs (required):**
 - PRDs list **which entitlement keys** a widget uses and **how they map** to widget state (paths + metrics).
 - Tier values live only in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
-- Widget enforcement lives in `tokyo/product/widgets/{widget}/limits.json` (flags/caps). Budgets are global and metered server-side.
+- Widget enforcement lives in `tokyo/product/widgets/{widget}/limits.json` (flags/limits). Plan limits are global and metered server-side.
 - Template: `documentation/widgets/_templates/SubjectPolicyMatrices.md` (no per-widget tier matrices).
 
 **Upsell popup standard (durable):**
-- Every rejected limit or budget uses the same **Upsell** popup (no per-row copy).
+- Every rejected plan limit uses the same **Upsell** popup (no per-row copy).
 - The system chooses the destination and CTA deterministically:
   - If the viewer has no account/session (Prague demo / anonymous): upsell takes them to **Create Free Account**
   - If the viewer is logged in but blocked by plan/tier: upsell takes them to **Upgrade Plan**
@@ -318,7 +318,7 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 - Shared Builder core does not URL-bootstrap account sessions.
 
 **What still matters:**
-- Uploads and Copilot remain bounded by server-side policy/budget enforcement.
+- Uploads and Copilot remain bounded by server-side policy limit enforcement.
 - Shared Builder should not carry `if (minibob)` checks or other fake editor identities.
 
 **Why this scales:**
@@ -330,7 +330,7 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 Current shipped behavior:
 - Account member listing is read-only via `GET /api/account/team` and `GET /api/account/team/members/:memberId` for authorized users.
 - Publish and editor behavior use policy/entitlement enforcement already wired in runtime.
-- There is no shipped seat-cap write-path enforcement yet.
+- There is no shipped seat-limit write-path enforcement yet.
 - There is no shipped `SEAT_LIMIT_EXCEEDED` runtime error yet.
 
 Planned behavior (not shipped):

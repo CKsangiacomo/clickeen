@@ -962,7 +962,6 @@ export async function executeWidgetCopilotWithRuntime(
     forbidInternalControlDumpPromptLine: runtime.forbidInternalControlDumpPromptLine,
   });
 
-  const maxRequests = typeof params.grant.budgets?.maxRequests === 'number' ? params.grant.budgets.maxRequests : 1;
   const messages: ChatMessage[] = [{ role: 'system', content: systemPrompt }, ...session.turns, { role: 'user', content: user }];
 
   const overallStartedAt = Date.now();
@@ -986,74 +985,6 @@ export async function executeWidgetCopilotWithRuntime(
   let message = parsed ? (asString(parsed.message) ?? '').trim() : '';
   let opsRaw = parsed?.ops;
   let ops = Array.isArray(opsRaw) ? opsRaw.filter(isWidgetOp) : undefined;
-  const preValidation = parsed && message && ops && ops.length ? validateOpsAgainstControls({ ops, controls: input.controls }) : ({ ok: true } as const);
-
-  const elapsedMs = Date.now() - overallStartedAt;
-  const remainingTimeoutMs = timeoutMs - elapsedMs;
-  const canRepair = maxRequests >= 2 && remainingTimeoutMs >= 4_000;
-  const needsRepair = !parseResult.ok || !parsed || !message || !preValidation.ok;
-
-  if (canRepair && needsRepair) {
-    let issueText = 'The previous response was invalid.';
-    if (!parseResult.ok) {
-      issueText = 'Your previous response was not valid JSON.';
-    } else if (!parsed) {
-      issueText = 'Your previous response was valid JSON but not a JSON object.';
-    } else if (!message) {
-      issueText = 'Your previous response was missing the required message field.';
-    } else if (!preValidation.ok) {
-      issueText = `Validation errors:\n${preValidation.issues
-        .slice(0, 6)
-        .map((i) => `- ${i.path}: ${i.message}`)
-        .join('\n')}`;
-    }
-
-    const previous = content.length > 2200 ? `${content.slice(0, 2200)}\n\n[truncated]` : content;
-    const repairSystem =
-      systemPrompt +
-      '\n\nREPAIR MODE:\n- Return ONLY a JSON object (no markdown, no extra text).\n- Fix the schema/validation errors.\n- If you cannot produce valid ops, return message-only (no ops) and ask one short clarifying question.';
-    const repairUser = [
-      user,
-      '',
-      'Your previous response was invalid. Please repair it.',
-      issueText,
-      '',
-      'Previous response:',
-      previous,
-      '',
-      'Return corrected JSON only.',
-    ].join('\n');
-
-    const repairTimeoutMs = Math.min(4_000, Math.max(1_000, remainingTimeoutMs - 500));
-    const repairMaxTokens = Math.min(160, maxTokens);
-
-    const repaired = await callChatCompletion({
-      env,
-      grant: params.grant,
-      agentId: runtime.agentId,
-      messages: [
-        { role: 'system', content: repairSystem },
-        { role: 'user', content: repairUser },
-      ],
-      temperature: 0,
-      maxTokens: repairMaxTokens,
-      timeoutMs: repairTimeoutMs,
-    });
-
-    lastUsage = repaired.usage;
-    promptTokens += repaired.usage.promptTokens;
-    completionTokens += repaired.usage.completionTokens;
-    content = repaired.content;
-
-    parseResult = parseJsonFromModel(content);
-    if (!parseResult.ok) throw invalidStructuredEditError(lastUsage.provider);
-    parsed = isRecord(parseResult.value) ? parseResult.value : null;
-    if (!parsed) throw invalidStructuredEditError(lastUsage.provider, 'Model output must be a JSON object.');
-    message = (asString(parsed.message) ?? '').trim();
-    if (!message) throw invalidStructuredEditError(lastUsage.provider, 'Model output is missing a message.');
-    opsRaw = parsed.ops;
-    ops = Array.isArray(opsRaw) ? opsRaw.filter(isWidgetOp) : undefined;
-  }
 
   if (!parseResult.ok) throw invalidStructuredEditError(lastUsage.provider);
   if (!parsed) throw invalidStructuredEditError(lastUsage.provider, 'Model output must be a JSON object.');

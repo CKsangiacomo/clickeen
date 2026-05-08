@@ -298,7 +298,7 @@ The best-practice shape is:
 
 - tiny metering for every execution
 - small outcomes for product learning
-- paid-only sampled raw payloads for debug/eval, plus serious paid failures
+- paid-only sampled raw payloads for debug/eval
 - curated examples for release gates
 
 This supports billing, abuse detection, reliability, and model improvement without making R2 a giant unbounded dump.
@@ -321,7 +321,7 @@ Before execution:
 
 - First learning loop: Builder copilot quality.
 - Outcome event names: `edit_applied`, `edit_rejected`, `edit_undone`, `clarification_needed`, `invalid_output`, plus existing `cta_clicked`.
-- Raw payload policy for this slice: paid-only 20% deterministic samples for normal successes, serious paid failures always captured, no full raw object for every execution.
+- Raw payload policy for this slice: paid-only 20% deterministic samples for normal successes, no full raw object for every execution.
 - D1 index shape for this slice: existing small D1 execution/outcome facts only; no schema migration.
 - Unrelated personalization/onboarding command path: left for its owning PRD. Outcome attach no longer uses the command envelope.
 
@@ -331,7 +331,7 @@ Execution is green only when:
 - execution and outcome share `requestId`
 - canonical outcome names are wired end to end
 - detailed learning is paid-only sampled at 20% for normal successes
-- serious paid failures are captured outside the sample
+- paid samples are captured by deterministic sampling only
 - raw payload writes are bounded
 - telemetry no longer infers widget scopes from path prefixes
 - no learning path mutates prompt/model/policy automatically

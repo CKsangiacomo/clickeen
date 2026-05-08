@@ -107,21 +107,21 @@ export async function POST(request: NextRequest, context: RouteContext) {
     role: current.value.authzPayload.role,
     entitlements: current.value.authzPayload.entitlements ?? null,
   });
-  const publishedCapRaw = policy.caps['instances.published.max'];
-  const publishedCap =
-    typeof publishedCapRaw === 'number' && Number.isFinite(publishedCapRaw)
-      ? Math.max(0, Math.floor(publishedCapRaw))
+  const publishedLimitRaw = policy.limits['instances.published.max'];
+  const publishedLimit =
+    typeof publishedLimitRaw === 'number' && Number.isFinite(publishedLimitRaw)
+      ? Math.max(0, Math.floor(publishedLimitRaw))
       : null;
-  if (publishedCap != null) {
-    if (publishedCap === 0) {
+  if (publishedLimit != null) {
+    if (publishedLimit === 0) {
       return withSession(
         request,
         NextResponse.json(
           {
             error: {
               kind: 'DENY',
-              reasonKey: 'coreui.upsell.reason.capReached',
-              detail: `instances.published.max=${publishedCap}`,
+              reasonKey: 'coreui.upsell.reason.limitReached',
+              detail: `instances.published.max=${publishedLimit}`,
             },
           },
           { status: 403 },
@@ -141,15 +141,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    if (accountIndex.value.publishedCount >= publishedCap) {
+    if (accountIndex.value.publishedCount >= publishedLimit) {
       return withSession(
         request,
         NextResponse.json(
           {
             error: {
               kind: 'DENY',
-              reasonKey: 'coreui.upsell.reason.capReached',
-              detail: `instances.published.max=${publishedCap}`,
+              reasonKey: 'coreui.upsell.reason.limitReached',
+              detail: `instances.published.max=${publishedLimit}`,
             },
           },
           { status: 403 },

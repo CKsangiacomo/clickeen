@@ -371,9 +371,9 @@ Orchestrator exposes `getStatus()`:
   "researchCacheTtlDays": 30,
   "tokenBudgetPerRun": 500000,
   "llm": {
-    "research": { "model": "gpt-4o-mini", "maxTokens": 2000 },
-    "audit": { "model": "gpt-4o-mini", "maxTokens": 4000 },
-    "propose": { "model": "gpt-4o", "maxTokens": 4000 }
+    "research": { "model": "gpt-5-mini", "maxTokens": 2000 },
+    "audit": { "model": "gpt-5-mini", "maxTokens": 4000 },
+    "propose": { "model": "gpt-5", "maxTokens": 4000 }
   },
   "schedule": "0 3 * * 0"
 }

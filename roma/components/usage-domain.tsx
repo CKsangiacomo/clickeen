@@ -17,9 +17,9 @@ export function UsageDomain() {
   const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
   const [storageLoading, setStorageLoading] = useState(true);
 
-  const storageBudget = entitlements?.budgets?.['budget.uploads.bytes'] ?? null;
+  const storageLimit = entitlements?.limits?.['storage.bytes.max'] ?? null;
   const storageLimitLabel =
-    typeof storageBudget?.max === 'number' && Number.isFinite(storageBudget.max) && storageBudget.max > 0 ? formatBytes(storageBudget.max) : 'Unlimited';
+    typeof storageLimit === 'number' && Number.isFinite(storageLimit) && storageLimit > 0 ? formatBytes(storageLimit) : 'Unlimited';
   const storageUsedLabel = storageLoading ? 'Loading...' : storageBytesUsed == null ? 'Unavailable' : formatBytes(storageBytesUsed);
 
   useEffect(() => {

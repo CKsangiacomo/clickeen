@@ -42,12 +42,12 @@ Use the limits mapping for paths + metrics; do not duplicate per-tier matrices h
 Entitlements mapping (must match `tokyo/product/widgets/faq/limits.json`):
 
 ```text
-Key                      | Kind | Path(s)                    | Metric/Mode            | Enforcement        | Notes
------------------------- | ---- | -------------------------- | ---------------------- | ------------------ | ----------------------------
-branding.remove          | flag | behavior.showBacklink      | boolean (deny false)   | ops+save           | Bob gates the control; Roma rejects invalid saved config
-cap.group.items.small.max  | cap  | sections[]                 | count                  | ops+publish        | section count cap (cap group)
-cap.group.items.medium.max | cap  | sections[].faqs[]          | count                  | ops+publish        | per-section Q/A count cap (cap group)
-cap.group.items.large.max  | cap  | sections[].faqs[]          | count-total            | ops+publish        | total Q/A count cap (cap group)
+Key                        | Kind | Path(s)                    | Metric/Mode          | Enforcement        | Notes
+-------------------------- | ---- | -------------------------- | -------------------- | ------------------ | ----------------------------
+branding.remove            | flag | behavior.showBacklink      | boolean (deny false) | ops+save           | Bob gates the control; Roma rejects invalid saved config
+items.group.small.max  | limit | sections[]                 | count                | ops+publish        | section count limit group
+items.group.medium.max | limit | sections[].faqs[]          | count                | ops+publish        | per-section Q/A count limit group
+items.group.large.max  | limit | sections[].faqs[]          | count-total          | ops+publish        | total Q/A count limit group
 ```
 
 ## 1) Where the widget lives
@@ -57,7 +57,7 @@ Widget definition (the software): `tokyo/product/widgets/faq/`
 - `widget.css` — scoped styles (Dieter tokens)
 - `widget.client.js` — `applyState(state)` runtime
 - `agent.md` — AI editing contract
-- `limits.json` — entitlements caps/flags
+- `limits.json` — entitlement limits/flags
 - `localization.json` — locale-layer allowlist
 - `layers/*.allowlist.json` — non-locale layer allowlists (when used)
 

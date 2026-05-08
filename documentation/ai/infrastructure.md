@@ -45,18 +45,12 @@ Worker vars/secrets:
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
 - `OPENAI_API_KEY` (secret, optional): required for Paid Standard/Premium tiers and L10n
 - `OPENAI_MODEL` (optional): defaults to `gpt-5.2`
-- `ANTHROPIC_API_KEY` (secret, optional): required for Paid Standard/Premium tiers
-- `GROQ_API_KEY` (secret, optional): required for Llama models
-- `NOVA_API_KEY` (secret, optional): required for direct Amazon Nova API access
-- `NOVA_BASE_URL` (optional): defaults to `https://api.nova.amazon.com/v1`
-- `NOVA_MODEL` (optional): defaults to `nova-2-lite-v1`
-- `AMAZON_BEDROCK_ACCESS_KEY_ID` / `AMAZON_BEDROCK_SECRET_ACCESS_KEY` / `AMAZON_BEDROCK_REGION` (secret/var, optional): Bedrock fallback path for Amazon provider
 
 Provider/model policy:
 - `@clickeen/ck-contracts` owns the model catalog.
 - `@clickeen/ck-policy` owns the tier + agent runtime policy matrix.
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
-- San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, and request ceilings.
+- San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, token ceiling, turn ceiling, and timeout ceiling.
 - **Prague strings L10n**: `website.prague.copy.translator`, OpenAI via the Prague tooling route.
 - **Account-widget instance l10n**: `widget.instance.translator`. Tokyo-worker calls San Francisco through the private `generateAccountWidgetL10nOps` WorkerEntrypoint method with Roma-derived `policyProfile`; San Francisco resolves the runtime policy from `@clickeen/ck-policy` and then intersects it with env-configured providers.
 
@@ -139,7 +133,7 @@ Queue consumer writes bounded raw JSON samples into R2 using a stable key patter
 `learning/{ENVIRONMENT}/{agentId}/{YYYY-MM-DD}/{requestId}.json`
 
 This allows:
-- bounded debug/eval storage for selected paid executions and serious paid failures
+- bounded debug/eval storage for selected paid executions
 - offline analysis without turning R2 into a full execution dump
 
 ### D1 (queryable indexes)
@@ -164,7 +158,6 @@ San Francisco applies a per-isolate in-flight cap through `sanfrancisco/src/conc
 Agent executions are constrained by the grant:
 - `budgets.maxTokens`
 - `budgets.timeoutMs` (default 20s if omitted)
-- `budgets.maxRequests` (optional, for session windows)
 
 The owning backend surface is expected to cap these budgets server-side so the client can’t request arbitrarily large execution windows.
 
@@ -172,7 +165,6 @@ Canonical runtime budget source:
 - `packages/ck-policy/src/ai-runtime.ts` (tier + agent runtime policy matrix)
 - `roma/lib/ai/account-copilot.ts` (account-mode grant issuance, usage reservation, and clamp caps)
 
-Runtime policy matrix (`maxTokens / timeoutMs / maxRequests`):
 
 | Agent | free | tier1 | tier2 | tier3 |
 |---|---|---|---|---|

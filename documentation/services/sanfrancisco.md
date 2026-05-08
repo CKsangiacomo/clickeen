@@ -29,7 +29,6 @@ Health contract:
 - Grant verification accepts the active internal Clickeen issuers `roma` and `sanfrancisco`.
 - The live product Copilot path executes only from Roma account routes; Bob no longer owns a public Minibob copilot flow.
 - Agent routing uses registry canonical IDs.
-- Budget enforcement is centralized in `callChatCompletion` (`maxTokens`, `timeoutMs`, `maxRequests`, and `maxCostUsd` when present).
 - Provider execution retries transient upstream failures once against the same selected/default model. It does not silently switch models or providers.
 - OpenAI responses are normalized across string/array/refusal content shapes before being treated as empty output.
 - Live product widget-copilot canonical ID:
@@ -43,7 +42,7 @@ Health contract:
   - shared core: `sanfrancisco/src/agents/widgetCopilotCore.ts`
   - CS wrapper: `sanfrancisco/src/agents/csWidgetCopilot.ts` (KV namespace `copilot:cs:session:*`)
 - **Runtime policy execution:** Enforces the signed `AgentRuntimePolicy` from the grant: `defaultModel`, `modelsByProvider`, optional `selectedModel`, request ceilings, and learning-capture rules. Product/account policy decides the allowed model set before grant issuance.
-- Budget tracking persists to `SF_KV` per grant (requests + cost) with TTL aligned to grant expiry.
+- Request tracking persists to `SF_KV` per grant with TTL aligned to grant expiry.
 - Contract coverage now explicitly guards grant verification, budget enforcement, provider routing, and concurrency ceilings before further AI-plane sophistication lands.
 
 ## Entrypoint posture
@@ -67,8 +66,7 @@ Health contract:
 - Returns set-only locale ops to Tokyo-worker.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext translation uses one structured path: San Francisco extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.
-- l10n translation calls go through the shared policy router via `callChatCompletion` (same budget enforcement + provider/model allowlist).
-- Cost budgets (`maxCostUsd`) use provider+model prices from the shared AI model catalog. `AI_PRICE_TABLE_JSON` may override catalog prices by `provider:model` key for deployment-specific estimates.
+- l10n translation calls go through the shared policy router via `callChatCompletion` (same request/token enforcement + provider/model allowlist).
 
 ## Prague localization translation (local + cloud-dev)
 - Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT` is `local` or `dev`; disabled elsewhere).

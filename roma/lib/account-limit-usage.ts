@@ -1,4 +1,4 @@
-import type { BudgetKey } from '@clickeen/ck-policy';
+import type { PlanLimitKey } from '@clickeen/ck-policy';
 
 export type RomaUsageKv = {
   get(key: string): Promise<string | null>;
@@ -11,27 +11,27 @@ export type RomaUsageKv = {
   ): Promise<void>;
 };
 
-function budgetCounterKey(accountId: string, budgetKey: BudgetKey, periodKey: string): string {
-  return `usage.budget.v1.${budgetKey}.${periodKey}.acct:${accountId}`;
+function limitCounterKey(accountId: string, limitKey: PlanLimitKey, periodKey: string): string {
+  return `usage.limit.v1.${limitKey}.${periodKey}.acct:${accountId}`;
 }
 
-function currentBudgetPeriodKey(now = new Date()): string {
+function currentLimitPeriodKey(now = new Date()): string {
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth() + 1;
   return `${year}-${String(month).padStart(2, '0')}`;
 }
 
-function secondsUntilNextBudgetPeriod(now = new Date()): number {
+function secondsUntilNextLimitPeriod(now = new Date()): number {
   const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0, 0));
   return Math.max(1, Math.ceil((nextMonth.getTime() - now.getTime()) / 1000) + 172_800);
 }
 
-export async function readAccountBudgetUsed(
+export async function readAccountLimitUsed(
   accountId: string,
-  budgetKey: BudgetKey,
+  limitKey: PlanLimitKey,
   usageKv: RomaUsageKv | null | undefined,
 ): Promise<number> {
-  const counterKey = budgetCounterKey(accountId, budgetKey, currentBudgetPeriodKey());
+  const counterKey = limitCounterKey(accountId, limitKey, currentLimitPeriodKey());
   if (!usageKv) {
     throw new Error('[Roma] Missing USAGE_KV binding');
   }
@@ -40,9 +40,9 @@ export async function readAccountBudgetUsed(
   return Number.isFinite(parsed) && parsed >= 0 ? Math.trunc(parsed) : 0;
 }
 
-export async function reserveAccountBudgetUse(args: {
+export async function reserveAccountLimitUse(args: {
   accountId: string;
-  budgetKey: BudgetKey;
+  limitKey: PlanLimitKey;
   max: number | null;
   usageKv: RomaUsageKv | null | undefined;
   amount?: number;
@@ -51,13 +51,13 @@ export async function reserveAccountBudgetUse(args: {
     throw new Error('[Roma] Missing USAGE_KV binding');
   }
   const amount = Math.max(1, Math.trunc(args.amount ?? 1));
-  const periodKey = currentBudgetPeriodKey();
-  const counterKey = budgetCounterKey(args.accountId, args.budgetKey, periodKey);
-  const current = await readAccountBudgetUsed(args.accountId, args.budgetKey, args.usageKv);
+  const periodKey = currentLimitPeriodKey();
+  const counterKey = limitCounterKey(args.accountId, args.limitKey, periodKey);
+  const current = await readAccountLimitUsed(args.accountId, args.limitKey, args.usageKv);
   if (args.max != null && current + amount > args.max) {
     return { ok: false, used: current };
   }
   const nextUsed = current + amount;
-  await args.usageKv.put(counterKey, String(nextUsed), { expirationTtl: secondsUntilNextBudgetPeriod() });
+  await args.usageKv.put(counterKey, String(nextUsed), { expirationTtl: secondsUntilNextLimitPeriod() });
   return { ok: true, used: nextUsed };
 }

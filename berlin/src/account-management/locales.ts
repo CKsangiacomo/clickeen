@@ -47,46 +47,25 @@ function resolveAccountL10nPolicy(raw: unknown): AccountL10nPolicy {
   }
 }
 
-function resolveLocaleEntitlementMax(policy: Policy): number | null {
-  const raw = policy.caps['l10n.locales.max'];
-  return raw == null ? null : Math.max(1, Math.floor(raw));
+function resolveTranslatedLocaleEntitlementMax(policy: Policy): number | null {
+  const raw = policy.limits['l10n.locales.max'];
+  return raw == null ? null : Math.max(0, Math.floor(raw));
 }
 
 function enforceL10nSelection(policy: Policy, locales: string[]): Response | null {
-  const maxLocalesTotal = resolveLocaleEntitlementMax(policy);
-  const maxAdditional = maxLocalesTotal == null ? null : Math.max(0, maxLocalesTotal - 1);
-  if (maxAdditional != null && locales.length > maxAdditional) {
+  const maxTranslatedLocales = resolveTranslatedLocaleEntitlementMax(policy);
+  if (maxTranslatedLocales != null && locales.length > maxTranslatedLocales) {
     return json(
       {
         error: {
           kind: 'DENY',
-          reasonKey: 'coreui.upsell.reason.capReached',
+          reasonKey: 'coreui.upsell.reason.limitReached',
           upsell: 'UP',
-          detail: `l10n.locales.max=${maxLocalesTotal}`,
+          detail: `l10n.locales.max=${maxTranslatedLocales}`,
         },
       },
       { status: 403 },
     );
-  }
-
-  const maxCustomRaw = policy.caps['l10n.locales.custom.max'];
-  const maxCustom = maxCustomRaw == null ? null : Math.max(0, Math.floor(maxCustomRaw));
-  if (maxCustom != null) {
-    const systemReserved = maxAdditional == null ? 0 : Math.max(0, maxAdditional - maxCustom);
-    const customCount = Math.max(0, locales.length - systemReserved);
-    if (customCount > maxCustom) {
-      return json(
-        {
-          error: {
-            kind: 'DENY',
-            reasonKey: 'coreui.upsell.reason.capReached',
-            upsell: 'UP',
-            detail: `l10n.locales.custom.max=${maxCustom}`,
-          },
-        },
-        { status: 403 },
-      );
-    }
   }
 
   return null;

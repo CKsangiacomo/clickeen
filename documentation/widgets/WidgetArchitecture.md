@@ -25,7 +25,7 @@ Files:
 - `widget.css` (styles using tokens + CSS vars)
 - `widget.client.js` (applyState runtime)
 - `agent.md` (AI editing contract)
-- `limits.json` (entitlements caps/flags)
+- `limits.json` (entitlement limits/flags)
 - `localization.json` (locale allowlist)
 - `layers/*.allowlist.json` (non-locale layers)
 - `pages/*.json` (Prague pages)

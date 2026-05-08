@@ -2,7 +2,7 @@ import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { HttpError } from '../http';
 import type { AIGrant } from '../types';
 
-export type AiProvider = 'deepseek' | 'openai' | 'anthropic' | 'groq' | 'amazon';
+export type AiProvider = 'deepseek' | 'openai';
 
 export type ModelSelection = {
   provider: AiProvider;

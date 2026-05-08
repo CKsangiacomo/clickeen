@@ -19,7 +19,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-const AI_PROVIDERS: ReadonlySet<AiProvider> = new Set(['deepseek', 'openai', 'anthropic', 'groq', 'amazon']);
+const AI_PROVIDERS: ReadonlySet<AiProvider> = new Set(['deepseek', 'openai']);
 
 function isAiProvider(value: string): value is AiProvider {
   return AI_PROVIDERS.has(value as AiProvider);

@@ -71,8 +71,7 @@ export type RomaMeResponse = {
     expiresAt?: string | null;
     entitlements?: {
       flags?: Record<string, boolean>;
-      caps?: Record<string, number | null>;
-      budgets?: Record<string, { max: number | null }>;
+      limits?: Record<string, number | null>;
     } | null;
   } | null;
 };
@@ -88,8 +87,7 @@ export type RomaAuthzPolicy = {
   profile: 'free' | 'tier1' | 'tier2' | 'tier3';
   role: 'viewer' | 'editor' | 'admin' | 'owner';
   flags: Record<string, boolean>;
-  caps: Record<string, number | null>;
-  budgets: Record<string, { max: number | null }>;
+  limits: Record<string, number | null>;
 };
 
 function normalizeAccountId(value: unknown): string | null {
@@ -166,13 +164,7 @@ export function resolveAccountPolicyFromRomaAuthz(data: RomaMeResponse | null, a
     profile,
     role,
     flags: { ...(entitlements.flags ?? {}) },
-    caps: { ...(entitlements.caps ?? {}) },
-    budgets: Object.fromEntries(
-      Object.entries(entitlements.budgets ?? {}).flatMap(([key, entry]) => {
-        if (!entry) return [];
-        return [[key, { max: entry.max ?? null }] as const];
-      }),
-    ),
+    limits: { ...(entitlements.limits ?? {}) },
   };
 }
 

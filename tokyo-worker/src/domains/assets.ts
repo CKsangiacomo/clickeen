@@ -7,9 +7,9 @@ import {
 import { supabaseFetch } from '../supabase';
 import type { Env } from '../types';
 
-const L10N_VERSION_CAP_KEY = 'l10n.versions.max';
-export const UPLOAD_SIZE_CAP_KEY = 'uploads.size.max';
-export const STORAGE_BYTES_BUDGET_KEY = 'budget.uploads.bytes';
+const L10N_VERSION_LIMIT_KEY = 'l10n.versions.max';
+export const UPLOAD_SIZE_LIMIT_KEY = 'uploads.size.max';
+export const STORAGE_BYTES_LIMIT_KEY = 'storage.bytes.max';
 
 function resolveEntitlementTierOrThrow(tier: string | null): string {
   const normalized = typeof tier === 'string' ? tier.trim() : '';
@@ -25,39 +25,39 @@ function resolveEntitlementTierOrThrow(tier: string | null): string {
 
 export function resolveL10nVersionLimit(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
-  const entry = matrix.capabilities[L10N_VERSION_CAP_KEY];
-  if (!entry || entry.kind !== 'cap') throw new Error(`[tokyo] Missing entitlement cap: ${L10N_VERSION_CAP_KEY}`);
+  const entry = matrix.entitlements[L10N_VERSION_LIMIT_KEY];
+  if (!entry || entry.kind !== 'limit') throw new Error(`[tokyo] Missing entitlement limit: ${L10N_VERSION_LIMIT_KEY}`);
   const profile = resolveEntitlementTierOrThrow(tier) as keyof typeof entry.values;
   const value = entry.values[profile];
   if (value == null) return null;
   if (typeof value !== 'number' || !Number.isFinite(value)) {
-    throw new Error(`[tokyo] Invalid entitlement cap value for ${L10N_VERSION_CAP_KEY}`);
+    throw new Error(`[tokyo] Invalid entitlement limit value for ${L10N_VERSION_LIMIT_KEY}`);
   }
   return Math.max(1, Math.floor(value));
 }
 
 export function resolveUploadSizeLimitBytes(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
-  const entry = matrix.capabilities[UPLOAD_SIZE_CAP_KEY];
-  if (!entry || entry.kind !== 'cap') throw new Error(`[tokyo] Missing entitlement cap: ${UPLOAD_SIZE_CAP_KEY}`);
+  const entry = matrix.entitlements[UPLOAD_SIZE_LIMIT_KEY];
+  if (!entry || entry.kind !== 'limit') throw new Error(`[tokyo] Missing entitlement limit: ${UPLOAD_SIZE_LIMIT_KEY}`);
   const profile = resolveEntitlementTierOrThrow(tier) as keyof typeof entry.values;
   const value = entry.values[profile];
   if (value == null) return null;
   if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
-    throw new Error(`[tokyo] Invalid entitlement cap value for ${UPLOAD_SIZE_CAP_KEY}`);
+    throw new Error(`[tokyo] Invalid entitlement limit value for ${UPLOAD_SIZE_LIMIT_KEY}`);
   }
   return Math.max(1, Math.floor(value));
 }
 
-export function resolveStorageBytesBudgetMax(tier: string | null): number | null {
+export function resolveStorageBytesLimit(tier: string | null): number | null {
   const matrix = getEntitlementsMatrix();
-  const entry = matrix.capabilities[STORAGE_BYTES_BUDGET_KEY];
-  if (!entry || entry.kind !== 'budget') throw new Error(`[tokyo] Missing entitlement budget: ${STORAGE_BYTES_BUDGET_KEY}`);
+  const entry = matrix.entitlements[STORAGE_BYTES_LIMIT_KEY];
+  if (!entry || entry.kind !== 'limit') throw new Error(`[tokyo] Missing entitlement limit: ${STORAGE_BYTES_LIMIT_KEY}`);
   const profile = resolveEntitlementTierOrThrow(tier) as keyof typeof entry.values;
   const value = entry.values[profile];
   if (value == null) return null;
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-    throw new Error(`[tokyo] Invalid entitlement budget value for ${STORAGE_BYTES_BUDGET_KEY}`);
+    throw new Error(`[tokyo] Invalid entitlement limit value for ${STORAGE_BYTES_LIMIT_KEY}`);
   }
   return Math.floor(value);
 }

@@ -25,10 +25,9 @@ import {
 import dietIconCss from '@dieter/components/icon/icon.css?raw';
 import { typographySections, getTypographySampleText } from './data/typography';
 import {
-  CAPABILITY_META,
+  ENTITLEMENT_META,
   isPolicyEntitled,
   deriveAiRuntimePolicyUi,
-  listAiRuntimePoliciesForTier,
   resolveAiRuntimePolicy,
   resolvePolicy,
   getEntitlementsMatrix,
@@ -58,77 +57,11 @@ const showcaseAccountAssets: AccountAssetsClient = {
 };
 
 window.__CK_ENTITLEMENTS__ = entitlements;
-window.__CK_ENTITLEMENTS_META__ = CAPABILITY_META;
+window.__CK_ENTITLEMENTS_META__ = ENTITLEMENT_META;
 
 const aiProviderUi = listAiProviderUi();
 const aiProviderLabelByKey = new Map(aiProviderUi.map((entry) => [entry.provider, entry.label]));
-const aiAccessByTier: Partial<
-  Record<
-    PolicyProfile,
-    {
-      policyProfile: PolicyProfile;
-      defaultProvider: AiProvider;
-      defaultProviderLabel: string;
-      providers: Array<{
-        provider: AiProvider;
-        label: string;
-        defaultModel: string;
-        defaultModelLabel: string;
-        models: Array<{ model: string; label: string }>;
-      }>;
-    }
-  >
-> = {};
-
-for (const policyProfile of entitlements.tiers) {
-  const tierPolicies = listAiRuntimePoliciesForTier(policyProfile);
-  const providersByKey = new Map<
-    AiProvider,
-    {
-      provider: AiProvider;
-      label: string;
-      defaultModel: string;
-      defaultModelLabel: string;
-      models: Array<{ model: string; label: string }>;
-    }
-  >();
-  let defaultProvider: AiProvider = 'deepseek';
-  for (const { policy } of tierPolicies) {
-    defaultProvider = policy.defaultModel.provider;
-    for (const [provider, modelPolicy] of Object.entries(policy.modelsByProvider) as Array<[AiProvider, NonNullable<typeof policy.modelsByProvider[AiProvider]>]>) {
-      const current = providersByKey.get(provider) ?? {
-        provider,
-        label: aiProviderLabelByKey.get(provider) ?? provider,
-        defaultModel: modelPolicy.defaultModel,
-        defaultModelLabel: labelAiModel(modelPolicy.defaultModel, provider),
-        models: [],
-      };
-      current.defaultModel = modelPolicy.defaultModel;
-      current.defaultModelLabel = labelAiModel(modelPolicy.defaultModel, provider);
-      const seen = new Set(current.models.map((model) => model.model));
-      modelPolicy.allowed.forEach((model) => {
-        if (seen.has(model)) return;
-        seen.add(model);
-        current.models.push({ model, label: labelAiModel(model, provider) });
-      });
-      providersByKey.set(provider, current);
-    }
-  }
-  const providers = aiProviderUi
-    .map((entry) => providersByKey.get(entry.provider))
-    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
-
-  aiAccessByTier[policyProfile] = {
-    policyProfile,
-    defaultProvider,
-    defaultProviderLabel: providers.find((provider) => provider.provider === defaultProvider)?.label ?? defaultProvider,
-    providers,
-  };
-}
-
-const aiAgents = listAiAgents()
-  .filter((entry) => entry.executionSurface === 'execute')
-  .filter((entry) => !entry.agentId.startsWith('debug.'));
+const aiAgents = listAiAgents();
 
 const aiAgentsByTier = aiAgents.map((entry) => {
   const byTier: Partial<
@@ -202,8 +135,9 @@ const aiAgentsByTier = aiAgents.map((entry) => {
 window.__CK_AI_ACCESS__ = {
   providers: aiProviderUi,
   models: listAiModelCatalog(),
-  byTier: aiAccessByTier,
   agents: aiAgentsByTier,
+  copilots: aiAgentsByTier.filter((agent) => agent.category === 'copilot'),
+  systemAgents: aiAgentsByTier.filter((agent) => agent.category === 'system_agent'),
 };
 
 const appRoot = document.getElementById('app');

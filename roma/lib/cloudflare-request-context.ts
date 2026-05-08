@@ -3,7 +3,7 @@ const CLOUDFLARE_REQUEST_CONTEXT_SYMBOL = Symbol.for('__cloudflare-request-conte
 // This is intentionally narrow.
 // Roma retains ambient Cloudflare request context only for edge-only binding access and
 // request-scoped stage/env reads where Next route plumbing would otherwise widen many call signatures.
-// Hot product-path reads such as account budget usage and rate-limit KV injection should prefer
+// Hot product-path reads such as account limit usage and rate-limit KV injection should prefer
 // explicit request-boundary injection instead of reaching through this global accessor.
 
 type CloudflareRequestContext = {

@@ -15,8 +15,7 @@ export type AccountAssetsTransport = {
 };
 
 const ACCOUNT_ASSET_UPSELL_REASONS = new Set([
-  'coreui.upsell.reason.budgetExceeded',
-  'coreui.upsell.reason.capReached',
+  'coreui.upsell.reason.limitReached',
   'coreui.upsell.reason.platform.uploads',
 ]);
 

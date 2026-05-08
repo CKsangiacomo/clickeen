@@ -94,7 +94,6 @@ interface AiProfileConfig {
   perRequestLimits: {
     maxTokens: number;
     timeoutMs: number;
-    maxRequests: number;
   };
 }
 
@@ -115,7 +114,6 @@ const PROFILE_CONFIGS: Record<AiProfile, AiProfileConfig> = {
       },
     },
     defaultProvider: 'amazon',
-    perRequestLimits: { maxTokens: 650, timeoutMs: 45000, maxRequests: 2 },
   },
 
   paid_standard: {
@@ -153,7 +151,6 @@ const PROFILE_CONFIGS: Record<AiProfile, AiProfileConfig> = {
       },
     },
     defaultProvider: 'amazon',
-    perRequestLimits: { maxTokens: 900, timeoutMs: 45000, maxRequests: 3 },
   },
 
   paid_premium: {
@@ -195,7 +192,6 @@ const PROFILE_CONFIGS: Record<AiProfile, AiProfileConfig> = {
       },
     },
     defaultProvider: 'openai',
-    perRequestLimits: { maxTokens: 1400, timeoutMs: 60000, maxRequests: 3 },
   },
 };
 

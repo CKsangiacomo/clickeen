@@ -3,7 +3,7 @@ import type { AIGrant } from './types';
 import { HttpError, asNumber, asString, isRecord } from './http';
 
 const AI_GRANT_ISSUER_SET = new Set<AIGrant['iss']>(['roma', 'sanfrancisco']);
-const AI_PROVIDER_SET = new Set<AiProvider>(['deepseek', 'openai', 'anthropic', 'groq', 'amazon']);
+const AI_PROVIDER_SET = new Set<AiProvider>(['deepseek', 'openai']);
 
 function isAiGrantIssuer(value: string): value is AIGrant['iss'] {
   return AI_GRANT_ISSUER_SET.has(value as AIGrant['iss']);
@@ -155,21 +155,13 @@ function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
   }
 
   const maxTokensPerCall = asPositiveInteger((value as any).maxTokensPerCall);
-  const maxRequestsPerGrant = asPositiveInteger((value as any).maxRequestsPerGrant);
   const maxTurnsPerThread = asPositiveInteger((value as any).maxTurnsPerThread);
   const maxMonthlyTurnsRaw = (value as any).maxMonthlyTurns;
   const maxMonthlyTurns = maxMonthlyTurnsRaw === null ? null : asPositiveInteger(maxMonthlyTurnsRaw);
   const timeoutMs = asPositiveInteger((value as any).timeoutMs);
-  const maxCostUsdRaw = (value as any).maxCostUsd;
-  const maxCostUsd =
-    typeof maxCostUsdRaw === 'undefined'
-      ? undefined
-      : typeof maxCostUsdRaw === 'number' && Number.isFinite(maxCostUsdRaw) && maxCostUsdRaw > 0
-        ? maxCostUsdRaw
-        : null;
   const learningCapture = normalizeLearningCapturePolicy((value as any).learningCapture);
   const policyVersion = asString((value as any).policyVersion);
-  if (!maxTokensPerCall || !maxRequestsPerGrant || !maxTurnsPerThread || maxMonthlyTurns === undefined || !timeoutMs || maxCostUsd === null || !learningCapture || !policyVersion) {
+  if (!maxTokensPerCall || !maxTurnsPerThread || maxMonthlyTurns === undefined || !timeoutMs || !learningCapture || !policyVersion) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy has invalid limits' });
   }
 
@@ -181,10 +173,8 @@ function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
     allowModelPicker,
     ...(selectedModel ? { selectedModel } : {}),
     maxTokensPerCall,
-    maxRequestsPerGrant,
     maxTurnsPerThread,
     maxMonthlyTurns,
-    ...(typeof maxCostUsd === 'number' ? { maxCostUsd } : {}),
     timeoutMs,
     learningCapture,
     policyVersion,
@@ -210,10 +200,8 @@ function normalizeLearningCapturePolicy(value: unknown): AiGrantPolicy['learning
   if (typeof rawSamplePercent !== 'number' || !Number.isFinite(rawSamplePercent) || rawSamplePercent < 0 || rawSamplePercent > 100) {
     return undefined;
   }
-  if (typeof (value as any).captureRawFailures !== 'boolean') return undefined;
   return {
     rawSamplePercent,
-    captureRawFailures: (value as any).captureRawFailures,
   };
 }
 
@@ -253,22 +241,4 @@ export function getGrantTimeoutMs(grant: AIGrant): number {
     throw new HttpError(400, { code: 'GRANT_INVALID', message: 'Grant budgets.timeoutMs must be a positive number' });
   }
   return timeoutMs;
-}
-
-export function getGrantMaxRequests(grant: AIGrant): number {
-  const maxRequests = (grant.budgets as any).maxRequests;
-  if (maxRequests === undefined) return 1;
-  if (typeof maxRequests !== 'number' || !Number.isFinite(maxRequests) || maxRequests <= 0) {
-    throw new HttpError(400, { code: 'GRANT_INVALID', message: 'Grant budgets.maxRequests must be a positive number' });
-  }
-  return Math.max(1, Math.floor(maxRequests));
-}
-
-export function getGrantMaxCostUsd(grant: AIGrant): number | null {
-  const maxCostUsd = (grant.budgets as any).maxCostUsd;
-  if (maxCostUsd === undefined) return null;
-  if (typeof maxCostUsd !== 'number' || !Number.isFinite(maxCostUsd) || maxCostUsd <= 0) {
-    throw new HttpError(400, { code: 'GRANT_INVALID', message: 'Grant budgets.maxCostUsd must be a positive number' });
-  }
-  return maxCostUsd;
 }

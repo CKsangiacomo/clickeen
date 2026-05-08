@@ -80,8 +80,7 @@ export type BerlinBootstrapPayload = {
     expiresAt: string;
     entitlements: {
       flags: Record<string, boolean>;
-      caps: Record<string, number | null>;
-      budgets: Record<string, { max: number | null }>;
+      limits: Record<string, number | null>;
     };
   };
 };

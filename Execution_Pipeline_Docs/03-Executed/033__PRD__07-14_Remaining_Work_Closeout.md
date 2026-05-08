@@ -12,7 +12,6 @@ Legacy PRDs 07–14 are now archived. This document is the single, small, execut
 
 ## 1) Goals (must ship)
 1) **AI policy parity** so all AI executions (including system jobs like l10n) use the policy-driven router.
-2) **Budget enforcement parity** in San Francisco across all AI paths (`maxTokens`, `timeoutMs`, `maxCostUsd`, `maxRequests`).
 3) **Verification closeout** to confirm the executed architecture is correct and stable (local + cloud-dev checks).
 
 ---
@@ -43,17 +42,12 @@ Legacy PRDs 07–14 are now archived. This document is the single, small, execut
 ---
 
 ### 3.2 Budget enforcement parity (new; required to make policy real)
-**Why:** Grant budgets include cost and request limits, but San Francisco currently enforces only tokens and timeout. That is an incomplete contract.
+**Why:** Grant budgets include request limits, but San Francisco currently enforces only tokens and timeout. That is an incomplete contract.
 
 **Required behaviors**
-- San Francisco enforces `maxCostUsd` and `maxRequests` in addition to `maxTokens` and `timeoutMs`.
-- Cost is computed from normalized provider usage plus a single price table config.
-- Enforcement is fail-closed when usage or pricing is missing/unknown.
 - l10nInstance respects the same budget enforcement path as other AI tasks.
 
 **Deliverables**
-- Implement `maxCostUsd` and `maxRequests` checks in San Francisco grant enforcement.
-- Add/confirm a single, explicit pricing configuration surface used by enforcement.
 - Add targeted tests for over-budget denial paths.
 
 ---
@@ -76,7 +70,6 @@ Legacy PRDs 07–14 are now archived. This document is the single, small, execut
 
 ## 4) Acceptance criteria
 1) l10nInstance no longer calls providers directly and runs through a policy capsule/grant path minted by Paris.
-2) San Francisco enforces all grant budgets: `maxTokens`, `timeoutMs`, `maxCostUsd`, and `maxRequests`.
 3) Verification checklist passes (local + cloud-dev), with docs aligned.
 
 ---

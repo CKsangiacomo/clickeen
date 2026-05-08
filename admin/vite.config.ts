@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import { createDevstudioPlugins } from './vite/devstudio';
+import { applyAiRuntimeMatrixCellUpdate, assertAiRuntimeMatrix } from '@clickeen/ck-policy';
 
 export default defineConfig({
   build: {
@@ -99,17 +100,17 @@ export default defineConfig({
               return;
             }
 
-            const capabilityKey = String(payload?.capabilityKey || '').trim();
+            const entitlementKey = String(payload?.entitlementKey || '').trim();
             const tier = String(payload?.tier || '').trim();
             const value = payload?.value as unknown;
 
-            if (!capabilityKey) {
+            if (!entitlementKey) {
               res.statusCode = 422;
               res.end(
                 JSON.stringify({
                   error: {
                     kind: 'VALIDATION',
-                    reasonKey: 'coreui.errors.entitlements.capabilityKey.invalid',
+                    reasonKey: 'coreui.errors.entitlements.entitlementKey.invalid',
                   },
                 }),
               );
@@ -148,21 +149,21 @@ export default defineConfig({
                 return;
               }
 
-              const cap = matrix?.capabilities?.[capabilityKey];
-              if (!cap || typeof cap !== 'object') {
+              const entitlement = matrix?.entitlements?.[entitlementKey];
+              if (!entitlement || typeof entitlement !== 'object') {
                 res.statusCode = 404;
                 res.end(
                   JSON.stringify({
                     error: {
                       kind: 'NOT_FOUND',
-                      reasonKey: 'coreui.errors.entitlements.capability.notFound',
+                      reasonKey: 'coreui.errors.entitlements.entitlement.notFound',
                     },
                   }),
                 );
                 return;
               }
 
-              const kind = String((cap as any).kind || '').trim();
+              const kind = String((entitlement as any).kind || '').trim();
               if (kind === 'flag') {
                 if (typeof value !== 'boolean') {
                   res.statusCode = 422;
@@ -177,7 +178,7 @@ export default defineConfig({
                   );
                   return;
                 }
-              } else if (kind === 'cap' || kind === 'budget') {
+              } else if (kind === 'limit') {
                 if (value !== null && (typeof value !== 'number' || !Number.isFinite(value))) {
                   res.statusCode = 422;
                   res.end(
@@ -205,13 +206,13 @@ export default defineConfig({
                 return;
               }
 
-              if (!cap.values || typeof cap.values !== 'object') (cap as any).values = {};
-              (cap as any).values[tier] = value;
+              if (!entitlement.values || typeof entitlement.values !== 'object') (entitlement as any).values = {};
+              (entitlement as any).values[tier] = value;
 
               fs.writeFileSync(matrixPath, `${JSON.stringify(matrix, null, 2)}\n`, 'utf8');
 
               res.statusCode = 200;
-              res.end(JSON.stringify({ ok: true, capabilityKey, tier, value }));
+              res.end(JSON.stringify({ ok: true, entitlementKey, tier, value }));
             } catch (error) {
               res.statusCode = 500;
               res.end(
@@ -219,6 +220,106 @@ export default defineConfig({
                   error: {
                     kind: 'INTERNAL',
                     reasonKey: 'coreui.errors.db.writeFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+            }
+          });
+        });
+      },
+    },
+    {
+      name: 'local-edit-ai-runtime-matrix',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          const url = req.url || '';
+          const pathname = url.split('?')[0] || '';
+          const wantsGet = pathname === '/api/ai-runtime/matrix' && req.method === 'GET';
+          const wantsUpdateCell = pathname === '/api/ai-runtime/matrix/cell' && req.method === 'POST';
+          if (!wantsGet && !wantsUpdateCell) return next();
+
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-store');
+
+          const matrixPath = path.resolve(__dirname, '..', 'packages', 'ck-policy', 'ai-runtime.matrix.json');
+
+          const readMatrix = () => {
+            if (!fs.existsSync(matrixPath)) {
+              res.statusCode = 404;
+              res.end(
+                JSON.stringify({
+                  error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.aiRuntime.notFound' },
+                }),
+              );
+              return null;
+            }
+            const raw = fs.readFileSync(matrixPath, 'utf8');
+            return assertAiRuntimeMatrix(JSON.parse(raw));
+          };
+
+          if (wantsGet) {
+            try {
+              const matrix = readMatrix();
+              if (!matrix) return;
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, path: matrixPath, matrix }));
+            } catch (error) {
+              res.statusCode = 500;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'INTERNAL',
+                    reasonKey: 'coreui.errors.db.readFailed',
+                    detail: error instanceof Error ? error.message : String(error),
+                  },
+                }),
+              );
+            }
+            return;
+          }
+
+          let body = '';
+          req.on('data', (chunk) => {
+            body += chunk.toString();
+          });
+          req.on('end', () => {
+            let payload: any;
+            try {
+              payload = body ? JSON.parse(body) : null;
+            } catch (_err) {
+              res.statusCode = 422;
+              res.end(
+                JSON.stringify({
+                  error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' },
+                }),
+              );
+              return;
+            }
+
+            try {
+              const matrix = readMatrix();
+              if (!matrix) return;
+              const nextMatrix = applyAiRuntimeMatrixCellUpdate(matrix, {
+                agentId: String(payload?.agentId || '').trim(),
+                tier: String(payload?.tier || '').trim() as any,
+                field: String(payload?.field || '').trim() as any,
+                value: payload?.value,
+                provider: typeof payload?.provider === 'string' ? (payload.provider.trim() as any) : undefined,
+                model: typeof payload?.model === 'string' ? payload.model.trim() : undefined,
+              });
+
+              fs.writeFileSync(matrixPath, `${JSON.stringify(nextMatrix, null, 2)}\n`, 'utf8');
+
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, matrix: nextMatrix }));
+            } catch (error) {
+              res.statusCode = 422;
+              res.end(
+                JSON.stringify({
+                  error: {
+                    kind: 'VALIDATION',
+                    reasonKey: 'coreui.errors.aiRuntime.updateFailed',
                     detail: error instanceof Error ? error.message : String(error),
                   },
                 }),

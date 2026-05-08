@@ -43,12 +43,13 @@ OUTPUT
 Key                     | Kind | Path(s)                | Metric/Mode          | Enforcement              | Notes
 ----------------------- | ---- | ---------------------- | -------------------- | ------------------------ | ----------------
 branding.remove         | flag | behavior.showBacklink  | boolean (deny false) | load=sanitize ops=reject | sanitize on load
-cap.group.items.small.max | cap | sections[]            | count                | ops+publish reject       | cap binding
-cap.group.items.large.max | cap | sections[].faqs[]     | count-total          | ops+publish reject       | cap binding
+items.group.small.max | limit | sections[]          | count                | ops+publish reject       | limit binding
+items.group.large.max | limit | sections[].faqs[]   | count-total          | ops+publish reject       | limit binding
 ```
 
 NOTES
 - Every row must correspond to an entry in `tokyo/product/widgets/{widgetType}/limits.json`; shared policy/ops/publish enforcement consumes that mapping.
+- Use active global entitlement keys from `packages/ck-policy/entitlements.matrix.json`. If a limit is product truth but enforcement is missing, mark that enforcement gap in `packages/ck-policy/src/registry.ts` instead of deleting the limit.
 - If the PRD expects UI gating (e.g. disabling a control), it must be explicit; otherwise keep UI generic and rely on shared policy plus owner-correct server enforcement.
 
 GATE

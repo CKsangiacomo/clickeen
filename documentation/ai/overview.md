@@ -13,17 +13,14 @@ Traditional SaaS companies need full teams to operate at scale—sales, support,
 | Agent | Role | Replaces |
 |-------|------|----------|
 | Builder Copilot | Help account users customize widgets | Product specialists |
-| Support Agent | Resolve user issues | Support team |
-| Marketing Copywriter | Funnels, landing pages, PLG copy | Marketing team |
-| Content Writer | Blog, SEO, help articles | Content team |
-| UI Translator | Product localization | Localization team |
-| Ops Monitor | Alerts, incidents, monitoring | DevOps/SRE |
+| Widget Instance Translator | Translate saved widget instances into enabled locales | Localization team |
+| Prague Copy Translator | Translate Prague website copy | Marketing localization |
 
 **Every agent learns automatically** from outcomes—improving prompts, accumulating golden examples, and evolving over time. Day 1 agents are mediocre. Day 100 agents are excellent.
 
 See also:
 - `learning.md` — How agents learn from outcomes
-- `infrastructure.md` — Sessions, jobs, state management
+- `infrastructure.md` — Sessions, agent execution state management
 - `BUILD_Widget.md` — AI execution guide for widget definitions
 - `BUILD_PraguePage.md` — AI execution guide for Prague page composition
 
@@ -71,7 +68,7 @@ The policy contains direct execution truth:
 - `modelsByProvider`
 - optional `selectedModel`
 - model-picker permission
-- token, turn, timeout, and cost ceilings
+- token, turn, and timeout ceilings
 - learning-capture rules
 - `policyVersion`
 
@@ -79,7 +76,7 @@ San Francisco enforces this policy by:
 1. Verifying the signed grant.
 2. Rejecting providers/models outside `modelsByProvider`.
 3. Rejecting selected models when the account policy does not allow a picker.
-4. Enforcing request ceilings from the grant.
+4. Enforcing token, turn, and timeout ceilings from the grant.
 
 Widget copilot routing (shipped):
 - Account Builder uses `cs.widget.copilot.v1`
@@ -123,9 +120,9 @@ Keeping product/persistence owners and San Francisco separate prevents:
 4) San Francisco returns `{ ops[], usage }`.
 5) Bob applies `ops[]` locally as pure state transforms. If an op cannot be applied, Bob fails loudly (platform bug) and the developer fixes the widget/package or copilot output.
 
-### Operational agents (Clickeen’s internal workforce)
-- A worker (or scheduled job) triggers an execution request to San Francisco using a **service grant** issued by a trusted Clickeen backend surface.
-- Result is used to create tickets, draft responses, or propose actions (depending on the agent’s permissions/tools).
+### System agents (Clickeen’s internal workforce)
+- A trusted backend surface triggers an explicit system-agent execution request to San Francisco.
+- Result is used by the owning system boundary, such as widget translation overlays or Prague copy output.
 
 ## Runtime Reality (what’s actually shipped)
 
@@ -138,7 +135,7 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - Account-widget l10n ops generation (Tokyo-worker calls San Francisco through the private `SANFRANCISCO_L10N` service binding; no public HTTP route and no shared-secret bearer)
   - `POST /v1/l10n/translate` (local + cloud-dev only; HMAC body signature; `ENVIRONMENT in {local,dev}`)
 - Cloudflare bindings:
-  - `SF_KV` (sessions + job records)
+  - `SF_KV` (agent sessions)
   - `SF_EVENTS` (queue for async event ingestion)
   - `SF_D1` (queryable indexes)
   - `SF_R2` (raw event storage)
@@ -174,8 +171,6 @@ type AIGrant = {
   budgets: {
     maxTokens: number;
     timeoutMs?: number;
-    maxCostUsd?: number;
-    maxRequests?: number; // optional session window
   };
   mode: 'editor' | 'ops'; // editor copilots vs operational agents
   ai?: {
@@ -186,12 +181,9 @@ type AIGrant = {
     allowModelPicker: boolean;
     selectedModel?: { provider: string; model: string };
     maxTokensPerCall: number;
-    maxRequestsPerGrant: number;
     maxTurnsPerThread: number;
     maxMonthlyTurns: number | null;
-    maxCostUsd?: number;
     timeoutMs: number;
-    learningCapture: { rawSamplePercent: number; captureRawFailures: boolean };
     policyVersion: string;
   };
   trace: { sessionId?: string; instancePublicId?: string };
@@ -218,7 +210,6 @@ type EditorAIResult = {
     model: string;
     promptTokens: number;
     completionTokens: number;
-    costUsd?: number;
     latencyMs: number;
   };
 };
@@ -323,7 +314,7 @@ These are different classes of limits and must not be mixed.
 ## Security
 - San Francisco verifies grant signatures and expiry.
 - San Francisco enforces capability allowlists from the grant.
-- San Francisco enforces per-request budgets and concurrency.
+- San Francisco enforces token limits, timeouts, and concurrency.
 - Bob never receives provider keys.
 
 ## Operational Specs (shipped)

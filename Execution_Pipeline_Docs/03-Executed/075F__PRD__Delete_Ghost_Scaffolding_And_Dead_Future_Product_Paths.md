@@ -184,7 +184,6 @@ The real live budget surface remains:
 - `budgetsByProfile`
 - `AiBudget.maxTokens`
 - `AiBudget.timeoutMs`
-- `AiBudget.maxRequests`
 
 #### Delete
 

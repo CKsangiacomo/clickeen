@@ -8,8 +8,8 @@ export function AiDomain() {
   const authz = data.authz ?? null;
   const profile = authz?.profile ?? null;
   const entitlements = authz?.entitlements ?? null;
-  const copilotBudget = entitlements?.budgets?.['budget.copilot.turns'] ?? null;
-  const copilotTurnsLabel = typeof copilotBudget?.max === 'number' && Number.isFinite(copilotBudget.max) ? `${copilotBudget.max}` : 'Unlimited';
+  const copilotTurnLimit = entitlements?.limits?.['copilot.turns.monthly.max'] ?? null;
+  const copilotTurnsLabel = typeof copilotTurnLimit === 'number' && Number.isFinite(copilotTurnLimit) ? `${copilotTurnLimit}` : 'Unlimited';
 
   return (
     <>

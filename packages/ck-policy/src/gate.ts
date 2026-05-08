@@ -1,13 +1,9 @@
-import type { ActionKey, BudgetKey } from './registry';
+import type { ActionKey } from './registry';
 import type { Policy } from './types';
 
 export type GateDecision =
   | { allow: true }
   | { allow: false; upsell: 'UP'; reasonKey: string; detail?: string };
-
-export type BudgetDecision =
-  | { ok: true; nextUsed: number }
-  | { ok: false; upsell: 'UP'; reasonKey: string; detail?: string };
 
 function assertEditorRole(policy: Policy) {
   if (policy.role === 'viewer') {
@@ -37,35 +33,4 @@ export function can(policy: Policy, actionKey: ActionKey, _payload?: unknown): G
       throw new Error(`[ck-policy] Unhandled actionKey: ${exhaustive}`);
     }
   }
-}
-
-export function canConsume(policy: Policy, budgetKey: BudgetKey, amount = 1): BudgetDecision {
-  if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error('[ck-policy] canConsume amount must be a positive finite number');
-  }
-
-  const budget = policy.budgets[budgetKey];
-  if (!budget) {
-    throw new Error(`[ck-policy] Policy is missing budget key: ${budgetKey}`);
-  }
-
-  if (budget.max == null) return { ok: true, nextUsed: budget.used + amount };
-  if (budget.used + amount <= budget.max) return { ok: true, nextUsed: budget.used + amount };
-
-  return {
-    ok: false,
-    upsell: 'UP',
-    reasonKey: 'coreui.upsell.reason.budgetExceeded',
-    detail: `${String(budgetKey)} budget exceeded (max=${budget.max}).`,
-  };
-}
-
-export function consume(policy: Policy, budgetKey: BudgetKey, amount = 1): Policy {
-  const decision = canConsume(policy, budgetKey, amount);
-  if (!decision.ok) {
-    throw new Error(`[ck-policy] Budget denied: ${budgetKey}`);
-  }
-  const next = structuredClone(policy) as Policy;
-  next.budgets[budgetKey].used = decision.nextUsed;
-  return next;
 }

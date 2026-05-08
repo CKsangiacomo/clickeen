@@ -126,7 +126,6 @@ Create a central module (e.g., `sanfrancisco/src/ai/modelRouter.ts`) that takes:
 …and returns:
 - `provider`: `deepseek | openai | anthropic`
 - `model`: string (per provider)
-- `budgets`: maxTokens/timeoutMs/maxRequests (bounded by grant)
 - `client`: `minibob|bob|ops`
 - optional: `pricingTier` / `aiProfile` (for logs)
 
@@ -231,7 +230,6 @@ type AgentRegistryEntry = {
   allowProviderChoice?: boolean;     // if paid users can pick OpenAI vs Anthropic
 
   // Default budgets by tier/profile
-  budgetsByProfile: Record<string, { maxTokens: number; timeoutMs: number; maxRequests?: number }>;
 
   // Tool allowlist (future-proof)
   toolCaps?: string[];               // e.g. ['tool:readUrl', 'tool:searchDocs']
@@ -271,7 +269,6 @@ To rename `sdr.widget.copilot.v1` to `cs.copilot.v1` without breaking old caller
 ## 6) AI Grants (Paris → SF) become “policy capsules”
 Today, the grant carries:
 - caps: [`agent:${agentId}`]
-- budgets: maxTokens/timeoutMs/maxRequests
 - mode: editor|ops
 - trace
 
@@ -304,7 +301,6 @@ type AIGrant = {
   sub: { kind: 'anon'|'user'|'service'; ... };
   exp: number;
   caps: string[];
-  budgets: { maxTokens: number; timeoutMs?: number; maxRequests?: number; maxCostUsd?: number; };
   mode: 'editor'|'ops';
   trace?: { sessionId?: string; instancePublicId?: string; envStage?: string; };
   ai?: AIGrantAiPolicy;
@@ -516,7 +512,7 @@ Because tier-based intelligence is monetized, you must be able to measure and en
 - `ai.profile`
 - `selectedProvider`
 - `selectedModel`
-- `usage.promptTokens`, `usage.completionTokens`, `usage.costUsd` (if computed)
+- `usage.promptTokens`, `usage.completionTokens`
 - `taskClass`
 - `trace.client`
 
@@ -576,8 +572,6 @@ Recommended Codex prompt structure:
       "defaultProviders": ["deepseek"],
       "allowProviderChoice": false,
       "budgetsByProfile": {
-        "free_low": { "maxTokens": 280, "timeoutMs": 15000, "maxRequests": 1 },
-        "paid_standard": { "maxTokens": 450, "timeoutMs": 20000, "maxRequests": 1 }
       }
     },
     {
@@ -589,9 +583,6 @@ Recommended Codex prompt structure:
       "allowProviderChoice": true,
       "requiredEntitlements": ["ai.cs.enabled"],
       "budgetsByProfile": {
-        "free_low": { "maxTokens": 500, "timeoutMs": 20000, "maxRequests": 1 },
-        "paid_standard": { "maxTokens": 900, "timeoutMs": 30000, "maxRequests": 2 },
-        "paid_premium": { "maxTokens": 1600, "timeoutMs": 45000, "maxRequests": 2 }
       },
       "toolCaps": ["tool:readUrl"]
     },
@@ -603,9 +594,6 @@ Recommended Codex prompt structure:
       "defaultProviders": ["deepseek", "openai", "anthropic"],
       "allowProviderChoice": true,
       "budgetsByProfile": {
-        "free_low": { "maxTokens": 500, "timeoutMs": 20000, "maxRequests": 1 },
-        "paid_standard": { "maxTokens": 1200, "timeoutMs": 30000, "maxRequests": 1 },
-        "curated_premium": { "maxTokens": 2000, "timeoutMs": 60000, "maxRequests": 2 }
       }
     }
   ]

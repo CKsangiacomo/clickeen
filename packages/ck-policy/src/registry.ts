@@ -3,184 +3,207 @@ import { getEntitlementsMatrix } from './matrix';
 const matrix = getEntitlementsMatrix();
 
 // Keep in sync with packages/ck-policy/entitlements.matrix.json (registry is the typed source of truth).
-export const CAPABILITY_KEYS = [
+export const ENTITLEMENT_KEYS = [
   'l10n.locales.max',
-  'l10n.locales.custom.max',
   'l10n.versions.max',
-  'personalization.sources.website.depth.max',
   'branding.remove',
   'embed.seoGeo.enabled',
-  'budget.copilot.turns',
-  'budget.uploads.bytes',
-  'budget.personalization.runs',
-  'budget.personalization.website.crawls',
-  'budget.snapshots.regens',
-  'budget.l10n.publishes',
+  'copilot.turns.monthly.max',
+  'storage.bytes.max',
   'views.monthly.max',
   'instances.published.max',
   'widgets.types.max',
   'uploads.size.max',
-  'cap.group.items.small.max',
-  'cap.group.items.medium.max',
-  'cap.group.items.large.max',
+  'items.group.small.max',
+  'items.group.medium.max',
+  'items.group.large.max',
 ] as const;
-export type CapabilityKey = (typeof CAPABILITY_KEYS)[number];
+export type EntitlementKey = (typeof ENTITLEMENT_KEYS)[number];
 
 export const FLAG_KEYS = [
   'branding.remove',
   'embed.seoGeo.enabled',
-] as const satisfies readonly CapabilityKey[];
+] as const satisfies readonly EntitlementKey[];
 export type FlagKey = (typeof FLAG_KEYS)[number];
 
-export const CAP_KEYS = [
+export const PLAN_LIMIT_KEYS = [
   'l10n.locales.max',
-  'l10n.locales.custom.max',
   'l10n.versions.max',
-  'personalization.sources.website.depth.max',
+  'copilot.turns.monthly.max',
+  'storage.bytes.max',
   'views.monthly.max',
   'instances.published.max',
   'widgets.types.max',
   'uploads.size.max',
-  'cap.group.items.small.max',
-  'cap.group.items.medium.max',
-  'cap.group.items.large.max',
-] as const satisfies readonly CapabilityKey[];
-export type CapKey = (typeof CAP_KEYS)[number];
+  'items.group.small.max',
+  'items.group.medium.max',
+  'items.group.large.max',
+] as const satisfies readonly EntitlementKey[];
+export type PlanLimitKey = (typeof PLAN_LIMIT_KEYS)[number];
 
-export const BUDGET_KEYS = [
-  'budget.copilot.turns',
-  'budget.uploads.bytes',
-  'budget.personalization.runs',
-  'budget.personalization.website.crawls',
-  'budget.snapshots.regens',
-  'budget.l10n.publishes',
-] as const satisfies readonly CapabilityKey[];
-export type BudgetKey = (typeof BUDGET_KEYS)[number];
-
-export const ENTITLEMENT_KEYS = CAPABILITY_KEYS;
-
-export type CapabilityMeta = {
+export type EntitlementMeta = {
   label: string;
   description: string;
+  enforcement: {
+    status: 'enforced' | 'gap';
+    owner: string;
+    note: string;
+  };
 };
 
-export const CAPABILITY_META: Record<CapabilityKey, CapabilityMeta> = {
+export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
   'l10n.locales.max': {
-    label: 'Max locales',
-    description: 'Maximum locale overlays per widget (total, including EN).',
-  },
-  'l10n.locales.custom.max': {
-    label: 'Max custom locales',
-    description: 'Maximum user-selectable locales per widget (excluding EN).',
+    label: 'Translation languages',
+    description: 'Maximum translated languages the account can add. The base language is implied and not counted.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Berlin account locale routes',
+      note: 'Berlin rejects selected translated locales above the plan limit. Base language is not counted.',
+    },
   },
   'l10n.versions.max': {
     label: 'Max l10n versions',
     description: 'Maximum overlay versions retained.',
-  },
-  'personalization.sources.website.depth.max': {
-    label: 'Website crawl depth',
-    description: 'Maximum website crawl depth for personalization.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Tokyo-worker account instance sync',
+      note: 'Tokyo-worker enforces retained account-instance l10n versions.',
+    },
   },
   'branding.remove': {
     label: 'Remove branding',
     description: 'Allow removing Clickeen branding.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Widget limits and policy evaluation',
+      note: 'Widget limits sanitize/reject hidden backlink state where the tier cannot remove branding.',
+    },
   },
   'embed.seoGeo.enabled': {
     label: 'SEO/GEO embed',
     description: 'Allow generating and serving SEO/GEO optimized embed artifacts (Iframe++).',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Bob embed UI and Tokyo-worker sync',
+      note: 'Bob gates the embed option; Tokyo-worker only syncs SEO/GEO artifacts when the flag is true.',
+    },
   },
-  'budget.copilot.turns': {
+  'copilot.turns.monthly.max': {
     label: 'Copilot turns',
     description: 'Monthly AI copilot turns.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Roma copilot grant issuance',
+      note: 'Roma blocks copilot grant issuance when the monthly turn limit is exceeded.',
+    },
   },
-  'budget.uploads.bytes': {
+  'storage.bytes.max': {
     label: 'Storage',
     description: 'Total account storage available for uploaded assets (bytes).',
-  },
-  'budget.personalization.runs': {
-    label: 'Personalization runs',
-    description: 'Monthly personalization runs budget.',
-  },
-  'budget.personalization.website.crawls': {
-    label: 'Website crawls',
-    description: 'Monthly website crawls budget.',
-  },
-  'budget.snapshots.regens': {
-    label: 'Snapshot regenerations',
-    description: 'Monthly snapshot regeneration budget.',
-  },
-  'budget.l10n.publishes': {
-    label: 'L10n publishes',
-    description: 'Monthly localization publish budget.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Tokyo-worker assets',
+      note: 'Tokyo-worker rejects uploads that exceed the account storage limit.',
+    },
   },
   'views.monthly.max': {
     label: 'Monthly views',
-    description: 'Maximum monthly views.',
+    description: 'Maximum monthly public embed views.',
+    enforcement: {
+      status: 'gap',
+      owner: 'Venice/public embed telemetry',
+      note: 'Product limit restored; view counting and freeze/upsell behavior still need enforcement.',
+    },
   },
   'instances.published.max': {
     label: 'Published instances',
     description: 'Maximum published instances.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Roma publish route',
+      note: 'Roma rejects publish when the account is already at the plan limit.',
+    },
   },
   'widgets.types.max': {
     label: 'Widget types',
     description: 'Maximum distinct widget types per account.',
+    enforcement: {
+      status: 'gap',
+      owner: 'Roma widget creation',
+      note: 'Product limit restored; new-widget/create flow still needs distinct widget-type enforcement.',
+    },
   },
   'uploads.size.max': {
     label: 'Upload size max',
     description: 'Maximum upload size per file (bytes).',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Tokyo-worker assets',
+      note: 'Tokyo-worker rejects files above the per-upload plan limit.',
+    },
   },
-  'cap.group.items.small.max': {
-    label: 'Items cap group (small)',
-    description: 'Shared max items cap for “small” list-style widgets.',
+  'items.group.small.max': {
+    label: 'Items group (small)',
+    description: 'Shared max items limit for small list-style widgets.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Widget limits and policy evaluation',
+      note: 'Widget limits reject configs above the plan limit where a widget binds this group.',
+    },
   },
-  'cap.group.items.medium.max': {
-    label: 'Items cap group (medium)',
-    description: 'Shared max items cap for “medium” list-style widgets.',
+  'items.group.medium.max': {
+    label: 'Items group (medium)',
+    description: 'Shared max items limit for medium list-style widgets.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Widget limits and policy evaluation',
+      note: 'Widget limits reject configs above the plan limit where a widget binds this group.',
+    },
   },
-  'cap.group.items.large.max': {
-    label: 'Items cap group (large)',
-    description: 'Shared max items cap for “large” list-style widgets.',
+  'items.group.large.max': {
+    label: 'Items group (large)',
+    description: 'Shared max items limit for large list-style widgets.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Widget limits and policy evaluation',
+      note: 'Widget limits reject aggregate item counts above the plan limit where a widget binds this group.',
+    },
   },
 };
 
 function assertMetaMatchesRegistry(): void {
-  const metaKeys = Object.keys(CAPABILITY_META).sort();
-  const registryKeys = [...CAPABILITY_KEYS].sort();
+  const metaKeys = Object.keys(ENTITLEMENT_META).sort();
+  const registryKeys = [...ENTITLEMENT_KEYS].sort();
   if (metaKeys.length !== registryKeys.length) {
-    throw new Error('[ck-policy] Capability meta is out of sync with registry');
+    throw new Error('[ck-policy] Entitlement meta is out of sync with registry');
   }
   for (let i = 0; i < registryKeys.length; i += 1) {
     if (registryKeys[i] !== metaKeys[i]) {
-      throw new Error('[ck-policy] Capability meta is out of sync with registry');
+      throw new Error('[ck-policy] Entitlement meta is out of sync with registry');
     }
   }
 }
 
 function assertRegistryMatchesMatrix(): void {
-  const matrixKeys = Object.keys(matrix.capabilities).sort();
-  const registryKeys = [...CAPABILITY_KEYS].sort();
+  const matrixKeys = Object.keys(matrix.entitlements).sort();
+  const registryKeys = [...ENTITLEMENT_KEYS].sort();
   if (matrixKeys.length !== registryKeys.length) {
-    throw new Error('[ck-policy] Capability registry is out of sync with entitlements.matrix.json');
+    throw new Error('[ck-policy] Entitlement registry is out of sync with entitlements.matrix.json');
   }
   for (let i = 0; i < matrixKeys.length; i += 1) {
     if (matrixKeys[i] !== registryKeys[i]) {
-      throw new Error('[ck-policy] Capability registry is out of sync with entitlements.matrix.json');
+      throw new Error('[ck-policy] Entitlement registry is out of sync with entitlements.matrix.json');
     }
   }
 
   for (const key of FLAG_KEYS) {
-    if (matrix.capabilities[key]?.kind !== 'flag') {
-      throw new Error(`[ck-policy] Capability ${key} must be kind=flag`);
+    if (matrix.entitlements[key]?.kind !== 'flag') {
+      throw new Error(`[ck-policy] Entitlement ${key} must be kind=flag`);
     }
   }
-  for (const key of CAP_KEYS) {
-    if (matrix.capabilities[key]?.kind !== 'cap') {
-      throw new Error(`[ck-policy] Capability ${key} must be kind=cap`);
-    }
-  }
-  for (const key of BUDGET_KEYS) {
-    if (matrix.capabilities[key]?.kind !== 'budget') {
-      throw new Error(`[ck-policy] Capability ${key} must be kind=budget`);
+  for (const key of PLAN_LIMIT_KEYS) {
+    if (matrix.entitlements[key]?.kind !== 'limit') {
+      throw new Error(`[ck-policy] Entitlement ${key} must be kind=limit`);
     }
   }
 }

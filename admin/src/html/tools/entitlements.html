@@ -30,7 +30,7 @@
     width: 96px;
   }
 
-  .entitlements-table__cap-col {
+  .entitlements-table__name-col {
     width: 180px;
   }
 
@@ -172,7 +172,39 @@
     color: color-mix(in oklab, var(--color-text), transparent 35%);
   }
 
-  .entitlements-table__capability {
+  .entitlements-table__desc-stack {
+    display: grid;
+    gap: 4px;
+  }
+
+  .entitlements-table__enforcement {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .entitlements-table__badge {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 18px;
+    padding-inline: 6px;
+    border-radius: var(--control-radius-sm, 0.25rem);
+    font: 600 var(--fs-10)/1 var(--font-ui);
+    color: var(--color-system-green-contrast);
+    background: color-mix(in oklab, var(--color-system-green), transparent 84%);
+  }
+
+  .entitlements-table__badge[data-status='gap'] {
+    color: var(--color-system-orange-contrast, var(--color-text));
+    background: color-mix(in oklab, var(--color-system-orange, #ff9500), transparent 84%);
+  }
+
+  .entitlements-table__owner {
+    color: color-mix(in oklab, var(--color-text), transparent 45%);
+  }
+
+  .entitlements-table__name {
     font-weight: 500;
   }
 
@@ -185,21 +217,15 @@
     font-weight: 600;
   }
 
-  .entitlements-ai-row__name--model {
-    font-weight: 500;
-    padding-left: 14px;
-  }
-
-  tr.entitlements-ai-row--provider td {
-    background: color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), var(--color-system-white) 30%);
-  }
-
-  tr.entitlements-ai-row--provider:hover td {
-    background: color-mix(in oklab, var(--role-surface-bg, var(--role-surface)), var(--color-system-blue) 6%);
-  }
-
   tr.entitlements-ai-row--model td:first-child {
     color: color-mix(in oklab, var(--color-text), transparent 10%);
+  }
+
+  .entitlements-ai-row__model-label {
+    display: block;
+    color: var(--color-text);
+    font-weight: 500;
+    margin-block-end: 2px;
   }
 
   .entitlements-agent-row__name {
@@ -220,7 +246,7 @@
   }
 </style>
 
-<h1 class="heading-2">Entitlements Matrix</h1>
+<h1 class="heading-2">Policy Editor</h1>
 
 <section class="devstudio-page-section" id="entitlements-root" aria-live="polite"></section>
 
@@ -228,18 +254,23 @@
   const root = document.getElementById('entitlements-root');
   const meta = window.__CK_ENTITLEMENTS_META__ || {};
   const aiAccess = window.__CK_AI_ACCESS__ || null;
-  const aiAccessByTier = aiAccess?.byTier || null;
   const aiProviders = Array.isArray(aiAccess?.providers) ? aiAccess.providers : [];
+  const aiModels = Array.isArray(aiAccess?.models) ? aiAccess.models : [];
   const aiAgents = Array.isArray(aiAccess?.agents) ? aiAccess.agents : [];
+  const aiCopilots = Array.isArray(aiAccess?.copilots) ? aiAccess.copilots : aiAgents.filter((agent) => agent?.category === 'copilot');
+  const aiSystemAgents = Array.isArray(aiAccess?.systemAgents) ? aiAccess.systemAgents : aiAgents.filter((agent) => agent?.category === 'system_agent');
 
   const state = {
     matrix: null,
     matrixPath: null,
+    aiRuntimeMatrix: null,
+    aiRuntimePath: null,
     savingCount: 0,
+    aiSavingCount: 0,
     lastSavedAt: null,
     lastError: null,
     filter: '',
-    unitsByCapabilityKey: {},
+    unitsByEntitlementKey: {},
   };
 
   const setStatus = (next) => {
@@ -260,13 +291,13 @@
     return { matrix: json.matrix, path: json.path || null };
   }
 
-  async function saveCell({ capabilityKey, tier, value }) {
+  async function saveCell({ entitlementKey, tier, value }) {
     setStatus({ savingCount: state.savingCount + 1, lastError: null });
     try {
       const res = await fetch('/api/entitlements/matrix/cell', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ capabilityKey, tier, value }),
+        body: JSON.stringify({ entitlementKey, tier, value }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
@@ -283,6 +314,45 @@
     }
   }
 
+  async function fetchAiRuntimeMatrix() {
+    const res = await fetch('/api/ai-runtime/matrix', {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.ok) {
+      const message = json?.error?.detail || json?.error?.reasonKey || `HTTP_${res.status}`;
+      throw new Error(message);
+    }
+    return { matrix: json.matrix, path: json.path || null };
+  }
+
+  async function saveAiRuntimeCell(payload) {
+    setStatus({ aiSavingCount: state.aiSavingCount + 1, lastError: null });
+    try {
+      const res = await fetch('/api/ai-runtime/matrix/cell', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        const message = json?.error?.detail || json?.error?.reasonKey || `HTTP_${res.status}`;
+        throw new Error(message);
+      }
+      setStatus({
+        aiRuntimeMatrix: json.matrix || state.aiRuntimeMatrix,
+        lastSavedAt: new Date(),
+        lastError: null,
+      });
+    } catch (err) {
+      setStatus({ lastError: err instanceof Error ? err.message : String(err) });
+      throw err;
+    } finally {
+      setStatus({ aiSavingCount: Math.max(0, state.aiSavingCount - 1) });
+    }
+  }
+
   const formatBytes = (bytes) => {
     if (!Number.isFinite(bytes) || bytes < 0) return String(bytes);
     const gb = 1024 * 1024 * 1024;
@@ -293,11 +363,11 @@
     return `${bytes}B`;
   };
 
-  const formatValue = ({ key, cap, value }) => {
+  const formatValue = ({ key, entitlement, value }) => {
     if (value === null) return '∞';
-    if (cap.kind === 'flag') return value ? '✓' : '✗';
+    if (entitlement.kind === 'flag') return value ? '✓' : '✗';
     if (typeof value === 'number') {
-      if (key === 'uploads.size.max' || key === 'budget.uploads.bytes') return formatBytes(value);
+      if (key === 'uploads.size.max' || key === 'storage.bytes.max') return formatBytes(value);
       if (Number.isFinite(value) && Math.abs(value) >= 1000) return value.toLocaleString('en-US');
       return String(value);
     }
@@ -352,8 +422,14 @@
     reloadBtn.innerHTML = '<span class="diet-btn-txt__label">Reload</span>';
     reloadBtn.addEventListener('click', async () => {
       try {
-        const next = await fetchMatrix();
-        setStatus({ matrix: next.matrix, matrixPath: next.path, lastError: null });
+        const [next, nextAiRuntime] = await Promise.all([fetchMatrix(), fetchAiRuntimeMatrix()]);
+        setStatus({
+          matrix: next.matrix,
+          matrixPath: next.path,
+          aiRuntimeMatrix: nextAiRuntime.matrix,
+          aiRuntimePath: nextAiRuntime.path,
+          lastError: null,
+        });
       } catch (err) {
         setStatus({ lastError: err instanceof Error ? err.message : String(err) });
       }
@@ -365,20 +441,20 @@
     container.appendChild(toolbar);
   }
 
-  function createEditableValueCell({ key, cap, tier }) {
+  function createEditableValueCell({ key, entitlement, tier }) {
     const td = document.createElement('td');
     td.className = 'body-s entitlements-table__value';
 
-    const value = cap.values?.[tier];
+    const value = entitlement.values?.[tier];
     const disabled = state.savingCount > 0;
 
     const safeId = `ent_${String(key)}_${String(tier)}`.replace(/[^a-zA-Z0-9_-]+/g, '_');
 
     const cell = document.createElement('div');
-    cell.className = `entitlements-cell entitlements-cell--${cap.kind}`;
+    cell.className = `entitlements-cell entitlements-cell--${entitlement.kind}`;
     td.appendChild(cell);
 
-    if (cap.kind === 'flag') {
+    if (entitlement.kind === 'flag') {
       const wrapper = document.createElement('div');
       wrapper.className = 'diet-toggle';
       wrapper.setAttribute('data-size', 'md');
@@ -396,9 +472,9 @@
         input.disabled = disabled;
         input.addEventListener('change', async () => {
           try {
-            await saveCell({ capabilityKey: key, tier, value: input.checked });
+            await saveCell({ entitlementKey: key, tier, value: input.checked });
           } catch (_err) {
-            const nextValue = state.matrix?.capabilities?.[key]?.values?.[tier];
+            const nextValue = state.matrix?.entitlements?.[key]?.values?.[tier];
             input.checked = Boolean(nextValue);
           }
         });
@@ -413,10 +489,10 @@
     wrapper.className = 'diet-valuefield entitlements-valuefield';
     wrapper.setAttribute('data-size', 'md');
 
-    const isBytes = key === 'uploads.size.max' || key === 'budget.uploads.bytes';
+    const isBytes = key === 'uploads.size.max' || key === 'storage.bytes.max';
     const defaultUnit = 'mb';
-    const selectedUnit = (state.unitsByCapabilityKey[key] || defaultUnit).toLowerCase() === 'kb' ? 'kb' : 'mb';
-    if (!state.unitsByCapabilityKey[key]) state.unitsByCapabilityKey[key] = selectedUnit;
+    const selectedUnit = (state.unitsByEntitlementKey[key] || defaultUnit).toLowerCase() === 'kb' ? 'kb' : 'mb';
+    if (!state.unitsByEntitlementKey[key]) state.unitsByEntitlementKey[key] = selectedUnit;
 
     const rawNumber = typeof value === 'number' && Number.isFinite(value) ? value : null;
     // Color rules apply to the normalized (unfocused) display only.
@@ -469,7 +545,7 @@
       unitSelect.disabled = disabled;
       unitSelect.addEventListener('change', () => {
         const nextUnit = unitSelect.value === 'kb' ? 'kb' : 'mb';
-        state.unitsByCapabilityKey[key] = nextUnit;
+        state.unitsByEntitlementKey[key] = nextUnit;
         // Re-render so the displayed number updates to the new unit.
         render();
       });
@@ -499,8 +575,8 @@
       input.addEventListener('focus', () => {
         wrapper.classList.add('is-editing');
         // On focus, show raw number (no commas).
-        const unit = isBytes ? (state.unitsByCapabilityKey[key] || selectedUnit) : null;
-        const currentRaw = state.matrix?.capabilities?.[key]?.values?.[tier];
+        const unit = isBytes ? (state.unitsByEntitlementKey[key] || selectedUnit) : null;
+        const currentRaw = state.matrix?.entitlements?.[key]?.values?.[tier];
         const currentNum = typeof currentRaw === 'number' && Number.isFinite(currentRaw) ? currentRaw : null;
         const rawForEdit = isBytes ? bytesToUnitValue(currentNum, unit) : currentNum;
         setRaw(rawForEdit);
@@ -510,17 +586,17 @@
       const commit = async () => {
         const raw = String(input.value ?? '');
         const parsed = parseNumberish(raw);
-        const unit = isBytes ? (state.unitsByCapabilityKey[key] || selectedUnit) : null;
+        const unit = isBytes ? (state.unitsByEntitlementKey[key] || selectedUnit) : null;
         const normalized = isBytes ? unitValueToBytes(parsed, unit) : parsed;
 
         try {
-          await saveCell({ capabilityKey: key, tier, value: normalized });
-          const savedRaw = state.matrix?.capabilities?.[key]?.values?.[tier];
+          await saveCell({ entitlementKey: key, tier, value: normalized });
+          const savedRaw = state.matrix?.entitlements?.[key]?.values?.[tier];
           const savedNum = typeof savedRaw === 'number' && Number.isFinite(savedRaw) ? savedRaw : null;
           const savedDisplay = isBytes ? bytesToUnitValue(savedNum, unit) : savedNum;
           setDisplay(savedDisplay);
         } catch (_err) {
-          const current = state.matrix?.capabilities?.[key]?.values?.[tier];
+          const current = state.matrix?.entitlements?.[key]?.values?.[tier];
           const currentNum = typeof current === 'number' && Number.isFinite(current) ? current : null;
           const currentDisplay = isBytes ? bytesToUnitValue(currentNum, unit) : currentNum;
           setDisplay(currentDisplay);
@@ -538,7 +614,7 @@
       input.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
           e.preventDefault();
-          const unit = isBytes ? (state.unitsByCapabilityKey[key] || selectedUnit) : null;
+          const unit = isBytes ? (state.unitsByEntitlementKey[key] || selectedUnit) : null;
           const current = parseNumberish(input.value);
           const baseStep = isBytes ? 1 : 10;
           const step = e.shiftKey ? baseStep * 10 : baseStep;
@@ -553,8 +629,8 @@
         }
         if (e.key === 'Escape') {
           e.preventDefault();
-          const unit = isBytes ? (state.unitsByCapabilityKey[key] || selectedUnit) : null;
-          const current = state.matrix?.capabilities?.[key]?.values?.[tier];
+          const unit = isBytes ? (state.unitsByEntitlementKey[key] || selectedUnit) : null;
+          const current = state.matrix?.entitlements?.[key]?.values?.[tier];
           const currentNum = typeof current === 'number' && Number.isFinite(current) ? current : null;
           const currentDisplay = isBytes ? bytesToUnitValue(currentNum, unit) : currentNum;
           setDisplay(currentDisplay);
@@ -580,11 +656,11 @@
     table.className = 'body-s entitlements-table';
 
     const colgroup = document.createElement('colgroup');
-    const colCapability = document.createElement('col');
-    colCapability.className = 'entitlements-table__cap-col';
+    const colEntitlement = document.createElement('col');
+    colEntitlement.className = 'entitlements-table__name-col';
     const colDesc = document.createElement('col');
     colDesc.className = 'entitlements-table__desc-col';
-    colgroup.append(colCapability, colDesc);
+    colgroup.append(colEntitlement, colDesc);
     tiers.forEach(() => {
       const col = document.createElement('col');
       col.className = 'entitlements-table__tier';
@@ -598,10 +674,10 @@
     const thead = document.createElement('thead');
     const headRow = document.createElement('tr');
 
-    const capHeader = document.createElement('th');
-    capHeader.textContent = 'Capability';
-    capHeader.className = 'label-s';
-    headRow.appendChild(capHeader);
+    const entitlementHeader = document.createElement('th');
+    entitlementHeader.textContent = 'Entitlement';
+    entitlementHeader.className = 'label-s';
+    headRow.appendChild(entitlementHeader);
 
     const descHeader = document.createElement('th');
     descHeader.textContent = 'Description';
@@ -631,36 +707,59 @@
     const normalizedFilter = String(state.filter || '').trim().toLowerCase();
 
     entries
-      .filter(({ key, cap }) => {
+      .filter(({ key, entitlement }) => {
         if (!normalizedFilter) return true;
-        const metaEntry = meta[key] || { label: '', description: '' };
+        const metaEntry = meta[key] || { label: '', description: '', enforcement: null };
         const haystack = [
           String(key || ''),
           String(metaEntry.label || ''),
           String(metaEntry.description || ''),
-          String(cap?.kind || ''),
+          String(metaEntry.enforcement?.status || ''),
+          String(metaEntry.enforcement?.owner || ''),
+          String(metaEntry.enforcement?.note || ''),
+          String(entitlement?.kind || ''),
         ]
           .join(' ')
           .toLowerCase();
         return haystack.includes(normalizedFilter);
       })
-      .forEach(({ key, cap }) => {
+      .forEach(({ key, entitlement }) => {
       const row = document.createElement('tr');
 
-      const metaEntry = meta[key] || { label: key, description: '' };
+      const metaEntry = meta[key] || { label: key, description: '', enforcement: null };
 
       const nameCell = document.createElement('td');
       nameCell.textContent = metaEntry.label || key;
-      nameCell.className = 'body-s entitlements-table__capability';
+      nameCell.className = 'body-s entitlements-table__name';
       row.appendChild(nameCell);
 
       const descCell = document.createElement('td');
-      descCell.textContent = metaEntry.description || '';
       descCell.className = 'body-s entitlements-table__desc';
+      const descStack = document.createElement('div');
+      descStack.className = 'entitlements-table__desc-stack';
+      const descText = document.createElement('span');
+      descText.textContent = metaEntry.description || '';
+      descStack.appendChild(descText);
+      if (metaEntry.enforcement) {
+        const enforcement = document.createElement('span');
+        enforcement.className = 'entitlements-table__enforcement';
+        const badge = document.createElement('span');
+        badge.className = 'entitlements-table__badge';
+        badge.dataset.status = metaEntry.enforcement.status || 'gap';
+        badge.textContent = metaEntry.enforcement.status === 'enforced' ? 'Enforced' : 'Enforcement gap';
+        enforcement.appendChild(badge);
+        const owner = document.createElement('span');
+        owner.className = 'entitlements-table__owner';
+        owner.textContent = metaEntry.enforcement.owner || metaEntry.enforcement.note || '';
+        if (metaEntry.enforcement.note) owner.title = metaEntry.enforcement.note;
+        enforcement.appendChild(owner);
+        descStack.appendChild(enforcement);
+      }
+      descCell.appendChild(descStack);
       row.appendChild(descCell);
 
       tiers.forEach((tier) => {
-        row.appendChild(createEditableValueCell({ key, cap, tier }));
+        row.appendChild(createEditableValueCell({ key, entitlement, tier }));
       });
 
       const tokenCell = document.createElement('td');
@@ -709,97 +808,251 @@
     return td;
   }
 
-  function renderAiAccess({ tiers }) {
-    if (!aiAccessByTier) return null;
-    if (!tiers.length) return null;
+  function normalizeTierLabel(tier) {
+    return String(tier || '').replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  function getAiRuntimeConfig(agentId, tier) {
+    return state.aiRuntimeMatrix?.agents?.[agentId]?.[tier] || null;
+  }
+
+  function labelProvider(provider) {
+    const found = aiProviders.find((entry) => entry.provider === provider);
+    return found?.label || provider;
+  }
+
+  function labelModel(provider, model) {
+    const found = aiModels.find((entry) => entry.provider === provider && entry.model === model);
+    return found?.label || model;
+  }
+
+  function isModelAllowed(config, provider, model) {
+    const allowed = config?.modelsByProvider?.[provider]?.allowed;
+    return Array.isArray(allowed) && allowed.includes(model);
+  }
+
+  function getRuntimeModelOptions(agent) {
+    const supported = new Set((agent.supportedProviders || []).map((entry) => entry.provider));
+    const seen = new Set();
+    const out = [];
+    aiModels.forEach((model) => {
+      if (!supported.has(model.provider)) return;
+      const key = `${model.provider}:${model.model}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(model);
+    });
+    return out.sort((a, b) => `${a.provider}:${a.label || a.model}`.localeCompare(`${b.provider}:${b.label || b.model}`));
+  }
+
+  function renderAiCatalog() {
+    if (!aiModels.length) return null;
 
     const section = document.createElement('section');
     section.className = 'devstudio-page-section entitlements-section';
 
     const heading = document.createElement('h2');
     heading.className = 'heading-3';
-    heading.textContent = 'AI / LLM Access';
+    heading.textContent = 'AI Model Catalog';
     section.appendChild(heading);
 
     const hint = document.createElement('p');
     hint.className = 'body-s entitlements-ai__hint';
-    hint.textContent =
-      'Read-only. Runtime policy by account tier; individual copilots and jobs receive signed per-provider model policy.';
+    hint.textContent = 'Read-only. This is every LLM/model Clickeen knows how to call; runtime access is set per copilot or system agent below.';
     section.appendChild(hint);
 
-    const providersByKey = new Map();
-    const defaultProviderTiers = new Map();
-    const defaultModelTiers = new Map();
+    const table = document.createElement('table');
+    table.className = 'body-s entitlements-table';
 
-    const normalizeTierLabel = (tier) => tier.replace(/\b\w/g, (c) => c.toUpperCase());
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    ['LLM', 'Model / ID'].forEach((label) => {
+      const th = document.createElement('th');
+      th.className = 'label-s';
+      th.textContent = label;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
 
-    tiers.forEach((tier) => {
-      const tierEntry = aiAccessByTier?.[tier];
-      if (!tierEntry) return;
+    const providerLabels = new Map(aiProviders.map((provider) => [provider.provider, provider.label || provider.provider]));
+    const tbody = document.createElement('tbody');
+    aiModels
+      .slice()
+      .sort((a, b) => {
+        const providerA = String(providerLabels.get(a.provider) || a.provider);
+        const providerB = String(providerLabels.get(b.provider) || b.provider);
+        return `${providerA}:${a.label || a.model}`.localeCompare(`${providerB}:${b.label || b.model}`);
+      })
+      .forEach((model) => {
+        const row = document.createElement('tr');
+        row.className = 'entitlements-ai-row entitlements-ai-row--model';
+        row.innerHTML = `
+          <td class="body-s entitlements-table__name entitlements-ai-row__name">${providerLabels.get(model.provider) || model.provider}</td>
+          <td class="body-s entitlements-table__desc">
+            <span class="entitlements-ai-row__model-label">${model.label || model.model}</span>
+            <span class="entitlements-table__token">${model.provider}:${model.model}</span>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
 
-      const defaultProvider = tierEntry.defaultProvider;
-      if (defaultProvider) {
-        const arr = defaultProviderTiers.get(defaultProvider) || [];
-        arr.push(tier);
-        defaultProviderTiers.set(defaultProvider, arr);
-      }
+    table.appendChild(tbody);
+    section.appendChild(table);
+    return section;
+  }
 
-      const providers = Array.isArray(tierEntry.providers) ? tierEntry.providers : [];
-      providers.forEach((provider) => {
-        const existing = providersByKey.get(provider.provider) || { provider: provider.provider, label: provider.label, models: new Map() };
-        existing.label = provider.label || existing.label;
-        const models = Array.isArray(provider.models) ? provider.models : [];
-        models.forEach((model) => {
-          existing.models.set(model.model, model.label || model.model);
-        });
-        providersByKey.set(provider.provider, existing);
-
-        const defaultModel = provider.defaultModel;
-        if (defaultModel) {
-          const mapKey = `${provider.provider}::${defaultModel}`;
-          const arr = defaultModelTiers.get(mapKey) || [];
-          arr.push(tier);
-          defaultModelTiers.set(mapKey, arr);
+  function renderEditableAiToggleCell({ id, checked, label, onChange }) {
+    const td = renderReadonlyToggleCell({ id, checked, label });
+    const input = td.querySelector('input');
+    if (input) {
+      input.disabled = state.aiSavingCount > 0;
+      input.tabIndex = 0;
+      input.addEventListener('change', async () => {
+        try {
+          await onChange(input.checked);
+        } catch (_err) {
+          input.checked = !input.checked;
         }
+      });
+    }
+    return td;
+  }
+
+  function renderReadonlyValueCell(value) {
+    const td = document.createElement('td');
+    td.className = 'body-s entitlements-table__value';
+    td.textContent = value === null || typeof value === 'undefined' ? 'none' : String(value);
+    return td;
+  }
+
+  function renderAiNumberCell({ agentId, tier, field, value, allowNull = false }) {
+    const td = document.createElement('td');
+    td.className = 'body-s entitlements-table__value';
+
+    const input = document.createElement('input');
+    input.className = 'diet-valuefield__field';
+    input.type = 'text';
+    input.inputMode = 'decimal';
+    input.disabled = state.aiSavingCount > 0;
+    input.placeholder = allowNull ? 'none' : '0';
+    input.value = value === null || typeof value === 'undefined' ? '' : String(value);
+    input.setAttribute('aria-label', `${agentId} ${tier} ${field}`);
+
+    const commit = async () => {
+      const parsed = parseNumberish(input.value);
+      const nextValue = parsed === null && allowNull ? null : parsed;
+      try {
+        await saveAiRuntimeCell({ agentId, tier, field, value: nextValue });
+      } catch (_err) {
+        const config = getAiRuntimeConfig(agentId, tier);
+        const current =
+          field === 'rawSamplePercent'
+            ? config?.learningCapture?.rawSamplePercent
+            : field === 'maxTurnsPerThread'
+              ? config?.maxTurnsPerThread
+              : config?.budget?.[field];
+        input.value = current === null || typeof current === 'undefined' ? '' : String(current);
+      }
+    };
+
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        input.blur();
+      }
+    });
+    td.appendChild(input);
+    return td;
+  }
+
+  function renderDefaultModelCell({ agent, tier, config, editable }) {
+    if (!editable) {
+      return renderReadonlyValueCell(`${labelProvider(config?.defaultModel?.provider)} / ${labelModel(config?.defaultModel?.provider, config?.defaultModel?.model)}`);
+    }
+
+    const td = document.createElement('td');
+    td.className = 'body-s entitlements-table__value';
+
+    const select = document.createElement('select');
+    select.className = 'entitlements-unit';
+    select.disabled = state.aiSavingCount > 0;
+    select.setAttribute('aria-label', `${agent.agentId} ${tier} default model`);
+
+    Object.entries(config?.modelsByProvider || {}).forEach(([provider, policy]) => {
+      (policy?.allowed || []).forEach((model) => {
+        const option = document.createElement('option');
+        option.value = `${provider}::${model}`;
+        option.textContent = `${labelProvider(provider)} / ${labelModel(provider, model)}`;
+        option.selected = config?.defaultModel?.provider === provider && config?.defaultModel?.model === model;
+        select.appendChild(option);
       });
     });
 
-    const providersOrdered = (aiProviders.length ? aiProviders : Array.from(providersByKey.values()))
-      .filter((entry) => providersByKey.has(entry.provider))
-      .map((entry) => providersByKey.get(entry.provider));
+    select.addEventListener('change', async () => {
+      const [provider, model] = String(select.value || '').split('::');
+      try {
+        await saveAiRuntimeCell({ agentId: agent.agentId, tier, field: 'defaultModel', value: { provider, model } });
+      } catch (_err) {
+        render();
+      }
+    });
+    td.appendChild(select);
+    return td;
+  }
+
+  function renderRuntimePolicyTable({ title, hintText, agents, tiers, editable }) {
+    if (!Array.isArray(agents) || !agents.length || !tiers.length) return null;
+
+    const section = document.createElement('section');
+    section.className = 'devstudio-page-section entitlements-section';
+
+    const heading = document.createElement('h2');
+    heading.className = 'heading-3';
+    heading.textContent = title;
+    section.appendChild(heading);
+
+    const hint = document.createElement('p');
+    hint.className = 'body-s entitlements-ai__hint';
+    hint.textContent = hintText;
+    section.appendChild(hint);
+
+    if (!state.aiRuntimeMatrix) {
+      const loading = document.createElement('p');
+      loading.className = 'body-s';
+      loading.textContent = 'Loading AI runtime policy...';
+      section.appendChild(loading);
+      return section;
+    }
 
     const table = document.createElement('table');
     table.className = 'body-s entitlements-table';
 
     const colgroup = document.createElement('colgroup');
     const colName = document.createElement('col');
-    colName.className = 'entitlements-table__cap-col';
-    const colKind = document.createElement('col');
-    colKind.className = 'entitlements-table__desc-col';
-    colgroup.append(colName, colKind);
+    colName.className = 'entitlements-table__name-col';
+    const colDesc = document.createElement('col');
+    colDesc.className = 'entitlements-table__desc-col';
+    colgroup.append(colName, colDesc);
     tiers.forEach(() => {
       const col = document.createElement('col');
       col.className = 'entitlements-table__tier';
       colgroup.appendChild(col);
     });
-    const colId = document.createElement('col');
-    colId.className = 'entitlements-table__token-col';
-    colgroup.appendChild(colId);
+    const colToken = document.createElement('col');
+    colToken.className = 'entitlements-table__token-col';
+    colgroup.appendChild(colToken);
     table.appendChild(colgroup);
 
     const thead = document.createElement('thead');
     const headRow = document.createElement('tr');
-
-    const nameHeader = document.createElement('th');
-    nameHeader.textContent = 'LLM / Model';
-    nameHeader.className = 'label-s';
-    headRow.appendChild(nameHeader);
-
-    const kindHeader = document.createElement('th');
-    kindHeader.textContent = 'Kind';
-    kindHeader.className = 'label-s';
-    headRow.appendChild(kindHeader);
-
+    ['Agent', 'Setting'].forEach((label) => {
+      const th = document.createElement('th');
+      th.className = 'label-s';
+      th.textContent = label;
+      headRow.appendChild(th);
+    });
     tiers.forEach((tier) => {
       const th = document.createElement('th');
       th.className = 'entitlements-table__tier-head';
@@ -809,101 +1062,126 @@
       th.appendChild(label);
       headRow.appendChild(th);
     });
-
-    const idHeader = document.createElement('th');
-    idHeader.textContent = 'ID';
-    idHeader.className = 'label-s entitlements-table__token-head';
-    headRow.appendChild(idHeader);
-
+    const tokenHeader = document.createElement('th');
+    tokenHeader.textContent = 'ID';
+    tokenHeader.className = 'label-s entitlements-table__token-head';
+    headRow.appendChild(tokenHeader);
     thead.appendChild(headRow);
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
 
-    providersOrdered.forEach((provider) => {
-      if (!provider) return;
+    agents.forEach((agent) => {
+      const addRow = ({ name, desc, token, cells }) => {
+        const row = document.createElement('tr');
+        const nameCell = document.createElement('td');
+        nameCell.className = 'body-s entitlements-table__name';
+        nameCell.textContent = name;
+        row.appendChild(nameCell);
+        const descCell = document.createElement('td');
+        descCell.className = 'body-s entitlements-table__desc';
+        descCell.textContent = desc;
+        row.appendChild(descCell);
+        cells.forEach((cell) => row.appendChild(cell));
+        const tokenCell = document.createElement('td');
+        tokenCell.className = 'body-s entitlements-table__token';
+        tokenCell.textContent = token;
+        row.appendChild(tokenCell);
+        tbody.appendChild(row);
+      };
 
-      const providerRow = document.createElement('tr');
-      providerRow.className = 'entitlements-ai-row entitlements-ai-row--provider';
-
-      const providerName = document.createElement('td');
-      providerName.className = 'body-s entitlements-table__capability entitlements-ai-row__name';
-      providerName.textContent = provider.label || provider.provider;
-      providerRow.appendChild(providerName);
-
-      const providerKind = document.createElement('td');
-      providerKind.className = 'body-s entitlements-table__desc';
-      const defaultTiers = defaultProviderTiers.get(provider.provider) || [];
-      providerKind.textContent = defaultTiers.length
-        ? `Provider · Default for: ${defaultTiers.map(normalizeTierLabel).join(', ')}`
-        : 'Provider';
-      providerRow.appendChild(providerKind);
-
-      tiers.forEach((tier) => {
-        const tierEntry = aiAccessByTier?.[tier];
-        const tierProviders = Array.isArray(tierEntry?.providers) ? tierEntry.providers : [];
-        const isAllowed = tierProviders.some((p) => p.provider === provider.provider);
-        providerRow.appendChild(
-          renderReadonlyToggleCell({
-            id: `ai_provider_${provider.provider}_${tier}`,
-            checked: isAllowed,
-            label: `${provider.label || provider.provider} ${normalizeTierLabel(tier)} allowed`,
-            title: isAllowed ? 'Allowed' : 'Not allowed',
-          }),
-        );
+      addRow({
+        name: agent.description || agent.agentId,
+        desc: `${agent.category === 'copilot' ? 'Customer copilot' : 'System agent'} · ${agent.executionSurface}`,
+        token: agent.agentId,
+        cells: tiers.map((tier) => {
+          const tierEntry = agent.byTier?.[tier];
+          const enabled = Boolean(tierEntry?.enabled);
+          return renderReadonlyToggleCell({
+            id: `ai_agent_${agent.agentId}_${tier}`,
+            checked: enabled,
+            label: `${agent.agentId} ${normalizeTierLabel(tier)} enabled`,
+            title: enabled ? 'Enabled by account policy' : `Blocked by entitlement: ${tierEntry?.deniedEntitlement || 'unknown'}`,
+          });
+        }),
       });
 
-      const providerId = document.createElement('td');
-      providerId.className = 'body-s entitlements-table__token';
-      providerId.textContent = provider.provider;
-      providerRow.appendChild(providerId);
+      addRow({
+        name: 'Default model',
+        desc: 'The model selected when the user has not chosen one.',
+        token: 'defaultModel',
+        cells: tiers.map((tier) => renderDefaultModelCell({ agent, tier, config: getAiRuntimeConfig(agent.agentId, tier), editable })),
+      });
 
-      tbody.appendChild(providerRow);
-
-      const models = Array.from(provider.models.entries())
-        .map(([model, label]) => ({ model, label }))
-        .sort((a, b) => String(a.label).localeCompare(String(b.label)));
-
-      models.forEach((model) => {
-        const modelRow = document.createElement('tr');
-        modelRow.className = 'entitlements-ai-row entitlements-ai-row--model';
-
-        const modelName = document.createElement('td');
-        modelName.className = 'body-s entitlements-table__capability entitlements-ai-row__name entitlements-ai-row__name--model';
-        modelName.textContent = model.label || model.model;
-        modelRow.appendChild(modelName);
-
-        const modelKind = document.createElement('td');
-        modelKind.className = 'body-s entitlements-table__desc';
-        const defaultKey = `${provider.provider}::${model.model}`;
-        const defaultTiersForModel = defaultModelTiers.get(defaultKey) || [];
-        modelKind.textContent = defaultTiersForModel.length
-          ? `Model · Default for: ${defaultTiersForModel.map(normalizeTierLabel).join(', ')}`
-          : 'Model';
-        modelRow.appendChild(modelKind);
-
-        tiers.forEach((tier) => {
-          const tierEntry = aiAccessByTier?.[tier];
-          const tierProviders = Array.isArray(tierEntry?.providers) ? tierEntry.providers : [];
-          const providerEntry = tierProviders.find((p) => p.provider === provider.provider);
-          const allowedModels = Array.isArray(providerEntry?.models) ? providerEntry.models : [];
-          const isAllowed = allowedModels.some((m) => m.model === model.model);
-          modelRow.appendChild(
-            renderReadonlyToggleCell({
-              id: `ai_model_${provider.provider}_${model.model}_${tier}`,
-              checked: isAllowed,
-              label: `${model.label || model.model} ${normalizeTierLabel(tier)} allowed`,
-              title: isAllowed ? (providerEntry?.defaultModel === model.model ? 'Allowed (default)' : 'Allowed') : 'Not allowed',
-            }),
-          );
+      getRuntimeModelOptions(agent).forEach((model) => {
+        addRow({
+          name: `${labelProvider(model.provider)} / ${model.label || model.model}`,
+          desc: 'Allowed model',
+          token: `${model.provider}:${model.model}`,
+          cells: tiers.map((tier) => {
+            const config = getAiRuntimeConfig(agent.agentId, tier);
+            const checked = isModelAllowed(config, model.provider, model.model);
+            if (!editable) {
+              return renderReadonlyToggleCell({
+                id: `ai_allowed_${agent.agentId}_${model.provider}_${model.model}_${tier}`,
+                checked,
+                label: `${agent.agentId} ${model.model} ${tier} allowed`,
+              });
+            }
+            return renderEditableAiToggleCell({
+              id: `ai_allowed_${agent.agentId}_${model.provider}_${model.model}_${tier}`,
+              checked,
+              label: `${agent.agentId} ${model.model} ${tier} allowed`,
+              onChange: (value) =>
+                saveAiRuntimeCell({
+                  agentId: agent.agentId,
+                  tier,
+                  field: 'allowedModel',
+                  provider: model.provider,
+                  model: model.model,
+                  value,
+                }),
+            });
+          }),
         });
+      });
 
-        const modelId = document.createElement('td');
-        modelId.className = 'body-s entitlements-table__token';
-        modelId.textContent = model.model;
-        modelRow.appendChild(modelId);
-
-        tbody.appendChild(modelRow);
+      [
+        ['allowModelPicker', 'Model picker', 'User can choose among allowed models.'],
+        ['maxTokens', 'Max tokens', 'Maximum output tokens per call.'],
+        ['timeoutMs', 'Timeout ms', 'Call timeout in milliseconds.'],
+        ['maxTurnsPerThread', 'Turns/thread', 'Maximum chat turns in one thread.'],
+      ].forEach(([field, name, desc]) => {
+        addRow({
+          name,
+          desc,
+          token: field,
+          cells: tiers.map((tier) => {
+            const config = getAiRuntimeConfig(agent.agentId, tier);
+            const value =
+              field === 'allowModelPicker'
+                ? config?.allowModelPicker
+                : field === 'rawSamplePercent'
+                  ? config?.learningCapture?.rawSamplePercent
+                  : field === 'maxTurnsPerThread'
+                    ? config?.maxTurnsPerThread
+                    : config?.budget?.[field];
+            if (field === 'allowModelPicker') {
+              if (!editable) {
+                return renderReadonlyToggleCell({ id: `ai_${field}_${agent.agentId}_${tier}`, checked: Boolean(value), label: `${agent.agentId} ${tier} ${field}` });
+              }
+              return renderEditableAiToggleCell({
+                id: `ai_${field}_${agent.agentId}_${tier}`,
+                checked: Boolean(value),
+                label: `${agent.agentId} ${tier} ${field}`,
+                onChange: (nextValue) => saveAiRuntimeCell({ agentId: agent.agentId, tier, field, value: nextValue }),
+              });
+            }
+            return editable
+              ? renderAiNumberCell({ agentId: agent.agentId, tier, field, value })
+              : renderReadonlyValueCell(value);
+          }),
+        });
       });
     });
 
@@ -912,57 +1190,57 @@
     return section;
   }
 
-  function renderAiAgentAccess({ tiers }) {
-    if (!Array.isArray(aiAgents) || !aiAgents.length) return null;
-    if (!tiers.length) return null;
+  function renderLearningCaptureTable({ agents, tiers }) {
+    if (!Array.isArray(agents) || !agents.length || !tiers.length) return null;
 
     const section = document.createElement('section');
     section.className = 'devstudio-page-section entitlements-section';
 
     const heading = document.createElement('h2');
     heading.className = 'heading-3';
-    heading.textContent = 'AI Runtime Access';
+    heading.textContent = 'Learning Capture';
     section.appendChild(heading);
 
     const hint = document.createElement('p');
     hint.className = 'body-s entitlements-ai__hint';
-    hint.textContent = 'Read-only. Shows per-agent runtime policy by tier from the same catalog/policy source production uses.';
+    hint.textContent = 'Raw AI payload sampling policy. Customer copilot rows are editable; system agents are shown for inspection.';
     section.appendChild(hint);
 
-    const normalizeTierLabel = (tier) => tier.replace(/\b\w/g, (c) => c.toUpperCase());
+    if (!state.aiRuntimeMatrix) {
+      const loading = document.createElement('p');
+      loading.className = 'body-s';
+      loading.textContent = 'Loading learning capture policy...';
+      section.appendChild(loading);
+      return section;
+    }
 
     const table = document.createElement('table');
     table.className = 'body-s entitlements-table';
 
     const colgroup = document.createElement('colgroup');
     const colName = document.createElement('col');
-    colName.className = 'entitlements-table__cap-col';
-    const colKind = document.createElement('col');
-    colKind.className = 'entitlements-table__desc-col';
-    colgroup.append(colName, colKind);
+    colName.className = 'entitlements-table__name-col';
+    const colDesc = document.createElement('col');
+    colDesc.className = 'entitlements-table__desc-col';
+    colgroup.append(colName, colDesc);
     tiers.forEach(() => {
       const col = document.createElement('col');
       col.className = 'entitlements-table__tier';
       colgroup.appendChild(col);
     });
-    const colId = document.createElement('col');
-    colId.className = 'entitlements-table__token-col';
-    colgroup.appendChild(colId);
+    const colToken = document.createElement('col');
+    colToken.className = 'entitlements-table__token-col';
+    colgroup.appendChild(colToken);
     table.appendChild(colgroup);
 
     const thead = document.createElement('thead');
     const headRow = document.createElement('tr');
-
-    const nameHeader = document.createElement('th');
-    nameHeader.textContent = 'Copilot / Job / Provider';
-    nameHeader.className = 'label-s';
-    headRow.appendChild(nameHeader);
-
-    const kindHeader = document.createElement('th');
-    kindHeader.textContent = 'Kind';
-    kindHeader.className = 'label-s';
-    headRow.appendChild(kindHeader);
-
+    ['Agent', 'Policy'].forEach((label) => {
+      const th = document.createElement('th');
+      th.className = 'label-s';
+      th.textContent = label;
+      headRow.appendChild(th);
+    });
     tiers.forEach((tier) => {
       const th = document.createElement('th');
       th.className = 'entitlements-table__tier-head';
@@ -972,114 +1250,40 @@
       th.appendChild(label);
       headRow.appendChild(th);
     });
-
-    const idHeader = document.createElement('th');
-    idHeader.textContent = 'ID';
-    idHeader.className = 'label-s entitlements-table__token-head';
-    headRow.appendChild(idHeader);
-
+    const tokenHeader = document.createElement('th');
+    tokenHeader.textContent = 'ID';
+    tokenHeader.className = 'label-s entitlements-table__token-head';
+    headRow.appendChild(tokenHeader);
     thead.appendChild(headRow);
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
+    agents.forEach((agent) => {
+      const row = document.createElement('tr');
+      const nameCell = document.createElement('td');
+      nameCell.className = 'body-s entitlements-table__name';
+      nameCell.textContent = agent.description || agent.agentId;
+      row.appendChild(nameCell);
 
-    aiAgents.forEach((agent) => {
-      if (!agent || !agent.agentId) return;
-
-      const agentRow = document.createElement('tr');
-      agentRow.className = 'entitlements-agent-row entitlements-agent-row--agent';
-
-      const agentName = document.createElement('td');
-      agentName.className = 'body-s entitlements-table__capability entitlements-agent-row__name';
-      agentName.textContent = agent.description || agent.agentId;
-      agentRow.appendChild(agentName);
-
-      const agentKind = document.createElement('td');
-      agentKind.className = 'body-s entitlements-table__desc';
-      const kindParts = [
-        `${agent.category === 'copilot' ? 'Copilot' : 'Job'} · ${agent.executionSurface}`,
-        agent.taskClass ? `Task: ${agent.taskClass}` : '',
-      ].filter(Boolean);
-      if (Array.isArray(agent.requiredEntitlements) && agent.requiredEntitlements.length) {
-        kindParts.push(`Requires: ${agent.requiredEntitlements.join(', ')}`);
-      }
-      agentKind.textContent = kindParts.join(' · ');
-      agentRow.appendChild(agentKind);
+      const descCell = document.createElement('td');
+      descCell.className = 'body-s entitlements-table__desc';
+      descCell.textContent = agent.category === 'copilot' ? 'Customer copilot raw sample %' : 'System agent raw sample %';
+      row.appendChild(descCell);
 
       tiers.forEach((tier) => {
-        const tierEntry = agent.byTier?.[tier];
-        const enabled = Boolean(tierEntry?.enabled);
-        const blockedBy = typeof tierEntry?.deniedEntitlement === 'string' ? tierEntry.deniedEntitlement : '';
-        const title = enabled
-          ? [
-              'Enabled',
-              tierEntry?.defaultProviderLabel ? `default provider: ${tierEntry.defaultProviderLabel}` : '',
-              `model picker: ${tierEntry?.allowModelPicker ? 'enabled' : 'locked'}`,
-            ]
-              .filter(Boolean)
-              .join(' · ')
-          : blockedBy
-            ? `Blocked by entitlement: ${blockedBy}`
-            : 'Not enabled';
-        agentRow.appendChild(
-          renderReadonlyToggleCell({
-            id: `ai_agent_${agent.agentId}_${tier}`,
-            checked: enabled,
-            label: `${agent.agentId} ${normalizeTierLabel(tier)} enabled`,
-            title,
-          }),
-        );
+        const value = getAiRuntimeConfig(agent.agentId, tier)?.learningCapture?.rawSamplePercent;
+        if (agent.category === 'copilot') {
+          row.appendChild(renderAiNumberCell({ agentId: agent.agentId, tier, field: 'rawSamplePercent', value }));
+        } else {
+          row.appendChild(renderReadonlyValueCell(value));
+        }
       });
 
-      const agentId = document.createElement('td');
-      agentId.className = 'body-s entitlements-table__token';
-      agentId.textContent = agent.agentId;
-      agentRow.appendChild(agentId);
-
-      tbody.appendChild(agentRow);
-
-      const supportedProviders = Array.isArray(agent.supportedProviders) ? agent.supportedProviders : [];
-      supportedProviders.forEach((provider) => {
-        const providerRow = document.createElement('tr');
-        providerRow.className = 'entitlements-agent-row entitlements-agent-row--provider';
-
-        const providerName = document.createElement('td');
-        providerName.className = 'body-s entitlements-table__capability entitlements-agent-row__name entitlements-agent-row__name--provider';
-        providerName.textContent = provider.label || provider.provider;
-        providerRow.appendChild(providerName);
-
-        const providerKind = document.createElement('td');
-        providerKind.className = 'body-s entitlements-table__desc';
-        providerKind.textContent = 'Provider access from runtime policy';
-        providerRow.appendChild(providerKind);
-
-        tiers.forEach((tier) => {
-          const tierEntry = agent.byTier?.[tier];
-          const providers = Array.isArray(tierEntry?.providers) ? tierEntry.providers : [];
-          const providerEntry = providers.find((p) => p.provider === provider.provider);
-          const isAllowed = Boolean(providerEntry);
-          const title = isAllowed
-            ? providerEntry?.defaultModelLabel
-              ? `Allowed · default model: ${providerEntry.defaultModelLabel}`
-              : 'Allowed'
-            : 'Not allowed';
-          providerRow.appendChild(
-            renderReadonlyToggleCell({
-              id: `ai_agent_provider_${agent.agentId}_${provider.provider}_${tier}`,
-              checked: isAllowed,
-              label: `${agent.agentId} ${provider.provider} ${normalizeTierLabel(tier)} allowed`,
-              title,
-            }),
-          );
-        });
-
-        const providerId = document.createElement('td');
-        providerId.className = 'body-s entitlements-table__token';
-        providerId.textContent = `${agent.agentId}:${provider.provider}`;
-        providerRow.appendChild(providerId);
-
-        tbody.appendChild(providerRow);
-      });
+      const tokenCell = document.createElement('td');
+      tokenCell.className = 'body-s entitlements-table__token';
+      tokenCell.textContent = agent.agentId;
+      row.appendChild(tokenCell);
+      tbody.appendChild(row);
     });
 
     table.appendChild(tbody);
@@ -1094,7 +1298,7 @@
     if (!meta || Object.keys(meta).length === 0) {
       const warn = document.createElement('p');
       warn.className = 'body-s';
-      warn.textContent = 'Missing entitlement metadata (CAPABILITY_META). Some labels/descriptions may be empty.';
+      warn.textContent = 'Missing entitlement metadata. Some labels/descriptions may be empty.';
       root.appendChild(warn);
     }
 
@@ -1119,15 +1323,10 @@
       if (ra !== rb) return ra - rb;
       return String(a).localeCompare(String(b));
     });
-    const groups = { flag: [], cap: [], budget: [] };
-    Object.entries(matrix.capabilities).forEach(([key, cap]) => {
-      groups[cap.kind]?.push({ key, cap });
-    });
-
     const sortEntries = (entries) => {
       entries.sort((a, b) => {
-        const ma = meta[a.key] || { label: '', description: '' };
-        const mb = meta[b.key] || { label: '', description: '' };
+        const ma = meta[a.key] || { label: '', description: '', enforcement: null };
+        const mb = meta[b.key] || { label: '', description: '', enforcement: null };
         const la = String(ma.label || '').trim();
         const lb = String(mb.label || '').trim();
         if (la && lb && la !== lb) return la.localeCompare(lb);
@@ -1136,15 +1335,35 @@
       return entries;
     };
 
-    root.appendChild(renderTable({ title: 'Flags', entries: groups.flag, tiers }));
-    root.appendChild(renderTable({ title: 'Caps', entries: sortEntries(groups.cap), tiers }));
-    root.appendChild(renderTable({ title: 'Budgets', entries: sortEntries(groups.budget), tiers }));
+    const planLimitEntries = sortEntries(Object.entries(matrix.entitlements).map(([key, entitlement]) => ({ key, entitlement })));
+    root.appendChild(renderTable({ title: 'Plan Limits', entries: planLimitEntries, tiers }));
 
-    const aiSection = renderAiAccess({ tiers });
-    if (aiSection) root.appendChild(aiSection);
+    const aiCatalogSection = renderAiCatalog();
+    if (aiCatalogSection) root.appendChild(aiCatalogSection);
 
-    const aiAgentSection = renderAiAgentAccess({ tiers });
-    if (aiAgentSection) root.appendChild(aiAgentSection);
+    const copilotRuntimeSection = renderRuntimePolicyTable({
+      title: 'Customer Copilots',
+      hintText: 'Editable. These local JSON values decide what customer-facing copilots can use after git deploy.',
+      agents: aiCopilots,
+      tiers,
+      editable: true,
+    });
+    if (copilotRuntimeSection) root.appendChild(copilotRuntimeSection);
+
+    const systemAgentSection = renderRuntimePolicyTable({
+      title: 'System Agents',
+      hintText: 'Read-only here. These are internal Clickeen agents from the same registry and runtime JSON.',
+      agents: aiSystemAgents,
+      tiers,
+      editable: false,
+    });
+    if (systemAgentSection) root.appendChild(systemAgentSection);
+
+    const learningCaptureSection = renderLearningCaptureTable({
+      agents: [...aiCopilots, ...aiSystemAgents],
+      tiers,
+    });
+    if (learningCaptureSection) root.appendChild(learningCaptureSection);
   }
 
   if (!root) {
@@ -1152,9 +1371,15 @@
   }
 
   render();
-  fetchMatrix()
-    .then((next) => {
-      setStatus({ matrix: next.matrix, matrixPath: next.path, lastError: null });
+  Promise.all([fetchMatrix(), fetchAiRuntimeMatrix()])
+    .then(([next, nextAiRuntime]) => {
+      setStatus({
+        matrix: next.matrix,
+        matrixPath: next.path,
+        aiRuntimeMatrix: nextAiRuntime.matrix,
+        aiRuntimePath: nextAiRuntime.path,
+        lastError: null,
+      });
     })
     .catch((err) => {
       setStatus({ lastError: err instanceof Error ? err.message : String(err) });
