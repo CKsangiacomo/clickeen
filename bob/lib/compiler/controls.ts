@@ -296,7 +296,7 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
         type,
         path,
         label: attrs.label ? decodeHtmlEntities(attrs.label) : undefined,
-        showIf: attrs['show-if'],
+        showIf: attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : undefined,
         options: attrs.options ? parseControlOptions({ controlPath: path, optionsRaw: attrs.options }) : undefined,
         allowImage,
         min,
