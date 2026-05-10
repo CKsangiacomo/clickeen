@@ -99,7 +99,7 @@ export type BobAccountCommandMessage = {
   type: 'bob:account-command';
   requestId: string;
   command: BobAccountCommand;
-  instanceId: string;
+  instanceId?: string;
   headers?: Record<string, string>;
   body?: unknown;
 };
@@ -108,7 +108,7 @@ export type HostAccountCommandResultMessage = {
   type: 'host:account-command-result';
   requestId: string;
   command: BobAccountCommand;
-  instanceId: string;
+  instanceId?: string;
   ok: boolean;
   status: number;
   payload?: unknown;

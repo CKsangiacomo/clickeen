@@ -51,7 +51,7 @@ type HostAccountCommandResultMessage = {
   type: 'host:account-command-result';
   requestId: string;
   command: BobAccountCommand;
-  instanceId: string;
+  instanceId?: string;
   ok: boolean;
   status: number;
   payload?: unknown;
@@ -129,13 +129,13 @@ function buildRomaBuilderRoute(args: { instanceId: string }): string {
 
 function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
-  instanceId: string;
+  instanceId?: string;
 }): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
   const instanceId = String(args.instanceId || '').trim();
-  if (!instanceId) return null;
 
   switch (args.command) {
     case 'update-instance':
+      if (!instanceId) return null;
       return {
         method: 'PUT',
         path: `/api/account/instance/${encodeURIComponent(instanceId)}`,
@@ -156,16 +156,19 @@ function resolveBobAccountCommandRequest(args: {
         path: '/api/account/assets/upload',
       };
     case 'load-translations':
+      if (!instanceId) return null;
       return {
         method: 'GET',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations`,
       };
     case 'run-copilot':
+      if (!instanceId) return null;
       return {
         method: 'POST',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot`,
       };
     case 'attach-ai-outcome':
+      if (!instanceId) return null;
       return {
         method: 'POST',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot/outcome`,
@@ -173,6 +176,10 @@ function resolveBobAccountCommandRequest(args: {
     default:
       return null;
   }
+}
+
+function isAccountAssetCommand(command: BobAccountCommand): boolean {
+  return command === 'list-assets' || command === 'resolve-assets' || command === 'upload-asset';
 }
 
 function decodeBuilderPathInstanceId(pathname: string): string {
@@ -229,7 +236,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   }, [activeInstanceId, initialInstanceId, pathInstanceId]);
 
   const runBobAccountCommand = useCallback(
-    async (args: { source: Window; requestId: string; command: BobAccountCommand; instanceId: string; headers?: Record<string, string>; body?: unknown }) => {
+    async (args: { source: Window; requestId: string; command: BobAccountCommand; instanceId?: string; headers?: Record<string, string>; body?: unknown }) => {
       const route = resolveBobAccountCommandRequest({
         command: args.command,
         instanceId: args.instanceId,
@@ -246,7 +253,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         reply({
           requestId: args.requestId,
           command: args.command,
-          instanceId: args.instanceId,
+          ...(args.instanceId ? { instanceId: args.instanceId } : {}),
           ok: false,
           status: 422,
           message: 'coreui.errors.builder.command.invalid',
@@ -294,7 +301,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         reply({
           requestId: args.requestId,
           command: args.command,
-          instanceId: args.instanceId,
+          ...(args.instanceId ? { instanceId: args.instanceId } : {}),
           ok: response.ok,
           status: response.status,
           payload,
@@ -316,7 +323,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         reply({
           requestId: args.requestId,
           command: args.command,
-          instanceId: args.instanceId,
+          ...(args.instanceId ? { instanceId: args.instanceId } : {}),
           ok: false,
           status: 500,
           message,
@@ -468,12 +475,13 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         const command = message.command ?? null;
         const instanceId = typeof message.instanceId === 'string' ? message.instanceId.trim() : '';
         const headers = message.headers && typeof message.headers === 'object' ? message.headers : undefined;
-        if (!requestId || !command || !instanceId) return;
+        if (!requestId || !command) return;
+        if (!instanceId && !isAccountAssetCommand(command)) return;
         void runBobAccountCommand({
           source,
           requestId,
           command,
-          instanceId,
+          ...(instanceId ? { instanceId } : {}),
           ...(headers ? { headers } : {}),
           ...(typeof message.body === 'undefined' ? {} : { body: message.body }),
         });

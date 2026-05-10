@@ -94,7 +94,7 @@ export function useSessionTransport(args: {
   const dispatchHostAccountCommand = useCallback(
     (commandArgs: {
       command: BobAccountCommand;
-      instanceId: string;
+      instanceId?: string;
       headers?: Record<string, string>;
       body?: unknown;
     }): Promise<{ ok: boolean; status: number; payload: any; message?: string }> => {
@@ -108,7 +108,7 @@ export function useSessionTransport(args: {
         type: 'bob:account-command',
         requestId,
         command: commandArgs.command,
-        instanceId: String(commandArgs.instanceId || '').trim(),
+        ...(String(commandArgs.instanceId || '').trim() ? { instanceId: String(commandArgs.instanceId || '').trim() } : {}),
         ...(commandArgs.headers ? { headers: commandArgs.headers } : {}),
         ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
       };
@@ -162,12 +162,9 @@ export function useSessionTransport(args: {
       body?: unknown;
     }): Promise<Response> => {
       const instanceId = String(args.metaRef.current?.instanceId || '').trim();
-      if (!instanceId) {
-        return createHostUnavailableResponse();
-      }
       const result = await dispatchHostAccountCommand({
         command: commandArgs.command,
-        instanceId,
+        ...(instanceId ? { instanceId } : {}),
         ...(commandArgs.headers ? { headers: commandArgs.headers } : {}),
         ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
       });
