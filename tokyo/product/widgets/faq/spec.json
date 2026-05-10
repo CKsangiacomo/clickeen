@@ -22,6 +22,16 @@
         "path": "sections[].faqs[].defaultOpen",
         "type": "boolean",
         "default": false
+      },
+      {
+        "path": "displayCategoryTitles",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "path": "behavior.showBacklink",
+        "type": "boolean",
+        "default": true
       }
     ]
   },

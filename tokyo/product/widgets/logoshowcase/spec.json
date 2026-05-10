@@ -1934,5 +1934,14 @@
         ]
       }
     ]
+  },
+  "normalization": {
+    "coerceRules": [
+      {
+        "path": "behavior.showBacklink",
+        "type": "boolean",
+        "default": true
+      }
+    ]
   }
 }

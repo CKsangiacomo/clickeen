@@ -15,8 +15,11 @@ export function TopDrawer() {
   const hasInstance = Boolean(currentInstanceId);
   const canSave = hasInstance && isDirty;
   const currentLabel = useMemo(
-    () => (typeof meta?.label === 'string' ? meta.label.trim() : ''),
-    [meta?.label]
+    () => {
+      const label = typeof meta?.label === 'string' ? meta.label.trim() : '';
+      return label || currentInstanceId;
+    },
+    [currentInstanceId, meta?.label]
   );
 
   return (
