@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { collectConfigMediaAssetIds, materializeConfigMedia } from '@clickeen/ck-contracts';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
+import { serializeInstanceDataSignature } from '../lib/session/sessionTypes';
 
 const BLOCKED_SWITCHER_COPY =
   'Translations not available while in editing mode. Preview translations in Translations panel.';
@@ -37,7 +38,16 @@ export function Workspace({
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
-  const [previewInstanceData, setPreviewInstanceData] = useState<Record<string, unknown>>(instanceData);
+  const instanceDataSignature = useMemo(
+    () => serializeInstanceDataSignature(instanceData),
+    [instanceData],
+  );
+  const [materializedPreview, setMaterializedPreview] = useState<{
+    signature: string;
+    data: Record<string, unknown>;
+  } | null>(null);
+  const previewInstanceData =
+    materializedPreview?.signature === instanceDataSignature ? materializedPreview.data : instanceData;
   const effectiveReadyPreviewLocales = useMemo(() => {
     const readyLocales = Array.from(
       new Set(
@@ -96,9 +106,10 @@ export function Workspace({
 
   useEffect(() => {
     let cancelled = false;
+    const signature = instanceDataSignature;
     const assetIds = collectConfigMediaAssetIds(instanceData);
     if (!assetIds.length) {
-      setPreviewInstanceData(instanceData);
+      setMaterializedPreview(null);
       return () => {
         cancelled = true;
       };
@@ -109,21 +120,24 @@ export function Workspace({
       .then(({ assetsById }) => {
         if (cancelled) return;
         const materialized = materializeConfigMedia(instanceData, assetsById);
-        setPreviewInstanceData(
-          materialized && typeof materialized === 'object' && !Array.isArray(materialized)
-            ? (materialized as Record<string, unknown>)
-            : instanceData,
-        );
+        if (materialized && typeof materialized === 'object' && !Array.isArray(materialized)) {
+          setMaterializedPreview({
+            signature,
+            data: materialized as Record<string, unknown>,
+          });
+          return;
+        }
+        setMaterializedPreview(null);
       })
       .catch(() => {
         if (cancelled) return;
-        setPreviewInstanceData(instanceData);
+        setMaterializedPreview(null);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [accountAssets, instanceData]);
+  }, [accountAssets, instanceData, instanceDataSignature]);
 
   useEffect(() => {
     if (!switcherNotice) return undefined;
