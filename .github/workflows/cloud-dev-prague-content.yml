@@ -33,8 +33,6 @@ jobs:
       PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
       PUBLIC_VENICE_URL: https://venice.dev.clickeen.com
       PUBLIC_ROMA_URL: https://roma.dev.clickeen.com
-
-      PRAGUE_BASE_URL: https://prague.dev.clickeen.com
     steps:
       - uses: actions/checkout@v4
 
@@ -58,15 +56,41 @@ jobs:
       - name: Build Prague (includes overlay verify)
         run: pnpm -C prague build
 
-      - name: Smoke test (en)
+      - name: Smoke test published Prague overlay
         run: |
           set -euo pipefail
-          curl -fsSIL "$PRAGUE_BASE_URL/us/en/widgets/faq/" | tee /tmp/headers_en.txt
-          grep -qi "^x-prague-overlay-status: skipped" /tmp/headers_en.txt
-
-      - name: Smoke test (fr overlay applied)
-        run: |
-          set -euo pipefail
-          curl -fsSIL "$PRAGUE_BASE_URL/us/fr/widgets/faq/" | tee /tmp/headers_fr.txt
-          grep -qi "^x-prague-overlay-status: applied" /tmp/headers_fr.txt
-          grep -qi "^x-prague-overlay-locale: fr" /tmp/headers_fr.txt
+          node <<'NODE'
+          const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+          const base = String(process.env.PUBLIC_TOKYO_URL || '').replace(/\/+$/, '');
+          if (!base) throw new Error('PUBLIC_TOKYO_URL is required');
+          const indexUrl = `${base}/l10n/prague/widgets/faq/index.json`;
+          let indexRes = null;
+          for (let attempt = 1; attempt <= 30; attempt += 1) {
+            indexRes = await fetch(indexUrl);
+            if (indexRes.ok) break;
+            if (attempt === 30) {
+              throw new Error(`Missing Prague FAQ index: ${indexRes.status} ${indexUrl}`);
+            }
+            await sleep(10_000);
+          }
+          const index = await indexRes.json();
+          const fingerprint = index?.layers?.locale?.lastPublishedFingerprint?.fr;
+          if (!fingerprint || typeof fingerprint !== 'string') {
+            throw new Error('Prague FAQ index missing fr lastPublishedFingerprint');
+          }
+          const overlayUrl = `${base}/l10n/prague/widgets/faq/locale/fr/${encodeURIComponent(fingerprint)}.ops.json`;
+          let overlayRes = null;
+          for (let attempt = 1; attempt <= 30; attempt += 1) {
+            overlayRes = await fetch(overlayUrl);
+            if (overlayRes.ok) break;
+            if (attempt === 30) {
+              throw new Error(`Missing Prague FAQ fr overlay: ${overlayRes.status} ${overlayUrl}`);
+            }
+            await sleep(10_000);
+          }
+          const overlay = await overlayRes.json();
+          if (overlay?.v !== 1 || !Array.isArray(overlay.ops) || overlay.ops.length < 1) {
+            throw new Error('Invalid Prague FAQ fr overlay payload');
+          }
+          console.log(`[prague-content] Published FAQ fr overlay ${fingerprint}`);
+          NODE
