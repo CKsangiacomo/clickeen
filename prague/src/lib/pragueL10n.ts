@@ -137,20 +137,6 @@ function readEnvStrictFlag(): string | undefined {
   return readEnv('PRAGUE_L10N_STRICT') || readEnv('PUBLIC_PRAGUE_L10N_STRICT');
 }
 
-function readEnvPragueBuildId(): string | undefined {
-  const metaAny = import.meta.env as any;
-  const metaPublic = String(metaAny.PUBLIC_PRAGUE_BUILD_ID || '').trim();
-  if (metaPublic) return metaPublic;
-  const metaCommit = String(metaAny.CF_PAGES_COMMIT_SHA || '').trim();
-  if (metaCommit) return metaCommit;
-
-  const envPublic = readEnv('PUBLIC_PRAGUE_BUILD_ID');
-  if (envPublic) return envPublic;
-  const envCommit = readEnv('CF_PAGES_COMMIT_SHA');
-  if (envCommit) return envCommit;
-  return undefined;
-}
-
 function getTokyoBaseUrl(): string {
   const raw = String(readEnvTokyoUrl() || '').trim();
   if (!raw) {
@@ -246,15 +232,11 @@ function encodePathSegments(pathStr: string): string {
     .join('/');
 }
 
-function getTokyoL10nPrefix(): string {
-  const token = String(readEnvPragueBuildId() || '').trim();
-  return token ? `/l10n/v/${encodeURIComponent(token)}` : '/l10n';
-}
+const PRAGUE_L10N_PREFIX = '/l10n/prague';
 
 async function fetchLayerIndex(pageId: string): Promise<LayerIndex | null> {
   const baseUrl = getTokyoBaseUrl();
-  const prefix = getTokyoL10nPrefix();
-  const path = `${prefix}/prague/${encodePathSegments(pageId)}/index.json`;
+  const path = `${PRAGUE_L10N_PREFIX}/${encodePathSegments(pageId)}/index.json`;
   let res: Response;
   try {
     res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
@@ -272,8 +254,7 @@ async function fetchLayerIndex(pageId: string): Promise<LayerIndex | null> {
 async function fetchBaseSnapshot(args: { pageId: string; baseFingerprint: string }): Promise<Record<string, string> | null> {
   if (!args.baseFingerprint) return null;
   const baseUrl = getTokyoBaseUrl();
-  const prefix = getTokyoL10nPrefix();
-  const path = `${prefix}/prague/${encodePathSegments(args.pageId)}/bases/${encodeURIComponent(
+  const path = `${PRAGUE_L10N_PREFIX}/${encodePathSegments(args.pageId)}/bases/${encodeURIComponent(
     args.baseFingerprint,
   )}.snapshot.json`;
   let res: Response;
@@ -504,8 +485,7 @@ async function fetchOverlay(args: {
 }): Promise<PragueOverlay | null> {
   if (!args.baseFingerprint) return null;
   const baseUrl = getTokyoBaseUrl();
-  const prefix = getTokyoL10nPrefix();
-  const path = `${prefix}/prague/${encodePathSegments(args.pageId)}/${encodeURIComponent(args.layer)}/${encodeURIComponent(
+  const path = `${PRAGUE_L10N_PREFIX}/${encodePathSegments(args.pageId)}/${encodeURIComponent(args.layer)}/${encodeURIComponent(
     args.layerKey
   )}/${encodeURIComponent(args.baseFingerprint)}.ops.json`;
   let res: Response;

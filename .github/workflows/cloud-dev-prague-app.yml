@@ -31,7 +31,6 @@ jobs:
       PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
       PUBLIC_VENICE_URL: https://venice.dev.clickeen.com
       PUBLIC_ROMA_URL: https://roma.dev.clickeen.com
-      PUBLIC_PRAGUE_BUILD_ID: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
 

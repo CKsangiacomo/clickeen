@@ -28,7 +28,6 @@ Prague is strict: these env vars are required at build/runtime (because they are
 
 Optional:
 
-- `PUBLIC_PRAGUE_BUILD_ID` (optional override for Prague l10n cache token; defaults to `CF_PAGES_COMMIT_SHA` automatically)
 - `PUBLIC_ROMA_URL` (used by `/{market}/{locale}/create` redirect bridge to Roma `/home`)
 
 Prague widget pages embed explicit Clickeen-owned account instances by `accountInstanceRef.instanceId`.

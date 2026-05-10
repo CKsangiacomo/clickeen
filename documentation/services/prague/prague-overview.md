@@ -20,7 +20,7 @@ Deploy contract:
   - output: `prague/dist`
 - Manual Cloudflare project/env alignment is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy) and localized via Tokyo overlays (R2 keys under `tokyo/prague/l10n/**`, fetched at runtime from `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
+In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy) and localized via Tokyo overlays (R2 keys under `tokyo/prague/l10n/**`, fetched at runtime from `${PUBLIC_TOKYO_URL}/l10n/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
 
 At build time, Prague:
 - enumerates widgets by scanning `tokyo/product/widgets/*` (excluding `_*/` and `shared/`)
@@ -84,7 +84,7 @@ Current repo behavior:
 - `/{market}/{locale}/create` is a redirect bridge from Prague into Roma (`${PUBLIC_ROMA_URL}/home`).
 - Prague preserves incoming query params and appends source context (`from=prague_create`, `market`, `locale`).
 - If `PUBLIC_ROMA_URL` is missing, this route fails visibly with `503` (no silent fallback).
-- Prague l10n cache token is resolved automatically from `CF_PAGES_COMMIT_SHA`; `PUBLIC_PRAGUE_BUILD_ID` is only an optional manual override.
+- Prague l10n overlays use stable Tokyo paths; freshness is enforced by each overlay's `baseFingerprint`.
 
 ---
 
@@ -149,7 +149,7 @@ Localization is applied via page JSON + ops overlays:
 - overlays: `tokyo/prague/l10n/widgets/{widget}/locale/{locale}/{baseFingerprint}.ops.json`
 - overlays (subpages): `tokyo/prague/l10n/widgets/{widget}/{page}/locale/{locale}/{baseFingerprint}.ops.json`
 - Prague merges localized overlays into `blocks[].copy` at load time
-- Overlays are **set-only ops** gated by `baseFingerprint` and indexed via `${PUBLIC_TOKYO_URL}/l10n/v/<build-token>/prague/{pageId}/index.json` (deterministic, no manifest fan‑out in app code).
+- Overlays are **set-only ops** gated by `baseFingerprint` and indexed via `${PUBLIC_TOKYO_URL}/l10n/prague/{pageId}/index.json` (deterministic, no manifest fan-out in app code).
 - Manual locale base variants are **not** part of the runtime contract in this repo snapshot; localization is overlay‑only.
 
 Validation:
