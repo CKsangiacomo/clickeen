@@ -115,6 +115,12 @@ function appendLimited(existing, chunk, limit) {
   return next.slice(next.length - limit);
 }
 
+function getPragueL10nPublishPrefix() {
+  const buildId = String(process.env.PUBLIC_PRAGUE_BUILD_ID || process.env.CF_PAGES_COMMIT_SHA || '').trim();
+  if (!buildId) return path.posix.join('l10n', 'prague');
+  return path.posix.join('l10n', 'v', encodeURIComponent(buildId), 'prague');
+}
+
 function runWranglerAsync(argsList, options = {}) {
   const { timeoutMs = PUBLISH_TIMEOUT_MS } = options;
   const invocation = getWranglerInvocation(argsList);
@@ -203,9 +209,10 @@ async function publishOverlays() {
 
   files.sort();
   const modeFlag = publishRemote ? '--remote' : '--local';
+  const publishPrefix = getPragueL10nPublishPrefix();
   const tasks = files.map((filePath) => {
     const relFromPragueL10n = path.relative(PRAGUE_L10N_ROOT, filePath).replace(/\\/g, '/');
-    const key = path.posix.join('l10n', 'prague', relFromPragueL10n);
+    const key = path.posix.join(publishPrefix, relFromPragueL10n);
     const objectPath = `${R2_BUCKET}/${key}`;
     return { key, objectPath, filePath, modeFlag };
   });

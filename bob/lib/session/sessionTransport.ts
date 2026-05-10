@@ -25,6 +25,9 @@ export type LoadTranslations = (
   args: LoadTranslationsArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
+const HOST_ORIGIN_WAIT_MS = 3_000;
+const HOST_ORIGIN_POLL_MS = 25;
+
 function createHostUnavailableResponse(): Response {
   return Response.json(
     {
@@ -48,6 +51,20 @@ export function useSessionTransport(args: {
   metaRef: MutableRefObject<SessionMeta>;
 }) {
   const hostOriginRef = useRef<string | null>(null);
+
+  const waitForHostOrigin = useCallback(async (): Promise<string | null> => {
+    const existing = hostOriginRef.current;
+    if (existing) return existing;
+    if (typeof window === 'undefined') return null;
+
+    const deadline = Date.now() + HOST_ORIGIN_WAIT_MS;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => window.setTimeout(resolve, HOST_ORIGIN_POLL_MS));
+      const next = hostOriginRef.current;
+      if (next) return next;
+    }
+    return null;
+  }, []);
 
   const normalizeInputUrl = useCallback((input: RequestInfo | URL): string => {
     const raw =
@@ -92,13 +109,13 @@ export function useSessionTransport(args: {
   }, []);
 
   const dispatchHostAccountCommand = useCallback(
-    (commandArgs: {
+    async (commandArgs: {
       command: BobAccountCommand;
       instanceId?: string;
       headers?: Record<string, string>;
       body?: unknown;
     }): Promise<{ ok: boolean; status: number; payload: any; message?: string }> => {
-      const targetOrigin = hostOriginRef.current;
+      const targetOrigin = await waitForHostOrigin();
       if (!targetOrigin) {
         return Promise.reject(new Error('coreui.errors.builder.command.hostUnavailable'));
       }
@@ -150,7 +167,7 @@ export function useSessionTransport(args: {
         }
       });
     },
-    [],
+    [waitForHostOrigin],
   );
 
   const accountAssets = useRef<AccountAssetsTransport | null>(null);
