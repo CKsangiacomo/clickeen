@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { Policy } from '@clickeen/ck-policy';
+import { materializeConfigWithDefaults, normalizeSessionConfig } from './sessionConfig';
 import {
   type BobOpenEditorAppliedMessage,
   type BobOpenEditorFailedMessage,
@@ -12,36 +13,6 @@ import {
   type CopilotRuntimeUi,
   serializeInstanceDataSignature,
 } from './sessionTypes';
-
-function cloneSessionConfig(config: Record<string, unknown>): Record<string, unknown> {
-  if (typeof structuredClone === 'function') {
-    return structuredClone(config) as Record<string, unknown>;
-  }
-  return JSON.parse(JSON.stringify(config)) as Record<string, unknown>;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function materializeConfigWithDefaults(defaults: unknown, config: Record<string, unknown>): Record<string, unknown> {
-  if (!isPlainObject(defaults)) return cloneSessionConfig(config);
-  const next = cloneSessionConfig(defaults);
-
-  function mergeInto(target: Record<string, unknown>, source: Record<string, unknown>) {
-    for (const [key, value] of Object.entries(source)) {
-      const existing = target[key];
-      if (isPlainObject(existing) && isPlainObject(value)) {
-        mergeInto(existing, value);
-        continue;
-      }
-      target[key] = value;
-    }
-  }
-
-  mergeInto(next, config);
-  return next;
-}
 
 export function useSessionBoot(args: {
   setState: Dispatch<SetStateAction<SessionState>>;
@@ -72,7 +43,10 @@ export function useSessionBoot(args: {
             error: 'coreui.errors.instance.config.invalid',
           };
         }
-        const resolved = materializeConfigWithDefaults(compiled.defaults, rawInstanceData as Record<string, unknown>);
+        const resolved = normalizeSessionConfig(
+          materializeConfigWithDefaults(compiled.defaults, rawInstanceData as Record<string, unknown>),
+          compiled,
+        );
         const savedInstanceDataSignature = serializeInstanceDataSignature(resolved);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
         const nextCopilot = (message.copilot as CopilotRuntimeUi | undefined) ?? null;

@@ -3,6 +3,7 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../ops';
 import { applyWidgetOps } from '../ops';
+import { normalizeSessionConfig } from './sessionConfig';
 import { serializeInstanceDataSignature, type SessionMeta, type SessionState } from './sessionTypes';
 
 export function useSessionEditing(args: {
@@ -34,10 +35,12 @@ export function useSessionEditing(args: {
         return applied;
       }
 
+      const normalizedData = normalizeSessionConfig(applied.data, compiled);
+
       setState((prev) => ({
         ...prev,
-        instanceData: applied.data,
-        isDirty: serializeInstanceDataSignature(applied.data) !== prev.savedInstanceDataSignature,
+        instanceData: normalizedData,
+        isDirty: serializeInstanceDataSignature(normalizedData) !== prev.savedInstanceDataSignature,
         error: null,
         lastUpdate: {
           source: 'ops',
@@ -46,7 +49,7 @@ export function useSessionEditing(args: {
         },
       }));
 
-      return applied;
+      return { ok: true, data: normalizedData };
     },
     [setState, state],
   );

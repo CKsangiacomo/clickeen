@@ -8,6 +8,7 @@ import {
   type SessionUpsell,
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
+import { normalizeSessionConfig } from './sessionConfig';
 
 export function useSessionSaving(args: {
   stateRef: MutableRefObject<SessionState>;
@@ -52,7 +53,7 @@ export function useSessionSaving(args: {
     setState((prev) => ({ ...prev, isSaving: true, error: null }));
 
     try {
-      const config = snapshot.instanceData;
+      const config = normalizeSessionConfig(snapshot.instanceData, snapshot.compiled);
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
         instanceId,
@@ -85,6 +86,7 @@ export function useSessionSaving(args: {
       const savedInstanceDataSignature = serializeInstanceDataSignature(config);
       const nextState: SessionState = {
         ...current,
+        instanceData: config,
         savedInstanceDataSignature,
         isDirty: false,
         isSaving: false,

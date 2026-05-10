@@ -116,8 +116,12 @@ export async function tryHandlePublicRenderRoutes(
   }
 
   if (pathname.startsWith('/fonts/')) {
-    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
-    return respond(await handleGetTokyoFontAsset(env, pathname));
+    if (req.method !== 'GET' && req.method !== 'HEAD') return respondMethodNotAllowed(respond);
+    const response = await handleGetTokyoFontAsset(env, pathname);
+    if (req.method === 'HEAD') {
+      return respond(new Response(null, { status: response.status, headers: response.headers }));
+    }
+    return respond(response);
   }
 
   return null;

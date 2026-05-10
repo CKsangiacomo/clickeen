@@ -47,8 +47,8 @@ async function walkFiles(root) {
 function buildBulkEntries(files) {
   return files
     .map((filePath) => {
-      const rel = path.relative(path.join(repoRoot, 'tokyo'), filePath).replace(/\\/g, '/');
-      return { key: rel, file: filePath };
+      const rel = path.relative(tokyoFontsRoot, filePath).replace(/\\/g, '/');
+      return { key: path.posix.join('fonts', rel), file: filePath };
     })
     .sort((a, b) => a.key.localeCompare(b.key));
 }
