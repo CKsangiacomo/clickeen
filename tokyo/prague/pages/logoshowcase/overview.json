@@ -58,8 +58,8 @@
     {
       "id": "minibob",
       "type": "minibob",
-      "systemInstanceRef": {
-        "publicId": "wgt_main_logoshowcase"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZZ07S5PMJVSRKM4M7K8"
       },
       "copy": {
         "heading": "Try it live",

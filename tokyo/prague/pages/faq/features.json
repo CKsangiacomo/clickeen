@@ -16,8 +16,8 @@
         "headline": "How the FAQ widget works",
         "subheadline": "From AI drafting to localization and SEO, these are the systems that keep answers accurate and discoverable."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {
@@ -29,8 +29,8 @@
         "subheadline": "Generate structured drafts inside the editor, then accept, edit, or reject each suggestion before publish.",
         "body": "Ombra generates structured FAQ copy inside the editor. Accept, edit, override, or reject each suggestion before publish."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {
@@ -42,8 +42,8 @@
         "subheadline": "Serve translated answers automatically and fine-tune wording manually when brand voice or nuance matters.",
         "body": "You edit one source. Clickeen serves translated answers and lets you override any line when needed."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {
@@ -55,8 +55,8 @@
         "subheadline": "Edit once in one source, then publish and push the latest answers to every live embed.",
         "body": "After you click Publish, every live embed loads the latest content."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {

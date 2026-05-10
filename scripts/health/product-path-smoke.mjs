@@ -38,7 +38,7 @@ function parseArgs(argv) {
     romaBase: process.env.ROMA_BASE_URL || process.env.CK_ROMA_BASE_URL || DEFAULT_ROMA_BASE,
     veniceBase: process.env.VENICE_BASE_URL || process.env.CK_VENICE_BASE_URL || DEFAULT_VENICE_BASE,
     cookie: process.env.CK_ROMA_COOKIE || process.env.ROMA_COOKIE || '',
-    publicId: process.env.CK_HEALTH_PUBLIC_ID || process.env.VENICE_PUBLIC_ID || '',
+    instanceId: process.env.CK_HEALTH_PUBLIC_ID || process.env.VENICE_PUBLIC_ID || '',
     concurrency: DEFAULT_CONCURRENCY,
     timeoutMs: DEFAULT_TIMEOUT_MS,
     write: false,
@@ -82,7 +82,7 @@ function parseArgs(argv) {
       continue;
     }
     if (token === '--public-id') {
-      args.publicId = String(argv[i + 1] || '').trim();
+      args.instanceId = String(argv[i + 1] || '').trim();
       i += 1;
       continue;
     }
@@ -102,7 +102,7 @@ function parseArgs(argv) {
   args.romaBase = normalizeBaseUrl(args.romaBase, 'roma-base');
   args.veniceBase = normalizeBaseUrl(args.veniceBase, 'venice-base');
   args.cookie = normalizeCookie(args.cookie);
-  args.publicId = args.publicId.trim();
+  args.instanceId = args.instanceId.trim();
   if (!Number.isInteger(args.concurrency) || args.concurrency < 1 || args.concurrency > 50) {
     throw new Error('--concurrency must be an integer from 1 to 50');
   }
@@ -150,19 +150,18 @@ function extractInstances(payload) {
 }
 
 function selectAccountInstance(instances) {
-  return instances.find((entry) => entry.listed !== true && typeof entry.publicId === 'string') || null;
+  return instances.find((entry) => typeof entry.instanceId === 'string') || null;
 }
 
 function selectDuplicateSource(instances) {
   return (
-    instances.find((entry) => entry.listed === true && isRecord(entry.actions) && entry.actions.duplicate === true && typeof entry.publicId === 'string') ||
-    instances.find((entry) => isRecord(entry.actions) && entry.actions.duplicate === true && typeof entry.publicId === 'string') ||
+    instances.find((entry) => isRecord(entry.actions) && entry.actions.duplicate === true && typeof entry.instanceId === 'string') ||
     null
   );
 }
 
 function selectPublishedInstance(instances) {
-  return instances.find((entry) => entry.status === 'published' && typeof entry.publicId === 'string') || null;
+  return instances.find((entry) => entry.status === 'published' && typeof entry.instanceId === 'string') || null;
 }
 
 class HealthRunner {
@@ -298,9 +297,7 @@ async function loadWidgets(runner) {
     assert2xx(result, 'GET /api/account/widgets');
     const instances = extractInstances(result.payload);
     if (!instances.length) throw new Error('widget catalog returned zero instances');
-    const accountCount = instances.filter((entry) => entry.listed !== true).length;
-    const listedCount = instances.filter((entry) => entry.listed === true).length;
-    return { instances, detail: `${instances.length} instances (${accountCount} account, ${listedCount} listed)` };
+    return { instances, detail: `${instances.length} account instances` };
   });
 }
 
@@ -310,18 +307,18 @@ async function runBuilderAndL10n(runner, accountInstance) {
     runner.skip('Roma translations panel', 'roma.l10n', 'no account-owned instance available');
     return;
   }
-  const publicId = accountInstance.publicId;
+  const instanceId = accountInstance.instanceId;
   await runner.check('Roma builder open', 'roma.builder', async () => {
-    const result = await runner.request(runner.args.romaBase, `/api/builder/${encodeURIComponent(publicId)}/open`);
-    assert2xx(result, `GET /api/builder/${publicId}/open`);
+    const result = await runner.request(runner.args.romaBase, `/api/builder/${encodeURIComponent(instanceId)}/open`);
+    assert2xx(result, `GET /api/builder/${instanceId}/open`);
     if (!isRecord(result.payload) || !isRecord(result.payload.instance)) {
       throw new Error('builder open payload missing instance');
     }
-    return publicId;
+    return instanceId;
   });
   await runner.check('Roma translations panel', 'roma.l10n', async () => {
-    const result = await runner.request(runner.args.romaBase, `/api/account/instances/${encodeURIComponent(publicId)}/translations`);
-    assert2xx(result, `GET /api/account/instances/${publicId}/translations`);
+    const result = await runner.request(runner.args.romaBase, `/api/account/instances/${encodeURIComponent(instanceId)}/translations`);
+    assert2xx(result, `GET /api/account/instances/${instanceId}/translations`);
     if (!isRecord(result.payload)) throw new Error('translations payload is not an object');
     const state = isRecord(result.payload.summary) ? result.payload.summary.state : result.payload.state;
     return state ? `state=${String(state)}` : 'payload ok';
@@ -369,58 +366,58 @@ async function runAssetWrite(runner) {
 
 async function runDuplicateWrite(runner, sourceInstance) {
   if (!sourceInstance) {
-    runner.skip('Roma instance duplicate/delete', 'roma.widgets', 'no duplicable instance available');
+    runner.skip('Roma instance duplicate/delete', 'roma.widgets', 'no source instance available');
     return null;
   }
-  let createdPublicId = '';
+  let createdInstanceId = '';
   await runner.check('Roma instance duplicate/delete', 'roma.widgets', async () => {
     const duplicate = await runner.request(runner.args.romaBase, '/api/account/widgets/duplicate', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sourcePublicId: sourceInstance.publicId }),
+      body: JSON.stringify({ sourceInstanceId: sourceInstance.instanceId }),
     });
     assertHttp(duplicate, 201, 'POST /api/account/widgets/duplicate');
-    if (!isRecord(duplicate.payload) || typeof duplicate.payload.publicId !== 'string') {
-      throw new Error('duplicate payload missing publicId');
+    if (!isRecord(duplicate.payload) || typeof duplicate.payload.instanceId !== 'string') {
+      throw new Error('duplicate payload missing instanceId');
     }
-    createdPublicId = duplicate.payload.publicId;
+    createdInstanceId = duplicate.payload.instanceId;
 
-    const open = await runner.request(runner.args.romaBase, `/api/builder/${encodeURIComponent(createdPublicId)}/open`);
-    assert2xx(open, `GET /api/builder/${createdPublicId}/open`);
+    const open = await runner.request(runner.args.romaBase, `/api/builder/${encodeURIComponent(createdInstanceId)}/open`);
+    assert2xx(open, `GET /api/builder/${createdInstanceId}/open`);
 
     const translations = await runner.request(
       runner.args.romaBase,
-      `/api/account/instances/${encodeURIComponent(createdPublicId)}/translations`,
+      `/api/account/instances/${encodeURIComponent(createdInstanceId)}/translations`,
     );
-    assert2xx(translations, `GET /api/account/instances/${createdPublicId}/translations`);
+    assert2xx(translations, `GET /api/account/instances/${createdInstanceId}/translations`);
 
-    const cleanup = await runner.request(runner.args.romaBase, `/api/account/instance/${encodeURIComponent(createdPublicId)}`, {
+    const cleanup = await runner.request(runner.args.romaBase, `/api/account/instance/${encodeURIComponent(createdInstanceId)}`, {
       method: 'DELETE',
     });
-    assert2xx(cleanup, `DELETE /api/account/instance/${createdPublicId}`);
-    return `duplicated ${sourceInstance.publicId} to ${createdPublicId}, opened, checked l10n, deleted`;
+    assert2xx(cleanup, `DELETE /api/account/instance/${createdInstanceId}`);
+    return `duplicated ${sourceInstance.instanceId} to ${createdInstanceId}, opened, checked l10n, deleted`;
   });
-  return createdPublicId || null;
+  return createdInstanceId || null;
 }
 
-async function runVenice(runner, publicId) {
+async function runVenice(runner, instanceId) {
   await runner.check('Venice loader', 'venice.public', async () => {
     const result = await runner.request(runner.args.veniceBase, '/embed/latest/loader.js');
     assert2xx(result, 'GET /embed/latest/loader.js');
     return `HTTP ${result.status}`;
   });
 
-  if (!publicId) {
+  if (!instanceId) {
     runner.skip('Venice public instance read', 'venice.public', 'no published public id supplied or discovered');
     return;
   }
 
   await runner.check('Venice public instance read', 'venice.public', async () => {
-    const pointer = await runner.request(runner.args.veniceBase, `/r/${encodeURIComponent(publicId)}`);
-    assert2xx(pointer, `GET /r/${publicId}`);
-    const embed = await runner.request(runner.args.veniceBase, `/e/${encodeURIComponent(publicId)}`);
-    assert2xx(embed, `GET /e/${publicId}`);
-    return publicId;
+    const pointer = await runner.request(runner.args.veniceBase, `/renders/widgets/${encodeURIComponent(instanceId)}`);
+    assert2xx(pointer, `GET /renders/widgets/${instanceId}`);
+    const embed = await runner.request(runner.args.veniceBase, `/widget/${encodeURIComponent(instanceId)}`);
+    assert2xx(embed, `GET /widget/${instanceId}`);
+    return instanceId;
   });
 }
 
@@ -442,7 +439,7 @@ async function main() {
   const runner = new HealthRunner(args);
 
   await runUnauthenticatedBoundary(runner);
-  await runVenice(runner, args.publicOnly ? args.publicId : '');
+  await runVenice(runner, args.publicOnly ? args.instanceId : '');
 
   if (args.publicOnly) {
     printResults(runner.results, args.json);
@@ -473,8 +470,8 @@ async function main() {
     await runDuplicateWrite(runner, selectDuplicateSource(instances));
   }
 
-  const publishedPublicId = args.publicId || selectPublishedInstance(instances)?.publicId || '';
-  await runVenice(runner, publishedPublicId);
+  const publishedInstanceId = args.instanceId || selectPublishedInstance(instances)?.instanceId || '';
+  await runVenice(runner, publishedInstanceId);
 
   printResults(runner.results, args.json);
   process.exit(runner.results.some((result) => !result.ok) ? 1 : 0);

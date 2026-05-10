@@ -41,13 +41,13 @@ export function WidgetsDomain() {
   const [domainLoading, setDomainLoading] = useState(() => !cachedWidgets);
   const [domainRefreshing, setDomainRefreshing] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
-  const [renamingPublicId, setRenamingPublicId] = useState<string | null>(null);
+  const [renamingInstanceId, setRenamingInstanceId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
 
   const searchIntent = useMemo(() => (searchParams.get('intent') || '').trim().toLowerCase(), [searchParams]);
   const searchWidgetType = useMemo(() => normalizeWidgetType(searchParams.get('widgetType')), [searchParams]);
-  const selectedPublicId = useMemo(() => (searchParams.get('selected') || '').trim(), [searchParams]);
+  const selectedInstanceId = useMemo(() => (searchParams.get('selected') || '').trim(), [searchParams]);
 
   const applyWidgets = useCallback((widgets: RomaWidgetsResponse) => {
     setWidgetInstances(widgets.instances);
@@ -127,7 +127,7 @@ export function WidgetsDomain() {
     return Array.from(groups.entries())
       .map(([widgetType, instances]) => ({
         widgetType,
-        instances: instances.slice().sort((a, b) => a.publicId.localeCompare(b.publicId)),
+        instances: instances.slice().sort((a, b) => a.instanceId.localeCompare(b.instanceId)),
       }))
       .sort((a, b) => a.widgetType.localeCompare(b.widgetType));
   }, [availableWidgetTypes, widgetInstances]);
@@ -153,24 +153,23 @@ export function WidgetsDomain() {
         const source = widgetInstances.find(
           (instance) =>
             instance.widgetType === normalizedWidgetType &&
-            instance.listed === true &&
             instance.actions.duplicate === true,
         );
         if (!source) {
-          throw new Error('No starter instance is available for this widget type.');
+          throw new Error('No source instance is available for this widget type.');
         }
         const payload = await accountApi.fetchJson<{
-          publicId?: string;
+          instanceId?: string;
           widgetType?: string;
         }>(`/api/account/widgets/duplicate`, {
           method: 'POST',
           headers: accountApi.buildHeaders({ contentType: 'application/json' }),
           body: JSON.stringify({
-            sourcePublicId: source.publicId,
+            sourceInstanceId: source.instanceId,
           }),
         });
-        const createdPublicId = payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
-        if (!createdPublicId) {
+        const createdInstanceId = payload && typeof payload.instanceId === 'string' && payload.instanceId.trim() ? payload.instanceId.trim() : '';
+        if (!createdInstanceId) {
           throw new Error('coreui.errors.payload.invalid');
         }
         const createdType = normalizeWidgetType(payload && typeof payload.widgetType === 'string' ? payload.widgetType : normalizedWidgetType);
@@ -178,7 +177,7 @@ export function WidgetsDomain() {
         if (openBuilder) {
           router.push(
             buildBuilderRoute({
-              publicId: createdPublicId,
+              instanceId: createdInstanceId,
               widgetType: createdType,
             }),
           );
@@ -196,22 +195,22 @@ export function WidgetsDomain() {
   const handleDuplicateInstance = useCallback(
     async (instance: WidgetInstance) => {
       if (!accountId) return;
-      const actionKey = `duplicate:${instance.publicId}`;
+      const actionKey = `duplicate:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
         const payload = await accountApi.fetchJson<{
-          publicId?: string;
+          instanceId?: string;
           widgetType?: string;
         }>(`/api/account/widgets/duplicate`, {
           method: 'POST',
           headers: accountApi.buildHeaders({ contentType: 'application/json' }),
           body: JSON.stringify({
-            sourcePublicId: instance.publicId,
+            sourceInstanceId: instance.instanceId,
           }),
         });
-        const duplicatedPublicId = payload && typeof payload.publicId === 'string' && payload.publicId.trim() ? payload.publicId.trim() : '';
-        if (!duplicatedPublicId) {
+        const duplicatedInstanceId = payload && typeof payload.instanceId === 'string' && payload.instanceId.trim() ? payload.instanceId.trim() : '';
+        if (!duplicatedInstanceId) {
           throw new Error('coreui.errors.payload.invalid');
         }
         await refreshWidgets({ force: true });
@@ -228,11 +227,11 @@ export function WidgetsDomain() {
   const handleDeleteInstance = useCallback(
     async (instance: WidgetInstance) => {
       if (!accountId) return;
-      const actionKey = `delete:${instance.publicId}`;
+      const actionKey = `delete:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
-        await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instance/${encodeURIComponent(instance.publicId)}`, {
+        await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instance/${encodeURIComponent(instance.instanceId)}`, {
           method: 'DELETE',
         });
         await refreshWidgets({ force: true });
@@ -249,12 +248,12 @@ export function WidgetsDomain() {
   const handleStatusChange = useCallback(
     async (instance: WidgetInstance, nextStatus: 'published' | 'unpublished') => {
       if (!accountId) return;
-      const actionKey = `${nextStatus}:${instance.publicId}`;
+      const actionKey = `${nextStatus}:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setCreateError(null);
       try {
         await accountApi.fetchJson<{ status?: 'published' | 'unpublished' }>(
-          `/api/account/instances/${encodeURIComponent(instance.publicId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}`,
+          `/api/account/instances/${encodeURIComponent(instance.instanceId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}`,
           {
             method: 'POST',
           },
@@ -274,12 +273,12 @@ export function WidgetsDomain() {
     if (!instance.actions.rename) return;
     setCreateError(null);
     setRenameError(null);
-    setRenamingPublicId(instance.publicId);
+    setRenamingInstanceId(instance.instanceId);
     setRenameDraft(instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME);
   }, []);
 
   const cancelRename = useCallback(() => {
-    setRenamingPublicId(null);
+    setRenamingInstanceId(null);
     setRenameDraft('');
     setRenameError(null);
   }, []);
@@ -296,15 +295,15 @@ export function WidgetsDomain() {
         cancelRename();
         return;
       }
-      const actionKey = `rename:${instance.publicId}`;
+      const actionKey = `rename:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setCreateError(null);
       setRenameError(null);
       try {
         const payload = await accountApi.fetchJson<{
-          publicId?: string;
+          instanceId?: string;
           displayName?: string;
-        }>(`/api/account/instances/${encodeURIComponent(instance.publicId)}/rename`, {
+        }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/rename`, {
           method: 'POST',
           headers: accountApi.buildHeaders({
             contentType: 'application/json',
@@ -312,10 +311,10 @@ export function WidgetsDomain() {
           body: JSON.stringify({ displayName: nextDisplayName }),
         });
         const resolvedDisplayName = typeof payload.displayName === 'string' && payload.displayName.trim() ? payload.displayName.trim() : nextDisplayName;
-        setWidgetInstances((prev) => prev.map((entry) => (entry.publicId === instance.publicId ? { ...entry, displayName: resolvedDisplayName } : entry)));
+        setWidgetInstances((prev) => prev.map((entry) => (entry.instanceId === instance.instanceId ? { ...entry, displayName: resolvedDisplayName } : entry)));
         updateRomaWidgetsCache(accountId, (current) => ({
           ...current,
-          instances: current.instances.map((entry) => (entry.publicId === instance.publicId ? { ...entry, displayName: resolvedDisplayName } : entry)),
+          instances: current.instances.map((entry) => (entry.instanceId === instance.instanceId ? { ...entry, displayName: resolvedDisplayName } : entry)),
         }));
         cancelRename();
       } catch (err) {
@@ -400,21 +399,21 @@ export function WidgetsDomain() {
               </thead>
               <tbody>
                 {group.instances.map((instance) => {
-                  const duplicateActionKey = `duplicate:${instance.publicId}`;
-                  const deleteActionKey = `delete:${instance.publicId}`;
-                  const publishActionKey = `published:${instance.publicId}`;
-                  const unpublishActionKey = `unpublished:${instance.publicId}`;
+                  const duplicateActionKey = `duplicate:${instance.instanceId}`;
+                  const deleteActionKey = `delete:${instance.instanceId}`;
+                  const publishActionKey = `published:${instance.instanceId}`;
+                  const unpublishActionKey = `unpublished:${instance.instanceId}`;
                   const canEdit = instance.actions.edit;
                   const canDuplicate = instance.actions.duplicate;
                   const canDelete = instance.actions.delete;
                   const canRename = instance.actions.rename;
                   const canPublish = instance.actions.publish;
                   const canUnpublish = instance.actions.unpublish;
-                  const isSelected = selectedPublicId === instance.publicId;
-                  const renameActionKey = `rename:${instance.publicId}`;
-                  const isRenaming = renamingPublicId === instance.publicId;
+                  const isSelected = selectedInstanceId === instance.instanceId;
+                  const renameActionKey = `rename:${instance.instanceId}`;
+                  const isRenaming = renamingInstanceId === instance.instanceId;
                   return (
-                    <tr key={instance.publicId} data-selected={isSelected ? 'true' : undefined}>
+                    <tr key={instance.instanceId} data-selected={isSelected ? 'true' : undefined}>
                       <td className="body-s">
                         {isRenaming ? (
                           <div className="roma-instance-rename">
@@ -466,13 +465,13 @@ export function WidgetsDomain() {
                           </>
                         )}
                       </td>
-                      <td className="body-s">{instance.publicId}</td>
+                      <td className="body-s">{instance.instanceId}</td>
                       <td className="body-s">{instance.status === 'published' ? 'Published' : 'Unpublished'}</td>
                       <td className="roma-cell-actions">
                         {canEdit ? (
                           <Link
                             href={buildBuilderRoute({
-                              publicId: instance.publicId,
+                              instanceId: instance.instanceId,
                               widgetType: instance.widgetType,
                             })}
                             className="diet-btn-txt"

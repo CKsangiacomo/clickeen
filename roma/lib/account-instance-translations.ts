@@ -4,7 +4,7 @@ import {
 } from './tokyo-product-control';
 
 export type AccountTranslationsPanelPayload = {
-  publicId: string;
+  instanceId: string;
   widgetType: string;
   baseLocale: string;
   requestedLocales: string[];
@@ -47,7 +47,7 @@ function resolveTokyoControlErrorDetail(payload: unknown, fallback: string): str
 
 function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPanelPayload | null {
   if (!isRecord(raw)) return null;
-  const publicId = asTrimmedString(raw.publicId);
+  const instanceId = asTrimmedString(raw.instanceId);
   const widgetType = asTrimmedString(raw.widgetType);
   const baseLocale = asTrimmedString(raw.baseLocale);
   const requestedLocales = Array.isArray(raw.requestedLocales)
@@ -68,13 +68,13 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
   const generationId = asTrimmedString(raw.generationId);
   const updatedAt = asTrimmedString(raw.updatedAt);
 
-  if (!publicId || !widgetType || !baseLocale || !requestedLocales.includes(baseLocale) || !status || !baseFingerprint || !generationId || !updatedAt) {
+  if (!instanceId || !widgetType || !baseLocale || !requestedLocales.includes(baseLocale) || !status || !baseFingerprint || !generationId || !updatedAt) {
     return null;
   }
   if (!readyLocales.includes(baseLocale)) return null;
 
   return {
-    publicId,
+    instanceId,
     widgetType,
     baseLocale,
     requestedLocales: Array.from(new Set(requestedLocales)),
@@ -88,11 +88,11 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
 
 export async function loadAccountInstanceTranslationsPanel(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
 }): Promise<{ ok: true; value: AccountTranslationsPanelPayload } | RouteFailure> {
   const response = await fetchTokyoProductControl({
-    path: `/__internal/account/instances/${encodeURIComponent(args.publicId)}/translations`,
+    path: `/__internal/account/widgets/${encodeURIComponent(args.instanceId)}/translations`,
     method: 'GET',
     headers: buildTokyoProductControlHeaders({
       accountId: args.accountId,

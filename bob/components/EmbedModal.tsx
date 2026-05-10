@@ -36,7 +36,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 export function EmbedModal({ open, onClose }: EmbedModalProps) {
   const session = useWidgetSessionChrome();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
-  const publicId = session.meta?.publicId ? String(session.meta.publicId) : '';
+  const instanceId = session.meta?.instanceId ? String(session.meta.instanceId) : '';
 
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
@@ -67,16 +67,16 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
       veniceBase = '';
     }
     const loaderSrc = veniceBase ? `${veniceBase}/embed/latest/loader.js` : '';
-    const canRender = Boolean(publicId && loaderSrc);
+    const canRender = Boolean(instanceId && loaderSrc);
 
     const safeSnippet = canRender
-      ? `<div data-clickeen-id="${publicId}"></div>
+      ? `<div data-clickeen-id="${instanceId}"></div>
 <script src="${loaderSrc}" async></script>`
       : '';
 
     const scriptlessSnippet = canRender
       ? `<iframe
-  src="${veniceBase}/e/${encodeURIComponent(publicId)}"
+  src="${veniceBase}/widget/${encodeURIComponent(instanceId)}"
   title="Clickeen widget"
   loading="lazy"
   referrerpolicy="no-referrer"
@@ -87,7 +87,7 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
 
     const seoGeoSnippet = canRender
       ? `<div
-  data-clickeen-id="${publicId}"
+  data-clickeen-id="${instanceId}"
   data-ck-optimization="seo-geo"
   data-max-width="0"
   data-min-height="420"
@@ -96,12 +96,12 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
 <script src="${loaderSrc}" async></script>`
       : '';
 
-    const previewSeoGeoHref = publicId
-      ? `/bob/preview-shadow?publicId=${encodeURIComponent(publicId)}&mode=seo-geo`
+    const previewSeoGeoHref = instanceId
+      ? `/bob/preview-shadow?instanceId=${encodeURIComponent(instanceId)}&mode=seo-geo`
       : '/bob/preview-shadow?mode=seo-geo';
 
     return { veniceBase, loaderSrc, canRender, safeSnippet, scriptlessSnippet, seoGeoSnippet, previewSeoGeoHref };
-  }, [publicId]);
+  }, [instanceId]);
 
   const copySnippet = useCallback(async (label: string, snippet: string) => {
     setCopyStatus(null);
@@ -126,8 +126,8 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
           <div className="label-s label-muted">Paste this code into your website where you want the widget to appear.</div>
         </div>
 
-        {!publicId ? <div className="settings-panel__error">Instance publicId missing.</div> : null}
-        {publicId && !embed.veniceBase ? (
+        {!instanceId ? <div className="settings-panel__error">Instance instanceId missing.</div> : null}
+        {instanceId && !embed.veniceBase ? (
           <div className="settings-panel__error">Missing NEXT_PUBLIC_VENICE_URL (cannot build embed snippet).</div>
         ) : null}
 

@@ -1,6 +1,2 @@
-export * from './berlin-instance-projections';
-export type {
-  BerlinAccountInstanceProjectionResult,
-  BerlinAccountPublishContainmentResult,
-  BerlinDeleteInstanceProjectionResult,
-} from './berlin-product-shared';
+export * from './berlin-publish-containment';
+export type { BerlinAccountPublishContainmentResult } from './berlin-product-shared';

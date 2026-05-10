@@ -10,8 +10,8 @@ import { normalizeLocaleToken, type AllowlistEntry } from '@clickeen/l10n';
 import { json } from '../http';
 import type { AccountWidgetL10nItem, Env } from '../types';
 import {
-  accountInstanceL10nLivePointerKey,
-  normalizeTextPointer,
+  accountInstanceL10nOverlayKey,
+  resolveAccountInstanceLocation,
   readSavedRenderConfig,
 } from './render';
 import {
@@ -65,26 +65,35 @@ export async function loadBerlinAccountL10nState(args: {
 export async function loadOverlayOps(args: {
   env: Env;
   accountId: string;
-  publicId: string;
+  instanceId: string;
   layer: 'locale';
   layerKey: string;
   baseFingerprint: string;
   allowlist: AllowlistEntry[];
 }): Promise<{ ops: LocalizationOp[]; baseUpdatedAt: string | null }> {
-  const key = `accounts/${args.accountId}/instances/${args.publicId}/l10n/overlays/${args.layer}/${args.layerKey}/${args.baseFingerprint}.ops.json`;
+  const location = await resolveAccountInstanceLocation({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+  });
+  if (!location) return { ops: [], baseUpdatedAt: null };
+  const key = accountInstanceL10nOverlayKey(location.accountId, location.widgetType, location.instanceId, args.layerKey);
   const obj = await args.env.TOKYO_R2.get(key);
   if (!obj) {
     return { ops: [], baseUpdatedAt: null };
   }
   const payload = (await obj.json().catch(() => null)) as
-    | { ops?: unknown; baseUpdatedAt?: unknown }
+    | { ops?: unknown; updatedAt?: unknown; baseFingerprint?: unknown }
     | null;
+  if (asTrimmedString(payload?.baseFingerprint) !== args.baseFingerprint) {
+    return { ops: [], baseUpdatedAt: null };
+  }
   return {
     ops: filterAllowlistedOps(
       normalizeLocalizationOps(payload?.ops),
       args.allowlist,
     ),
-    baseUpdatedAt: asTrimmedString(payload?.baseUpdatedAt),
+    baseUpdatedAt: asTrimmedString(payload?.updatedAt),
   };
 }
 
@@ -144,9 +153,9 @@ export async function generateAccountWidgetL10nOps(args: {
 export async function loadAccountTranslationsPanelData(args: {
   env: Env;
   accountId: string;
-  publicId: string;
+  instanceId: string;
 }): Promise<{
-  publicId: string;
+  instanceId: string;
   widgetType: string;
   baseLocale: string;
   requestedLocales: string[];
@@ -160,7 +169,7 @@ export async function loadAccountTranslationsPanelData(args: {
   const saved = await readSavedRenderConfig({
     env: args.env,
     accountId: args.accountId,
-    publicId: args.publicId,
+    instanceId: args.instanceId,
   });
   if (!saved.ok) {
     throw new Error(saved.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : saved.reasonKey);
@@ -180,11 +189,16 @@ export async function loadAccountTranslationsPanelData(args: {
   const textPointerLocales = await Promise.all(
     requestedLocales.map(async (locale) => {
       if (locale === summaryBaseLocale) return locale;
+      const location = await resolveAccountInstanceLocation({
+        env: args.env,
+        accountId: args.accountId,
+        instanceId: args.instanceId,
+      });
+      if (!location) return null;
       const raw = await args.env.TOKYO_R2
-        .get(accountInstanceL10nLivePointerKey(args.accountId, args.publicId, locale))
+        .get(accountInstanceL10nOverlayKey(location.accountId, location.widgetType, location.instanceId, locale))
         .then((obj) => obj?.json().catch(() => null) ?? null);
-      const pointer = normalizeTextPointer(raw);
-      return pointer?.baseFingerprint === baseFingerprint ? locale : null;
+      return isRecord(raw) && asTrimmedString(raw.baseFingerprint) === baseFingerprint ? locale : null;
     }),
   );
   const readyLocales = normalizeReadyLocales({
@@ -216,7 +230,7 @@ export async function loadAccountTranslationsPanelData(args: {
       : [];
 
   return {
-    publicId: args.publicId,
+    instanceId: args.instanceId,
     widgetType: saved.value.pointer.widgetType,
     baseLocale: summaryBaseLocale,
     requestedLocales,
@@ -246,14 +260,14 @@ function buildTranslationsPanelReadErrorResponse(detail: string): Response {
 export async function handleGetAccountTranslationsPanel(
   _req: Request,
   env: Env,
-  publicId: string,
+  instanceId: string,
   accountId: string,
 ): Promise<Response> {
   try {
     const result = await loadAccountTranslationsPanelData({
       env,
       accountId,
-      publicId,
+      instanceId,
     });
     return json(result);
   } catch (error) {

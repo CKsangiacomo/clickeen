@@ -38,7 +38,7 @@ Non-negotiable negative truths:
 - Invalid state must fail at the named boundary. Do not silently heal product truth into a new normal.
 - Non-account/helper/demo flows may exist in code while being reduced, but they do **not** define account authoring truth.
 - Admin is a normal account with broader permissions. Admin instances are normal account-owned instances and must not get a separate admin storage lane.
-- Starter/example content is a listed and duplicable instance, not a separate architecture, storage, API, or type model.
+- Example content is a normal account-owned instance referenced from product-owned files, not a separate architecture, storage lane, API, or type model.
 
 ### Publication / Serve-State Truth
 
@@ -99,9 +99,9 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 - One saved configured widget owned by one account
 - Owns saved config, display metadata, asset refs, base locale, l10n state, overlay ops, generated packs, and publish/live state
-- Stored in Tokyo under the owning account. `accounts/{accountId}/instances/index.json` is the product inventory.
+- Stored in Tokyo under the owning account. `accounts/{accountId}/widgets/index.json` is the product inventory.
 - Tokyo instance indexes are prepared read models for product navigation. Hot list reads validate the index contract and must not perform full R2 integrity audits; save/rebuild/repair paths own deep pointer/config validation.
-- Projected in Michael only for joins, support, billing/account reporting, audit, and repair. `widget_instances` must not be read as Widgets inventory, editable config, display-name truth, publish-state truth, or starter availability truth.
+- Projected in Michael only for joins, support, billing/account reporting, audit, and repair. `widget_instances` must not be read as Widgets inventory, editable config, display-name truth, publish-state truth, or example availability truth.
 - Product-path account open resolves the saved authoring revision from Tokyo; instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
 - On the active account authoring path, user-facing instance identity (`widgetType`, `displayName`, `source`, `meta`) is Tokyo-owned. Michael `widget_instances.display_name` may still exist as storage residue during cutover, but Widgets/Builder product contracts must not read or write identity truth from it.
 - Michael `widget_instances.config` may still exist as inert schema residue for user-instance rows, but the active product path must not persist or read a second live widget document there.
@@ -113,12 +113,13 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Admin is just an account with broader permissions
 - Account-owned runtime truth belongs under account-first Tokyo-worker storage, not in repo folders
 
-**Listed/Duplicable Instance** = STARTER CONTENT
+**Clickeen-Owned Example Instance** = A NORMAL ACCOUNT INSTANCE USED BY PRODUCT FILES
 
-- A normal account-owned instance with metadata like `listed: true` and `duplicable: true`
-- Prague may display listed admin-account instances; Roma may duplicate them into a customer account
-- Copying a starter creates a new instance under the destination account
-- There is no surviving separate preset model, route authority, folder authority, or type authority
+- A normal account-owned instance under the Clickeen admin account.
+- Prague may embed it by writing `accountInstanceRef.instanceId` in page JSON.
+- Roma may duplicate it only through explicit product-owned catalog/reference data.
+- The instance itself must not contain global distribution flags such as `visibleInRoma`, `listed`, or `duplicable`.
+- There is no surviving separate preset model, route authority, folder authority, or type authority.
 
 ### Product-Path Account Editing (Current PRD 61 Cutover)
 
@@ -126,8 +127,8 @@ Core account editing currently uses direct app-owned read/write paths for the on
 
 For the 075 authoring simplification track, this account-mode Roma -> Bob -> Tokyo chain is the governing authoring path; non-account/helper flows do not define account authoring truth.
 
-1. **Open core instance**: `GET /api/builder/:publicId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads the saved authoring revision from Tokyo through the private product-control binding, and then sends Bob one `ck:open-editor` payload.
-2. **Save**: `PUT /api/account/instance/:publicId` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, carrying the current saved-document metadata (`widgetType`, `displayName`, `source`, `meta`) together with `config`, and return success immediately. The Tokyo commit is the save boundary.
+1. **Open core instance**: `GET /api/builder/:instanceId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads the saved authoring revision from Tokyo through the private product-control binding, and then sends Bob one `ck:open-editor` payload.
+2. **Save**: `PUT /api/account/instance/:instanceId` when the editor saves. Bob/Roma same-origin routes commit the saved authoring revision to Tokyo directly, carrying the current saved-document metadata (`widgetType`, `displayName`, `source`, `meta`) together with `config`, and return success immediately. The Tokyo commit is the save boundary.
 3. **Widgets list + rename identity**: Roma reads user-instance identity for `/widgets` from Tokyo saved documents. The surviving publish/unpublish authority is Tokyo's per-instance serve flag, not a Michael status row. Rename writes that Tokyo identity directly instead of patching Michael `display_name`.
 4. **Create/duplicate**: Roma writes the Tokyo saved document before creating the Michael row, so the product never exposes a Michael-visible account widget before the real Tokyo document exists.
 5. **Authz**: normal product ops authorize from the bootstrap account authz capsule carried by Roma/Bob. Active product routes do not re-read account membership or recompute policy on each open/save call; the signed capsule carries stable authz truth, while live mutable counters are enforced at the canonical owner when needed.
@@ -160,56 +161,33 @@ Between open and save:
 
 | Term           | Description                                                                                              |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
-| `publicId`     | Instance unique identifier used across Tokyo saved state, live state, and projection rows                 |
+| `instanceId`     | Instance unique identifier used across Tokyo saved state, live state, and projection rows                 |
 | `widgetType`   | Widget identifier referencing the definition (e.g., "faq")                                               |
 | `config`       | Persisted base instance values; active product account reads/writes use Tokyo's saved authoring snapshot |
 | `instanceData` | Working copy of config in Bob during editing                                                             |
 | `spec.json`    | Defaults + structured Builder editor contract (`editor.panels`); compiled by Bob                         |
 | `agent.md`     | AI contract documenting editable paths and semantics                                                     |
 
-### Starter Designs (Listed/Duplicable Instances)
+### Clickeen-Owned Examples
 
-**Clickeen does not have a separate gallery-preset content model.** "Starter designs" are Clickeen-authored account instances marked as listed and duplicable.
+**Clickeen does not have a separate gallery-preset content model.**
 
-**How it works:**
+How it works:
 
-1. Clickeen team authors the starter instances in Builder, under the admin account.
-2. One instance per widget may be shown first in MiniBob (`wgt_main_{widgetType}` in current runtime naming).
-3. Other starter instances use `wgt_system_{widgetType}_{styleSlug}` in current runtime naming.
-4. These instances are published/listed and surfaced as starters.
-5. User browses gallery -> clicks "Use this" -> clones to their account as a user instance.
-6. User customizes their copy freely (full ToolDrawer access).
+1. Clickeen authors example instances in Builder under the admin account.
+2. Those instances are normal account-owned instances with generated `ins_...` IDs.
+3. Prague embeds them with `accountInstanceRef.instanceId` in `tokyo/prague/pages/**`.
+4. Roma can offer some of them to users through product-owned catalog/reference data outside the instance document.
+5. A user copy creates a new instance under the destination account.
 
-**Why this approach:**
+Why:
 
-- **One editor**: Clickeen and users author in Bob; same config schema.
-- **One instance set**: the same instances appear as Roma starters, local internal verification targets, and Prague embeds.
-- **No special owner lane**: admin starters live under the admin account like every other account-owned instance.
-- **Scales to marketplace**: listed instances remain shareable configs, not a new content type.
+- One editor: Clickeen and users author through the same Builder path.
+- One storage model: admin examples live under the admin account like every other account-owned instance.
+- No hidden distribution metadata: global/platform decisions stay out of normal customer instance data.
+- Future marketplace-compatible: a creator can later be another account whose instances are referenced from catalog data.
 
-**Naming convention for Clickeen starters:**
-
-```
-wgt_main_{widgetType}
-wgt_system_{widgetType}_{styleSlug}
-Examples:
-  wgt_main_faq
-  wgt_system_faq_lightblurs_generic
-```
-
-**Publishing semantics:** `published` / `unpublished` is a Tokyo instance serve-state concept. Michael rows may still carry `status` residue during cutover, but that column is not canonical authority and not a user-facing gate.
-
-Listed metadata lives alongside the instance (not in the publicId):
-
-```
-instance.meta = {
-  listed: true,
-  duplicable: true,
-  listedSurfaces: ["prague", "roma"],
-  styleName: "lightblurs.generic",
-  styleSlug: "lightblurs_generic"
-}
-```
+Publishing semantics: `published` / `unpublished` is a Tokyo instance serve-state concept. It means only whether Venice may serve that instance publicly.
 
 ---
 
@@ -239,11 +217,11 @@ instance.meta = {
 
 **DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, verification, and small local utility pages. The old local DevStudio widget-authoring lane is removed. DevStudio must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 
-**Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/e/:publicId`, `/r/:publicId`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice.
+**Venice** — SSR embed runtime. Serves public embeds from Tokyo published snapshot pointers (`/widget/:instanceId`, `/renders/widgets/:instanceId/live/r.json`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice.
 
 **San Francisco** — AI Workforce Operating System. Runs customer copilots and internal system agents such as Builder Copilot, Widget Instance Translator, and Prague Copy Translator. Manages agent sessions, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
-**Michael** — Supabase PostgreSQL database. Stores account/user data, submissions, usage events, and projection rows for account instances (`widget_instances`). RLS enforced for user tables. It is not the product owner for widget instance inventory, editable config, display name, publish state, or starter availability.
+**Michael** — Supabase PostgreSQL database. Stores account/user data, submissions, usage events, and projection rows for account instances (`widget_instances`). RLS enforced for user tables. It is not the product owner for widget instance inventory, editable config, display name, publish state, or example availability.
 
 **Tokyo** — Asset storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, public projections, and account-owned upload blobs.
 
@@ -346,7 +324,7 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 
 ## Localization (Layered)
 
-Locale is a runtime parameter and must not be encoded into instance identity (`publicId`).
+Locale is a runtime parameter and must not be encoded into instance identity (`instanceId`).
 
 - Roma/account product UI strings live under `tokyo/roma/i18n/**` and are served through Tokyo as product UI catalogs.
 - Prague marketing/showcase copy and localization source live under `tokyo/prague/**`.

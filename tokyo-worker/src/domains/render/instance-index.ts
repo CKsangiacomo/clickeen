@@ -1,23 +1,31 @@
 import { isUuid } from '@clickeen/ck-contracts';
 import type { Env } from '../../types';
 import {
+  accountInstanceConfigKey,
+  accountInstanceDocumentKey,
   accountInstanceIndexKey,
-  accountInstanceListedIndexKey,
-  accountInstanceRenderLivePointerKey,
-  accountInstanceSavedConfigPackKey,
-  accountInstancesRoot,
+  accountInstancePublishKey,
+  accountWidgetsRoot,
 } from './keys';
-import { normalizeLiveRenderPointer, normalizeSavedRenderPointer } from './normalize';
+import {
+  normalizeAccountInstanceDocument,
+  normalizeIndexDocument,
+  normalizePublishDocument,
+} from './normalize';
 import { loadJson, putJson } from './storage';
 import type {
   AccountInstanceIndexDocument,
   AccountInstanceIndexEntry,
+  AccountInstanceDocument,
   InstanceServeState,
-  SavedRenderPointer,
 } from './types';
-import { normalizePublicId } from './utils';
+import { normalizeStorageId } from './utils';
 
-const DEFAULT_PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000100';
+export type AccountInstanceLocation = {
+  accountId: string;
+  widgetType: string;
+  instanceId: string;
+};
 
 type IndexFailure = {
   ok: false;
@@ -30,216 +38,107 @@ export type AccountInstanceIndexReadResult =
   | { ok: true; value: AccountInstanceIndexDocument }
   | IndexFailure;
 
-export function resolvePlatformAccountId(env: Env): string {
-  const configured = typeof env.CK_PLATFORM_ACCOUNT_ID === 'string' ? env.CK_PLATFORM_ACCOUNT_ID.trim() : '';
-  return configured && isUuid(configured) ? configured : DEFAULT_PLATFORM_ACCOUNT_ID;
-}
-
 function asTrimmedString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim();
   return normalized || null;
 }
 
-function normalizeStringList(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return Array.from(
-    new Set(
-      value
-        .map((entry) => asTrimmedString(entry))
-        .filter((entry): entry is string => Boolean(entry)),
-    ),
-  );
-}
-
-function displayNameFromPointer(pointer: SavedRenderPointer): string {
-  const displayName = asTrimmedString(pointer.displayName);
+function displayNameFromInstance(instance: AccountInstanceDocument): string {
+  const displayName = asTrimmedString(instance.displayName);
   if (displayName) return displayName;
-  const meta = pointer.meta && typeof pointer.meta === 'object' && !Array.isArray(pointer.meta) ? pointer.meta : null;
+  const meta = instance.meta && typeof instance.meta === 'object' && !Array.isArray(instance.meta) ? instance.meta : null;
   return (
     asTrimmedString(meta?.styleName) ??
     asTrimmedString(meta?.name) ??
     asTrimmedString(meta?.title) ??
-    pointer.publicId
+    instance.id
   );
-}
-
-function kindFromPointer(args: {
-  pointer: SavedRenderPointer;
-  meta: Record<string, unknown>;
-  platformAccountId: string;
-}): AccountInstanceIndexEntry['kind'] {
-  if (args.meta.kind === 'system') return 'system';
-  if (args.meta.kind === 'user') return 'user';
-  if (
-    args.pointer.accountId === args.platformAccountId &&
-    (args.meta.listed === true ||
-      args.meta.duplicable === true ||
-      normalizeStringList(args.meta.listedSurfaces).length > 0)
-  ) {
-    return 'system';
-  }
-  return 'user';
 }
 
 async function readServeState(args: {
   env: Env;
   accountId: string;
-  publicId: string;
+  widgetType: string;
+  instanceId: string;
 }): Promise<InstanceServeState> {
-  const livePointer = normalizeLiveRenderPointer(
-    await loadJson(args.env, accountInstanceRenderLivePointerKey(args.accountId, args.publicId)),
+  const publish = normalizePublishDocument(
+    await loadJson(args.env, accountInstancePublishKey(args.accountId, args.widgetType, args.instanceId)),
   );
-  return livePointer ? 'published' : 'unpublished';
+  return publish?.status === 'published' ? 'published' : 'unpublished';
 }
 
-async function buildEntryFromPointer(args: {
+async function buildEntryFromInstance(args: {
   env: Env;
-  pointer: SavedRenderPointer;
+  instance: AccountInstanceDocument;
 }): Promise<AccountInstanceIndexEntry> {
   const config = await loadJson(
     args.env,
-    accountInstanceSavedConfigPackKey(args.pointer.accountId, args.pointer.publicId, args.pointer.configFp),
+    accountInstanceConfigKey(args.instance.accountId, args.instance.widgetType, args.instance.id),
   );
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
-    throw new Error(`saved_config_missing:${args.pointer.accountId}:${args.pointer.publicId}`);
+    throw new Error(`instance_config_missing:${args.instance.accountId}:${args.instance.id}`);
   }
 
-  const meta =
-    args.pointer.meta && typeof args.pointer.meta === 'object' && !Array.isArray(args.pointer.meta)
-      ? args.pointer.meta
-      : {};
   return {
-    accountId: args.pointer.accountId,
-    publicId: args.pointer.publicId,
-    widgetType: args.pointer.widgetType,
-    displayName: displayNameFromPointer(args.pointer),
-    kind: kindFromPointer({
-      pointer: args.pointer,
-      meta,
-      platformAccountId: resolvePlatformAccountId(args.env),
-    }),
-    listed: meta.listed === true,
-    duplicable: meta.duplicable === true,
-    listedSurfaces: normalizeStringList(meta.listedSurfaces),
+    accountId: args.instance.accountId,
+    id: args.instance.id,
+    widgetType: args.instance.widgetType,
+    displayName: displayNameFromInstance(args.instance),
     publishStatus: await readServeState({
       env: args.env,
-      accountId: args.pointer.accountId,
-      publicId: args.pointer.publicId,
+      accountId: args.instance.accountId,
+      widgetType: args.instance.widgetType,
+      instanceId: args.instance.id,
     }),
-    updatedAt: args.pointer.updatedAt,
+    updatedAt: args.instance.updatedAt,
   };
 }
 
-function normalizeIndexEntry(raw: unknown): AccountInstanceIndexEntry | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const payload = raw as Record<string, unknown>;
-  const accountId = asTrimmedString(payload.accountId);
-  const publicId = asTrimmedString(payload.publicId);
-  const widgetType = asTrimmedString(payload.widgetType);
-  const displayName = asTrimmedString(payload.displayName);
-  const updatedAt = asTrimmedString(payload.updatedAt);
-  const kind = payload.kind === 'user' ? 'user' : payload.kind === 'system' ? 'system' : null;
-  const publishStatus =
-    payload.publishStatus === 'published'
-      ? 'published'
-      : payload.publishStatus === 'unpublished'
-        ? 'unpublished'
-        : null;
-  if (!accountId || !publicId || !widgetType || !displayName || !updatedAt || !kind || !publishStatus) {
-    return null;
-  }
-  return {
-    accountId,
-    publicId,
-    widgetType,
-    displayName,
-    kind,
-    listed: payload.listed === true,
-    duplicable: payload.duplicable === true,
-    listedSurfaces: normalizeStringList(payload.listedSurfaces),
-    publishStatus,
-    updatedAt,
-  };
-}
-
-function normalizeIndexDocument(raw: unknown, accountId: string): AccountInstanceIndexDocument | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const payload = raw as Record<string, unknown>;
-  if (payload.v !== 1) return null;
-  const docAccountId = asTrimmedString(payload.accountId);
-  const updatedAt = asTrimmedString(payload.updatedAt);
-  const entriesRaw = Array.isArray(payload.entries) ? payload.entries : null;
-  if (docAccountId !== accountId || !updatedAt || !entriesRaw) return null;
-  const entries = entriesRaw.map((entry) => normalizeIndexEntry(entry));
-  if (entries.some((entry) => !entry)) return null;
-  return {
-    v: 1,
-    accountId,
-    entries: entries as AccountInstanceIndexEntry[],
-    updatedAt,
-  };
-}
-
-async function listSavedPointerKeys(env: Env, accountId: string): Promise<string[]> {
-  const prefix = `${accountInstancesRoot(accountId)}/`;
-  const suffix = '/saved/pointer.json';
+async function listInstanceDocumentKeys(env: Env, accountId: string): Promise<string[]> {
+  const prefix = `${accountWidgetsRoot(accountId)}/`;
+  const suffix = '/instance.json';
   const keys: string[] = [];
   let cursor: string | undefined = undefined;
   do {
     const listed = await env.TOKYO_R2.list({ prefix, cursor });
-    keys.push(
-      ...listed.objects
-        .map((object) => object.key)
-        .filter((key) => key.endsWith(suffix)),
-    );
+    keys.push(...listed.objects.map((object) => object.key).filter((key) => key.endsWith(suffix)));
     cursor = listed.truncated ? listed.cursor : undefined;
   } while (cursor);
   return keys;
 }
 
 async function buildIndexDocument(env: Env, accountId: string): Promise<AccountInstanceIndexDocument> {
-  const keys = await listSavedPointerKeys(env, accountId);
+  const keys = await listInstanceDocumentKeys(env, accountId);
   const entries: AccountInstanceIndexEntry[] = [];
   for (const key of keys) {
     const raw = await loadJson(env, key);
-    const pointer = normalizeSavedRenderPointer(raw);
-    if (!pointer || pointer.accountId !== accountId) {
-      throw new Error(`saved_pointer_invalid:${key}`);
+    const instance = normalizeAccountInstanceDocument(raw);
+    if (!instance || instance.accountId !== accountId) {
+      throw new Error(`instance_document_invalid:${key}`);
     }
-    entries.push(await buildEntryFromPointer({ env, pointer }));
+    entries.push(await buildEntryFromInstance({ env, instance }));
   }
   entries.sort((left, right) => {
     const byWidget = left.widgetType.localeCompare(right.widgetType);
     if (byWidget !== 0) return byWidget;
     const byUpdated = right.updatedAt.localeCompare(left.updatedAt);
     if (byUpdated !== 0) return byUpdated;
-    return left.publicId.localeCompare(right.publicId);
+    return left.id.localeCompare(right.id);
   });
-  return {
-    v: 1,
-    accountId,
-    entries,
-    updatedAt: new Date().toISOString(),
-  };
+  return { v: 1, accountId, entries, updatedAt: new Date().toISOString() };
 }
 
 export async function rebuildAccountInstanceIndexes(env: Env, accountIdRaw: string): Promise<AccountInstanceIndexDocument> {
-  const accountId = normalizePublicId(accountIdRaw);
+  const accountId = normalizeStorageId(accountIdRaw);
   if (!accountId || !isUuid(accountId)) throw new Error('tokyo.errors.render.invalid');
   const index = await buildIndexDocument(env, accountId);
   await putJson(env, accountInstanceIndexKey(accountId), index);
-  if (accountId === resolvePlatformAccountId(env)) {
-    await putJson(env, accountInstanceListedIndexKey(accountId), {
-      ...index,
-      entries: index.entries.filter((entry) => entry.listed),
-    } satisfies AccountInstanceIndexDocument);
-  }
   return index;
 }
 
 export async function buildAccountInstanceIndexDryRun(env: Env, accountIdRaw: string): Promise<AccountInstanceIndexDocument> {
-  const accountId = normalizePublicId(accountIdRaw);
+  const accountId = normalizeStorageId(accountIdRaw);
   if (!accountId || !isUuid(accountId)) throw new Error('tokyo.errors.render.invalid');
   return buildIndexDocument(env, accountId);
 }
@@ -249,25 +148,35 @@ export async function readAccountInstanceIndex(args: {
   accountId: string;
   rebuildIfMissing?: boolean;
 }): Promise<AccountInstanceIndexReadResult> {
-  const accountId = normalizePublicId(args.accountId);
+  const accountId = normalizeStorageId(args.accountId);
   if (!accountId || !isUuid(accountId)) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' };
   }
   const raw = await loadJson(args.env, accountInstanceIndexKey(accountId));
-  if (!raw) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.instance.indexMissing' };
+  if (!raw) {
+    if (args.rebuildIfMissing) {
+      return { ok: true, value: await rebuildAccountInstanceIndexes(args.env, accountId) };
+    }
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.instance.indexMissing' };
+  }
   const index = normalizeIndexDocument(raw, accountId);
   if (!index) return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.instance.indexInvalid' };
   return { ok: true, value: index };
 }
 
-export async function readListedInstanceIndex(args: {
+export async function resolveAccountInstanceLocation(args: {
   env: Env;
-  platformAccountId?: string;
-}): Promise<AccountInstanceIndexReadResult> {
-  const accountId = args.platformAccountId ?? resolvePlatformAccountId(args.env);
-  const raw = await loadJson(args.env, accountInstanceListedIndexKey(accountId));
-  if (!raw) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.instance.indexMissing' };
-  const index = normalizeIndexDocument(raw, accountId);
-  if (!index) return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.instance.indexInvalid' };
-  return { ok: true, value: index };
+  accountId: string;
+  instanceId: string;
+  widgetType?: string | null;
+}): Promise<AccountInstanceLocation | null> {
+  const accountId = normalizeStorageId(args.accountId);
+  const instanceId = normalizeStorageId(args.instanceId);
+  const widgetType = asTrimmedString(args.widgetType);
+  if (!accountId || !instanceId) return null;
+  if (widgetType) return { accountId, widgetType, instanceId };
+  const index = await readAccountInstanceIndex({ env: args.env, accountId, rebuildIfMissing: true });
+  if (!index.ok) return null;
+  const entry = index.value.entries.find((candidate) => candidate.id === instanceId);
+  return entry ? { accountId, widgetType: entry.widgetType, instanceId } : null;
 }

@@ -8,7 +8,7 @@ import {
   classifyAccountAssetType,
   guessContentTypeFromExt,
   normalizeAccountAssetReadKey,
-  normalizePublicId,
+  normalizeStorageId,
   normalizeWidgetType,
   parseAccountAssetIdentityFromKey,
   pickExtension,
@@ -34,7 +34,7 @@ import {
   loadAccountAssetByIdentity,
   loadAccountAssetManifestByIdentity,
   loadAccountStoredBytesUsage,
-  loadAccountAssetUsagePublicIdsByIdentity,
+  loadAccountAssetUsageInstanceIdsByIdentity,
   listAccountAssetManifestsByAccount,
   loadAccountAssetBlobIdentitiesByAccount,
   loadAccountAssetBlobKeys,
@@ -767,8 +767,8 @@ async function handleDeleteAccountAsset(
     return jsonAssetIdentityIntegrityMismatch(accountId, assetId, integritySnapshot);
   }
 
-  const impactedPublicIds = await loadAccountAssetUsagePublicIdsByIdentity(env, accountId, assetId);
-  const usageCount = impactedPublicIds.length;
+  const impactedInstanceIds = await loadAccountAssetUsageInstanceIdsByIdentity(env, accountId, assetId);
+  const usageCount = impactedInstanceIds.length;
   const confirmInUseRaw = (new URL(req.url).searchParams.get('confirmInUse') || '').trim().toLowerCase();
   const confirmInUse = confirmInUseRaw === '1' || confirmInUseRaw === 'true' || confirmInUseRaw === 'yes';
   if (usageCount > 0 && !confirmInUse) {

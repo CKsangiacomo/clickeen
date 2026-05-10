@@ -47,7 +47,7 @@ async function writeLayerIndex({ pageId, locales, baseFingerprint }) {
   }
   const index = {
     v: 1,
-    publicId: pageId,
+    pageId,
     layers: {
       locale: {
         keys,

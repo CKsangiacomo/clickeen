@@ -23,7 +23,7 @@ export function Workspace({
   const chrome = useWidgetSessionChrome();
   const { accountAssets, compiled, instanceData } = session;
   const { preview, setPreview } = chrome;
-  const publicId = chrome.meta?.publicId ?? '';
+  const instanceId = chrome.meta?.instanceId ?? '';
   const device = preview.device;
   const theme = preview.theme;
   const host = preview.host;
@@ -61,7 +61,7 @@ export function Workspace({
   const latestRef = useRef({
     compiled,
     instanceData: previewInstanceData,
-    publicId,
+    instanceId,
     baseLocale,
     previewMode,
     effectivePreviewLocale,
@@ -74,7 +74,7 @@ export function Workspace({
     latestRef.current = {
       compiled,
       instanceData: previewInstanceData,
-      publicId,
+      instanceId,
       baseLocale,
       previewMode,
       effectivePreviewLocale,
@@ -85,7 +85,7 @@ export function Workspace({
   }, [
     compiled,
     previewInstanceData,
-    publicId,
+    instanceId,
     baseLocale,
     previewMode,
     effectivePreviewLocale,
@@ -183,7 +183,7 @@ export function Workspace({
         {
           type: 'ck:state-update',
           widgetname: nextCompiled.widgetname,
-          publicId: snapshot.publicId,
+          instanceId: snapshot.instanceId,
           baseLocale: snapshot.baseLocale,
           state: snapshot.instanceData,
           locale: snapshot.effectivePreviewLocale,
@@ -227,7 +227,7 @@ export function Workspace({
     const message = {
       type: 'ck:state-update',
       widgetname: compiled.widgetname,
-      publicId,
+      instanceId,
       baseLocale,
       state: previewInstanceData,
       locale: effectivePreviewLocale,
@@ -240,7 +240,7 @@ export function Workspace({
   }, [
     hasWidget,
     compiled,
-    publicId,
+    instanceId,
     previewInstanceData,
     effectivePreviewLocale,
     previewMode,

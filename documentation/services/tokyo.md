@@ -1,149 +1,78 @@
-# System: Tokyo - Product Static Resources, Account Storage, And Public Projections
+# System: Tokyo - Product Assets And Account Storage
 
-STATUS: PRD 79 TARGET MODEL
-Runtime code is being migrated to this model by PRD 79. Current residue is listed in `Execution_Pipeline_Docs/02-Executing/079A__Audit__Tokyo_Account_First_Taxonomy_Deletion_Map.md`.
+STATUS: REFERENCE - MUST MATCH PRD 88 RUNTIME
 
-## Identity
-
-- Tier: Supporting
-- Purpose: product static resource hosting, account-owned asset/instance storage through Tokyo-worker, and public CDN projections
-- Runtime: Cloudflare R2 plus Tokyo Worker
+Tokyo is the storage and static-serving plane. It is not an editor, account authority, or Prague-specific runtime.
 
 ## Product Model
 
-Tokyo must keep three planes separate:
+Tokyo has three boring jobs:
 
-- **Product source/static plane**: widget software, Dieter output, fonts, themes, Roma UI catalogs, Prague page/assets source.
-- **Account truth plane**: account-owned assets, saved instance documents, instance l10n, render state, usage/index data.
-- **Public projection plane**: cacheable public reads for embeds, assets, and localization. Public projections are generated from account truth and never own account state.
+- Serve product software/static resources: widgets, Dieter assets, fonts, themes, Roma i18n, and Prague website content.
+- Store account-owned data through Tokyo-worker: assets and widget instances.
+- Serve published widget bytes to Venice through public read paths.
 
-The ownership boundary is always the account. A widget is software. An instance is the saved account-owned widget data.
+The ownership boundary is always the account. Admin is just the Clickeen account with broader permissions; admin-owned instances are stored exactly like customer-owned instances.
 
-Forbidden architecture/storage concepts:
+## Runtime Account Shape
 
-- separate admin storage lanes
-- separate starter/preset storage classes
-- repo-owned instance l10n
-- owner-specific translation flow
-
-Admin starter content is normal account-owned instance data under the admin account with listed/duplicable metadata.
-
-## Repo Taxonomy
-
-The Git repo `tokyo/` contains product source and authored static resources only:
+Real account data lives in R2:
 
 ```txt
-tokyo/
-  product/
-    widgets/
-    dieter/
-    fonts/
-    themes/
-  roma/
-    i18n/
-  prague/
-    pages/
-    i18n/
-    l10n/
-    assets/
-  accounts/
-    README.md
+accounts/{accountId}/
+  assets/{assetId}/
+    manifest.json
+    blob/{filename}
+  widgets/{widgetType}/
+    widget.json
+    index.json
+    {instanceId}/
+      instance.json
+      config.json
+      published/config.json
+      overlays/l10n/{locale}/overlay.json
+      publish.json
 ```
 
 Rules:
 
-- Widget source belongs under `tokyo/product/widgets/{widgetType}/`.
-- Widget folders contain widget software and contracts only. Prague page source belongs under `tokyo/prague/pages/{widgetType}/`.
-- Roma product/account UI catalogs belong under `tokyo/roma/i18n/**`.
-- Prague website copy, l10n source, and website assets belong under `tokyo/prague/**`.
-- `accounts/` in Git is documentation/fixture-only. Real account data lives in Tokyo-worker storage.
-- Public HTTP routes like `/widgets/**`, `/dieter/**`, `/themes/**`, and `/i18n/**` remain stable serving URLs through `tokyo/_redirects`, but they map into the account-first repo taxonomy instead of recreating old root folders.
-- `/fonts/**` is served through Tokyo-worker from synced R2 font objects.
+- `instanceId` is the stable generated instance identity. It is also the public embed ID.
+- Instance names are labels only and must never be used as storage keys.
+- Widget type folders (`faq`, `countdown`, `logoshowcase`, etc.) own widget-level account state, including downgrade lock state.
+- Instance l10n is an account-instance overlay under `overlays/l10n`.
+- Prague page translations are not account-instance overlays.
 
-## Account-First Storage
+## Published Lookup
 
-Runtime/account data must be keyed by account first:
+Public serving uses a tiny lookup, not a copied public instance tree:
 
 ```txt
-accounts/
-  <accountId>/
-    assets/
-    instances/
-      <publicId>/
-        saved/
-        l10n/
-        render/
-    indexes/
+published/widgets/{instanceId}.json
 ```
 
-Rules:
+That lookup points Venice/Tokyo-worker to the owning account, widget type, and published account bytes.
 
-- `publicId` alone is not an ownership boundary.
-- Saved config, l10n, render state, translation status, and overlay ops belong under the owning account's instance.
-- Assets belong under the owning account.
-- Account export/delete/usage can be answered from `accounts/<accountId>`.
-- Product reads must not fall back to old root-level instance keys after the migration gate.
+## Forbidden Concepts
 
-## Public Projections
+- No `accounts/{accountId}/instances`.
+- No `public/instances`.
+- No separate admin, curated, template, or example storage lane.
+- No hidden `listed` / `duplicable` / distribution flags inside customer instance data.
+- No Prague-specific widget storage.
 
-Public embeds need fast paths, but those paths are projections:
-
-```txt
-public/
-  assets/
-    v/
-  instances/
-    <publicId>/
-      live.json
-      config/
-      l10n/
-      meta/
-```
-
-Rules:
-
-- Venice and public embeds read projections only.
-- Publishing writes account truth first, then projection.
-- Unpublishing/deleting removes or invalidates projections.
-- Projection helper names must say `publicProjection` so source truth and serving output are not confused.
+Platform-owned references, when needed, live outside instance data. Example: Prague page JSON may point at a normal account-owned instance through `accountInstanceRef.instanceId`.
 
 ## Interfaces
 
-Tokyo serves:
+Public static/read paths:
 
-- Widget software and contracts for Bob/Roma/Venice/Prague.
-- Dieter bundles and manifest.
-- Roma UI localization catalogs.
-- Prague website/static resources.
-- Immutable public asset reads.
-- Public embed render/config/l10n projections.
+- `/widgets/**`
+- `/dieter/**`
+- `/themes/**`
+- `/fonts/**`
+- `/i18n/**`
+- `/renders/widgets/**`
+- `/l10n/widgets/**`
+- `/assets/account/**`
 
-Tokyo-worker owns private account-control routes through Cloudflare service bindings:
-
-- account asset upload/list/resolve/delete
-- saved instance open/save/delete
-- render config/live/meta writes
-- l10n base/overlay/pack/live writes
-- account usage/integrity/index reads
-
-Browser product traffic must go through Roma same-origin routes. Public Tokyo HTTP is not the account save/control boundary.
-
-## Canonical URLs
-
-- **Local**: `http://localhost:4000` (local Tokyo dev server + local Tokyo-worker path)
-- **Cloud-dev**: `https://tokyo.dev.clickeen.com`
-- **UAT / Limited GA / GA**: `https://tokyo.clickeen.com`
-
-## Security Rules
-
-- Private account-control routes require Roma's service binding plus Roma-minted account authz capsule.
-- Public projection routes are read-only.
-- `TOKYO_DEV_JWT` is local/internal only and must never be used from a browser.
-- Tokyo-worker must not rediscover account truth from end-user JWTs on product control paths; Roma carries the verified account context.
-
-## Links
-
-- Back: `../architecture/CONTEXT.md`
-- Tokyo Worker: `documentation/services/tokyo-worker.md`
-- Localization contract: `documentation/capabilities/localization.md`
-- PRD 79: `Execution_Pipeline_Docs/02-Executing/079__PRD__Tokyo_Account_First_Storage_And_Surface_Taxonomy.md`
+Private account-control paths are owned by Tokyo-worker and reached from Roma through Cloudflare service bindings.

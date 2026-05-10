@@ -4,7 +4,6 @@
 
 It does one thing:
 - start the local DevStudio operating lane
-- seed required local platform state
 - verify the local stack and internal-tool surfaces before finishing
 
 Local boot topology:
@@ -21,6 +20,4 @@ Rules:
 - `dev-up` exists to make the local DevStudio operating lane usable.
 - Local DevStudio runs alongside local Bob + local Tokyo, but it does not host the removed widget-authoring lane.
 - Local theme mutation tools (`/api/themes/*`) are local DevStudio tools, not a separate runtime mode feature.
-- If local platform state is missing or invalid, `dev-up` fails loudly during seeding instead of pretending the stack is healthy.
-- Explicit rerun commands remain available only for debugging:
-  - `pnpm dev:seed:platform`
+- `dev-up` does not seed a fake platform/account lane. Product state must come from the real Roma -> Bob -> Tokyo account path.

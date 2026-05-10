@@ -6,10 +6,10 @@ const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 
 type InstanceLayerIndex = {
   v: 1;
-  publicId: string;
-  layers?: {
-    locale?: {
-      keys?: string[];
+  instanceId: string;
+  overlays?: {
+    l10n?: {
+      locales?: string[];
     };
   };
 };
@@ -30,14 +30,6 @@ function getTokyoBaseUrl(): string {
   return raw.replace(/\/+$/, '');
 }
 
-function getPragueBuildId(): string | null {
-  const metaEnv = (import.meta as any)?.env || {};
-  const metaPublic = String(metaEnv.PUBLIC_PRAGUE_BUILD_ID || '').trim();
-  const metaCommit = String(metaEnv.CF_PAGES_COMMIT_SHA || '').trim();
-  const raw = metaPublic || metaCommit || readEnv('PUBLIC_PRAGUE_BUILD_ID') || readEnv('CF_PAGES_COMMIT_SHA') || '';
-  return raw.trim() ? raw.trim() : null;
-}
-
 async function fetchJson(url: string): Promise<{ status: number; ok: boolean; json: unknown | null }> {
   const res = await fetch(url, { method: 'GET' });
   const json = await res.json().catch(() => null);
@@ -51,18 +43,12 @@ function normalizeLocaleKeys(keys: unknown): string[] {
     .filter((k): k is string => Boolean(k));
 }
 
-export async function resolveTokyoInstanceLocales(publicId: string): Promise<string[] | null> {
-  const id = String(publicId || '').trim();
+export async function resolveTokyoInstanceLocales(instanceId: string): Promise<string[] | null> {
+  const id = String(instanceId || '').trim();
   if (!id) return null;
 
   const baseUrl = getTokyoBaseUrl();
-  const buildId = getPragueBuildId();
-
-  const candidates: string[] = [];
-  if (buildId) {
-    candidates.push(`${baseUrl}/l10n/v/${encodeURIComponent(buildId)}/instances/${encodeURIComponent(id)}/index.json`);
-  }
-  candidates.push(`${baseUrl}/l10n/instances/${encodeURIComponent(id)}/index.json`);
+  const candidates = [`${baseUrl}/l10n/widgets/${encodeURIComponent(id)}/index.json`];
 
   for (const url of candidates) {
     const { status, ok, json } = await fetchJson(url);
@@ -72,7 +58,7 @@ export async function resolveTokyoInstanceLocales(publicId: string): Promise<str
     const parsed = json as InstanceLayerIndex;
     if (parsed.v !== 1) return null;
 
-    const keys = normalizeLocaleKeys(parsed.layers?.locale?.keys);
+    const keys = normalizeLocaleKeys(parsed.overlays?.l10n?.locales);
     if (!keys.length) return null;
 
     // Keep stable order but ensure 'en' is present.

@@ -22,9 +22,9 @@ export function useSessionSaving(args: {
     // Save persists the one widget the customer is actively editing.
     const snapshot = stateRef.current;
     const meta = metaRef.current;
-    const publicId = meta?.publicId ? String(meta.publicId) : '';
+    const instanceId = meta?.instanceId ? String(meta.instanceId) : '';
     const widgetType = meta?.widgetname ? String(meta.widgetname).trim() : '';
-    if (!publicId) {
+    if (!instanceId) {
       setState((prev) => ({
         ...prev,
         error: { source: 'save', message: 'Missing instance context for save.' },
@@ -55,7 +55,7 @@ export function useSessionSaving(args: {
       const config = snapshot.instanceData;
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
-        publicId,
+        instanceId,
         body: {
           widgetType,
           config,

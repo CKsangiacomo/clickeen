@@ -1,47 +1,75 @@
 import {
-  publicProjectionL10nLivePointerKey,
-  publicProjectionL10nTextPackKey,
+  accountInstanceL10nOverlayPrefix,
+  accountInstanceL10nOverlayKey,
+  normalizePublishedWidgetLookupDocument,
+  publishedWidgetLookupKey,
 } from './render';
 
 type TokyoR2Env = { TOKYO_R2: R2Bucket };
 
-function resolvePublicProjectionL10nKey(key: string): string {
-  const liveMatch = key.match(/^l10n\/instances\/([^/]+)\/live\/([^/]+)\.json$/i);
-  if (liveMatch) {
-    return publicProjectionL10nLivePointerKey(
-      decodeURIComponent(liveMatch[1]),
-      decodeURIComponent(liveMatch[2]),
-    );
-  }
-
-  const packMatch = key.match(/^l10n\/instances\/([^/]+)\/packs\/([^/]+)\/([a-f0-9]{64})\.json$/i);
-  if (packMatch) {
-    return publicProjectionL10nTextPackKey(
-      decodeURIComponent(packMatch[1]),
-      decodeURIComponent(packMatch[2]),
-      decodeURIComponent(packMatch[3]),
-    );
-  }
-
-  return key;
+async function loadJson<T>(env: TokyoR2Env, key: string): Promise<T | null> {
+  const obj = await env.TOKYO_R2.get(key);
+  if (!obj) return null;
+  return (await obj.json().catch(() => null)) as T | null;
 }
 
 export async function handleGetL10nAsset(env: TokyoR2Env, key: string): Promise<Response> {
-  if (key.replace(/^\/+/, '') === 'l10n/manifest.json') {
-    return new Response('Not found', { status: 404 });
+  const normalized = key.replace(/^\/+/, '');
+  const indexMatch = normalized.match(/^l10n\/widgets\/([^/]+)\/index\.json$/i);
+  if (indexMatch) {
+    const instanceId = decodeURIComponent(indexMatch[1]);
+    const lookup = normalizePublishedWidgetLookupDocument(
+      await loadJson(env, publishedWidgetLookupKey(instanceId)),
+    );
+    if (!lookup || lookup.status !== 'published') return new Response('Not found', { status: 404 });
+    const prefix = accountInstanceL10nOverlayPrefix(lookup.accountId, lookup.widgetType, lookup.id);
+    const locales = new Set<string>();
+    let cursor: string | undefined;
+    do {
+      const listed = await env.TOKYO_R2.list({ prefix, cursor });
+      listed.objects.forEach((object) => {
+        const relative = object.key.slice(prefix.length);
+        const match = relative.match(/^([^/]+)\/overlay\.json$/);
+        if (match?.[1]) locales.add(decodeURIComponent(match[1]).toLowerCase());
+      });
+      cursor = listed.truncated ? listed.cursor : undefined;
+    } while (cursor);
+    return new Response(
+      JSON.stringify({
+        v: 1,
+        instanceId: lookup.id,
+        overlays: {
+          l10n: {
+            locales: Array.from(locales).sort((left, right) => left.localeCompare(right)),
+          },
+        },
+      }),
+      {
+        status: 200,
+        headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+      },
+    );
   }
 
-  const projectionKey = resolvePublicProjectionL10nKey(key);
-  const obj = await env.TOKYO_R2.get(projectionKey);
+  const overlayMatch = normalized.match(/^l10n\/widgets\/([^/]+)\/([^/]+)\/overlay\.json$/i);
+  if (!overlayMatch) return new Response('Not found', { status: 404 });
+
+  const instanceId = decodeURIComponent(overlayMatch[1]);
+  const locale = decodeURIComponent(overlayMatch[2]).toLowerCase();
+  const lookup = normalizePublishedWidgetLookupDocument(
+    await loadJson(env, publishedWidgetLookupKey(instanceId)),
+  );
+  if (!lookup || lookup.status !== 'published') return new Response('Not found', { status: 404 });
+
+  const obj = await env.TOKYO_R2.get(
+    accountInstanceL10nOverlayKey(lookup.accountId, lookup.widgetType, lookup.id, locale),
+  );
   if (!obj) return new Response('Not found', { status: 404 });
-
-  const headers = new Headers();
-  headers.set('content-type', obj.httpMetadata?.contentType || 'application/json; charset=utf-8');
-
-  const isLivePointer = /^l10n\/instances\/[^/]+\/live\/[^/]+\.json$/i.test(key);
-  if (isLivePointer) headers.set('cache-control', 'no-store');
-  else if (key.endsWith('/index.json')) headers.set('cache-control', 'public, max-age=60');
-  else headers.set('cache-control', 'public, max-age=31536000, immutable');
-
-  return new Response(obj.body, { status: 200, headers });
+  return new Response(obj.body, {
+    status: 200,
+    headers: {
+      'content-type': obj.httpMetadata?.contentType || 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+    },
+  });
 }

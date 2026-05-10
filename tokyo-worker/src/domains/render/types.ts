@@ -13,38 +13,26 @@ export type LocalePolicy = {
   };
 };
 
-export type SavedRenderL10nStatus = 'queued' | 'working' | 'ready' | 'failed';
+export type WidgetStatus = 'active' | 'locked_over_plan';
 
-export type SavedRenderL10nFailure = {
-  locale: string;
-  reasonKey: string;
-  detail?: string;
-};
-
-export type LiveRenderPointer = {
+export type AccountWidgetDocument = {
   v: 1;
-  publicId: string;
+  accountId: string;
   widgetType: string;
-  configFp: string;
-  localePolicy: LocalePolicy;
-  l10n: {
-    liveBase: string;
-    packsBase: string;
-  };
-  seoGeo?: {
-    metaLiveBase: string;
-    metaPacksBase: string;
-  };
+  status: WidgetStatus;
+  lockedReason: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
-export type SavedRenderPointer = {
+export type AccountInstanceDocument = {
   v: 1;
-  publicId: string;
+  id: string;
   accountId: string;
   widgetType: string;
   displayName: string | null;
   meta?: Record<string, unknown> | null;
-  configFp: string;
+  createdAt: string;
   updatedAt: string;
   l10n?: {
     baseFingerprint: string;
@@ -61,6 +49,59 @@ export type SavedRenderPointer = {
     finishedAt?: string;
     lastError?: string;
   };
+};
+
+export type PublishDocument = {
+  v: 1;
+  id: string;
+  accountId: string;
+  widgetType: string;
+  status: InstanceServeState;
+  configFp: string | null;
+  localePolicy?: LocalePolicy;
+  seoGeo?: boolean;
+  updatedAt: string;
+};
+
+export type PublishedWidgetLookupDocument = {
+  v: 1;
+  id: string;
+  accountId: string;
+  widgetType: string;
+  status: 'published';
+  updatedAt: string;
+};
+
+export type LiveRenderPointer = {
+  v: 1;
+  id: string;
+  widgetType: string;
+  configFp: string;
+  localePolicy: LocalePolicy;
+  seoGeo?: {
+    metaLiveBase: string;
+    metaPacksBase: string;
+  };
+};
+
+export type SavedRenderL10nStatus = 'queued' | 'working' | 'ready' | 'failed';
+
+export type SavedRenderL10nFailure = {
+  locale: string;
+  reasonKey: string;
+  detail?: string;
+};
+
+export type SavedRenderPointer = {
+  v: 1;
+  id: string;
+  accountId: string;
+  widgetType: string;
+  displayName: string | null;
+  meta?: Record<string, unknown> | null;
+  configFp: string;
+  updatedAt: string;
+  l10n?: AccountInstanceDocument['l10n'];
 };
 
 export type SavedRenderDocument = {
@@ -85,13 +126,9 @@ export type InstanceServeState = 'published' | 'unpublished';
 
 export type AccountInstanceIndexEntry = {
   accountId: string;
-  publicId: string;
+  id: string;
   widgetType: string;
   displayName: string;
-  kind: 'user' | 'system';
-  listed: boolean;
-  duplicable: boolean;
-  listedSurfaces: string[];
   publishStatus: InstanceServeState;
   updatedAt: string;
 };
@@ -103,18 +140,20 @@ export type AccountInstanceIndexDocument = {
   updatedAt: string;
 };
 
-export type L10nLivePointer = {
+export type L10nOverlayDocument = {
   v: 1;
-  publicId: string;
+  type: 'l10n';
   locale: string;
-  textFp: string;
-  baseFingerprint: string | null;
+  baseFingerprint: string;
+  status: SavedRenderL10nStatus;
+  ops: Array<{ op: 'set'; path: string; value: string }>;
+  textPack?: Record<string, string>;
   updatedAt: string;
 };
 
 export type MetaLivePointer = {
   v: 1;
-  publicId: string;
+  id: string;
   locale: string;
   metaFp: string;
   updatedAt: string;
@@ -123,7 +162,7 @@ export type MetaLivePointer = {
 export type WriteConfigPackJob = {
   v: 1;
   kind: 'write-config-pack';
-  publicId: string;
+  instanceId: string;
   accountId: string;
   widgetType: string;
   configFp: string;
@@ -133,7 +172,7 @@ export type WriteConfigPackJob = {
 export type WriteTextPackJob = {
   v: 1;
   kind: 'write-text-pack';
-  publicId: string;
+  instanceId: string;
   accountId: string;
   locale: string;
   baseFingerprint: string;
@@ -143,7 +182,7 @@ export type WriteTextPackJob = {
 export type WriteMetaPackJob = {
   v: 1;
   kind: 'write-meta-pack';
-  publicId: string;
+  instanceId: string;
   accountId: string;
   locale: string;
   metaPack: Record<string, unknown>;
@@ -152,7 +191,7 @@ export type WriteMetaPackJob = {
 export type SyncLiveSurfaceJob = {
   v: 1;
   kind: 'sync-live-surface';
-  publicId: string;
+  instanceId: string;
   accountId: string;
   live: boolean;
   widgetType?: string;
@@ -164,7 +203,7 @@ export type SyncLiveSurfaceJob = {
 export type EnforceLiveSurfaceJob = {
   v: 1;
   kind: 'enforce-live-surface';
-  publicId: string;
+  instanceId: string;
   accountId: string;
   localePolicy: LocalePolicy;
   seoGeo: boolean;
@@ -173,14 +212,14 @@ export type EnforceLiveSurfaceJob = {
 export type DeleteInstanceMirrorJob = {
   v: 1;
   kind: 'delete-instance-mirror';
-  publicId: string;
+  instanceId: string;
   accountId: string;
 };
 
 export type SyncInstanceOverlaysJob = {
   v: 1;
   kind: 'sync-instance-overlays';
-  publicId: string;
+  instanceId: string;
   accountId: string;
   baseFingerprint: string;
   generationId: string;

@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:cf": "node ../scripts/build-venice-cf.mjs",
-    "start": "next start",
-    "check:budgets": "node scripts/check-budgets.js"
+    "start": "next start"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

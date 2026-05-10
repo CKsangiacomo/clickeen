@@ -11,8 +11,8 @@ import InstanceEmbed from '../../components/InstanceEmbed.astro';
 import Carousel from '../../components/Carousel.astro';
 
 type CarouselItem = {
-  systemInstanceRef: {
-    publicId: string;
+  accountInstanceRef: {
+    instanceId: string;
     locale: string;
     title?: string;
     embedMode?: 'iframe' | 'indexable';

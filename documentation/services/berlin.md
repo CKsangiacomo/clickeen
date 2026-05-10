@@ -108,11 +108,6 @@ Residual public account-management routes:
 - `POST /v1/invitations/:token/accept`
 - `POST /v1/accounts/:id/switch`
 - `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
-- `GET /v1/accounts/:id/widget-registry`
-- `GET /v1/accounts/:id/instances/public-ids`
-- `POST /v1/accounts/:id/instances/registry`
-- `GET /v1/accounts/:id/instances/:publicId/registry`
-- `DELETE /v1/accounts/:id/instances/:publicId/registry`
 - `GET /v1/accounts/:id/publish-containment`
 
 Internal routes:
@@ -193,8 +188,8 @@ Primary runtime dependencies:
 Registry/account product dependencies:
 
 - Roma no longer receives a Michael/PostgREST token from Berlin.
-- Berlin owns the residual account registry product endpoints listed above and reads Michael internally through its service-role boundary.
-- Roma combines those registry responses with Tokyo/Tokyo-worker saved-document and serve-state truth.
+- Berlin only answers account governance and publish-containment questions for this area.
+- Berlin does not own widget instance inventory, instance IDs, display names, saved config, l10n overlays, or publish state.
 
 ## Environment
 

@@ -67,7 +67,7 @@ Bob compiles the spec into a deterministic contract:
 
 ### Host bootstrap contract (current repo behavior)
 
-Active account authoring host path: Roma Builder fetches the saved document envelope (`compiled`, `instanceData`, `policy`, `publicId`, `displayName`, `source`, `meta`), then waits for Bob session readiness and sends `ck:open-editor`.
+Active account authoring host path: Roma Builder fetches the saved document envelope (`compiled`, `instanceData`, `policy`, `instanceId`, `displayName`, `source`, `meta`), then waits for Bob session readiness and sends `ck:open-editor`.
 
 That open envelope is document-only for authoring. It does not carry published/unpublished live-state noise into the editor.
 
@@ -85,7 +85,7 @@ Then they wait for Bob session readiness and post into Bob:
   compiled,
   instanceData,
   policy,
-  publicId,
+  instanceId,
   label,
   source,
   meta
@@ -106,7 +106,7 @@ Together they:
 - Requires an explicit `instanceData` document on open; Bob does not promote `compiled.defaults` into visible widget truth
 - Fails the open request when `instanceData` is missing or invalid; Bob does not invent `{}` as a replacement widget
 - Stores `{ compiled, instanceData }` in React state
-- Never auto-picks a different instance when `publicId` is missing.
+- Never auto-picks a different instance when `instanceId` is missing.
 - Replies with terminal `bob:open-editor-applied` or `bob:open-editor-failed` for the current host request.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
 - Local Bob may run as an editor runtime for debugging, but it is not a product account shell. Hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma account routes. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
@@ -138,7 +138,7 @@ Core base-config lifecycle per open session:
 
 1. One core instance load performed by the host before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
-3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instance/:publicId` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
+3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instance/:instanceId` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
    Bob sends the current document metadata back with the save (`widgetType`, `displayName`, `source`, `meta`, `config`) so Roma/Tokyo do not reconstruct sibling identity from the previously saved row.
    Save success clears the save/error state and keeps the same in-memory widget truth; Bob does not swap in a server-returned replacement copy of the widget.
 4. Bob opens the saved document it was given. It does not merge missing widget defaults into account-hosted config on load. If Roma/Tokyo surface malformed saved widget payload, Builder fails open at that boundary instead of healing or masking the bad row.
@@ -147,7 +147,7 @@ Core base-config lifecycle per open session:
 Copilot account path:
 
 - Bob posts prompt, current config, controls, and session metadata to Roma.
-- Bob does not restate widget identity in the request body; Roma resolves widget type from the current saved instance for that `publicId`.
+- Bob does not restate widget identity in the request body; Roma resolves widget type from the current saved instance for that `instanceId`.
 
 Within Bob, explicit save ownership stays in `useSessionSaving.ts`. Builder no longer mounts a localization overlay/session subsystem on the active account editing path.
 
@@ -214,7 +214,7 @@ Bob’s preview-shadow route (`/bob/preview-shadow`) is a diagnostic/internal em
 
 Modes (shipped):
 
-- Default: passes `data-force-shadow="true"` to preview shadow DOM rendering via Venice `/r/:publicId` (diagnostics only).
+- Default: passes `data-force-shadow="true"` to preview shadow DOM rendering via Venice `/renders/widgets/:instanceId/live/r.json` (diagnostics only).
 - `?mode=seo-geo`: previews the **iframe++ SEO/GEO optimized embed** by passing `data-ck-optimization="seo-geo"` (UI stays iframe; loader injects host metadata).
 
 Requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin.
@@ -388,7 +388,7 @@ type WidgetOp =
 - Validation rules:
   - reject empty/invalid ops arrays
   - reject prohibited path segments (`__proto__`, `constructor`, `prototype`)
-  - reject paths not allowlisted by `compiled.controls`
+  - reject paths not allowexternally referenced by `compiled.controls`
   - enforce control-kind semantics (arrays for `insert/remove/move`)
   - strict value coercion based on `compiled.controls.kind`
 
@@ -509,8 +509,8 @@ Reference:
 
 Important boundary:
 
-- Roma product starter/listed-instance discovery is Roma-owned through `/api/account/widgets`.
-- DevStudio local must not use Roma starter routes for instance discovery.
+- Roma product example/externally referenced-instance discovery is Roma-owned through `/api/account/widgets`.
+- DevStudio local must not use Roma example routes for instance discovery.
 
 Bob editor routes are explicit:
 

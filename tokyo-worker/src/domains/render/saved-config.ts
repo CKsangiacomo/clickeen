@@ -1,15 +1,88 @@
 import type { Env } from '../../types';
-import { accountInstanceRenderLivePointerKey, accountInstanceSavedConfigPackKey, accountInstanceSavedPointerKey } from './keys';
-import { rebuildAccountInstanceIndexes } from './instance-index';
+import {
+  accountInstanceConfigKey,
+  accountInstanceDocumentKey,
+  accountInstancePublishKey,
+  accountWidgetDocumentKey,
+} from './keys';
+import { rebuildAccountInstanceIndexes, resolveAccountInstanceLocation } from './instance-index';
 import { ensureSavedRenderL10nBase } from './localization';
-import { normalizeLiveRenderPointer, normalizeSavedRenderPointer, resolveSavedRenderValidationReason } from './normalize';
-import { loadJson, putJson } from './storage';
-import type { InstanceServeState, LiveRenderPointer, SavedRenderDocumentReadFailure, SavedRenderDocumentReadResult, SavedRenderL10nFailure, SavedRenderL10nStatus, SavedRenderPointer } from './types';
-import { jsonSha256Hex, normalizeFingerprint, normalizeLocaleList, normalizePublicId, normalizeSavedL10nFailures } from './utils';
+import {
+  normalizeAccountInstanceDocument,
+  normalizePublishDocument,
+  normalizeSavedRenderPointer,
+  resolveSavedRenderValidationReason,
+} from './normalize';
+import { loadJson, putJson, deletePrefix } from './storage';
+import type {
+  AccountInstanceDocument,
+  AccountWidgetDocument,
+  InstanceServeState,
+  SavedRenderDocumentReadFailure,
+  SavedRenderDocumentReadResult,
+  SavedRenderL10nFailure,
+  SavedRenderL10nStatus,
+  SavedRenderPointer,
+} from './types';
+import { jsonSha256Hex, normalizeLocaleList, normalizeStorageId, normalizeSavedL10nFailures } from './utils';
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function normalizeDisplayName(value: unknown): string | null {
+  return typeof value === 'string' ? value.trim() || null : null;
+}
+
+function normalizeMeta(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+async function ensureWidgetDocument(args: {
+  env: Env;
+  accountId: string;
+  widgetType: string;
+  now: string;
+}): Promise<void> {
+  const key = accountWidgetDocumentKey(args.accountId, args.widgetType);
+  const existing = await loadJson<AccountWidgetDocument>(args.env, key);
+  const createdAt =
+    existing && typeof existing === 'object' && typeof (existing as any).createdAt === 'string'
+      ? String((existing as any).createdAt)
+      : args.now;
+  await putJson(args.env, key, {
+    v: 1,
+    accountId: args.accountId,
+    widgetType: args.widgetType,
+    status: 'active',
+    lockedReason: null,
+    createdAt,
+    updatedAt: args.now,
+  } satisfies AccountWidgetDocument);
+}
+
+function toSavedPointer(args: {
+  instance: AccountInstanceDocument;
+  configFp: string;
+}): SavedRenderPointer {
+  return {
+    v: 1,
+    id: args.instance.id,
+    accountId: args.instance.accountId,
+    widgetType: args.instance.widgetType,
+    displayName: args.instance.displayName,
+    meta: args.instance.meta ?? null,
+    configFp: args.configFp,
+    updatedAt: args.instance.updatedAt,
+    ...(args.instance.l10n ? { l10n: args.instance.l10n } : {}),
+  };
+}
 
 export async function writeSavedRenderConfig(args: {
   env: Env;
-  publicId: string;
+  instanceId: string;
   accountId: string;
   widgetType: string;
   config: Record<string, unknown>;
@@ -25,152 +98,114 @@ export async function writeSavedRenderConfig(args: {
       }
     | null;
 }): Promise<{ pointer: SavedRenderPointer; previousBaseFingerprint: string | null }> {
-  const publicId = args.publicId;
-  const accountId = args.accountId;
-  const config = args.config;
-  const widgetType = args.widgetType;
+  const instanceId = normalizeStorageId(args.instanceId);
+  const accountId = normalizeStorageId(args.accountId);
+  const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
+  if (!instanceId || !accountId || !widgetType) {
+    throw new Error('tokyo.errors.render.invalid');
+  }
 
-  const configFp = await jsonSha256Hex(config);
-  const packKey = accountInstanceSavedConfigPackKey(accountId, publicId, configFp);
-  await putJson(args.env, packKey, config);
+  const now = nowIso();
+  await ensureWidgetDocument({ env: args.env, accountId, widgetType, now });
+  const configFp = await jsonSha256Hex(args.config);
+  await putJson(args.env, accountInstanceConfigKey(accountId, widgetType, instanceId), args.config);
 
-  const displayName =
-    typeof args.displayName === 'string' ? args.displayName.trim() || null : null;
-  const meta =
-    args.meta === null
-      ? null
-      : args.meta && typeof args.meta === 'object' && !Array.isArray(args.meta)
-        ? (args.meta as Record<string, unknown>)
-        : null;
-  const existingPointer = normalizeSavedRenderPointer(
-    await loadJson(args.env, accountInstanceSavedPointerKey(accountId, publicId)),
+  const existing = normalizeAccountInstanceDocument(
+    await loadJson(args.env, accountInstanceDocumentKey(accountId, widgetType, instanceId)),
   );
-  const previousBaseFingerprint = existingPointer?.l10n?.baseFingerprint ?? null;
+  const previousBaseFingerprint = existing?.l10n?.baseFingerprint ?? null;
   const l10nBase = await ensureSavedRenderL10nBase({
     env: args.env,
     accountId,
-    publicId,
+    instanceId: instanceId,
     widgetType,
-    config,
+    config: args.config,
     existingBaseFingerprint:
       typeof args.l10n?.baseFingerprint === 'string'
         ? args.l10n.baseFingerprint
-        : existingPointer?.l10n?.baseFingerprint ?? null,
+        : previousBaseFingerprint,
   });
   const requestedSummary = args.l10n?.summary ?? undefined;
   const carriedSummary =
     requestedSummary === null
       ? null
-      : requestedSummary ?? existingPointer?.l10n?.summary ?? null;
-  const l10n = {
-    baseFingerprint: l10nBase.baseFingerprint,
-    ...(carriedSummary ? { summary: carriedSummary } : {}),
-  } satisfies NonNullable<SavedRenderPointer['l10n']>;
+      : requestedSummary ?? existing?.l10n?.summary ?? null;
 
-  const pointer: SavedRenderPointer = {
+  const instance: AccountInstanceDocument & { configFp: string } = {
     v: 1,
-    publicId,
+    id: instanceId,
     accountId,
     widgetType,
-    displayName,
-    meta,
+    displayName: normalizeDisplayName(args.displayName),
+    meta: normalizeMeta(args.meta),
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+    l10n: {
+      baseFingerprint: l10nBase.baseFingerprint,
+      ...(carriedSummary ? { summary: carriedSummary } : {}),
+    },
     configFp,
-    updatedAt: new Date().toISOString(),
-    l10n,
   };
-  await putJson(args.env, accountInstanceSavedPointerKey(accountId, publicId), pointer);
+
+  await putJson(args.env, accountInstanceDocumentKey(accountId, widgetType, instanceId), instance);
   await rebuildAccountInstanceIndexes(args.env, accountId);
   return {
-    pointer,
+    pointer: toSavedPointer({ instance, configFp }),
     previousBaseFingerprint,
   };
 }
 
 export async function readSavedRenderPointer(args: {
   env: Env;
-  publicId: string;
+  instanceId: string;
   accountId: string;
-}): Promise<
-  | {
-      ok: true;
-      value: SavedRenderPointer;
-    }
-  | SavedRenderDocumentReadFailure
-> {
-  const publicId = normalizePublicId(args.publicId);
-  const accountId = normalizePublicId(args.accountId);
-  if (!publicId || !accountId) {
-    return {
-      ok: false,
-      kind: 'VALIDATION',
-      reasonKey: 'tokyo.errors.render.invalid',
-    };
+  widgetType?: string | null;
+}): Promise<{ ok: true; value: SavedRenderPointer } | SavedRenderDocumentReadFailure> {
+  const instanceId = normalizeStorageId(args.instanceId);
+  const accountId = normalizeStorageId(args.accountId);
+  if (!instanceId || !accountId) {
+    return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' };
   }
-
-  const pointerRaw = await loadJson(args.env, accountInstanceSavedPointerKey(accountId, publicId));
-  if (!pointerRaw) {
-    return {
-      ok: false,
-      kind: 'NOT_FOUND',
-      reasonKey: 'tokyo.errors.render.notFound',
-    };
-  }
-  const pointer = normalizeSavedRenderPointer(pointerRaw);
+  const location = await resolveAccountInstanceLocation({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetType: args.widgetType,
+  });
+  if (!location) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' };
+  const raw = await loadJson(args.env, accountInstanceDocumentKey(location.accountId, location.widgetType, location.instanceId));
+  if (!raw) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' };
+  const instance = normalizeAccountInstanceDocument(raw);
+  const pointer = instance
+    ? normalizeSavedRenderPointer({
+        ...instance,
+        configFp: (raw as Record<string, unknown>).configFp,
+      })
+    : null;
   if (!pointer) {
-    return {
-      ok: false,
-      kind: 'VALIDATION',
-      reasonKey: resolveSavedRenderValidationReason(pointerRaw),
-    };
+    return { ok: false, kind: 'VALIDATION', reasonKey: resolveSavedRenderValidationReason(raw) };
   }
-  if (pointer.publicId !== publicId) {
-    return {
-      ok: false,
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.config.invalid',
-    };
+  if (pointer.id !== instanceId || pointer.accountId !== accountId) {
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' };
   }
-  if (pointer.accountId !== accountId) {
-    return {
-      ok: false,
-      kind: 'NOT_FOUND',
-      reasonKey: 'tokyo.errors.render.notFound',
-    };
-  }
-
   return { ok: true, value: pointer };
 }
 
 export async function readSavedRenderConfig(args: {
   env: Env;
-  publicId: string;
+  instanceId: string;
   accountId: string;
+  widgetType?: string | null;
 }): Promise<SavedRenderDocumentReadResult> {
-  const publicId = normalizePublicId(args.publicId);
-  const accountId = normalizePublicId(args.accountId);
-  if (!publicId || !accountId) {
-    return {
-      ok: false,
-      kind: 'VALIDATION',
-      reasonKey: 'tokyo.errors.render.invalid',
-    };
-  }
-
   const pointerResult = await readSavedRenderPointer(args);
   if (!pointerResult.ok) return pointerResult;
   const pointer = pointerResult.value;
-
-  const config =
-    (await loadJson<Record<string, unknown>>(
-      args.env,
-      accountInstanceSavedConfigPackKey(accountId, publicId, pointer.configFp),
-    )) ?? null;
+  const config = await loadJson<Record<string, unknown>>(
+    args.env,
+    accountInstanceConfigKey(pointer.accountId, pointer.widgetType, pointer.id),
+  );
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
-    return {
-      ok: false,
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.config.invalid',
-    };
+    return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.config.invalid' };
   }
   return { ok: true, value: { pointer, config } };
 }
@@ -178,26 +213,22 @@ export async function readSavedRenderConfig(args: {
 export async function readInstanceServeState(args: {
   env: Env;
   accountId: string;
-  publicId: string;
+  instanceId: string;
 }): Promise<InstanceServeState> {
-  const publicId = normalizePublicId(args.publicId);
-  const accountId = normalizePublicId(args.accountId);
-  if (!publicId) {
-    throw new Error('tokyo.errors.render.invalid');
-  }
-  if (!accountId) {
-    throw new Error('tokyo.errors.render.invalid');
-  }
-
-  const pointer = normalizeLiveRenderPointer(
-    await loadJson<LiveRenderPointer>(args.env, accountInstanceRenderLivePointerKey(accountId, publicId)),
+  const instanceId = normalizeStorageId(args.instanceId);
+  const accountId = normalizeStorageId(args.accountId);
+  if (!instanceId || !accountId) throw new Error('tokyo.errors.render.invalid');
+  const location = await resolveAccountInstanceLocation({ env: args.env, accountId, instanceId });
+  if (!location) return 'unpublished';
+  const publish = normalizePublishDocument(
+    await loadJson(args.env, accountInstancePublishKey(location.accountId, location.widgetType, location.instanceId)),
   );
-  return pointer ? 'published' : 'unpublished';
+  return publish?.status === 'published' ? 'published' : 'unpublished';
 }
 
 export async function writeSavedRenderL10nState(args: {
   env: Env;
-  publicId: string;
+  instanceId: string;
   accountId: string;
   baseFingerprint: string;
   summary?: {
@@ -205,32 +236,33 @@ export async function writeSavedRenderL10nState(args: {
     desiredLocales: string[];
   } | null;
 }): Promise<SavedRenderPointer> {
-  const pointerResult = await readSavedRenderPointer({
-    env: args.env,
-    publicId: args.publicId,
-    accountId: args.accountId,
-  });
+  const pointerResult = await readSavedRenderPointer(args);
   if (!pointerResult.ok) {
-    throw new Error(
-      pointerResult.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : pointerResult.reasonKey,
-    );
+    throw new Error(pointerResult.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : pointerResult.reasonKey);
   }
-
-  const pointer: SavedRenderPointer = {
-    ...pointerResult.value,
+  const pointer = pointerResult.value;
+  const raw = await loadJson<Record<string, unknown>>(
+    args.env,
+    accountInstanceDocumentKey(pointer.accountId, pointer.widgetType, pointer.id),
+  );
+  const instance = normalizeAccountInstanceDocument(raw);
+  if (!instance) throw new Error('tokyo_saved_not_found');
+  const next: AccountInstanceDocument & { configFp: string } = {
+    ...instance,
     l10n: {
-      ...(pointerResult.value.l10n ?? {}),
+      ...(instance.l10n ?? {}),
       baseFingerprint: args.baseFingerprint,
       ...(args.summary ? { summary: args.summary } : {}),
     },
+    configFp: pointer.configFp,
   };
-  await putJson(args.env, accountInstanceSavedPointerKey(args.accountId, args.publicId), pointer);
-  return pointer;
+  await putJson(args.env, accountInstanceDocumentKey(pointer.accountId, pointer.widgetType, pointer.id), next);
+  return toSavedPointer({ instance: next, configFp: pointer.configFp });
 }
 
 export async function writeSavedRenderL10nStatus(args: {
   env: Env;
-  publicId: string;
+  instanceId: string;
   accountId: string;
   generationId: string;
   status: SavedRenderL10nStatus;
@@ -242,40 +274,32 @@ export async function writeSavedRenderL10nStatus(args: {
   finishedAt?: string | null;
   guardCurrentGeneration?: boolean;
 }): Promise<SavedRenderPointer | null> {
-  const pointerResult = await readSavedRenderPointer({
-    env: args.env,
-    publicId: args.publicId,
-    accountId: args.accountId,
-  });
+  const pointerResult = await readSavedRenderPointer(args);
   if (!pointerResult.ok) {
-    throw new Error(
-      pointerResult.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : pointerResult.reasonKey,
-    );
+    throw new Error(pointerResult.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : pointerResult.reasonKey);
   }
-
-  const current = pointerResult.value.l10n;
-  const baseFingerprint = normalizeFingerprint(args.baseFingerprint) ?? current?.baseFingerprint ?? '';
+  const pointer = pointerResult.value;
+  const current = pointer.l10n;
+  const baseFingerprint = args.baseFingerprint || current?.baseFingerprint || '';
   const generationId = typeof args.generationId === 'string' ? args.generationId.trim() : '';
-  if (!current || !baseFingerprint || !generationId) {
-    throw new Error('tokyo_saved_l10n_base_missing');
-  }
-  if (args.guardCurrentGeneration === true && current.generationId !== generationId) {
-    return null;
-  }
+  if (!current || !baseFingerprint || !generationId) throw new Error('tokyo_saved_l10n_base_missing');
+  if (args.guardCurrentGeneration === true && current.generationId !== generationId) return null;
 
-  const now = new Date().toISOString();
-  const readyLocales = args.readyLocales
-    ? normalizeLocaleList(args.readyLocales)
-    : current.readyLocales ?? [];
-  const failedLocales = args.failedLocales
-    ? normalizeSavedL10nFailures(args.failedLocales)
-    : current.failedLocales ?? [];
-  const lastError = typeof args.lastError === 'string' ? args.lastError.trim() : '';
-  const startedAt = typeof args.startedAt === 'string' ? args.startedAt.trim() : '';
-  const finishedAt = typeof args.finishedAt === 'string' ? args.finishedAt.trim() : '';
+  const now = nowIso();
+  const readyLocales = args.readyLocales ? normalizeLocaleList(args.readyLocales) : current.readyLocales ?? [];
+  const failedLocales = args.failedLocales ? normalizeSavedL10nFailures(args.failedLocales) : current.failedLocales ?? [];
+  const lastError = normalizeDisplayName(args.lastError);
+  const startedAt = normalizeDisplayName(args.startedAt);
+  const finishedAt = normalizeDisplayName(args.finishedAt);
 
-  const pointer: SavedRenderPointer = {
-    ...pointerResult.value,
+  const raw = await loadJson<Record<string, unknown>>(
+    args.env,
+    accountInstanceDocumentKey(pointer.accountId, pointer.widgetType, pointer.id),
+  );
+  const instance = normalizeAccountInstanceDocument(raw);
+  if (!instance) throw new Error('tokyo_saved_not_found');
+  const next: AccountInstanceDocument & { configFp: string } = {
+    ...instance,
     l10n: {
       baseFingerprint,
       ...(current.summary ? { summary: current.summary } : {}),
@@ -288,36 +312,23 @@ export async function writeSavedRenderL10nStatus(args: {
       ...(finishedAt ? { finishedAt } : {}),
       ...(lastError ? { lastError } : {}),
     },
+    configFp: pointer.configFp,
   };
-  await putJson(args.env, accountInstanceSavedPointerKey(args.accountId, args.publicId), pointer);
-  return pointer;
+  await putJson(args.env, accountInstanceDocumentKey(pointer.accountId, pointer.widgetType, pointer.id), next);
+  return toSavedPointer({ instance: next, configFp: pointer.configFp });
 }
 
 export async function deleteSavedRenderConfig(args: {
   env: Env;
-  publicId: string;
+  instanceId: string;
   accountId: string;
-}): Promise<
-  | { ok: true; deleted: true }
-  | SavedRenderDocumentReadFailure
-> {
-  const publicId = normalizePublicId(args.publicId);
-  const accountId = normalizePublicId(args.accountId);
-  if (!publicId || !accountId) {
-    return {
-      ok: false,
-      kind: 'VALIDATION',
-      reasonKey: 'tokyo.errors.render.invalid',
-    };
-  }
-
-  const saved = await readSavedRenderConfig({ env: args.env, publicId, accountId });
+}): Promise<{ ok: true; deleted: true } | SavedRenderDocumentReadFailure> {
+  const saved = await readSavedRenderConfig(args);
   if (!saved.ok) return saved;
-
-  await Promise.all([
-    args.env.TOKYO_R2.delete(accountInstanceSavedPointerKey(accountId, publicId)),
-    args.env.TOKYO_R2.delete(accountInstanceSavedConfigPackKey(accountId, publicId, saved.value.pointer.configFp)),
-  ]);
-  await rebuildAccountInstanceIndexes(args.env, accountId);
+  await deletePrefix(
+    args.env,
+    `accounts/${saved.value.pointer.accountId}/widgets/${saved.value.pointer.widgetType}/${saved.value.pointer.id}/`,
+  );
+  await rebuildAccountInstanceIndexes(args.env, saved.value.pointer.accountId);
   return { ok: true, deleted: true };
 }

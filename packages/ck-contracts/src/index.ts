@@ -1,7 +1,7 @@
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 
-export const INSTANCE_PUBLIC_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$/;
+export const INSTANCE_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$/;
 
 export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const ACCOUNT_ASSET_PATH_RE = /^\/assets\/account\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)$/;
@@ -138,16 +138,16 @@ function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-export function normalizeInstancePublicId(raw: unknown): string | null {
+export function normalizeInstanceId(raw: unknown): string | null {
   const value = typeof raw === 'string' ? raw.trim() : '';
   if (!value) return null;
   if (value === '.' || value === '..') return null;
   if (value.includes('/') || value.includes('\\')) return null;
-  return INSTANCE_PUBLIC_ID_RE.test(value) ? value : null;
+  return INSTANCE_ID_RE.test(value) ? value : null;
 }
 
-export function isInstancePublicId(raw: unknown): raw is string {
-  return normalizeInstancePublicId(raw) != null;
+export function isInstanceId(raw: unknown): raw is string {
+  return normalizeInstanceId(raw) != null;
 }
 
 function decodePathPart(raw: unknown): string {

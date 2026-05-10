@@ -1,0 +1,64 @@
+{
+  "v": 1,
+  "prd": "088",
+  "accountId": "00000000-0000-0000-0000-000000000100",
+  "instances": [
+    {
+      "oldId": "wgt_main_countdown",
+      "newId": "ins_01KR8R6ZYTPM6B3CHS8KZ0CEC9",
+      "widgetType": "countdown",
+      "displayName": "wgt_main_countdown"
+    },
+    {
+      "oldId": "wgt_curated_faq_photo_hospitality_westcoast",
+      "newId": "ins_01KR8R6ZYZBDXE0DT2FB8PB0NN",
+      "widgetType": "faq",
+      "displayName": "photo.hospitality.westcoast",
+      "pragueAliases": ["wgt_system_faq_photo_hospitality_westcoast"]
+    },
+    {
+      "oldId": "wgt_curated_faq_lightblurs_generic",
+      "newId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG",
+      "widgetType": "faq",
+      "displayName": "lightblurs.generic",
+      "pragueAliases": ["wgt_system_faq_lightblurs_generic"]
+    },
+    {
+      "oldId": "wgt_curated_faq_photo_museum_art",
+      "newId": "ins_01KR8R6ZYZWXEWPYHVBWVD4PPZ",
+      "widgetType": "faq",
+      "displayName": "wgt_curated_faq_photo_museum_art"
+    },
+    {
+      "oldId": "wgt_curated_faq_minimal_whitegreen_museum",
+      "newId": "ins_01KR8R6ZZ0SXP6MSSHRNV0S52R",
+      "widgetType": "faq",
+      "displayName": "wgt_curated_faq_minimal_whitegreen_museum",
+      "pragueAliases": ["wgt_system_faq_minimal_whitegreen_museum"]
+    },
+    {
+      "oldId": "wgt_curated_faq_photo_restaurant_highend",
+      "newId": "ins_01KR8R6ZZ0M5RN6CVDR0X5G6DR",
+      "widgetType": "faq",
+      "displayName": "wgt_curated_faq_photo_restaurant_highend"
+    },
+    {
+      "oldId": "wgt_curated_faq_minimal_techpalette",
+      "newId": "ins_01KR8R6ZZ0F8CKMC45CXEB5BKX",
+      "widgetType": "faq",
+      "displayName": "wgt_curated_faq_minimal_techpalette"
+    },
+    {
+      "oldId": "wgt_main_faq",
+      "newId": "ins_01KR8R6ZZ0TXQMJQ3VPS9WM2QJ",
+      "widgetType": "faq",
+      "displayName": "wgt_main_faq"
+    },
+    {
+      "oldId": "wgt_main_logoshowcase",
+      "newId": "ins_01KR8R6ZZ07S5PMJVSRKM4M7K8",
+      "widgetType": "logoshowcase",
+      "displayName": "wgt_main_logoshowcase"
+    }
+  ]
+}

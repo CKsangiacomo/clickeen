@@ -31,7 +31,7 @@ type AIGrant = {
   ai?: AiGrantPolicy;
   trace?: {
     sessionId?: string;
-    instancePublicId?: string;
+    instanceId?: string;
     envStage?: string;
   };
 };
@@ -96,7 +96,7 @@ async function mintGrant(grant: AIGrant, secret: string): Promise<string> {
 export async function issueAccountCopilotGrant(args: {
   authz: RomaAccountAuthzCapsulePayload;
   selectedModel?: AiModelRef | null;
-  trace?: { sessionId?: string; instancePublicId?: string };
+  trace?: { sessionId?: string; instanceId?: string };
   usageKv?: RomaUsageKv | null;
 }): Promise<
   | { ok: true; grant: string; exp: number; agentId: string }
@@ -146,9 +146,9 @@ export async function issueAccountCopilotGrant(args: {
   const traceRaw = args.trace ?? {};
   const sessionId =
     typeof traceRaw.sessionId === 'string' && traceRaw.sessionId.trim() ? traceRaw.sessionId.trim() : crypto.randomUUID();
-  const instancePublicId =
-    typeof traceRaw.instancePublicId === 'string' && traceRaw.instancePublicId.trim()
-      ? traceRaw.instancePublicId.trim()
+  const instanceId =
+    typeof traceRaw.instanceId === 'string' && traceRaw.instanceId.trim()
+      ? traceRaw.instanceId.trim()
       : undefined;
 
   const baseBudgets = resolveAiRuntimeBudget(ai);
@@ -197,7 +197,7 @@ export async function issueAccountCopilotGrant(args: {
     ai,
     trace: {
       sessionId,
-      ...(instancePublicId ? { instancePublicId } : {}),
+      ...(instanceId ? { instanceId } : {}),
       envStage: resolveEnvStage(),
     },
   };

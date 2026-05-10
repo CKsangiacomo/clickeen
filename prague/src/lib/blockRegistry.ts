@@ -59,7 +59,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'headline', type: 'string' },
       { key: 'subheadline', type: 'string' },
     ],
-    meta: ['visual', 'systemInstanceRef', 'items'],
+    meta: ['visual', 'accountInstanceRef', 'items'],
   },
   split: {
     type: 'split',
@@ -68,7 +68,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'headline', type: 'string' },
       { key: 'subheadline', type: 'string' },
     ],
-    meta: ['systemInstanceRef', 'layout', 'copy'],
+    meta: ['accountInstanceRef', 'layout', 'copy'],
   },
   'split-carousel': {
     type: 'split-carousel',
@@ -139,7 +139,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'heading', type: 'string' },
       { key: 'subhead', type: 'string' },
     ],
-    meta: ['copy', 'mode', 'systemInstanceRef'],
+    meta: ['copy', 'mode', 'accountInstanceRef'],
   },
   'locale-showcase': {
     type: 'locale-showcase',
@@ -148,7 +148,7 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
       { key: 'title', type: 'string' },
       { key: 'subtitle', type: 'string' },
     ],
-    meta: ['systemInstanceRef'],
+    meta: ['accountInstanceRef'],
   },
   'embed-carousel': {
     type: 'embed-carousel',
@@ -214,13 +214,13 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
       throw new Error(`[prague] ${pagePath}: block "${type}" visual must be boolean or object`);
     }
   }
-  if (contract.meta.includes('systemInstanceRef') && block.systemInstanceRef != null) {
-    if (typeof block.systemInstanceRef !== 'object' || Array.isArray(block.systemInstanceRef)) {
-      throw new Error(`[prague] ${pagePath}: block "${type}" systemInstanceRef must be an object`);
+  if (contract.meta.includes('accountInstanceRef') && block.accountInstanceRef != null) {
+    if (typeof block.accountInstanceRef !== 'object' || Array.isArray(block.accountInstanceRef)) {
+      throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef must be an object`);
     }
-    const publicId = (block.systemInstanceRef as { publicId?: unknown }).publicId;
-    if (publicId != null && typeof publicId !== 'string') {
-      throw new Error(`[prague] ${pagePath}: block "${type}" systemInstanceRef.publicId must be a string`);
+    const instanceId = (block.accountInstanceRef as { instanceId?: unknown }).instanceId;
+    if (instanceId != null && typeof instanceId !== 'string') {
+      throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef.instanceId must be a string`);
     }
   }
   if (contract.meta.includes('layout') && (block as any).layout != null) {

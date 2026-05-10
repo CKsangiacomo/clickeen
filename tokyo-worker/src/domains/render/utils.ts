@@ -16,7 +16,7 @@ export function jsonSha256Hex(value: unknown): Promise<string> {
   return sha256Hex(arrayBuffer);
 }
 
-export function normalizePublicId(value: unknown): string | null {
+export function normalizeStorageId(value: unknown): string | null {
   const normalized = String(value || '').trim();
   return normalized ? normalized : null;
 }

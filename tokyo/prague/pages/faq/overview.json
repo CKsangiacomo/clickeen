@@ -16,8 +16,8 @@
         "headline": "One FAQ widget. All your answers. Any language.",
         "subheadline": "Design it your way, publish once, and every live FAQ on your site updates with the latest answers."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {
@@ -31,8 +31,8 @@
     {
       "id": "minibob",
       "type": "minibob",
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       },
       "copy": {
         "heading": "Preview a live FAQ",
@@ -84,8 +84,8 @@
         "title": "The world is your oyster",
         "subtitle": "Welcome every website visitor like a local. Instant, natural translations for a global audience."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {
@@ -118,8 +118,8 @@
         "headline": "Total design control",
         "subheadline": "Radius. Shadows. Borders. Spacing. Tune every property in our visual editor without writing a single line of CSS."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_minimal_whitegreen_museum"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZZ0SXP6MSSHRNV0S52R"
       }
     },
     {

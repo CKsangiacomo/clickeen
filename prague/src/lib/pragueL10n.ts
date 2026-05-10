@@ -51,7 +51,7 @@ type LayerIndexEntry = {
 
 type LayerIndex = {
   v: 1;
-  publicId: string;
+  pageId: string;
   layers: Record<string, LayerIndexEntry>;
 };
 
@@ -573,8 +573,8 @@ async function applyPragueLayeredOverlaysWithMeta(args: {
     }
     return { content: args.base, meta };
   }
-  if (index.publicId && index.publicId !== args.pageId) {
-    throw new Error(`[prague] Layer index publicId mismatch for ${args.pageId}`);
+  if (index.pageId && index.pageId !== args.pageId) {
+    throw new Error(`[prague] Layer index pageId mismatch for ${args.pageId}`);
   }
 
   const { targets, missingRequired, localeKey } = resolveLayerTargets({

@@ -12,7 +12,7 @@ import {
 } from '@clickeen/ck-contracts';
 import {
   buildAccountAssetPublicPath,
-  normalizePublicId,
+  normalizeStorageId,
   normalizeSha256Hex,
   prettyStableJson,
   sha256Hex,
@@ -208,14 +208,14 @@ async function materializeRuntimeConfigPack(args: {
 export async function syncAccountInstance(args: {
   env: Env;
   accountId: string;
-  publicId: string;
+  instanceId: string;
   live: boolean;
   previousBaseFingerprint?: string | null;
   accountAuthz: SyncAuthzSnapshot;
   l10nIntent: SyncL10nIntent;
 }): Promise<{
   ok: true;
-  publicId: string;
+  instanceId: string;
   widgetType: string;
   live: boolean;
   baseFingerprint: string;
@@ -224,7 +224,7 @@ export async function syncAccountInstance(args: {
 }> {
   const saved = await readSavedRenderConfig({
     env: args.env,
-    publicId: args.publicId,
+    instanceId: args.instanceId,
     accountId: args.accountId,
   });
   if (!saved.ok) {
@@ -234,7 +234,7 @@ export async function syncAccountInstance(args: {
   const l10nBase = await ensureSavedRenderL10nBase({
     env: args.env,
     accountId: args.accountId,
-    publicId: args.publicId,
+    instanceId: args.instanceId,
     widgetType: saved.value.pointer.widgetType,
     config: saved.value.config,
     existingBaseFingerprint: saved.value.pointer.l10n?.baseFingerprint ?? null,
@@ -251,7 +251,7 @@ export async function syncAccountInstance(args: {
       ? await loadSavedRenderL10nBase({
           env: args.env,
           accountId: args.accountId,
-          publicId: args.publicId,
+          instanceId: args.instanceId,
           widgetType: saved.value.pointer.widgetType,
           baseFingerprint: sourceBaseFingerprint,
         })
@@ -279,7 +279,7 @@ export async function syncAccountInstance(args: {
         const baseOverlay = await loadOverlayOps({
           env: args.env,
           accountId: args.accountId,
-          publicId: args.publicId,
+          instanceId: args.instanceId,
           layer: 'locale',
           layerKey: locale,
           baseFingerprint: sourceBaseFingerprint,
@@ -401,7 +401,7 @@ export async function syncAccountInstance(args: {
     await upsertL10nOverlay({
       env: args.env,
       accountId: args.accountId,
-      publicId: args.publicId,
+      instanceId: args.instanceId,
       layer: 'locale',
       layerKey: locale,
       baseFingerprint,
@@ -414,7 +414,7 @@ export async function syncAccountInstance(args: {
 
   await writeSavedRenderL10nState({
     env: args.env,
-    publicId: args.publicId,
+    instanceId: args.instanceId,
     accountId: args.accountId,
     baseFingerprint,
     summary: {
@@ -438,7 +438,7 @@ export async function syncAccountInstance(args: {
       await writeConfigPack(args.env, {
         v: 1,
         kind: 'write-config-pack',
-        publicId: args.publicId,
+        instanceId: args.instanceId,
         accountId: args.accountId,
         widgetType: saved.value.pointer.widgetType,
         configFp: nextConfigFp,
@@ -456,7 +456,7 @@ export async function syncAccountInstance(args: {
     await syncLiveSurface(args.env, {
       v: 1,
       kind: 'sync-live-surface',
-      publicId: args.publicId,
+      instanceId: args.instanceId,
       accountId: args.accountId,
       live: true,
       widgetType: saved.value.pointer.widgetType,
@@ -468,7 +468,7 @@ export async function syncAccountInstance(args: {
 
   return {
     ok: true,
-    publicId: args.publicId,
+    instanceId: args.instanceId,
     widgetType: saved.value.pointer.widgetType,
     live: args.live,
     baseFingerprint,
@@ -484,7 +484,7 @@ export async function runQueuedAccountInstanceSync(
 ): Promise<void> {
   const current = await readSavedRenderConfig({
     env,
-    publicId: job.publicId,
+    instanceId: job.instanceId,
     accountId: job.accountId,
   });
   if (!current.ok) {
@@ -503,7 +503,7 @@ export async function runQueuedAccountInstanceSync(
 
   await writeSavedRenderL10nStatus({
     env,
-    publicId: job.publicId,
+    instanceId: job.instanceId,
     accountId: job.accountId,
     generationId: job.generationId,
     status: 'working',
@@ -517,7 +517,7 @@ export async function runQueuedAccountInstanceSync(
   const result = await syncAccountInstance({
     env,
     accountId: job.accountId,
-    publicId: job.publicId,
+    instanceId: job.instanceId ?? '',
     live: job.live === true,
     previousBaseFingerprint: job.previousBaseFingerprint ?? null,
     accountAuthz: job.accountAuthz,
@@ -534,7 +534,7 @@ export async function runQueuedAccountInstanceSync(
   });
   await writeSavedRenderL10nStatus({
     env,
-    publicId: job.publicId,
+    instanceId: job.instanceId,
     accountId: job.accountId,
     generationId: job.generationId,
     status: completion.status,
@@ -549,12 +549,12 @@ export async function runQueuedAccountInstanceSync(
 export async function handleSyncAccountInstance(
   req: Request,
   env: Env,
-  publicIdRaw: string,
+  instanceIdRaw: string,
   accountId: string,
   accountAuthz: RomaAccountAuthzCapsulePayload,
 ): Promise<Response> {
-  const publicId = normalizePublicId(publicIdRaw);
-  if (!publicId || !isUuid(accountId)) {
+  const instanceId = normalizeStorageId(instanceIdRaw);
+  if (!instanceId || !isUuid(accountId)) {
     return json(
       { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' } },
       { status: 422 },
@@ -596,7 +596,7 @@ export async function handleSyncAccountInstance(
     const result = await syncAccountInstance({
       env,
       accountId,
-      publicId,
+      instanceId,
       live,
       previousBaseFingerprint,
       accountAuthz: {
@@ -614,7 +614,7 @@ export async function handleSyncAccountInstance(
     });
     await writeSavedRenderL10nStatus({
       env,
-      publicId,
+      instanceId,
       accountId,
       generationId,
       status: completion.status,

@@ -5,10 +5,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const publicId = url.searchParams.get('widget');
+  const instanceId = url.searchParams.get('widget');
   const event = url.searchParams.get('event');
 
-  if (!publicId || event !== 'view') {
+  if (!instanceId || event !== 'view') {
     return new NextResponse(null, { status: 204 });
   }
 

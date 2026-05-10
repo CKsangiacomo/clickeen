@@ -2,7 +2,7 @@ import { BerlinAuthTicketDO } from '../auth/ticket-store';
 import { AUTH_ROUTES } from '../auth/routes';
 import { ACCOUNT_MANAGEMENT_ROUTES } from '../account-management/routes';
 import { BOOTSTRAP_ROUTES } from '../bootstrap/routes';
-import { PROJECTION_ROUTES } from '../projection/routes';
+import { PUBLISH_CONTAINMENT_ROUTES } from '../publish-containment/routes';
 import { SESSION_ROUTES } from '../session/routes';
 import { internalError, json, methodNotAllowed } from './response';
 import { type BerlinRoute } from './routing';
@@ -14,7 +14,7 @@ const BERLIN_ROUTES: BerlinRoute[] = [
   ...SESSION_ROUTES,
   ...AUTH_ROUTES,
   ...ACCOUNT_MANAGEMENT_ROUTES,
-  ...PROJECTION_ROUTES,
+  ...PUBLISH_CONTAINMENT_ROUTES,
   ...BOOTSTRAP_ROUTES,
 ];
 

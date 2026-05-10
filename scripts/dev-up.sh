@@ -518,12 +518,4 @@ if ! ensure_stack_ports_healthy "$DEV_UP_HEALTH_ATTEMPTS" "$DEV_UP_HEALTH_INTERV
   exit 1
 fi
 
-echo "[dev-up] Seeding local platform state"
-if ! node "$ROOT_DIR/scripts/dev/seed-local-platform-state.mjs" --persist-to "$WRANGLER_PERSIST_DIR"; then
-  echo "[dev-up] Local platform seeding failed. Cleaning listeners."
-  stop_repo_wrangler_processes
-  for p in "${STACK_PORTS[@]}"; do
-    stop_port "$p"
-  done
-  exit 1
-fi
+echo "[dev-up] Local stack is healthy"

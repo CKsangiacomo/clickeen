@@ -9,13 +9,13 @@ type Props = {
   page: string;
   heading: string;
   subhead: string;
-  publicId: string;
+  instanceId: string;
 };
 
-const { widget, locale, heading, subhead, publicId } = Astro.props;
+const { widget, locale, heading, subhead, instanceId } = Astro.props;
 
-if (!String(publicId || '').trim()) {
-  throw new Error('[prague] minibob requires an explicit systemInstanceRef.publicId');
+if (!String(instanceId || '').trim()) {
+  throw new Error('[prague] minibob requires an explicit accountInstanceRef.instanceId');
 }
 
 const headerPrimitives = assertPrimitives(
@@ -61,7 +61,7 @@ const createHref = (() => {
   <div class="ck-inline">
     <div class="ck-minibob__embed">
       <InstanceEmbed
-        publicId={publicId}
+        instanceId={instanceId}
         locale={locale}
         widgetType={widget}
         title="Demo widget preview"

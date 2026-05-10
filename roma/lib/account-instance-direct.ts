@@ -20,7 +20,7 @@ type RouteFailure = {
 };
 
 export type AccountInstanceCoreRow = {
-  publicId: string;
+  instanceId: string;
   displayName: string | null;
   updatedAt?: string | null;
   widgetId?: string;
@@ -33,28 +33,22 @@ export type AccountInstanceLiveStatus = 'published' | 'unpublished';
 
 export type TokyoAccountInstanceIndexEntry = {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   widgetType: string;
   displayName: string;
-  kind: 'user' | 'system';
-  listed: boolean;
-  duplicable: boolean;
-  listedSurfaces: string[];
   publishStatus: AccountInstanceLiveStatus;
   updatedAt: string;
 };
 
 export type TokyoAccountInstanceIndex = {
   accountId: string;
-  platformAccountId: string;
   accountInstances: TokyoAccountInstanceIndexEntry[];
-  listedInstances: TokyoAccountInstanceIndexEntry[];
   widgetTypes: string[];
   publishedCount: number;
 };
 
 type TokyoSavedInstancePayload = {
-  publicId?: unknown;
+  instanceId?: unknown;
   accountId?: unknown;
   widgetType?: unknown;
   displayName?: unknown;
@@ -70,14 +64,10 @@ type TokyoServeStatesPayload = {
 
 type TokyoAccountInstanceIndexPayload = {
   accountId?: unknown;
-  platformAccountId?: unknown;
   accountInstances?: unknown;
-  listedInstances?: unknown;
   widgetTypes?: unknown;
   publishedCount?: unknown;
 };
-
-type TokyoProjectionGapAction = 'create' | 'delete';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -145,7 +135,7 @@ function buildWidgetConfigContractFailure(
 }
 
 function resolveSavedInstanceDisplayName(args: {
-  publicId: string;
+  instanceId: string;
   displayName: unknown;
   meta: unknown;
 }): string | null {
@@ -171,29 +161,24 @@ function normalizeStringList(value: unknown): string[] {
 function normalizeTokyoIndexEntry(raw: unknown): TokyoAccountInstanceIndexEntry | null {
   if (!isRecord(raw)) return null;
   const accountId = asTrimmedString(raw.accountId);
-  const publicId = asTrimmedString(raw.publicId);
+  const instanceId = asTrimmedString(raw.instanceId ?? raw.id);
   const widgetType = asTrimmedString(raw.widgetType);
   const displayName = asTrimmedString(raw.displayName);
   const updatedAt = asTrimmedString(raw.updatedAt);
-  const kind = raw.kind === 'user' ? 'user' : raw.kind === 'system' ? 'system' : null;
   const publishStatus =
     raw.publishStatus === 'published'
       ? 'published'
       : raw.publishStatus === 'unpublished'
         ? 'unpublished'
         : null;
-  if (!accountId || !publicId || !widgetType || !displayName || !updatedAt || !kind || !publishStatus) {
+  if (!accountId || !instanceId || !widgetType || !displayName || !updatedAt || !publishStatus) {
     return null;
   }
   return {
     accountId,
-    publicId,
+    instanceId,
     widgetType,
     displayName,
-    kind,
-    listed: raw.listed === true,
-    duplicable: raw.duplicable === true,
-    listedSurfaces: normalizeStringList(raw.listedSurfaces),
     publishStatus,
     updatedAt,
   };
@@ -208,7 +193,7 @@ function normalizeTokyoIndexEntries(raw: unknown): TokyoAccountInstanceIndexEntr
 
 async function loadSavedInstanceFromTokyo(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
@@ -225,7 +210,7 @@ async function loadSavedInstanceFromTokyo(args: {
   });
 
   const response = await fetchTokyoProductControl({
-    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
+    path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/saved.json`,
     method: 'GET',
     headers,
   });
@@ -243,7 +228,7 @@ async function loadSavedInstanceFromTokyo(args: {
     });
   }
   const saved = payload as {
-    publicId: string;
+    instanceId: string;
     accountId: string;
     widgetType: string;
     displayName?: unknown;
@@ -256,9 +241,9 @@ async function loadSavedInstanceFromTokyo(args: {
     ok: true,
     value: {
       row: {
-        publicId: saved.publicId,
+        instanceId: saved.instanceId,
         displayName: resolveSavedInstanceDisplayName({
-          publicId: saved.publicId,
+          instanceId: saved.instanceId,
           displayName: saved.displayName,
           meta: saved.meta,
         }),
@@ -274,7 +259,7 @@ async function loadSavedInstanceFromTokyo(args: {
 
 export async function writeSavedConfigToTokyo(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
   widgetType: string;
   config: Record<string, unknown>;
@@ -296,7 +281,7 @@ export async function writeSavedConfigToTokyo(args: {
   });
 
   const response = await fetchTokyoProductControl({
-    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
+    path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/saved.json`,
     method: 'PUT',
     headers,
     body: JSON.stringify({
@@ -328,7 +313,7 @@ export async function writeSavedConfigToTokyo(args: {
 
 export async function deleteSavedConfigFromTokyo(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<void> {
@@ -339,7 +324,7 @@ export async function deleteSavedConfigFromTokyo(args: {
   });
 
   const response = await fetchTokyoProductControl({
-    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/saved.json`,
+    path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/saved.json`,
     method: 'DELETE',
     headers,
   });
@@ -354,7 +339,7 @@ export async function deleteSavedConfigFromTokyo(args: {
 
 export async function deleteLiveSurfaceFromTokyo(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<void> {
@@ -365,7 +350,7 @@ export async function deleteLiveSurfaceFromTokyo(args: {
   });
 
   const response = await fetchTokyoProductControl({
-    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/live.json`,
+    path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/live.json`,
     method: 'DELETE',
     headers,
   });
@@ -380,7 +365,7 @@ export async function deleteLiveSurfaceFromTokyo(args: {
 
 export async function loadTokyoAccountInstanceDocument<TRow extends AccountInstanceCoreRow>(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
@@ -392,7 +377,7 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
 > {
   const saved = await loadSavedInstanceFromTokyo({
     accountId: args.accountId,
-    publicId: args.publicId,
+    instanceId: args.instanceId,
     internalServiceName: args.internalServiceName,
     accountCapsule: args.accountCapsule,
   });
@@ -429,7 +414,7 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
 
 export async function loadTokyoAccountInstanceLiveStatus(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
@@ -438,7 +423,7 @@ export async function loadTokyoAccountInstanceLiveStatus(args: {
 > {
   const states = await loadTokyoAccountInstanceServeStates({
     accountId: args.accountId,
-    publicIds: [args.publicId],
+    instanceIds: [args.instanceId],
     accountCapsule: args.accountCapsule,
     internalServiceName: args.internalServiceName,
   });
@@ -448,13 +433,13 @@ export async function loadTokyoAccountInstanceLiveStatus(args: {
 
   return {
     ok: true,
-    value: states.value.serveStates[args.publicId] ?? 'unpublished',
+    value: states.value.serveStates[args.instanceId] ?? 'unpublished',
   };
 }
 
 export async function loadTokyoAccountInstanceServeStates(args: {
   accountId: string;
-  publicIds: string[];
+  instanceIds: string[];
   accountCapsule?: string | null;
   internalServiceName?: string | null;
 }): Promise<
@@ -467,14 +452,14 @@ export async function loadTokyoAccountInstanceServeStates(args: {
     }
   | RouteFailure
 > {
-  const publicIds = Array.from(
+  const instanceIds = Array.from(
     new Set(
-      args.publicIds
-        .map((publicId) => String(publicId || '').trim())
-        .filter((publicId) => publicId.length > 0),
+      args.instanceIds
+        .map((instanceId) => String(instanceId || '').trim())
+        .filter((instanceId) => instanceId.length > 0),
     ),
   );
-  if (!publicIds.length) {
+  if (!instanceIds.length) {
     return {
       ok: true,
       value: {
@@ -492,10 +477,10 @@ export async function loadTokyoAccountInstanceServeStates(args: {
   });
 
   const response = await fetchTokyoProductControl({
-    path: '/__internal/renders/instances/serve-state.json',
+    path: '/__internal/renders/widgets/serve-state.json',
     method: 'POST',
     headers,
-    body: JSON.stringify({ publicIds }),
+    body: JSON.stringify({ instanceIds }),
   });
 
   const payload = (await response.json().catch(() => null)) as TokyoServeStatesPayload | null;
@@ -514,9 +499,9 @@ export async function loadTokyoAccountInstanceServeStates(args: {
       : {};
 
   const serveStates = Object.fromEntries(
-    publicIds.map((publicId) => [
-      publicId,
-      serveStatesRecord[publicId] === 'published' ? 'published' : 'unpublished',
+    instanceIds.map((instanceId) => [
+      instanceId,
+      serveStatesRecord[instanceId] === 'published' ? 'published' : 'unpublished',
     ]),
   ) as Record<string, AccountInstanceLiveStatus>;
 
@@ -550,7 +535,7 @@ export async function loadTokyoAccountInstanceIndex(args: {
   });
 
   const response = await fetchTokyoProductControl({
-    path: '/__internal/renders/instances/index.json',
+    path: '/__internal/renders/widgets/index.json',
     method: 'GET',
     headers,
   });
@@ -566,16 +551,14 @@ export async function loadTokyoAccountInstanceIndex(args: {
   }
 
   const accountId = asTrimmedString(payload?.accountId);
-  const platformAccountId = asTrimmedString(payload?.platformAccountId);
   const accountInstances = normalizeTokyoIndexEntries(payload?.accountInstances);
-  const listedInstances = normalizeTokyoIndexEntries(payload?.listedInstances);
   const widgetTypes = normalizeStringList(payload?.widgetTypes).sort((left, right) => left.localeCompare(right));
   const publishedCount =
     typeof payload?.publishedCount === 'number' && Number.isFinite(payload.publishedCount)
       ? Math.max(0, Math.floor(payload.publishedCount))
       : accountInstances?.filter((entry) => entry.publishStatus === 'published').length ?? 0;
 
-  if (!accountId || !platformAccountId || !accountInstances || !listedInstances) {
+  if (!accountId || !accountInstances) {
     return {
       ok: false,
       status: 502,
@@ -591,61 +574,17 @@ export async function loadTokyoAccountInstanceIndex(args: {
     ok: true,
     value: {
       accountId,
-      platformAccountId,
       accountInstances,
-      listedInstances,
       widgetTypes,
       publishedCount,
     },
   };
 }
 
-export async function recordTokyoAccountInstanceProjectionGap(args: {
-  accountId: string;
-  publicId: string;
-  action: TokyoProjectionGapAction;
-  reasonKey: string;
-  detail?: string | null;
-  status?: number | null;
-  accountCapsule?: string | null;
-  internalServiceName?: string | null;
-}): Promise<{ ok: true; gapId: string | null } | RouteFailure> {
-  const headers = buildTokyoProductControlHeaders({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    contentType: 'application/json',
-    internalServiceName: args.internalServiceName,
-  });
-
-  const response = await fetchTokyoProductControl({
-    path: '/__internal/renders/instances/projection-gap.json',
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      publicId: args.publicId,
-      action: args.action,
-      reasonKey: args.reasonKey,
-      detail: args.detail ?? null,
-      status: args.status ?? null,
-    }),
-  });
-
-  const payload = (await response.json().catch(() => null)) as { gapId?: unknown } | null;
-  if (!response.ok) {
-    return buildTokyoRouteFailure({
-      response,
-      payload,
-      fallbackDetail: `tokyo_projection_gap_http_${response.status}`,
-      fallbackReasonKey: 'coreui.errors.db.writeFailed',
-    });
-  }
-
-  return { ok: true, gapId: asTrimmedString(payload?.gapId) };
-}
 
 export async function saveAccountInstanceDirect(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   widgetType: string;
   config: Record<string, unknown>;
   displayName?: string | null;
@@ -673,7 +612,7 @@ export async function saveAccountInstanceDirect(args: {
   try {
     const write = await writeSavedConfigToTokyo({
       accountId: args.accountId,
-      publicId: args.publicId,
+      instanceId: args.instanceId,
       internalServiceName: args.internalServiceName,
       accountCapsule: args.accountCapsule,
       widgetType: args.widgetType,

@@ -28,7 +28,7 @@ export type MediaPrimitive = PrimitiveBase & {
   variant: 'image' | 'video' | 'widget';
   src?: string;
   alt?: string;
-  systemInstanceRef?: string;
+  accountInstanceRef?: string;
 };
 
 export type StackPrimitive = PrimitiveBase & {

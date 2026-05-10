@@ -31,7 +31,7 @@ export type SessionState = {
 };
 
 export type SessionMeta = {
-  publicId?: string;
+  instanceId?: string;
   baseLocale?: string;
   widgetname?: string;
   label?: string;
@@ -64,7 +64,7 @@ export type EditorOpenMessage = {
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
   policy?: Policy;
-  publicId?: string;
+  instanceId?: string;
   label?: string;
   meta?: Record<string, unknown> | null;
   copilot?: CopilotRuntimeUi;
@@ -77,7 +77,7 @@ export type BobSessionReadyMessage = {
 export type BobOpenEditorAppliedMessage = {
   type: 'bob:open-editor-applied';
   requestId: string;
-  publicId?: string;
+  instanceId?: string;
   widgetname?: string;
 };
 
@@ -99,7 +99,7 @@ export type BobAccountCommandMessage = {
   type: 'bob:account-command';
   requestId: string;
   command: BobAccountCommand;
-  publicId: string;
+  instanceId: string;
   headers?: Record<string, string>;
   body?: unknown;
 };
@@ -108,7 +108,7 @@ export type HostAccountCommandResultMessage = {
   type: 'host:account-command-result';
   requestId: string;
   command: BobAccountCommand;
-  publicId: string;
+  instanceId: string;
   ok: boolean;
   status: number;
   payload?: unknown;

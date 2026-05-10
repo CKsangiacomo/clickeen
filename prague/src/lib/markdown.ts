@@ -1,14 +1,14 @@
 import { validateBlockMeta, validateBlockStrings } from './blockRegistry';
-import { normalizeInstancePublicId } from '@clickeen/ck-contracts';
+import { normalizeInstanceId } from '@clickeen/ck-contracts';
 import { loadPraguePageContent, loadPraguePageContentWithMeta, type PragueOverlayContext, type PragueOverlayMeta } from './pragueL10n';
 
-const SYSTEM_INSTANCE_VALIDATE =
-  process.env.PRAGUE_VALIDATE_SYSTEM_INSTANCE === '1' ||
-  (process.env.NODE_ENV === 'development' && process.env.PRAGUE_VALIDATE_SYSTEM_INSTANCE !== '0');
-const SYSTEM_INSTANCE_VALIDATE_STRICT =
-  process.env.PRAGUE_VALIDATE_SYSTEM_INSTANCE_STRICT === '1' ||
-  (process.env.NODE_ENV === 'production' && process.env.PRAGUE_VALIDATE_SYSTEM_INSTANCE === '1');
-const SYSTEM_INSTANCE_VALIDATION_CACHE = new Map<string, Promise<void>>();
+const ACCOUNT_INSTANCE_VALIDATE =
+  process.env.PRAGUE_VALIDATE_ACCOUNT_INSTANCE === '1' ||
+  (process.env.NODE_ENV === 'development' && process.env.PRAGUE_VALIDATE_ACCOUNT_INSTANCE !== '0');
+const ACCOUNT_INSTANCE_VALIDATE_STRICT =
+  process.env.PRAGUE_VALIDATE_ACCOUNT_INSTANCE_STRICT === '1' ||
+  (process.env.NODE_ENV === 'production' && process.env.PRAGUE_VALIDATE_ACCOUNT_INSTANCE === '1');
+const ACCOUNT_INSTANCE_VALIDATION_CACHE = new Map<string, Promise<void>>();
 
 function buildPageBase(args: { pageId: string; pagePath: string; blocks: unknown[] }) {
   const baseBlocks: Record<string, { copy: Record<string, unknown> }> = {};
@@ -36,63 +36,63 @@ function resolveVeniceBaseUrl(): string | null {
   return null;
 }
 
-async function assertSystemInstanceExists(args: { publicId: string; pagePath: string }): Promise<void> {
-  if (!SYSTEM_INSTANCE_VALIDATE) return;
+async function assertAccountInstanceExists(args: { instanceId: string; pagePath: string }): Promise<void> {
+  if (!ACCOUNT_INSTANCE_VALIDATE) return;
   const baseUrl = resolveVeniceBaseUrl();
   if (!baseUrl) {
-    throw new Error('[prague] System instance validation requires PUBLIC_VENICE_URL.');
+    throw new Error('[prague] Account instance validation requires PUBLIC_VENICE_URL.');
   }
 
-  const publicId = normalizeInstancePublicId(args.publicId);
-  if (!publicId) {
+  const instanceId = normalizeInstanceId(args.instanceId);
+  if (!instanceId) {
     throw new Error(
-      `[prague] ${args.pagePath}: systemInstanceRef.publicId must be a valid instance id, got "${args.publicId}"`,
+      `[prague] ${args.pagePath}: accountInstanceRef.instanceId must be a valid instance id, got "${args.instanceId}"`,
     );
   }
 
-  const cached = SYSTEM_INSTANCE_VALIDATION_CACHE.get(publicId);
+  const cached = ACCOUNT_INSTANCE_VALIDATION_CACHE.get(instanceId);
   if (cached) return cached;
 
   const task = (async () => {
-    const url = `${baseUrl}/api/instance/${encodeURIComponent(publicId)}`;
+    const url = `${baseUrl}/widget/${encodeURIComponent(instanceId)}`;
     let res: Response | null = null;
     try {
       res = await fetch(url, { method: 'GET' });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       const detail = message ? ` (${message})` : '';
-      const warning = `[prague] ${args.pagePath}: system instance validation skipped (Venice unreachable) for ${publicId}${detail}`;
-      if (SYSTEM_INSTANCE_VALIDATE_STRICT) throw new Error(warning);
+      const warning = `[prague] ${args.pagePath}: account instance validation skipped (Venice unreachable) for ${instanceId}${detail}`;
+      if (ACCOUNT_INSTANCE_VALIDATE_STRICT) throw new Error(warning);
       console.warn(warning);
       return;
     }
     if (res.ok) return;
     if (res.status !== 404) {
-      throw new Error(`[prague] System instance validation failed for ${publicId} (${res.status})`);
+      throw new Error(`[prague] Account instance validation failed for ${instanceId} (${res.status})`);
     }
 
-    const message = `[prague] ${args.pagePath}: listed instance ${publicId} not found in Venice.`;
-    if (SYSTEM_INSTANCE_VALIDATE_STRICT) throw new Error(message);
+    const message = `[prague] ${args.pagePath}: instance ${instanceId} is not published in Venice.`;
+    if (ACCOUNT_INSTANCE_VALIDATE_STRICT) throw new Error(message);
     console.warn(message);
   })();
 
-  SYSTEM_INSTANCE_VALIDATION_CACHE.set(publicId, task);
+  ACCOUNT_INSTANCE_VALIDATION_CACHE.set(instanceId, task);
   return task;
 }
 
-async function validateSystemInstanceRefs(args: { pagePath: string; blocks: unknown[] }): Promise<void> {
-  if (!SYSTEM_INSTANCE_VALIDATE) return;
-  const systemInstanceIds = args.blocks
+async function validateAccountInstanceRefs(args: { pagePath: string; blocks: unknown[] }): Promise<void> {
+  if (!ACCOUNT_INSTANCE_VALIDATE) return;
+  const accountInstanceIds = args.blocks
     .map((block) => {
       if (!block || typeof block !== 'object' || Array.isArray(block)) return null;
-      const systemInstanceRef = (block as any).systemInstanceRef;
-      if (!systemInstanceRef || typeof systemInstanceRef !== 'object' || Array.isArray(systemInstanceRef)) return null;
-      const publicId = String((systemInstanceRef as any).publicId || '').trim();
-      return publicId ? publicId : null;
+      const accountInstanceRef = (block as any).accountInstanceRef;
+      if (!accountInstanceRef || typeof accountInstanceRef !== 'object' || Array.isArray(accountInstanceRef)) return null;
+      const instanceId = String((accountInstanceRef as any).instanceId || '').trim();
+      return instanceId ? instanceId : null;
     })
     .filter((value): value is string => Boolean(value));
-  if (systemInstanceIds.length === 0) return;
-  await Promise.all(systemInstanceIds.map((publicId) => assertSystemInstanceExists({ publicId, pagePath: args.pagePath })));
+  if (accountInstanceIds.length === 0) return;
+  await Promise.all(accountInstanceIds.map((instanceId) => assertAccountInstanceExists({ instanceId, pagePath: args.pagePath })));
 }
 
 function isRealWidgetDir(name: string): boolean {
@@ -164,7 +164,7 @@ export async function loadWidgetPageJsonForLocale(
     throw new Error(`[prague] Invalid localized blocks for ${pagePath}`);
   }
 
-  await validateSystemInstanceRefs({ pagePath, blocks: baseBlocks });
+  await validateAccountInstanceRefs({ pagePath, blocks: baseBlocks });
 
   const mergedBlocks = baseBlocks.map((block: any) => {
     if (!block || typeof block !== 'object' || Array.isArray(block)) {
@@ -219,7 +219,7 @@ export async function loadWidgetPageJsonForLocaleWithOverlayMeta(
     throw new Error(`[prague] Invalid localized blocks for ${pagePath}`);
   }
 
-  await validateSystemInstanceRefs({ pagePath, blocks: baseBlocks });
+  await validateAccountInstanceRefs({ pagePath, blocks: baseBlocks });
 
   const mergedBlocks = baseBlocks.map((block: any) => {
     if (!block || typeof block !== 'object' || Array.isArray(block)) {

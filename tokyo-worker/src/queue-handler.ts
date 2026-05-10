@@ -49,7 +49,7 @@ export async function handleTokyoQueue(
           await enforceLiveSurface(env, body);
           break;
         case 'delete-instance-mirror':
-          await deleteInstanceMirror(env, body.publicId, body.accountId);
+          await deleteInstanceMirror(env, body.instanceId ?? body.instanceId ?? '', body.accountId);
           break;
         case 'sync-instance-overlays':
           await runQueuedAccountInstanceSync(env, body, {
@@ -65,7 +65,7 @@ export async function handleTokyoQueue(
       const attempt =
         typeof msg.attempts === 'number' && Number.isFinite(msg.attempts) ? msg.attempts : 0;
       const maxAttempts = 10;
-      const publicId = body.publicId;
+      const instanceId = body.instanceId ?? body.instanceId ?? '';
       const message = error instanceof Error ? error.message : String(error);
 
       if (attempt >= maxAttempts) {
@@ -73,7 +73,7 @@ export async function handleTokyoQueue(
           try {
             await writeSavedRenderL10nStatus({
               env,
-              publicId,
+              instanceId,
               accountId: body.accountId,
               generationId: body.generationId,
               status: 'failed',
@@ -94,7 +94,7 @@ export async function handleTokyoQueue(
             console.error(
               '[tokyo] queue job failed permanently and could not persist translation status',
               body.kind,
-              publicId,
+              instanceId,
               message,
               statusError instanceof Error ? statusError.message : String(statusError),
             );
@@ -103,7 +103,7 @@ export async function handleTokyoQueue(
         console.error(
           '[tokyo] queue job failed permanently',
           body.kind,
-          publicId,
+          instanceId,
           `attempt=${attempt}`,
           message,
         );
@@ -117,7 +117,7 @@ export async function handleTokyoQueue(
       console.warn(
         '[tokyo] queue job failed, retrying',
         body.kind,
-        publicId,
+        instanceId,
         `attempt=${attempt}`,
         message,
       );

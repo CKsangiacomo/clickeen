@@ -48,14 +48,14 @@ For the 075 authoring simplification track, Roma's governing authoring path is o
   - `/usage`
   - `/ai`
   - `/settings`
-- `/builder` and `/builder/:publicId`
-- `/widgets/:publicId` (redirects back to `/widgets?selected=:publicId`; widgets list is the canonical status-owner surface)
+- `/builder` and `/builder/:instanceId`
+- `/widgets/:instanceId` (redirects back to `/widgets?selected=:instanceId`; widgets list is the canonical status-owner surface)
 - `/assets/:assetId` (detail placeholder)
 
 ### URL path isolation (Builder)
 
-- Selected instance is path-driven: `/builder/:publicId`.
-- Query `publicId` is a fallback input only.
+- Selected instance is path-driven: `/builder/:instanceId`.
+- Query `instanceId` is a fallback input only.
 - No auto-pick/random-first-instance behavior exists.
 - Roma keeps URL and selected instance synchronized (`router.replace`) so state is deep-linkable.
 
@@ -132,11 +132,11 @@ Client fetch behavior:
 
 `BuilderDomain` flow:
 
-1. Resolve active Roma account context + target `publicId`.
-2. Load one Builder-open envelope from Roma same-origin (`GET /api/builder/:publicId/open`), which resolves the saved authoring revision server-side.
+1. Resolve active Roma account context + target `instanceId`.
+2. Load one Builder-open envelope from Roma same-origin (`GET /api/builder/:instanceId/open`), which resolves the saved authoring revision server-side.
 3. Load compiled payload (`/api/widgets/:widgetname/compiled`).
 4. Wait for Bob `bob:session-ready`.
-5. Send `ck:open-editor` with `requestId`, `widgetname`, `compiled`, `instanceData`, `policy`, `publicId`, `label`, `source`, and `meta`.
+5. Send `ck:open-editor` with `requestId`, `widgetname`, `compiled`, `instanceData`, `policy`, `instanceId`, `label`, `source`, and `meta`.
 6. Wait for terminal open result (`bob:open-editor-applied` or `bob:open-editor-failed`).
 
 This is the governing product-path authoring flow for the 075 authoring simplification track.
@@ -147,12 +147,12 @@ Notes:
 - Builder-open is document-only. Roma does not pull publish/live-plane status into the Bob editor envelope.
 - Roma no longer uses one mixed helper for both Builder-open document loading and publish/serve-state lookup. Builder-open loads the saved document only; widgets-domain/account routes that need serve-state ask the Tokyo live plane separately.
 - Invalid saved-document failures now surface at the Tokyo saved-document control boundary. Roma forwards that boundary result to Builder instead of re-validating the same saved payload again on read.
-- Roma now consumes the saved-document identity returned by Tokyo on that path instead of reconstructing `publicId` / `accountId` locally after Tokyo has already answered.
+- Roma now consumes the saved-document identity returned by Tokyo on that path instead of reconstructing `instanceId` / `accountId` locally after Tokyo has already answered.
 - The Builder host now trusts the successful Builder-open envelope for widget identity instead of running another local `widgetType` proof step before opening Bob.
 - On save, Roma now forwards the already-opened saved-pointer metadata (`widgetType`, `displayName`, `source`, `meta`) back to Tokyo with the config write. Tokyo does not look backward at the previous saved pointer to recover sibling metadata during product-path save.
 - Product-path save no longer computes localization base state inline. Tokyo-worker derives/ensures l10n base state later from explicit localization/live follow-up consumers.
 - Product-path save must stay one user action with one owner in product language: the user saves the instance, and Tokyo-worker reconciles that instance and its derived artifacts. Any transport details behind that handoff are implementation residue, not product meaning, and must not turn into a second save mode or a second user-facing workflow.
-- Roma no longer exposes a mixed `GET /api/account/instance/:publicId` reader that combines saved document truth with instance serve-state in one payload. Builder-open remains the document read boundary; widgets-domain serve-state flows ask the Tokyo live plane separately.
+- Roma no longer exposes a mixed `GET /api/account/instance/:instanceId` reader that combines saved document truth with instance serve-state in one payload. Builder-open remains the document read boundary; widgets-domain serve-state flows ask the Tokyo live plane separately.
 - Widgets-domain account instance identity now comes from Tokyo saved documents. Canonical publish/unpublish truth is Tokyo's per-instance serve flag. Michael status residue must not be treated as surviving authority.
 - Account-widget rename now reads the current Tokyo saved document and writes the renamed document back through the same Tokyo save boundary. It no longer patches Michael `display_name` as product identity truth.
 - Account create/duplicate commit the Tokyo saved document before creating the Michael row. Widgets never sees a Michael-only placeholder row before the real saved document exists, and Michael row creation no longer copies the live widget document config; schema-required Michael config is inert residue only.
@@ -176,7 +176,7 @@ Roma `widgets` is the product surface that brokers per-instance serve-state chan
 - `/widgets` reads account-instance identity from Tokyo and must converge to Tokyo serve-state truth for publish/unpublish. Michael status residue is not the target architecture.
 - `Publish` is the explicit serve-on boundary in Widgets: Roma tells Tokyo-worker to make the instance publicly servable, then returns success.
 - `Unpublish` removes the Tokyo live surface so Venice stops serving the instance, without deleting saved or internal overlay state.
-- Duplicate-from-widget and duplicate-from-listed-instance create account-owned instances through Roma same-origin routes that commit the canonical Tokyo-backed authoring state
+- Duplicate-from-widget and duplicate-from-externally referenced-instance create account-owned instances through Roma same-origin routes that commit the canonical Tokyo-backed authoring state
 - The old settings-level “unpublish all instances” product action is not part of the active product surface
 
 ## Data domains and caches (client-side)
@@ -202,11 +202,11 @@ Assets domain behavior:
 - Roma exposes private non-asset product control routes to Tokyo-worker through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Public Tokyo HTTP is no longer the Builder open/save authoring seam.
 - Asset inventory/upload payloads expose `assetId` and metadata only; delivery URL comes from `/api/account/assets/resolve`, and Roma delete uses `assetId` directly.
 - Builder save writes the instance through the Tokyo/Tokyo-worker boundary. Save success now requires Tokyo-worker to write the current saved widget `l10n` status on the saved pointer; LLM generation and R2/runtime artifact convergence still run after save. `published` / `unpublished` does not change the meaning of Save; it only changes whether Venice may publicly serve the instance.
-- While Builder `Translations` is open, Bob reads one Roma same-origin route: `GET /api/account/instances/:publicId/translations`. Roma stays read-only on that path and relays Tokyo-worker's current `baseLocale`, `requestedLocales`, `readyLocales`, `status`, `failedLocales`, `baseFingerprint`, `generationId`, and `updatedAt` truth.
+- While Builder `Translations` is open, Bob reads one Roma same-origin route: `GET /api/account/instances/:instanceId/translations`. Roma stays read-only on that path and relays Tokyo-worker's current `baseLocale`, `requestedLocales`, `readyLocales`, `status`, `failedLocales`, `baseFingerprint`, `generationId`, and `updatedAt` truth.
 - When account locale settings change, Roma now fans that locale intent out across all account-owned saved instances, not just published ones:
   - published instances enqueue Tokyo-worker sync with `live: true`
   - unpublished instances enqueue Tokyo-worker sync with `live: false`
-  - curated starter instances are not part of that account locale fanout
+  - curated example instances are not part of that account locale fanout
 - Localization staleness is derived from Tokyo-owned localization artifacts/state after lazy base derivation; San Francisco remains generation-only.
 - Roma-side non-storage account-budget reads now take `USAGE_KV` explicitly from the request boundary instead of reaching through ambient global context in the hot product path. Storage bytes are no longer read from `USAGE_KV`.
 - Assets supports single upload, bulk upload (multi-file queue), list, resolve, and per-asset delete only.

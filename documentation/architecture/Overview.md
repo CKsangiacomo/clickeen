@@ -37,7 +37,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | **Widget Files = Truth**       | Core runtime files + contract files in `tokyo/product/widgets/{name}/` define widget behavior and validation.                                                                                                                    |
 | **Orchestrators = Dumb Pipes** | Bob/Roma/Tokyo-worker/Venice avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. overlay composition, artifact materialization) but must not “fix” state ad hoc.                    |
 | **Dieter Tokens**              | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB.                                                                                                                   |
-| **Locale Is Not Identity**     | Locale is a runtime parameter. IDs (`publicId`) must be locale-free; localization is applied via overlays, not DB fan-out.                                                                                               |
+| **Locale Is Not Identity**     | Locale is a runtime parameter. IDs (`instanceId`) must be locale-free; localization is applied via overlays, not DB fan-out.                                                                                               |
 
 ---
 
@@ -57,7 +57,7 @@ Mutable pointer  (tiny, always fetched fresh)
 
 | Domain       | Mutable pointer                                                        | Immutable artifact                                                                    |
 | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **Serve state** | Tokyo live pointer / serve flag (`no-store`)                           | Render artifacts at `/renders/instances/{publicId}/{fingerprint}/...` (cache forever) |
+| **Serve state** | Tokyo live pointer / serve flag (`no-store`)                           | Render artifacts at `/renders/widgets/{instanceId}/{fingerprint}/...` (cache forever) |
 | **Assets**   | _(authoring stores logical `assetId`; runtime serves `/assets/account/{accountId}/{assetId}/{filename}`)_ | Asset bytes at `/assets/account/{accountId}/{assetId}/{filename}`                                                  |
 | **Auth**     | JWT (short-lived, refreshable)                                         | userId claim (stable identity)                                                        |
 | **Authz**    | HMAC-signed capsule (expires)                                          | Role/account snapshot at issuance                                                     |
@@ -201,10 +201,10 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - Public embed surface (third-party websites only talk to Venice).
 - Runtime reads only Tokyo live pointers + fingerprinted config/text/widget bytes.
-- Public `/e/:publicId` and `/r/:publicId` do **0** Supabase calls at request time.
+- Public `/widget/:instanceId` and `/renders/widgets/:instanceId/live/r.json` do **0** Supabase calls at request time.
 - Public snapshot serving is revision-coherent: Venice reads one published revision and never mixes artifacts from previous revisions.
 - If a locale artifact is missing in the current revision, Venice returns unavailable for that locale (no serve-time locale fallback).
-- Public `/e/:publicId` and `/r/:publicId` serve snapshots from published pointers only (no public dynamic fallback). Dynamic rendering is restricted to controlled internal bypass.
+- Public `/widget/:instanceId` and `/renders/widgets/:instanceId/live/r.json` serve snapshots from published pointers only (no public dynamic fallback). Dynamic rendering is restricted to controlled internal bypass.
 
 #### Tokyo (R2)
 
@@ -331,7 +331,7 @@ Non-negotiable:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           EDITING FLOW                                  │
 │                                                                         │
-│  ┌─────────┐    GET /api/builder/:publicId/open                                    ┌──────────────┐        │
+│  ┌─────────┐    GET /api/builder/:instanceId/open                                    ┌──────────────┐        │
 │  │   Bob   │ ◄──────────────────────────────── │ Bob/Roma route │        │
 │  │ Builder │                                   │ Michael metadata│       │
 │  │         │                                   │ + Tokyo config │        │
@@ -348,7 +348,7 @@ Non-negotiable:
 │       │ User clicks Save                            │                   │
 │       │                                             ▼                   │
 │       └──────────────────────────────────────► ┌──────────────┐        │
-│            PUT /api/account/instance/:publicId                                      │ Tokyo saved    │      │
+│            PUT /api/account/instance/:instanceId                                      │ Tokyo saved    │      │
 │                                                │   revision      │      │
 │                                                └──────┬─────────┘        │
 │                                                       │                  │
@@ -363,7 +363,7 @@ Non-negotiable:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           EMBED FLOW                                    │
 │                                                                         │
-│  ┌──────────────┐    GET /e/:publicId    ┌─────────┐    ┌─────────┐   │
+│  ┌──────────────┐    GET /widget/:instanceId    ┌─────────┐    ┌─────────┐   │
 │  │ Third-party  │ ──────────────────────►│ Venice  │───►│  Tokyo  │   │
 │  │   Website    │                        │  Edge   │    │   R2    │   │
 │  └──────────────┘ ◄──────────────────────└─────────┘    └─────────┘   │
@@ -374,7 +374,7 @@ Non-negotiable:
 ### Roma host flow (current)
 
 - Roma does not rely on Bob URL-bootstrap for normal Builder opens.
-- Roma resolves selected instance from URL path (`/builder/:publicId`) and keeps that as the single active selection source.
+- Roma resolves selected instance from URL path (`/builder/:instanceId`) and keeps that as the single active selection source.
 - Roma preloads the instance + compiled payload, then opens Bob via one `ck:open-editor` message and waits only for Bob to confirm it applied the open payload or report a real open failure.
 
 ### AI Copilot Flow (Current)
@@ -413,10 +413,10 @@ On the active account authoring path, the widget document exists in exactly 2 pl
 **The Pattern:**
 
 ```
-1. Load:    GET /api/builder/:publicId/open  → Roma gets the saved widget and opens Bob once
+1. Load:    GET /api/builder/:instanceId/open  → Roma gets the saved widget and opens Bob once
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:publicId` → commits the one widget document to Tokyo and returns immediately
+4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:instanceId` → commits the one widget document to Tokyo and returns immediately
 ```
 
 In Roma account flows, the host performs the initial load call and sends Bob one resolved `ck:open-editor` payload. Save returns through that same Roma account boundary.
@@ -563,15 +563,15 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 ## Venice Embed Architecture
 
-**Current Status:** Shipped DB-free public embed runtime. Venice assembles `/e/:publicId` from Tokyo-only bytes and Tokyo-owned serve pointers only. Submission routes are hard-cut; `/embed/pixel` remains a compatibility no-op (`204`).
+**Current Status:** Shipped DB-free public embed runtime. Venice assembles `/widget/:instanceId` from Tokyo-only bytes and Tokyo-owned serve pointers only. Submission routes are hard-cut; `/embed/pixel` remains a compatibility no-op (`204`).
 
 ### Endpoints
 
 | Route                                | Purpose                                   |
 | ------------------------------------ | ----------------------------------------- |
-| `GET /e/:publicId`                   | Embed shell HTML + runtime bootstrap      |
-| `GET /r/:publicId`                   | Live serve pointer proxy (`no-store`) |
-| `GET /r/:publicId?meta=1&locale=...` | SEO/GEO meta pointer proxy (`no-store`)   |
+| `GET /widget/:instanceId`                   | Embed shell HTML + runtime bootstrap      |
+| `GET /renders/widgets/:instanceId/live/r.json`                   | Live serve pointer proxy (`no-store`) |
+| `GET /renders/widgets/:instanceId/live/r.json?meta=1&locale=...` | SEO/GEO meta pointer proxy (`no-store`)   |
 | `/embed/latest/loader.js`            | Canonical loader alias                    |
 | `/embed/v2/loader.js`                | Versioned loader                          |
 | `/embed/pixel`                       | Compatibility no-op (`204`)               |
@@ -580,7 +580,7 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 | Artifact                                        | Cache-Control                         |
 | ----------------------------------------------- | ------------------------------------- |
-| `/e/:publicId` shell HTML                       | `public, max-age=60, s-maxage=86400`  |
+| `/widget/:instanceId` shell HTML                       | `public, max-age=60, s-maxage=86400`  |
 | Live pointers (`/r`, locale/meta live pointers) | `no-store`                            |
 | Fingerprinted packs + widget assets             | `public, max-age=31536000, immutable` |
 
@@ -600,7 +600,7 @@ All third-party embed traffic terminates at Venice:
 ### 1. Editing Flow
 
 ```
-User opens widget → Roma GET /api/builder/:publicId/open
+User opens widget → Roma GET /api/builder/:instanceId/open
                   → Roma sends one ck:open-editor payload to Bob
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
@@ -612,8 +612,8 @@ User opens widget → Roma GET /api/builder/:publicId/open
 ### 2. Embed View Flow
 
 ```
-Visitor loads embed → Venice GET /e/:publicId
-                    → Venice GET /r/:publicId (Tokyo live pointer)
+Visitor loads embed → Venice GET /widget/:instanceId
+                    → Venice GET /renders/widgets/:instanceId/live/r.json (Tokyo live pointer)
                     → Venice GET Tokyo config pack + locale text pointer + text pack + widget HTML
                     → Venice returns SSR HTML / bootstraps CK_WIDGET
                     → optional /embed/pixel remains a no-op (`204`)
@@ -623,7 +623,7 @@ Visitor loads embed → Venice GET /e/:publicId
 
 ```
 Submission proxy path hard-cut in this repo snapshot.
-`POST /s/:publicId` is not an active runtime contract.
+`POST /s/:instanceId` is not an active runtime contract.
 ```
 
 ---

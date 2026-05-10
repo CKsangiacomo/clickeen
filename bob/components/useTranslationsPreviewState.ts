@@ -89,7 +89,7 @@ function resolveTranslationsErrorMessage(args: {
 }
 
 export function useTranslationsPreviewState(args: {
-  publicId: string;
+  instanceId: string;
   bootBaseLocale: string;
   enabled: boolean;
   refreshVersion: number;
@@ -103,10 +103,10 @@ export function useTranslationsPreviewState(args: {
     setData(null);
     setLoading(false);
     setError(null);
-  }, [args.publicId]);
+  }, [args.instanceId]);
 
   useEffect(() => {
-    if (!args.publicId) {
+    if (!args.instanceId) {
       setData(null);
       setLoading(false);
       setError(null);
@@ -122,7 +122,7 @@ export function useTranslationsPreviewState(args: {
     setData(null);
     setError(null);
 
-    loadTranslations({ publicId: args.publicId })
+    loadTranslations({ instanceId: args.instanceId })
       .then((response) => {
         if (cancelled) return;
         if (!response.ok) {
@@ -167,7 +167,7 @@ export function useTranslationsPreviewState(args: {
   }, [
     args.bootBaseLocale,
     args.enabled,
-    args.publicId,
+    args.instanceId,
     args.refreshVersion,
     loadTranslations,
   ]);

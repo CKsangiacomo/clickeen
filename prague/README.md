@@ -24,14 +24,14 @@ Canonical routes in this repo snapshot:
 Prague is strict: these env vars are required at build/runtime (because they are used in `*.astro`):
 
 - `PUBLIC_TOKYO_URL` — base URL for Tokyo assets (Dieter + widget specs + i18n)
-- `PUBLIC_VENICE_URL` — base URL for Venice embed runtime (used for system instance iframes)
+- `PUBLIC_VENICE_URL` — base URL for Venice embed runtime (used for account instance iframes)
 
 Optional:
 
 - `PUBLIC_PRAGUE_BUILD_ID` (optional override for Prague l10n cache token; defaults to `CF_PAGES_COMMIT_SHA` automatically)
 - `PUBLIC_ROMA_URL` (used by `/{market}/{locale}/create` redirect bridge to Roma `/home`)
 
-Prague widget demo `publicId` is derived from the widget slug as `wgt_main_${widget}` and is not overridden.
+Prague widget pages embed explicit Clickeen-owned account instances by `accountInstanceRef.instanceId`.
 
 Local defaults (when running `scripts/dev-up.sh`):
 
@@ -41,7 +41,7 @@ Local defaults (when running `scripts/dev-up.sh`):
 Cloudflare (dev):
 
 - `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com`
-- `PUBLIC_VENICE_URL=https://venice.dev.clickeen.com` (must serve `GET /e/:publicId`)
+- `PUBLIC_VENICE_URL=https://venice.dev.clickeen.com` (must serve `GET /widget/:instanceId`)
 
 If you're not using `scripts/dev-up.sh`, create `prague/.env.local` with the values you want.
 

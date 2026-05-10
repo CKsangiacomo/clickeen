@@ -2,7 +2,7 @@
 import Icon from './Icon.astro';
 
 type Props = {
-  publicId: string;
+  instanceId?: string;
   locale: string;
   localeOverride?: string;
   title?: string;
@@ -12,10 +12,11 @@ type Props = {
   widgetType?: string;
 };
 
-const { publicId, locale, localeOverride, title = 'Widget preview', loading = 'lazy', embedMode = 'iframe' } =
+const { locale, localeOverride, title = 'Widget preview', loading = 'lazy', embedMode = 'iframe' } =
   Astro.props;
 
 const props = Astro.props as Props;
+const instanceId = String(props.instanceId || '').trim();
 const showShareChrome = props.showShareChrome !== false;
 const PRAGUE_EMBED_MIN_HEIGHT = 420;
 const PRAGUE_EMBED_MAX_HEIGHT = 800;
@@ -30,10 +31,10 @@ const ts = tsToken ? `&ts=${encodeURIComponent(tsToken)}` : '';
 const resolvedLocale = String(localeOverride || locale || 'en').trim();
 const loaderSrc = VENICE_URL ? `${VENICE_URL.replace(/\/+$/, '')}/embed/latest/loader.js` : null;
 const iframeSrc = VENICE_URL
-  ? `${VENICE_URL.replace(/\/+$/, '')}/e/${encodeURIComponent(publicId)}?locale=${encodeURIComponent(resolvedLocale)}${ts}`
+  ? `${VENICE_URL.replace(/\/+$/, '')}/widget/${encodeURIComponent(instanceId)}?locale=${encodeURIComponent(resolvedLocale)}${ts}`
   : null;
 
-const anchorId = `ck-instance-${publicId.replace(/[^a-z0-9_-]+/gi, '-')}`;
+const anchorId = `ck-instance-${instanceId.replace(/[^a-z0-9_-]+/gi, '-')}`;
 
 // Brand icons we already ship in Tokyo, inlined here to keep this component self-contained.
 // Source: tokyo/prague/assets/share-icons/*.svg (normalized in CSS to currentColor).
@@ -53,7 +54,7 @@ const brandSvgs = {
 <div
   class="ck-instanceEmbed"
   id={anchorId}
-  data-ck-instance-id={anchorId}
+  data-ck-share-anchor-id={anchorId}
   data-ck-widget-type={widgetType || undefined}
   data-ck-min-height={String(PRAGUE_EMBED_MIN_HEIGHT)}
   data-ck-max-height={String(PRAGUE_EMBED_MAX_HEIGHT)}
@@ -64,7 +65,7 @@ const brandSvgs = {
         <script
           src={loaderSrc}
           defer
-          data-public-id={publicId}
+          data-instance-id={instanceId}
           data-trigger="immediate"
           data-ck-optimization="seo-geo"
           data-locale={resolvedLocale}
@@ -193,7 +194,7 @@ const brandSvgs = {
     </>
   ) : (
     <div class="ck-media ck-instanceEmbed__stub">
-      Missing <code>PUBLIC_VENICE_URL</code> — cannot embed {publicId}
+      Missing <code>PUBLIC_VENICE_URL</code> — cannot embed {instanceId}
     </div>
   )}
 </div>
@@ -491,7 +492,7 @@ const brandSvgs = {
       instance.dataset.ckResizeBound = '1';
     }
 
-    const anchorId = instance.getAttribute('data-ck-instance-id') || instance.id || '';
+    const anchorId = instance.getAttribute('data-ck-share-anchor-id') || instance.id || '';
     const widgetType = instance.getAttribute('data-ck-widget-type') || '';
     const details = instance.querySelector('.ck-share');
     const menu = instance.querySelector('.ck-share__menu');

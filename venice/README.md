@@ -10,8 +10,7 @@ Deploy plane:
 - GitHub Actions may verify the build contract, but must not create Pages projects, sync Pages secrets, or deploy Venice artifacts.
 
 Key routes (shipped):
-- `GET /e/:publicId` (SSR embed HTML)
-- `GET /r/:publicId` (render JSON; `?meta=1` for SEO/GEO metadata payload)
+- `GET /widget/:instanceId` (SSR embed HTML)
 - `GET /widgets/*` and `GET /dieter/*` (Tokyo asset proxy)
 - `GET /embed/latest/loader.js` and `GET /embed/v2/loader.js` (embed loader)
 - `GET /embed/pixel` (compat no-op `204`)

@@ -143,7 +143,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
   const canApplyOps = Boolean(compiled && compiled.controls.length > 0);
 
   const widgetType = compiled?.widgetname ?? null;
-  const instancePublicId = chrome.meta?.publicId ?? null;
+  const instanceId = chrome.meta?.instanceId ?? null;
 
   const [draft, setDraft] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading'>('idle');
@@ -156,8 +156,8 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
   const threadKey = useMemo(() => {
     if (!widgetType) return null;
-    return `${widgetType}:${instancePublicId ?? 'local'}`;
-  }, [widgetType, instancePublicId]);
+    return `${widgetType}:${instanceId ?? 'local'}`;
+  }, [widgetType, instanceId]);
 
   const thread = threadKey ? copilot.copilotThreads?.[threadKey] ?? null : null;
   const messages = useMemo(() => thread?.messages ?? [], [thread?.messages]);

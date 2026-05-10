@@ -16,8 +16,8 @@
         "headline": "FAQ pricing",
         "subheadline": "Simple tiers. Upgrade when you need more widgets and remove branding."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     }
   ]

@@ -340,7 +340,7 @@ export async function loadAccountAssetUsageCountByIdentity(_env: Env, _accountId
   return 0;
 }
 
-export async function loadAccountAssetUsagePublicIdsByIdentity(
+export async function loadAccountAssetUsageInstanceIdsByIdentity(
   _env: Env,
   _accountId: string,
   _assetId: string,

@@ -53,20 +53,20 @@ Prague validates widget page JSON at load time:
 - Loader: `prague/src/lib/markdown.ts`
 
 Validation rules:
-- A block may only include meta keys registered for its type (example: `visual`, `systemInstanceRef`).
+- A block may only include meta keys registered for its type (example: `visual`, `accountInstanceRef`).
 - Required copy keys are enforced per block type.
 
 Required copy keys (enforced today):
 - `big-bang`: `headline`, `body`
-- `hero`: `headline`, `subheadline` (meta: `visual`, `systemInstanceRef`, `items`)
-- `split`: `headline`, `subheadline` (meta: `layout`, `systemInstanceRef`)
+- `hero`: `headline`, `subheadline` (meta: `visual`, `accountInstanceRef`, `items`)
+- `split`: `headline`, `subheadline` (meta: `layout`, `accountInstanceRef`)
 - `split-carousel`: `headline` (meta: `layout`, `items`)
 - `steps`: `title`, `items[]` (meta: `visual`)
 - `subpage-cards`: `title`, `items[]` (meta: `links`)
 - `control-moat`: `title`, `items[]` (meta: `visual`)
 - `global-moat`: `title`, `items[]` (meta: `visual`)
 - `platform-strip`: `title`, `items[]` (meta: `visual`)
-- `locale-showcase`: `title`, `subtitle` (meta: `systemInstanceRef`)
+- `locale-showcase`: `title`, `subtitle` (meta: `accountInstanceRef`)
 - `cta-bottom-block`: `headline`, `subheadline`
 - `minibob`: `heading`, `subhead`
 - `feature-explorer`: `categories[]`
@@ -131,23 +131,23 @@ Non-visual block contracts (required):
 ### 2.2 Hero
 
 `blocks/hero/hero`
-- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup, systemInstanceRef?: { publicId: string, locale: string, embedMode?: 'iframe' | 'indexable', height?: string, title?: string } }`
-- Owns: H1 + subhead + primary/secondary CTA + system instance embed (optional)
+- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup, accountInstanceRef?: { instanceId: string, locale: string, embedMode?: 'iframe' | 'indexable', height?: string, title?: string } }`
+- Owns: H1 + subhead + primary/secondary CTA + account instance embed (optional)
 
 Copy contract:
 - `headline` and `subheadline` come from `blocks[].copy`.
 - CTA labels come from Prague chrome strings (`prague.cta.*`), not from page copy.
 
 **Contract (non-negotiable):**
-- The hero visual is rendered only when a system instance is explicitly provided via `systemInstanceRef.publicId`.
-- Pages opt in by adding `systemInstanceRef.publicId` to the hero block in the canonical page spec.
+- The hero visual is rendered only when a account instance is explicitly provided via `accountInstanceRef.instanceId`.
+- Pages opt in by adding `accountInstanceRef.instanceId` to the hero block in the canonical page spec.
 - `visual: true` is legacy metadata only; it does not embed anything by itself.
 
 **Embed rule (strict):**
-- Prague embeds Venice with the canonical locale-free `publicId` and passes locale only as a query param.
-- `wgt_system_*.<locale>` is invalid and must 404 (no legacy support).
+- Prague embeds Venice with the canonical locale-free `instanceId` and passes locale only as a query param.
+- `ins_*.<locale>` is invalid and must 404 (no legacy support).
 
-**Embed mode (systemInstanceRef.embedMode):**
+**Embed mode (accountInstanceRef.embedMode):**
 - default (omitted): iframe embed
 - `indexable`: iframe++ SEO/GEO optimized embed (uses Venice loader + host metadata injection; UI stays iframe)
 
@@ -163,14 +163,14 @@ Copy contract:
 ### 2.4 Split (consolidated)
 
 `blocks/split/split`
-- Props: `{ headline: string, subheadline?: string, primaryCta, secondaryCta?, actionGroup?, systemInstanceRef?, layout: 'visual-left' | 'visual-right' | 'stacked' }`
+- Props: `{ headline: string, subheadline?: string, primaryCta, secondaryCta?, actionGroup?, accountInstanceRef?, layout: 'visual-left' | 'visual-right' | 'stacked' }`
 - Layouts: `visual-left`, `visual-right`, `stacked`
 
 Copy contract:
 - `headline`, `subheadline`
 
 Embed rules:
-- System instance visuals render only when `systemInstanceRef.publicId` is present.
+- Account instance visuals render only when `accountInstanceRef.instanceId` is present.
 
 ### 2.5 How-it-works (steps)
 
@@ -185,7 +185,7 @@ Copy contract:
 
 `blocks/split-carousel/SplitCarousel.astro`
 - Props: `{ headline: string, subheadline?: string, layout: 'visual-left' | 'visual-right' | 'stacked', items: any[] }`
-- Used for: visual comparison sections where one side is a carousel of system instance embeds.
+- Used for: visual comparison sections where one side is a carousel of account instance embeds.
 
 Copy contract:
 - `headline`, `subheadline`
@@ -244,13 +244,13 @@ Copy contract:
 
 `blocks/locale-showcase/locale-showcase`
 - Purpose: show the **same instance** in a few real locales (default tiles: `en`, `es`, `ja`) to prove global-by-default and layout adaptivity.
-- Props: `{ title: string, subtitle: string, systemInstanceRef?: { publicId: string } }`
+- Props: `{ title: string, subtitle: string, accountInstanceRef?: { instanceId: string } }`
 - Placement:
   - Preferred: include a `locale-showcase` block explicitly in page JSON (deterministic placement).
   - Convenience: if a widget page includes `minibob` but no explicit `locale-showcase`, Prague injects a default locale showcase immediately after `minibob` (see `prague/src/components/WidgetBlocks.astro`).
 - Instance selection:
-  - If the explicit `locale-showcase` block provides `systemInstanceRef.publicId`, use that.
-  - Else use the first `systemInstanceRef.publicId` found in the page blocks.
+  - If the explicit `locale-showcase` block provides `accountInstanceRef.instanceId`, use that.
+  - Else use the first `accountInstanceRef.instanceId` found in the page blocks.
   - Else fall back to `wgt_main_{widget}`.
 
 Copy contract:
@@ -268,7 +268,7 @@ Copy contract:
   - It must not introduce global CSS (only block-scoped styles).
   - It must not access host cookies/storage.
   - It must not boot Bob or start a draft handoff flow.
-  - `publicId` is always derived as `wgt_main_{widget}` (no override).
+  - `instanceId` is always derived as `wgt_main_{widget}` (no override).
 
 ## 3) Page Composition
 
@@ -288,8 +288,8 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 
 - Canonical widget pages:
   - Source of truth: `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`
-  - Prague renders `blocks[]` by `type` and embeds system instances only when `systemInstanceRef.publicId` is present.
-  - Prague validates `systemInstanceRef.publicId` during page load; missing system instances fail fast in dev/build.
+  - Prague renders `blocks[]` by `type` and embeds account instances only when `accountInstanceRef.instanceId` is present.
+  - Prague validates `accountInstanceRef.instanceId` during page load; missing account instances fail fast in dev/build.
   - Page JSON is layout + base copy; Tokyo overlays overwrite `blocks[].copy` at runtime.
   - Copy is loaded from page JSON and Tokyo overlays `tokyo/prague/l10n/**`, then merged into `copy`.
   - Runtime overlays are deterministic for canonical pages (locale + market-bound geo); composition stays static.
@@ -305,7 +305,7 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 ### 2.14 Embed Carousel (Premium)
 
 `blocks/embed-carousel/embed-carousel`
-- Props: `{ items: { publicId: string, systemInstanceRef?: { publicId: string } }[], options: Object }`
+- Props: `{ items: { instanceId: string, accountInstanceRef?: { instanceId: string } }[], options: Object }`
 - Behavior: Horizontal scroll snap carousel of lazy−loaded Clickeen widgets.
 - Used for: "Made with Clickeen" galleries.
 

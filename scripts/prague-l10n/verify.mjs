@@ -127,8 +127,8 @@ async function loadIndex(pageId, locales, latestFingerprint) {
   if (!isPlainObject(index) || index.v !== 1) {
     throw new Error(`[prague-l10n] Invalid index.json: ${indexPath}`);
   }
-  if (index.publicId !== pageId) {
-    throw new Error(`[prague-l10n] index.json publicId mismatch: ${indexPath}`);
+  if (index.pageId !== pageId) {
+    throw new Error(`[prague-l10n] index.json pageId mismatch: ${indexPath}`);
   }
   if (!isPlainObject(index.layers) || !isPlainObject(index.layers.locale)) {
     throw new Error(`[prague-l10n] index.json missing locale layer: ${indexPath}`);

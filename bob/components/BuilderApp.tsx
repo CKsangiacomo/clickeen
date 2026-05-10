@@ -26,20 +26,20 @@ function UpsellPopupHost() {
 function BuilderShell() {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const publicId = chrome.meta?.publicId ?? '';
+  const instanceId = chrome.meta?.instanceId ?? '';
   const baseLocale = chrome.meta?.baseLocale ?? '';
   const [previewMode, setPreviewMode] = useState<'editing' | 'translations'>('editing');
   const [overlayPreviewLocale, setOverlayPreviewLocale] = useState('');
   const [translationsRefreshVersion, setTranslationsRefreshVersion] = useState(0);
   const translationRefreshAttemptsRef = useRef(0);
   const previousSavingRef = useRef(false);
-  const translationsEnabled = Boolean(session.compiled && publicId && previewMode === 'translations');
+  const translationsEnabled = Boolean(session.compiled && instanceId && previewMode === 'translations');
   const {
     data: translationsData,
     loading: translationsLoading,
     error: translationsError,
   } = useTranslationsPreviewState({
-    publicId,
+    instanceId,
     bootBaseLocale: baseLocale,
     enabled: translationsEnabled,
     refreshVersion: translationsRefreshVersion,
@@ -51,7 +51,7 @@ function BuilderShell() {
     setTranslationsRefreshVersion(0);
     translationRefreshAttemptsRef.current = 0;
     previousSavingRef.current = false;
-  }, [publicId]);
+  }, [instanceId]);
 
   useEffect(() => {
     const justFinishedSave = previousSavingRef.current && !session.isSaving;

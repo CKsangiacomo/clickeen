@@ -6,7 +6,7 @@ function buildScript(): string {
   if (!scriptEl) return;
 
 			  const {
-			    publicId,
+			    instanceId,
 			    trigger = 'immediate',
 			    delay = '0',
 			    scrollPct,
@@ -82,14 +82,14 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 			    missingIdErrorEl = null;
 			  };
 			  const scheduleMissingIdError = () => {
-			    if (publicId) return;
+			    if (instanceId) return;
 			    clearMissingIdError();
 			    missingIdErrorTimer = setTimeout(() => {
 			      if (document.querySelector(PLACEHOLDER_SELECTOR)) return;
 			      missingIdErrorEl = createHostErrorCard(
 			        'Clickeen embed error',
-			        'Missing data-public-id on the loader script (and no data-clickeen-id placeholders found).',
-			        'Fix: either add data-public-id=\"wgt_...\" to the <script> tag OR add <div data-clickeen-id=\"wgt_...\"></div> placeholders.',
+			        'Missing data-instance-id on the loader script (and no data-clickeen-id placeholders found).',
+			        'Fix: either add data-instance-id=\"ins_...\" to the <script> tag OR add <div data-clickeen-id=\"ins_...\"></div> placeholders.',
 			        640,
 			      );
 			      if (scriptEl.parentNode) scriptEl.parentNode.insertBefore(missingIdErrorEl, scriptEl);
@@ -253,7 +253,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 
 	  function mountIframe() {
 	    const iframe = document.createElement('iframe');
-	    iframe.src = embedUrl('/e/' + encodeURIComponent(publicId), fixedLocale ? { locale: fixedLocale } : {});
+	    iframe.src = embedUrl('/widget/' + encodeURIComponent(instanceId), fixedLocale ? { locale: fixedLocale } : {});
 	    iframe.setAttribute('loading', trigger === 'immediate' ? 'eager' : 'lazy');
 	    iframe.setAttribute('title', 'Clickeen widget');
 	    iframe.setAttribute('referrerpolicy', 'no-referrer');
@@ -321,9 +321,9 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     });
   }
 
-  function upsertSchema(targetPublicId, schemaJsonLd) {
+  function upsertSchema(targetInstanceId, schemaJsonLd) {
     if (!schemaJsonLd) return;
-    const id = 'ck-schema-' + targetPublicId;
+    const id = 'ck-schema-' + targetInstanceId;
     let script = document.getElementById(id);
     if (!(script instanceof HTMLScriptElement)) {
       script = document.createElement('script');
@@ -334,8 +334,8 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     script.textContent = schemaJsonLd;
   }
 
-  function ensureExcerptShell(targetPublicId, anchorEl, maxWidthPx) {
-    const id = 'ck-excerpt-' + targetPublicId;
+  function ensureExcerptShell(targetInstanceId, anchorEl, maxWidthPx) {
+    const id = 'ck-excerpt-' + targetInstanceId;
     let details = document.getElementById(id);
     if (details instanceof HTMLDetailsElement) return details;
 
@@ -366,17 +366,17 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     return details;
   }
 
-  function upsertExcerpt(targetPublicId, anchorEl, maxWidthPx, excerptHtml) {
+  function upsertExcerpt(targetInstanceId, anchorEl, maxWidthPx, excerptHtml) {
     if (!excerptHtml) return;
-    const shell = ensureExcerptShell(targetPublicId, anchorEl, maxWidthPx);
+    const shell = ensureExcerptShell(targetInstanceId, anchorEl, maxWidthPx);
     const body = shell.querySelector('[data-ck-excerpt-body=\"1\"]');
     if (!body) return;
     body.innerHTML = excerptHtml;
   }
 
-  async function loadSeoGeoMeta(opts, targetPublicId, fixedLocaleOverride, anchorEl, maxWidthPx) {
+  async function loadSeoGeoMeta(opts, targetInstanceId, fixedLocaleOverride, anchorEl, maxWidthPx) {
     try {
-      const pointerRes = await fetch(embedUrlFor(opts, '/r/' + encodeURIComponent(targetPublicId)), {
+      const pointerRes = await fetch(embedUrlFor(opts, '/renders/widgets/' + encodeURIComponent(targetInstanceId) + '/live/r.json'), {
         mode: 'cors',
         credentials: 'omit',
       });
@@ -392,7 +392,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 
       const effectiveLocale = computeEffectiveLocale(resolveLocaleRuntimePolicy(pointer), geoCountry, fixedLocaleOverride);
       const metaPointerRes = await fetch(
-        embedUrlFor(opts, '/r/' + encodeURIComponent(targetPublicId), { meta: '1', locale: effectiveLocale }),
+        embedUrlFor(opts, '/renders/widgets/' + encodeURIComponent(targetInstanceId) + '/meta/live/' + encodeURIComponent(effectiveLocale) + '.json'),
         { mode: 'cors', credentials: 'omit' },
       );
       const metaPointer = await metaPointerRes.json().catch(() => null);
@@ -405,8 +405,8 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
       const metaPackRes = await fetch(
         embedUrlFor(
           opts,
-          '/renders/instances/' +
-            encodeURIComponent(targetPublicId) +
+          '/renders/widgets/' +
+            encodeURIComponent(targetInstanceId) +
             '/meta/' +
             encodeURIComponent(effectiveLocale) +
             '/' +
@@ -421,8 +421,8 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
         return;
       }
 
-      upsertSchema(targetPublicId, metaPack.schemaJsonLd);
-      upsertExcerpt(targetPublicId, anchorEl, maxWidthPx, metaPack.excerptHtml);
+      upsertSchema(targetInstanceId, metaPack.schemaJsonLd);
+      upsertExcerpt(targetInstanceId, anchorEl, maxWidthPx, metaPack.excerptHtml);
     } catch (err) {
       console.warn('[Clickeen] SEO/GEO meta failed', err);
     }
@@ -436,7 +436,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 		    // PRD 54: public embed = iframe + Tokyo artifacts only. No dynamic shadow payload.
 		    mountIframe();
 		    if (!seoGeoOptimization) return;
-		    await loadSeoGeoMeta({ tsParam }, publicId, fixedLocale, container, maxWidthValue);
+		    await loadSeoGeoMeta({ tsParam }, instanceId, fixedLocale, container, maxWidthValue);
 	  }
 
   function triggerAndMount() {
@@ -499,7 +499,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     if (!pid) return;
 
     hostEl.setAttribute('data-ck-mounted', '1');
-    hostEl.setAttribute('data-ck-public-id', pid);
+    hostEl.setAttribute('data-ck-instance-id', pid);
     clearMissingIdError();
 
 	    const hostFixedLocale = normalizeLocaleToken(hostEl.dataset.locale);
@@ -525,7 +525,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     const iframe = document.createElement('iframe');
 	    iframe.src = embedUrlFor(
 	      { tsParam: hostTsParam },
-	      '/e/' + encodeURIComponent(pid),
+	      '/widget/' + encodeURIComponent(pid),
 	      hostFixedLocale ? { locale: hostFixedLocale } : {},
 	    );
     iframe.setAttribute('loading', 'lazy');
@@ -678,7 +678,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     loaderState.observer.observe(document.documentElement, { childList: true, subtree: true });
   }
 
-  if (publicId) scheduleMount();
+  if (instanceId) scheduleMount();
 })();
 `;
 }

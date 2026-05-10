@@ -32,7 +32,7 @@ type Block = {
   visual?: { image?: string };
   links?: any;
   align?: string;
-  systemInstanceRef?: { publicId?: string; embedMode?: string };
+  accountInstanceRef?: { instanceId?: string; embedMode?: string };
 };
 
 type Props = {
@@ -46,18 +46,18 @@ type Props = {
 
 const { blocks, widget, market, locale, activeSubpage = 'overview', primaryCta } = Astro.props;
 const hasExplicitLocaleShowcase = blocks.some((b) => b && b.type === 'locale-showcase');
-const explicitShowcasePublicId =
-  blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.systemInstanceRef?.publicId === 'string')?.systemInstanceRef?.publicId ??
+const explicitShowcaseInstanceId =
+  blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.accountInstanceRef?.instanceId === 'string')?.accountInstanceRef?.instanceId ??
   null;
-const showcasePublicId =
-  explicitShowcasePublicId ??
-  blocks.find((b) => b && b.systemInstanceRef && typeof b.systemInstanceRef.publicId === 'string')?.systemInstanceRef?.publicId ??
+const showcaseInstanceId =
+  explicitShowcaseInstanceId ??
+  blocks.find((b) => b && b.accountInstanceRef && typeof b.accountInstanceRef.instanceId === 'string')?.accountInstanceRef?.instanceId ??
   null;
 const defaultShowcaseTitle = await pragueT(locale, 'prague.localeShowcase.title');
 const defaultShowcaseSubtitle = await pragueT(locale, 'prague.localeShowcase.subtitle');
 const marketConfig = getPragueMarket(market);
 
-const instanceLocalesRaw = showcasePublicId ? await resolveTokyoInstanceLocales(showcasePublicId).catch(() => null) : null;
+const instanceLocalesRaw = showcaseInstanceId ? await resolveTokyoInstanceLocales(showcaseInstanceId).catch(() => null) : null;
 const fallbackInstanceLocales = marketConfig?.locales?.length ? marketConfig.locales : ['en', 'es', 'zh-hans', 'ja'];
 const instanceLocales = instanceLocalesRaw ? sortLocaleOptions(instanceLocalesRaw) : sortLocaleOptions(fallbackInstanceLocales);
 const showcaseTiles = chooseShowcaseTiles(instanceLocales);
@@ -95,12 +95,12 @@ function renderOverviewHeroSubheadline(args: { selectedLocales: string[] }): str
     .replace('{more}', String(more));
 }
 
-function requireInstancePublicId(context: string, value?: string | null): string {
-  const publicId = String(value || '').trim();
-  if (!publicId) {
-    throw new Error(`[prague] ${widget}/${activeSubpage}: ${context} requires explicit systemInstanceRef.publicId`);
+function requireInstanceId(context: string, value?: string | null): string {
+  const instanceId = String(value || '').trim();
+  if (!instanceId) {
+    throw new Error(`[prague] ${widget}/${activeSubpage}: ${context} requires explicit accountInstanceRef.instanceId`);
   }
-  return publicId;
+  return instanceId;
 }
 ---
 
@@ -122,28 +122,28 @@ function requireInstancePublicId(context: string, value?: string | null): string
     }
     case 'hero': {
       const copy = block.copy ?? {};
-      const systemInstancePublicId = block.systemInstanceRef?.publicId;
-      const systemInstanceEmbedModeRaw =
-        block.systemInstanceRef && typeof block.systemInstanceRef.embedMode === 'string' ? String(block.systemInstanceRef.embedMode) : '';
-      const systemInstanceEmbedMode = systemInstanceEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
+      const accountInstanceId = block.accountInstanceRef?.instanceId;
+      const accountInstanceEmbedModeRaw =
+        block.accountInstanceRef && typeof block.accountInstanceRef.embedMode === 'string' ? String(block.accountInstanceRef.embedMode) : '';
+      const accountInstanceEmbedMode = accountInstanceEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
       const explicitHeroItems = Array.isArray((block as any).items) ? ((block as any).items as any[]) : [];
       const mappedHeroItems = explicitHeroItems.map((item: any) => {
-        const itemLocale = typeof item?.systemInstanceRef?.locale === 'string' ? item.systemInstanceRef.locale.trim() : '';
+        const itemLocale = typeof item?.accountInstanceRef?.locale === 'string' ? item.accountInstanceRef.locale.trim() : '';
         return {
           ...item,
-          systemInstanceRef: item.systemInstanceRef ? { ...item.systemInstanceRef, locale: itemLocale || locale } : item.systemInstanceRef,
+          accountInstanceRef: item.accountInstanceRef ? { ...item.accountInstanceRef, locale: itemLocale || locale } : item.accountInstanceRef,
         };
       });
-      const heroPreviewPublicId = systemInstancePublicId || showcasePublicId;
+      const heroPreviewInstanceId = accountInstanceId || showcaseInstanceId;
       const overviewHeroLocales = [normalizeLocaleToken(locale) ?? 'en'];
       const autoOverviewHeroItems =
-        activeSubpage === 'overview' && mappedHeroItems.length === 0 && heroPreviewPublicId
+        activeSubpage === 'overview' && mappedHeroItems.length === 0 && heroPreviewInstanceId
           ? overviewHeroLocales.map((code) => ({
-              systemInstanceRef: {
-                publicId: heroPreviewPublicId,
+              accountInstanceRef: {
+                instanceId: heroPreviewInstanceId,
                 locale: code,
                 title: `${widget} overview ${code}`,
-                embedMode: systemInstanceEmbedMode,
+                embedMode: accountInstanceEmbedMode,
               },
             }))
           : [];
@@ -160,9 +160,9 @@ function requireInstancePublicId(context: string, value?: string | null): string
           subheadline={dynamicOverviewSubheadline || String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
-          systemInstanceRef={
-            systemInstancePublicId
-              ? { publicId: systemInstancePublicId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: systemInstanceEmbedMode }
+          accountInstanceRef={
+            accountInstanceId
+              ? { instanceId: accountInstanceId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: accountInstanceEmbedMode }
               : undefined
           }
           items={resolvedHeroItems}
@@ -174,10 +174,10 @@ function requireInstancePublicId(context: string, value?: string | null): string
     }
     case 'split': {
       const copy = block.copy ?? {};
-      const systemInstancePublicId = block.systemInstanceRef?.publicId;
-      const systemInstanceEmbedModeRaw =
-        block.systemInstanceRef && typeof block.systemInstanceRef.embedMode === 'string' ? String(block.systemInstanceRef.embedMode) : '';
-      const systemInstanceEmbedMode = systemInstanceEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
+      const accountInstanceId = block.accountInstanceRef?.instanceId;
+      const accountInstanceEmbedModeRaw =
+        block.accountInstanceRef && typeof block.accountInstanceRef.embedMode === 'string' ? String(block.accountInstanceRef.embedMode) : '';
+      const accountInstanceEmbedMode = accountInstanceEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
       const layout = typeof (block as any).layout === 'string' ? (block as any).layout : '';
       rendered = (
         <Split
@@ -186,9 +186,9 @@ function requireInstancePublicId(context: string, value?: string | null): string
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
           layout={layout}
-          systemInstanceRef={
-            systemInstancePublicId
-              ? { publicId: systemInstancePublicId, locale, title: `${widget} ${activeSubpage} split`, embedMode: systemInstanceEmbedMode }
+          accountInstanceRef={
+            accountInstanceId
+              ? { instanceId: accountInstanceId, locale, title: `${widget} ${activeSubpage} split`, embedMode: accountInstanceEmbedMode }
               : undefined
           }
         />
@@ -206,10 +206,10 @@ function requireInstancePublicId(context: string, value?: string | null): string
           secondaryCta={undefined}
           layout={layout}
           items={((block as any).items ?? []).map((item: any) => {
-            const itemLocale = typeof item?.systemInstanceRef?.locale === 'string' ? item.systemInstanceRef.locale.trim() : '';
+            const itemLocale = typeof item?.accountInstanceRef?.locale === 'string' ? item.accountInstanceRef.locale.trim() : '';
             return {
               ...item,
-              systemInstanceRef: item.systemInstanceRef ? { ...item.systemInstanceRef, locale: itemLocale || locale } : item.systemInstanceRef,
+              accountInstanceRef: item.accountInstanceRef ? { ...item.accountInstanceRef, locale: itemLocale || locale } : item.accountInstanceRef,
             };
           })}
         />
@@ -301,7 +301,7 @@ function requireInstancePublicId(context: string, value?: string | null): string
     }
     case 'minibob': {
       const copy = block.copy ?? {};
-      const minibobPublicId = requireInstancePublicId('minibob', block.systemInstanceRef?.publicId);
+      const minibobInstanceId = requireInstanceId('minibob', block.accountInstanceRef?.instanceId);
       rendered = (
         <>
           <Minibob
@@ -310,11 +310,11 @@ function requireInstancePublicId(context: string, value?: string | null): string
             page={activeSubpage}
             heading={String(copy.heading ?? '')}
             subhead={String(copy.subhead ?? '')}
-            publicId={minibobPublicId}
+            instanceId={minibobInstanceId}
           />
           {!hasExplicitLocaleShowcase ? (
             <LocaleShowcase
-              publicId={minibobPublicId}
+              instanceId={minibobInstanceId}
               title={defaultShowcaseTitle}
               subtitle={defaultShowcaseSubtitle}
               tiles={showcaseTileEntries}
@@ -327,13 +327,13 @@ function requireInstancePublicId(context: string, value?: string | null): string
     }
     case 'locale-showcase': {
       const copy = block.copy ?? {};
-      const localeShowcasePublicId = requireInstancePublicId('locale-showcase', block.systemInstanceRef?.publicId ?? showcasePublicId);
+      const localeShowcaseInstanceId = requireInstanceId('locale-showcase', block.accountInstanceRef?.instanceId ?? showcaseInstanceId);
       const title = typeof copy.title === 'string' && copy.title.trim() ? String(copy.title) : defaultShowcaseTitle;
       const subtitle =
         typeof copy.subtitle === 'string' && copy.subtitle.trim() ? String(copy.subtitle) : defaultShowcaseSubtitle;
       rendered = (
         <LocaleShowcase
-          publicId={localeShowcasePublicId}
+          instanceId={localeShowcaseInstanceId}
           title={title}
           subtitle={subtitle}
           tiles={showcaseTileEntries}

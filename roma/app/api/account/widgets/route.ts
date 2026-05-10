@@ -6,11 +6,10 @@ import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-
 export const runtime = 'edge';
 
 type WidgetInstance = {
-  publicId: string;
+  instanceId: string;
   widgetType: string;
   displayName: string;
   status: 'published' | 'unpublished';
-  listed: boolean;
   actions: {
     edit: boolean;
     duplicate: boolean;
@@ -76,11 +75,10 @@ export async function GET(request: NextRequest) {
 
   const canMutate = current.value.authzPayload.role !== 'viewer';
   const accountInstances: WidgetInstance[] = widgetIndex.value.accountInstances.map((instance) => ({
-    publicId: instance.publicId,
+    instanceId: instance.instanceId,
     widgetType: instance.widgetType,
     displayName: instance.displayName,
     status: instance.publishStatus,
-    listed: false,
     actions: {
       edit: true,
       duplicate: canMutate,
@@ -91,22 +89,6 @@ export async function GET(request: NextRequest) {
     },
   }));
 
-  const listedInstances: WidgetInstance[] = widgetIndex.value.listedInstances.map((instance) => ({
-    publicId: instance.publicId,
-    widgetType: instance.widgetType,
-    displayName: instance.displayName,
-    status: instance.publishStatus,
-    listed: true,
-    actions: {
-      edit: false,
-      duplicate: canMutate && instance.duplicable,
-      delete: false,
-      rename: false,
-      publish: false,
-      unpublish: false,
-    },
-  }));
-
   return withSession(
     request,
     NextResponse.json({
@@ -114,7 +96,7 @@ export async function GET(request: NextRequest) {
         accountId,
       },
       widgetTypes: widgetIndex.value.widgetTypes,
-      instances: [...accountInstances, ...listedInstances],
+      instances: accountInstances,
     }),
     current.value.setCookies,
   );

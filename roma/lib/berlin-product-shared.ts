@@ -1,25 +1,5 @@
 import { resolveBerlinBaseUrl } from './env/berlin';
 
-export type BerlinAccountInstanceProjectionResult =
-  | {
-      ok: true;
-      row: {
-        publicId: string;
-        displayName: string | null;
-        updatedAt: string | null;
-        widgetId: string;
-        accountId: string;
-        widgetType: string;
-        meta?: Record<string, unknown> | null;
-      } | null;
-    }
-  | {
-      ok: false;
-      status: number;
-      reasonKey: string;
-      detail?: string;
-    };
-
 export type BerlinAccountPublishContainmentResult =
   | {
       ok: true;
@@ -27,17 +7,6 @@ export type BerlinAccountPublishContainmentResult =
         active: boolean;
         reason: string | null;
       };
-    }
-  | {
-      ok: false;
-      status: number;
-      reasonKey: string;
-      detail?: string;
-    };
-
-export type BerlinDeleteInstanceProjectionResult =
-  | {
-      ok: true;
     }
   | {
       ok: false;

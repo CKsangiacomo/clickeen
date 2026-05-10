@@ -7,7 +7,7 @@ export function isTokyoMirrorJob(value: unknown): value is TokyoMirrorQueueJob {
   if (job.v !== 1) return false;
   if (typeof job.kind !== 'string') return false;
   if (!job.kind) return false;
-  if (typeof job.publicId !== 'string') return false;
+  if (typeof job.instanceId !== 'string') return false;
   if (typeof job.accountId !== 'string') return false;
   return (
     job.kind === 'write-config-pack' ||

@@ -1,83 +1,75 @@
-export function accountInstanceRoot(accountId: string, publicId: string): string {
-  return `accounts/${accountId}/instances/${publicId}`;
+export function accountWidgetsRoot(accountId: string): string {
+  return `accounts/${accountId}/widgets`;
 }
 
-export function accountInstancesRoot(accountId: string): string {
-  return `accounts/${accountId}/instances`;
+export function accountWidgetRoot(accountId: string, widgetType: string): string {
+  return `${accountWidgetsRoot(accountId)}/${widgetType}`;
+}
+
+export function accountWidgetDocumentKey(accountId: string, widgetType: string): string {
+  return `${accountWidgetRoot(accountId, widgetType)}/widget.json`;
+}
+
+export function accountInstanceRoot(accountId: string, widgetType: string, instanceId: string): string {
+  return `${accountWidgetRoot(accountId, widgetType)}/${instanceId}`;
 }
 
 export function accountInstanceIndexKey(accountId: string): string {
-  return `${accountInstancesRoot(accountId)}/index.json`;
+  return `${accountWidgetsRoot(accountId)}/index.json`;
 }
 
-export function accountInstanceListedIndexKey(accountId: string): string {
-  return `${accountInstancesRoot(accountId)}/listed-index.json`;
+export function accountInstanceDocumentKey(accountId: string, widgetType: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/instance.json`;
 }
 
-export function accountInstanceProjectionGapKey(accountId: string, gapId: string): string {
-  return `${accountInstancesRoot(accountId)}/projection-gaps/${gapId}.json`;
+export function accountInstanceConfigKey(accountId: string, widgetType: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/config.json`;
 }
 
-export function accountInstanceRenderLivePointerKey(accountId: string, publicId: string): string {
-  return `${accountInstanceRoot(accountId, publicId)}/render/live/pointer.json`;
+export function accountInstancePublishKey(accountId: string, widgetType: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/publish.json`;
 }
 
-export function accountInstanceRenderConfigPackKey(accountId: string, publicId: string, configFp: string): string {
-  return `${accountInstanceRoot(accountId, publicId)}/render/config/${configFp}.json`;
+export function accountInstancePublishedConfigKey(accountId: string, widgetType: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/published/config.json`;
 }
 
-export function accountInstanceSavedPointerKey(accountId: string, publicId: string): string {
-  return `${accountInstanceRoot(accountId, publicId)}/saved/pointer.json`;
+export function accountInstanceL10nBaseSnapshotKey(
+  accountId: string,
+  widgetType: string,
+  instanceId: string,
+  baseFingerprint: string,
+): string {
+  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/l10n/base/${baseFingerprint}.snapshot.json`;
 }
 
-export function accountInstanceSavedConfigPackKey(accountId: string, publicId: string, configFp: string): string {
-  return `${accountInstanceRoot(accountId, publicId)}/saved/config/${configFp}.json`;
+export function accountInstanceL10nOverlayKey(
+  accountId: string,
+  widgetType: string,
+  instanceId: string,
+  locale: string,
+): string {
+  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/overlays/l10n/${locale}/overlay.json`;
 }
 
-export function accountInstanceL10nBaseSnapshotKey(accountId: string, publicId: string, baseFingerprint: string): string {
-  return `${accountInstanceRoot(accountId, publicId)}/l10n/bases/${baseFingerprint}.snapshot.json`;
+export function accountInstanceL10nOverlayPrefix(
+  accountId: string,
+  widgetType: string,
+  instanceId: string,
+  locale?: string,
+): string {
+  const root = `${accountInstanceRoot(accountId, widgetType, instanceId)}/overlays/l10n`;
+  return locale ? `${root}/${locale}/` : `${root}/`;
 }
 
-export function accountInstanceRenderMetaLivePointerKey(accountId: string, publicId: string, locale: string): string {
-  return `${accountInstanceRoot(accountId, publicId)}/render/meta/${locale}/live.json`;
+export function accountInstanceRenderMetaLivePointerKey(accountId: string, widgetType: string, instanceId: string, locale: string): string {
+  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/seo/meta/live/${locale}.json`;
 }
 
-export function accountInstanceRenderMetaPackKey(accountId: string, publicId: string, locale: string, metaFp: string): string {
-  return `${accountInstanceRoot(accountId, publicId)}/render/meta/${locale}/${metaFp}.json`;
+export function accountInstanceRenderMetaPackKey(accountId: string, widgetType: string, instanceId: string, locale: string, metaFp: string): string {
+  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/seo/meta/${locale}/${metaFp}.json`;
 }
 
-export function accountInstanceL10nLivePointerKey(accountId: string, publicId: string, locale: string): string {
-  return `${accountInstanceRoot(accountId, publicId)}/l10n/live/${locale}.json`;
-}
-
-export function accountInstanceL10nTextPackKey(accountId: string, publicId: string, locale: string, textFp: string): string {
-  return `${accountInstanceRoot(accountId, publicId)}/l10n/packs/${locale}/${textFp}.json`;
-}
-
-export function publicProjectionRoot(publicId: string): string {
-  return `public/instances/${publicId}`;
-}
-
-export function publicProjectionRenderLivePointerKey(publicId: string): string {
-  return `${publicProjectionRoot(publicId)}/live.json`;
-}
-
-export function publicProjectionRenderConfigPackKey(publicId: string, configFp: string): string {
-  return `${publicProjectionRoot(publicId)}/config/${configFp}.json`;
-}
-
-export function publicProjectionRenderMetaLivePointerKey(publicId: string, locale: string): string {
-  return `${publicProjectionRoot(publicId)}/meta/live/${locale}.json`;
-}
-
-export function publicProjectionRenderMetaPackKey(publicId: string, locale: string, metaFp: string): string {
-  return `${publicProjectionRoot(publicId)}/meta/${locale}/${metaFp}.json`;
-}
-
-export function publicProjectionL10nLivePointerKey(publicId: string, locale: string): string {
-  return `${publicProjectionRoot(publicId)}/l10n/live/${locale}.json`;
-}
-
-export function publicProjectionL10nTextPackKey(publicId: string, locale: string, textFp: string): string {
-  return `${publicProjectionRoot(publicId)}/l10n/packs/${locale}/${textFp}.json`;
+export function publishedWidgetLookupKey(instanceId: string): string {
+  return `published/widgets/${instanceId}.json`;
 }

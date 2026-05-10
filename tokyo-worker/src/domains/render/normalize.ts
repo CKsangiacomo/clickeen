@@ -1,259 +1,288 @@
 import { normalizeLocale } from '../../asset-utils';
 import type { AllowlistEntry } from '@clickeen/l10n';
-import type { LiveRenderPointer, L10nLivePointer, LocalePolicy, MetaLivePointer, SavedRenderL10nFailure, SavedRenderPointer } from './types';
-import { normalizeFingerprint, normalizeLocaleList, normalizePublicId, normalizeSavedL10nFailures, normalizeSavedL10nStatus } from './utils';
+import type {
+  AccountInstanceDocument,
+  AccountInstanceIndexDocument,
+  AccountInstanceIndexEntry,
+  AccountWidgetDocument,
+  LiveRenderPointer,
+  LocalePolicy,
+  MetaLivePointer,
+  PublishDocument,
+  PublishedWidgetLookupDocument,
+  SavedRenderL10nFailure,
+  SavedRenderPointer,
+} from './types';
+import { normalizeFingerprint, normalizeLocaleList, normalizeStorageId, normalizeSavedL10nFailures, normalizeSavedL10nStatus } from './utils';
+
+function asTrimmedString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim();
+  return normalized || null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
 
 export function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const payload = raw as Record<string, unknown>;
+  const payload = asRecord(raw);
+  if (!payload) return null;
   const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
-  const readyLocalesRaw = Array.isArray(payload.readyLocales)
-    ? payload.readyLocales
-    : [];
-  const readyLocales = readyLocalesRaw
-    .map((value) => normalizeLocale(value))
-    .filter((value): value is string => Boolean(value));
-  if (!baseLocale || !readyLocales.length) return null;
-  if (!readyLocales.includes(baseLocale)) return null;
-  const outReadyLocales = Array.from(new Set(readyLocales));
+  const readyLocales = normalizeLocaleList(payload.readyLocales);
+  if (!baseLocale || !readyLocales.length || !readyLocales.includes(baseLocale)) return null;
 
-  const ipRaw = payload.ip;
-  const ipRecord =
-    ipRaw && typeof ipRaw === 'object' && !Array.isArray(ipRaw)
-      ? (ipRaw as Record<string, unknown>)
-      : null;
-  const switcherRaw = payload.switcher;
-  const switcherRecord =
-    switcherRaw && typeof switcherRaw === 'object' && !Array.isArray(switcherRaw)
-      ? (switcherRaw as Record<string, unknown>)
-      : null;
-  const ipEnabled = typeof ipRecord?.enabled === 'boolean' ? ipRecord.enabled : false;
-  const switcherEnabled = typeof switcherRecord?.enabled === 'boolean' ? switcherRecord.enabled : false;
-  const alwaysShowLocaleRaw =
-    typeof switcherRecord?.alwaysShowLocale === 'string' ? switcherRecord.alwaysShowLocale : '';
-  const alwaysShowLocale = normalizeLocale(alwaysShowLocaleRaw);
-
-  const countryToLocaleRaw = ipRecord?.countryToLocale;
+  const ipRecord = asRecord(payload.ip);
+  const switcherRecord = asRecord(payload.switcher);
+  const countryToLocaleRaw = asRecord(ipRecord?.countryToLocale);
   const countryToLocale: Record<string, string> = {};
-  if (
-    countryToLocaleRaw &&
-    typeof countryToLocaleRaw === 'object' &&
-    !Array.isArray(countryToLocaleRaw)
-  ) {
-    for (const [country, locale] of Object.entries(countryToLocaleRaw as Record<string, unknown>)) {
+  if (countryToLocaleRaw) {
+    for (const [country, locale] of Object.entries(countryToLocaleRaw)) {
       if (!/^[A-Z]{2}$/.test(country)) continue;
       const normalized = normalizeLocale(locale);
-      if (!normalized) continue;
-      if (!outReadyLocales.includes(normalized)) continue;
+      if (!normalized || !readyLocales.includes(normalized)) continue;
       countryToLocale[country] = normalized;
     }
   }
+  const alwaysShowLocale = normalizeLocale(switcherRecord?.alwaysShowLocale);
 
   return {
     baseLocale,
-    readyLocales: outReadyLocales,
-    ip: { enabled: ipEnabled, countryToLocale },
+    readyLocales,
+    ip: {
+      enabled: ipRecord?.enabled === true,
+      countryToLocale,
+    },
     switcher: {
-      enabled: switcherEnabled,
-      ...(alwaysShowLocale && outReadyLocales.includes(alwaysShowLocale)
-        ? { alwaysShowLocale }
-        : {}),
+      enabled: switcherRecord?.enabled === true,
+      ...(alwaysShowLocale && readyLocales.includes(alwaysShowLocale) ? { alwaysShowLocale } : {}),
     },
   };
 }
 
-export function normalizeLiveRenderPointer(raw: unknown): LiveRenderPointer | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const payload = raw as Record<string, unknown>;
-  if (payload.v !== 1) return null;
-  const publicId = normalizePublicId(payload.publicId) ?? '';
-  const widgetType = typeof payload.widgetType === 'string' ? payload.widgetType.trim() : '';
-  const configFp = normalizeFingerprint(payload.configFp) ?? '';
-  const localePolicy = normalizeLocalePolicy(payload.localePolicy);
-  if (!publicId || !widgetType || !configFp || !localePolicy) return null;
-  const l10n = payload.l10n;
-  const liveBase =
-    l10n &&
-    typeof l10n === 'object' &&
-    !Array.isArray(l10n) &&
-    typeof (l10n as any).liveBase === 'string'
-      ? String((l10n as any).liveBase).trim()
-      : '';
-  const packsBase =
-    l10n &&
-    typeof l10n === 'object' &&
-    !Array.isArray(l10n) &&
-    typeof (l10n as any).packsBase === 'string'
-      ? String((l10n as any).packsBase).trim()
-      : '';
-  if (!liveBase || !packsBase) return null;
-  const seoGeoRaw = payload.seoGeo;
-  const seoGeo =
-    seoGeoRaw &&
-    typeof seoGeoRaw === 'object' &&
-    !Array.isArray(seoGeoRaw) &&
-    typeof (seoGeoRaw as any).metaLiveBase === 'string' &&
-    typeof (seoGeoRaw as any).metaPacksBase === 'string'
-      ? {
-          metaLiveBase: String((seoGeoRaw as any).metaLiveBase).trim(),
-          metaPacksBase: String((seoGeoRaw as any).metaPacksBase).trim(),
-        }
-      : undefined;
-  return {
-    v: 1,
-    publicId,
-    widgetType,
-    configFp,
-    localePolicy,
-    l10n: { liveBase, packsBase },
-    seoGeo: seoGeo?.metaLiveBase && seoGeo?.metaPacksBase ? seoGeo : undefined,
-  };
-}
-
-export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const payload = raw as Record<string, unknown>;
-  if (payload.v !== 1) return null;
-  const publicId = normalizePublicId(payload.publicId) ?? '';
-  const accountId = normalizePublicId(payload.accountId) ?? '';
-  const widgetType = typeof payload.widgetType === 'string' ? payload.widgetType.trim() : '';
-  const displayNameRaw = typeof payload.displayName === 'string' ? payload.displayName.trim() : '';
-  const meta =
-    payload.meta && typeof payload.meta === 'object' && !Array.isArray(payload.meta)
-      ? (payload.meta as Record<string, unknown>)
-      : payload.meta === null || payload.meta === undefined
-        ? null
-        : null;
-  const l10nRaw =
-    payload.l10n && typeof payload.l10n === 'object' && !Array.isArray(payload.l10n)
-      ? (payload.l10n as Record<string, unknown>)
-      : null;
-  const baseFingerprint = normalizeFingerprint(l10nRaw?.baseFingerprint);
-  const summaryRaw =
-    l10nRaw?.summary && typeof l10nRaw.summary === 'object' && !Array.isArray(l10nRaw.summary)
-      ? (l10nRaw.summary as Record<string, unknown>)
-      : null;
+function normalizeL10nStatus(raw: unknown): AccountInstanceDocument['l10n'] | undefined {
+  const payload = asRecord(raw);
+  if (!payload) return undefined;
+  const baseFingerprint = normalizeFingerprint(payload.baseFingerprint);
+  if (!baseFingerprint) return undefined;
+  const summaryRaw = asRecord(payload.summary);
   const summaryBaseLocale = normalizeLocale(summaryRaw?.baseLocale) ?? '';
   const summaryDesiredLocales = normalizeLocaleList(summaryRaw?.desiredLocales);
   const summary =
     summaryBaseLocale && summaryDesiredLocales.includes(summaryBaseLocale)
-      ? {
-          baseLocale: summaryBaseLocale,
-          desiredLocales: summaryDesiredLocales,
-        }
+      ? { baseLocale: summaryBaseLocale, desiredLocales: summaryDesiredLocales }
       : null;
-  const generationId =
-    typeof l10nRaw?.generationId === 'string' ? l10nRaw.generationId.trim() : '';
-  const status = normalizeSavedL10nStatus(l10nRaw?.status);
-  const readyLocales = normalizeLocaleList(l10nRaw?.readyLocales);
-  const failedLocales = normalizeSavedL10nFailures(l10nRaw?.failedLocales);
-  const l10nUpdatedAt =
-    typeof l10nRaw?.updatedAt === 'string' ? l10nRaw.updatedAt.trim() : '';
-  const l10nStartedAt =
-    typeof l10nRaw?.startedAt === 'string' ? l10nRaw.startedAt.trim() : '';
-  const l10nFinishedAt =
-    typeof l10nRaw?.finishedAt === 'string' ? l10nRaw.finishedAt.trim() : '';
-  const lastError =
-    typeof l10nRaw?.lastError === 'string' ? l10nRaw.lastError.trim() : '';
-  const configFp = normalizeFingerprint(payload.configFp) ?? '';
-  const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
-  if (!publicId || !accountId || !widgetType || !configFp || !updatedAt) return null;
-  const l10nStatus =
-    baseFingerprint && generationId && status && l10nUpdatedAt
-      ? {
-          generationId,
-          status,
-          readyLocales,
-          failedLocales,
-          updatedAt: l10nUpdatedAt,
-          ...(l10nStartedAt ? { startedAt: l10nStartedAt } : {}),
-          ...(l10nFinishedAt ? { finishedAt: l10nFinishedAt } : {}),
-          ...(lastError ? { lastError } : {}),
-        }
-      : null;
+  const generationId = asTrimmedString(payload.generationId);
+  const status = normalizeSavedL10nStatus(payload.status);
+  const updatedAt = asTrimmedString(payload.updatedAt);
+  const startedAt = asTrimmedString(payload.startedAt);
+  const finishedAt = asTrimmedString(payload.finishedAt);
+  const lastError = asTrimmedString(payload.lastError);
+  return {
+    baseFingerprint,
+    ...(summary ? { summary } : {}),
+    ...(generationId ? { generationId } : {}),
+    ...(status ? { status } : {}),
+    ...(payload.readyLocales ? { readyLocales: normalizeLocaleList(payload.readyLocales) } : {}),
+    ...(payload.failedLocales ? { failedLocales: normalizeSavedL10nFailures(payload.failedLocales) } : {}),
+    ...(updatedAt ? { updatedAt } : {}),
+    ...(startedAt ? { startedAt } : {}),
+    ...(finishedAt ? { finishedAt } : {}),
+    ...(lastError ? { lastError } : {}),
+  };
+}
+
+export function normalizeAccountWidgetDocument(raw: unknown): AccountWidgetDocument | null {
+  const payload = asRecord(raw);
+  if (!payload || payload.v !== 1) return null;
+  const accountId = normalizeStorageId(payload.accountId) ?? '';
+  const widgetType = asTrimmedString(payload.widgetType) ?? '';
+  const status = payload.status === 'locked_over_plan' ? 'locked_over_plan' : payload.status === 'active' ? 'active' : null;
+  const createdAt = asTrimmedString(payload.createdAt) ?? '';
+  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
+  if (!accountId || !widgetType || !status || !createdAt || !updatedAt) return null;
   return {
     v: 1,
-    publicId,
     accountId,
     widgetType,
-    displayName: displayNameRaw || null,
-    meta,
-    configFp,
+    status,
+    lockedReason: asTrimmedString(payload.lockedReason),
+    createdAt,
     updatedAt,
-    ...(baseFingerprint
+  };
+}
+
+export function normalizeAccountInstanceDocument(raw: unknown): AccountInstanceDocument | null {
+  const payload = asRecord(raw);
+  if (!payload || payload.v !== 1) return null;
+  const id = normalizeStorageId(payload.id) ?? '';
+  const accountId = normalizeStorageId(payload.accountId) ?? '';
+  const widgetType = asTrimmedString(payload.widgetType) ?? '';
+  const displayName = asTrimmedString(payload.displayName);
+  const createdAt = asTrimmedString(payload.createdAt) ?? '';
+  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
+  if (!id || !accountId || !widgetType || !createdAt || !updatedAt) return null;
+  const meta = asRecord(payload.meta) ?? (payload.meta === null || payload.meta === undefined ? null : null);
+  return {
+    v: 1,
+    id,
+    accountId,
+    widgetType,
+    displayName,
+    meta,
+    createdAt,
+    updatedAt,
+    ...(normalizeL10nStatus(payload.l10n) ? { l10n: normalizeL10nStatus(payload.l10n) } : {}),
+  };
+}
+
+export function normalizePublishDocument(raw: unknown): PublishDocument | null {
+  const payload = asRecord(raw);
+  if (!payload || payload.v !== 1) return null;
+  const id = normalizeStorageId(payload.id) ?? '';
+  const accountId = normalizeStorageId(payload.accountId) ?? '';
+  const widgetType = asTrimmedString(payload.widgetType) ?? '';
+  const status = payload.status === 'published' ? 'published' : payload.status === 'unpublished' ? 'unpublished' : null;
+  const configFp = normalizeFingerprint(payload.configFp);
+  const localePolicy = normalizeLocalePolicy(payload.localePolicy);
+  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
+  if (!id || !accountId || !widgetType || !status || !updatedAt) return null;
+  return {
+    v: 1,
+    id,
+    accountId,
+    widgetType,
+    status,
+    configFp,
+    ...(localePolicy ? { localePolicy } : {}),
+    ...(payload.seoGeo === true ? { seoGeo: true } : {}),
+    updatedAt,
+  };
+}
+
+export function normalizePublishedWidgetLookupDocument(raw: unknown): PublishedWidgetLookupDocument | null {
+  const payload = asRecord(raw);
+  if (!payload || payload.v !== 1 || payload.status !== 'published') return null;
+  const id = normalizeStorageId(payload.id) ?? '';
+  const accountId = normalizeStorageId(payload.accountId) ?? '';
+  const widgetType = asTrimmedString(payload.widgetType) ?? '';
+  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
+  if (!id || !accountId || !widgetType || !updatedAt) return null;
+  return { v: 1, id, accountId, widgetType, status: 'published', updatedAt };
+}
+
+export function normalizeLiveRenderPointer(raw: unknown): LiveRenderPointer | null {
+  const payload = asRecord(raw);
+  if (!payload || payload.v !== 1) return null;
+  const id = normalizeStorageId(payload.id) ?? '';
+  const widgetType = asTrimmedString(payload.widgetType) ?? '';
+  const configFp = normalizeFingerprint(payload.configFp) ?? '';
+  const localePolicy = normalizeLocalePolicy(payload.localePolicy);
+  if (!id || !widgetType || !configFp || !localePolicy) return null;
+  const seoGeoRaw = asRecord(payload.seoGeo);
+  const seoGeo =
+    asTrimmedString(seoGeoRaw?.metaLiveBase) && asTrimmedString(seoGeoRaw?.metaPacksBase)
       ? {
-          l10n: {
-            baseFingerprint,
-            ...(summary ? { summary } : {}),
-            ...(l10nStatus ?? {}),
-          },
+          metaLiveBase: String(seoGeoRaw?.metaLiveBase).trim(),
+          metaPacksBase: String(seoGeoRaw?.metaPacksBase).trim(),
         }
-      : {}),
+      : undefined;
+  return {
+    v: 1,
+    id,
+    widgetType,
+    configFp,
+    localePolicy,
+    ...(seoGeo ? { seoGeo } : {}),
+  };
+}
+
+export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | null {
+  const instance = normalizeAccountInstanceDocument(raw);
+  if (!instance) return null;
+  const configFp = normalizeFingerprint((raw as Record<string, unknown>).configFp) ?? '';
+  if (!configFp) return null;
+  return {
+    v: 1,
+    id: instance.id,
+    accountId: instance.accountId,
+    widgetType: instance.widgetType,
+    displayName: instance.displayName,
+    meta: instance.meta ?? null,
+    configFp,
+    updatedAt: instance.updatedAt,
+    ...(instance.l10n ? { l10n: instance.l10n } : {}),
   };
 }
 
 export function resolveSavedRenderValidationReason(raw: unknown): string {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-    return 'coreui.errors.instance.config.invalid';
-  }
-  const payload = raw as Record<string, unknown>;
-  const widgetType =
-    typeof payload.widgetType === 'string' ? payload.widgetType.trim() : '';
+  const payload = asRecord(raw);
+  const widgetType = asTrimmedString(payload?.widgetType);
   if (!widgetType) return 'coreui.errors.instance.widgetMissing';
   return 'coreui.errors.instance.config.invalid';
 }
 
 export function normalizeAllowlistEntries(raw: unknown): AllowlistEntry[] {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return [];
-  const paths = Array.isArray((raw as { paths?: unknown }).paths)
-    ? (raw as { paths: unknown[] }).paths
-    : [];
+  const payload = asRecord(raw);
+  if (!payload) return [];
+  const paths = Array.isArray(payload.paths) ? payload.paths : [];
   return paths.reduce<AllowlistEntry[]>((entries, entry) => {
-    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entries;
-    const path = typeof (entry as { path?: unknown }).path === 'string'
-      ? (entry as { path: string }).path.trim()
-      : '';
+    const record = asRecord(entry);
+    if (!record) return entries;
+    const path = asTrimmedString(record.path);
     if (!path) return entries;
     entries.push({
       path,
-      type: (entry as { type?: unknown }).type === 'richtext' ? 'richtext' : 'string',
+      type: record.type === 'richtext' ? 'richtext' : 'string',
     });
     return entries;
   }, []);
 }
 
 export function normalizeSavedL10nSnapshot(raw: unknown): Record<string, string> | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const payload = asRecord(raw);
+  if (!payload) return null;
   const snapshot: Record<string, string> = {};
-  for (const [path, value] of Object.entries(raw as Record<string, unknown>)) {
-    const normalizedPath = typeof path === 'string' ? path.trim() : '';
+  for (const [path, value] of Object.entries(payload)) {
+    const normalizedPath = asTrimmedString(path);
     if (!normalizedPath || typeof value !== 'string') return null;
     snapshot[normalizedPath] = value;
   }
   return snapshot;
 }
 
-export function normalizeTextPointer(raw: unknown): L10nLivePointer | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const payload = raw as Record<string, unknown>;
-  if (payload.v !== 1) return null;
-  const publicId = normalizePublicId(payload.publicId) ?? '';
-  const locale = normalizeLocale(payload.locale) ?? '';
-  const textFp = normalizeFingerprint(payload.textFp) ?? '';
-  const baseFingerprint = normalizeFingerprint(payload.baseFingerprint);
-  const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
-  if (!publicId || !locale || !textFp || !updatedAt) return null;
-  return { v: 1, publicId, locale, textFp, baseFingerprint, updatedAt };
-}
-
 export function normalizeMetaPointer(raw: unknown): MetaLivePointer | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const payload = raw as Record<string, unknown>;
-  if (payload.v !== 1) return null;
-  const publicId = normalizePublicId(payload.publicId) ?? '';
+  const payload = asRecord(raw);
+  if (!payload || payload.v !== 1) return null;
+  const id = normalizeStorageId(payload.id) ?? '';
   const locale = normalizeLocale(payload.locale) ?? '';
   const metaFp = normalizeFingerprint(payload.metaFp) ?? '';
-  const updatedAt = typeof payload.updatedAt === 'string' ? payload.updatedAt.trim() : '';
-  if (!publicId || !locale || !metaFp || !updatedAt) return null;
-  return { v: 1, publicId, locale, metaFp, updatedAt };
+  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
+  if (!id || !locale || !metaFp || !updatedAt) return null;
+  return { v: 1, id, locale, metaFp, updatedAt };
+}
+
+export function normalizeIndexEntry(raw: unknown): AccountInstanceIndexEntry | null {
+  const payload = asRecord(raw);
+  if (!payload) return null;
+  const accountId = normalizeStorageId(payload.accountId) ?? '';
+  const id = normalizeStorageId(payload.id) ?? '';
+  const widgetType = asTrimmedString(payload.widgetType) ?? '';
+  const displayName = asTrimmedString(payload.displayName) ?? id;
+  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
+  const publishStatus = payload.publishStatus === 'published' ? 'published' : 'unpublished';
+  if (!accountId || !id || !widgetType || !displayName || !updatedAt) return null;
+  return { accountId, id, widgetType, displayName, publishStatus, updatedAt };
+}
+
+export function normalizeIndexDocument(raw: unknown, accountId: string): AccountInstanceIndexDocument | null {
+  const payload = asRecord(raw);
+  if (!payload || payload.v !== 1) return null;
+  const docAccountId = normalizeStorageId(payload.accountId);
+  const updatedAt = asTrimmedString(payload.updatedAt);
+  const entriesRaw = Array.isArray(payload.entries) ? payload.entries : null;
+  if (docAccountId !== accountId || !updatedAt || !entriesRaw) return null;
+  const entries = entriesRaw.map((entry) => normalizeIndexEntry(entry));
+  if (entries.some((entry) => !entry)) return null;
+  return { v: 1, accountId, entries: entries as AccountInstanceIndexEntry[], updatedAt };
 }

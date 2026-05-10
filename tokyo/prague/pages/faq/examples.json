@@ -16,8 +16,8 @@
         "headline": "FAQ widget examples by industry",
         "subheadline": "See how teams in travel, hospitality, and service businesses use one FAQ widget to answer repeat questions faster."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_photo_hospitality_westcoast"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZBDXE0DT2FB8PB0NN"
       }
     },
     {
@@ -29,8 +29,8 @@
         "subheadline": "Answer check-in, parking, and breakfast questions before guests arrive and reduce front-desk interruptions.",
         "body": "Guests repeat check-in, parking, and breakfast questions every day. Put those answers in one FAQ widget and publish updates once. Guests get clear answers in their language before messaging the front desk."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {
@@ -42,8 +42,8 @@
         "subheadline": "Keep menu details, allergens, and hours clear on mobile so guests decide faster with less staff back-and-forth.",
         "body": "Guests check menu details, allergens, and opening hours from their phones. Use the FAQ widget to keep those answers current. Visitors decide faster while staff handle fewer repeated questions."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {
@@ -55,8 +55,8 @@
         "subheadline": "Keep check-in steps, Wi-Fi details, and house rules consistent across properties with one publish flow.",
         "body": "Check-in instructions, Wi-Fi details, and house rules repeat across properties. Keep them in one FAQ widget and publish once. Every listing shows the latest version without manual rework."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {
@@ -76,8 +76,8 @@
         "subheadline": "Handle pickup points, cancellation rules, and weather policies upfront so booking decisions happen with confidence.",
         "body": "Travelers need clear pickup points, cancellation rules, and weather policies. Add those answers to the FAQ widget and localize for key markets. Booking friction drops because questions are resolved before checkout."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {
@@ -89,8 +89,8 @@
         "subheadline": "Clarify tickets, entry rules, and accessibility info before visitors show up, so arrival is smoother for everyone.",
         "body": "Visitors ask about tickets, bag policy, accessibility, and opening times. Keep these answers in one FAQ widget and update when operations change. Arrival flow is smoother because expectations are clear before entry."
       },
-      "systemInstanceRef": {
-        "publicId": "wgt_system_faq_lightblurs_generic"
+      "accountInstanceRef": {
+        "instanceId": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG"
       }
     },
     {

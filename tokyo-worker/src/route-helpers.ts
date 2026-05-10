@@ -63,10 +63,10 @@ export function respondInternalOnly(
 }
 
 export function isValidScopedInstance(
-  publicId: string | null,
+  instanceId: string | null,
   accountId: string,
 ): boolean {
-  return Boolean(publicId) && isUuid(accountId);
+  return Boolean(instanceId) && isUuid(accountId);
 }
 
 export async function authorizeRomaAccountScopedRequest(args: {

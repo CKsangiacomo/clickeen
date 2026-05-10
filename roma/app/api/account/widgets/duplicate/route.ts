@@ -2,13 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   loadTokyoAccountInstanceDocument,
   loadTokyoAccountInstanceIndex,
-  recordTokyoAccountInstanceProjectionGap,
   writeSavedConfigToTokyo,
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
 import { enqueueAccountInstanceSync } from '@roma/lib/account-instance-sync';
-import { createAccountInstanceProjectionRow } from '@roma/lib/berlin-product';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -28,20 +26,14 @@ function asTrimmedString(value: unknown): string | null {
   return normalized || null;
 }
 
-function createUserInstancePublicId(widgetType: string): string {
-  const normalized = widgetType
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '');
-  const stem = normalized || 'instance';
-  const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-  return `wgt_${stem}_u_${suffix}`;
+function createUserInstanceInstanceId(): string {
+  const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+  return `ins_${suffix}`;
 }
 
 async function loadDuplicateSource(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
 }): Promise<
   | { ok: true; value: DuplicateSource }
@@ -63,9 +55,7 @@ async function loadDuplicateSource(args: {
     };
   }
 
-  const sourceEntry =
-    index.value.accountInstances.find((entry) => entry.publicId === args.publicId) ??
-    index.value.listedInstances.find((entry) => entry.publicId === args.publicId);
+  const sourceEntry = index.value.accountInstances.find((entry) => entry.instanceId === args.instanceId);
   if (!sourceEntry) {
     return {
       ok: false,
@@ -76,25 +66,10 @@ async function loadDuplicateSource(args: {
       },
     };
   }
-  if (
-    sourceEntry.accountId !== args.accountId &&
-    (sourceEntry.listed !== true || sourceEntry.duplicable !== true)
-  ) {
-    return {
-      ok: false,
-      status: 403,
-      error: {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.auth.forbidden',
-        detail: 'source_instance_not_duplicable',
-      },
-    };
-  }
-
   const source = await loadTokyoAccountInstanceDocument({
     accountId: sourceEntry.accountId,
-    publicId: args.publicId,
-    accountCapsule: sourceEntry.accountId === args.accountId ? args.accountCapsule : undefined,
+    instanceId: args.instanceId,
+    accountCapsule: args.accountCapsule,
   });
   if (!source.ok) {
     return {
@@ -122,9 +97,9 @@ export async function POST(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
 
-  let body: { sourcePublicId?: unknown } | null = null;
+  let body: { sourceInstanceId?: unknown } | null = null;
   try {
-    body = (await request.json()) as { sourcePublicId?: unknown } | null;
+    body = (await request.json()) as { sourceInstanceId?: unknown } | null;
   } catch {
     return withSession(
       request,
@@ -137,8 +112,8 @@ export async function POST(request: NextRequest) {
   }
 
   const accountId = current.value.authzPayload.accountId;
-  const sourcePublicId = asTrimmedString(body?.sourcePublicId);
-  if (!sourcePublicId) {
+  const sourceInstanceId = asTrimmedString(body?.sourceInstanceId);
+  if (!sourceInstanceId) {
     return withSession(
       request,
       NextResponse.json(
@@ -151,7 +126,7 @@ export async function POST(request: NextRequest) {
 
   const source = await loadDuplicateSource({
     accountId,
-    publicId: sourcePublicId,
+    instanceId: sourceInstanceId,
     accountCapsule: current.value.authzToken,
   });
   if (!source.ok) {
@@ -202,11 +177,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const publicId = createUserInstancePublicId(source.value.widgetType);
+  const instanceId = createUserInstanceInstanceId();
   try {
     await writeSavedConfigToTokyo({
       accountId,
-      publicId,
+      instanceId,
       accountCapsule: current.value.authzToken,
       widgetType: source.value.widgetType,
       config: source.value.config,
@@ -239,63 +214,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const createdRow = await createAccountInstanceProjectionRow({
-    accountId,
-    publicId,
-    widgetType: source.value.widgetType,
-    berlinAccessToken: current.value.accessToken,
-  });
-  const projectionFollowup = createdRow.ok && createdRow.row
-    ? { ok: true as const }
-    : {
-        ok: false as const,
-        reasonKey: createdRow.ok ? 'coreui.errors.db.writeFailed' : createdRow.reasonKey,
-        detail: createdRow.ok ? 'instance_projection_create_empty' : createdRow.detail,
-        status: createdRow.ok ? 500 : createdRow.status,
-      };
-  let projectionGapFollowup:
-    | { ok: true; gapId: string | null }
-    | { ok: false; reasonKey: string; detail?: string; status: number } = { ok: true, gapId: null };
-  if (!projectionFollowup.ok) {
-    console.error('[roma account widgets duplicate route] projection create failed after Tokyo duplicate', {
-      accountId,
-      publicId,
-      reasonKey: projectionFollowup.reasonKey,
-      detail: projectionFollowup.detail,
-    });
-    const projectionGap = await recordTokyoAccountInstanceProjectionGap({
-      accountId,
-      publicId,
-      action: 'create',
-      reasonKey: projectionFollowup.reasonKey,
-      detail: projectionFollowup.detail,
-      status: projectionFollowup.status,
-      accountCapsule: current.value.authzToken,
-    });
-    if (!projectionGap.ok) {
-      projectionGapFollowup = {
-        ok: false,
-        reasonKey: projectionGap.error.reasonKey,
-        detail: projectionGap.error.detail,
-        status: projectionGap.status,
-      };
-      console.error('[roma account widgets duplicate route] projection gap recording failed', {
-        accountId,
-        publicId,
-        detail: projectionGap.error.detail ?? projectionGap.error.reasonKey,
-      });
-    } else {
-      projectionGapFollowup = { ok: true, gapId: projectionGap.gapId };
-    }
-  }
-
   let syncFollowup:
     | { ok: true }
     | { ok: false; reasonKey: string; detail: string } = { ok: true };
   try {
     await enqueueAccountInstanceSync({
       accountId,
-      publicId,
+      instanceId,
       accountCapsule: current.value.authzToken,
       live: false,
       l10nIntent: {
@@ -316,7 +241,7 @@ export async function POST(request: NextRequest) {
     };
     console.error('[roma account widgets duplicate route] sync follow-up failed after Tokyo duplicate', {
       accountId,
-      publicId,
+      instanceId,
       detail,
     });
   }
@@ -326,13 +251,11 @@ export async function POST(request: NextRequest) {
     NextResponse.json(
       {
         accountId,
-        sourcePublicId,
+        sourceInstanceId,
         sourceAccountId: source.value.accountId,
-        publicId,
+        instanceId,
         widgetType: source.value.widgetType,
         status: 'unpublished',
-        projectionFollowup,
-        projectionGapFollowup,
         syncFollowup,
       },
       { status: 201 },

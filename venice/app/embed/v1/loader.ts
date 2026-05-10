@@ -4,15 +4,15 @@ function buildScript(): string {
   if (!scriptEl) return;
 
   const {
-    publicId,
+    instanceId,
     trigger = 'immediate',
     delay = '0',
     scrollPct,
     clickSelector
   } = scriptEl.dataset;
 
-  if (!publicId) {
-    console.warn('[Clickeen] Missing data-public-id');
+  if (!instanceId) {
+    console.warn('[Clickeen] Missing data-instance-id');
     return;
   }
 
@@ -35,7 +35,7 @@ function buildScript(): string {
 
   const origin = new URL(scriptEl.src, window.location.href).origin;
   const embedUrl = (params = {}) => {
-    const url = new URL(origin + '/e/' + encodeURIComponent(publicId));
+    const url = new URL(origin + '/widget/' + encodeURIComponent(instanceId));
     Object.entries(params).forEach(([key, value]) => {
       if (value) url.searchParams.set(key, String(value));
     });

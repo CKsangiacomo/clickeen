@@ -31,7 +31,7 @@ function resolveTokyoSyncErrorDetail(payload: unknown, fallback: string): string
 async function postAccountInstanceSync(args: {
   path: string;
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
   live?: boolean;
   baseFingerprint?: string | null;
@@ -71,7 +71,7 @@ async function postAccountInstanceSync(args: {
 
 export async function enqueueAccountInstanceSync(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
   live?: boolean;
   baseFingerprint?: string | null;
@@ -80,13 +80,13 @@ export async function enqueueAccountInstanceSync(args: {
 }): Promise<void> {
   await postAccountInstanceSync({
     ...args,
-    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/sync/queue`,
+    path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/sync/queue`,
   });
 }
 
 export async function syncAccountInstanceLiveSurface(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
   previousBaseFingerprint?: string | null;
   l10nIntent: AccountInstanceSyncIntent;
@@ -94,6 +94,6 @@ export async function syncAccountInstanceLiveSurface(args: {
   await postAccountInstanceSync({
     ...args,
     live: true,
-    path: `/__internal/renders/instances/${encodeURIComponent(args.publicId)}/sync`,
+    path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/sync`,
   });
 }

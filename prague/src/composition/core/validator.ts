@@ -91,7 +91,7 @@ export function assertPrimitive(value: unknown, ctx = 'primitive'): Primitive {
       const variant = (primitive as any).variant;
       const src = (primitive as any).src;
       const alt = (primitive as any).alt;
-      const systemInstanceRef = (primitive as any).systemInstanceRef;
+      const accountInstanceRef = (primitive as any).accountInstanceRef;
       if (!MEDIA_VARIANTS.has(variant)) {
         throw new Error(`[composition] ${ctx}.variant must be image|video|widget`);
       }
@@ -109,8 +109,8 @@ export function assertPrimitive(value: unknown, ctx = 'primitive'): Primitive {
         }
       }
       if (variant === 'widget') {
-        if (typeof systemInstanceRef !== 'string' || !systemInstanceRef.trim()) {
-          throw new Error(`[composition] ${ctx}.systemInstanceRef is required for widget`);
+        if (typeof accountInstanceRef !== 'string' || !accountInstanceRef.trim()) {
+          throw new Error(`[composition] ${ctx}.accountInstanceRef is required for widget`);
         }
       }
       return primitive;

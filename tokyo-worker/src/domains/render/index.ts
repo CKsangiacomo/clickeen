@@ -5,6 +5,7 @@ export * from './normalize';
 export * from './localization';
 export * from './saved-config';
 export * from './queue';
+export * from './storage';
 export * from './r2-object';
 export * from './packs';
 export * from './live-surface';

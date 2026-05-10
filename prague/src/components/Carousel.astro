@@ -2,8 +2,8 @@
 import InstanceEmbed from './InstanceEmbed.astro';
 
 type CarouselItem = {
-  systemInstanceRef: {
-    publicId: string;
+  accountInstanceRef: {
+    instanceId: string;
     locale: string;
     title?: string;
     embedMode?: 'iframe' | 'indexable';
@@ -25,16 +25,16 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
         <div class="ck-carousel__track" id={id}>
           {items.concat(items[0]).map((item, index) => (
             <div class="ck-carousel__item" data-index={index}>
-              {item.systemInstanceRef ? (
+              {item.accountInstanceRef ? (
                 <InstanceEmbed
-                  publicId={item.systemInstanceRef.publicId}
-                  locale={item.systemInstanceRef.locale}
-                  title={item.systemInstanceRef.title ?? `Widget preview ${index + 1}`}
-                  embedMode={item.systemInstanceRef.embedMode}
+                  instanceId={item.accountInstanceRef.instanceId}
+                  locale={item.accountInstanceRef.locale}
+                  title={item.accountInstanceRef.title ?? `Widget preview ${index + 1}`}
+                  embedMode={item.accountInstanceRef.embedMode}
                   loading="eager"
                 />
               ) : (
-                <div class="ck-media ck-carousel__stub">Missing systemInstanceRef</div>
+                <div class="ck-media ck-carousel__stub">Missing accountInstanceRef</div>
               )}
             </div>
           ))}

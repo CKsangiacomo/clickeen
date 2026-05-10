@@ -3,7 +3,7 @@ import type { Env } from '../../types';
 import { accountInstanceL10nBaseSnapshotKey } from './keys';
 import { loadJson, putJson } from './storage';
 import { normalizeAllowlistEntries } from './normalize';
-import { normalizeFingerprint, normalizePublicId } from './utils';
+import { normalizeFingerprint, normalizeStorageId } from './utils';
 
 export function resolveTokyoPublicBaseUrl(env: Env): string | null {
   const configured =
@@ -53,7 +53,7 @@ function normalizeSavedL10nSnapshot(raw: unknown): Record<string, string> | null
 export async function loadSavedRenderL10nBase(args: {
   env: Env;
   accountId: string;
-  publicId: string;
+  instanceId: string;
   widgetType: string;
   baseFingerprint?: string | null;
 }): Promise<{
@@ -61,9 +61,9 @@ export async function loadSavedRenderL10nBase(args: {
   snapshot: Record<string, string>;
   allowlist: AllowlistEntry[];
 } | null> {
-  const publicId = normalizePublicId(args.publicId);
-  const accountId = normalizePublicId(args.accountId);
-  if (!publicId) throw new Error('[tokyo] load-saved-render-l10n-base invalid publicId');
+  const instanceId = normalizeStorageId(args.instanceId);
+  const accountId = normalizeStorageId(args.accountId);
+  if (!instanceId) throw new Error('[tokyo] load-saved-render-l10n-base invalid instanceId');
   if (!accountId) throw new Error('[tokyo] load-saved-render-l10n-base invalid accountId');
   const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
   if (!widgetType) throw new Error('[tokyo] load-saved-render-l10n-base missing widgetType');
@@ -77,7 +77,7 @@ export async function loadSavedRenderL10nBase(args: {
 
   const existing = await loadJson<{ snapshot?: unknown }>(
     args.env,
-    accountInstanceL10nBaseSnapshotKey(accountId, publicId, baseFingerprint),
+    accountInstanceL10nBaseSnapshotKey(accountId, widgetType, instanceId, baseFingerprint),
   );
   const existingSnapshot = normalizeSavedL10nSnapshot(existing?.snapshot);
   if (!existingSnapshot) return null;
@@ -92,7 +92,7 @@ export async function loadSavedRenderL10nBase(args: {
 export async function ensureSavedRenderL10nBase(args: {
   env: Env;
   accountId: string;
-  publicId: string;
+  instanceId: string;
   widgetType: string;
   config: Record<string, unknown>;
   existingBaseFingerprint?: string | null;
@@ -101,9 +101,9 @@ export async function ensureSavedRenderL10nBase(args: {
   snapshot: Record<string, string>;
   allowlist: AllowlistEntry[];
 }> {
-  const publicId = normalizePublicId(args.publicId);
-  const accountId = normalizePublicId(args.accountId);
-  if (!publicId) throw new Error('[tokyo] ensure-saved-render-l10n-base invalid publicId');
+  const instanceId = normalizeStorageId(args.instanceId);
+  const accountId = normalizeStorageId(args.accountId);
+  if (!instanceId) throw new Error('[tokyo] ensure-saved-render-l10n-base invalid instanceId');
   if (!accountId) throw new Error('[tokyo] ensure-saved-render-l10n-base invalid accountId');
   const widgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
   if (!widgetType) throw new Error('[tokyo] ensure-saved-render-l10n-base missing widgetType');
@@ -121,7 +121,7 @@ export async function ensureSavedRenderL10nBase(args: {
     const existing = await loadSavedRenderL10nBase({
       env: args.env,
       accountId,
-      publicId,
+      instanceId,
       widgetType,
       baseFingerprint,
     });
@@ -133,7 +133,7 @@ export async function ensureSavedRenderL10nBase(args: {
   const existingCurrent = await loadSavedRenderL10nBase({
     env: args.env,
     accountId,
-    publicId,
+    instanceId,
     widgetType,
     baseFingerprint,
   });
@@ -141,9 +141,9 @@ export async function ensureSavedRenderL10nBase(args: {
     return existingCurrent;
   }
 
-  await putJson(args.env, accountInstanceL10nBaseSnapshotKey(accountId, publicId, baseFingerprint), {
+  await putJson(args.env, accountInstanceL10nBaseSnapshotKey(accountId, widgetType, instanceId, baseFingerprint), {
     v: 1,
-    publicId,
+    id: instanceId,
     baseFingerprint,
     snapshot,
   });

@@ -9,7 +9,7 @@ import {
 
 export type ExecuteAccountCommandArgs = {
   command: BobAccountCommand;
-  publicId: string;
+  instanceId: string;
   body?: unknown;
 };
 
@@ -18,7 +18,7 @@ export type ExecuteAccountCommand = (
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
 export type LoadTranslationsArgs = {
-  publicId: string;
+  instanceId: string;
 };
 
 export type LoadTranslations = (
@@ -94,7 +94,7 @@ export function useSessionTransport(args: {
   const dispatchHostAccountCommand = useCallback(
     (commandArgs: {
       command: BobAccountCommand;
-      publicId: string;
+      instanceId: string;
       headers?: Record<string, string>;
       body?: unknown;
     }): Promise<{ ok: boolean; status: number; payload: any; message?: string }> => {
@@ -108,7 +108,7 @@ export function useSessionTransport(args: {
         type: 'bob:account-command',
         requestId,
         command: commandArgs.command,
-        publicId: String(commandArgs.publicId || '').trim(),
+        instanceId: String(commandArgs.instanceId || '').trim(),
         ...(commandArgs.headers ? { headers: commandArgs.headers } : {}),
         ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
       };
@@ -161,13 +161,13 @@ export function useSessionTransport(args: {
       headers?: Record<string, string>;
       body?: unknown;
     }): Promise<Response> => {
-      const publicId = String(args.metaRef.current?.publicId || '').trim();
-      if (!publicId) {
+      const instanceId = String(args.metaRef.current?.instanceId || '').trim();
+      if (!instanceId) {
         return createHostUnavailableResponse();
       }
       const result = await dispatchHostAccountCommand({
         command: commandArgs.command,
-        publicId,
+        instanceId,
         ...(commandArgs.headers ? { headers: commandArgs.headers } : {}),
         ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
       });
@@ -209,15 +209,15 @@ export function useSessionTransport(args: {
 
   const fetchApi = useCallback(async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const inputUrl = normalizeInputUrl(input);
-    const publicId = String(args.metaRef.current?.publicId || '').trim();
+    const instanceId = String(args.metaRef.current?.instanceId || '').trim();
     if (inputUrl === '/api/ai/widget-copilot' || inputUrl === '/api/ai/outcome') {
-      if (!publicId) {
+      if (!instanceId) {
         return createHostUnavailableResponse();
       }
       const body = await readRequestJsonBody(input, init);
       const result = await dispatchHostAccountCommand({
         command: inputUrl === '/api/ai/widget-copilot' ? 'run-copilot' : 'attach-ai-outcome',
-        publicId,
+        instanceId,
         ...(typeof body === 'undefined' ? {} : { body }),
       });
       return createJsonResponse(result.status, result.payload);
@@ -245,7 +245,7 @@ export function useSessionTransport(args: {
     async (commandArgs: ExecuteAccountCommandArgs) => {
       const result = await dispatchHostAccountCommand({
         command: commandArgs.command,
-        publicId: commandArgs.publicId,
+        instanceId: commandArgs.instanceId,
         ...(typeof commandArgs.body === 'undefined' ? {} : { body: commandArgs.body }),
       });
       return { ok: result.ok, status: result.status, json: result.payload };
@@ -255,10 +255,10 @@ export function useSessionTransport(args: {
 
   const loadTranslations: LoadTranslations = useCallback(
     async (commandArgs: LoadTranslationsArgs) => {
-      const publicId = String(commandArgs.publicId || '').trim();
+      const instanceId = String(commandArgs.instanceId || '').trim();
       const result = await dispatchHostAccountCommand({
         command: 'load-translations',
-        publicId,
+        instanceId,
       });
       return { ok: result.ok, status: result.status, json: result.payload };
     },

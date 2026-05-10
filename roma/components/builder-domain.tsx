@@ -10,7 +10,7 @@ import { getCompiledWidget } from './compiled-widget-cache';
 import { useRomaAccountContext } from './roma-account-context';
 
 type BuilderDomainProps = {
-  initialPublicId?: string;
+  initialInstanceId?: string;
 };
 
 const OPEN_EDITOR_TIMEOUT_MS = 7000;
@@ -21,7 +21,7 @@ type BobReadyMessage = {
 
 type BobSwitchMessage = {
   type: 'bob:request-instance-switch';
-  publicId?: string | null;
+  instanceId?: string | null;
 };
 
 type BobOpenEditorAppliedMessage = {
@@ -42,7 +42,7 @@ type BobAccountCommandMessage = {
   type: 'bob:account-command';
   requestId?: string | null;
   command?: BobAccountCommand | null;
-  publicId?: string | null;
+  instanceId?: string | null;
   headers?: Record<string, string> | null;
   body?: unknown;
 };
@@ -51,7 +51,7 @@ type HostAccountCommandResultMessage = {
   type: 'host:account-command-result';
   requestId: string;
   command: BobAccountCommand;
-  publicId: string;
+  instanceId: string;
   ok: boolean;
   status: number;
   payload?: unknown;
@@ -61,7 +61,7 @@ type HostAccountCommandResultMessage = {
 type BobOpenEditorMessage = {
   type: 'ck:open-editor';
   requestId: string;
-  publicId: string;
+  instanceId: string;
   baseLocale: string;
   label: string;
   widgetname: string;
@@ -75,7 +75,7 @@ type BobOpenEditorMessage = {
 type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId'>;
 
 type BuilderOpenResponse = {
-  publicId: string;
+  instanceId: string;
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
@@ -123,22 +123,22 @@ function resolveBobBaseUrl(): string {
   return 'https://bob.dev.clickeen.com';
 }
 
-function buildRomaBuilderRoute(args: { publicId: string }): string {
-  return `/builder/${encodeURIComponent(args.publicId)}`;
+function buildRomaBuilderRoute(args: { instanceId: string }): string {
+  return `/builder/${encodeURIComponent(args.instanceId)}`;
 }
 
 function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
-  publicId: string;
+  instanceId: string;
 }): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
-  const publicId = String(args.publicId || '').trim();
-  if (!publicId) return null;
+  const instanceId = String(args.instanceId || '').trim();
+  if (!instanceId) return null;
 
   switch (args.command) {
     case 'update-instance':
       return {
         method: 'PUT',
-        path: `/api/account/instance/${encodeURIComponent(publicId)}`,
+        path: `/api/account/instance/${encodeURIComponent(instanceId)}`,
       };
     case 'list-assets':
       return {
@@ -158,24 +158,24 @@ function resolveBobAccountCommandRequest(args: {
     case 'load-translations':
       return {
         method: 'GET',
-        path: `/api/account/instances/${encodeURIComponent(publicId)}/translations`,
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations`,
       };
     case 'run-copilot':
       return {
         method: 'POST',
-        path: `/api/account/instances/${encodeURIComponent(publicId)}/copilot`,
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot`,
       };
     case 'attach-ai-outcome':
       return {
         method: 'POST',
-        path: `/api/account/instances/${encodeURIComponent(publicId)}/copilot/outcome`,
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot/outcome`,
       };
     default:
       return null;
   }
 }
 
-function decodeBuilderPathPublicId(pathname: string): string {
+function decodeBuilderPathInstanceId(pathname: string): string {
   const match = /^\/builder\/([^/?#]+)$/.exec(pathname);
   if (!match) return '';
   try {
@@ -185,7 +185,7 @@ function decodeBuilderPathPublicId(pathname: string): string {
   }
 }
 
-export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
+export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const { activeAccount, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const router = useRouter();
@@ -193,16 +193,16 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const bobReadyRef = useRef(false);
   const openDispatchSeqRef = useRef(0);
-  const [activePublicId, setActivePublicId] = useState(() => {
-    const fromPath = decodeBuilderPathPublicId(pathname);
+  const [activeInstanceId, setActiveInstanceId] = useState(() => {
+    const fromPath = decodeBuilderPathInstanceId(pathname);
     if (fromPath) return fromPath;
-    return String(initialPublicId || '').trim();
+    return String(initialInstanceId || '').trim();
   });
   const [openError, setOpenError] = useState<string | null>(null);
 
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
-  const pathPublicId = useMemo(() => decodeBuilderPathPublicId(pathname), [pathname]);
+  const pathInstanceId = useMemo(() => decodeBuilderPathInstanceId(pathname), [pathname]);
 
   // Active account authoring truth: Roma hosts one current-account Builder session and opens Bob with one explicit payload.
   const bobSrc = useMemo(() => {
@@ -210,29 +210,29 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
   }, [bobBaseUrl]);
 
   useEffect(() => {
-    if (!activePublicId) return;
+    if (!activeInstanceId) return;
     const nextRoute = buildRomaBuilderRoute({
-      publicId: activePublicId,
+      instanceId: activeInstanceId,
     });
     if (nextRoute === currentUrl) return;
     router.replace(nextRoute, { scroll: false });
-  }, [activePublicId, currentUrl, router]);
+  }, [activeInstanceId, currentUrl, router]);
 
   useEffect(() => {
-    const resolved = pathPublicId || String(initialPublicId || '').trim();
+    const resolved = pathInstanceId || String(initialInstanceId || '').trim();
     if (!resolved) {
-      if (activePublicId) setActivePublicId('');
+      if (activeInstanceId) setActiveInstanceId('');
       return;
     }
-    if (resolved === activePublicId) return;
-    setActivePublicId(resolved);
-  }, [activePublicId, initialPublicId, pathPublicId]);
+    if (resolved === activeInstanceId) return;
+    setActiveInstanceId(resolved);
+  }, [activeInstanceId, initialInstanceId, pathInstanceId]);
 
   const runBobAccountCommand = useCallback(
-    async (args: { source: Window; requestId: string; command: BobAccountCommand; publicId: string; headers?: Record<string, string>; body?: unknown }) => {
+    async (args: { source: Window; requestId: string; command: BobAccountCommand; instanceId: string; headers?: Record<string, string>; body?: unknown }) => {
       const route = resolveBobAccountCommandRequest({
         command: args.command,
-        publicId: args.publicId,
+        instanceId: args.instanceId,
       });
       const reply = (payload: Omit<HostAccountCommandResultMessage, 'type'>) => {
         const message: HostAccountCommandResultMessage = {
@@ -246,7 +246,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         reply({
           requestId: args.requestId,
           command: args.command,
-          publicId: args.publicId,
+          instanceId: args.instanceId,
           ok: false,
           status: 422,
           message: 'coreui.errors.builder.command.invalid',
@@ -294,7 +294,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         reply({
           requestId: args.requestId,
           command: args.command,
-          publicId: args.publicId,
+          instanceId: args.instanceId,
           ok: response.ok,
           status: response.status,
           payload,
@@ -316,7 +316,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
         reply({
           requestId: args.requestId,
           command: args.command,
-          publicId: args.publicId,
+          instanceId: args.instanceId,
           ok: false,
           status: 500,
           message,
@@ -398,25 +398,25 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
 
   const openActiveInstanceInBob = useCallback(async () => {
     const targetWindow = iframeRef.current?.contentWindow;
-    if (!targetWindow || !activePublicId) return;
+    if (!targetWindow || !activeInstanceId) return;
 
     const openSeq = ++openDispatchSeqRef.current;
     setOpenError(null);
 
     try {
-      const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(`/api/builder/${encodeURIComponent(activePublicId)}/open`);
+      const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(`/api/builder/${encodeURIComponent(activeInstanceId)}/open`);
       const widgetType = builderOpen.widgetType;
       const { payload: compiled } = await getCompiledWidget(widgetType);
 
       if (openSeq !== openDispatchSeqRef.current) return;
 
-      const resolvedPublicId = builderOpen.publicId;
-      const label = typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim() ? builderOpen.displayName.trim() : resolvedPublicId;
+      const resolvedInstanceId = builderOpen.instanceId;
+      const label = typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim() ? builderOpen.displayName.trim() : resolvedInstanceId;
       const config = builderOpen.config as Record<string, unknown>;
       const baseLocale = parseAccountL10nPolicyStrict(activeAccount.l10nPolicy).baseLocale;
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
-        publicId: resolvedPublicId,
+        instanceId: resolvedInstanceId,
         baseLocale,
         label,
         widgetname: widgetType,
@@ -438,7 +438,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [accountApi, accountPolicy, activeAccount.l10nPolicy, activePublicId, postOpenEditorAndWait]);
+  }, [accountApi, accountPolicy, activeAccount.l10nPolicy, activeInstanceId, postOpenEditorAndWait]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {
@@ -449,31 +449,31 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
       if (!data || typeof data !== 'object') return;
       if (data.type === 'bob:session-ready') {
         bobReadyRef.current = true;
-        if (activePublicId) {
+        if (activeInstanceId) {
           void openActiveInstanceInBob();
         }
         return;
       }
       if (data.type === 'bob:request-instance-switch') {
         const switchMessage = data as BobSwitchMessage;
-        const nextPublicId = String(switchMessage.publicId || '').trim();
-        if (!nextPublicId) return;
-        if (nextPublicId === activePublicId) return;
-        setActivePublicId(nextPublicId);
+        const nextInstanceId = String(switchMessage.instanceId || '').trim();
+        if (!nextInstanceId) return;
+        if (nextInstanceId === activeInstanceId) return;
+        setActiveInstanceId(nextInstanceId);
         return;
       }
       if (data.type === 'bob:account-command') {
         const message = data as BobAccountCommandMessage;
         const requestId = typeof message.requestId === 'string' ? message.requestId.trim() : '';
         const command = message.command ?? null;
-        const publicId = typeof message.publicId === 'string' ? message.publicId.trim() : '';
+        const instanceId = typeof message.instanceId === 'string' ? message.instanceId.trim() : '';
         const headers = message.headers && typeof message.headers === 'object' ? message.headers : undefined;
-        if (!requestId || !command || !publicId) return;
+        if (!requestId || !command || !instanceId) return;
         void runBobAccountCommand({
           source,
           requestId,
           command,
-          publicId,
+          instanceId,
           ...(headers ? { headers } : {}),
           ...(typeof message.body === 'undefined' ? {} : { body: message.body }),
         });
@@ -483,7 +483,7 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activePublicId, bobBaseUrl, openActiveInstanceInBob, runBobAccountCommand]);
+  }, [activeInstanceId, bobBaseUrl, openActiveInstanceInBob, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
@@ -492,17 +492,17 @@ export function BuilderDomain({ initialPublicId = '' }: BuilderDomainProps) {
   }, [bobSrc]);
 
   useEffect(() => {
-    if (!activePublicId) {
+    if (!activeInstanceId) {
       setOpenError(null);
       return;
     }
     if (!bobReadyRef.current) return;
     void openActiveInstanceInBob();
-  }, [activePublicId, openActiveInstanceInBob]);
+  }, [activeInstanceId, openActiveInstanceInBob]);
 
   const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
 
-  if (!activePublicId) {
+  if (!activeInstanceId) {
     return (
       <div className="rd-canvas-module">
         <p className="body-m">No instance selected for Builder.</p>

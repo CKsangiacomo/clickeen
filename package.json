@@ -31,9 +31,7 @@
     "build:prague:global": "pnpm prague:l10n:translate && pnpm prague:l10n:verify && pnpm build:prague",
     "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs",
     "prague:sync": "node scripts/prague-sync.mjs --publish --local",
-    "health:product-path": "node scripts/health/product-path-smoke.mjs",
-    "dev:seed:platform": "node scripts/dev/seed-local-platform-state.mjs",
-    "dev:seed:platform:assets": "node scripts/dev/seed-local-platform-assets.mjs"
+    "health:product-path": "node scripts/health/product-path-smoke.mjs"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

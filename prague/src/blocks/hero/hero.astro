@@ -10,8 +10,8 @@ import InstanceEmbed from '../../components/InstanceEmbed.astro';
 import Carousel from '../../components/Carousel.astro';
 
 type CarouselItem = {
-  systemInstanceRef: {
-    publicId: string;
+  accountInstanceRef: {
+    instanceId: string;
     locale: string;
     title?: string;
     embedMode?: 'iframe' | 'indexable';
@@ -24,8 +24,8 @@ type Props = {
   primaryCta: { label: string; href: string };
   secondaryCta?: { label: string; href: string };
   actionGroup?: ActionGroup;
-  systemInstanceRef?: {
-    publicId: string;
+  accountInstanceRef?: {
+    instanceId: string;
     locale: string;
     title?: string;
     embedMode?: 'iframe' | 'indexable';
@@ -33,7 +33,7 @@ type Props = {
   items?: CarouselItem[];
 };
 
-const { headline, subheadline, primaryCta, secondaryCta, actionGroup, systemInstanceRef, items } = Astro.props;
+const { headline, subheadline, primaryCta, secondaryCta, actionGroup, accountInstanceRef, items } = Astro.props;
 
 const resolvedActionGroup =
   actionGroup ??
@@ -88,12 +88,12 @@ const headerPrimitives = assertPrimitives(
       <div class="ck-split__b" aria-hidden="true">
         {items && items.length > 0 ? (
           <Carousel items={items} id={`hero-carousel-${headline.replace(/\s+/g, '-').toLowerCase()}`} />
-        ) : systemInstanceRef ? (
+        ) : accountInstanceRef ? (
           <InstanceEmbed
-            publicId={systemInstanceRef.publicId}
-            locale={systemInstanceRef.locale}
-            title={systemInstanceRef.title ?? 'Widget preview'}
-            embedMode={systemInstanceRef.embedMode}
+            instanceId={accountInstanceRef.instanceId}
+            locale={accountInstanceRef.locale}
+            title={accountInstanceRef.title ?? 'Widget preview'}
+            embedMode={accountInstanceRef.embedMode}
             loading="eager"
           />
         ) : (

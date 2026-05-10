@@ -1,9 +1,9 @@
 import { isUuid } from '@clickeen/ck-contracts';
 import {
-  normalizePublicId,
+  normalizeStorageId,
   normalizeSha256Hex,
 } from '../asset-utils';
-import { assertRomaAccountCapsuleAuth, INTERNAL_SERVICE_HEADER, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '../auth';
+import { assertRomaAccountCapsuleAuth, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '../auth';
 import { json } from '../http';
 import {
   deleteSavedRenderConfig,
@@ -11,10 +11,7 @@ import {
   buildAccountInstanceIndexDryRun,
   readInstanceServeState,
   readAccountInstanceIndex,
-  readListedInstanceIndex,
   rebuildAccountInstanceIndexes,
-  resolvePlatformAccountId,
-  accountInstanceProjectionGapKey,
   readSavedRenderConfig,
   syncLiveSurface,
   writeConfigPack,
@@ -40,12 +37,12 @@ export async function tryHandleInternalRenderRoutes(
   const { req, env, pathname, respond } = args;
 
   const internalRenderSyncMatch = pathname.match(
-    /^\/__internal\/renders\/instances\/([^/]+)\/sync$/,
+    /^\/__internal\/renders\/widgets\/([^/]+)\/sync$/,
   );
   if (internalRenderSyncMatch) {
-    const publicId = normalizePublicId(decodeURIComponent(internalRenderSyncMatch[1]));
+    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderSyncMatch[1]));
     const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!isValidScopedInstance(publicId, accountId)) {
+    if (!isValidScopedInstance(instanceId, accountId)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
     if (req.method !== 'POST') {
@@ -64,16 +61,16 @@ export async function tryHandleInternalRenderRoutes(
         ),
       );
     }
-    return respond(await handleSyncAccountInstance(req, env, publicId!, accountId, capsule));
+    return respond(await handleSyncAccountInstance(req, env, instanceId!, accountId, capsule));
   }
 
   const internalRenderSyncQueueMatch = pathname.match(
-    /^\/__internal\/renders\/instances\/([^/]+)\/sync\/queue$/,
+    /^\/__internal\/renders\/widgets\/([^/]+)\/sync\/queue$/,
   );
   if (internalRenderSyncQueueMatch) {
-    const publicId = normalizePublicId(decodeURIComponent(internalRenderSyncQueueMatch[1]));
+    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderSyncQueueMatch[1]));
     const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!isValidScopedInstance(publicId, accountId)) {
+    if (!isValidScopedInstance(instanceId, accountId)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
     if (req.method !== 'POST') {
@@ -148,7 +145,7 @@ export async function tryHandleInternalRenderRoutes(
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
 
-    const saved = await readSavedRenderConfig({ env, publicId: publicId!, accountId });
+    const saved = await readSavedRenderConfig({ env, instanceId: instanceId!, accountId });
     if (!saved.ok) {
       return respond(
         json(
@@ -185,7 +182,7 @@ export async function tryHandleInternalRenderRoutes(
 
     const statusPointer = await writeSavedRenderL10nStatus({
       env,
-      publicId: publicId!,
+      instanceId: instanceId!,
       accountId,
       generationId,
       status: translationStatus,
@@ -196,7 +193,7 @@ export async function tryHandleInternalRenderRoutes(
     });
 
     const translation = {
-      publicId: publicId!,
+      instanceId: instanceId!,
       widgetType: saved.value.pointer.widgetType,
       baseFingerprint: resolvedBaseFingerprint,
       baseLocale: normalizedBaseLocale,
@@ -214,7 +211,7 @@ export async function tryHandleInternalRenderRoutes(
         await enqueueTokyoMirrorJob(env, {
           v: 1,
           kind: 'sync-instance-overlays',
-          publicId: publicId!,
+          instanceId: instanceId!,
           accountId,
           baseFingerprint: resolvedBaseFingerprint,
           generationId,
@@ -234,7 +231,7 @@ export async function tryHandleInternalRenderRoutes(
       const detail = error instanceof Error ? error.message : String(error);
       await writeSavedRenderL10nStatus({
         env,
-        publicId: publicId!,
+        instanceId: instanceId!,
         accountId,
         generationId,
         status: 'failed',
@@ -267,7 +264,7 @@ export async function tryHandleInternalRenderRoutes(
       json({
         ok: true,
         queued: shouldQueue,
-        publicId,
+        instanceId,
         live,
         baseFingerprint: resolvedBaseFingerprint,
         translation,
@@ -275,7 +272,7 @@ export async function tryHandleInternalRenderRoutes(
     );
   }
 
-  if (pathname === '/__internal/renders/instances/serve-state.json') {
+  if (pathname === '/__internal/renders/widgets/serve-state.json') {
     const accountId = String(req.headers.get('x-account-id') || '').trim();
     if (!isUuid(accountId)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
@@ -293,28 +290,28 @@ export async function tryHandleInternalRenderRoutes(
     if (authErr) return respond(authErr);
 
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-    const rawPublicIds = Array.isArray(body?.publicIds) ? body.publicIds : null;
-    if (!rawPublicIds) {
+    const rawInstanceIds = Array.isArray(body?.instanceIds) ? body.instanceIds : null;
+    if (!rawInstanceIds) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
 
-    const publicIds = Array.from(
+    const instanceIds = Array.from(
       new Set(
-        rawPublicIds
+        rawInstanceIds
           .filter((entry): entry is string => typeof entry === 'string')
-          .map((entry) => normalizePublicId(entry))
+          .map((entry) => normalizeStorageId(entry))
           .filter((entry): entry is string => Boolean(entry)),
       ),
     );
 
-    if (publicIds.length !== rawPublicIds.length) {
+    if (instanceIds.length !== rawInstanceIds.length) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
 
     const serveEntries = await Promise.all(
-      publicIds.map(async (publicId) => [
-        publicId,
-        await readInstanceServeState({ env, accountId, publicId }),
+      instanceIds.map(async (instanceId) => [
+        instanceId,
+        await readInstanceServeState({ env, accountId, instanceId }),
       ] as const),
     );
     const serveStates = Object.fromEntries(serveEntries);
@@ -329,7 +326,7 @@ export async function tryHandleInternalRenderRoutes(
     );
   }
 
-  if (pathname === '/__internal/renders/instances/index.json') {
+  if (pathname === '/__internal/renders/widgets/index.json') {
     const accountId = String(req.headers.get('x-account-id') || '').trim();
     if (!isUuid(accountId)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
@@ -356,26 +353,9 @@ export async function tryHandleInternalRenderRoutes(
       );
     }
 
-    const platformAccountId = resolvePlatformAccountId(env);
-    let listedInstances = [] as typeof accountIndex.value.entries;
-    if (accountId !== platformAccountId) {
-      const listedIndex = await readListedInstanceIndex({ env, platformAccountId });
-      if (!listedIndex.ok) {
-        return respond(
-          json(
-            { error: { kind: listedIndex.kind, reasonKey: listedIndex.reasonKey, detail: listedIndex.detail } },
-            { status: listedIndex.kind === 'NOT_FOUND' ? 404 : 422 },
-          ),
-        );
-      }
-      listedInstances = listedIndex.value.entries.filter((entry) => entry.duplicable);
-    }
-
     const widgetTypes = Array.from(
       new Set(
-        [...accountIndex.value.entries, ...listedInstances]
-          .map((entry) => entry.widgetType.trim().toLowerCase())
-          .filter(Boolean),
+        accountIndex.value.entries.map((entry) => entry.widgetType.trim().toLowerCase()).filter(Boolean),
       ),
     ).sort((left, right) => left.localeCompare(right));
 
@@ -383,16 +363,14 @@ export async function tryHandleInternalRenderRoutes(
       json({
         ok: true,
         accountId,
-        platformAccountId,
-        accountInstances: accountIndex.value.entries,
-        listedInstances,
+        accountInstances: accountIndex.value.entries.map((entry) => ({ ...entry, instanceId: entry.id })),
         widgetTypes,
         publishedCount: accountIndex.value.entries.filter((entry) => entry.publishStatus === 'published').length,
       }),
     );
   }
 
-  if (pathname === '/__internal/renders/instances/index/rebuild.json') {
+  if (pathname === '/__internal/renders/widgets/index/rebuild.json') {
     const accountId = String(req.headers.get('x-account-id') || '').trim();
     if (!isUuid(accountId)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
@@ -422,15 +400,7 @@ export async function tryHandleInternalRenderRoutes(
           dryRun,
           accountId,
           entries: index.entries.length,
-          entryPublicIds: index.entries.map((entry) => entry.publicId),
-          listedEntries:
-            accountId === resolvePlatformAccountId(env)
-              ? index.entries.filter((entry) => entry.listed).length
-              : 0,
-          listedPublicIds:
-            accountId === resolvePlatformAccountId(env)
-              ? index.entries.filter((entry) => entry.listed).map((entry) => entry.publicId)
-              : [],
+          entryIds: index.entries.map((entry) => entry.id),
         }),
       );
     } catch (error) {
@@ -449,71 +419,13 @@ export async function tryHandleInternalRenderRoutes(
     }
   }
 
-  if (pathname === '/__internal/renders/instances/projection-gap.json') {
-    const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!isUuid(accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'POST') {
-      return respondMethodNotAllowed(respond);
-    }
-
-    const authErr = await authorizeSavedRenderControlRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'editor',
-    });
-    if (authErr) return respond(authErr);
-
-    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-    const publicId = normalizePublicId(body?.publicId);
-    if (!isValidScopedInstance(publicId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    const action = typeof body?.action === 'string' ? body.action.trim() : '';
-    if (action !== 'create' && action !== 'delete') {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    const reasonKey = typeof body?.reasonKey === 'string' ? body.reasonKey.trim() : '';
-    if (!reasonKey) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    const detail = typeof body?.detail === 'string' ? body.detail.trim() : null;
-    const status =
-      typeof body?.status === 'number' && Number.isFinite(body.status)
-        ? Math.max(0, Math.floor(body.status))
-        : null;
-    const createdAt = new Date().toISOString();
-    const gapId = `${Date.now().toString(36)}-${crypto.randomUUID()}`;
-    await env.TOKYO_R2.put(
-      accountInstanceProjectionGapKey(accountId, gapId),
-      JSON.stringify({
-        v: 1,
-        kind: 'instance-projection-gap',
-        accountId,
-        publicId,
-        action,
-        reasonKey,
-        detail,
-        status,
-        createdAt,
-      }),
-      {
-        httpMetadata: { contentType: 'application/json; charset=utf-8' },
-      },
-    );
-
-    return respond(json({ ok: true, gapId, createdAt }));
-  }
-
   const internalRenderLivePointerMatch = pathname.match(
-    /^\/__internal\/renders\/instances\/([^/]+)\/live\/r\.json$/,
+    /^\/__internal\/renders\/widgets\/([^/]+)\/live\/r\.json$/,
   );
   if (internalRenderLivePointerMatch) {
-    const publicId = normalizePublicId(decodeURIComponent(internalRenderLivePointerMatch[1]));
+    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderLivePointerMatch[1]));
     const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!isValidScopedInstance(publicId, accountId)) {
+    if (!isValidScopedInstance(instanceId, accountId)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
     if (req.method !== 'POST') {
@@ -538,7 +450,7 @@ export async function tryHandleInternalRenderRoutes(
     await syncLiveSurface(env, {
       v: 1,
       kind: 'sync-live-surface',
-      publicId: publicId!,
+      instanceId: instanceId!,
       accountId,
       live: true,
       widgetType,
@@ -550,7 +462,7 @@ export async function tryHandleInternalRenderRoutes(
     return respond(
       json({
         ok: true,
-        publicId,
+        instanceId,
         live: true,
         configFp,
       }),
@@ -558,12 +470,12 @@ export async function tryHandleInternalRenderRoutes(
   }
 
   const internalRenderLiveSurfaceMatch = pathname.match(
-    /^\/__internal\/renders\/instances\/([^/]+)\/live\.json$/,
+    /^\/__internal\/renders\/widgets\/([^/]+)\/live\.json$/,
   );
   if (internalRenderLiveSurfaceMatch) {
-    const publicId = normalizePublicId(decodeURIComponent(internalRenderLiveSurfaceMatch[1]));
+    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderLiveSurfaceMatch[1]));
     const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!isValidScopedInstance(publicId, accountId)) {
+    if (!isValidScopedInstance(instanceId, accountId)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
     if (req.method !== 'DELETE') {
@@ -579,43 +491,32 @@ export async function tryHandleInternalRenderRoutes(
     await syncLiveSurface(env, {
       v: 1,
       kind: 'sync-live-surface',
-      publicId: publicId!,
+      instanceId: instanceId!,
       accountId,
       live: false,
     });
-    return respond(json({ ok: true, publicId, live: false }));
+    return respond(json({ ok: true, instanceId, live: false }));
   }
 
   const internalRenderSavedMatch = pathname.match(
-    /^\/__internal\/renders\/instances\/([^/]+)\/saved\.json$/,
+    /^\/__internal\/renders\/widgets\/([^/]+)\/saved\.json$/,
   );
   if (internalRenderSavedMatch) {
-    const publicId = normalizePublicId(decodeURIComponent(internalRenderSavedMatch[1]));
+    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderSavedMatch[1]));
     const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!isValidScopedInstance(publicId, accountId)) {
+    if (!isValidScopedInstance(instanceId, accountId)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
 
     if (req.method === 'GET') {
-      const internalServiceId = String(req.headers.get(INTERNAL_SERVICE_HEADER) || '').trim().toLowerCase();
-      const isRomaListedRead =
-        internalServiceId === TOKYO_INTERNAL_SERVICE_ROMA_EDGE &&
-        publicId != null &&
-        (await isRomaListedSavedReadAllowed({
-          env,
-          accountId,
-          publicId,
-        }));
-      if (!isRomaListedRead) {
-        const authErr = await authorizeSavedRenderControlRequest({
-          req,
-          env,
-          accountId,
-          minRole: 'viewer',
-        });
-        if (authErr) return respond(authErr);
-      }
-      const saved = await readSavedRenderConfig({ env, publicId: publicId!, accountId });
+      const authErr = await authorizeSavedRenderControlRequest({
+        req,
+        env,
+        accountId,
+        minRole: 'viewer',
+      });
+      if (authErr) return respond(authErr);
+      const saved = await readSavedRenderConfig({ env, instanceId: instanceId!, accountId });
       if (!saved.ok && saved.kind === 'NOT_FOUND') {
         return respond(
           json(
@@ -662,7 +563,7 @@ export async function tryHandleInternalRenderRoutes(
           : undefined;
       const savedWrite = await writeSavedRenderConfig({
         env,
-        publicId: publicId!,
+        instanceId: instanceId!,
         accountId,
         widgetType: body.widgetType as string,
         config: body.config as Record<string, unknown>,
@@ -687,7 +588,7 @@ export async function tryHandleInternalRenderRoutes(
         minRole: 'editor',
       });
       if (authErr) return respond(authErr);
-      const deleted = await deleteSavedRenderConfig({ env, publicId: publicId!, accountId });
+      const deleted = await deleteSavedRenderConfig({ env, instanceId: instanceId!, accountId });
       if (!deleted.ok && deleted.kind === 'NOT_FOUND') {
         return respond(
           json(
@@ -711,12 +612,12 @@ export async function tryHandleInternalRenderRoutes(
   }
 
   const internalRenderConfigPackWriteMatch = pathname.match(
-    /^\/__internal\/renders\/instances\/([^/]+)\/config-pack$/,
+    /^\/__internal\/renders\/widgets\/([^/]+)\/config-pack$/,
   );
   if (internalRenderConfigPackWriteMatch) {
-    const publicId = normalizePublicId(decodeURIComponent(internalRenderConfigPackWriteMatch[1]));
+    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderConfigPackWriteMatch[1]));
     const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!isValidScopedInstance(publicId, accountId)) {
+    if (!isValidScopedInstance(instanceId, accountId)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
     if (req.method !== 'POST') {
@@ -743,7 +644,7 @@ export async function tryHandleInternalRenderRoutes(
     await writeConfigPack(env, {
       v: 1,
       kind: 'write-config-pack',
-      publicId: publicId!,
+      instanceId: instanceId!,
       accountId,
       widgetType,
       configFp,
@@ -752,7 +653,7 @@ export async function tryHandleInternalRenderRoutes(
 
     return respond(
       json({
-        publicId,
+        instanceId,
         widgetType,
         configFp,
         written: true,
@@ -761,25 +662,4 @@ export async function tryHandleInternalRenderRoutes(
   }
 
   return null;
-}
-
-async function isRomaListedSavedReadAllowed(args: {
-  env: TokyoRouteArgs['env'];
-  accountId: string;
-  publicId: string;
-}): Promise<boolean> {
-  const platformAccountId = resolvePlatformAccountId(args.env);
-  if (args.accountId !== platformAccountId) return false;
-  const listedIndex = await readListedInstanceIndex({
-    env: args.env,
-    platformAccountId,
-  });
-  if (!listedIndex.ok) return false;
-  return listedIndex.value.entries.some(
-    (entry) =>
-      entry.accountId === args.accountId &&
-      entry.publicId === args.publicId &&
-      entry.listed === true &&
-      entry.duplicable === true,
-  );
 }

@@ -11,8 +11,8 @@ export function TopDrawer() {
   const [embedOpen, setEmbedOpen] = useState(false);
 
   const meta = chrome.meta;
-  const currentPublicId = typeof meta?.publicId === 'string' ? meta.publicId : '';
-  const hasInstance = Boolean(currentPublicId);
+  const currentInstanceId = typeof meta?.instanceId === 'string' ? meta.instanceId : '';
+  const hasInstance = Boolean(currentInstanceId);
   const canSave = hasInstance && isDirty;
   const currentLabel = useMemo(
     () => (typeof meta?.label === 'string' ? meta.label.trim() : ''),

@@ -54,7 +54,7 @@ export function useSessionBoot(args: {
   const loadInstance = useCallback(
     async (
       message: EditorOpenMessage,
-    ): Promise<{ ok: true; publicId?: string; widgetname?: string } | { ok: false; error: string }> => {
+    ): Promise<{ ok: true; instanceId?: string; widgetname?: string } | { ok: false; error: string }> => {
       try {
         const compiled = message.compiled;
         const baseLocale = typeof message.baseLocale === 'string' ? message.baseLocale.trim() : '';
@@ -78,13 +78,13 @@ export function useSessionBoot(args: {
         const nextCopilot = (message.copilot as CopilotRuntimeUi | undefined) ?? null;
 
         if (!nextLabel) {
-          nextLabel = String(message.publicId || '').trim() || 'Untitled widget';
+          nextLabel = String(message.instanceId || '').trim() || 'Untitled widget';
         }
 
         setPolicy(nextPolicy);
         setCopilot(nextCopilot);
         setMeta({
-          publicId: message.publicId,
+          instanceId: message.instanceId,
           baseLocale,
           widgetname: compiled.widgetname,
           label: nextLabel,
@@ -105,7 +105,7 @@ export function useSessionBoot(args: {
         }));
         return {
           ok: true,
-          publicId: message.publicId,
+          instanceId: message.instanceId,
           widgetname: compiled.widgetname,
         };
       } catch (err) {
@@ -169,7 +169,7 @@ export function useSessionBoot(args: {
               {
                 type: 'bob:open-editor-applied',
                 requestId,
-                publicId: result.publicId,
+                instanceId: result.instanceId,
                 widgetname: result.widgetname,
               },
               targetOrigin,

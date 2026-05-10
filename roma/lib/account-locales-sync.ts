@@ -9,7 +9,7 @@ function formatWarning(prefix: string, detail?: string | null): string {
 }
 
 type AccountLocaleSyncTarget = {
-  publicId: string;
+  instanceId: string;
   live: boolean;
 };
 
@@ -35,7 +35,7 @@ async function loadAccountLocaleSyncTargets(args: {
   }
 
   const targets = index.value.accountInstances.map((instance) => ({
-    publicId: instance.publicId,
+    instanceId: instance.instanceId,
     live: instance.publishStatus === 'published',
   }));
 
@@ -61,7 +61,7 @@ export async function runAccountLocalesSync(args: {
 
   const syncTargets = Array.from(
     new Map(
-      targets.targets.map((instance) => [instance.publicId, instance]),
+      targets.targets.map((instance) => [instance.instanceId, instance]),
     ).values(),
   );
 
@@ -72,7 +72,7 @@ export async function runAccountLocalesSync(args: {
   for (const instance of syncTargets) {
     await enqueueAccountInstanceSync({
       accountId: args.accountId,
-      publicId: instance.publicId,
+      instanceId: instance.instanceId,
       accountCapsule: args.accountCapsule,
       live: instance.live,
       l10nIntent: args.l10nIntent,

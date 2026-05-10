@@ -1,11 +1,10 @@
 'use client';
 
 export type WidgetInstance = {
-  publicId: string;
+  instanceId: string;
   widgetType: string;
   displayName: string;
   status: 'published' | 'unpublished';
-  listed: boolean;
   actions: {
     edit: boolean;
     duplicate: boolean;
@@ -17,11 +16,10 @@ export type WidgetInstance = {
 };
 
 type RawWidgetInstance = {
-  publicId?: string | null;
+  instanceId?: string | null;
   widgetType?: string | null;
   displayName?: string | null;
   status?: string | null;
-  listed?: boolean | null;
   actions?: {
     edit?: boolean | null;
     duplicate?: boolean | null;
@@ -59,21 +57,19 @@ export function normalizeWidgetType(value: string | null | undefined): string {
 }
 
 export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance | null {
-  const publicId = String(raw.publicId || '').trim();
-  if (!publicId) return null;
+  const instanceId = String(raw.instanceId || '').trim();
+  if (!instanceId) return null;
 
   const widgetType = normalizeWidgetType(raw.widgetType);
   const displayName = String(raw.displayName || '').trim() || DEFAULT_INSTANCE_DISPLAY_NAME;
   const status = raw.status === 'published' ? 'published' : 'unpublished';
-  const listed = raw.listed === true;
   const actions = raw.actions && typeof raw.actions === 'object' ? raw.actions : null;
 
   return {
-    publicId,
+    instanceId,
     widgetType,
     displayName,
     status,
-    listed,
     actions: {
       edit: actions?.edit !== false,
       duplicate: actions?.duplicate !== false,
@@ -191,20 +187,14 @@ export async function loadRomaWidgetsForAccount(args: {
   }
 }
 
-export function createUserInstancePublicId(widgetType: string): string {
-  const normalized = widgetType
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '');
-  const stem = normalized || 'instance';
+export function createUserInstanceId(): string {
   const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-  return `wgt_${stem}_u_${suffix}`;
+  return `ins_${suffix}`;
 }
 
 export function buildBuilderRoute(args: {
-  publicId: string;
+  instanceId: string;
   widgetType?: string | null;
 }): string {
-  return `/builder/${encodeURIComponent(args.publicId)}`;
+  return `/builder/${encodeURIComponent(args.instanceId)}`;
 }

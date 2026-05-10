@@ -35,7 +35,7 @@ Manifest must carry:
 - `sizeBytes` (exact bytes)
 - `sha256`
 - `key` (private canonical blob key)
-- provenance fields (`publicId`, `widgetType`, `source`)
+- provenance fields (`instanceId`, `widgetType`, `source`)
 
 ---
 

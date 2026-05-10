@@ -1,7 +1,7 @@
 import { loadTokyoAccountInstanceDocument } from './account-instance-direct';
 
 export type BuilderOpenEnvelope = {
-  publicId: string;
+  instanceId: string;
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
@@ -10,7 +10,7 @@ export type BuilderOpenEnvelope = {
 
 export async function loadBuilderOpenEnvelope(args: {
   accountId: string;
-  publicId: string;
+  instanceId: string;
   accountCapsule?: string | null;
 }): Promise<
   | { ok: true; value: BuilderOpenEnvelope }
@@ -26,7 +26,7 @@ export async function loadBuilderOpenEnvelope(args: {
 > {
   const instance = await loadTokyoAccountInstanceDocument({
     accountId: args.accountId,
-    publicId: args.publicId,
+    instanceId: args.instanceId,
     accountCapsule: args.accountCapsule,
   });
   if (!instance.ok) {
@@ -36,7 +36,7 @@ export async function loadBuilderOpenEnvelope(args: {
   return {
     ok: true,
     value: {
-      publicId: instance.value.row.publicId,
+      instanceId: instance.value.row.instanceId,
       displayName: instance.value.row.displayName || 'Untitled widget',
       widgetType: instance.value.row.widgetType,
       config: instance.value.config,

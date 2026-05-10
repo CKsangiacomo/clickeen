@@ -2,7 +2,7 @@
 import InstanceEmbed from '../../components/InstanceEmbed.astro';
 
 type Props = {
-  publicId: string;
+  instanceId: string;
   title: string;
   subtitle: string;
   tiles: Array<{ code: string; label: string }>;
@@ -10,7 +10,7 @@ type Props = {
 };
 
 const {
-  publicId,
+  instanceId,
   title,
   subtitle,
   tiles,
@@ -40,7 +40,7 @@ const {
               <span aria-hidden="true" class="selector-icon icon icon-chevrondown"></span>
             </form>
             <InstanceEmbed
-              publicId={publicId}
+              instanceId={instanceId}
               locale={item.code}
               localeOverride={item.code}
               title={`${item.label} preview`}
