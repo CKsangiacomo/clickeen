@@ -1,6 +1,10 @@
 name: cloud-dev runtime verify
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cloud-dev-runtime-verify.yml"
   workflow_run:
     workflows:
       - cloud-dev workers deploy
@@ -60,10 +64,17 @@ jobs:
           echo "Bob custom domain did not become reachable in time." >&2
           exit 1
 
-      - name: Verify Venice embed reachability
+      - name: Verify Venice embed loader reachability
         run: |
           set -euo pipefail
-          curl -I -fsS "https://venice.dev.clickeen.com/e/test" >/tmp/venice-embed.head
+          for attempt in $(seq 1 12); do
+            if curl -fsS "https://venice.dev.clickeen.com/embed/latest/loader.js" >/tmp/venice-loader.js && grep -q "window.Clickeen" /tmp/venice-loader.js; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Venice embed loader did not become reachable with the expected runtime payload in time." >&2
+          exit 1
 
       - name: Verify corrected Roma auth routes
         run: |
