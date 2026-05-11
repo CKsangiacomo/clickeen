@@ -68,41 +68,33 @@
   }
 
   async function loadLocalizedState(args) {
-    const publicId = typeof args?.publicId === 'string' ? args.publicId.trim() : '';
+    const instanceId = typeof args?.instanceId === 'string' ? args.instanceId.trim() : '';
     const locale = normalizeLocale(args?.locale);
     const baseLocale = normalizeLocale(args?.baseLocale);
     const previewMode = typeof args?.previewMode === 'string' ? args.previewMode.trim() : '';
     const sourceState = args?.baseState;
     if (!sourceState || typeof sourceState !== 'object') return sourceState;
     if (previewMode !== 'translations') return sourceState;
-    if (!publicId || !locale) return sourceState;
+    if (!instanceId || !locale) return sourceState;
     if (baseLocale && locale === baseLocale) return sourceState;
 
-    const pointerRes = await fetch(
-      '/l10n/instances/' + encodeURIComponent(publicId) + '/live/' + encodeURIComponent(locale) + '.json',
+    const overlayRes = await fetch(
+      '/l10n/widgets/' +
+        encodeURIComponent(instanceId) +
+        '/' +
+        encodeURIComponent(locale) +
+        '/overlay.json',
       { method: 'GET', cache: 'no-store', credentials: 'omit' },
     ).catch(() => null);
-    if (!pointerRes) throw new Error('ck_preview_l10n_pointer_request_failed');
-    if (!pointerRes.ok) throw new Error('ck_preview_l10n_pointer_missing');
-    const pointer = await pointerRes.json().catch(() => null);
-    const textFp = pointer && typeof pointer.textFp === 'string' ? pointer.textFp.trim() : '';
-    if (!textFp) throw new Error('ck_preview_l10n_textfp_missing');
-
-    const textRes = await fetch(
-      '/l10n/instances/' +
-        encodeURIComponent(publicId) +
-        '/packs/' +
-        encodeURIComponent(locale) +
-        '/' +
-        encodeURIComponent(textFp) +
-        '.json',
-      { method: 'GET', cache: 'force-cache', credentials: 'omit' },
-    ).catch(() => null);
-    if (!textRes) throw new Error('ck_preview_l10n_pack_request_failed');
-    if (!textRes.ok) throw new Error('ck_preview_l10n_pack_missing');
-    const textPack = await textRes.json().catch(() => null);
-    if (!textPack || typeof textPack !== 'object' || Array.isArray(textPack)) {
-      throw new Error('ck_preview_l10n_pack_invalid');
+    if (!overlayRes) throw new Error('ck_preview_l10n_overlay_request_failed');
+    if (!overlayRes.ok) throw new Error('ck_preview_l10n_overlay_missing');
+    const overlay = await overlayRes.json().catch(() => null);
+    const textPack =
+      overlay && typeof overlay === 'object' && overlay.textPack && typeof overlay.textPack === 'object'
+        ? overlay.textPack
+        : null;
+    if (!textPack || Array.isArray(textPack)) {
+      throw new Error('ck_preview_l10n_overlay_invalid');
     }
 
     const localized =

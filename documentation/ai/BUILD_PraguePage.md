@@ -80,7 +80,7 @@ Rules:
 - Page JSON is the **single source of truth** for base copy; overlays overwrite `blocks[].copy` at runtime.
 - `id` is unique and stable per page.
 - `type` must match a registered block type.
-- `visual` is only allowed for block types that support it (see registry). For embeds, use `systemInstanceRef.publicId`.
+- `visual` is only allowed for block types that support it (see registry). For embeds, use `accountInstanceRef.instanceId` only when the page intentionally points at a real account widget instance.
 
 Example shape:
 ```json
@@ -89,7 +89,7 @@ Example shape:
   "blocks": [
     { "id": "page-meta", "type": "page-meta", "copy": { "title": "...", "description": "..." } },
     { "id": "navmeta", "type": "navmeta", "copy": { "title": "...", "description": "..." } },
-    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true, "systemInstanceRef": { "publicId": "wgt_system_faq_lightblurs_generic" } },
+    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true, "accountInstanceRef": { "instanceId": "ins_faq_lightblurs_generic" } },
     { "id": "minibob", "type": "minibob", "copy": { "heading": "...", "subhead": "..." } }
   ]
 }
@@ -100,7 +100,7 @@ Example shape:
 Required keys (current registry):
 - `big-bang`: `headline`, `body`
 - `hero`: `headline`, `subheadline`
-- `split`: `headline`, `subheadline` (meta: `layout`, `systemInstanceRef` allowed)
+- `split`: `headline`, `subheadline` (meta: `layout`, `accountInstanceRef` allowed)
 - `steps`: `title`, `items[]`
 - `outcomes`: no required keys enforced yet (expects `items[]` when used)
 - `cta`: `headline`, `subheadline`

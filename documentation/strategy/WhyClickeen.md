@@ -119,7 +119,7 @@ There is no geography.
 **What this requires:**
 - Locale is a runtime parameter, like `userId`
 - No hardcoded date formats
-- Locale is never encoded into IDs (no DB fan-out like `wgt_curated_*.<locale>`)
+- Locale is never encoded into IDs; account widget `instanceId` values are locale-free.
 - Typography that handles all scripts from day 1
 - Payments designed multi-currency from the start
 - AI agents that operate natively in any language—not "translate from English"
@@ -185,7 +185,7 @@ Widget categories (illustrative, not final):
 - Information display — FAQs, pricing tables, feature lists
 - Engagement — newsletters, popups, announcements
 
-Some widgets collect data (e.g., forms, surveys). Others are presentational (e.g., testimonials, pricing tables). Both follow the same embed → claim → upgrade model. The catalog will evolve with demand. Each widget includes multiple professionally designed **starter designs** (curated instances, `wgt_curated_*`, that users can clone).
+Some widgets collect data (e.g., forms, surveys). Others are presentational (e.g., testimonials, pricing tables). Both follow the same embed → claim → upgrade model. The catalog will evolve with demand, but the current account product operates on account-owned widget instances rather than legacy catalog identities.
 
 **Widgets are the Trojan horse, not the destination.** They're the perfect starting point—high-ROI, viral by design, fast time-to-value. But once you're using widgets, you're already on the platform. The architecture is the product.
 
@@ -260,7 +260,7 @@ See: `documentation/capabilities/multitenancy.md`
 - Visitor browses widgets on clickeen.com (Prague, our marketing website)
 - Chooses a widget (e.g., "FAQ", "Testimonials") and lands on the widget's landing page
 - Sees MiniBob loaded with an unpublished instance
-- Can customize config (text, colors, etc.) and optionally start from a different starter design
+- Can customize config (text, colors, etc.) in the temporary marketing experience
 - No signup needed to experiment
 - **NO Save button** in MiniBob (claim persists on signup)
 - **NO "Copy Code" button** in MiniBob
@@ -277,12 +277,12 @@ See: `documentation/capabilities/multitenancy.md`
 
 **Free vs Paid boundaries:**
 - Free: one active widget, "Made with Clickeen" branding on
-- Paid: unlimited widgets, no branding, premium starter designs
+- Paid: unlimited widgets, no branding, premium design controls
 
 **Natural upgrade path:**
 - Need a second widget (free allows one)
 - Want professional appearance (remove branding)
-- Need premium starter designs or advanced options
+- Need premium design controls or advanced options
 
 ---
 

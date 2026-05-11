@@ -49,29 +49,27 @@ type NextRevalidate = { revalidate?: number };
 function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: NextRevalidate } {
   const normalized = pathname.startsWith('/') ? pathname : `/${pathname}`;
   const isL10n = normalized.startsWith('/l10n/');
+  const isWidgetL10n = normalized.startsWith('/l10n/widgets/');
   const isL10nIndex = isL10n && normalized.endsWith('/index.json');
-  const isL10nOverlay = isL10n && normalized.endsWith('.ops.json');
-  const isL10nBaseSnapshot = isL10n && normalized.includes('/bases/') && normalized.endsWith('.snapshot.json');
-  const isL10nLivePointer = isL10n && /^\/l10n\/instances\/[^/]+\/live\/[^/]+\.json$/i.test(normalized);
-  const isL10nPack = isL10n && /^\/l10n\/instances\/[^/]+\/packs\/[^/]+\/[a-f0-9]{64}\.json$/i.test(normalized);
+  const isL10nOverlay = isWidgetL10n && /^\/l10n\/widgets\/[^/]+\/[^/]+\/overlay\.json$/i.test(normalized);
   const isI18n = normalized.startsWith('/i18n/');
   const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
   const isAccountAsset = normalized.startsWith('/assets/account/');
   const isRender = normalized.startsWith('/renders/');
-  const isRenderLivePointer = isRender && /^\/renders\/instances\/[^/]+\/live\//i.test(normalized);
-  const isRenderConfigPack =
-    isRender && /^\/renders\/instances\/[^/]+\/config\/[a-f0-9]{64}\/config\.json$/i.test(normalized);
+  const isRenderLivePointer = isRender && /^\/renders\/widgets\/[^/]+\/live\/r\.json$/i.test(normalized);
+  const isRenderConfigPack = isRender && /^\/renders\/widgets\/[^/]+\/config\.json$/i.test(normalized);
+  const isRenderMetaLivePointer = isRender && /^\/renders\/widgets\/[^/]+\/meta\/live\/[^/]+\.json$/i.test(normalized);
   const isRenderMetaPack =
-    isRender && /^\/renders\/instances\/[^/]+\/meta\/[^/]+\/[a-f0-9]{64}\.json$/i.test(normalized);
+    isRender && /^\/renders\/widgets\/[^/]+\/meta\/[^/]+\/[a-f0-9]{64}\.json$/i.test(normalized);
   const isRenderPack = isRenderConfigPack || isRenderMetaPack;
   const isDieter = normalized.startsWith('/dieter/');
   const isWidget = normalized.startsWith('/widgets/');
   const isFont = normalized.startsWith('/fonts/');
 
-  if (isL10nLivePointer || isRenderLivePointer) {
+  if (isL10nOverlay || isRenderLivePointer || isRenderConfigPack || isRenderMetaLivePointer) {
     return { cache: 'no-store' };
   }
-  if (isL10nOverlay || isL10nBaseSnapshot || isL10nPack || isAccountAsset || isRenderPack) {
+  if (isAccountAsset || isRenderPack) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
   if (isI18n && !isI18nManifest) {

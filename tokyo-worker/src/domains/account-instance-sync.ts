@@ -382,11 +382,14 @@ export async function syncAccountInstance(args: {
   );
 
   for (const locale of desiredLocales) {
+    if (locale === baseLocale) {
+      continue;
+    }
     if (locale !== baseLocale && incompleteLocales.has(locale)) {
       continue;
     }
     const existing = existingLocaleOverlays.get(locale);
-    const baseOps = locale === baseLocale ? [] : generatedBaseOpsByLocale.get(locale) ?? existing?.baseOps ?? [];
+    const baseOps = generatedBaseOpsByLocale.get(locale) ?? existing?.baseOps ?? [];
 
     const mirror = buildLocaleMirrorPayload({
       widgetType: saved.value.pointer.widgetType,

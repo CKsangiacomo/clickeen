@@ -23,11 +23,12 @@ Required for authenticated checks:
 Options:
   --roma-base <url>            Roma base URL (default: ${DEFAULT_ROMA_BASE})
   --venice-base <url>          Venice base URL (default: ${DEFAULT_VENICE_BASE})
-  --public-id <id>             Published public id for Venice read checks
+  --instance-id <id>           Published instanceId for Venice read checks
+  --source-instance-id <id>    Account instanceId to duplicate during --write checks
   --concurrency <n>            Concurrent auth/account probes (default: ${DEFAULT_CONCURRENCY})
   --timeout-ms <n>             Request timeout (default: ${DEFAULT_TIMEOUT_MS})
-  --write                      Run write+cleanup checks: tiny asset upload/delete and starter duplicate/delete
-  --public-only                Skip authenticated Roma checks
+  --write                      Run write+cleanup checks: tiny asset upload/delete and account instance duplicate/delete
+  --public-only                Skip authenticated Roma checks; requires --instance-id
   --json                       Print machine-readable summary
   --help                       Show this message
 `);
@@ -38,7 +39,8 @@ function parseArgs(argv) {
     romaBase: process.env.ROMA_BASE_URL || process.env.CK_ROMA_BASE_URL || DEFAULT_ROMA_BASE,
     veniceBase: process.env.VENICE_BASE_URL || process.env.CK_VENICE_BASE_URL || DEFAULT_VENICE_BASE,
     cookie: process.env.CK_ROMA_COOKIE || process.env.ROMA_COOKIE || '',
-    instanceId: process.env.CK_HEALTH_PUBLIC_ID || process.env.VENICE_PUBLIC_ID || '',
+    instanceId: process.env.CK_HEALTH_INSTANCE_ID || process.env.VENICE_INSTANCE_ID || '',
+    sourceInstanceId: process.env.CK_HEALTH_SOURCE_INSTANCE_ID || '',
     concurrency: DEFAULT_CONCURRENCY,
     timeoutMs: DEFAULT_TIMEOUT_MS,
     write: false,
@@ -81,8 +83,13 @@ function parseArgs(argv) {
       i += 1;
       continue;
     }
-    if (token === '--public-id') {
+    if (token === '--instance-id') {
       args.instanceId = String(argv[i + 1] || '').trim();
+      i += 1;
+      continue;
+    }
+    if (token === '--source-instance-id') {
+      args.sourceInstanceId = String(argv[i + 1] || '').trim();
       i += 1;
       continue;
     }
@@ -103,6 +110,13 @@ function parseArgs(argv) {
   args.veniceBase = normalizeBaseUrl(args.veniceBase, 'venice-base');
   args.cookie = normalizeCookie(args.cookie);
   args.instanceId = args.instanceId.trim();
+  args.sourceInstanceId = args.sourceInstanceId.trim();
+  if (args.publicOnly && !args.instanceId) {
+    throw new Error('--public-only requires --instance-id / CK_HEALTH_INSTANCE_ID / VENICE_INSTANCE_ID');
+  }
+  if (args.write && !args.sourceInstanceId) {
+    throw new Error('--write requires --source-instance-id / CK_HEALTH_SOURCE_INSTANCE_ID');
+  }
   if (!Number.isInteger(args.concurrency) || args.concurrency < 1 || args.concurrency > 50) {
     throw new Error('--concurrency must be an integer from 1 to 50');
   }
@@ -151,13 +165,6 @@ function extractInstances(payload) {
 
 function selectAccountInstance(instances) {
   return instances.find((entry) => typeof entry.instanceId === 'string') || null;
-}
-
-function selectDuplicateSource(instances) {
-  return (
-    instances.find((entry) => isRecord(entry.actions) && entry.actions.duplicate === true && typeof entry.instanceId === 'string') ||
-    null
-  );
 }
 
 function selectPublishedInstance(instances) {
@@ -408,7 +415,7 @@ async function runVenice(runner, instanceId) {
   });
 
   if (!instanceId) {
-    runner.skip('Venice public instance read', 'venice.public', 'no published public id supplied or discovered');
+    runner.skip('Venice public instance read', 'venice.public', 'no published instanceId supplied or discovered');
     return;
   }
 
@@ -467,7 +474,7 @@ async function main() {
 
   if (args.write) {
     await runAssetWrite(runner);
-    await runDuplicateWrite(runner, selectDuplicateSource(instances));
+    await runDuplicateWrite(runner, { instanceId: args.sourceInstanceId });
   }
 
   const publishedInstanceId = args.instanceId || selectPublishedInstance(instances)?.instanceId || '';

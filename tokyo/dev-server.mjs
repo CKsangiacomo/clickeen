@@ -23,16 +23,16 @@ import url from 'node:url';
 import crypto from 'node:crypto';
 
 // Keep the Tokyo dev stub self-contained so CI can boot it with plain `node`.
-const INSTANCE_PUBLIC_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$/;
+const INSTANCE_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ACCOUNT_ASSET_PATH_RE = /^\/assets\/account\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)$/;
 
-function normalizeInstancePublicId(raw) {
+function normalizeInstanceId(raw) {
   const value = typeof raw === 'string' ? raw.trim() : '';
   if (!value) return null;
   if (value === '.' || value === '..') return null;
   if (value.includes('/') || value.includes('\\')) return null;
-  return INSTANCE_PUBLIC_ID_RE.test(value) ? value : null;
+  return INSTANCE_ID_RE.test(value) ? value : null;
 }
 
 function decodePathPart(raw) {
@@ -158,7 +158,7 @@ function normalizeWidgetType(raw) {
 }
 
 function normalizePublicId(raw) {
-  return normalizeInstancePublicId(raw);
+  return normalizeInstanceId(raw);
 }
 
 function pickExtension({ filename, contentType }) {
@@ -209,7 +209,7 @@ function isTokyoWorkerBridgeRequest(req) {
 function shouldProxyMutableToWorker(req, pathname) {
   if (isTokyoWorkerBridgeRequest(req)) return false;
   const isAccountInstanceL10nRead =
-    pathname.startsWith('/l10n/instances/') || /^\/l10n\/v\/[^/]+\/instances\//.test(pathname);
+    pathname.startsWith('/l10n/widgets/') || /^\/l10n\/v\/[^/]+\/widgets\//.test(pathname);
   if ((req.method === 'GET' || req.method === 'HEAD') && isAccountInstanceL10nRead) {
     return true;
   }
@@ -222,7 +222,7 @@ function shouldProxyMutableToWorker(req, pathname) {
   if ((req.method === 'GET' || req.method === 'HEAD') && parseAccountAssetRef(pathname)) {
     return true;
   }
-  if ((req.method === 'POST' || req.method === 'DELETE') && pathname.startsWith('/l10n/instances/')) {
+  if ((req.method === 'POST' || req.method === 'DELETE') && pathname.startsWith('/l10n/widgets/')) {
     return true;
   }
   return false;
@@ -393,7 +393,7 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, authorization, x-account-id, x-public-id, x-widget-type, x-filename, x-asset-id, x-source, x-tokyo-l10n-bridge'
+    'Content-Type, authorization, x-account-id, x-instance-id, x-widget-type, x-filename, x-asset-id, x-source, x-tokyo-l10n-bridge'
   );
 
   if (req.method === 'OPTIONS') {

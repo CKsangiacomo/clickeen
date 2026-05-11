@@ -366,9 +366,9 @@
 
     const widgetRoot = scopeEl.closest('[data-ck-widget]');
     const widgetname = widgetRoot instanceof HTMLElement ? widgetRoot.getAttribute('data-ck-widget') || '' : '';
-    const publicId = widgetRoot instanceof HTMLElement ? widgetRoot.getAttribute('data-ck-public-id') || '' : '';
+    const instanceId = widgetRoot instanceof HTMLElement ? widgetRoot.getAttribute('data-ck-instance-id') || '' : '';
 
-    window.parent.postMessage({ type: 'ck:ready', widgetname, publicId }, '*');
+    window.parent.postMessage({ type: 'ck:ready', widgetname, instanceId }, '*');
   }
 
   function applyStagePod(stageCfg, podCfg, scopeEl) {

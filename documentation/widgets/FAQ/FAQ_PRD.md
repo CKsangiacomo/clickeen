@@ -25,7 +25,7 @@ Layout choices (inside the same Type):
 - When `layout.type = multicolumn` (“Cards”), cards packing is controlled by `layout.cardsLayout = grid | masonry`.
 
 ## 0) Non-negotiables (Architecture)
-1. **Starter designs are instances**: system instances are Clickeen-owned instances that users clone.
+1. **Account instances are the authoring unit**: Bob edits one account widget instance at a time.
 2. **Editor is strict**: no silent fixups, no coercing bad values, no inventing missing state.
 3. **Deterministic render**: the same instance state produces the same output every time.
 4. **Scoped runtime**: runtime queries inside the widget root (no global selectors for internals).
@@ -93,8 +93,8 @@ Rules:
 - AI ops that create a section/item must include an `id` (use a stable uuid-like string).
 - Never “rename” ids as a styling/content change; treat ids as persistent identifiers.
 Deep-link DOM id contract (accordion):
-- Question item: `faq-q-<publicId>-<item.id>`
-- Answer region: `faq-a-<publicId>-<item.id>`
+- Question item: `faq-q-<instanceId>-<item.id>`
+- Answer region: `faq-a-<instanceId>-<item.id>`
 
 ### Layouts
 State: `layout.type`

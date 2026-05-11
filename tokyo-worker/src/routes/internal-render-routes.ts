@@ -6,7 +6,7 @@ import {
 import { assertRomaAccountCapsuleAuth, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '../auth';
 import { json } from '../http';
 import {
-  deleteSavedRenderConfig,
+  deleteInstanceMirror,
   enqueueTokyoMirrorJob,
   buildAccountInstanceIndexDryRun,
   readInstanceServeState,
@@ -353,18 +353,11 @@ export async function tryHandleInternalRenderRoutes(
       );
     }
 
-    const widgetTypes = Array.from(
-      new Set(
-        accountIndex.value.entries.map((entry) => entry.widgetType.trim().toLowerCase()).filter(Boolean),
-      ),
-    ).sort((left, right) => left.localeCompare(right));
-
     return respond(
       json({
         ok: true,
         accountId,
         accountInstances: accountIndex.value.entries.map((entry) => ({ ...entry, instanceId: entry.id })),
-        widgetTypes,
         publishedCount: accountIndex.value.entries.filter((entry) => entry.publishStatus === 'published').length,
       }),
     );
@@ -588,23 +581,7 @@ export async function tryHandleInternalRenderRoutes(
         minRole: 'editor',
       });
       if (authErr) return respond(authErr);
-      const deleted = await deleteSavedRenderConfig({ env, instanceId: instanceId!, accountId });
-      if (!deleted.ok && deleted.kind === 'NOT_FOUND') {
-        return respond(
-          json(
-            { error: { kind: 'NOT_FOUND', reasonKey: deleted.reasonKey } },
-            { status: 404 },
-          ),
-        );
-      }
-      if (!deleted.ok) {
-        return respond(
-          json(
-            { error: { kind: 'VALIDATION', reasonKey: deleted.reasonKey } },
-            { status: 422 },
-          ),
-        );
-      }
+      await deleteInstanceMirror(env, instanceId!, accountId);
       return respond(json({ ok: true, deleted: true }));
     }
 

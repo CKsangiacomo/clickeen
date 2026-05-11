@@ -15,6 +15,15 @@ import type {
 } from './types';
 import { normalizeFingerprint, normalizeStorageId } from './utils';
 
+async function restorePublishDocument(
+  env: Env,
+  publishKey: string,
+  previous: PublishDocument | null,
+  fallback: PublishDocument,
+): Promise<void> {
+  await putJson(env, publishKey, previous ?? fallback);
+}
+
 export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promise<void> {
   const instanceId = normalizeStorageId(job.instanceId);
   const accountId = normalizeStorageId(job.accountId);
@@ -30,19 +39,24 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
   if (!location) throw new Error('[tokyo] sync-live-surface missing instance location');
 
   const publishKey = accountInstancePublishKey(location.accountId, location.widgetType, location.instanceId);
+  const previousPublish = normalizePublishDocument(await loadJson(env, publishKey));
   if (!job.live) {
-    await Promise.all([
-      putJson(env, publishKey, {
-        v: 1,
-        id: location.instanceId,
-        accountId: location.accountId,
-        widgetType: location.widgetType,
-        status: 'unpublished',
-        configFp: null,
-        updatedAt: new Date().toISOString(),
-      } satisfies PublishDocument),
-      env.TOKYO_R2.delete(publishedWidgetLookupKey(location.instanceId)),
-    ]);
+    const unpublished = {
+      v: 1,
+      id: location.instanceId,
+      accountId: location.accountId,
+      widgetType: location.widgetType,
+      status: 'unpublished',
+      configFp: null,
+      updatedAt: new Date().toISOString(),
+    } satisfies PublishDocument;
+    await putJson(env, publishKey, unpublished);
+    try {
+      await env.TOKYO_R2.delete(publishedWidgetLookupKey(location.instanceId));
+    } catch (error) {
+      await restorePublishDocument(env, publishKey, previousPublish, unpublished);
+      throw error;
+    }
     await rebuildAccountInstanceIndexes(env, accountId);
     return;
   }
@@ -52,27 +66,39 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
   const localePolicy = normalizeLocalePolicy(job.localePolicy);
   if (!localePolicy) throw new Error('[tokyo] sync-live-surface invalid localePolicy');
   const updatedAt = new Date().toISOString();
-  await Promise.all([
-    putJson(env, publishKey, {
+  const published = {
+    v: 1,
+    id: location.instanceId,
+    accountId: location.accountId,
+    widgetType: location.widgetType,
+    status: 'published',
+    configFp,
+    localePolicy,
+    seoGeo: job.seoGeo === true,
+    updatedAt,
+  } satisfies PublishDocument;
+  await putJson(env, publishKey, published);
+  try {
+    await putJson(env, publishedWidgetLookupKey(location.instanceId), {
       v: 1,
       id: location.instanceId,
       accountId: location.accountId,
       widgetType: location.widgetType,
       status: 'published',
-      configFp,
-      localePolicy,
-      seoGeo: job.seoGeo === true,
       updatedAt,
-    } satisfies PublishDocument),
-    putJson(env, publishedWidgetLookupKey(location.instanceId), {
+    } satisfies PublishedWidgetLookupDocument);
+  } catch (error) {
+    await restorePublishDocument(env, publishKey, previousPublish, {
       v: 1,
       id: location.instanceId,
       accountId: location.accountId,
       widgetType: location.widgetType,
-      status: 'published',
+      status: 'unpublished',
+      configFp: null,
       updatedAt,
-    } satisfies PublishedWidgetLookupDocument),
-  ]);
+    });
+    throw error;
+  }
   await rebuildAccountInstanceIndexes(env, accountId);
 }
 

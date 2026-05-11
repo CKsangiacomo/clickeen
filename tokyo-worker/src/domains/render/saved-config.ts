@@ -13,7 +13,7 @@ import {
   normalizeSavedRenderPointer,
   resolveSavedRenderValidationReason,
 } from './normalize';
-import { loadJson, putJson, deletePrefix } from './storage';
+import { loadJson, putJson } from './storage';
 import type {
   AccountInstanceDocument,
   AccountWidgetDocument,
@@ -316,19 +316,4 @@ export async function writeSavedRenderL10nStatus(args: {
   };
   await putJson(args.env, accountInstanceDocumentKey(pointer.accountId, pointer.widgetType, pointer.id), next);
   return toSavedPointer({ instance: next, configFp: pointer.configFp });
-}
-
-export async function deleteSavedRenderConfig(args: {
-  env: Env;
-  instanceId: string;
-  accountId: string;
-}): Promise<{ ok: true; deleted: true } | SavedRenderDocumentReadFailure> {
-  const saved = await readSavedRenderConfig(args);
-  if (!saved.ok) return saved;
-  await deletePrefix(
-    args.env,
-    `accounts/${saved.value.pointer.accountId}/widgets/${saved.value.pointer.widgetType}/${saved.value.pointer.id}/`,
-  );
-  await rebuildAccountInstanceIndexes(args.env, saved.value.pointer.accountId);
-  return { ok: true, deleted: true };
 }

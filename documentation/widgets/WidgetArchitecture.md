@@ -79,7 +79,7 @@ tokyo/product/themes/themes.json -> Bob compiles theme dropdown/presets from loc
 
 Embed flow (Venice):
 ```
-Browser -> Venice /e/{publicId}?locale=... -> Venice loads live pointer + config pack + text pack + widget files (Tokyo)
+Browser -> Venice /widget/{instanceId}?locale=... -> Venice loads live pointer + config pack + text pack + widget files (Tokyo)
 -> Venice injects window.CK_WIDGET (state + locale) -> widget.client.js applyState
 ```
 

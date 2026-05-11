@@ -32,7 +32,6 @@ type RawWidgetInstance = {
 
 export type RomaWidgetsResponse = {
   accountId: string;
-  widgetTypes: string[];
   instances: WidgetInstance[];
 };
 
@@ -81,17 +80,6 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
   };
 }
 
-function normalizeWidgetTypeList(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return [];
-  return Array.from(
-    new Set(
-      raw
-        .map((entry) => normalizeWidgetType(typeof entry === 'string' ? entry : ''))
-        .filter((widgetType) => widgetType !== 'unknown'),
-    ),
-  ).sort((a, b) => a.localeCompare(b));
-}
-
 export function normalizeRomaWidgetsResponse(raw: unknown): RomaWidgetsResponse | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
@@ -112,7 +100,6 @@ export function normalizeRomaWidgetsResponse(raw: unknown): RomaWidgetsResponse 
 
   return {
     accountId,
-    widgetTypes: normalizeWidgetTypeList(record.widgetTypes),
     instances,
   };
 }

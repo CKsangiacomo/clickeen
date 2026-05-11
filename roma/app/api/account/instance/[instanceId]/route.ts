@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isUuid, normalizeInstanceId } from '@clickeen/ck-contracts';
 import {
-  deleteLiveSurfaceFromTokyo,
-  deleteSavedConfigFromTokyo,
+  deleteAccountInstanceFromTokyo,
   loadTokyoAccountInstanceDocument,
   loadTokyoAccountInstanceLiveStatus,
   saveAccountInstanceDirect,
@@ -28,18 +27,11 @@ async function deleteTokyoMirrors(args: {
   accountCapsule?: string;
 }): Promise<{ ok: true } | { ok: false; detail: string }> {
   try {
-    await Promise.all([
-      deleteSavedConfigFromTokyo({
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-        accountCapsule: args.accountCapsule,
-      }),
-      deleteLiveSurfaceFromTokyo({
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-        accountCapsule: args.accountCapsule,
-      }),
-    ]);
+    await deleteAccountInstanceFromTokyo({
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      accountCapsule: args.accountCapsule,
+    });
     return { ok: true };
   } catch (error) {
     return { ok: false, detail: error instanceof Error ? error.message : String(error) };

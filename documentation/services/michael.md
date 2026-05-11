@@ -18,7 +18,7 @@ Active widget instance truth lives in Tokyo:
 - l10n overlays
 - runtime published bytes
 
-If historical `widget_instances` schema residue exists, product code must not treat it as the source of truth for Builder, Widgets, Venice serving, or Prague embeds.
+The PRD 89 schema hard cut drops the historical `widget_instances` residue. Product code must not recreate a Michael widget-instance table for Builder, Widgets, Venice serving, or Prague embeds.
 
 ## Account Truth
 

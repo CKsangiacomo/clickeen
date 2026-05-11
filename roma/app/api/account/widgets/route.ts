@@ -80,10 +80,10 @@ export async function GET(request: NextRequest) {
     displayName: instance.displayName,
     status: instance.publishStatus,
     actions: {
-      edit: true,
+      edit: canMutate,
       duplicate: canMutate,
       delete: canMutate,
-      rename: true,
+      rename: canMutate,
       publish: canMutate && !containment.containment.active,
       unpublish: canMutate && instance.publishStatus === 'published',
     },
@@ -95,7 +95,6 @@ export async function GET(request: NextRequest) {
       account: {
         accountId,
       },
-      widgetTypes: widgetIndex.value.widgetTypes,
       instances: accountInstances,
     }),
     current.value.setCookies,

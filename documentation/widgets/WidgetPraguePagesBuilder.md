@@ -28,7 +28,7 @@ This doc is intentionally operational. It is not a creative brainstorm doc.
 Before writing any page JSON, collect:
 
 1. `widgetType`
-2. System instance public IDs available for the widget (`wgt_main_*`, `wgt_system_*`)
+2. Account widget instance references available for the page (`accountInstanceRef.instanceId`), if the page intentionally embeds a real account widget instance
 3. Widget-specific claim bank (from `WidgetGTMStrategy.md` section 5)
 4. Platform claims selected for this widget
 5. Source PRD for the widget
@@ -120,7 +120,7 @@ Create a compact internal object before page writing:
       "rationale": "Mobile-first questions on menu, allergens, and opening hours."
     }
   ],
-  "systemInstanceRefs": ["wgt_system_faq_lightblurs_generic"]
+  "accountInstanceRefs": [{ "instanceId": "ins_faq_lightblurs_generic" }]
 }
 ```
 

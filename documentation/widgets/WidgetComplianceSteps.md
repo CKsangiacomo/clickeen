@@ -129,7 +129,7 @@ OUTPUT
 - postMessage support:
   - Accept `ck:state-update` payloads `{ type, widgetname, state }`.
 - Initial state:
-  - Read from `window.CK_WIDGET` / `window.CK_WIDGETS[publicId]` (embed + Bob preview).
+  - Read from `window.CK_WIDGET` / `window.CK_WIDGETS[instanceId]` (embed + Bob preview).
 - Richtext safety:
   - If inline HTML is supported, sanitize deterministically and strip unsafe tags/attrs.
 
@@ -192,8 +192,8 @@ GATE
 ## Step 7.1 - Prague pages + l10n pipeline
 OUTPUT
 - `tokyo/prague/pages/{widgetType}/*.json` exist and contain valid `blocks[]`.
-- `curatedRef.publicId` references a real curated instance.
-- Page copy is compatible with Prague l10n allowlists.
+- `accountInstanceRef.instanceId` is present only when a Prague page intentionally points at a real account widget instance.
+- Page copy is compatible with Prague l10n allowlists. Prague page translations remain separate from account widget overlays.
 
 GATE (local)
 - `node scripts/prague-l10n/verify.mjs`
@@ -212,7 +212,7 @@ OUTPUT
   - widget-specific schema only when semantically safe
 
 GATE
-- `GET /r/:publicId?meta=1` returns expected SEO/GEO payloads by widget contract when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
+- `GET /renders/widgets/{instanceId}/meta/live/{locale}.json` returns expected SEO/GEO payloads by widget contract when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
 
 ---
 
@@ -229,5 +229,5 @@ Required checks
 
 Manual smoke (fast)
 - Bob preview: each panel control updates the preview deterministically.
-- Venice embed: `/e/:publicId` loads without console errors.
+- Venice embed: `/widget/{instanceId}` loads without console errors.
 - Localization: switching locale uses only current ready overlays for the active base fingerprint; missing current overlays fail visibly instead of silently falling back.

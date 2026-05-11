@@ -1,13 +1,13 @@
 # SEO + GEO optimized embed (Iframe++)
 
 STATUS: REFERENCE — MUST MATCH RUNTIME  
-Last updated: 2026-03-01 (PRD 54 pivot)
+Last updated: 2026-05-11 (PRD 89 account-instance route closure)
 
 This capability makes an iframe embed **SEO/GEO-friendly** by adding deterministic **host-page** metadata:
 - **SEO:** Schema.org JSON‑LD in the host `<head>`
 - **GEO:** A readable HTML excerpt in the host DOM (for humans + AI crawlers)
 
-UI still renders in the iframe (`/e/:publicId`). The “++” part is just extra metadata on the host page.
+UI still renders in the iframe (`/widget/:instanceId`). The “++” part is just extra metadata on the host page.
 
 ---
 
@@ -16,7 +16,7 @@ UI still renders in the iframe (`/e/:publicId`). The “++” part is just extra
 **Venice does not generate SEO/GEO at request time.**
 
 For public traffic, Venice is DB‑free and serves **only Tokyo bytes**:
-- a tiny pointer (`/r/:publicId`, `no-store`), and
+- a tiny pointer (`/renders/widgets/:instanceId/live/r.json`, `no-store`), and
 - (when entitled) tiny meta pointers + immutable meta packs.
 
 If the meta bytes don’t exist in Tokyo, the loader simply skips meta injection and still renders the iframe UI.
@@ -26,7 +26,7 @@ If the meta bytes don’t exist in Tokyo, the loader simply skips meta injection
 ## Host opt-in (how a site enables it)
 
 ```html
-<div data-clickeen-id="wgt_..." data-ck-optimization="seo-geo"></div>
+<div data-clickeen-id="ins_..." data-ck-optimization="seo-geo"></div>
 <script src="<VENICE_URL>/embed/latest/loader.js" async></script>
 ```
 
@@ -40,11 +40,11 @@ SEO/GEO embed is **tier-gated**.
 
 Source of truth:
 - Entitlement flag: `embed.seoGeo.enabled` in `packages/ck-policy/entitlements.matrix.json`
-- Public live pointer contract: `/renders/instances/<publicId>/live/r.json` includes `seoGeo` bases **only when entitled**. That URL serves the `public/instances/<publicId>/live.json` projection.
+- Public live pointer contract: `/renders/widgets/<instanceId>/live/r.json` includes `seoGeo` bases **only when entitled**.
 
 Non-entitled tiers:
 - Bob must not offer the SEO/GEO snippet.
-- Tokyo must not publish meta projections under `public/instances/<publicId>/meta/...`.
+- Tokyo must not expose meta artifacts under `/renders/widgets/<instanceId>/meta/...`.
 
 ---
 
@@ -53,7 +53,7 @@ Non-entitled tiers:
 When the loader sees `data-ck-optimization="seo-geo"`:
 
 1) Loader fetches the live pointer:
-- `GET <VENICE_URL>/r/:publicId`
+- `GET <VENICE_URL>/renders/widgets/:instanceId/live/r.json`
 
 2) Loader chooses the effective locale using the pointer’s `localePolicy`:
 - If an embed URL forces `?locale=<token>` and `<token>` is in `readyLocales`, use it.
@@ -62,13 +62,13 @@ When the loader sees `data-ck-optimization="seo-geo"`:
 
 3) If (and only if) the pointer indicates `seoGeo` exists:
 - Loader fetches the meta pointer:
-  - `GET <VENICE_URL>/r/:publicId?meta=1&locale=<effective>`
+  - `GET <VENICE_URL>/renders/widgets/:instanceId/meta/live/<effective>.json`
 - The meta pointer returns `metaFp`
 - Loader fetches the immutable meta pack from Tokyo (via Venice proxy):
-  - `GET <VENICE_URL>/renders/instances/<publicId>/meta/<locale>/<metaFp>.json`
+  - `GET <VENICE_URL>/renders/widgets/:instanceId/meta/<locale>/<metaFp>.json`
 
 4) Loader injects what it got:
-- `<script type="application/ld+json" id="ck-schema-<publicId>">…</script>` into `<head>`
+- `<script type="application/ld+json" id="ck-schema-<instanceId>">…</script>` into `<head>`
 - Excerpt HTML next to the embed container
 
 Failure rule:
@@ -78,6 +78,6 @@ Failure rule:
 
 ## Notes
 
-- Locale is never encoded into `publicId`.
-- Venice public routes (`/e`, `/r`) stay DB‑free.
+- Locale is never encoded into `instanceId`.
+- Venice public routes stay DB‑free.
 - SEO/GEO bytes are produced in the write plane (PRD 54B) and mirrored into Tokyo (PRD 54C cleanup rules apply).

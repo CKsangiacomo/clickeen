@@ -123,7 +123,7 @@ Bob’s active account-mode host surface is Roma.
 
 ### Instance write surfaces (current)
 
-- Roma user flows can create/duplicate/delete account user instances through Roma same-origin routes plus canonical account instance routes.
+- Roma user flows can duplicate, rename, publish, unpublish, and delete account widget instances through Roma same-origin routes plus canonical account instance routes. Account widget creation is not an active Bob-owned surface.
 - In hosted account mode, Bob does not own account transport. It emits explicit editor read/write intents back to the parent host, and the host executes the named account/tool routes on Bob's behalf.
 - Roma hosts customer account sessions through Roma same-origin current-account routes (`/api/account/...`).
 - Prague demo no longer boots Bob as a second editor. Public demo playback is Venice-owned; Bob no longer exposes MiniBob helper routes or a public editor boot path.

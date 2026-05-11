@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  deleteAccountInstanceFromTokyo,
   loadTokyoAccountInstanceDocument,
   loadTokyoAccountInstanceIndex,
   writeSavedConfigToTokyo,
@@ -214,9 +215,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let syncFollowup:
-    | { ok: true }
-    | { ok: false; reasonKey: string; detail: string } = { ok: true };
   try {
     await enqueueAccountInstanceSync({
       accountId,
@@ -234,16 +232,47 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    syncFollowup = {
-      ok: false,
-      reasonKey: 'coreui.errors.translations.acceptanceFailed',
-      detail,
-    };
     console.error('[roma account widgets duplicate route] sync follow-up failed after Tokyo duplicate', {
       accountId,
       instanceId,
       detail,
     });
+    try {
+      await deleteAccountInstanceFromTokyo({
+        accountId,
+        instanceId,
+        accountCapsule: current.value.authzToken,
+      });
+    } catch (cleanupError) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.translations.acceptanceFailed',
+              detail: `${detail}; duplicate cleanup failed: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`,
+            },
+          },
+          { status: 502 },
+        ),
+        current.value.setCookies,
+      );
+    }
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.translations.acceptanceFailed',
+            detail,
+          },
+        },
+        { status: 502 },
+      ),
+      current.value.setCookies,
+    );
   }
 
   return withSession(
@@ -256,7 +285,6 @@ export async function POST(request: NextRequest) {
         instanceId,
         widgetType: source.value.widgetType,
         status: 'unpublished',
-        syncFollowup,
       },
       { status: 201 },
     ),

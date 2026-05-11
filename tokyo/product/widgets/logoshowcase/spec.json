@@ -229,8 +229,7 @@
             "href": "",
             "name": "Audi",
             "asset": {
-              "name": "Audi.svg",
-              "source": "curated"
+              "name": "Audi.svg"
             },
             "title": "",
             "caption": "",
@@ -244,8 +243,7 @@
             "href": "",
             "name": "BMW",
             "asset": {
-              "name": "BMW.svg",
-              "source": "curated"
+              "name": "BMW.svg"
             },
             "title": "",
             "caption": "",
@@ -259,8 +257,7 @@
             "href": "",
             "name": "Chana",
             "asset": {
-              "name": "Chana.svg",
-              "source": "curated"
+              "name": "Chana.svg"
             },
             "title": "",
             "caption": "",
@@ -274,8 +271,7 @@
             "href": "",
             "name": "Daihatsu",
             "asset": {
-              "name": "Daihatsu.svg",
-              "source": "curated"
+              "name": "Daihatsu.svg"
             },
             "title": "",
             "caption": "",
@@ -289,8 +285,7 @@
             "href": "",
             "name": "Ford",
             "asset": {
-              "name": "Ford.svg",
-              "source": "curated"
+              "name": "Ford.svg"
             },
             "title": "",
             "caption": "",
@@ -304,8 +299,7 @@
             "href": "",
             "name": "Honda",
             "asset": {
-              "name": "Honda.svg",
-              "source": "curated"
+              "name": "Honda.svg"
             },
             "title": "",
             "caption": "",
@@ -319,8 +313,7 @@
             "href": "",
             "name": "Isuzu",
             "asset": {
-              "name": "Isuzu.svg",
-              "source": "curated"
+              "name": "Isuzu.svg"
             },
             "title": "",
             "caption": "",
@@ -334,8 +327,7 @@
             "href": "",
             "name": "Lambo",
             "asset": {
-              "name": "Lambo.svg",
-              "source": "curated"
+              "name": "Lambo.svg"
             },
             "title": "",
             "caption": "",
@@ -349,8 +341,7 @@
             "href": "",
             "name": "Perodua",
             "asset": {
-              "name": "Perodua.svg",
-              "source": "curated"
+              "name": "Perodua.svg"
             },
             "title": "",
             "caption": "",
@@ -364,8 +355,7 @@
             "href": "",
             "name": "Peugeot",
             "asset": {
-              "name": "Peugeot.svg",
-              "source": "curated"
+              "name": "Peugeot.svg"
             },
             "title": "",
             "caption": "",
@@ -379,8 +369,7 @@
             "href": "",
             "name": "Proton",
             "asset": {
-              "name": "Proton.svg",
-              "source": "curated"
+              "name": "Proton.svg"
             },
             "title": "",
             "caption": "",
@@ -394,8 +383,7 @@
             "href": "",
             "name": "Suzuki",
             "asset": {
-              "name": "Suzuki.svg",
-              "source": "curated"
+              "name": "Suzuki.svg"
             },
             "title": "",
             "caption": "",
@@ -409,8 +397,7 @@
             "href": "",
             "name": "Tesla",
             "asset": {
-              "name": "Tesla.svg",
-              "source": "curated"
+              "name": "Tesla.svg"
             },
             "title": "",
             "caption": "",
@@ -424,8 +411,7 @@
             "href": "",
             "name": "Toyota",
             "asset": {
-              "name": "Toyota.svg",
-              "source": "curated"
+              "name": "Toyota.svg"
             },
             "title": "",
             "caption": "",
@@ -439,8 +425,7 @@
             "href": "",
             "name": "VW",
             "asset": {
-              "name": "VW.svg",
-              "source": "curated"
+              "name": "VW.svg"
             },
             "title": "",
             "caption": "",
@@ -454,8 +439,7 @@
             "href": "",
             "name": "Volvo",
             "asset": {
-              "name": "Volvo.svg",
-              "source": "curated"
+              "name": "Volvo.svg"
             },
             "title": "",
             "caption": "",
@@ -704,8 +688,7 @@
                       "default-item": {
                         "name": "New logo",
                         "asset": {
-                          "name": "",
-                          "source": "user"
+                          "name": ""
                         },
                         "logoFill": "transparent",
                         "href": "",
@@ -731,8 +714,7 @@
                       {
                         "name": "New logo",
                         "asset": {
-                          "name": "",
-                          "source": "user"
+                          "name": ""
                         },
                         "logoFill": "transparent",
                         "href": "",

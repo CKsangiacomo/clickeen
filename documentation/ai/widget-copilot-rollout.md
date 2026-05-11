@@ -19,7 +19,7 @@ This runbook captures the rollout status for the account Builder Copilot path an
 
 | Environment | Browser endpoint | Observed status |
 |---|---|---|
-| Local / Cloud-dev Roma Builder | `/api/account/instances/:publicId/copilot` | Active primary route |
+| Local / Cloud-dev Roma Builder | `/api/account/instances/:instanceId/copilot` | Active primary route |
 
 ## Cloud-dev verification findings (February 11, 2026)
 

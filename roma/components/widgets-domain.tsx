@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
 import { prefetchCompiledWidget } from './compiled-widget-cache';
@@ -12,32 +12,22 @@ import {
   DEFAULT_INSTANCE_DISPLAY_NAME,
   isRomaWidgetsCacheFresh,
   loadRomaWidgetsForAccount,
-  normalizeWidgetType,
   readRomaWidgetsCache,
   updateRomaWidgetsCache,
   type RomaWidgetsResponse,
   type WidgetInstance,
 } from './use-roma-widgets';
 
-type CreateInstanceArgs = {
-  widgetType: string;
-  openBuilder?: boolean;
-  actionKey: string;
-};
-
 export function WidgetsDomain() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { accountContext } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
-  const autoCreateStartedRef = useRef(false);
   const accountId = accountContext.accountId;
   const cachedWidgets = readRomaWidgetsCache(accountId);
 
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
-  const [widgetTypes, setWidgetTypes] = useState<string[]>(() => cachedWidgets?.data.widgetTypes ?? []);
   const [domainLoading, setDomainLoading] = useState(() => !cachedWidgets);
   const [domainRefreshing, setDomainRefreshing] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
@@ -45,13 +35,10 @@ export function WidgetsDomain() {
   const [renameDraft, setRenameDraft] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
 
-  const searchIntent = useMemo(() => (searchParams.get('intent') || '').trim().toLowerCase(), [searchParams]);
-  const searchWidgetType = useMemo(() => normalizeWidgetType(searchParams.get('widgetType')), [searchParams]);
   const selectedInstanceId = useMemo(() => (searchParams.get('selected') || '').trim(), [searchParams]);
 
   const applyWidgets = useCallback((widgets: RomaWidgetsResponse) => {
     setWidgetInstances(widgets.instances);
-    setWidgetTypes(widgets.widgetTypes);
   }, []);
 
   const refreshWidgets = useCallback(async (args?: { force?: boolean }) => {
@@ -80,7 +67,6 @@ export function WidgetsDomain() {
       const message = err instanceof Error ? err.message : String(err);
       if (!cached) {
         setWidgetInstances([]);
-        setWidgetTypes([]);
       }
       setDataError(resolveAccountShellErrorCopy(message, 'Failed to load widgets. Please try again.'));
     } finally {
@@ -96,27 +82,18 @@ export function WidgetsDomain() {
       setDomainLoading(false);
     } else {
       setWidgetInstances([]);
-      setWidgetTypes([]);
       setDomainLoading(true);
     }
     void refreshWidgets();
   }, [accountId, applyWidgets, refreshWidgets]);
 
-  const availableWidgetTypes = useMemo(() => {
-    const values = new Set<string>();
-    widgetTypes.forEach((type) => {
-      const normalized = normalizeWidgetType(type);
-      if (normalized !== 'unknown') values.add(normalized);
-    });
-    widgetInstances.forEach((instance) => {
-      if (instance.widgetType !== 'unknown') values.add(instance.widgetType);
-    });
-    return Array.from(values).sort((a, b) => a.localeCompare(b));
-  }, [widgetInstances, widgetTypes]);
+  const instanceWidgetTypes = useMemo(
+    () => Array.from(new Set(widgetInstances.map((instance) => instance.widgetType).filter((widgetType) => widgetType !== 'unknown'))).sort((a, b) => a.localeCompare(b)),
+    [widgetInstances],
+  );
 
   const groupedInstances = useMemo(() => {
     const groups = new Map<string, WidgetInstance[]>();
-    availableWidgetTypes.forEach((widgetType) => groups.set(widgetType, []));
 
     widgetInstances.forEach((instance) => {
       const widgetType = instance.widgetType;
@@ -130,74 +107,21 @@ export function WidgetsDomain() {
         instances: instances.slice().sort((a, b) => a.instanceId.localeCompare(b.instanceId)),
       }))
       .sort((a, b) => a.widgetType.localeCompare(b.widgetType));
-  }, [availableWidgetTypes, widgetInstances]);
+  }, [widgetInstances]);
 
   useEffect(() => {
-    const candidates = availableWidgetTypes.filter((widgetType) => widgetType !== 'unknown').slice(0, 8);
+    const candidates = instanceWidgetTypes.slice(0, 8);
     candidates.forEach((widgetType) => {
       void prefetchCompiledWidget(widgetType);
     });
-  }, [availableWidgetTypes]);
-
-  const createInstance = useCallback(
-    async ({ widgetType, openBuilder, actionKey }: CreateInstanceArgs) => {
-      if (!accountId) return;
-      const normalizedWidgetType = normalizeWidgetType(widgetType);
-      if (normalizedWidgetType === 'unknown') {
-        setCreateError('Widget type is required for this action.');
-        return;
-      }
-      setActiveActionKey(actionKey);
-      setCreateError(null);
-      try {
-        const source = widgetInstances.find(
-          (instance) =>
-            instance.widgetType === normalizedWidgetType &&
-            instance.actions.duplicate === true,
-        );
-        if (!source) {
-          throw new Error('No source instance is available for this widget type.');
-        }
-        const payload = await accountApi.fetchJson<{
-          instanceId?: string;
-          widgetType?: string;
-        }>(`/api/account/widgets/duplicate`, {
-          method: 'POST',
-          headers: accountApi.buildHeaders({ contentType: 'application/json' }),
-          body: JSON.stringify({
-            sourceInstanceId: source.instanceId,
-          }),
-        });
-        const createdInstanceId = payload && typeof payload.instanceId === 'string' && payload.instanceId.trim() ? payload.instanceId.trim() : '';
-        if (!createdInstanceId) {
-          throw new Error('coreui.errors.payload.invalid');
-        }
-        const createdType = normalizeWidgetType(payload && typeof payload.widgetType === 'string' ? payload.widgetType : normalizedWidgetType);
-        await refreshWidgets({ force: true });
-        if (openBuilder) {
-          router.push(
-            buildBuilderRoute({
-              instanceId: createdInstanceId,
-              widgetType: createdType,
-            }),
-          );
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        setCreateError(resolveAccountShellErrorCopy(message, 'Creating the widget failed. Please try again.'));
-      } finally {
-        setActiveActionKey((current) => (current === actionKey ? null : current));
-      }
-    },
-    [accountApi, accountId, refreshWidgets, router, widgetInstances],
-  );
+  }, [instanceWidgetTypes]);
 
   const handleDuplicateInstance = useCallback(
     async (instance: WidgetInstance) => {
       if (!accountId) return;
       const actionKey = `duplicate:${instance.instanceId}`;
       setActiveActionKey(actionKey);
-      setCreateError(null);
+      setMutationError(null);
       try {
         const payload = await accountApi.fetchJson<{
           instanceId?: string;
@@ -216,7 +140,7 @@ export function WidgetsDomain() {
         await refreshWidgets({ force: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setCreateError(resolveAccountShellErrorCopy(message, 'Duplicating the widget failed. Please try again.'));
+        setMutationError(resolveAccountShellErrorCopy(message, 'Duplicating the widget failed. Please try again.'));
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -229,7 +153,7 @@ export function WidgetsDomain() {
       if (!accountId) return;
       const actionKey = `delete:${instance.instanceId}`;
       setActiveActionKey(actionKey);
-      setCreateError(null);
+      setMutationError(null);
       try {
         await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instance/${encodeURIComponent(instance.instanceId)}`, {
           method: 'DELETE',
@@ -237,7 +161,7 @@ export function WidgetsDomain() {
         await refreshWidgets({ force: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setCreateError(resolveAccountShellErrorCopy(message, 'Deleting the widget failed. Please try again.'));
+        setMutationError(resolveAccountShellErrorCopy(message, 'Deleting the widget failed. Please try again.'));
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -250,7 +174,7 @@ export function WidgetsDomain() {
       if (!accountId) return;
       const actionKey = `${nextStatus}:${instance.instanceId}`;
       setActiveActionKey(actionKey);
-      setCreateError(null);
+      setMutationError(null);
       try {
         await accountApi.fetchJson<{ status?: 'published' | 'unpublished' }>(
           `/api/account/instances/${encodeURIComponent(instance.instanceId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}`,
@@ -261,7 +185,7 @@ export function WidgetsDomain() {
         await refreshWidgets({ force: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setCreateError(resolveAccountShellErrorCopy(message, 'Updating widget status failed. Please try again.'));
+        setMutationError(resolveAccountShellErrorCopy(message, 'Updating widget status failed. Please try again.'));
       } finally {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
@@ -271,7 +195,7 @@ export function WidgetsDomain() {
 
   const startRename = useCallback((instance: WidgetInstance) => {
     if (!instance.actions.rename) return;
-    setCreateError(null);
+    setMutationError(null);
     setRenameError(null);
     setRenamingInstanceId(instance.instanceId);
     setRenameDraft(instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME);
@@ -297,7 +221,7 @@ export function WidgetsDomain() {
       }
       const actionKey = `rename:${instance.instanceId}`;
       setActiveActionKey(actionKey);
-      setCreateError(null);
+      setMutationError(null);
       setRenameError(null);
       try {
         const payload = await accountApi.fetchJson<{
@@ -327,33 +251,9 @@ export function WidgetsDomain() {
     [accountApi, accountId, cancelRename, renameDraft],
   );
 
-  useEffect(() => {
-    if (searchIntent !== 'create') return;
-    if (autoCreateStartedRef.current) return;
-    if (!accountId || activeActionKey) return;
-    const targetWidgetType = searchWidgetType !== 'unknown' ? searchWidgetType : availableWidgetTypes[0];
-    if (!targetWidgetType) return;
-    autoCreateStartedRef.current = true;
-    void createInstance({
-      widgetType: targetWidgetType,
-      openBuilder: true,
-      actionKey: `intent:create:${targetWidgetType}`,
-    });
-  }, [accountId, activeActionKey, availableWidgetTypes, createInstance, searchIntent, searchWidgetType]);
-
-  const handleCreateFromWidget = useCallback(
-    (widgetType: string) => {
-      void createInstance({
-        widgetType,
-        actionKey: `create:${widgetType}`,
-      });
-    },
-    [createInstance],
-  );
-
   return (
     <>
-      {dataError || createError || groupedInstances.length === 0 ? (
+      {dataError || mutationError || groupedInstances.length === 0 ? (
         <section className="rd-canvas-module">
           {dataError ? (
             <div className="roma-inline-stack">
@@ -363,22 +263,20 @@ export function WidgetsDomain() {
               </button>
             </div>
           ) : null}
-          {createError ? <p className="body-m">{createError}</p> : null}
+          {mutationError ? <p className="body-m">{mutationError}</p> : null}
           {renameError ? <p className="body-m">{renameError}</p> : null}
 
           {domainLoading && groupedInstances.length === 0 && !dataError ? <p className="body-m">Loading widgets...</p> : null}
 
           {!domainLoading && groupedInstances.length === 0 ? (
             <div className="rd-canvas-module__actions">
-              <p className="body-m">No editable instances yet. Create a widget from the available widget types.</p>
+              <p className="body-m">No editable instances yet.</p>
             </div>
           ) : null}
         </section>
       ) : null}
 
       {groupedInstances.map((group) => {
-        const createActionKey = `create:${group.widgetType}`;
-        const canCreate = group.widgetType !== 'unknown';
         return (
           <section className="rd-canvas-module" key={group.widgetType}>
             <div className="roma-toolbar">
@@ -392,7 +290,7 @@ export function WidgetsDomain() {
               <thead>
                 <tr>
                   <th className="table-header label-s">Instance</th>
-                  <th className="table-header label-s">Public ID</th>
+                  <th className="table-header label-s">Instance ID</th>
                   <th className="table-header label-s">Status</th>
                   <th className="table-header label-s">Actions</th>
                 </tr>
@@ -554,22 +452,6 @@ export function WidgetsDomain() {
                 ) : null}
               </tbody>
             </table>
-            {canCreate ? (
-              <div className="rd-canvas-module__actions">
-                <button
-                  className="diet-btn-txt"
-                  data-size="md"
-                  data-variant="primary"
-                  type="button"
-                  onClick={() => handleCreateFromWidget(group.widgetType)}
-                  disabled={Boolean(activeActionKey)}
-                >
-                  <span className="diet-btn-txt__label body-m">
-                    {activeActionKey === createActionKey ? 'Creating...' : `Create ${group.widgetType} widget instance`}
-                  </span>
-                </button>
-              </div>
-            ) : null}
           </section>
         );
       })}

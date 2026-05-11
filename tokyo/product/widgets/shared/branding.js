@@ -105,33 +105,33 @@
     return { widgetRoot: null, rootNode: document };
   }
 
-  function resolvePublicId(widgetRoot) {
-    const direct = widgetRoot.getAttribute('data-ck-public-id');
+  function resolveInstanceId(widgetRoot) {
+    const direct = widgetRoot.getAttribute('data-ck-instance-id');
     if (typeof direct === 'string' && direct.trim()) return direct.trim();
 
     const rootNode = widgetRoot.getRootNode();
     if (rootNode instanceof ShadowRoot) {
       const host = rootNode.host;
-      const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-public-id') : '';
+      const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-instance-id') : '';
       if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
     }
 
-    const ancestor = widgetRoot.closest('[data-ck-public-id]');
-    const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-public-id') : '';
+    const ancestor = widgetRoot.closest('[data-ck-instance-id]');
+    const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-instance-id') : '';
     if (typeof fromAncestor === 'string' && fromAncestor.trim()) return fromAncestor.trim();
 
     return '';
   }
 
-  function resolveInitialState(publicId) {
+  function resolveInitialState(instanceId) {
     if (
-      publicId &&
+      instanceId &&
       window.CK_WIDGETS &&
       typeof window.CK_WIDGETS === 'object' &&
-      window.CK_WIDGETS[publicId] &&
-      typeof window.CK_WIDGETS[publicId] === 'object'
+      window.CK_WIDGETS[instanceId] &&
+      typeof window.CK_WIDGETS[instanceId] === 'object'
     ) {
-      return window.CK_WIDGETS[publicId].state;
+      return window.CK_WIDGETS[instanceId].state;
     }
     return window.CK_WIDGET && window.CK_WIDGET.state;
   }
@@ -183,8 +183,8 @@
 
     if (widgetRoot) {
       ensureBranding(widgetRoot);
-      const publicId = resolvePublicId(widgetRoot);
-      const initialState = resolveInitialState(publicId);
+      const instanceId = resolveInstanceId(widgetRoot);
+      const initialState = resolveInitialState(instanceId);
       if (initialState) applyVisibility(widgetRoot, initialState);
       return;
     }
@@ -193,8 +193,8 @@
     const roots = Array.from(document.querySelectorAll('[data-ck-widget]'));
     roots.forEach((root) => ensureBranding(root));
     roots.forEach((root) => {
-      const publicId = resolvePublicId(root);
-      const initialState = resolveInitialState(publicId);
+      const instanceId = resolveInstanceId(root);
+      const initialState = resolveInitialState(instanceId);
       if (initialState) applyVisibility(root, initialState);
     });
   }

@@ -605,33 +605,33 @@
     ensureGoogleFontLoaded(family, spec);
   }
 
-  function normalizePublicId(value) {
+  function normalizeInstanceId(value) {
     if (typeof value !== 'string') return '';
     return value.trim();
   }
 
-  function resolvePublicId(root, runtimeContext) {
-    const fromContext = normalizePublicId(runtimeContext && runtimeContext.publicId);
+  function resolveInstanceId(root, runtimeContext) {
+    const fromContext = normalizeInstanceId(runtimeContext && runtimeContext.instanceId);
     if (fromContext) return fromContext;
 
-    const own = normalizePublicId(root.getAttribute('data-ck-public-id'));
+    const own = normalizeInstanceId(root.getAttribute('data-ck-instance-id'));
     if (own) return own;
 
     const rootNode = root.getRootNode();
     if (rootNode instanceof ShadowRoot && rootNode.host instanceof HTMLElement) {
-      const fromHost = normalizePublicId(rootNode.host.getAttribute('data-ck-public-id'));
+      const fromHost = normalizeInstanceId(rootNode.host.getAttribute('data-ck-instance-id'));
       if (fromHost) return fromHost;
     }
 
-    const ancestor = root.closest('[data-ck-public-id]');
+    const ancestor = root.closest('[data-ck-instance-id]');
     if (ancestor instanceof HTMLElement) {
-      const fromAncestor = normalizePublicId(ancestor.getAttribute('data-ck-public-id'));
+      const fromAncestor = normalizeInstanceId(ancestor.getAttribute('data-ck-instance-id'));
       if (fromAncestor) return fromAncestor;
     }
 
     const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
     if (global) {
-      const fromGlobal = normalizePublicId(global.publicId);
+      const fromGlobal = normalizeInstanceId(global.instanceId);
       if (fromGlobal) return fromGlobal;
     }
 
@@ -654,9 +654,9 @@
     }
   }
 
-  function resolveLocaleFromPayload(publicId) {
-    if (publicId && window.CK_WIDGETS && typeof window.CK_WIDGETS === 'object') {
-      const keyed = window.CK_WIDGETS[publicId];
+  function resolveLocaleFromPayload(instanceId) {
+    if (instanceId && window.CK_WIDGETS && typeof window.CK_WIDGETS === 'object') {
+      const keyed = window.CK_WIDGETS[instanceId];
       if (keyed && typeof keyed === 'object') {
         const fromKeyed = normalizeLocaleTag(keyed.locale);
         if (fromKeyed) return fromKeyed;
@@ -686,7 +686,7 @@
       if (fromDocAttr) return fromDocAttr;
     }
 
-    const fromPayload = resolveLocaleFromPayload(resolvePublicId(root, runtimeContext));
+    const fromPayload = resolveLocaleFromPayload(resolveInstanceId(root, runtimeContext));
     if (fromPayload) return fromPayload;
 
     const fromQuery = resolveLocaleFromQuery();

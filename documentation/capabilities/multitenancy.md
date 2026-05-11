@@ -146,11 +146,8 @@ Account
 │   ├── { userId, role: 'editor', joinedAt }
 │   ├── { userId, role: 'viewer', joinedAt }
 │   └── ...
-├── WidgetInstances[]
-│   ├── { publicId, widgetType, config, createdBy, ... }
-│   └── ...
-└── Comments[]
-    ├── { widgetId, userId, text, createdAt, resolved }
+└── WidgetInstances[] in Tokyo
+    ├── { instanceId, widgetType, config, displayName, ... }
     └── ...
 ```
 
@@ -349,6 +346,8 @@ Planned behavior (not shipped):
 
 ### Michael Schema
 
+The old comments table was part of the workspace/widget-instance era and is no longer part of the active schema after the PRD 89 hard cut. Current account membership truth stays in `account_members`; account widget instance truth stays in Tokyo.
+
 ```sql
 CREATE TABLE account_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -357,18 +356,6 @@ CREATE TABLE account_members (
   role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'editor', 'viewer')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (account_id, user_id)
-);
-
-CREATE TABLE comments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  account_id UUID NOT NULL REFERENCES public.accounts(id) ON DELETE CASCADE,
-  widget_instance_id UUID NOT NULL REFERENCES public.widget_instances(id) ON DELETE CASCADE,
-  user_id UUID NULL REFERENCES auth.users(id) ON DELETE SET NULL,
-  text TEXT NOT NULL,
-  target JSONB NULL,
-  resolved BOOLEAN NOT NULL DEFAULT false,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
 

@@ -100,11 +100,17 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - One saved configured widget owned by one account
 - Owns saved config, display metadata, asset refs, base locale, l10n state, overlay ops, generated packs, and publish/live state
 - Stored in Tokyo under the owning account. `accounts/{accountId}/widgets/index.json` is the product inventory.
+- Source truth is the account instance subtree: `instance.json` for identity/ownership/display metadata, `config.json` for saved base config, `publish.json` for publish/live state, and `overlays/l10n/{locale}/overlay.json` for locale overlay ops/text pack state. `accounts/{accountId}/widgets/index.json` is a generated account read model, not an identity authority.
+- Kept generated account-instance artifacts are explicit derived artifacts:
+  - `accounts/{accountId}/widgets/index.json`: generated product inventory. Tokyo-worker writes it on save/delete and through `POST /__internal/renders/widgets/index/rebuild.json`; Roma reads it for Widgets navigation. It is rebuildable from `instance.json`, `config.json`, and `publish.json`.
+  - `published/config.json`: generated public runtime config pack. Tokyo-worker writes it from saved config during publish/sync; public `/renders/widgets/{instanceId}/config.json` reads it only after `published/widgets/{instanceId}.json` resolves the account location.
+  - `l10n/base/{fingerprint}.snapshot.json`: generated base text snapshot from the saved config plus the widget localization allowlist. Tokyo-worker writes/reads it for translation diffing and status; it is not base config truth.
+  - `seo/meta/live/{locale}.json` and `seo/meta/{locale}/{metaFp}.json`: generated per-instance serving namespace for public SEO metadata. Tokyo-worker writes it from l10n/meta generation; Venice/Tokyo public reads are gated by `published/widgets/{instanceId}.json`.
+- No generated artifact is required to determine account instance identity, ownership, saved base config truth, or publish truth. If a generated artifact is missing or stale, Tokyo-worker either rebuilds it through the named repair boundary or the public/read route fails at Tokyo; product paths must not infer a second source of truth.
 - Tokyo instance indexes are prepared read models for product navigation. Hot list reads validate the index contract and must not perform full R2 integrity audits; save/rebuild/repair paths own deep pointer/config validation.
-- Projected in Michael only for joins, support, billing/account reporting, audit, and repair. `widget_instances` must not be read as Widgets inventory, editable config, display-name truth, publish-state truth, or example availability truth.
+- Michael does not keep a parallel account widget instance table. Support, billing/account reporting, and audit flows must use account/user relational data plus Tokyo-owned instance documents, not a Michael `widget_instances` projection.
 - Product-path account open resolves the saved authoring revision from Tokyo; instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
-- On the active account authoring path, user-facing instance identity (`widgetType`, `displayName`, `source`, `meta`) is Tokyo-owned. Michael `widget_instances.display_name` may still exist as storage residue during cutover, but Widgets/Builder product contracts must not read or write identity truth from it.
-- Michael `widget_instances.config` may still exist as inert schema residue for user-instance rows, but the active product path must not persist or read a second live widget document there.
+- On the active account authoring path, user-facing instance identity (`widgetType`, `displayName`, `source`, `meta`) is Tokyo-owned.
 - Bob holds working copy in memory as `instanceData` during editing
 
 **Account** = THE OWNERSHIP BOUNDARY
@@ -221,7 +227,7 @@ Publishing semantics: `published` / `unpublished` is a Tokyo instance serve-stat
 
 **San Francisco** — AI Workforce Operating System. Runs customer copilots and internal system agents such as Builder Copilot, Widget Instance Translator, and Prague Copy Translator. Manages agent sessions, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
-**Michael** — Supabase PostgreSQL database. Stores account/user data, submissions, usage events, and projection rows for account instances (`widget_instances`). RLS enforced for user tables. It is not the product owner for widget instance inventory, editable config, display name, publish state, or example availability.
+**Michael** — Supabase PostgreSQL database. Stores account/user data, submissions, usage events, and relational support records. It does not store account widget instance source or projection tables. RLS is enforced for user/account tables, while widget instance inventory, editable config, display name, publish state, and example availability are Tokyo-owned.
 
 **Tokyo** — Asset storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, public projections, and account-owned upload blobs.
 

@@ -1,6 +1,8 @@
 import {
+  accountInstanceDocumentKey,
   accountInstanceL10nOverlayPrefix,
   accountInstanceL10nOverlayKey,
+  normalizeAccountInstanceDocument,
   normalizePublishedWidgetLookupDocument,
   publishedWidgetLookupKey,
 } from './render';
@@ -28,6 +30,16 @@ async function handleGetPragueL10nAsset(env: TokyoR2Env, key: string): Promise<R
   });
 }
 
+async function loadPublishedAccountInstanceBaseLocale(
+  env: TokyoR2Env,
+  lookup: { accountId: string; widgetType: string; id: string },
+): Promise<string | null> {
+  const instance = normalizeAccountInstanceDocument(
+    await loadJson(env, accountInstanceDocumentKey(lookup.accountId, lookup.widgetType, lookup.id)),
+  );
+  return instance?.l10n?.summary?.baseLocale ?? null;
+}
+
 export async function handleGetL10nAsset(env: TokyoR2Env, key: string): Promise<Response> {
   const normalized = key.replace(/^\/+/, '');
   if (normalized.startsWith('l10n/prague/')) {
@@ -41,6 +53,8 @@ export async function handleGetL10nAsset(env: TokyoR2Env, key: string): Promise<
       await loadJson(env, publishedWidgetLookupKey(instanceId)),
     );
     if (!lookup || lookup.status !== 'published') return new Response('Not found', { status: 404 });
+    const baseLocale = await loadPublishedAccountInstanceBaseLocale(env, lookup);
+    if (!baseLocale) return new Response('Not found', { status: 404 });
     const prefix = accountInstanceL10nOverlayPrefix(lookup.accountId, lookup.widgetType, lookup.id);
     const locales = new Set<string>();
     let cursor: string | undefined;
@@ -49,7 +63,8 @@ export async function handleGetL10nAsset(env: TokyoR2Env, key: string): Promise<
       listed.objects.forEach((object) => {
         const relative = object.key.slice(prefix.length);
         const match = relative.match(/^([^/]+)\/overlay\.json$/);
-        if (match?.[1]) locales.add(decodeURIComponent(match[1]).toLowerCase());
+        const locale = match?.[1] ? decodeURIComponent(match[1]).toLowerCase() : '';
+        if (locale && locale !== baseLocale) locales.add(locale);
       });
       cursor = listed.truncated ? listed.cursor : undefined;
     } while (cursor);
@@ -79,6 +94,9 @@ export async function handleGetL10nAsset(env: TokyoR2Env, key: string): Promise<
     await loadJson(env, publishedWidgetLookupKey(instanceId)),
   );
   if (!lookup || lookup.status !== 'published') return new Response('Not found', { status: 404 });
+  const baseLocale = await loadPublishedAccountInstanceBaseLocale(env, lookup);
+  if (!baseLocale) return new Response('Not found', { status: 404 });
+  if (locale === baseLocale) return new Response('Not found', { status: 404 });
 
   const obj = await env.TOKYO_R2.get(
     accountInstanceL10nOverlayKey(lookup.accountId, lookup.widgetType, lookup.id, locale),

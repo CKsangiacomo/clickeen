@@ -129,8 +129,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Maximum distinct widget types per account.',
     enforcement: {
       status: 'gap',
-      owner: 'Roma widget creation',
-      note: 'Product limit restored; new-widget/create flow still needs distinct widget-type enforcement.',
+      owner: 'No active product surface',
+      note: 'No active Roma create-from-type flow exists; enforce this only when a real account instance provisioning boundary is introduced.',
     },
   },
   'uploads.size.max': {

@@ -99,7 +99,7 @@ MUST NOT
 MUST
 - Define `defaults.typography.roles` for all visible text parts.
 - Call `window.CKTypography.applyTypography(state.typography, root, roleMap, runtimeContext?)`.
-  - Pass runtime locale when available (for example `{ locale: msg.locale, publicId: resolvedPublicId }`) so script-aware fallback chains are deterministic.
+  - Pass runtime locale when available (for example `{ locale: msg.locale, instanceId: resolvedInstanceId }`) so script-aware fallback chains are deterministic.
 - Use typography CSS vars in `widget.css` (no ad-hoc fonts).
 
 MUST NOT

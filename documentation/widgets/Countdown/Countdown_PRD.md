@@ -6,7 +6,7 @@ STATUS: PRD
 Renders a configurable countdown / personal countdown / number counter with optional CTA and “after end” behavior, edited in Bob and rendered deterministically in the embed.
 
 ## 0) Non-negotiables (Architecture)
-1. **Starter designs are instances**: system instances are Clickeen-owned instances that users clone.
+1. **Account instances are the authoring unit**: Bob edits one account widget instance at a time.
 2. **No silent fixups**: editor + runtime must not invent state, merge defaults, coerce invalid values, or generate IDs at render time.
 3. **Deterministic render**: the same instance state produces the same output every time.
 4. **CSS-first variants**: variants are driven by `data-*` + CSS variables; JS only sets attributes/vars and updates text/visibility.
@@ -127,7 +127,7 @@ Required roles (minimum):
   - `CKSurface.applyCardWrapper(state.appearance.cardwrapper, root)` (sets `--ck-cardwrapper-*` for timer tiles)
 
 Personal countdown persistence rule (deterministic):
-- Store start time in `localStorage` keyed by **widget instance id** (use `state.instanceId` once we have it, otherwise `publicId` injected by embed; do not invent random ids).
+- Store start time in `localStorage` keyed by **widget instance id** (use `state.instanceId` or runtime `instanceId`; do not invent random ids).
 - If the key is missing: set it once and reuse.
 
 ## 6) ToolDrawer panels (required mapping)

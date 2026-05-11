@@ -48,30 +48,30 @@
     return String(value ?? '');
   }
 
-  function resolvePublicId(widgetRoot) {
-    const direct = widgetRoot.getAttribute('data-ck-public-id');
+  function resolveInstanceId(widgetRoot) {
+    const direct = widgetRoot.getAttribute('data-ck-instance-id');
     if (typeof direct === 'string' && direct.trim()) return direct.trim();
     const rootNode = widgetRoot.getRootNode();
     if (rootNode instanceof ShadowRoot && rootNode.host instanceof HTMLElement) {
-      const fromHost = rootNode.host.getAttribute('data-ck-public-id') || '';
+      const fromHost = rootNode.host.getAttribute('data-ck-instance-id') || '';
       if (fromHost.trim()) return fromHost.trim();
     }
-    const ancestor = widgetRoot.closest('[data-ck-public-id]');
+    const ancestor = widgetRoot.closest('[data-ck-instance-id]');
     if (ancestor instanceof HTMLElement) {
-      const fromAncestor = ancestor.getAttribute('data-ck-public-id') || '';
+      const fromAncestor = ancestor.getAttribute('data-ck-instance-id') || '';
       if (fromAncestor.trim()) return fromAncestor.trim();
     }
     const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
-    return global && typeof global.publicId === 'string' ? global.publicId.trim() : '';
+    return global && typeof global.instanceId === 'string' ? global.instanceId.trim() : '';
   }
 
   function resolveInstanceKey(widgetRoot) {
     const existing = ROOT_SWITCHER_IDS.get(widgetRoot);
     if (existing) return existing;
     switcherSequence += 1;
-    const publicId = resolvePublicId(widgetRoot);
+    const instanceId = resolveInstanceId(widgetRoot);
     const widgetName = widgetRoot.getAttribute('data-ck-widget') || 'widget';
-    const instanceKey = (publicId || widgetName) + '__' + String(switcherSequence);
+    const instanceKey = (instanceId || widgetName) + '__' + String(switcherSequence);
     ROOT_SWITCHER_IDS.set(widgetRoot, instanceKey);
     return instanceKey;
   }

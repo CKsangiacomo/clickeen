@@ -43,7 +43,6 @@ export type TokyoAccountInstanceIndexEntry = {
 export type TokyoAccountInstanceIndex = {
   accountId: string;
   accountInstances: TokyoAccountInstanceIndexEntry[];
-  widgetTypes: string[];
   publishedCount: number;
 };
 
@@ -65,7 +64,6 @@ type TokyoServeStatesPayload = {
 type TokyoAccountInstanceIndexPayload = {
   accountId?: unknown;
   accountInstances?: unknown;
-  widgetTypes?: unknown;
   publishedCount?: unknown;
 };
 
@@ -145,17 +143,6 @@ function resolveSavedInstanceDisplayName(args: {
     return asTrimmedString(args.meta.styleName ?? args.meta.name ?? args.meta.title) ?? null;
   }
   return null;
-}
-
-function normalizeStringList(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return Array.from(
-    new Set(
-      value
-        .map((entry) => asTrimmedString(entry))
-        .filter((entry): entry is string => Boolean(entry)),
-    ),
-  );
 }
 
 function normalizeTokyoIndexEntry(raw: unknown): TokyoAccountInstanceIndexEntry | null {
@@ -311,7 +298,7 @@ export async function writeSavedConfigToTokyo(args: {
   };
 }
 
-export async function deleteSavedConfigFromTokyo(args: {
+export async function deleteAccountInstanceFromTokyo(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;
@@ -332,7 +319,7 @@ export async function deleteSavedConfigFromTokyo(args: {
   if (!response.ok && response.status !== 404) {
     const payload = (await response.json().catch(() => null)) as unknown;
     throw new Error(
-      resolveTokyoControlErrorDetail(payload, `tokyo_saved_config_delete_http_${response.status}`),
+      resolveTokyoControlErrorDetail(payload, `tokyo_account_instance_delete_http_${response.status}`),
     );
   }
 }
@@ -552,7 +539,6 @@ export async function loadTokyoAccountInstanceIndex(args: {
 
   const accountId = asTrimmedString(payload?.accountId);
   const accountInstances = normalizeTokyoIndexEntries(payload?.accountInstances);
-  const widgetTypes = normalizeStringList(payload?.widgetTypes).sort((left, right) => left.localeCompare(right));
   const publishedCount =
     typeof payload?.publishedCount === 'number' && Number.isFinite(payload.publishedCount)
       ? Math.max(0, Math.floor(payload.publishedCount))
@@ -575,7 +561,6 @@ export async function loadTokyoAccountInstanceIndex(args: {
     value: {
       accountId,
       accountInstances,
-      widgetTypes,
       publishedCount,
     },
   };

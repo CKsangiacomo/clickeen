@@ -467,13 +467,14 @@ tokyo/
 │   ├── localization.json            # Locale allowlist
 │   ├── layers/*.allowlist.json      # Non-locale allowlists
 │   └── pages/*.json                 # Prague base copy
-├── l10n/instances/
-│   └── wgt_curated_faq_lightblurs_generic/
-│       ├── index.json               # Layer index (locale keys + fingerprints)
-│       └── locale/
-│           ├── fr/<baseFingerprint>.ops.json
-│           ├── es/<baseFingerprint>.ops.json
-│           └── ja/<baseFingerprint>.ops.json
+├── accounts/{accountId}/widgets/faq/{instanceId}/
+│   ├── instance.json                # Account instance metadata
+│   ├── config.json                  # Saved source config
+│   ├── publish.json                 # Published/saved status pointer
+│   └── overlays/l10n/
+│       ├── fr/overlay.json
+│       ├── es/overlay.json
+│       └── ja/overlay.json
 ```
 
 **Why this matters:**
@@ -532,7 +533,7 @@ tokyo/
 
 **Request flow:**
 ```
-User visits: /e/wgt_curated_faq_lightblurs_generic?locale=fr
+User visits: /widget/{instanceId}?locale=fr
     ↓
 Venice receives request and resolves the requested locale against Tokyo's current-ready locale policy
     ↓
@@ -1467,7 +1468,7 @@ LOOP REPEATS (exponential growth)
 │  • Detect translatable fields (title, body, cta, etc.)      │
 │  • Check existing translations (baseFingerprint match?)     │
 │  • If fingerprint changed → translate delta only            │
-│  • Store as account ops overlay (accounts/{accountId}/instances/{publicId}/l10n/overlays/locale/{locale}/{baseFingerprint}.ops.json) │
+│  • Store as account overlay (accounts/{accountId}/widgets/{widgetType}/{instanceId}/overlays/l10n/{locale}/overlay.json) │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -1494,7 +1495,7 @@ LOOP REPEATS (exponential growth)
 
 ```json
 {
-  "publicId": "wgt_curated_faq_lightblurs_generic",
+  "instanceId": "ins_faq_lightblurs_generic",
   "widgetType": "faq",
   "status": "published",
   "config": {

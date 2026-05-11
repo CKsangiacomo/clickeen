@@ -53,7 +53,7 @@ Content:
   - `strips[].logos[]` (array)
 - `strips[].logos[].name` (string)
 - `strips[].logos[].logoFill` (string; static/base logo background or runtime-materialized uploaded logo background)
-  - `strips[].logos[].asset` (object; editor metadata + logical asset identity, e.g. `{ name, source, assetId }`)
+  - `strips[].logos[].asset` (object; editor metadata + logical asset identity, e.g. `{ name, assetId }`)
   - `strips[].logos[].caption` (string; hover label; falls back to `name` if empty)
   - `strips[].logos[].href` (string; only valid `http(s)://` becomes clickable)
   - `strips[].logos[].targetBlank` (boolean)

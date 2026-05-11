@@ -135,9 +135,9 @@ Invariant:
 
 Instances are data (not code) and live in Michael/Tokyo. Assets live in Tokyo.
 
-1. **Roma + Bob handle account user-instance flows**:
-   - Roma Widgets create/duplicate/delete user instances through current-account same-origin routes.
-   - Listed/duplicable starter instances replace the old standalone Templates product architecture.
+1. **Roma + Bob handle account widget instance flows**:
+   - Roma Widgets lists, duplicates, renames, publishes, unpublishes, and deletes real account-owned instances through current-account same-origin routes.
+   - Starter/gallery creation is not an active product surface.
    - Bob save writes base config via account `PUT`.
 2. **DevStudio Local does not host widget authoring**.
    - Curated/main verification remains an internal toolbench concern only.
@@ -195,7 +195,7 @@ If you change runtime behavior, update docs in the same PR/commit:
 - Compiler determinism: repo typecheck/build plus Cloudflare verification, not a localhost Bob HTTP gate
 - Quick grep for removed/renamed surfaces:
   - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/account/instances/.*/copilot|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
-  - `rg -n "claims/minibob/complete|/api/account/assets|GET /api/account/instance/:publicId|PUT /api/account/instance/:publicId|POST /api/instance\\b" documentation --glob '*.md'`
+  - `rg -n "claims/minibob/complete|/api/account/assets|GET /api/account/instance/:instanceId|PUT /api/account/instance/:instanceId|POST /api/instance\\b" documentation --glob '*.md'`
   - `rg -n "/api/bootstrap|/api/account/widgets|/api/session/finish|/api/account/assets" documentation --glob '*.md'`
 
 When drift is found: update docs to match the shipped code/config immediately; treat mismatches as P0 doc bugs.

@@ -155,7 +155,7 @@ Notes:
 - Roma no longer exposes a mixed `GET /api/account/instance/:instanceId` reader that combines saved document truth with instance serve-state in one payload. Builder-open remains the document read boundary; widgets-domain serve-state flows ask the Tokyo live plane separately.
 - Widgets-domain account instance identity now comes from Tokyo saved documents. Canonical publish/unpublish truth is Tokyo's per-instance serve flag. Michael status residue must not be treated as surviving authority.
 - Account-widget rename now reads the current Tokyo saved document and writes the renamed document back through the same Tokyo save boundary. It no longer patches Michael `display_name` as product identity truth.
-- Account create/duplicate commit the Tokyo saved document before creating the Michael row. Widgets never sees a Michael-only placeholder row before the real saved document exists, and Michael row creation no longer copies the live widget document config; schema-required Michael config is inert residue only.
+- Account duplicate commits the Tokyo saved document and must fail with cleanup if downstream sync acceptance fails. Widgets must never expose a placeholder row before the real Tokyo document exists.
 - Asset picker/upload/resolve behavior on the active Builder path now runs through the Roma current-account asset routes, delegated from Bob through one hosted account-command seam. Roma handles `list-assets`, `resolve-assets`, and `upload-asset` directly against those current-account routes and does not feed a hosted asset bridge into Bob for this path.
 - In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
 - Account language policy/settings are owned by Roma Settings, not Bob. Roma serves `/api/account/locales` as the same-origin route for that account-level surface, backed by Berlin for the mutation/read and Tokyo-worker-owned downstream locale/live work.
@@ -176,7 +176,7 @@ Roma `widgets` is the product surface that brokers per-instance serve-state chan
 - `/widgets` reads account-instance identity from Tokyo and must converge to Tokyo serve-state truth for publish/unpublish. Michael status residue is not the target architecture.
 - `Publish` is the explicit serve-on boundary in Widgets: Roma tells Tokyo-worker to make the instance publicly servable, then returns success.
 - `Unpublish` removes the Tokyo live surface so Venice stops serving the instance, without deleting saved or internal overlay state.
-- Duplicate-from-widget and duplicate-from-externally referenced-instance create account-owned instances through Roma same-origin routes that commit the canonical Tokyo-backed authoring state
+- Duplicate-from-widget creates account-owned instances from an existing same-account source through Roma same-origin routes that commit the canonical Tokyo-backed authoring state
 - The old settings-level “unpublish all instances” product action is not part of the active product surface
 
 ## Data domains and caches (client-side)
@@ -206,7 +206,7 @@ Assets domain behavior:
 - When account locale settings change, Roma now fans that locale intent out across all account-owned saved instances, not just published ones:
   - published instances enqueue Tokyo-worker sync with `live: true`
   - unpublished instances enqueue Tokyo-worker sync with `live: false`
-  - curated example instances are not part of that account locale fanout
+  - the fanout boundary is account-owned saved instances only
 - Localization staleness is derived from Tokyo-owned localization artifacts/state after lazy base derivation; San Francisco remains generation-only.
 - Roma-side non-storage account-budget reads now take `USAGE_KV` explicitly from the request boundary instead of reaching through ambient global context in the hot product path. Storage bytes are no longer read from `USAGE_KV`.
 - Assets supports single upload, bulk upload (multi-file queue), list, resolve, and per-asset delete only.

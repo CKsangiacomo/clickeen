@@ -64,26 +64,26 @@
     throw new Error('[Countdown] Missing .pod wrapper');
   }
 
-  const resolvedPublicId = (() => {
-    const direct = widgetRoot.getAttribute('data-ck-public-id');
+  const resolvedInstanceId = (() => {
+    const direct = widgetRoot.getAttribute('data-ck-instance-id');
     if (typeof direct === 'string' && direct.trim()) return direct.trim();
 
     const rootNode = widgetRoot.getRootNode();
     if (rootNode instanceof ShadowRoot) {
       const host = rootNode.host;
-      const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-public-id') : '';
+      const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-instance-id') : '';
       if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
     }
 
-    const ancestor = widgetRoot.closest('[data-ck-public-id]');
-    const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-public-id') : '';
+    const ancestor = widgetRoot.closest('[data-ck-instance-id]');
+    const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-instance-id') : '';
     if (typeof fromAncestor === 'string' && fromAncestor.trim()) return fromAncestor.trim();
 
     const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
-    const candidate = global && typeof global.publicId === 'string' ? global.publicId.trim() : '';
+    const candidate = global && typeof global.instanceId === 'string' ? global.instanceId.trim() : '';
     return candidate || '';
   })();
-  if (resolvedPublicId) widgetRoot.setAttribute('data-ck-public-id', resolvedPublicId);
+  if (resolvedInstanceId) widgetRoot.setAttribute('data-ck-instance-id', resolvedInstanceId);
 
   const THEME_KEYS = new Set([
     'custom',
@@ -486,7 +486,7 @@
   function resolveStorageKey(state) {
     const instanceId = typeof state.instanceId === 'string' ? state.instanceId.trim() : '';
     if (instanceId) return instanceId;
-    if (resolvedPublicId) return resolvedPublicId;
+    if (resolvedInstanceId) return resolvedInstanceId;
     return null;
   }
 
@@ -520,7 +520,7 @@
         label: { varKey: 'label' },
         button: { varKey: 'button' },
       },
-      { locale: runtimeContext && runtimeContext.locale, publicId: resolvedPublicId },
+      { locale: runtimeContext && runtimeContext.locale, instanceId: resolvedInstanceId },
     );
 
     if (!window.CKHeader?.applyHeader) {
@@ -853,7 +853,7 @@
 
   let previewLocaleRequest = 0;
 
-  async function applyPreviewState(state, locale, publicId, previewMode, baseLocale) {
+  async function applyPreviewState(state, locale, instanceId, previewMode, baseLocale) {
     const requestId = ++previewLocaleRequest;
     const helper =
       window.CK_PREVIEW_L10N &&
@@ -865,7 +865,7 @@
     if (helper) {
       try {
         localizedState = await helper.loadLocalizedState({
-          publicId: typeof publicId === 'string' ? publicId : resolvedPublicId,
+          instanceId: typeof instanceId === 'string' ? instanceId : resolvedInstanceId,
           locale,
           baseLocale,
           previewMode,
@@ -891,19 +891,19 @@
     void applyPreviewState(
       data.state,
       data.locale,
-      data.publicId,
+      data.instanceId,
       data.previewMode,
       data.baseLocale,
     );
   });
 
   const keyedPayload =
-    resolvedPublicId &&
+    resolvedInstanceId &&
       window.CK_WIDGETS &&
       typeof window.CK_WIDGETS === 'object' &&
-      window.CK_WIDGETS[resolvedPublicId] &&
-      typeof window.CK_WIDGETS[resolvedPublicId] === 'object'
-      ? window.CK_WIDGETS[resolvedPublicId]
+      window.CK_WIDGETS[resolvedInstanceId] &&
+      typeof window.CK_WIDGETS[resolvedInstanceId] === 'object'
+      ? window.CK_WIDGETS[resolvedInstanceId]
       : null;
   const initialLocale =
     (keyedPayload && typeof keyedPayload.locale === 'string' && keyedPayload.locale) ||

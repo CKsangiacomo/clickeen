@@ -21,15 +21,19 @@ accounts/{accountId}/
   assets/{assetId}/
     manifest.json
     blob/{filename}
-  widgets/{widgetType}/
-    widget.json
+  widgets/
     index.json
-    {instanceId}/
-      instance.json
-      config.json
-      published/config.json
-      overlays/l10n/{locale}/overlay.json
-      publish.json
+    {widgetType}/
+      widget.json
+      {instanceId}/
+        instance.json
+        config.json
+        publish.json
+        overlays/l10n/{locale}/overlay.json
+        published/config.json
+        l10n/base/{fingerprint}.snapshot.json
+        seo/meta/live/{locale}.json
+        seo/meta/{locale}/{metaFp}.json
 ```
 
 Rules:
@@ -40,8 +44,11 @@ Rules:
 - `{instanceId}` is stable and generated. It is not derived from widget type or display name.
 - `instance.json` stores identity and display metadata.
 - `config.json` stores the saved authoring config.
-- `published/config.json` is the published runtime config for that account instance.
+- `publish.json` stores the account instance serve-state and published fingerprint/policy.
 - `overlays/l10n/{locale}/overlay.json` stores the current l10n overlay for that locale.
+- `widgets/index.json`, `published/config.json`, `l10n/base/{fingerprint}.snapshot.json`, and `seo/meta/**` are generated artifacts. They are read models or serving bytes; they are not source truth for identity, ownership, saved config, or publish state.
+- `seo/meta/**` is intentionally kept as the generated per-instance SEO serving namespace.
+- `POST /__internal/renders/widgets/index/rebuild.json` audits or rebuilds the generated account inventory from source instance documents.
 
 ## Public Serving
 
@@ -87,6 +94,7 @@ If the lookup or required published bytes are missing, the route returns unavail
 - `DELETE /__internal/renders/widgets/{instanceId}/saved.json`
 - `POST /__internal/renders/widgets/{instanceId}/sync`
 - `POST /__internal/renders/widgets/serve-state.json`
+- `POST /__internal/renders/widgets/index/rebuild.json`
 - `GET /__internal/account/widgets/{instanceId}/translations`
 
 These routes require Roma internal service auth plus a valid Roma account authz capsule. Local `TOKYO_DEV_JWT` is only for explicit internal tooling and never a product browser path.

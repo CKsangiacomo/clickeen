@@ -20,8 +20,8 @@ Venice does not read Supabase, does not know account membership, and does not re
 
 Deleted routes:
 
-- `/e/{id}`
-- `/r/{id}`
+- legacy short embed route with the single-letter `e` prefix
+- legacy short render route with the single-letter `r` prefix
 - `/api/instance/{id}`
 
 ## Identity

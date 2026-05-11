@@ -40,14 +40,12 @@ Historical snapshots:
 Current account-scale DB floor:
 - Active RLS account predicates on `account_id` are already backed by current indexes:
   - `account_members`: primary key `(account_id, user_id)`
-  - `widget_instances`: `widget_instances_account_id_idx`
-  - `comments`: `comments_account_id_idx`
 - Current account-scoped high-volume non-RLS tables also already carry account-first indexes where they matter on the active path:
   - `account_invitations`: `account_invitations_account_id_idx`
   - `account_notices`: `(account_id, status, created_at DESC)`
   - `internal_control_events`: `(account_id, created_at DESC)`
   - `account_business_profiles`: `account_business_profiles_account_id_idx`
-- Legacy Michael tables from the removed asset/l10n plane are out of scope for the active product path and are not part of this floor.
+- Legacy Michael tables from the removed widget-instance, asset, comments, and l10n planes are out of scope for the active product path and are not part of this floor.
 
 ---
 

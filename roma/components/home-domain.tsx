@@ -17,11 +17,11 @@ export function HomeDomain() {
       <section className="rd-canvas-module">
         <div className="roma-grid roma-grid--three">
           <article className="roma-card">
-            <h2 className="heading-6">Create</h2>
-            <p className="body-s">Create a widget and open Bob Builder immediately.</p>
+            <h2 className="heading-6">Widgets</h2>
+            <p className="body-s">Open current account widget instances and duplicate existing ones when needed.</p>
             <div className="rd-canvas-module__actions">
-              <Link href="/widgets?intent=create" className="diet-btn-txt" data-size="md" data-variant="primary">
-                <span className="diet-btn-txt__label body-m">Create widget</span>
+              <Link href="/widgets" className="diet-btn-txt" data-size="md" data-variant="primary">
+                <span className="diet-btn-txt__label body-m">Open widgets</span>
               </Link>
             </div>
           </article>

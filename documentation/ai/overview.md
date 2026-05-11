@@ -86,7 +86,7 @@ Widget copilot routing (shipped):
   - `cs.widget.copilot.v1`: in-product editor copilot (control-driven edits and task-completion clarifications).
 
 Deployment status (code-synced on February 26, 2026; last cloud-dev smoke notes from February 11, 2026):
-- Local + cloud-dev target behavior: browser calls `POST /api/account/instances/:publicId/copilot` on Roma.
+- Local + cloud-dev target behavior: browser calls `POST /api/account/instances/:instanceId/copilot` on Roma.
 - Verified post-deploy routing on cloud-dev:
   - account Builder requests execute through Roma instance routes
   - widget-copilot alias resolves to CS on the live product path
@@ -114,7 +114,7 @@ Keeping product/persistence owners and San Francisco separate prevents:
 ## High‑Level Data Flow
 
 ### Editor agents (inside Clickeen app)
-1) Core Builder open now loads through one Roma same-origin route (`GET /api/builder/:publicId/open`) that resolves the saved authoring revision server-side for Roma's host-open flow. Account-mode save delegates back to Roma through `PUT /api/account/instance/:publicId`. Builder no longer carries localization refresh/status commands on the active account authoring path.
+1) Core Builder open now loads through one Roma same-origin route (`GET /api/builder/:instanceId/open`) that resolves the saved authoring revision server-side for Roma's host-open flow. Account-mode save delegates back to Roma through `PUT /api/account/instance/:instanceId`. Builder no longer carries localization refresh/status commands on the active account authoring path.
 2) Account-mode Builder requests execute through Roma instance routes. Roma mints the short-lived AI Grant inline for that request.
 3) Bob calls San Francisco with `{ grant, agentId, input, context }`.
 4) San Francisco returns `{ ops[], usage }`.
