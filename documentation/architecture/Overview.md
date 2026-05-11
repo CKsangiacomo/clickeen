@@ -93,7 +93,7 @@ Every service section below is an instance of this pattern. Tokyo stores immutab
 | **Bob**           | `bob/`          | Cloudflare Pages                     | Widget builder, compiler, ToolDrawer, preview                           | ✅ Active   |
 | **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
 | **DevStudio**     | `admin/`        | Local Vite                           | Internal toolbench for platform curation, verification, and local utility pages | ✅ Internal |
-| **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | SSR embed runtime, pixel, loader                                        | ✅ Active   |
+| **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | SSR embed runtime and loader                                            | ✅ Active   |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
 | **Dieter**        | `dieter/`       | (build artifact)                     | Design system: tokens, 16+ components                                   | ✅ Active   |
@@ -348,7 +348,7 @@ Non-negotiable:
 │       │ User clicks Save                            │                   │
 │       │                                             ▼                   │
 │       └──────────────────────────────────────► ┌──────────────┐        │
-│            PUT /api/account/instance/:instanceId                                      │ Tokyo saved    │      │
+│            PUT /api/account/instances/:instanceId                                     │ Tokyo saved    │      │
 │                                                │   revision      │      │
 │                                                └──────┬─────────┘        │
 │                                                       │                  │
@@ -416,7 +416,7 @@ On the active account authoring path, the widget document exists in exactly 2 pl
 1. Load:    GET /api/builder/:instanceId/open  → Roma gets the saved widget and opens Bob once
 2. Edit:    All changes in React state   → ZERO API calls
 3. Preview: postMessage to iframe        → widget.client.js updates DOM
-4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instance/:instanceId` → commits the one widget document to Tokyo and returns immediately
+4. Save: Roma-hosted Builder sends an account mutation command to Roma, and Roma executes `PUT /api/account/instances/:instanceId` → commits the one widget document to Tokyo and returns immediately
 ```
 
 In Roma account flows, the host performs the initial load call and sends Bob one resolved `ck:open-editor` payload. Save returns through that same Roma account boundary.
@@ -563,7 +563,7 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 ## Venice Embed Architecture
 
-**Current Status:** Shipped DB-free public embed runtime. Venice assembles `/widget/:instanceId` from Tokyo-only bytes and Tokyo-owned serve pointers only. Submission routes are hard-cut; `/embed/pixel` remains a compatibility no-op (`204`).
+**Current Status:** Shipped DB-free public embed runtime. Venice assembles `/widget/:instanceId` from Tokyo-only bytes and Tokyo-owned serve pointers only. Submission and compatibility routes are hard-cut before GA unless a current PRD names an owner and reason.
 
 ### Endpoints
 
@@ -571,10 +571,13 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 | ------------------------------------ | ----------------------------------------- |
 | `GET /widget/:instanceId`                   | Embed shell HTML + runtime bootstrap      |
 | `GET /renders/widgets/:instanceId/live/r.json`                   | Live serve pointer proxy (`no-store`) |
-| `GET /renders/widgets/:instanceId/live/r.json?meta=1&locale=...` | SEO/GEO meta pointer proxy (`no-store`)   |
+| `GET /renders/widgets/:instanceId/config.json`                   | Published config pack proxy              |
+| `GET /renders/widgets/:instanceId/meta/live/:locale.json`        | SEO/GEO meta pointer proxy (`no-store`)   |
+| `GET /renders/widgets/:instanceId/meta/:locale/:metaFp.json`     | SEO/GEO meta pack proxy                   |
+| `GET /l10n/widgets/:instanceId/index.json`                       | Published l10n index proxy                |
+| `GET /l10n/widgets/:instanceId/:locale/overlay.json`             | Published l10n overlay proxy              |
 | `/embed/latest/loader.js`            | Canonical loader alias                    |
 | `/embed/v2/loader.js`                | Versioned loader                          |
-| `/embed/pixel`                       | Compatibility no-op (`204`)               |
 
 ### Caching Strategy
 
@@ -616,7 +619,6 @@ Visitor loads embed → Venice GET /widget/:instanceId
                     → Venice GET /renders/widgets/:instanceId/live/r.json (Tokyo live pointer)
                     → Venice GET Tokyo config pack + locale text pointer + text pack + widget HTML
                     → Venice returns SSR HTML / bootstraps CK_WIDGET
-                    → optional /embed/pixel remains a no-op (`204`)
 ```
 
 ### 3. Form Submission Flow
@@ -668,6 +670,6 @@ Submission proxy path hard-cut in this repo snapshot.
 
 ### What's Planned
 
-- Venice iframe++ SEO/GEO optimized embed (host JSON‑LD + excerpt injection) + submission/pixel wiring
+- Venice iframe++ SEO/GEO optimized embed (host JSON‑LD + excerpt injection)
 - Prague long-tail SEO surfaces (hubs/spokes/comparisons)
 - Additional widget types

@@ -95,6 +95,16 @@ async function buildEntryFromInstance(args: {
   };
 }
 
+function sortIndexEntries(entries: AccountInstanceIndexEntry[]): AccountInstanceIndexEntry[] {
+  return [...entries].sort((left, right) => {
+    const byWidget = left.widgetType.localeCompare(right.widgetType);
+    if (byWidget !== 0) return byWidget;
+    const byUpdated = right.updatedAt.localeCompare(left.updatedAt);
+    if (byUpdated !== 0) return byUpdated;
+    return left.id.localeCompare(right.id);
+  });
+}
+
 async function listInstanceDocumentKeys(env: Env, accountId: string): Promise<string[]> {
   const prefix = `${accountWidgetsRoot(accountId)}/`;
   const suffix = '/instance.json';
@@ -119,14 +129,15 @@ async function buildIndexDocument(env: Env, accountId: string): Promise<AccountI
     }
     entries.push(await buildEntryFromInstance({ env, instance }));
   }
-  entries.sort((left, right) => {
-    const byWidget = left.widgetType.localeCompare(right.widgetType);
-    if (byWidget !== 0) return byWidget;
-    const byUpdated = right.updatedAt.localeCompare(left.updatedAt);
-    if (byUpdated !== 0) return byUpdated;
-    return left.id.localeCompare(right.id);
-  });
-  return { v: 1, accountId, entries, updatedAt: new Date().toISOString() };
+  return { v: 1, accountId, entries: sortIndexEntries(entries), updatedAt: new Date().toISOString() };
+}
+
+async function readIndexForMutation(env: Env, accountId: string): Promise<AccountInstanceIndexDocument> {
+  const raw = await loadJson(env, accountInstanceIndexKey(accountId));
+  if (!raw) return { v: 1, accountId, entries: [], updatedAt: new Date().toISOString() };
+  const index = normalizeIndexDocument(raw, accountId);
+  if (!index) throw new Error('tokyo.errors.instance.indexInvalid');
+  return index;
 }
 
 export async function rebuildAccountInstanceIndexes(env: Env, accountIdRaw: string): Promise<AccountInstanceIndexDocument> {
@@ -141,6 +152,54 @@ export async function buildAccountInstanceIndexDryRun(env: Env, accountIdRaw: st
   const accountId = normalizeStorageId(accountIdRaw);
   if (!accountId || !isUuid(accountId)) throw new Error('tokyo.errors.render.invalid');
   return buildIndexDocument(env, accountId);
+}
+
+export async function patchAccountInstanceIndexEntry(args: {
+  env: Env;
+  accountId: string;
+  widgetType: string;
+  instanceId: string;
+}): Promise<AccountInstanceIndexDocument> {
+  const accountId = normalizeStorageId(args.accountId);
+  const widgetType = asTrimmedString(args.widgetType);
+  const instanceId = normalizeStorageId(args.instanceId);
+  if (!accountId || !isUuid(accountId) || !widgetType || !instanceId) {
+    throw new Error('tokyo.errors.render.invalid');
+  }
+  const instance = normalizeAccountInstanceDocument(
+    await loadJson(args.env, accountInstanceDocumentKey(accountId, widgetType, instanceId)),
+  );
+  if (!instance || instance.accountId !== accountId || instance.widgetType !== widgetType || instance.id !== instanceId) {
+    throw new Error('tokyo.errors.instance.documentInvalid');
+  }
+  const entry = await buildEntryFromInstance({ env: args.env, instance });
+  const index = await readIndexForMutation(args.env, accountId);
+  const entries = [
+    ...index.entries.filter((candidate) => candidate.id !== instanceId),
+    entry,
+  ];
+  const next = { v: 1, accountId, entries: sortIndexEntries(entries), updatedAt: new Date().toISOString() } satisfies AccountInstanceIndexDocument;
+  await putJson(args.env, accountInstanceIndexKey(accountId), next);
+  return next;
+}
+
+export async function removeAccountInstanceIndexEntry(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+}): Promise<AccountInstanceIndexDocument> {
+  const accountId = normalizeStorageId(args.accountId);
+  const instanceId = normalizeStorageId(args.instanceId);
+  if (!accountId || !isUuid(accountId) || !instanceId) throw new Error('tokyo.errors.render.invalid');
+  const index = await readIndexForMutation(args.env, accountId);
+  const next = {
+    v: 1,
+    accountId,
+    entries: sortIndexEntries(index.entries.filter((candidate) => candidate.id !== instanceId)),
+    updatedAt: new Date().toISOString(),
+  } satisfies AccountInstanceIndexDocument;
+  await putJson(args.env, accountInstanceIndexKey(accountId), next);
+  return next;
 }
 
 export async function readAccountInstanceIndex(args: {
@@ -169,13 +228,18 @@ export async function resolveAccountInstanceLocation(args: {
   accountId: string;
   instanceId: string;
   widgetType?: string | null;
+  rebuildIfMissing?: boolean;
 }): Promise<AccountInstanceLocation | null> {
   const accountId = normalizeStorageId(args.accountId);
   const instanceId = normalizeStorageId(args.instanceId);
   const widgetType = asTrimmedString(args.widgetType);
   if (!accountId || !instanceId) return null;
   if (widgetType) return { accountId, widgetType, instanceId };
-  const index = await readAccountInstanceIndex({ env: args.env, accountId, rebuildIfMissing: true });
+  const index = await readAccountInstanceIndex({
+    env: args.env,
+    accountId,
+    rebuildIfMissing: args.rebuildIfMissing ?? true,
+  });
   if (!index.ok) return null;
   const entry = index.value.entries.find((candidate) => candidate.id === instanceId);
   return entry ? { accountId, widgetType: entry.widgetType, instanceId } : null;

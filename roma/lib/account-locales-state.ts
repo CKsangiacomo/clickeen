@@ -1,6 +1,8 @@
 import { parseAccountL10nPolicyStrict, parseAccountLocaleListStrict } from '@clickeen/ck-contracts';
 import { resolveBerlinBaseUrl } from './env/berlin';
 
+// Berlin is the account-level locale policy authority. Roma reads it here and
+// passes it downstream as intent; Tokyo does not compete as another policy owner.
 export async function loadCurrentAccountLocalesState(args: {
   accessToken: string;
   accountId: string;

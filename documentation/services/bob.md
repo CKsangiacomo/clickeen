@@ -26,7 +26,7 @@ Between load and save, Bob does not write intermediate edits to the saved revisi
 Bob intentionally separates:
 
 - **Saving config** (writes through Bob/Roma same-origin routes to Tokyo): appears as a plain **Save** action. Save persists the one widget document currently open in Builder. Builder no longer treats localization as a second save lane and no longer carries a shadow saved-document model just to drive dirty/discard UI.
-- **Copy code in Bob** is only the embed-code affordance: the **Copy code** button opens a modal containing the snippets needed to place the widget on a website (safe iframe + gated iframe++ SEO/GEO).
+- **Copy code in Bob** is only the embed-code affordance for published instances: the **Copy code** button opens a modal containing the snippets needed to place the widget on a website (safe iframe + gated iframe++ SEO/GEO). Unpublished instances show no live snippets.
 - **Bob has no live/unlive toggle** and does not manage published/unpublished state.
 - Active account routes authorize from the Berlin-issued bootstrap account authz capsule carried by Roma/Bob. They do not re-read account membership on normal editor open/save paths.
 
@@ -50,9 +50,11 @@ Bob compiles the spec into a deterministic contract:
 - `compiled.panels[]` (rendered panel HTML)
 - `compiled.controls[]` (editor binding metadata + AI context)
 
-### Bob does not “heal” state
+### Bob does not “heal” saved state
 
-- Bob does not coerce values or perform orchestrator-owned schema validation.
+- Bob validates the host-opened `instanceData` against the compiled widget default-owned shape and fails open when saved truth is malformed.
+- Bob does not merge `compiled.defaults` into account-hosted config and does not coerce invalid saved primitive values to defaults during open.
+- Post-open editor-operation normalization may still keep user edits in control-compatible shape after a valid saved document is loaded.
 - State errors are surfaced by the widget runtime (Tokyo) and fixed at the source (Tokyo widget package + our own code).
 
 ### Entitlements + limits (v1)
@@ -69,7 +71,7 @@ Bob compiles the spec into a deterministic contract:
 
 Active account authoring host path: Roma Builder fetches the saved document envelope (`compiled`, `instanceData`, `policy`, `instanceId`, `displayName`, `source`, `meta`), then waits for Bob session readiness and sends `ck:open-editor`.
 
-That open envelope is document-only for authoring. It does not carry published/unpublished live-state noise into the editor.
+That open envelope carries the saved authoring document plus Tokyo-owned `publishStatus` for copy-code gating. It does not give Bob authority to publish or unpublish.
 
 Then they wait for Bob session readiness and post into Bob:
 
@@ -138,11 +140,12 @@ Core base-config lifecycle per open session:
 
 1. One core instance load performed by the host before Bob receives `ck:open-editor`.
 2. In-memory edits only (no base-config API writes).
-3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instance/:instanceId` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
+3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instances/:instanceId` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
    Bob sends the current document metadata back with the save (`widgetType`, `displayName`, `source`, `meta`, `config`) so Roma/Tokyo do not reconstruct sibling identity from the previously saved row.
-   Save success clears the save/error state and keeps the same in-memory widget truth; Bob does not swap in a server-returned replacement copy of the widget.
+   Base save success clears the base dirty state and keeps the same in-memory widget truth; Bob does not swap in a server-returned replacement copy of the widget. If Tokyo reports translation follow-up acceptance failure, Bob keeps the base save as saved but surfaces a visible translation warning.
 4. Bob opens the saved document it was given. It does not merge missing widget defaults into account-hosted config on load. If Roma/Tokyo surface malformed saved widget payload, Builder fails open at that boundary instead of healing or masking the bad row.
-5. Bob does not own instance rename. Widgets-domain rename mutates the Tokyo saved document separately, and Bob save does not re-author identity through a second authority.
+5. Bob carries Tokyo-owned `publishStatus` in session metadata only to gate public embed copy. Unpublished instances do not expose live snippets; publish/unpublish remains a Widgets-domain action.
+6. Bob does not own instance rename. Widgets-domain rename mutates the Tokyo saved document separately, and Bob save does not re-author identity through a second authority.
 
 Copilot account path:
 

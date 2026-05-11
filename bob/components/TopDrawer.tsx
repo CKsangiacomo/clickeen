@@ -13,6 +13,7 @@ export function TopDrawer() {
   const meta = chrome.meta;
   const currentInstanceId = typeof meta?.instanceId === 'string' ? meta.instanceId : '';
   const hasInstance = Boolean(currentInstanceId);
+  const isPublished = meta?.publishStatus === 'published';
   const canSave = hasInstance && isDirty;
   const currentLabel = useMemo(
     () => {
@@ -52,10 +53,11 @@ export function TopDrawer() {
           data-size="xl"
           data-variant="primary"
           type="button"
-          disabled={!hasInstance}
+          disabled={!hasInstance || !isPublished}
+          title={hasInstance && !isPublished ? 'Publish this widget before copying embed code.' : undefined}
           onClick={() => setEmbedOpen(true)}
         >
-          <span className="diet-btn-txt__label">Copy code</span>
+          <span className="diet-btn-txt__label">{hasInstance && !isPublished ? 'Publish first' : 'Copy code'}</span>
         </button>
       </div>
       <EmbedModal open={embedOpen} onClose={() => setEmbedOpen(false)} />

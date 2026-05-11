@@ -5,7 +5,7 @@ import {
   accountInstancePublishKey,
   accountWidgetDocumentKey,
 } from './keys';
-import { rebuildAccountInstanceIndexes, resolveAccountInstanceLocation } from './instance-index';
+import { patchAccountInstanceIndexEntry, resolveAccountInstanceLocation } from './instance-index';
 import { ensureSavedRenderL10nBase } from './localization';
 import {
   normalizeAccountInstanceDocument,
@@ -88,6 +88,8 @@ export async function writeSavedRenderConfig(args: {
   config: Record<string, unknown>;
   displayName?: unknown;
   meta?: unknown;
+  // Optional derived locale projection from Berlin account policy. This is
+  // stored with l10n state for sync/runtime work, not as instance-owned policy.
   l10n?:
     | {
         baseFingerprint?: string | null;
@@ -148,7 +150,7 @@ export async function writeSavedRenderConfig(args: {
   };
 
   await putJson(args.env, accountInstanceDocumentKey(accountId, widgetType, instanceId), instance);
-  await rebuildAccountInstanceIndexes(args.env, accountId);
+  await patchAccountInstanceIndexEntry({ env: args.env, accountId, widgetType, instanceId });
   return {
     pointer: toSavedPointer({ instance, configFp }),
     previousBaseFingerprint,

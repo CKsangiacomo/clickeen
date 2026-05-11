@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  deleteLiveSurfaceFromTokyo,
-  loadTokyoAccountInstanceDocument,
-  loadTokyoAccountInstanceLiveStatus,
-} from '@roma/lib/account-instance-direct';
+import { unpublishAccountInstanceInTokyo } from '@roma/lib/account-instance-direct';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -28,66 +24,27 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const currentInstance = await loadTokyoAccountInstanceDocument({
+  const unpublish = await unpublishAccountInstanceInTokyo({
     accountId,
     instanceId,
     accountCapsule: current.value.authzToken,
   });
-  if (!currentInstance.ok) {
+  if (!unpublish.ok) {
     return withSession(
       request,
-      NextResponse.json({ error: currentInstance.error }, { status: currentInstance.status }),
-      current.value.setCookies,
-    );
-  }
-
-  const liveStatus = await loadTokyoAccountInstanceLiveStatus({
-    accountId,
-    instanceId,
-    accountCapsule: current.value.authzToken,
-  });
-  if (!liveStatus.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: liveStatus.error }, { status: liveStatus.status }),
-      current.value.setCookies,
-    );
-  }
-
-  if (liveStatus.value === 'unpublished') {
-    return withSession(
-      request,
-      NextResponse.json({ ok: true, instanceId, status: 'unpublished', changed: false }),
-      current.value.setCookies,
-    );
-  }
-
-  try {
-    await deleteLiveSurfaceFromTokyo({
-      accountId,
-      instanceId,
-      accountCapsule: current.value.authzToken,
-    });
-  } catch (error) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.db.writeFailed',
-            detail: error instanceof Error ? error.message : String(error),
-          },
-        },
-        { status: 502 },
-      ),
+      NextResponse.json({ error: unpublish.error }, { status: unpublish.status }),
       current.value.setCookies,
     );
   }
 
   return withSession(
     request,
-    NextResponse.json({ ok: true, instanceId, status: 'unpublished', changed: true }),
+    NextResponse.json({
+      ok: true,
+      instanceId: unpublish.value.instanceId,
+      status: unpublish.value.status,
+      changed: unpublish.value.changed,
+    }),
     current.value.setCookies,
   );
 }

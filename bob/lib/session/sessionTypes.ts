@@ -12,6 +12,7 @@ export type UpdateMeta = {
 export type SessionError =
   | { source: 'load'; message: string }
   | { source: 'ops'; errors: WidgetOpError[] }
+  | { source: 'translation'; message: string; detail?: string }
   | { source: 'save'; message: string; paths?: string[] };
 
 export type PreviewSettings = {
@@ -34,6 +35,7 @@ export type SessionMeta = {
   instanceId?: string;
   baseLocale?: string;
   widgetname?: string;
+  publishStatus?: 'published' | 'unpublished';
   label?: string;
   meta?: Record<string, unknown> | null;
 } | null;
@@ -65,6 +67,7 @@ export type EditorOpenMessage = {
   instanceData?: Record<string, unknown> | null;
   policy?: Policy;
   instanceId?: string;
+  publishStatus?: 'published' | 'unpublished';
   label?: string;
   meta?: Record<string, unknown> | null;
   copilot?: CopilotRuntimeUi;

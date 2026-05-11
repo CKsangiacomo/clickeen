@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadTokyoAccountInstanceIndex } from '@roma/lib/account-instance-direct';
-import { loadAccountPublishContainment } from '@roma/lib/berlin-product';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -32,13 +31,10 @@ export async function GET(request: NextRequest) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountId;
-  const [widgetIndex, containment] = await Promise.all([
-    loadTokyoAccountInstanceIndex({
-      accountId,
-      accountCapsule: current.value.authzToken,
-    }),
-    loadAccountPublishContainment(accountId, current.value.accessToken),
-  ]);
+  const widgetIndex = await loadTokyoAccountInstanceIndex({
+    accountId,
+    accountCapsule: current.value.authzToken,
+  });
   if (widgetIndex.ok === false) {
     return withSession(
       request,
@@ -55,24 +51,6 @@ export async function GET(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  if (containment.ok === false) {
-    const status = containment.status === 401 || containment.status === 403 ? containment.status : 502;
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: routeKind(status),
-            reasonKey: containment.reasonKey,
-            detail: containment.detail,
-          },
-        },
-        { status },
-      ),
-      current.value.setCookies,
-    );
-  }
-
   const canMutate = current.value.authzPayload.role !== 'viewer';
   const accountInstances: WidgetInstance[] = widgetIndex.value.accountInstances.map((instance) => ({
     instanceId: instance.instanceId,
@@ -84,7 +62,7 @@ export async function GET(request: NextRequest) {
       duplicate: canMutate,
       delete: canMutate,
       rename: canMutate,
-      publish: canMutate && !containment.containment.active,
+      publish: canMutate,
       unpublish: canMutate && instance.publishStatus === 'published',
     },
   }));

@@ -44,7 +44,7 @@ Source of truth:
 
 Non-entitled tiers:
 - Bob must not offer the SEO/GEO snippet.
-- Tokyo must not expose meta artifacts under `/renders/widgets/<instanceId>/meta/...`.
+- The public live pointer must not advertise `seoGeo`, so the loader does not request `/renders/widgets/<instanceId>/meta/...` artifacts for that instance. Missing or unauthorized meta bytes are not healed at serve time.
 
 ---
 

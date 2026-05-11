@@ -1,4 +1,5 @@
 import { isUuid } from '@clickeen/ck-contracts';
+import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import {
   normalizeStorageId,
   normalizeSha256Hex,
@@ -6,19 +7,26 @@ import {
 import { assertRomaAccountCapsuleAuth, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '../auth';
 import { json } from '../http';
 import {
+  AccountInstanceTransitionError,
   deleteInstanceMirror,
-  enqueueTokyoMirrorJob,
+  duplicateAccountInstanceTransition,
   buildAccountInstanceIndexDryRun,
+  createAccountInstanceFromDefaults,
+  publishAccountInstanceTransition,
   readInstanceServeState,
   readAccountInstanceIndex,
   rebuildAccountInstanceIndexes,
   readSavedRenderConfig,
+  saveAccountInstanceTransition,
   syncLiveSurface,
+  unpublishAccountInstanceTransition,
   writeConfigPack,
   writeSavedRenderConfig,
-  writeSavedRenderL10nStatus,
 } from '../domains/render';
-import { handleSyncAccountInstance } from '../domains/account-instance-sync';
+import {
+  enqueueAccountInstanceSyncJob,
+  handleSyncAccountInstance,
+} from '../domains/account-instance-sync';
 import {
   authorizeRomaAccountScopedRequest,
   authorizeSavedRenderControlRequest,
@@ -30,6 +38,97 @@ import {
   type TokyoRouteArgs,
 } from '../route-helpers';
 import { roleRank } from '../domains/assets';
+import type { Env } from '../types';
+
+function normalizeTransitionL10nIntent(raw: unknown): {
+  baseLocale: string;
+  desiredLocales: string[];
+  countryToLocale: Record<string, string>;
+} | null {
+  if (!isRecord(raw)) return null;
+  const baseLocale = typeof raw.baseLocale === 'string' ? raw.baseLocale.trim().toLowerCase() : '';
+  const desiredLocales = Array.isArray(raw.desiredLocales)
+    ? raw.desiredLocales
+        .filter((entry): entry is string => typeof entry === 'string')
+        .map((entry) => entry.trim().toLowerCase())
+        .filter(Boolean)
+    : [];
+  if (!baseLocale || !desiredLocales.includes(baseLocale)) return null;
+  const countryToLocale =
+    isRecord(raw.countryToLocale)
+      ? Object.fromEntries(
+          Object.entries(raw.countryToLocale).flatMap(([country, locale]) => {
+            if (!/^[A-Z]{2}$/.test(country) || typeof locale !== 'string') return [];
+            const normalized = locale.trim().toLowerCase();
+            return normalized ? [[country, normalized] as const] : [];
+          }),
+        )
+      : {};
+  return {
+    baseLocale,
+    desiredLocales: Array.from(new Set(desiredLocales)),
+    countryToLocale,
+  };
+}
+
+function transitionErrorResponse(error: unknown): Response {
+  if (error instanceof AccountInstanceTransitionError) {
+    return json(
+      {
+        error: {
+          kind: error.kind,
+          reasonKey: error.reasonKey,
+          detail: error.message,
+        },
+      },
+      { status: error.status },
+    );
+  }
+  const detail = error instanceof Error ? error.message : String(error);
+  return json(
+    {
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'coreui.errors.db.writeFailed',
+        detail,
+      },
+    },
+    { status: 502 },
+  );
+}
+
+function toAccountAuthzSnapshot(capsule: RomaAccountAuthzCapsulePayload) {
+  return {
+    profile: capsule.profile,
+    role: capsule.role,
+    entitlements: capsule.entitlements ?? null,
+  };
+}
+
+async function authorizeRomaEditorTransition(args: {
+  req: Request;
+  env: Env;
+  accountId: string;
+}): Promise<
+  | { ok: true; capsule: RomaAccountAuthzCapsulePayload }
+  | { ok: false; response: Response }
+> {
+  const auth = await assertRomaAccountCapsuleAuth(args.req, args.env, {
+    requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
+  });
+  if (!auth.ok) return auth;
+  const capsule = auth.principal.accountAuthz;
+  if (capsule.accountId !== args.accountId || roleRank(capsule.role) < roleRank('editor')) {
+    return {
+      ok: false,
+      response: json(
+        { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
+        { status: 403 },
+      ),
+    };
+  }
+  return { ok: true, capsule };
+}
 
 export async function tryHandleInternalRenderRoutes(
   args: TokyoRouteArgs,
@@ -48,19 +147,9 @@ export async function tryHandleInternalRenderRoutes(
     if (req.method !== 'POST') {
       return respondMethodNotAllowed(respond);
     }
-    const auth = await assertRomaAccountCapsuleAuth(req, env, {
-      requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
-    });
+    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
-    const capsule = auth.principal.accountAuthz;
-    if (capsule.accountId !== accountId || roleRank(capsule.role) < roleRank('editor')) {
-      return respond(
-        json(
-          { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
-          { status: 403 },
-        ),
-      );
-    }
+    const { capsule } = auth;
     return respond(await handleSyncAccountInstance(req, env, instanceId!, accountId, capsule));
   }
 
@@ -76,19 +165,9 @@ export async function tryHandleInternalRenderRoutes(
     if (req.method !== 'POST') {
       return respondMethodNotAllowed(respond);
     }
-    const auth = await assertRomaAccountCapsuleAuth(req, env, {
-      requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
-    });
+    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
-    const capsule = auth.principal.accountAuthz;
-    if (capsule.accountId !== accountId || roleRank(capsule.role) < roleRank('editor')) {
-      return respond(
-        json(
-          { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
-          { status: 403 },
-        ),
-      );
-    }
+    const { capsule } = auth;
 
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
     const live = body?.live === true;
@@ -119,157 +198,62 @@ export async function tryHandleInternalRenderRoutes(
     ) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
-    const l10nIntent =
-      body && isRecord(body.l10nIntent)
-        ? body.l10nIntent
-        : null;
-    const baseLocale =
-      l10nIntent && typeof l10nIntent.baseLocale === 'string' ? l10nIntent.baseLocale.trim() : '';
-    const desiredLocales = Array.isArray(l10nIntent?.desiredLocales)
-      ? l10nIntent.desiredLocales
-          .filter((entry): entry is string => typeof entry === 'string')
-          .map((entry) => entry.trim())
-          .filter((entry) => entry.length > 0)
-      : [];
-    const countryToLocale =
-      l10nIntent && isRecord(l10nIntent.countryToLocale)
-        ? Object.fromEntries(
-            Object.entries(l10nIntent.countryToLocale).flatMap(([country, locale]) => {
-              if (!/^[A-Z]{2}$/.test(country) || typeof locale !== 'string') return [];
-              const normalized = locale.trim().toLowerCase();
-              return normalized ? [[country, normalized] as const] : [];
-            }),
-          )
-        : {};
-    if (!baseLocale || !desiredLocales.length) {
+    const l10nIntent = normalizeTransitionL10nIntent(body?.l10nIntent);
+    if (!l10nIntent) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
 
-    const saved = await readSavedRenderConfig({ env, instanceId: instanceId!, accountId });
-    if (!saved.ok) {
-      return respond(
-        json(
-          { error: { kind: saved.kind, reasonKey: saved.reasonKey } },
-          { status: saved.kind === 'NOT_FOUND' ? 404 : 422 },
-        ),
-      );
-    }
-    const savedBaseFingerprint = normalizeSha256Hex(saved.value.pointer.l10n?.baseFingerprint);
-    const resolvedBaseFingerprint = requestedBaseFingerprint ?? savedBaseFingerprint;
-    if (!resolvedBaseFingerprint) {
-      return respond(
-        json(
-          { error: { kind: 'VALIDATION', reasonKey: 'tokyo_saved_l10n_base_missing' } },
-          { status: 422 },
-        ),
-      );
-    }
-    if (requestedBaseFingerprint && savedBaseFingerprint && requestedBaseFingerprint !== savedBaseFingerprint) {
-      return respondValidation(respond, 'tokyo.errors.render.staleBaseFingerprint');
-    }
-
-    const normalizedBaseLocale = baseLocale.toLowerCase();
-    const requestedLocales = Array.from(
-      new Set([
-        normalizedBaseLocale,
-        ...desiredLocales.map((locale) => locale.trim().toLowerCase()).filter(Boolean),
-      ]),
-    );
-    const generationId = crypto.randomUUID();
-    const nonBaseLocales = requestedLocales.filter((locale) => locale !== normalizedBaseLocale);
-    const translationStatus = nonBaseLocales.length > 0 ? 'queued' : 'ready';
-    const finishedAt = translationStatus === 'ready' ? new Date().toISOString() : null;
-
-    const statusPointer = await writeSavedRenderL10nStatus({
-      env,
-      instanceId: instanceId!,
-      accountId,
-      generationId,
-      status: translationStatus,
-      baseFingerprint: resolvedBaseFingerprint,
-      readyLocales: [normalizedBaseLocale],
-      failedLocales: [],
-      finishedAt,
-    });
-
-    const translation = {
-      instanceId: instanceId!,
-      widgetType: saved.value.pointer.widgetType,
-      baseFingerprint: resolvedBaseFingerprint,
-      baseLocale: normalizedBaseLocale,
-      requestedLocales,
-      readyLocales: [normalizedBaseLocale],
-      status: translationStatus,
-      failedLocales: [],
-      generationId,
-      updatedAt: statusPointer?.l10n?.updatedAt ?? new Date().toISOString(),
-    };
-
-    const shouldQueue = nonBaseLocales.length > 0;
     try {
-      if (shouldQueue) {
-        await enqueueTokyoMirrorJob(env, {
-          v: 1,
-          kind: 'sync-instance-overlays',
-          instanceId: instanceId!,
-          accountId,
-          baseFingerprint: resolvedBaseFingerprint,
-          generationId,
-          live,
-          accountAuthz: {
-            profile: capsule.profile,
-            role: capsule.role,
-            entitlements: capsule.entitlements ?? null,
-          },
-          baseLocale: normalizedBaseLocale,
-          desiredLocales: requestedLocales,
-          countryToLocale,
-          previousBaseFingerprint,
-        });
-      }
+      const queued = await enqueueAccountInstanceSyncJob({
+        env,
+        accountId,
+        instanceId: instanceId!,
+        live,
+        baseFingerprint: requestedBaseFingerprint,
+        previousBaseFingerprint,
+        accountAuthz: {
+          profile: capsule.profile,
+          role: capsule.role,
+          entitlements: capsule.entitlements ?? null,
+        },
+        l10nIntent,
+      });
+      return respond(
+        json({
+          ok: true,
+          ...queued,
+        }),
+      );
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      await writeSavedRenderL10nStatus({
-        env,
-        instanceId: instanceId!,
-        accountId,
-        generationId,
-        status: 'failed',
-        baseFingerprint: resolvedBaseFingerprint,
-        readyLocales: [normalizedBaseLocale],
-        failedLocales: nonBaseLocales.map((locale) => ({
-          locale,
-          reasonKey: 'tokyo_translation_enqueue_failed',
-          detail,
-        })),
-        lastError: detail,
-        finishedAt: new Date().toISOString(),
-        guardCurrentGeneration: true,
-      });
+      const status =
+        detail === 'tokyo_saved_not_found'
+          ? 404
+          : detail === 'tokyo_saved_l10n_base_missing' ||
+              detail === 'tokyo.errors.render.staleBaseFingerprint'
+            ? 422
+            : detail.startsWith('tokyo_overlay_sync_enqueue_failed:')
+              ? 503
+              : 502;
+      const kind =
+        status === 404
+          ? 'NOT_FOUND'
+          : status === 422
+            ? 'VALIDATION'
+            : 'UPSTREAM_UNAVAILABLE';
       return respond(
         json(
           {
             error: {
-              kind: 'VALIDATION',
-              reasonKey: 'tokyo_overlay_sync_enqueue_failed',
+              kind,
+              reasonKey: detail,
               detail,
             },
           },
-          { status: 503 },
+          { status },
         ),
       );
     }
-
-    return respond(
-      json({
-        ok: true,
-        queued: shouldQueue,
-        instanceId,
-        live,
-        baseFingerprint: resolvedBaseFingerprint,
-        translation,
-      }),
-    );
   }
 
   if (pathname === '/__internal/renders/widgets/serve-state.json') {
@@ -372,13 +356,8 @@ export async function tryHandleInternalRenderRoutes(
       return respondMethodNotAllowed(respond);
     }
 
-    const authErr = await authorizeSavedRenderControlRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'editor',
-    });
-    if (authErr) return respond(authErr);
+    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+    if (!auth.ok) return respond(auth.response);
 
     const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
     const dryRun = body?.dryRun !== false;
@@ -409,6 +388,233 @@ export async function tryHandleInternalRenderRoutes(
           { status: 422 },
         ),
       );
+    }
+  }
+
+  if (pathname === '/__internal/renders/widgets/create.json') {
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isUuid(accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'POST') {
+      return respondMethodNotAllowed(respond);
+    }
+
+    const authErr = await authorizeSavedRenderControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'editor',
+    });
+    if (authErr) return respond(authErr);
+
+    const rawBody = (await req.json().catch(() => null)) as unknown;
+    if (!isRecord(rawBody)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    const body = rawBody;
+    const widgetType = typeof body.widgetType === 'string' ? body.widgetType.trim() : '';
+    if (!widgetType) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    const l10n =
+      body.l10n === null || isRecord(body.l10n)
+        ? (body.l10n as
+            | {
+                summary?: {
+                  baseLocale: string;
+                  desiredLocales: string[];
+                } | null;
+              }
+            | null)
+        : undefined;
+
+    try {
+      const created = await createAccountInstanceFromDefaults({
+        env,
+        accountId,
+        widgetType,
+        displayName: body.displayName,
+        ...(l10n !== undefined ? { l10n } : {}),
+      });
+      return respond(
+        json(
+          {
+            ok: true,
+            ...created.pointer,
+            instanceId: created.pointer.id,
+            config: created.config,
+          },
+          { status: 201 },
+        ),
+      );
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      return respond(
+        json(
+          {
+            error: {
+              kind: detail === 'tokyo.errors.widget.unsupported' ? 'VALIDATION' : 'UPSTREAM_UNAVAILABLE',
+              reasonKey: detail,
+              detail,
+            },
+          },
+          { status: detail === 'tokyo.errors.widget.unsupported' ? 422 : 502 },
+        ),
+      );
+    }
+  }
+
+  const internalRenderSaveTransitionMatch = pathname.match(
+    /^\/__internal\/renders\/widgets\/([^/]+)\/save\.json$/,
+  );
+  if (internalRenderSaveTransitionMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderSaveTransitionMatch[1]));
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'POST') {
+      return respondMethodNotAllowed(respond);
+    }
+    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+    if (!auth.ok) return respond(auth.response);
+    const { capsule } = auth;
+
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    if (!isRecord(body) || !isRecord(body.config)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    const l10nIntent = normalizeTransitionL10nIntent(body.l10nIntent);
+    if (!l10nIntent) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+
+    try {
+      const result = await saveAccountInstanceTransition({
+        env,
+        accountId,
+        instanceId: instanceId!,
+        submittedWidgetType: body.widgetType as string,
+        config: body.config,
+        displayName: body.displayName,
+        hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
+        meta: body.meta,
+        hasMeta: Object.prototype.hasOwnProperty.call(body, 'meta'),
+        l10nIntent,
+        accountAuthz: toAccountAuthzSnapshot(capsule),
+      });
+      return respond(
+        json({
+          ok: true,
+          instanceId,
+          widgetType: result.pointer.widgetType,
+          live: result.live,
+          previousBaseFingerprint: result.previousBaseFingerprint,
+          baseFingerprint: result.pointer.l10n?.baseFingerprint ?? null,
+          translationFollowup: result.translationFollowup,
+        }),
+      );
+    } catch (error) {
+      return respond(transitionErrorResponse(error));
+    }
+  }
+
+  const internalRenderDuplicateTransitionMatch = pathname.match(
+    /^\/__internal\/renders\/widgets\/([^/]+)\/duplicate\.json$/,
+  );
+  if (internalRenderDuplicateTransitionMatch) {
+    const sourceInstanceId = normalizeStorageId(decodeURIComponent(internalRenderDuplicateTransitionMatch[1]));
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isValidScopedInstance(sourceInstanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'POST') {
+      return respondMethodNotAllowed(respond);
+    }
+    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+    if (!auth.ok) return respond(auth.response);
+    const { capsule } = auth;
+
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const l10nIntent = normalizeTransitionL10nIntent(body?.l10nIntent);
+    if (!l10nIntent) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+
+    try {
+      const duplicated = await duplicateAccountInstanceTransition({
+        env,
+        accountId,
+        sourceInstanceId: sourceInstanceId!,
+        l10nIntent,
+        accountAuthz: toAccountAuthzSnapshot(capsule),
+      });
+      return respond(json({ ok: true, ...duplicated }, { status: 201 }));
+    } catch (error) {
+      return respond(transitionErrorResponse(error));
+    }
+  }
+
+  const internalRenderPublishTransitionMatch = pathname.match(
+    /^\/__internal\/renders\/widgets\/([^/]+)\/publish\.json$/,
+  );
+  if (internalRenderPublishTransitionMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderPublishTransitionMatch[1]));
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'POST') {
+      return respondMethodNotAllowed(respond);
+    }
+    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+    if (!auth.ok) return respond(auth.response);
+    const { capsule } = auth;
+
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const l10nIntent = normalizeTransitionL10nIntent(body?.l10nIntent);
+    if (!l10nIntent) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+
+    try {
+      const published = await publishAccountInstanceTransition({
+        env,
+        accountId,
+        instanceId: instanceId!,
+        accountAuthz: toAccountAuthzSnapshot(capsule),
+        l10nIntent,
+      });
+      return respond(json({ ok: true, ...published }));
+    } catch (error) {
+      return respond(transitionErrorResponse(error));
+    }
+  }
+
+  const internalRenderUnpublishTransitionMatch = pathname.match(
+    /^\/__internal\/renders\/widgets\/([^/]+)\/unpublish\.json$/,
+  );
+  if (internalRenderUnpublishTransitionMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderUnpublishTransitionMatch[1]));
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'POST') {
+      return respondMethodNotAllowed(respond);
+    }
+    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+    if (!auth.ok) return respond(auth.response);
+    try {
+      const unpublished = await unpublishAccountInstanceTransition({
+        env,
+        accountId,
+        instanceId: instanceId!,
+      });
+      return respond(json({ ok: true, ...unpublished }));
+    } catch (error) {
+      return respond(transitionErrorResponse(error));
     }
   }
 
@@ -581,8 +787,8 @@ export async function tryHandleInternalRenderRoutes(
         minRole: 'editor',
       });
       if (authErr) return respond(authErr);
-      await deleteInstanceMirror(env, instanceId!, accountId);
-      return respond(json({ ok: true, deleted: true }));
+      const deleted = await deleteInstanceMirror(env, instanceId!, accountId);
+      return respond(json({ ok: true, deleted: deleted.existed, existed: deleted.existed }));
     }
 
     return respondMethodNotAllowed(respond);

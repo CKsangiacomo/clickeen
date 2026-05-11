@@ -1,3 +1,7 @@
+import faqSpec from '../../tokyo/product/widgets/faq/spec.json';
+import countdownSpec from '../../tokyo/product/widgets/countdown/spec.json';
+import logoShowcaseSpec from '../../tokyo/product/widgets/logoshowcase/spec.json';
+
 export type WidgetConfigContractIssue = {
   path: string;
   message: string;
@@ -12,6 +16,11 @@ export type WidgetConfigContractResult =
     };
 
 const ACTIVE_WIDGET_TYPES = new Set(['faq', 'countdown', 'logoshowcase']);
+const ACTIVE_WIDGET_DEFAULTS: Record<string, unknown> = {
+  faq: faqSpec.defaults,
+  countdown: countdownSpec.defaults,
+  logoshowcase: logoShowcaseSpec.defaults,
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -31,6 +40,55 @@ function optionalNumber(value: unknown): boolean {
 
 function pushIssue(issues: WidgetConfigContractIssue[], path: string, message: string) {
   issues.push({ path, message });
+}
+
+function describeKind(value: unknown): string {
+  if (Array.isArray(value)) return 'array';
+  if (value === null) return 'null';
+  return typeof value;
+}
+
+function validateDefaultOwnedShape(args: {
+  defaults: unknown;
+  config: unknown;
+  path: string;
+  issues: WidgetConfigContractIssue[];
+}) {
+  const { config, defaults, issues, path } = args;
+  if (Array.isArray(defaults)) {
+    if (!Array.isArray(config)) {
+      pushIssue(issues, path, `Expected array, received ${describeKind(config)}`);
+    }
+    return;
+  }
+
+  if (isRecord(defaults)) {
+    if (!isRecord(config)) {
+      pushIssue(issues, path, `Expected object, received ${describeKind(config)}`);
+      return;
+    }
+    for (const [key, value] of Object.entries(defaults)) {
+      if (!(key in config)) {
+        pushIssue(issues, `${path}.${key}`, 'Missing required saved config field');
+        continue;
+      }
+      validateDefaultOwnedShape({
+        defaults: value,
+        config: config[key],
+        path: `${path}.${key}`,
+        issues,
+      });
+    }
+    return;
+  }
+
+  if (defaults === null) {
+    return;
+  }
+
+  if (typeof config !== typeof defaults) {
+    pushIssue(issues, path, `Expected ${typeof defaults}, received ${describeKind(config)}`);
+  }
 }
 
 function validateFaqConfig(config: Record<string, unknown>): WidgetConfigContractIssue[] {
@@ -161,12 +219,22 @@ export function validateWidgetConfigContract(args: {
     return { ok: true };
   }
 
-  const issues =
+  const defaults = ACTIVE_WIDGET_DEFAULTS[widgetType];
+  const issues: WidgetConfigContractIssue[] = [];
+  validateDefaultOwnedShape({
+    defaults,
+    config: args.config,
+    path: 'config',
+    issues,
+  });
+
+  const widgetIssues =
     widgetType === 'faq'
       ? validateFaqConfig(args.config)
       : widgetType === 'countdown'
         ? validateCountdownConfig(args.config)
         : validateLogoShowcaseConfig(args.config);
+  issues.push(...widgetIssues);
 
   return issues.length ? { ok: false, reasonKey: 'coreui.errors.instance.config.invalid', issues } : { ok: true };
 }

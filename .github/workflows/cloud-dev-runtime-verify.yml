@@ -1,4 +1,4 @@
-name: cloud-dev runtime verify
+name: cloud-dev surface reachability
 
 on:
   push:
@@ -14,11 +14,11 @@ on:
   workflow_dispatch: {}
 
 concurrency:
-  group: cloud-dev-runtime-verify
+  group: cloud-dev-surface-reachability
   cancel-in-progress: true
 
 jobs:
-  verify:
+  reachability:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     steps:
@@ -76,7 +76,7 @@ jobs:
           echo "Venice embed loader did not become reachable with the expected runtime payload in time." >&2
           exit 1
 
-      - name: Verify corrected Roma auth routes
+      - name: Verify unauthenticated Roma route boundaries
         run: |
           set -euo pipefail
           verify_route() {

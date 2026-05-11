@@ -10,6 +10,27 @@ import {
 import type { ExecuteAccountCommand } from './sessionTransport';
 import { normalizeSessionConfig } from './sessionConfig';
 
+function normalizeTranslationFollowup(payload: unknown):
+  | { ok: true }
+  | { ok: false; reasonKey: string; detail?: string } {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return { ok: true };
+  const followup = payload as Record<string, unknown>;
+  if (followup.ok !== false) return { ok: true };
+  const reasonKey =
+    typeof followup.reasonKey === 'string' && followup.reasonKey.trim()
+      ? followup.reasonKey.trim()
+      : 'coreui.errors.translations.acceptanceFailed';
+  const detail =
+    typeof followup.detail === 'string' && followup.detail.trim()
+      ? followup.detail.trim()
+      : undefined;
+  return {
+    ok: false,
+    reasonKey,
+    ...(detail ? { detail } : {}),
+  };
+}
+
 export function useSessionSaving(args: {
   stateRef: MutableRefObject<SessionState>;
   metaRef: MutableRefObject<SessionMeta>;
@@ -90,7 +111,15 @@ export function useSessionSaving(args: {
         savedInstanceDataSignature,
         isDirty: false,
         isSaving: false,
-        error: null,
+        error: (() => {
+          const translationFollowup = normalizeTranslationFollowup(json?.translationFollowup);
+          if (translationFollowup.ok) return null;
+          return {
+            source: 'translation',
+            message: translationFollowup.reasonKey,
+            ...(translationFollowup.detail ? { detail: translationFollowup.detail } : {}),
+          };
+        })(),
       };
       setUpsell(null);
       stateRef.current = nextState;

@@ -37,6 +37,7 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
   const session = useWidgetSessionChrome();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const instanceId = session.meta?.instanceId ? String(session.meta.instanceId) : '';
+  const isPublished = session.meta?.publishStatus === 'published';
 
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
@@ -67,7 +68,7 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
       veniceBase = '';
     }
     const loaderSrc = veniceBase ? `${veniceBase}/embed/latest/loader.js` : '';
-    const canRender = Boolean(instanceId && loaderSrc);
+    const canRender = Boolean(isPublished && instanceId && loaderSrc);
 
     const safeSnippet = canRender
       ? `<div data-clickeen-id="${instanceId}"></div>
@@ -101,7 +102,7 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
       : '/bob/preview-shadow?mode=seo-geo';
 
     return { veniceBase, loaderSrc, canRender, safeSnippet, scriptlessSnippet, seoGeoSnippet, previewSeoGeoHref };
-  }, [instanceId]);
+  }, [instanceId, isPublished]);
 
   const copySnippet = useCallback(async (label: string, snippet: string) => {
     setCopyStatus(null);
@@ -127,7 +128,10 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
         </div>
 
         {!instanceId ? <div className="settings-panel__error">Instance instanceId missing.</div> : null}
-        {instanceId && !embed.veniceBase ? (
+        {instanceId && !isPublished ? (
+          <div className="settings-panel__error">Publish this widget before copying embed code.</div>
+        ) : null}
+        {instanceId && isPublished && !embed.veniceBase ? (
           <div className="settings-panel__error">Missing NEXT_PUBLIC_VENICE_URL (cannot build embed snippet).</div>
         ) : null}
 

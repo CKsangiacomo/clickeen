@@ -174,11 +174,6 @@ export async function loadRomaWidgetsForAccount(args: {
   }
 }
 
-export function createUserInstanceId(): string {
-  const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-  return `ins_${suffix}`;
-}
-
 export function buildBuilderRoute(args: {
   instanceId: string;
   widgetType?: string | null;

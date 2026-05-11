@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { Policy } from '@clickeen/ck-policy';
-import { materializeConfigWithDefaults, normalizeSessionConfig } from './sessionConfig';
+import { validateSessionConfigForOpen } from './sessionConfig';
 import {
   type BobOpenEditorAppliedMessage,
   type BobOpenEditorFailedMessage,
@@ -31,6 +31,7 @@ export function useSessionBoot(args: {
         const baseLocale = typeof message.baseLocale === 'string' ? message.baseLocale.trim() : '';
         let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
         const rawInstanceData = message.instanceData;
+        const publishStatus = message.publishStatus === 'published' ? 'published' : 'unpublished';
         if (!baseLocale) {
           return {
             ok: false,
@@ -43,10 +44,25 @@ export function useSessionBoot(args: {
             error: 'coreui.errors.instance.config.invalid',
           };
         }
-        const resolved = normalizeSessionConfig(
-          materializeConfigWithDefaults(compiled.defaults, rawInstanceData as Record<string, unknown>),
-          compiled,
-        );
+        const resolved = rawInstanceData as Record<string, unknown>;
+        const contract = validateSessionConfigForOpen(resolved, compiled);
+        if (!contract.ok) {
+          setState((prev) => ({
+            ...prev,
+            compiled: null,
+            instanceData: {},
+            savedInstanceDataSignature: serializeInstanceDataSignature({}),
+            isDirty: false,
+            error: {
+              source: 'load',
+              message: `coreui.errors.instance.config.invalid:${contract.issues.map((issue) => issue.path).join(',')}`,
+            },
+          }));
+          return {
+            ok: false,
+            error: 'coreui.errors.instance.config.invalid',
+          };
+        }
         const savedInstanceDataSignature = serializeInstanceDataSignature(resolved);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
         const nextCopilot = (message.copilot as CopilotRuntimeUi | undefined) ?? null;
@@ -61,6 +77,7 @@ export function useSessionBoot(args: {
           instanceId: message.instanceId,
           baseLocale,
           widgetname: compiled.widgetname,
+          publishStatus,
           label: nextLabel,
           meta: message.meta ?? null,
         });

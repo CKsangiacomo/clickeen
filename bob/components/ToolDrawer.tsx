@@ -26,6 +26,8 @@ const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.builder.open.failed': 'Builder could not open this widget. Please try again.',
   'coreui.errors.instance.notFound': 'This widget could not be found. It may have been deleted.',
   'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot load right now.',
+  'coreui.errors.translations.acceptanceFailed':
+    'Changes were saved, but translations could not start. Try saving again.',
 };
 
 function resolveBuilderErrorCopy(reason: string, fallback: string): string {
@@ -41,6 +43,7 @@ function resolveBuilderErrorCopy(reason: string, fallback: string): string {
 
 function resolveSessionErrorTitle(error: NonNullable<ReturnType<typeof useWidgetSession>['error']>): string {
   if (error.source === 'load') return 'Builder unavailable';
+  if (error.source === 'translation') return 'Translations need attention';
   if (error.source === 'save') return 'Save failed';
   return 'Edit blocked';
 }
@@ -55,6 +58,15 @@ function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidget
       resolveBuilderErrorCopy(
         error.message,
         'Saving changes failed. Please try again.',
+      ),
+    ];
+  }
+
+  if (error.source === 'translation') {
+    return [
+      resolveBuilderErrorCopy(
+        error.message,
+        'Changes were saved, but translations could not start. Try saving again.',
       ),
     ];
   }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
@@ -18,8 +18,15 @@ import {
   type WidgetInstance,
 } from './use-roma-widgets';
 
+const CREATE_WIDGET_OPTIONS = [
+  { widgetType: 'faq', label: 'FAQ' },
+  { widgetType: 'countdown', label: 'Countdown' },
+  { widgetType: 'logoshowcase', label: 'Logo showcase' },
+] as const;
+
 export function WidgetsDomain() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { accountContext } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const accountId = accountContext.accountId;
@@ -116,6 +123,37 @@ export function WidgetsDomain() {
     });
   }, [instanceWidgetTypes]);
 
+  const handleCreateInstance = useCallback(
+    async (widgetType: string) => {
+      if (!accountId) return;
+      const actionKey = `create:${widgetType}`;
+      setActiveActionKey(actionKey);
+      setMutationError(null);
+      try {
+        const payload = await accountApi.fetchJson<{
+          instanceId?: string;
+          widgetType?: string;
+        }>('/api/account/instances', {
+          method: 'POST',
+          headers: accountApi.buildHeaders({ contentType: 'application/json' }),
+          body: JSON.stringify({ widgetType }),
+        });
+        const createdInstanceId = typeof payload.instanceId === 'string' ? payload.instanceId.trim() : '';
+        if (!createdInstanceId) {
+          throw new Error('coreui.errors.payload.invalid');
+        }
+        await refreshWidgets({ force: true });
+        router.push(buildBuilderRoute({ instanceId: createdInstanceId, widgetType }));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setMutationError(resolveAccountShellErrorCopy(message, 'Creating the widget failed. Please try again.'));
+      } finally {
+        setActiveActionKey((current) => (current === actionKey ? null : current));
+      }
+    },
+    [accountApi, accountId, refreshWidgets, router],
+  );
+
   const handleDuplicateInstance = useCallback(
     async (instance: WidgetInstance) => {
       if (!accountId) return;
@@ -126,12 +164,8 @@ export function WidgetsDomain() {
         const payload = await accountApi.fetchJson<{
           instanceId?: string;
           widgetType?: string;
-        }>(`/api/account/widgets/duplicate`, {
+        }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/duplicate`, {
           method: 'POST',
-          headers: accountApi.buildHeaders({ contentType: 'application/json' }),
-          body: JSON.stringify({
-            sourceInstanceId: instance.instanceId,
-          }),
         });
         const duplicatedInstanceId = payload && typeof payload.instanceId === 'string' && payload.instanceId.trim() ? payload.instanceId.trim() : '';
         if (!duplicatedInstanceId) {
@@ -155,7 +189,7 @@ export function WidgetsDomain() {
       setActiveActionKey(actionKey);
       setMutationError(null);
       try {
-        await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instance/${encodeURIComponent(instance.instanceId)}`, {
+        await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}`, {
           method: 'DELETE',
         });
         await refreshWidgets({ force: true });
@@ -271,6 +305,24 @@ export function WidgetsDomain() {
           {!domainLoading && groupedInstances.length === 0 ? (
             <div className="rd-canvas-module__actions">
               <p className="body-m">No editable instances yet.</p>
+              {CREATE_WIDGET_OPTIONS.map((option) => {
+                const actionKey = `create:${option.widgetType}`;
+                return (
+                  <button
+                    className="diet-btn-txt"
+                    data-size="md"
+                    data-variant={option.widgetType === 'faq' ? 'primary' : 'line2'}
+                    type="button"
+                    key={option.widgetType}
+                    onClick={() => void handleCreateInstance(option.widgetType)}
+                    disabled={Boolean(activeActionKey)}
+                  >
+                    <span className="diet-btn-txt__label body-m">
+                      {activeActionKey === actionKey ? 'Creating...' : `Create ${option.label}`}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           ) : null}
         </section>

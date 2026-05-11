@@ -378,12 +378,12 @@ async function runDuplicateWrite(runner, sourceInstance) {
   }
   let createdInstanceId = '';
   await runner.check('Roma instance duplicate/delete', 'roma.widgets', async () => {
-    const duplicate = await runner.request(runner.args.romaBase, '/api/account/widgets/duplicate', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sourceInstanceId: sourceInstance.instanceId }),
-    });
-    assertHttp(duplicate, 201, 'POST /api/account/widgets/duplicate');
+    const duplicate = await runner.request(
+      runner.args.romaBase,
+      `/api/account/instances/${encodeURIComponent(sourceInstance.instanceId)}/duplicate`,
+      { method: 'POST' },
+    );
+    assertHttp(duplicate, 201, `POST /api/account/instances/${sourceInstance.instanceId}/duplicate`);
     if (!isRecord(duplicate.payload) || typeof duplicate.payload.instanceId !== 'string') {
       throw new Error('duplicate payload missing instanceId');
     }
@@ -398,10 +398,10 @@ async function runDuplicateWrite(runner, sourceInstance) {
     );
     assert2xx(translations, `GET /api/account/instances/${createdInstanceId}/translations`);
 
-    const cleanup = await runner.request(runner.args.romaBase, `/api/account/instance/${encodeURIComponent(createdInstanceId)}`, {
+    const cleanup = await runner.request(runner.args.romaBase, `/api/account/instances/${encodeURIComponent(createdInstanceId)}`, {
       method: 'DELETE',
     });
-    assert2xx(cleanup, `DELETE /api/account/instance/${createdInstanceId}`);
+    assert2xx(cleanup, `DELETE /api/account/instances/${createdInstanceId}`);
     return `duplicated ${sourceInstance.instanceId} to ${createdInstanceId}, opened, checked l10n, deleted`;
   });
   return createdInstanceId || null;
@@ -420,8 +420,8 @@ async function runVenice(runner, instanceId) {
   }
 
   await runner.check('Venice public instance read', 'venice.public', async () => {
-    const pointer = await runner.request(runner.args.veniceBase, `/renders/widgets/${encodeURIComponent(instanceId)}`);
-    assert2xx(pointer, `GET /renders/widgets/${instanceId}`);
+    const pointer = await runner.request(runner.args.veniceBase, `/renders/widgets/${encodeURIComponent(instanceId)}/live/r.json`);
+    assert2xx(pointer, `GET /renders/widgets/${instanceId}/live/r.json`);
     const embed = await runner.request(runner.args.veniceBase, `/widget/${encodeURIComponent(instanceId)}`);
     assert2xx(embed, `GET /widget/${instanceId}`);
     return instanceId;

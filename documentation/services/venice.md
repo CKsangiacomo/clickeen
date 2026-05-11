@@ -11,17 +11,21 @@ Venice does not read Supabase, does not know account membership, and does not re
 - `GET /widget/{instanceId}` - public iframe shell.
 - `GET /embed/latest/loader.js` - current loader alias.
 - `GET /embed/v2/loader.js` - current loader.
-- `GET /embed/v1/loader.js` - legacy loader shape that still targets `/widget/{instanceId}`.
-- `GET /embed/pixel` - no-op compatibility endpoint.
 - `GET /widgets/**` - Tokyo widget runtime proxy.
 - `GET /dieter/**` - Tokyo Dieter asset proxy.
-- `GET /renders/widgets/**` - Tokyo published render proxy.
-- `GET /l10n/widgets/**` - Tokyo published l10n proxy.
+- `GET /renders/widgets/{instanceId}/live/r.json` - Tokyo published render pointer proxy.
+- `GET /renders/widgets/{instanceId}/config.json` - Tokyo published config pack proxy.
+- `GET /renders/widgets/{instanceId}/meta/live/{locale}.json` - Tokyo published SEO/GEO meta pointer proxy.
+- `GET /renders/widgets/{instanceId}/meta/{locale}/{metaFp}.json` - Tokyo published SEO/GEO meta pack proxy.
+- `GET /l10n/widgets/{instanceId}/index.json` - Tokyo published l10n index proxy.
+- `GET /l10n/widgets/{instanceId}/{locale}/overlay.json` - Tokyo published l10n overlay proxy.
 
 Deleted routes:
 
 - legacy short embed route with the single-letter `e` prefix
 - legacy short render route with the single-letter `r` prefix
+- pre-GA embed-loader compatibility route
+- pre-GA tracking compatibility endpoint
 - `/api/instance/{id}`
 
 ## Identity

@@ -83,17 +83,3 @@ export async function enqueueAccountInstanceSync(args: {
     path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/sync/queue`,
   });
 }
-
-export async function syncAccountInstanceLiveSurface(args: {
-  accountId: string;
-  instanceId: string;
-  accountCapsule?: string | null;
-  previousBaseFingerprint?: string | null;
-  l10nIntent: AccountInstanceSyncIntent;
-}): Promise<void> {
-  await postAccountInstanceSync({
-    ...args,
-    live: true,
-    path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/sync`,
-  });
-}

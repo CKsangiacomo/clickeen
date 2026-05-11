@@ -36,6 +36,8 @@ export type AccountInstanceDocument = {
   updatedAt: string;
   l10n?: {
     baseFingerprint: string;
+    // Derived from Berlin account locale policy for this saved instance. The
+    // saved base config remains the base-locale source; non-base locales use overlays.
     summary?: {
       baseLocale: string;
       desiredLocales: string[];

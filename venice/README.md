@@ -13,7 +13,8 @@ Key routes (shipped):
 - `GET /widget/:instanceId` (SSR embed HTML)
 - `GET /widgets/*` and `GET /dieter/*` (Tokyo asset proxy)
 - `GET /embed/latest/loader.js` and `GET /embed/v2/loader.js` (embed loader)
-- `GET /embed/pixel` (compat no-op `204`)
+- `GET /renders/widgets/:instanceId/live/r.json`, `/config.json`, and SEO/GEO meta pack routes (Tokyo published render proxies)
+- `GET /l10n/widgets/:instanceId/index.json` and `/:locale/overlay.json` (Tokyo published l10n proxies)
 
 Required env (deployed environments):
 - `TOKYO_URL` (or `TOKYO_BASE_URL` / `NEXT_PUBLIC_TOKYO_URL`)

@@ -4,10 +4,26 @@ import { tokyoFetch } from '@venice/lib/tokyo';
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
+function isAllowedL10nPath(parts: string[]): boolean {
+  if (parts[0] !== 'widgets') return false;
+  const instanceId = parts[1] || '';
+  if (!instanceId) return false;
+
+  if (parts.length === 3) {
+    return parts[2] === 'index.json';
+  }
+  if (parts.length === 4) {
+    const locale = parts[2] || '';
+    return Boolean(locale) && parts[3] === 'overlay.json';
+  }
+
+  return false;
+}
+
 export async function GET(_req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;
   const parts = Array.isArray(path) ? path.map((p) => String(p || '').replace(/^\/+|\/+$/g, '')).filter(Boolean) : [];
-  if (parts.length === 0) return new NextResponse('NOT_FOUND', { status: 404 });
+  if (parts.length === 0 || !isAllowedL10nPath(parts)) return new NextResponse('NOT_FOUND', { status: 404 });
 
   const pathname = `/l10n/${parts.join('/')}`;
   const res = await tokyoFetch(pathname, { method: 'GET' });
@@ -29,4 +45,3 @@ export async function HEAD(req: Request, ctx: { params: Promise<{ path: string[]
   const res = await GET(req, ctx);
   return new NextResponse(null, { status: res.status, headers: res.headers });
 }
-

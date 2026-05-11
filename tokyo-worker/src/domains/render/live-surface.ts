@@ -3,7 +3,11 @@ import {
   accountInstancePublishKey,
   publishedWidgetLookupKey,
 } from './keys';
-import { rebuildAccountInstanceIndexes, resolveAccountInstanceLocation } from './instance-index';
+import {
+  patchAccountInstanceIndexEntry,
+  removeAccountInstanceIndexEntry,
+  resolveAccountInstanceLocation,
+} from './instance-index';
 import { normalizeLocalePolicy, normalizePublishDocument } from './normalize';
 import { deletePrefix, loadJson, putJson } from './storage';
 import type {
@@ -57,7 +61,12 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
       await restorePublishDocument(env, publishKey, previousPublish, unpublished);
       throw error;
     }
-    await rebuildAccountInstanceIndexes(env, accountId);
+    await patchAccountInstanceIndexEntry({
+      env,
+      accountId: location.accountId,
+      widgetType: location.widgetType,
+      instanceId: location.instanceId,
+    });
     return;
   }
 
@@ -99,7 +108,12 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
     });
     throw error;
   }
-  await rebuildAccountInstanceIndexes(env, accountId);
+  await patchAccountInstanceIndexEntry({
+    env,
+    accountId: location.accountId,
+    widgetType: location.widgetType,
+    instanceId: location.instanceId,
+  });
 }
 
 export async function enforceLiveSurface(env: Env, job: EnforceLiveSurfaceJob): Promise<void> {
@@ -126,17 +140,24 @@ export async function enforceLiveSurface(env: Env, job: EnforceLiveSurfaceJob): 
   });
 }
 
-export async function deleteInstanceMirror(env: Env, instanceId: string, accountId: string): Promise<void> {
+export async function deleteInstanceMirror(env: Env, instanceId: string, accountId: string): Promise<{ existed: boolean }> {
   const normalized = normalizeStorageId(instanceId);
   const normalizedAccount = normalizeStorageId(accountId);
   if (!normalized) throw new Error('[tokyo] delete-instance-mirror missing instanceId');
   if (!normalizedAccount) throw new Error('[tokyo] delete-instance-mirror missing accountId');
-  const location = await resolveAccountInstanceLocation({ env, accountId: normalizedAccount, instanceId: normalized });
+  const location = await resolveAccountInstanceLocation({
+    env,
+    accountId: normalizedAccount,
+    instanceId: normalized,
+    rebuildIfMissing: false,
+  });
+  const existed = Boolean(location);
   if (location) {
     await deletePrefix(env, `accounts/${location.accountId}/widgets/${location.widgetType}/${location.instanceId}/`);
   }
   await env.TOKYO_R2.delete(publishedWidgetLookupKey(normalized));
-  await rebuildAccountInstanceIndexes(env, normalizedAccount);
+  await removeAccountInstanceIndexEntry({ env, accountId: normalizedAccount, instanceId: normalized });
+  return { existed };
 }
 
 export function buildLiveRenderPointer(args: {

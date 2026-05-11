@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isUuid, normalizeInstanceId } from '@clickeen/ck-contracts';
+import { normalizeInstanceId } from '@clickeen/ck-contracts';
 import {
   deleteAccountInstanceFromTokyo,
-  loadTokyoAccountInstanceDocument,
-  loadTokyoAccountInstanceLiveStatus,
-  saveAccountInstanceDirect,
+  saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
-import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
-import { normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
-import {
-  enqueueAccountInstanceSync,
-  TokyoAccountInstanceSyncError,
-} from '@roma/lib/account-instance-sync';
+import { loadAccountL10nIntent } from '@roma/lib/account-l10n-intent';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -20,23 +13,6 @@ import {
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
-
-async function deleteTokyoMirrors(args: {
-  accountId: string;
-  instanceId: string;
-  accountCapsule?: string;
-}): Promise<{ ok: true } | { ok: false; detail: string }> {
-  try {
-    await deleteAccountInstanceFromTokyo({
-      accountId: args.accountId,
-      instanceId: args.instanceId,
-      accountCapsule: args.accountCapsule,
-    });
-    return { ok: true };
-  } catch (error) {
-    return { ok: false, detail: error instanceof Error ? error.message : String(error) };
-  }
-}
 
 export async function PUT(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
@@ -140,62 +116,26 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const accountLocalesState = await loadCurrentAccountLocalesState({
+  const l10nIntent = await loadAccountL10nIntent({
     accessToken: current.value.accessToken,
     accountId,
   });
-  if (!accountLocalesState.ok) {
-    const status =
-      accountLocalesState.status === 401
-        ? 401
-        : accountLocalesState.status === 403
-          ? 403
-          : 502;
-    const kind =
-      status === 401
-        ? 'AUTH'
-        : status === 403
-          ? 'DENY'
-          : 'UPSTREAM_UNAVAILABLE';
+  if (!l10nIntent.ok) {
     return withSession(
       request,
-      NextResponse.json(
-        {
-          error: {
-            kind,
-            reasonKey:
-              status === 401
-                ? 'coreui.errors.auth.required'
-                : status === 403
-                  ? 'coreui.errors.auth.forbidden'
-                  : 'coreui.errors.auth.contextUnavailable',
-            detail:
-              accountLocalesState.detail ||
-              `berlin_account_http_${accountLocalesState.status}`,
-          },
-        },
-        { status },
-      ),
+      NextResponse.json({ error: l10nIntent.error }, { status: l10nIntent.status }),
       current.value.setCookies,
     );
   }
 
-  const result = await saveAccountInstanceDirect({
+  const result = await saveAccountInstanceInTokyo({
     accountId,
     instanceId,
     widgetType,
     config,
-    displayName,
-    meta,
-    l10n: {
-      summary: {
-        baseLocale: accountLocalesState.policy.baseLocale,
-        desiredLocales: normalizeDesiredAccountLocales({
-          baseLocale: accountLocalesState.policy.baseLocale,
-          locales: accountLocalesState.locales,
-        }),
-      },
-    },
+    ...(displayName !== undefined ? { displayName } : {}),
+    ...(meta !== undefined ? { meta } : {}),
+    l10nIntent: l10nIntent.value,
     accountCapsule: current.value.authzToken,
   });
 
@@ -207,63 +147,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  let live = false;
-  const liveStatus = await loadTokyoAccountInstanceLiveStatus({
-    accountId,
-    instanceId,
-    accountCapsule: current.value.authzToken,
-  });
-  if (liveStatus.ok) {
-    live = liveStatus.value === 'published';
-  } else {
-    console.error('[roma account instance current route] serve-state lookup failed after save', {
-      accountId,
-      instanceId,
-      detail: liveStatus.error.detail ?? liveStatus.error.reasonKey,
-    });
-  }
-
-  let translationFollowup:
-    | { ok: true }
-    | { ok: false; reasonKey: string; detail: string; status: number } = { ok: true };
-
-  try {
-    await enqueueAccountInstanceSync({
-      accountId,
-      instanceId,
-      accountCapsule: current.value.authzToken,
-      live,
-      baseFingerprint: result.baseFingerprint,
-      previousBaseFingerprint: result.previousBaseFingerprint,
-      l10nIntent: {
-        baseLocale: accountLocalesState.policy.baseLocale,
-        desiredLocales: normalizeDesiredAccountLocales({
-          baseLocale: accountLocalesState.policy.baseLocale,
-          locales: accountLocalesState.locales,
-        }),
-        countryToLocale: accountLocalesState.policy.ip.countryToLocale,
-      },
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    translationFollowup = {
-      ok: false,
-      reasonKey: 'coreui.errors.translations.acceptanceFailed',
-      detail,
-      status: error instanceof TokyoAccountInstanceSyncError ? error.status : 502,
-    };
-    console.error('[roma account instance current route] translation acceptance failed after save', {
-      accountId,
-      instanceId,
-      detail,
-    });
-  }
-
   return withSession(
     request,
     NextResponse.json({
       ok: true,
-      translationFollowup,
+      translationFollowup: result.value.translationFollowup,
     }),
     current.value.setCookies,
   );
@@ -274,17 +162,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountId;
-  if (!isUuid(accountId)) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-
   const { instanceId: instanceIdRaw } = await context.params;
   const instanceId = normalizeInstanceId(instanceIdRaw);
   if (!instanceId) {
@@ -298,39 +175,19 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const existing = await loadTokyoAccountInstanceDocument({
-    accountId,
-    instanceId,
-    accountCapsule: current.value.authzToken,
-  });
-  if (!existing.ok && existing.status === 404) {
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' } },
-        { status: 404 },
-      ),
-      current.value.setCookies,
-    );
-  }
-  if (!existing.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: existing.error }, { status: existing.status }),
-      current.value.setCookies,
-    );
-  }
-
-  const tokyoCleanup = await deleteTokyoMirrors({
-    accountId,
-    instanceId,
-    accountCapsule: current.value.authzToken,
-  });
-  if (!tokyoCleanup.ok) {
+  let deleted: { existed: boolean };
+  try {
+    deleted = await deleteAccountInstanceFromTokyo({
+      accountId,
+      instanceId,
+      accountCapsule: current.value.authzToken,
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
     console.error('[roma account instance current route] tokyo cleanup failed', {
       accountId,
       instanceId,
-      detail: tokyoCleanup.detail,
+      detail,
     });
     return withSession(
       request,
@@ -339,7 +196,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
           error: {
             kind: 'UPSTREAM_UNAVAILABLE',
             reasonKey: 'coreui.errors.db.writeFailed',
-            detail: tokyoCleanup.detail,
+            detail,
           },
         },
         { status: 502 },
@@ -353,8 +210,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     NextResponse.json({
       accountId,
       instanceId,
-      deleted: true,
-      tokyoCleanupApplied: true,
+      deleted: deleted.existed,
+      existed: deleted.existed,
     }),
     current.value.setCookies,
   );

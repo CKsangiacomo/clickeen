@@ -32,6 +32,7 @@ import { upsertL10nOverlay } from './l10n-authoring';
 import {
   type SyncInstanceOverlaysJob,
   type SavedRenderL10nFailure,
+  enqueueTokyoMirrorJob,
   ensureSavedRenderL10nBase,
   loadSavedRenderL10nBase,
   readSavedRenderConfig,
@@ -48,15 +49,36 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>;
 }
 
-type SyncAuthzSnapshot = Pick<
+export type SyncAuthzSnapshot = Pick<
   RomaAccountAuthzCapsulePayload,
   'profile' | 'role' | 'entitlements'
 >;
 
-type SyncL10nIntent = {
+// Berlin owns account locale policy. Tokyo receives this as per-instance sync
+// intent and records a derived l10n summary, not a competing policy authority.
+export type SyncL10nIntent = {
   baseLocale: string;
   desiredLocales: string[];
   countryToLocale: Record<string, string>;
+};
+
+export type QueuedAccountInstanceSyncResult = {
+  queued: boolean;
+  instanceId: string;
+  live: boolean;
+  baseFingerprint: string;
+  translation: {
+    instanceId: string;
+    widgetType: string;
+    baseFingerprint: string;
+    baseLocale: string;
+    requestedLocales: string[];
+    readyLocales: string[];
+    status: 'queued' | 'ready';
+    failedLocales: SavedRenderL10nFailure[];
+    generationId: string;
+    updatedAt: string;
+  };
 };
 
 function normalizeCountryToLocale(raw: unknown): Record<string, string> {
@@ -385,7 +407,7 @@ export async function syncAccountInstance(args: {
     if (locale === baseLocale) {
       continue;
     }
-    if (locale !== baseLocale && incompleteLocales.has(locale)) {
+    if (incompleteLocales.has(locale)) {
       continue;
     }
     const existing = existingLocaleOverlays.get(locale);
@@ -478,6 +500,154 @@ export async function syncAccountInstance(args: {
     readyLocales,
     ...(configFp ? { configFp } : {}),
   };
+}
+
+export async function enqueueAccountInstanceSyncJob(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  live: boolean;
+  baseFingerprint?: string | null;
+  previousBaseFingerprint?: string | null;
+  accountAuthz: SyncAuthzSnapshot;
+  l10nIntent: SyncL10nIntent;
+}): Promise<QueuedAccountInstanceSyncResult> {
+  const saved = await readSavedRenderConfig({
+    env: args.env,
+    instanceId: args.instanceId,
+    accountId: args.accountId,
+  });
+  if (!saved.ok) {
+    throw new Error(saved.kind === 'NOT_FOUND' ? 'tokyo_saved_not_found' : saved.reasonKey);
+  }
+
+  const savedBaseFingerprint = normalizeSha256Hex(saved.value.pointer.l10n?.baseFingerprint);
+  const requestedBaseFingerprint = normalizeSha256Hex(args.baseFingerprint);
+  const previousBaseFingerprint = normalizeSha256Hex(args.previousBaseFingerprint);
+  const resolvedBaseFingerprint = requestedBaseFingerprint ?? savedBaseFingerprint;
+  if (!resolvedBaseFingerprint) {
+    throw new Error('tokyo_saved_l10n_base_missing');
+  }
+  if (requestedBaseFingerprint && savedBaseFingerprint && requestedBaseFingerprint !== savedBaseFingerprint) {
+    throw new Error('tokyo.errors.render.staleBaseFingerprint');
+  }
+
+  const baseLocale = args.l10nIntent.baseLocale;
+  const requestedLocales = normalizeReadyLocales({
+    baseLocale,
+    locales: args.l10nIntent.desiredLocales,
+  });
+  const generationId = crypto.randomUUID();
+  const nonBaseLocales = requestedLocales.filter((locale) => locale !== baseLocale);
+  const translationStatus: 'queued' | 'ready' = nonBaseLocales.length > 0 ? 'queued' : 'ready';
+  const finishedAt = translationStatus === 'ready' ? new Date().toISOString() : null;
+
+  const statusPointer = await writeSavedRenderL10nStatus({
+    env: args.env,
+    instanceId: args.instanceId,
+    accountId: args.accountId,
+    generationId,
+    status: translationStatus,
+    baseFingerprint: resolvedBaseFingerprint,
+    readyLocales: [baseLocale],
+    failedLocales: [],
+    finishedAt,
+  });
+
+  const translation = {
+    instanceId: args.instanceId,
+    widgetType: saved.value.pointer.widgetType,
+    baseFingerprint: resolvedBaseFingerprint,
+    baseLocale,
+    requestedLocales,
+    readyLocales: [baseLocale],
+    status: translationStatus,
+    failedLocales: [],
+    generationId,
+    updatedAt: statusPointer?.l10n?.updatedAt ?? new Date().toISOString(),
+  };
+
+  const shouldQueue = nonBaseLocales.length > 0;
+  try {
+    if (shouldQueue) {
+      await enqueueTokyoMirrorJob(args.env, {
+        v: 1,
+        kind: 'sync-instance-overlays',
+        instanceId: args.instanceId,
+        accountId: args.accountId,
+        baseFingerprint: resolvedBaseFingerprint,
+        generationId,
+        live: args.live,
+        accountAuthz: {
+          profile: args.accountAuthz.profile,
+          role: args.accountAuthz.role,
+          entitlements: args.accountAuthz.entitlements ?? null,
+        },
+        baseLocale,
+        desiredLocales: requestedLocales,
+        countryToLocale: args.l10nIntent.countryToLocale,
+        previousBaseFingerprint,
+      });
+    }
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    await writeSavedRenderL10nStatus({
+      env: args.env,
+      instanceId: args.instanceId,
+      accountId: args.accountId,
+      generationId,
+      status: 'failed',
+      baseFingerprint: resolvedBaseFingerprint,
+      readyLocales: [baseLocale],
+      failedLocales: nonBaseLocales.map((locale) => ({
+        locale,
+        reasonKey: 'tokyo_translation_enqueue_failed',
+        detail,
+      })),
+      lastError: detail,
+      finishedAt: new Date().toISOString(),
+      guardCurrentGeneration: true,
+    });
+    throw new Error(`tokyo_overlay_sync_enqueue_failed:${detail}`);
+  }
+
+  return {
+    queued: shouldQueue,
+    instanceId: args.instanceId,
+    live: args.live,
+    baseFingerprint: resolvedBaseFingerprint,
+    translation,
+  };
+}
+
+export async function syncAccountInstanceAndRecordStatus(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  live: boolean;
+  previousBaseFingerprint?: string | null;
+  accountAuthz: SyncAuthzSnapshot;
+  l10nIntent: SyncL10nIntent;
+}) {
+  const result = await syncAccountInstance(args);
+  const generationId = crypto.randomUUID();
+  const completion = resolveTranslationCompletion({
+    baseLocale: args.l10nIntent.baseLocale,
+    desiredLocales: args.l10nIntent.desiredLocales,
+    readyLocales: result.readyLocales,
+  });
+  await writeSavedRenderL10nStatus({
+    env: args.env,
+    instanceId: args.instanceId,
+    accountId: args.accountId,
+    generationId,
+    status: completion.status,
+    baseFingerprint: result.baseFingerprint,
+    readyLocales: result.readyLocales,
+    failedLocales: completion.failedLocales,
+    finishedAt: new Date().toISOString(),
+  });
+  return result;
 }
 
 export async function runQueuedAccountInstanceSync(
@@ -596,7 +766,7 @@ export async function handleSyncAccountInstance(
   }
 
   try {
-    const result = await syncAccountInstance({
+    const result = await syncAccountInstanceAndRecordStatus({
       env,
       accountId,
       instanceId,
@@ -608,23 +778,6 @@ export async function handleSyncAccountInstance(
         entitlements: accountAuthz.entitlements ?? null,
       },
       l10nIntent,
-    });
-    const generationId = crypto.randomUUID();
-    const completion = resolveTranslationCompletion({
-      baseLocale: l10nIntent.baseLocale,
-      desiredLocales: l10nIntent.desiredLocales,
-      readyLocales: result.readyLocales,
-    });
-    await writeSavedRenderL10nStatus({
-      env,
-      instanceId,
-      accountId,
-      generationId,
-      status: completion.status,
-      baseFingerprint: result.baseFingerprint,
-      readyLocales: result.readyLocales,
-      failedLocales: completion.failedLocales,
-      finishedAt: new Date().toISOString(),
     });
     return json(result);
   } catch (error) {
