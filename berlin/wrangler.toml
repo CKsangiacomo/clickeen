@@ -20,8 +20,8 @@ ENV_STAGE = "cloud-dev"
 
 [[kv_namespaces]]
 binding = "BERLIN_SESSION_KV"
-id = "a9396f7fee7f47bc9b1be520c78a24c9"
-preview_id = "4d253b94b6b5434ab484cfe4a3a0fb9a"
+id = "bf40f9bee2f74772ad7f0e9fb640ee29"
+preview_id = "fa868bb00ba04b7d83e215a6d4652c31"
 
 [[queues.producers]]
 binding = "RENDER_SNAPSHOT_QUEUE"
