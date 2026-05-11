@@ -3,7 +3,6 @@ import {
   DEFAULT_AUDIENCE,
   DEFAULT_ISSUER,
   REFRESH_KEY_CACHE,
-  REFRESH_RTI_GRACE_MS,
   REFRESH_TOKEN_PREFIX,
   SIGNING_CONTEXT_KEY,
   type AccessClaims,
@@ -225,8 +224,4 @@ export async function verifyRefreshToken(token: string, env: Env, options: { all
   if (!exp) return { ok: false, reason: 'payload' };
   if (!options.allowExpired && exp <= Math.floor(Date.now() / 1000)) return { ok: false, reason: 'expired' };
   return { ok: true, payload };
-}
-
-export function isRefreshGraceWindow(rtiRotatedAt: number, nowMs: number): boolean {
-  return nowMs - rtiRotatedAt <= REFRESH_RTI_GRACE_MS;
 }

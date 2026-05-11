@@ -142,7 +142,6 @@ Person-scoped surface for the currently signed-in human.
 Owns:
 - personal profile fields
 - primary email visibility
-- auth-owned email-change initiation
 - person-level settings
 
 Linked identities remain a Berlin-internal auth/account model, not a standard customer-facing User Settings surface.
@@ -154,13 +153,13 @@ Rules:
 - `timezone` is derived from `country` and is directly selectable only when the selected country has more than one supported timezone
 - invalid persisted profile/account locale state must fail explicitly in canonical product/account flows; it is an operator defect, not something the runtime silently heals
 - `display_name` may still exist as inert storage residue during cutover, but product read/write contracts must not expose or depend on it
-- primary email change is not a generic profile patch; it is an auth-owned flow initiated through `POST /v1/me/email-change`
+- primary email change is not an active Berlin product route; provider-owned email identity must not be shadow-mutated through generic profile patching
 - contact verification is Berlin-owned and channel-specific:
   - `POST /v1/me/contact-methods/:channel/start`
   - `POST /v1/me/contact-methods/:channel/verify`
 - `phone` and `whatsapp` become active only after Berlin verifies the code
 - local uses a delivery-capture adapter for verification preview; `cloud-dev`/prod must fail unavailable until a real delivery dependency exists
-- pending email change state is owned by the auth system; Berlin must not invent a second shadow email model in product persistence
+- Berlin must not invent a second shadow email model in product persistence
 
 ### Account Settings
 
@@ -290,37 +289,34 @@ Returns:
   - `traits.linkedProviders`
 - signed account capsule
 
-Current account API surface:
+Current residual Berlin account API surface:
 - `GET /v1/me`
 - `PUT /v1/me`
-- `POST /v1/me/email-change`
 - `POST /v1/me/contact-methods/:channel/start`
 - `POST /v1/me/contact-methods/:channel/verify`
 - `GET /v1/me/identities`
-- `GET /v1/accounts`
-- `POST /v1/accounts`
 - `GET /v1/accounts/:id`
 - `DELETE /v1/accounts/:id`
+- `PUT /v1/accounts/:id/locales`
 - `GET /v1/accounts/:id/members`
 - `GET /v1/accounts/:id/members/:memberId`
+- `PATCH /v1/accounts/:id/members/:memberId`
 - `DELETE /v1/accounts/:id/members/:memberId`
 - `GET /v1/accounts/:id/invitations`
 - `POST /v1/accounts/:id/invitations`
 - `DELETE /v1/accounts/:id/invitations/:invitationId`
 - `POST /v1/invitations/:token/accept`
-- `POST /v1/accounts/:id/members`
-- `PATCH /v1/accounts/:id/members/:memberId`
-- `DELETE /v1/accounts/:id/members/:memberId`
 - `POST /v1/accounts/:id/owner-transfer`
-- `PUT /v1/accounts/:id/locales`
-- `POST /v1/accounts/:id/switch`
+- `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
+- `GET /v1/accounts/:id/publish-containment`
 
 Rules:
 - `POST /v1/accounts/:id/invitations` is the canonical unknown-person grant-access path
-- `POST /v1/accounts/:id/members` is only for already-resolved user profiles
+- direct member creation is no longer an active Berlin route; invitations are the surviving grant-access path
 - `PATCH /v1/accounts/:id/members/:memberId` mutates membership only
 - `DELETE /v1/accounts/:id/members/:memberId` removes a non-owner member from the account
 - `GET /v1/me/identities` returns Berlin's minimal provider reuse summary; shells must not invent their own provider/account linkage model on top
+- `GET /v1/accounts/:id/publish-containment` is account-level policy only; it does not make Berlin a widget publish/live-state owner
 - Berlin currently hosts this API surface, but the corrected mandate keeps only login-time account truth in Berlin long term. Post-login account-management routes are extraction targets.
 
 ---

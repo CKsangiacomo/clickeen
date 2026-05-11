@@ -1,5 +1,6 @@
 import { isUserSettingsTimezoneSupported, normalizeUserSettingsCountry } from '@clickeen/ck-contracts';
 import type { BerlinUserProfilePayload } from '../bootstrap/types';
+import { asTrimmedString } from '../utils/primitives';
 
 export type UserProfileRow = {
   user_id?: unknown;
@@ -13,12 +14,6 @@ export type UserProfileRow = {
   timezone?: unknown;
   active_account_id?: unknown;
 };
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
 
 function normalizeBoolean(value: unknown): boolean {
   if (typeof value === 'boolean') return value;

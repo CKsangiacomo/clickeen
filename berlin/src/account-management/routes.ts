@@ -1,4 +1,3 @@
-import { claimAsString } from '../utils/claims';
 import { json, validationError } from '../http';
 import { capture, exact, type BerlinRoute } from '../http/routing';
 import {
@@ -13,7 +12,6 @@ import {
   handleInvitationAccept as applyInvitationAccept,
 } from './invitations';
 import {
-  handleAccountMemberCreate,
   handleAccountMemberDelete,
   handleAccountMemberUpdate,
 } from './members';
@@ -22,25 +20,14 @@ import {
   findAccountContext,
   findAccountMember,
   listAccountMembers,
-  loadPrincipalAccountState,
   loadPrincipalIdentities,
-  persistActiveAccountPreference,
   summarizeConnectorState,
 } from '../bootstrap/state';
 import { denyResponse, normalizeUuid, resolvePrincipalState } from '../bootstrap/route-context';
-import { provisionOwnedAccount } from '../identity/reconcile';
 import { startUserContactVerification, verifyUserContactMethod, type UserContactChannel } from '../identity/contact-methods';
 import { type Env } from '../types';
 import { parseUserProfilePatchPayload, patchUserProfile } from '../identity/user-profiles';
-
-function parseAccountName(value: unknown): string | null {
-  if (value == null) return 'New account';
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  if (!normalized) return null;
-  if (normalized.length > 80) return null;
-  return normalized;
-}
+import { readJsonPayload } from '../utils/primitives';
 
 function normalizeContactChannel(value: string): UserContactChannel | null {
   const normalized = String(value || '').trim().toLowerCase();
@@ -52,7 +39,7 @@ function canDismissTierDropNotice(role: string): boolean {
   return role === 'owner' || role === 'admin';
 }
 
-export async function handleMe(request: Request, env: Env): Promise<Response> {
+async function handleMe(request: Request, env: Env): Promise<Response> {
   const resolved = await resolvePrincipalState(request, env);
   if (!resolved.ok) return resolved.response;
 
@@ -62,16 +49,11 @@ export async function handleMe(request: Request, env: Env): Promise<Response> {
   });
 }
 
-export async function handleMeUpdate(request: Request, env: Env): Promise<Response> {
+async function handleMeUpdate(request: Request, env: Env): Promise<Response> {
   const resolved = await resolvePrincipalState(request, env);
   if (!resolved.ok) return resolved.response;
 
-  let payload: unknown = null;
-  try {
-    payload = await request.json();
-  } catch {
-    payload = null;
-  }
+  const payload = await readJsonPayload(request);
 
   const parsed = parseUserProfilePatchPayload(payload);
   if (!parsed.ok) return parsed.response;
@@ -92,22 +74,7 @@ export async function handleMeUpdate(request: Request, env: Env): Promise<Respon
   });
 }
 
-export async function handleMeEmailChange(_request: Request, env: Env): Promise<Response> {
-  const resolved = await resolvePrincipalState(_request, env);
-  if (!resolved.ok) return resolved.response;
-  return json(
-    {
-      error: {
-        kind: 'UNSUPPORTED',
-        reasonKey: 'coreui.errors.user.email.providerManaged',
-        detail: 'provider_managed_email',
-      },
-    },
-    { status: 409 },
-  );
-}
-
-export async function handleMeContactMethodStart(
+async function handleMeContactMethodStart(
   request: Request,
   env: Env,
   channelRaw: string,
@@ -118,12 +85,7 @@ export async function handleMeContactMethodStart(
   const channel = normalizeContactChannel(channelRaw);
   if (!channel) return validationError('coreui.errors.payload.invalid', 'unsupported contact channel');
 
-  let payload: unknown = null;
-  try {
-    payload = await request.json();
-  } catch {
-    payload = null;
-  }
+  const payload = await readJsonPayload(request);
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return validationError('coreui.errors.payload.invalid');
   }
@@ -136,7 +98,7 @@ export async function handleMeContactMethodStart(
   });
 }
 
-export async function handleMeContactMethodVerify(
+async function handleMeContactMethodVerify(
   request: Request,
   env: Env,
   channelRaw: string,
@@ -147,12 +109,7 @@ export async function handleMeContactMethodVerify(
   const channel = normalizeContactChannel(channelRaw);
   if (!channel) return validationError('coreui.errors.payload.invalid', 'unsupported contact channel');
 
-  let payload: unknown = null;
-  try {
-    payload = await request.json();
-  } catch {
-    payload = null;
-  }
+  const payload = await readJsonPayload(request);
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return validationError('coreui.errors.payload.invalid');
   }
@@ -165,7 +122,7 @@ export async function handleMeContactMethodVerify(
   });
 }
 
-export async function handleMeIdentities(request: Request, env: Env): Promise<Response> {
+async function handleMeIdentities(request: Request, env: Env): Promise<Response> {
   const resolved = await resolvePrincipalState(request, env);
   if (!resolved.ok) return resolved.response;
 
@@ -184,76 +141,7 @@ export async function handleMeIdentities(request: Request, env: Env): Promise<Re
   });
 }
 
-export async function handleAccounts(request: Request, env: Env): Promise<Response> {
-  const resolved = await resolvePrincipalState(request, env);
-  if (!resolved.ok) return resolved.response;
-
-  return json({
-    accounts: resolved.state.accounts,
-  });
-}
-
-export async function handleAccountCreate(request: Request, env: Env): Promise<Response> {
-  const resolved = await resolvePrincipalState(request, env);
-  if (!resolved.ok) return resolved.response;
-
-  let payload: unknown = null;
-  try {
-    payload = await request.json();
-  } catch {
-    payload = null;
-  }
-
-  if (payload != null && (typeof payload !== 'object' || Array.isArray(payload))) {
-    return validationError('coreui.errors.payload.invalid');
-  }
-
-  const name = parseAccountName((payload as { name?: unknown } | null)?.name);
-  if (!name) {
-    return validationError('coreui.errors.payload.invalid', 'account name must be a non-empty string up to 80 chars');
-  }
-
-  const accountId = crypto.randomUUID();
-  const provisioned = await provisionOwnedAccount({
-    env,
-    userId: resolved.principal.userId,
-    accountId,
-    name,
-    setActive: true,
-  });
-  if (!provisioned.ok) return provisioned.response;
-
-  const state = await loadPrincipalAccountState({
-    env,
-    userId: resolved.principal.userId,
-    sessionRole: claimAsString(resolved.principal.claims.role),
-  });
-  if (!state.ok) return state.response;
-
-  const account = findAccountContext(state.value, accountId);
-  if (!account) {
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.db.readFailed',
-          detail: 'created account missing from principal state',
-        },
-      },
-      { status: 500 },
-    );
-  }
-
-  return json(
-    {
-      account,
-      isActive: true,
-    },
-    { status: provisioned.created ? 201 : 200 },
-  );
-}
-
-export async function handleAccountById(
+async function handleAccountById(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -273,7 +161,7 @@ export async function handleAccountById(
   });
 }
 
-export async function handleAccountDelete(
+async function handleAccountDelete(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -294,7 +182,7 @@ export async function handleAccountDelete(
   });
 }
 
-export async function handleAccountMembers(
+async function handleAccountMembers(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -308,15 +196,6 @@ export async function handleAccountMembers(
   const account = findAccountContext(resolved.state, accountId);
   if (!account) return denyResponse();
 
-  if (request.method === 'POST') {
-    return handleAccountMemberCreate({
-      request,
-      env,
-      account,
-      accountId,
-    });
-  }
-
   const members = await listAccountMembers(env, accountId);
   if (!members.ok) return members.response;
 
@@ -327,7 +206,7 @@ export async function handleAccountMembers(
   });
 }
 
-export async function handleAccountInvitations(
+async function handleAccountInvitations(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -360,7 +239,7 @@ export async function handleAccountInvitations(
   return validationError('coreui.errors.payload.invalid');
 }
 
-export async function handleAccountLocales(
+async function handleAccountLocales(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -381,7 +260,7 @@ export async function handleAccountLocales(
   });
 }
 
-export async function handleAccountMemberById(
+async function handleAccountMemberById(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -412,7 +291,7 @@ export async function handleAccountMemberById(
   });
 }
 
-export async function handleAccountInvitationDelete(
+async function handleAccountInvitationDelete(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -439,7 +318,7 @@ export async function handleAccountInvitationDelete(
   });
 }
 
-export async function handleAccountMemberPatch(
+async function handleAccountMemberPatch(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -466,7 +345,7 @@ export async function handleAccountMemberPatch(
   });
 }
 
-export async function handleAccountMemberDeleteRoute(
+async function handleAccountMemberDeleteRoute(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -492,34 +371,7 @@ export async function handleAccountMemberDeleteRoute(
   });
 }
 
-export async function handleAccountSwitch(
-  request: Request,
-  env: Env,
-  accountIdRaw: string,
-): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
-  if (!accountId) return validationError('coreui.errors.accountId.invalid');
-
-  const resolved = await resolvePrincipalState(request, env);
-  if (!resolved.ok) return resolved.response;
-
-  const account = findAccountContext(resolved.state, accountId);
-  if (!account) return denyResponse();
-
-  const persisted = await persistActiveAccountPreference({
-    env,
-    userId: resolved.principal.userId,
-    accountId,
-  });
-  if (!persisted.ok) return persisted.response;
-
-  return json({
-    ok: true,
-    accountId,
-  });
-}
-
-export async function handleAccountLifecycleTierDropDismiss(
+async function handleAccountLifecycleTierDropDismiss(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -540,7 +392,7 @@ export async function handleAccountLifecycleTierDropDismiss(
   });
 }
 
-export async function handleAccountOwnerTransfer(
+async function handleAccountOwnerTransfer(
   request: Request,
   env: Env,
   accountIdRaw: string,
@@ -559,11 +411,10 @@ export async function handleAccountOwnerTransfer(
     env,
     account,
     currentOwnerUserId: resolved.principal.userId,
-    sessionRole: claimAsString(resolved.principal.claims.role),
   });
 }
 
-export async function handleInvitationAccept(
+async function handleInvitationAccept(
   request: Request,
   env: Env,
   invitationIdRaw: string,
@@ -581,7 +432,6 @@ export async function handleInvitationAccept(
     invitationId,
     principalUserId: resolved.principal.userId,
     principalEmail: resolved.state.profile.primaryEmail,
-    sessionRole: claimAsString(resolved.principal.claims.role),
   });
 }
 
@@ -589,9 +439,6 @@ export const ACCOUNT_MANAGEMENT_ROUTES: BerlinRoute[] = [
   exact('/v1/me', {
     GET: ({ request, env }) => handleMe(request, env),
     PUT: ({ request, env }) => handleMeUpdate(request, env),
-  }),
-  exact('/v1/me/email-change', {
-    POST: ({ request, env }) => handleMeEmailChange(request, env),
   }),
   {
     pattern: /^\/v1\/me\/contact-methods\/([^/]+)\/start$/,
@@ -607,10 +454,6 @@ export const ACCOUNT_MANAGEMENT_ROUTES: BerlinRoute[] = [
   },
   exact('/v1/me/identities', {
     GET: ({ request, env }) => handleMeIdentities(request, env),
-  }),
-  exact('/v1/accounts', {
-    GET: ({ request, env }) => handleAccounts(request, env),
-    POST: ({ request, env }) => handleAccountCreate(request, env),
   }),
   {
     pattern: /^\/v1\/invitations\/([^/]+)\/accept$/,
@@ -631,7 +474,6 @@ export const ACCOUNT_MANAGEMENT_ROUTES: BerlinRoute[] = [
     pattern: /^\/v1\/accounts\/([^/]+)\/members$/,
     methods: {
       GET: ({ request, env, match }) => handleAccountMembers(request, env, capture(match, 1)),
-      POST: ({ request, env, match }) => handleAccountMembers(request, env, capture(match, 1)),
     },
   },
   {
@@ -652,12 +494,6 @@ export const ACCOUNT_MANAGEMENT_ROUTES: BerlinRoute[] = [
     pattern: /^\/v1\/accounts\/([^/]+)\/locales$/,
     methods: {
       PUT: ({ request, env, match }) => handleAccountLocales(request, env, capture(match, 1)),
-    },
-  },
-  {
-    pattern: /^\/v1\/accounts\/([^/]+)\/switch$/,
-    methods: {
-      POST: ({ request, env, match }) => handleAccountSwitch(request, env, capture(match, 1)),
     },
   },
   {

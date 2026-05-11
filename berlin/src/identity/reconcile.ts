@@ -4,6 +4,7 @@ import { normalizeProfileLocation } from './profile-normalization';
 import { readSupabaseAdminListAll } from '../supabase-admin';
 import { readSupabaseAdminJson, supabaseAdminFetch, supabaseAdminErrorResponse } from '../supabase-admin';
 import { type Env } from '../types';
+import { asTrimmedString, normalizeUuid } from '../utils/primitives';
 
 type MembershipRow = {
   account_id?: unknown;
@@ -23,7 +24,6 @@ export type ProviderIdentity = {
   primaryLanguage?: string | null;
   country?: string | null;
   timezone?: string | null;
-  legacyUserId?: string | null;
 };
 
 type ReconcileResult =
@@ -49,12 +49,6 @@ const DEFAULT_ACCOUNT_L10N_POLICY = {
 } as const;
 const USER_MEMBERSHIP_PAGE_SIZE = 200;
 
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
-
 function normalizeEmail(value: unknown): string | null {
   const email = asTrimmedString(value);
   return email ? email.toLowerCase() : null;
@@ -69,14 +63,6 @@ function normalizeLoginProvider(value: unknown): string | null {
 function normalizeProviderSubject(value: unknown): string | null {
   const subject = asTrimmedString(value);
   return subject && subject.length <= 512 ? subject : null;
-}
-
-function normalizeUuid(value: unknown): string | null {
-  const normalized = asTrimmedString(value);
-  if (!normalized) return null;
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(normalized)
-    ? normalized
-    : null;
 }
 
 function normalizePrimaryLanguage(value: unknown): string | null {
@@ -94,21 +80,6 @@ function normalizeRole(value: unknown): 'viewer' | 'editor' | 'admin' | 'owner' 
       return role;
     default:
       return null;
-  }
-}
-
-function roleRank(value: unknown): number {
-  switch (normalizeRole(value)) {
-    case 'owner':
-      return 4;
-    case 'admin':
-      return 3;
-    case 'editor':
-      return 2;
-    case 'viewer':
-      return 1;
-    default:
-      return 0;
   }
 }
 
@@ -153,7 +124,6 @@ async function resolveProductUserForIdentity(
       p_primary_language: normalizePrimaryLanguage(identity.primaryLanguage),
       p_country: location.country,
       p_timezone: location.timezone,
-      p_legacy_user_id: normalizeUuid(identity.legacyUserId),
     }),
   });
   const payload = await readSupabaseAdminJson<ResolveLoginIdentityRpcRow[] | ResolveLoginIdentityRpcRow | Record<string, unknown>>(

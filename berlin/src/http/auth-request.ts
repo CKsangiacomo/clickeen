@@ -1,4 +1,5 @@
 import { asBearerToken, claimAsString } from '../utils/claims';
+import { readJsonPayload } from '../utils/primitives';
 import { REFRESH_TOKEN_PREFIX } from '../types';
 
 export function parseCookieValue(request: Request, name: string): string | null {
@@ -20,7 +21,7 @@ export function parseCookieValue(request: Request, name: string): string | null 
 }
 
 export async function readJsonBody(request: Request): Promise<Record<string, unknown> | null> {
-  const parsed = (await request.json().catch(() => null)) as unknown;
+  const parsed = await readJsonPayload(request);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
   return parsed as Record<string, unknown>;
 }

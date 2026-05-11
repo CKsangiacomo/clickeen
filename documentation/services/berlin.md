@@ -63,7 +63,7 @@ These surfaces must not be expanded in Berlin without a PRD:
 - contact-method verification and profile mutation endpoints
 - account governance and lifecycle operations
 - post-login invitation listing, issuance, revocation, and member-management workflows
-- general account creation/deletion outside the login/session boundary
+- account deletion outside the login/session boundary
 
 Correct direction:
 
@@ -87,17 +87,13 @@ Residual public account-management routes:
 
 - `GET /v1/me`
 - `PUT /v1/me`
-- `POST /v1/me/email-change`
 - `POST /v1/me/contact-methods/:channel/start`
 - `POST /v1/me/contact-methods/:channel/verify`
 - `GET /v1/me/identities`
-- `GET /v1/accounts`
-- `POST /v1/accounts`
 - `GET /v1/accounts/:id`
 - `DELETE /v1/accounts/:id`
 - `PUT /v1/accounts/:id/locales`
 - `GET /v1/accounts/:id/members`
-- `POST /v1/accounts/:id/members`
 - `GET /v1/accounts/:id/members/:memberId`
 - `PATCH /v1/accounts/:id/members/:memberId`
 - `DELETE /v1/accounts/:id/members/:memberId`
@@ -106,9 +102,10 @@ Residual public account-management routes:
 - `DELETE /v1/accounts/:id/invitations/:invitationId`
 - `POST /v1/accounts/:id/owner-transfer`
 - `POST /v1/invitations/:token/accept`
-- `POST /v1/accounts/:id/switch`
 - `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
 - `GET /v1/accounts/:id/publish-containment`
+
+`GET /v1/accounts/:id/publish-containment` is a policy-only read used by Roma's publish action boundary. Berlin reads `account_publish_containment` for the account block state and reason only; Tokyo remains the owner of widget instance inventory, editable config, display metadata, localization overlays, and publish/live state.
 
 Internal routes:
 
@@ -188,7 +185,7 @@ Primary runtime dependencies:
 Registry/account product dependencies:
 
 - Roma no longer receives a Michael/PostgREST token from Berlin.
-- Berlin only answers account governance and publish-containment questions for this area.
+- Berlin only answers account governance and account-level publish-containment policy questions for this area.
 - Berlin does not own widget instance inventory, instance IDs, display names, saved config, l10n overlays, or publish state.
 
 ## Environment

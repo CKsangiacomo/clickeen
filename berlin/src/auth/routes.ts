@@ -249,7 +249,7 @@ async function createProviderLoginStart(args: {
   return { ok: true, provider, url: oauth.url, transaction };
 }
 
-export async function handleProviderLoginRedirectStart(
+async function handleProviderLoginRedirectStart(
   request: Request,
   env: Env,
   providerRaw: string,
@@ -272,7 +272,7 @@ export async function handleProviderLoginRedirectStart(
   return redirect(started.url);
 }
 
-export async function handleProviderLoginCallback(
+async function handleProviderLoginCallback(
   request: Request,
   env: Env,
   providerFromPath?: string,
@@ -430,7 +430,7 @@ export async function handleProviderLoginCallback(
   return redirect(destination.toString());
 }
 
-export async function handleFinish(request: Request, env: Env): Promise<Response> {
+async function handleFinish(request: Request, env: Env): Promise<Response> {
   const body = await readJsonBody(request);
   const finishFromBody = claimAsString(body?.finishId);
   const finishFromQuery = claimAsString(new URL(request.url).searchParams.get('finishId'));

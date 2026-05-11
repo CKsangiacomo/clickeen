@@ -1,5 +1,5 @@
 export const enc = new TextEncoder();
-export const dec = new TextDecoder();
+const dec = new TextDecoder();
 
 export function normalizePem(raw: string): string {
   const trimmed = raw.trim();
@@ -62,4 +62,3 @@ export function decodeJsonBase64Url<T>(value: string): T | null {
     return null;
   }
 }
-

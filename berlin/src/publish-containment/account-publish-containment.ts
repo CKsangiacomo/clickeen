@@ -1,6 +1,7 @@
 import { type BerlinAccountContext } from '../bootstrap/types';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
 import { type Env } from '../types';
+import { asTrimmedString } from '../utils/primitives';
 
 type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
 
@@ -8,12 +9,6 @@ type PublishContainmentRow = {
   account_id?: unknown;
   reason?: unknown;
 };
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
 
 function dbReadFailure(response: Response, payload: unknown): Response {
   return supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload);

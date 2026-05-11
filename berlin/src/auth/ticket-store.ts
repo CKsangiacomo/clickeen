@@ -1,3 +1,5 @@
+import { readJsonPayload } from '../utils/primitives';
+
 export type TicketConsumeResult<T> =
   | { outcome: 'ok'; ticket: T }
   | { outcome: 'missing' | 'expired' | 'alreadyConsumed' | 'storeUnavailable' };
@@ -82,7 +84,7 @@ function toStoredTicket(value: unknown): StoredTicket | null {
 }
 
 async function readJsonBody(request: Request): Promise<JsonRecord | null> {
-  const parsed = (await request.json().catch(() => null)) as unknown;
+  const parsed = await readJsonPayload(request);
   return readObject(parsed);
 }
 

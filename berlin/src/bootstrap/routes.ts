@@ -4,7 +4,7 @@ import { buildBootstrapPayload } from './capsule';
 import { resolvePrincipalState } from './route-context';
 import { type Env } from '../types';
 
-export async function handleSessionBootstrap(request: Request, env: Env): Promise<Response> {
+async function handleSessionBootstrap(request: Request, env: Env): Promise<Response> {
   const resolved = await resolvePrincipalState(request, env);
   if (!resolved.ok) return resolved.response;
 

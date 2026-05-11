@@ -8,7 +8,7 @@ import { resolveSigningContext, signAccessToken, signRefreshToken, verifyRefresh
 import { resolveAudience, resolveIssuer } from '../auth/config';
 import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS, type AccessClaims, type Env, type RefreshPayloadV2 } from '../types';
 
-export async function handleRefresh(request: Request, env: Env): Promise<Response> {
+async function handleRefresh(request: Request, env: Env): Promise<Response> {
   const body = await readJsonBody(request);
   const refreshToken = resolveRefreshTokenFromRequest(request, body);
   if (!refreshToken) return authError('coreui.errors.auth.required', 401);
@@ -78,7 +78,7 @@ export async function handleRefresh(request: Request, env: Env): Promise<Respons
   });
 }
 
-export async function handleSession(request: Request, env: Env): Promise<Response> {
+async function handleSession(request: Request, env: Env): Promise<Response> {
   const principal = await resolvePrincipalSession(request, env);
   if (!principal.ok) return principal.response;
 
@@ -91,7 +91,7 @@ export async function handleSession(request: Request, env: Env): Promise<Respons
   });
 }
 
-export async function handleLogout(request: Request, env: Env): Promise<Response> {
+async function handleLogout(request: Request, env: Env): Promise<Response> {
   const body = await readJsonBody(request);
   const all = body?.all === true || claimAsString(body?.scope) === 'user';
 
@@ -112,14 +112,14 @@ export async function handleLogout(request: Request, env: Env): Promise<Response
   return json({ ok: true, revokedScope: 'sid', sid: verified.payload.sid });
 }
 
-export async function handleJwks(env: Env): Promise<Response> {
+async function handleJwks(env: Env): Promise<Response> {
   const signing = await resolveSigningContext(env);
   const keys = [signing.current.publicJwk];
   if (signing.previous) keys.push(signing.previous.publicJwk);
   return json({ keys });
 }
 
-export function handleHealthz(): Response {
+function handleHealthz(): Response {
   return json({ ok: true, service: 'berlin' });
 }
 

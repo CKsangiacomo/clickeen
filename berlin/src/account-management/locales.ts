@@ -71,17 +71,6 @@ function enforceL10nSelection(policy: Policy, locales: string[]): Response | nul
   return null;
 }
 
-function resolveActivePublishLocales(args: {
-  accountLocales: unknown;
-  baseLocale: string;
-}): string[] {
-  const normalized = resolveLocaleList(args.accountLocales, 'l10n_locales');
-  const additionalLocales = normalized.ok ? normalized.locales : [];
-  const baseLocale = args.baseLocale || 'en';
-  const locales = Array.from(new Set([baseLocale, ...additionalLocales]));
-  return locales;
-}
-
 async function patchAccountLocales(args: {
   env: Env;
   accountId: string;

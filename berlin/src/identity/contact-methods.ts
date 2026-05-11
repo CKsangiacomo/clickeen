@@ -2,6 +2,7 @@ import { enc } from '../crypto/encoding';
 import { json, validationError } from '../http';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
 import { type Env } from '../types';
+import { asTrimmedString } from '../utils/primitives';
 
 export type UserContactChannel = 'phone' | 'whatsapp';
 
@@ -38,12 +39,6 @@ type ContactVerificationRow = {
 
 const CHALLENGE_TTL_MS = 10 * 60_000;
 const MAX_ATTEMPTS = 5;
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
 
 function normalizeChannel(value: string): UserContactChannel | null {
   const normalized = asTrimmedString(value)?.toLowerCase();

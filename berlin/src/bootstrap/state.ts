@@ -21,11 +21,11 @@ import type { UserProfileRow as BerlinUserProfileRow } from '../identity/profile
 import { readSupabaseAdminListAll } from '../supabase-admin';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
 import { type Env, type SessionState } from '../types';
+import { asTrimmedString, isUuid } from '../utils/primitives';
 
 const MEMBERSHIP_PAGE_SIZE = 200;
 const ACCOUNT_MEMBER_PAGE_SIZE = 200;
 const USER_PROFILE_QUERY_CHUNK_SIZE = 100;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type AccountMembershipRow = {
   account_id?: unknown;
@@ -78,12 +78,6 @@ export type PrincipalAccountState = {
 
 type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
 
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
-
 function normalizeRole(value: unknown): MemberRole | null {
   switch (asTrimmedString(value)?.toLowerCase()) {
     case 'viewer':
@@ -106,10 +100,6 @@ function normalizeTier(value: unknown): AccountTier | null {
     default:
       return null;
   }
-}
-
-function isUuid(value: string | null): value is string {
-  return typeof value === 'string' && UUID_PATTERN.test(value);
 }
 
 function encodeInFilter(values: string[]): string {

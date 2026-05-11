@@ -4,7 +4,7 @@ import { resolveAccountRouteContext } from '../bootstrap/route-context';
 import { type Env } from '../types';
 import { loadAccountPublishContainment } from './account-publish-containment';
 
-export async function handleAccountPublishContainment(
+async function handleAccountPublishContainment(
   request: Request,
   env: Env,
   accountIdRaw: string,

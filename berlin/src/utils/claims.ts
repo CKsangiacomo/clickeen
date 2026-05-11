@@ -22,18 +22,8 @@ export function claimAsNumber(value: unknown): number | null {
   return null;
 }
 
-export function parsePositiveInt(value: unknown, fallback: number): number {
-  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.floor(value);
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10);
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
-  }
-  return fallback;
-}
-
 export function audienceMatches(claim: unknown, expected: string): boolean {
   if (typeof claim === 'string') return claim === expected;
   if (Array.isArray(claim)) return claim.some((entry) => typeof entry === 'string' && entry === expected);
   return false;
 }
-

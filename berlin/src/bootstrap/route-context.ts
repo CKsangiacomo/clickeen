@@ -1,10 +1,11 @@
 import { claimAsString } from '../utils/claims';
+import { normalizeUuid } from '../utils/primitives';
 import { json, validationError } from '../http';
 import { findAccountContext, loadPrincipalAccountState } from './state';
 import { resolvePrincipalSession } from '../session/auth-session';
 import { type Env } from '../types';
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export { normalizeUuid };
 
 export function denyResponse(): Response {
   return json(
@@ -16,12 +17,6 @@ export function denyResponse(): Response {
     },
     { status: 403 },
   );
-}
-
-export function normalizeUuid(value: string): string | null {
-  const normalized = String(value || '').trim();
-  if (!UUID_PATTERN.test(normalized)) return null;
-  return normalized;
 }
 
 export async function resolvePrincipalState(request: Request, env: Env) {

@@ -1,9 +1,10 @@
 import type { BerlinAccountContext } from '../bootstrap/types';
-import { findAccountContext, listAccountMembers, loadPrincipalAccountState, persistActiveAccountPreference } from '../bootstrap/state';
+import { listAccountMembers, persistActiveAccountPreference } from '../bootstrap/state';
 import { json, validationError } from '../http';
 import { readSupabaseAdminListAll } from '../supabase-admin';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
 import { type Env } from '../types';
+import { asTrimmedString, readJsonPayload } from '../utils/primitives';
 
 type AccountInvitationRole = 'viewer' | 'editor' | 'admin';
 
@@ -46,12 +47,6 @@ export type InvitationAcceptOutcome = {
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const INVITATION_PAGE_SIZE = 200;
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
 
 function normalizeInvitationRole(value: unknown): AccountInvitationRole | null {
   switch (asTrimmedString(value)?.toLowerCase()) {
@@ -182,7 +177,7 @@ async function loadPendingInvitationByEmail(
   return { ok: true, value: row ? normalizeInvitationRow(row) : null };
 }
 
-export async function listAccountInvitations(env: Env, accountId: string): Promise<Result<BerlinAccountInvitation[]>> {
+async function listAccountInvitations(env: Env, accountId: string): Promise<Result<BerlinAccountInvitation[]>> {
   const params = new URLSearchParams({
     select:
       'id,account_id,email,role,created_by_user_id,accepted_by_user_id,expires_at,accepted_at,revoked_at,created_at,updated_at',
@@ -353,12 +348,7 @@ export async function handleAccountInvitationsPost(args: {
 }): Promise<Response> {
   if (!canManageInvitations(args.account.role)) return denyResponse();
 
-  let payload: unknown = null;
-  try {
-    payload = await args.request.json();
-  } catch {
-    payload = null;
-  }
+  const payload = await readJsonPayload(args.request);
 
   const parsed = parseInvitationIssuePayload(payload);
   if (!parsed.ok) return parsed.response;
@@ -556,7 +546,6 @@ export async function handleInvitationAccept(args: {
   invitationId: string;
   principalUserId: string;
   principalEmail: string;
-  sessionRole: string | null;
 }): Promise<Response> {
   const acceptedInvitation = await acceptInvitationForPrincipal({
     env: args.env,
@@ -566,30 +555,10 @@ export async function handleInvitationAccept(args: {
   });
   if (!acceptedInvitation.ok) return acceptedInvitation.response;
 
-  const state = await loadPrincipalAccountState({
-    env: args.env,
-    userId: args.principalUserId,
-    sessionRole: args.sessionRole,
-  });
-  if (!state.ok) return state.response;
-
-  const account = findAccountContext(state.value, acceptedInvitation.value.accountId);
-  if (!account) {
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.auth.contextUnavailable',
-          detail: 'accepted invitation account missing from principal state',
-        },
-      },
-      { status: 500 },
-    );
-  }
-
   return json({
     ok: true,
     accountId: acceptedInvitation.value.accountId,
-    account,
+    invitationId: acceptedInvitation.value.invitationId,
+    role: acceptedInvitation.value.role,
   });
 }

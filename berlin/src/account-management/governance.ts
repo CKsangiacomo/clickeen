@@ -1,16 +1,10 @@
 import type { BerlinAccountContext } from '../bootstrap/types';
-import { findAccountContext, loadPrincipalAccountState } from '../bootstrap/state';
 import { json, validationError } from '../http';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
 import { type Env } from '../types';
+import { asTrimmedString, normalizeUuid, readJsonPayload } from '../utils/primitives';
 
 type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
 
 function denyResponse(): Response {
   return json(
@@ -35,10 +29,6 @@ function conflictResponse(reasonKey: string, detail?: string): Response {
     },
     { status: 409 },
   );
-}
-
-function isUuid(value: string | null): value is string {
-  return Boolean(value) && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value ?? '');
 }
 
 async function callTransferOwnerRpc(args: {
@@ -116,8 +106,8 @@ function parseOwnerTransferPayload(
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return { ok: false, response: validationError('coreui.errors.payload.invalid') };
   }
-  const nextOwnerUserId = asTrimmedString((value as { nextOwnerUserId?: unknown }).nextOwnerUserId);
-  if (!isUuid(nextOwnerUserId)) {
+  const nextOwnerUserId = normalizeUuid((value as { nextOwnerUserId?: unknown }).nextOwnerUserId);
+  if (!nextOwnerUserId) {
     return {
       ok: false,
       response: validationError('coreui.errors.payload.invalid', 'nextOwnerUserId must be a uuid'),
@@ -148,16 +138,10 @@ export async function handleOwnerTransfer(args: {
   env: Env;
   account: BerlinAccountContext;
   currentOwnerUserId: string;
-  sessionRole: string | null;
 }): Promise<Response> {
   if (args.account.role !== 'owner') return denyResponse();
 
-  let payload: unknown = null;
-  try {
-    payload = await args.request.json();
-  } catch {
-    payload = null;
-  }
+  const payload = await readJsonPayload(args.request);
   const parsed = parseOwnerTransferPayload(payload);
   if (!parsed.ok) return parsed.response;
   if (parsed.nextOwnerUserId === args.currentOwnerUserId) {
@@ -172,30 +156,10 @@ export async function handleOwnerTransfer(args: {
   });
   if (writeError) return writeError;
 
-  const state = await loadPrincipalAccountState({
-    env: args.env,
-    userId: args.currentOwnerUserId,
-    sessionRole: args.sessionRole,
-  });
-  if (!state.ok) return state.response;
-
-  const account = findAccountContext(state.value, args.account.accountId);
-  if (!account) {
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.auth.contextUnavailable',
-          detail: 'owner transfer account missing from refreshed principal state',
-        },
-      },
-      { status: 500 },
-    );
-  }
-
   return json({
     ok: true,
-    account,
+    accountId: args.account.accountId,
+    ownerUserId: parsed.nextOwnerUserId,
   });
 }
 
@@ -206,12 +170,7 @@ export async function handleAccountDelete(args: {
 }): Promise<Response> {
   if (args.account.role !== 'owner') return denyResponse();
 
-  let payload: unknown = null;
-  try {
-    payload = await args.request.json();
-  } catch {
-    payload = null;
-  }
+  const payload = await readJsonPayload(args.request);
   const parsed = parseDeletePayload(payload, args.account.accountId);
   if (!parsed.ok) return parsed.response;
 
