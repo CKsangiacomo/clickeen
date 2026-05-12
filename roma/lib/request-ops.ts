@@ -1,3 +1,4 @@
+import { parseRateLimitRecord, type RateLimitRecord } from '@clickeen/ck-contracts';
 import { NextRequest, NextResponse } from 'next/server';
 import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
 import type { RomaUsageKv } from './account-limit-usage';
@@ -40,11 +41,6 @@ type RateLimitDecision =
       resetAt: number;
       retryAfterSec: number;
     };
-
-type RateLimitRecord = {
-  count: number;
-  resetAt: number;
-};
 
 type RomaKv = RomaUsageKv & {
   get(key: string, type: 'json'): Promise<unknown | null>;
@@ -105,21 +101,6 @@ function getOrCreateRequestContext(request: NextRequest): RomaRequestContext {
   };
   REQUEST_CONTEXTS.set(request, created);
   return created;
-}
-
-function parseRateLimitRecord(value: unknown): RateLimitRecord | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  const record = value as Record<string, unknown>;
-  const count =
-    typeof record.count === 'number' && Number.isFinite(record.count)
-      ? Math.max(0, Math.trunc(record.count))
-      : null;
-  const resetAt =
-    typeof record.resetAt === 'number' && Number.isFinite(record.resetAt)
-      ? Math.max(0, Math.trunc(record.resetAt))
-      : null;
-  if (count == null || resetAt == null) return null;
-  return { count, resetAt };
 }
 
 function resolveRateLimitPolicy(method: string, path: string): RateLimitPolicy | null {

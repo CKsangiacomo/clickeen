@@ -30,11 +30,9 @@ import {
   type AccountAssetManifest,
   type MemberRole,
   deleteAccountAssetByIdentity,
-  deleteAccountAssetUsageByIdentity,
   loadAccountAssetByIdentity,
   loadAccountAssetManifestByIdentity,
   loadAccountStoredBytesUsage,
-  loadAccountAssetUsageInstanceIdsByIdentity,
   listAccountAssetManifestsByAccount,
   loadAccountAssetBlobIdentitiesByAccount,
   loadAccountAssetBlobKeys,
@@ -348,7 +346,6 @@ async function deleteAccountAssetMetadataWithRetries(args: {
   let lastError: unknown = null;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      await deleteAccountAssetUsageByIdentity(args.env, args.accountId, args.assetId);
       await deleteAccountAssetByIdentity(args.env, args.accountId, args.assetId);
       return;
     } catch (error) {
@@ -404,8 +401,8 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   if (!accountId || !isUuid(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
-  const legacyVariant = (req.headers.get('x-variant') || '').trim();
-  if (legacyVariant) {
+  const unsupportedVariant = (req.headers.get('x-variant') || '').trim();
+  if (unsupportedVariant) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.variantUnsupported' } }, { status: 422 });
   }
 
@@ -767,21 +764,6 @@ async function handleDeleteAccountAsset(
     return jsonAssetIdentityIntegrityMismatch(accountId, assetId, integritySnapshot);
   }
 
-  const impactedInstanceIds = await loadAccountAssetUsageInstanceIdsByIdentity(env, accountId, assetId);
-  const usageCount = impactedInstanceIds.length;
-  const confirmInUseRaw = (new URL(req.url).searchParams.get('confirmInUse') || '').trim().toLowerCase();
-  const confirmInUse = confirmInUseRaw === '1' || confirmInUseRaw === 'true' || confirmInUseRaw === 'yes';
-  if (usageCount > 0 && !confirmInUse) {
-    return json(
-      {
-        error: { kind: 'DENY', reasonKey: 'coreui.errors.asset.inUseConfirmRequired' },
-        usageCount,
-        requiresConfirm: true,
-      },
-      { status: 409 },
-    );
-  }
-
   const blobKeys = await loadAccountAssetBlobKeys(env, accountId, assetId);
   try {
     if (blobKeys.length) {
@@ -862,7 +844,6 @@ async function handleDeleteAccountAsset(
       accountId,
       assetId,
       deleted: true,
-      usageCount,
     },
     { status: 200 },
   );

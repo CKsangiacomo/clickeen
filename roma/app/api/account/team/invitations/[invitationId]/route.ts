@@ -1,3 +1,4 @@
+import { isUuid } from '@clickeen/ck-contracts';
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
@@ -7,10 +8,6 @@ export const runtime = 'edge';
 type RouteContext = {
   params: Promise<{ invitationId: string }>;
 };
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'admin' });

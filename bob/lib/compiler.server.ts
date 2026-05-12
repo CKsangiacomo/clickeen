@@ -326,9 +326,6 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
         let rendered = renderComponentStencil(stencil, context);
         if (context.path) {
           rendered = rendered.replace(/data-path="/g, 'data-bob-path="');
-          if (!/data-bob-path="/.test(rendered)) {
-            rendered = rendered.replace(/<input([^>]*?)(\/?)>/, `<input$1 data-bob-path="${context.path}"$2>`);
-          }
         }
 
         const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : '';

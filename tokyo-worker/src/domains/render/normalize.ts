@@ -4,10 +4,7 @@ import type {
   AccountInstanceDocument,
   AccountInstanceIndexDocument,
   AccountInstanceIndexEntry,
-  AccountWidgetDocument,
-  LiveRenderPointer,
   LocalePolicy,
-  MetaLivePointer,
   PublishDocument,
   PublishedWidgetLookupDocument,
   SavedRenderL10nFailure,
@@ -92,26 +89,6 @@ function normalizeL10nStatus(raw: unknown): AccountInstanceDocument['l10n'] | un
   };
 }
 
-export function normalizeAccountWidgetDocument(raw: unknown): AccountWidgetDocument | null {
-  const payload = asRecord(raw);
-  if (!payload || payload.v !== 1) return null;
-  const accountId = normalizeStorageId(payload.accountId) ?? '';
-  const widgetType = asTrimmedString(payload.widgetType) ?? '';
-  const status = payload.status === 'locked_over_plan' ? 'locked_over_plan' : payload.status === 'active' ? 'active' : null;
-  const createdAt = asTrimmedString(payload.createdAt) ?? '';
-  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
-  if (!accountId || !widgetType || !status || !createdAt || !updatedAt) return null;
-  return {
-    v: 1,
-    accountId,
-    widgetType,
-    status,
-    lockedReason: asTrimmedString(payload.lockedReason),
-    createdAt,
-    updatedAt,
-  };
-}
-
 export function normalizeAccountInstanceDocument(raw: unknown): AccountInstanceDocument | null {
   const payload = asRecord(raw);
   if (!payload || payload.v !== 1) return null;
@@ -171,32 +148,6 @@ export function normalizePublishedWidgetLookupDocument(raw: unknown): PublishedW
   return { v: 1, id, accountId, widgetType, status: 'published', updatedAt };
 }
 
-export function normalizeLiveRenderPointer(raw: unknown): LiveRenderPointer | null {
-  const payload = asRecord(raw);
-  if (!payload || payload.v !== 1) return null;
-  const id = normalizeStorageId(payload.id) ?? '';
-  const widgetType = asTrimmedString(payload.widgetType) ?? '';
-  const configFp = normalizeFingerprint(payload.configFp) ?? '';
-  const localePolicy = normalizeLocalePolicy(payload.localePolicy);
-  if (!id || !widgetType || !configFp || !localePolicy) return null;
-  const seoGeoRaw = asRecord(payload.seoGeo);
-  const seoGeo =
-    asTrimmedString(seoGeoRaw?.metaLiveBase) && asTrimmedString(seoGeoRaw?.metaPacksBase)
-      ? {
-          metaLiveBase: String(seoGeoRaw?.metaLiveBase).trim(),
-          metaPacksBase: String(seoGeoRaw?.metaPacksBase).trim(),
-        }
-      : undefined;
-  return {
-    v: 1,
-    id,
-    widgetType,
-    configFp,
-    localePolicy,
-    ...(seoGeo ? { seoGeo } : {}),
-  };
-}
-
 export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | null {
   const instance = normalizeAccountInstanceDocument(raw);
   if (!instance) return null;
@@ -249,17 +200,6 @@ export function normalizeSavedL10nSnapshot(raw: unknown): Record<string, string>
     snapshot[normalizedPath] = value;
   }
   return snapshot;
-}
-
-export function normalizeMetaPointer(raw: unknown): MetaLivePointer | null {
-  const payload = asRecord(raw);
-  if (!payload || payload.v !== 1) return null;
-  const id = normalizeStorageId(payload.id) ?? '';
-  const locale = normalizeLocale(payload.locale) ?? '';
-  const metaFp = normalizeFingerprint(payload.metaFp) ?? '';
-  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
-  if (!id || !locale || !metaFp || !updatedAt) return null;
-  return { v: 1, id, locale, metaFp, updatedAt };
 }
 
 export function normalizeIndexEntry(raw: unknown): AccountInstanceIndexEntry | null {

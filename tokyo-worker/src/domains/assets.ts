@@ -336,22 +336,6 @@ export async function loadPrimaryAccountAssetKey(
   return key || null;
 }
 
-export async function loadAccountAssetUsageCountByIdentity(_env: Env, _accountId: string, _assetId: string): Promise<number> {
-  return 0;
-}
-
-export async function loadAccountAssetUsageInstanceIdsByIdentity(
-  _env: Env,
-  _accountId: string,
-  _assetId: string,
-): Promise<string[]> {
-  return [];
-}
-
-export async function deleteAccountAssetUsageByIdentity(_env: Env, _accountId: string, _assetId: string): Promise<void> {
-  // Usage index is no longer persisted in Supabase.
-}
-
 export async function deleteAccountAssetByIdentity(env: Env, accountId: string, assetId: string): Promise<void> {
   await env.TOKYO_R2.delete(accountAssetManifestKey(accountId, assetId));
 }

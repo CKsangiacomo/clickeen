@@ -1,3 +1,4 @@
+import { looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WidgetOp } from '../lib/ops';
 import type { CopilotMessage } from '../lib/copilot/types';
@@ -30,23 +31,10 @@ function safeJsonParse(text: string): unknown {
   }
 }
 
-function looksLikeHtml(text: string): boolean {
-  const s = (text || '').trim().slice(0, 2000).toLowerCase();
-  if (!s) return false;
-  return (
-    s.startsWith('<!doctype html') ||
-    s.startsWith('<html') ||
-    s.includes('<html') ||
-    s.includes('id="cf-wrapper"') ||
-    s.includes("id='cf-wrapper'") ||
-    s.includes('cloudflare.com/5xx-error-landing')
-  );
-}
-
 function normalizeAssistantText(text: string): string {
   const candidate = (text || '').trim();
   if (!candidate) return 'Done.';
-  if (looksLikeHtml(candidate)) return 'Copilot is temporarily unavailable (received an HTML error page). Please try again in a moment.';
+  if (looksLikeHtmlErrorPage(candidate)) return 'Copilot is temporarily unavailable (received an HTML error page). Please try again in a moment.';
   if (candidate === 'Unhandled error') return 'Copilot hit a backend timeout. Please try again (or ask for a smaller, single change).';
   if (candidate.toLowerCase().includes('empty model response')) {
     return 'Copilot got an empty response. Please try again with a smaller, more specific request.';
@@ -396,7 +384,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
       });
 
       const text = await res.text();
-      if (looksLikeHtml(text)) {
+      if (looksLikeHtmlErrorPage(text)) {
         throw new Error(normalizeAssistantText(text));
       }
       const parsed = safeJsonParse(text) as any;

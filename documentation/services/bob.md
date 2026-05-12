@@ -251,7 +251,7 @@ Requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin
 4. Emits `compiled.controls[]` by walking spec markup + stencils.
 5. Builds `compiled.assets`:
    - Widget runtime URLs (`widget.html`, `widget.css`, `widget.client.js`)
-   - Dieter assets required by this widget’s controls (`tokens.css` + per-component CSS/JS)
+   - Dieter assets required by this widget’s controls (`tokens/tokens.css` + per-component CSS/JS)
 
 ### Strict compiler rules (authoring constraints)
 
@@ -595,7 +595,5 @@ Preview:
 
 ## Not solved yet (intentionally)
 
-- Backward compatibility / legacy instance migration.
-- Hardened embed runtime surface (Venice) as a product contract.
 - Copilot rollout/auth: account-mode Copilot now runs through Roma-owned backend routes. Production allowlists/flags still evolve with the release model.
 - Copilot policy hardening: post-model “light edits only” caps + scope confirmation + deeper grounding to per-widget `agent.md` contracts (in progress).

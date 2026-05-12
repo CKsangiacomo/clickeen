@@ -10,7 +10,6 @@ import {
   AccountInstanceTransitionError,
   deleteInstanceMirror,
   duplicateAccountInstanceTransition,
-  buildAccountInstanceIndexDryRun,
   createAccountInstanceFromDefaults,
   publishAccountInstanceTransition,
   readInstanceServeState,
@@ -359,17 +358,11 @@ export async function tryHandleInternalRenderRoutes(
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
 
-    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-    const dryRun = body?.dryRun !== false;
-
     try {
-      const index = dryRun
-        ? await buildAccountInstanceIndexDryRun(env, accountId)
-        : await rebuildAccountInstanceIndexes(env, accountId);
+      const index = await rebuildAccountInstanceIndexes(env, accountId);
       return respond(
         json({
           ok: true,
-          dryRun,
           accountId,
           entries: index.entries.length,
           entryIds: index.entries.map((entry) => entry.id),

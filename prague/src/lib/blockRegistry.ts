@@ -318,10 +318,6 @@ export function validateBlockStrings(args: { blockType: string; strings: Record<
       if (iconName != null && typeof iconName !== 'string') {
         throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].iconName must be a string`);
       }
-      const legacyIcon = (item as any).icon;
-      if (legacyIcon != null && typeof legacyIcon !== 'string') {
-        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].icon must be a string`);
-      }
 
       const backgroundEnabled = (item as any).backgroundEnabled;
       if (backgroundEnabled != null && typeof backgroundEnabled !== 'boolean') {
@@ -331,10 +327,6 @@ export function validateBlockStrings(args: { blockType: string; strings: Record<
       if (backgroundPath != null && typeof backgroundPath !== 'string') {
         throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].backgroundPath must be a string`);
       }
-      const legacyBackground = (item as any).background;
-      if (legacyBackground != null && typeof legacyBackground !== 'string') {
-        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].background must be a string`);
-      }
 
       const imageEnabled = (item as any).imageEnabled;
       if (imageEnabled != null && typeof imageEnabled !== 'boolean') {
@@ -343,10 +335,6 @@ export function validateBlockStrings(args: { blockType: string; strings: Record<
       const imagePath = (item as any).imagePath;
       if (imagePath != null && typeof imagePath !== 'string') {
         throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].imagePath must be a string`);
-      }
-      const legacyImage = (item as any).image;
-      if (legacyImage != null && typeof legacyImage !== 'string') {
-        throw new Error(`[prague] ${pagePath}: block "${blockId}" items[${i}].image must be a string`);
       }
       const imageAlt = (item as any).imageAlt;
       if (imageAlt != null && typeof imageAlt !== 'string') {

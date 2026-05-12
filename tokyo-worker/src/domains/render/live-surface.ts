@@ -149,7 +149,6 @@ export async function deleteInstanceMirror(env: Env, instanceId: string, account
     env,
     accountId: normalizedAccount,
     instanceId: normalized,
-    rebuildIfMissing: false,
   });
   const existed = Boolean(location);
   if (location) {

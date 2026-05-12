@@ -1,3 +1,4 @@
+import { parseRateLimitRecord, type RateLimitRecord } from '@clickeen/ck-contracts';
 import { json } from './response';
 import { type Env } from '../types';
 
@@ -37,11 +38,6 @@ export type RateLimitDecision =
       resetAt: number;
       retryAfterSec: number;
     };
-
-type RateLimitRecord = {
-  count: number;
-  resetAt: number;
-};
 
 function normalizeStage(env: Env): string {
   const stage = typeof env.ENV_STAGE === 'string' ? env.ENV_STAGE.trim() : '';
@@ -98,21 +94,6 @@ function rateLimitKey(policy: RateLimitPolicy, context: BerlinRequestContext): s
   if (policy.vary !== 'ip') return null;
   if (!context.clientIp) return null;
   return `${RATE_LIMIT_PREFIX}:${policy.bucket}:ip:${context.clientIp}`;
-}
-
-function parseRateLimitRecord(value: unknown): RateLimitRecord | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  const record = value as Record<string, unknown>;
-  const count =
-    typeof record.count === 'number' && Number.isFinite(record.count)
-      ? Math.max(0, Math.trunc(record.count))
-      : null;
-  const resetAt =
-    typeof record.resetAt === 'number' && Number.isFinite(record.resetAt)
-      ? Math.max(0, Math.trunc(record.resetAt))
-      : null;
-  if (count == null || resetAt == null) return null;
-  return { count, resetAt };
 }
 
 async function consumeRateLimit(

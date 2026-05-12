@@ -209,26 +209,3 @@ export async function patchUserProfile(args: {
   }
   return { ok: true, profile };
 }
-
-export async function userProfileExists(args: {
-  env: Env;
-  userId: string;
-}): Promise<{ ok: true; exists: boolean } | { ok: false; response: Response }> {
-  const params = new URLSearchParams({
-    select: 'user_id',
-    user_id: `eq.${args.userId}`,
-    limit: '1',
-  });
-  const response = await supabaseAdminFetch(args.env, `/rest/v1/user_profiles?${params.toString()}`, {
-    method: 'GET',
-  });
-  const payload = await readSupabaseAdminJson<Array<{ user_id?: unknown }> | Record<string, unknown>>(response);
-  if (!response.ok) {
-    return {
-      ok: false,
-      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
-    };
-  }
-  const rows = Array.isArray(payload) ? payload : [];
-  return { ok: true, exists: Boolean(rows[0]?.user_id) };
-}

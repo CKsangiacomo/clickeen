@@ -91,7 +91,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 - Complete functional software for a widget type (e.g. FAQ)
 - Surviving repo source lives in `tokyo/product/widgets/{widgetType}/`
-- Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, `agent.md`
+- Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, optional widget-local `widget.*.js` helpers, and `agent.md`
 - Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `limits.json`, `localization.json`, `layers/*.allowlist.json`
 - Platform-controlled; **not stored in Michael**
 

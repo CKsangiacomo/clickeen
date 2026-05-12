@@ -11,24 +11,6 @@ type DeleteAssetPayload = {
   accountId: string;
   assetId: string;
   deleted: boolean;
-  usageCount?: number;
-};
-
-type DeletePreconditionPayload = {
-  error?: { reasonKey?: string };
-  usageCount?: number;
-  requiresConfirm?: boolean;
-};
-
-type PendingDelete = {
-  assetId: string;
-  filename: string;
-  usageCount: number;
-};
-
-type DeleteRequestError = Error & {
-  status?: number;
-  payload?: DeletePreconditionPayload | null;
 };
 
 type AccountAssetsListResponse = {
@@ -50,7 +32,6 @@ type BulkUploadItem = {
 
 const DELETE_REASON_COPY: Record<string, string> = {
   'coreui.errors.asset.notFound': 'Asset not found. It may already be deleted.',
-  'coreui.errors.asset.inUseConfirmRequired': 'This asset is in use and requires confirmation before delete.',
   'coreui.errors.auth.required': 'You need to sign in again to manage assets.',
   'coreui.errors.auth.forbidden': 'You do not have permission to manage this asset.',
   'coreui.errors.db.writeFailed': 'Asset delete failed on the server. Please try again.',
@@ -92,19 +73,14 @@ async function requestDeleteAsset(
   accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
   accountId: string,
   assetId: string,
-  confirmInUse: boolean,
 ): Promise<DeleteAssetPayload> {
-  const search = confirmInUse ? '?confirmInUse=1' : '';
-  const response = await accountApi.fetchRaw(`/api/account/assets/${encodeURIComponent(assetId)}${search}`, {
+  const response = await accountApi.fetchRaw(`/api/account/assets/${encodeURIComponent(assetId)}`, {
     method: 'DELETE',
   });
-  const payload = (await response.json().catch(() => null)) as DeleteAssetPayload | DeletePreconditionPayload | null;
+  const payload = (await response.json().catch(() => null)) as DeleteAssetPayload | { error?: unknown } | null;
   if (!response.ok) {
     const reason = parseApiErrorReason(payload, response.status);
-    const error = new Error(reason) as DeleteRequestError;
-    error.status = response.status;
-    error.payload = (payload as DeletePreconditionPayload | null) ?? null;
-    throw error;
+    throw new Error(reason);
   }
   return (payload as DeleteAssetPayload) ?? { accountId, assetId, deleted: true };
 }
@@ -148,7 +124,6 @@ export function AssetsDomain() {
   const [loading, setLoading] = useState(true);
   const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
   const [singleUploadError, setSingleUploadError] = useState<string | null>(null);
   const [singleUploadBusy, setSingleUploadBusy] = useState(false);
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
@@ -191,7 +166,7 @@ export function AssetsDomain() {
   }, [refreshAssets]);
 
   const deleteAsset = useCallback(
-    async (asset: AccountAssetRecord, confirmInUse: boolean) => {
+    async (asset: AccountAssetRecord) => {
       if (!accountId) return;
       if (!asset.assetId) {
         setDeleteError('Asset delete failed. Invalid assetId.');
@@ -200,25 +175,9 @@ export function AssetsDomain() {
       setDeletingAssetId(asset.assetId);
       setDeleteError(null);
       try {
-        await requestDeleteAsset(accountApi, accountId, asset.assetId, confirmInUse);
-        setPendingDelete(null);
+        await requestDeleteAsset(accountApi, accountId, asset.assetId);
         await refreshAssets();
       } catch (err) {
-        const typed = err as DeleteRequestError;
-        if (
-          typed?.status === 409 &&
-          typed.payload &&
-          typed.payload.requiresConfirm === true &&
-          typed.payload.error?.reasonKey === 'coreui.errors.asset.inUseConfirmRequired'
-        ) {
-          setPendingDelete({
-            assetId: asset.assetId,
-            filename: asset.filename,
-            usageCount:
-              typeof typed.payload.usageCount === 'number' && Number.isFinite(typed.payload.usageCount) ? Math.max(0, Math.trunc(typed.payload.usageCount)) : 0,
-          });
-          return;
-        }
         const message = err instanceof Error ? err.message : String(err);
         setDeleteError(resolveDeleteErrorCopy(message));
       } finally {
@@ -228,17 +187,10 @@ export function AssetsDomain() {
     [accountApi, accountId, refreshAssets],
   );
 
-  const handleConfirmDelete = useCallback(async () => {
-    if (!pendingDelete) return;
-    const asset = (assets ?? []).find((entry) => entry.assetId === pendingDelete.assetId);
-    if (!asset) return;
-    await deleteAsset(asset, true);
-  }, [assets, deleteAsset, pendingDelete]);
-
   const handleDeleteAsset = useCallback(
     (asset: AccountAssetRecord) => {
       if (!accountId) return;
-      void deleteAsset(asset, false);
+      void deleteAsset(asset);
     },
     [accountId, deleteAsset],
   );
@@ -452,44 +404,6 @@ export function AssetsDomain() {
           </tbody>
         </table>
       </section>
-
-      {pendingDelete ? (
-        <div className="roma-modal-backdrop" role="presentation">
-          <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-assets-delete-title">
-            <h2 id="roma-assets-delete-title" className="heading-6">
-              Confirm asset delete
-            </h2>
-            <p className="body-m">
-              {pendingDelete.usageCount > 0
-                ? `This asset is used ${pendingDelete.usageCount} time${pendingDelete.usageCount === 1 ? '' : 's'}, are you sure you want to delete it?`
-                : 'Are you sure you want to delete this asset?'}
-            </p>
-            <p className="body-m">Asset: {pendingDelete.filename}</p>
-            <div className="roma-modal__actions">
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="secondary"
-                type="button"
-                onClick={() => setPendingDelete(null)}
-                disabled={Boolean(deletingAssetId)}
-              >
-                <span className="diet-btn-txt__label body-m">Cancel</span>
-              </button>
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="danger"
-                type="button"
-                onClick={() => void handleConfirmDelete()}
-                disabled={Boolean(deletingAssetId)}
-              >
-                <span className="diet-btn-txt__label body-m">Confirm Delete</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {bulkUploadOpen ? (
         <div className="roma-modal-backdrop" role="presentation">

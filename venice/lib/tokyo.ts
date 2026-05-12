@@ -1,13 +1,4 @@
 const TOKYO_BASE_ENV_KEYS = 'TOKYO_URL/TOKYO_BASE_URL/NEXT_PUBLIC_TOKYO_URL';
-const TOKYO_LEGACY_PATH_PREFIXES = new Set([
-  '/assets',
-  '/dieter',
-  '/widgets',
-  '/renders',
-  '/l10n',
-  '/i18n',
-  '/fonts',
-]);
 
 function normalizeTokyoBaseUrl(raw: string): string {
   const trimmed = raw.trim();
@@ -26,7 +17,6 @@ function normalizeTokyoBaseUrl(raw: string): string {
 
   const normalizedPath = parsed.pathname.replace(/\/+$/, '') || '/';
   if (normalizedPath === '/') return parsed.origin;
-  if (TOKYO_LEGACY_PATH_PREFIXES.has(normalizedPath)) return parsed.origin;
 
   throw new Error(`[Venice] Invalid ${TOKYO_BASE_ENV_KEYS}: expected Tokyo origin, got path "${parsed.pathname}"`);
 }

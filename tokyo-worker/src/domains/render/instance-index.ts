@@ -148,12 +148,6 @@ export async function rebuildAccountInstanceIndexes(env: Env, accountIdRaw: stri
   return index;
 }
 
-export async function buildAccountInstanceIndexDryRun(env: Env, accountIdRaw: string): Promise<AccountInstanceIndexDocument> {
-  const accountId = normalizeStorageId(accountIdRaw);
-  if (!accountId || !isUuid(accountId)) throw new Error('tokyo.errors.render.invalid');
-  return buildIndexDocument(env, accountId);
-}
-
 export async function patchAccountInstanceIndexEntry(args: {
   env: Env;
   accountId: string;
@@ -205,7 +199,6 @@ export async function removeAccountInstanceIndexEntry(args: {
 export async function readAccountInstanceIndex(args: {
   env: Env;
   accountId: string;
-  rebuildIfMissing?: boolean;
 }): Promise<AccountInstanceIndexReadResult> {
   const accountId = normalizeStorageId(args.accountId);
   if (!accountId || !isUuid(accountId)) {
@@ -213,9 +206,6 @@ export async function readAccountInstanceIndex(args: {
   }
   const raw = await loadJson(args.env, accountInstanceIndexKey(accountId));
   if (!raw) {
-    if (args.rebuildIfMissing) {
-      return { ok: true, value: await rebuildAccountInstanceIndexes(args.env, accountId) };
-    }
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.instance.indexMissing' };
   }
   const index = normalizeIndexDocument(raw, accountId);
@@ -228,7 +218,6 @@ export async function resolveAccountInstanceLocation(args: {
   accountId: string;
   instanceId: string;
   widgetType?: string | null;
-  rebuildIfMissing?: boolean;
 }): Promise<AccountInstanceLocation | null> {
   const accountId = normalizeStorageId(args.accountId);
   const instanceId = normalizeStorageId(args.instanceId);
@@ -238,7 +227,6 @@ export async function resolveAccountInstanceLocation(args: {
   const index = await readAccountInstanceIndex({
     env: args.env,
     accountId,
-    rebuildIfMissing: args.rebuildIfMissing ?? true,
   });
   if (!index.ok) return null;
   const entry = index.value.entries.find((candidate) => candidate.id === instanceId);

@@ -68,7 +68,7 @@ async function patchMemberRole(args: {
   accountId: string;
   memberId: string;
   role: Exclude<AccountMemberRole, 'owner'>;
-}): Promise<Response | null> {
+}): Promise<{ ok: true; role: Exclude<AccountMemberRole, 'owner'> } | { ok: false; response: Response }> {
   const params = new URLSearchParams({
     account_id: `eq.${args.accountId}`,
     user_id: `eq.${args.memberId}`,
@@ -78,15 +78,22 @@ async function patchMemberRole(args: {
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify({ role: args.role }),
   });
-  const payload = await readSupabaseAdminJson<Array<{ user_id?: unknown }> | Record<string, unknown>>(response);
+  const payload = await readSupabaseAdminJson<Array<{ role?: unknown; user_id?: unknown }> | Record<string, unknown>>(response);
   if (!response.ok) {
-    return supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload);
+    return { ok: false, response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload) };
   }
   const rows = Array.isArray(payload) ? payload : [];
   if (!rows[0]?.user_id) {
-    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.memberNotFound' } }, { status: 404 });
+    return {
+      ok: false,
+      response: json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.memberNotFound' } }, { status: 404 }),
+    };
   }
-  return null;
+  const role = normalizeMemberRole(rows[0]?.role);
+  if (!role || role === 'owner') {
+    return { ok: false, response: validationError('coreui.errors.db.writeFailed') };
+  }
+  return { ok: true, role };
 }
 
 export async function handleAccountMemberUpdate(args: {
@@ -119,21 +126,18 @@ export async function handleAccountMemberUpdate(args: {
     );
   }
 
-  const writeError = await patchMemberRole({
+  const patched = await patchMemberRole({
     env: args.env,
     accountId: args.accountId,
     memberId: args.memberId,
     role: parsed.role,
   });
-  if (writeError) return writeError;
-
-  const refreshed = await loadAccountMember(args.env, args.accountId, args.memberId);
-  if (!refreshed.ok) return refreshed.response;
+  if (!patched.ok) return patched.response;
 
   return json({
     accountId: args.accountId,
     role: args.account.role,
-    member: refreshed.member,
+    member: { ...current.member, role: patched.role },
   });
 }
 

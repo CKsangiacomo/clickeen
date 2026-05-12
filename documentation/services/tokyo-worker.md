@@ -48,7 +48,7 @@ Rules:
 - `overlays/l10n/{locale}/overlay.json` stores the current l10n overlay for that locale.
 - `widgets/index.json`, `published/config.json`, `l10n/base/{fingerprint}.snapshot.json`, and `seo/meta/**` are generated artifacts. They are read models or serving bytes; they are not source truth for identity, ownership, saved config, or publish state.
 - `seo/meta/**` is intentionally kept as the generated per-instance SEO serving namespace.
-- `POST /__internal/renders/widgets/index/rebuild.json` audits or rebuilds the generated account inventory from source instance documents.
+- `POST /__internal/renders/widgets/index/rebuild.json` rebuilds the generated account inventory from source instance documents. Product reads do not rebuild this index; if it is missing or invalid, Tokyo fails the read and the operator repair boundary must be called explicitly.
 
 ## Public Serving
 

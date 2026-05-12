@@ -351,7 +351,6 @@ export async function publishAccountInstanceTransition(args: {
     const index = await readAccountInstanceIndex({
       env: args.env,
       accountId,
-      rebuildIfMissing: true,
     });
     if (!index.ok) {
       throw new AccountInstanceTransitionError({

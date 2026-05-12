@@ -1,3 +1,4 @@
+import { isUuid } from '@clickeen/ck-contracts';
 import { NextRequest, NextResponse } from 'next/server';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
 import { resolveBerlinBaseUrl } from '../../../../../lib/env/berlin';
@@ -21,10 +22,6 @@ function withSession(
   setCookies?: SessionCookieSpec[],
 ): NextResponse {
   return withNoStore(applySessionCookies(response, request, setCookies));
-}
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {

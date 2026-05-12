@@ -8,7 +8,6 @@ type GlobalMoatItem = {
   body: string;
   iconEnabled?: boolean;
   iconName?: string;
-  icon?: string;
 };
 
 type Props = {
@@ -41,10 +40,7 @@ const headerPrimitives = assertPrimitives(
 
 function resolveIconName(item: GlobalMoatItem): string {
   if (item.iconEnabled === false) return '';
-  const next = typeof item.iconName === 'string' ? item.iconName.trim() : '';
-  if (next) return next;
-  const legacy = typeof item.icon === 'string' ? item.icon.trim() : '';
-  return legacy;
+  return typeof item.iconName === 'string' ? item.iconName.trim() : '';
 }
 ---
 

@@ -20,6 +20,12 @@ Venice does not read Supabase, does not know account membership, and does not re
 - `GET /l10n/widgets/{instanceId}/index.json` - Tokyo published l10n index proxy.
 - `GET /l10n/widgets/{instanceId}/{locale}/overlay.json` - Tokyo published l10n overlay proxy.
 
+Proxy routes use explicit shape allowlists:
+
+- `/widgets/**` allows current widget runtime contracts only: widget root assets, widget-local `widget.*.js` helpers, shared runtime JS/CSS, base assets, and localization/allowlist metadata.
+- `/dieter/**` allows the Dieter manifest, token CSS, icon catalog/SVGs, and component asset files.
+- `/renders/**` and `/l10n/**` allow only published render/l10n serving shapes.
+
 Deleted routes:
 
 - legacy short embed route with the single-letter `e` prefix

@@ -52,15 +52,6 @@ function resolveUsageToBundleName(manifest: DieterManifest, usage: string): stri
   const alias = manifest.aliases?.[trimmed];
   if (alias && manifest.components.includes(alias)) return alias;
 
-  // Back-compat for historical usage tokens (prefer explicit `aliases` in manifest).
-  if (trimmed === 'btn' && manifest.components.includes('button')) return 'button';
-  if (trimmed.startsWith('btn-') && manifest.components.includes('button')) {
-    if (trimmed === 'btn-menuactions' && manifest.components.includes('menuactions')) return 'menuactions';
-    return 'button';
-  }
-  if (trimmed === 'popover-host' && manifest.components.includes('popover')) return 'popover';
-  if (trimmed.startsWith('dropdown-header')) return null;
-
   return null;
 }
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { isUuid } from '@clickeen/ck-contracts';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRomaMe } from './use-roma-me';
@@ -7,10 +8,6 @@ import { useRomaMe } from './use-roma-me';
 type AcceptInviteDomainProps = {
   token: string;
 };
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
 
 function resolveErrorReason(payload: unknown, fallback: string): string {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return fallback;

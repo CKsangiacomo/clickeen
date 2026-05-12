@@ -1,31 +1,43 @@
-import { NextResponse } from 'next/server';
-import { tokyoFetch } from '@venice/lib/tokyo';
+import { normalizeTokyoPathParts, proxyTokyoPath } from '@venice/lib/tokyo-proxy';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
+const SIMPLE_FILE_RE = /^[A-Za-z0-9._-]+$/;
+const COMPONENT_RE = /^[a-z0-9-]+$/;
+const ICON_RE = /^[A-Za-z0-9._-]+\.svg$/;
+
+function isAllowedDieterPath(parts: string[]): boolean {
+  if (parts.length === 1) return parts[0] === 'manifest.json';
+  if (parts[0] === 'tokens' && parts.length === 2) return SIMPLE_FILE_RE.test(parts[1] || '') && parts[1].endsWith('.css');
+  if (parts[0] === 'icons' && parts.length === 2) return parts[1] === 'icons.json';
+  if (parts[0] === 'icons' && parts[1] === 'svg' && parts.length === 3) return ICON_RE.test(parts[2] || '');
+  if (parts[0] === 'components' && parts.length === 3) {
+    const component = parts[1] || '';
+    const filename = parts[2] || '';
+    return COMPONENT_RE.test(component) && filename.startsWith(`${component}.`) && /\.(css|html|js|json)$/.test(filename);
+  }
+  return false;
+}
+
 export async function GET(_req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;
-  const parts = Array.isArray(path) ? path.map((p) => String(p || '').replace(/^\/+|\/+$/g, '')).filter(Boolean) : [];
-  if (parts.length === 0) return new NextResponse('NOT_FOUND', { status: 404 });
-
-  const pathname = `/dieter/${parts.join('/')}`;
-  const res = await tokyoFetch(pathname, { method: 'GET' });
-
-  const headers = new Headers();
-  const contentType = res.headers.get('content-type');
-  if (contentType) headers.set('Content-Type', contentType);
-
-  const cacheControl = res.headers.get('cache-control');
-  headers.set('Cache-Control', cacheControl || 'public, max-age=3600, s-maxage=86400');
-  headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('X-Content-Type-Options', 'nosniff');
-
-  // Stream through (avoid buffering) so Edge runtime can proxy large assets safely.
-  return new NextResponse(res.body, { status: res.status, headers });
+  return proxyTokyoPath({
+    prefix: 'dieter',
+    parts: normalizeTokyoPathParts(path),
+    allowed: isAllowedDieterPath,
+    defaultCache: 'public, max-age=3600, s-maxage=86400',
+    method: 'GET',
+  });
 }
 
 export async function HEAD(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
-  const res = await GET(req, ctx);
-  return new NextResponse(null, { status: res.status, headers: res.headers });
+  const { path } = await ctx.params;
+  return proxyTokyoPath({
+    prefix: 'dieter',
+    parts: normalizeTokyoPathParts(path),
+    allowed: isAllowedDieterPath,
+    defaultCache: 'public, max-age=3600, s-maxage=86400',
+    method: 'HEAD',
+  });
 }

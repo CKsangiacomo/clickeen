@@ -7,6 +7,7 @@ import {
   type AgentRuntimePolicyUi,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
+import { looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
 import {
   resolveAiAgent,
   type AiGrantPolicy,
@@ -231,22 +232,9 @@ function safeJsonParse(text: string): unknown {
   }
 }
 
-function looksLikeHtml(text: string): boolean {
-  const s = (text || '').trim().slice(0, 2000).toLowerCase();
-  if (!s) return false;
-  return (
-    s.startsWith('<!doctype html') ||
-    s.startsWith('<html') ||
-    s.includes('<html') ||
-    s.includes('id="cf-wrapper"') ||
-    s.includes("id='cf-wrapper'") ||
-    s.includes('cloudflare.com/5xx-error-landing')
-  );
-}
-
 function summarizeUpstreamError(args: { serviceName: string; baseUrl: string; status: number; bodyText: string }): string {
   const base = args.baseUrl ? args.baseUrl.replace(/\/$/, '') : '(missing)';
-  if (looksLikeHtml(args.bodyText)) {
+  if (looksLikeHtmlErrorPage(args.bodyText)) {
     return `${args.serviceName} returned an HTML error page (HTTP ${args.status}). Check ${args.serviceName.toUpperCase()}_BASE_URL (currently: ${base}).`;
   }
   return args.bodyText || `${args.serviceName} error (${args.status})`;

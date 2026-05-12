@@ -24,9 +24,6 @@
   --fs-fluid-display-1: clamp(2.25rem, 1.7rem + 2.2vw, 3.75rem);
   --fs-fluid-display-2: clamp(1.875rem, 1.45rem + 1.7vw, 3rem);
   --fs-fluid-display-3: clamp(1.5rem, 1.2rem + 1.2vw, 2.5rem);
-  /* Back-compat alias (older code may reference this). */
-  --fs-fluid-title: var(--fs-fluid-display-2);
-
   /* Line heights */
   --lh-tight: 1.15;
   --lh-normal: 1.4;

@@ -4,7 +4,6 @@
  - Normalize SVGs to fill="currentColor" (scripts/process-svgs.js)
  - Verify SVGs (scripts/verify-svgs.js)
  - Copy tokens/* -> dist/tokens/*
- - Write dist/tokens.css wrapper -> dist/tokens/tokens.css
  - Copy icons/icons.json -> dist/icons/icons.json
  - Copy icons/svg/* -> dist/icons/svg/*
  - Copy component/foundation CSS
@@ -267,7 +266,6 @@ async function main() {
   // 3) Copy tokens
   const tokensDirSrc = path.join(dieterRoot, 'tokens');
   const tokensSrc = path.join(tokensDirSrc, 'tokens.css');
-  const tokensDst = path.join(dist, 'tokens.css');
   if (!fs.existsSync(tokensSrc)) {
     console.error('[build-dieter] Missing tokens source:', tokensSrc);
     process.exit(1);
@@ -276,8 +274,6 @@ async function main() {
     copyRecursiveSync(tokensDirSrc, path.join(dist, 'tokens'));
   }
   generateShadowTokenCss(path.join(dist, 'tokens'));
-  // Keep legacy /dieter/tokens.css working even though the actual token files live under /dieter/tokens/*.
-  fs.writeFileSync(tokensDst, "@import url('./tokens/tokens.css');\n");
 
   // 4) Copy icons manifest and svgs
   const iconsJsonSrc = path.join(dieterRoot, 'icons', 'icons.json');
@@ -312,7 +308,7 @@ async function main() {
   await bundleComponentScripts({ componentsSrc, dist });
 
   // 7) Build verification (fail fast if outputs are missing)
-  assertExists('tokens.css', path.join(dist, 'tokens.css'));
+  assertExists('tokens/tokens.css', path.join(dist, 'tokens', 'tokens.css'));
   assertExists('icons.json', path.join(dist, 'icons', 'icons.json'));
   assertExists('icons/svg', path.join(dist, 'icons', 'svg'));
 

@@ -140,16 +140,7 @@ async function renderNestedTooldrawerFields(
     const pathStr = typeof path === 'string' ? path.trim() : '';
     if (!pathStr) return rendered;
 
-    // Match the main compiler pass: Dieter stencils historically use `data-path`,
-    // but Bob binds via `data-bob-path`.
-    let next = rendered.replace(/data-path="/g, 'data-bob-path="');
-
-    // Back-compat: if a stencil doesn't declare any binding attribute, attach one to the first input.
-    if (!/data-bob-path="/.test(next)) {
-      next = next.replace(/<input([^>]*?)(\/?)>/, `<input$1 data-bob-path="${pathStr}"$2>`);
-    }
-
-    return next;
+    return rendered.replace(/data-path="/g, 'data-bob-path="');
   };
 
   let out = '';

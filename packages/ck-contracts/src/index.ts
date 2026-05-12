@@ -41,6 +41,11 @@ export type ResolvedAccountAsset = {
 
 export type AccountAssetHostCommand = 'list-assets' | 'resolve-assets' | 'upload-asset';
 
+export type RateLimitRecord = {
+  count: number;
+  resetAt: number;
+};
+
 export type AccountL10nPolicy = {
   v: 1;
   baseLocale: string;
@@ -173,6 +178,33 @@ function pathnameFromRawAssetRef(raw: unknown): string | null {
 export function isUuid(raw: unknown): boolean {
   const value = typeof raw === 'string' ? raw.trim() : '';
   return Boolean(value && UUID_RE.test(value));
+}
+
+export function parseRateLimitRecord(value: unknown): RateLimitRecord | null {
+  if (!isRecord(value)) return null;
+  const count =
+    typeof value.count === 'number' && Number.isFinite(value.count)
+      ? Math.max(0, Math.trunc(value.count))
+      : null;
+  const resetAt =
+    typeof value.resetAt === 'number' && Number.isFinite(value.resetAt)
+      ? Math.max(0, Math.trunc(value.resetAt))
+      : null;
+  if (count == null || resetAt == null) return null;
+  return { count, resetAt };
+}
+
+export function looksLikeHtmlErrorPage(text: string): boolean {
+  const value = String(text || '').trim().slice(0, 2000).toLowerCase();
+  if (!value) return false;
+  return (
+    value.startsWith('<!doctype html') ||
+    value.startsWith('<html') ||
+    value.includes('<html') ||
+    value.includes('id="cf-wrapper"') ||
+    value.includes("id='cf-wrapper'") ||
+    value.includes('cloudflare.com/5xx-error-landing')
+  );
 }
 
 export function normalizeAccountAssetRecord(raw: unknown): AccountAssetRecord | null {

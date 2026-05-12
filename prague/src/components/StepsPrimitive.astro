@@ -6,18 +6,12 @@ import DieterIcon from './DieterIcon.astro';
 type StepItem = {
   title: string;
   body: string;
-  // Icon support (new + legacy)
   iconEnabled?: boolean;
   iconName?: string;
-  icon?: string;
-  // Background support (new + legacy)
   backgroundEnabled?: boolean;
   backgroundPath?: string;
-  background?: string;
-  // Image support (new + legacy)
   imageEnabled?: boolean;
   imagePath?: string;
-  image?: string;
   imageAlt?: string;
   imageLayout?: 'inset' | 'bleed';
   imageFit?: 'cover' | 'contain';
@@ -76,26 +70,17 @@ function resolveTokyoAssetUrl(args: { widgetSlug: string; path: string }): strin
 
 function resolveStepIconName(step: StepItem): string {
   if (step.iconEnabled === false) return '';
-  const next = typeof step.iconName === 'string' ? step.iconName.trim() : '';
-  if (next) return next;
-  const legacy = typeof step.icon === 'string' ? step.icon.trim() : '';
-  return legacy;
+  return typeof step.iconName === 'string' ? step.iconName.trim() : '';
 }
 
 function resolveStepBackgroundPath(step: StepItem): string {
   if (step.backgroundEnabled === false) return '';
-  const next = typeof step.backgroundPath === 'string' ? step.backgroundPath.trim() : '';
-  if (next) return next;
-  const legacy = typeof step.background === 'string' ? step.background.trim() : '';
-  return legacy;
+  return typeof step.backgroundPath === 'string' ? step.backgroundPath.trim() : '';
 }
 
 function resolveStepImagePath(step: StepItem): string {
   if (step.imageEnabled === false) return '';
-  const next = typeof step.imagePath === 'string' ? step.imagePath.trim() : '';
-  if (next) return next;
-  const legacy = typeof step.image === 'string' ? step.image.trim() : '';
-  return legacy;
+  return typeof step.imagePath === 'string' ? step.imagePath.trim() : '';
 }
 
 function resolveStepImageAlt(step: StepItem): string {

@@ -35,6 +35,21 @@ type Block = {
   accountInstanceRef?: { instanceId?: string; embedMode?: string };
 };
 
+type FeatureItem = {
+  title: string;
+  body: string;
+  iconEnabled?: boolean;
+  iconName?: string;
+  backgroundEnabled?: boolean;
+  backgroundPath?: string;
+  imageEnabled?: boolean;
+  imagePath?: string;
+  imageAlt?: string;
+  imageLayout?: 'inset' | 'bleed';
+  imageFit?: 'cover' | 'contain';
+  imagePositionY?: 'top' | 'center' | 'bottom';
+};
+
 type Props = {
   blocks: Block[];
   widget: string;
@@ -223,7 +238,7 @@ function requireInstanceId(context: string, value?: string | null): string {
           widget={widget}
           title={copy.title as string}
           subhead={copy.subhead as string}
-          steps={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
+          steps={(copy.items ?? []) as FeatureItem[]}
           visual={block.visual}
           ctaHref={heroPrimaryCta.href}
         />
@@ -253,7 +268,7 @@ function requireInstanceId(context: string, value?: string | null): string {
           widget={widget}
           title={copy.title as string}
           subhead={copy.subhead as string}
-          items={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
+          items={(copy.items ?? []) as FeatureItem[]}
           visual={block.visual}
           ctaHref={heroPrimaryCta.href}
         />
@@ -267,7 +282,7 @@ function requireInstanceId(context: string, value?: string | null): string {
           widget={widget}
           title={copy.title as string}
           subhead={copy.subhead as string}
-          items={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
+          items={(copy.items ?? []) as FeatureItem[]}
           visual={block.visual}
           ctaHref={heroPrimaryCta.href}
         />
@@ -281,7 +296,7 @@ function requireInstanceId(context: string, value?: string | null): string {
           widget={widget}
           title={copy.title as string}
           subhead={copy.subhead as string}
-          items={(copy.items ?? []) as { title: string; body: string; icon?: string }[]}
+          items={(copy.items ?? []) as FeatureItem[]}
           visual={block.visual}
           ctaHref={heroPrimaryCta.href}
         />
