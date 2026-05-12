@@ -133,7 +133,7 @@ Core account editing currently uses direct app-owned read/write paths for the on
 
 For the 075 authoring simplification track, this account-mode Roma -> Bob -> Tokyo chain is the governing authoring path; non-account/helper flows do not define account authoring truth.
 
-1. **Open core instance**: `GET /api/builder/:instanceId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads the saved authoring revision from Tokyo through the private product-control binding, and then sends Bob one `ck:open-editor` payload.
+1. **Open core instance**: `GET /api/builder/:instanceId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads one saved authoring envelope from Tokyo through the private product-control binding, and then sends Bob one `ck:open-editor` payload. The saved authoring envelope includes Tokyo-owned `publishStatus`; Roma must not derive or locally default instance serve-state during Builder open.
 2. **Save**: `PUT /api/account/instances/:instanceId` when the editor saves. Roma validates the account request, then calls one Tokyo-worker save transition for that existing instance. Tokyo-worker verifies the saved document, rejects widget-type mismatch, preserves omitted display metadata, writes the saved config, reads its own publish state for follow-up work, and returns base-save success plus explicit translation follow-up status. The Tokyo save transition is the boundary.
 3. **Widgets list + rename identity**: Roma reads user-instance identity for `/widgets` from Tokyo saved documents. The surviving publish/unpublish authority is Tokyo's per-instance serve flag, not a Michael status row. Rename writes that Tokyo identity directly instead of patching Michael `display_name`.
 4. **Create/duplicate**: account instance creation is a Tokyo-owned storage verb. Roma sends account create or duplicate intent, Tokyo-worker mints the `ins_*` instance ID, sources create config from the current widget definition defaults or duplicate config from the existing saved document, writes the account instance documents, and returns the new instance to Roma. Roma does not mint IDs or run compensation cleanup for Tokyo-owned duplicate state.
@@ -440,7 +440,7 @@ Pages deploy rule:
 ### Deterministic compilation contract (anti-drift)
 
 - **Dieter bundling manifest (authoritative)**: `tokyo/product/dieter/manifest.json` after PRD 79 Phase 1 (public `/dieter/**` can remain a serving route)
-- **Widget catalog manifest (generated)**: `tokyo/product/widgets/manifest.json`, built from widget-owned `catalog.json` + `spec.json` by `scripts/build-widget-catalog.mjs`; Tokyo-worker consumes the manifest and generated SEO/GEO registry instead of hand-registering widgets.
+- **Widget catalog manifest (generated)**: `tokyo/product/widgets/manifest.json`, built from widget-owned `catalog.json` + `spec.json` by `scripts/build-widget-catalog.mjs`; Tokyo-worker consumes the manifest and generated SEO/GEO registry instead of hand-registering widgets. Prague may read this generated manifest for public widget labels, and unknown widget labels must fail at the page/content boundary rather than falling back to slug title-casing.
 - **Rule**: ToolDrawer `type="..."` drives required bundles; CSS classnames never add bundles.
 - **Verification plane**: compilation discipline is enforced through repo typecheck/build and Cloudflare verification, not a localhost Bob HTTP gate.
 

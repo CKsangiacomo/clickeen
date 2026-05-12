@@ -11,7 +11,9 @@
   "main": "index.html",
   "scripts": {
     "build": "node ../scripts/build-dieter.js",
+    "lint": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --experimental-strip-types",
     "prepare": "pnpm run build"
   }
 }

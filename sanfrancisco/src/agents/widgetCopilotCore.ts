@@ -66,23 +66,12 @@ type WidgetCopilotResult = {
     promptVersion?: string;
     promptProfileVersion?: string;
     promptRole?: WidgetCopilotRole;
-    policyVersion?: string;
     dictionaryHash?: string;
     language?: string;
     languageConfidence?: number;
     touchedPaths?: string[];
-    touchedControls?: Array<{
-      path: string;
-      label?: string;
-      groupId?: string;
-      groupLabel?: string;
-    }>;
-    touchedScopes?: string[];
-    touchedGroups?: Array<{ key: string; label: string }>;
     opsCount?: number;
     uniquePathsTouched?: number;
-    validationResult?: "valid" | "invalid" | "not_applicable";
-    invalidReason?: string;
   };
 };
 
@@ -94,25 +83,9 @@ type CopilotSession = {
   turns: Array<{ role: "user" | "assistant"; content: string }>;
   conversationLanguage?: string;
   languageConfidence?: number;
-  pendingPolicy?:
-    | {
-        kind: "scope";
-        createdAtMs: number;
-        ops: WidgetOp[];
-        scopes: Array<"stage" | "pod" | "content">;
-      }
-    | {
-        kind: "group";
-        createdAtMs: number;
-        ops: WidgetOp[];
-        groups: Array<{ key: string; label: string }>;
-      };
 };
 
 const PROMPT_VERSION = "widget.copilot.core.v2@2026-02-11";
-const POLICY_VERSION_BY_ROLE: Record<WidgetCopilotRole, string> = {
-  cs: "widget.copilot.policy.cs.editor.v1@2026-02-11",
-};
 const INVALID_STRUCTURED_EDIT_MESSAGE =
   'I had trouble generating a structured edit. Please try again, or ask for one specific change (e.g. "translate the content to French").';
 
@@ -135,7 +108,6 @@ function buildMeta(
     promptVersion: PROMPT_VERSION,
     promptProfileVersion: WIDGET_COPILOT_PROMPT_PROFILE_VERSION,
     promptRole: role,
-    policyVersion: POLICY_VERSION_BY_ROLE[role],
     dictionaryHash: DICTIONARY_HASH,
     ...(extras ?? {}),
   };
@@ -143,56 +115,24 @@ function buildMeta(
 
 function summarizeOpsForLearning(args: {
   ops: WidgetOp[] | undefined;
-  controls: ControlSummary[];
-  validationResult?: "valid" | "invalid" | "not_applicable";
-  invalidReason?: string;
 }): Partial<NonNullable<WidgetCopilotResult["meta"]>> {
   const ops = args.ops && args.ops.length ? args.ops : [];
   if (!ops.length) {
     return {
       opsCount: 0,
       uniquePathsTouched: 0,
-      validationResult: args.validationResult ?? "not_applicable",
-      ...(args.invalidReason ? { invalidReason: args.invalidReason } : {}),
     };
   }
 
-  const controlByPath = new Map(
-    args.controls.map((control) => [control.path, control]),
-  );
   const pathSet = new Set<string>();
-  const scopeSet = new Set<string>();
-  const groups = new Map<string, { key: string; label: string }>();
-  const controls = new Map<
-    string,
-    { path: string; label?: string; groupId?: string; groupLabel?: string }
-  >();
-
   for (const op of ops) {
     pathSet.add(op.path);
-    scopeSet.add(inferScopeFromPath(op.path));
-    const control = controlByPath.get(op.path);
-    if (control) {
-      controls.set(op.path, {
-        path: op.path,
-        ...(control.label ? { label: control.label } : {}),
-        ...(control.groupId ? { groupId: control.groupId } : {}),
-        ...(control.groupLabel ? { groupLabel: control.groupLabel } : {}),
-      });
-      const group = groupForPath(op.path, args.controls);
-      if (group) groups.set(group.key, group);
-    }
   }
 
   return {
     opsCount: ops.length,
     uniquePathsTouched: pathSet.size,
     touchedPaths: Array.from(pathSet),
-    touchedScopes: Array.from(scopeSet),
-    touchedControls: Array.from(controls.values()),
-    touchedGroups: Array.from(groups.values()),
-    validationResult: args.validationResult ?? "valid",
-    ...(args.invalidReason ? { invalidReason: args.invalidReason } : {}),
   };
 }
 
@@ -302,12 +242,6 @@ function parseWidgetCopilotInput(input: unknown): WidgetCopilotInput {
     currentConfig: currentConfig as Record<string, unknown>,
     controls: safeControls,
   };
-}
-
-function inferScopeFromPath(controlPath: string): "stage" | "pod" | "content" {
-  if (controlPath.startsWith("stage.")) return "stage";
-  if (controlPath.startsWith("pod.")) return "pod";
-  return "content";
 }
 
 function normalizeToken(input: string): string {
@@ -423,353 +357,6 @@ function explainMessage(input: WidgetCopilotInput): string {
   );
 }
 
-function bestControlForPath(
-  path: string,
-  controls: ControlSummary[],
-): ControlSummary | null {
-  const target = (path || "").trim();
-  if (!target) return null;
-
-  let best: { len: number; control: ControlSummary } | null = null;
-
-  for (const c of controls) {
-    const cp = typeof c.path === "string" ? c.path.trim() : "";
-    if (!cp) continue;
-    if (cp === target) return c;
-    if (target.startsWith(cp + ".")) {
-      const len = cp.length;
-      if (!best || len > best.len) best = { len, control: c };
-      continue;
-    }
-    if (cp.startsWith(target + ".")) {
-      const len = target.length;
-      if (!best || len > best.len) best = { len, control: c };
-    }
-  }
-
-  return best?.control ?? null;
-}
-
-function groupForPath(
-  path: string,
-  controls: ControlSummary[],
-): { key: string; label: string } | null {
-  const control = bestControlForPath(path, controls);
-  if (!control) return null;
-  const key = (
-    control.groupId ||
-    control.groupLabel ||
-    control.panelId ||
-    ""
-  ).trim();
-  if (!key) return null;
-  const label = (control.groupLabel || control.panelId || key).trim();
-  return { key, label };
-}
-
-function pathLooksSensitive(path: string): boolean {
-  // In CS mode we only hard-gate truly sensitive execution surfaces.
-  // URL/href/domain edits are normal widget editing actions.
-  return /\b(script|html|embed)\b/i.test(path);
-}
-
-type LightEditsDecision =
-  | { ok: true }
-  | {
-      ok: false;
-      message: string;
-      pendingPolicy?: CopilotSession["pendingPolicy"];
-    };
-
-type OpsValidationIssue = { opIndex: number; path: string; message: string };
-
-type OpsValidationResult =
-  | { ok: true }
-  | { ok: false; issues: OpsValidationIssue[] };
-
-function isNumericString(value: string): boolean {
-  return /^-?\d+(?:\.\d+)?$/.test(value.trim());
-}
-
-function validateOpsAgainstControls(args: {
-  ops: WidgetOp[];
-  controls: ControlSummary[];
-}): OpsValidationResult {
-  const issues: OpsValidationIssue[] = [];
-
-  for (let opIndex = 0; opIndex < args.ops.length; opIndex += 1) {
-    const op = args.ops[opIndex]!;
-    const path = op.path;
-    const control = bestControlForPath(path, args.controls);
-    if (!control) {
-      issues.push({
-        opIndex,
-        path,
-        message: "Unknown path (not in editable controls)",
-      });
-      continue;
-    }
-    if (!control.kind) {
-      issues.push({ opIndex, path, message: "Control kind is unknown" });
-      continue;
-    }
-
-    if (op.op === "insert" || op.op === "remove" || op.op === "move") {
-      if (control.kind !== "array") {
-        issues.push({
-          opIndex,
-          path,
-          message: "Target must be an array control",
-        });
-        continue;
-      }
-      if (op.op === "insert" && control.itemIdPath) {
-        const item = op.value as any;
-        const id =
-          item && typeof item === "object" && !Array.isArray(item)
-            ? item[control.itemIdPath]
-            : null;
-        if (typeof id !== "string" || !id.trim()) {
-          issues.push({
-            opIndex,
-            path,
-            message: `Inserted item must include a non-empty "${control.itemIdPath}"`,
-          });
-        }
-      }
-      continue;
-    }
-
-    // set op
-    if (op.op === "set") {
-      if (
-        control.kind === "enum" &&
-        Array.isArray(control.enumValues) &&
-        control.enumValues.length > 0
-      ) {
-        if (
-          typeof op.value !== "string" ||
-          !control.enumValues.includes(op.value)
-        ) {
-          issues.push({
-            opIndex,
-            path,
-            message: "Value must be one of the allowed enum values",
-          });
-        }
-        continue;
-      }
-
-      if (
-        control.kind === "number" ||
-        typeof control.min === "number" ||
-        typeof control.max === "number"
-      ) {
-        let n: number | null = null;
-        if (typeof op.value === "number" && Number.isFinite(op.value))
-          n = op.value;
-        if (typeof op.value === "string" && isNumericString(op.value))
-          n = Number(op.value);
-        if (n == null || !Number.isFinite(n)) {
-          issues.push({ opIndex, path, message: "Value must be a number" });
-          continue;
-        }
-        if (typeof control.min === "number" && n < control.min) {
-          issues.push({
-            opIndex,
-            path,
-            message: `Value must be >= ${control.min}`,
-          });
-        }
-        if (typeof control.max === "number" && n > control.max) {
-          issues.push({
-            opIndex,
-            path,
-            message: `Value must be <= ${control.max}`,
-          });
-        }
-        continue;
-      }
-
-      if (control.kind === "boolean") {
-        const ok =
-          typeof op.value === "boolean" ||
-          (typeof op.value === "string" &&
-            (op.value.toLowerCase() === "true" ||
-              op.value.toLowerCase() === "false"));
-        if (!ok)
-          issues.push({
-            opIndex,
-            path,
-            message: "Value must be true or false",
-          });
-        continue;
-      }
-    }
-  }
-
-  if (issues.length > 0) return { ok: false, issues };
-  return { ok: true };
-}
-
-function evaluateLightEditsPolicy(args: {
-  ops: WidgetOp[];
-  controls: ControlSummary[];
-}): LightEditsDecision {
-  const opsCount = args.ops.length;
-  const uniquePaths = new Set(args.ops.map((o) => o.path));
-  const scopes = new Set(args.ops.map((o) => inferScopeFromPath(o.path)));
-  const groups = new Map<string, { key: string; label: string }>();
-  for (const op of args.ops) {
-    const g = groupForPath(op.path, args.controls);
-    if (g) groups.set(g.key, g);
-  }
-
-  const hasSensitive = args.ops.some((o) => pathLooksSensitive(o.path));
-  const isContentOnly = scopes.size === 1 && scopes.has("content");
-
-  // Content personalization needs to update multiple copy fields at once.
-  const maxOps = isContentOnly ? 30 : 6;
-  const maxUniquePathsTouched = isContentOnly ? 20 : 4;
-  const maxScopesTouched = 1;
-  const maxGroupsTouched = isContentOnly ? 3 : 1;
-
-  if (opsCount > maxOps) {
-    return {
-      ok: false,
-      message: `That’s a lot to change at once (${opsCount} edits). Please ask for one smaller change (e.g. “change the title” or “make the pod background white”).`,
-    };
-  }
-
-  if (uniquePaths.size > maxUniquePathsTouched) {
-    return {
-      ok: false,
-      message: `That would touch many settings at once (${uniquePaths.size} paths). Please ask for one smaller change first.`,
-    };
-  }
-
-  if (scopes.size > maxScopesTouched) {
-    const scopeList = Array.from(scopes);
-    const labels = scopeList.map((s) => s).join(" + ");
-    const picks = scopeList.filter(
-      (s) => s === "stage" || s === "pod" || s === "content",
-    );
-    const pickText = picks.join(" or ");
-    const tokenText = picks.join(" | ");
-    const msg =
-      `That would change multiple areas (${labels}). Which should I change first: ${pickText}?` +
-      `\nReply with: ${tokenText}` +
-      `\nTo apply across the whole widget, reply: apply across widget`;
-    return {
-      ok: false,
-      message: msg,
-      pendingPolicy: {
-        kind: "scope",
-        createdAtMs: Date.now(),
-        ops: args.ops,
-        scopes: scopeList,
-      },
-    };
-  }
-
-  if (groups.size > maxGroupsTouched) {
-    const groupList = Array.from(groups.values()).slice(0, 6);
-    const lines = groupList
-      .map((g, idx) => `${idx + 1}) ${g.label}`)
-      .join("\n");
-    const msg =
-      `That would change multiple panels. Which panel should I start with?\n` +
-      `${lines}\n` +
-      `Reply with the number (1-${groupList.length}).\n` +
-      `To apply across the whole widget, reply: apply across widget`;
-    return {
-      ok: false,
-      message: msg,
-      pendingPolicy: {
-        kind: "group",
-        createdAtMs: Date.now(),
-        ops: args.ops,
-        groups: groupList,
-      },
-    };
-  }
-
-  if (hasSensitive) {
-    return {
-      ok: false,
-      message:
-        "That change would modify a sensitive setting (URL/embed/script). Please confirm by replying exactly: apply across widget",
-      pendingPolicy: {
-        kind: "scope",
-        createdAtMs: Date.now(),
-        ops: args.ops,
-        scopes: Array.from(scopes),
-      },
-    };
-  }
-
-  return { ok: true };
-}
-
-function extractExactToken(prompt: string): string {
-  return (prompt || "").trim().toLowerCase();
-}
-
-function selectScopeFromPrompt(
-  prompt: string,
-  scopes: Array<"stage" | "pod" | "content">,
-): "stage" | "pod" | "content" | null {
-  const token = extractExactToken(prompt);
-  if (!token) return null;
-  if (token === "stage" && scopes.includes("stage")) return "stage";
-  if (token === "pod" && scopes.includes("pod")) return "pod";
-  if (token === "content" && scopes.includes("content")) return "content";
-
-  const lower = token;
-  const hasStage = lower.includes("stage");
-  const hasPod = lower.includes("pod");
-  const hasContent = lower.includes("content");
-  const count = Number(hasStage) + Number(hasPod) + Number(hasContent);
-  if (count !== 1) return null;
-  if (hasStage && scopes.includes("stage")) return "stage";
-  if (hasPod && scopes.includes("pod")) return "pod";
-  if (hasContent && scopes.includes("content")) return "content";
-  return null;
-}
-
-function filterOpsByScope(
-  ops: WidgetOp[],
-  scope: "stage" | "pod" | "content",
-): WidgetOp[] {
-  return ops.filter((o) => inferScopeFromPath(o.path) === scope);
-}
-
-function selectGroupFromPrompt(
-  prompt: string,
-  groups: Array<{ key: string; label: string }>,
-): { key: string; label: string } | null {
-  const token = extractExactToken(prompt);
-  if (!token) return null;
-  const n = Number(token);
-  if (Number.isFinite(n) && Number.isInteger(n)) {
-    const idx = n - 1;
-    if (idx >= 0 && idx < groups.length) return groups[idx] ?? null;
-  }
-  const normalized = normalizeToken(prompt);
-  for (const g of groups) {
-    if (normalizeToken(g.label) === normalized) return g;
-  }
-  return null;
-}
-
-function filterOpsByGroup(
-  ops: WidgetOp[],
-  groupKey: string,
-  controls: ControlSummary[],
-): WidgetOp[] {
-  return ops.filter((o) => groupForPath(o.path, controls)?.key === groupKey);
-}
-
 async function getSession(
   env: Env,
   sessionId: string,
@@ -842,8 +429,6 @@ export async function executeWidgetCopilotWithRuntime(
     buildMeta(intent, outcome, runtime.role, {
       ...summarizeOpsForLearning({
         ops,
-        controls: input.controls,
-        validationResult: ops && ops.length ? "valid" : "not_applicable",
       }),
       ...(extras ?? {}),
     });
@@ -888,101 +473,6 @@ export async function executeWidgetCopilotWithRuntime(
         latencyMs: 0,
       },
     };
-  }
-
-  if (session.pendingPolicy) {
-    const pending = session.pendingPolicy;
-    const token = extractExactToken(input.prompt);
-
-    if (token === "apply across widget") {
-      const ops = pending.ops;
-      session.pendingPolicy = undefined;
-      session.lastActiveAtMs = Date.now();
-      const msg = "Ok — applying across the whole widget.";
-      session.turns = [
-        ...session.turns,
-        { role: "user" as const, content: input.prompt },
-        { role: "assistant" as const, content: msg },
-      ].slice(-10) as CopilotSession["turns"];
-      await putSession(env, session, runtime.sessionKeyPrefix);
-      return {
-        result: {
-          message: msg,
-          ops,
-          meta: metaWithOps("edit", "ops_applied", ops),
-        },
-        usage: {
-          provider: "local",
-          model: "policy_confirm_all",
-          promptTokens: 0,
-          completionTokens: 0,
-          latencyMs: 0,
-        },
-      };
-    }
-
-    if (pending.kind === "scope") {
-      const chosen = selectScopeFromPrompt(input.prompt, pending.scopes);
-      if (chosen) {
-        const ops = filterOpsByScope(pending.ops, chosen);
-        session.pendingPolicy = undefined;
-        session.lastActiveAtMs = Date.now();
-        const msg = `Ok — applying to ${chosen} only.`;
-        session.turns = [
-          ...session.turns,
-          { role: "user" as const, content: input.prompt },
-          { role: "assistant" as const, content: msg },
-        ].slice(-10) as CopilotSession["turns"];
-        await putSession(env, session, runtime.sessionKeyPrefix);
-        return {
-          result: {
-            message: msg,
-            ops,
-            meta: metaWithOps("edit", "ops_applied", ops),
-          },
-          usage: {
-            provider: "local",
-            model: "policy_scope_pick",
-            promptTokens: 0,
-            completionTokens: 0,
-            latencyMs: 0,
-          },
-        };
-      }
-    }
-
-    if (pending.kind === "group") {
-      const chosen = selectGroupFromPrompt(input.prompt, pending.groups);
-      if (chosen) {
-        const ops = filterOpsByGroup(pending.ops, chosen.key, input.controls);
-        session.pendingPolicy = undefined;
-        session.lastActiveAtMs = Date.now();
-        const msg = `Ok — applying to “${chosen.label}” only.`;
-        session.turns = [
-          ...session.turns,
-          { role: "user" as const, content: input.prompt },
-          { role: "assistant" as const, content: msg },
-        ].slice(-10) as CopilotSession["turns"];
-        await putSession(env, session, runtime.sessionKeyPrefix);
-        return {
-          result: {
-            message: msg,
-            ops,
-            meta: metaWithOps("edit", "ops_applied", ops),
-          },
-          usage: {
-            provider: "local",
-            model: "policy_group_pick",
-            promptTokens: 0,
-            completionTokens: 0,
-            latencyMs: 0,
-          },
-        };
-      }
-    }
-
-    // If the user didn't answer with an accepted token, drop the pending policy and treat this as a new request.
-    session.pendingPolicy = undefined;
   }
 
   const returnLocalMessage = async (args: {
@@ -1116,50 +606,13 @@ export async function executeWidgetCopilotWithRuntime(
   }
 
   if (finalOps && finalOps.length) {
-    const validated = validateOpsAgainstControls({
-      ops: finalOps,
-      controls: input.controls,
-    });
-    if (!validated.ok) {
-      const invalidOps = finalOps;
-      const details = validated.issues
-        .slice(0, 3)
-        .map((i) => `- ${i.path}: ${i.message}`)
-        .join("\n");
-      finalMessage =
-        "I tried to apply an edit, but it didn’t match the widget’s editable controls. " +
-        "Please try again and mention the setting you want to change (e.g. “stage background”, “title”, “accordion multi-open”)." +
-        (details ? `\n\nDetails:\n${details}` : "");
-      finalOps = undefined;
-      finalCta = undefined;
-      finalMeta = metaWithOps("clarify", "invalid_ops", invalidOps, {
-        validationResult: "invalid",
-        invalidReason: details || "Ops did not match editable controls",
-      });
-      session.pendingPolicy = undefined;
-    } else {
-      const policy = evaluateLightEditsPolicy({
-        ops: finalOps,
-        controls: input.controls,
-      });
-      if (!policy.ok) {
-        finalMessage = policy.message;
-        finalMeta = metaWithOps("clarify", "no_ops", finalOps);
-        finalOps = undefined;
-        finalCta = undefined;
-        session.pendingPolicy = policy.pendingPolicy;
-      } else {
-        finalMeta = metaWithOps("edit", "ops_applied", finalOps);
-        session.pendingPolicy = undefined;
-      }
-    }
+    finalMeta = metaWithOps("edit", "ops_applied", finalOps);
   } else {
     finalMeta = metaWithOps(
       "clarify",
       finalMeta?.outcome ?? "no_ops",
       undefined,
     );
-    session.pendingPolicy = undefined;
   }
 
   const hasEdit = Boolean(finalOps && finalOps.length > 0);

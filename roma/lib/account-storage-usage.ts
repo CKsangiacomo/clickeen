@@ -1,3 +1,4 @@
+import { asTrimmedString } from '@clickeen/ck-contracts';
 import {
   buildTokyoAssetControlHeaders,
   fetchTokyoAssetControl,
@@ -7,10 +8,6 @@ type TokyoAccountAssetUsagePayload = {
   storageBytesUsed?: unknown;
   error?: { reasonKey?: unknown; detail?: unknown };
 };
-
-function asTrimmedString(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
-}
 
 function resolveTokyoAssetUsageError(payload: TokyoAccountAssetUsagePayload | null, status: number): string {
   const reasonKey = asTrimmedString(payload?.error?.reasonKey);

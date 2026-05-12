@@ -7,6 +7,8 @@
     "@clickeen/l10n": "workspace:*"
   },
   "scripts": {
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --test --experimental-strip-types src/security.test.ts"
   },
   "exports": {

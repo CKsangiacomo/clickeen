@@ -5,15 +5,12 @@ import {
 } from '@roma/lib/ai/account-copilot';
 import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-direct';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
+import { asTrimmedString } from '@clickeen/ck-contracts';
 import type { AiModelRef, AiProvider } from '@clickeen/ck-contracts/ai';
 
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
-
-function asTrimmedString(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -66,8 +63,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const body = (await request.json().catch(() => null)) as unknown;
     const payload = isRecord(body) ? body : null;
 
-    const prompt = asTrimmedString(payload?.prompt);
-    const sessionId = asTrimmedString(payload?.sessionId);
+    const prompt = asTrimmedString(payload?.prompt) ?? '';
+    const sessionId = asTrimmedString(payload?.sessionId) ?? '';
     const currentConfig = payload?.currentConfig;
     const controls = payload?.controls;
     const selectedModelResult = parseSelectedModel(payload?.selectedModel);

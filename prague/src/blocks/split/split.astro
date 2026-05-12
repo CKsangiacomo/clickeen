@@ -15,6 +15,7 @@ type Props = {
   primaryCta: { label: string; href: string };
   secondaryCta?: { label: string; href: string };
   actionGroup?: ActionGroup;
+  widgetType?: string;
   accountInstanceRef?: {
     instanceId: string;
     locale: string;
@@ -24,7 +25,7 @@ type Props = {
   layout: string;
 };
 
-const { headline, subheadline, primaryCta, secondaryCta, actionGroup, accountInstanceRef, layout } = Astro.props;
+const { headline, subheadline, primaryCta, secondaryCta, actionGroup, widgetType, accountInstanceRef, layout } = Astro.props;
 const resolvedLayout = assertSplitLayout(layout, 'split.layout');
 const isStacked = resolvedLayout === 'stacked';
 const isReverse = resolvedLayout === 'visual-left';
@@ -83,6 +84,7 @@ const headerPrimitives = assertPrimitives(
               locale={accountInstanceRef.locale}
               title={accountInstanceRef.title ?? 'Widget preview'}
               embedMode={accountInstanceRef.embedMode}
+              widgetType={widgetType}
             />
           ) : (
             <div class="ck-media ck-splitCreative__fallback">Widget preview unavailable</div>
@@ -113,6 +115,7 @@ const headerPrimitives = assertPrimitives(
               locale={accountInstanceRef.locale}
               title={accountInstanceRef.title ?? 'Widget preview'}
               embedMode={accountInstanceRef.embedMode}
+              widgetType={widgetType}
             />
           ) : (
             <div class="ck-media ck-splitCreative__fallback">Widget preview unavailable</div>

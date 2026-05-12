@@ -175,6 +175,7 @@ function requireInstanceId(context: string, value?: string | null): string {
           subheadline={dynamicOverviewSubheadline || String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
+          widgetType={widget}
           accountInstanceRef={
             accountInstanceId
               ? { instanceId: accountInstanceId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: accountInstanceEmbedMode }
@@ -200,6 +201,7 @@ function requireInstanceId(context: string, value?: string | null): string {
           subheadline={String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
+          widgetType={widget}
           layout={layout}
           accountInstanceRef={
             accountInstanceId
@@ -219,6 +221,7 @@ function requireInstanceId(context: string, value?: string | null): string {
           subheadline={String(copy.subheadline ?? '')}
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
+          widgetType={widget}
           layout={layout}
           items={((block as any).items ?? []).map((item: any) => {
             const itemLocale = typeof item?.accountInstanceRef?.locale === 'string' ? item.accountInstanceRef.locale.trim() : '';

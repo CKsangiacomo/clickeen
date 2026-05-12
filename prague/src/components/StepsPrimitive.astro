@@ -2,6 +2,7 @@
 import { assertPrimitives } from '../composition/index';
 import PrimitiveRenderer from '../composition/renderers/astro/PrimitiveRenderer.astro';
 import DieterIcon from './DieterIcon.astro';
+import { resolvePragueWidgetLabel } from '../lib/widgetCatalog';
 
 type StepItem = {
   title: string;
@@ -35,17 +36,7 @@ const visualImage = typeof visual?.image === 'string' ? visual.image : '';
 const hasTileImages = Array.isArray(steps) && steps.some((step) => Boolean(resolveStepImagePath(step)));
 const resolvedVariant = variant === 'value-props' && Array.isArray(steps) && steps.length > 3 ? 'cards' : (variant ?? 'cards');
 
-function titleCaseWidgetType(input: string): string {
-  const s = String(input || '').trim();
-  if (!s) return 'Widget';
-  const spaced = s
-    .replace(/[_-]+/g, ' ')
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .toLowerCase();
-  return spaced.replace(/\b[a-z]/g, (m) => m.toUpperCase());
-}
-
-const ctaLabel = `Create a free ${titleCaseWidgetType(widget)} widget`;
+const ctaLabel = `Create a free ${resolvePragueWidgetLabel(widget)} widget`;
 const resolvedCtaHref = typeof ctaHref === 'string' && ctaHref.trim() ? ctaHref.trim() : '#minibob';
 
 function resolveTokyoAssetUrl(args: { widgetSlug: string; path: string }): string {

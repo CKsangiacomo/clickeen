@@ -13,9 +13,10 @@ type CarouselItem = {
 type Props = {
   items: CarouselItem[];
   id?: string;
+  widgetType?: string;
 };
 
-const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = Astro.props;
+const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}`, widgetType } = Astro.props;
 ---
 
 <div class="ck-carousel">
@@ -32,6 +33,7 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
                   title={item.accountInstanceRef.title ?? `Widget preview ${index + 1}`}
                   embedMode={item.accountInstanceRef.embedMode}
                   loading="eager"
+                  widgetType={widgetType}
                 />
               ) : (
                 <div class="ck-media ck-carousel__fallback">Widget preview unavailable</div>

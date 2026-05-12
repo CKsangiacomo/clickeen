@@ -19,10 +19,6 @@ export type TokyoRouteArgs = {
   respond: (response: Response) => Response;
 };
 
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
 export async function sha256StableJson(value: unknown): Promise<string> {
   const bytes = new TextEncoder().encode(prettyStableJson(value));
   const arrayBuffer = bytes.buffer.slice(

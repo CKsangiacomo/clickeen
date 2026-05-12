@@ -7,7 +7,7 @@ import {
   type AgentRuntimePolicyUi,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
-import { looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
+import { asTrimmedString, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
 import {
   resolveAiAgent,
   type AiGrantPolicy,
@@ -219,10 +219,6 @@ export function resolveAccountCopilotRuntimeUi(args: {
   return deriveAiRuntimePolicyUi(policy);
 }
 
-function asTrimmedString(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
-}
-
 function safeJsonParse(text: string): unknown {
   if (!text) return null;
   try {
@@ -282,7 +278,7 @@ export async function executeCopilotOnSanFrancisco(args: {
 
   return {
     ok: true,
-    requestId: asTrimmedString(payload?.requestId),
+    requestId: asTrimmedString(payload?.requestId) ?? '',
     result: payload?.result ?? null,
   };
 }

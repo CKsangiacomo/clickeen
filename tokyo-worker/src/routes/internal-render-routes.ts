@@ -1,4 +1,4 @@
-import { isUuid } from '@clickeen/ck-contracts';
+import { isRecord, isUuid } from '@clickeen/ck-contracts';
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import {
   normalizeStorageId,
@@ -32,7 +32,6 @@ import {
 import {
   authorizeRomaAccountScopedRequest,
   authorizeSavedRenderControlRequest,
-  isRecord,
   isValidScopedInstance,
   respondMethodNotAllowed,
   respondValidation,
@@ -746,7 +745,13 @@ export async function tryHandleInternalRenderRoutes(
           ),
         );
       }
-      return respond(json({ ...saved.value.pointer, config: saved.value.config }));
+      const publishStatus = await readInstanceServeState({
+        env,
+        accountId,
+        instanceId: instanceId!,
+        widgetType: saved.value.pointer.widgetType,
+      });
+      return respond(json({ ...saved.value.pointer, publishStatus, config: saved.value.config }));
     }
 
     if (req.method === 'PUT') {

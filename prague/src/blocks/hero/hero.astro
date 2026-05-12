@@ -24,6 +24,7 @@ type Props = {
   primaryCta: { label: string; href: string };
   secondaryCta?: { label: string; href: string };
   actionGroup?: ActionGroup;
+  widgetType?: string;
   accountInstanceRef?: {
     instanceId: string;
     locale: string;
@@ -33,7 +34,7 @@ type Props = {
   items?: CarouselItem[];
 };
 
-const { headline, subheadline, primaryCta, secondaryCta, actionGroup, accountInstanceRef, items } = Astro.props;
+const { headline, subheadline, primaryCta, secondaryCta, actionGroup, widgetType, accountInstanceRef, items } = Astro.props;
 
 const resolvedActionGroup =
   actionGroup ??
@@ -87,7 +88,7 @@ const headerPrimitives = assertPrimitives(
       </div>
       <div class="ck-split__b" aria-hidden="true">
         {items && items.length > 0 ? (
-          <Carousel items={items} id={`hero-carousel-${headline.replace(/\s+/g, '-').toLowerCase()}`} />
+          <Carousel items={items} widgetType={widgetType} id={`hero-carousel-${headline.replace(/\s+/g, '-').toLowerCase()}`} />
         ) : accountInstanceRef ? (
           <InstanceEmbed
             instanceId={accountInstanceRef.instanceId}
@@ -95,6 +96,7 @@ const headerPrimitives = assertPrimitives(
             title={accountInstanceRef.title ?? 'Widget preview'}
             embedMode={accountInstanceRef.embedMode}
             loading="eager"
+            widgetType={widgetType}
           />
         ) : (
           <div class="ck-media ck-heroPreview">Widget preview unavailable</div>

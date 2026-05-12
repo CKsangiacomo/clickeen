@@ -216,11 +216,17 @@ export async function readInstanceServeState(args: {
   env: Env;
   accountId: string;
   instanceId: string;
+  widgetType?: string | null;
 }): Promise<InstanceServeState> {
   const instanceId = normalizeStorageId(args.instanceId);
   const accountId = normalizeStorageId(args.accountId);
   if (!instanceId || !accountId) throw new Error('tokyo.errors.render.invalid');
-  const location = await resolveAccountInstanceLocation({ env: args.env, accountId, instanceId });
+  const location = await resolveAccountInstanceLocation({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetType: args.widgetType,
+  });
   if (!location) return 'unpublished';
   const publish = normalizePublishDocument(
     await loadJson(args.env, accountInstancePublishKey(location.accountId, location.widgetType, location.instanceId)),
