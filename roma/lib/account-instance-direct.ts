@@ -238,7 +238,7 @@ function normalizeSavedPayload(payload: unknown):
   | { row: AccountInstanceCoreRow; config: Record<string, unknown> }
   | null {
   if (!isRecord(payload) || !isRecord(payload.config)) return null;
-  const instanceId = asTrimmedString(payload.instanceId);
+  const instanceId = asTrimmedString(payload.instanceId ?? payload.id);
   const accountId = asTrimmedString(payload.accountId);
   const widgetType = asTrimmedString(payload.widgetType);
   if (!instanceId || !accountId || !widgetType) return null;
