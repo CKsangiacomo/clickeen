@@ -70,8 +70,8 @@ type TokyoJsonResult =
 function resolveTokyoControlErrorDetail(payload: unknown, fallback: string): string {
   if (isRecord(payload) && isRecord(payload.error)) {
     return (
-      asTrimmedString(payload.error.reasonKey) ??
       asTrimmedString(payload.error.detail) ??
+      asTrimmedString(payload.error.reasonKey) ??
       fallback
     );
   }
@@ -84,7 +84,9 @@ function buildTokyoRouteFailure(args: {
   fallbackDetail: string;
   fallbackReasonKey: string;
 }): RouteFailure {
+  const upstreamError = isRecord(args.payload) && isRecord(args.payload.error) ? args.payload.error : null;
   const detail = resolveTokyoControlErrorDetail(args.payload, args.fallbackDetail);
+  const upstreamReasonKey = upstreamError ? asTrimmedString(upstreamError.reasonKey) : null;
   const mapped =
     args.response.status === 401
       ? { kind: 'AUTH' as const, status: 401 }
@@ -101,7 +103,10 @@ function buildTokyoRouteFailure(args: {
     status: mapped.status,
     error: {
       kind: mapped.kind,
-      reasonKey: mapped.kind === 'UPSTREAM_UNAVAILABLE' ? args.fallbackReasonKey : detail,
+      reasonKey:
+        mapped.kind === 'UPSTREAM_UNAVAILABLE'
+          ? (upstreamReasonKey ?? args.fallbackReasonKey)
+          : (upstreamReasonKey ?? detail),
       detail,
     },
   };

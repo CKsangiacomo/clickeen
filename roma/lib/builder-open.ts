@@ -30,6 +30,15 @@ export async function loadBuilderOpenEnvelope(args: {
     accountCapsule: args.accountCapsule,
   });
   if (!instance.ok) {
+    console.error(
+      JSON.stringify({
+        event: 'builder.open.tokyo_read_failed',
+        accountId: args.accountId,
+        instanceId: args.instanceId,
+        status: instance.status,
+        error: instance.error,
+      }),
+    );
     return instance;
   }
 
