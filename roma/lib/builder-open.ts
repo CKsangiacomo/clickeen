@@ -1,14 +1,10 @@
-import {
-  loadTokyoAccountInstanceDocument,
-  type AccountInstanceLiveStatus,
-} from './account-instance-direct';
+import { loadTokyoAccountInstanceDocument } from './account-instance-direct';
 
 export type BuilderOpenEnvelope = {
   instanceId: string;
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
-  publishStatus: AccountInstanceLiveStatus;
   meta?: Record<string, unknown> | null;
 };
 
@@ -37,19 +33,6 @@ export async function loadBuilderOpenEnvelope(args: {
     return instance;
   }
 
-  const publishStatus = instance.value.row.publishStatus;
-  if (publishStatus !== 'published' && publishStatus !== 'unpublished') {
-    return {
-      ok: false,
-      status: 502,
-      error: {
-        kind: 'UPSTREAM_UNAVAILABLE',
-        reasonKey: 'coreui.errors.instance.invalidPayload',
-        detail: 'Tokyo saved instance payload is missing publishStatus.',
-      },
-    };
-  }
-
   return {
     ok: true,
     value: {
@@ -57,7 +40,6 @@ export async function loadBuilderOpenEnvelope(args: {
       displayName: instance.value.row.displayName || 'Untitled widget',
       widgetType: instance.value.row.widgetType,
       config: instance.value.config,
-      publishStatus,
       meta: instance.value.row.meta,
     },
   };

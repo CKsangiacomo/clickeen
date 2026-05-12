@@ -14,11 +14,11 @@ Execution notes: `Execution_Pipeline_Docs/02-Executing/093A__Execution_Notes.md`
 
 ## 0. Execution Result
 
-PRD 093 was executed on 2026-05-12.
+PRD 093 was executed on 2026-05-12 and corrected the same day to remove publish/serve-state coupling from Builder open.
 
 Green:
 
-- Builder open contract repaired: Tokyo saved-instance envelope includes Tokyo-owned `publishStatus`, and Roma Builder open consumes one saved envelope instead of making a second serve-state request.
+- Builder open contract repaired: Roma Builder open consumes Tokyo saved authoring config and does not require publish/serve state to open an unpublished widget for editing.
 - Prague widget labels now resolve through generated catalog metadata and fail on unknown widget metadata.
 - Prague footer no longer routes generic widget chrome to FAQ.
 - San Francisco PRD 092 edit-policy scope creep was removed rather than parked.

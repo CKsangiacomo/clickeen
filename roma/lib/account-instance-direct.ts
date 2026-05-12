@@ -27,7 +27,6 @@ export type AccountInstanceCoreRow = {
   widgetId?: string;
   accountId: string;
   widgetType: string;
-  publishStatus?: AccountInstanceLiveStatus;
   meta?: Record<string, unknown> | null;
 };
 
@@ -237,10 +236,6 @@ function normalizeSavedPayload(payload: unknown):
   const instanceId = asTrimmedString(payload.instanceId);
   const accountId = asTrimmedString(payload.accountId);
   const widgetType = asTrimmedString(payload.widgetType);
-  const publishStatus =
-    payload.publishStatus === 'published' || payload.publishStatus === 'unpublished'
-      ? payload.publishStatus
-      : undefined;
   if (!instanceId || !accountId || !widgetType) return null;
   return {
     row: {
@@ -252,7 +247,6 @@ function normalizeSavedPayload(payload: unknown):
       updatedAt: asTrimmedString(payload.updatedAt),
       accountId,
       widgetType,
-      publishStatus,
       meta: isRecord(payload.meta) ? payload.meta : null,
     },
     config: payload.config,

@@ -32,7 +32,7 @@ Findings:
 
 - Prague has one product-code widget literal outside widget-owned source: `prague/src/blocks/site/footer.astro` links generic "Widgets" chrome to `/widgets/faq/`.
 - Prague derives widget labels from slug helpers in widget overview, widget subpage, `StepsPrimitive.astro`, and `InstanceEmbed.astro`.
-- Builder open path is Roma `/api/builder/{instanceId}/open` -> `loadBuilderOpenEnvelope` -> Tokyo saved instance + serve-state reads -> Bob `ck:open-editor`.
+- Builder open path is Roma `/api/builder/{instanceId}/open` -> `loadBuilderOpenEnvelope` -> Tokyo saved authoring config -> Bob `ck:open-editor`. Publish/serve state is not part of the editor-open gate.
 - Roma has three local `asTrimmedString` definitions returning `string` instead of canonical `string | null`.
 - Tokyo-worker exports a service-local `isRecord` from `tokyo-worker/src/route-helpers.ts`; remaining object guards are private parser helpers to classify in closure.
 - `packages/l10n/src/index.ts` has a private `sha256Hex`; direct import from `ck-contracts` would currently create a package ownership concern because `ck-contracts` depends on `l10n`.
@@ -45,15 +45,16 @@ Findings:
 Status: GREEN
 
 Change:
-- `tokyo-worker/src/routes/internal-render-routes.ts` now includes Tokyo-owned `publishStatus` in the saved-instance envelope returned by `GET /__internal/renders/widgets/:id/saved.json`.
-- `tokyo-worker/src/domains/render/saved-config.ts` allows `readInstanceServeState` to resolve by known `widgetType`, so the saved-instance route can read publish state without depending on the account index lookup.
-- `roma/lib/account-instance-direct.ts` preserves `publishStatus` from the Tokyo saved-instance payload.
-- `roma/lib/builder-open.ts` opens Bob from the single saved-instance envelope and no longer makes a second `/serve-state.json` request. If Tokyo omits `publishStatus`, Roma fails at the named Builder-open boundary with `coreui.errors.instance.invalidPayload`; it does not invent a fallback status.
+- `roma/lib/builder-open.ts` opens Bob from the saved authoring envelope only.
+- `tokyo-worker/src/routes/internal-render-routes.ts` returns saved authoring config without reading or embedding publish/serve state.
+- `roma/lib/account-instance-direct.ts` no longer carries `publishStatus` on the saved authoring row.
+- `roma/components/builder-domain.tsx` no longer requires `publishStatus` in the Builder-open response.
+- Publish/unpublish remains owned by the Widgets-domain and Tokyo serve-state flows; it must not block opening an unpublished widget for editing.
 
 Verification:
 - `corepack pnpm --filter @clickeen/roma typecheck`
 - `corepack pnpm --filter @clickeen/tokyo-worker typecheck`
-- `rg "loadTokyoAccountInstanceServeStates|publishStatus" roma/lib/builder-open.ts roma/lib/account-instance-direct.ts tokyo-worker/src/routes/internal-render-routes.ts tokyo-worker/src/domains/render/saved-config.ts`
+- `rg "publishStatus|readInstanceServeState|serve-state" roma/lib/builder-open.ts tokyo-worker/src/routes/internal-render-routes.ts`
 
 ## Slice 2 - Prague Catalog Label Helper
 
@@ -183,7 +184,7 @@ Required follow-up input:
 Status: GREEN
 
 Documentation:
-- Updated `documentation/architecture/CONTEXT.md` so the Builder open path names Tokyo saved render output as the single source for config plus `publishStatus`.
+- Updated `documentation/architecture/CONTEXT.md` so the Builder open path names Tokyo saved authoring config as the required authoring input and explicitly excludes publish/serve state as an editor-open blocker.
 - Updated `documentation/architecture/CONTEXT.md` so Prague public widget labels come from the generated widget manifest and unknown widget types fail at the page/content boundary.
 - Updated PRD 093 status to executed with the credentialed product smoke explicitly blocked by missing Roma cookie.
 

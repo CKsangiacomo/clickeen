@@ -745,13 +745,7 @@ export async function tryHandleInternalRenderRoutes(
           ),
         );
       }
-      const publishStatus = await readInstanceServeState({
-        env,
-        accountId,
-        instanceId: instanceId!,
-        widgetType: saved.value.pointer.widgetType,
-      });
-      return respond(json({ ...saved.value.pointer, publishStatus, config: saved.value.config }));
+      return respond(json({ ...saved.value.pointer, config: saved.value.config }));
     }
 
     if (req.method === 'PUT') {
