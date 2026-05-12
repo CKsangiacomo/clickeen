@@ -1,28 +1,14 @@
 import { isUuid } from '@clickeen/ck-contracts';
 import { NextRequest, NextResponse } from 'next/server';
-import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from '../../../../../lib/auth/session';
-import { resolveBerlinBaseUrl } from '../../../../../lib/env/berlin';
+import { proxyBerlinTextResponse } from '@roma/lib/berlin-proxy-route';
+import { resolveSessionBearer } from '../../../../../lib/auth/session';
+import { withNoStore, withSession } from '../../../../../lib/current-account-route';
 
 export const runtime = 'edge';
 
 type RouteContext = {
   params: Promise<{ token: string }>;
 };
-
-function withNoStore(response: NextResponse): NextResponse {
-  response.headers.set('cache-control', 'no-store');
-  response.headers.set('cdn-cache-control', 'no-store');
-  response.headers.set('cloudflare-cdn-cache-control', 'no-store');
-  return response;
-}
-
-function withSession(
-  request: NextRequest,
-  response: NextResponse,
-  setCookies?: SessionCookieSpec[],
-): NextResponse {
-  return withNoStore(applySessionCookies(response, request, setCookies));
-}
 
 export async function POST(request: NextRequest, context: RouteContext) {
   const session = await resolveSessionBearer(request);
@@ -41,42 +27,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  try {
-    const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
-    const upstream = await fetch(`${berlinBase}/v1/invitations/${encodeURIComponent(token)}/accept`, {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${session.accessToken}`,
-        accept: 'application/json',
-      },
-      cache: 'no-store',
-    });
-    const body = await upstream.text().catch(() => '');
-    return withSession(
-      request,
-      new NextResponse(body, {
-        status: upstream.status,
-        headers: {
-          'content-type': upstream.headers.get('content-type') || 'application/json; charset=utf-8',
-        },
-      }),
-      session.setCookies,
-    );
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.auth.contextUnavailable',
-            detail,
-          },
-        },
-        { status: 502 },
-      ),
-      session.setCookies,
-    );
-  }
+  return proxyBerlinTextResponse({
+    request,
+    accessToken: session.accessToken,
+    setCookies: session.setCookies,
+    path: `/v1/invitations/${encodeURIComponent(token)}/accept`,
+    method: 'POST',
+  });
 }

@@ -34,7 +34,7 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
                   loading="eager"
                 />
               ) : (
-                <div class="ck-media ck-carousel__stub">Missing accountInstanceRef</div>
+                <div class="ck-media ck-carousel__fallback">Widget preview unavailable</div>
               )}
             </div>
           ))}
@@ -53,7 +53,7 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
       </div>
     </>
   ) : (
-    <div class="ck-media ck-carousel__stub">No items provided</div>
+    <div class="ck-media ck-carousel__fallback">Widget preview unavailable</div>
   )}
 </div>
 
@@ -275,8 +275,7 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}` } = As
   }
 
 
-  /* ── Stub ── */
-  .ck-carousel__stub {
+  .ck-carousel__fallback {
     width: 100%;
     min-height: 280px;
     display: flex;

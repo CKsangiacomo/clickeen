@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "order": 10,
+  "label": "FAQ",
+  "description": "Answer common questions with grouped, editable content.",
+  "category": "Support",
+  "capabilities": {
+    "seoGeo": true
+  }
+}

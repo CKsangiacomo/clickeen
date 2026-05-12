@@ -24,10 +24,10 @@ export const ROMA_DOMAINS: readonly RomaDomainDefinition[] = [
   { key: 'builder', label: 'Builder', href: '/builder', description: 'Edit widget instances in Bob.' },
   { key: 'assets', label: 'Assets', href: '/assets', description: 'Account library and usage mapping.' },
   { key: 'team', label: 'Team', href: '/team', description: 'Members and roles.' },
-  { key: 'billing', label: 'Billing', href: '/billing', description: 'Plan and billing actions.' },
-  { key: 'usage', label: 'Usage', href: '/usage', description: 'Quota and metering visibility.' },
-  { key: 'ai', label: 'AI', href: '/ai', description: 'AI profile and limits.' },
-  { key: 'settings', label: 'Settings', href: '/settings', description: 'App preferences and context.' },
+  { key: 'billing', label: 'Billing', href: '/billing', description: 'Current plan; billing provider not connected.' },
+  { key: 'usage', label: 'Usage', href: '/usage', description: 'Storage usage and quota snapshot.' },
+  { key: 'ai', label: 'AI', href: '/ai', description: 'AI entitlement profile and limits.' },
+  { key: 'settings', label: 'Settings', href: '/settings', description: 'Account languages, ownership, and final controls.' },
 ] as const;
 
 export const DEFAULT_HOME_ROUTE = '/home';

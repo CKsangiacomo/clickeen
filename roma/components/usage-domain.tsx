@@ -54,7 +54,7 @@ export function UsageDomain() {
       <section className="rd-canvas-module">
         <p className="body-m">Account: {accountContext.accountName}</p>
         <p className="body-s">Slug: {accountContext.accountSlug}</p>
-        <p className="body-m">Detailed usage reporting is not available in Roma yet.</p>
+        <p className="body-m">Storage usage is live. Broader usage reporting is not connected in Roma yet.</p>
       </section>
 
       <section className="rd-canvas-module">

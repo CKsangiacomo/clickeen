@@ -316,6 +316,8 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 
 **What still matters:**
 - Uploads and Copilot remain bounded by server-side policy limit enforcement.
+- Widget type creation is bounded by the account policy catalog path: Roma filters unavailable catalog options and rejects direct create requests that would exceed `widgets.types.max`.
+- Monthly public view limits remain a named pre-GA enforcement gap, not a customer-facing active claim. Before GA, `views.monthly.max` needs Venice-side monthly counters keyed by account/instance and a public embed deny/upsell behavior once policy is exceeded.
 - Shared Builder should not carry `if (minibob)` checks or other fake editor identities.
 
 **Why this scales:**
@@ -327,8 +329,10 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 Current shipped behavior:
 - Account member listing is read-only via `GET /api/account/team` and `GET /api/account/team/members/:memberId` for authorized users.
 - Publish and editor behavior use policy/entitlement enforcement already wired in runtime.
+- Widget catalog creation uses `widgets.types.max` to hide unavailable create options and reject direct create requests.
 - There is no shipped seat-limit write-path enforcement yet.
 - There is no shipped `SEAT_LIMIT_EXCEEDED` runtime error yet.
+- There is no shipped `views.monthly.max` public embed enforcement yet; do not advertise it as an active runtime limit until Venice telemetry and over-limit behavior exist.
 
 Planned behavior (not shipped):
 - Add member management write endpoints.

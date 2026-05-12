@@ -175,7 +175,7 @@ export function SettingsDomain() {
       <section className="rd-canvas-module">
         <h2 className="heading-6">Plan</h2>
         <p className="body-m">Current plan: {activeAccount.tier}</p>
-        <p className="body-s">Plan and billing changes are handled through the billing/commercial flow, not directly in Account Settings.</p>
+        <p className="body-s">Plan changes are handled outside Roma until the billing provider integration is connected.</p>
       </section>
 
       <AccountLocaleSettingsCard accountId={activeAccountId} canEdit={canEditLocales} policyProfile={accountPolicy.profile} onSaved={() => reload()} />

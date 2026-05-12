@@ -1,18 +1,10 @@
+import { timingSafeEqualString } from '@clickeen/ck-contracts/security';
 import { HttpError } from './http';
 
 function base64UrlEncodeBytes(bytes: Uint8Array): string {
   let binary = '';
   for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function timingSafeEqual(a: string, b: string): boolean {
-  const aBytes = new TextEncoder().encode(a);
-  const bBytes = new TextEncoder().encode(b);
-  if (aBytes.length !== bBytes.length) return false;
-  let out = 0;
-  for (let i = 0; i < aBytes.length; i += 1) out |= aBytes[i] ^ bBytes[i];
-  return out === 0;
 }
 
 export async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
@@ -37,7 +29,7 @@ export async function verifyBodySignature(args: {
     throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: args.missingSecretMessage });
   }
   const expected = await hmacSha256Base64Url(secret, args.message);
-  if (!timingSafeEqual(provided, expected)) {
+  if (!timingSafeEqualString(provided, expected)) {
     throw new HttpError(403, { code: 'CAPABILITY_DENIED', message: 'Invalid signature' });
   }
 }

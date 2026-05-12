@@ -11,6 +11,7 @@
   "main": "index.html",
   "scripts": {
     "build": "node ../scripts/build-dieter.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "prepare": "pnpm run build"
   }
 }

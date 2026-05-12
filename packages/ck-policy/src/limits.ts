@@ -1,3 +1,4 @@
+import { isRecord } from '@clickeen/ck-contracts';
 import { getEntitlementsMatrix } from './matrix';
 import type { Policy } from './types';
 
@@ -47,10 +48,6 @@ const DEFAULT_FLAG_ENFORCE: Record<LimitContext, LimitEnforcement> = {
   publish: 'reject',
   load: 'ignore',
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
-}
 
 function normalizePaths(entry: { path?: string; paths?: unknown }): string[] {
   if (typeof entry.path === 'string' && entry.path.trim()) {

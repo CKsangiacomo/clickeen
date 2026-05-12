@@ -135,12 +135,13 @@ function normalizeSupportedLocaleToken(raw: unknown): string | null {
   return SUPPORTED_LOCALES.has(normalized) ? normalized : null;
 }
 
-function isRecord(value: unknown): value is JsonRecord {
+export function isRecord(value: unknown): value is JsonRecord {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function asTrimmedString(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
+export function asTrimmedString(value: unknown): string | null {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  return normalized || null;
 }
 
 export function normalizeInstanceId(raw: unknown): string | null {
@@ -209,11 +210,11 @@ export function looksLikeHtmlErrorPage(text: string): boolean {
 
 export function normalizeAccountAssetRecord(raw: unknown): AccountAssetRecord | null {
   if (!isRecord(raw)) return null;
-  const assetId = asTrimmedString(raw.assetId);
-  const assetType = asTrimmedString(raw.assetType);
-  const filename = asTrimmedString(raw.filename);
-  const contentType = asTrimmedString(raw.contentType);
-  const createdAt = asTrimmedString(raw.createdAt);
+  const assetId = asTrimmedString(raw.assetId) ?? '';
+  const assetType = asTrimmedString(raw.assetType) ?? '';
+  const filename = asTrimmedString(raw.filename) ?? '';
+  const contentType = asTrimmedString(raw.contentType) ?? '';
+  const createdAt = asTrimmedString(raw.createdAt) ?? '';
   const sizeBytes = Number(raw.sizeBytes);
   if (!isUuid(assetId) || !filename) return null;
   return {
@@ -228,8 +229,8 @@ export function normalizeAccountAssetRecord(raw: unknown): AccountAssetRecord | 
 
 export function normalizeResolvedAccountAsset(raw: unknown): ResolvedAccountAsset | null {
   if (!isRecord(raw)) return null;
-  const assetId = asTrimmedString(raw.assetId);
-  const url = asTrimmedString(raw.url);
+  const assetId = asTrimmedString(raw.assetId) ?? '';
+  const url = asTrimmedString(raw.url) ?? '';
   if (!isUuid(assetId) || !url) return null;
   return { assetId, url };
 }
@@ -405,8 +406,8 @@ export function validateAccountL10nPolicy(raw: unknown, path = 'policy'): Accoun
 
 export function normalizeWidgetLocaleSwitcherSettings(raw: unknown): WidgetLocaleSwitcherSettings {
   const payload = isRecord(raw) ? raw : {};
-  const attachTo = asTrimmedString(payload.attachTo).toLowerCase();
-  const position = asTrimmedString(payload.position).toLowerCase();
+  const attachTo = (asTrimmedString(payload.attachTo) ?? '').toLowerCase();
+  const position = (asTrimmedString(payload.position) ?? '').toLowerCase();
   const alwaysShowLocale = normalizeSupportedLocaleToken(payload.alwaysShowLocale);
 
   return {

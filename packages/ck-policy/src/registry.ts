@@ -112,7 +112,7 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     enforcement: {
       status: 'gap',
       owner: 'Venice/public embed telemetry',
-      note: 'Product limit restored; view counting and freeze/upsell behavior still need enforcement.',
+      note: 'Not surfaced as an active customer-facing limit before GA. Enforcement requires Venice monthly view counters keyed by account/instance plus a public embed deny/upsell response once the counter exceeds policy.',
     },
   },
   'instances.published.max': {
@@ -128,9 +128,9 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     label: 'Widget types',
     description: 'Maximum distinct widget types per account.',
     enforcement: {
-      status: 'gap',
-      owner: 'No active product surface',
-      note: 'No active Roma create-from-type flow exists; enforce this only when a real account instance provisioning boundary is introduced.',
+      status: 'enforced',
+      owner: 'Roma widget catalog/create routes',
+      note: 'Roma filters catalog create options and rejects direct create requests that would exceed the account distinct-widget-type limit.',
     },
   },
   'uploads.size.max': {

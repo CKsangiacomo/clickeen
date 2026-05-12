@@ -4,6 +4,7 @@ import {
   parseAccountAssetRef,
   toAccountAssetPublicPath,
 } from '@clickeen/ck-contracts';
+import { sha256Hex as computeSha256Hex } from '@clickeen/ck-contracts/security';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import type { Env } from './types';
 
@@ -226,8 +227,5 @@ export function prettyStableJson(value: any): string {
 }
 
 export async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
-  const hash = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  return computeSha256Hex(bytes);
 }

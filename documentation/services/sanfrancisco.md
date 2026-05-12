@@ -37,7 +37,7 @@ Health contract:
 - Prompt persona pack lives in `sanfrancisco/src/agents/widgetCopilotPromptProfiles.ts`.
 - Widget copilot now runs with shared execution plumbing + role-scoped policy behavior:
   - CS policy (`cs.widget.copilot.v1`): full in-product editor assistant behavior (control-driven edits), no public-signup CTA flow.
-- CS prompt payload expands tokenized content paths into concrete FAQ entries for rewrite intents and forbids requesting control/config dumps from users.
+- CS prompt payload expands tokenized content paths into concrete editable content entries for rewrite intents and forbids requesting control/config dumps from users.
 - Runtime modules are split between a shared core and thin per-agent wrappers:
   - shared core: `sanfrancisco/src/agents/widgetCopilotCore.ts`
   - CS wrapper: `sanfrancisco/src/agents/csWidgetCopilot.ts` (KV namespace `copilot:cs:session:*`)

@@ -12,7 +12,8 @@
     "build": "next build",
     "build:cf": "node ../scripts/build-bob-cf.mjs",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

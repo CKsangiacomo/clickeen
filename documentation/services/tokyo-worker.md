@@ -6,6 +6,16 @@ Tokyo-worker owns account-owned assets, account widget instances, l10n overlay a
 
 It is not an account authority. Roma carries verified account context to Tokyo-worker through private service bindings.
 
+## Widget Catalog And Contracts
+
+Active widget catalog truth is widget-owned under `tokyo/product/widgets/{widgetType}/`:
+
+- `catalog.json` carries catalog label, description, category, display order, and capabilities.
+- `spec.json` carries defaults and editor contract truth.
+- `seo-geo.ts` exists only for widgets whose `catalog.json` declares `capabilities.seoGeo: true`.
+
+`scripts/build-widget-catalog.mjs` generates `tokyo/product/widgets/manifest.json` and `tokyo-worker/src/generated/widget-seo-geo-registry.ts` from those widget folders. Tokyo-worker imports those generated artifacts; adding a widget must not require editing Tokyo-worker source.
+
 ## Responsibilities
 
 1. Account assets: upload, list, usage, resolve, delete.
@@ -89,12 +99,13 @@ If the lookup or required published bytes are missing, the route returns unavail
 ## Private Roma Product-Control Routes
 
 - `GET /__internal/renders/widgets/{instanceId}/saved.json`
+- `GET /__internal/renders/widgets/catalog.json`
 - `PUT /__internal/renders/widgets/{instanceId}/saved.json`
-- `PATCH /__internal/renders/widgets/{instanceId}/saved.json`
 - `DELETE /__internal/renders/widgets/{instanceId}/saved.json`
 - `POST /__internal/renders/widgets/{instanceId}/sync`
 - `POST /__internal/renders/widgets/serve-state.json`
 - `POST /__internal/renders/widgets/index/rebuild.json`
+- `POST /__internal/renders/widgets/index/rebuild.json` is an explicit operator repair route. Product reads and writes must not call it as a fallback.
 - `GET /__internal/account/widgets/{instanceId}/translations`
 
 These routes require Roma internal service auth plus a valid Roma account authz capsule. Local `TOKYO_DEV_JWT` is only for explicit internal tooling and never a product browser path.

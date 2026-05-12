@@ -15,6 +15,18 @@ export type WidgetInstance = {
   };
 };
 
+export type WidgetCatalogOption = {
+  widgetType: string;
+  label: string;
+  description: string;
+  category: string;
+  capabilities: {
+    seoGeo: boolean;
+  };
+  canCreate: boolean;
+  disabledReasonKey: string | null;
+};
+
 type RawWidgetInstance = {
   instanceId?: string | null;
   widgetType?: string | null;
@@ -30,8 +42,21 @@ type RawWidgetInstance = {
   } | null;
 };
 
+type RawWidgetCatalogOption = {
+  widgetType?: string | null;
+  label?: string | null;
+  description?: string | null;
+  category?: string | null;
+  capabilities?: {
+    seoGeo?: boolean | null;
+  } | null;
+  canCreate?: boolean | null;
+  disabledReasonKey?: string | null;
+};
+
 export type RomaWidgetsResponse = {
   accountId: string;
+  catalog: WidgetCatalogOption[];
   instances: WidgetInstance[];
 };
 
@@ -80,6 +105,29 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
   };
 }
 
+export function normalizeWidgetCatalogOption(raw: RawWidgetCatalogOption): WidgetCatalogOption | null {
+  const widgetType = normalizeWidgetType(raw.widgetType);
+  if (widgetType === 'unknown') return null;
+  const label = String(raw.label || '').trim() || widgetType;
+  const description = String(raw.description || '').trim();
+  const category = String(raw.category || '').trim() || 'Widgets';
+  const capabilities = raw.capabilities && typeof raw.capabilities === 'object' ? raw.capabilities : null;
+  const disabledReasonKey = typeof raw.disabledReasonKey === 'string' && raw.disabledReasonKey.trim()
+    ? raw.disabledReasonKey.trim()
+    : null;
+  return {
+    widgetType,
+    label,
+    description,
+    category,
+    capabilities: {
+      seoGeo: capabilities?.seoGeo === true,
+    },
+    canCreate: raw.canCreate === true,
+    disabledReasonKey,
+  };
+}
+
 export function normalizeRomaWidgetsResponse(raw: unknown): RomaWidgetsResponse | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
@@ -97,9 +145,15 @@ export function normalizeRomaWidgetsResponse(raw: unknown): RomaWidgetsResponse 
         .map((item) => normalizeWidgetInstance((item || {}) as RawWidgetInstance))
         .filter((item): item is WidgetInstance => Boolean(item))
     : [];
+  const catalog = Array.isArray(record.catalog)
+    ? record.catalog
+        .map((item) => normalizeWidgetCatalogOption((item || {}) as RawWidgetCatalogOption))
+        .filter((item): item is WidgetCatalogOption => Boolean(item))
+    : [];
 
   return {
     accountId,
+    catalog,
     instances,
   };
 }

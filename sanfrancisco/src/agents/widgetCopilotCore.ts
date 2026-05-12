@@ -1,20 +1,27 @@
-import type { AIGrant, Env, Usage } from '../types';
-import { HttpError, asString, isRecord } from '../http';
-import { getGrantMaxTokens, getGrantTimeoutMs } from '../grants';
-import { callChatCompletion, type ChatMessage } from '../ai/chat';
-import globalDictionary from '../lexicon/global_dictionary.json';
+import type { AIGrant, Env, Usage } from "../types";
+import { HttpError, asString, isRecord } from "../http";
+import { getGrantMaxTokens, getGrantTimeoutMs } from "../grants";
+import { callChatCompletion, type ChatMessage } from "../ai/chat";
+import globalDictionary from "../lexicon/global_dictionary.json";
 import {
   buildCsSystemPrompt,
   finalizeCsOps,
   resolveCsPrelude,
-} from './widgetCopilotCsProduct';
+} from "./widgetCopilotCsProduct";
 import {
   WIDGET_COPILOT_PROMPT_PROFILE_VERSION,
   type WidgetCopilotRole,
-} from './widgetCopilotPromptProfiles';
-import { buildCsPromptPayload } from './csPromptPayload';
-import { DICTIONARY_HASH, resolveConversationLanguage, translateCopilotUi } from './widgetCopilotLanguage';
-import { looksLikeCloudflareErrorPage, parseJsonFromModel } from './widgetCopilotParsing';
+} from "./widgetCopilotPromptProfiles";
+import { buildCsPromptPayload } from "./csPromptPayload";
+import {
+  DICTIONARY_HASH,
+  resolveConversationLanguage,
+  translateCopilotUi,
+} from "./widgetCopilotLanguage";
+import {
+  looksLikeCloudflareErrorPage,
+  parseJsonFromModel,
+} from "./widgetCopilotParsing";
 
 type ControlSummary = {
   path: string;
@@ -40,18 +47,22 @@ type WidgetCopilotInput = {
 };
 
 type WidgetOp =
-  | { op: 'set'; path: string; value: unknown }
-  | { op: 'insert'; path: string; index: number; value: unknown }
-  | { op: 'remove'; path: string; index: number }
-  | { op: 'move'; path: string; from: number; to: number };
+  | { op: "set"; path: string; value: unknown }
+  | { op: "insert"; path: string; index: number; value: unknown }
+  | { op: "remove"; path: string; index: number }
+  | { op: "move"; path: string; from: number; to: number };
 
 type WidgetCopilotResult = {
   message: string;
   ops?: WidgetOp[];
-  cta?: { text: string; action: 'signup' | 'upgrade' | 'learn-more'; url?: string };
+  cta?: {
+    text: string;
+    action: "signup" | "upgrade" | "learn-more";
+    url?: string;
+  };
   meta?: {
-    intent?: 'edit' | 'explain' | 'clarify';
-    outcome?: 'ops_applied' | 'no_ops' | 'invalid_ops';
+    intent?: "edit" | "explain" | "clarify";
+    outcome?: "ops_applied" | "no_ops" | "invalid_ops";
     promptVersion?: string;
     promptProfileVersion?: string;
     promptRole?: WidgetCopilotRole;
@@ -60,12 +71,17 @@ type WidgetCopilotResult = {
     language?: string;
     languageConfidence?: number;
     touchedPaths?: string[];
-    touchedControls?: Array<{ path: string; label?: string; groupId?: string; groupLabel?: string }>;
+    touchedControls?: Array<{
+      path: string;
+      label?: string;
+      groupId?: string;
+      groupLabel?: string;
+    }>;
     touchedScopes?: string[];
     touchedGroups?: Array<{ key: string; label: string }>;
     opsCount?: number;
     uniquePathsTouched?: number;
-    validationResult?: 'valid' | 'invalid' | 'not_applicable';
+    validationResult?: "valid" | "invalid" | "not_applicable";
     invalidReason?: string;
   };
 };
@@ -75,44 +91,44 @@ type CopilotSession = {
   createdAtMs: number;
   lastActiveAtMs: number;
   successfulEdits: number;
-  turns: Array<{ role: 'user' | 'assistant'; content: string }>;
+  turns: Array<{ role: "user" | "assistant"; content: string }>;
   conversationLanguage?: string;
   languageConfidence?: number;
   pendingPolicy?:
     | {
-        kind: 'scope';
+        kind: "scope";
         createdAtMs: number;
         ops: WidgetOp[];
-        scopes: Array<'stage' | 'pod' | 'content'>;
+        scopes: Array<"stage" | "pod" | "content">;
       }
     | {
-        kind: 'group';
+        kind: "group";
         createdAtMs: number;
         ops: WidgetOp[];
         groups: Array<{ key: string; label: string }>;
       };
 };
 
-const PROMPT_VERSION = 'widget.copilot.core.v2@2026-02-11';
+const PROMPT_VERSION = "widget.copilot.core.v2@2026-02-11";
 const POLICY_VERSION_BY_ROLE: Record<WidgetCopilotRole, string> = {
-  cs: 'widget.copilot.policy.cs.editor.v1@2026-02-11',
+  cs: "widget.copilot.policy.cs.editor.v1@2026-02-11",
 };
 const INVALID_STRUCTURED_EDIT_MESSAGE =
-  'I had trouble generating a structured edit. Please try again, or ask for one specific change (e.g. "translate the FAQs to French").';
+  'I had trouble generating a structured edit. Please try again, or ask for one specific change (e.g. "translate the content to French").';
 
 type WidgetCopilotRuntime = {
-  agentId: 'cs.widget.copilot.v1';
+  agentId: "cs.widget.copilot.v1";
   role: WidgetCopilotRole;
   sessionKeyPrefix: string;
   forbidInternalControlDumpPromptLine?: boolean;
 };
 
 function buildMeta(
-  intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
-  outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
+  intent: NonNullable<WidgetCopilotResult["meta"]>["intent"],
+  outcome: NonNullable<WidgetCopilotResult["meta"]>["outcome"],
   role: WidgetCopilotRole,
-  extras?: Partial<NonNullable<WidgetCopilotResult['meta']>>,
-): NonNullable<WidgetCopilotResult['meta']> {
+  extras?: Partial<NonNullable<WidgetCopilotResult["meta"]>>,
+): NonNullable<WidgetCopilotResult["meta"]> {
   return {
     intent,
     outcome,
@@ -128,24 +144,29 @@ function buildMeta(
 function summarizeOpsForLearning(args: {
   ops: WidgetOp[] | undefined;
   controls: ControlSummary[];
-  validationResult?: 'valid' | 'invalid' | 'not_applicable';
+  validationResult?: "valid" | "invalid" | "not_applicable";
   invalidReason?: string;
-}): Partial<NonNullable<WidgetCopilotResult['meta']>> {
+}): Partial<NonNullable<WidgetCopilotResult["meta"]>> {
   const ops = args.ops && args.ops.length ? args.ops : [];
   if (!ops.length) {
     return {
       opsCount: 0,
       uniquePathsTouched: 0,
-      validationResult: args.validationResult ?? 'not_applicable',
+      validationResult: args.validationResult ?? "not_applicable",
       ...(args.invalidReason ? { invalidReason: args.invalidReason } : {}),
     };
   }
 
-  const controlByPath = new Map(args.controls.map((control) => [control.path, control]));
+  const controlByPath = new Map(
+    args.controls.map((control) => [control.path, control]),
+  );
   const pathSet = new Set<string>();
   const scopeSet = new Set<string>();
   const groups = new Map<string, { key: string; label: string }>();
-  const controls = new Map<string, { path: string; label?: string; groupId?: string; groupLabel?: string }>();
+  const controls = new Map<
+    string,
+    { path: string; label?: string; groupId?: string; groupLabel?: string }
+  >();
 
   for (const op of ops) {
     pathSet.add(op.path);
@@ -170,16 +191,21 @@ function summarizeOpsForLearning(args: {
     touchedScopes: Array.from(scopeSet),
     touchedControls: Array.from(controls.values()),
     touchedGroups: Array.from(groups.values()),
-    validationResult: args.validationResult ?? 'valid',
+    validationResult: args.validationResult ?? "valid",
     ...(args.invalidReason ? { invalidReason: args.invalidReason } : {}),
   };
 }
 
-function invalidStructuredEditError(provider: string, detail?: string): HttpError {
+function invalidStructuredEditError(
+  provider: string,
+  detail?: string,
+): HttpError {
   return new HttpError(502, {
-    code: 'PROVIDER_ERROR',
+    code: "PROVIDER_ERROR",
     provider,
-    message: detail ? `${INVALID_STRUCTURED_EDIT_MESSAGE} ${detail}` : INVALID_STRUCTURED_EDIT_MESSAGE,
+    message: detail
+      ? `${INVALID_STRUCTURED_EDIT_MESSAGE} ${detail}`
+      : INVALID_STRUCTURED_EDIT_MESSAGE,
   });
 }
 
@@ -188,79 +214,128 @@ function isWidgetOp(value: unknown): value is WidgetOp {
   const op = asString(value.op);
   const path = asString(value.path);
   if (!op || !path) return false;
-  if (op === 'set') return value.value !== undefined;
-  if (op === 'insert') return typeof value.index === 'number' && value.value !== undefined;
-  if (op === 'remove') return typeof value.index === 'number';
-  if (op === 'move') return typeof value.from === 'number' && typeof value.to === 'number';
+  if (op === "set") return value.value !== undefined;
+  if (op === "insert")
+    return typeof value.index === "number" && value.value !== undefined;
+  if (op === "remove") return typeof value.index === "number";
+  if (op === "move")
+    return typeof value.from === "number" && typeof value.to === "number";
   return false;
 }
 
 function parseWidgetCopilotInput(input: unknown): WidgetCopilotInput {
-  if (!isRecord(input)) throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid input', issues: [{ path: 'input', message: 'Expected an object' }] });
-  const sessionId = (asString(input.sessionId) ?? '').trim();
-  const prompt = (asString(input.prompt) ?? '').trim();
-  const widgetType = (asString(input.widgetType) ?? '').trim();
-  const currentConfig = isRecord(input.currentConfig) ? input.currentConfig : null;
+  if (!isRecord(input))
+    throw new HttpError(400, {
+      code: "BAD_REQUEST",
+      message: "Invalid input",
+      issues: [{ path: "input", message: "Expected an object" }],
+    });
+  const sessionId = (asString(input.sessionId) ?? "").trim();
+  const prompt = (asString(input.prompt) ?? "").trim();
+  const widgetType = (asString(input.widgetType) ?? "").trim();
+  const currentConfig = isRecord(input.currentConfig)
+    ? input.currentConfig
+    : null;
   const controls = Array.isArray(input.controls) ? input.controls : null;
 
   const issues: Array<{ path: string; message: string }> = [];
-  if (!sessionId) issues.push({ path: 'input.sessionId', message: 'Missing required value' });
-  if (!prompt) issues.push({ path: 'input.prompt', message: 'Missing required value' });
-  if (!widgetType) issues.push({ path: 'input.widgetType', message: 'Missing required value' });
-  if (!currentConfig) issues.push({ path: 'input.currentConfig', message: 'currentConfig must be an object' });
-  if (!controls) issues.push({ path: 'input.controls', message: 'controls must be an array' });
-  if (issues.length) throw new HttpError(400, { code: 'BAD_REQUEST', message: 'Invalid input', issues });
+  if (!sessionId)
+    issues.push({ path: "input.sessionId", message: "Missing required value" });
+  if (!prompt)
+    issues.push({ path: "input.prompt", message: "Missing required value" });
+  if (!widgetType)
+    issues.push({
+      path: "input.widgetType",
+      message: "Missing required value",
+    });
+  if (!currentConfig)
+    issues.push({
+      path: "input.currentConfig",
+      message: "currentConfig must be an object",
+    });
+  if (!controls)
+    issues.push({
+      path: "input.controls",
+      message: "controls must be an array",
+    });
+  if (issues.length)
+    throw new HttpError(400, {
+      code: "BAD_REQUEST",
+      message: "Invalid input",
+      issues,
+    });
 
   const safeControls: ControlSummary[] = (controls as any[])
-    .filter((c) => isRecord(c) && typeof c.path === 'string' && c.path.trim())
+    .filter((c) => isRecord(c) && typeof c.path === "string" && c.path.trim())
     .map((c) => ({
       path: String(c.path),
-      panelId: typeof c.panelId === 'string' ? c.panelId : undefined,
-      groupId: typeof c.groupId === 'string' ? c.groupId : undefined,
-      groupLabel: typeof c.groupLabel === 'string' ? c.groupLabel : undefined,
-      type: typeof c.type === 'string' ? c.type : undefined,
-      kind: typeof c.kind === 'string' ? c.kind : undefined,
-      label: typeof c.label === 'string' ? c.label : undefined,
+      panelId: typeof c.panelId === "string" ? c.panelId : undefined,
+      groupId: typeof c.groupId === "string" ? c.groupId : undefined,
+      groupLabel: typeof c.groupLabel === "string" ? c.groupLabel : undefined,
+      type: typeof c.type === "string" ? c.type : undefined,
+      kind: typeof c.kind === "string" ? c.kind : undefined,
+      label: typeof c.label === "string" ? c.label : undefined,
       options:
-        Array.isArray(c.options) && c.options.every((o: any) => isRecord(o) && typeof o.label === 'string' && typeof o.value === 'string')
+        Array.isArray(c.options) &&
+        c.options.every(
+          (o: any) =>
+            isRecord(o) &&
+            typeof o.label === "string" &&
+            typeof o.value === "string",
+        )
           ? (c.options as Array<{ label: string; value: string }>)
           : undefined,
-      enumValues: Array.isArray(c.enumValues) && c.enumValues.every((v: unknown) => typeof v === 'string') ? c.enumValues : undefined,
-      min: typeof c.min === 'number' ? c.min : undefined,
-      max: typeof c.max === 'number' ? c.max : undefined,
-      itemIdPath: typeof c.itemIdPath === 'string' ? c.itemIdPath : undefined,
+      enumValues:
+        Array.isArray(c.enumValues) &&
+        c.enumValues.every((v: unknown) => typeof v === "string")
+          ? c.enumValues
+          : undefined,
+      min: typeof c.min === "number" ? c.min : undefined,
+      max: typeof c.max === "number" ? c.max : undefined,
+      itemIdPath: typeof c.itemIdPath === "string" ? c.itemIdPath : undefined,
     }));
 
-  return { sessionId, prompt, widgetType, currentConfig: currentConfig as Record<string, unknown>, controls: safeControls };
+  return {
+    sessionId,
+    prompt,
+    widgetType,
+    currentConfig: currentConfig as Record<string, unknown>,
+    controls: safeControls,
+  };
 }
 
-function inferScopeFromPath(controlPath: string): 'stage' | 'pod' | 'content' {
-  if (controlPath.startsWith('stage.')) return 'stage';
-  if (controlPath.startsWith('pod.')) return 'pod';
-  return 'content';
+function inferScopeFromPath(controlPath: string): "stage" | "pod" | "content" {
+  if (controlPath.startsWith("stage.")) return "stage";
+  if (controlPath.startsWith("pod.")) return "pod";
+  return "content";
 }
 
 function normalizeToken(input: string): string {
   return input
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }
 
-function bestControlMatch(prompt: string, controls: ControlSummary[]): ControlSummary | null {
+function bestControlMatch(
+  prompt: string,
+  controls: ControlSummary[],
+): ControlSummary | null {
   const p = normalizeToken(prompt);
   if (!p) return null;
-  const pTokens = new Set(p.split(' ').filter(Boolean));
+  const pTokens = new Set(p.split(" ").filter(Boolean));
   if (pTokens.size === 0) return null;
 
   let best: { score: number; control: ControlSummary } | null = null;
   for (const c of controls) {
-    const label = typeof c.label === 'string' ? c.label : '';
-    const path = typeof c.path === 'string' ? c.path : '';
-    const groupLabel = typeof c.groupLabel === 'string' ? c.groupLabel : '';
-    const hay = normalizeToken([label, path, groupLabel].filter(Boolean).join(' '));
+    const label = typeof c.label === "string" ? c.label : "";
+    const path = typeof c.path === "string" ? c.path : "";
+    const groupLabel = typeof c.groupLabel === "string" ? c.groupLabel : "";
+    const hay = normalizeToken(
+      [label, path, groupLabel].filter(Boolean).join(" "),
+    );
     if (!hay) continue;
-    const hTokens = hay.split(' ').filter(Boolean);
+    const hTokens = hay.split(" ").filter(Boolean);
     if (hTokens.length === 0) continue;
 
     let score = 0;
@@ -281,42 +356,62 @@ function bestControlMatch(prompt: string, controls: ControlSummary[]): ControlSu
 function explainMessage(input: WidgetCopilotInput): string {
   const s = normalizeToken(input.prompt);
 
-  if (/\b(what can you do|what can i do|how do i use|how does this work)\b/i.test(input.prompt)) {
+  if (
+    /\b(what can you do|what can i do|how do i use|how does this work)\b/i.test(
+      input.prompt,
+    )
+  ) {
     return (
-      'I can help you customize this widget by changing the settings that are available in the editable controls. ' +
-      'Ask for one small change at a time (title, colors, layout, fonts, or content like questions/answers).'
+      "I can help you customize this widget by changing the settings that are available in the editable controls. " +
+      "Ask for one small change at a time (title, colors, layout, fonts, or content like questions/answers)."
     );
   }
 
-  if (s.includes('accordion')) {
+  if (s.includes("accordion")) {
     return (
-      'An accordion shows each FAQ as a collapsible item. Usually you click a question to expand its answer. ' +
-      'If you enable multi-open, multiple answers can stay expanded at the same time.'
+      "An accordion shows each item as a collapsible row. Usually you click the row title to expand its content. " +
+      "If you enable multi-open, multiple rows can stay expanded at the same time."
     );
   }
 
-  if (/\bmulti[-\s]*open\b/i.test(input.prompt) || s.includes('multi open') || s.includes('multiopen')) {
-    return '“Multi-open” controls whether multiple FAQ items can be expanded at once (instead of only one at a time).';
+  if (
+    /\bmulti[-\s]*open\b/i.test(input.prompt) ||
+    s.includes("multi open") ||
+    s.includes("multiopen")
+  ) {
+    return "“Multi-open” controls whether multiple accordion rows can be expanded at once (instead of only one at a time).";
   }
 
-  if (/\bexpand[-\s]*all\b/i.test(input.prompt) || s.includes('expand all') || s.includes('expandall')) {
-    return '“Expand all” controls whether all FAQ items start expanded (all answers visible).';
+  if (
+    /\bexpand[-\s]*all\b/i.test(input.prompt) ||
+    s.includes("expand all") ||
+    s.includes("expandall")
+  ) {
+    return "“Expand all” controls whether all accordion rows start expanded.";
   }
 
-  if (/\bexpand[-\s]*first\b/i.test(input.prompt) || s.includes('expand first') || s.includes('expandfirst')) {
-    return '“Expand first” controls whether the first FAQ item starts expanded when the widget loads.';
+  if (
+    /\bexpand[-\s]*first\b/i.test(input.prompt) ||
+    s.includes("expand first") ||
+    s.includes("expandfirst")
+  ) {
+    return "“Expand first” controls whether the first accordion row starts expanded when the widget loads.";
   }
 
   const matched = bestControlMatch(input.prompt, input.controls);
   if (matched) {
     const label = matched.label?.trim() || matched.path;
-    const where = matched.groupLabel?.trim() || matched.panelId || 'the editor';
-    const kind = matched.kind ? ` (${matched.kind})` : '';
-    if (matched.kind === 'enum' && Array.isArray(matched.enumValues) && matched.enumValues.length > 0) {
-      const values = matched.enumValues.slice(0, 12).join(', ');
+    const where = matched.groupLabel?.trim() || matched.panelId || "the editor";
+    const kind = matched.kind ? ` (${matched.kind})` : "";
+    if (
+      matched.kind === "enum" &&
+      Array.isArray(matched.enumValues) &&
+      matched.enumValues.length > 0
+    ) {
+      const values = matched.enumValues.slice(0, 12).join(", ");
       return `“${label}”${kind} is an editable setting in ${where}. Allowed values include: ${values}. Tell me what you want it set to and I’ll change it.`;
     }
-    if (matched.kind === 'boolean') {
+    if (matched.kind === "boolean") {
       return `“${label}”${kind} is a toggle in ${where}. Tell me if you want it on or off and I’ll update it.`;
     }
     return `“${label}”${kind} is an editable setting in ${where}. Tell me what you want and I’ll change it.`;
@@ -324,26 +419,29 @@ function explainMessage(input: WidgetCopilotInput): string {
 
   return (
     "I can explain specific settings if you mention them by name (like “multi-open”, “expand all”, or “show title”). " +
-    'Or tell me what you want to change and I’ll apply it.'
+    "Or tell me what you want to change and I’ll apply it."
   );
 }
 
-function bestControlForPath(path: string, controls: ControlSummary[]): ControlSummary | null {
-  const target = (path || '').trim();
+function bestControlForPath(
+  path: string,
+  controls: ControlSummary[],
+): ControlSummary | null {
+  const target = (path || "").trim();
   if (!target) return null;
 
   let best: { len: number; control: ControlSummary } | null = null;
 
   for (const c of controls) {
-    const cp = typeof c.path === 'string' ? c.path.trim() : '';
+    const cp = typeof c.path === "string" ? c.path.trim() : "";
     if (!cp) continue;
     if (cp === target) return c;
-    if (target.startsWith(cp + '.')) {
+    if (target.startsWith(cp + ".")) {
       const len = cp.length;
       if (!best || len > best.len) best = { len, control: c };
       continue;
     }
-    if (cp.startsWith(target + '.')) {
+    if (cp.startsWith(target + ".")) {
       const len = target.length;
       if (!best || len > best.len) best = { len, control: c };
     }
@@ -352,10 +450,18 @@ function bestControlForPath(path: string, controls: ControlSummary[]): ControlSu
   return best?.control ?? null;
 }
 
-function groupForPath(path: string, controls: ControlSummary[]): { key: string; label: string } | null {
+function groupForPath(
+  path: string,
+  controls: ControlSummary[],
+): { key: string; label: string } | null {
   const control = bestControlForPath(path, controls);
   if (!control) return null;
-  const key = (control.groupId || control.groupLabel || control.panelId || '').trim();
+  const key = (
+    control.groupId ||
+    control.groupLabel ||
+    control.panelId ||
+    ""
+  ).trim();
   if (!key) return null;
   const label = (control.groupLabel || control.panelId || key).trim();
   return { key, label };
@@ -372,18 +478,23 @@ type LightEditsDecision =
   | {
       ok: false;
       message: string;
-      pendingPolicy?: CopilotSession['pendingPolicy'];
+      pendingPolicy?: CopilotSession["pendingPolicy"];
     };
 
 type OpsValidationIssue = { opIndex: number; path: string; message: string };
 
-type OpsValidationResult = { ok: true } | { ok: false; issues: OpsValidationIssue[] };
+type OpsValidationResult =
+  | { ok: true }
+  | { ok: false; issues: OpsValidationIssue[] };
 
 function isNumericString(value: string): boolean {
   return /^-?\d+(?:\.\d+)?$/.test(value.trim());
 }
 
-function validateOpsAgainstControls(args: { ops: WidgetOp[]; controls: ControlSummary[] }): OpsValidationResult {
+function validateOpsAgainstControls(args: {
+  ops: WidgetOp[];
+  controls: ControlSummary[];
+}): OpsValidationResult {
   const issues: OpsValidationIssue[] = [];
 
   for (let opIndex = 0; opIndex < args.ops.length; opIndex += 1) {
@@ -391,60 +502,107 @@ function validateOpsAgainstControls(args: { ops: WidgetOp[]; controls: ControlSu
     const path = op.path;
     const control = bestControlForPath(path, args.controls);
     if (!control) {
-      issues.push({ opIndex, path, message: 'Unknown path (not in editable controls)' });
+      issues.push({
+        opIndex,
+        path,
+        message: "Unknown path (not in editable controls)",
+      });
       continue;
     }
     if (!control.kind) {
-      issues.push({ opIndex, path, message: 'Control kind is unknown' });
+      issues.push({ opIndex, path, message: "Control kind is unknown" });
       continue;
     }
 
-    if (op.op === 'insert' || op.op === 'remove' || op.op === 'move') {
-      if (control.kind !== 'array') {
-        issues.push({ opIndex, path, message: 'Target must be an array control' });
+    if (op.op === "insert" || op.op === "remove" || op.op === "move") {
+      if (control.kind !== "array") {
+        issues.push({
+          opIndex,
+          path,
+          message: "Target must be an array control",
+        });
         continue;
       }
-      if (op.op === 'insert' && control.itemIdPath) {
+      if (op.op === "insert" && control.itemIdPath) {
         const item = op.value as any;
-        const id = item && typeof item === 'object' && !Array.isArray(item) ? item[control.itemIdPath] : null;
-        if (typeof id !== 'string' || !id.trim()) {
-          issues.push({ opIndex, path, message: `Inserted item must include a non-empty "${control.itemIdPath}"` });
+        const id =
+          item && typeof item === "object" && !Array.isArray(item)
+            ? item[control.itemIdPath]
+            : null;
+        if (typeof id !== "string" || !id.trim()) {
+          issues.push({
+            opIndex,
+            path,
+            message: `Inserted item must include a non-empty "${control.itemIdPath}"`,
+          });
         }
       }
       continue;
     }
 
     // set op
-    if (op.op === 'set') {
-      if (control.kind === 'enum' && Array.isArray(control.enumValues) && control.enumValues.length > 0) {
-        if (typeof op.value !== 'string' || !control.enumValues.includes(op.value)) {
-          issues.push({ opIndex, path, message: 'Value must be one of the allowed enum values' });
+    if (op.op === "set") {
+      if (
+        control.kind === "enum" &&
+        Array.isArray(control.enumValues) &&
+        control.enumValues.length > 0
+      ) {
+        if (
+          typeof op.value !== "string" ||
+          !control.enumValues.includes(op.value)
+        ) {
+          issues.push({
+            opIndex,
+            path,
+            message: "Value must be one of the allowed enum values",
+          });
         }
         continue;
       }
 
-      if (control.kind === 'number' || typeof control.min === 'number' || typeof control.max === 'number') {
+      if (
+        control.kind === "number" ||
+        typeof control.min === "number" ||
+        typeof control.max === "number"
+      ) {
         let n: number | null = null;
-        if (typeof op.value === 'number' && Number.isFinite(op.value)) n = op.value;
-        if (typeof op.value === 'string' && isNumericString(op.value)) n = Number(op.value);
+        if (typeof op.value === "number" && Number.isFinite(op.value))
+          n = op.value;
+        if (typeof op.value === "string" && isNumericString(op.value))
+          n = Number(op.value);
         if (n == null || !Number.isFinite(n)) {
-          issues.push({ opIndex, path, message: 'Value must be a number' });
+          issues.push({ opIndex, path, message: "Value must be a number" });
           continue;
         }
-        if (typeof control.min === 'number' && n < control.min) {
-          issues.push({ opIndex, path, message: `Value must be >= ${control.min}` });
+        if (typeof control.min === "number" && n < control.min) {
+          issues.push({
+            opIndex,
+            path,
+            message: `Value must be >= ${control.min}`,
+          });
         }
-        if (typeof control.max === 'number' && n > control.max) {
-          issues.push({ opIndex, path, message: `Value must be <= ${control.max}` });
+        if (typeof control.max === "number" && n > control.max) {
+          issues.push({
+            opIndex,
+            path,
+            message: `Value must be <= ${control.max}`,
+          });
         }
         continue;
       }
 
-      if (control.kind === 'boolean') {
+      if (control.kind === "boolean") {
         const ok =
-          typeof op.value === 'boolean' ||
-          (typeof op.value === 'string' && (op.value.toLowerCase() === 'true' || op.value.toLowerCase() === 'false'));
-        if (!ok) issues.push({ opIndex, path, message: 'Value must be true or false' });
+          typeof op.value === "boolean" ||
+          (typeof op.value === "string" &&
+            (op.value.toLowerCase() === "true" ||
+              op.value.toLowerCase() === "false"));
+        if (!ok)
+          issues.push({
+            opIndex,
+            path,
+            message: "Value must be true or false",
+          });
         continue;
       }
     }
@@ -454,7 +612,10 @@ function validateOpsAgainstControls(args: { ops: WidgetOp[]; controls: ControlSu
   return { ok: true };
 }
 
-function evaluateLightEditsPolicy(args: { ops: WidgetOp[]; controls: ControlSummary[] }): LightEditsDecision {
+function evaluateLightEditsPolicy(args: {
+  ops: WidgetOp[];
+  controls: ControlSummary[];
+}): LightEditsDecision {
   const opsCount = args.ops.length;
   const uniquePaths = new Set(args.ops.map((o) => o.path));
   const scopes = new Set(args.ops.map((o) => inferScopeFromPath(o.path)));
@@ -465,7 +626,7 @@ function evaluateLightEditsPolicy(args: { ops: WidgetOp[]; controls: ControlSumm
   }
 
   const hasSensitive = args.ops.some((o) => pathLooksSensitive(o.path));
-  const isContentOnly = scopes.size === 1 && scopes.has('content');
+  const isContentOnly = scopes.size === 1 && scopes.has("content");
 
   // Content personalization needs to update multiple copy fields at once.
   const maxOps = isContentOnly ? 30 : 6;
@@ -489,10 +650,12 @@ function evaluateLightEditsPolicy(args: { ops: WidgetOp[]; controls: ControlSumm
 
   if (scopes.size > maxScopesTouched) {
     const scopeList = Array.from(scopes);
-    const labels = scopeList.map((s) => s).join(' + ');
-    const picks = scopeList.filter((s) => s === 'stage' || s === 'pod' || s === 'content');
-    const pickText = picks.join(' or ');
-    const tokenText = picks.join(' | ');
+    const labels = scopeList.map((s) => s).join(" + ");
+    const picks = scopeList.filter(
+      (s) => s === "stage" || s === "pod" || s === "content",
+    );
+    const pickText = picks.join(" or ");
+    const tokenText = picks.join(" | ");
     const msg =
       `That would change multiple areas (${labels}). Which should I change first: ${pickText}?` +
       `\nReply with: ${tokenText}` +
@@ -500,13 +663,20 @@ function evaluateLightEditsPolicy(args: { ops: WidgetOp[]; controls: ControlSumm
     return {
       ok: false,
       message: msg,
-      pendingPolicy: { kind: 'scope', createdAtMs: Date.now(), ops: args.ops, scopes: scopeList },
+      pendingPolicy: {
+        kind: "scope",
+        createdAtMs: Date.now(),
+        ops: args.ops,
+        scopes: scopeList,
+      },
     };
   }
 
   if (groups.size > maxGroupsTouched) {
     const groupList = Array.from(groups.values()).slice(0, 6);
-    const lines = groupList.map((g, idx) => `${idx + 1}) ${g.label}`).join('\n');
+    const lines = groupList
+      .map((g, idx) => `${idx + 1}) ${g.label}`)
+      .join("\n");
     const msg =
       `That would change multiple panels. Which panel should I start with?\n` +
       `${lines}\n` +
@@ -515,7 +685,12 @@ function evaluateLightEditsPolicy(args: { ops: WidgetOp[]; controls: ControlSumm
     return {
       ok: false,
       message: msg,
-      pendingPolicy: { kind: 'group', createdAtMs: Date.now(), ops: args.ops, groups: groupList },
+      pendingPolicy: {
+        kind: "group",
+        createdAtMs: Date.now(),
+        ops: args.ops,
+        groups: groupList,
+      },
     };
   }
 
@@ -523,8 +698,13 @@ function evaluateLightEditsPolicy(args: { ops: WidgetOp[]; controls: ControlSumm
     return {
       ok: false,
       message:
-        'That change would modify a sensitive setting (URL/embed/script). Please confirm by replying exactly: apply across widget',
-      pendingPolicy: { kind: 'scope', createdAtMs: Date.now(), ops: args.ops, scopes: Array.from(scopes) },
+        "That change would modify a sensitive setting (URL/embed/script). Please confirm by replying exactly: apply across widget",
+      pendingPolicy: {
+        kind: "scope",
+        createdAtMs: Date.now(),
+        ops: args.ops,
+        scopes: Array.from(scopes),
+      },
     };
   }
 
@@ -532,33 +712,42 @@ function evaluateLightEditsPolicy(args: { ops: WidgetOp[]; controls: ControlSumm
 }
 
 function extractExactToken(prompt: string): string {
-  return (prompt || '').trim().toLowerCase();
+  return (prompt || "").trim().toLowerCase();
 }
 
-function selectScopeFromPrompt(prompt: string, scopes: Array<'stage' | 'pod' | 'content'>): 'stage' | 'pod' | 'content' | null {
+function selectScopeFromPrompt(
+  prompt: string,
+  scopes: Array<"stage" | "pod" | "content">,
+): "stage" | "pod" | "content" | null {
   const token = extractExactToken(prompt);
   if (!token) return null;
-  if (token === 'stage' && scopes.includes('stage')) return 'stage';
-  if (token === 'pod' && scopes.includes('pod')) return 'pod';
-  if (token === 'content' && scopes.includes('content')) return 'content';
+  if (token === "stage" && scopes.includes("stage")) return "stage";
+  if (token === "pod" && scopes.includes("pod")) return "pod";
+  if (token === "content" && scopes.includes("content")) return "content";
 
   const lower = token;
-  const hasStage = lower.includes('stage');
-  const hasPod = lower.includes('pod');
-  const hasContent = lower.includes('content');
+  const hasStage = lower.includes("stage");
+  const hasPod = lower.includes("pod");
+  const hasContent = lower.includes("content");
   const count = Number(hasStage) + Number(hasPod) + Number(hasContent);
   if (count !== 1) return null;
-  if (hasStage && scopes.includes('stage')) return 'stage';
-  if (hasPod && scopes.includes('pod')) return 'pod';
-  if (hasContent && scopes.includes('content')) return 'content';
+  if (hasStage && scopes.includes("stage")) return "stage";
+  if (hasPod && scopes.includes("pod")) return "pod";
+  if (hasContent && scopes.includes("content")) return "content";
   return null;
 }
 
-function filterOpsByScope(ops: WidgetOp[], scope: 'stage' | 'pod' | 'content'): WidgetOp[] {
+function filterOpsByScope(
+  ops: WidgetOp[],
+  scope: "stage" | "pod" | "content",
+): WidgetOp[] {
   return ops.filter((o) => inferScopeFromPath(o.path) === scope);
 }
 
-function selectGroupFromPrompt(prompt: string, groups: Array<{ key: string; label: string }>): { key: string; label: string } | null {
+function selectGroupFromPrompt(
+  prompt: string,
+  groups: Array<{ key: string; label: string }>,
+): { key: string; label: string } | null {
   const token = extractExactToken(prompt);
   if (!token) return null;
   const n = Number(token);
@@ -573,26 +762,56 @@ function selectGroupFromPrompt(prompt: string, groups: Array<{ key: string; labe
   return null;
 }
 
-function filterOpsByGroup(ops: WidgetOp[], groupKey: string, controls: ControlSummary[]): WidgetOp[] {
+function filterOpsByGroup(
+  ops: WidgetOp[],
+  groupKey: string,
+  controls: ControlSummary[],
+): WidgetOp[] {
   return ops.filter((o) => groupForPath(o.path, controls)?.key === groupKey);
 }
 
-async function getSession(env: Env, sessionId: string, sessionKeyPrefix: string): Promise<CopilotSession> {
+async function getSession(
+  env: Env,
+  sessionId: string,
+  sessionKeyPrefix: string,
+): Promise<CopilotSession> {
   const key = `${sessionKeyPrefix}${sessionId}`;
-  const existing = await env.SF_KV.get(key, 'json');
+  const existing = await env.SF_KV.get(key, "json");
   if (!existing) {
     const now = Date.now();
-    return { sessionId, createdAtMs: now, lastActiveAtMs: now, successfulEdits: 0, turns: [] };
+    return {
+      sessionId,
+      createdAtMs: now,
+      lastActiveAtMs: now,
+      successfulEdits: 0,
+      turns: [],
+    };
   }
-  if (!isRecord(existing)) throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Session store is corrupted' });
+  if (!isRecord(existing))
+    throw new HttpError(500, {
+      code: "PROVIDER_ERROR",
+      provider: "sanfrancisco",
+      message: "Session store is corrupted",
+    });
   const turns = Array.isArray(existing.turns) ? existing.turns : null;
-  if (!turns) throw new HttpError(500, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Session store is corrupted' });
+  if (!turns)
+    throw new HttpError(500, {
+      code: "PROVIDER_ERROR",
+      provider: "sanfrancisco",
+      message: "Session store is corrupted",
+    });
   return existing as CopilotSession;
 }
 
-async function putSession(env: Env, session: CopilotSession, sessionKeyPrefix: string): Promise<void> {
+async function putSession(
+  env: Env,
+  session: CopilotSession,
+  sessionKeyPrefix: string,
+): Promise<void> {
   const key = `${sessionKeyPrefix}${session.sessionId}`;
-  await env.SF_KV.put(key, JSON.stringify(session), { expirationTtl: 60 * 60 * 24 });
+  await env.SF_KV.put(key, JSON.stringify(session), {
+    expirationTtl: 60 * 60 * 24,
+  });
 }
 
 export async function executeWidgetCopilotWithRuntime(
@@ -601,25 +820,40 @@ export async function executeWidgetCopilotWithRuntime(
   runtime: WidgetCopilotRuntime,
 ): Promise<{ result: WidgetCopilotResult; usage: Usage }> {
   const input = parseWidgetCopilotInput(params.input);
-  const session = await getSession(env, input.sessionId, runtime.sessionKeyPrefix);
+  const session = await getSession(
+    env,
+    input.sessionId,
+    runtime.sessionKeyPrefix,
+  );
   const baseMeta = (
-    intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
-    outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
-    extras?: Pick<NonNullable<WidgetCopilotResult['meta']>, 'language' | 'languageConfidence'>,
+    intent: NonNullable<WidgetCopilotResult["meta"]>["intent"],
+    outcome: NonNullable<WidgetCopilotResult["meta"]>["outcome"],
+    extras?: Pick<
+      NonNullable<WidgetCopilotResult["meta"]>,
+      "language" | "languageConfidence"
+    >,
   ) => buildMeta(intent, outcome, runtime.role, extras);
   const metaWithOps = (
-    intent: NonNullable<WidgetCopilotResult['meta']>['intent'],
-    outcome: NonNullable<WidgetCopilotResult['meta']>['outcome'],
+    intent: NonNullable<WidgetCopilotResult["meta"]>["intent"],
+    outcome: NonNullable<WidgetCopilotResult["meta"]>["outcome"],
     ops: WidgetOp[] | undefined,
-    extras?: Partial<NonNullable<WidgetCopilotResult['meta']>>,
+    extras?: Partial<NonNullable<WidgetCopilotResult["meta"]>>,
   ) =>
     buildMeta(intent, outcome, runtime.role, {
-      ...summarizeOpsForLearning({ ops, controls: input.controls, validationResult: ops && ops.length ? 'valid' : 'not_applicable' }),
+      ...summarizeOpsForLearning({
+        ops,
+        controls: input.controls,
+        validationResult: ops && ops.length ? "valid" : "not_applicable",
+      }),
       ...(extras ?? {}),
     });
   const languageInfo = resolveConversationLanguage(session, input.prompt);
-  const conversationLanguage = languageInfo.language || 'en';
-  if (!session.conversationLanguage || (session.conversationLanguage !== conversationLanguage && languageInfo.confidence >= 0.85)) {
+  const conversationLanguage = languageInfo.language || "en";
+  if (
+    !session.conversationLanguage ||
+    (session.conversationLanguage !== conversationLanguage &&
+      languageInfo.confidence >= 0.85)
+  ) {
     session.conversationLanguage = conversationLanguage;
     session.languageConfidence = languageInfo.confidence;
   }
@@ -627,18 +861,32 @@ export async function executeWidgetCopilotWithRuntime(
   const cfError = looksLikeCloudflareErrorPage(input.prompt);
   if (cfError) {
     session.lastActiveAtMs = Date.now();
-    const msg = translateCopilotUi(conversationLanguage, 'cloudflareError') + (cfError.status ? ` (HTTP ${cfError.status})` : '');
+    const msg =
+      translateCopilotUi(conversationLanguage, "cloudflareError") +
+      (cfError.status ? ` (HTTP ${cfError.status})` : "");
 
     session.turns = [
       ...session.turns,
-      { role: 'user' as const, content: input.prompt },
-      { role: 'assistant' as const, content: msg },
-    ].slice(-10) as CopilotSession['turns'];
+      { role: "user" as const, content: input.prompt },
+      { role: "assistant" as const, content: msg },
+    ].slice(-10) as CopilotSession["turns"];
     await putSession(env, session, runtime.sessionKeyPrefix);
 
     return {
-      result: { message: msg, meta: baseMeta('clarify', 'no_ops', { language: conversationLanguage, languageConfidence: session.languageConfidence }) },
-      usage: { provider: 'local', model: 'cloudflare_error_detector', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+      result: {
+        message: msg,
+        meta: baseMeta("clarify", "no_ops", {
+          language: conversationLanguage,
+          languageConfidence: session.languageConfidence,
+        }),
+      },
+      usage: {
+        provider: "local",
+        model: "cloudflare_error_detector",
+        promptTokens: 0,
+        completionTokens: 0,
+        latencyMs: 0,
+      },
     };
   }
 
@@ -646,24 +894,34 @@ export async function executeWidgetCopilotWithRuntime(
     const pending = session.pendingPolicy;
     const token = extractExactToken(input.prompt);
 
-    if (token === 'apply across widget') {
+    if (token === "apply across widget") {
       const ops = pending.ops;
       session.pendingPolicy = undefined;
       session.lastActiveAtMs = Date.now();
-      const msg = 'Ok — applying across the whole widget.';
+      const msg = "Ok — applying across the whole widget.";
       session.turns = [
         ...session.turns,
-        { role: 'user' as const, content: input.prompt },
-        { role: 'assistant' as const, content: msg },
-      ].slice(-10) as CopilotSession['turns'];
+        { role: "user" as const, content: input.prompt },
+        { role: "assistant" as const, content: msg },
+      ].slice(-10) as CopilotSession["turns"];
       await putSession(env, session, runtime.sessionKeyPrefix);
       return {
-        result: { message: msg, ops, meta: metaWithOps('edit', 'ops_applied', ops) },
-        usage: { provider: 'local', model: 'policy_confirm_all', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+        result: {
+          message: msg,
+          ops,
+          meta: metaWithOps("edit", "ops_applied", ops),
+        },
+        usage: {
+          provider: "local",
+          model: "policy_confirm_all",
+          promptTokens: 0,
+          completionTokens: 0,
+          latencyMs: 0,
+        },
       };
     }
 
-    if (pending.kind === 'scope') {
+    if (pending.kind === "scope") {
       const chosen = selectScopeFromPrompt(input.prompt, pending.scopes);
       if (chosen) {
         const ops = filterOpsByScope(pending.ops, chosen);
@@ -672,18 +930,28 @@ export async function executeWidgetCopilotWithRuntime(
         const msg = `Ok — applying to ${chosen} only.`;
         session.turns = [
           ...session.turns,
-          { role: 'user' as const, content: input.prompt },
-          { role: 'assistant' as const, content: msg },
-        ].slice(-10) as CopilotSession['turns'];
+          { role: "user" as const, content: input.prompt },
+          { role: "assistant" as const, content: msg },
+        ].slice(-10) as CopilotSession["turns"];
         await putSession(env, session, runtime.sessionKeyPrefix);
         return {
-          result: { message: msg, ops, meta: metaWithOps('edit', 'ops_applied', ops) },
-          usage: { provider: 'local', model: 'policy_scope_pick', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+          result: {
+            message: msg,
+            ops,
+            meta: metaWithOps("edit", "ops_applied", ops),
+          },
+          usage: {
+            provider: "local",
+            model: "policy_scope_pick",
+            promptTokens: 0,
+            completionTokens: 0,
+            latencyMs: 0,
+          },
         };
       }
     }
 
-    if (pending.kind === 'group') {
+    if (pending.kind === "group") {
       const chosen = selectGroupFromPrompt(input.prompt, pending.groups);
       if (chosen) {
         const ops = filterOpsByGroup(pending.ops, chosen.key, input.controls);
@@ -692,13 +960,23 @@ export async function executeWidgetCopilotWithRuntime(
         const msg = `Ok — applying to “${chosen.label}” only.`;
         session.turns = [
           ...session.turns,
-          { role: 'user' as const, content: input.prompt },
-          { role: 'assistant' as const, content: msg },
-        ].slice(-10) as CopilotSession['turns'];
+          { role: "user" as const, content: input.prompt },
+          { role: "assistant" as const, content: msg },
+        ].slice(-10) as CopilotSession["turns"];
         await putSession(env, session, runtime.sessionKeyPrefix);
         return {
-          result: { message: msg, ops, meta: metaWithOps('edit', 'ops_applied', ops) },
-          usage: { provider: 'local', model: 'policy_group_pick', promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+          result: {
+            message: msg,
+            ops,
+            meta: metaWithOps("edit", "ops_applied", ops),
+          },
+          usage: {
+            provider: "local",
+            model: "policy_group_pick",
+            promptTokens: 0,
+            completionTokens: 0,
+            latencyMs: 0,
+          },
         };
       }
     }
@@ -710,8 +988,8 @@ export async function executeWidgetCopilotWithRuntime(
   const returnLocalMessage = async (args: {
     message: string;
     usageModel: string;
-    intent: NonNullable<WidgetCopilotResult['meta']>['intent'];
-    cta?: WidgetCopilotResult['cta'];
+    intent: NonNullable<WidgetCopilotResult["meta"]>["intent"];
+    cta?: WidgetCopilotResult["cta"];
     language?: string;
   }) => {
     await putSession(env, session, runtime.sessionKeyPrefix);
@@ -719,12 +997,18 @@ export async function executeWidgetCopilotWithRuntime(
       result: {
         message: args.message,
         ...(args.cta ? { cta: args.cta } : {}),
-        meta: baseMeta(args.intent, 'no_ops', {
+        meta: baseMeta(args.intent, "no_ops", {
           language: args.language ?? conversationLanguage,
           languageConfidence: session.languageConfidence,
         }),
       },
-      usage: { provider: 'local', model: args.usageModel, promptTokens: 0, completionTokens: 0, latencyMs: 0 },
+      usage: {
+        provider: "local",
+        model: args.usageModel,
+        promptTokens: 0,
+        completionTokens: 0,
+        latencyMs: 0,
+      },
     };
   };
 
@@ -749,10 +1033,15 @@ export async function executeWidgetCopilotWithRuntime(
   const user = buildCsPromptPayload(input);
   const systemPrompt = buildCsSystemPrompt({
     language: conversationLanguage,
-    forbidInternalControlDumpPromptLine: runtime.forbidInternalControlDumpPromptLine,
+    forbidInternalControlDumpPromptLine:
+      runtime.forbidInternalControlDumpPromptLine,
   });
 
-  const messages: ChatMessage[] = [{ role: 'system', content: systemPrompt }, ...session.turns, { role: 'user', content: user }];
+  const messages: ChatMessage[] = [
+    { role: "system", content: systemPrompt },
+    ...session.turns,
+    { role: "user", content: user },
+  ];
 
   const overallStartedAt = Date.now();
   const first = await callChatCompletion({
@@ -771,89 +1060,118 @@ export async function executeWidgetCopilotWithRuntime(
   let completionTokens = lastUsage.completionTokens;
 
   let parseResult = parseJsonFromModel(content);
-  let parsed = parseResult.ok && isRecord(parseResult.value) ? parseResult.value : null;
-  let message = parsed ? (asString(parsed.message) ?? '').trim() : '';
+  let parsed =
+    parseResult.ok && isRecord(parseResult.value) ? parseResult.value : null;
+  let message = parsed ? (asString(parsed.message) ?? "").trim() : "";
   let opsRaw = parsed?.ops;
   let ops = Array.isArray(opsRaw) ? opsRaw.filter(isWidgetOp) : undefined;
 
   if (!parseResult.ok) throw invalidStructuredEditError(lastUsage.provider);
-  if (!parsed) throw invalidStructuredEditError(lastUsage.provider, 'Model output must be a JSON object.');
-  if (!message) throw invalidStructuredEditError(lastUsage.provider, 'Model output is missing a message.');
+  if (!parsed)
+    throw invalidStructuredEditError(
+      lastUsage.provider,
+      "Model output must be a JSON object.",
+    );
+  if (!message)
+    throw invalidStructuredEditError(
+      lastUsage.provider,
+      "Model output is missing a message.",
+    );
 
   const latencyMs = Date.now() - overallStartedAt;
 
   const ctaRaw = parsed.cta;
-  let cta: WidgetCopilotResult['cta'];
+  let cta: WidgetCopilotResult["cta"];
   if (isRecord(ctaRaw)) {
-    const text = (asString(ctaRaw.text) ?? '').trim();
-    const action = (asString(ctaRaw.action) ?? '').trim();
-    const url = (asString(ctaRaw.url) ?? '').trim();
-    if (text && (action === 'signup' || action === 'upgrade' || action === 'learn-more')) {
+    const text = (asString(ctaRaw.text) ?? "").trim();
+    const action = (asString(ctaRaw.action) ?? "").trim();
+    const url = (asString(ctaRaw.url) ?? "").trim();
+    if (
+      text &&
+      (action === "signup" || action === "upgrade" || action === "learn-more")
+    ) {
       cta = { text, action, ...(url ? { url } : {}) };
     }
   }
 
   let finalMessage = message;
   let finalOps = ops && ops.length ? ops : undefined;
-  let finalCta: WidgetCopilotResult['cta'] | undefined = cta;
-  let finalMeta: WidgetCopilotResult['meta'] = metaWithOps(finalOps ? 'edit' : 'clarify', finalOps ? 'ops_applied' : 'no_ops', finalOps);
+  let finalCta: WidgetCopilotResult["cta"] | undefined = cta;
+  let finalMeta: WidgetCopilotResult["meta"] = metaWithOps(
+    finalOps ? "edit" : "clarify",
+    finalOps ? "ops_applied" : "no_ops",
+    finalOps,
+  );
   const finalizedCs = finalizeCsOps({
     prompt: input.prompt,
-    forbidInternalControlDumpPromptLine: runtime.forbidInternalControlDumpPromptLine,
+    forbidInternalControlDumpPromptLine:
+      runtime.forbidInternalControlDumpPromptLine,
     message: finalMessage,
     ops: finalOps,
   });
   finalMessage = finalizedCs.message;
   finalOps = finalizedCs.ops;
   if (finalizedCs.overrideToClarify) {
-    finalMeta = metaWithOps('clarify', 'no_ops', undefined);
+    finalMeta = metaWithOps("clarify", "no_ops", undefined);
   }
 
   if (finalOps && finalOps.length) {
-    const validated = validateOpsAgainstControls({ ops: finalOps, controls: input.controls });
+    const validated = validateOpsAgainstControls({
+      ops: finalOps,
+      controls: input.controls,
+    });
     if (!validated.ok) {
       const invalidOps = finalOps;
       const details = validated.issues
         .slice(0, 3)
         .map((i) => `- ${i.path}: ${i.message}`)
-        .join('\n');
+        .join("\n");
       finalMessage =
-        'I tried to apply an edit, but it didn’t match the widget’s editable controls. ' +
-        'Please try again and mention the setting you want to change (e.g. “stage background”, “FAQ title”, “accordion multi-open”).' +
-        (details ? `\n\nDetails:\n${details}` : '');
+        "I tried to apply an edit, but it didn’t match the widget’s editable controls. " +
+        "Please try again and mention the setting you want to change (e.g. “stage background”, “title”, “accordion multi-open”)." +
+        (details ? `\n\nDetails:\n${details}` : "");
       finalOps = undefined;
       finalCta = undefined;
-      finalMeta = metaWithOps('clarify', 'invalid_ops', invalidOps, {
-        validationResult: 'invalid',
-        invalidReason: details || 'Ops did not match editable controls',
+      finalMeta = metaWithOps("clarify", "invalid_ops", invalidOps, {
+        validationResult: "invalid",
+        invalidReason: details || "Ops did not match editable controls",
       });
       session.pendingPolicy = undefined;
     } else {
-      const policy = evaluateLightEditsPolicy({ ops: finalOps, controls: input.controls });
+      const policy = evaluateLightEditsPolicy({
+        ops: finalOps,
+        controls: input.controls,
+      });
       if (!policy.ok) {
         finalMessage = policy.message;
-        finalMeta = metaWithOps('clarify', 'no_ops', finalOps);
+        finalMeta = metaWithOps("clarify", "no_ops", finalOps);
         finalOps = undefined;
         finalCta = undefined;
         session.pendingPolicy = policy.pendingPolicy;
       } else {
-        finalMeta = metaWithOps('edit', 'ops_applied', finalOps);
+        finalMeta = metaWithOps("edit", "ops_applied", finalOps);
         session.pendingPolicy = undefined;
       }
     }
   } else {
-    finalMeta = metaWithOps('clarify', finalMeta?.outcome ?? 'no_ops', undefined);
+    finalMeta = metaWithOps(
+      "clarify",
+      finalMeta?.outcome ?? "no_ops",
+      undefined,
+    );
     session.pendingPolicy = undefined;
   }
 
   const hasEdit = Boolean(finalOps && finalOps.length > 0);
   session.lastActiveAtMs = Date.now();
-  session.successfulEdits = hasEdit ? session.successfulEdits + 1 : session.successfulEdits;
+  session.successfulEdits = hasEdit
+    ? session.successfulEdits + 1
+    : session.successfulEdits;
   session.turns = [
     ...session.turns,
-    { role: 'user' as const, content: input.prompt },
-    { role: 'assistant' as const, content: finalMessage },
-  ].slice(-10) as CopilotSession['turns'];
+    { role: "user" as const, content: input.prompt },
+    { role: "assistant" as const, content: finalMessage },
+  ].slice(-10) as CopilotSession["turns"];
   await putSession(env, session, runtime.sessionKeyPrefix);
 
   const result: WidgetCopilotResult = {

@@ -1,0 +1,1650 @@
+{
+  "v": 1,
+  "widgets": [
+    {
+      "widgetType": "faq",
+      "order": 10,
+      "label": "FAQ",
+      "description": "Answer common questions with grouped, editable content.",
+      "category": "Support",
+      "capabilities": {
+        "seoGeo": true
+      },
+      "itemKey": "faq.item",
+      "defaults": {
+        "cta": {
+          "href": "https://example.com",
+          "label": "Contact us",
+          "enabled": true,
+          "iconName": "arrowshape.turn.up.right",
+          "openMode": "same-tab",
+          "iconEnabled": true,
+          "iconPlacement": "right"
+        },
+        "geo": {
+          "answerFormat": "direct-first",
+          "enableDeepLinks": true
+        },
+        "localeSwitcher": {
+          "enabled": false,
+          "byIp": false,
+          "alwaysShowLocale": "",
+          "attachTo": "stage",
+          "position": "top-right"
+        },
+        "pod": {
+          "radius": "4xl",
+          "shadow": {
+            "x": 0,
+            "y": 8,
+            "blur": 24,
+            "alpha": 18,
+            "color": "#ff3b30",
+            "inset": false,
+            "spread": 0,
+            "enabled": false
+          },
+          "padding": {
+            "mobile": {
+              "all": 28,
+              "top": 28,
+              "left": 28,
+              "right": 28,
+              "bottom": 28,
+              "linked": true
+            },
+            "desktop": {
+              "all": 60,
+              "top": 60,
+              "left": 60,
+              "right": 60,
+              "bottom": 60,
+              "linked": true
+            }
+          },
+          "radiusBL": "4xl",
+          "radiusBR": "4xl",
+          "radiusTL": "4xl",
+          "radiusTR": "4xl",
+          "widthMode": "full",
+          "background": {
+            "type": "color",
+            "color": "var(--color-system-white)"
+          },
+          "contentWidth": 960,
+          "insideShadow": {
+            "all": {
+              "x": 0,
+              "y": 0,
+              "blur": 24,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": 0,
+              "enabled": false
+            },
+            "top": {
+              "x": 0,
+              "y": 12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "left": {
+              "x": 12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "layer": "below-content",
+            "right": {
+              "x": -12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "bottom": {
+              "x": 0,
+              "y": -12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "linked": true
+          },
+          "radiusLinked": true
+        },
+        "seo": {
+          "businessType": "online-service",
+          "canonicalUrl": "",
+          "enableSchema": true
+        },
+        "stage": {
+          "canvas": {
+            "mode": "viewport",
+            "width": 0,
+            "height": 0
+          },
+          "shadow": {
+            "x": 0,
+            "y": 8,
+            "blur": 24,
+            "alpha": 18,
+            "color": "#000000",
+            "inset": false,
+            "spread": 0,
+            "enabled": false
+          },
+          "padding": {
+            "mobile": {
+              "all": 24,
+              "top": 24,
+              "left": 24,
+              "right": 24,
+              "bottom": 24,
+              "linked": true
+            },
+            "desktop": {
+              "all": 40,
+              "top": 40,
+              "left": 40,
+              "right": 40,
+              "bottom": 40,
+              "linked": true
+            }
+          },
+          "alignment": "center",
+          "background": {
+            "type": "color",
+            "color": "#d1d1d6"
+          },
+          "insideShadow": {
+            "all": {
+              "x": 0,
+              "y": 0,
+              "blur": 24,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": 0,
+              "enabled": false
+            },
+            "top": {
+              "x": 0,
+              "y": 12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "left": {
+              "x": 12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "layer": "below-content",
+            "right": {
+              "x": -12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "bottom": {
+              "x": 0,
+              "y": -12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "linked": true
+          }
+        },
+        "title": "Frequently Asked Questions",
+        "header": {
+          "gap": 28,
+          "title": "FAQs",
+          "enabled": true,
+          "textGap": 4,
+          "innerGap": 16,
+          "alignment": "left",
+          "placement": "top",
+          "ctaPlacement": "right",
+          "showSubtitle": false,
+          "subtitleHtml": "Modern website widgets—fast to launch, easy to customize, and built to help you convert."
+        },
+        "layout": {
+          "gap": 16,
+          "type": "list",
+          "columns": {
+            "mobile": 1,
+            "desktop": 2
+          },
+          "cardsLayout": "grid",
+          "itemPadding": 20,
+          "itemPaddingTop": 20,
+          "itemPaddingLeft": 20,
+          "itemQaGapCustom": 8,
+          "itemQaGapPreset": "s",
+          "itemPaddingRight": 20,
+          "itemPaddingBottom": 20,
+          "itemPaddingLinked": true
+        },
+        "seoGeo": {
+          "enabled": false
+        },
+        "context": {
+          "websiteUrl": ""
+        },
+        "behavior": {
+          "expandAll": false,
+          "multiOpen": false,
+          "expandFirst": true,
+          "showBacklink": true
+        },
+        "sections": [
+          {
+            "id": "s1",
+            "faqs": [
+              {
+                "id": "q1",
+                "answer": "Clickeen is a widget SaaS platform that lets you add polished, high-performing widgets to your website in minutes—no heavy dev work required.",
+                "question": "What is Clickeen?",
+                "defaultOpen": false
+              },
+              {
+                "id": "q2",
+                "answer": "Yes. The Free plan includes 1 active widget with essential features so you can try Clickeen on a live site.",
+                "question": "Do you offer a free plan?",
+                "defaultOpen": false
+              },
+              {
+                "id": "q3",
+                "answer": "Create your widget, copy the embed code, and paste it right before the closing </body> tag on your website. Changes you make in Clickeen update instantly.",
+                "question": "How do I install a widget on my site?",
+                "defaultOpen": false
+              },
+              {
+                "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
+                "answer": "Launch faster with flexible design controls, simple updates, and reliable performance—so your team can ship improvements without maintaining custom code.",
+                "question": "Why use Clickeen instead of building widgets from scratch?",
+                "defaultOpen": false
+              }
+            ],
+            "title": "Getting started"
+          }
+        ],
+        "appearance": {
+          "theme": "custom",
+          "ctaBorder": {
+            "color": "var(--color-system-blue)",
+            "width": 1,
+            "enabled": false
+          },
+          "ctaRadius": "md",
+          "iconColor": "var(--typo-question-color)",
+          "iconStyle": "plus",
+          "linkStyle": "underline",
+          "podBorder": {
+            "color": "var(--color-system-gray-5)",
+            "width": 1,
+            "enabled": false
+          },
+          "cardwrapper": {
+            "border": {
+              "color": "#efeff2",
+              "width": 1,
+              "enabled": true
+            },
+            "radius": "2xl",
+            "shadow": {
+              "x": 23,
+              "y": 12,
+              "blur": 21,
+              "alpha": 38,
+              "color": "#e5e5ea",
+              "inset": false,
+              "spread": -5,
+              "enabled": true
+            },
+            "radiusBL": "2xl",
+            "radiusBR": "2xl",
+            "radiusTL": "2xl",
+            "radiusTR": "2xl",
+            "insideShadow": {
+              "all": {
+                "x": 0,
+                "y": 0,
+                "blur": 24,
+                "alpha": 12,
+                "color": "#000000",
+                "inset": true,
+                "spread": 0,
+                "enabled": false
+              },
+              "top": {
+                "x": 0,
+                "y": 12,
+                "blur": 16,
+                "alpha": 12,
+                "color": "#000000",
+                "inset": true,
+                "spread": -12,
+                "enabled": false
+              },
+              "left": {
+                "x": 12,
+                "y": 0,
+                "blur": 16,
+                "alpha": 12,
+                "color": "#000000",
+                "inset": true,
+                "spread": -12,
+                "enabled": false
+              },
+              "layer": "below-content",
+              "right": {
+                "x": -12,
+                "y": 0,
+                "blur": 16,
+                "alpha": 12,
+                "color": "#000000",
+                "inset": true,
+                "spread": -12,
+                "enabled": false
+              },
+              "bottom": {
+                "x": 0,
+                "y": -12,
+                "blur": 16,
+                "alpha": 12,
+                "color": "#000000",
+                "inset": true,
+                "spread": -12,
+                "enabled": false
+              },
+              "linked": true
+            },
+            "radiusLinked": true
+          },
+          "ctaIconSize": 16,
+          "ctaTextColor": "var(--color-system-white)",
+          "ctaBackground": "var(--color-system-blue)",
+          "ctaSizePreset": "custom",
+          "localeSwitcherBorder": {
+            "color": "var(--color-system-gray-5)",
+            "width": 1,
+            "enabled": true
+          },
+          "localeSwitcherRadius": "md",
+          "localeSwitcherTextColor": "var(--color-system-black)",
+          "localeSwitcherBackground": "var(--color-system-white)",
+          "localeSwitcherPaddingBlock": 10,
+          "localeSwitcherPaddingInline": 14,
+          "linkTextColor": "var(--color-system-blue)",
+          "itemBackground": {
+            "type": "color",
+            "color": "var(--color-system-white)"
+          },
+          "ctaPaddingBlock": 12,
+          "ctaPaddingInline": 16,
+          "ctaPaddingLinked": false,
+          "ctaIconSizePreset": "m",
+          "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
+          "linkUnderlineColor": "var(--color-system-blue)"
+        },
+        "typography": {
+          "roles": {
+            "body": {
+              "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+              "family": "Inter",
+              "weight": "400",
+              "fontStyle": "normal",
+              "sizeCustom": 14,
+              "sizePreset": "s",
+              "trackingCustom": 0,
+              "trackingPreset": "normal",
+              "lineHeightCustom": 1.4,
+              "lineHeightPreset": "normal"
+            },
+            "title": {
+              "color": {
+                "type": "color",
+                "color": "#545456"
+              },
+              "family": "Inter",
+              "weight": "600",
+              "fontStyle": "normal",
+              "sizeCustom": "24px",
+              "sizePreset": "m",
+              "trackingCustom": 0,
+              "trackingPreset": "normal",
+              "lineHeightCustom": 1.4,
+              "lineHeightPreset": "normal"
+            },
+            "answer": {
+              "color": {
+                "type": "color",
+                "color": "#585858"
+              },
+              "family": "Inter",
+              "weight": "400",
+              "fontStyle": "normal",
+              "sizeCustom": "15px",
+              "sizePreset": "s",
+              "trackingCustom": 0,
+              "trackingPreset": "normal",
+              "lineHeightCustom": 1.4,
+              "lineHeightPreset": "normal"
+            },
+            "button": {
+              "color": "var(--color-system-white)",
+              "family": "Inter",
+              "weight": "600",
+              "fontStyle": "normal",
+              "sizeCustom": 14,
+              "sizePreset": "s",
+              "trackingCustom": 0,
+              "trackingPreset": "normal",
+              "lineHeightCustom": 1.4,
+              "lineHeightPreset": "normal"
+            },
+            "localeSwitcher": {
+              "color": "var(--color-system-black)",
+              "family": "Inter",
+              "weight": "500",
+              "fontStyle": "normal",
+              "sizeCustom": 14,
+              "sizePreset": "s",
+              "trackingCustom": 0,
+              "trackingPreset": "normal",
+              "lineHeightCustom": 1.2,
+              "lineHeightPreset": "tight"
+            },
+            "section": {
+              "color": {
+                "type": "color",
+                "color": "#757575"
+              },
+              "family": "Inter",
+              "weight": "400",
+              "fontStyle": "normal",
+              "sizeCustom": "14px",
+              "sizePreset": "s",
+              "trackingCustom": 0,
+              "trackingPreset": "normal",
+              "lineHeightCustom": 1.4,
+              "lineHeightPreset": "normal"
+            },
+            "question": {
+              "color": {
+                "type": "color",
+                "color": "#212121"
+              },
+              "family": "Inter",
+              "weight": "600",
+              "fontStyle": "normal",
+              "sizeCustom": "16px",
+              "sizePreset": "s",
+              "trackingCustom": 0,
+              "trackingPreset": "normal",
+              "lineHeightCustom": 1.4,
+              "lineHeightPreset": "normal"
+            }
+          },
+          "roleScales": {
+            "body": {
+              "l": "22px",
+              "m": "18px",
+              "s": "16px",
+              "xl": "24px",
+              "xs": "14px"
+            },
+            "title": {
+              "l": "44px",
+              "m": "36px",
+              "s": "28px",
+              "xl": "60px",
+              "xs": "20px"
+            },
+            "answer": {
+              "l": "22px",
+              "m": "18px",
+              "s": "16px",
+              "xl": "24px",
+              "xs": "14px"
+            },
+            "button": {
+              "l": "20px",
+              "m": "18px",
+              "s": "15px",
+              "xl": "24px",
+              "xs": "13px"
+            },
+            "localeSwitcher": {
+              "l": "20px",
+              "m": "18px",
+              "s": "15px",
+              "xl": "24px",
+              "xs": "13px"
+            },
+            "section": {
+              "l": "16px",
+              "m": "14px",
+              "s": "13px",
+              "xl": "18px",
+              "xs": "12px"
+            },
+            "question": {
+              "l": "22px",
+              "m": "18px",
+              "s": "16px",
+              "xl": "24px",
+              "xs": "14px"
+            }
+          },
+          "globalFamily": "Inter"
+        },
+        "displayCategoryTitles": false
+      }
+    },
+    {
+      "widgetType": "countdown",
+      "order": 20,
+      "label": "Countdown",
+      "description": "Show launch, offer, or event timing in one active widget.",
+      "category": "Conversion",
+      "capabilities": {
+        "seoGeo": true
+      },
+      "itemKey": "countdown.item",
+      "defaults": {
+        "pod": {
+          "radius": "4xl",
+          "padding": {
+            "mobile": {
+              "all": 28,
+              "top": 28,
+              "left": 28,
+              "right": 28,
+              "bottom": 28,
+              "linked": true
+            },
+            "desktop": {
+              "all": 60,
+              "top": 60,
+              "left": 60,
+              "right": 60,
+              "bottom": 60,
+              "linked": true
+            }
+          },
+          "radiusBL": "4xl",
+          "radiusBR": "4xl",
+          "radiusTL": "4xl",
+          "radiusTR": "4xl",
+          "widthMode": "wrap",
+          "background": {
+            "type": "color",
+            "color": "var(--color-system-white)"
+          },
+          "shadow": {
+            "x": 0,
+            "y": 8,
+            "blur": 24,
+            "alpha": 18,
+            "color": "#000000",
+            "inset": false,
+            "spread": 0,
+            "enabled": false
+          },
+          "insideShadow": {
+            "linked": true,
+            "layer": "below-content",
+            "all": {
+              "x": 0,
+              "y": 0,
+              "blur": 24,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": 0,
+              "enabled": false
+            },
+            "top": {
+              "x": 0,
+              "y": 12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "right": {
+              "x": -12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "bottom": {
+              "x": 0,
+              "y": -12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "left": {
+              "x": 12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            }
+          },
+          "contentWidth": 960,
+          "radiusLinked": true
+        },
+        "stage": {
+          "canvas": {
+            "mode": "viewport",
+            "width": 0,
+            "height": 0
+          },
+          "insideShadow": {
+            "linked": true,
+            "layer": "below-content",
+            "all": {
+              "x": 0,
+              "y": 0,
+              "blur": 24,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": 0,
+              "enabled": false
+            },
+            "top": {
+              "x": 0,
+              "y": 12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "right": {
+              "x": -12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "bottom": {
+              "x": 0,
+              "y": -12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "left": {
+              "x": 12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            }
+          },
+          "shadow": {
+            "x": 0,
+            "y": 8,
+            "blur": 24,
+            "alpha": 18,
+            "color": "#000000",
+            "inset": false,
+            "spread": 0,
+            "enabled": false
+          },
+          "padding": {
+            "mobile": {
+              "all": 24,
+              "top": 24,
+              "left": 24,
+              "right": 24,
+              "bottom": 24,
+              "linked": true
+            },
+            "desktop": {
+              "all": 80,
+              "top": 80,
+              "left": 80,
+              "right": 80,
+              "bottom": 80,
+              "linked": true
+            }
+          },
+          "alignment": "center",
+          "background": {
+            "type": "color",
+            "color": "var(--color-system-gray-5)"
+          },
+          "floating": {
+            "enabled": false,
+            "anchor": "bottom-right",
+            "offset": 24
+          }
+        },
+        "header": {
+          "enabled": true,
+          "title": "Sales are coming soon!!!🎯",
+          "showSubtitle": true,
+          "subtitleHtml": "Don't miss out on these limited time offers.",
+          "alignment": "center",
+          "placement": "top",
+          "ctaPlacement": "right",
+          "gap": 24,
+          "innerGap": 16,
+          "textGap": 8
+        },
+        "timer": {
+          "mode": "date",
+          "repeat": "never",
+          "timeUnit": "hours",
+          "timezone": "UTC",
+          "targetDate": "2026-01-20T12:00",
+          "timeAmount": 1,
+          "targetNumber": 1000,
+          "countDuration": 5,
+          "startingNumber": 0,
+          "labels": {
+            "days": "Days",
+            "hours": "Hours",
+            "minutes": "Minutes",
+            "seconds": "Seconds"
+          }
+        },
+        "layout": {
+          "position": "inline"
+        },
+        "seoGeo": {
+          "enabled": false
+        },
+        "seo": {
+          "businessType": "online-service",
+          "canonicalUrl": "",
+          "enableSchema": true
+        },
+        "geo": {
+          "answerFormat": "direct-first",
+          "enableDeepLinks": true
+        },
+        "localeSwitcher": {
+          "enabled": false,
+          "byIp": false,
+          "alwaysShowLocale": "",
+          "attachTo": "stage",
+          "position": "top-right"
+        },
+        "actions": {
+          "after": {
+            "url": "",
+            "text": "",
+            "type": "hide"
+          },
+          "during": {
+            "url": "",
+            "text": "Purchase now",
+            "type": "link",
+            "style": "primary",
+            "newTab": true
+          }
+        },
+        "behavior": {
+          "showBacklink": true
+        },
+        "appearance": {
+          "timerStyle": "separated",
+          "timeFormat": "auto",
+          "showLabels": true,
+          "theme": "custom",
+          "animation": "fade",
+          "separator": ":",
+          "textColor": {
+            "type": "color",
+            "color": "var(--color-system-black)"
+          },
+          "itemBackground": {
+            "type": "color",
+            "color": "var(--color-system-gray-5)"
+          },
+          "cardwrapper": {
+            "border": {
+              "color": "var(--color-system-gray-5)",
+              "width": 1,
+              "enabled": false
+            },
+            "radius": "2xl",
+            "shadow": {
+              "x": 0,
+              "y": 8,
+              "blur": 24,
+              "alpha": 18,
+              "color": "#000000",
+              "inset": false,
+              "spread": 0,
+              "enabled": false
+            },
+            "radiusBL": "2xl",
+            "radiusBR": "2xl",
+            "radiusTL": "2xl",
+            "radiusTR": "2xl",
+            "radiusLinked": true
+          },
+          "podBorder": {
+            "color": "var(--color-system-gray-5)",
+            "width": 1,
+            "enabled": false
+          },
+          "localeSwitcherBorder": {
+            "color": "var(--color-system-gray-5)",
+            "width": 1,
+            "enabled": true
+          },
+          "localeSwitcherRadius": "md",
+          "localeSwitcherTextColor": "var(--color-system-black)",
+          "localeSwitcherBackground": "var(--color-system-white)",
+          "localeSwitcherPaddingBlock": 10,
+          "localeSwitcherPaddingInline": 14,
+          "ctaBackground": "var(--color-system-blue)",
+          "ctaTextColor": "var(--color-system-white)",
+          "ctaBorder": {
+            "enabled": false,
+            "width": 1,
+            "color": "var(--color-system-blue)"
+          },
+          "ctaRadius": "md",
+          "ctaSizePreset": "m",
+          "ctaPaddingLinked": true,
+          "ctaPaddingInline": 16,
+          "ctaPaddingBlock": 12,
+          "ctaIconSizePreset": "m",
+          "ctaIconSize": 16
+        },
+        "typography": {
+          "roles": {
+            "label": {
+              "color": {
+                "type": "color",
+                "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)"
+              },
+              "family": "Inter",
+              "weight": "400",
+              "fontStyle": "normal",
+              "sizeCustom": 14,
+              "sizePreset": "custom"
+            },
+            "timer": {
+              "color": {
+                "type": "color",
+                "color": "var(--color-system-black)"
+              },
+              "family": "Inter",
+              "weight": "700",
+              "fontStyle": "normal",
+              "sizeCustom": 48,
+              "sizePreset": "custom"
+            },
+            "button": {
+              "color": {
+                "type": "color",
+                "color": "var(--color-system-white)"
+              },
+              "family": "Inter",
+              "weight": "500",
+              "fontStyle": "normal",
+              "sizeCustom": 16,
+              "sizePreset": "custom"
+            },
+            "localeSwitcher": {
+              "color": "var(--color-system-black)",
+              "family": "Inter",
+              "weight": "500",
+              "fontStyle": "normal",
+              "sizeCustom": 14,
+              "sizePreset": "s"
+            },
+            "title": {
+              "color": {
+                "type": "color",
+                "color": "var(--color-system-black)"
+              },
+              "family": "Inter",
+              "weight": "600",
+              "fontStyle": "normal",
+              "sizeCustom": 32,
+              "sizePreset": "custom"
+            },
+            "body": {
+              "color": {
+                "type": "color",
+                "color": "var(--color-system-black)"
+              },
+              "family": "Inter",
+              "weight": "400",
+              "fontStyle": "normal",
+              "sizeCustom": 14,
+              "sizePreset": "custom"
+            }
+          },
+          "roleScales": {
+            "label": {
+              "l": "16px",
+              "m": "14px",
+              "s": "12px",
+              "xl": "18px",
+              "xs": "11px"
+            },
+            "timer": {
+              "l": "56px",
+              "m": "48px",
+              "s": "40px",
+              "xl": "64px",
+              "xs": "32px"
+            },
+            "button": {
+              "l": "20px",
+              "m": "18px",
+              "s": "15px",
+              "xl": "24px",
+              "xs": "13px"
+            },
+            "localeSwitcher": {
+              "l": "20px",
+              "m": "18px",
+              "s": "15px",
+              "xl": "24px",
+              "xs": "13px"
+            },
+            "title": {
+              "l": "38px",
+              "m": "28px",
+              "s": "24px",
+              "xl": "48px",
+              "xs": "20px"
+            },
+            "body": {
+              "l": "22px",
+              "m": "18px",
+              "s": "16px",
+              "xl": "24px",
+              "xs": "14px"
+            }
+          },
+          "globalFamily": "Inter"
+        },
+        "cta": {
+          "href": "https://example.com",
+          "label": "Learn more",
+          "openMode": "same-tab",
+          "enabled": false,
+          "iconEnabled": false,
+          "iconName": "arrow.right",
+          "iconPlacement": "right"
+        }
+      }
+    },
+    {
+      "widgetType": "logoshowcase",
+      "order": 30,
+      "label": "Logo showcase",
+      "description": "Display brand, customer, or partner logos from one saved config.",
+      "category": "Social proof",
+      "capabilities": {
+        "seoGeo": false
+      },
+      "itemKey": "logoshowcase.item",
+      "defaults": {
+        "cta": {
+          "href": "https://example.com/contact",
+          "label": "Contact us",
+          "openMode": "same-tab",
+          "enabled": true,
+          "iconEnabled": false,
+          "iconName": "arrow.right",
+          "iconPlacement": "right"
+        },
+        "pod": {
+          "radius": "4xl",
+          "padding": {
+            "mobile": {
+              "all": 16,
+              "top": 16,
+              "left": 16,
+              "right": 16,
+              "bottom": 16,
+              "linked": true
+            },
+            "desktop": {
+              "all": 24,
+              "top": 24,
+              "left": 24,
+              "right": 24,
+              "bottom": 24,
+              "linked": true
+            }
+          },
+          "radiusBL": "4xl",
+          "radiusBR": "4xl",
+          "radiusTL": "4xl",
+          "radiusTR": "4xl",
+          "widthMode": "fixed",
+          "background": "var(--color-system-white)",
+          "shadow": {
+            "x": 0,
+            "y": 8,
+            "blur": 24,
+            "alpha": 18,
+            "color": "#000000",
+            "inset": false,
+            "spread": 0,
+            "enabled": false
+          },
+          "insideShadow": {
+            "linked": true,
+            "layer": "below-content",
+            "all": {
+              "x": 0,
+              "y": 0,
+              "blur": 24,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": 0,
+              "enabled": false
+            },
+            "top": {
+              "x": 0,
+              "y": 12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "right": {
+              "x": -12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "bottom": {
+              "x": 0,
+              "y": -12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "left": {
+              "x": 12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            }
+          },
+          "contentWidth": 960,
+          "radiusLinked": true
+        },
+        "type": "grid",
+        "stage": {
+          "canvas": {
+            "mode": "viewport",
+            "width": 0,
+            "height": 0
+          },
+          "insideShadow": {
+            "linked": true,
+            "layer": "below-content",
+            "all": {
+              "x": 0,
+              "y": 0,
+              "blur": 24,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": 0,
+              "enabled": false
+            },
+            "top": {
+              "x": 0,
+              "y": 12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "right": {
+              "x": -12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "bottom": {
+              "x": 0,
+              "y": -12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "left": {
+              "x": 12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            }
+          },
+          "shadow": {
+            "x": 0,
+            "y": 8,
+            "blur": 24,
+            "alpha": 18,
+            "color": "#000000",
+            "inset": false,
+            "spread": 0,
+            "enabled": false
+          },
+          "padding": {
+            "mobile": {
+              "all": 24,
+              "top": 24,
+              "left": 24,
+              "right": 24,
+              "bottom": 24,
+              "linked": true
+            },
+            "desktop": {
+              "all": 80,
+              "top": 80,
+              "left": 80,
+              "right": 80,
+              "bottom": 80,
+              "linked": true
+            }
+          },
+          "alignment": "center",
+          "background": "var(--color-system-gray-5)"
+        },
+        "header": {
+          "enabled": true,
+          "title": "Some of our best clients",
+          "showSubtitle": true,
+          "subtitleHtml": "Trusted by teams worldwide.",
+          "alignment": "center",
+          "placement": "top",
+          "ctaPlacement": "right",
+          "gap": 24,
+          "innerGap": 16,
+          "textGap": 8
+        },
+        "seoGeo": {
+          "enabled": false
+        },
+        "localeSwitcher": {
+          "enabled": false,
+          "byIp": false,
+          "alwaysShowLocale": "",
+          "attachTo": "stage",
+          "position": "top-right"
+        },
+        "strips": [
+          {
+            "id": "s1",
+            "logos": [
+              {
+                "id": "l1",
+                "alt": "",
+                "href": "",
+                "name": "Audi",
+                "asset": {
+                  "name": "Audi.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Audi.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l2",
+                "alt": "",
+                "href": "",
+                "name": "BMW",
+                "asset": {
+                  "name": "BMW.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/BMW.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l3",
+                "alt": "",
+                "href": "",
+                "name": "Chana",
+                "asset": {
+                  "name": "Chana.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Chana.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l4",
+                "alt": "",
+                "href": "",
+                "name": "Daihatsu",
+                "asset": {
+                  "name": "Daihatsu.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Daihatsu.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l5",
+                "alt": "",
+                "href": "",
+                "name": "Ford",
+                "asset": {
+                  "name": "Ford.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Ford.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l6",
+                "alt": "",
+                "href": "",
+                "name": "Honda",
+                "asset": {
+                  "name": "Honda.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Honda.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l7",
+                "alt": "",
+                "href": "",
+                "name": "Isuzu",
+                "asset": {
+                  "name": "Isuzu.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Isuzu.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l8",
+                "alt": "",
+                "href": "",
+                "name": "Lambo",
+                "asset": {
+                  "name": "Lambo.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Lambo.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l9",
+                "alt": "",
+                "href": "",
+                "name": "Perodua",
+                "asset": {
+                  "name": "Perodua.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Perodua.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l10",
+                "alt": "",
+                "href": "",
+                "name": "Peugeot",
+                "asset": {
+                  "name": "Peugeot.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Peugeot.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l11",
+                "alt": "",
+                "href": "",
+                "name": "Proton",
+                "asset": {
+                  "name": "Proton.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Proton.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l12",
+                "alt": "",
+                "href": "",
+                "name": "Suzuki",
+                "asset": {
+                  "name": "Suzuki.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Suzuki.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l13",
+                "alt": "",
+                "href": "",
+                "name": "Tesla",
+                "asset": {
+                  "name": "Tesla.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Tesla.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l14",
+                "alt": "",
+                "href": "",
+                "name": "Toyota",
+                "asset": {
+                  "name": "Toyota.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Toyota.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l15",
+                "alt": "",
+                "href": "",
+                "name": "VW",
+                "asset": {
+                  "name": "VW.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/VW.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              },
+              {
+                "id": "l16",
+                "alt": "",
+                "href": "",
+                "name": "Volvo",
+                "asset": {
+                  "name": "Volvo.svg"
+                },
+                "title": "",
+                "caption": "",
+                "logoFill": "url(/widgets/logoshowcase/base-assets/Volvo.svg) center / contain no-repeat",
+                "nofollow": false,
+                "targetBlank": false
+              }
+            ]
+          }
+        ],
+        "spacing": {
+          "gap": 20,
+          "rowGap": 16,
+          "stripGap": 16,
+          "mobileGap": 16,
+          "logoHeight": 40,
+          "mobileStripGap": 12
+        },
+        "behavior": {
+          "randomOrder": false,
+          "showBacklink": true
+        },
+        "appearance": {
+          "cardwrapper": {
+            "border": {
+              "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)",
+              "width": 1,
+              "enabled": false
+            },
+            "radius": "4xl",
+            "shadow": {
+              "x": 0,
+              "y": 8,
+              "blur": 24,
+              "alpha": 18,
+              "color": "#000000",
+              "inset": false,
+              "spread": 0,
+              "enabled": false
+            },
+            "radiusBL": "4xl",
+            "radiusBR": "4xl",
+            "radiusTL": "4xl",
+            "radiusTR": "4xl",
+            "radiusLinked": true
+          },
+          "logoLook": "original",
+          "ctaRadius": "md",
+          "logoOpacity": 0.9,
+          "ctaTextColor": "var(--color-system-white)",
+          "ctaBackground": "var(--color-system-blue)",
+          "localeSwitcherBorder": {
+            "color": "var(--color-system-gray-5)",
+            "width": 1,
+            "enabled": true
+          },
+          "localeSwitcherRadius": "md",
+          "localeSwitcherTextColor": "var(--color-system-black)",
+          "localeSwitcherBackground": "var(--color-system-white)",
+          "localeSwitcherPaddingBlock": 10,
+          "localeSwitcherPaddingInline": 14,
+          "ctaBorder": {
+            "enabled": false,
+            "width": 1,
+            "color": "var(--color-system-blue)"
+          },
+          "ctaSizePreset": "m",
+          "ctaPaddingLinked": true,
+          "ctaPaddingInline": 16,
+          "ctaPaddingBlock": 12,
+          "ctaIconSizePreset": "m",
+          "ctaIconSize": 16,
+          "itemBackground": "transparent"
+        },
+        "typeConfig": {
+          "grid": {},
+          "carousel": {
+            "mode": "paged",
+            "step": "page",
+            "speed": 30,
+            "autoplay": false,
+            "direction": "left",
+            "allowSwipe": true,
+            "showArrows": true,
+            "pauseOnHover": true,
+            "transitionMs": 350,
+            "autoSlideDelayMs": 2500
+          }
+        },
+        "typography": {
+          "roles": {
+            "body": {
+              "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
+              "family": "Inter",
+              "weight": "400",
+              "fontStyle": "normal",
+              "sizeCustom": 14,
+              "sizePreset": "m"
+            },
+            "title": {
+              "color": "var(--color-system-black)",
+              "family": "Inter",
+              "weight": "700",
+              "fontStyle": "normal",
+              "sizeCustom": 24,
+              "sizePreset": "m"
+            },
+            "button": {
+              "color": "var(--color-system-white)",
+              "family": "Inter",
+              "weight": "600",
+              "fontStyle": "normal",
+              "sizeCustom": 14,
+              "sizePreset": "m"
+            },
+            "localeSwitcher": {
+              "color": "var(--color-system-black)",
+              "family": "Inter",
+              "weight": "500",
+              "fontStyle": "normal",
+              "sizeCustom": 14,
+              "sizePreset": "s"
+            }
+          },
+          "roleScales": {
+            "body": {
+              "l": "22px",
+              "m": "18px",
+              "s": "16px",
+              "xl": "24px",
+              "xs": "14px"
+            },
+            "title": {
+              "l": "38px",
+              "m": "28px",
+              "s": "24px",
+              "xl": "48px",
+              "xs": "20px"
+            },
+            "button": {
+              "l": "20px",
+              "m": "18px",
+              "s": "15px",
+              "xl": "24px",
+              "xs": "13px"
+            },
+            "localeSwitcher": {
+              "l": "20px",
+              "m": "18px",
+              "s": "15px",
+              "xl": "24px",
+              "xs": "13px"
+            }
+          },
+          "globalFamily": "Inter"
+        }
+      }
+    }
+  ]
+}

@@ -15,14 +15,9 @@ import {
   readRomaWidgetsCache,
   updateRomaWidgetsCache,
   type RomaWidgetsResponse,
+  type WidgetCatalogOption,
   type WidgetInstance,
 } from './use-roma-widgets';
-
-const CREATE_WIDGET_OPTIONS = [
-  { widgetType: 'faq', label: 'FAQ' },
-  { widgetType: 'countdown', label: 'Countdown' },
-  { widgetType: 'logoshowcase', label: 'Logo showcase' },
-] as const;
 
 export function WidgetsDomain() {
   const searchParams = useSearchParams();
@@ -35,6 +30,7 @@ export function WidgetsDomain() {
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
+  const [widgetCatalog, setWidgetCatalog] = useState<WidgetCatalogOption[]>(() => cachedWidgets?.data.catalog ?? []);
   const [domainLoading, setDomainLoading] = useState(() => !cachedWidgets);
   const [domainRefreshing, setDomainRefreshing] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
@@ -46,6 +42,7 @@ export function WidgetsDomain() {
 
   const applyWidgets = useCallback((widgets: RomaWidgetsResponse) => {
     setWidgetInstances(widgets.instances);
+    setWidgetCatalog(widgets.catalog);
   }, []);
 
   const refreshWidgets = useCallback(async (args?: { force?: boolean }) => {
@@ -89,6 +86,7 @@ export function WidgetsDomain() {
       setDomainLoading(false);
     } else {
       setWidgetInstances([]);
+      setWidgetCatalog([]);
       setDomainLoading(true);
     }
     void refreshWidgets();
@@ -113,8 +111,12 @@ export function WidgetsDomain() {
         widgetType,
         instances: instances.slice().sort((a, b) => a.instanceId.localeCompare(b.instanceId)),
       }))
-      .sort((a, b) => a.widgetType.localeCompare(b.widgetType));
-  }, [widgetInstances]);
+      .sort((a, b) => {
+        const labelA = widgetCatalog.find((entry) => entry.widgetType === a.widgetType)?.label ?? a.widgetType;
+        const labelB = widgetCatalog.find((entry) => entry.widgetType === b.widgetType)?.label ?? b.widgetType;
+        return labelA.localeCompare(labelB);
+      });
+  }, [widgetCatalog, widgetInstances]);
 
   useEffect(() => {
     const candidates = instanceWidgetTypes.slice(0, 8);
@@ -305,17 +307,18 @@ export function WidgetsDomain() {
           {!domainLoading && groupedInstances.length === 0 ? (
             <div className="rd-canvas-module__actions">
               <p className="body-m">No editable instances yet.</p>
-              {CREATE_WIDGET_OPTIONS.map((option) => {
+              {widgetCatalog.map((option, optionIndex) => {
                 const actionKey = `create:${option.widgetType}`;
                 return (
                   <button
                     className="diet-btn-txt"
                     data-size="md"
-                    data-variant={option.widgetType === 'faq' ? 'primary' : 'line2'}
+                    data-variant={optionIndex === 0 ? 'primary' : 'line2'}
                     type="button"
                     key={option.widgetType}
                     onClick={() => void handleCreateInstance(option.widgetType)}
-                    disabled={Boolean(activeActionKey)}
+                    disabled={Boolean(activeActionKey) || !option.canCreate}
+                    title={option.disabledReasonKey ? resolveAccountShellErrorCopy(option.disabledReasonKey, 'This widget is not available on the current account plan.') : option.description}
                   >
                     <span className="diet-btn-txt__label body-m">
                       {activeActionKey === actionKey ? 'Creating...' : `Create ${option.label}`}
@@ -332,7 +335,7 @@ export function WidgetsDomain() {
         return (
           <section className="rd-canvas-module" key={group.widgetType}>
             <div className="roma-toolbar">
-              <h2 className="heading-4">{group.widgetType}</h2>
+              <h2 className="heading-4">{widgetCatalog.find((entry) => entry.widgetType === group.widgetType)?.label ?? group.widgetType}</h2>
               <p className="body-m roma-toolbar-count">
                 {group.instances.length} {group.instances.length === 1 ? 'instance' : 'instances'}
               </p>

@@ -10,7 +10,7 @@ export function BillingDomain() {
       <section className="rd-canvas-module">
         <p className="body-m">Account: {accountContext.accountName}</p>
         <p className="body-s">Slug: {accountContext.accountSlug}</p>
-        <p className="body-m">Billing is not configured for this account yet.</p>
+        <p className="body-m">Billing provider integration is not connected in this environment. Roma shows the current plan only.</p>
       </section>
 
       <section className="rd-canvas-module">
@@ -20,12 +20,12 @@ export function BillingDomain() {
             <p className="body-s">{activeAccount.tier}</p>
           </article>
           <article className="roma-card">
-            <h2 className="heading-6">Billing status</h2>
-            <p className="body-s">Not available yet</p>
+            <h2 className="heading-6">Billing operations</h2>
+            <p className="body-s">Not connected</p>
           </article>
           <article className="roma-card">
             <h2 className="heading-6">What to do</h2>
-            <p className="body-s">Use Settings for account ownership changes and current plan visibility.</p>
+            <p className="body-s">Use Settings for account ownership and language controls.</p>
           </article>
         </div>
       </section>

@@ -1,3 +1,4 @@
+import { isRecord } from '@clickeen/ck-contracts';
 import type { Policy, PolicyProfile } from './types';
 import { FLAG_KEYS, PLAN_LIMIT_KEYS } from './registry';
 import { getEntitlementsMatrix } from './matrix';
@@ -11,10 +12,6 @@ export type PolicyEntitlementsSnapshot = {
   flags?: Record<string, boolean> | null;
   limits?: Record<string, number | null> | null;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function assertAllowedKeys(
   value: Record<string, unknown>,

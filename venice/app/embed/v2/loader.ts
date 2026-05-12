@@ -251,19 +251,31 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     }
   }
 
-	  function mountIframe() {
+	  function mountFrame(opts) {
+	    const targetEl = opts.targetEl;
+	    const targetInstanceId = opts.instanceId;
+	    const targetLocale = opts.locale;
+	    const targetTsParam = opts.tsParam || {};
+	    const maxWidthPx = opts.maxWidthPx;
+	    const minHeightPx = opts.minHeightPx;
+	    const loading = opts.loading || 'lazy';
+
 	    const iframe = document.createElement('iframe');
-	    iframe.src = embedUrl('/widget/' + encodeURIComponent(instanceId), fixedLocale ? { locale: fixedLocale } : {});
-	    iframe.setAttribute('loading', trigger === 'immediate' ? 'eager' : 'lazy');
+	    iframe.src = embedUrlFor(
+	      { tsParam: targetTsParam },
+	      '/widget/' + encodeURIComponent(targetInstanceId),
+	      targetLocale ? { locale: targetLocale } : {},
+	    );
+	    iframe.setAttribute('loading', loading);
 	    iframe.setAttribute('title', 'Clickeen widget');
 	    iframe.setAttribute('referrerpolicy', 'no-referrer');
 	    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
 	    iframe.style.width = '100%';
 	    iframe.style.border = '0';
-	    iframe.style.maxWidth = maxWidthValue === 0 ? 'none' : maxWidthValue + 'px';
-	    iframe.style.minHeight = minHeightValue + 'px';
+	    iframe.style.maxWidth = maxWidthPx === 0 ? 'none' : maxWidthPx + 'px';
+	    iframe.style.minHeight = minHeightPx + 'px';
 
-    container.replaceChildren(iframe);
+    targetEl.replaceChildren(iframe);
 
     let errorEl = null;
     const clearError = () => {
@@ -273,9 +285,9 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 
     const showFrameError = (title, message, details) => {
       if (errorEl) return;
-      errorEl = createHostErrorCard(title, message, details, maxWidthValue);
+      errorEl = createHostErrorCard(title, message, details, maxWidthPx);
       errorEl.style.marginTop = '10px';
-      container.appendChild(errorEl);
+      targetEl.appendChild(errorEl);
     };
 
     const onResizeMessage = (event) => {
@@ -285,9 +297,9 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
       if (!data || typeof data !== 'object' || data.type !== 'ck:resize') return;
       const h = Number(data.height);
       if (!Number.isFinite(h) || h <= 0) return;
-      const next = Math.max(minHeightValue, Math.min(12000, Math.ceil(h)));
+      const next = Math.max(minHeightPx, Math.min(12000, Math.ceil(h)));
       iframe.style.height = next + 'px';
-      container.style.minHeight = next + 'px';
+      targetEl.style.minHeight = next + 'px';
     };
     window.addEventListener('message', onResizeMessage);
 
@@ -320,6 +332,18 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
       setReadyOnce();
     });
   }
+
+	  function mountIframe() {
+	    mountFrame({
+	      targetEl: container,
+	      instanceId,
+	      locale: fixedLocale,
+	      tsParam,
+	      maxWidthPx: maxWidthValue,
+	      minHeightPx: minHeightValue,
+	      loading: trigger === 'immediate' ? 'eager' : 'lazy',
+	    });
+	  }
 
   function upsertSchema(targetInstanceId, schemaJsonLd) {
     if (!schemaJsonLd) return;
@@ -522,76 +546,14 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     hostEl.style.maxWidth = hostMaxWidth === 0 ? 'none' : hostMaxWidth + 'px';
     hostEl.style.minHeight = hostMinHeight + 'px';
 
-    const iframe = document.createElement('iframe');
-	    iframe.src = embedUrlFor(
-	      { tsParam: hostTsParam },
-	      '/widget/' + encodeURIComponent(pid),
-	      hostFixedLocale ? { locale: hostFixedLocale } : {},
-	    );
-    iframe.setAttribute('loading', 'lazy');
-    iframe.setAttribute('title', 'Clickeen widget');
-    iframe.setAttribute('referrerpolicy', 'no-referrer');
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
-    iframe.style.width = '100%';
-    iframe.style.border = '0';
-    iframe.style.maxWidth = hostMaxWidth === 0 ? 'none' : hostMaxWidth + 'px';
-    iframe.style.minHeight = hostMinHeight + 'px';
-
-    hostEl.replaceChildren(iframe);
-
-    let errorEl = null;
-    const clearError = () => {
-      if (errorEl && errorEl.parentNode) errorEl.parentNode.removeChild(errorEl);
-      errorEl = null;
-    };
-
-    const showFrameError = (title, message, details) => {
-      if (errorEl) return;
-      errorEl = createHostErrorCard(title, message, details, hostMaxWidth);
-      errorEl.style.marginTop = '10px';
-      hostEl.appendChild(errorEl);
-    };
-
-    const onResizeMessage = (event) => {
-      if (!event || event.origin !== origin) return;
-      if (!iframe.contentWindow || event.source !== iframe.contentWindow) return;
-      const data = event.data;
-      if (!data || typeof data !== 'object' || data.type !== 'ck:resize') return;
-      const h = Number(data.height);
-      if (!Number.isFinite(h) || h <= 0) return;
-      const next = Math.max(hostMinHeight, Math.min(12000, Math.ceil(h)));
-      iframe.style.height = next + 'px';
-      hostEl.style.minHeight = next + 'px';
-    };
-    window.addEventListener('message', onResizeMessage);
-
-    const onCspViolation = (event) => {
-      const dir = String((event && (event.effectiveDirective || event.violatedDirective)) || '').toLowerCase();
-      if (dir !== 'frame-src' && dir !== 'child-src') return;
-      const blocked = String((event && event.blockedURI) || '');
-      if (!blocked) return;
-      if (!blocked.startsWith(origin)) return;
-      showFrameError(
-        'Clickeen blocked by CSP',
-        'Your site Content Security Policy is blocking the embed iframe.',
-        'Allow in CSP: frame-src (or child-src) ' + origin,
-      );
-    };
-    document.addEventListener('securitypolicyviolation', onCspViolation);
-
-    const loadTimeout = setTimeout(() => {
-      showFrameError(
-        'Clickeen failed to load',
-        'The iframe did not finish loading. This is usually a CSP (frame-src) block or an ad-blocker.',
-        'If you use CSP, allow: frame-src ' + origin,
-      );
-    }, 8000);
-
-    iframe.addEventListener('load', () => {
-      clearTimeout(loadTimeout);
-      document.removeEventListener('securitypolicyviolation', onCspViolation);
-      clearError();
-      setReadyOnce();
+    mountFrame({
+      targetEl: hostEl,
+      instanceId: pid,
+      locale: hostFixedLocale,
+      tsParam: hostTsParam,
+      maxWidthPx: hostMaxWidth,
+      minHeightPx: hostMinHeight,
+      loading: 'lazy',
     });
 
     const hostOptimization = typeof hostEl.dataset.ckOptimization === 'string' ? hostEl.dataset.ckOptimization.trim().toLowerCase() : '';

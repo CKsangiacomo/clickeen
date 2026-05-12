@@ -4,38 +4,47 @@ Purpose: the execution checklist for building/refactoring a widget definition fo
 `tokyo/product/widgets/{widgetType}/` so it is compliant with the **shipped** platform.
 
 Canonical contracts (must match runtime):
+
 - `documentation/widgets/WidgetBuildContract.md`
 - `documentation/widgets/WidgetArchitecture.md`
 - `documentation/capabilities/seo-geo.md` (only if the widget exposes SEO/GEO)
 
 INPUTS
+
 - `widgetType` (explicit)
 - PRD (required)
 - Entitlements keys from `packages/ck-policy/entitlements.matrix.json`
 
 OUTPUTS
+
 - A compliant widget definition folder in `tokyo/product/widgets/{widgetType}/`.
 
 ---
 
 ## Step -2 - Scope + stop conditions
+
 OUTPUT
+
 - A clear declaration of scope:
   - Which widgetType(s) are being modified.
   - Which system(s) need changes: Tokyo only vs Tokyo+Bob/Roma/Tokyo-worker/Venice/Prague.
 
 STOP / ASK (do not proceed blindly)
+
 - Change requires a new Dieter primitive/token.
 - Change requires `tokyo/product/widgets/shared/*` edits.
 - Change requires Bob/Roma/Tokyo-worker/Venice/Prague edits and you don’t have an explicit PRD direction.
 
 GATE
+
 - `widgetType` is explicit and PRD exists.
 
 ---
 
 ## Step -1 - PRD and entitlements mapping
+
 OUTPUT
+
 - PRD includes an entitlements mapping for this widget (what is tier-gated, capped, or sanitized).
 - Mapping format (fixed-width table in code block):
 
@@ -48,17 +57,21 @@ items.group.large.max | limit | sections[].faqs[]   | count-total          | ops
 ```
 
 NOTES
+
 - Every row must correspond to an entry in `tokyo/product/widgets/{widgetType}/limits.json`; shared policy/ops/publish enforcement consumes that mapping.
 - Use active global entitlement keys from `packages/ck-policy/entitlements.matrix.json`. If a limit is product truth but enforcement is missing, mark that enforcement gap in `packages/ck-policy/src/registry.ts` instead of deleting the limit.
 - If the PRD expects UI gating (e.g. disabling a control), it must be explicit; otherwise keep UI generic and rely on shared policy plus owner-correct server enforcement.
 
 GATE
+
 - PRD exists and mapping is present.
 
 ---
 
 ## Step 0 - State model + Binding Map (before ToolDrawer)
+
 OUTPUT
+
 - State model summary:
   - Arrays list (`path[]`) and required stable IDs (`path[].id`).
   - Item pieces list (subparts) and whether each piece is `string` vs `richtext`.
@@ -73,12 +86,15 @@ OUTPUT
   - CSS var on a specific scope element
 
 GATE
+
 - One item can be described (render + update) without opening Bob.
 
 ---
 
 ## Step 1 - Defaults (`spec.json`)
+
 OUTPUT
+
 - Full `defaults` state shape (no runtime fallbacks/healing).
 - Required platform fields:
   - Stage/Pod defaults (`stage.*`, `pod.*`)
@@ -88,12 +104,15 @@ OUTPUT
 - `itemKey` declared in `spec.json` (`{widgetType}.item`) with pluralization support.
 
 GATE
+
 - Every control path exists in defaults (compile-time and runtime strictness depend on it).
 
 ---
 
 ## Step 2 - DOM (`widget.html`)
+
 OUTPUT
+
 - Required wrapper hierarchy:
   - `[data-role="stage"]` contains `[data-role="pod"]` contains `[data-role="root"][data-ck-widget="{widgetType}"]`
 - Stable `data-role` hooks for every runtime-mutated element.
@@ -105,23 +124,29 @@ OUTPUT
   - plus `../shared/surface.js` / `../shared/header.js` / `../shared/header.css` when those primitives are used
 
 GATE
+
 - Every runtime selector exists and is stable.
 
 ---
 
 ## Step 3 - Styling (`widget.css`)
+
 OUTPUT
+
 - Variants implemented via `data-*` selectors and CSS vars (no DOM reparenting).
 - Dieter tokens only (no ad-hoc values).
 - One breakpoint: `900px` (desktop vs mobile).
 
 GATE
+
 - Toggling variant/layout fields changes the visual output.
 
 ---
 
 ## Step 4 - Runtime (`widget.client.js`)
+
 OUTPUT
+
 - Deterministic `applyState(state)`:
   - Strict state assertions (fail-fast; fix the source).
   - Apply Stage/Pod and Typography first, then shared primitives, then widget-specific bindings.
@@ -134,12 +159,15 @@ OUTPUT
   - If inline HTML is supported, sanitize deterministically and strip unsafe tags/attrs.
 
 GATE
+
 - All Binding Map rows are implemented and visibly update DOM/CSS.
 
 ---
 
 ## Step 5 - Builder Editor Contract (`spec.json.editor`)
+
 OUTPUT
+
 - Panels: `content`, `layout`, `appearance`, `typography`, `settings` (no extras).
 - Panels are composed of one or more explicit cluster objects and field/shared nodes.
   - Use `label`/`labelKey` on clusters for meaningful collapsible section headers.
@@ -151,18 +179,22 @@ OUTPUT
   - Any manual edits to theme-controlled fields must reset `appearance.theme` to `custom` (editor behavior; runtime reads only final state).
 
 Compiler notes (current codebase behavior)
+
 - Bob renders shared Stage/Pod fields only when `spec.json.editor` declares the matching shared node.
 - Bob renders shared Header fields only when `spec.json.editor` declares the matching shared node.
 - Bob renders a standardized Typography panel only when `spec.json.editor` declares the `typography` shared panel and `defaults.typography.roles` exists.
 - Bob compiles theme controls from local `tokyo/product/themes/themes.json`; missing or malformed theme truth is a compiler error.
 
 GATE
+
 - Zero dead controls (validated via compile step in Step 8).
 
 ---
 
 ## Step 6 - `agent.md`
+
 OUTPUT
+
 - DOM parts map (scoped selectors; query within widget root).
 - Editable paths list (grouped by intent).
 - Array ops semantics (add/remove/reorder + required `id` fields).
@@ -171,53 +203,68 @@ OUTPUT
   - Anything outside allowlists (`localization.json`, `layers/*.allowlist.json` as applicable).
 
 GATE
+
 - Contract matches defaults, DOM hooks, and runtime behavior.
 
 ---
 
 ## Step 7 - Contract files
+
 OUTPUT
+
+- `catalog.json` with label, description, category, display order, and capabilities.
 - `limits.json` (unless PRD opts out).
 - `localization.json` with all translatable paths.
 - `layers/*.allowlist.json` only when that layer exists and is used.
 - `pages/*.json` (Prague widget pages: overview/features/examples/templates/pricing).
 
 GATE
+
 - Valid JSON.
 - No forbidden path segments (`__proto__`, `constructor`, `prototype`).
 - Allowlist paths resolve against `spec.json` defaults.
+- `node scripts/build-widget-catalog.mjs` regenerates `tokyo/product/widgets/manifest.json` and the Tokyo-worker SEO/GEO registry without hand-editing worker source.
 
 ---
 
 ## Step 7.1 - Prague pages + l10n pipeline
+
 OUTPUT
+
 - `tokyo/prague/pages/{widgetType}/*.json` exist and contain valid `blocks[]`.
 - `accountInstanceRef.instanceId` is present only when a Prague page intentionally points at a real account widget instance.
 - Page copy is compatible with Prague l10n allowlists. Prague page translations remain separate from account widget overlays.
 
 GATE (local)
+
 - `node scripts/prague-l10n/verify.mjs`
 
 ---
 
 ## Step 7.2 - SEO/GEO (Iframe++)
+
 Only applicable if the widget exposes `seoGeo.enabled` / an SEO/GEO toggle.
 
 OUTPUT
-- Venice schema/excerpt implementation:
-  - `venice/lib/schema/{widgetType}.ts` (excerptHtml required; schemaJsonLd only when semantically implemented)
-  - registered in `venice/lib/schema/index.ts`
+
+- Widget-owned schema/excerpt implementation:
+  - `tokyo/product/widgets/{widgetType}/seo-geo.ts` (excerptHtml required; schemaJsonLd only when semantically implemented)
+  - `catalog.json` declares `capabilities.seoGeo: true`
+  - `node scripts/build-widget-catalog.mjs` regenerates `tokyo-worker/src/generated/widget-seo-geo-registry.ts`
 - Gating matches `documentation/capabilities/seo-geo.md`:
   - `seoGeo.enabled !== true` → emit empty strings
   - widget-specific schema only when semantically safe
 
 GATE
+
 - `GET /renders/widgets/{instanceId}/meta/live/{locale}.json` returns expected SEO/GEO payloads by widget contract when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
 
 ---
 
 ## Step 8 - Verification (local)
+
 Required checks
+
 - Start stack: `bash scripts/dev-up.sh`
 - Repo validation:
   - `pnpm typecheck`
@@ -228,6 +275,7 @@ Required checks
   - `node scripts/prague-l10n/verify.mjs`
 
 Manual smoke (fast)
+
 - Bob preview: each panel control updates the preview deterministically.
 - Venice embed: `/widget/{instanceId}` loads without console errors.
 - Localization: switching locale uses only current ready overlays for the active base fingerprint; missing current overlays fail visibly instead of silently falling back.

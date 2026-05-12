@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { sha256Hex } from '@clickeen/ck-contracts/security';
 import { parseLimitsSpec } from '@clickeen/ck-policy';
 import { compileWidgetServer } from '../compiler.server';
 import type { RawWidget } from '../compiler.shared';
@@ -29,14 +30,6 @@ function hasStrongFreshnessSignal(validator: { etag: string; lastModified: strin
 
 function buildSourceSignal(label: string, status: number, validator: { etag: string; lastModified: string }) {
   return `${label}:status=${status};etag=${validator.etag || '-'};lm=${validator.lastModified || '-'}`;
-}
-
-async function sha256Hex(value: string) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
 }
 
 export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { params: Promise<{ widgetname: string }> }) {

@@ -1,8 +1,8 @@
+import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
 } from './tokyo-product-control';
-import { validateWidgetConfigContract, type WidgetConfigContractResult } from './widget-config-contract';
 
 // Roma's direct instance path is the server boundary for one boring product flow:
 // call Tokyo's named account-instance verbs and surface their result.
@@ -47,6 +47,16 @@ export type TokyoAccountInstanceIndex = {
   publishedCount: number;
 };
 
+export type TokyoWidgetCatalogEntry = {
+  widgetType: string;
+  label: string;
+  description: string;
+  category: string;
+  capabilities: {
+    seoGeo: boolean;
+  };
+};
+
 type TokyoL10nIntent = {
   baseLocale: string;
   desiredLocales: string[];
@@ -56,16 +66,6 @@ type TokyoL10nIntent = {
 type TokyoJsonResult =
   | { ok: true; payload: unknown; status: number }
   | RouteFailure;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
 
 function resolveTokyoControlErrorDetail(payload: unknown, fallback: string): string {
   if (isRecord(payload) && isRecord(payload.error)) {
@@ -152,21 +152,6 @@ function invalidTokyoPayload(detail: string): RouteFailure {
   };
 }
 
-function buildWidgetConfigContractFailure(
-  contract: Extract<WidgetConfigContractResult, { ok: false }>,
-): RouteFailure {
-  return {
-    ok: false,
-    status: 422,
-    error: {
-      kind: 'VALIDATION',
-      reasonKey: contract.reasonKey,
-      paths: contract.issues.map((issue) => issue.path),
-      detail: contract.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '),
-    },
-  };
-}
-
 function normalizeTranslationFollowup(value: unknown):
   | { ok: true }
   | { ok: false; reasonKey: string; detail: string; status: number } {
@@ -216,6 +201,32 @@ function normalizeTokyoIndexEntries(raw: unknown): TokyoAccountInstanceIndexEntr
   const entries = raw.map((entry) => normalizeTokyoIndexEntry(entry));
   if (entries.some((entry) => !entry)) return null;
   return entries as TokyoAccountInstanceIndexEntry[];
+}
+
+function normalizeTokyoWidgetCatalogEntry(raw: unknown): TokyoWidgetCatalogEntry | null {
+  if (!isRecord(raw)) return null;
+  const widgetType = asTrimmedString(raw.widgetType);
+  const label = asTrimmedString(raw.label);
+  const description = asTrimmedString(raw.description);
+  const category = asTrimmedString(raw.category);
+  const capabilitiesRaw = isRecord(raw.capabilities) ? raw.capabilities : {};
+  if (!widgetType || !label || !description || !category) return null;
+  return {
+    widgetType,
+    label,
+    description,
+    category,
+    capabilities: {
+      seoGeo: capabilitiesRaw.seoGeo === true,
+    },
+  };
+}
+
+function normalizeTokyoWidgetCatalogEntries(raw: unknown): TokyoWidgetCatalogEntry[] | null {
+  if (!Array.isArray(raw)) return null;
+  const entries = raw.map((entry) => normalizeTokyoWidgetCatalogEntry(entry));
+  if (entries.some((entry) => !entry)) return null;
+  return entries as TokyoWidgetCatalogEntry[];
 }
 
 function normalizeSavedPayload(payload: unknown):
@@ -360,11 +371,6 @@ export async function createAccountInstanceInTokyo(args: {
 
   const saved = normalizeSavedPayload(result.payload);
   if (!saved) return invalidTokyoPayload('invalid Tokyo create instance payload');
-  const contract = validateWidgetConfigContract({
-    widgetType: saved.row.widgetType,
-    config: saved.config,
-  });
-  if (!contract.ok) return buildWidgetConfigContractFailure(contract);
   return { ok: true, value: saved };
 }
 
@@ -390,12 +396,6 @@ export async function saveAccountInstanceInTokyo(args: {
     }
   | RouteFailure
 > {
-  const contract = validateWidgetConfigContract({
-    widgetType: args.widgetType,
-    config: args.config,
-  });
-  if (!contract.ok) return buildWidgetConfigContractFailure(contract);
-
   const result = await fetchTokyoJson({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
@@ -613,11 +613,6 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
       },
     };
   }
-  const contract = validateWidgetConfigContract({
-    widgetType: saved.value.row.widgetType,
-    config: saved.value.config,
-  });
-  if (!contract.ok) return buildWidgetConfigContractFailure(contract);
   return {
     ok: true,
     value: {
@@ -714,6 +709,33 @@ export async function loadTokyoAccountInstanceIndex(args: {
   };
 }
 
+export async function loadTokyoWidgetCatalog(args: {
+  accountId: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+}): Promise<
+  | { ok: true; value: { widgets: TokyoWidgetCatalogEntry[] } }
+  | RouteFailure
+> {
+  const result = await fetchTokyoJson({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
+    path: '/__internal/renders/widgets/catalog.json',
+    method: 'GET',
+    fallbackDetail: 'tokyo_widget_catalog_http_error',
+    fallbackReasonKey: 'coreui.errors.db.readFailed',
+  });
+  if (!result.ok) return result;
+
+  const payload = isRecord(result.payload) ? result.payload : {};
+  const widgets = normalizeTokyoWidgetCatalogEntries(payload.widgets);
+  if (!widgets) {
+    return invalidTokyoPayload('invalid Tokyo widget catalog payload');
+  }
+  return { ok: true, value: { widgets } };
+}
+
 export async function saveAccountInstanceDirect(args: {
   accountId: string;
   instanceId: string;
@@ -733,12 +755,6 @@ export async function saveAccountInstanceDirect(args: {
   | { ok: true; previousBaseFingerprint: string | null; baseFingerprint: string | null }
   | RouteFailure
 > {
-  const contract = validateWidgetConfigContract({
-    widgetType: args.widgetType,
-    config: args.config,
-  });
-  if (!contract.ok) return buildWidgetConfigContractFailure(contract);
-
   try {
     return {
       ok: true,

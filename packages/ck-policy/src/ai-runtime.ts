@@ -9,6 +9,7 @@ import {
   type AiProvider,
   type AiRegistryEntry,
 } from '@clickeen/ck-contracts/ai';
+import { isRecord } from '@clickeen/ck-contracts';
 import rawRuntimeMatrix from '../ai-runtime.matrix.json';
 import { getEntitlementsMatrix } from './matrix';
 import type { PolicyProfile } from './types';
@@ -55,10 +56,6 @@ export type AgentRuntimePolicyUi = {
   selectedModel?: AiModelRef;
   modelOptions: AiModelOption[];
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value != null && typeof value === 'object' && !Array.isArray(value);
-}
 
 function assertFiniteNumber(value: unknown, label: string): asserts value is number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {

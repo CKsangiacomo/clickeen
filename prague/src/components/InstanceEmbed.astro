@@ -193,8 +193,8 @@ const brandSvgs = {
       ) : null}
     </>
   ) : (
-    <div class="ck-media ck-instanceEmbed__stub">
-      Missing <code>PUBLIC_VENICE_URL</code> — cannot embed {instanceId}
+    <div class="ck-media ck-instanceEmbed__fallback">
+      Widget preview is unavailable right now.
     </div>
   )}
 </div>
@@ -444,7 +444,7 @@ const brandSvgs = {
     height: 420px;
   }
 
-  .ck-instanceEmbed__stub {
+  .ck-instanceEmbed__fallback {
     min-height: 240px;
     display: flex;
     align-items: center;
@@ -519,7 +519,6 @@ const brandSvgs = {
     function titleCaseWidgetType(input) {
       const s = String(input || '').trim();
       if (!s) return 'Widget';
-      if (s.toLowerCase() === 'faq') return 'FAQ';
 
       const spaced = s
         .replace(/[_-]+/g, ' ')

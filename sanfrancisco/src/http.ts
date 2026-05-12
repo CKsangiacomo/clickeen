@@ -1,4 +1,7 @@
+import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import type { AIError } from './types';
+
+export { asTrimmedString, isRecord };
 
 export class HttpError extends Error {
   readonly status: number;
@@ -33,18 +36,8 @@ export async function readJson(request: Request): Promise<unknown> {
   }
 }
 
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 export function asString(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
-}
-
-export function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const s = value.trim();
-  return s ? s : null;
 }
 
 export function asNumber(value: unknown): number | null {

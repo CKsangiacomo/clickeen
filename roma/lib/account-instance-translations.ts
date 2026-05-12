@@ -1,3 +1,4 @@
+import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
@@ -24,16 +25,6 @@ type RouteFailure = {
     detail?: string;
   };
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
 
 function resolveTokyoControlErrorDetail(payload: unknown, fallback: string): string {
   if (isRecord(payload) && isRecord(payload.error)) {

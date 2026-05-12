@@ -1,4 +1,7 @@
+import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import { resolveBerlinBaseUrl } from './env/berlin';
+
+export { asTrimmedString, isRecord };
 
 export type BerlinAccountPublishContainmentResult =
   | {
@@ -26,16 +29,6 @@ export type BerlinProductJsonResult<T> =
       reasonKey: string;
       detail?: string;
     };
-
-export function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 export function parseJsonTextOrNull(text: string): unknown | null {
   if (!text) return null;

@@ -1,4 +1,5 @@
 import type { AiGrantPolicy, AiModelRef, AiProvider } from '@clickeen/ck-contracts/ai';
+import { timingSafeEqualBytes } from '@clickeen/ck-contracts/security';
 import type { AIGrant } from './types';
 import { HttpError, asNumber, asString, isRecord } from './http';
 
@@ -19,13 +20,6 @@ function base64UrlToBytes(input: string): Uint8Array {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
-}
-
-function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
-  return diff === 0;
 }
 
 async function hmacSha256(secret: string, message: string): Promise<Uint8Array> {
@@ -94,7 +88,7 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
 
   const expectedSig = await hmacSha256(secret, `v1.${payloadB64}`);
   const providedSig = base64UrlToBytes(sigB64);
-  if (!timingSafeEqual(expectedSig, providedSig)) {
+  if (!timingSafeEqualBytes(expectedSig, providedSig)) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant signature mismatch' });
   }
 

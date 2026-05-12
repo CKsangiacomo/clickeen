@@ -1,6 +1,6 @@
 import { isUuid } from '@clickeen/ck-contracts';
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
+import { proxyBerlinTextResponse } from '@roma/lib/berlin-proxy-route';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -26,45 +26,11 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     );
   }
 
-  try {
-    const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
-    const upstream = await fetch(
-      `${berlinBase}/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations/${encodeURIComponent(invitationId)}`,
-      {
-        method: 'DELETE',
-        headers: {
-          authorization: `Bearer ${current.value.accessToken}`,
-          accept: 'application/json',
-        },
-        cache: 'no-store',
-      },
-    );
-    const body = await upstream.text().catch(() => '');
-    return withSession(
-      request,
-      new NextResponse(body, {
-        status: upstream.status,
-        headers: {
-          'content-type': upstream.headers.get('content-type') || 'application/json; charset=utf-8',
-        },
-      }),
-      current.value.setCookies,
-    );
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.auth.contextUnavailable',
-            detail,
-          },
-        },
-        { status: 502 },
-      ),
-      current.value.setCookies,
-    );
-  }
+  return proxyBerlinTextResponse({
+    request,
+    accessToken: current.value.accessToken,
+    setCookies: current.value.setCookies,
+    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations/${encodeURIComponent(invitationId)}`,
+    method: 'DELETE',
+  });
 }

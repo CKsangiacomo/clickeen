@@ -6,8 +6,12 @@
   "dependencies": {
     "@clickeen/l10n": "workspace:*"
   },
+  "scripts": {
+    "test": "node --test --experimental-strip-types src/security.test.ts"
+  },
   "exports": {
     ".": "./src/index.ts",
-    "./ai": "./src/ai.ts"
+    "./ai": "./src/ai.ts",
+    "./security": "./src/security.ts"
   }
 }

@@ -4,6 +4,7 @@ import {
   verifyRomaAccountAuthzCapsule,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
+import { timingSafeEqualString } from '@clickeen/ck-contracts/security';
 import { json } from './http';
 import type { Env } from './types';
 
@@ -34,15 +35,6 @@ function normalizeInternalServiceId(value: string | null): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim().toLowerCase();
   return normalized || null;
-}
-
-function timingSafeEqual(left: string, right: string): boolean {
-  if (left.length !== right.length) return false;
-  let mismatch = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
-  }
-  return mismatch === 0;
 }
 
 function resolveBerlinJwksUrl(env: Env): string {
@@ -138,7 +130,7 @@ export function requireDevAuth(
   if (!token) return json({ error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } }, { status: 401 });
   const internalServiceId = normalizeInternalServiceId(req.headers.get(INTERNAL_SERVICE_HEADER));
   if (
-    !timingSafeEqual(token, expected) ||
+    !timingSafeEqualString(token, expected) ||
     !internalServiceId ||
     !(options?.allowTrustedInternalServices ?? []).includes(internalServiceId)
   ) {

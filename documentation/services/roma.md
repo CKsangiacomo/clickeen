@@ -188,8 +188,8 @@ Roma `widgets` is the product surface that brokers per-instance serve-state chan
 Usage, billing, and AI domain behavior:
 
 - `UsageDomain` reads live storage usage through `/api/account/usage`, and that route reads the same Tokyo-worker asset authority used by Assets and storage-budget checks. Bootstrap provides only plan/maxima context.
-- `BillingDomain` is a placeholder surface today; billing is not configured in current environments.
-- `AiDomain` remains bootstrap-driven and renders plan/profile summaries from bootstrap authz context (no extra policy/entitlements fetches).
+- `BillingDomain` is an honest current-plan surface today; billing provider operations are not configured in current environments.
+- `AiDomain` remains bootstrap-driven and renders plan/profile summaries from bootstrap authz context (no extra policy/entitlements fetches). Copilot execution itself remains a Builder flow.
 
 Assets domain behavior:
 

@@ -1,8 +1,9 @@
 import { resolvePolicyFromEntitlementsSnapshot, type RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
-import faqSpec from '../../../../tokyo/product/widgets/faq/spec.json';
-import countdownSpec from '../../../../tokyo/product/widgets/countdown/spec.json';
-import logoShowcaseSpec from '../../../../tokyo/product/widgets/logoshowcase/spec.json';
 import type { Env } from '../../types';
+import {
+  resolveWidgetDefaults,
+  validateWidgetConfigContract,
+} from '../widget-catalog';
 import {
   enqueueAccountInstanceSyncJob,
   syncAccountInstanceAndRecordStatus,
@@ -22,18 +23,21 @@ export class AccountInstanceTransitionError extends Error {
   status: number;
   kind: 'VALIDATION' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
   reasonKey: string;
+  paths?: string[];
 
   constructor(args: {
     status: number;
     kind: AccountInstanceTransitionError['kind'];
     reasonKey: string;
     detail?: string;
+    issues?: Array<{ path: string }>;
   }) {
     super(args.detail ?? args.reasonKey);
     this.name = 'AccountInstanceTransitionError';
     this.status = args.status;
     this.kind = args.kind;
     this.reasonKey = args.reasonKey;
+    this.paths = args.issues?.map((issue) => issue.path);
   }
 }
 
@@ -41,20 +45,6 @@ type AccountAuthzSnapshot = Pick<
   RomaAccountAuthzCapsulePayload,
   'profile' | 'role' | 'entitlements'
 >;
-
-type WidgetSpecWithDefaults = {
-  defaults?: unknown;
-};
-
-const WIDGET_SPECS: Record<string, WidgetSpecWithDefaults> = {
-  faq: faqSpec,
-  countdown: countdownSpec,
-  logoshowcase: logoShowcaseSpec,
-};
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function assertScopedIds(accountIdRaw: string, instanceIdRaw: string): {
   accountId: string;
@@ -105,21 +95,22 @@ function mintAccountInstanceId(): string {
   return `ins_${crypto.randomUUID()}`;
 }
 
-function cloneRecord(value: Record<string, unknown>): Record<string, unknown> {
-  return typeof structuredClone === 'function'
-    ? (structuredClone(value) as Record<string, unknown>)
-    : (JSON.parse(JSON.stringify(value)) as Record<string, unknown>);
-}
-
 function normalizeDisplayName(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed.length > 0 && trimmed.length <= 120 ? trimmed : null;
 }
 
-function resolveWidgetDefaults(widgetType: string): Record<string, unknown> | null {
-  const spec = WIDGET_SPECS[widgetType];
-  return spec && isRecord(spec.defaults) ? cloneRecord(spec.defaults) : null;
+function assertValidWidgetConfig(widgetType: string, config: unknown): void {
+  const contract = validateWidgetConfigContract({ widgetType, config });
+  if (contract.ok) return;
+  throw new AccountInstanceTransitionError({
+    status: 422,
+    kind: 'VALIDATION',
+    reasonKey: contract.reasonKey,
+    detail: contract.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '),
+    issues: contract.issues,
+  });
 }
 
 async function enqueueTranslationFollowup(args: {
@@ -217,6 +208,7 @@ export async function saveAccountInstanceTransition(args: {
       detail: `submitted widgetType "${submittedWidgetType}" does not match Tokyo instance widgetType "${existingWidgetType}"`,
     });
   }
+  assertValidWidgetConfig(existingWidgetType, args.config);
 
   const saved = await writeSavedRenderConfig({
     env: args.env,

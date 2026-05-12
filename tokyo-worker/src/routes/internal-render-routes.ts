@@ -19,9 +19,12 @@ import {
   saveAccountInstanceTransition,
   syncLiveSurface,
   unpublishAccountInstanceTransition,
-  writeConfigPack,
   writeSavedRenderConfig,
 } from '../domains/render';
+import {
+  listWidgetCatalogEntries,
+  validateWidgetConfigContract,
+} from '../domains/widget-catalog';
 import {
   enqueueAccountInstanceSyncJob,
   handleSyncAccountInstance,
@@ -33,7 +36,6 @@ import {
   isValidScopedInstance,
   respondMethodNotAllowed,
   respondValidation,
-  sha256StableJson,
   type TokyoRouteArgs,
 } from '../route-helpers';
 import { roleRank } from '../domains/assets';
@@ -78,6 +80,7 @@ function transitionErrorResponse(error: unknown): Response {
           kind: error.kind,
           reasonKey: error.reasonKey,
           detail: error.message,
+          ...(error.paths?.length ? { paths: error.paths } : {}),
         },
       },
       { status: error.status },
@@ -344,6 +347,24 @@ export async function tryHandleInternalRenderRoutes(
         publishedCount: accountIndex.value.entries.filter((entry) => entry.publishStatus === 'published').length,
       }),
     );
+  }
+
+  if (pathname === '/__internal/renders/widgets/catalog.json') {
+    const accountId = String(req.headers.get('x-account-id') || '').trim();
+    if (!isUuid(accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'GET') {
+      return respondMethodNotAllowed(respond);
+    }
+    const authErr = await authorizeRomaAccountScopedRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+    return respond(json({ ok: true, widgets: listWidgetCatalogEntries() }));
   }
 
   if (pathname === '/__internal/renders/widgets/index/rebuild.json') {
@@ -753,6 +774,25 @@ export async function tryHandleInternalRenderRoutes(
                 }
               | null)
           : undefined;
+      const contract = validateWidgetConfigContract({
+        widgetType: body.widgetType,
+        config: body.config,
+      });
+      if (!contract.ok) {
+        return respond(
+          json(
+            {
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: contract.reasonKey,
+                paths: contract.issues.map((issue) => issue.path),
+                detail: contract.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '),
+              },
+            },
+            { status: 422 },
+          ),
+        );
+      }
       const savedWrite = await writeSavedRenderConfig({
         env,
         instanceId: instanceId!,
@@ -785,56 +825,6 @@ export async function tryHandleInternalRenderRoutes(
     }
 
     return respondMethodNotAllowed(respond);
-  }
-
-  const internalRenderConfigPackWriteMatch = pathname.match(
-    /^\/__internal\/renders\/widgets\/([^/]+)\/config-pack$/,
-  );
-  if (internalRenderConfigPackWriteMatch) {
-    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderConfigPackWriteMatch[1]));
-    const accountId = String(req.headers.get('x-account-id') || '').trim();
-    if (!isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'POST') {
-      return respondMethodNotAllowed(respond);
-    }
-
-    const authErr = await authorizeRomaAccountScopedRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'editor',
-    });
-    if (authErr) return respond(authErr);
-
-    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-    const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-    const configPack =
-      isRecord(body?.configPack) ? (body.configPack as Record<string, unknown>) : null;
-    if (!widgetType || !configPack) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-
-    const configFp = await sha256StableJson(configPack);
-    await writeConfigPack(env, {
-      v: 1,
-      kind: 'write-config-pack',
-      instanceId: instanceId!,
-      accountId,
-      widgetType,
-      configFp,
-      configPack,
-    });
-
-    return respond(
-      json({
-        instanceId,
-        widgetType,
-        configFp,
-        written: true,
-      }),
-    );
   }
 
   return null;

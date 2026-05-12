@@ -85,7 +85,7 @@ const headerPrimitives = assertPrimitives(
               embedMode={accountInstanceRef.embedMode}
             />
           ) : (
-            <div class="ck-media ck-splitCreative__stub">Missing accountInstanceRef.instanceId</div>
+            <div class="ck-media ck-splitCreative__fallback">Widget preview unavailable</div>
           )}
         </div>
       </div>
@@ -115,7 +115,7 @@ const headerPrimitives = assertPrimitives(
               embedMode={accountInstanceRef.embedMode}
             />
           ) : (
-            <div class="ck-media ck-splitCreative__stub">Missing accountInstanceRef.instanceId</div>
+            <div class="ck-media ck-splitCreative__fallback">Widget preview unavailable</div>
           )}
         </div>
       </div>
@@ -154,7 +154,7 @@ const headerPrimitives = assertPrimitives(
     gap: var(--space-3);
   }
 
-  .ck-splitCreative__stub {
+  .ck-splitCreative__fallback {
     width: 100%;
     min-height: 280px;
     display: flex;

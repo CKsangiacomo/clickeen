@@ -167,7 +167,7 @@ Between open and save:
 
 | Term           | Description                                                                                              |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
-| `instanceId`     | Instance unique identifier used across Tokyo saved state, live state, and projection rows                 |
+| `instanceId`   | Instance unique identifier used across Tokyo saved state, live state, and projection rows                |
 | `widgetType`   | Widget identifier referencing the definition (e.g., "faq")                                               |
 | `config`       | Persisted base instance values; active product account reads/writes use Tokyo's saved authoring snapshot |
 | `instanceData` | Working copy of config in Bob during editing                                                             |
@@ -199,19 +199,19 @@ Publishing semantics: `published` / `unpublished` is a Tokyo instance serve-stat
 
 ## Systems
 
-| System            | Purpose                                                         | Runtime                         | Repo Path       |
-| ----------------- | --------------------------------------------------------------- | ------------------------------- | --------------- |
-| **Prague**        | Marketing site + gallery + demo/funnel surfaces                 | Cloudflare Pages                | `prague/`       |
-| **Bob**           | Account Builder editor runtime; the real widget authoring UI    | Cloudflare Pages (Next.js)      | `bob/`          |
-| **Roma**          | Current-account product shell + Builder host orchestration      | Cloudflare Pages (Next.js)      | `roma/`         |
+| System            | Purpose                                                                         | Runtime                         | Repo Path       |
+| ----------------- | ------------------------------------------------------------------------------- | ------------------------------- | --------------- |
+| **Prague**        | Marketing site + gallery + demo/funnel surfaces                                 | Cloudflare Pages                | `prague/`       |
+| **Bob**           | Account Builder editor runtime; the real widget authoring UI                    | Cloudflare Pages (Next.js)      | `bob/`          |
+| **Roma**          | Current-account product shell + Builder host orchestration                      | Cloudflare Pages (Next.js)      | `roma/`         |
 | **DevStudio**     | Internal toolbench for platform curation, verification, and local utility pages | Local Vite toolbench            | `admin/`        |
-| **Venice**        | SSR embed runtime                                               | Cloudflare Pages (Next.js Edge) | `venice/`       |
-| **San Francisco** | AI Workforce OS (agents, learning)                              | Workers (D1/KV/R2/Queues)       | `sanfrancisco/` |
-| **Michael**       | Database                                                        | Supabase Postgres               | `supabase/`     |
-| **Dieter**        | Design system                                                   | Build artifacts in Tokyo        | `dieter/`       |
-| **Tokyo**         | Asset storage & CDN                                             | Cloudflare R2                   | `tokyo/`        |
-| **Tokyo Worker**  | Account-owned asset uploads + l10n publisher + render snapshots | Cloudflare Workers + R2         | `tokyo-worker/` |
-| **Atlas**         | Edge config cache (read-only)                                   | Cloudflare KV                   | —               |
+| **Venice**        | SSR embed runtime                                                               | Cloudflare Pages (Next.js Edge) | `venice/`       |
+| **San Francisco** | AI Workforce OS (agents, learning)                                              | Workers (D1/KV/R2/Queues)       | `sanfrancisco/` |
+| **Michael**       | Database                                                                        | Supabase Postgres               | `supabase/`     |
+| **Dieter**        | Design system                                                                   | Build artifacts in Tokyo        | `dieter/`       |
+| **Tokyo**         | Asset storage & CDN                                                             | Cloudflare R2                   | `tokyo/`        |
+| **Tokyo Worker**  | Account-owned asset uploads + l10n publisher + render snapshots                 | Cloudflare Workers + R2         | `tokyo-worker/` |
+| **Atlas**         | Edge config cache (read-only)                                                   | Cloudflare KV                   | —               |
 
 ---
 
@@ -318,10 +318,10 @@ Edits are expressed as ops (no direct mutation):
 
 ```typescript
 type WidgetOp =
-  | { op: 'set'; path: string; value: unknown }
-  | { op: 'insert'; path: string; index: number; value: unknown }
-  | { op: 'remove'; path: string; index: number }
-  | { op: 'move'; path: string; from: number; to: number };
+  | { op: "set"; path: string; value: unknown }
+  | { op: "insert"; path: string; index: number; value: unknown }
+  | { op: "remove"; path: string; index: number }
+  | { op: "move"; path: string; from: number; to: number };
 ```
 
 All ops are validated against `compiled.controls[]` allowlist. Invalid ops are rejected fail-closed.
@@ -360,11 +360,11 @@ Canonical reference:
 
 ### Widgets
 
-| Widget        | Status    | Components Used                                                                                                                               |
-| ------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Widget        | Status    | Components Used                                                                                                                                       |
+| ------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | FAQ           | ✅ Active | See `tokyo/product/widgets/faq/spec.json` (object-manager, repeater, dropdown-edit, toggle, textfield, dropdown-fill, dropdown-actions, choice-tiles) |
-| Countdown     | ✅ Active | See `tokyo/product/widgets/countdown/spec.json`                                                                                        |
-| Logo Showcase | ✅ Active | See `tokyo/product/widgets/logoshowcase/spec.json`                                                                                     |
+| Countdown     | ✅ Active | See `tokyo/product/widgets/countdown/spec.json`                                                                                                       |
+| Logo Showcase | ✅ Active | See `tokyo/product/widgets/logoshowcase/spec.json`                                                                                                    |
 
 ### Dieter Components
 
@@ -420,17 +420,18 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 ### Environments (Canonical)
 
-| Environment           | Bob                     | Roma                            | Tokyo                   | San Francisco                  | DevStudio               |
-| --------------------- | ----------------------- | ------------------------------- | ----------------------- | ------------------------------ | ----------------------- |
-| **Local**             | `http://localhost:3000` | `https://roma.dev.clickeen.com` | `http://localhost:4000` | `—`                            | `http://localhost:5173` |
-| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com`   | `https://roma.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `— local only`                       |
-| **UAT**                     | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
-| **Limited GA**              | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
-| **GA**                      | `https://app.clickeen.com`       | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only             |
+| Environment                 | Bob                            | Roma                            | Tokyo                            | San Francisco                           | DevStudio                |
+| --------------------------- | ------------------------------ | ------------------------------- | -------------------------------- | --------------------------------------- | ------------------------ |
+| **Local**                   | `http://localhost:3000`        | `https://roma.dev.clickeen.com` | `http://localhost:4000`          | `—`                                     | `http://localhost:5173`  |
+| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `— local only`           |
+| **UAT**                     | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
+| **Limited GA**              | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
+| **GA**                      | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
 
 UAT / Limited GA / GA are **release stages** (account-level exposure controls), not separate infrastructure.
 
 Pages deploy rule:
+
 - `bob`, `roma`, `venice`, and `prague` deploy through **Cloudflare Pages Git build only**.
 - GitHub Actions may verify Pages build contracts, but are not the Pages deploy plane and must not create Pages projects, sync Pages secrets, or deploy Pages artifacts.
 - The manual Pages project/env/host contract is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
@@ -439,6 +440,7 @@ Pages deploy rule:
 ### Deterministic compilation contract (anti-drift)
 
 - **Dieter bundling manifest (authoritative)**: `tokyo/product/dieter/manifest.json` after PRD 79 Phase 1 (public `/dieter/**` can remain a serving route)
+- **Widget catalog manifest (generated)**: `tokyo/product/widgets/manifest.json`, built from widget-owned `catalog.json` + `spec.json` by `scripts/build-widget-catalog.mjs`; Tokyo-worker consumes the manifest and generated SEO/GEO registry instead of hand-registering widgets.
 - **Rule**: ToolDrawer `type="..."` drives required bundles; CSS classnames never add bundles.
 - **Verification plane**: compilation discipline is enforced through repo typecheck/build and Cloudflare verification, not a localhost Bob HTTP gate.
 

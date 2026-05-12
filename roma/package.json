@@ -7,7 +7,8 @@
     "build": "next build",
     "build:cf": "node ../scripts/build-roma-cf.mjs",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@clickeen/bob": "workspace:*",

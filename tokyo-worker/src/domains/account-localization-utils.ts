@@ -1,15 +1,7 @@
-import type { LocalizationOp } from '@clickeen/ck-contracts';
+import { asTrimmedString, isRecord, type LocalizationOp } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken, type AllowlistEntry } from '@clickeen/l10n';
 
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-export function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
+export { asTrimmedString, isRecord };
 
 export function parseBearerToken(value: string | null): string | null {
   if (!value) return null;

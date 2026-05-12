@@ -18,6 +18,7 @@ Prior simplification PRDs:
 - `Execution_Pipeline_Docs/02-Executing/090__PRD__Berlin_World_Class_Auth_System.md`
 - `Execution_Pipeline_Docs/02-Executing/091__PRD__Codebase_And_Architecture_Simplification_Closure.md`
 Additional audit source: `/Users/pietro_macpro_home/Downloads/Clickeen_simplification_audit.md`, reviewed 2026-05-12 against local `HEAD` `09e7d109`
+Peer review source: `/Users/pietro_macpro_home/Downloads/PRD_092_review.md`, reviewed 2026-05-12 against local `HEAD` `0e6d620f`
 
 ## 1. Purpose
 
@@ -54,6 +55,14 @@ The additional simplification audit adds a sharper implementation lens:
 - several small single-caller files are PRD scar tissue rather than architecture;
 - Dieter dropdown lifecycle needs a deliberate design primitive, not an accidental cleanup;
 - generic overlay abstractions are a Phase B concern, not a GA blocker.
+
+The peer review confirms the direction but changes execution strategy:
+
+- PRD 092 must not execute as one monolithic cleanup pass.
+- Wave A is boring simplification and verification hardening.
+- Wave B is structural widget-catalog, SEO/GEO capability, policy, and Tokyo boundary work.
+- Meta-work must be bounded to files losing, moving, or gaining authority.
+- Roma widget-config validation and Tokyo-worker validation must not coexist as two product authorities.
 
 ## 2. Corrected Simplification Doctrine
 
@@ -229,9 +238,11 @@ Forbidden simplification:
 
 ## 5. Simplification Targets
 
-### Target A - Evidence Baseline And Classification Matrix
+### Target A - Evidence Baseline And Bounded Classification Matrix
 
-Before any code changes, create a classification matrix for all proposed simplification targets.
+Before any code changes, create a classification matrix for files that will lose, move, or gain authority.
+
+Do not build a full inventory of every file mentioned by the PRD. Files that are read, verified, or intentionally preserved do not need matrix rows unless the execution slice changes their authority.
 
 Required columns:
 
@@ -248,6 +259,8 @@ Required columns:
 Acceptance:
 
 - No target is executed without a classification.
+- The matrix is bounded to changed files and authority-moving files.
+- The Slice 0 matrix is the execution snapshot; later slices update it only when new evidence changes the planned authority.
 - Any "delete" action must cite why the target is not documented product intent, deliberate scaffold, current product behavior, enforcement architecture, or operator repair.
 
 ### Target B - Verification Surface
@@ -260,18 +273,18 @@ Required audit:
 - Root `pnpm lint` coverage by package.
 - Root `pnpm test` coverage by package.
 - Direct build/typecheck availability for `bob`, `roma`, `venice`, `tokyo-worker`, `sanfrancisco`, `berlin`, `prague`, `dieter`.
-- Cloud-dev runtime verify workflow expectations versus current product routes.
 
 Required correction:
 
 - Add missing package scripts only where they run real checks.
 - Avoid no-op scripts that create false green.
-- Product-path smoke must verify current product routes and report credential/env blockers explicitly.
+- Product-path smoke is limited to local checks or explicitly documented credential/env blockers.
 
 Acceptance:
 
 - Every deployable service has a named local verification command.
 - Root verification either covers the service or documents why a direct command must be run.
+- Cloud-dev/GitHub Actions workflow repair is out of scope unless a local verification script is demonstrably stale because of the workflow.
 
 ### Target C - Venice Loader Internal Simplification
 
@@ -355,9 +368,11 @@ Acceptance:
 - No public page renders accidental "stub" copy.
 - Intentional scaffold states are documented in product language.
 
-### Target F - Policy Enforcement Readiness
+### Target F - Customer-Facing Policy Enforcement Readiness
 
-Create an enforcement readiness map for every policy key in `packages/ck-policy`.
+Create an enforcement readiness map for customer-facing policy keys that are advertised, surfaced, or used to gate product behavior before GA.
+
+Do not turn this target into a consulting-style inventory of every policy key. Registry-wide cleanup is a follow-up unless a key is visible to customers or blocks another PRD 092 slice.
 
 Required columns:
 
@@ -381,6 +396,7 @@ Acceptance:
 
 - `embed.seoGeo.enabled` remains enforced and documented.
 - `views.monthly.max` has either real Venice/public embed enforcement or a documented blocked implementation plan.
+- `instances.published.max` and any currently surfaced creation/publish policy have an enforcement status.
 - Registry claims match code behavior.
 
 ### Target G - Tokyo-worker Artifact Boundary Audit
@@ -489,11 +505,14 @@ Acceptance:
 
 Roma must not import Tokyo widget spec truth to validate saves.
 
+Peer-review correction: this target is subsumed by Target Q and must execute in the same slice as widget catalog authority. Do not execute this as a standalone Roma cleanup, because that would touch `roma/lib/widget-config-contract.ts` twice and risk preserving two validators.
+
 Confirmed current `HEAD` concern:
 
 - `roma/lib/widget-config-contract.ts` imports `tokyo/product/widgets/*/spec.json`.
 - Roma validates widget config before forwarding to Tokyo-worker.
 - Tokyo-worker also owns the saved widget instance and validation boundary.
+- Tokyo-worker does not currently have the equivalent widget-config validator; the work is to build the Tokyo-worker boundary validator and structured error path, then delete Roma's validator in the same commit/slice.
 
 Why this matters:
 
@@ -503,15 +522,16 @@ Why this matters:
 
 Required correction:
 
-- Move widget config contract validation to Tokyo-worker or prove Tokyo-worker already fully owns it.
+- Build widget config contract validation at the Tokyo-worker saved-instance boundary.
 - Roma forwards config and surfaces Tokyo-worker structured errors.
-- Delete Roma's widget spec imports once Tokyo-worker is the only validator.
+- Delete Roma's widget spec imports and Roma validator in the same commit/slice that lands the Tokyo-worker validator.
 
 Acceptance:
 
 - Roma no longer imports `tokyo/product/widgets/*/spec.json`.
 - Tokyo-worker rejects invalid saved config at its boundary.
 - Roma surfaces the returned structured error.
+- Roma and Tokyo-worker do not both retain active widget-config validators after the slice lands.
 - Bob/Roma save path remains green.
 
 ### Target L - Roma Route And Error Boilerplate
@@ -544,6 +564,8 @@ Acceptance:
 
 Some small one-caller files are scar tissue from PRD-by-PRD construction.
 
+This is low-priority cleanup. Inline or merge these files only when a PRD 092 slice already touches the caller or boundary. Do not open a separate sweep only to reduce file count.
+
 Required audit:
 
 - Single-export, single-caller files under Roma/Bob/Tokyo-worker/Berlin/Venice.
@@ -561,6 +583,7 @@ Acceptance:
 - The files removed or merged are all single-caller or single-boundary helpers.
 - No public import/export contract is broken.
 - Affected service verification green.
+- No file is touched only because it appears small.
 
 ### Target N - Dieter Dropdown Lifecycle Design Gate
 
@@ -604,7 +627,9 @@ Acceptance:
 
 ### Target P - Promise Catch/Silent Swallow Sweep
 
-Classify inline `.catch(...)` usage before changing error handling.
+Classify inline `.catch(...)` usage in product-path files before changing error handling.
+
+This is bounded to Roma account routes, Tokyo-worker domain/product routes, Venice loader/embed paths, and Berlin auth/session paths unless another slice already touches a file.
 
 Required classification:
 
@@ -719,6 +744,31 @@ Acceptance:
 
 Each slice must be green before the next starts.
 
+PRD 092 executes in two waves. Do not run all slices as one continuous cleanup session.
+
+Wave A - boring simplification and safety rails:
+
+- Slice 0 - Documentation And Evidence Baseline
+- Slice 1 - Verification Coverage
+- Slice 2 - Contract And Security Primitive Convergence
+- Slice 7 - Venice Loader Simplification With SEO/GEO Preservation
+- Slice 8 - Roma Scaffold Honesty
+- Slice 9 - Prague Stub Classification And Cleanup
+- Slice 12 - Shared Contract Hygiene
+- Slice 13 - Final Product-Path Verification for Wave A
+
+Wave B - structural architecture work:
+
+- Slice 3 - Roma Route And Error Boilerplate Cleanup
+- Slice 4 - Widget Catalog Authority And Create Flow
+- Slice 5 - Widget-Owned SEO/GEO Dispatch
+- Slice 6 - Catalog Labels, UX Scale, And Agent Metadata
+- Slice 10 - Policy Enforcement Readiness
+- Slice 11 - Tokyo-worker Artifact Boundary Simplification
+- Slice 13 - Final Product-Path Verification for Wave B
+
+Wave B requires a fresh review checkpoint after Wave A. The widget catalog and SEO/GEO slices are correct architecture, but they are not routine LOC reduction.
+
 ### Slice 0 - Documentation And Evidence Baseline
 
 Purpose:
@@ -739,6 +789,7 @@ pnpm test
 Acceptance:
 
 - A classification matrix exists in the PRD execution notes or a follow-up audit artifact.
+- The matrix includes only changed files and files whose authority is being moved.
 - Any failing verification is documented as a blocker before code edits.
 
 ### Slice 1 - Verification Coverage
@@ -752,7 +803,7 @@ Scope:
 - `package.json` files.
 - `turbo.json`.
 - existing health/verify scripts.
-- GitHub Actions only if current workflow is stale against product routes.
+- GitHub Actions only if a local verification script is demonstrably stale because of the workflow.
 
 Acceptance:
 
@@ -779,27 +830,24 @@ Acceptance:
 - Security primitive tests cover byte-safety and non-ASCII string input.
 - Affected services are green.
 
-### Slice 3 - Roma Boundary And Boilerplate Cleanup
+### Slice 3 - Roma Route And Error Boilerplate Cleanup
 
 Purpose:
 
-- Remove Roma's remaining orchestrator-layer truth import and reduce route/error boilerplate that future agents will copy.
+- Reduce route/error boilerplate that future agents will copy.
+
+Widget-config validation removal is not part of this slice. It belongs to Slice 4 so Tokyo-worker validation and Roma validator deletion land together.
 
 Scope:
 
-- `roma/lib/widget-config-contract.ts`
-- Tokyo-worker saved-config validation boundary.
 - Roma no-store/session helper duplication.
 - Berlin proxy route boilerplate.
 - Roma reason-key/error-copy helper duplication.
 
 Acceptance:
 
-- Roma no longer imports Tokyo widget spec JSON files.
-- Tokyo-worker is the config validation boundary for saved account instances.
-- Roma surfaces Tokyo-worker structured errors.
 - Repeated route boilerplate is collapsed without hiding route ownership.
-- Roma and Tokyo-worker verification green.
+- Roma verification green.
 
 ### Slice 4 - Widget Catalog Authority And Create Flow
 
@@ -819,8 +867,10 @@ Required execution:
 
 - Identify or create a single catalog authority derived from widget-owned source.
 - Replace Roma `CREATE_WIDGET_OPTIONS` with catalog-driven options.
-- Remove Roma's local active-widget defaults/validators as product truth.
+- Build Tokyo-worker saved-config validation from the catalog/spec authority.
+- Remove Roma's local active-widget defaults/validators as product truth in the same commit/slice.
 - Replace Tokyo-worker's hand-maintained `WIDGET_SPECS` map with catalog/spec lookup.
+- Plumb Tokyo-worker structured validation errors back through Roma.
 - Preserve current FAQ, Countdown, and Logo Showcase create/edit/save behavior.
 
 Acceptance:
@@ -828,6 +878,10 @@ Acceptance:
 - Roma source does not need a code edit to list a newly cataloged widget.
 - Tokyo-worker source does not need a hardcoded map edit to create a newly cataloged widget from defaults.
 - Account policy can hide/show widgets before Roma offers creation.
+- Tokyo-worker rejects invalid saved config at its boundary.
+- Roma surfaces the returned structured error.
+- Roma no longer imports `tokyo/product/widgets/*/spec.json`.
+- Roma and Tokyo-worker do not both retain active widget-config validators after the slice lands.
 - Bob still compiles widgets by spec and does not gain a widget-type switch.
 - Roma, Bob, and Tokyo-worker verification green.
 
@@ -997,7 +1051,7 @@ Acceptance:
 
 Purpose:
 
-- Prove simplification preserved the real product path.
+- Prove the completed wave preserved the real product path.
 
 Required verification:
 
@@ -1008,7 +1062,7 @@ pnpm lint
 pnpm test
 ```
 
-Additional direct checks must cover:
+Additional direct checks are required only for services touched by the completed wave or not covered by root verification:
 
 - Bob build/typecheck.
 - Roma build/typecheck.
@@ -1022,6 +1076,7 @@ Additional direct checks must cover:
 Acceptance:
 
 - All checks green or blocked by explicit external credential/env limitation.
+- If Slice 1 made root verification comprehensive for a service, do not rerun duplicate direct checks without a reason.
 - Documentation updated for any changed behavior.
 - No deleted scaffold was undocumented after the fact.
 
@@ -1060,5 +1115,7 @@ PRD 092 is successful when:
 ## 9. Execution Rule
 
 Do not execute PRD 092 until Slice 0 produces the classification matrix.
+
+Do not start Wave B until Wave A is green and reviewed.
 
 If a target cannot be classified, stop and ask for a product decision instead of guessing.
