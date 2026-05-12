@@ -41,6 +41,7 @@ type BerlinRefreshResult =
 
 const SHARED_ACCESS_COOKIE = 'ck-access-token';
 const SHARED_REFRESH_COOKIE = 'ck-refresh-token';
+const SHARED_AUTHZ_CAPSULE_COOKIE = 'ck-authz-capsule';
 
 export function isLocalHostname(hostname: string): boolean {
   const normalized = hostname.trim().toLowerCase();
@@ -74,6 +75,24 @@ export function resolveRequestOrigin(request: NextRequest): string {
 
 export function resolveSessionCookieNames(): { access: string; refresh: string } {
   return { access: SHARED_ACCESS_COOKIE, refresh: SHARED_REFRESH_COOKIE };
+}
+
+export function resolveAccountAuthzCookieName(): string {
+  return SHARED_AUTHZ_CAPSULE_COOKIE;
+}
+
+export function resolveJwtCookieMaxAge(token: string, fallbackSeconds: number): number {
+  const payload = decodeJwtPayload(token);
+  const expClaim = payload?.exp;
+  const exp =
+    typeof expClaim === 'number'
+      ? expClaim
+      : typeof expClaim === 'string'
+        ? Number.parseInt(expClaim, 10)
+        : Number.NaN;
+  if (!Number.isFinite(exp)) return fallbackSeconds;
+  const now = Math.floor(Date.now() / 1000);
+  return Math.max(1, Math.floor(exp - now));
 }
 
 export function resolveSessionCookieDomain(request: NextRequest): string | undefined {

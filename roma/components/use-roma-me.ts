@@ -62,7 +62,6 @@ export type RomaMeResponse = {
   activeAccount?: RomaActiveAccount | null;
   accounts: RomaAccountSummary[];
   authz?: {
-    accountCapsule?: string | null;
     accountId?: string | null;
     role?: string | null;
     profile?: string | null;
@@ -195,9 +194,8 @@ function assertRomaMeAuthzPayload(data: RomaMeResponse | null): void {
   const authzVersion = typeof authz.authzVersion === 'string' ? authz.authzVersion.trim() : '';
   const issuedAt = typeof authz.issuedAt === 'string' ? authz.issuedAt.trim() : '';
   const expiresAt = typeof authz.expiresAt === 'string' ? authz.expiresAt.trim() : '';
-  const accountCapsule = typeof authz.accountCapsule === 'string' ? authz.accountCapsule.trim() : '';
 
-  if (!accountId || !role || !profile || !authzVersion || !issuedAt || !expiresAt || !accountCapsule) {
+  if (!accountId || !role || !profile || !authzVersion || !issuedAt || !expiresAt) {
     throw new Error('coreui.errors.auth.contextUnavailable');
   }
   if (!Number.isFinite(Date.parse(issuedAt)) || !Number.isFinite(Date.parse(expiresAt))) {

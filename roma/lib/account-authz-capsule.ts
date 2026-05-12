@@ -1,10 +1,15 @@
 import {
-  readRomaAuthzCapsuleHeader,
   resolveCachedJwksVerifyKey,
   verifyRomaAccountAuthzCapsule,
   type MemberRole,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
+import type { NextRequest } from 'next/server';
+import {
+  resolveAccountAuthzCookieName,
+  resolveJwtCookieMaxAge,
+  type SessionCookieSpec,
+} from './auth/session';
 import { resolveBerlinBaseUrl } from './env/berlin';
 
 export type AccountCapsuleAuthzError = {
@@ -26,6 +31,7 @@ export type AccountCapsuleAuthzResult =
     };
 
 const BERLIN_ACCOUNT_CAPSULE_JWKS_CACHE_KEY = '__CK_ROMA_ACCOUNT_CAPSULE_JWKS_V1__';
+const ACCOUNT_AUTHZ_CAPSULE_FALLBACK_MAX_AGE_SECONDS = 30 * 60;
 
 function roleRank(value: MemberRole): number {
   switch (value) {
@@ -102,71 +108,111 @@ async function verifyAccountCapsuleToken(token: string): Promise<
   return { ok: true, token: normalizedToken, payload: verified.payload };
 }
 
-export async function authorizeAccountRoleFromCapsuleToken(args: {
-  token: string;
-  accountId: string;
-  minRole: MemberRole;
-}): Promise<AccountCapsuleAuthzResult> {
-  const verified = await verifyAccountCapsuleToken(args.token);
-  if (!verified.ok) return verified;
-
-  if (verified.payload.accountId !== args.accountId) {
-    return {
-      ok: false,
-      status: 403,
-      error: {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.auth.forbidden',
-        detail: 'account_mismatch',
-      },
-    };
-  }
-
-  if (roleRank(verified.payload.role) < roleRank(args.minRole)) {
-    return {
-      ok: false,
-      status: 403,
-      error: {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.auth.forbidden',
-        detail: 'role_insufficient',
-      },
-    };
-  }
-
-  return verified;
+function buildAuthzCookie(token: string): SessionCookieSpec {
+  return {
+    name: resolveAccountAuthzCookieName(),
+    value: token,
+    maxAge: resolveJwtCookieMaxAge(token, ACCOUNT_AUTHZ_CAPSULE_FALLBACK_MAX_AGE_SECONDS),
+  };
 }
 
-export async function authorizeRequestRoleFromCapsule(args: {
-  request: Request;
-  minRole: MemberRole;
-}): Promise<AccountCapsuleAuthzResult> {
-  const verified = await verifyAccountCapsuleToken(readRomaAuthzCapsuleHeader(args.request) || '');
-  if (!verified.ok) return verified;
-
-  if (roleRank(verified.payload.role) < roleRank(args.minRole)) {
-    return {
-      ok: false,
-      status: 403,
-      error: {
-        kind: 'DENY',
-        reasonKey: 'coreui.errors.auth.forbidden',
-        detail: 'role_insufficient',
-      },
-    };
-  }
-
-  return verified;
+function hardAuthRequired(): AccountCapsuleAuthzResult {
+  return {
+    ok: false,
+    status: 401,
+    error: {
+      kind: 'AUTH',
+      reasonKey: 'coreui.errors.auth.required',
+      detail: 'account_authz_unavailable',
+    },
+  };
 }
 
-export async function authorizeRequestAccountRoleFromCapsule(args: {
-  request: Request;
-  accountId: string;
-  minRole: MemberRole;
-}): Promise<AccountCapsuleAuthzResult> {
-  return authorizeAccountRoleFromCapsuleToken({
-    token: readRomaAuthzCapsuleHeader(args.request) || '',
-    accountId: args.accountId,
-    minRole: args.minRole,
+async function fetchBootstrapAccountCapsule(accessToken: string): Promise<string | null> {
+  let berlinBase = '';
+  try {
+    berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
+  } catch {
+    return null;
+  }
+
+  const response = await fetch(`${berlinBase}/v1/session/bootstrap`, {
+    method: 'GET',
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      accept: 'application/json',
+    },
+    cache: 'no-store',
   });
+  const payload = (await response.json().catch(() => null)) as
+    | { authz?: { accountCapsule?: unknown } }
+    | null;
+  if (!response.ok || !payload) return null;
+  const accountCapsule =
+    typeof payload.authz?.accountCapsule === 'string' ? payload.authz.accountCapsule.trim() : '';
+  return accountCapsule || null;
+}
+
+export async function resolveServerAccountAuthz(args: {
+  request: NextRequest;
+  accessToken: string;
+  minRole: MemberRole;
+}): Promise<
+  | {
+      ok: true;
+      token: string;
+      payload: RomaAccountAuthzCapsulePayload;
+      setCookies?: SessionCookieSpec[];
+    }
+  | {
+      ok: false;
+      status: number;
+      error: AccountCapsuleAuthzError;
+    }
+> {
+  const cookieToken = args.request.cookies.get(resolveAccountAuthzCookieName())?.value?.trim() || '';
+  const verifiedCookie = cookieToken ? await verifyAccountCapsuleToken(cookieToken) : null;
+
+  if (verifiedCookie?.ok) {
+    if (roleRank(verifiedCookie.payload.role) < roleRank(args.minRole)) {
+      return {
+        ok: false,
+        status: 403,
+        error: {
+          kind: 'DENY',
+          reasonKey: 'coreui.errors.auth.forbidden',
+          detail: 'role_insufficient',
+        },
+      };
+    }
+    return {
+      ok: true,
+      token: verifiedCookie.token,
+      payload: verifiedCookie.payload,
+    };
+  }
+
+  const refreshedToken = await fetchBootstrapAccountCapsule(args.accessToken);
+  if (!refreshedToken) return hardAuthRequired();
+
+  const refreshed = await verifyAccountCapsuleToken(refreshedToken);
+  if (!refreshed.ok) return hardAuthRequired();
+  if (roleRank(refreshed.payload.role) < roleRank(args.minRole)) {
+    return {
+      ok: false,
+      status: 403,
+      error: {
+        kind: 'DENY',
+        reasonKey: 'coreui.errors.auth.forbidden',
+        detail: 'role_insufficient',
+      },
+    };
+  }
+
+  return {
+    ok: true,
+    token: refreshed.token,
+    payload: refreshed.payload,
+    setCookies: [buildAuthzCookie(refreshed.token)],
+  };
 }

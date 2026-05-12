@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import {
   applySessionCookies,
+  resolveAccountAuthzCookieName,
+  resolveJwtCookieMaxAge,
   resolveRequestOrigin,
   resolveSessionCookieNames,
 } from '../../../../lib/auth/session';
@@ -141,6 +143,7 @@ function applyFinishSessionCookies(args: {
   request: NextRequest;
   accessToken: string;
   refreshToken: string;
+  accountCapsule?: string | null;
   accessMaxAge: number;
   refreshMaxAge: number;
 }): void {
@@ -148,6 +151,15 @@ function applyFinishSessionCookies(args: {
   applySessionCookies(args.response, args.request, [
     { name: cookieNames.access, value: args.accessToken, maxAge: args.accessMaxAge },
     { name: cookieNames.refresh, value: args.refreshToken, maxAge: args.refreshMaxAge },
+    ...(args.accountCapsule
+      ? [
+          {
+            name: resolveAccountAuthzCookieName(),
+            value: args.accountCapsule,
+            maxAge: resolveJwtCookieMaxAge(args.accountCapsule, 30 * 60),
+          },
+        ]
+      : []),
   ]);
 }
 
@@ -198,12 +210,14 @@ export async function GET(request: NextRequest) {
   const refreshMaxAge = parsePositiveInt(payload.refreshTokenMaxAge, 60 * 60 * 24 * 30);
 
   const continuation = extractContinuation(payload as BerlinFinishPayload);
+  let accountCapsule: string | null = null;
   const applySession = (response: NextResponse): NextResponse => {
     applyFinishSessionCookies({
       response,
       request,
       accessToken,
       refreshToken,
+      accountCapsule,
       accessMaxAge,
       refreshMaxAge,
     });
@@ -234,6 +248,7 @@ export async function GET(request: NextRequest) {
       }),
     );
   }
+  accountCapsule = bootstrap.accountCapsule;
 
   const destination = new URL(continuation.next, resolveRequestOrigin(request));
   const response = NextResponse.redirect(destination, { headers: CACHE_HEADERS });

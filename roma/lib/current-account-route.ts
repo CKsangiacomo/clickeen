@@ -1,6 +1,6 @@
 import type { MemberRole, RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import { NextRequest, NextResponse } from 'next/server';
-import { authorizeRequestRoleFromCapsule } from './account-authz-capsule';
+import { resolveServerAccountAuthz } from './account-authz-capsule';
 import { applySessionCookies, resolveSessionBearer, type SessionCookieSpec } from './auth/session';
 import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
 import {
@@ -42,8 +42,9 @@ export async function resolveCurrentAccountRouteContext(args: {
     return { ok: false, response: withSession(args.request, session.response) };
   }
 
-  const authz = await authorizeRequestRoleFromCapsule({
+  const authz = await resolveServerAccountAuthz({
     request: args.request,
+    accessToken: session.accessToken,
     minRole: args.minRole,
   });
   if (!authz.ok) {
@@ -69,7 +70,11 @@ export async function resolveCurrentAccountRouteContext(args: {
   if (limited) {
     return {
       ok: false,
-      response: withSession(args.request, limited, session.setCookies),
+      response: withSession(
+        args.request,
+        limited,
+        [...(session.setCookies ?? []), ...(authz.setCookies ?? [])],
+      ),
     };
   }
 
@@ -79,7 +84,7 @@ export async function resolveCurrentAccountRouteContext(args: {
       accessToken: session.accessToken,
       authzToken: authz.token,
       authzPayload: authz.payload,
-      setCookies: session.setCookies,
+      setCookies: [...(session.setCookies ?? []), ...(authz.setCookies ?? [])],
       usageKv,
     },
   };
