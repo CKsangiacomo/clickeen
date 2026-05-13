@@ -36,7 +36,7 @@ export function TopDrawer() {
       </div>
 
       <div className="topdrawer-actions">
-        {canSave || isSaving ? (
+        {hasInstance ? (
           <button
             className="diet-btn-txt"
             data-size="xl"
@@ -48,17 +48,17 @@ export function TopDrawer() {
             <span className="diet-btn-txt__label">{isSaving ? 'Saving…' : 'Save'}</span>
           </button>
         ) : null}
-        <button
-          className="diet-btn-txt"
-          data-size="xl"
-          data-variant="primary"
-          type="button"
-          disabled={!hasInstance || !isPublished}
-          title={hasInstance && !isPublished ? 'Publish this widget before copying embed code.' : undefined}
-          onClick={() => setEmbedOpen(true)}
-        >
-          <span className="diet-btn-txt__label">{hasInstance && !isPublished ? 'Publish first' : 'Copy code'}</span>
-        </button>
+        {isPublished ? (
+          <button
+            className="diet-btn-txt"
+            data-size="xl"
+            data-variant="primary"
+            type="button"
+            onClick={() => setEmbedOpen(true)}
+          >
+            <span className="diet-btn-txt__label">Copy code</span>
+          </button>
+        ) : null}
       </div>
       <EmbedModal open={embedOpen} onClose={() => setEmbedOpen(false)} />
     </section>

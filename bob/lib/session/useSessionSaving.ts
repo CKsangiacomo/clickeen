@@ -8,7 +8,7 @@ import {
   type SessionUpsell,
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
-import { normalizeSessionConfig } from './sessionConfig';
+import { normalizeSessionConfigForOpen } from './sessionConfig';
 
 function normalizeTranslationFollowup(payload: unknown):
   | { ok: true }
@@ -74,7 +74,7 @@ export function useSessionSaving(args: {
     setState((prev) => ({ ...prev, isSaving: true, error: null }));
 
     try {
-      const config = normalizeSessionConfig(snapshot.instanceData, snapshot.compiled);
+      const config = normalizeSessionConfigForOpen(snapshot.instanceData, snapshot.compiled);
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
         instanceId,
