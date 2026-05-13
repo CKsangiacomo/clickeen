@@ -524,7 +524,18 @@ export async function enqueueAccountInstanceSyncJob(args: {
   const savedBaseFingerprint = normalizeSha256Hex(saved.value.pointer.l10n?.baseFingerprint);
   const requestedBaseFingerprint = normalizeSha256Hex(args.baseFingerprint);
   const previousBaseFingerprint = normalizeSha256Hex(args.previousBaseFingerprint);
-  const resolvedBaseFingerprint = requestedBaseFingerprint ?? savedBaseFingerprint;
+  const generatedBase =
+    requestedBaseFingerprint || savedBaseFingerprint
+      ? null
+      : await ensureSavedRenderL10nBase({
+          env: args.env,
+          accountId: args.accountId,
+          instanceId: args.instanceId,
+          widgetType: saved.value.pointer.widgetType,
+          config: saved.value.config,
+          existingBaseFingerprint: null,
+        });
+  const resolvedBaseFingerprint = requestedBaseFingerprint ?? savedBaseFingerprint ?? generatedBase?.baseFingerprint ?? null;
   if (!resolvedBaseFingerprint) {
     throw new Error('tokyo_saved_l10n_base_missing');
   }
@@ -537,6 +548,18 @@ export async function enqueueAccountInstanceSyncJob(args: {
     baseLocale,
     locales: args.l10nIntent.desiredLocales,
   });
+  if (generatedBase) {
+    await writeSavedRenderL10nState({
+      env: args.env,
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      baseFingerprint: resolvedBaseFingerprint,
+      summary: {
+        baseLocale,
+        desiredLocales: requestedLocales,
+      },
+    });
+  }
   const generationId = crypto.randomUUID();
   const nonBaseLocales = requestedLocales.filter((locale) => locale !== baseLocale);
   const translationStatus: 'queued' | 'ready' = nonBaseLocales.length > 0 ? 'queued' : 'ready';
