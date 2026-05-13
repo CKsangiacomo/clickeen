@@ -3,7 +3,6 @@ import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
-import { loadAccountL10nIntent } from '@roma/lib/account-l10n-intent';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -102,19 +101,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const l10nIntent = await loadAccountL10nIntent({
-    accessToken: current.value.accessToken,
-    accountId,
-    requestId: current.value.requestId,
-  });
-  if (!l10nIntent.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: l10nIntent.error }, { status: l10nIntent.status }),
-      current.value.setCookies,
-    );
-  }
-
   const result = await saveAccountInstanceInTokyo({
     accountId,
     instanceId,
@@ -122,7 +108,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     config,
     ...(displayName !== undefined ? { displayName } : {}),
     ...(meta !== undefined ? { meta } : {}),
-    l10nIntent: l10nIntent.value,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

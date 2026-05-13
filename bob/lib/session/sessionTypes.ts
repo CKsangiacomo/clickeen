@@ -13,7 +13,7 @@ export type SessionError =
   | { source: 'load'; message: string }
   | { source: 'ops'; errors: WidgetOpError[] }
   | { source: 'translation'; message: string; detail?: string }
-  | { source: 'save'; message: string; paths?: string[] };
+  | { source: 'save'; message: string; detail?: string; paths?: string[] };
 
 export type PreviewSettings = {
   device: 'desktop' | 'mobile';
@@ -67,7 +67,6 @@ export type EditorOpenMessage = {
   instanceData?: Record<string, unknown> | null;
   policy?: Policy;
   instanceId?: string;
-  publishStatus?: 'published' | 'unpublished';
   label?: string;
   meta?: Record<string, unknown> | null;
   copilot?: CopilotRuntimeUi;

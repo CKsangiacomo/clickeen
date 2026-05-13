@@ -437,7 +437,6 @@ export async function saveAccountInstanceInTokyo(args: {
   config: Record<string, unknown>;
   displayName?: string | null;
   meta?: Record<string, unknown> | null;
-  l10nIntent: TokyoL10nIntent;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<
@@ -460,7 +459,6 @@ export async function saveAccountInstanceInTokyo(args: {
       config: args.config,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.meta !== undefined ? { meta: args.meta } : {}),
-      l10nIntent: args.l10nIntent,
     },
     decode: (payload) => payload,
     errorDetail: 'tokyo_instance_save_http_error',
@@ -481,7 +479,6 @@ export async function duplicateAccountInstanceInTokyo(args: {
   accountId: string;
   sourceInstanceId: string;
   accountCapsule?: string | null;
-  l10nIntent: TokyoL10nIntent;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<
@@ -503,7 +500,7 @@ export async function duplicateAccountInstanceInTokyo(args: {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/renders/widgets/${encodeURIComponent(args.sourceInstanceId)}/duplicate.json`,
     method: 'POST',
-    body: { l10nIntent: args.l10nIntent },
+    body: {},
     decode: (payload) => payload,
     errorDetail: 'tokyo_instance_duplicate_http_error',
     errorKey: 'coreui.errors.db.writeFailed',

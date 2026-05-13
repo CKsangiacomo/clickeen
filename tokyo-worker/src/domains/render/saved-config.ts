@@ -90,6 +90,7 @@ export async function writeSavedRenderConfig(args: {
   meta?: unknown;
   // Optional derived locale projection from Berlin account policy. This is
   // stored with l10n state for sync/runtime work, not as instance-owned policy.
+  deriveL10nBase?: boolean;
   l10n?:
     | {
         baseFingerprint?: string | null;
@@ -116,22 +117,38 @@ export async function writeSavedRenderConfig(args: {
     await loadJson(args.env, accountInstanceDocumentKey(accountId, widgetType, instanceId)),
   );
   const previousBaseFingerprint = existing?.l10n?.baseFingerprint ?? null;
-  const l10nBase = await ensureSavedRenderL10nBase({
-    env: args.env,
-    accountId,
-    instanceId: instanceId,
-    widgetType,
-    config: args.config,
-    existingBaseFingerprint:
-      typeof args.l10n?.baseFingerprint === 'string'
-        ? args.l10n.baseFingerprint
-        : previousBaseFingerprint,
-  });
   const requestedSummary = args.l10n?.summary ?? undefined;
   const carriedSummary =
     requestedSummary === null
       ? null
       : requestedSummary ?? existing?.l10n?.summary ?? null;
+  const deriveL10nBase = args.deriveL10nBase !== false;
+  const l10nBase = deriveL10nBase
+    ? await ensureSavedRenderL10nBase({
+        env: args.env,
+        accountId,
+        instanceId: instanceId,
+        widgetType,
+        config: args.config,
+        existingBaseFingerprint:
+          typeof args.l10n?.baseFingerprint === 'string'
+            ? args.l10n.baseFingerprint
+            : previousBaseFingerprint,
+      })
+    : null;
+  const l10n =
+    l10nBase
+      ? {
+          baseFingerprint: l10nBase.baseFingerprint,
+          ...(carriedSummary ? { summary: carriedSummary } : {}),
+        }
+      : existing?.l10n
+        ? requestedSummary === null
+          ? (({ summary: _summary, ...rest }) => rest)(existing.l10n)
+          : carriedSummary
+            ? { ...existing.l10n, summary: carriedSummary }
+            : existing.l10n
+        : undefined;
 
   const instance: AccountInstanceDocument & { configFp: string } = {
     v: 1,
@@ -142,10 +159,7 @@ export async function writeSavedRenderConfig(args: {
     meta: normalizeMeta(args.meta),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
-    l10n: {
-      baseFingerprint: l10nBase.baseFingerprint,
-      ...(carriedSummary ? { summary: carriedSummary } : {}),
-    },
+    ...(l10n ? { l10n } : {}),
     configFp,
   };
 

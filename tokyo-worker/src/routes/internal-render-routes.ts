@@ -23,7 +23,6 @@ import {
 } from '../domains/render';
 import {
   listWidgetCatalogEntries,
-  validateWidgetConfigContract,
 } from '../domains/widget-catalog';
 import {
   enqueueAccountInstanceSyncJob,
@@ -566,11 +565,6 @@ export async function tryHandleInternalRenderRoutes(
     if (!isRecord(body) || !isRecord(body.config)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
-    const l10nIntent = normalizeTransitionL10nIntent(body.l10nIntent);
-    if (!l10nIntent) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-
     try {
       const result = await saveAccountInstanceTransition({
         env,
@@ -582,7 +576,6 @@ export async function tryHandleInternalRenderRoutes(
         hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
         meta: body.meta,
         hasMeta: Object.prototype.hasOwnProperty.call(body, 'meta'),
-        l10nIntent,
         accountAuthz: toAccountAuthzSnapshot(capsule),
       });
       return respond(
@@ -617,24 +610,11 @@ export async function tryHandleInternalRenderRoutes(
     if (!auth.ok) return respond(auth.response);
     const { capsule } = auth;
 
-    const body = (await readInternalRenderJsonBody({
-      req,
-      env,
-      boundary: 'internal.render.duplicate.body',
-      instanceId: sourceInstanceId,
-      accountId,
-    })) as Record<string, unknown> | null;
-    const l10nIntent = normalizeTransitionL10nIntent(body?.l10nIntent);
-    if (!l10nIntent) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-
     try {
       const duplicated = await duplicateAccountInstanceTransition({
         env,
         accountId,
         sourceInstanceId: sourceInstanceId!,
-        l10nIntent,
         accountAuthz: toAccountAuthzSnapshot(capsule),
       });
       return respond(json({ ok: true, ...duplicated }, { status: 201 }));
@@ -865,24 +845,8 @@ export async function tryHandleInternalRenderRoutes(
                 }
               | null)
           : undefined;
-      const contract = validateWidgetConfigContract({
-        widgetType: body.widgetType,
-        config: body.config,
-      });
-      if (!contract.ok) {
-        return respond(
-          json(
-            {
-              error: {
-                kind: 'VALIDATION',
-                reasonKey: contract.reasonKey,
-                paths: contract.issues.map((issue) => issue.path),
-                detail: contract.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '),
-              },
-            },
-            { status: 422 },
-          ),
-        );
+      if (typeof body.widgetType !== 'string' || !isRecord(body.config)) {
+        return respondValidation(respond, 'tokyo.errors.render.invalid');
       }
       const savedWrite = await writeSavedRenderConfig({
         env,
@@ -892,6 +856,7 @@ export async function tryHandleInternalRenderRoutes(
         config: body.config as Record<string, unknown>,
         displayName: body.displayName,
         meta: body.meta,
+        deriveL10nBase: false,
         ...(l10n !== undefined ? { l10n } : {}),
       });
       return respond(

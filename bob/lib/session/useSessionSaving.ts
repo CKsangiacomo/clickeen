@@ -8,7 +8,6 @@ import {
   type SessionUpsell,
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
-import { normalizeSessionConfigForOpen } from './sessionConfig';
 
 function normalizeTranslationFollowup(payload: unknown):
   | { ok: true }
@@ -74,7 +73,7 @@ export function useSessionSaving(args: {
     setState((prev) => ({ ...prev, isSaving: true, error: null }));
 
     try {
-      const config = normalizeSessionConfigForOpen(snapshot.instanceData, snapshot.compiled);
+      const config = snapshot.instanceData;
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
         instanceId,
@@ -91,14 +90,25 @@ export function useSessionSaving(args: {
           setState((prev) => ({
             ...prev,
             isSaving: false,
-            error: { source: 'save', message: err.reasonKey || 'Save failed.', paths: err.paths },
+            error: {
+              source: 'save',
+              message: err.reasonKey || 'Save failed.',
+              detail: typeof err.detail === 'string' ? err.detail : undefined,
+              paths: Array.isArray(err.paths)
+                ? err.paths.filter((path: unknown): path is string => typeof path === 'string')
+                : undefined,
+            },
           }));
           return;
         }
         setState((prev) => ({
           ...prev,
           isSaving: false,
-          error: { source: 'save', message: err?.reasonKey || 'Save failed.' },
+          error: {
+            source: 'save',
+            message: err?.reasonKey || 'Save failed.',
+            detail: typeof err?.detail === 'string' ? err.detail : undefined,
+          },
         }));
         return;
       }

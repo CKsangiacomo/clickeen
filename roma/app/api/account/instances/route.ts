@@ -5,7 +5,6 @@ import {
   loadTokyoAccountInstanceIndex,
   loadTokyoWidgetCatalog,
 } from '@roma/lib/account-instance-direct';
-import { loadAccountL10nIntent } from '@roma/lib/account-l10n-intent';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -113,30 +112,12 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  const l10nIntent = await loadAccountL10nIntent({
-    accessToken: current.value.accessToken,
-    accountId,
-    requestId: current.value.requestId,
-  });
-  if (!l10nIntent.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: l10nIntent.error }, { status: l10nIntent.status }),
-      current.value.setCookies,
-    );
-  }
   const created = await createAccountInstanceInTokyo({
     accountId,
     accountCapsule: current.value.authzToken,
     widgetType,
     displayName,
     requestId: current.value.requestId,
-    l10n: {
-      summary: {
-        baseLocale: l10nIntent.value.baseLocale,
-        desiredLocales: l10nIntent.value.desiredLocales,
-      },
-    },
   });
   if (!created.ok) {
     return withSession(

@@ -2,7 +2,6 @@ import { resolvePolicyFromEntitlementsSnapshot, type RomaAccountAuthzCapsulePayl
 import type { Env } from '../../types';
 import {
   resolveWidgetDefaults,
-  validateWidgetConfigContract,
 } from '../widget-catalog';
 import {
   enqueueAccountInstanceSyncJob,
@@ -101,18 +100,6 @@ function normalizeDisplayName(value: unknown): string | null {
   return trimmed.length > 0 && trimmed.length <= 120 ? trimmed : null;
 }
 
-function assertValidWidgetConfig(widgetType: string, config: unknown): void {
-  const contract = validateWidgetConfigContract({ widgetType, config });
-  if (contract.ok) return;
-  throw new AccountInstanceTransitionError({
-    status: 422,
-    kind: 'VALIDATION',
-    reasonKey: contract.reasonKey,
-    detail: contract.issues.map((issue) => `${issue.path}: ${issue.message}`).join('; '),
-    issues: contract.issues,
-  });
-}
-
 async function enqueueTranslationFollowup(args: {
   env: Env;
   accountId: string;
@@ -162,6 +149,7 @@ export async function createAccountInstanceFromDefaults(args: {
     config,
     displayName: normalizeDisplayName(args.displayName),
     meta: null,
+    deriveL10nBase: false,
     ...(args.l10n !== undefined ? { l10n: args.l10n } : {}),
   });
 
@@ -178,7 +166,7 @@ export async function saveAccountInstanceTransition(args: {
   hasDisplayName: boolean;
   meta?: unknown;
   hasMeta: boolean;
-  l10nIntent: SyncL10nIntent;
+  l10nIntent?: SyncL10nIntent;
   accountAuthz: AccountAuthzSnapshot;
 }): Promise<{
   ok: true;
@@ -208,8 +196,6 @@ export async function saveAccountInstanceTransition(args: {
       detail: `submitted widgetType "${submittedWidgetType}" does not match Tokyo instance widgetType "${existingWidgetType}"`,
     });
   }
-  assertValidWidgetConfig(existingWidgetType, args.config);
-
   const saved = await writeSavedRenderConfig({
     env: args.env,
     accountId,
@@ -218,24 +204,31 @@ export async function saveAccountInstanceTransition(args: {
     config: args.config,
     displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
     meta: args.hasMeta ? args.meta : existing.value.pointer.meta ?? null,
-    l10n: {
-      summary: {
-        baseLocale: args.l10nIntent.baseLocale,
-        desiredLocales: args.l10nIntent.desiredLocales,
-      },
-    },
+    deriveL10nBase: false,
+    ...(args.l10nIntent
+      ? {
+          l10n: {
+            summary: {
+              baseLocale: args.l10nIntent.baseLocale,
+              desiredLocales: args.l10nIntent.desiredLocales,
+            },
+          },
+        }
+      : {}),
   });
   const live = (await readInstanceServeState({ env: args.env, accountId, instanceId })) === 'published';
-  const translationFollowup = await enqueueTranslationFollowup({
-    env: args.env,
-    accountId,
-    instanceId,
-    live,
-    baseFingerprint: saved.pointer.l10n?.baseFingerprint ?? null,
-    previousBaseFingerprint: saved.previousBaseFingerprint,
-    accountAuthz: args.accountAuthz,
-    l10nIntent: args.l10nIntent,
-  });
+  const translationFollowup = args.l10nIntent
+    ? await enqueueTranslationFollowup({
+        env: args.env,
+        accountId,
+        instanceId,
+        live,
+        baseFingerprint: saved.pointer.l10n?.baseFingerprint ?? null,
+        previousBaseFingerprint: saved.previousBaseFingerprint,
+        accountAuthz: args.accountAuthz,
+        l10nIntent: args.l10nIntent,
+      })
+    : { ok: true as const };
 
   return {
     ok: true,
@@ -250,7 +243,7 @@ export async function duplicateAccountInstanceTransition(args: {
   env: Env;
   accountId: string;
   sourceInstanceId: string;
-  l10nIntent: SyncL10nIntent;
+  l10nIntent?: SyncL10nIntent;
   accountAuthz: AccountAuthzSnapshot;
 }): Promise<{
   accountId: string;
@@ -277,24 +270,31 @@ export async function duplicateAccountInstanceTransition(args: {
     config: source.value.config,
     displayName: null,
     meta: null,
-    l10n: {
-      summary: {
-        baseLocale: args.l10nIntent.baseLocale,
-        desiredLocales: args.l10nIntent.desiredLocales,
-      },
-    },
+    deriveL10nBase: false,
+    ...(args.l10nIntent
+      ? {
+          l10n: {
+            summary: {
+              baseLocale: args.l10nIntent.baseLocale,
+              desiredLocales: args.l10nIntent.desiredLocales,
+            },
+          },
+        }
+      : {}),
   });
 
-  const translationFollowup = await enqueueTranslationFollowup({
-    env: args.env,
-    accountId,
-    instanceId,
-    live: false,
-    baseFingerprint: saved.pointer.l10n?.baseFingerprint ?? null,
-    previousBaseFingerprint: saved.previousBaseFingerprint,
-    accountAuthz: args.accountAuthz,
-    l10nIntent: args.l10nIntent,
-  });
+  const translationFollowup = args.l10nIntent
+    ? await enqueueTranslationFollowup({
+        env: args.env,
+        accountId,
+        instanceId,
+        live: false,
+        baseFingerprint: saved.pointer.l10n?.baseFingerprint ?? null,
+        previousBaseFingerprint: saved.previousBaseFingerprint,
+        accountAuthz: args.accountAuthz,
+        l10nIntent: args.l10nIntent,
+      })
+    : { ok: true as const };
 
   return {
     accountId,

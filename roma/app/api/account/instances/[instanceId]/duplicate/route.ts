@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { duplicateAccountInstanceInTokyo } from '@roma/lib/account-instance-direct';
-import { loadAccountL10nIntent } from '@roma/lib/account-l10n-intent';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -25,24 +24,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const l10nIntent = await loadAccountL10nIntent({
-    accessToken: current.value.accessToken,
-    accountId,
-    requestId: current.value.requestId,
-  });
-  if (!l10nIntent.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: l10nIntent.error }, { status: l10nIntent.status }),
-      current.value.setCookies,
-    );
-  }
-
   const duplicate = await duplicateAccountInstanceInTokyo({
     accountId,
     sourceInstanceId,
     accountCapsule: current.value.authzToken,
-    l10nIntent: l10nIntent.value,
     requestId: current.value.requestId,
   });
   if (!duplicate.ok) {

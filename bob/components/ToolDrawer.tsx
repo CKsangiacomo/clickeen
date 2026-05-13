@@ -54,12 +54,15 @@ function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidget
   }
 
   if (error.source === 'save') {
-    return [
+    const lines = [
       resolveBuilderErrorCopy(
         error.message,
         'Saving changes failed. Please try again.',
       ),
     ];
+    if (error.detail) lines.push(error.detail);
+    if (error.paths?.length) lines.push(`Paths: ${error.paths.join(', ')}`);
+    return lines;
   }
 
   if (error.source === 'translation') {
