@@ -10,6 +10,47 @@ function cloneSessionConfig(config: Record<string, unknown>): Record<string, unk
   return JSON.parse(JSON.stringify(config)) as Record<string, unknown>;
 }
 
+function cloneUnknown<T>(value: T): T {
+  if (typeof structuredClone === 'function') return structuredClone(value);
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasAt(obj: unknown, path: string): boolean {
+  if (!path) return true;
+  const parts = path.split('.');
+  let cur: unknown = obj;
+  for (const part of parts) {
+    if (!isPlainRecord(cur) && !Array.isArray(cur)) return false;
+    const key = /^\d+$/.test(part) ? Number(part) : part;
+    if (!Object.prototype.hasOwnProperty.call(cur, key)) return false;
+    cur = (cur as Record<string | number, unknown>)[key];
+  }
+  return true;
+}
+
+function applyObjectDefaults(
+  config: Record<string, unknown>,
+  defaults?: Record<string, unknown> | null,
+): Record<string, unknown> {
+  if (!defaults) return config;
+  const next: Record<string, unknown> = { ...config };
+  for (const [key, defaultValue] of Object.entries(defaults)) {
+    const currentValue = next[key];
+    if (currentValue === undefined) {
+      next[key] = cloneUnknown(defaultValue);
+      continue;
+    }
+    if (isPlainRecord(currentValue) && isPlainRecord(defaultValue)) {
+      next[key] = applyObjectDefaults(currentValue, defaultValue);
+    }
+  }
+  return next;
+}
+
 export type SessionConfigValidationIssue = {
   path: string;
   message: string;
@@ -27,6 +68,7 @@ export function validateSessionConfigForOpen(
   for (const control of compiled.controls ?? []) {
     if (!control.path || control.path.includes('__')) continue;
     if (!['boolean', 'number', 'string', 'enum'].includes(control.kind ?? '')) continue;
+    if (!hasAt(config, control.path)) continue;
     const current = getAt<unknown>(config, control.path);
     const coerced = coerceValueStrict(control, current);
     if (!coerced.ok) {
@@ -59,4 +101,12 @@ export function normalizeSessionConfig(
   }
 
   return next;
+}
+
+export function normalizeSessionConfigForOpen(
+  config: Record<string, unknown>,
+  compiled?: Pick<CompiledWidget, 'controls' | 'defaults' | 'normalization'> | null,
+): Record<string, unknown> {
+  const withDefaults = applyObjectDefaults(cloneSessionConfig(config), compiled?.defaults);
+  return normalizeSessionConfig(withDefaults, compiled);
 }

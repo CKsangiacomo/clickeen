@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { Policy } from '@clickeen/ck-policy';
-import { validateSessionConfigForOpen } from './sessionConfig';
+import { normalizeSessionConfigForOpen, validateSessionConfigForOpen } from './sessionConfig';
 import {
   type BobOpenEditorAppliedMessage,
   type BobOpenEditorFailedMessage,
@@ -44,7 +44,7 @@ export function useSessionBoot(args: {
             error: 'coreui.errors.instance.config.invalid',
           };
         }
-        const resolved = rawInstanceData as Record<string, unknown>;
+        const resolved = normalizeSessionConfigForOpen(rawInstanceData as Record<string, unknown>, compiled);
         const contract = validateSessionConfigForOpen(resolved, compiled);
         if (!contract.ok) {
           setState((prev) => ({
