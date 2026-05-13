@@ -81,6 +81,9 @@ function BuilderShell() {
   const previewableTranslationLocales = useMemo(() => {
     return translationsData?.readyLocales ?? [];
   }, [translationsData]);
+  const translationTextPacks = useMemo(() => {
+    return translationsData?.textPacks ?? {};
+  }, [translationsData]);
 
   useEffect(() => {
     if (!overlayPreviewLocale) return;
@@ -108,6 +111,7 @@ function BuilderShell() {
             overlayPreviewLocale={overlayPreviewLocale}
             onOverlayPreviewLocaleChange={setOverlayPreviewLocale}
             readyPreviewLocales={previewableTranslationLocales}
+            translationTextPacks={translationTextPacks}
           />
         </div>
       </div>

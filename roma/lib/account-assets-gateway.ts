@@ -11,6 +11,7 @@ import {
 type AccountAssetGatewayContext = {
   accountId: string;
   accountCapsule: string;
+  requestId: string;
   sessionSetCookies?: CurrentAccountRouteContext['setCookies'];
 };
 
@@ -67,6 +68,7 @@ export async function resolveCurrentAccountAssetGatewayContext(args: {
       value: {
         accountId: current.value.authzPayload.accountId,
         accountCapsule: current.value.authzToken,
+        requestId: current.value.requestId,
         sessionSetCookies: current.value.setCookies,
       },
     };
@@ -99,6 +101,7 @@ export async function proxyAccountAssetJson(args: {
     headers = buildTokyoAssetControlHeaders({
       accountId: args.context.accountId,
       accountCapsule: args.context.accountCapsule,
+      requestId: args.context.requestId,
       ...(args.contentType ? { contentType: args.contentType } : {}),
     });
     new Headers(args.extraHeaders).forEach((value, key) => headers.set(key, value));

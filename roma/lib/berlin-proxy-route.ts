@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { CK_REQUEST_ID_HEADER } from '@clickeen/ck-contracts';
 import { resolveBerlinBaseUrl } from './env/berlin';
 import { withSession } from './current-account-route';
+import { resolveRomaRequestId } from './request-ops';
 import type { SessionCookieSpec } from './auth/session';
 
 type BerlinProxyMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
@@ -18,11 +20,13 @@ export async function proxyBerlinTextResponse(args: {
 }): Promise<NextResponse> {
   try {
     const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
+    const requestId = resolveRomaRequestId(args.request);
     const upstream = await fetch(`${berlinBase}${args.path}`, {
       method: args.method,
       headers: {
         authorization: `Bearer ${args.accessToken}`,
         accept: args.accept || 'application/json',
+        [CK_REQUEST_ID_HEADER]: requestId,
         ...(args.body !== undefined
           ? { 'content-type': args.contentType || 'application/json' }
           : {}),

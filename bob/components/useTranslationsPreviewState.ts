@@ -1,5 +1,6 @@
 'use client';
 
+import { asTrimmedString } from '@clickeen/ck-contracts';
 import { useEffect, useState } from 'react';
 import { useWidgetSessionTransport } from '../lib/session/useWidgetSession';
 
@@ -8,6 +9,7 @@ export type TranslationsPreviewData = {
   requestedLocales: string[];
   readyLocales: string[];
   status: 'queued' | 'working' | 'ready' | 'failed';
+  textPacks: Record<string, Record<string, string>>;
 };
 
 type ErrorPayload = {
@@ -16,12 +18,6 @@ type ErrorPayload = {
     detail?: unknown;
   };
 };
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
 
 function normalizePreviewData(payload: unknown): TranslationsPreviewData | null {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
@@ -52,6 +48,22 @@ function normalizePreviewData(payload: unknown): TranslationsPreviewData | null 
     record.status === 'failed'
       ? record.status
       : null;
+  const textPacksRaw =
+    record.textPacks && typeof record.textPacks === 'object' && !Array.isArray(record.textPacks)
+      ? (record.textPacks as Record<string, unknown>)
+      : {};
+  const textPacks: Record<string, Record<string, string>> = {};
+  for (const [localeRaw, packRaw] of Object.entries(textPacksRaw)) {
+    const locale = asTrimmedString(localeRaw);
+    if (!locale || !packRaw || typeof packRaw !== 'object' || Array.isArray(packRaw)) continue;
+    const entries = Object.entries(packRaw)
+      .map(([pathRaw, value]) => {
+        const path = asTrimmedString(pathRaw);
+        return path && typeof value === 'string' ? [path, value] : null;
+      })
+      .filter((entry): entry is [string, string] => Boolean(entry));
+    textPacks[locale] = Object.fromEntries(entries);
+  }
 
   if (!baseLocale || !requestedLocales.includes(baseLocale) || !status) return null;
   if (!readyLocales.includes(baseLocale)) return null;
@@ -61,6 +73,7 @@ function normalizePreviewData(payload: unknown): TranslationsPreviewData | null 
     requestedLocales,
     readyLocales,
     status,
+    textPacks,
   };
 }
 

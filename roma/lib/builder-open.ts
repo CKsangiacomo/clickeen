@@ -12,6 +12,7 @@ export async function loadBuilderOpenEnvelope(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;
+  requestId?: string | null;
 }): Promise<
   | { ok: true; value: BuilderOpenEnvelope }
   | {
@@ -28,6 +29,7 @@ export async function loadBuilderOpenEnvelope(args: {
     accountId: args.accountId,
     instanceId: args.instanceId,
     accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
   });
   if (!instance.ok) {
     console.error(

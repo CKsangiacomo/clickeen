@@ -1,8 +1,9 @@
-import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
+import { asTrimmedString, isRecord, serializeCkLogEvent } from '@clickeen/ck-contracts';
 import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
 } from './tokyo-product-control';
+import { callTokyo, type TokyoCallContext } from './tokyo-client';
 
 // Roma's direct instance path is the server boundary for one boring product flow:
 // call Tokyo's named account-instance verbs and surface their result.
@@ -67,6 +68,20 @@ type TokyoJsonResult =
   | { ok: true; payload: unknown; status: number }
   | RouteFailure;
 
+function tokyoCallContext(args: {
+  accountId: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+  requestId?: string | null;
+}): TokyoCallContext {
+  return {
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
+    requestId: args.requestId,
+  };
+}
+
 function resolveTokyoControlErrorDetail(payload: unknown, fallback: string): string {
   if (isRecord(payload) && isRecord(payload.error)) {
     return (
@@ -112,10 +127,33 @@ function buildTokyoRouteFailure(args: {
   };
 }
 
+function logTokyoJsonParseWarning(args: {
+  requestId?: string | null;
+  accountId: string;
+  path: string;
+  method: string;
+  detail: string;
+}): void {
+  console.warn(
+    serializeCkLogEvent({
+      event: 'boundary.parse_failed',
+      service: 'roma',
+      stage: 'unknown',
+      requestId: args.requestId || crypto.randomUUID(),
+      boundary: 'tokyo.productControl.responseJson',
+      method: args.method,
+      path: args.path,
+      accountId: args.accountId,
+      detail: args.detail,
+    }),
+  );
+}
+
 async function fetchTokyoJson(args: {
   accountId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
   path: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
@@ -129,11 +167,23 @@ async function fetchTokyoJson(args: {
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
       internalServiceName: args.internalServiceName,
+      requestId: args.requestId,
       ...(args.body !== undefined ? { contentType: 'application/json' } : {}),
     }),
     ...(args.body !== undefined ? { body: JSON.stringify(args.body) } : {}),
   });
-  const payload = await response.json().catch(() => null);
+  let payload: unknown = null;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    logTokyoJsonParseWarning({
+      requestId: args.requestId,
+      accountId: args.accountId,
+      path: args.path,
+      method: args.method,
+      detail: error instanceof Error ? error.message : String(error),
+    });
+  }
   if (!response.ok) {
     return buildTokyoRouteFailure({
       response,
@@ -263,6 +313,7 @@ async function loadSavedInstanceFromTokyo(args: {
   instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | {
       ok: true;
@@ -270,20 +321,18 @@ async function loadSavedInstanceFromTokyo(args: {
     }
   | RouteFailure
 > {
-  const result = await fetchTokyoJson({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    internalServiceName: args.internalServiceName,
+  const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/saved.json`,
     method: 'GET',
-    fallbackDetail: 'tokyo_saved_config_http_error',
-    fallbackReasonKey: 'coreui.errors.db.readFailed',
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_saved_config_http_error',
+    errorKey: 'coreui.errors.db.readFailed',
   });
   if (!result.ok) {
     if (result.status === 404) return { ok: true, value: null };
     return result;
   }
-  const saved = normalizeSavedPayload(result.payload);
+  const saved = normalizeSavedPayload(result.value);
   if (!saved) return invalidTokyoPayload('invalid Tokyo saved instance payload');
   return { ok: true, value: saved };
 }
@@ -303,11 +352,9 @@ export async function writeSavedConfigToTokyo(args: {
     } | null;
   } | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<{ previousBaseFingerprint: string | null; baseFingerprint: string | null }> {
-  const result = await fetchTokyoJson({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    internalServiceName: args.internalServiceName,
+  const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/saved.json`,
     method: 'PUT',
     body: {
@@ -317,11 +364,12 @@ export async function writeSavedConfigToTokyo(args: {
       ...(args.meta !== undefined ? { meta: args.meta } : {}),
       ...(args.l10n !== undefined ? { l10n: args.l10n } : {}),
     },
-    fallbackDetail: 'tokyo_saved_config_http_error',
-    fallbackReasonKey: 'coreui.errors.db.writeFailed',
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_saved_config_http_error',
+    errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) throw new Error(result.error.detail ?? result.error.reasonKey);
-  const payload = isRecord(result.payload) ? result.payload : {};
+  const payload = isRecord(result.value) ? result.value : {};
   const l10n = isRecord(payload.l10n) ? payload.l10n : null;
   return {
     previousBaseFingerprint: asTrimmedString(payload.previousBaseFingerprint),
@@ -341,6 +389,7 @@ export async function createAccountInstanceInTokyo(args: {
     } | null;
   } | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | { ok: true; value: { row: AccountInstanceCoreRow; config: Record<string, unknown> } }
   | RouteFailure
@@ -362,6 +411,7 @@ export async function createAccountInstanceInTokyo(args: {
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     internalServiceName: args.internalServiceName,
+    requestId: args.requestId,
     path: '/__internal/renders/widgets/create.json',
     method: 'POST',
     body: {
@@ -389,6 +439,7 @@ export async function saveAccountInstanceInTokyo(args: {
   meta?: Record<string, unknown> | null;
   l10nIntent: TokyoL10nIntent;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | {
       ok: true;
@@ -401,10 +452,7 @@ export async function saveAccountInstanceInTokyo(args: {
     }
   | RouteFailure
 > {
-  const result = await fetchTokyoJson({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    internalServiceName: args.internalServiceName,
+  const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/save.json`,
     method: 'POST',
     body: {
@@ -414,11 +462,12 @@ export async function saveAccountInstanceInTokyo(args: {
       ...(args.meta !== undefined ? { meta: args.meta } : {}),
       l10nIntent: args.l10nIntent,
     },
-    fallbackDetail: 'tokyo_instance_save_http_error',
-    fallbackReasonKey: 'coreui.errors.db.writeFailed',
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_instance_save_http_error',
+    errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  const payload = isRecord(result.payload) ? result.payload : {};
+  const payload = isRecord(result.value) ? result.value : {};
   return {
     ok: true,
     value: {
@@ -434,6 +483,7 @@ export async function duplicateAccountInstanceInTokyo(args: {
   accountCapsule?: string | null;
   l10nIntent: TokyoL10nIntent;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | {
       ok: true;
@@ -450,18 +500,16 @@ export async function duplicateAccountInstanceInTokyo(args: {
     }
   | RouteFailure
 > {
-  const result = await fetchTokyoJson({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    internalServiceName: args.internalServiceName,
+  const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/renders/widgets/${encodeURIComponent(args.sourceInstanceId)}/duplicate.json`,
     method: 'POST',
     body: { l10nIntent: args.l10nIntent },
-    fallbackDetail: 'tokyo_instance_duplicate_http_error',
-    fallbackReasonKey: 'coreui.errors.db.writeFailed',
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_instance_duplicate_http_error',
+    errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  const payload = isRecord(result.payload) ? result.payload : null;
+  const payload = isRecord(result.value) ? result.value : null;
   const accountId = asTrimmedString(payload?.accountId);
   const sourceInstanceId = asTrimmedString(payload?.sourceInstanceId);
   const instanceId = asTrimmedString(payload?.instanceId);
@@ -487,6 +535,7 @@ async function postInstanceStatusTransition(args: {
   instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
   action: 'publish' | 'unpublish';
   expectedStatus: AccountInstanceLiveStatus;
   body?: Record<string, unknown>;
@@ -498,6 +547,7 @@ async function postInstanceStatusTransition(args: {
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     internalServiceName: args.internalServiceName,
+    requestId: args.requestId,
     path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/${args.action}.json`,
     method: 'POST',
     body: args.body ?? {},
@@ -526,6 +576,7 @@ export async function publishAccountInstanceInTokyo(args: {
   accountCapsule?: string | null;
   l10nIntent: TokyoL10nIntent;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | { ok: true; value: { instanceId: string; status: 'published'; changed: boolean } }
   | RouteFailure
@@ -552,6 +603,7 @@ export async function unpublishAccountInstanceInTokyo(args: {
   instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | { ok: true; value: { instanceId: string; status: 'unpublished'; changed: boolean } }
   | RouteFailure
@@ -577,20 +629,19 @@ export async function deleteAccountInstanceFromTokyo(args: {
   instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<{ existed: boolean }> {
-  const result = await fetchTokyoJson({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    internalServiceName: args.internalServiceName,
+  const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/saved.json`,
     method: 'DELETE',
-    fallbackDetail: 'tokyo_account_instance_delete_http_error',
-    fallbackReasonKey: 'coreui.errors.db.writeFailed',
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_account_instance_delete_http_error',
+    errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok && result.status !== 404) {
     throw new Error(result.error.detail ?? result.error.reasonKey);
   }
-  const payload = result.ok && isRecord(result.payload) ? result.payload : null;
+  const payload = result.ok && isRecord(result.value) ? result.value : null;
   return { existed: payload?.existed === true || payload?.deleted === true };
 }
 
@@ -599,6 +650,7 @@ export async function loadTokyoAccountInstanceDocument<TRow extends AccountInsta
   instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | {
       ok: true;
@@ -632,6 +684,7 @@ export async function loadTokyoAccountInstanceServeStates(args: {
   instanceIds: string[];
   accountCapsule?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | {
       ok: true;
@@ -657,6 +710,7 @@ export async function loadTokyoAccountInstanceServeStates(args: {
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     internalServiceName: args.internalServiceName,
+    requestId: args.requestId,
     path: '/__internal/renders/widgets/serve-state.json',
     method: 'POST',
     body: { instanceIds },
@@ -683,6 +737,7 @@ export async function loadTokyoAccountInstanceIndex(args: {
   accountId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | { ok: true; value: TokyoAccountInstanceIndex }
   | RouteFailure
@@ -691,6 +746,7 @@ export async function loadTokyoAccountInstanceIndex(args: {
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     internalServiceName: args.internalServiceName,
+    requestId: args.requestId,
     path: '/__internal/renders/widgets/index.json',
     method: 'GET',
     fallbackDetail: 'tokyo_instance_index_http_error',
@@ -718,6 +774,7 @@ export async function loadTokyoWidgetCatalog(args: {
   accountId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | { ok: true; value: { widgets: TokyoWidgetCatalogEntry[] } }
   | RouteFailure
@@ -726,6 +783,7 @@ export async function loadTokyoWidgetCatalog(args: {
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
     internalServiceName: args.internalServiceName,
+    requestId: args.requestId,
     path: '/__internal/renders/widgets/catalog.json',
     method: 'GET',
     fallbackDetail: 'tokyo_widget_catalog_http_error',
@@ -756,6 +814,7 @@ export async function saveAccountInstanceDirect(args: {
   } | null;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
 }): Promise<
   | { ok: true; previousBaseFingerprint: string | null; baseFingerprint: string | null }
   | RouteFailure

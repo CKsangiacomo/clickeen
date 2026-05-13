@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
   const widgetIndex = await loadTokyoAccountInstanceIndex({
     accountId,
     accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
   });
   if (widgetIndex.ok === false) {
     return withSession(
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
   const widgetCatalog = await loadTokyoWidgetCatalog({
     accountId,
     accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
   });
   if (widgetCatalog.ok === false) {
     return withSession(

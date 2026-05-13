@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { normalizeInstanceId } from '@clickeen/ck-contracts';
 import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
 import { loadAccountL10nIntent } from '@roma/lib/account-l10n-intent';
+import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -19,45 +19,31 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountId;
-  const { instanceId: instanceIdRaw } = await context.params;
-  const instanceId = normalizeInstanceId(instanceIdRaw);
-  if (!instanceId) {
+  const instanceId = await requireInstanceIdParam(context, { mode: 'normalized' });
+  if (typeof instanceId !== 'string') {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instanceId.invalid' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
       current.value.setCookies,
     );
   }
-  let body:
+  const bodyResult = await readJsonPayloadOrValidation<
     | {
         widgetType?: string;
         config?: Record<string, unknown>;
         displayName?: string | null;
         meta?: Record<string, unknown> | null;
       }
-    | null = null;
-  try {
-    body = (await request.json()) as
-      | {
-          widgetType?: string;
-          config?: Record<string, unknown>;
-          displayName?: string | null;
-          meta?: Record<string, unknown> | null;
-        }
-      | null;
-  } catch {
+    | null
+  >(request);
+  if (!bodyResult.ok) {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }),
       current.value.setCookies,
     );
   }
+  const body = bodyResult.payload;
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
   const config = body?.config;
@@ -119,6 +105,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   const l10nIntent = await loadAccountL10nIntent({
     accessToken: current.value.accessToken,
     accountId,
+    requestId: current.value.requestId,
   });
   if (!l10nIntent.ok) {
     return withSession(
@@ -137,6 +124,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     ...(meta !== undefined ? { meta } : {}),
     l10nIntent: l10nIntent.value,
     accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
   });
 
   if (!result.ok) {
@@ -162,15 +150,11 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountId;
-  const { instanceId: instanceIdRaw } = await context.params;
-  const instanceId = normalizeInstanceId(instanceIdRaw);
-  if (!instanceId) {
+  const instanceId = await requireInstanceIdParam(context, { mode: 'normalized' });
+  if (typeof instanceId !== 'string') {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instanceId.invalid' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
       current.value.setCookies,
     );
   }
@@ -181,6 +165,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       accountId,
       instanceId,
       accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);

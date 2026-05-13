@@ -1,3 +1,4 @@
+import { CK_REQUEST_ID_HEADER } from '@clickeen/ck-contracts';
 import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
 
 const TOKYO_PRODUCT_CONTROL_ORIGIN = 'https://tokyo-product-control.internal';
@@ -26,6 +27,7 @@ export function buildTokyoProductControlHeaders(args: {
   contentType?: string | null;
   accept?: string | null;
   internalServiceName?: string | null;
+  requestId?: string | null;
   headers?: HeadersInit;
 }): Headers {
   const headers = new Headers(args.headers);
@@ -36,6 +38,9 @@ export function buildTokyoProductControlHeaders(args: {
       DEFAULT_INTERNAL_SERVICE_NAME,
   );
   headers.set('accept', args.accept || 'application/json');
+  if (args.requestId) {
+    headers.set(CK_REQUEST_ID_HEADER, args.requestId);
+  }
   if (args.accountCapsule) {
     headers.set('x-ck-authz-capsule', args.accountCapsule);
   }

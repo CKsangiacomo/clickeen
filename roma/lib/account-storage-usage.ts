@@ -20,6 +20,7 @@ function resolveTokyoAssetUsageError(payload: TokyoAccountAssetUsagePayload | nu
 export async function readAccountStorageBytesUsed(args: {
   accountId: string;
   accountCapsule: string;
+  requestId?: string | null;
 }): Promise<number> {
   const response = await fetchTokyoAssetControl({
     path: `/__internal/assets/account/${encodeURIComponent(args.accountId)}/usage`,
@@ -27,6 +28,7 @@ export async function readAccountStorageBytesUsed(args: {
     headers: buildTokyoAssetControlHeaders({
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
     }),
   });
   const payload = (await response.json().catch(() => null)) as TokyoAccountAssetUsagePayload | null;

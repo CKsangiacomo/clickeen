@@ -10,7 +10,7 @@
     "build:i18n": "node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs",
     "build:l10n": "node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs",
     "build": "pnpm build:widgets && pnpm build:i18n && pnpm build:l10n && turbo build",
-    "lint": "turbo lint",
+    "lint": "node scripts/verify/primitive-drift.mjs && turbo lint",
     "test": "turbo test",
     "typecheck": "pnpm build:widgets:check && turbo typecheck",
     "tokyo:fonts:sync:local": "node scripts/tokyo-fonts-sync.mjs --local",
@@ -38,6 +38,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
+    "@playwright/test": "^1.60.0",
     "esbuild": "^0.21.5",
     "eslint": "^9.5.0",
     "eslint-config-next": "15.5.2",

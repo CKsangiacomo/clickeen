@@ -1,3 +1,4 @@
+import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import type { Env } from '../types';
 import {
@@ -16,16 +17,6 @@ const UTF8_ENCODER = new TextEncoder();
 
 function encodeJson(payload: unknown): Uint8Array {
   return UTF8_ENCODER.encode(JSON.stringify(payload));
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
 }
 
 function normalizeLayer(raw: unknown): LayerKind | null {

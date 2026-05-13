@@ -17,6 +17,8 @@ export type WidgetSessionChromeValue = {
 
 type WidgetSessionChromeControllerValue = {
   meta: SessionMeta;
+  policy: Policy | null;
+  requestUpsell: (reasonKey: string, detail?: string) => void;
   setMeta: React.Dispatch<React.SetStateAction<SessionMeta>>;
   setPolicy: React.Dispatch<React.SetStateAction<Policy | null>>;
   setCopilot: React.Dispatch<React.SetStateAction<CopilotRuntimeUi>>;
@@ -67,12 +69,14 @@ export function WidgetSessionChromeProvider({ children }: { children: ReactNode 
   const controllerValue = useMemo<WidgetSessionChromeControllerValue>(
     () => ({
       meta,
+      policy,
+      requestUpsell,
       setMeta,
       setPolicy,
       setCopilot,
       setUpsell,
     }),
-    [meta],
+    [meta, policy, requestUpsell],
   );
 
   return (

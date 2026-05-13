@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import {
   executeCopilotOnSanFrancisco,
   issueAccountCopilotGrant,
 } from '@roma/lib/ai/account-copilot';
 import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-direct';
+import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
-import { asTrimmedString } from '@clickeen/ck-contracts';
 import type { AiModelRef, AiProvider } from '@clickeen/ck-contracts/ai';
 
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 const AI_PROVIDERS: ReadonlySet<AiProvider> = new Set(['deepseek', 'openai']);
 
@@ -46,15 +43,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
 
-  const { instanceId: instanceIdRaw } = await context.params;
-  const instanceId = String(instanceIdRaw || '').trim();
-  if (!instanceId) {
+  const instanceId = await requireInstanceIdParam(context);
+  if (typeof instanceId !== 'string') {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.instanceIdRequired' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
       current.value.setCookies,
     );
   }
@@ -84,6 +77,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       accountId: current.value.authzPayload.accountId,
       instanceId,
       accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
     });
     if (!currentInstance.ok) {
       return withSession(
@@ -127,6 +121,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       grant: issued.grant,
       agentId: issued.agentId,
       traceClient: 'roma',
+      requestId: current.value.requestId,
       input: {
         prompt,
         widgetType,

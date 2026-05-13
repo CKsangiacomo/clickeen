@@ -150,6 +150,17 @@ export async function generateAccountWidgetL10nOps(args: {
   return out;
 }
 
+function normalizeTextPack(raw: unknown): Record<string, string> | null {
+  if (!isRecord(raw)) return null;
+  const entries = Object.entries(raw)
+    .map(([path, value]) => {
+      const key = asTrimmedString(path);
+      return key && typeof value === 'string' ? [key, value] : null;
+    })
+    .filter((entry): entry is [string, string] => Boolean(entry));
+  return Object.fromEntries(entries);
+}
+
 export async function loadAccountTranslationsPanelData(args: {
   env: Env;
   accountId: string;
@@ -165,6 +176,7 @@ export async function loadAccountTranslationsPanelData(args: {
   baseFingerprint: string;
   generationId: string;
   updatedAt: string;
+  textPacks: Record<string, Record<string, string>>;
 }> {
   const saved = await readSavedRenderConfig({
     env: args.env,
@@ -186,26 +198,32 @@ export async function loadAccountTranslationsPanelData(args: {
     throw new Error('tokyo_saved_l10n_summary_missing');
   }
 
-  const textPointerLocales = await Promise.all(
+  const overlayResults = await Promise.all(
     requestedLocales.map(async (locale) => {
-      if (locale === summaryBaseLocale) return locale;
-      const location = await resolveAccountInstanceLocation({
-        env: args.env,
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-      });
-      if (!location) return null;
+      if (locale === summaryBaseLocale) {
+        return { locale, ready: true, textPack: null };
+      }
       const raw = await args.env.TOKYO_R2
-        .get(accountInstanceL10nOverlayKey(location.accountId, location.widgetType, location.instanceId, locale))
+        .get(accountInstanceL10nOverlayKey(args.accountId, saved.value.pointer.widgetType, args.instanceId, locale))
         .then((obj) => obj?.json().catch(() => null) ?? null);
-      return isRecord(raw) && asTrimmedString(raw.baseFingerprint) === baseFingerprint ? locale : null;
+      if (!isRecord(raw) || asTrimmedString(raw.baseFingerprint) !== baseFingerprint) {
+        return { locale, ready: false, textPack: null };
+      }
+      return { locale, ready: true, textPack: normalizeTextPack(raw.textPack) };
     }),
+  );
+  const textPacks = Object.fromEntries(
+    overlayResults
+      .filter((result) => result.ready && result.locale !== summaryBaseLocale)
+      .map((result) => [result.locale, result.textPack ?? {}]),
   );
   const readyLocales = normalizeReadyLocales({
     baseLocale: summaryBaseLocale,
     locales: [
       ...(l10n.readyLocales ?? []),
-      ...textPointerLocales.filter((locale): locale is string => Boolean(locale)),
+      ...overlayResults
+        .filter((result) => result.ready)
+        .map((result) => result.locale),
     ],
   }).filter((locale) => requestedLocales.includes(locale));
   const readySet = new Set(readyLocales);
@@ -240,6 +258,7 @@ export async function loadAccountTranslationsPanelData(args: {
     baseFingerprint,
     generationId: l10n.generationId ?? `saved-${baseFingerprint.slice(0, 12)}`,
     updatedAt: l10n.updatedAt ?? saved.value.pointer.updatedAt,
+    textPacks,
   };
 }
 

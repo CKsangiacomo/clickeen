@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { normalizeInstanceId } from '@clickeen/ck-contracts';
 import { duplicateAccountInstanceInTokyo } from '@roma/lib/account-instance-direct';
 import { loadAccountL10nIntent } from '@roma/lib/account-l10n-intent';
+import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -16,15 +16,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountId;
-  const { instanceId: sourceInstanceIdRaw } = await context.params;
-  const sourceInstanceId = normalizeInstanceId(sourceInstanceIdRaw);
-  if (!sourceInstanceId) {
+  const sourceInstanceId = await requireInstanceIdParam(context, { mode: 'normalized' });
+  if (typeof sourceInstanceId !== 'string') {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instanceId.invalid' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: sourceInstanceId.error }, { status: sourceInstanceId.status }),
       current.value.setCookies,
     );
   }
@@ -32,6 +28,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const l10nIntent = await loadAccountL10nIntent({
     accessToken: current.value.accessToken,
     accountId,
+    requestId: current.value.requestId,
   });
   if (!l10nIntent.ok) {
     return withSession(
@@ -46,6 +43,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     sourceInstanceId,
     accountCapsule: current.value.authzToken,
     l10nIntent: l10nIntent.value,
+    requestId: current.value.requestId,
   });
   if (!duplicate.ok) {
     return withSession(

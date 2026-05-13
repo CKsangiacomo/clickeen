@@ -8,6 +8,7 @@ import {
 export async function loadAccountPublishContainment(
   accountId: string,
   berlinAccessToken: string,
+  requestId?: string | null,
 ): Promise<BerlinAccountPublishContainmentResult> {
   try {
     const containment = await fetchBerlinProductJson<{
@@ -15,6 +16,7 @@ export async function loadAccountPublishContainment(
     }>({
       accessToken: berlinAccessToken,
       path: `/v1/accounts/${encodeURIComponent(accountId)}/publish-containment`,
+      requestId,
     });
     if (!containment.ok) return containment;
     return {

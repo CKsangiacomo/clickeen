@@ -275,6 +275,12 @@
           return;
         }
         if (target === hidden) return;
+        if (
+          target.classList.contains("diet-repeater__field") ||
+          target.classList.contains("diet-object-manager__field")
+        ) {
+          return;
+        }
         const basePath = hidden.getAttribute("data-bob-path") || hidden.getAttribute("data-path") || "";
         if (!basePath) return;
         const path = target.getAttribute("data-bob-path") || "";

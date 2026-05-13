@@ -16,6 +16,7 @@ type AccountLocaleSyncTarget = {
 async function loadAccountLocaleSyncTargets(args: {
   accountId: string;
   accountCapsule?: string | null;
+  requestId?: string | null;
 }): Promise<
   | { ok: true; targets: AccountLocaleSyncTarget[]; warnings: string[] }
   | { ok: false; warning: string }
@@ -23,6 +24,7 @@ async function loadAccountLocaleSyncTargets(args: {
   const index = await loadTokyoAccountInstanceIndex({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
   });
   if (!index.ok) {
     return {
@@ -49,11 +51,13 @@ async function loadAccountLocaleSyncTargets(args: {
 export async function runAccountLocalesSync(args: {
   accountId: string;
   accountCapsule?: string | null;
+  requestId?: string | null;
   l10nIntent: AccountInstanceSyncIntent;
 }): Promise<void> {
   const targets = await loadAccountLocaleSyncTargets({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
   });
   if (!targets.ok) {
     throw new Error(targets.warning);
@@ -74,6 +78,7 @@ export async function runAccountLocalesSync(args: {
       accountId: args.accountId,
       instanceId: instance.instanceId,
       accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
       live: instance.live,
       l10nIntent: args.l10nIntent,
     });

@@ -1,3 +1,4 @@
+import { asTrimmedString } from '@clickeen/ck-contracts';
 import { normalizeLocale } from '../../asset-utils';
 import type { AllowlistEntry } from '@clickeen/l10n';
 import type {
@@ -11,12 +12,6 @@ import type {
   SavedRenderPointer,
 } from './types';
 import { normalizeFingerprint, normalizeLocaleList, normalizeStorageId, normalizeSavedL10nFailures, normalizeSavedL10nStatus } from './utils';
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;

@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { collectConfigMediaAssetIds, materializeConfigMedia } from '@clickeen/ck-contracts';
+import {
+  collectConfigMediaAssetIds,
+  materializeConfigMedia,
+  type ResolvedAccountAsset,
+} from '@clickeen/ck-contracts';
 import { getIcon } from '../lib/icons';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
-import { serializeInstanceDataSignature } from '../lib/session/sessionTypes';
 
 const BLOCKED_SWITCHER_COPY =
   'Translations not available while in editing mode. Preview translations in Translations panel.';
@@ -13,12 +16,14 @@ export function Workspace({
   overlayPreviewLocale,
   onOverlayPreviewLocaleChange,
   readyPreviewLocales,
+  translationTextPacks,
 }: {
   baseLocale: string;
   previewMode: 'editing' | 'translations';
   overlayPreviewLocale: string;
   onOverlayPreviewLocaleChange: (locale: string) => void;
   readyPreviewLocales: string[];
+  translationTextPacks: Record<string, Record<string, string>>;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
@@ -38,16 +43,18 @@ export function Workspace({
   const [iframeLoadError, setIframeLoadError] = useState<string | null>(null);
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
-  const instanceDataSignature = useMemo(
-    () => serializeInstanceDataSignature(instanceData),
+  const [resolvedAssets, setResolvedAssets] = useState<Map<string, ResolvedAccountAsset>>(() => new Map());
+  const mediaAssetIds = useMemo(
+    () => collectConfigMediaAssetIds(instanceData),
     [instanceData],
   );
-  const [materializedPreview, setMaterializedPreview] = useState<{
-    signature: string;
-    data: Record<string, unknown>;
-  } | null>(null);
-  const previewInstanceData =
-    materializedPreview?.signature === instanceDataSignature ? materializedPreview.data : instanceData;
+  const previewInstanceData = useMemo(() => {
+    if (!mediaAssetIds.length) return instanceData;
+    const materialized = materializeConfigMedia(instanceData, resolvedAssets);
+    return materialized && typeof materialized === 'object' && !Array.isArray(materialized)
+      ? (materialized as Record<string, unknown>)
+      : instanceData;
+  }, [instanceData, mediaAssetIds, resolvedAssets]);
   const effectiveReadyPreviewLocales = useMemo(() => {
     const readyLocales = Array.from(
       new Set(
@@ -68,6 +75,10 @@ export function Workspace({
         ? overlayPreviewLocale
         : fallbackPreviewLocale
       : fallbackPreviewLocale;
+  const effectiveTranslationTextPack =
+    previewMode === 'translations' && effectivePreviewLocale !== baseLocale
+      ? translationTextPacks[effectivePreviewLocale] ?? null
+      : null;
   const latestRef = useRef({
     compiled,
     instanceData: previewInstanceData,
@@ -75,6 +86,7 @@ export function Workspace({
     baseLocale,
     previewMode,
     effectivePreviewLocale,
+    effectiveTranslationTextPack,
     readyPreviewLocales: effectiveReadyPreviewLocales,
     device,
     theme,
@@ -88,6 +100,7 @@ export function Workspace({
       baseLocale,
       previewMode,
       effectivePreviewLocale,
+      effectiveTranslationTextPack,
       readyPreviewLocales: effectiveReadyPreviewLocales,
       device,
       theme,
@@ -99,6 +112,7 @@ export function Workspace({
     baseLocale,
     previewMode,
     effectivePreviewLocale,
+    effectiveTranslationTextPack,
     effectiveReadyPreviewLocales,
     device,
     theme,
@@ -106,38 +120,42 @@ export function Workspace({
 
   useEffect(() => {
     let cancelled = false;
-    const signature = instanceDataSignature;
-    const assetIds = collectConfigMediaAssetIds(instanceData);
-    if (!assetIds.length) {
-      setMaterializedPreview(null);
+    if (!mediaAssetIds.length) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const missingAssetIds = mediaAssetIds.filter((assetId) => !resolvedAssets.has(assetId));
+    if (!missingAssetIds.length) {
       return () => {
         cancelled = true;
       };
     }
 
     void accountAssets
-      .resolveAssets(assetIds)
+      .resolveAssets(missingAssetIds)
       .then(({ assetsById }) => {
         if (cancelled) return;
-        const materialized = materializeConfigMedia(instanceData, assetsById);
-        if (materialized && typeof materialized === 'object' && !Array.isArray(materialized)) {
-          setMaterializedPreview({
-            signature,
-            data: materialized as Record<string, unknown>,
+        setResolvedAssets((current) => {
+          let changed = false;
+          const next = new Map(current);
+          assetsById.forEach((asset, assetId) => {
+            next.set(assetId, asset);
+            changed = true;
           });
-          return;
-        }
-        setMaterializedPreview(null);
+          return changed ? next : current;
+        });
       })
       .catch(() => {
-        if (cancelled) return;
-        setMaterializedPreview(null);
+        // Asset resolve failure is already surfaced through the account route.
+        // Keep the previous materialized preview state instead of flashing unresolved media.
       });
 
     return () => {
       cancelled = true;
     };
-  }, [accountAssets, instanceData, instanceDataSignature]);
+  }, [accountAssets, mediaAssetIds, resolvedAssets]);
 
   useEffect(() => {
     if (!switcherNotice) return undefined;
@@ -201,6 +219,7 @@ export function Workspace({
           baseLocale: snapshot.baseLocale,
           state: snapshot.instanceData,
           locale: snapshot.effectivePreviewLocale,
+          translationTextPack: snapshot.effectiveTranslationTextPack,
           previewMode: snapshot.previewMode,
           device: snapshot.device,
           theme: snapshot.theme,
@@ -245,6 +264,7 @@ export function Workspace({
       baseLocale,
       state: previewInstanceData,
       locale: effectivePreviewLocale,
+      translationTextPack: effectiveTranslationTextPack,
       previewMode,
       device,
       theme,
@@ -257,6 +277,7 @@ export function Workspace({
     instanceId,
     previewInstanceData,
     effectivePreviewLocale,
+    effectiveTranslationTextPack,
     previewMode,
     baseLocale,
     device,

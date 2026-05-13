@@ -1,4 +1,4 @@
-import { parseAccountL10nPolicyStrict, parseAccountLocaleListStrict } from '@clickeen/ck-contracts';
+import { CK_REQUEST_ID_HEADER, parseAccountL10nPolicyStrict, parseAccountLocaleListStrict } from '@clickeen/ck-contracts';
 import { resolveBerlinBaseUrl } from './env/berlin';
 
 // Berlin is the account-level locale policy authority. Roma reads it here and
@@ -6,6 +6,7 @@ import { resolveBerlinBaseUrl } from './env/berlin';
 export async function loadCurrentAccountLocalesState(args: {
   accessToken: string;
   accountId: string;
+  requestId?: string | null;
 }): Promise<
   | {
       ok: true;
@@ -27,6 +28,7 @@ export async function loadCurrentAccountLocalesState(args: {
       headers: {
         authorization: `Bearer ${args.accessToken}`,
         accept: 'application/json',
+        ...(args.requestId ? { [CK_REQUEST_ID_HEADER]: args.requestId } : {}),
       },
       cache: 'no-store',
     },

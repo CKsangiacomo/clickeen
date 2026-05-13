@@ -717,7 +717,7 @@
 
   let previewLocaleRequest = 0;
 
-  async function applyPreviewState(state, locale, instanceId, previewMode, baseLocale) {
+  async function applyPreviewState(state, locale, instanceId, previewMode, baseLocale, translationTextPack) {
     const requestId = ++previewLocaleRequest;
     const helper =
       window.CK_PREVIEW_L10N &&
@@ -734,6 +734,7 @@
           baseLocale,
           previewMode,
           baseState: state,
+          textPack: translationTextPack,
         });
       } catch (error) {
         if (requestId === previewLocaleRequest) {
@@ -756,6 +757,7 @@
       data.instanceId,
       data.previewMode,
       data.baseLocale,
+      data.translationTextPack,
     );
   });
 

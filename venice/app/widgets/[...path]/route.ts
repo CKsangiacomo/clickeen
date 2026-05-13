@@ -19,9 +19,10 @@ function isAllowedWidgetPath(parts: string[]): boolean {
   return false;
 }
 
-export async function GET(_req: Request, ctx: { params: Promise<{ path: string[] }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;
   return proxyTokyoPath({
+    request: req,
     prefix: 'widgets',
     parts: normalizeTokyoPathParts(path),
     allowed: isAllowedWidgetPath,
@@ -38,5 +39,6 @@ export async function HEAD(req: Request, ctx: { params: Promise<{ path: string[]
     allowed: isAllowedWidgetPath,
     defaultCache: 'public, max-age=3600, s-maxage=86400',
     method: 'HEAD',
+    request: req,
   });
 }

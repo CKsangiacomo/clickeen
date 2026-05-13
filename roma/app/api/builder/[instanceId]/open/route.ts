@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { loadBuilderOpenEnvelope } from '@roma/lib/builder-open';
 import { resolveAccountCopilotRuntimeUi } from '@roma/lib/ai/account-copilot';
 import { resolveCurrentAccountRouteContext, withSession } from '@roma/lib/current-account-route';
+import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 
 export const runtime = 'edge';
 
@@ -11,14 +12,13 @@ export async function GET(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
   if (!current.ok) return current.response;
 
-  const { instanceId: instanceIdRaw } = await context.params;
-  const instanceId = String(instanceIdRaw || '').trim();
-  if (!instanceId) {
+  const instanceId = await requireInstanceIdParam(context);
+  if (typeof instanceId !== 'string') {
     return withSession(
       request,
       NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.instanceIdRequired' } },
-        { status: 422 },
+        { error: instanceId.error },
+        { status: instanceId.status },
       ),
       current.value.setCookies,
     );
@@ -28,6 +28,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     accountId: current.value.authzPayload.accountId,
     instanceId,
     accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
   });
 
   if (!result.ok) {

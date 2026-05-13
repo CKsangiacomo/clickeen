@@ -1,6 +1,6 @@
 # PRD 89 - Slice 5 Derived Artifact Contract
 
-Status: contract green; bespoke audit script removed by Slice 10
+Status: Executed - contract green; bespoke audit script removed by Slice 10
 Date: 2026-05-11
 
 ## Decision

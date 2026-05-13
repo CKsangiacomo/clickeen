@@ -144,6 +144,36 @@ export function asTrimmedString(value: unknown): string | null {
   return normalized || null;
 }
 
+export function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  try {
+    const payloadPart = parts[1] || '';
+    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const decoded = atob(padded);
+    const parsed = JSON.parse(decoded) as unknown;
+    if (!isRecord(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function tokenIsExpired(token: string, leewaySeconds = 30): boolean {
+  const payload = decodeJwtPayload(token);
+  const expClaim = payload?.exp;
+  const exp =
+    typeof expClaim === 'number'
+      ? expClaim
+      : typeof expClaim === 'string'
+        ? Number.parseInt(expClaim, 10)
+        : Number.NaN;
+  if (!Number.isFinite(exp)) return false;
+  const now = Math.floor(Date.now() / 1000);
+  return exp <= now + leewaySeconds;
+}
+
 export function normalizeInstanceId(raw: unknown): string | null {
   const value = typeof raw === 'string' ? raw.trim() : '';
   if (!value) return null;
@@ -583,3 +613,5 @@ export function configNonPersistableUrlIssues(config: unknown): AccountL10nValid
 }
 
 export * from './user-settings-geo';
+export * from './observability';
+export * from './reason-keys';

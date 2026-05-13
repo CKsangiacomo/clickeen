@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { isRecord } from '@clickeen/ck-contracts';
 import { assertPolicyEntitlementsSnapshot } from '@clickeen/ck-policy';
 
 export type RomaLifecycleNotice = {
@@ -96,10 +97,6 @@ function normalizeAccountId(value: unknown): string | null {
 
 function normalizeOptionalString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function normalizeRole(value: unknown): RomaAuthzPolicy['role'] | null {

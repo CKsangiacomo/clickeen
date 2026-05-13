@@ -6,8 +6,8 @@ Date: 2026-05-12
 Architecture source: `documentation/architecture/CONTEXT.md`
 Strategy source: `documentation/strategy/WhyClickeen.md`
 Triggered by: Builder open regression returning `authz_capsule_required`
-Parent cleanup: `Execution_Pipeline_Docs/02-Executing/093__PRD__PRD_092_Intent_Closure_And_Widget_Catalog_Truth.md`
-Execution notes: `Execution_Pipeline_Docs/02-Executing/094A__Execution_Notes.md`
+Parent cleanup: `Execution_Pipeline_Docs/03-Executed/093__PRD__PRD_092_Intent_Closure_And_Widget_Catalog_Truth.md`
+Execution notes: `Execution_Pipeline_Docs/03-Executed/094A__Execution_Notes.md`
 
 ## 0. Execution Result
 

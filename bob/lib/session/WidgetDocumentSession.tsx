@@ -48,6 +48,8 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
     state,
     setState,
     setMeta: chrome.setMeta,
+    policy: chrome.policy,
+    requestUpsell: chrome.requestUpsell,
   });
   const boot = useSessionBoot({
     setState,

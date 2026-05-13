@@ -7,6 +7,7 @@ import {
   localeCandidates,
   normalizeLocaleToken,
 } from '@clickeen/l10n';
+import { serializeCkLogEvent } from '@clickeen/ck-contracts';
 import localesJson from '@clickeen/l10n/locales.json';
 
 const BASE_LOADERS = import.meta.glob('../../content/base/v1/**/*.json', { import: 'default' });
@@ -234,18 +235,81 @@ function encodePathSegments(pathStr: string): string {
 
 const PRAGUE_L10N_PREFIX = '/l10n/prague';
 
-async function fetchLayerIndex(pageId: string): Promise<LayerIndex | null> {
+function resolvePragueL10nStage(): string {
+  return readEnv('PUBLIC_ENV_STAGE') || readEnv('ENV_STAGE') || (import.meta.env.DEV ? 'local' : 'unknown');
+}
+
+function logPragueL10nWarning(args: {
+  boundary: string;
+  detail: string;
+  pageId?: string | null;
+  path?: string | null;
+  status?: number | null;
+}): void {
+  console.warn(
+    serializeCkLogEvent({
+      event: 'boundary.operation_failed',
+      service: 'prague',
+      stage: resolvePragueL10nStage(),
+      requestId: crypto.randomUUID(),
+      boundary: args.boundary,
+      path: args.path ?? undefined,
+      status: args.status ?? undefined,
+      detail: args.detail,
+      meta: args.pageId ? { pageId: args.pageId } : undefined,
+    }),
+  );
+}
+
+async function fetchTokyoL10nJson<T>(args: {
+  pageId: string;
+  path: string;
+  boundary: string;
+}): Promise<T | null> {
   const baseUrl = getTokyoBaseUrl();
-  const path = `${PRAGUE_L10N_PREFIX}/${encodePathSegments(pageId)}/index.json`;
-  let res: Response;
+  let response: Response;
   try {
-    res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
-  } catch {
+    response = await fetch(`${baseUrl}${args.path}`, { method: 'GET' });
+  } catch (error) {
+    logPragueL10nWarning({
+      boundary: `${args.boundary}.fetch`,
+      pageId: args.pageId,
+      path: args.path,
+      detail: error instanceof Error ? error.message : String(error),
+    });
     return null;
   }
-  if (res.status === 404) return null;
-  if (!res.ok) return null;
-  const json = (await res.json().catch(() => null)) as LayerIndex | null;
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    logPragueL10nWarning({
+      boundary: `${args.boundary}.http`,
+      pageId: args.pageId,
+      path: args.path,
+      status: response.status,
+      detail: `HTTP_${response.status}`,
+    });
+    return null;
+  }
+  try {
+    return (await response.json()) as T;
+  } catch (error) {
+    logPragueL10nWarning({
+      boundary: `${args.boundary}.json`,
+      pageId: args.pageId,
+      path: args.path,
+      detail: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+async function fetchLayerIndex(pageId: string): Promise<LayerIndex | null> {
+  const path = `${PRAGUE_L10N_PREFIX}/${encodePathSegments(pageId)}/index.json`;
+  const json = await fetchTokyoL10nJson<LayerIndex>({
+    boundary: 'prague.l10n.index',
+    pageId,
+    path,
+  });
   if (!json || typeof json !== 'object' || json.v !== 1) return null;
   if (!json.layers || typeof json.layers !== 'object') return null;
   return json;
@@ -253,19 +317,14 @@ async function fetchLayerIndex(pageId: string): Promise<LayerIndex | null> {
 
 async function fetchBaseSnapshot(args: { pageId: string; baseFingerprint: string }): Promise<Record<string, string> | null> {
   if (!args.baseFingerprint) return null;
-  const baseUrl = getTokyoBaseUrl();
   const path = `${PRAGUE_L10N_PREFIX}/${encodePathSegments(args.pageId)}/bases/${encodeURIComponent(
     args.baseFingerprint,
   )}.snapshot.json`;
-  let res: Response;
-  try {
-    res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
-  } catch {
-    return null;
-  }
-  if (res.status === 404) return null;
-  if (!res.ok) return null;
-  const json = (await res.json().catch(() => null)) as PragueBaseSnapshot | null;
+  const json = await fetchTokyoL10nJson<PragueBaseSnapshot>({
+    boundary: 'prague.l10n.baseSnapshot',
+    pageId: args.pageId,
+    path,
+  });
   if (!json || typeof json !== 'object' || json.v !== 1) return null;
   if (!json.snapshot || typeof json.snapshot !== 'object' || Array.isArray(json.snapshot)) return null;
   const out: Record<string, string> = {};
@@ -484,19 +543,14 @@ async function fetchOverlay(args: {
   baseFingerprint: string;
 }): Promise<PragueOverlay | null> {
   if (!args.baseFingerprint) return null;
-  const baseUrl = getTokyoBaseUrl();
   const path = `${PRAGUE_L10N_PREFIX}/${encodePathSegments(args.pageId)}/${encodeURIComponent(args.layer)}/${encodeURIComponent(
     args.layerKey
   )}/${encodeURIComponent(args.baseFingerprint)}.ops.json`;
-  let res: Response;
-  try {
-    res = await fetch(`${baseUrl}${path}`, { method: 'GET' });
-  } catch {
-    return null;
-  }
-  if (res.status === 404) return null;
-  if (!res.ok) return null;
-  const json = (await res.json().catch(() => null)) as PragueOverlay | null;
+  const json = await fetchTokyoL10nJson<PragueOverlay>({
+    boundary: 'prague.l10n.overlay',
+    pageId: args.pageId,
+    path,
+  });
   if (!json || typeof json !== 'object' || json.v !== 1 || !Array.isArray(json.ops)) return null;
   return json;
 }
@@ -540,7 +594,14 @@ async function applyPragueLayeredOverlaysWithMeta(args: {
   }
 
   const baseFingerprint = await computeBaseFingerprint(args.base);
-  const index = await fetchLayerIndex(args.pageId).catch(() => null);
+  const index = await fetchLayerIndex(args.pageId).catch((error) => {
+    logPragueL10nWarning({
+      boundary: 'prague.l10n.index.unhandled',
+      pageId: args.pageId,
+      detail: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  });
 
   if (!index) {
     const meta = { overlayStatus: 'missing' as const, overlayLocale: normalized };
@@ -612,7 +673,14 @@ async function applyPragueLayeredOverlaysWithMeta(args: {
         return { target, overlay: null, stale: true, fingerprint: overlayFingerprint, snapshot: null };
       }
       if (overlayFingerprint !== baseFingerprint) {
-        const snapshot = await fetchBaseSnapshot({ pageId: args.pageId, baseFingerprint: overlayFingerprint }).catch(() => null);
+        const snapshot = await fetchBaseSnapshot({ pageId: args.pageId, baseFingerprint: overlayFingerprint }).catch((error) => {
+          logPragueL10nWarning({
+            boundary: 'prague.l10n.baseSnapshot.unhandled',
+            pageId: args.pageId,
+            detail: error instanceof Error ? error.message : String(error),
+          });
+          return null;
+        });
         return { target, overlay, stale: true, fingerprint: overlayFingerprint, snapshot };
       }
       return { target, overlay, stale: false, fingerprint: overlayFingerprint, snapshot: null };

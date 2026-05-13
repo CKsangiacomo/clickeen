@@ -6,6 +6,7 @@ import {
   loadTokyoWidgetCatalog,
 } from '@roma/lib/account-instance-direct';
 import { loadAccountL10nIntent } from '@roma/lib/account-l10n-intent';
+import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -26,19 +27,15 @@ export async function POST(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
 
-  let body: { widgetType?: unknown; displayName?: unknown } | null = null;
-  try {
-    body = (await request.json()) as { widgetType?: unknown; displayName?: unknown } | null;
-  } catch {
+  const bodyResult = await readJsonPayloadOrValidation<{ widgetType?: unknown; displayName?: unknown } | null>(request);
+  if (!bodyResult.ok) {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }),
       current.value.setCookies,
     );
   }
+  const body = bodyResult.payload;
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
   const hasDisplayName = Boolean(body && Object.prototype.hasOwnProperty.call(body, 'displayName'));
@@ -58,6 +55,7 @@ export async function POST(request: NextRequest) {
   const catalog = await loadTokyoWidgetCatalog({
     accountId,
     accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
   });
   if (!catalog.ok) {
     return withSession(
@@ -79,6 +77,7 @@ export async function POST(request: NextRequest) {
   const widgetIndex = await loadTokyoAccountInstanceIndex({
     accountId,
     accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
   });
   if (!widgetIndex.ok) {
     return withSession(
@@ -117,6 +116,7 @@ export async function POST(request: NextRequest) {
   const l10nIntent = await loadAccountL10nIntent({
     accessToken: current.value.accessToken,
     accountId,
+    requestId: current.value.requestId,
   });
   if (!l10nIntent.ok) {
     return withSession(
@@ -130,6 +130,7 @@ export async function POST(request: NextRequest) {
     accountCapsule: current.value.authzToken,
     widgetType,
     displayName,
+    requestId: current.value.requestId,
     l10n: {
       summary: {
         baseLocale: l10nIntent.value.baseLocale,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { publishAccountInstanceInTokyo } from '@roma/lib/account-instance-direct';
 import { loadAccountL10nIntent } from '@roma/lib/account-l10n-intent';
 import { loadAccountPublishContainment } from '@roma/lib/berlin-product';
+import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -13,20 +14,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountId;
-  const { instanceId: instanceIdRaw } = await context.params;
-  const instanceId = String(instanceIdRaw || '').trim();
-  if (!instanceId) {
+  const instanceId = await requireInstanceIdParam(context);
+  if (typeof instanceId !== 'string') {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.instanceIdRequired' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
       current.value.setCookies,
     );
   }
 
-  const containment = await loadAccountPublishContainment(accountId, current.value.accessToken);
+  const containment = await loadAccountPublishContainment(accountId, current.value.accessToken, current.value.requestId);
   if (!containment.ok) {
     const status = containment.status === 401 ? 401 : containment.status === 403 ? 403 : 502;
     const kind = status === 401 ? 'AUTH' : status === 403 ? 'DENY' : 'UPSTREAM_UNAVAILABLE';
@@ -59,6 +56,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const l10nIntent = await loadAccountL10nIntent({
     accessToken: current.value.accessToken,
     accountId,
+    requestId: current.value.requestId,
   });
   if (!l10nIntent.ok) {
     return withSession(
@@ -73,6 +71,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     instanceId,
     accountCapsule: current.value.authzToken,
     l10nIntent: l10nIntent.value,
+    requestId: current.value.requestId,
   });
   if (!publish.ok) {
     return withSession(

@@ -1,4 +1,4 @@
-import { isUuid } from '@clickeen/ck-contracts';
+import { asTrimmedString, isUuid } from '@clickeen/ck-contracts';
 import type { Env } from '../../types';
 import {
   accountInstanceConfigKey,
@@ -37,12 +37,6 @@ type IndexFailure = {
 export type AccountInstanceIndexReadResult =
   | { ok: true; value: AccountInstanceIndexDocument }
   | IndexFailure;
-
-function asTrimmedString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  return normalized || null;
-}
 
 function displayNameFromInstance(instance: AccountInstanceDocument): string {
   const displayName = asTrimmedString(instance.displayName);

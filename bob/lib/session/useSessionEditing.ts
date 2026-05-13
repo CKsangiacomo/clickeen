@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
+import { evaluateLimits, type Policy } from '@clickeen/ck-policy';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../ops';
 import { applyWidgetOps } from '../ops';
 import { normalizeSessionConfig } from './sessionConfig';
@@ -10,8 +11,10 @@ export function useSessionEditing(args: {
   state: SessionState;
   setState: Dispatch<SetStateAction<SessionState>>;
   setMeta: Dispatch<SetStateAction<SessionMeta>>;
+  policy: Policy | null;
+  requestUpsell: (reasonKey: string, detail?: string) => void;
 }) {
-  const { state, setMeta, setState } = args;
+  const { policy, requestUpsell, state, setMeta, setState } = args;
 
   const applyOps = useCallback(
     (ops: WidgetOp[]): ApplyWidgetOpsResult => {
@@ -36,6 +39,27 @@ export function useSessionEditing(args: {
       }
 
       const normalizedData = normalizeSessionConfig(applied.data, compiled);
+      const limitViolations =
+        policy && compiled.limits
+          ? evaluateLimits({
+              config: normalizedData,
+              limits: compiled.limits,
+              policy,
+              context: 'ops',
+            })
+          : [];
+      if (limitViolations.length > 0) {
+        const errors = limitViolations.map((violation, idx) => ({
+          opIndex: idx,
+          path: violation.path,
+          message: violation.reasonKey,
+        }));
+        const primary = limitViolations[0];
+        requestUpsell(primary.reasonKey, primary.detail);
+        const result: ApplyWidgetOpsResult = { ok: false, errors };
+        setState((prev) => ({ ...prev, error: { source: 'ops', errors } }));
+        return result;
+      }
 
       setState((prev) => ({
         ...prev,
@@ -51,7 +75,7 @@ export function useSessionEditing(args: {
 
       return { ok: true, data: normalizedData };
     },
-    [setState, state],
+    [policy, requestUpsell, setState, state],
   );
 
   const setInstanceLabel = useCallback((label: string) => {

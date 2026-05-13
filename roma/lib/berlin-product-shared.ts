@@ -1,4 +1,4 @@
-import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
+import { CK_REQUEST_ID_HEADER, asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import { resolveBerlinBaseUrl } from './env/berlin';
 
 export { asTrimmedString, isRecord };
@@ -44,6 +44,7 @@ export async function fetchBerlinProductJson<T>(args: {
   path: string;
   method?: string;
   body?: unknown;
+  requestId?: string | null;
 }): Promise<BerlinProductJsonResult<T>> {
   let berlinBase = '';
   try {
@@ -61,6 +62,9 @@ export async function fetchBerlinProductJson<T>(args: {
   const headers = new Headers();
   headers.set('authorization', `Bearer ${args.accessToken}`);
   headers.set('accept', 'application/json');
+  if (args.requestId) {
+    headers.set(CK_REQUEST_ID_HEADER, args.requestId);
+  }
   if (args.body !== undefined) {
     headers.set('content-type', 'application/json');
   }

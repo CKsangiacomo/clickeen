@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadAccountInstanceTranslationsPanel } from '@roma/lib/account-instance-translations';
+import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -14,15 +15,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountId;
-  const { instanceId: instanceIdRaw } = await context.params;
-  const instanceId = String(instanceIdRaw || '').trim();
-  if (!instanceId) {
+  const instanceId = await requireInstanceIdParam(context);
+  if (typeof instanceId !== 'string') {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.instanceIdRequired' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
       current.value.setCookies,
     );
   }
@@ -31,6 +28,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     accountId,
     instanceId,
     accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
   });
 
   if (!result.ok) {

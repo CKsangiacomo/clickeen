@@ -1,3 +1,4 @@
+import { isRecord as isPlainRecord } from '@clickeen/ck-contracts';
 import type {
   WidgetNormalizationCoerceRule,
   WidgetNormalizationIdRule,
@@ -6,10 +7,6 @@ import type {
 } from '../../types';
 
 const FORBIDDEN_PATH_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
-
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function isSafePathKey(value: string): boolean {
   if (!value) return false;
@@ -261,17 +258,17 @@ export function normalizeWidgetNormalizationSpec(raw: unknown): WidgetNormalizat
     throw new Error('[BobCompiler] normalization must be an object');
   }
 
-  const idRulesRaw = raw.idRules;
+  const idRulesRaw: unknown = raw.idRules;
   if (idRulesRaw != null && !Array.isArray(idRulesRaw)) {
     throw new Error('[BobCompiler] normalization.idRules must be an array');
   }
-  const coerceRulesRaw = raw.coerceRules;
+  const coerceRulesRaw: unknown = raw.coerceRules;
   if (coerceRulesRaw != null && !Array.isArray(coerceRulesRaw)) {
     throw new Error('[BobCompiler] normalization.coerceRules must be an array');
   }
 
-  const idRules = (idRulesRaw ?? []).map((rule, index) => parseIdRule(rule, index));
-  const coerceRules = (coerceRulesRaw ?? []).map((rule, index) => parseCoerceRule(rule, index));
+  const idRules = ((idRulesRaw ?? []) as unknown[]).map((rule, index) => parseIdRule(rule, index));
+  const coerceRules = ((coerceRulesRaw ?? []) as unknown[]).map((rule, index) => parseCoerceRule(rule, index));
 
   if (!idRules.length && !coerceRules.length) return undefined;
   return {

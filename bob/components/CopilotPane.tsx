@@ -1,12 +1,8 @@
-import { looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
+import { asTrimmedString, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { WidgetOp } from '../lib/ops';
 import type { CopilotMessage } from '../lib/copilot/types';
 import { useWidgetSession, useWidgetSessionChrome, useWidgetSessionCopilot } from '../lib/session/useWidgetSession';
-
-function asTrimmedString(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
-}
 
 type WidgetSessionValue = ReturnType<typeof useWidgetSession>;
 

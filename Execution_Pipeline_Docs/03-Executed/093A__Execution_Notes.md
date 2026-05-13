@@ -1,9 +1,9 @@
 # PRD 093 Execution Notes
 
-Status: In progress
+Status: Executed
 Owner: Codex
 Date: 2026-05-12
-PRD: `Execution_Pipeline_Docs/02-Executing/093__PRD__PRD_092_Intent_Closure_And_Widget_Catalog_Truth.md`
+PRD: `Execution_Pipeline_Docs/03-Executed/093__PRD__PRD_092_Intent_Closure_And_Widget_Catalog_Truth.md`
 
 ## Slice 0 - Evidence Refresh
 
@@ -162,7 +162,7 @@ Verification:
 
 ## Slice 9 - Product-Path Smoke
 
-Status: BLOCKED
+Status: Executed - public checks green; authenticated product-path smoke blocked by missing Roma cookie
 
 Attempted command:
 - `corepack pnpm health:product-path --json`

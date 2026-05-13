@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const storageBytesUsed = await readAccountStorageBytesUsed({
       accountId: current.value.authzPayload.accountId,
       accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
     });
     return withSession(
       request,

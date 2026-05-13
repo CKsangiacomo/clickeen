@@ -3,7 +3,16 @@ import { WorkerEntrypoint } from 'cloudflare:workers';
 import { executeCsWidgetCopilot } from './agents/csWidgetCopilot';
 import { withInflightLimit } from './concurrency';
 import { assertCap, verifyGrant } from './grants';
-import { HttpError, json, noStore, readJson, isRecord } from './http';
+import {
+  HttpError,
+  createSanFranciscoRequestContext,
+  finalizeSanFranciscoObservedResponse,
+  isRecord,
+  json,
+  noStore,
+  readJson,
+  type SanFranciscoRequestContext,
+} from './http';
 import {
   handlePragueStringsTranslate,
 } from './l10n-routes';
@@ -85,7 +94,12 @@ for (const agentId of Object.keys(AGENT_EXECUTORS)) {
   }
 }
 
-async function handleExecute(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+async function handleExecute(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+  requestContext: SanFranciscoRequestContext,
+): Promise<Response> {
   return await withInflightLimit(async () => {
     const body = await readJson(request);
     if (!isExecuteRequest(body)) {
@@ -103,7 +117,7 @@ async function handleExecute(request: Request, env: Env, ctx: ExecutionContext):
     }
     assertCap(grant, `agent:${canonicalId}`);
 
-    const requestId = typeof body.trace?.requestId === 'string' ? body.trace.requestId : crypto.randomUUID();
+    const requestId = requestContext.requestId;
     const occurredAtMs = Date.now();
 
     const executor = AGENT_EXECUTORS[canonicalId];
@@ -192,18 +206,57 @@ async function handleOutcome(request: Request, env: Env): Promise<Response> {
 export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    const requestContext = createSanFranciscoRequestContext(request, this.env);
 
     try {
-      if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') return okHealth(this.env);
-      if (request.method === 'POST' && url.pathname === '/v1/execute') return await handleExecute(request, this.env, this.ctx);
-      if (request.method === 'POST' && url.pathname === '/v1/outcome') return await handleOutcome(request, this.env);
-      if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') return await handlePragueStringsTranslate(request, this.env);
+      if ((request.method === 'GET' || request.method === 'HEAD') && url.pathname === '/healthz') {
+        return finalizeSanFranciscoObservedResponse({
+          context: requestContext,
+          response: okHealth(this.env),
+          boundary: 'health',
+        });
+      }
+      if (request.method === 'POST' && url.pathname === '/v1/execute') {
+        return finalizeSanFranciscoObservedResponse({
+          context: requestContext,
+          response: await handleExecute(request, this.env, this.ctx, requestContext),
+          boundary: 'ai.execute',
+        });
+      }
+      if (request.method === 'POST' && url.pathname === '/v1/outcome') {
+        return finalizeSanFranciscoObservedResponse({
+          context: requestContext,
+          response: await handleOutcome(request, this.env),
+          boundary: 'ai.outcome',
+        });
+      }
+      if (request.method === 'POST' && url.pathname === '/v1/l10n/translate') {
+        return finalizeSanFranciscoObservedResponse({
+          context: requestContext,
+          response: await handlePragueStringsTranslate(request, this.env),
+          boundary: 'l10n.translate',
+        });
+      }
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     } catch (err: unknown) {
-      if (err instanceof HttpError) return noStore(json({ error: err.error }, { status: err.status }));
+      if (err instanceof HttpError) {
+        return finalizeSanFranciscoObservedResponse({
+          context: requestContext,
+          response: noStore(json({ error: err.error }, { status: err.status })),
+          boundary: 'http.error',
+          reasonKey: err.error.code,
+          detail: err.error.message,
+        });
+      }
       console.error('[sanfrancisco] Unhandled error', err);
-      return noStore(json({ error: { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Unhandled error' } }, { status: 500 }));
+      return finalizeSanFranciscoObservedResponse({
+        context: requestContext,
+        response: noStore(json({ error: { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Unhandled error' } }, { status: 500 })),
+        boundary: 'http.error',
+        reasonKey: 'PROVIDER_ERROR',
+        detail: err instanceof Error ? err.message : String(err),
+      });
     }
   }
 

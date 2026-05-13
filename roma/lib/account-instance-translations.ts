@@ -14,6 +14,7 @@ export type AccountTranslationsPanelPayload = {
   baseFingerprint: string;
   generationId: string;
   updatedAt: string;
+  textPacks: Record<string, Record<string, string>>;
 };
 
 type RouteFailure = {
@@ -58,6 +59,19 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
   const baseFingerprint = asTrimmedString(raw.baseFingerprint);
   const generationId = asTrimmedString(raw.generationId);
   const updatedAt = asTrimmedString(raw.updatedAt);
+  const textPacksRaw = isRecord(raw.textPacks) ? raw.textPacks : {};
+  const textPacks: Record<string, Record<string, string>> = {};
+  for (const [localeRaw, packRaw] of Object.entries(textPacksRaw)) {
+    const locale = asTrimmedString(localeRaw);
+    if (!locale || !isRecord(packRaw)) continue;
+    const entries = Object.entries(packRaw)
+      .map(([pathRaw, value]) => {
+        const path = asTrimmedString(pathRaw);
+        return path && typeof value === 'string' ? [path, value] : null;
+      })
+      .filter((entry): entry is [string, string] => Boolean(entry));
+    textPacks[locale] = Object.fromEntries(entries);
+  }
 
   if (!instanceId || !widgetType || !baseLocale || !requestedLocales.includes(baseLocale) || !status || !baseFingerprint || !generationId || !updatedAt) {
     return null;
@@ -74,6 +88,7 @@ function normalizeTranslationsPanelPayload(raw: unknown): AccountTranslationsPan
     baseFingerprint,
     generationId,
     updatedAt,
+    textPacks,
   };
 }
 
@@ -81,6 +96,7 @@ export async function loadAccountInstanceTranslationsPanel(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;
+  requestId?: string | null;
 }): Promise<{ ok: true; value: AccountTranslationsPanelPayload } | RouteFailure> {
   const response = await fetchTokyoProductControl({
     path: `/__internal/account/widgets/${encodeURIComponent(args.instanceId)}/translations`,
@@ -88,6 +104,7 @@ export async function loadAccountInstanceTranslationsPanel(args: {
     headers: buildTokyoProductControlHeaders({
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
     }),
   });
 

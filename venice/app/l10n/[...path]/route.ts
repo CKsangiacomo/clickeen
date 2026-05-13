@@ -19,9 +19,10 @@ function isAllowedL10nPath(parts: string[]): boolean {
   return false;
 }
 
-export async function GET(_req: Request, ctx: { params: Promise<{ path: string[] }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;
   return proxyTokyoPath({
+    request: req,
     prefix: 'l10n',
     parts: normalizeTokyoPathParts(path),
     allowed: isAllowedL10nPath,
@@ -38,5 +39,6 @@ export async function HEAD(req: Request, ctx: { params: Promise<{ path: string[]
     allowed: isAllowedL10nPath,
     defaultCache: 'no-store',
     method: 'HEAD',
+    request: req,
   });
 }

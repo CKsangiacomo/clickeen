@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       headers: buildTokyoAssetControlHeaders({
         accountId: gateway.value.accountId,
         accountCapsule: gateway.value.accountCapsule,
+        requestId: gateway.value.requestId,
       }),
     });
 

@@ -1,7 +1,7 @@
 # PRD 094A - Execution Notes
 
 Date: 2026-05-12
-Status: Code/build verified; credentialed cloud-dev browser smoke pending deployed build
+Status: Executed - code/build verified; credentialed cloud-dev browser smoke pending deployed build
 
 ## Slice 0 - Evidence And Route Matrix
 
@@ -62,7 +62,7 @@ Verification:
 
 ## Slice 5/6 - Product API Verification
 
-Status: PARTIAL
+Status: Executed - local product API verification green; credentialed cloud-dev browser smoke pending deployed build
 
 Local verification:
 - `corepack pnpm --filter @clickeen/roma typecheck`

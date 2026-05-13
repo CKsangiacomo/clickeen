@@ -78,6 +78,19 @@
     if (!instanceId || !locale) return sourceState;
     if (baseLocale && locale === baseLocale) return sourceState;
 
+    const inlineTextPack =
+      args?.textPack && typeof args.textPack === 'object' && !Array.isArray(args.textPack)
+        ? args.textPack
+        : null;
+    if (inlineTextPack) {
+      const localized =
+        typeof structuredClone === 'function'
+          ? structuredClone(sourceState)
+          : JSON.parse(JSON.stringify(sourceState));
+      applyTextOverrides(localized, inlineTextPack);
+      return localized;
+    }
+
     const overlayRes = await fetch(
       '/l10n/widgets/' +
         encodeURIComponent(instanceId) +

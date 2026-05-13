@@ -1,6 +1,156 @@
 import { EMBED_LOCALE_RUNTIME_SOURCE } from '../runtime-locale';
+import {
+  createVeniceRequestContext,
+  finalizeVeniceObservedResponse,
+} from '@venice/lib/request-ops';
 
-function buildScript(): string {
+const LOADER_ALIAS_CACHE_CONTROL = 'public, max-age=300, s-maxage=600';
+const LOADER_VERSION_CACHE_CONTROL = 'public, max-age=31536000, immutable';
+
+function resolveLoaderCacheControl(request: Request): string {
+  const pathname = new URL(request.url).pathname;
+  if (/\/embed\/v\d+\.\d+\.\d+\/[^/]+\.js$/i.test(pathname)) return LOADER_VERSION_CACHE_CONTROL;
+  return LOADER_ALIAS_CACHE_CONTROL;
+}
+
+type LoaderOptions = {
+  includeSeoGeo: boolean;
+};
+
+function buildSeoGeoSource(): string {
+  return `
+  function upsertSchema(targetInstanceId, schemaJsonLd) {
+    if (!schemaJsonLd) return;
+    const id = 'ck-schema-' + targetInstanceId;
+    let script = document.getElementById(id);
+    if (!(script instanceof HTMLScriptElement)) {
+      script = document.createElement('script');
+      script.id = id;
+      script.type = 'application/ld+json';
+      document.head.appendChild(script);
+    }
+    script.textContent = schemaJsonLd;
+  }
+
+  function ensureExcerptShell(targetInstanceId, anchorEl, maxWidthPx) {
+    const id = 'ck-excerpt-' + targetInstanceId;
+    let details = document.getElementById(id);
+    if (details instanceof HTMLDetailsElement) return details;
+
+    details = document.createElement('details');
+    details.id = id;
+    details.setAttribute('data-ck-excerpt', '1');
+    details.style.width = '100%';
+    details.style.maxWidth = maxWidthPx === 0 ? 'none' : maxWidthPx + 'px';
+    details.style.marginTop = '12px';
+
+    const summary = document.createElement('summary');
+    summary.textContent = 'About this widget';
+    details.appendChild(summary);
+
+    const body = document.createElement('div');
+    body.setAttribute('data-ck-excerpt-body', '1');
+    body.style.marginTop = '8px';
+    details.appendChild(body);
+
+    const parent = anchorEl && anchorEl.parentNode;
+    if (parent) {
+      if (anchorEl.nextSibling) parent.insertBefore(details, anchorEl.nextSibling);
+      else parent.appendChild(details);
+    } else {
+      document.body.appendChild(details);
+    }
+
+    return details;
+  }
+
+  function upsertExcerpt(targetInstanceId, anchorEl, maxWidthPx, excerptHtml) {
+    if (!excerptHtml) return;
+    const shell = ensureExcerptShell(targetInstanceId, anchorEl, maxWidthPx);
+    const body = shell.querySelector('[data-ck-excerpt-body=\"1\"]');
+    if (!body) return;
+    body.innerHTML = excerptHtml;
+  }
+
+  async function loadSeoGeoMeta(opts, targetInstanceId, fixedLocaleOverride, anchorEl, maxWidthPx) {
+    try {
+      const pointerRes = await fetch(embedUrlFor(opts, '/renders/widgets/' + encodeURIComponent(targetInstanceId) + '/live/r.json'), {
+        mode: 'cors',
+        credentials: 'omit',
+      });
+      const geoCountry = parseGeoCountry(pointerRes);
+      const pointer = await pointerRes.json().catch(() => null);
+      if (!pointerRes.ok || !pointer || typeof pointer !== 'object') {
+        debugWarn('[Clickeen] SEO/GEO pointer unavailable', pointerRes.status, pointer);
+        return;
+      }
+
+      // Not entitled / not published with SEO meta.
+      if (!pointer.seoGeo) return;
+
+      const effectiveLocale = computeEffectiveLocale(resolveLocaleRuntimePolicy(pointer), geoCountry, fixedLocaleOverride);
+      const metaPointerRes = await fetch(
+        embedUrlFor(opts, '/renders/widgets/' + encodeURIComponent(targetInstanceId) + '/meta/live/' + encodeURIComponent(effectiveLocale) + '.json'),
+        { mode: 'cors', credentials: 'omit' },
+      );
+      const metaPointer = await metaPointerRes.json().catch(() => null);
+      const metaFp = metaPointer && typeof metaPointer.metaFp === 'string' ? metaPointer.metaFp.trim() : '';
+      if (!metaPointerRes.ok || !metaFp) {
+        debugWarn('[Clickeen] SEO/GEO meta pointer unavailable', metaPointerRes.status, metaPointer);
+        return;
+      }
+
+      const metaPackRes = await fetch(
+        embedUrlFor(
+          opts,
+          '/renders/widgets/' +
+            encodeURIComponent(targetInstanceId) +
+            '/meta/' +
+            encodeURIComponent(effectiveLocale) +
+            '/' +
+            encodeURIComponent(metaFp) +
+            '.json',
+        ),
+        { mode: 'cors', credentials: 'omit' },
+      );
+      const metaPack = await metaPackRes.json().catch(() => null);
+      if (!metaPackRes.ok || !metaPack) {
+        debugWarn('[Clickeen] SEO/GEO meta pack unavailable', metaPackRes.status, metaPack);
+        return;
+      }
+
+      upsertSchema(targetInstanceId, metaPack.schemaJsonLd);
+      upsertExcerpt(targetInstanceId, anchorEl, maxWidthPx, metaPack.excerptHtml);
+    } catch (err) {
+      debugWarn('[Clickeen] SEO/GEO meta failed', err);
+    }
+  }
+`;
+}
+
+function buildScript(options: LoaderOptions): string {
+  const seoGeoSource = options.includeSeoGeo ? buildSeoGeoSource() : '';
+  const seoGeoDatasetField = options.includeSeoGeo ? "			    ckOptimization = 'none',\n" : '';
+  const seoGeoFlag = options.includeSeoGeo
+    ? `
+		  const optimization = typeof ckOptimization === 'string' ? ckOptimization.trim().toLowerCase() : '';
+		  const seoGeoOptimization = optimization === 'seo-geo';
+`
+    : '';
+  const inlineSeoGeoMount = options.includeSeoGeo
+    ? `
+		    if (seoGeoOptimization) {
+		      await loadSeoGeoMeta({ tsParam }, instanceId, fixedLocale, container, maxWidthValue);
+		    }`
+    : '';
+  const placeholderSeoGeoMount = options.includeSeoGeo
+    ? `
+    const hostOptimization = typeof hostEl.dataset.ckOptimization === 'string' ? hostEl.dataset.ckOptimization.trim().toLowerCase() : '';
+    const hostSeoGeoOptimization = hostOptimization === 'seo-geo';
+    if (hostSeoGeoOptimization) {
+      loadSeoGeoMeta({ tsParam: hostTsParam }, pid, hostFixedLocale, hostEl, hostMaxWidth);
+    }`
+    : '';
   return `(() => {
   const scriptEl = document.currentScript;
   if (!scriptEl) return;
@@ -11,14 +161,23 @@ function buildScript(): string {
 			    delay = '0',
 			    scrollPct,
 			    clickSelector,
-			    ckOptimization = 'none',
-			    cacheBust = 'false',
+${seoGeoDatasetField}			    cacheBust = 'false',
 		    maxWidth: maxWidthAttr,
 		    minHeight: minHeightAttr,
 		    width: widthAttr,
 		    ts: tsAttr,
 		    locale: localeAttr,
+		    ckDebug: ckDebugAttr,
+		    ckApi: ckApiAttr,
 		  } = scriptEl.dataset;
+
+  const debugEnabled =
+    ckDebugAttr === 'true' ||
+    new URL(window.location.href).searchParams.get('ck_debug') === '1' ||
+    window.CLICKEEN_DEBUG === true;
+  const debugWarn = (...args) => {
+    if (debugEnabled) console.warn(...args);
+  };
 
   function createHostErrorCard(title, message, details, maxWidthPx) {
     const card = document.createElement('div');
@@ -68,6 +227,8 @@ function buildScript(): string {
 			  const origin = new URL(scriptEl.src, window.location.href).origin;
 
 			  const PLACEHOLDER_SELECTOR = '[data-clickeen-id]';
+  const loaderState = { observer: null, io: null };
+  const publicApiEnabled = ckApiAttr === 'true';
 
 ${EMBED_LOCALE_RUNTIME_SOURCE}
 
@@ -97,8 +258,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 			  };
 			  scheduleMissingIdError();
 
-		  const optimization = typeof ckOptimization === 'string' ? ckOptimization.trim().toLowerCase() : '';
-		  const seoGeoOptimization = optimization === 'seo-geo';
+${seoGeoFlag}
 
 		  const explicitTs = typeof tsAttr === 'string' ? tsAttr.trim() : '';
 		  const tsToken = explicitTs || (cacheBust === 'true' ? String(Date.now()) : '');
@@ -125,7 +285,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 
 	  const widthValue = typeof widthAttr === 'string' ? widthAttr.trim() : '';
 	  if (widthValue && widthValue !== '100%') {
-	    console.warn('[Clickeen] Invalid data-width (v2 only supports \"100%\"):', widthValue);
+	    debugWarn('[Clickeen] Invalid data-width (v2 only supports \"100%\"):', widthValue);
 	  }
 
   // Minimal event bus with buffering
@@ -139,9 +299,6 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     this.listeners[event].push(handler);
     return () => { this.listeners[event] = (this.listeners[event] || []).filter((fn) => fn !== handler); };
   };
-
-  window.ckeenBus = window.ckeenBus || bus;
-  window.Clickeen = window.Clickeen || window.ckeenBus;
 
 	  const makeUrl = (path, params = {}) => {
 	    const url = new URL(origin + path);
@@ -229,12 +386,12 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
       }
       case 'click': {
         if (!clickSelector) {
-          console.warn('[Clickeen] data-click-selector required for click trigger');
+          debugWarn('[Clickeen] data-click-selector required for click trigger');
           return;
         }
         const triggerEl = document.querySelector(clickSelector);
         if (!triggerEl) {
-          console.warn('[Clickeen] click selector not found:', clickSelector);
+          debugWarn('[Clickeen] click selector not found:', clickSelector);
           return;
         }
         triggerEl.addEventListener('click', (evt) => {
@@ -261,7 +418,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 	    const loading = opts.loading || 'lazy';
 
 	    const iframe = document.createElement('iframe');
-	    iframe.src = embedUrlFor(
+	    const frameSrc = embedUrlFor(
 	      { tsParam: targetTsParam },
 	      '/widget/' + encodeURIComponent(targetInstanceId),
 	      targetLocale ? { locale: targetLocale } : {},
@@ -275,19 +432,28 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 	    iframe.style.maxWidth = maxWidthPx === 0 ? 'none' : maxWidthPx + 'px';
 	    iframe.style.minHeight = minHeightPx + 'px';
 
-    targetEl.replaceChildren(iframe);
-
     let errorEl = null;
+    let frameFailed = false;
     const clearError = () => {
       if (errorEl && errorEl.parentNode) errorEl.parentNode.removeChild(errorEl);
       errorEl = null;
     };
 
     const showFrameError = (title, message, details) => {
+      frameFailed = true;
       if (errorEl) return;
       errorEl = createHostErrorCard(title, message, details, maxWidthPx);
       errorEl.style.marginTop = '10px';
       targetEl.appendChild(errorEl);
+    };
+
+    const isProbablyBlockedFrame = () => {
+      try {
+        const href = iframe.contentWindow && iframe.contentWindow.location && iframe.contentWindow.location.href;
+        return !href || href === 'about:blank';
+      } catch {
+        return false;
+      }
     };
 
     const onResizeMessage = (event) => {
@@ -306,9 +472,8 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     const onCspViolation = (event) => {
       const dir = String((event && (event.effectiveDirective || event.violatedDirective)) || '').toLowerCase();
       if (dir !== 'frame-src' && dir !== 'child-src') return;
-      const blocked = String((event && event.blockedURI) || '');
-      if (!blocked) return;
-      if (!blocked.startsWith(origin)) return;
+      clearTimeout(loadTimeout);
+      document.removeEventListener('securitypolicyviolation', onCspViolation);
       showFrameError(
         'Clickeen blocked by CSP',
         'Your site Content Security Policy is blocking the embed iframe.',
@@ -326,11 +491,28 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     }, 8000);
 
     iframe.addEventListener('load', () => {
-      clearTimeout(loadTimeout);
-      document.removeEventListener('securitypolicyviolation', onCspViolation);
-      clearError();
-      setReadyOnce();
+      setTimeout(() => {
+        clearTimeout(loadTimeout);
+        if (frameFailed) return;
+        if (isProbablyBlockedFrame()) {
+          showFrameError(
+            'Clickeen blocked by CSP',
+            'Your site Content Security Policy is blocking the embed iframe.',
+            'Allow in CSP: frame-src (or child-src) ' + origin,
+          );
+          document.removeEventListener('securitypolicyviolation', onCspViolation);
+          return;
+        }
+        clearError();
+        setReadyOnce();
+        setTimeout(() => {
+          document.removeEventListener('securitypolicyviolation', onCspViolation);
+        }, 1500);
+      }, 0);
     });
+
+    targetEl.replaceChildren(iframe);
+    iframe.src = frameSrc;
   }
 
 	  function mountIframe() {
@@ -345,112 +527,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 	    });
 	  }
 
-  function upsertSchema(targetInstanceId, schemaJsonLd) {
-    if (!schemaJsonLd) return;
-    const id = 'ck-schema-' + targetInstanceId;
-    let script = document.getElementById(id);
-    if (!(script instanceof HTMLScriptElement)) {
-      script = document.createElement('script');
-      script.id = id;
-      script.type = 'application/ld+json';
-      document.head.appendChild(script);
-    }
-    script.textContent = schemaJsonLd;
-  }
-
-  function ensureExcerptShell(targetInstanceId, anchorEl, maxWidthPx) {
-    const id = 'ck-excerpt-' + targetInstanceId;
-    let details = document.getElementById(id);
-    if (details instanceof HTMLDetailsElement) return details;
-
-    details = document.createElement('details');
-    details.id = id;
-    details.setAttribute('data-ck-excerpt', '1');
-    details.style.width = '100%';
-    details.style.maxWidth = maxWidthPx === 0 ? 'none' : maxWidthPx + 'px';
-    details.style.marginTop = '12px';
-
-    const summary = document.createElement('summary');
-    summary.textContent = 'About this widget';
-    details.appendChild(summary);
-
-    const body = document.createElement('div');
-    body.setAttribute('data-ck-excerpt-body', '1');
-    body.style.marginTop = '8px';
-    details.appendChild(body);
-
-    const parent = anchorEl && anchorEl.parentNode;
-    if (parent) {
-      if (anchorEl.nextSibling) parent.insertBefore(details, anchorEl.nextSibling);
-      else parent.appendChild(details);
-    } else {
-      document.body.appendChild(details);
-    }
-
-    return details;
-  }
-
-  function upsertExcerpt(targetInstanceId, anchorEl, maxWidthPx, excerptHtml) {
-    if (!excerptHtml) return;
-    const shell = ensureExcerptShell(targetInstanceId, anchorEl, maxWidthPx);
-    const body = shell.querySelector('[data-ck-excerpt-body=\"1\"]');
-    if (!body) return;
-    body.innerHTML = excerptHtml;
-  }
-
-  async function loadSeoGeoMeta(opts, targetInstanceId, fixedLocaleOverride, anchorEl, maxWidthPx) {
-    try {
-      const pointerRes = await fetch(embedUrlFor(opts, '/renders/widgets/' + encodeURIComponent(targetInstanceId) + '/live/r.json'), {
-        mode: 'cors',
-        credentials: 'omit',
-      });
-      const geoCountry = parseGeoCountry(pointerRes);
-      const pointer = await pointerRes.json().catch(() => null);
-      if (!pointerRes.ok || !pointer || typeof pointer !== 'object') {
-        console.warn('[Clickeen] SEO/GEO pointer unavailable', pointerRes.status, pointer);
-        return;
-      }
-
-      // Not entitled / not published with SEO meta.
-      if (!pointer.seoGeo) return;
-
-      const effectiveLocale = computeEffectiveLocale(resolveLocaleRuntimePolicy(pointer), geoCountry, fixedLocaleOverride);
-      const metaPointerRes = await fetch(
-        embedUrlFor(opts, '/renders/widgets/' + encodeURIComponent(targetInstanceId) + '/meta/live/' + encodeURIComponent(effectiveLocale) + '.json'),
-        { mode: 'cors', credentials: 'omit' },
-      );
-      const metaPointer = await metaPointerRes.json().catch(() => null);
-      const metaFp = metaPointer && typeof metaPointer.metaFp === 'string' ? metaPointer.metaFp.trim() : '';
-      if (!metaPointerRes.ok || !metaFp) {
-        console.warn('[Clickeen] SEO/GEO meta pointer unavailable', metaPointerRes.status, metaPointer);
-        return;
-      }
-
-      const metaPackRes = await fetch(
-        embedUrlFor(
-          opts,
-          '/renders/widgets/' +
-            encodeURIComponent(targetInstanceId) +
-            '/meta/' +
-            encodeURIComponent(effectiveLocale) +
-            '/' +
-            encodeURIComponent(metaFp) +
-            '.json',
-        ),
-        { mode: 'cors', credentials: 'omit' },
-      );
-      const metaPack = await metaPackRes.json().catch(() => null);
-      if (!metaPackRes.ok || !metaPack) {
-        console.warn('[Clickeen] SEO/GEO meta pack unavailable', metaPackRes.status, metaPack);
-        return;
-      }
-
-      upsertSchema(targetInstanceId, metaPack.schemaJsonLd);
-      upsertExcerpt(targetInstanceId, anchorEl, maxWidthPx, metaPack.excerptHtml);
-    } catch (err) {
-      console.warn('[Clickeen] SEO/GEO meta failed', err);
-    }
-  }
+${seoGeoSource}
 
 	  let mountStarted = false;
 	  async function mountOnce() {
@@ -459,14 +536,13 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 
 		    // PRD 54: public embed = iframe + Tokyo artifacts only. No dynamic shadow payload.
 		    mountIframe();
-		    if (!seoGeoOptimization) return;
-		    await loadSeoGeoMeta({ tsParam }, instanceId, fixedLocale, container, maxWidthValue);
+${inlineSeoGeoMount}
 	  }
 
   function triggerAndMount() {
     triggerInjection();
     mountOnce().catch((err) => {
-    console.warn('[Clickeen] Mount failed, falling back to iframe', err);
+    debugWarn('[Clickeen] Mount failed, falling back to iframe', err);
     try { mountIframe(); } catch {}
     });
   }
@@ -493,12 +569,12 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
       }
       case 'click': {
         if (!clickSelector) {
-          console.warn('[Clickeen] data-click-selector required for click trigger');
+          debugWarn('[Clickeen] data-click-selector required for click trigger');
           return;
         }
         const triggerEl = document.querySelector(clickSelector);
         if (!triggerEl) {
-          console.warn('[Clickeen] click selector not found:', clickSelector);
+          debugWarn('[Clickeen] click selector not found:', clickSelector);
           return;
         }
         triggerEl.addEventListener('click', (evt) => {
@@ -538,7 +614,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 
     const hostWidth = typeof hostEl.dataset.width === 'string' ? hostEl.dataset.width.trim() : '';
     if (hostWidth && hostWidth !== '100%') {
-      console.warn('[Clickeen] Invalid data-width (v2 only supports \"100%\"):', hostWidth);
+      debugWarn('[Clickeen] Invalid data-width (v2 only supports \"100%\"):', hostWidth);
     }
 
     hostEl.style.position = 'relative';
@@ -556,11 +632,7 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
       loading: 'lazy',
     });
 
-    const hostOptimization = typeof hostEl.dataset.ckOptimization === 'string' ? hostEl.dataset.ckOptimization.trim().toLowerCase() : '';
-    const hostSeoGeoOptimization = hostOptimization === 'seo-geo';
-    if (hostSeoGeoOptimization) {
-      loadSeoGeoMeta({ tsParam: hostTsParam }, pid, hostFixedLocale, hostEl, hostMaxWidth);
-    }
+${placeholderSeoGeoMount}
   }
 
   function mountPlaceholder(hostEl) {
@@ -575,10 +647,6 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
       mountPlaceholderNow(hostEl);
       return;
     }
-
-    const LOADER_STATE_KEY = '__CK_V2_EMBED_LOADER__';
-    const loaderState = window[LOADER_STATE_KEY] || { observer: null, io: null };
-    window[LOADER_STATE_KEY] = loaderState;
 
     const rect = hostEl.getBoundingClientRect();
     const margin = 240;
@@ -616,13 +684,11 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
     nodes.forEach((el) => mountPlaceholder(el));
   }
 
-  const LOADER_STATE_KEY = '__CK_V2_EMBED_LOADER__';
-  const loaderState = window[LOADER_STATE_KEY] || { observer: null, io: null };
-  window[LOADER_STATE_KEY] = loaderState;
-
   const mount = (root) => scanPlaceholders(root || document);
-  if (window.Clickeen && typeof window.Clickeen === 'object') {
-    window.Clickeen.mount = window.Clickeen.mount || mount;
+  if (publicApiEnabled) {
+    const api = window.Clickeen && typeof window.Clickeen === 'object' ? window.Clickeen : {};
+    api.mount = api.mount || mount;
+    window.Clickeen = api;
   }
 
   mount(document);
@@ -647,14 +713,29 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 
 export const runtime = 'edge';
 
-export function GET() {
-  const script = buildScript();
-  return new Response(script, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/javascript; charset=utf-8',
-      'Cache-Control': 'public, max-age=300, s-maxage=600',
-      'Access-Control-Allow-Origin': '*',
-    },
+function loaderResponse(request: Request, options: LoaderOptions) {
+  const context = createVeniceRequestContext(request);
+  const script = buildScript(options);
+  return finalizeVeniceObservedResponse({
+    context,
+    response: new Response(script, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/javascript; charset=utf-8',
+        'Cache-Control': resolveLoaderCacheControl(request),
+        'Access-Control-Allow-Origin': '*',
+      },
+    }),
+    boundary: 'embed.loader',
   });
+}
+
+export function GET(request: Request) {
+  const pathname = new URL(request.url).pathname;
+  const includeSeoGeo = !/\/embed\/v\d+\.\d+\.\d+\/loader\.js$/i.test(pathname);
+  return loaderResponse(request, { includeSeoGeo });
+}
+
+export function GET_SEO_GEO(request: Request) {
+  return loaderResponse(request, { includeSeoGeo: true });
 }

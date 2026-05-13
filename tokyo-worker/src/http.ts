@@ -1,3 +1,4 @@
+import { CK_REQUEST_ID_HEADER, serializeCkLogEvent, type CkLogEvent, type CkLogLevel } from '@clickeen/ck-contracts';
 import type { Env } from './types';
 
 export type TokyoRequestContext = {
@@ -65,12 +66,12 @@ function applyPublicCors(headers: Headers): void {
   headers.set('access-control-allow-methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
   headers.set(
     'access-control-allow-headers',
-    'authorization, content-type, x-account-id, x-filename, x-source, idempotency-key, x-ck-internal-service',
+    `authorization, content-type, x-account-id, x-filename, x-source, idempotency-key, x-ck-internal-service, ${CK_REQUEST_ID_HEADER}`,
   );
 }
 
-function log(level: 'info' | 'warn' | 'error', payload: Record<string, unknown>): void {
-  const serialized = JSON.stringify(payload);
+function log(level: CkLogLevel, payload: CkLogEvent): void {
+  const serialized = serializeCkLogEvent(payload);
   if (level === 'error') {
     console.error(serialized);
     return;
@@ -83,7 +84,7 @@ function log(level: 'info' | 'warn' | 'error', payload: Record<string, unknown>)
 }
 
 export function createTokyoRequestContext(request: Request, env: Env, path: string): TokyoRequestContext {
-  const fromHeader = String(request.headers.get('x-request-id') || '').trim();
+  const fromHeader = String(request.headers.get(CK_REQUEST_ID_HEADER) || '').trim();
   return {
     service: 'tokyo-worker',
     stage: resolveStage(request, env),
@@ -103,7 +104,7 @@ export function finalizeTokyoObservedResponse(args: {
   errorDetail?: string | null;
 }): Response {
   const headers = new Headers(args.response.headers);
-  headers.set('x-request-id', args.context.requestId);
+  headers.set(CK_REQUEST_ID_HEADER, args.context.requestId);
   if (args.context.visibility === 'public') {
     applyPublicCors(headers);
   }
@@ -118,15 +119,15 @@ export function finalizeTokyoObservedResponse(args: {
     event,
     service: args.context.service,
     stage: args.context.stage,
+    boundary: 'http.request',
     visibility: args.context.visibility,
     requestId: args.context.requestId,
     method: args.context.method,
     path: args.context.path,
     status,
     durationMs,
-    clientIp: args.context.clientIp,
     cfRay: args.context.cfRay,
-    ...(args.errorDetail ? { errorDetail: args.errorDetail } : {}),
+    ...(args.errorDetail ? { detail: args.errorDetail } : {}),
   });
 
   return response;

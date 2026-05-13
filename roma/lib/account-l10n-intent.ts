@@ -10,6 +10,7 @@ export type AccountL10nIntent = {
 export async function loadAccountL10nIntent(args: {
   accessToken: string;
   accountId: string;
+  requestId?: string | null;
 }): Promise<
   | { ok: true; value: AccountL10nIntent }
   | {

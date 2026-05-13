@@ -7,7 +7,7 @@ import {
   type AgentRuntimePolicyUi,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
-import { asTrimmedString, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
+import { CK_REQUEST_ID_HEADER, asTrimmedString, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
 import {
   resolveAiAgent,
   type AiGrantPolicy,
@@ -241,6 +241,7 @@ export async function executeCopilotOnSanFrancisco(args: {
   agentId: string;
   input: unknown;
   traceClient: 'roma';
+  requestId?: string | null;
 }): Promise<
   | { ok: true; requestId: string; result: unknown }
   | { ok: false; message: string }
@@ -250,12 +251,15 @@ export async function executeCopilotOnSanFrancisco(args: {
   try {
     res = await fetch(`${baseUrl}/v1/execute`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        ...(args.requestId ? { [CK_REQUEST_ID_HEADER]: args.requestId } : {}),
+      },
       body: JSON.stringify({
         grant: args.grant,
         agentId: args.agentId,
         input: args.input,
-        trace: { client: args.traceClient },
+        trace: { client: args.traceClient, requestId: args.requestId ?? undefined },
       }),
       cache: 'no-store',
     });

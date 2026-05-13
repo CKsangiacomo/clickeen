@@ -1,4 +1,11 @@
-import { parseRateLimitRecord, type RateLimitRecord } from '@clickeen/ck-contracts';
+import {
+  CK_REQUEST_ID_HEADER,
+  parseRateLimitRecord,
+  serializeCkLogEvent,
+  type CkLogEvent,
+  type CkLogLevel,
+  type RateLimitRecord,
+} from '@clickeen/ck-contracts';
 import { NextRequest, NextResponse } from 'next/server';
 import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
 import type { RomaUsageKv } from './account-limit-usage';
@@ -87,7 +94,7 @@ function getOrCreateRequestContext(request: NextRequest): RomaRequestContext {
   const existing = REQUEST_CONTEXTS.get(request);
   if (existing) return existing;
 
-  const fromHeader = String(request.headers.get('x-request-id') || '').trim();
+  const fromHeader = String(request.headers.get(CK_REQUEST_ID_HEADER) || '').trim();
   const created: RomaRequestContext = {
     service: 'roma',
     stage: resolveStage(request),
@@ -101,6 +108,10 @@ function getOrCreateRequestContext(request: NextRequest): RomaRequestContext {
   };
   REQUEST_CONTEXTS.set(request, created);
   return created;
+}
+
+export function resolveRomaRequestId(request: NextRequest): string {
+  return getOrCreateRequestContext(request).requestId;
 }
 
 function resolveRateLimitPolicy(method: string, path: string): RateLimitPolicy | null {
@@ -203,8 +214,8 @@ function applyRateLimitHeaders(response: NextResponse, decision: RateLimitDecisi
   }
 }
 
-function log(level: 'info' | 'warn' | 'error', payload: Record<string, unknown>): void {
-  const serialized = JSON.stringify(payload);
+function log(level: CkLogLevel, payload: CkLogEvent): void {
+  const serialized = serializeCkLogEvent(payload);
   if (level === 'error') {
     console.error(serialized);
     return;
@@ -221,7 +232,7 @@ export function finalizeRomaObservedResponse(
   response: NextResponse,
 ): NextResponse {
   const requestContext = getOrCreateRequestContext(request);
-  response.headers.set('x-request-id', requestContext.requestId);
+  response.headers.set(CK_REQUEST_ID_HEADER, requestContext.requestId);
   applyRateLimitHeaders(response, requestContext.rateLimit);
 
   const status = response.status;
@@ -238,15 +249,15 @@ export function finalizeRomaObservedResponse(
     event,
     service: requestContext.service,
     stage: requestContext.stage,
+    boundary: 'http.request',
     requestId: requestContext.requestId,
     method: requestContext.method,
     path: requestContext.path,
     status,
     durationMs: Date.now() - requestContext.startedAt,
-    clientIp: requestContext.clientIp,
     cfRay: requestContext.cfRay,
     ...(requestContext.accountId ? { accountId: requestContext.accountId } : {}),
-    ...(requestContext.rateLimit ? { rateLimitBucket: requestContext.rateLimit.bucket } : {}),
+    ...(requestContext.rateLimit ? { meta: { rateLimitBucket: requestContext.rateLimit.bucket } } : {}),
   });
 
   return response;

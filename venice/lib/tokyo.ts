@@ -1,3 +1,5 @@
+import { CK_REQUEST_ID_HEADER } from '@clickeen/ck-contracts';
+
 const TOKYO_BASE_ENV_KEYS = 'TOKYO_URL/TOKYO_BASE_URL/NEXT_PUBLIC_TOKYO_URL';
 
 function normalizeTokyoBaseUrl(raw: string): string {
@@ -81,7 +83,7 @@ export async function tokyoFetch(pathname: string, init: RequestInit = {}) {
   const timer = setTimeout(() => controller.abort(), 5000);
   try {
     const headers = new Headers(init.headers as HeadersInit);
-    if (!headers.has('X-Request-ID')) headers.set('X-Request-ID', crypto.randomUUID());
+    if (!headers.has(CK_REQUEST_ID_HEADER)) headers.set(CK_REQUEST_ID_HEADER, crypto.randomUUID());
     const requestInit = {
       ...init,
       headers,

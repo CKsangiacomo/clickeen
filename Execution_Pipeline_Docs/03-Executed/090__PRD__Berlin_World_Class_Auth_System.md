@@ -1,6 +1,6 @@
 # PRD 090 - Berlin Simplifying Architecture And Codebase
 
-Status: Draft - ready for deletion-first execution
+Status: Executed
 Owner: Codex
 Date: 2026-05-11
 Architecture source: `documentation/architecture/CONTEXT.md`
@@ -799,7 +799,7 @@ Files changed:
 
 - `documentation/services/berlin.md`
 - `documentation/architecture/AccountManagement.md`
-- `Execution_Pipeline_Docs/02-Executing/090__PRD__Berlin_World_Class_Auth_System.md`
+- `Execution_Pipeline_Docs/03-Executed/090__PRD__Berlin_World_Class_Auth_System.md`
 
 Final route fate table:
 
@@ -817,7 +817,7 @@ rg -n "password login|Supabase Auth|PostgREST|generic account-management backend
 rg -n "exact\\('|pattern:" berlin/src/account-management/routes.ts berlin/src/publish-containment/routes.ts berlin/src/bootstrap/routes.ts berlin/src/auth/routes.ts berlin/src/session/routes.ts -g'*.ts'
 corepack pnpm --filter @clickeen/berlin typecheck
 corepack pnpm --filter @clickeen/berlin run verify:auth-boundary
-git diff --check -- documentation/services/berlin.md documentation/architecture/AccountManagement.md Execution_Pipeline_Docs/02-Executing/090__PRD__Berlin_World_Class_Auth_System.md
+git diff --check -- documentation/services/berlin.md documentation/architecture/AccountManagement.md Execution_Pipeline_Docs/03-Executed/090__PRD__Berlin_World_Class_Auth_System.md
 ```
 
 Result:

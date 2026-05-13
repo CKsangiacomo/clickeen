@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
     headers = buildTokyoAssetControlHeaders({
       accountId: gateway.value.accountId,
       accountCapsule: gateway.value.accountCapsule,
+      requestId: gateway.value.requestId,
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);

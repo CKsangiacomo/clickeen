@@ -1,4 +1,4 @@
-import { isRecord, isUuid } from '@clickeen/ck-contracts';
+import { CK_REQUEST_ID_HEADER, isRecord, isUuid, serializeCkLogEvent } from '@clickeen/ck-contracts';
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import {
   normalizeStorageId,
@@ -106,6 +106,52 @@ function toAccountAuthzSnapshot(capsule: RomaAccountAuthzCapsulePayload) {
   };
 }
 
+function logInternalRenderWarning(args: {
+  req: Request;
+  env: Env;
+  boundary: string;
+  detail: string;
+  instanceId?: string | null;
+  accountId?: string | null;
+}): void {
+  console.warn(
+    serializeCkLogEvent({
+      event: 'boundary.parse_failed',
+      service: 'tokyo-worker',
+      stage: typeof args.env.ENV_STAGE === 'string' && args.env.ENV_STAGE.trim() ? args.env.ENV_STAGE.trim() : 'unknown',
+      requestId: String(args.req.headers.get(CK_REQUEST_ID_HEADER) || '').trim() || crypto.randomUUID(),
+      boundary: args.boundary,
+      method: args.req.method,
+      path: new URL(args.req.url).pathname,
+      detail: args.detail,
+      ...(args.instanceId ? { instanceId: args.instanceId } : {}),
+      ...(args.accountId ? { accountId: args.accountId } : {}),
+    }),
+  );
+}
+
+async function readInternalRenderJsonBody(args: {
+  req: Request;
+  env: Env;
+  boundary: string;
+  instanceId?: string | null;
+  accountId?: string | null;
+}): Promise<unknown | null> {
+  try {
+    return await args.req.json();
+  } catch (error) {
+    logInternalRenderWarning({
+      req: args.req,
+      env: args.env,
+      boundary: args.boundary,
+      instanceId: args.instanceId,
+      accountId: args.accountId,
+      detail: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 async function authorizeRomaEditorTransition(args: {
   req: Request;
   env: Env;
@@ -170,7 +216,13 @@ export async function tryHandleInternalRenderRoutes(
     if (!auth.ok) return respond(auth.response);
     const { capsule } = auth;
 
-    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const body = (await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.render.syncQueue.body',
+      instanceId,
+      accountId,
+    })) as Record<string, unknown> | null;
     const live = body?.live === true;
     if (body && Object.prototype.hasOwnProperty.call(body, 'live') && typeof body.live !== 'boolean') {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
@@ -274,7 +326,12 @@ export async function tryHandleInternalRenderRoutes(
     });
     if (authErr) return respond(authErr);
 
-    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const body = (await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.render.serveState.body',
+      accountId,
+    })) as Record<string, unknown> | null;
     const rawInstanceIds = Array.isArray(body?.instanceIds) ? body.instanceIds : null;
     if (!rawInstanceIds) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
@@ -421,7 +478,12 @@ export async function tryHandleInternalRenderRoutes(
     });
     if (authErr) return respond(authErr);
 
-    const rawBody = (await req.json().catch(() => null)) as unknown;
+    const rawBody = await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.render.create.body',
+      accountId,
+    });
     if (!isRecord(rawBody)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
@@ -494,7 +556,13 @@ export async function tryHandleInternalRenderRoutes(
     if (!auth.ok) return respond(auth.response);
     const { capsule } = auth;
 
-    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const body = (await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.render.save.body',
+      instanceId,
+      accountId,
+    })) as Record<string, unknown> | null;
     if (!isRecord(body) || !isRecord(body.config)) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
     }
@@ -549,7 +617,13 @@ export async function tryHandleInternalRenderRoutes(
     if (!auth.ok) return respond(auth.response);
     const { capsule } = auth;
 
-    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const body = (await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.render.duplicate.body',
+      instanceId: sourceInstanceId,
+      accountId,
+    })) as Record<string, unknown> | null;
     const l10nIntent = normalizeTransitionL10nIntent(body?.l10nIntent);
     if (!l10nIntent) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
@@ -585,7 +659,13 @@ export async function tryHandleInternalRenderRoutes(
     if (!auth.ok) return respond(auth.response);
     const { capsule } = auth;
 
-    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const body = (await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.render.publish.body',
+      instanceId,
+      accountId,
+    })) as Record<string, unknown> | null;
     const l10nIntent = normalizeTransitionL10nIntent(body?.l10nIntent);
     if (!l10nIntent) {
       return respondValidation(respond, 'tokyo.errors.render.invalid');
@@ -651,7 +731,13 @@ export async function tryHandleInternalRenderRoutes(
     });
     if (authErr) return respond(authErr);
 
-    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const body = (await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.render.livePointer.body',
+      instanceId,
+      accountId,
+    })) as Record<string, unknown> | null;
     const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
     const configFp = normalizeSha256Hex(body?.configFp);
     const localePolicy = body?.localePolicy;
@@ -756,7 +842,13 @@ export async function tryHandleInternalRenderRoutes(
         minRole: 'editor',
       });
       if (authErr) return respond(authErr);
-      const rawBody = (await req.json().catch(() => null)) as unknown;
+      const rawBody = await readInternalRenderJsonBody({
+        req,
+        env,
+        boundary: 'internal.render.savedWrite.body',
+        instanceId,
+        accountId,
+      });
       if (!isRecord(rawBody)) {
         return respondValidation(respond, 'tokyo.errors.render.invalid');
       }

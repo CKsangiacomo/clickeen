@@ -5,12 +5,12 @@ Owner: Codex
 Date: 2026-05-12
 Architecture source: `documentation/architecture/CONTEXT.md`
 Strategy source: `documentation/strategy/WhyClickeen.md`
-Parent PRD: `Execution_Pipeline_Docs/02-Executing/092__PRD__Pre_GA_Product_Architecture_Simplification_Pass.md`
-Execution source: `Execution_Pipeline_Docs/02-Executing/092A__Wave_A_Execution_Notes.md`
+Parent PRD: `Execution_Pipeline_Docs/03-Executed/092__PRD__Pre_GA_Product_Architecture_Simplification_Pass.md`
+Execution source: `Execution_Pipeline_Docs/03-Executed/092A__Wave_A_Execution_Notes.md`
 Review source: post-execution PRD 092 audit on commit `229e5e85`
 Additional audit source: `/Users/pietro_macpro_home/Downloads/PRD_092_execution_audit.md`, reviewed 2026-05-12
 Inline audit source: user-provided "PRD 92 Execution Audit", reviewed 2026-05-12
-Execution notes: `Execution_Pipeline_Docs/02-Executing/093A__Execution_Notes.md`
+Execution notes: `Execution_Pipeline_Docs/03-Executed/093A__Execution_Notes.md`
 
 ## 0. Execution Result
 
@@ -171,8 +171,8 @@ Non-goals:
 
 Current evidence:
 
-- `Execution_Pipeline_Docs/02-Executing/092__PRD__Pre_GA_Product_Architecture_Simplification_Pass.md` remains in `02-Executing`.
-- `Execution_Pipeline_Docs/02-Executing/092A__Wave_A_Execution_Notes.md` remains in `02-Executing`.
+- `Execution_Pipeline_Docs/03-Executed/092__PRD__Pre_GA_Product_Architecture_Simplification_Pass.md` has been moved to `03-Executed`.
+- `Execution_Pipeline_Docs/03-Executed/092A__Wave_A_Execution_Notes.md` has been moved to `03-Executed`.
 - There is no PRD 092 final executed report in `Execution_Pipeline_Docs/03-Executed`.
 
 Required correction:

@@ -1,4 +1,11 @@
-import { parseRateLimitRecord, type RateLimitRecord } from '@clickeen/ck-contracts';
+import {
+  CK_REQUEST_ID_HEADER,
+  parseRateLimitRecord,
+  serializeCkLogEvent,
+  type CkLogEvent,
+  type CkLogLevel,
+  type RateLimitRecord,
+} from '@clickeen/ck-contracts';
 import { json } from './response';
 import { type Env } from '../types';
 
@@ -60,7 +67,7 @@ function normalizeCfRay(request: Request): string | null {
 }
 
 export function createBerlinRequestContext(request: Request, env: Env): BerlinRequestContext {
-  const fromHeader = String(request.headers.get('x-request-id') || '').trim();
+  const fromHeader = String(request.headers.get(CK_REQUEST_ID_HEADER) || '').trim();
   const pathname = new URL(request.url).pathname.replace(/\/+$/, '') || '/';
   return {
     service: 'berlin',
@@ -162,7 +169,7 @@ export function attachBerlinRequestHeaders(
   decision?: RateLimitDecision | null,
 ): Response {
   const headers = new Headers(response.headers);
-  headers.set('x-request-id', context.requestId);
+  headers.set(CK_REQUEST_ID_HEADER, context.requestId);
   if (decision) {
     headers.set('x-rate-limit-bucket', decision.bucket);
     headers.set('x-rate-limit-limit', String(decision.limit));
@@ -202,8 +209,8 @@ export async function enforceBerlinRateLimit(
   };
 }
 
-function log(level: 'info' | 'warn' | 'error', payload: Record<string, unknown>): void {
-  const serialized = JSON.stringify(payload);
+function log(level: CkLogLevel, payload: CkLogEvent): void {
+  const serialized = serializeCkLogEvent(payload);
   if (level === 'error') {
     console.error(serialized);
     return;
@@ -235,14 +242,14 @@ export function logBerlinRequestCompletion(args: {
     event,
     service: args.context.service,
     stage: args.context.stage,
+    boundary: 'http.request',
     requestId: args.context.requestId,
     method: args.context.method,
     path: args.context.path,
     status,
     durationMs,
-    clientIp: args.context.clientIp,
     cfRay: args.context.cfRay,
-    ...(args.decision ? { rateLimitBucket: args.decision.bucket } : {}),
-    ...(args.errorDetail ? { errorDetail: args.errorDetail } : {}),
+    ...(args.errorDetail ? { detail: args.errorDetail } : {}),
+    ...(args.decision ? { meta: { rateLimitBucket: args.decision.bucket } } : {}),
   });
 }

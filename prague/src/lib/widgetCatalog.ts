@@ -1,3 +1,4 @@
+import { isRecord } from '@clickeen/ck-contracts';
 import widgetsManifest from '../../../tokyo/product/widgets/manifest.json';
 
 export type PragueWidgetCatalogEntry = {
@@ -9,10 +10,6 @@ export type PragueWidgetCatalogEntry = {
     seoGeo: boolean;
   };
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function parseWidgetCatalogEntry(value: unknown, index: number): PragueWidgetCatalogEntry {
   if (!isRecord(value)) {

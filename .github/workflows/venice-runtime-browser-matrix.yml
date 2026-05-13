@@ -1,0 +1,51 @@
+name: venice runtime browser matrix
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "venice/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/venice-runtime-browser-matrix.yml"
+  push:
+    branches: [main]
+    paths:
+      - "venice/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/venice-runtime-browser-matrix.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: venice-runtime-browser-matrix-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-matrix:
+    runs-on: macos-latest
+    env:
+      NEXT_PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
+      TOKYO_URL: https://tokyo.dev.clickeen.com
+      CK_VENICE_INCLUDE_WEBKIT: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: {}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium firefox webkit
+
+      - name: Verify Venice runtime browser matrix
+        run: pnpm --filter @clickeen/venice verify:runtime

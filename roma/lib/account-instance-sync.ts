@@ -33,6 +33,7 @@ async function postAccountInstanceSync(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;
+  requestId?: string | null;
   live?: boolean;
   baseFingerprint?: string | null;
   previousBaseFingerprint?: string | null;
@@ -44,6 +45,7 @@ async function postAccountInstanceSync(args: {
     headers: buildTokyoProductControlHeaders({
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
       contentType: 'application/json',
     }),
     body: JSON.stringify({
@@ -73,6 +75,7 @@ export async function enqueueAccountInstanceSync(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;
+  requestId?: string | null;
   live?: boolean;
   baseFingerprint?: string | null;
   previousBaseFingerprint?: string | null;

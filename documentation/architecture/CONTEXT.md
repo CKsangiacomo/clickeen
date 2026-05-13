@@ -150,6 +150,7 @@ Bob does not URL-bootstrap account mode. Account editing is host-only.
 
 Localization is separate from Builder authoring: Berlin-backed Roma Settings owns account locale policy, and translation/runtime locale convergence happens downstream from the one widget save path. Tokyo stores base locale on instance l10n state only as a derived projection of that account policy for sync/runtime work.
 For account-widget localization, Tokyo-worker owns the saved pointer, base snapshot, approved text extraction, queue state, overlay writes, and public projection. San Francisco is a private worker-bound translation executor: it receives approved text items and returns set-only locale ops, with no account storage, widget config, allowlist, or publication authority.
+Builder translation preview is account-authenticated read-only inspection: Bob asks Roma for ready locale metadata plus the selected account overlay text pack, then sends that pack into the preview iframe. Unpublished Builder preview must not depend on public Venice/Tokyo l10n URLs, because public l10n serving is gated by Tokyo publish state.
 
 Between open and save:
 

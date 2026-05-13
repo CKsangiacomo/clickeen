@@ -10,7 +10,9 @@ Venice does not read Supabase, does not know account membership, and does not re
 
 - `GET /widget/{instanceId}` - public iframe shell.
 - `GET /embed/latest/loader.js` - current loader alias.
-- `GET /embed/v2/loader.js` - current loader.
+- `GET /embed/v2/loader.js` - compatibility v2 loader alias.
+- `GET /embed/v2.0.0/loader.js` - immutable versioned loader.
+- `GET /embed/v2.0.0/seo-geo-loader.js` - immutable versioned SEO/GEO enhancement loader.
 - `GET /widgets/**` - Tokyo widget runtime proxy.
 - `GET /dieter/**` - Tokyo Dieter asset proxy.
 - `GET /renders/widgets/{instanceId}/live/r.json` - Tokyo published render pointer proxy.
@@ -80,6 +82,9 @@ Scriptless iframe:
 ## Cache Rules
 
 - `/widget/{instanceId}`: short cache.
+- `/embed/latest/loader.js` and `/embed/v2/loader.js`: short compatibility cache.
+- `/embed/v2.0.0/loader.js`: immutable versioned cache.
+- `/embed/v2.0.0/seo-geo-loader.js`: immutable versioned cache.
 - Published live pointers: `no-store`.
 - Fingerprinted packs and widget assets: immutable.
 

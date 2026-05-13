@@ -3,6 +3,7 @@ import {
   loadTokyoAccountInstanceDocument,
   saveAccountInstanceDirect,
 } from '@roma/lib/account-instance-direct';
+import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -21,31 +22,23 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountId;
-  const { instanceId: instanceIdRaw } = await context.params;
-  const instanceId = String(instanceIdRaw || '').trim();
-  if (!instanceId) {
+  const instanceId = await requireInstanceIdParam(context);
+  if (typeof instanceId !== 'string') {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.instanceIdRequired' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
       current.value.setCookies,
     );
   }
-  let body: { displayName?: unknown } | null = null;
-  try {
-    body = (await request.json()) as { displayName?: unknown } | null;
-  } catch {
+  const bodyResult = await readJsonPayloadOrValidation<{ displayName?: unknown } | null>(request);
+  if (!bodyResult.ok) {
     return withSession(
       request,
-      NextResponse.json(
-        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } },
-        { status: 422 },
-      ),
+      NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }),
       current.value.setCookies,
     );
   }
+  const body = bodyResult.payload;
 
   const displayName = normalizeDisplayName(body?.displayName);
   if (!displayName) {
@@ -69,6 +62,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     accountId,
     instanceId,
     accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
   });
   if (!currentInstance.ok) {
     const status =
@@ -109,6 +103,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     displayName,
     meta: currentInstance.value.row.meta ?? null,
     accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
   });
   if (result.ok === false) {
     const status =

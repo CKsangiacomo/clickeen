@@ -1,3 +1,4 @@
+import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
 import type { CompiledPanel, CompiledWidget, WidgetPresets } from './types';
 import { RawWidget, decodeHtmlEntities, parseTooldrawerAttributes, parsePanels } from './compiler.shared';
 import { buildWidgetAssets } from './compiler/assets';
@@ -62,10 +63,6 @@ function replacePrimaryUrl(raw: string, nextUrl: string): string {
   const match = v.match(/url\(\s*(['"]?)([^'")]+)\1\s*\)/i);
   if (match && match[2]) return v.replace(match[2], nextUrl);
   return nextUrl;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function isTokyoAssetPath(pathname: string): boolean {

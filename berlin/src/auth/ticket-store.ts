@@ -1,3 +1,4 @@
+import { CK_REQUEST_ID_HEADER, serializeCkLogEvent } from '@clickeen/ck-contracts';
 import { readJsonPayload } from '../utils/primitives';
 
 export type TicketConsumeResult<T> =
@@ -36,6 +37,41 @@ function json(payload: unknown, init?: ResponseInit): Response {
       ...(init?.headers || {}),
     },
   });
+}
+
+function resolveTicketLogRequestId(source?: Request | Response | null): string {
+  const fromHeader = String(source?.headers.get(CK_REQUEST_ID_HEADER) || '').trim();
+  return fromHeader || crypto.randomUUID();
+}
+
+function logTicketStoreWarning(args: {
+  boundary: string;
+  detail: string;
+  source?: Request | Response | null;
+}): void {
+  console.warn(
+    serializeCkLogEvent({
+      event: 'boundary.operation_failed',
+      service: 'berlin',
+      stage: 'unknown',
+      requestId: resolveTicketLogRequestId(args.source),
+      boundary: args.boundary,
+      detail: args.detail,
+    }),
+  );
+}
+
+async function readTicketStoreJson(response: Response, boundary: string): Promise<unknown | null> {
+  try {
+    return await response.json();
+  } catch (error) {
+    logTicketStoreWarning({
+      boundary,
+      source: response,
+      detail: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }
 
 function claimAsString(value: unknown): string | null {
@@ -112,7 +148,7 @@ export async function storeAuthTicket(
     headers: { 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({ kind, payload, expiresAt }),
   });
-  const body = readObject(await response.json().catch(() => null));
+  const body = readObject(await readTicketStoreJson(response, 'auth.ticket.store.responseJson'));
   return Boolean(response.ok && body?.ok === true);
 }
 
@@ -131,7 +167,7 @@ export async function consumeAuthTicket<T>(
     body: JSON.stringify({ kind }),
   });
 
-  const body = readObject(await response.json().catch(() => null));
+  const body = readObject(await readTicketStoreJson(response, 'auth.ticket.consume.responseJson'));
   if (!response.ok || !body) return { outcome: 'missing' };
 
   const outcome = claimAsString(body.outcome);

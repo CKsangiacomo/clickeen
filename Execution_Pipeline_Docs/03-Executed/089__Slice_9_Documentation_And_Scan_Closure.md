@@ -1,6 +1,6 @@
 # PRD 089 Slice 9 - Documentation And Scan Closure
 
-Status: repository checks green; authenticated live product-path smoke blocked by missing Roma cookie
+Status: Executed - repository checks green; authenticated live product-path smoke blocked by missing Roma cookie
 
 Date: 2026-05-11
 

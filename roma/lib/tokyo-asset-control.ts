@@ -1,3 +1,4 @@
+import { CK_REQUEST_ID_HEADER } from '@clickeen/ck-contracts';
 import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
 
 const TOKYO_ASSET_CONTROL_ORIGIN = 'https://tokyo-asset-control.internal';
@@ -24,12 +25,16 @@ export function buildTokyoAssetControlHeaders(args: {
   accountCapsule?: string | null;
   contentType?: string | null;
   accept?: string | null;
+  requestId?: string | null;
   headers?: HeadersInit;
 }): Headers {
   const headers = new Headers(args.headers);
   headers.set('x-account-id', args.accountId);
   headers.set('x-ck-internal-service', 'roma.edge');
   headers.set('accept', args.accept || 'application/json');
+  if (args.requestId) {
+    headers.set(CK_REQUEST_ID_HEADER, args.requestId);
+  }
   if (args.accountCapsule) {
     headers.set('x-ck-authz-capsule', args.accountCapsule);
   }

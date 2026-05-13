@@ -567,7 +567,11 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     const list = state.list;
     const onPointerDown = (startEvent) => {
       if (startEvent.button !== 0) return;
-      if (isInteractive(startEvent.target)) return;
+      const handleTarget =
+        startEvent.target instanceof HTMLElement
+          ? startEvent.target.closest(".diet-repeater__item-handle")
+          : null;
+      if (!handleTarget && isInteractive(startEvent.target)) return;
       startEvent.preventDefault();
 
       const rect = item.getBoundingClientRect();

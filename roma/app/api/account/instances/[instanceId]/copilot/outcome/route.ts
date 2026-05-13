@@ -4,6 +4,7 @@ import {
   hashCopilotAccountId,
   isValidCopilotOutcomePayload,
 } from '@roma/lib/ai/account-copilot';
+import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -18,9 +19,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
   if (!current.ok) return current.response;
 
-  const { instanceId: instanceIdRaw } = await context.params;
-  const instanceId = String(instanceIdRaw || '').trim();
-  if (!instanceId) {
+  const instanceId = await requireInstanceIdParam(context);
+  if (typeof instanceId !== 'string') {
     return withSession(
       request,
       NextResponse.json({ ok: false, message: 'Invalid instanceId' }, { status: 200, headers: { 'cache-control': 'no-store' } }),

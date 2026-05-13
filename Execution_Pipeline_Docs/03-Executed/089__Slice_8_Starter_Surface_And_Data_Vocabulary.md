@@ -1,6 +1,6 @@
 # PRD 089 Slice 8 - Starter Surface And Data Vocabulary Decision
 
-Status: completed
+Status: Executed
 
 Date: 2026-05-11
 

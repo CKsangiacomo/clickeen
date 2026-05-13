@@ -1,6 +1,6 @@
 # PRD 089 Slice 0 - Evidence Refresh And Scope Lock
 
-Status: GREEN
+Status: Executed - green
 Date: 2026-05-11
 
 ## Scope

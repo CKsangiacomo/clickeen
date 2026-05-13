@@ -577,13 +577,18 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 | `GET /l10n/widgets/:instanceId/index.json`                       | Published l10n index proxy                |
 | `GET /l10n/widgets/:instanceId/:locale/overlay.json`             | Published l10n overlay proxy              |
 | `/embed/latest/loader.js`            | Canonical loader alias                    |
-| `/embed/v2/loader.js`                | Versioned loader                          |
+| `/embed/v2/loader.js`                | Compatibility v2 loader alias             |
+| `/embed/v2.0.0/loader.js`            | Immutable versioned loader                |
+| `/embed/v2.0.0/seo-geo-loader.js`    | Immutable versioned SEO/GEO enhancement loader |
 
 ### Caching Strategy
 
 | Artifact                                        | Cache-Control                         |
 | ----------------------------------------------- | ------------------------------------- |
 | `/widget/:instanceId` shell HTML                       | `public, max-age=60, s-maxage=86400`  |
+| `/embed/latest/loader.js`, `/embed/v2/loader.js`       | `public, max-age=300, s-maxage=600`   |
+| `/embed/v2.0.0/loader.js`                              | `public, max-age=31536000, immutable` |
+| `/embed/v2.0.0/seo-geo-loader.js`                      | `public, max-age=31536000, immutable` |
 | Live pointers (`/r`, locale/meta live pointers) | `no-store`                            |
 | Fingerprinted packs + widget assets             | `public, max-age=31536000, immutable` |
 

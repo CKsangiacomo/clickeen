@@ -6,6 +6,7 @@ import { getOptionalCloudflareRequestContext } from './cloudflare-request-contex
 import {
   enforceRomaRateLimitForAccountRequest,
   finalizeRomaObservedResponse,
+  resolveRomaRequestId,
   type RomaRateLimitKv,
 } from './request-ops';
 
@@ -15,6 +16,7 @@ export type CurrentAccountRouteContext = {
   authzPayload: RomaAccountAuthzCapsulePayload;
   setCookies?: SessionCookieSpec[];
   usageKv?: RomaRateLimitKv | null;
+  requestId: string;
 };
 
 export function withNoStore(response: NextResponse): NextResponse {
@@ -86,6 +88,7 @@ export async function resolveCurrentAccountRouteContext(args: {
       authzPayload: authz.payload,
       setCookies: [...(session.setCookies ?? []), ...(authz.setCookies ?? [])],
       usageKv,
+      requestId: resolveRomaRequestId(args.request),
     },
   };
 }

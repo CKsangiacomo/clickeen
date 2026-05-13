@@ -1,3 +1,4 @@
+import { isRecord } from "@clickeen/ck-contracts";
 import widgetsManifest from "../../../tokyo/product/widgets/manifest.json";
 
 export type WidgetCatalogEntry = {
@@ -29,10 +30,6 @@ type WidgetCatalogManifestEntry = WidgetCatalogEntry & {
   itemKey?: string | null;
   defaults?: unknown;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
 
 function cloneRecord(value: Record<string, unknown>): Record<string, unknown> {
   return typeof structuredClone === "function"

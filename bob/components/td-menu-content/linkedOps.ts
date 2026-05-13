@@ -1,3 +1,4 @@
+import { isRecord as isPlainRecord } from '@clickeen/ck-contracts';
 import type { CompiledWidget } from '../../lib/types';
 import type { WidgetOp } from '../../lib/ops';
 import { getAt } from '../../lib/utils/paths';
@@ -16,9 +17,7 @@ type PresetEntry = {
   targetPaths: string[];
 };
 
-export function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
+export { isPlainRecord };
 
 export function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);

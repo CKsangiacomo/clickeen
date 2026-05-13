@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isRecord } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { materializeAccountAdditionalLocales, normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
 import { runAccountLocalesSync } from '@roma/lib/account-locales-sync';
 import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
+import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -13,10 +15,6 @@ type AccountLocalesWritePayload = {
   locales?: unknown;
   policy?: unknown;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function normalizeWarnings(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -37,6 +35,7 @@ export async function GET(request: NextRequest) {
     const accountState = await loadCurrentAccountLocalesState({
       accessToken: current.value.accessToken,
       accountId: current.value.authzPayload.accountId,
+      requestId: current.value.requestId,
     });
     if (!accountState.ok) {
       return withSession(
@@ -60,6 +59,7 @@ export async function GET(request: NextRequest) {
     const baseLocaleLock = await loadAccountBaseLocaleLockState({
       accountId: current.value.authzPayload.accountId,
       accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
     });
     if (!baseLocaleLock.ok) {
       return withSession(
@@ -118,19 +118,15 @@ export async function PUT(request: NextRequest) {
   const contentType = request.headers.get('content-type') || 'application/json';
 
   try {
-    let body: AccountLocalesWritePayload | null = null;
-    try {
-      body = (await request.json()) as AccountLocalesWritePayload | null;
-    } catch {
+    const bodyResult = await readJsonPayloadOrValidation<AccountLocalesWritePayload | null>(request);
+    if (!bodyResult.ok) {
       return withSession(
         request,
-        NextResponse.json(
-          { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalidJson' } },
-          { status: 422 },
-        ),
+        NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }),
         current.value.setCookies,
       );
     }
+    const body = bodyResult.payload;
 
     if (!isRecord(body)) {
       return withSession(
@@ -158,6 +154,7 @@ export async function PUT(request: NextRequest) {
     const accountState = await loadCurrentAccountLocalesState({
       accessToken: current.value.accessToken,
       accountId: current.value.authzPayload.accountId,
+      requestId: current.value.requestId,
     });
     if (!accountState.ok) {
       return withSession(
@@ -181,6 +178,7 @@ export async function PUT(request: NextRequest) {
     const baseLocaleLock = await loadAccountBaseLocaleLockState({
       accountId: current.value.authzPayload.accountId,
       accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
     });
     if (!baseLocaleLock.ok) {
       return withSession(
@@ -258,6 +256,7 @@ export async function PUT(request: NextRequest) {
     const refreshedAccountState = await loadCurrentAccountLocalesState({
       accessToken: current.value.accessToken,
       accountId: current.value.authzPayload.accountId,
+      requestId: current.value.requestId,
     });
     if (!refreshedAccountState.ok) {
       return withSession(
@@ -281,6 +280,7 @@ export async function PUT(request: NextRequest) {
       await runAccountLocalesSync({
         accountId: current.value.authzPayload.accountId,
         accountCapsule: current.value.authzToken,
+        requestId: current.value.requestId,
         l10nIntent: {
           baseLocale: refreshedAccountState.policy.baseLocale,
           desiredLocales: normalizeDesiredAccountLocales({

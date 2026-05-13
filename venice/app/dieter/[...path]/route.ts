@@ -20,9 +20,10 @@ function isAllowedDieterPath(parts: string[]): boolean {
   return false;
 }
 
-export async function GET(_req: Request, ctx: { params: Promise<{ path: string[] }> }) {
+export async function GET(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;
   return proxyTokyoPath({
+    request: req,
     prefix: 'dieter',
     parts: normalizeTokyoPathParts(path),
     allowed: isAllowedDieterPath,
@@ -39,5 +40,6 @@ export async function HEAD(req: Request, ctx: { params: Promise<{ path: string[]
     allowed: isAllowedDieterPath,
     defaultCache: 'public, max-age=3600, s-maxage=86400',
     method: 'HEAD',
+    request: req,
   });
 }

@@ -15,11 +15,13 @@ type AccountBaseLocaleLockResult =
 export async function loadAccountBaseLocaleLockState(args: {
   accountId: string;
   accountCapsule?: string | null;
+  requestId?: string | null;
 }): Promise<AccountBaseLocaleLockResult> {
   try {
     const index = await loadTokyoAccountInstanceIndex({
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
     });
     if (!index.ok) {
       return {

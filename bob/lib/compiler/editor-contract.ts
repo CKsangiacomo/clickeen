@@ -1,3 +1,4 @@
+import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
 import {
   buildHeaderAppearancePanelFields,
   buildHeaderContentPanelFields,
@@ -76,10 +77,6 @@ type EditorPanel = {
 type EditorContract = {
   panels: EditorPanel[];
 };
-
-function isPlainObject(value: unknown): value is JsonObject {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function encodeHtmlEntities(value: string): string {
   return value

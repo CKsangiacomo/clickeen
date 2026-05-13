@@ -58,6 +58,7 @@ export function useTdMenuBindings(args: {
       if (!applied.ok && process.env.NODE_ENV === 'development') {
         console.warn('[TdMenuContent] Failed to apply set op', applied.errors);
       }
+      return applied;
     };
 
     const handleBobOpsEvent = (event: Event) => {
@@ -101,7 +102,10 @@ export function useTdMenuBindings(args: {
       if (!path) return;
 
       if (target instanceof HTMLInputElement && target.type === 'checkbox') {
-        applySet(path, target.checked);
+        const applied = applySet(path, target.checked);
+        if (!applied.ok) {
+          target.checked = getAt(instanceData, path) === true;
+        }
         return;
       }
 
