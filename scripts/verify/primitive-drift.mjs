@@ -21,7 +21,6 @@ const SCANNED_PATHS = [
   'roma/app/api/account/locales/route.ts',
   'roma/components/use-roma-me.ts',
   'roma/lib/auth/session.ts',
-  'tokyo-worker/src/domains/l10n-authoring.ts',
   'tokyo-worker/src/domains/render/instance-index.ts',
   'tokyo-worker/src/domains/render/normalize.ts',
   'tokyo-worker/src/domains/widget-catalog.ts',
