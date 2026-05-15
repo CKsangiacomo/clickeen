@@ -24,8 +24,8 @@ export function WidgetsDomain() {
   const router = useRouter();
   const { accountContext } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
-  const accountId = accountContext.accountId;
-  const cachedWidgets = readRomaWidgetsCache(accountId);
+  const productAccountId = accountContext.accountPublicId;
+  const cachedWidgets = readRomaWidgetsCache(productAccountId);
 
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -47,7 +47,7 @@ export function WidgetsDomain() {
 
   const refreshWidgets = useCallback(async (args?: { force?: boolean }) => {
     const force = args?.force === true;
-    const cached = readRomaWidgetsCache(accountId);
+    const cached = readRomaWidgetsCache(productAccountId);
 
     if (!force && cached) {
       applyWidgets(cached.data);
@@ -61,7 +61,7 @@ export function WidgetsDomain() {
     setDataError(null);
     try {
       const normalized = await loadRomaWidgetsForAccount({
-        accountId,
+        accountId: productAccountId,
         fetchJson: accountApi.fetchJson,
         force,
       });
@@ -77,10 +77,10 @@ export function WidgetsDomain() {
       setDomainLoading(false);
       setDomainRefreshing(false);
     }
-  }, [accountApi.fetchJson, accountId, applyWidgets]);
+  }, [accountApi.fetchJson, productAccountId, applyWidgets]);
 
   useEffect(() => {
-    const cached = readRomaWidgetsCache(accountId);
+    const cached = readRomaWidgetsCache(productAccountId);
     if (cached) {
       applyWidgets(cached.data);
       setDomainLoading(false);
@@ -90,7 +90,7 @@ export function WidgetsDomain() {
       setDomainLoading(true);
     }
     void refreshWidgets();
-  }, [accountId, applyWidgets, refreshWidgets]);
+  }, [productAccountId, applyWidgets, refreshWidgets]);
 
   const instanceWidgetTypes = useMemo(
     () => Array.from(new Set(widgetInstances.map((instance) => instance.widgetType).filter((widgetType) => widgetType !== 'unknown'))).sort((a, b) => a.localeCompare(b)),
@@ -127,7 +127,7 @@ export function WidgetsDomain() {
 
   const handleCreateInstance = useCallback(
     async (widgetType: string) => {
-      if (!accountId) return;
+      if (!productAccountId) return;
       const actionKey = `create:${widgetType}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
@@ -153,12 +153,12 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, accountId, refreshWidgets, router],
+    [accountApi, productAccountId, refreshWidgets, router],
   );
 
   const handleDuplicateInstance = useCallback(
     async (instance: WidgetInstance) => {
-      if (!accountId) return;
+      if (!productAccountId) return;
       const actionKey = `duplicate:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
@@ -181,12 +181,12 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, accountId, refreshWidgets],
+    [accountApi, productAccountId, refreshWidgets],
   );
 
   const handleDeleteInstance = useCallback(
     async (instance: WidgetInstance) => {
-      if (!accountId) return;
+      if (!productAccountId) return;
       const actionKey = `delete:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
@@ -202,12 +202,12 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, accountId, refreshWidgets],
+    [accountApi, productAccountId, refreshWidgets],
   );
 
   const handleStatusChange = useCallback(
     async (instance: WidgetInstance, nextStatus: 'published' | 'unpublished') => {
-      if (!accountId) return;
+      if (!productAccountId) return;
       const actionKey = `${nextStatus}:${instance.instanceId}`;
       setActiveActionKey(actionKey);
       setMutationError(null);
@@ -226,7 +226,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, accountId, refreshWidgets],
+    [accountApi, productAccountId, refreshWidgets],
   );
 
   const startRename = useCallback((instance: WidgetInstance) => {
@@ -245,7 +245,7 @@ export function WidgetsDomain() {
 
   const handleRenameInstance = useCallback(
     async (instance: WidgetInstance) => {
-      if (!accountId || !instance.actions.rename) return;
+      if (!productAccountId || !instance.actions.rename) return;
       const nextDisplayName = renameDraft.trim();
       if (!nextDisplayName) {
         setRenameError('Instance name cannot be empty.');
@@ -272,7 +272,7 @@ export function WidgetsDomain() {
         });
         const resolvedDisplayName = typeof payload.displayName === 'string' && payload.displayName.trim() ? payload.displayName.trim() : nextDisplayName;
         setWidgetInstances((prev) => prev.map((entry) => (entry.instanceId === instance.instanceId ? { ...entry, displayName: resolvedDisplayName } : entry)));
-        updateRomaWidgetsCache(accountId, (current) => ({
+        updateRomaWidgetsCache(productAccountId, (current) => ({
           ...current,
           instances: current.instances.map((entry) => (entry.instanceId === instance.instanceId ? { ...entry, displayName: resolvedDisplayName } : entry)),
         }));
@@ -284,7 +284,7 @@ export function WidgetsDomain() {
         setActiveActionKey((current) => (current === actionKey ? null : current));
       }
     },
-    [accountApi, accountId, cancelRename, renameDraft],
+    [accountApi, productAccountId, cancelRename, renameDraft],
   );
 
   return (
