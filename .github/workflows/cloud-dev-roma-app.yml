@@ -17,6 +17,7 @@ on:
       - "packages/**"
       - "scripts/build-bob-cf.mjs"
       - "scripts/build-roma-cf.mjs"
+      - "scripts/verify/**"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"

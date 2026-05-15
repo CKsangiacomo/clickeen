@@ -12,6 +12,7 @@ on:
       - "tokyo/product/themes/**"
       - "tokyo/product/dieter/**"
       - "scripts/infra/**"
+      - "scripts/verify/**"
       - "scripts/tokyo-fonts-sync.mjs"
       - ".github/workflows/cloud-dev-workers.yml"
   workflow_dispatch: {}
