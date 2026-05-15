@@ -205,7 +205,7 @@ export async function readAccountInstanceIndex(args: {
   }
   const raw = await loadJson(args.env, accountInstanceIndexKey(accountId));
   if (!raw) {
-    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.instance.indexMissing' };
+    return { ok: true, value: { v: 1, accountId, entries: [], updatedAt: new Date().toISOString() } };
   }
   const index = normalizeIndexDocument(raw, accountId);
   if (!index) return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.instance.indexInvalid' };

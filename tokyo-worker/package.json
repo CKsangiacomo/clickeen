@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "wrangler dev --local --port 4001",
     "deploy": "node ../scripts/infra/ensure-queues.mjs --write --queue instance-render-snapshot-cloud-dev && wrangler deploy",
-    "test": "rm -rf /tmp/clickeen-tokyo-worker-tests && esbuild src/route-helpers.test.ts src/domains/render/overlays.test.ts --bundle --platform=node --format=esm --outdir=/tmp/clickeen-tokyo-worker-tests && node --test /tmp/clickeen-tokyo-worker-tests/route-helpers.test.js /tmp/clickeen-tokyo-worker-tests/domains/render/overlays.test.js",
+    "test": "rm -rf /tmp/clickeen-tokyo-worker-tests && esbuild src/route-helpers.test.ts src/domains/render/overlays.test.ts src/domains/render/instance-index.test.ts --bundle --platform=node --format=esm --outdir=/tmp/clickeen-tokyo-worker-tests && node --test /tmp/clickeen-tokyo-worker-tests/route-helpers.test.js /tmp/clickeen-tokyo-worker-tests/domains/render/overlays.test.js /tmp/clickeen-tokyo-worker-tests/domains/render/instance-index.test.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
