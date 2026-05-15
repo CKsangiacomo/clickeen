@@ -27,8 +27,6 @@ jobs:
   browser-matrix:
     runs-on: macos-latest
     env:
-      NEXT_PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
-      TOKYO_URL: https://tokyo.dev.clickeen.com
       CK_VENICE_INCLUDE_WEBKIT: "1"
     steps:
       - uses: actions/checkout@v4
