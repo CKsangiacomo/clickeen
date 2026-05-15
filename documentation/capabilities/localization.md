@@ -1,373 +1,125 @@
-# Localization (i18n + l10n) — Phase 1 Contract
+# Localization Capability
 
-This document defines how Clickeen handles language and localization across:
+STATUS: REFERENCE - PRD 098 MODEL
 
-- Prague (marketing site strings)
-- Bob (editor UI + instance content)
-- Venice (embed runtime)
-- Tokyo (software plane CDN)
-- Michael (database)
-- San Francisco (translation agents)
+Localization is the first Babel application of the overlay primitive. It translates widget-owned text primitives into locale overlay objects.
 
-## Core principle
+## Core Principle
 
-- **Locale is a runtime parameter.**
-- **Locale is not identity.** We never encode locale into `instanceId`.
+- Locale is a runtime parameter for serving.
+- Locale is not base instance identity.
+- Locale is encoded in `overlayId` because an overlay is a SKU-like value object.
+- The overlay body is only `{ "v": 1, "values": { ... } }`.
 
-This prevents locale fan-out IDs (for example `ins_...fr` / `ins_...de`) and keeps caching + ownership clean.
+There is no account-widget `localization.json`, no layer sidecar, no text pack, no base-fingerprint overlay identity, and no compatibility bridge to the old pre-GA l10n model.
 
-## Canonical locale registry (shared)
+## Canonical Locale Registry
 
-`packages/l10n/locales.json` is the canonical registry of supported locale tokens **and** how to label them in different UI languages.
+`packages/l10n/locales.json` is the canonical registry of supported locale tokens and labels.
 
-- Use `code` as the locale token everywhere (lowercase BCP47-ish like `fr-ca`, `zh-hans`).
-- For locale pickers, always render locale names using `labels[uiLocale]` (not `nativeLabel`) so an English UI user does not see Chinese/Arabic script in the picker.
-- Use `@clickeen/l10n` helpers (e.g. `normalizeLocaleToken`, `normalizeCanonicalLocalesFile`, `resolveLocaleLabel`) instead of ad-hoc parsing (`split('-')[0]` is forbidden).
+Use `@clickeen/l10n` only for locale data helpers:
 
-## Instance kinds + entitlement gating (Phase 1)
+- `normalizeLocaleToken`
+- `localeCandidates`
+- `normalizeCanonicalLocalesFile`
+- `resolveLocaleLabel`
 
-### Instance ownership (authoritative)
+`@clickeen/l10n` must not own widget path extraction or overlay identity.
 
-- Clickeen-owned examples are normal account-owned instances under the Clickeen account.
-- User instances are normal account-owned instances under the user's active account.
+## Account Locale Policy
 
-All account instances localize within the owning account's active locales, bounded by tier entitlements and subject policy.
+Account-mode effective localization is:
 
-- **User instances** localize through explicit Tokyo-worker sync triggered by Roma widget/localization routes; save itself does not run l10n work.
-- **Curated instances** use the same explicit Tokyo-worker sync model rather than save-time l10n work.
+```txt
+entitlements + account active locales + saved widget primitive graph
+```
 
-### Entitlement + active locales model
+Entitlement keys:
 
-Account-mode effective localization = **entitlements** ∩ **subject policy** ∩ **account active locales**.
+- `l10n.locales.max`
+- `l10n.versions.max`
 
-- Entitlement keys:
-  - `l10n.locales.max` (limit; translated languages the account can add; the base language is implied and not counted)
-  - `l10n.versions.max` (limit; retained overlay versions)
-- Tier rules (v1; executed):
-  - Free: base language only; no translated-language picker
-  - Tier1: up to 3 translated languages
-  - Tier2+: unlimited translated languages
-- DevStudio: uncapped
-- Account active locales source: `accounts.l10n_locales` (JSON array of **non‑EN** locales; EN is implied)
-- Account locale policy/settings are managed in Roma Settings, not inside Bob.
+Account active locales are managed in Roma Settings. Builder edits only one base-locale widget at a time; translation is async follow-up work after save.
 
-Current free-tier materialization rule:
-- Berlin persists no additional translated locales for free accounts.
-- Downstream systems do not choose or materialize locales again.
+## Widget Text Primitive Source
 
-### MiniBob public contract
-
-MiniBob is not an account-governance surface, so its locale visibility is different:
-
-- MiniBob can view all locales that are already `ready` in the public Venice/Tokyo consumer truth for the current live fingerprint.
-- MiniBob does not gain locale governance, translation generation, publish, or account writes from that visibility.
-- MiniBob action limits come from subject policy; locale visibility comes from public `readyLocales`.
-- Bob translation UI should communicate locale truth only; commercial upsell/gating copy must not live inside the translation-status surface.
-- Bob must treat host/public localization payloads as strict system-owned truth. Malformed MiniBob/account localization snapshots are producer bugs, not inputs to normalize.
-
-## Localization systems (runtime)
-
-### `i18n` (catalogs for UI strings)
-
-Use `i18n` when the surface is UI chrome / labels:
-
-- Bob editor chrome (`coreui.*`)
-- Widget UI string bundles (`{widgetName}.*`), when applicable
-
-**Tokyo output**
-
-- `tokyo/roma/i18n/public/manifest.json`
-- `tokyo/roma/i18n/public/{locale}/{bundle}.{hash}.json`
-- Roma authored source: `tokyo/roma/i18n/source/{locale}/{bundle}.json`
-
-Rule: catalogs are content-hashed and cacheable; the manifest is the indirection layer.
-
-### `l10n` (overlays for instance config/content)
-
-Use `l10n` when the surface is “content inside an instance config” (copy, headings, CTA labels, etc.).
-
-**Tokyo output (served; current account-instance runtime)**
-
-When Tokyo marks an instance as published/servable, Tokyo exposes account-owned l10n truth through current widget routes:
-
-- Locale index:
-  - `/l10n/widgets/<instanceId>/index.json`
-- Locale overlay:
-  - `/l10n/widgets/<instanceId>/<locale>/overlay.json`
-
-Rules:
-- Venice public never reads DB. It only reads Tokyo public routes gated by the published widget lookup.
-- Locale overlays carry the current full `textPack` plus overlay ops for that locale.
-- Text packs contain only allowlisted keys.
-
-Where the write plane fits (current repo snapshot):
-- Tokyo-worker stores editable overlay rows and base snapshots under `accounts/<accountId>/widgets/<widgetType>/<instanceId>/...`.
-  - `layer=locale` = generated/managed translation ops
-- Tokyo-worker still owns canonical overlay/artifact state, but Builder no longer mounts account-mode localization snapshot/status/user-layer flows as part of the active authoring loop.
-- Every overlay row is keyed by `baseFingerprint` (sha256 of the current allowlist snapshot).
-- Repo-owned account instance l10n is forbidden by PRD 79. Account instance overlays belong under account-first Tokyo-worker storage; Prague website overlays live under `tokyo/prague/l10n/**`.
-- Stale writes are rejected when `baseFingerprint` does not match.
-- These authoring records are **never** served publicly.
-- When overlay/base state changes and the instance is published/servable, Tokyo-worker rebuilds the full text pack and publishes it:
-  - `fullPack = baseSnapshot + localeOps`
-
-**Generation + mirroring (current after PRD 80)**
-
-- Tokyo computes the canonical base text snapshot/fingerprint from the widget allowlist (`tokyo/product/widgets/<widgetType>/localization.json`) when the saved authoring config is written.
-- Tokyo-worker extracts the full approved current text item index (`path`, `type`, `value`) from that snapshot before generation.
-- Tokyo-worker calls San Francisco through the private `SANFRANCISCO_L10N` worker binding only when explicit instance sync needs new locale ops.
-- Tokyo-worker sends San Francisco approved items, requested target locales, existing locale ops, changed paths, removed paths, and the account `policyProfile`. It does not send widget config or allowlists.
-- San Francisco derives the `widget.instance.translator` runtime policy from `@clickeen/ck-policy`, translates only requested changed items when possible, preserves unchanged existing ops for current item paths, and removes only explicitly removed paths.
-- San Francisco returns set-only locale ops.
-- Tokyo-worker persists those overlay rows in the canonical Tokyo l10n plane.
-- Roma settings plus entitlements determine the canonical desired locale set for the account/widget lane, and Tokyo-worker reads that account-locale truth directly from Berlin during explicit sync execution.
-- Product-path save writes the current saved-widget l10n summary (`baseLocale` + desired locale set), `baseFingerprint`, and translation status onto the Tokyo saved widget pointer before Roma reports save success.
-- Explicit sync converges locale artifacts against that saved widget `l10n` block.
-- Builder Translations reads consume only Tokyo-worker's saved widget `l10n` truth plus matching current text pointers for the same `baseFingerprint`; there is no separate translation-state file.
-- While the `Translations` panel is open, Bob reads one Roma same-origin translations route backed by Tokyo-worker. That payload is `baseLocale`, `requestedLocales`, `readyLocales`, `status`, `failedLocales`, `baseFingerprint`, `generationId`, and `updatedAt`.
-- After Save succeeds, Bob may re-read that same route once to show current Tokyo truth.
-- Builder does not own an always-on localization convergence loop. If the Translations panel is open and the route says translations are still preparing, Builder may perform a small bounded recheck of that same Tokyo-backed status read.
-- Account-widget l10n statuses are only `queued`, `working`, `ready`, and `failed`. `queued` means Tokyo saved the current instance and handed off translation work; `working` includes bounded queue retries; `failed` is shown honestly instead of fake endless progress.
-- The Translations panel presents allowed and ready counts from `requestedLocales` and `readyLocales`, plus per-locale `Base` / `Ready` / `Not ready` / `Failed` truth.
-- The panel locale chooser exposes each currently ready locale immediately. Partial current-ready locale sets are user-facing truth; one missing locale must not block locales Tokyo has already made ready for the current fingerprint.
-- Commercial upsell copy stays outside the translation-readiness panel.
-- When a newer save writes a new `generationId` for the same instance, queued older generations are ignored.
-- If Tokyo cannot hand follow-up localization work to the queue, Tokyo-worker marks saved widget `l10n.status` as `failed` instead of letting Builder show fake progress.
-- If locale generation does not return current ops for a locale requested by the latest save, Tokyo-worker does not publish that locale as current-ready for the new `baseFingerprint`.
-- Builder preview locale selection uses the same readiness truth. Incomplete locale sets enter the Builder locale chooser only for locales that are already current-ready.
-- On explicit Tokyo-worker sync, the pipeline reconciles Tokyo against that desired set for the current `baseFingerprint`:
-  - if Tokyo already has the locale artifact for that exact fingerprint, skip
-  - if Tokyo does not have it, generate and write it
-- If the instance is published/servable:
-  - Tokyo-worker writes the locale text pack (full pack = base snapshot + locale ops + user ops).
-  - Tokyo-worker moves the public live locale policy with the current-ready locale subset only; missing locales stay out of public serving until they have current artifacts.
-  - If SEO/GEO is entitled+enabled, Tokyo-worker also writes the locale meta pack.
-- Consumer/embed policy is built only from Tokyo-ready locales for the current `baseFingerprint`, never from the full desired/allowed set.
-- When an instance first becomes published/servable, Roma triggers Tokyo-worker sync for the desired locale set and Tokyo-worker exposes only the Tokyo-ready subset to consumers.
-- When account locale/policy changes, Roma fans that change out across all account-owned saved instances:
-  - published instances enqueue sync with `live: true`, so public serving truth refreshes too
-  - unpublished instances enqueue sync with `live: false`, so Builder/saved locale truth refreshes without turning public serving on
-  - the fanout boundary is account-owned saved instances only
-- Unpublish turns public serving off. It removes the public live/serve surfaces that Venice depends on, but it is not the definition of whether saved base state or internal overlay authoring state exists.
-
-**Widget allowlist (authoritative)**
-
-- Locale layer allowlist: `tokyo/product/widgets/{widgetType}/localization.json`
-- Non-locale layer allowlists: `tokyo/product/widgets/{widgetType}/layers/{layer}.allowlist.json` (404 = no allowed paths)
-- Agents must not mutate paths outside the relevant allowlist.
-
-**Canonical write-plane store (Tokyo/Tokyo-worker runtime)**
-
-- Tokyo stores per-instance overlay rows for authoring/generation (write plane only).
-  - Locale translations: `layer='locale'`, `layer_key=<locale>`, set-only ops, `base_fingerprint=<hash of base snapshot>`.
-- Historical `layer='user'` rows may still exist in Tokyo storage from older flows, but the active `75E` product path no longer writes or consumes them.
-- Public/product l10n control routes no longer admit `layer='user'`.
-- Tokyo-worker derives status from canonical Tokyo overlay/artifact state.
-- These authoring records are never served publicly.
-- Public embeds read only Tokyo account-instance projections (`/l10n/widgets/{instanceId}/index.json` and `/l10n/widgets/{instanceId}/{locale}/overlay.json`).
-- The old Michael overlay table is not part of the active schema in this repo snapshot.
-
-Notes:
-- `user_ops` is not part of the active `75E` product path.
-- `geo_targets` is not used by PRD 54 public embed; IP mapping is driven by `localePolicy.ip.*` in `renders/.../live/r.json`.
-
-### Prague localization (system-owned, Babel-aligned)
-
-Use Prague page JSON base copy + Tokyo overlays for **Clickeen-owned website copy** (Prague pages). Chrome UI strings remain in `prague/content/base/v1/chrome.json`. This mirrors instance l10n semantics with deterministic overlay keys and no manifest.
-
-**Filesystem layout**
-
-- Base copy: `tokyo/prague/pages/*/*.json`
-- Chrome base: `prague/content/base/v1/chrome.json`
-- Allowlists: `prague/content/allowlists/v1/**`
-- Overlays: `tokyo/prague/l10n/{pageId}/locale/{locale}/{baseFingerprint}.ops.json`
-
-**Pipeline**
-
-- Translation is done by San Francisco via `POST /v1/l10n/translate` (local + cloud-dev; requires an HMAC body signature using `AI_GRANT_HMAC_SECRET`).
-- Provider: OpenAI for `website.prague.copy.translator`; account-widget instance l10n uses `widget.instance.translator` and follows the account runtime policy.
-- `scripts/prague-l10n/translate.mjs` calls San Francisco and writes overlay ops into `tokyo/prague/l10n/**`.
-- `scripts/prague-l10n/verify.mjs` is a read-only artifact validator:
-  - validates index/overlay presence and schema
-  - validates overlay fingerprint alignment
-  - does not mutate files or enforce allowlist policy
-  - Default mode validates the currently published overlay fingerprints (from `index.json`) and will **warn** on missing locales instead of blocking builds.
-  - Strict mode is `node scripts/prague-l10n/verify.mjs --strict-latest` (or `PRAGUE_L10N_VERIFY_STRICT=1`) and enforces “latest base fingerprint translated for all locales”.
-- `scripts/prague-sync.mjs` is the orchestrator used by CI: verify → (translate only if needed) → publish to Tokyo/R2.
-  - To publish, pass `--publish` with an explicit target:
-    - `--remote` in cloud-dev/prod (writes to Cloudflare R2)
-    - `--local` in local dev (writes to Wrangler local R2)
-- Prague loads page JSON base copy and applies overlays at runtime via Tokyo fetch.
-  - Runtime fetches use stable Prague overlay paths: `${PUBLIC_TOKYO_URL}/l10n/prague/...`
-  - Freshness is enforced by `baseFingerprint` in the Prague overlay index and ops files.
-
-**Strict rules**
-
-- Overlays are set-only ops and must include `baseFingerprint`.
-- `baseFingerprint` is the consumer visibility guard.
-- Public/current consumer paths must not apply non-current overlays.
-- Prague snapshot/base-snapshot metadata may still exist for verification and publication repair work, but that is not the account/widget consumer contract and must not be copied into Builder/Venice product paths.
-
-**Base snapshots (Prague)**
-
-- `scripts/prague-l10n/translate.mjs` writes base snapshots to `tokyo/prague/l10n/{pageId}/bases/{baseFingerprint}.snapshot.json`.
-- Prague retains snapshots for translation/publication tooling and diagnostics.
-
-## Curated embeds (Prague visuals)
-
-Prague visuals are Clickeen-owned example instances embedded by `accountInstanceRef.instanceId`.
-There is exactly one normal account instance in Tokyo for each embedded example. Locale selection happens at render time.
-
-### Render algorithm (Phase 1)
-
-1. Prague embeds Venice with canonical `instanceId`:
-   - `/widget/{instanceId}?locale=...`
-2. Venice serves the published snapshot for the requested locale from the current revision.
-3. If locale artifact is missing in that revision, response is unavailable (no serve-time EN fallback).
-4. Dynamic base-config + overlay composition is an internal bypass/debug path, not the public default path.
-
-**Strict rule:** locale-suffixed instance IDs are invalid and must 404 (no legacy support).
-
-## Overlay format (set-only authoring state)
-
-Tokyo write-plane storage:
-
-- Overlay row: `accounts/<accountId>/widgets/<widgetType>/<instanceId>/overlays/l10n/<locale>/overlay.json`
-- Base snapshots: `accounts/<accountId>/widgets/<widgetType>/<instanceId>/l10n/base/<baseFingerprint>.snapshot.json`
-- Generated SEO meta: `accounts/<accountId>/widgets/<widgetType>/<instanceId>/seo/meta/**`
-
-Public Tokyo output:
-
-- Public HTTP `/l10n/widgets/{instanceId}/index.json` and `/l10n/widgets/{instanceId}/{locale}/overlay.json` read through the published widget lookup. They are not storage truth.
-
-Example:
+Each widget declares translatable text in `spec.json`:
 
 ```json
 {
-  "instanceId": "ins_01KR8R6ZYZBDXE0DT2FB8PB0NN",
-  "locale": "fr",
-  "baseFingerprint": "sha256-hex",
-  "source": "job",
-  "ops": [{ "op": "set", "path": "headline", "value": "..." }]
+  "overlays": {
+    "v": 1,
+    "text": [
+      { "path": "header.title", "label": "Title" },
+      { "path": "sections[].faqs[].question", "label": "Question" },
+      { "path": "sections[].faqs[].answer", "label": "Answer" }
+    ]
+  }
 }
 ```
 
-Rules:
+Collection declarations are never sent to producers. They are expanded against the saved config into concrete paths such as:
 
-- Only `{ op: "set" }` ops are allowed.
-- Paths use dot notation (e.g. `cta.label`, `items.0.title`).
+```txt
+sections.0.faqs.0.question
+sections.0.faqs.0.answer
+```
 
-### Staleness guard (single contract for pages + account widget instances)
+## Babel Save Flow
 
-We use one staleness guard everywhere (Prague pages and account widget instances):
+1. User saves one widget instance in Bob.
+2. Roma saves the base config through the account product boundary.
+3. Roma orchestrates Babel follow-up for account active locales.
+4. San Francisco receives concrete text primitive paths and base values.
+5. San Francisco returns concrete translated text values.
+6. The receiving boundary rejects missing or extra paths with the path named.
+7. Tokyo-worker stores an exact overlay object under `overlays/{overlayId}.json`.
+8. Published runtime projection points to exact overlay IDs when public serving should expose them.
 
-- `baseFingerprint` is the canonical staleness guard.
-- Fresh overlays apply when:
-  - `overlay.baseFingerprint === computeL10nFingerprint(baseConfig, allowlist)`.
-- Consumer paths apply only current overlays for the active `baseFingerprint`.
-- Non-current overlays remain internal publication/control-plane state until regeneration converges them.
+No step repairs values, drops paths, guesses paths, or scans widget JSON to rediscover meaning.
 
-This keeps “locale overlays” deterministic across file-based content (Prague pages) and service-backed content (instances).
+Base save success is independent from language production. If Czech fails and Italian succeeds, Roma returns base save success with per-language follow-up details and Tokyo stores the successful Italian overlay. The failed language has no selected overlay update.
 
-**Strict rule (Phase 1+):**
+## Builder Preview
 
-- `baseFingerprint` is required for all new overlays.
-- `baseUpdatedAt` is retained as metadata only; runtime does not apply overlays without a fingerprint.
+The Builder Translations panel is read-only inspection of locale overlays.
 
-**Shared implementation requirement:**
+Bob reads selected overlay values through Roma's account route. A target language is selectable only when the route returns both a selected `overlayId` and the exact value map for that language. Account-enabled languages without a selected overlay may be named as unavailable UI rows, but they are not preview options.
 
-- `computeL10nFingerprint()` (and `buildL10nSnapshot()`) must be implemented once and imported from a shared module (`@clickeen/l10n` in `packages/l10n`).
+When a locale overlay is selected, Bob preview resolves:
 
-## Why overlays (vs full localized JSON per locale)
+```txt
+baseConfig + one overlay values object
+```
 
-We use ops overlays because they scale cleanly:
+Partial overlay values are not selectable. Stale old values must not be shown as if they are current. If the user edits the base widget, Bob clears language preview selection until the next save completes. Operational messages may explain that values are unavailable for the current save, but they must not become overlay truth.
 
-- **No instance fan-out:** one canonical base config per instance.
-- **Cacheable at the edge:** baseFingerprint-named overlay files can be `immutable`.
-- **Diff-friendly:** small changes don’t require re-storing the entire JSON blob.
-- **Safe by construction:** set-only prevents structural drift and merge conflicts.
+## Venice Runtime
 
-**Base language note (current architecture):**
+Venice serves only published projection truth.
 
-- The base config may be authored in **any** language.
-- The account base locale is the source language for translation bases.
-- That base locale must be chosen before the first widget save in the account.
-- After the first widget save, base locale is locked in product UI; later changes are support/migration work, not a normal settings toggle.
-- Overlays are generated from whatever base language is stored; no English-only assumption.
+For a locale request, Venice reads the published projection, fetches the exact overlay object by `overlayId`, and resolves:
 
-## Default locale (Phase 1)
+```txt
+publishedBaseConfig + one overlay values object
+```
 
-If a request does not include a locale signal:
+If the published projection does not contain a usable overlay for that locale, the locale is unavailable at the named boundary. Venice must not fallback to an unrelated language or compose old overlay shapes.
 
-- Venice defaults to `en` (no index-based auto-selection).
+## Prague
 
-This is a deterministic runtime choice (for cache stability), not an identity rule.
+Prague website copy is not account-widget authoring truth. PRD 098F decides whether Prague routes through the Venice/account-widget overlay runtime or keeps a separate website-copy pipeline. It must not silently preserve old account-widget l10n concepts.
 
-## Operational runbook (Phase 1)
+## Deleted Pre-GA Concepts
 
-### 0) Prague localization (system-owned)
+The following are not part of the active account-widget localization capability:
 
-1. Author base copy in `tokyo/prague/pages/*/*.json`.
-2. Update allowlists under `prague/content/allowlists/v1/**` when new copy paths are added.
-3. Generate overlays via `node scripts/prague-l10n/translate.mjs` (requires San Francisco; local uses `sanfrancisco-local`, cloud-dev uses `sanfrancisco-dev` with `SANFRANCISCO_BASE_URL` + `AI_GRANT_HMAC_SECRET`). This is Prague website-string localization only; account-widget l10n uses the private worker binding path.
-4. Verify overlays via `pnpm prague:l10n:verify`.
-5. Publish overlays to Tokyo/R2:
-   - Cloud-dev/prod (remote R2): `node scripts/prague-sync.mjs --publish --remote`
-   - Local dev (wrangler local R2): `node scripts/prague-sync.mjs --publish --local`
-6. Prague reads page JSON base copy + Tokyo overlays from `tokyo/prague/l10n/**` (repo output) and fetches them at runtime from `${PUBLIC_TOKYO_URL}/l10n/prague/...`; overlay freshness is enforced by the stored `baseFingerprint`.
-
-### 1) Enforce locale-free account instance IDs
-
-Canonical storage:
-
-- Tokyo account instance documents use `instanceId`.
-- The PRD 89 hard-cut migration drops the old Michael widget-instance identity schema.
-
-Effect:
-
-- Account widget identity is locale-free and Tokyo-owned.
-- No old Michael account-widget locale table or second account-widget identity remains in the active schema.
-
-Apply:
-
-- Local/Remote: apply the current Supabase migration set.
-
-### 2) Generate overlays (current)
-
-1. Roma triggers Tokyo-worker sync only from explicit save/create/locale-settings/publish flows when locale artifacts need to converge.
-2. Tokyo-worker extracts approved current text items and calls San Francisco through `SANFRANCISCO_L10N` only when locale ops are missing or changed.
-3. San Francisco translates only those approved items and returns set-only locale ops; it does not read or write Tokyo state.
-4. Tokyo-worker writes overlay rows and base snapshots to Tokyo.
-5. If the instance is live, Tokyo-worker exposes current overlay artifacts through `/l10n/widgets/**`.
-
-User overrides (interactive):
-
-- Historical `layer=user` rows may still exist in Tokyo storage from older flows.
-- The active Builder product path does not expose or write a `layer=user` surface.
-
-### 3) Consume overlays
-
-- Public `/widget/:instanceId` and `/l10n/widgets/**` are snapshot-first and revision-coherent; they do not dynamically heal missing locale artifacts.
-- Dynamic overlay composition is internal bypass behavior only (non-public).
-- Prague embeds the canonical locale-free `instanceId` and passes locale via query param to Venice.
-
-## User-owned localization (historical / not active in current product path)
-
-Older flows stored user-authored translation overrides separately from system-generated locale ops.
-That model is not part of the active Builder authoring path in the current repo state.
-
-Non-goals for Phase 1:
-
-- Storing per-locale copies of the full instance config in Michael.
-- Allowing locale suffixes in `instanceId`.
-- Sprinkling locale-specific conditionals throughout widget packages.
-
-The durable contract remains: **one instance identity + locale overlays applied at runtime**.
-
----
-
-## Links
-
-- Prague overview: `documentation/services/prague/prague-overview.md`
-- Tokyo (CDN): `documentation/services/tokyo.md`
-- San Francisco: `documentation/services/sanfrancisco.md`
+- Widget `localization.json`.
+- Widget `layers/*.allowlist.json`.
+- `textPack`.
+- `L10nOp`.
+- Base snapshots/fingerprints as overlay identity.
+- Overlay status/readiness inside overlay bodies.
+- User-authored translation layers.
+- Locale-suffixed instance IDs.
+- Public serving from old `/l10n/widgets/**` truth as an identity authority.

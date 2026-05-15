@@ -83,7 +83,7 @@ If any system along this path "corrects" or "defaults" the value, the user's int
 - The widget files define everything; orchestrators pass data through unchanged
 
 Note: request parameters (like `locale`) may have a deterministic default (Phase 1: `en`) when omitted. This is not identity and must not create DB fan-out.
-Note: localization overlays are **not** “fallbacks for config.” The base config is always complete and renderable; locale overlays are exposed only when current for the active base fingerprint. Consumers must not silently substitute base, stale, or other locale output and must not lie about the rendered locale.
+Note: localization overlays are **not** “fallbacks for config.” The base config is always complete and renderable; locale overlays are exposed only when the published render pointer names a selected PRD 098 `overlayId` for that language. Consumers must not silently substitute base, stale, or other locale output and must not lie about the rendered locale.
 
 ### Why No Fallbacks
 
@@ -108,8 +108,7 @@ tokyo/product/widgets/{widgetname}/
 ├── widget.client.js       ← Runtime behavior
 ├── agent.md               ← AI editing contract
 ├── limits.json            ← Entitlements caps/flags consumed by shared policy enforcement
-├── localization.json      ← Locale-layer allowlist (translatable paths)
-├── layers/*.allowlist.json← Per-layer allowlists (user/geo/industry/etc.)
+├── catalog.json           ← Widget catalog metadata and capability declarations
 └── pages/*.json           ← Prague marketing pages (overview/features/etc.)
 ```
 

@@ -1,14 +1,14 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
-  resolveAiAgent,
-  type AiGrantPolicy,
-} from '@clickeen/ck-contracts/ai';
-import {
-  resolveAiRuntimeBudget,
-  resolveAiRuntimePolicy,
-  type PolicyProfile,
-} from '@clickeen/ck-policy';
-import { HttpError, asTrimmedString, isRecord } from './http';
+  validateOverlayValuesForProducerItems,
+  type BabelTextProducerItem,
+  type BabelTextProducerRequest,
+  type BabelTextProducerResponse,
+  type OverlayValueMap,
+} from '@clickeen/ck-contracts/overlay-primitives';
+import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
+import { assertCap, verifyGrant } from './grants';
+import { HttpError, asTrimmedString, isRecord, json, noStore, readJson } from './http';
 import type { AIGrant, Env, Usage } from './types';
 import {
   MAX_TOTAL_INPUT_CHARS,
@@ -18,8 +18,6 @@ import {
   buildUserPrompt,
   chunkTranslationEntries,
   executeTranslationModel,
-  deleteMergedByPathOrPattern,
-  expandPathPatterns,
   isLikelyNonTranslatableLiteral,
   mergeUsage,
   parseTranslationResult,
@@ -27,187 +25,85 @@ import {
   type TranslationItem,
 } from './agents/l10nTranslationCore';
 
-type LocalizationOp = { op: 'set'; path: string; value: string };
+const TRANSLATOR_AGENT_ID = 'widget.instance.translator';
 
-export type AccountWidgetL10nGenerateRequest = {
-  widgetType: string;
-  baseLocale: string;
-  targetLocales: string[];
-  items: Array<{
-    path: string;
-    type: 'string' | 'richtext';
-    value: string;
-  }>;
-  existingOpsByLocale: Record<string, LocalizationOp[]>;
-  changedPaths: string[] | null;
-  removedPaths: string[];
-  policyProfile: PolicyProfile;
+export type BabelTextValuesResult = BabelTextProducerResponse & {
+  usage?: Usage;
 };
 
-export type AccountWidgetL10nGenerateResponse = {
-  results: Array<
-    | {
-        locale: string;
-        ok: true;
-        ops: LocalizationOp[];
-        usage?: Usage;
-      }
-    | {
-        locale: string;
-        ok: false;
-        ops: LocalizationOp[];
-        error: string;
-      }
-  >;
-};
-
-export function normalizePolicyProfile(value: unknown): PolicyProfile | null {
-  if (typeof value !== 'string') return null;
-  const normalized = value.trim();
-  if (
-    normalized === 'free' ||
-    normalized === 'tier1' ||
-    normalized === 'tier2' ||
-    normalized === 'tier3'
-  ) {
-    return normalized;
-  }
-  return null;
+function bearerToken(request: Request): string | null {
+  const header = request.headers.get('authorization');
+  if (!header) return null;
+  const [scheme, token] = header.split(' ');
+  if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) return null;
+  return token.trim() || null;
 }
 
-function normalizeOps(raw: unknown): LocalizationOp[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .filter((entry) => isRecord(entry) && entry.op === 'set')
-    .map((entry) => ({
-      op: 'set' as const,
-      path: typeof entry.path === 'string' ? entry.path.trim() : '',
-      value: typeof entry.value === 'string' ? entry.value : '',
-    }))
-    .filter((entry) => entry.path);
-}
-
-function normalizeTranslationItems(raw: unknown): TranslationItem[] | null {
+function normalizeProducerItems(raw: unknown): BabelTextProducerItem[] | null {
   if (!Array.isArray(raw)) return null;
   const items = raw
-    .filter((entry) => isRecord(entry) && typeof entry.path === 'string')
+    .filter((entry) => isRecord(entry))
     .map((entry) => ({
-      path: String(entry.path || '').trim(),
+      path: asTrimmedString(entry.path) ?? '',
       type: entry.type === 'richtext' ? ('richtext' as const) : ('string' as const),
-      value: typeof entry.value === 'string' ? entry.value : '',
-    }))
-    .filter((entry) => entry.path);
+      value: typeof entry.value === 'string' ? entry.value : null,
+    }));
+  if (items.some((entry) => !entry.path || entry.value == null)) return null;
   const seen = new Set<string>();
-  return items.filter((entry) => {
-    if (seen.has(entry.path)) return false;
-    seen.add(entry.path);
-    return true;
-  });
-}
-
-function normalizePathList(raw: unknown): string[] | null {
-  if (raw == null) return null;
-  if (!Array.isArray(raw)) return null;
-  return Array.from(
-    new Set(
-      raw
-        .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
-        .filter(Boolean),
-    ),
-  );
-}
-
-function buildInternalGrant(args: {
-  env: Env;
-  policyProfile: PolicyProfile;
-}): AIGrant {
-  const resolvedAgent = resolveAiAgent('widget.instance.translator');
-  if (!resolvedAgent) {
-    throw new HttpError(500, {
-      code: 'PROVIDER_ERROR',
-      provider: 'sanfrancisco',
-      message: 'Missing AI registry entry for account l10n generation',
-    });
+  for (const item of items) {
+    if (seen.has(item.path)) return null;
+    if (item.path.includes('*') || item.path.includes('[]')) return null;
+    seen.add(item.path);
   }
+  return items as BabelTextProducerItem[];
+}
 
-  const ai: AiGrantPolicy = resolveAiRuntimePolicy({
-    entry: resolvedAgent.entry,
-    policyProfile: args.policyProfile,
-  });
-  const budget = resolveAiRuntimeBudget(ai);
-
-  const nowSec = Math.floor(Date.now() / 1000);
+export function normalizeBabelTextProducerRequest(raw: unknown): BabelTextProducerRequest | null {
+  if (!isRecord(raw) || raw.v !== 1) return null;
+  const widgetType = asTrimmedString(raw.widgetType);
+  const sourceLanguage = normalizeLocaleToken(raw.sourceLanguage);
+  const targetLanguage = normalizeLocaleToken(raw.targetLanguage);
+  const items = normalizeProducerItems(raw.items);
+  if (!widgetType || !sourceLanguage || !targetLanguage || sourceLanguage === targetLanguage || !items) {
+    return null;
+  }
   return {
     v: 1,
-    iss: 'sanfrancisco',
-    jti: crypto.randomUUID(),
-    sub: { kind: 'service', serviceId: 'roma.account.l10n' },
-    exp: nowSec + 10 * 60,
-    caps: ['agent:widget.instance.translator'],
-    budgets: {
-      maxTokens: budget.maxTokens,
-      timeoutMs: budget.timeoutMs,
-    },
-    mode: 'ops',
-    ai,
-    trace: {
-      sessionId: crypto.randomUUID(),
-      envStage: asTrimmedString(args.env.ENVIRONMENT) ?? 'dev',
-    },
+    widgetType,
+    sourceLanguage,
+    targetLanguage,
+    items,
   };
 }
 
-export async function generateAccountWidgetLocaleOps(args: {
+function asTranslationItem(item: BabelTextProducerItem): TranslationItem {
+  return {
+    path: item.path,
+    type: item.type,
+    promptType: item.type,
+    value: item.value,
+  };
+}
+
+export async function produceBabelTextValues(args: {
   env: Env;
   grant: AIGrant;
-  widgetType: string;
-  locale: string;
-  entries: TranslationItem[];
-  existingOps: LocalizationOp[];
-  changedPaths: string[] | null;
-  removedPaths: string[];
-}): Promise<{ ops: LocalizationOp[]; usage?: Usage }> {
-  const entryMap = new Map(args.entries.map((entry) => [entry.path, entry]));
-  const candidatePaths = Array.from(
-    new Set([
-      ...args.entries.map((entry) => entry.path),
-      ...args.existingOps.map((op) => op.path),
-    ]),
-  );
-  const expandedChangedPaths =
-    args.changedPaths == null
-      ? null
-      : expandPathPatterns(args.changedPaths, candidatePaths);
-  const removedSet = new Set(expandPathPatterns(args.removedPaths, candidatePaths));
+  request: BabelTextProducerRequest;
+}): Promise<BabelTextValuesResult> {
+  const items = args.request.items.map(asTranslationItem);
+  const directValues = new Map<string, string>();
+  const modelItems: TranslationItem[] = [];
 
-  const translateAll = expandedChangedPaths == null;
-  const targetPaths = translateAll
-    ? args.entries.map((entry) => entry.path)
-    : expandedChangedPaths;
-
-  const translateEntries: TranslationItem[] = [];
-  const directOps: LocalizationOp[] = [];
-
-  targetPaths.forEach((path) => {
-    const entry = entryMap.get(path);
-    if (!entry) {
-      removedSet.add(path);
-      return;
+  for (const item of items) {
+    if (!item.value.trim() || isLikelyNonTranslatableLiteral(item.value)) {
+      directValues.set(item.path, item.value);
+      continue;
     }
-    if (!entry.value.trim()) {
-      directOps.push({ op: 'set', path: entry.path, value: '' });
-      return;
-    }
-    if (isLikelyNonTranslatableLiteral(entry.value)) {
-      directOps.push({ op: 'set', path: entry.path, value: entry.value });
-      return;
-    }
-    translateEntries.push(entry);
-  });
+    modelItems.push(item);
+  }
 
-  const structuredPlan = buildStructuredTranslationPlan(translateEntries);
+  const structuredPlan = buildStructuredTranslationPlan(modelItems);
   const modelEntries = structuredPlan.modelEntries;
-
   if (modelEntries.length > MAX_TOTAL_ITEMS) {
     throw new HttpError(400, {
       code: 'BAD_REQUEST',
@@ -223,154 +119,85 @@ export async function generateAccountWidgetLocaleOps(args: {
     });
   }
 
-  const translatedOps: LocalizationOp[] = [];
+  const values: OverlayValueMap = Object.fromEntries(directValues);
   let usage: Usage | undefined;
 
   if (modelEntries.length > 0) {
     const system = buildSystemPrompt({
-      locale: args.locale,
-      widgetType: args.widgetType,
+      locale: args.request.targetLanguage,
+      widgetType: args.request.widgetType,
       items: modelEntries,
     });
     const batches = chunkTranslationEntries(modelEntries);
     const translatedItems: Array<{ path: string; value: string }> = [];
-    let provider = 'deepseek';
+    let provider: string = args.grant.ai?.selectedModel?.provider ?? args.grant.ai?.defaultModel?.provider ?? 'deepseek';
 
     for (const batch of batches) {
-      const user = buildUserPrompt(batch);
       const result = await executeTranslationModel({
         env: args.env,
         grant: args.grant,
-        agentId: 'widget.instance.translator',
+        agentId: TRANSLATOR_AGENT_ID,
         system,
-        user,
+        user: buildUserPrompt(batch),
       });
       usage = mergeUsage(usage, result.usage);
       provider = result.usage.provider || provider;
-      const translated = parseTranslationResult(
-        result.content,
-        batch,
-        result.usage.provider || 'deepseek',
+      translatedItems.push(
+        ...parseTranslationResult(result.content, batch, result.usage.provider || provider),
       );
-      translatedItems.push(...translated);
     }
 
-    const restoredItems = restoreStructuredTranslationResults({
-      entries: translateEntries,
+    const restored = restoreStructuredTranslationResults({
+      entries: modelItems,
       plan: structuredPlan,
       translatedItems,
       provider,
     });
-    restoredItems.forEach((item) => {
-      translatedOps.push({ op: 'set', path: item.path, value: item.value });
+    for (const item of restored) {
+      values[item.path] = item.value;
+    }
+  }
+
+  const exact = validateOverlayValuesForProducerItems(args.request.items, values);
+  if (!exact.ok) {
+    throw new HttpError(502, {
+      code: 'PROVIDER_ERROR',
+      provider: 'sanfrancisco',
+      message: `Producer output ${exact.reason}: ${exact.path}`,
     });
   }
 
-  const merged = new Map<string, string>();
-  args.existingOps.forEach((op) => {
-    if (entryMap.has(op.path)) merged.set(op.path, op.value);
-  });
-
-  removedSet.forEach((pathOrPattern) => {
-    deleteMergedByPathOrPattern(merged, pathOrPattern);
-  });
-
-  [...directOps, ...translatedOps].forEach((op) => {
-    merged.set(op.path, op.value);
-  });
-
-  const ops = Array.from(merged.entries()).map(([path, value]) => ({
-    op: 'set' as const,
-    path,
-    value,
-  }));
-
-  return { ops, ...(usage ? { usage } : {}) };
+  return {
+    v: 1,
+    values,
+    ...(usage ? { usage } : {}),
+  };
 }
 
-export async function generateAccountWidgetL10nOps(
-  request: AccountWidgetL10nGenerateRequest,
-  env: Env,
-): Promise<AccountWidgetL10nGenerateResponse> {
-  const widgetType = asTrimmedString(request.widgetType);
-  const baseLocale = normalizeLocaleToken(request.baseLocale) ?? null;
-  const policyProfile = normalizePolicyProfile(request.policyProfile);
-  const entries = normalizeTranslationItems(request.items);
-  const targetLocalesRaw = Array.isArray(request.targetLocales) ? request.targetLocales : [];
-  const targetLocales = Array.from(
-    new Set(
-      targetLocalesRaw
-        .map((entry) => normalizeLocaleToken(entry))
-        .filter((locale): locale is string => Boolean(locale && locale !== baseLocale)),
-    ),
-  );
-
-  if (!widgetType) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Missing required field: widgetType',
+export async function handleBabelTextValues(request: Request, env: Env): Promise<Response> {
+  const resolvedAgent = resolveAiAgent(TRANSLATOR_AGENT_ID);
+  if (!resolvedAgent) {
+    throw new HttpError(500, {
+      code: 'PROVIDER_ERROR',
+      provider: 'sanfrancisco',
+      message: 'Missing AI registry entry for Babel text production',
     });
   }
-  if (!entries) {
+
+  const token = bearerToken(request);
+  if (!token) {
+    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Missing AI grant' });
+  }
+  const grant = await verifyGrant(token, env.AI_GRANT_HMAC_SECRET);
+  assertCap(grant, `agent:${resolvedAgent.canonicalId}`);
+
+  const body = normalizeBabelTextProducerRequest(await readJson(request));
+  if (!body) {
     throw new HttpError(400, {
       code: 'BAD_REQUEST',
-      message: 'Missing required field: items',
+      message: 'Expected Babel text producer request',
     });
   }
-  if (!baseLocale) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Missing required field: baseLocale',
-    });
-  }
-  if (!policyProfile) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: 'Missing required field: policyProfile',
-    });
-  }
-  if (!targetLocales.length) {
-    return { results: [] };
-  }
 
-  const changedPaths = normalizePathList(request.changedPaths);
-  const removedPaths = normalizePathList(request.removedPaths) ?? [];
-  const existingOpsByLocale = isRecord(request.existingOpsByLocale)
-    ? (request.existingOpsByLocale as Record<string, unknown>)
-    : {};
-  const grant = buildInternalGrant({ env, policyProfile });
-
-  const results = await Promise.all(
-    targetLocales.map(async (locale) => {
-      const existingOps = normalizeOps(existingOpsByLocale[locale]);
-      try {
-        const generated = await generateAccountWidgetLocaleOps({
-          env,
-          grant,
-          widgetType,
-          locale,
-          entries,
-          existingOps,
-          changedPaths,
-          removedPaths,
-        });
-
-        return {
-          locale,
-          ok: true as const,
-          ops: generated.ops,
-          ...(generated.usage ? { usage: generated.usage } : {}),
-        };
-      } catch (error) {
-        return {
-          locale,
-          ok: false as const,
-          ops: existingOps,
-          error: error instanceof Error ? error.message : String(error),
-        };
-      }
-    }),
-  );
-
-  return { results };
+  return noStore(json(await produceBabelTextValues({ env, grant, request: body })));
 }

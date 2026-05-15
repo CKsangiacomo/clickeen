@@ -1,15 +1,13 @@
-import { collectAllowlistedEntries } from '@clickeen/l10n';
 import type { AIGrant, Env, Usage } from '../types';
 import { HttpError, asString, isRecord } from '../http';
 import { callChatCompletion } from '../ai/chat';
 import { assertTranslationSafety, BRACE_PLACEHOLDER_PATTERN, HTML_TAG_PATTERN } from './translationSafety';
 
-export type AllowlistEntry = { path: string; type: 'string' | 'richtext' };
 export type TranslationItem = {
   path: string;
-  type: AllowlistEntry['type'];
+  type: 'string' | 'richtext';
   value: string;
-  promptType?: AllowlistEntry['type'];
+  promptType?: 'string' | 'richtext';
 };
 
 type RichtextSegmentPart =
@@ -25,7 +23,7 @@ export type StructuredTranslationPlan = {
 };
 
 export const PROMPT_VERSION = 'widget.instance.translator@2026-05-06.1';
-export const POLICY_VERSION = 'l10n.ops.v1';
+export const POLICY_VERSION = 'babel.text.values.v1';
 
 const MAX_BATCH_ITEMS = 80;
 const MAX_BATCH_INPUT_CHARS = 4000;
@@ -37,22 +35,6 @@ const TIMEOUT_MS = 35_000;
 const URL_PATTERN = /^https?:\/\/\S+$/i;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UNICODE_LETTER_PATTERN = /[\p{L}\p{M}]/u;
-
-export function collectTranslatableEntries(
-  config: Record<string, unknown>,
-  allowlist: AllowlistEntry[],
-  includeEmpty = false,
-): TranslationItem[] {
-  const entries = collectAllowlistedEntries(config, allowlist, { includeEmpty: true });
-  return entries
-    .filter((entry) => includeEmpty || entry.value.trim())
-    .map((entry) => ({
-      path: entry.path,
-      type: entry.type,
-      promptType: entry.type,
-      value: entry.value,
-    }));
-}
 
 export function buildSystemPrompt(args: {
   locale: string;
@@ -165,59 +147,6 @@ function normalizeBracePlaceholderSpacing(source: string, translated: string): s
     normalized = normalized.replace(pattern, token);
   });
   return normalized;
-}
-
-function splitPathSegments(pathStr: string): string[] {
-  return String(pathStr || '')
-    .split('.')
-    .map((seg) => seg.trim())
-    .filter(Boolean);
-}
-
-function isNumericSegment(seg: string): boolean {
-  return /^\d+$/.test(seg);
-}
-
-function pathMatchesPattern(pathStr: string, pattern: string): boolean {
-  const pathSegs = splitPathSegments(pathStr);
-  const patternSegs = splitPathSegments(pattern);
-  if (pathSegs.length !== patternSegs.length) return false;
-  for (let i = 0; i < patternSegs.length; i += 1) {
-    const pat = patternSegs[i] ?? '';
-    const actual = pathSegs[i] ?? '';
-    if (pat === '*') {
-      if (!isNumericSegment(actual)) return false;
-      continue;
-    }
-    if (pat !== actual) return false;
-  }
-  return true;
-}
-
-export function expandPathPatterns(patterns: string[], candidates: string[]): string[] {
-  const out = new Set<string>();
-  for (const raw of patterns) {
-    const pattern = String(raw || '').trim();
-    if (!pattern) continue;
-    if (!pattern.includes('*')) {
-      out.add(pattern);
-      continue;
-    }
-    for (const candidate of candidates) {
-      if (pathMatchesPattern(candidate, pattern)) out.add(candidate);
-    }
-  }
-  return Array.from(out);
-}
-
-export function deleteMergedByPathOrPattern(merged: Map<string, string>, pathOrPattern: string): void {
-  if (!pathOrPattern.includes('*')) {
-    merged.delete(pathOrPattern);
-    return;
-  }
-  for (const key of Array.from(merged.keys())) {
-    if (pathMatchesPattern(key, pathOrPattern)) merged.delete(key);
-  }
 }
 
 export function isLikelyNonTranslatableLiteral(value: string): boolean {

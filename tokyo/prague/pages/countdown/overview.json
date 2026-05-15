@@ -30,7 +30,7 @@
       "id": "minibob",
       "type": "minibob",
       "accountInstanceRef": {
-        "instanceId": "ins_01KR8R6ZYTPM6B3CHS8KZ0CEC9"
+        "instanceId": "INST000001"
       },
       "copy": {
         "heading": "Try it live",

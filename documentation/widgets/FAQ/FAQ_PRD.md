@@ -65,10 +65,9 @@ Widget definition (the software): `tokyo/product/widgets/faq/`
 - `widget.client.js` — `applyState(state)` runtime
 - `agent.md` — AI editing contract
 - `limits.json` — entitlement limits/flags
-- `localization.json` — locale-layer allowlist
-- `layers/*.allowlist.json` — non-locale layer allowlists (when used)
 
 Source of truth for editor state is `tokyo/product/widgets/faq/spec.json` → `defaults`.
+Source of truth for overlay-editable text primitives is `tokyo/product/widgets/faq/spec.json` → `overlays.text[]`.
 
 ## 2) Functional spec
 
@@ -201,16 +200,20 @@ Controls:
   - `cta.iconPlacement` (`left|right`)
 - `displayCategoryTitles` (toggle)
 
-Localization:
+Babel text primitives:
 
 - Localization/translation UI lives in Content (Translate mode).
-- The allowlist is `tokyo/product/widgets/faq/localization.json`.
-  - `header.title` (richtext)
-  - `header.subtitleHtml` (richtext)
-  - `cta.label` (string)
-  - `sections.*.title` (string)
-  - `sections.*.faqs.*.question` (string)
-  - `sections.*.faqs.*.answer` (richtext)
+- The source is `tokyo/product/widgets/faq/spec.json.overlays.text[]`.
+- Required coverage:
+  - `header.title`
+  - `header.subtitleHtml`
+  - `cta.label`
+  - `sections[].title`
+  - `sections[].faqs[].question`
+  - `sections[].faqs[].answer`
+- Before producer calls, repeatable declarations are expanded against the saved config into concrete paths such as `sections.0.faqs.0.question`.
+- FAQ must not add `localization.json`, layer sidecars, text packs, or wildcard producer payloads.
+- In Builder preview, selecting a language overlay must change FAQ title, subtitle, CTA text, section titles, every question, and every answer together. A target language without selected overlay values for the current save must not display stale FAQ text.
 
 ### Panel: Layout (`layout`)
 
@@ -373,9 +376,9 @@ Saved/open boundary requirements:
 When changing FAQ state/controls/runtime, keep the system coherent:
 
 1. `tokyo/product/widgets/faq/spec.json`: update defaults + panel controls (do not duplicate Typography controls into Appearance).
+   - If any customer-visible text path is added or moved, update `overlays.text[]` in the same file.
 2. `tokyo/product/widgets/faq/widget.client.js`: update `assertFaqState(...)` + `applyState(...)` so every control has a deterministic effect.
 3. `tokyo/product/widgets/faq/agent.md`: update the Editable Schema + Binding Map rows for any new/changed paths (no dead controls).
-4. `tokyo/product/widgets/faq/localization.json`: update allowlist if you add/move any localized content fields.
-5. `tokyo/product/widgets/faq/limits.json`: update entitlements limits if you add gated controls/metrics.
-6. SEO/GEO: update `tokyo/product/widgets/faq/seo-geo.ts` (schema + excerpt) and rerun `node scripts/build-widget-catalog.mjs` if SEO/GEO outputs change.
-7. Verify with repo typecheck/build and the relevant Cloudflare verification; do not use a localhost Bob HTTP compile gate.
+4. `tokyo/product/widgets/faq/limits.json`: update entitlements limits if you add gated controls/metrics.
+5. SEO/GEO: update `tokyo/product/widgets/faq/seo-geo.ts` (schema + excerpt) and rerun `node scripts/build-widget-catalog.mjs` if SEO/GEO outputs change.
+6. Verify with repo typecheck/build and the relevant Cloudflare verification; do not use a localhost Bob HTTP compile gate.

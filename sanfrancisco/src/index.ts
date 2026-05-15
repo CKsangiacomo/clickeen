@@ -17,9 +17,7 @@ import {
   handlePragueStringsTranslate,
 } from './l10n-routes';
 import {
-  generateAccountWidgetL10nOps,
-  type AccountWidgetL10nGenerateRequest,
-  type AccountWidgetL10nGenerateResponse,
+  handleBabelTextValues,
 } from './l10n-account-routes';
 import {
   buildLearningSample,
@@ -237,6 +235,13 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
           boundary: 'l10n.translate',
         });
       }
+      if (request.method === 'POST' && url.pathname === '/v1/babel/text-values') {
+        return finalizeSanFranciscoObservedResponse({
+          context: requestContext,
+          response: await handleBabelTextValues(request, this.env),
+          boundary: 'babel.textValues',
+        });
+      }
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     } catch (err: unknown) {
@@ -276,11 +281,5 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
         }
       }
     }
-  }
-
-  async generateAccountWidgetL10nOps(
-    request: AccountWidgetL10nGenerateRequest,
-  ): Promise<AccountWidgetL10nGenerateResponse> {
-    return generateAccountWidgetL10nOps(request, this.env);
   }
 }

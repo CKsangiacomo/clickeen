@@ -2,72 +2,81 @@ export function accountWidgetsRoot(accountId: string): string {
   return `accounts/${accountId}/widgets`;
 }
 
-export function accountWidgetRoot(accountId: string, widgetType: string): string {
-  return `${accountWidgetsRoot(accountId)}/${widgetType}`;
+export function accountWidgetRoot(accountId: string, widgetCode: string): string {
+  return `${accountWidgetsRoot(accountId)}/${widgetCode}`;
 }
 
-export function accountWidgetDocumentKey(accountId: string, widgetType: string): string {
-  return `${accountWidgetRoot(accountId, widgetType)}/widget.json`;
+export function accountWidgetDocumentKey(accountId: string, widgetCode: string): string {
+  return `${accountWidgetRoot(accountId, widgetCode)}/widget.json`;
 }
 
-export function accountInstanceRoot(accountId: string, widgetType: string, instanceId: string): string {
-  return `${accountWidgetRoot(accountId, widgetType)}/${instanceId}`;
+export function accountInstanceRoot(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountWidgetRoot(accountId, widgetCode)}/${instanceId}`;
 }
 
 export function accountInstanceIndexKey(accountId: string): string {
   return `${accountWidgetsRoot(accountId)}/index.json`;
 }
 
-export function accountInstanceDocumentKey(accountId: string, widgetType: string, instanceId: string): string {
-  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/instance.json`;
+export function accountInstanceDocumentKey(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/instance.json`;
 }
 
-export function accountInstanceConfigKey(accountId: string, widgetType: string, instanceId: string): string {
-  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/config.json`;
+export function accountInstanceConfigKey(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/config.json`;
 }
 
-export function accountInstancePublishKey(accountId: string, widgetType: string, instanceId: string): string {
-  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/publish.json`;
+export function accountInstancePublishKey(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/publish.json`;
 }
 
-export function accountInstancePublishedConfigKey(accountId: string, widgetType: string, instanceId: string): string {
-  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/published/config.json`;
+export function accountInstancePublishedConfigKey(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/published/config.json`;
 }
 
-export function accountInstanceL10nBaseSnapshotKey(
+export function accountInstanceOverlayObjectKey(
   accountId: string,
-  widgetType: string,
+  widgetCode: string,
   instanceId: string,
-  baseFingerprint: string,
+  overlayId: string,
 ): string {
-  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/l10n/base/${baseFingerprint}.snapshot.json`;
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/${overlayId}.json`;
 }
 
-export function accountInstanceL10nOverlayKey(
+export function accountInstanceOverlayObjectPrefix(
   accountId: string,
-  widgetType: string,
+  widgetCode: string,
   instanceId: string,
-  locale: string,
+  overlayIdPrefix = '',
 ): string {
-  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/overlays/l10n/${locale}/overlay.json`;
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/${overlayIdPrefix}`;
 }
 
-export function accountInstanceL10nOverlayPrefix(
+export function accountInstanceSelectedOverlayKey(
   accountId: string,
-  widgetType: string,
+  widgetCode: string,
   instanceId: string,
-  locale?: string,
+  languageCode: string,
+  experiment: string,
+  personalization: string,
 ): string {
-  const root = `${accountInstanceRoot(accountId, widgetType, instanceId)}/overlays/l10n`;
-  return locale ? `${root}/${locale}/` : `${root}/`;
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/selected-overlays/${languageCode}/${experiment}/${personalization}.json`;
 }
 
-export function accountInstanceRenderMetaLivePointerKey(accountId: string, widgetType: string, instanceId: string, locale: string): string {
-  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/seo/meta/live/${locale}.json`;
+export function accountInstanceSelectedOverlayPrefix(
+  accountId: string,
+  widgetCode: string,
+  instanceId: string,
+): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/selected-overlays/`;
 }
 
-export function accountInstanceRenderMetaPackKey(accountId: string, widgetType: string, instanceId: string, locale: string, metaFp: string): string {
-  return `${accountInstanceRoot(accountId, widgetType, instanceId)}/seo/meta/${locale}/${metaFp}.json`;
+export function accountInstanceRenderMetaLivePointerKey(accountId: string, widgetCode: string, instanceId: string, locale: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/seo/meta/live/${locale}.json`;
+}
+
+export function accountInstanceRenderMetaPackKey(accountId: string, widgetCode: string, instanceId: string, locale: string, metaFp: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/seo/meta/${locale}/${metaFp}.json`;
 }
 
 export function publishedWidgetLookupKey(instanceId: string): string {

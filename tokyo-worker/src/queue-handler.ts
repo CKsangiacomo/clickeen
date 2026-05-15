@@ -3,12 +3,9 @@ import {
   enforceLiveSurface,
   isTokyoMirrorJob,
   syncLiveSurface,
-  writeSavedRenderL10nStatus,
   writeConfigPack,
   writeMetaPack,
-  writeTextPack,
 } from './domains/render';
-import { runQueuedAccountInstanceSync } from './domains/account-instance-sync';
 import type { Env } from './types';
 
 function retryDelaySeconds(attempt: number, baseSeconds: number, capSeconds: number): number {
@@ -36,9 +33,6 @@ export async function handleTokyoQueue(
         case 'write-config-pack':
           await writeConfigPack(env, body);
           break;
-        case 'write-text-pack':
-          await writeTextPack(env, body);
-          break;
         case 'write-meta-pack':
           await writeMetaPack(env, body);
           break;
@@ -51,14 +45,6 @@ export async function handleTokyoQueue(
         case 'delete-instance-mirror':
           await deleteInstanceMirror(env, body.instanceId ?? body.instanceId ?? '', body.accountId);
           break;
-        case 'sync-instance-overlays':
-          await runQueuedAccountInstanceSync(env, body, {
-            attempt:
-              typeof msg.attempts === 'number' && Number.isFinite(msg.attempts)
-                ? msg.attempts
-                : 0,
-          });
-          break;
       }
       msg.ack();
     } catch (error) {
@@ -69,37 +55,6 @@ export async function handleTokyoQueue(
       const message = error instanceof Error ? error.message : String(error);
 
       if (attempt >= maxAttempts) {
-        if (body.kind === 'sync-instance-overlays') {
-          try {
-            await writeSavedRenderL10nStatus({
-              env,
-              instanceId,
-              accountId: body.accountId,
-              generationId: body.generationId,
-              status: 'failed',
-              baseFingerprint: body.baseFingerprint,
-              readyLocales: [body.baseLocale],
-              failedLocales: body.desiredLocales
-                .filter((locale) => locale !== body.baseLocale)
-                .map((locale) => ({
-                  locale,
-                  reasonKey: 'tokyo_translation_generation_failed',
-                  detail: message,
-                })),
-              lastError: message,
-              finishedAt: new Date().toISOString(),
-              guardCurrentGeneration: true,
-            });
-          } catch (statusError) {
-            console.error(
-              '[tokyo] queue job failed permanently and could not persist translation status',
-              body.kind,
-              instanceId,
-              message,
-              statusError instanceof Error ? statusError.message : String(statusError),
-            );
-          }
-        }
         console.error(
           '[tokyo] queue job failed permanently',
           body.kind,

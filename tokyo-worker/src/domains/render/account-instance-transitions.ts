@@ -1,13 +1,9 @@
+import { createCompactInstanceId, isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { resolvePolicyFromEntitlementsSnapshot, type RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import type { Env } from '../../types';
 import {
   resolveWidgetDefaults,
 } from '../widget-catalog';
-import {
-  enqueueAccountInstanceSyncJob,
-  syncAccountInstanceAndRecordStatus,
-  type SyncL10nIntent,
-} from '../account-instance-sync';
 import { readAccountInstanceIndex } from './instance-index';
 import { syncLiveSurface } from './live-surface';
 import {
@@ -51,7 +47,7 @@ function assertScopedIds(accountIdRaw: string, instanceIdRaw: string): {
 } {
   const accountId = normalizeStorageId(accountIdRaw);
   const instanceId = normalizeStorageId(instanceIdRaw);
-  if (!accountId || !instanceId) {
+  if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(instanceId)) {
     throw new AccountInstanceTransitionError({
       status: 422,
       kind: 'VALIDATION',
@@ -77,21 +73,29 @@ function transitionFailureFromSavedRead(result: { kind: 'NOT_FOUND' | 'VALIDATIO
   });
 }
 
-function toTranslationFollowup(error: unknown):
-  | { ok: true }
-  | { ok: false; reasonKey: string; detail: string; status: number } {
-  if (!error) return { ok: true };
-  const detail = error instanceof Error ? error.message : String(error);
-  return {
-    ok: false,
-    reasonKey: 'coreui.errors.translations.acceptanceFailed',
-    detail,
-    status: detail === 'tokyo_saved_not_found' ? 404 : 502,
-  };
-}
-
-function mintAccountInstanceId(): string {
-  return `ins_${crypto.randomUUID()}`;
+async function mintAccountInstanceId(args: {
+  env: Env;
+  accountId: string;
+  widgetType: string;
+}): Promise<string> {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const instanceId = createCompactInstanceId();
+    const existing = await readSavedRenderConfig({
+      env: args.env,
+      accountId: args.accountId,
+      widgetType: args.widgetType,
+      instanceId,
+    });
+    if (!existing.ok && existing.kind === 'NOT_FOUND') {
+      return instanceId;
+    }
+  }
+  throw new AccountInstanceTransitionError({
+    status: 503,
+    kind: 'UPSTREAM_UNAVAILABLE',
+    reasonKey: 'tokyo.errors.instance.idCollision',
+    detail: 'compact_instance_id_collision',
+  });
 }
 
 function normalizeDisplayName(value: unknown): string | null {
@@ -100,35 +104,11 @@ function normalizeDisplayName(value: unknown): string | null {
   return trimmed.length > 0 && trimmed.length <= 120 ? trimmed : null;
 }
 
-async function enqueueTranslationFollowup(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-  live: boolean;
-  baseFingerprint?: string | null;
-  previousBaseFingerprint?: string | null;
-  accountAuthz: AccountAuthzSnapshot;
-  l10nIntent: SyncL10nIntent;
-}): Promise<ReturnType<typeof toTranslationFollowup>> {
-  try {
-    await enqueueAccountInstanceSyncJob(args);
-    return { ok: true };
-  } catch (error) {
-    return toTranslationFollowup(error);
-  }
-}
-
 export async function createAccountInstanceFromDefaults(args: {
   env: Env;
   accountId: string;
   widgetType: string;
   displayName?: unknown;
-  l10n?: {
-    summary?: {
-      baseLocale: string;
-      desiredLocales: string[];
-    } | null;
-  } | null;
 }): Promise<{ pointer: SavedRenderPointer; config: Record<string, unknown> }> {
   const accountId = normalizeStorageId(args.accountId);
   const widgetType = normalizeStorageId(args.widgetType);
@@ -144,13 +124,11 @@ export async function createAccountInstanceFromDefaults(args: {
   const saved = await writeSavedRenderConfig({
     env: args.env,
     accountId,
-    instanceId: mintAccountInstanceId(),
+    instanceId: await mintAccountInstanceId({ env: args.env, accountId, widgetType }),
     widgetType,
     config,
     displayName: normalizeDisplayName(args.displayName),
     meta: null,
-    deriveL10nBase: false,
-    ...(args.l10n !== undefined ? { l10n: args.l10n } : {}),
   });
 
   return { pointer: saved.pointer, config };
@@ -166,14 +144,11 @@ export async function saveAccountInstanceTransition(args: {
   hasDisplayName: boolean;
   meta?: unknown;
   hasMeta: boolean;
-  l10nIntent?: SyncL10nIntent;
   accountAuthz: AccountAuthzSnapshot;
 }): Promise<{
   ok: true;
   pointer: SavedRenderPointer;
   live: boolean;
-  previousBaseFingerprint: string | null;
-  translationFollowup: ReturnType<typeof toTranslationFollowup>;
 }> {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
   const submittedWidgetType = String(args.submittedWidgetType || '').trim();
@@ -204,38 +179,13 @@ export async function saveAccountInstanceTransition(args: {
     config: args.config,
     displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
     meta: args.hasMeta ? args.meta : existing.value.pointer.meta ?? null,
-    deriveL10nBase: false,
-    ...(args.l10nIntent
-      ? {
-          l10n: {
-            summary: {
-              baseLocale: args.l10nIntent.baseLocale,
-              desiredLocales: args.l10nIntent.desiredLocales,
-            },
-          },
-        }
-      : {}),
   });
   const live = (await readInstanceServeState({ env: args.env, accountId, instanceId })) === 'published';
-  const translationFollowup = args.l10nIntent
-    ? await enqueueTranslationFollowup({
-        env: args.env,
-        accountId,
-        instanceId,
-        live,
-        baseFingerprint: saved.pointer.l10n?.baseFingerprint ?? null,
-        previousBaseFingerprint: saved.previousBaseFingerprint,
-        accountAuthz: args.accountAuthz,
-        l10nIntent: args.l10nIntent,
-      })
-    : { ok: true as const };
 
   return {
     ok: true,
     pointer: saved.pointer,
     live,
-    previousBaseFingerprint: saved.previousBaseFingerprint,
-    translationFollowup,
   };
 }
 
@@ -243,7 +193,6 @@ export async function duplicateAccountInstanceTransition(args: {
   env: Env;
   accountId: string;
   sourceInstanceId: string;
-  l10nIntent?: SyncL10nIntent;
   accountAuthz: AccountAuthzSnapshot;
 }): Promise<{
   accountId: string;
@@ -251,7 +200,6 @@ export async function duplicateAccountInstanceTransition(args: {
   instanceId: string;
   widgetType: string;
   status: InstanceServeState;
-  translationFollowup: ReturnType<typeof toTranslationFollowup>;
 }> {
   const { accountId, instanceId: sourceInstanceId } = assertScopedIds(args.accountId, args.sourceInstanceId);
   const source = await readSavedRenderConfig({
@@ -261,7 +209,11 @@ export async function duplicateAccountInstanceTransition(args: {
   });
   if (!source.ok) transitionFailureFromSavedRead(source);
 
-  const instanceId = mintAccountInstanceId();
+  const instanceId = await mintAccountInstanceId({
+    env: args.env,
+    accountId,
+    widgetType: source.value.pointer.widgetType,
+  });
   const saved = await writeSavedRenderConfig({
     env: args.env,
     accountId,
@@ -270,31 +222,7 @@ export async function duplicateAccountInstanceTransition(args: {
     config: source.value.config,
     displayName: null,
     meta: null,
-    deriveL10nBase: false,
-    ...(args.l10nIntent
-      ? {
-          l10n: {
-            summary: {
-              baseLocale: args.l10nIntent.baseLocale,
-              desiredLocales: args.l10nIntent.desiredLocales,
-            },
-          },
-        }
-      : {}),
   });
-
-  const translationFollowup = args.l10nIntent
-    ? await enqueueTranslationFollowup({
-        env: args.env,
-        accountId,
-        instanceId,
-        live: false,
-        baseFingerprint: saved.pointer.l10n?.baseFingerprint ?? null,
-        previousBaseFingerprint: saved.previousBaseFingerprint,
-        accountAuthz: args.accountAuthz,
-        l10nIntent: args.l10nIntent,
-      })
-    : { ok: true as const };
 
   return {
     accountId,
@@ -302,7 +230,6 @@ export async function duplicateAccountInstanceTransition(args: {
     instanceId,
     widgetType: source.value.pointer.widgetType,
     status: 'unpublished',
-    translationFollowup,
   };
 }
 
@@ -311,13 +238,22 @@ export async function publishAccountInstanceTransition(args: {
   accountId: string;
   instanceId: string;
   accountAuthz: AccountAuthzSnapshot;
-  l10nIntent: SyncL10nIntent;
 }): Promise<{ instanceId: string; status: 'published'; changed: boolean }> {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
   const existing = await readSavedRenderConfig({ env: args.env, accountId, instanceId });
   if (!existing.ok) transitionFailureFromSavedRead(existing);
   const liveStatus = await readInstanceServeState({ env: args.env, accountId, instanceId });
   if (liveStatus === 'published') {
+    await syncLiveSurface(args.env, {
+      v: 1,
+      kind: 'sync-live-surface',
+      accountId,
+      instanceId,
+      live: true,
+      widgetType: existing.value.pointer.widgetType,
+      widgetCode: existing.value.pointer.widgetCode,
+      configFp: existing.value.pointer.configFp,
+    });
     return { instanceId, status: 'published', changed: false };
   }
 
@@ -363,13 +299,15 @@ export async function publishAccountInstanceTransition(args: {
     }
   }
 
-  await syncAccountInstanceAndRecordStatus({
-    env: args.env,
+  await syncLiveSurface(args.env, {
+    v: 1,
+    kind: 'sync-live-surface',
     accountId,
     instanceId,
     live: true,
-    accountAuthz: args.accountAuthz,
-    l10nIntent: args.l10nIntent,
+    widgetType: existing.value.pointer.widgetType,
+    widgetCode: existing.value.pointer.widgetCode,
+    configFp: existing.value.pointer.configFp,
   });
   return { instanceId, status: 'published', changed: true };
 }

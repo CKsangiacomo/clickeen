@@ -2,6 +2,41 @@
   "v": 1,
   "widgetname": "faq",
   "itemKey": "faq.item",
+  "overlays": {
+    "v": 1,
+    "text": [
+      {
+        "path": "header.title",
+        "label": "Header title",
+        "type": "richtext"
+      },
+      {
+        "path": "header.subtitleHtml",
+        "label": "Header subtitle",
+        "type": "richtext"
+      },
+      {
+        "path": "cta.label",
+        "label": "CTA label",
+        "type": "string"
+      },
+      {
+        "path": "sections[].title",
+        "label": "Section title",
+        "type": "string"
+      },
+      {
+        "path": "sections[].faqs[].question",
+        "label": "FAQ question",
+        "type": "string"
+      },
+      {
+        "path": "sections[].faqs[].answer",
+        "label": "FAQ answer",
+        "type": "richtext"
+      }
+    ]
+  },
   "normalization": {
     "idRules": [
       {

@@ -1,4 +1,5 @@
-import { asTrimmedString, isUuid } from '@clickeen/ck-contracts';
+import { asTrimmedString } from '@clickeen/ck-contracts';
+import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import {
   accountInstanceConfigKey,
@@ -19,10 +20,12 @@ import type {
   AccountInstanceDocument,
   InstanceServeState,
 } from './types';
+import { resolveWidgetCode } from '../widget-catalog';
 import { normalizeStorageId } from './utils';
 
 export type AccountInstanceLocation = {
   accountId: string;
+  widgetCode: string;
   widgetType: string;
   instanceId: string;
 };
@@ -53,11 +56,11 @@ function displayNameFromInstance(instance: AccountInstanceDocument): string {
 async function readServeState(args: {
   env: Env;
   accountId: string;
-  widgetType: string;
+  widgetCode: string;
   instanceId: string;
 }): Promise<InstanceServeState> {
   const publish = normalizePublishDocument(
-    await loadJson(args.env, accountInstancePublishKey(args.accountId, args.widgetType, args.instanceId)),
+    await loadJson(args.env, accountInstancePublishKey(args.accountId, args.widgetCode, args.instanceId)),
   );
   return publish?.status === 'published' ? 'published' : 'unpublished';
 }
@@ -68,7 +71,7 @@ async function buildEntryFromInstance(args: {
 }): Promise<AccountInstanceIndexEntry> {
   const config = await loadJson(
     args.env,
-    accountInstanceConfigKey(args.instance.accountId, args.instance.widgetType, args.instance.id),
+    accountInstanceConfigKey(args.instance.accountId, args.instance.widgetCode, args.instance.id),
   );
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
     throw new Error(`instance_config_missing:${args.instance.accountId}:${args.instance.id}`);
@@ -77,12 +80,13 @@ async function buildEntryFromInstance(args: {
   return {
     accountId: args.instance.accountId,
     id: args.instance.id,
+    widgetCode: args.instance.widgetCode,
     widgetType: args.instance.widgetType,
     displayName: displayNameFromInstance(args.instance),
     publishStatus: await readServeState({
       env: args.env,
       accountId: args.instance.accountId,
-      widgetType: args.instance.widgetType,
+      widgetCode: args.instance.widgetCode,
       instanceId: args.instance.id,
     }),
     updatedAt: args.instance.updatedAt,
@@ -136,7 +140,7 @@ async function readIndexForMutation(env: Env, accountId: string): Promise<Accoun
 
 export async function rebuildAccountInstanceIndexes(env: Env, accountIdRaw: string): Promise<AccountInstanceIndexDocument> {
   const accountId = normalizeStorageId(accountIdRaw);
-  if (!accountId || !isUuid(accountId)) throw new Error('tokyo.errors.render.invalid');
+  if (!isCompactAccountPublicId(accountId)) throw new Error('tokyo.errors.render.invalid');
   const index = await buildIndexDocument(env, accountId);
   await putJson(env, accountInstanceIndexKey(accountId), index);
   return index;
@@ -150,14 +154,15 @@ export async function patchAccountInstanceIndexEntry(args: {
 }): Promise<AccountInstanceIndexDocument> {
   const accountId = normalizeStorageId(args.accountId);
   const widgetType = asTrimmedString(args.widgetType);
+  const widgetCode = widgetType ? resolveWidgetCode(widgetType) : null;
   const instanceId = normalizeStorageId(args.instanceId);
-  if (!accountId || !isUuid(accountId) || !widgetType || !instanceId) {
+  if (!isCompactAccountPublicId(accountId) || !widgetType || !widgetCode || !instanceId) {
     throw new Error('tokyo.errors.render.invalid');
   }
   const instance = normalizeAccountInstanceDocument(
-    await loadJson(args.env, accountInstanceDocumentKey(accountId, widgetType, instanceId)),
+    await loadJson(args.env, accountInstanceDocumentKey(accountId, widgetCode, instanceId)),
   );
-  if (!instance || instance.accountId !== accountId || instance.widgetType !== widgetType || instance.id !== instanceId) {
+  if (!instance || instance.accountId !== accountId || instance.widgetCode !== widgetCode || instance.widgetType !== widgetType || instance.id !== instanceId) {
     throw new Error('tokyo.errors.instance.documentInvalid');
   }
   const entry = await buildEntryFromInstance({ env: args.env, instance });
@@ -178,7 +183,7 @@ export async function removeAccountInstanceIndexEntry(args: {
 }): Promise<AccountInstanceIndexDocument> {
   const accountId = normalizeStorageId(args.accountId);
   const instanceId = normalizeStorageId(args.instanceId);
-  if (!accountId || !isUuid(accountId) || !instanceId) throw new Error('tokyo.errors.render.invalid');
+  if (!isCompactAccountPublicId(accountId) || !instanceId) throw new Error('tokyo.errors.render.invalid');
   const index = await readIndexForMutation(args.env, accountId);
   const next = {
     v: 1,
@@ -195,7 +200,7 @@ export async function readAccountInstanceIndex(args: {
   accountId: string;
 }): Promise<AccountInstanceIndexReadResult> {
   const accountId = normalizeStorageId(args.accountId);
-  if (!accountId || !isUuid(accountId)) {
+  if (!isCompactAccountPublicId(accountId)) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.errors.render.invalid' };
   }
   const raw = await loadJson(args.env, accountInstanceIndexKey(accountId));
@@ -217,12 +222,15 @@ export async function resolveAccountInstanceLocation(args: {
   const instanceId = normalizeStorageId(args.instanceId);
   const widgetType = asTrimmedString(args.widgetType);
   if (!accountId || !instanceId) return null;
-  if (widgetType) return { accountId, widgetType, instanceId };
+  if (widgetType) {
+    const widgetCode = resolveWidgetCode(widgetType);
+    return widgetCode ? { accountId, widgetCode, widgetType, instanceId } : null;
+  }
   const index = await readAccountInstanceIndex({
     env: args.env,
     accountId,
   });
   if (!index.ok) return null;
   const entry = index.value.entries.find((candidate) => candidate.id === instanceId);
-  return entry ? { accountId, widgetType: entry.widgetType, instanceId } : null;
+  return entry ? { accountId, widgetCode: entry.widgetCode, widgetType: entry.widgetType, instanceId } : null;
 }

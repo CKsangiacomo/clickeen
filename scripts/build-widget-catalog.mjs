@@ -8,6 +8,10 @@ const repoRoot = path.resolve(
 );
 const widgetsRoot = path.join(repoRoot, "tokyo/product/widgets");
 const manifestPath = path.join(widgetsRoot, "manifest.json");
+const overlayCodebooksPath = path.join(
+  repoRoot,
+  "packages/ck-contracts/src/overlay-codebooks.ts",
+);
 const registryPath = path.join(
   repoRoot,
   "tokyo-worker/src/generated/widget-seo-geo-registry.ts",
@@ -63,6 +67,35 @@ function objectKeyFor(widgetType) {
     : JSON.stringify(widgetType);
 }
 
+function readWidgetOverlayCodes() {
+  const source = fs.readFileSync(overlayCodebooksPath, "utf8");
+  const match = source.match(
+    /WIDGET_OVERLAY_CODES\s*=\s*Object\.freeze\(\{([\s\S]*?)\}\s*as const\);/,
+  );
+  if (!match) {
+    fail("WIDGET_OVERLAY_CODES must be declared in @clickeen/ck-contracts");
+  }
+  const body = match[1] || "";
+  const codes = new Map();
+  const entryRe = /^\s*([a-zA-Z0-9_]+):\s*'([0-9A-Z]{3})',?\s*$/gm;
+  let entry;
+  while ((entry = entryRe.exec(body))) {
+    const widgetType = entry[1];
+    const code = entry[2];
+    if (codes.has(widgetType)) {
+      fail(`duplicate widget codebook entry for ${widgetType}`);
+    }
+    if ([...codes.values()].includes(code)) {
+      fail(`duplicate widget overlay code ${code}`);
+    }
+    codes.set(widgetType, code);
+  }
+  if (codes.size === 0) {
+    fail("WIDGET_OVERLAY_CODES must not be empty");
+  }
+  return codes;
+}
+
 const widgetNames = fs
   .readdirSync(widgetsRoot, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
@@ -72,6 +105,7 @@ const widgetNames = fs
   .sort((a, b) => a.localeCompare(b));
 
 const widgets = [];
+const widgetOverlayCodes = readWidgetOverlayCodes();
 
 for (const widgetName of widgetNames) {
   const widgetDir = path.join(widgetsRoot, widgetName);
@@ -92,9 +126,16 @@ for (const widgetName of widgetNames) {
   if (widgetType !== widgetName) {
     fail(`${widgetName}/spec.json widgetname must match its folder name`);
   }
+  const widgetCode = widgetOverlayCodes.get(widgetType);
+  if (!widgetCode) {
+    fail(`${widgetType} is missing a WIDGET_OVERLAY_CODES entry`);
+  }
 
   if (!isRecord(spec.defaults)) {
     fail(`${widgetName}/spec.json defaults must be an object`);
+  }
+  if (!isRecord(spec.overlays) || spec.overlays.v !== 1 || !Array.isArray(spec.overlays.text)) {
+    fail(`${widgetName}/spec.json overlays.v=1 with text[] is required`);
   }
 
   if (!isRecord(catalog.capabilities)) {
@@ -118,6 +159,7 @@ for (const widgetName of widgetNames) {
 
   widgets.push({
     widgetType,
+    widgetCode,
     order: optionalNumber(catalog.order, `${widgetName}/catalog.json order`),
     label: assertString(catalog.label, `${widgetName}/catalog.json label`),
     description: assertString(
@@ -135,8 +177,15 @@ for (const widgetName of widgetNames) {
       typeof spec.itemKey === "string" && spec.itemKey.trim()
         ? spec.itemKey.trim()
         : null,
+    overlays: spec.overlays,
     defaults: spec.defaults,
   });
+}
+
+for (const widgetType of widgetOverlayCodes.keys()) {
+  if (!widgetNames.includes(widgetType)) {
+    fail(`WIDGET_OVERLAY_CODES contains unsupported widget ${widgetType}`);
+  }
 }
 
 widgets.sort((a, b) => {

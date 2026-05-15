@@ -200,7 +200,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 #### Venice (Workers)
 
 - Public embed surface (third-party websites only talk to Venice).
-- Runtime reads only Tokyo live pointers + fingerprinted config/text/widget bytes.
+- Runtime reads only Tokyo live pointers, published config, selected overlay IDs, overlay objects, SEO/GEO packs, and widget bytes.
 - Public `/widget/:instanceId` and `/renders/widgets/:instanceId/live/r.json` do **0** Supabase calls at request time.
 - Public snapshot serving is revision-coherent: Venice reads one published revision and never mixes artifacts from previous revisions.
 - If a locale artifact is missing in the current revision, Venice returns unavailable for that locale (no serve-time locale fallback).
@@ -210,8 +210,8 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 - Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
 - **Deterministic compilation contract** depends on `tokyo/product/dieter/manifest.json`.
-- Serves published instance l10n artifacts (`/l10n/**`) written by Roma/Tokyo-worker, including text packs, live pointers, and per-fingerprint base snapshots for diagnostics/non-public tooling.
-- Prague website base copy lives in `tokyo/prague/pages/*/*.json` (single source per page), while localized overlays are served by Tokyo under `/l10n/prague/**` (deterministic `baseFingerprint`, no manifest). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
+- Serves published instance render artifacts and overlay objects written by Roma/Tokyo-worker. PRD 098 overlay identity is fixed-layout `overlayId`; old l10n indexes, text packs, and base fingerprints are not active product truth.
+- Prague website base copy lives in `tokyo/prague/pages/*/*.json` (single source per page). Account-widget overlays are resolved by Venice from Tokyo published overlay IDs; Prague does not own a separate widget localization runtime.
 
 #### Tokyo Worker (Workers + Queues)
 
@@ -572,10 +572,9 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 | `GET /widget/:instanceId`                   | Embed shell HTML + runtime bootstrap      |
 | `GET /renders/widgets/:instanceId/live/r.json`                   | Live serve pointer proxy (`no-store`) |
 | `GET /renders/widgets/:instanceId/config.json`                   | Published config pack proxy              |
+| `GET /renders/widgets/:instanceId/overlays/:overlayId.json`      | Published overlay object proxy (`no-store`) |
 | `GET /renders/widgets/:instanceId/meta/live/:locale.json`        | SEO/GEO meta pointer proxy (`no-store`)   |
 | `GET /renders/widgets/:instanceId/meta/:locale/:metaFp.json`     | SEO/GEO meta pack proxy                   |
-| `GET /l10n/widgets/:instanceId/index.json`                       | Published l10n index proxy                |
-| `GET /l10n/widgets/:instanceId/:locale/overlay.json`             | Published l10n overlay proxy              |
 | `/embed/latest/loader.js`            | Canonical loader alias                    |
 | `/embed/v2/loader.js`                | Compatibility v2 loader alias             |
 | `/embed/v2.0.0/loader.js`            | Immutable versioned loader                |

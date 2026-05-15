@@ -9,11 +9,15 @@
   "scripts": {
     "lint": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test --experimental-strip-types src/security.test.ts"
+    "test": "node --test --experimental-strip-types src/security.test.ts src/overlay-identity.test.ts src/overlay-codebooks.test.ts src/overlay-primitives.test.ts"
   },
   "exports": {
     ".": "./src/index.ts",
     "./ai": "./src/ai.ts",
+    "./ids": "./src/ids.ts",
+    "./overlay-codebooks": "./src/overlay-codebooks.ts",
+    "./overlay-identity": "./src/overlay-identity.ts",
+    "./overlay-primitives": "./src/overlay-primitives.ts",
     "./security": "./src/security.ts"
   }
 }

@@ -9,20 +9,31 @@ import {
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
 
-function normalizeTranslationFollowup(payload: unknown):
+function normalizeBabelFollowup(payload: unknown):
   | { ok: true }
   | { ok: false; reasonKey: string; detail?: string } {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return { ok: true };
   const followup = payload as Record<string, unknown>;
   if (followup.ok !== false) return { ok: true };
+  const failedResults = Array.isArray(followup.results)
+    ? followup.results.filter((entry): entry is Record<string, unknown> => {
+        return Boolean(entry && typeof entry === 'object' && !Array.isArray(entry) && entry.ok === false);
+      })
+    : [];
+  const firstFailure = failedResults[0] ?? null;
   const reasonKey =
-    typeof followup.reasonKey === 'string' && followup.reasonKey.trim()
-      ? followup.reasonKey.trim()
+    typeof firstFailure?.reasonKey === 'string' && firstFailure.reasonKey.trim()
+      ? firstFailure.reasonKey.trim()
       : 'coreui.errors.translations.acceptanceFailed';
-  const detail =
-    typeof followup.detail === 'string' && followup.detail.trim()
-      ? followup.detail.trim()
-      : undefined;
+  const locale =
+    typeof firstFailure?.locale === 'string' && firstFailure.locale.trim()
+      ? firstFailure.locale.trim()
+      : '';
+  const detailText =
+    typeof firstFailure?.detail === 'string' && firstFailure.detail.trim()
+      ? firstFailure.detail.trim()
+      : '';
+  const detail = [locale, detailText].filter(Boolean).join(': ') || undefined;
   return {
     ok: false,
     reasonKey,
@@ -122,12 +133,12 @@ export function useSessionSaving(args: {
         isDirty: false,
         isSaving: false,
         error: (() => {
-          const translationFollowup = normalizeTranslationFollowup(json?.translationFollowup);
-          if (translationFollowup.ok) return null;
+          const babelFollowup = normalizeBabelFollowup(json?.babel);
+          if (babelFollowup.ok) return null;
           return {
             source: 'translation',
-            message: translationFollowup.reasonKey,
-            ...(translationFollowup.detail ? { detail: translationFollowup.detail } : {}),
+            message: babelFollowup.reasonKey,
+            ...(babelFollowup.detail ? { detail: babelFollowup.detail } : {}),
           };
         })(),
       };

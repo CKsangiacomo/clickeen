@@ -1,5 +1,6 @@
 import { type MemberRole } from '@clickeen/ck-policy';
 import {
+  isCompactAccountPublicId,
   isUserSettingsTimezoneSupported,
   normalizeUserSettingsCountry,
   parseAccountL10nPolicyStrict,
@@ -34,6 +35,7 @@ type AccountMembershipRow = {
   created_at?: unknown;
   accounts?: {
     id?: unknown;
+    public_id?: unknown;
     status?: unknown;
     is_platform?: unknown;
     tier?: unknown;
@@ -207,7 +209,7 @@ async function loadAccountMembershipRows(
 ): Promise<Result<AccountMembershipRow[]>> {
   const params = new URLSearchParams({
     select:
-      'account_id,user_id,role,created_at,accounts(id,status,is_platform,tier,name,slug,website_url,l10n_locales,l10n_policy,tier_changed_at,tier_changed_from,tier_changed_to,tier_drop_dismissed_at,tier_drop_email_sent_at)',
+      'account_id,user_id,role,created_at,accounts(id,public_id,status,is_platform,tier,name,slug,website_url,l10n_locales,l10n_policy,tier_changed_at,tier_changed_from,tier_changed_to,tier_drop_dismissed_at,tier_drop_email_sent_at)',
     user_id: `eq.${userId}`,
     order: 'created_at.asc,account_id.asc',
   });
@@ -250,11 +252,12 @@ function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountCo
     if (!account) continue;
 
     const accountId = asTrimmedString(row.account_id);
+    const accountPublicId = asTrimmedString(account.public_id);
     const role = normalizeRole(row.role);
     const tier = normalizeTier(account.tier);
     const name = asTrimmedString(account.name);
     const slug = asTrimmedString(account.slug);
-    if (!accountId || !role || !tier || !name || !slug) continue;
+    if (!accountId || !isCompactAccountPublicId(accountPublicId) || !role || !tier || !name || !slug) continue;
     const localeIssues = validateAccountLocaleState(account.l10n_locales, account.l10n_policy, `accounts.${accountId}`);
     if (localeIssues.length) {
       return { ok: false, response: invalidPersistedStateResponse(localeIssues.join('|')) };
@@ -262,6 +265,7 @@ function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountCo
 
     out.push({
       accountId,
+      accountPublicId,
       role,
       name,
       slug,

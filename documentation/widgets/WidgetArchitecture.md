@@ -11,8 +11,9 @@ Related:
 
 ## System invariants
 - Widget files in Tokyo are the source of truth.
-- Orchestrators avoid widget-specific logic; they may apply generic, contract-driven transforms (e.g. overlay composition, snapshot patching).
-- Base-config contract violations must fail visibly (no silent fallback). Localization overlays are consumer-visible only when current for the active base fingerprint; runtime must not substitute base, stale, or other-locale output and must not lie about locale.
+- `spec.json` owns the widget primitive variable graph. ToolDrawer, Copilot, Babel, Tokyo validation, Bob preview, and Venice runtime must use that same graph.
+- Orchestrators avoid widget-specific logic; they may route calls and apply the shared single-overlay resolver only at the named boundary.
+- Base-config and overlay contract violations must fail visibly. Runtime must not substitute another overlay, repair values, or infer product meaning from bodies.
 
 ---
 
@@ -26,9 +27,9 @@ Files:
 - `widget.client.js` (applyState runtime)
 - `agent.md` (AI editing contract)
 - `limits.json` (entitlement limits/flags)
-- `localization.json` (locale allowlist)
-- `layers/*.allowlist.json` (non-locale layers)
 - `pages/*.json` (Prague pages)
+
+`spec.json.overlays.v = 1` declares overlay-editable text primitives. Repeatable paths use `[]` only as a widget-owned declaration form; producers receive extracted concrete paths such as `sections.0.faqs.0.question`.
 
 ---
 
@@ -79,7 +80,7 @@ tokyo/product/themes/themes.json -> Bob compiles theme dropdown/presets from loc
 
 Embed flow (Venice):
 ```
-Browser -> Venice /widget/{instanceId}?locale=... -> Venice loads live pointer + config pack + text pack + widget files (Tokyo)
+Browser -> Venice /widget/{instanceId}?locale=... -> Venice loads live projection + config pack + overlay values + widget files (Tokyo)
 -> Venice injects window.CK_WIDGET (state + locale) -> widget.client.js applyState
 ```
 
@@ -129,5 +130,5 @@ Runtime must not depend on `window.CK_ASSET_ORIGIN`; Venice owns proxying these 
 | Tokyo | Store widget definitions | Store instance data |
 | Bob | Compile spec, render ToolDrawer, hold working state | Apply widget-specific defaults at runtime |
 | Roma | Open/save account editor state through same-origin routes backed by Tokyo | Transform widget state |
-| Venice | Serve published pointer/config/text/widget bytes for public embeds | Modify widget state or fetch product databases at request time |
+| Venice | Serve published pointer/config/overlay/widget bytes for public embeds | Modify widget state or fetch product databases at request time |
 | Michael | Persist account/registry metadata and relational state | Per-widget validation or public embed assembly |

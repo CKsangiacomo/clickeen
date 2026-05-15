@@ -18,8 +18,6 @@ OUTPUTS
 - `widget.client.js`
 - `agent.md`
 - `limits.json` (unless PRD opts out)
-- `localization.json` (unless PRD opts out)
-- `layers/*.allowlist.json` (only when non-locale layers are used)
 
 STOP CONDITIONS
 - `widgetType` not explicit
@@ -145,7 +143,7 @@ MUST
       - `[data-role="header-subtitle"]`
       - `[data-role="header-cta"]`
     - `.ck-headerLayout__body` (direct child; holds widget-specific content)
-- Localize `header.title`, `header.subtitleHtml`, and `cta.label` in `localization.json`.
+- Declare `header.title`, `header.subtitleHtml`, and `cta.label` in `spec.json.overlays.text` when they are customer-visible text.
 - Keep all header layout variations purely via `data-*` + CSS (no DOM reparenting).
 - Mobile baseline (executed):
   - At widths `<= 900px`, header placements `left|right` collapse to a vertical stack (`top` semantics).
@@ -209,12 +207,19 @@ MUST
   - Stage/Pod backgrounds: `color,gradient,image,video`
   - Other surfaces: `color,gradient` unless PRD requires media
 
-### 7) Localization and layers
+### 7) Overlay primitive graph
 MUST
-- `localization.json` includes all translatable paths.
-- Use `*` for array indices (`sections.*.faqs.*.question`).
+- `spec.json` includes `overlays.v = 1`.
+- `spec.json.overlays.text[]` declares every customer-visible text primitive the widget owns.
+- Repeatable collections use `[]` in the widget declaration, for example `sections[].faqs[].question`.
+- Producer payloads are extracted to concrete paths before leaving the product boundary, for example `sections.0.faqs.0.question`.
 - Reject prohibited segments: `__proto__`, `constructor`, `prototype`.
-- `layers/*.allowlist.json` only when that layer is used.
+- Extra producer paths and missing required paths are rejected visibly with the concrete path named.
+
+MUST NOT
+- Create `localization.json`, layer path sidecars, or a second path schema for translation/editing.
+- Send repeatable declaration paths to producers.
+- Build a multi-overlay resolver in widget code.
 
 ### 8) Binding Map (anti-dead-controls)
 MUST

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const instanceId = process.env.CK_VENICE_TEST_INSTANCE_ID || 'ins_01KR8R6ZYZZNDEZA0R8KCSWEEG';
+const instanceId = process.env.CK_VENICE_TEST_INSTANCE_ID || 'INST000001';
 
 function loaderUrl(baseURL: string, path: string): string {
   return new URL(path, baseURL).toString();
@@ -72,6 +72,21 @@ test('direct iframe snippet serves resolved widget html', async ({ page, baseURL
 
   await expect(page.locator('iframe')).toHaveCount(1);
   await expect(page.frameLocator('iframe').locator('[data-ck-widget="faq"]')).toHaveCount(1);
+});
+
+test('direct iframe snippet applies selected published language overlay', async ({ page, baseURL }) => {
+  const rootURL = requireBaseURL(baseURL);
+  await page.setContent(`<!doctype html>
+    <html><head><meta charset="utf-8" /></head><body>
+    <iframe src="${loaderUrl(rootURL, `/widget/${instanceId}?locale=it`)}"></iframe>
+    </body></html>`);
+
+  const frame = page.frameLocator('iframe');
+  await expect(frame.locator('[data-ck-field="title"]')).toHaveText('Domande frequenti B&B');
+  await expect(frame.locator('[data-ck-field="cta"]')).toHaveText('Prenota ora');
+  await expect(frame.locator('[data-ck-field="section"]')).toHaveText('Domande');
+  await expect(frame.locator('[data-ck-field="question"]')).toHaveText('Quali camere offrite?');
+  await expect(frame.locator('[data-ck-field="answer"]')).toHaveText('Offriamo camere standard e deluxe.');
 });
 
 test('seo geo loader preserves explicit metadata enhancement path', async ({ page, baseURL }) => {

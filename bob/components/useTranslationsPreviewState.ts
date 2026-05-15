@@ -1,16 +1,13 @@
 'use client';
 
-import { asTrimmedString } from '@clickeen/ck-contracts';
 import { useEffect, useState } from 'react';
 import { useWidgetSessionTransport } from '../lib/session/useWidgetSession';
+import {
+  normalizeTranslationsPreviewData,
+  type TranslationsPreviewData,
+} from '../lib/translations-preview';
 
-export type TranslationsPreviewData = {
-  baseLocale: string;
-  requestedLocales: string[];
-  readyLocales: string[];
-  status: 'queued' | 'working' | 'ready' | 'failed';
-  textPacks: Record<string, Record<string, string>>;
-};
+export type { TranslationsPreviewData } from '../lib/translations-preview';
 
 type ErrorPayload = {
   error?: {
@@ -18,64 +15,6 @@ type ErrorPayload = {
     detail?: unknown;
   };
 };
-
-function normalizePreviewData(payload: unknown): TranslationsPreviewData | null {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const record = payload as Record<string, unknown>;
-  const baseLocale = asTrimmedString(record.baseLocale) ?? '';
-  const requestedLocales = Array.isArray(record.requestedLocales)
-    ? Array.from(
-        new Set(
-          record.requestedLocales
-            .map((entry) => asTrimmedString(entry))
-            .filter((entry): entry is string => Boolean(entry)),
-        ),
-      )
-    : [];
-  const readyLocales = Array.isArray(record.readyLocales)
-    ? Array.from(
-        new Set(
-          record.readyLocales
-            .map((entry) => asTrimmedString(entry))
-            .filter((entry): entry is string => Boolean(entry)),
-        ),
-      )
-    : [];
-  const status =
-    record.status === 'queued' ||
-    record.status === 'working' ||
-    record.status === 'ready' ||
-    record.status === 'failed'
-      ? record.status
-      : null;
-  const textPacksRaw =
-    record.textPacks && typeof record.textPacks === 'object' && !Array.isArray(record.textPacks)
-      ? (record.textPacks as Record<string, unknown>)
-      : {};
-  const textPacks: Record<string, Record<string, string>> = {};
-  for (const [localeRaw, packRaw] of Object.entries(textPacksRaw)) {
-    const locale = asTrimmedString(localeRaw);
-    if (!locale || !packRaw || typeof packRaw !== 'object' || Array.isArray(packRaw)) continue;
-    const entries = Object.entries(packRaw)
-      .map(([pathRaw, value]) => {
-        const path = asTrimmedString(pathRaw);
-        return path && typeof value === 'string' ? [path, value] : null;
-      })
-      .filter((entry): entry is [string, string] => Boolean(entry));
-    textPacks[locale] = Object.fromEntries(entries);
-  }
-
-  if (!baseLocale || !requestedLocales.includes(baseLocale) || !status) return null;
-  if (!readyLocales.includes(baseLocale)) return null;
-
-  return {
-    baseLocale,
-    requestedLocales,
-    readyLocales,
-    status,
-    textPacks,
-  };
-}
 
 function resolveRouteErrorReason(payload: unknown): string | null {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
@@ -126,6 +65,7 @@ export function useTranslationsPreviewState(args: {
       return;
     }
     if (!args.enabled) {
+      setData(null);
       setLoading(false);
       return;
     }
@@ -145,9 +85,9 @@ export function useTranslationsPreviewState(args: {
           };
         }
 
-        const payload = normalizePreviewData(response.json);
+        const payload = normalizeTranslationsPreviewData(response.json);
         if (!payload) throw new Error('coreui.errors.translations.invalid');
-        if (args.bootBaseLocale && payload.baseLocale !== args.bootBaseLocale) {
+        if (args.bootBaseLocale && payload.baseLanguage !== args.bootBaseLocale) {
           throw new Error('coreui.errors.translations.baseLocaleMismatch');
         }
         setData(payload);

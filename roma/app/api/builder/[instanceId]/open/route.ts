@@ -25,7 +25,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 
   const result = await loadBuilderOpenEnvelope({
-    accountId: current.value.authzPayload.accountId,
+    accountId: current.value.authzPayload.accountPublicId,
     instanceId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,

@@ -39,8 +39,7 @@ Widget definition (the software): `tokyo/product/widgets/countdown/`
 - `widget.client.js` — deterministic `applyState(state)`
 - `agent.md` — AI editing contract (editable paths + enums + array semantics)
 - `limits.json` — entitlement limits/flags (server-side validation)
-- `localization.json` — locale-layer allowlist
-- `layers/*.allowlist.json` — non-locale layer allowlists (when used)
+- `spec.json.overlays.text[]` — Babel text primitive graph
 
 ## 2) Types available (core framework)
 In Clickeen terms, **Type = miniwidget**.
@@ -64,6 +63,20 @@ Top-level groups:
 - `seoGeo.*` — embed optimization toggle (instance setting; not tier-gated)
 - `typography.*` — roles (explicitly declared shared typography panel)
 - `stage.*`, `pod.*` — Stage/Pod v2 (desktop+mobile padding objects)
+
+Babel text primitives live in `spec.json.overlays.text[]`. Countdown is WIP but still declares the PRD 098 contract for every customer-visible text path:
+
+- `header.title`
+- `header.subtitleHtml`
+- `timer.labels.days`
+- `timer.labels.hours`
+- `timer.labels.minutes`
+- `timer.labels.seconds`
+- `cta.label`
+- `actions.during.text`
+- `actions.after.text`
+
+The widget must not add `localization.json`, layer sidecars, text packs, or wildcard producer payloads.
 
 Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace). It is not part of widget instance config; Copilot may use it as context.
 
@@ -173,7 +186,7 @@ Defaults must include:
 - Unit controls: Show/hide individual units (days/hours/minutes/seconds); format: separated boxes or inline.
 - Separators: Customizable (colon, slash, etc.).
 - Limits: Include `copilot.turns.monthly.max` if AI interactions are added.
-- Localization: Default strings as above; support i18n overlays.
+- Babel/locales: default strings above are declared through `spec.json.overlays.text[]`; producer payloads use concrete paths only.
 
 ## Links
 - `documentation/architecture/CONTEXT.md`

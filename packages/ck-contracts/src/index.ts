@@ -1,9 +1,13 @@
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
+import { isUuid } from './ids';
+export { UUID_RE, isUuid } from './ids';
+export * from './overlay-codebooks';
+export * from './overlay-identity';
+export * from './overlay-primitives';
 
 export const INSTANCE_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$/;
 
-export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const ACCOUNT_ASSET_PATH_RE = /^\/assets\/account\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)$/;
 export const ACCOUNT_ASSET_PATH_PATTERN = '^/assets/account/([^/?#]+)/([^/?#]+)/([^/?#]+)$';
 const ACCOUNT_ASSET_KEY_RE = /^accounts\/([^/]+)\/assets\/([^/]+)\/blob\/([^/]+)$/i;
@@ -52,27 +56,6 @@ export type AccountL10nPolicy = {
   ip: {
     countryToLocale: Record<string, string>;
   };
-};
-
-export type LocalizationOp = { op: 'set'; path: string; value: string };
-
-export type AccountOverlayEntry = {
-  locale: string;
-  source: string | null;
-  baseFingerprint: string | null;
-  baseUpdatedAt: string | null;
-  hasUserOps: boolean;
-  baseOps: LocalizationOp[];
-  userOps: LocalizationOp[];
-};
-
-export type AccountLocalizationSnapshot = {
-  baseLocale: string;
-  accountLocales: string[];
-  readyLocales: string[];
-  invalidAccountLocales: string | null;
-  localeOverlays: AccountOverlayEntry[];
-  policy: AccountL10nPolicy;
 };
 
 export type WidgetLocaleSwitcherSettings = {
@@ -204,11 +187,6 @@ function pathnameFromRawAssetRef(raw: unknown): string | null {
   } catch {
     return null;
   }
-}
-
-export function isUuid(raw: unknown): boolean {
-  const value = typeof raw === 'string' ? raw.trim() : '';
-  return Boolean(value && UUID_RE.test(value));
 }
 
 export function parseRateLimitRecord(value: unknown): RateLimitRecord | null {
@@ -358,18 +336,6 @@ export function parseAccountL10nPolicyStrict(raw: unknown): AccountL10nPolicy {
       countryToLocale,
     },
   };
-}
-
-export function normalizeLocalizationOps(raw: unknown): LocalizationOp[] {
-  if (!Array.isArray(raw)) return [];
-  const out: LocalizationOp[] = [];
-  for (const entry of raw) {
-    if (!isRecord(entry) || entry.op !== 'set') continue;
-    const path = typeof entry.path === 'string' ? entry.path.trim() : '';
-    if (!path || typeof entry.value !== 'string') continue;
-    out.push({ op: 'set', path, value: entry.value });
-  }
-  return out;
 }
 
 export function validateAccountLocaleList(

@@ -8,7 +8,7 @@ Last updated: 2026-04-27
 
 ## 0) What Prague is (in this repo)
 
-Prague is the marketing + SEO surface, implemented as an **Astro** app deployed on **Cloudflare Pages**. GA routing is **market+locale** and pages render server-side so Prague can apply deterministic overlays and emit canonical SEO tags.
+Prague is the marketing + SEO surface, implemented as an **Astro** app deployed on **Cloudflare Pages**. GA routing is **market+locale** and pages render server-side from canonical page JSON so Prague can emit canonical SEO tags.
 
 Deploy contract:
 - Prague has **one deploy plane**: Git-connected Cloudflare Pages build.
@@ -20,7 +20,7 @@ Deploy contract:
   - output: `prague/dist`
 - Manual Cloudflare project/env alignment is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy) and localized via Tokyo overlays (R2 keys under `tokyo/prague/l10n/**`, fetched at runtime from `${PUBLIC_TOKYO_URL}/l10n/prague/**`). Chrome UI strings remain in `prague/content/base/v1/chrome.json`.
+In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy). Chrome UI strings remain in `prague/content/base/v1/chrome.json`. Prague does not own account-widget locale overlays.
 
 At build time, Prague:
 - enumerates widgets by scanning `tokyo/product/widgets/*` (excluding `_*/` and `shared/`)
@@ -29,9 +29,9 @@ At build time, Prague:
 - fails fast if required widget page JSON files are missing
 
 At request time (widget pages only), Prague:
-- loads page JSON + locale overlays
-- applies deterministic overlays only (locale + market-bound geo)
-- renders HTML with the merged copy (composition remains static)
+- loads canonical page JSON
+- validates block contracts and compact account-instance embed IDs
+- renders HTML from that page JSON
 
 Note: the helper module is still named `prague/src/lib/markdown.ts`, but it no longer parses markdown. It loads the JSON page specs described below.
 
@@ -84,33 +84,30 @@ Current repo behavior:
 - `/{market}/{locale}/create` is a redirect bridge from Prague into Roma (`${PUBLIC_ROMA_URL}/home`).
 - Prague preserves incoming query params and appends source context (`from=prague_create`, `market`, `locale`).
 - If `PUBLIC_ROMA_URL` is missing, this route fails visibly with `503` (no silent fallback).
-- Prague l10n overlays use stable Tokyo paths; freshness is enforced by each overlay's `baseFingerprint`.
+- Prague does not own account-widget overlay generation or serving. Public widget overlays are resolved by Venice from Tokyo published overlay IDs.
 
 ---
 
 ## 1.5 Authoring Prague blocks (AI checklist)
 
-Prague widget pages are rendered from **block JSON** in Tokyo and localized via **Tokyo overlays**. When you add or edit blocks, keep these four filesystems in lockstep:
+Prague widget pages are rendered from **block JSON** in Tokyo. They are marketing pages, not the account-widget overlay runtime. When you add or edit blocks, keep these filesystems in lockstep:
 
 1) **Renderer** (Astro): `prague/src/blocks/**` + `prague/src/lib/blockRegistry.ts`
-2) **Allowlist** (l10n contract): `prague/content/allowlists/v1/blocks/{blockType}.allowlist.json`
-3) **Base copy** (EN source): `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`
-4) **Overlays** (generated): `tokyo/prague/l10n/**`
+2) **Base copy** (source): `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`
+3) **Embeds** (optional): `accountInstanceRef.instanceId` must use PRD 098 compact instance IDs.
 
 ### Add a new block type
 
 - Add the renderer: `prague/src/blocks/{blockType}/{blockType}.astro`
 - Register it: `prague/src/lib/blockRegistry.ts`
-- Add its allowlist: `prague/content/allowlists/v1/blocks/{blockType}.allowlist.json`
 - Use it in a page JSON: `tokyo/prague/pages/{widget}/*.json` (ensure each block has `{ id, type, copy: {...} }`)
 - Validate contracts locally:
-  - `node scripts/prague-l10n/verify.mjs` (best-available; warns instead of blocking)
-  - `node scripts/prague-sync.mjs --strict-latest` (forces latest overlays, translates if needed)
+  - `pnpm --filter @clickeen/prague typecheck`
+  - `pnpm --filter @clickeen/prague build`
 
 ### Edit an existing block
 
-- Keep `id` stable: overlay ops are keyed by `blocks.{id}.…`
-- If you change `copy` shape (add/remove/rename fields), update the allowlist in the same change.
+- Keep `id` stable for deterministic block rendering and links.
 - Prefer adding a new block `type` over mutating semantics of an existing one.
 
 ---
@@ -142,15 +139,10 @@ Required non-visual blocks:
 - `page-meta` (all widget pages, used for `<head>` title/description)
 
 Notes:
-- Page JSON is the **single source of truth** for layout + base copy; overlays overwrite `blocks[].copy` at runtime.
+- Page JSON is the **single source of truth** for layout + base copy on Prague.
 - Visual embeds are explicit: use `accountInstanceRef.instanceId` on blocks that should embed a account instance.
 
-Localization is applied via page JSON + ops overlays:
-- overlays: `tokyo/prague/l10n/widgets/{widget}/locale/{locale}/{baseFingerprint}.ops.json`
-- overlays (subpages): `tokyo/prague/l10n/widgets/{widget}/{page}/locale/{locale}/{baseFingerprint}.ops.json`
-- Prague merges localized overlays into `blocks[].copy` at load time
-- Overlays are **set-only ops** gated by `baseFingerprint` and indexed via `${PUBLIC_TOKYO_URL}/l10n/prague/{pageId}/index.json` (deterministic, no manifest fan-out in app code).
-- Manual locale base variants are **not** part of the runtime contract in this repo snapshot; localization is overlay‑only.
+Prague does not merge localized page overlays in this runtime. Account-widget locale overlays are selected and served by Venice through the published render pointer and `/renders/widgets/{instanceId}/overlays/{overlayId}.json`.
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.

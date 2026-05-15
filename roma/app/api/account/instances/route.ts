@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const accountId = current.value.authzPayload.accountId;
+  const accountId = current.value.authzPayload.accountPublicId;
   const catalog = await loadTokyoWidgetCatalog({
     accountId,
     accountCapsule: current.value.authzToken,

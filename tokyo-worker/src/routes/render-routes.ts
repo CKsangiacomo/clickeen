@@ -1,4 +1,5 @@
 import { parseAccountAssetRef } from '@clickeen/ck-contracts';
+import { isOverlayId, parseOverlayId } from '@clickeen/ck-contracts/overlay-identity';
 import { handleGetTokyoFontAsset, normalizeStorageId } from '../asset-utils';
 import { handleGetAccountAsset } from '../domains/assets';
 import {
@@ -12,6 +13,7 @@ import {
   normalizePublishDocument,
   normalizePublishedWidgetLookupDocument,
   publishedWidgetLookupKey,
+  readOverlayObject,
 } from '../domains/render';
 import {
   respondMethodNotAllowed,
@@ -41,7 +43,7 @@ export async function tryHandlePublicRenderRoutes(
     const lookup = await readPublishedLookup(env, instanceId);
     if (!lookup) return respond(new Response('Not found', { status: 404 }));
     const publish = normalizePublishDocument(
-      await loadJson(env, accountInstancePublishKey(lookup.accountId, lookup.widgetType, lookup.id)),
+      await loadJson(env, accountInstancePublishKey(lookup.accountId, lookup.widgetCode, lookup.id)),
     );
     if (!publish || publish.status !== 'published') return respond(new Response('Not found', { status: 404 }));
     const pointer = buildLiveRenderPointer({ id: lookup.id, widgetType: lookup.widgetType, publish });
@@ -64,9 +66,49 @@ export async function tryHandlePublicRenderRoutes(
     return respond(
       await handleGetR2Object(
         env,
-        accountInstancePublishedConfigKey(lookup.accountId, lookup.widgetType, lookup.id),
+        accountInstancePublishedConfigKey(lookup.accountId, lookup.widgetCode, lookup.id),
         'public, max-age=60',
       ),
+    );
+  }
+
+  const renderOverlayMatch = pathname.match(/^\/renders\/widgets\/([^/]+)\/overlays\/([^/]+)\.json$/);
+  if (renderOverlayMatch) {
+    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
+    const instanceId = normalizeStorageId(decodeURIComponent(renderOverlayMatch[1]));
+    const overlayId = decodeURIComponent(renderOverlayMatch[2]);
+    if (!instanceId || !isOverlayId(overlayId)) return respondValidation(respond, 'tokyo.errors.render.invalidInstanceId');
+    const lookup = await readPublishedLookup(env, instanceId);
+    if (!lookup) return respond(new Response('Not found', { status: 404 }));
+
+    const parsed = parseOverlayId(overlayId);
+    if (!parsed.ok) return respondValidation(respond, 'tokyo.errors.render.invalidInstanceId');
+    if (
+      parsed.value.accountPublicId !== lookup.accountId ||
+      parsed.value.widgetCode !== lookup.widgetCode ||
+      parsed.value.instanceId !== lookup.id
+    ) {
+      return respond(new Response('Not found', { status: 404 }));
+    }
+
+    const publish = normalizePublishDocument(
+      await loadJson(env, accountInstancePublishKey(lookup.accountId, lookup.widgetCode, lookup.id)),
+    );
+    if (!publish || publish.status !== 'published') return respond(new Response('Not found', { status: 404 }));
+    if (!Object.values(publish.overlays?.languages ?? {}).includes(overlayId)) {
+      return respond(new Response('Not found', { status: 404 }));
+    }
+
+    const overlay = await readOverlayObject({ env, overlayId });
+    if (!overlay) return respond(new Response('Not found', { status: 404 }));
+    return respond(
+      new Response(JSON.stringify({ overlayId, ...overlay }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'cache-control': 'no-store',
+        },
+      }),
     );
   }
 
@@ -81,7 +123,7 @@ export async function tryHandlePublicRenderRoutes(
     return respond(
       await handleGetR2Object(
         env,
-        accountInstanceRenderMetaLivePointerKey(lookup.accountId, lookup.widgetType, lookup.id, locale),
+        accountInstanceRenderMetaLivePointerKey(lookup.accountId, lookup.widgetCode, lookup.id, locale),
         'no-store',
       ),
     );
@@ -99,7 +141,7 @@ export async function tryHandlePublicRenderRoutes(
     return respond(
       await handleGetR2Object(
         env,
-        accountInstanceRenderMetaPackKey(lookup.accountId, lookup.widgetType, lookup.id, locale, metaFp),
+        accountInstanceRenderMetaPackKey(lookup.accountId, lookup.widgetCode, lookup.id, locale, metaFp),
         'public, max-age=300',
       ),
     );

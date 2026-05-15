@@ -12,7 +12,7 @@ function isAllowedWidgetPath(parts: string[]): boolean {
   if (widget === 'shared') return parts.length === 2 && SIMPLE_FILE_RE.test(parts[1] || '') && /\.(css|js)$/.test(parts[1] || '');
   if (parts.length === 2) {
     const file = parts[1] || '';
-    return file === 'agent.md' || file === 'limits.json' || file === 'localization.json' || file === 'spec.json' || /^widget\.(css|html|client\.js|dom\.js)$/.test(file);
+    return file === 'agent.md' || file === 'limits.json' || file === 'spec.json' || /^widget\.(css|html|client\.js|dom\.js)$/.test(file);
   }
   if (parts.length === 3 && parts[1] === 'layers') return parts[2] === 'user.allowlist.json';
   if (parts.length >= 3 && parts[1] === 'base-assets') return parts.slice(2).every((part) => SIMPLE_FILE_RE.test(part));

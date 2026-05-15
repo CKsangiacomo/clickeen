@@ -116,10 +116,10 @@ prague/src/blocks/cta/cta.astro
   - `/[market]/[locale]/widgets/[widget]/examples|features|pricing`
 
 `site/nav/widgetsMegaMenu.ts`
-- Resolves mega menu content from the canonical widget registry + each widget’s localized page JSON:
+- Resolves mega menu content from the canonical widget registry + each widget’s page JSON:
   - `title` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.title`
   - `description` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.description`
-  - Source: `tokyo/prague/pages/{widget}/overview.json` + localized overlays (`tokyo/prague/l10n/**`)
+  - Source: `tokyo/prague/pages/{widget}/overview.json`
 
 `site/footer`
 - Props: `{ market: string, locale: string }`
@@ -290,9 +290,8 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
   - Source of truth: `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`
   - Prague renders `blocks[]` by `type` and embeds account instances only when `accountInstanceRef.instanceId` is present.
   - Prague validates `accountInstanceRef.instanceId` during page load; missing account instances fail fast in dev/build.
-  - Page JSON is layout + base copy; Tokyo overlays overwrite `blocks[].copy` at runtime.
-  - Copy is loaded from page JSON and Tokyo overlays `tokyo/prague/l10n/**`, then merged into `copy`.
-  - Runtime overlays are deterministic for canonical pages (locale + market-bound geo); composition stays static.
+  - Page JSON is layout + base copy.
+  - Account-widget overlays are not Prague page overlays; they are resolved by Venice from Tokyo published overlay IDs when a Prague page embeds a live instance.
 - Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[market]/[locale]/widgets/[widget]/index.astro`.
 
 ---

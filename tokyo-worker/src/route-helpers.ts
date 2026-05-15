@@ -1,4 +1,3 @@
-import { isUuid } from '@clickeen/ck-contracts';
 import {
   assertRomaAccountCapsuleAuth,
   INTERNAL_SERVICE_HEADER,
@@ -9,7 +8,10 @@ import {
 import { prettyStableJson, sha256Hex } from './asset-utils';
 import { json } from './http';
 import { roleRank, type MemberRole } from './domains/assets';
+import { isValidScopedInstance } from './instance-identity';
 import type { Env } from './types';
+
+export { isValidScopedInstance } from './instance-identity';
 
 export type TokyoRouteArgs = {
   req: Request;
@@ -58,13 +60,6 @@ export function respondInternalOnly(
   );
 }
 
-export function isValidScopedInstance(
-  instanceId: string | null,
-  accountId: string,
-): boolean {
-  return Boolean(instanceId) && isUuid(accountId);
-}
-
 export async function authorizeRomaAccountScopedRequest(args: {
   req: Request;
   env: Env;
@@ -76,7 +71,7 @@ export async function authorizeRomaAccountScopedRequest(args: {
   });
   if (!auth.ok) return auth.response;
   const capsule = auth.principal.accountAuthz;
-  if (capsule.accountId !== args.accountId) {
+  if (capsule.accountPublicId !== args.accountId) {
     return json(
       { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
       { status: 403 },

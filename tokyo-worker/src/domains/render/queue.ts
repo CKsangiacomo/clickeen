@@ -11,12 +11,10 @@ export function isTokyoMirrorJob(value: unknown): value is TokyoMirrorQueueJob {
   if (typeof job.accountId !== 'string') return false;
   return (
     job.kind === 'write-config-pack' ||
-    job.kind === 'write-text-pack' ||
     job.kind === 'write-meta-pack' ||
     job.kind === 'sync-live-surface' ||
     job.kind === 'enforce-live-surface' ||
-    job.kind === 'delete-instance-mirror' ||
-    job.kind === 'sync-instance-overlays'
+    job.kind === 'delete-instance-mirror'
   );
 }
 

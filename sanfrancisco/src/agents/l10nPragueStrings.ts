@@ -10,7 +10,7 @@ export type PragueStringsTranslationRequest = {
   chunkKey: string;
   blockKind: string;
   locale: string;
-  baseFingerprint: string;
+  sourceRevision: string;
   baseUpdatedAt: string;
   allowlistVersion: number;
   allowlistHash?: string;
@@ -42,11 +42,11 @@ export function isPragueStringsTranslationRequest(value: unknown): value is Prag
   const chunkKey = asString((value as any).chunkKey);
   const blockKind = asString((value as any).blockKind);
   const locale = asString((value as any).locale);
-  const baseFingerprint = asString((value as any).baseFingerprint);
+  const sourceRevision = asString((value as any).sourceRevision);
   const baseUpdatedAt = asString((value as any).baseUpdatedAt);
   const allowlistVersion = (value as any).allowlistVersion;
   const items = (value as any).items;
-  if (!chunkKey || !blockKind || !locale || !baseFingerprint || !baseUpdatedAt) return false;
+  if (!chunkKey || !blockKind || !locale || !sourceRevision || !baseUpdatedAt) return false;
   if (typeof allowlistVersion !== 'number' || !Number.isFinite(allowlistVersion)) return false;
   if (!Array.isArray(items)) return false;
   for (const item of items) {
@@ -267,7 +267,7 @@ export async function executePragueStringsTranslate(requestPayload: PragueString
     locale,
     chunkKey: requestPayload.chunkKey,
     blockKind: requestPayload.blockKind,
-    baseFingerprint: requestPayload.baseFingerprint,
+    sourceRevision: requestPayload.sourceRevision,
     baseUpdatedAt: requestPayload.baseUpdatedAt,
     allowlistVersion: requestPayload.allowlistVersion,
     allowlistHash: requestPayload.allowlistHash ?? null,

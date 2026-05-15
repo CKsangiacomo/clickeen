@@ -3,11 +3,8 @@ import Base from '../../../../../../layouts/Base.astro';
 import Nav from '../../../../../../blocks/site/nav/Nav.astro';
 import Footer from '../../../../../../blocks/site/footer.astro';
 import WidgetBlocks from '../../../../../../components/WidgetBlocks.astro';
-import { loadRequiredWidgetPageJsonForLocaleWithOverlayMeta } from '../../../../../../lib/markdown';
-import { getPragueCanonicalOverlayContext } from '../../../../../../lib/requestContext';
+import { loadRequiredWidgetPageJsonForLocale } from '../../../../../../lib/markdown';
 import { getPragueMarket, toMarketHreflang } from '../../../../../../lib/markets';
-import { isPragueOverlayFailureError, type PragueOverlayMeta } from '../../../../../../lib/pragueL10n';
-import { setPragueOverlayHeaders } from '../../../../../../lib/pragueOverlayHeaders';
 import { resolvePragueWidgetLabel } from '../../../../../../lib/widgetCatalog';
 
 const { market, locale, widget, page } = Astro.params;
@@ -66,17 +63,11 @@ const alternates =
       ]
     : null;
 
-const englishHref = marketConfig
-  ? `/${marketConfig.key}/en/widgets/${encodeURIComponent(widgetKey)}/${encodeURIComponent(activeSubpage)}/`
-  : `/`;
-
 let blocks: any[] = [];
 let hasHero = false;
 let pageTitle = '';
 let pageDescription = '';
 let createFreeLabel = '';
-let overlayMeta: PragueOverlayMeta = { overlayStatus: 'skipped', overlayLocale: String(localeKey || 'en') };
-let overlayError: string | null = null;
 
 if (!marketConfig) {
   Astro.response.status = 404;
@@ -87,59 +78,36 @@ if (!marketConfig) {
   pageTitle = 'Not found';
   pageDescription = 'Unknown widget subpage.';
 } else {
-  try {
-    const overlayContext = getPragueCanonicalOverlayContext({ req: Astro.request, market: marketConfig.key });
-    const result = await loadRequiredWidgetPageJsonForLocaleWithOverlayMeta({
-      widget: widgetKey,
-      page: pageKey,
-      locale: localeKey,
-      ...overlayContext,
-    });
-    overlayMeta = result.overlay;
-    const pageJson = result.json;
-    blocks = Array.isArray((pageJson as any).blocks) ? (pageJson as any).blocks : [];
-    hasHero = blocks.some((b: any) => b && b.type === 'hero');
-    const pageMetaBlock = blocks.find((b: any) => b && b.type === 'page-meta');
-    const pageMeta = pageMetaBlock && typeof pageMetaBlock === 'object' ? (pageMetaBlock as any).copy : null;
-    pageTitle = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).title ?? '') : '';
-    pageDescription = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).description ?? '') : '';
-    if (!pageTitle || !pageDescription) {
-      throw new Error(
-        `[prague] Invalid tokyo/prague/pages/${widgetKey}/${page}.json (page-meta.copy.title/description required)`,
-      );
-    }
-    const widgetDisplayName = resolvePragueWidgetLabel(widgetKey);
-    createFreeLabel = `Create a free ${widgetDisplayName} widget`;
-  } catch (err) {
-    if (!isPragueOverlayFailureError(err)) throw err;
-    overlayMeta = { overlayStatus: err.overlayStatus, overlayLocale: err.overlayLocale };
-    overlayError = 'This localized page is temporarily unavailable.';
-    Astro.response.status = err.statusCode;
-    pageTitle = 'Translations unavailable';
-    pageDescription = overlayError;
+  const pageJson = await loadRequiredWidgetPageJsonForLocale({
+    widget: widgetKey,
+    page: pageKey,
+    locale: localeKey,
+  });
+  blocks = Array.isArray((pageJson as any).blocks) ? (pageJson as any).blocks : [];
+  hasHero = blocks.some((b: any) => b && b.type === 'hero');
+  const pageMetaBlock = blocks.find((b: any) => b && b.type === 'page-meta');
+  const pageMeta = pageMetaBlock && typeof pageMetaBlock === 'object' ? (pageMetaBlock as any).copy : null;
+  pageTitle = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).title ?? '') : '';
+  pageDescription = pageMeta && typeof pageMeta === 'object' ? String((pageMeta as any).description ?? '') : '';
+  if (!pageTitle || !pageDescription) {
+    throw new Error(
+      `[prague] Invalid tokyo/prague/pages/${widgetKey}/${page}.json (page-meta.copy.title/description required)`,
+    );
   }
+  const widgetDisplayName = resolvePragueWidgetLabel(widgetKey);
+  createFreeLabel = `Create a free ${widgetDisplayName} widget`;
 }
-
-setPragueOverlayHeaders(Astro.response.headers, overlayMeta);
 ---
 
 <Base title={pageTitle || 'Not found'} description={pageDescription || undefined} locale={localeKey || 'en'} canonicalPath={canonicalPath ?? undefined} alternates={alternates ?? undefined}>
-  {overlayError || !marketConfig || !isValidSubpage ? (
+  {!marketConfig || !isValidSubpage ? (
     <main class="ck-canvas">
       <div class="ck-inline">
         <div class="ck-stack">
           <h1 class="heading-3 ck-m0">{marketConfig && isValidSubpage ? pageTitle : 'Not found'}</h1>
           <p class="body-1 ck-text-muted ck-m0">
-            {overlayError ?? (!marketConfig ? 'Unknown market.' : 'Unknown widget subpage.')}
+            {!marketConfig ? 'Unknown market.' : 'Unknown widget subpage.'}
           </p>
-          {overlayError && marketConfig ? (
-            <>
-              <p class="body-2 ck-text-subtle ck-m0">
-                Try the English page while this locale is restored.
-              </p>
-              <a class="body-2 ck-link" href={englishHref}>Open English version</a>
-            </>
-          ) : null}
         </div>
       </div>
     </main>

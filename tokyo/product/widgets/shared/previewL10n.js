@@ -33,10 +33,10 @@
     return out;
   }
 
-  function applyTextOverrides(state, textPack) {
+  function applyOverlayValues(state, values) {
     if (!state || typeof state !== 'object') return;
-    if (!textPack || typeof textPack !== 'object' || Array.isArray(textPack)) return;
-    Object.entries(textPack).forEach(([path, value]) => {
+    if (!values || typeof values !== 'object' || Array.isArray(values)) return;
+    Object.entries(values).forEach(([path, value]) => {
       if (typeof value !== 'string') return;
       const parts = parsePathParts(path);
       if (!parts.length) return;
@@ -78,44 +78,20 @@
     if (!instanceId || !locale) return sourceState;
     if (baseLocale && locale === baseLocale) return sourceState;
 
-    const inlineTextPack =
-      args?.textPack && typeof args.textPack === 'object' && !Array.isArray(args.textPack)
-        ? args.textPack
+    const inlineValues =
+      args?.values && typeof args.values === 'object' && !Array.isArray(args.values)
+        ? args.values
         : null;
-    if (inlineTextPack) {
+    if (inlineValues) {
       const localized =
         typeof structuredClone === 'function'
           ? structuredClone(sourceState)
           : JSON.parse(JSON.stringify(sourceState));
-      applyTextOverrides(localized, inlineTextPack);
+      applyOverlayValues(localized, inlineValues);
       return localized;
     }
 
-    const overlayRes = await fetch(
-      '/l10n/widgets/' +
-        encodeURIComponent(instanceId) +
-        '/' +
-        encodeURIComponent(locale) +
-        '/overlay.json',
-      { method: 'GET', cache: 'no-store', credentials: 'omit' },
-    ).catch(() => null);
-    if (!overlayRes) throw new Error('ck_preview_l10n_overlay_request_failed');
-    if (!overlayRes.ok) throw new Error('ck_preview_l10n_overlay_missing');
-    const overlay = await overlayRes.json().catch(() => null);
-    const textPack =
-      overlay && typeof overlay === 'object' && overlay.textPack && typeof overlay.textPack === 'object'
-        ? overlay.textPack
-        : null;
-    if (!textPack || Array.isArray(textPack)) {
-      throw new Error('ck_preview_l10n_overlay_invalid');
-    }
-
-    const localized =
-      typeof structuredClone === 'function'
-        ? structuredClone(sourceState)
-        : JSON.parse(JSON.stringify(sourceState));
-    applyTextOverrides(localized, textPack);
-    return localized;
+    return sourceState;
   }
 
   window.CK_PREVIEW_L10N = {

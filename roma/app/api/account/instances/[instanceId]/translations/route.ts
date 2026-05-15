@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
   if (!current.ok) return current.response;
 
-  const accountId = current.value.authzPayload.accountId;
+  const accountId = current.value.authzPayload.accountPublicId;
   const instanceId = await requireInstanceIdParam(context);
   if (typeof instanceId !== 'string') {
     return withSession(
@@ -26,6 +26,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   const result = await loadAccountInstanceTranslationsPanel({
     accountId,
+    berlinAccountId: current.value.authzPayload.accountId,
+    accessToken: current.value.accessToken,
     instanceId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,

@@ -1,8 +1,5 @@
-import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
-
 export type LocalePolicy = {
   baseLocale: string;
-  readyLocales: string[];
   ip: {
     enabled: boolean;
     countryToLocale: Record<string, string>;
@@ -13,11 +10,16 @@ export type LocalePolicy = {
   };
 };
 
+export type PublishedOverlayProjection = {
+  languages: Record<string, string>;
+};
+
 export type WidgetStatus = 'active' | 'locked_over_plan';
 
 export type AccountWidgetDocument = {
   v: 1;
   accountId: string;
+  widgetCode: string;
   widgetType: string;
   status: WidgetStatus;
   lockedReason: string | null;
@@ -29,38 +31,24 @@ export type AccountInstanceDocument = {
   v: 1;
   id: string;
   accountId: string;
+  widgetCode: string;
   widgetType: string;
   displayName: string | null;
   meta?: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
-  l10n?: {
-    baseFingerprint: string;
-    // Derived from Berlin account locale policy for this saved instance. The
-    // saved base config remains the base-locale source; non-base locales use overlays.
-    summary?: {
-      baseLocale: string;
-      desiredLocales: string[];
-    };
-    generationId?: string;
-    status?: SavedRenderL10nStatus;
-    readyLocales?: string[];
-    failedLocales?: SavedRenderL10nFailure[];
-    updatedAt?: string;
-    startedAt?: string;
-    finishedAt?: string;
-    lastError?: string;
-  };
 };
 
 export type PublishDocument = {
   v: 1;
   id: string;
   accountId: string;
+  widgetCode: string;
   widgetType: string;
   status: InstanceServeState;
   configFp: string | null;
   localePolicy?: LocalePolicy;
+  overlays?: PublishedOverlayProjection;
   seoGeo?: boolean;
   updatedAt: string;
 };
@@ -69,6 +57,7 @@ export type PublishedWidgetLookupDocument = {
   v: 1;
   id: string;
   accountId: string;
+  widgetCode: string;
   widgetType: string;
   status: 'published';
   updatedAt: string;
@@ -77,33 +66,27 @@ export type PublishedWidgetLookupDocument = {
 export type LiveRenderPointer = {
   v: 1;
   id: string;
+  widgetCode: string;
   widgetType: string;
   configFp: string;
   localePolicy: LocalePolicy;
+  overlays?: PublishedOverlayProjection;
   seoGeo?: {
     metaLiveBase: string;
     metaPacksBase: string;
   };
 };
 
-export type SavedRenderL10nStatus = 'queued' | 'working' | 'ready' | 'failed';
-
-export type SavedRenderL10nFailure = {
-  locale: string;
-  reasonKey: string;
-  detail?: string;
-};
-
 export type SavedRenderPointer = {
   v: 1;
   id: string;
   accountId: string;
+  widgetCode: string;
   widgetType: string;
   displayName: string | null;
   meta?: Record<string, unknown> | null;
   configFp: string;
   updatedAt: string;
-  l10n?: AccountInstanceDocument['l10n'];
 };
 
 export type SavedRenderDocument = {
@@ -129,6 +112,7 @@ export type InstanceServeState = 'published' | 'unpublished';
 export type AccountInstanceIndexEntry = {
   accountId: string;
   id: string;
+  widgetCode: string;
   widgetType: string;
   displayName: string;
   publishStatus: InstanceServeState;
@@ -142,15 +126,14 @@ export type AccountInstanceIndexDocument = {
   updatedAt: string;
 };
 
-export type L10nOverlayDocument = {
+export type OverlayObjectDocument = {
   v: 1;
-  type: 'l10n';
-  locale: string;
-  baseFingerprint: string;
-  status: SavedRenderL10nStatus;
-  ops: Array<{ op: 'set'; path: string; value: string }>;
-  textPack?: Record<string, string>;
-  updatedAt: string;
+  values: Record<string, unknown>;
+};
+
+export type SelectedOverlayPointerDocument = {
+  v: 1;
+  overlayId: string;
 };
 
 export type MetaLivePointer = {
@@ -166,19 +149,9 @@ export type WriteConfigPackJob = {
   kind: 'write-config-pack';
   instanceId: string;
   accountId: string;
-  widgetType: string;
+  widgetCode: string;
   configFp: string;
   configPack: unknown;
-};
-
-export type WriteTextPackJob = {
-  v: 1;
-  kind: 'write-text-pack';
-  instanceId: string;
-  accountId: string;
-  locale: string;
-  baseFingerprint: string;
-  textPack: Record<string, string>;
 };
 
 export type WriteMetaPackJob = {
@@ -196,9 +169,11 @@ export type SyncLiveSurfaceJob = {
   instanceId: string;
   accountId: string;
   live: boolean;
+  widgetCode?: string;
   widgetType?: string;
   configFp?: string;
   localePolicy?: LocalePolicy;
+  overlays?: PublishedOverlayProjection;
   seoGeo?: boolean;
 };
 
@@ -218,30 +193,9 @@ export type DeleteInstanceMirrorJob = {
   accountId: string;
 };
 
-export type SyncInstanceOverlaysJob = {
-  v: 1;
-  kind: 'sync-instance-overlays';
-  instanceId: string;
-  accountId: string;
-  baseFingerprint: string;
-  generationId: string;
-  live: boolean;
-  accountAuthz: {
-    profile: RomaAccountAuthzCapsulePayload['profile'];
-    role: RomaAccountAuthzCapsulePayload['role'];
-    entitlements: RomaAccountAuthzCapsulePayload['entitlements'] | null;
-  };
-  baseLocale: string;
-  desiredLocales: string[];
-  countryToLocale: Record<string, string>;
-  previousBaseFingerprint?: string | null;
-};
-
 export type TokyoMirrorQueueJob =
   | WriteConfigPackJob
-  | WriteTextPackJob
   | WriteMetaPackJob
   | SyncLiveSurfaceJob
   | EnforceLiveSurfaceJob
-  | DeleteInstanceMirrorJob
-  | SyncInstanceOverlaysJob;
+  | DeleteInstanceMirrorJob;

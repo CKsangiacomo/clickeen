@@ -56,7 +56,7 @@ When the loader sees `data-ck-optimization="seo-geo"`:
 - `GET <VENICE_URL>/renders/widgets/:instanceId/live/r.json`
 
 2) Loader chooses the effective locale using the pointer’s `localePolicy`:
-- If an embed URL forces `?locale=<token>` and `<token>` is in `readyLocales`, use it.
+- If an embed URL forces `?locale=<token>` and `<token>` is the base locale or has a published language overlay ID, use it.
 - Else if `localePolicy.ip.enabled=true`: use geo headers (`X-Ck-Geo-Country`, etc) + `countryToLocale`.
 - Else use `baseLocale`.
 

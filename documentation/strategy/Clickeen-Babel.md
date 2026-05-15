@@ -1,9 +1,15 @@
-# The Babel Protocol: Infinite Personalized Variants from Content-Addressed Overlays
+# The Babel Protocol: Infinite Personalized Variants from Overlay IDs
 
 **Vision Document**
 **Version:** 4.0 (The Personalization Revelation)
 **Date:** January 20, 2026
-**Status:** Strategic Vision
+**Status:** Strategic Vision - Implementation details are superseded by PRD 098 where they conflict.
+
+**PRD 098 implementation truth (May 2026):**
+- Account-widget Babel v1 uses SKU-like `overlayId` objects, not content hashes.
+- Overlay object bodies contain only `{ "v": 1, "values": {} }`.
+- Roma orchestrates save follow-up; San Francisco produces exact text values; Tokyo-worker stores and projects overlay IDs.
+- Old implementation sketches in this strategy doc that mention ops, text packs, fingerprints, generated readiness state, or Tokyo-worker orchestration are historical and not active architecture.
 
 **Key Revisions:**
 - **v1.0:** Initial conservative projections ($40M in 5 years, localization only)
@@ -12,7 +18,7 @@
 - **v4.0:** THE BIG REVEAL - Not just localization, but universal personalization (language + industry + ABM + A/B + geo + device + time + behavior)
 
 **Critical expansion from v3.0:**
-1. **Product definition:** Not "multi-language platform" but "content-addressed variant infrastructure for personalization"
+1. **Product definition:** Not "multi-language platform" but "overlay-ID-addressed variant infrastructure for personalization"
 2. **Competitive set:** Not just HubSpot/Sprout ($4K-10K/year) but entire enterprise personalization stack ($200K-500K/year)
 3. **TAM expansion:** From $587B to $603.5B (added A/B testing, personalization, ABM, CMS markets)
 4. **Core insight:** Language overlays were just the first use case - same architecture powers infinite personalization dimensions
@@ -22,7 +28,7 @@
 ## TL;DR - The v4.0 Bottom Line (With Personalization)
 
 **What Clickeen Is:**
-- The Babel Protocol: content-addressed personalization as infrastructure
+- The Babel Protocol: overlay-ID-addressed personalization as infrastructure
 - Resolves and serves the right stored content variant based on ANY context (language, industry, account, A/B test, geo, device, behavior)
 - Not a widget company, not a translation company - we're building a new layer of the internet stack
 - **Replaces $200K-500K/year enterprise personalization stack for $5,988-11,988/year**
@@ -1495,7 +1501,7 @@ LOOP REPEATS (exponential growth)
 
 ```json
 {
-  "instanceId": "ins_faq_lightblurs_generic",
+  "instanceId": "INST000001",
   "widgetType": "faq",
   "status": "published",
   "config": {

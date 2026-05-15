@@ -40,16 +40,13 @@ type NextRevalidate = { revalidate?: number };
 
 function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: NextRevalidate } {
   const normalized = pathname.startsWith('/') ? pathname : `/${pathname}`;
-  const isL10n = normalized.startsWith('/l10n/');
-  const isWidgetL10n = normalized.startsWith('/l10n/widgets/');
-  const isL10nIndex = isL10n && normalized.endsWith('/index.json');
-  const isL10nOverlay = isWidgetL10n && /^\/l10n\/widgets\/[^/]+\/[^/]+\/overlay\.json$/i.test(normalized);
   const isI18n = normalized.startsWith('/i18n/');
   const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
   const isAccountAsset = normalized.startsWith('/assets/account/');
   const isRender = normalized.startsWith('/renders/');
   const isRenderLivePointer = isRender && /^\/renders\/widgets\/[^/]+\/live\/r\.json$/i.test(normalized);
   const isRenderConfigPack = isRender && /^\/renders\/widgets\/[^/]+\/config\.json$/i.test(normalized);
+  const isRenderOverlay = isRender && /^\/renders\/widgets\/[^/]+\/overlays\/[^/]+\.json$/i.test(normalized);
   const isRenderMetaLivePointer = isRender && /^\/renders\/widgets\/[^/]+\/meta\/live\/[^/]+\.json$/i.test(normalized);
   const isRenderMetaPack =
     isRender && /^\/renders\/widgets\/[^/]+\/meta\/[^/]+\/[a-f0-9]{64}\.json$/i.test(normalized);
@@ -58,7 +55,7 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isWidget = normalized.startsWith('/widgets/');
   const isFont = normalized.startsWith('/fonts/');
 
-  if (isL10nOverlay || isRenderLivePointer || isRenderConfigPack || isRenderMetaLivePointer) {
+  if (isRenderOverlay || isRenderLivePointer || isRenderConfigPack || isRenderMetaLivePointer) {
     return { cache: 'no-store' };
   }
   if (isAccountAsset || isRenderPack) {
@@ -67,7 +64,7 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   if (isI18n && !isI18nManifest) {
     return { cache: 'force-cache', next: { revalidate: 31536000 } };
   }
-  if (isL10nIndex || isI18nManifest) {
+  if (isI18nManifest) {
     return { cache: 'force-cache', next: { revalidate: 300 } };
   }
   if (isDieter || isWidget || isFont) {

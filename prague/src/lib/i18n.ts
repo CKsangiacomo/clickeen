@@ -1,10 +1,10 @@
 import { localeCandidates } from '@clickeen/l10n';
 import { PRAGUE_CANONICAL_LOCALES, type PragueLocale } from './locales';
-import { loadPragueChromeStrings } from './pragueL10n';
+import chromeJson from '../../content/base/v1/chrome.json';
 
 // Prague chrome i18n (system-owned strings).
-// - Deterministic: Tokyo overlays keyed by base fingerprint (no manifest).
-// - Scope: UI chrome only (nav/tabs/common CTAs). Widget page content lives in tokyo/prague/pages JSON + ops.
+// - Pre-GA PRD 098 cut: Prague widget pages do not own an overlay/layer runtime.
+// - Scope: UI chrome only (nav/tabs/common CTAs). Widget overlays belong to Builder/Tokyo/Venice.
 
 export type PragueI18nKey =
   | 'prague.nav.widgets'
@@ -51,8 +51,6 @@ export type PragueI18nKey =
   | 'prague.footer.widgets'
   | 'prague.footer.rights';
 
-const chromeCache = new Map<string, Promise<Record<string, unknown>>>();
-
 function resolveLocale(locale: string): string {
   const candidates = localeCandidates(locale, PRAGUE_CANONICAL_LOCALES);
   if (!candidates.length) {
@@ -61,12 +59,16 @@ function resolveLocale(locale: string): string {
   return candidates[0];
 }
 
-async function getChromeStrings(locale: string): Promise<Record<string, unknown>> {
-  const resolved = resolveLocale(locale);
-  if (!chromeCache.has(resolved)) {
-    chromeCache.set(resolved, loadPragueChromeStrings(resolved));
+function getChromeStrings(locale: string): Record<string, unknown> {
+  resolveLocale(locale);
+  if (!chromeJson || typeof chromeJson !== 'object' || Array.isArray(chromeJson)) {
+    throw new Error('[prague] Invalid chrome base file: prague/content/base/v1/chrome.json');
   }
-  return chromeCache.get(resolved) as Promise<Record<string, unknown>>;
+  const strings = (chromeJson as Record<string, unknown>).strings;
+  if (!strings || typeof strings !== 'object' || Array.isArray(strings)) {
+    throw new Error('[prague] Missing chrome strings: prague/content/base/v1/chrome.json');
+  }
+  return strings as Record<string, unknown>;
 }
 
 function getValueAtPath(root: Record<string, unknown>, pathParts: string[]): unknown {
@@ -82,7 +84,7 @@ function getValueAtPath(root: Record<string, unknown>, pathParts: string[]): unk
 // calls across the monorepo. Prague chrome uses its own mechanism and must not pollute Bob's i18n keyset.
 export async function pragueT(locale: string, key: PragueI18nKey): Promise<string> {
   const resolved = resolveLocale(String(locale || '').trim() as PragueLocale);
-  const strings = await getChromeStrings(resolved);
+  const strings = getChromeStrings(resolved);
   if (!key.startsWith('prague.')) {
     throw new Error(`[prague] Invalid i18n key '${key}'`);
   }

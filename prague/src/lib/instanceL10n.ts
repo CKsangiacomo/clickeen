@@ -1,16 +1,18 @@
+import { resolveLocaleForLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
+import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import type { PragueMarket } from './markets';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 
-type InstanceLayerIndex = {
+type LiveRenderPointer = {
   v: 1;
-  instanceId: string;
+  localePolicy?: {
+    baseLocale?: string;
+  };
   overlays?: {
-    l10n?: {
-      locales?: string[];
-    };
+    languages?: Record<string, string>;
   };
 };
 
@@ -36,38 +38,25 @@ async function fetchJson(url: string): Promise<{ status: number; ok: boolean; js
   return { status: res.status, ok: res.ok, json };
 }
 
-function normalizeLocaleKeys(keys: unknown): string[] {
-  if (!Array.isArray(keys)) return [];
-  return keys
-    .map((k) => normalizeLocaleToken(k))
-    .filter((k): k is string => Boolean(k));
-}
-
 export async function resolveTokyoInstanceLocales(instanceId: string): Promise<string[] | null> {
   const id = String(instanceId || '').trim();
-  if (!id) return null;
+  if (!isCompactInstanceId(id)) return null;
 
   const baseUrl = getTokyoBaseUrl();
-  const candidates = [`${baseUrl}/l10n/widgets/${encodeURIComponent(id)}/index.json`];
+  const { status, ok, json } = await fetchJson(`${baseUrl}/renders/widgets/${encodeURIComponent(id)}/live/r.json`);
+  if (status === 404) return null;
+  if (!ok || !json || typeof json !== 'object') return null;
 
-  for (const url of candidates) {
-    const { status, ok, json } = await fetchJson(url);
-    if (status === 404) continue;
-    if (!ok || !json || typeof json !== 'object') return null;
+  const parsed = json as LiveRenderPointer;
+  if (parsed.v !== 1) return null;
 
-    const parsed = json as InstanceLayerIndex;
-    if (parsed.v !== 1) return null;
-
-    const keys = normalizeLocaleKeys(parsed.overlays?.l10n?.locales);
-    if (!keys.length) return null;
-
-    // Keep stable order but ensure 'en' is present.
-    const unique = Array.from(new Set(keys));
-    if (!unique.includes('en')) unique.unshift('en');
-    return unique;
+  const baseLocale = normalizeLocaleToken(parsed.localePolicy?.baseLocale) ?? 'en';
+  const overlayLocales: string[] = [];
+  for (const code of Object.keys(parsed.overlays?.languages ?? {})) {
+    const locale = resolveLocaleForLanguageOverlayCode(code);
+    if (typeof locale === 'string') overlayLocales.push(locale);
   }
-
-  return null;
+  return Array.from(new Set([baseLocale, ...overlayLocales]));
 }
 
 export function chooseShowcaseTiles(allLocales: string[]): string[] {

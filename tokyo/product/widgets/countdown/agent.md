@@ -93,9 +93,9 @@ Shared primitives:
 ## Messages
 - Accept `ck:state-update`: `{ type, widgetname: 'countdown', state }`
 
-## Allowlists
-Only write content paths allowed by:
-- `tokyo/product/widgets/countdown/localization.json`
-- `tokyo/product/widgets/countdown/layers/user.allowlist.json`
+## Overlay Primitive Graph
+The widget-owned text primitive graph lives in `spec.json` under `overlays.v = 1`.
+Babel and future producers must use that graph to extract concrete paths before
+producing values. Do not add a second path file for translation or editing.
 
 Forbidden path segments remain prohibited: `__proto__`, `constructor`, `prototype`.

@@ -19,10 +19,6 @@ head_sampling_rate = 1
 BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
 TOKYO_PUBLIC_BASE_URL = "https://tokyo.dev.clickeen.com"
 
-[[services]]
-binding = "SANFRANCISCO_L10N"
-service = "sanfrancisco-dev"
-
 [[kv_namespaces]]
 binding = "USAGE_KV"
 id = "eca50e55fa2a4f94a01fb81aeebf8377"
@@ -42,10 +38,6 @@ queue = "instance-render-snapshot-cloud-dev"
 [env.local]
 name = "tokyo-assets-local"
 vars = { BERLIN_BASE_URL = "http://localhost:3005", TOKYO_PUBLIC_BASE_URL = "http://localhost:4000" }
-
-[[env.local.services]]
-binding = "SANFRANCISCO_L10N"
-service = "sanfrancisco-local"
 
 [env.local.observability]
 enabled = true

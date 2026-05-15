@@ -39,6 +39,7 @@ async function resolveAuthzVersion(args: {
       stableJson({
         userId: args.state.user.id,
         accountId: args.activeAccount?.accountId,
+        accountPublicId: args.activeAccount?.accountPublicId,
         accountStatus: args.activeAccount?.status,
         accountIsPlatform: args.activeAccount?.isPlatform,
         accountName: args.activeAccount?.name,
@@ -100,6 +101,7 @@ export async function buildBootstrapPayload(args: {
         sub: args.state.user.id,
         userId: args.state.user.id,
         accountId: activeAccount.accountId,
+        accountPublicId: activeAccount.accountPublicId,
         accountStatus: activeAccount.status,
         accountIsPlatform: activeAccount.isPlatform,
         accountName: activeAccount.name,
@@ -127,6 +129,7 @@ export async function buildBootstrapPayload(args: {
         authz: {
           accountCapsule: capsule.token,
           accountId: activeAccount.accountId,
+          accountPublicId: activeAccount.accountPublicId,
           role: activeAccount.role,
           profile: activeAccount.tier,
           authzVersion,

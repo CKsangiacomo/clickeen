@@ -62,12 +62,12 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     },
   },
   'l10n.versions.max': {
-    label: 'Max l10n versions',
+    label: 'Retained locale overlay versions',
     description: 'Maximum overlay versions retained.',
     enforcement: {
       status: 'enforced',
-      owner: 'Tokyo-worker account instance sync',
-      note: 'Tokyo-worker enforces retained account-instance l10n versions.',
+      owner: 'Tokyo-worker overlay storage',
+      note: 'Tokyo-worker enforces retained overlay versions per account/widget/instance/language/experiment/personalization coordinate.',
     },
   },
   'branding.remove': {

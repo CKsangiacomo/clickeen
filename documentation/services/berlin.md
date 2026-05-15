@@ -28,6 +28,7 @@ Berlin permanently owns:
 - OAuth PKCE start/callback flows for login providers.
 - Provider identity to Clickeen user mapping through `login_identities` and `user_profiles` at Berlin's service-role boundary.
 - First-login account provisioning when no invitation or existing membership applies.
+- Compact account product identity (`accounts.public_id`) minting during account provisioning.
 - Invitation acceptance at login time when the login flow carries an invitation context.
 - Active account resolution for session landing.
 - Berlin access-token and refresh-token issuance.
@@ -38,7 +39,7 @@ Berlin permanently owns:
 - The signed account authz capsule needed by Roma/Bob for the active account context.
 - Request IDs, structured request-completion logs, and the first auth/session mutation rate-limit floor.
 
-The signed account authz capsule carries stable account authz truth only. Mutable locale settings and live `used` counters stay out of the signed capsule.
+The signed account authz capsule carries stable account authz truth only. Mutable locale settings and live `used` counters stay out of the signed capsule. The capsule includes `accountPublicId`; Roma must carry that compact identity, not compute it.
 
 ## Boundary Rules
 
@@ -46,6 +47,7 @@ The signed account authz capsule carries stable account authz truth only. Mutabl
 - Supabase Auth provider redirects are legacy residue and must not be reintroduced as the browser-visible customer login path.
 - The current linked-identity source is `public.login_identities`; Berlin writes provider/profile state through its service-role boundary and product shells must not consume Supabase Auth identities as provider/account truth.
 - Bootstrap is read-only. It resolves real user/account state and mints session/bootstrap truth; it must not silently repair missing profile, membership, or account state on the hot path.
+- Bootstrap exposes both `accountId` and `accountPublicId`. `accountId` is the private relational UUID; `accountPublicId` is the compact product/storage identity used by PRD 098 overlay IDs.
 - Missing canonical profile, membership, or active account state at bootstrap is a producer bug and must fail explicitly.
 - Active account resolution comes only from persisted active-account preference or deterministic real membership truth. Berlin must never open a privileged fallback account.
 - Invalid persisted profile/account locale-policy truth must fail explicitly in canonical product/account routes. Berlin logs the defect and does not silently default it away.
@@ -187,6 +189,17 @@ Registry/account product dependencies:
 - Roma no longer receives a Michael/PostgREST token from Berlin.
 - Berlin only answers account governance and account-level publish-containment policy questions for this area.
 - Berlin does not own widget instance inventory, instance IDs, display names, saved config, l10n overlays, or publish state.
+
+## PRD 098 Account Public ID
+
+Berlin writes `accounts.public_id` when it creates a new account:
+
+- 8 uppercase base36 characters
+- generated with the shared `@clickeen/ck-contracts` platform ID generator
+- protected by Michael's unique index
+- retried on collision
+
+Existing pre-GA account rows are backfilled by the Supabase migration. Berlin does not derive, repair, or recompute `accountPublicId` during bootstrap.
 
 ## Environment
 

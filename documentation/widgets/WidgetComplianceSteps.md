@@ -200,7 +200,8 @@ OUTPUT
 - Array ops semantics (add/remove/reorder + required `id` fields).
 - Binding Map summary (how each path affects DOM/CSS).
 - Prohibited paths:
-  - Anything outside allowlists (`localization.json`, `layers/*.allowlist.json` as applicable).
+  - Anything outside the widget primitive graph in `spec.json.overlays.text[]` for text overlays.
+  - Any second path schema for translation, layer authoring, or runtime overlays.
 
 GATE
 
@@ -214,8 +215,7 @@ OUTPUT
 
 - `catalog.json` with label, description, category, display order, and capabilities.
 - `limits.json` (unless PRD opts out).
-- `localization.json` with all translatable paths.
-- `layers/*.allowlist.json` only when that layer exists and is used.
+- `spec.json.overlays.text[]` with all translatable primitive text paths.
 - `pages/*.json` (Prague widget pages: overview/features/examples/templates/pricing).
 
 GATE
@@ -227,17 +227,19 @@ GATE
 
 ---
 
-## Step 7.1 - Prague pages + l10n pipeline
+## Step 7.1 - Prague pages
 
 OUTPUT
 
 - `tokyo/prague/pages/{widgetType}/*.json` exist and contain valid `blocks[]`.
 - `accountInstanceRef.instanceId` is present only when a Prague page intentionally points at a real account widget instance.
-- Page copy is compatible with Prague l10n allowlists. Prague page translations remain separate from account widget overlays.
+- `accountInstanceRef.instanceId` uses a PRD 098 compact instance ID.
+- Prague page copy is page JSON truth. Account-widget overlays are not Prague page overlays; they are served by Venice from Tokyo published overlay IDs.
 
 GATE (local)
 
-- `node scripts/prague-l10n/verify.mjs`
+- `pnpm --filter @clickeen/prague typecheck`
+- `pnpm --filter @clickeen/prague build`
 
 ---
 
@@ -271,8 +273,9 @@ Required checks
   - `pnpm build:dieter`
 - Defaults safety:
   - Defaults must not ship `data:` or `blob:` URLs (allowed only as user-edited/runtime values, never in `spec.json` defaults).
-- Prague pages/l10n verification (if pages changed):
-  - `node scripts/prague-l10n/verify.mjs`
+- Prague pages verification (if pages changed):
+  - `pnpm --filter @clickeen/prague typecheck`
+  - `pnpm --filter @clickeen/prague build`
 
 Manual smoke (fast)
 

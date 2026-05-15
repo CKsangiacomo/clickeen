@@ -133,3 +133,9 @@ Stage/Pod (layout spacing lives here; no widget-level width/padding):
 - Add logo: append to `strips[i].logos`
 - Remove logo: delete `strips[i].logos[j]`
 - Reorder logos: move within `strips[i].logos`
+
+## Overlay Primitive Graph
+The widget-owned text primitive graph lives in `spec.json` under `overlays.v = 1`.
+Babel and future producers must use that graph to extract concrete paths such as
+`strips.0.logos.0.name` before producing values. Do not add a second path file
+for translation or editing.

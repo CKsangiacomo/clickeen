@@ -9,6 +9,7 @@ import {
 import localesJson from '@clickeen/l10n/locales.json';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
 import type { TranslationsPreviewData } from './useTranslationsPreviewState';
+import { listPreviewableLanguages } from '../lib/translations-preview';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
@@ -75,21 +76,33 @@ export function TranslationsPanel({
   const session = useWidgetSession();
 
   const localeOptions = useMemo(() => {
-    const locales = translationsData?.readyLocales ?? [];
-    return locales.map((locale) => ({
-      value: locale,
-      label: resolveLocaleLabel(locale),
-    }));
+    if (!translationsData) return [];
+    const previewable = new Set(listPreviewableLanguages(translationsData));
+    return [
+      {
+        value: translationsData.baseLanguage,
+        label: `${resolveLocaleLabel(translationsData.baseLanguage)} (base)`,
+      },
+      ...translationsData.languages
+        .filter((entry) => previewable.has(entry.language))
+        .map((entry) => ({
+          value: entry.language,
+          label: entry.label || resolveLocaleLabel(entry.language),
+        })),
+    ];
   }, [translationsData]);
-  const requestedLocales = useMemo(() => translationsData?.requestedLocales ?? [], [translationsData]);
-  const readyLocales = useMemo(() => new Set(translationsData?.readyLocales ?? []), [translationsData]);
-  const readyCount = requestedLocales.filter((locale) => readyLocales.has(locale)).length;
-  const activeLocaleCount = requestedLocales.length;
+  const targetLanguages = translationsData?.languages ?? [];
+  const previewableTargetCount = targetLanguages.filter(
+    (entry) => Boolean(entry.overlayId && translationsData?.valuesByLanguage[entry.language]),
+  ).length;
+  const unavailableLabels = targetLanguages
+    .filter((entry) => !entry.overlayId || !translationsData?.valuesByLanguage[entry.language])
+    .map((entry) => entry.label || resolveLocaleLabel(entry.language));
 
   const localeValue =
     overlayPreviewLocale && localeOptions.some((option) => option.value === overlayPreviewLocale)
       ? overlayPreviewLocale
-      : translationsData?.baseLocale || localeOptions[0]?.value || '';
+      : translationsData?.baseLanguage || localeOptions[0]?.value || '';
 
   const selectOptions =
     localeOptions.length > 0
@@ -98,37 +111,39 @@ export function TranslationsPanel({
           {
             value: '',
             label: translationsLoading
-              ? 'Checking translations...'
+              ? 'Checking language values...'
               : translationsError
-                ? 'Translations unavailable'
-              : translationsData?.status === 'queued' || translationsData?.status === 'working'
-                ? 'Translations updating'
-                : translationsData?.status === 'failed'
-                  ? 'Translations failed'
-                  : 'Translations not ready yet',
+                ? 'Language values unavailable'
+                : session.isDirty
+                  ? 'Save before previewing languages'
+                  : 'Base language only',
           },
         ];
   const translationStatusTitle = (() => {
-    if (translationsLoading) return 'Checking translations';
-    if (translationsError) return 'Translations unavailable';
-    if (translationsData && activeLocaleCount > 0 && readyCount === activeLocaleCount) {
-      return 'Translations are ready';
+    if (session.isDirty) return 'Save changes first';
+    if (translationsLoading) return 'Checking language values';
+    if (translationsError) return 'Language values unavailable';
+    if (translationsData && targetLanguages.length > 0 && previewableTargetCount === targetLanguages.length) {
+      return 'Language overlays available';
     }
-    if (translationsData?.status === 'failed') return 'Translations failed';
-    return 'Translations are updating';
+    if (translationsData && previewableTargetCount > 0) return 'Some language overlays available';
+    return 'Base language preview';
   })();
   const translationStatusBody = (() => {
+    if (session.isDirty) {
+      return 'Save the current widget before previewing language overlays.';
+    }
     if (translationsLoading) {
-      return 'Builder is checking whether this widget is ready in your account languages.';
+      return 'Builder is reading selected language overlays for this widget.';
     }
     if (translationsError) return translationsError;
-    if (translationsData?.status === 'failed') {
-      return `Clickeen could not finish every active language yet. ${readyCount} ready languages can be previewed now.`;
+    if (translationsData && targetLanguages.length > 0) {
+      const base = `${previewableTargetCount} of ${targetLanguages.length} target language overlays can be previewed now.`;
+      return unavailableLabels.length
+        ? `${base} Not available for this save: ${unavailableLabels.join(', ')}.`
+        : base;
     }
-    if (translationsData && activeLocaleCount > 0) {
-      return `${readyCount} of ${activeLocaleCount} active languages are ready. Ready languages can be previewed now.`;
-    }
-    return 'Save to request translations for the current widget state.';
+    return 'No target language overlay is selected for this widget.';
   })();
 
   if (!session.compiled) {

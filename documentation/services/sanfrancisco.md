@@ -8,11 +8,11 @@
 - `GET /healthz`
 - Queue consumers for agent jobs.
 - HTTP endpoints for AI outcomes.
-- Private WorkerEntrypoint method `generateAccountWidgetL10nOps` for Tokyo-worker account-widget locale ops generation.
+- `POST /v1/babel/text-values` for Roma-orchestrated account-widget Babel text production.
 
 ## Dependencies
-- Tokyo-worker (account-mode explicit instance-sync caller)
-- Tokyo (widget localization allowlists)
+- Roma (account-mode save follow-up caller)
+- Widget primitive graph from `spec.json.overlays.text[]` via Roma request payloads
 - Cloudflare KV/R2/Queues (state, logs, scheduling)
 
 ## Deployment
@@ -47,39 +47,34 @@ Health contract:
 
 ## Entrypoint posture
 - `sanfrancisco/src/index.ts` is now a thin route shell.
-- The default export is a Cloudflare `WorkerEntrypoint` so Tokyo-worker can call private worker methods without a public HTTP route.
+- The default export is a Cloudflare `WorkerEntrypoint`; account-widget Babel production uses the grant-protected HTTP endpoint owned by Roma's save follow-up.
 - Extracted runtime modules own:
   - request-signature helpers: `sanfrancisco/src/signatures.ts`
   - concurrency limiting: `sanfrancisco/src/concurrency.ts`
   - telemetry and outcome persistence: `sanfrancisco/src/telemetry.ts`
-  - l10n route handlers: `sanfrancisco/src/l10n-routes.ts`
+  - account-widget Babel text handlers: `sanfrancisco/src/l10n-account-routes.ts`
 
-## Account-mode l10n flow (active)
-- Triggered by explicit Tokyo-worker instance sync after Roma create/locale-management/publish flows request reconciliation.
-- Tokyo owns saved-config l10n identity/staleness; San Francisco is generation-only.
-- Tokyo-worker calls the private `generateAccountWidgetL10nOps` worker method through its `SANFRANCISCO_L10N` service binding.
-- There is no public account-widget generation HTTP route and no bearer-token auth on this path.
-- The internal job is `widget.instance.translator`.
-- Request payloads contain only approved text items (`path`, `type`, `value`), existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and account policy profile.
-- San Francisco does not receive widget configs, localization allowlists, account ids, storage paths, live pointer state, or publication state for account-widget generation.
-- Incremental generation translates only changed current item paths when possible and preserves existing ops for unchanged current paths.
-- Returns set-only locale ops to Tokyo-worker.
+## Account-widget Babel text flow (active)
+- Triggered by Roma after a base widget save succeeds.
+- Roma owns orchestration, San Francisco owns value production, and Tokyo-worker owns overlay storage.
+- Endpoint: `POST /v1/babel/text-values`.
+- Auth: `Authorization: Bearer <Roma-minted AI grant>` with capability `agent:widget.instance.translator`.
+- Request payloads contain only `{ v, widgetType, sourceLanguage, targetLanguage, items }`, where each item is one concrete primitive text path and value from the current saved config.
+- San Francisco does not receive widget configs, wildcard path declarations, account storage paths, selected-overlay pointers, live pointer state, publication state, previous values, or patch operations.
+- San Francisco returns `{ v: 1, values }` with the exact same path set it received: no more and no fewer.
+- Roma validates the exact path set before calling Tokyo-worker storage verbs. San Francisco does not write Tokyo overlay objects.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext translation uses one structured path: San Francisco extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.
 - l10n translation calls go through the shared policy router via `callChatCompletion` (same request/token enforcement + provider/model allowlist).
 
-## Prague localization translation (local + cloud-dev)
-- Endpoint: `POST /v1/l10n/translate` (available only when `ENVIRONMENT` is `local` or `dev`; disabled elsewhere).
-- Auth: `x-clickeen-signature = base64url(hmacSha256("prague-l10n.v1.<bodyJson>", AI_GRANT_HMAC_SECRET))`.
-- Used by `scripts/prague-l10n/translate.mjs` to translate Prague base content.
-- Prague-string prompts preserve source acronym style and do not add parenthetical acronym expansions that are absent in source text.
-- Prague-string safety validation enforces placeholder parity, HTML tag parity, and anchor integrity for richtext items.
-- Returns translated items; the caller writes overlay files under `tokyo/prague/l10n/**`.
-- Provider: OpenAI via shared runtime policy router (`gpt-5.2` default in cloud-dev tooling; env overrides still apply).
+## Prague posture
+- Prague does not own the account-widget overlay runtime.
+- Public widget locale overlays are generated from Builder saves and served by Venice from Tokyo published overlay IDs.
+- San Francisco must not write Prague overlay files or resurrect a Prague-specific widget localization path.
 
 ## Rules
-- Active account-mode l10n returns set-only locale ops to Tokyo-worker; San Francisco does not own Tokyo overlay writes.
-- Agent writes must not invent or depend on a `layer=user` authoring surface. The active instance-localization path returns locale ops only; Tokyo/Tokyo-worker owns readiness and publication.
+- Active account-widget Babel returns exact text value maps to Roma; San Francisco does not own Tokyo overlay writes.
+- Agent writes must not invent paths, patch formats, readiness state, or layer authoring surfaces. The active instance-locale path returns concrete primitive values only; Roma orchestrates and Tokyo-worker stores.
 
 ## Links
 - AI overview: `documentation/ai/overview.md`

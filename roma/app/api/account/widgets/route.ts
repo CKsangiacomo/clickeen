@@ -24,7 +24,7 @@ type WidgetInstance = {
   };
 };
 
-type WidgetCatalogOption = TokyoWidgetCatalogEntry & {
+type WidgetCatalogOption = Omit<TokyoWidgetCatalogEntry, 'overlays'> & {
   canCreate: boolean;
   disabledReasonKey: string | null;
 };
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
   if (!current.ok) return current.response;
 
-  const accountId = current.value.authzPayload.accountId;
+  const accountId = current.value.authzPayload.accountPublicId;
   const widgetIndex = await loadTokyoAccountInstanceIndex({
     accountId,
     accountCapsule: current.value.authzToken,
@@ -99,7 +99,12 @@ export async function GET(request: NextRequest) {
     const existingType = usedWidgetTypes.has(entry.widgetType);
     const withinTypeLimit = widgetTypesLimit == null || existingType || usedWidgetTypes.size < widgetTypesLimit;
     return {
-      ...entry,
+      widgetType: entry.widgetType,
+      widgetCode: entry.widgetCode,
+      label: entry.label,
+      description: entry.description,
+      category: entry.category,
+      capabilities: entry.capabilities,
       canCreate: canMutate && withinTypeLimit,
       disabledReasonKey: canMutate
         ? withinTypeLimit

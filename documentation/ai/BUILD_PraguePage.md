@@ -89,7 +89,7 @@ Example shape:
   "blocks": [
     { "id": "page-meta", "type": "page-meta", "copy": { "title": "...", "description": "..." } },
     { "id": "navmeta", "type": "navmeta", "copy": { "title": "...", "description": "..." } },
-    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true, "accountInstanceRef": { "instanceId": "ins_faq_lightblurs_generic" } },
+    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true, "accountInstanceRef": { "instanceId": "INST000001" } },
     { "id": "minibob", "type": "minibob", "copy": { "heading": "...", "subhead": "..." } }
   ]
 }

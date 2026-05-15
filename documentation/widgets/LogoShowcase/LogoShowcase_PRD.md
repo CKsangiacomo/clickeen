@@ -44,8 +44,8 @@ The widget must be implemented as the standard Tokyo package (core runtime + con
 - `tokyo/product/widgets/logoshowcase/widget.client.js`
 - `tokyo/product/widgets/logoshowcase/agent.md`
 - `tokyo/product/widgets/logoshowcase/limits.json`
-- `tokyo/product/widgets/logoshowcase/localization.json`
-- `tokyo/product/widgets/logoshowcase/layers/*.allowlist.json`
+
+Overlay-editable text primitives are declared only in `tokyo/product/widgets/logoshowcase/spec.json.overlays.text[]`.
 
 ### Non-negotiable platform constraints
 - **No fallbacks**: `widget.client.js` must not merge defaults. Missing required state must throw a clear error.
@@ -56,6 +56,20 @@ The widget must be implemented as the standard Tokyo package (core runtime + con
 - **Branding**: handled by `tokyo/product/widgets/shared/branding.js` (injects/toggles backlink via `state.behavior.showBacklink`; no widget-specific call required).
 - **Width is Stage/Pod**: do not add a custom “widget width” control. Pod width mode/content width covers this.
 - **Desktop/Mobile contract**: Pod settings frame the experience (width mode, padding, content width, radius), but **responsive behavior must still be explicitly defined by the widget** in `widget.html` + `widget.css` for arrays/items/subparts.
+
+### Babel text primitive coverage
+
+LogoShowcase is WIP but still declares the PRD 098 text primitive graph:
+
+- `header.title`
+- `header.subtitleHtml`
+- `cta.label`
+- `strips[].logos[].name`
+- `strips[].logos[].caption`
+- `strips[].logos[].alt`
+- `strips[].logos[].title`
+
+Repeatable declarations are expanded to concrete saved config paths before San Francisco receives them. The widget must not add `localization.json`, layer sidecars, text packs, or wildcard producer payloads.
 
 ## 2) Types + Motion modes (high level)
 In Clickeen terms, **Type = miniwidget**. LogoShowcase has **two Types**:

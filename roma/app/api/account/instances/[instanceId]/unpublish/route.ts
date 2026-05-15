@@ -11,7 +11,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
 
-  const accountId = current.value.authzPayload.accountId;
+  const accountId = current.value.authzPayload.accountPublicId;
   const instanceId = await requireInstanceIdParam(context);
   if (typeof instanceId !== 'string') {
     return withSession(

@@ -22,6 +22,7 @@ type RomaAccountContextValue = {
   activeAccount: RomaActiveAccount;
   accountContext: ResolvedRomaContext & {
     accountId: string;
+    accountPublicId: string;
     accountName: string;
     accountSlug: string;
   };
@@ -51,7 +52,8 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
     const activeAccount = resolveActiveRomaAccount(me.data);
     const accountContext = resolveActiveRomaContext(me.data);
     const accountId = accountContext.accountId;
-    if (!activeAccount || !accountId || !accountContext.accountName || !accountContext.accountSlug) {
+    const accountPublicId = accountContext.accountPublicId;
+    if (!activeAccount || !accountId || !accountPublicId || !accountContext.accountName || !accountContext.accountSlug) {
       return null;
     }
     const accountPolicy = resolveAccountPolicyFromRomaAuthz(me.data, accountId);
@@ -62,6 +64,7 @@ export function RomaAccountBoundary({ children }: { children: ReactNode }) {
       activeAccount,
       accountContext: {
         accountId,
+        accountPublicId,
         accountName: accountContext.accountName,
         accountSlug: accountContext.accountSlug,
       },

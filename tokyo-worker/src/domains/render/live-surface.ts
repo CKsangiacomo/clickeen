@@ -13,11 +13,19 @@ import { deletePrefix, loadJson, putJson } from './storage';
 import type {
   EnforceLiveSurfaceJob,
   LiveRenderPointer,
+  LocalePolicy,
   PublishDocument,
   PublishedWidgetLookupDocument,
   SyncLiveSurfaceJob,
 } from './types';
 import { normalizeFingerprint, normalizeStorageId } from './utils';
+import { readSelectedOverlayProjection } from './overlays';
+
+const DEFAULT_LOCALE_POLICY: LocalePolicy = {
+  baseLocale: 'en',
+  ip: { enabled: false, countryToLocale: {} },
+  switcher: { enabled: false },
+};
 
 async function restorePublishDocument(
   env: Env,
@@ -42,13 +50,14 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
   });
   if (!location) throw new Error('[tokyo] sync-live-surface missing instance location');
 
-  const publishKey = accountInstancePublishKey(location.accountId, location.widgetType, location.instanceId);
+  const publishKey = accountInstancePublishKey(location.accountId, location.widgetCode, location.instanceId);
   const previousPublish = normalizePublishDocument(await loadJson(env, publishKey));
   if (!job.live) {
     const unpublished = {
       v: 1,
       id: location.instanceId,
       accountId: location.accountId,
+      widgetCode: location.widgetCode,
       widgetType: location.widgetType,
       status: 'unpublished',
       configFp: null,
@@ -72,17 +81,24 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
 
   const configFp = normalizeFingerprint(job.configFp);
   if (!configFp) throw new Error('[tokyo] sync-live-surface invalid configFp');
-  const localePolicy = normalizeLocalePolicy(job.localePolicy);
-  if (!localePolicy) throw new Error('[tokyo] sync-live-surface invalid localePolicy');
+  const localePolicy = normalizeLocalePolicy(job.localePolicy) ?? DEFAULT_LOCALE_POLICY;
+  const overlays = job.overlays ?? await readSelectedOverlayProjection({
+    env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+  });
   const updatedAt = new Date().toISOString();
   const published = {
     v: 1,
     id: location.instanceId,
     accountId: location.accountId,
+    widgetCode: location.widgetCode,
     widgetType: location.widgetType,
     status: 'published',
     configFp,
     localePolicy,
+    overlays,
     seoGeo: job.seoGeo === true,
     updatedAt,
   } satisfies PublishDocument;
@@ -92,6 +108,7 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
       v: 1,
       id: location.instanceId,
       accountId: location.accountId,
+      widgetCode: location.widgetCode,
       widgetType: location.widgetType,
       status: 'published',
       updatedAt,
@@ -101,6 +118,7 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
       v: 1,
       id: location.instanceId,
       accountId: location.accountId,
+      widgetCode: location.widgetCode,
       widgetType: location.widgetType,
       status: 'unpublished',
       configFp: null,
@@ -124,7 +142,7 @@ export async function enforceLiveSurface(env: Env, job: EnforceLiveSurfaceJob): 
   const location = await resolveAccountInstanceLocation({ env, accountId, instanceId });
   if (!location) return;
   const existing = normalizePublishDocument(
-    await loadJson(env, accountInstancePublishKey(location.accountId, location.widgetType, location.instanceId)),
+    await loadJson(env, accountInstancePublishKey(location.accountId, location.widgetCode, location.instanceId)),
   );
   if (!existing || existing.status !== 'published' || !existing.configFp || !existing.localePolicy) return;
   await syncLiveSurface(env, {
@@ -133,9 +151,11 @@ export async function enforceLiveSurface(env: Env, job: EnforceLiveSurfaceJob): 
     instanceId,
     accountId,
     live: true,
+    widgetCode: location.widgetCode,
     widgetType: location.widgetType,
     configFp: existing.configFp,
     localePolicy: job.localePolicy,
+    overlays: existing.overlays,
     seoGeo: job.seoGeo,
   });
 }
@@ -152,7 +172,7 @@ export async function deleteInstanceMirror(env: Env, instanceId: string, account
   });
   const existed = Boolean(location);
   if (location) {
-    await deletePrefix(env, `accounts/${location.accountId}/widgets/${location.widgetType}/${location.instanceId}/`);
+    await deletePrefix(env, `accounts/${location.accountId}/widgets/${location.widgetCode}/${location.instanceId}/`);
   }
   await env.TOKYO_R2.delete(publishedWidgetLookupKey(normalized));
   await removeAccountInstanceIndexEntry({ env, accountId: normalizedAccount, instanceId: normalized });
@@ -168,9 +188,11 @@ export function buildLiveRenderPointer(args: {
   return {
     v: 1,
     id: args.id,
+    widgetCode: args.publish.widgetCode,
     widgetType: args.widgetType,
     configFp: args.publish.configFp,
     localePolicy: args.publish.localePolicy,
+    ...(args.publish.overlays ? { overlays: args.publish.overlays } : {}),
     ...(args.publish.seoGeo
       ? {
           seoGeo: {

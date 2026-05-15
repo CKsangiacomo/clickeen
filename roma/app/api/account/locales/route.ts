@@ -3,8 +3,7 @@ import { isRecord } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
-import { materializeAccountAdditionalLocales, normalizeDesiredAccountLocales } from '@roma/lib/account-locales';
-import { runAccountLocalesSync } from '@roma/lib/account-locales-sync';
+import { materializeAccountAdditionalLocales } from '@roma/lib/account-locales';
 import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
@@ -272,37 +271,6 @@ export async function PUT(request: NextRequest) {
             },
           },
           { status: refreshedAccountState.status },
-        ),
-        current.value.setCookies,
-      );
-    }
-    try {
-      await runAccountLocalesSync({
-        accountId: current.value.authzPayload.accountId,
-        accountCapsule: current.value.authzToken,
-        requestId: current.value.requestId,
-        l10nIntent: {
-          baseLocale: refreshedAccountState.policy.baseLocale,
-          desiredLocales: normalizeDesiredAccountLocales({
-            baseLocale: refreshedAccountState.policy.baseLocale,
-            locales: refreshedAccountState.locales,
-          }),
-          countryToLocale: refreshedAccountState.policy.ip.countryToLocale,
-        },
-      });
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return withSession(
-        request,
-        NextResponse.json(
-          {
-            error: {
-              kind: 'UPSTREAM_UNAVAILABLE',
-              reasonKey: 'coreui.errors.translations.acceptanceFailed',
-              detail,
-            },
-          },
-          { status: 502 },
         ),
         current.value.setCookies,
       );

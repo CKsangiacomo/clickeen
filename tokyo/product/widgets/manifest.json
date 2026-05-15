@@ -3,6 +3,7 @@
   "widgets": [
     {
       "widgetType": "faq",
+      "widgetCode": "FAQ",
       "order": 10,
       "label": "FAQ",
       "description": "Answer common questions with grouped, editable content.",
@@ -11,6 +12,41 @@
         "seoGeo": true
       },
       "itemKey": "faq.item",
+      "overlays": {
+        "v": 1,
+        "text": [
+          {
+            "path": "header.title",
+            "label": "Header title",
+            "type": "richtext"
+          },
+          {
+            "path": "header.subtitleHtml",
+            "label": "Header subtitle",
+            "type": "richtext"
+          },
+          {
+            "path": "cta.label",
+            "label": "CTA label",
+            "type": "string"
+          },
+          {
+            "path": "sections[].title",
+            "label": "Section title",
+            "type": "string"
+          },
+          {
+            "path": "sections[].faqs[].question",
+            "label": "FAQ question",
+            "type": "string"
+          },
+          {
+            "path": "sections[].faqs[].answer",
+            "label": "FAQ answer",
+            "type": "richtext"
+          }
+        ]
+      },
       "defaults": {
         "cta": {
           "href": "https://example.com",
@@ -577,6 +613,7 @@
     },
     {
       "widgetType": "countdown",
+      "widgetCode": "CTD",
       "order": 20,
       "label": "Countdown",
       "description": "Show launch, offer, or event timing in one active widget.",
@@ -585,6 +622,56 @@
         "seoGeo": true
       },
       "itemKey": "countdown.item",
+      "overlays": {
+        "v": 1,
+        "text": [
+          {
+            "path": "header.title",
+            "label": "Header title",
+            "type": "richtext"
+          },
+          {
+            "path": "header.subtitleHtml",
+            "label": "Header subtitle",
+            "type": "richtext"
+          },
+          {
+            "path": "timer.labels.days",
+            "label": "Days label",
+            "type": "string"
+          },
+          {
+            "path": "timer.labels.hours",
+            "label": "Hours label",
+            "type": "string"
+          },
+          {
+            "path": "timer.labels.minutes",
+            "label": "Minutes label",
+            "type": "string"
+          },
+          {
+            "path": "timer.labels.seconds",
+            "label": "Seconds label",
+            "type": "string"
+          },
+          {
+            "path": "cta.label",
+            "label": "CTA label",
+            "type": "string"
+          },
+          {
+            "path": "actions.during.text",
+            "label": "Active CTA text",
+            "type": "string"
+          },
+          {
+            "path": "actions.after.text",
+            "label": "Finished action text",
+            "type": "string"
+          }
+        ]
+      },
       "defaults": {
         "pod": {
           "radius": "4xl",
@@ -1042,6 +1129,7 @@
     },
     {
       "widgetType": "logoshowcase",
+      "widgetCode": "LGS",
       "order": 30,
       "label": "Logo showcase",
       "description": "Display brand, customer, or partner logos from one saved config.",
@@ -1050,6 +1138,46 @@
         "seoGeo": false
       },
       "itemKey": "logoshowcase.item",
+      "overlays": {
+        "v": 1,
+        "text": [
+          {
+            "path": "header.title",
+            "label": "Header title",
+            "type": "richtext"
+          },
+          {
+            "path": "header.subtitleHtml",
+            "label": "Header subtitle",
+            "type": "richtext"
+          },
+          {
+            "path": "cta.label",
+            "label": "CTA label",
+            "type": "string"
+          },
+          {
+            "path": "strips[].logos[].name",
+            "label": "Logo name",
+            "type": "string"
+          },
+          {
+            "path": "strips[].logos[].caption",
+            "label": "Logo caption",
+            "type": "string"
+          },
+          {
+            "path": "strips[].logos[].alt",
+            "label": "Logo alt text",
+            "type": "string"
+          },
+          {
+            "path": "strips[].logos[].title",
+            "label": "Logo title",
+            "type": "string"
+          }
+        ]
+      },
       "defaults": {
         "cta": {
           "href": "https://example.com/contact",

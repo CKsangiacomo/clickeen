@@ -1,17 +1,17 @@
 import { asTrimmedString } from '@clickeen/ck-contracts';
+import { isCompactAccountPublicId, isCompactInstanceId, isWidgetOverlayCode, isOverlayId } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeLocale } from '../../asset-utils';
-import type { AllowlistEntry } from '@clickeen/l10n';
 import type {
   AccountInstanceDocument,
   AccountInstanceIndexDocument,
   AccountInstanceIndexEntry,
   LocalePolicy,
   PublishDocument,
+  PublishedOverlayProjection,
   PublishedWidgetLookupDocument,
-  SavedRenderL10nFailure,
   SavedRenderPointer,
 } from './types';
-import { normalizeFingerprint, normalizeLocaleList, normalizeStorageId, normalizeSavedL10nFailures, normalizeSavedL10nStatus } from './utils';
+import { normalizeFingerprint, normalizeStorageId } from './utils';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -21,8 +21,7 @@ export function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
   const payload = asRecord(raw);
   if (!payload) return null;
   const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
-  const readyLocales = normalizeLocaleList(payload.readyLocales);
-  if (!baseLocale || !readyLocales.length || !readyLocales.includes(baseLocale)) return null;
+  if (!baseLocale) return null;
 
   const ipRecord = asRecord(payload.ip);
   const switcherRecord = asRecord(payload.switcher);
@@ -32,7 +31,7 @@ export function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
     for (const [country, locale] of Object.entries(countryToLocaleRaw)) {
       if (!/^[A-Z]{2}$/.test(country)) continue;
       const normalized = normalizeLocale(locale);
-      if (!normalized || !readyLocales.includes(normalized)) continue;
+      if (!normalized) continue;
       countryToLocale[country] = normalized;
     }
   }
@@ -40,48 +39,27 @@ export function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
 
   return {
     baseLocale,
-    readyLocales,
     ip: {
       enabled: ipRecord?.enabled === true,
       countryToLocale,
     },
     switcher: {
       enabled: switcherRecord?.enabled === true,
-      ...(alwaysShowLocale && readyLocales.includes(alwaysShowLocale) ? { alwaysShowLocale } : {}),
+      ...(alwaysShowLocale ? { alwaysShowLocale } : {}),
     },
   };
 }
 
-function normalizeL10nStatus(raw: unknown): AccountInstanceDocument['l10n'] | undefined {
+function normalizePublishedOverlayProjection(raw: unknown): PublishedOverlayProjection | null {
   const payload = asRecord(raw);
-  if (!payload) return undefined;
-  const baseFingerprint = normalizeFingerprint(payload.baseFingerprint);
-  if (!baseFingerprint) return undefined;
-  const summaryRaw = asRecord(payload.summary);
-  const summaryBaseLocale = normalizeLocale(summaryRaw?.baseLocale) ?? '';
-  const summaryDesiredLocales = normalizeLocaleList(summaryRaw?.desiredLocales);
-  const summary =
-    summaryBaseLocale && summaryDesiredLocales.includes(summaryBaseLocale)
-      ? { baseLocale: summaryBaseLocale, desiredLocales: summaryDesiredLocales }
-      : null;
-  const generationId = asTrimmedString(payload.generationId);
-  const status = normalizeSavedL10nStatus(payload.status);
-  const updatedAt = asTrimmedString(payload.updatedAt);
-  const startedAt = asTrimmedString(payload.startedAt);
-  const finishedAt = asTrimmedString(payload.finishedAt);
-  const lastError = asTrimmedString(payload.lastError);
-  return {
-    baseFingerprint,
-    ...(summary ? { summary } : {}),
-    ...(generationId ? { generationId } : {}),
-    ...(status ? { status } : {}),
-    ...(payload.readyLocales ? { readyLocales: normalizeLocaleList(payload.readyLocales) } : {}),
-    ...(payload.failedLocales ? { failedLocales: normalizeSavedL10nFailures(payload.failedLocales) } : {}),
-    ...(updatedAt ? { updatedAt } : {}),
-    ...(startedAt ? { startedAt } : {}),
-    ...(finishedAt ? { finishedAt } : {}),
-    ...(lastError ? { lastError } : {}),
-  };
+  const languagesRaw = asRecord(payload?.languages);
+  if (!payload || !languagesRaw) return null;
+  const languages: Record<string, string> = {};
+  for (const [languageCode, overlayId] of Object.entries(languagesRaw)) {
+    if (!/^[0-9A-Z]{4}$/.test(languageCode) || !isOverlayId(overlayId)) return null;
+    languages[languageCode] = overlayId;
+  }
+  return { languages };
 }
 
 export function normalizeAccountInstanceDocument(raw: unknown): AccountInstanceDocument | null {
@@ -89,22 +67,23 @@ export function normalizeAccountInstanceDocument(raw: unknown): AccountInstanceD
   if (!payload || payload.v !== 1) return null;
   const id = normalizeStorageId(payload.id) ?? '';
   const accountId = normalizeStorageId(payload.accountId) ?? '';
+  const widgetCode = asTrimmedString(payload.widgetCode) ?? '';
   const widgetType = asTrimmedString(payload.widgetType) ?? '';
   const displayName = asTrimmedString(payload.displayName);
   const createdAt = asTrimmedString(payload.createdAt) ?? '';
   const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
-  if (!id || !accountId || !widgetType || !createdAt || !updatedAt) return null;
+  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || !isWidgetOverlayCode(widgetCode) || !widgetType || !createdAt || !updatedAt) return null;
   const meta = asRecord(payload.meta) ?? (payload.meta === null || payload.meta === undefined ? null : null);
   return {
     v: 1,
     id,
     accountId,
+    widgetCode,
     widgetType,
     displayName,
     meta,
     createdAt,
     updatedAt,
-    ...(normalizeL10nStatus(payload.l10n) ? { l10n: normalizeL10nStatus(payload.l10n) } : {}),
   };
 }
 
@@ -113,20 +92,23 @@ export function normalizePublishDocument(raw: unknown): PublishDocument | null {
   if (!payload || payload.v !== 1) return null;
   const id = normalizeStorageId(payload.id) ?? '';
   const accountId = normalizeStorageId(payload.accountId) ?? '';
+  const widgetCode = asTrimmedString(payload.widgetCode) ?? '';
   const widgetType = asTrimmedString(payload.widgetType) ?? '';
   const status = payload.status === 'published' ? 'published' : payload.status === 'unpublished' ? 'unpublished' : null;
   const configFp = normalizeFingerprint(payload.configFp);
   const localePolicy = normalizeLocalePolicy(payload.localePolicy);
   const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
-  if (!id || !accountId || !widgetType || !status || !updatedAt) return null;
+  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || !isWidgetOverlayCode(widgetCode) || !widgetType || !status || !updatedAt) return null;
   return {
     v: 1,
     id,
     accountId,
+    widgetCode,
     widgetType,
     status,
     configFp,
     ...(localePolicy ? { localePolicy } : {}),
+    ...(normalizePublishedOverlayProjection(payload.overlays) ? { overlays: normalizePublishedOverlayProjection(payload.overlays)! } : {}),
     ...(payload.seoGeo === true ? { seoGeo: true } : {}),
     updatedAt,
   };
@@ -137,10 +119,11 @@ export function normalizePublishedWidgetLookupDocument(raw: unknown): PublishedW
   if (!payload || payload.v !== 1 || payload.status !== 'published') return null;
   const id = normalizeStorageId(payload.id) ?? '';
   const accountId = normalizeStorageId(payload.accountId) ?? '';
+  const widgetCode = asTrimmedString(payload.widgetCode) ?? '';
   const widgetType = asTrimmedString(payload.widgetType) ?? '';
   const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
-  if (!id || !accountId || !widgetType || !updatedAt) return null;
-  return { v: 1, id, accountId, widgetType, status: 'published', updatedAt };
+  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || !isWidgetOverlayCode(widgetCode) || !widgetType || !updatedAt) return null;
+  return { v: 1, id, accountId, widgetCode, widgetType, status: 'published', updatedAt };
 }
 
 export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | null {
@@ -152,12 +135,12 @@ export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | 
     v: 1,
     id: instance.id,
     accountId: instance.accountId,
+    widgetCode: instance.widgetCode,
     widgetType: instance.widgetType,
     displayName: instance.displayName,
     meta: instance.meta ?? null,
     configFp,
     updatedAt: instance.updatedAt,
-    ...(instance.l10n ? { l10n: instance.l10n } : {}),
   };
 }
 
@@ -168,46 +151,18 @@ export function resolveSavedRenderValidationReason(raw: unknown): string {
   return 'coreui.errors.instance.config.invalid';
 }
 
-export function normalizeAllowlistEntries(raw: unknown): AllowlistEntry[] {
-  const payload = asRecord(raw);
-  if (!payload) return [];
-  const paths = Array.isArray(payload.paths) ? payload.paths : [];
-  return paths.reduce<AllowlistEntry[]>((entries, entry) => {
-    const record = asRecord(entry);
-    if (!record) return entries;
-    const path = asTrimmedString(record.path);
-    if (!path) return entries;
-    entries.push({
-      path,
-      type: record.type === 'richtext' ? 'richtext' : 'string',
-    });
-    return entries;
-  }, []);
-}
-
-export function normalizeSavedL10nSnapshot(raw: unknown): Record<string, string> | null {
-  const payload = asRecord(raw);
-  if (!payload) return null;
-  const snapshot: Record<string, string> = {};
-  for (const [path, value] of Object.entries(payload)) {
-    const normalizedPath = asTrimmedString(path);
-    if (!normalizedPath || typeof value !== 'string') return null;
-    snapshot[normalizedPath] = value;
-  }
-  return snapshot;
-}
-
 export function normalizeIndexEntry(raw: unknown): AccountInstanceIndexEntry | null {
   const payload = asRecord(raw);
   if (!payload) return null;
   const accountId = normalizeStorageId(payload.accountId) ?? '';
   const id = normalizeStorageId(payload.id) ?? '';
+  const widgetCode = asTrimmedString(payload.widgetCode) ?? '';
   const widgetType = asTrimmedString(payload.widgetType) ?? '';
   const displayName = asTrimmedString(payload.displayName) ?? id;
   const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
   const publishStatus = payload.publishStatus === 'published' ? 'published' : 'unpublished';
-  if (!accountId || !id || !widgetType || !displayName || !updatedAt) return null;
-  return { accountId, id, widgetType, displayName, publishStatus, updatedAt };
+  if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(id) || !isWidgetOverlayCode(widgetCode) || !widgetType || !displayName || !updatedAt) return null;
+  return { accountId, id, widgetCode, widgetType, displayName, publishStatus, updatedAt };
 }
 
 export function normalizeIndexDocument(raw: unknown, accountId: string): AccountInstanceIndexDocument | null {

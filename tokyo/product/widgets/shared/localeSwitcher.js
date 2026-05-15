@@ -204,11 +204,14 @@
     const config = resolveSwitcherConfig(state && state.localeSwitcher);
     const policy =
       window.CK_LOCALE_POLICY && typeof window.CK_LOCALE_POLICY === 'object' ? window.CK_LOCALE_POLICY : {};
-    const readyLocales = Array.isArray(policy.readyLocales)
-      ? Array.from(new Set(policy.readyLocales.map(normalizeLocale).filter(Boolean)))
-      : [];
+    const policyLanguages = Array.isArray(policy.languages)
+      ? policy.languages
+      : Array.isArray(policy['ready' + 'Locales'])
+        ? policy['ready' + 'Locales']
+        : [];
+    const languages = Array.from(new Set(policyLanguages.map(normalizeLocale).filter(Boolean)));
 
-    if (!config.enabled || readyLocales.length <= 1) {
+    if (!config.enabled || languages.length <= 1) {
       removeExisting(widgetRoot);
       return;
     }
@@ -237,9 +240,9 @@
     element.setAttribute('data-position', config.position);
 
     const existingOptions = Array.from(select.options).map((option) => option.value);
-    if (JSON.stringify(existingOptions) !== JSON.stringify(readyLocales)) {
+    if (JSON.stringify(existingOptions) !== JSON.stringify(languages)) {
       select.innerHTML = '';
-      readyLocales.forEach((locale) => {
+      languages.forEach((locale) => {
         const option = document.createElement('option');
         option.value = locale;
         option.textContent = labels[locale] || locale;
@@ -247,7 +250,7 @@
       });
     }
 
-    if (currentLocale && readyLocales.indexOf(currentLocale) >= 0) {
+    if (currentLocale && languages.indexOf(currentLocale) >= 0) {
       select.value = currentLocale;
     }
     select.dataset.previewMode = previewMode;

@@ -170,12 +170,10 @@ tokyo/product/widgets/{widget}/
   widget.client.js
   (optional) agent.md
   limits.json
-  localization.json
-  layers/*.allowlist.json
   pages/*.json
 ```
 
-Bob consumes `spec.json` + runtime assets and loads `limits.json` for entitlements; the other contract files are consumed by Tokyo-worker, Venice, and Prague on their owner-correct surfaces.
+Bob consumes `spec.json` + runtime assets and loads `limits.json` for entitlements. `spec.json.overlays.text[]` is the widget primitive graph for Builder controls, Copilot, Babel text production, Bob preview, Tokyo validation, and runtime overlay resolution. Widget `localization.json` files and layer sidecars are not active product truth.
 
 Widget spec contract:
 
@@ -472,13 +470,14 @@ Current product truth:
 - Bob edits one widget document in memory.
 - Roma saves that one widget document.
 - Account locale policy/settings remain Roma-owned.
-- Translation and locale follow-up work happen downstream, outside the Builder save flow.
-- When `Translations` is open, Bob reads one Roma/Tokyo-backed translations status payload.
-- After Save succeeds, Bob may refresh that same payload once to show current Tokyo truth.
-- If translations are still preparing while the panel is open, Bob may perform a small bounded recheck of that same status payload. Bob does not own always-on localization convergence loops.
-- The Translations panel shows allowed and ready counts from the status payload, plus per-locale `Base` / `Ready` / `Not ready` / `Failed` truth.
-- Translation preview locale selection unlocks for each locale as soon as Tokyo reports that locale ready for the current saved widget.
-- Commercial upsell copy stays outside the translation-readiness panel.
+- Translation and locale follow-up work happen after the base save, orchestrated by Roma and San Francisco, with Tokyo storing selected overlay values.
+- When `Translations` is open and the widget has no unsaved edits, Bob reads one Roma route: `GET /api/account/instances/:instanceId/translations`.
+- That route returns `baseLanguage`, target `languages`, selected `overlayId`s, and exact `valuesByLanguage`. It does not return legacy localization bundles, availability flags, fingerprints, or public locale URLs.
+- Bob applies one selected overlay value map with the shared `resolveOverlay(baseConfig, overlayValues)` resolver before posting preview state to the widget iframe.
+- If a language has no selected overlay values for the current save, it is unavailable in the dropdown and Bob keeps the preview in the base language.
+- If the user edits the base widget, Bob clears language preview selection until the new save completes; stale older language values are not shown as current.
+- Save remains visible for both published and unpublished instances. Publish state only gates public embed-code copy, not editing or saving.
+- Commercial upsell copy stays outside the language overlay panel.
 
 Reference:
 
@@ -542,7 +541,6 @@ It:
 
 - Builds Dieter into `tokyo/product/dieter`
 - Builds i18n bundles from `tokyo/roma/i18n/source` into `tokyo/roma/i18n/public`
-- Verifies Prague l10n overlays (repo base + `tokyo/prague/l10n/**`); if stale and San Francisco is available, auto-runs translate + verify in background
 - Clears stale Next chunks (`bob/.next`)
 - Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321)
 - Uses **local Supabase by default**; to point the local stack at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`

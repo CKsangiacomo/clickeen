@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 const META_FP_RE = /^[a-f0-9]{64}\.json$/i;
 const LOCALE_JSON_RE = /^[A-Za-z0-9_-]+\.json$/;
+const OVERLAY_ID_JSON_RE = /^[0-9A-Z]{35}\.json$/;
 
 function isAllowedRenderPath(parts: string[]): boolean {
   if (parts[0] !== 'widgets') return false;
@@ -15,6 +16,7 @@ function isAllowedRenderPath(parts: string[]): boolean {
     return parts[2] === 'config.json';
   }
   if (parts.length === 4) {
+    if (parts[2] === 'overlays') return OVERLAY_ID_JSON_RE.test(parts[3] || '');
     return parts[2] === 'live' && parts[3] === 'r.json';
   }
   if (parts.length === 5 && parts[2] === 'meta') {

@@ -2,6 +2,46 @@
   "v": 1,
   "widgetname": "logoshowcase",
   "itemKey": "logoshowcase.item",
+  "overlays": {
+    "v": 1,
+    "text": [
+      {
+        "path": "header.title",
+        "label": "Header title",
+        "type": "richtext"
+      },
+      {
+        "path": "header.subtitleHtml",
+        "label": "Header subtitle",
+        "type": "richtext"
+      },
+      {
+        "path": "cta.label",
+        "label": "CTA label",
+        "type": "string"
+      },
+      {
+        "path": "strips[].logos[].name",
+        "label": "Logo name",
+        "type": "string"
+      },
+      {
+        "path": "strips[].logos[].caption",
+        "label": "Logo caption",
+        "type": "string"
+      },
+      {
+        "path": "strips[].logos[].alt",
+        "label": "Logo alt text",
+        "type": "string"
+      },
+      {
+        "path": "strips[].logos[].title",
+        "label": "Logo title",
+        "type": "string"
+      }
+    ]
+  },
   "defaults": {
     "cta": {
       "href": "https://example.com/contact",

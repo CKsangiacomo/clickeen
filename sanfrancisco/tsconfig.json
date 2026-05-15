@@ -4,6 +4,6 @@
     "lib": ["ES2022", "WebWorker"],
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
 }
-

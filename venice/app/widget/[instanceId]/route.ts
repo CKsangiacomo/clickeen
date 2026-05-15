@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
-import { INSTANCE_ID_RE, isRecord } from '@clickeen/ck-contracts';
+import { isRecord } from '@clickeen/ck-contracts';
+import {
+  isCompactInstanceId,
+} from '@clickeen/ck-contracts/overlay-identity';
+import {
+  resolveLanguageOverlayCode,
+  resolveLocaleForLanguageOverlayCode,
+} from '@clickeen/ck-contracts/overlay-codebooks';
+import { resolveOverlay } from '@clickeen/ck-contracts/overlay-primitives';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
   createVeniceRequestContext,
@@ -16,7 +24,8 @@ const SHELL_CACHE_CONTROL = 'public, max-age=60, s-maxage=86400';
 
 type LocaleRuntimePolicy = {
   baseLocale: string;
-  readyLocales: string[];
+  availableLocales: string[];
+  overlayIdsByLocale: Record<string, string>;
   ipEnabled: boolean;
   alwaysShowLocale: string;
   mapping: Record<string, string>;
@@ -31,11 +40,15 @@ function parseGeoCountry(response: Response): string {
 function resolveLocaleRuntimePolicy(pointer: Record<string, unknown>): LocaleRuntimePolicy {
   const policy = isRecord(pointer.localePolicy) ? pointer.localePolicy : null;
   const baseLocale = normalizeLocaleToken(policy?.baseLocale) ?? 'en';
-  const readyLocales = Array.isArray(policy?.readyLocales)
-    ? Array.from(
-        new Set(policy.readyLocales.map((entry) => normalizeLocaleToken(entry)).filter((entry): entry is string => Boolean(entry))),
-      )
-    : [baseLocale];
+  const overlayIdsByLocale: Record<string, string> = {};
+  const overlays = isRecord(pointer.overlays) ? pointer.overlays : null;
+  const languageOverlays = isRecord(overlays?.languages) ? overlays.languages : {};
+  for (const [languageCode, overlayId] of Object.entries(languageOverlays)) {
+    if (typeof overlayId !== 'string') continue;
+    const locale = resolveLocaleForLanguageOverlayCode(languageCode);
+    if (locale) overlayIdsByLocale[locale] = overlayId;
+  }
+  const availableLocales = Array.from(new Set([baseLocale, ...Object.keys(overlayIdsByLocale)]));
   const ip = isRecord(policy?.ip) ? policy.ip : null;
   const switcher = isRecord(policy?.switcher) ? policy.switcher : null;
   const rawMapping = isRecord(ip?.countryToLocale) ? ip.countryToLocale : {};
@@ -50,7 +63,8 @@ function resolveLocaleRuntimePolicy(pointer: Record<string, unknown>): LocaleRun
 
   return {
     baseLocale,
-    readyLocales,
+    availableLocales,
+    overlayIdsByLocale,
     ipEnabled: ip?.enabled === true,
     alwaysShowLocale: normalizeLocaleToken(switcher?.alwaysShowLocale) ?? '',
     mapping,
@@ -59,70 +73,13 @@ function resolveLocaleRuntimePolicy(pointer: Record<string, unknown>): LocaleRun
 }
 
 function computeEffectiveLocale(policy: LocaleRuntimePolicy, geoCountry: string, fixedLocaleOverride: string | null): string {
-  if (fixedLocaleOverride && policy.readyLocales.includes(fixedLocaleOverride)) return fixedLocaleOverride;
+  if (fixedLocaleOverride && policy.availableLocales.includes(fixedLocaleOverride)) return fixedLocaleOverride;
   if (policy.ipEnabled) {
     const mapped = policy.mapping[geoCountry];
-    if (mapped && policy.readyLocales.includes(mapped)) return mapped;
+    if (mapped && policy.availableLocales.includes(mapped)) return mapped;
   }
-  if (policy.alwaysShowLocale && policy.readyLocales.includes(policy.alwaysShowLocale)) return policy.alwaysShowLocale;
+  if (policy.alwaysShowLocale && policy.availableLocales.includes(policy.alwaysShowLocale)) return policy.alwaysShowLocale;
   return policy.baseLocale;
-}
-
-function parsePathParts(path: string): string[] {
-  const out: string[] = [];
-  const raw = path.trim();
-  if (!raw) return out;
-  let buf = '';
-  for (let i = 0; i < raw.length; i += 1) {
-    const ch = raw[i];
-    if (ch === '.') {
-      if (buf) out.push(buf);
-      buf = '';
-      continue;
-    }
-    if (ch === '[') {
-      if (buf) out.push(buf);
-      buf = '';
-      const close = raw.indexOf(']', i + 1);
-      if (close < 0) break;
-      const inside = raw.slice(i + 1, close).trim();
-      if (inside) out.push(inside);
-      i = close;
-      continue;
-    }
-    buf += ch;
-  }
-  if (buf) out.push(buf);
-  return out;
-}
-
-function applyTextOverrides(state: unknown, textPack: Record<string, unknown>): void {
-  if (!isRecord(state)) return;
-  nextEntry:
-  for (const [path, value] of Object.entries(textPack)) {
-    if (typeof value !== 'string') continue;
-    const parts = parsePathParts(path);
-    if (!parts.length) continue;
-    let cur: unknown = state;
-    for (let i = 0; i < parts.length - 1; i += 1) {
-      const part = parts[i];
-      if (/^[0-9]+$/.test(part)) {
-        if (!Array.isArray(cur)) continue nextEntry;
-        cur = cur[Number(part)];
-        continue;
-      }
-      if (!isRecord(cur)) continue nextEntry;
-      cur = cur[part];
-    }
-    const last = parts[parts.length - 1];
-    if (/^[0-9]+$/.test(last)) {
-      if (!Array.isArray(cur)) continue;
-      const idx = Number(last);
-      if (typeof cur[idx] === 'string') cur[idx] = value;
-      continue;
-    }
-    if (isRecord(cur) && typeof cur[last] === 'string') cur[last] = value;
-  }
 }
 
 async function readJson(response: Response): Promise<unknown> {
@@ -166,7 +123,7 @@ function buildRuntimeScript(args: {
     `window.CK_LOCALE_LABELS=${inlineJson(args.localeLabels)};`,
     `window.CK_LOCALE_POLICY=${inlineJson({
       baseLocale: policy.baseLocale,
-      readyLocales: policy.readyLocales,
+      languages: policy.availableLocales,
       ip: { enabled: policy.ipEnabled, countryToLocale: policy.mapping },
       switcher: {
         enabled: policy.switcherEnabled,
@@ -237,7 +194,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ instanceId: str
       instanceId,
     });
 
-  if (!INSTANCE_ID_RE.test(instanceId)) {
+  if (!isCompactInstanceId(instanceId)) {
     return finish(
       errorResponse('Clickeen embed error', 'Invalid instanceId in URL.', `instanceId=${instanceId}`, 400),
       'coreui.errors.instanceId.invalid',
@@ -293,28 +250,47 @@ export async function GET(req: Request, ctx: { params: Promise<{ instanceId: str
     );
   }
 
-  const state = cloneJsonRecord(baseState);
-  const overlayRes = await tokyoFetch(
-    `/l10n/widgets/${encodeURIComponent(instanceId)}/${encodeURIComponent(locale)}/overlay.json`,
-    { method: 'GET', headers: upstreamHeaders },
-  );
-  const overlay = await readJson(overlayRes);
-  const textPack = isRecord(overlay) && isRecord(overlay.textPack) ? overlay.textPack : locale === policy.baseLocale ? {} : null;
-  if (!overlayRes.ok && locale !== policy.baseLocale) {
-    return finish(
-      errorResponse('Widget unavailable', 'Text overlay missing.', `instanceId=${instanceId} locale=${locale}`, overlayRes.status),
-      `HTTP_${overlayRes.status}`,
-      'overlay_missing',
+  let state = cloneJsonRecord(baseState);
+  if (locale !== policy.baseLocale) {
+    const languageCode = resolveLanguageOverlayCode(locale);
+    const overlayId = languageCode ? policy.overlayIdsByLocale[locale] : null;
+    if (!languageCode || !overlayId) {
+      return finish(
+        errorResponse('Widget unavailable', 'Text overlay missing.', `instanceId=${instanceId} locale=${locale}`, 404),
+        'coreui.errors.overlay.missing',
+        'overlay_missing',
+      );
+    }
+
+    const overlayRes = await tokyoFetch(
+      `/renders/widgets/${encodeURIComponent(instanceId)}/overlays/${encodeURIComponent(overlayId)}.json`,
+      { method: 'GET', headers: upstreamHeaders },
     );
+    const overlay = await readJson(overlayRes);
+    const overlayValues = isRecord(overlay) && isRecord(overlay.values) ? (overlay.values as Record<string, string>) : null;
+    if (!overlayRes.ok || !overlayValues) {
+      return finish(
+        errorResponse('Widget unavailable', 'Text overlay invalid.', `instanceId=${instanceId} locale=${locale}`, overlayRes.status || 502),
+        overlayRes.ok ? 'coreui.errors.widget.compiled.invalid' : `HTTP_${overlayRes.status}`,
+        overlayRes.ok ? 'overlay_invalid' : 'overlay_missing',
+      );
+    }
+
+    try {
+      state = resolveOverlay(state, overlayValues);
+    } catch (error) {
+      return finish(
+        errorResponse(
+          'Widget unavailable',
+          'Text overlay invalid.',
+          error instanceof Error ? error.message : String(error),
+          502,
+        ),
+        'coreui.errors.widget.compiled.invalid',
+        'overlay_resolve_invalid',
+      );
+    }
   }
-  if (!textPack) {
-    return finish(
-      errorResponse('Widget unavailable', 'Text overlay invalid.', `instanceId=${instanceId} locale=${locale}`, 502),
-      'coreui.errors.widget.compiled.invalid',
-      'overlay_invalid',
-    );
-  }
-  applyTextOverrides(state, textPack);
 
   const widgetRes = await tokyoFetch(`/widgets/${encodeURIComponent(widgetType)}/widget.html`, {
     method: 'GET',

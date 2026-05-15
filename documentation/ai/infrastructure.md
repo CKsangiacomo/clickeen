@@ -52,7 +52,7 @@ Provider/model policy:
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, token ceiling, turn ceiling, and timeout ceiling.
 - **Prague strings L10n**: `website.prague.copy.translator`, OpenAI via the Prague tooling route.
-- **Account-widget instance l10n**: `widget.instance.translator`. Tokyo-worker calls San Francisco through the private `generateAccountWidgetL10nOps` WorkerEntrypoint method with Roma-derived `policyProfile`; San Francisco resolves the runtime policy from `@clickeen/ck-policy` and then intersects it with env-configured providers.
+- **Account-widget Babel text production**: `widget.instance.translator`. Roma calls `POST /v1/babel/text-values` after base save with a Roma-minted AI grant. San Francisco verifies the grant, enforces the signed runtime policy, receives concrete primitive text values, and returns exact concrete values.
 
 ## 3) HTTP endpoints
 
@@ -85,19 +85,19 @@ Auth:
 Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
 
-### Private WorkerEntrypoint `generateAccountWidgetL10nOps`
-Purpose: generate account-widget locale ops for Tokyo-worker explicit instance-sync flows.
+### `POST /v1/babel/text-values`
+Purpose: produce account-widget locale overlay text values for Roma save follow-up.
 
 Boundary:
-- Tokyo-worker calls this through the private `SANFRANCISCO_L10N` Cloudflare service binding.
-- There is no public account-widget l10n generation HTTP route.
-- This path does not use `SANFRANCISCO_BASE_URL` or a bearer-token fallback.
+- Roma calls this through the explicit `SANFRANCISCO_BASE_URL`.
+- The request requires `Authorization: Bearer <AI grant>` with `agent:widget.instance.translator`.
+- Tokyo-worker is not a caller and does not queue San Francisco work.
 
 Contract:
-- Tokyo-worker sends only approved current text items (`path`, `type`, `value`), existing locale ops, changed paths, removed paths, target locales, widget type, base locale, and the account `policyProfile`.
-- San Francisco does not receive widget config, localization allowlists, account ids, storage paths, live pointer state, or publication state.
-- San Francisco derives the `widget.instance.translator` runtime policy from `policyProfile` and may reduce that provider set only by env reality: providers not configured in the current environment are removed from the allowed set.
-- Incremental generation translates only changed current item paths when possible and preserves existing ops for unchanged current paths.
+- Roma sends only `v`, `widgetType`, `sourceLanguage`, `targetLanguage`, and `items[]` with concrete `path`, `type`, and `value`.
+- San Francisco does not receive widget config, wildcard path declarations, account ids, storage paths, live pointer state, publication state, previous values, or patch operations.
+- San Francisco derives execution limits from the signed grant and may reduce provider availability only by env reality: providers not configured in the current environment are removed from the allowed set.
+- San Francisco returns `{ v: 1, values }` with the exact same path set it received. Missing or extra paths fail visibly.
 
 ### `POST /v1/l10n/translate` (local + cloud-dev)
 Purpose: translate Prague system-owned base content (prague-l10n pipeline).

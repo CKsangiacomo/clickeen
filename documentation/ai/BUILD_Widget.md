@@ -38,8 +38,6 @@ Only read these:
 - `tokyo/product/widgets/shared/header.css`
 - `tokyo/product/widgets/shared/surface.js`
 - `tokyo/product/widgets/{widgetType}/limits.json` (read-only unless PRD requires edits)
-- `tokyo/product/widgets/{widgetType}/localization.json` (read-only unless PRD requires edits)
-- `tokyo/product/widgets/{widgetType}/layers/*.allowlist.json` (read-only unless PRD requires edits)
 
 Do **not** repo-grep or read other folders unless explicitly instructed.
 
@@ -56,8 +54,6 @@ Default scope:
 
 Only if the PRD explicitly says so:
 - `tokyo/product/widgets/{widgetType}/limits.json`
-- `tokyo/product/widgets/{widgetType}/localization.json`
-- `tokyo/product/widgets/{widgetType}/layers/*.allowlist.json`
 
 Do **not** create new files outside `tokyo/product/widgets/{widgetType}/`.
 
@@ -96,6 +92,9 @@ Rules:
 - **Stage/Pod defaults are mandatory** (see `documentation/widgets/WidgetBuildContract.md`).
 - Keep **one breakpoint** (900px). Do not add other breakpoints.
 - Paths must be consistent across `spec.json`, `agent.md`, and runtime code.
+- Declare the widget primitive variable graph in `spec.json.overlays.v = 1`.
+- Put customer-visible text primitives in `spec.json.overlays.text[]`; repeatable collections use `[]` in the declaration and are extracted to concrete paths before producer calls.
+- Do not create a translation sidecar or a second path schema.
 - Use 2‑space indentation (Prettier).
 
 Checklist:

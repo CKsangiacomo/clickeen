@@ -44,6 +44,7 @@ export type BerlinConnectorSummaryPayload = {
 
 export type BerlinAccountContext = {
   accountId: string;
+  accountPublicId: string;
   role: MemberRole;
   name: string;
   slug: string;
@@ -73,6 +74,7 @@ export type BerlinBootstrapPayload = {
   authz: null | {
     accountCapsule: string;
     accountId: string;
+    accountPublicId: string;
     role: MemberRole;
     profile: AccountTier;
     authzVersion: string;

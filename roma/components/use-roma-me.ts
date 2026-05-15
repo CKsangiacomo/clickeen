@@ -14,6 +14,7 @@ export type RomaLifecycleNotice = {
 
 export type RomaAccountSummary = {
   accountId: string;
+  accountPublicId: string;
   role: string;
   name: string;
   slug: string;
@@ -64,6 +65,7 @@ export type RomaMeResponse = {
   accounts: RomaAccountSummary[];
   authz?: {
     accountId?: string | null;
+    accountPublicId?: string | null;
     role?: string | null;
     profile?: string | null;
     authzVersion?: string | null;
@@ -78,6 +80,7 @@ export type RomaMeResponse = {
 
 export type ResolvedRomaContext = {
   accountId: string | null;
+  accountPublicId: string | null;
   accountName: string | null;
   accountSlug: string | null;
 };
@@ -93,6 +96,10 @@ export type RomaAuthzPolicy = {
 function normalizeAccountId(value: unknown): string | null {
   const normalized = String(value || '').trim();
   return normalized || null;
+}
+
+function normalizeAccountPublicId(value: unknown): string | null {
+  return typeof value === 'string' && /^[0-9A-Z]{8}$/.test(value) ? value : null;
 }
 
 function normalizeOptionalString(value: unknown): string | null {
@@ -171,12 +178,13 @@ function assertRomaMeActiveAccountPayload(data: RomaMeResponse | null): void {
   }
 
   const accountId = normalizeAccountId(activeAccount.accountId);
+  const accountPublicId = normalizeAccountPublicId(activeAccount.accountPublicId);
   const role = normalizeRole(activeAccount.role);
   const profile = normalizeProfile(activeAccount.tier);
   const status = normalizeOptionalString(activeAccount.status);
   const name = normalizeOptionalString(activeAccount.name);
   const slug = normalizeOptionalString(activeAccount.slug);
-  if (!accountId || !role || !profile || !status || !name || !slug || typeof activeAccount.isPlatform !== 'boolean') {
+  if (!accountId || !accountPublicId || !role || !profile || !status || !name || !slug || typeof activeAccount.isPlatform !== 'boolean') {
     throw new Error('coreui.errors.auth.contextUnavailable');
   }
 }
@@ -186,13 +194,14 @@ function assertRomaMeAuthzPayload(data: RomaMeResponse | null): void {
   if (!authz) return;
 
   const accountId = normalizeAccountId(authz.accountId);
+  const accountPublicId = normalizeAccountPublicId(authz.accountPublicId);
   const role = normalizeRole(authz.role);
   const profile = normalizeProfile(authz.profile);
   const authzVersion = typeof authz.authzVersion === 'string' ? authz.authzVersion.trim() : '';
   const issuedAt = typeof authz.issuedAt === 'string' ? authz.issuedAt.trim() : '';
   const expiresAt = typeof authz.expiresAt === 'string' ? authz.expiresAt.trim() : '';
 
-  if (!accountId || !role || !profile || !authzVersion || !issuedAt || !expiresAt) {
+  if (!accountId || !accountPublicId || !role || !profile || !authzVersion || !issuedAt || !expiresAt) {
     throw new Error('coreui.errors.auth.contextUnavailable');
   }
   if (!Number.isFinite(Date.parse(issuedAt)) || !Number.isFinite(Date.parse(expiresAt))) {
@@ -207,7 +216,8 @@ function assertRomaMeAuthzPayload(data: RomaMeResponse | null): void {
 
   assertRomaMeActiveAccountPayload(data);
   const activeAccountId = normalizeAccountId(data?.activeAccount?.accountId);
-  if (!activeAccountId || activeAccountId !== accountId) {
+  const activeAccountPublicId = normalizeAccountPublicId(data?.activeAccount?.accountPublicId);
+  if (!activeAccountId || activeAccountId !== accountId || !activeAccountPublicId || activeAccountPublicId !== accountPublicId) {
     throw new Error('coreui.errors.auth.contextUnavailable');
   }
 }
@@ -216,16 +226,18 @@ export function resolveActiveRomaAccount(data: RomaMeResponse | null): RomaActiv
   const activeAccount = data?.activeAccount;
   if (!activeAccount) return null;
   const accountId = normalizeAccountId(activeAccount.accountId);
+  const accountPublicId = normalizeAccountPublicId(activeAccount.accountPublicId);
   const role = normalizeOptionalString(activeAccount.role);
   const name = normalizeOptionalString(activeAccount.name);
   const slug = normalizeOptionalString(activeAccount.slug);
   const tier = normalizeOptionalString(activeAccount.tier);
   const status = normalizeOptionalString(activeAccount.status);
-  if (!accountId || !role || !name || !slug || !tier || !status || typeof activeAccount.isPlatform !== 'boolean') {
+  if (!accountId || !accountPublicId || !role || !name || !slug || !tier || !status || typeof activeAccount.isPlatform !== 'boolean') {
     return null;
   }
   return {
     accountId,
+    accountPublicId,
     role,
     name,
     slug,
@@ -244,6 +256,7 @@ export function resolveActiveRomaContext(data: RomaMeResponse | null): ResolvedR
   const activeAccount = resolveActiveRomaAccount(data);
   return {
     accountId: activeAccount?.accountId ?? null,
+    accountPublicId: activeAccount?.accountPublicId ?? null,
     accountName: activeAccount?.name ?? null,
     accountSlug: activeAccount?.slug ?? null,
   };

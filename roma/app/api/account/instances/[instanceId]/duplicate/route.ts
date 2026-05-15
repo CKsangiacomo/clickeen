@@ -14,7 +14,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
 
-  const accountId = current.value.authzPayload.accountId;
+  const accountId = current.value.authzPayload.accountPublicId;
   const sourceInstanceId = await requireInstanceIdParam(context, { mode: 'normalized' });
   if (typeof sourceInstanceId !== 'string') {
     return withSession(
@@ -48,7 +48,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
         instanceId: duplicate.value.instanceId,
         widgetType: duplicate.value.widgetType,
         status: duplicate.value.status,
-        translationFollowup: duplicate.value.translationFollowup,
       },
       { status: 201 },
     ),

@@ -83,6 +83,13 @@ Account-scoped truth includes:
 - entitlements snapshot inputs
 - account traits and connector context that belong to the account, not the person
 
+Account identity has two names with different jobs:
+
+- `accountId`: private relational UUID used for Michael joins and existing account-management APIs.
+- `accountPublicId`: 8-character uppercase base36 product/storage identity stored as `accounts.public_id`.
+
+`accountPublicId` is minted once by Berlin/Michael at account creation, backfilled once for pre-GA accounts, and never derived from `accountId`. Overlay-era storage and overlay IDs use `accountPublicId`; Roma and Bob must carry it from bootstrap instead of computing it.
+
 ### Account Membership
 
 `Account Membership` is the person-in-account relationship.

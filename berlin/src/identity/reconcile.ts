@@ -1,3 +1,4 @@
+import { createCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import { acceptInvitationForPrincipal } from '../account-management/invitations';
 import { internalError } from '../http';
 import { normalizeProfileLocation } from './profile-normalization';
@@ -226,12 +227,13 @@ async function createAccountRecord(args: {
   let lastPayload: Record<string, unknown> | null = null;
   let lastStatus = 500;
 
-  for (let attempt = 0; attempt < 4; attempt += 1) {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
     const response = await supabaseAdminFetch(args.env, '/rest/v1/accounts', {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
         id: accountId,
+        public_id: createCompactAccountPublicId(),
         status: 'active',
         is_platform: false,
         tier: 'free',

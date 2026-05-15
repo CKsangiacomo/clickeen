@@ -44,7 +44,6 @@ const widgetCards = await Promise.all(
       widget,
       page: 'overview',
       locale: localeKey,
-      country: marketConfig.country,
     });
     const blocks = Array.isArray((overview as any)?.blocks) ? (overview as any).blocks : null;
     const hero = blocks ? blocks.find((b: any) => b && b.id === 'hero' && b.type === 'hero') : null;

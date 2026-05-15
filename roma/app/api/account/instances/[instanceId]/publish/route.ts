@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publishAccountInstanceInTokyo } from '@roma/lib/account-instance-direct';
-import { loadAccountL10nIntent } from '@roma/lib/account-l10n-intent';
 import { loadAccountPublishContainment } from '@roma/lib/berlin-product';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
@@ -14,6 +13,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountId;
+  const productAccountId = current.value.authzPayload.accountPublicId;
   const instanceId = await requireInstanceIdParam(context);
   if (typeof instanceId !== 'string') {
     return withSession(
@@ -53,24 +53,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const l10nIntent = await loadAccountL10nIntent({
-    accessToken: current.value.accessToken,
-    accountId,
-    requestId: current.value.requestId,
-  });
-  if (!l10nIntent.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: l10nIntent.error }, { status: l10nIntent.status }),
-      current.value.setCookies,
-    );
-  }
-
   const publish = await publishAccountInstanceInTokyo({
-    accountId,
+    accountId: productAccountId,
     instanceId,
     accountCapsule: current.value.authzToken,
-    l10nIntent: l10nIntent.value,
     requestId: current.value.requestId,
   });
   if (!publish.ok) {

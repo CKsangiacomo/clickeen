@@ -2,7 +2,7 @@ export * from './types';
 export * from './keys';
 export * from './utils';
 export * from './normalize';
-export * from './localization';
+export * from './overlays';
 export * from './saved-config';
 export * from './queue';
 export * from './storage';

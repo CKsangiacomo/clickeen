@@ -2,6 +2,56 @@
   "v": 1,
   "widgetname": "countdown",
   "itemKey": "countdown.item",
+  "overlays": {
+    "v": 1,
+    "text": [
+      {
+        "path": "header.title",
+        "label": "Header title",
+        "type": "richtext"
+      },
+      {
+        "path": "header.subtitleHtml",
+        "label": "Header subtitle",
+        "type": "richtext"
+      },
+      {
+        "path": "timer.labels.days",
+        "label": "Days label",
+        "type": "string"
+      },
+      {
+        "path": "timer.labels.hours",
+        "label": "Hours label",
+        "type": "string"
+      },
+      {
+        "path": "timer.labels.minutes",
+        "label": "Minutes label",
+        "type": "string"
+      },
+      {
+        "path": "timer.labels.seconds",
+        "label": "Seconds label",
+        "type": "string"
+      },
+      {
+        "path": "cta.label",
+        "label": "CTA label",
+        "type": "string"
+      },
+      {
+        "path": "actions.during.text",
+        "label": "Active CTA text",
+        "type": "string"
+      },
+      {
+        "path": "actions.after.text",
+        "label": "Finished action text",
+        "type": "string"
+      }
+    ]
+  },
   "defaults": {
     "pod": {
       "radius": "4xl",

@@ -1,5 +1,4 @@
 import { normalizeLocale, normalizeSha256Hex, prettyStableJson, sha256Hex } from '../../asset-utils';
-import type { SavedRenderL10nFailure, SavedRenderL10nStatus } from './types';
 
 const UTF8_ENCODER = new TextEncoder();
 
@@ -34,24 +33,4 @@ export function normalizeLocaleList(value: unknown): string[] {
         .filter((entry): entry is string => Boolean(entry)),
     ),
   );
-}
-
-export function normalizeSavedL10nStatus(value: unknown): SavedRenderL10nStatus | null {
-  return value === 'queued' || value === 'working' || value === 'ready' || value === 'failed'
-    ? value
-    : null;
-}
-
-export function normalizeSavedL10nFailures(value: unknown): SavedRenderL10nFailure[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((entry) => {
-    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return [];
-    const payload = entry as Record<string, unknown>;
-    const locale = normalizeLocale(payload.locale);
-    const reasonKey =
-      typeof payload.reasonKey === 'string' ? payload.reasonKey.trim() : '';
-    if (!locale || !reasonKey) return [];
-    const detail = typeof payload.detail === 'string' ? payload.detail.trim() : '';
-    return [{ locale, reasonKey, ...(detail ? { detail } : {}) }];
-  });
 }

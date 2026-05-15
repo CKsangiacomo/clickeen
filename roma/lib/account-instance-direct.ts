@@ -1,4 +1,5 @@
 import { asTrimmedString, isRecord, serializeCkLogEvent } from '@clickeen/ck-contracts';
+import type { WidgetOverlayContract } from '@clickeen/ck-contracts/overlay-primitives';
 import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
@@ -50,18 +51,14 @@ export type TokyoAccountInstanceIndex = {
 
 export type TokyoWidgetCatalogEntry = {
   widgetType: string;
+  widgetCode: string;
   label: string;
   description: string;
   category: string;
   capabilities: {
     seoGeo: boolean;
   };
-};
-
-type TokyoL10nIntent = {
-  baseLocale: string;
-  desiredLocales: string[];
-  countryToLocale: Record<string, string>;
+  overlays: WidgetOverlayContract;
 };
 
 type TokyoJsonResult =
@@ -207,21 +204,6 @@ function invalidTokyoPayload(detail: string): RouteFailure {
   };
 }
 
-function normalizeTranslationFollowup(value: unknown):
-  | { ok: true }
-  | { ok: false; reasonKey: string; detail: string; status: number } {
-  if (!isRecord(value) || value.ok !== false) return { ok: true };
-  return {
-    ok: false,
-    reasonKey: asTrimmedString(value.reasonKey) ?? 'coreui.errors.translations.acceptanceFailed',
-    detail: asTrimmedString(value.detail) ?? 'translation_followup_failed',
-    status:
-      typeof value.status === 'number' && Number.isFinite(value.status)
-        ? Math.max(400, Math.floor(value.status))
-        : 502,
-  };
-}
-
 function resolveSavedInstanceDisplayName(args: {
   displayName: unknown;
   meta: unknown;
@@ -261,19 +243,25 @@ function normalizeTokyoIndexEntries(raw: unknown): TokyoAccountInstanceIndexEntr
 function normalizeTokyoWidgetCatalogEntry(raw: unknown): TokyoWidgetCatalogEntry | null {
   if (!isRecord(raw)) return null;
   const widgetType = asTrimmedString(raw.widgetType);
+  const widgetCode = asTrimmedString(raw.widgetCode);
   const label = asTrimmedString(raw.label);
   const description = asTrimmedString(raw.description);
   const category = asTrimmedString(raw.category);
   const capabilitiesRaw = isRecord(raw.capabilities) ? raw.capabilities : {};
-  if (!widgetType || !label || !description || !category) return null;
+  const overlays = isRecord(raw.overlays) && raw.overlays.v === 1 && Array.isArray(raw.overlays.text)
+    ? (raw.overlays as WidgetOverlayContract)
+    : null;
+  if (!widgetType || !widgetCode || !label || !description || !category || !overlays) return null;
   return {
     widgetType,
+    widgetCode,
     label,
     description,
     category,
     capabilities: {
       seoGeo: capabilitiesRaw.seoGeo === true,
     },
+    overlays,
   };
 }
 
@@ -345,15 +333,9 @@ export async function writeSavedConfigToTokyo(args: {
   config: Record<string, unknown>;
   displayName?: string | null;
   meta?: Record<string, unknown> | null;
-  l10n?: {
-    summary?: {
-      baseLocale: string;
-      desiredLocales: string[];
-    } | null;
-  } | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ previousBaseFingerprint: string | null; baseFingerprint: string | null }> {
+}): Promise<void> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/renders/widgets/${encodeURIComponent(args.instanceId)}/saved.json`,
     method: 'PUT',
@@ -362,19 +344,12 @@ export async function writeSavedConfigToTokyo(args: {
       config: args.config,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.meta !== undefined ? { meta: args.meta } : {}),
-      ...(args.l10n !== undefined ? { l10n: args.l10n } : {}),
     },
     decode: (payload) => payload,
     errorDetail: 'tokyo_saved_config_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) throw new Error(result.error.detail ?? result.error.reasonKey);
-  const payload = isRecord(result.value) ? result.value : {};
-  const l10n = isRecord(payload.l10n) ? payload.l10n : null;
-  return {
-    previousBaseFingerprint: asTrimmedString(payload.previousBaseFingerprint),
-    baseFingerprint: asTrimmedString(l10n?.baseFingerprint),
-  };
 }
 
 export async function createAccountInstanceInTokyo(args: {
@@ -382,12 +357,6 @@ export async function createAccountInstanceInTokyo(args: {
   accountCapsule?: string | null;
   widgetType: string;
   displayName?: string | null;
-  l10n?: {
-    summary?: {
-      baseLocale: string;
-      desiredLocales: string[];
-    } | null;
-  } | null;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<
@@ -417,7 +386,6 @@ export async function createAccountInstanceInTokyo(args: {
     body: {
       widgetType: requestedWidgetType,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
-      ...(args.l10n !== undefined ? { l10n: args.l10n } : {}),
     },
     fallbackDetail: 'tokyo_instance_create_http_error',
     fallbackReasonKey: 'coreui.errors.db.writeFailed',
@@ -444,9 +412,6 @@ export async function saveAccountInstanceInTokyo(args: {
       ok: true;
       value: {
         live: boolean;
-        translationFollowup:
-          | { ok: true }
-          | { ok: false; reasonKey: string; detail: string; status: number };
       };
     }
   | RouteFailure
@@ -470,9 +435,66 @@ export async function saveAccountInstanceInTokyo(args: {
     ok: true,
     value: {
       live: payload.live === true,
-      translationFollowup: normalizeTranslationFollowup(payload.translationFollowup),
     },
   };
+}
+
+export async function writeLanguageOverlayToTokyo(args: {
+  accountId: string;
+  instanceId: string;
+  widgetType: string;
+  languageCode: string;
+  values: Record<string, string>;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+  requestId?: string | null;
+}): Promise<
+  | { ok: true; value: { overlayId: string } }
+  | RouteFailure
+> {
+  const result = await callTokyo(tokyoCallContext(args), {
+    path: '/__internal/overlays/languages/write.json',
+    method: 'POST',
+    body: {
+      instanceId: args.instanceId,
+      widgetType: args.widgetType,
+      languageCode: args.languageCode,
+      values: args.values,
+    },
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_overlay_language_write_http_error',
+    errorKey: 'tokyo.errors.l10n.invalid',
+  });
+  if (!result.ok) return result;
+  const payload = isRecord(result.value) ? result.value : null;
+  const overlayId = asTrimmedString(payload?.overlayId);
+  if (!overlayId) return invalidTokyoPayload('invalid Tokyo overlay write payload');
+  return { ok: true, value: { overlayId } };
+}
+
+export async function clearLanguageOverlaySelectionInTokyo(args: {
+  accountId: string;
+  instanceId: string;
+  widgetType: string;
+  languageCode: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true } | RouteFailure> {
+  const result = await callTokyo(tokyoCallContext(args), {
+    path: '/__internal/overlays/languages/clear.json',
+    method: 'POST',
+    body: {
+      instanceId: args.instanceId,
+      widgetType: args.widgetType,
+      languageCode: args.languageCode,
+    },
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_overlay_language_clear_http_error',
+    errorKey: 'tokyo.errors.l10n.invalid',
+  });
+  if (!result.ok) return result;
+  return { ok: true };
 }
 
 export async function duplicateAccountInstanceInTokyo(args: {
@@ -490,9 +512,6 @@ export async function duplicateAccountInstanceInTokyo(args: {
         instanceId: string;
         widgetType: string;
         status: AccountInstanceLiveStatus;
-        translationFollowup:
-          | { ok: true }
-          | { ok: false; reasonKey: string; detail: string; status: number };
       };
     }
   | RouteFailure
@@ -522,7 +541,6 @@ export async function duplicateAccountInstanceInTokyo(args: {
       instanceId,
       widgetType,
       status: payload?.status === 'published' ? 'published' : 'unpublished',
-      translationFollowup: normalizeTranslationFollowup(payload?.translationFollowup),
     },
   };
 }
@@ -571,7 +589,6 @@ export async function publishAccountInstanceInTokyo(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;
-  l10nIntent: TokyoL10nIntent;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<
@@ -582,7 +599,6 @@ export async function publishAccountInstanceInTokyo(args: {
     ...args,
     action: 'publish',
     expectedStatus: 'published',
-    body: { l10nIntent: args.l10nIntent },
   });
   if (!result.ok) return result;
   return {
@@ -803,24 +819,16 @@ export async function saveAccountInstanceDirect(args: {
   config: Record<string, unknown>;
   displayName?: string | null;
   meta?: Record<string, unknown> | null;
-  l10n?: {
-    summary?: {
-      baseLocale: string;
-      desiredLocales: string[];
-    } | null;
-  } | null;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<
-  | { ok: true; previousBaseFingerprint: string | null; baseFingerprint: string | null }
+  | { ok: true }
   | RouteFailure
 > {
   try {
-    return {
-      ok: true,
-      ...(await writeSavedConfigToTokyo(args)),
-    };
+    await writeSavedConfigToTokyo(args);
+    return { ok: true };
   } catch (error) {
     return {
       ok: false,

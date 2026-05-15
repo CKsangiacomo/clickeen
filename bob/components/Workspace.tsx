@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   collectConfigMediaAssetIds,
   materializeConfigMedia,
+  resolveOverlay,
   type ResolvedAccountAsset,
 } from '@clickeen/ck-contracts';
 import { getIcon } from '../lib/icons';
@@ -15,15 +16,15 @@ export function Workspace({
   previewMode,
   overlayPreviewLocale,
   onOverlayPreviewLocaleChange,
-  readyPreviewLocales,
-  translationTextPacks,
+  previewablePreviewLocales,
+  overlayValuesByLanguage,
 }: {
   baseLocale: string;
   previewMode: 'editing' | 'translations';
   overlayPreviewLocale: string;
   onOverlayPreviewLocaleChange: (locale: string) => void;
-  readyPreviewLocales: string[];
-  translationTextPacks: Record<string, Record<string, string>>;
+  previewablePreviewLocales: string[];
+  overlayValuesByLanguage: Record<string, Record<string, string>>;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
@@ -55,39 +56,42 @@ export function Workspace({
       ? (materialized as Record<string, unknown>)
       : instanceData;
   }, [instanceData, mediaAssetIds, resolvedAssets]);
-  const effectiveReadyPreviewLocales = useMemo(() => {
-    const readyLocales = Array.from(
+  const effectivePreviewableLocales = useMemo(() => {
+    const previewableLocales = Array.from(
       new Set(
-        readyPreviewLocales
+        previewablePreviewLocales
           .map((entry) => String(entry || '').trim())
           .filter(Boolean),
       ),
     );
-    if (baseLocale && !readyLocales.includes(baseLocale)) {
-      return [baseLocale, ...readyLocales];
+    if (baseLocale && !previewableLocales.includes(baseLocale)) {
+      return [baseLocale, ...previewableLocales];
     }
-    return readyLocales;
-  }, [baseLocale, readyPreviewLocales]);
-  const fallbackPreviewLocale = baseLocale || effectiveReadyPreviewLocales[0] || '';
+    return previewableLocales;
+  }, [baseLocale, previewablePreviewLocales]);
+  const fallbackPreviewLocale = baseLocale || effectivePreviewableLocales[0] || '';
   const effectivePreviewLocale =
     previewMode === 'translations'
-      ? overlayPreviewLocale && effectiveReadyPreviewLocales.includes(overlayPreviewLocale)
+      ? overlayPreviewLocale && effectivePreviewableLocales.includes(overlayPreviewLocale)
         ? overlayPreviewLocale
         : fallbackPreviewLocale
       : fallbackPreviewLocale;
-  const effectiveTranslationTextPack =
+  const selectedOverlayValues =
     previewMode === 'translations' && effectivePreviewLocale !== baseLocale
-      ? translationTextPacks[effectivePreviewLocale] ?? null
+      ? overlayValuesByLanguage[effectivePreviewLocale] ?? null
       : null;
+  const resolvedPreviewInstanceData = useMemo(() => {
+    if (!selectedOverlayValues) return previewInstanceData;
+    return resolveOverlay(previewInstanceData, selectedOverlayValues);
+  }, [previewInstanceData, selectedOverlayValues]);
   const latestRef = useRef({
     compiled,
-    instanceData: previewInstanceData,
+    instanceData: resolvedPreviewInstanceData,
     instanceId,
     baseLocale,
     previewMode,
     effectivePreviewLocale,
-    effectiveTranslationTextPack,
-    readyPreviewLocales: effectiveReadyPreviewLocales,
+    previewablePreviewLocales: effectivePreviewableLocales,
     device,
     theme,
   });
@@ -95,25 +99,23 @@ export function Workspace({
   useEffect(() => {
     latestRef.current = {
       compiled,
-      instanceData: previewInstanceData,
+      instanceData: resolvedPreviewInstanceData,
       instanceId,
       baseLocale,
       previewMode,
       effectivePreviewLocale,
-      effectiveTranslationTextPack,
-      readyPreviewLocales: effectiveReadyPreviewLocales,
+      previewablePreviewLocales: effectivePreviewableLocales,
       device,
       theme,
     };
   }, [
     compiled,
-    previewInstanceData,
+    resolvedPreviewInstanceData,
     instanceId,
     baseLocale,
     previewMode,
     effectivePreviewLocale,
-    effectiveTranslationTextPack,
-    effectiveReadyPreviewLocales,
+    effectivePreviewableLocales,
     device,
     theme,
   ]);
@@ -219,7 +221,6 @@ export function Workspace({
           baseLocale: snapshot.baseLocale,
           state: snapshot.instanceData,
           locale: snapshot.effectivePreviewLocale,
-          translationTextPack: snapshot.effectiveTranslationTextPack,
           previewMode: snapshot.previewMode,
           device: snapshot.device,
           theme: snapshot.theme,
@@ -262,9 +263,8 @@ export function Workspace({
       widgetname: compiled.widgetname,
       instanceId,
       baseLocale,
-      state: previewInstanceData,
+      state: resolvedPreviewInstanceData,
       locale: effectivePreviewLocale,
-      translationTextPack: effectiveTranslationTextPack,
       previewMode,
       device,
       theme,
@@ -275,9 +275,8 @@ export function Workspace({
     hasWidget,
     compiled,
     instanceId,
-    previewInstanceData,
+    resolvedPreviewInstanceData,
     effectivePreviewLocale,
-    effectiveTranslationTextPack,
     previewMode,
     baseLocale,
     device,
@@ -309,7 +308,7 @@ export function Workspace({
           setSwitcherNotice(BLOCKED_SWITCHER_COPY);
           return;
         }
-        if (!latestRef.current.readyPreviewLocales.includes(requestedLocale)) {
+        if (!latestRef.current.previewablePreviewLocales.includes(requestedLocale)) {
           return;
         }
         onOverlayPreviewLocaleChange(requestedLocale);

@@ -3,11 +3,7 @@ import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
-import {
-  enqueueAccountInstanceSync,
-  TokyoAccountInstanceSyncError,
-} from '@roma/lib/account-instance-sync';
-import { loadAccountL10nIntent } from '@roma/lib/account-l10n-intent';
+import { runBabelTextFollowupAfterSave } from '@roma/lib/account-babel-save-followup';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -18,61 +14,11 @@ export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
 
-async function enqueueTranslationAfterSave(args: {
-  accessToken: string;
-  accountId: string;
-  instanceId: string;
-  accountCapsule?: string | null;
-  requestId?: string | null;
-  live: boolean;
-}): Promise<
-  | { ok: true }
-  | { ok: false; reasonKey: string; detail: string; status: number }
-> {
-  const l10nIntent = await loadAccountL10nIntent({
-    accessToken: args.accessToken,
-    accountId: args.accountId,
-    requestId: args.requestId,
-  });
-  if (!l10nIntent.ok) {
-    return {
-      ok: false,
-      reasonKey: l10nIntent.error.reasonKey,
-      detail: l10nIntent.error.detail ?? l10nIntent.error.reasonKey,
-      status: l10nIntent.status,
-    };
-  }
-
-  try {
-    await enqueueAccountInstanceSync({
-      accountId: args.accountId,
-      instanceId: args.instanceId,
-      accountCapsule: args.accountCapsule,
-      requestId: args.requestId,
-      live: args.live,
-      l10nIntent: l10nIntent.value,
-    });
-    return { ok: true };
-  } catch (error) {
-    return {
-      ok: false,
-      reasonKey: 'coreui.errors.translations.acceptanceFailed',
-      detail:
-        error instanceof TokyoAccountInstanceSyncError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : String(error),
-      status: error instanceof TokyoAccountInstanceSyncError ? error.status : 502,
-    };
-  }
-}
-
 export async function PUT(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
 
-  const accountId = current.value.authzPayload.accountId;
+  const accountId = current.value.authzPayload.accountPublicId;
   const instanceId = await requireInstanceIdParam(context, { mode: 'normalized' });
   if (typeof instanceId !== 'string') {
     return withSession(
@@ -174,20 +120,21 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const translationFollowup = await enqueueTranslationAfterSave({
+  const babel = await runBabelTextFollowupAfterSave({
+    authz: current.value.authzPayload,
     accessToken: current.value.accessToken,
-    accountId,
-    instanceId,
     accountCapsule: current.value.authzToken,
+    accountPublicId: accountId,
+    instanceId,
+    widgetType,
+    config,
     requestId: current.value.requestId,
-    live: result.value.live,
   });
-
   return withSession(
     request,
     NextResponse.json({
       ok: true,
-      translationFollowup,
+      babel,
     }),
     current.value.setCookies,
   );
@@ -197,7 +144,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
 
-  const accountId = current.value.authzPayload.accountId;
+  const accountId = current.value.authzPayload.accountPublicId;
   const instanceId = await requireInstanceIdParam(context, { mode: 'normalized' });
   if (typeof instanceId !== 'string') {
     return withSession(

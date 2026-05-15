@@ -48,7 +48,7 @@ function safeSegment(raw: string): string | null {
 
 export async function proxyTokyoPath(args: {
   request: Request;
-  prefix: 'dieter' | 'l10n' | 'renders' | 'widgets';
+  prefix: 'dieter' | 'renders' | 'widgets';
   parts: string[];
   allowed: (parts: string[]) => boolean;
   defaultCache: string;

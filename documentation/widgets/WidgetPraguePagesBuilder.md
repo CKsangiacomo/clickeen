@@ -120,7 +120,7 @@ Create a compact internal object before page writing:
       "rationale": "Mobile-first questions on menu, allergens, and opening hours."
     }
   ],
-  "accountInstanceRefs": [{ "instanceId": "ins_faq_lightblurs_generic" }]
+  "accountInstanceRefs": [{ "instanceId": "INST000001" }]
 }
 ```
 
@@ -283,8 +283,8 @@ Because Prague copy is localized across many locales:
 5. System instance refs resolve to real instances.
 
 Recommended local checks:
-- `node scripts/prague-l10n/verify.mjs`
-- `pnpm -C prague build`
+- `pnpm --filter @clickeen/prague typecheck`
+- `pnpm --filter @clickeen/prague build`
 
 ---
 

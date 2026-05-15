@@ -25,6 +25,7 @@ The PRD 89 schema hard cut drops the historical `widget_instances` residue. Prod
 Michael remains appropriate for:
 
 - account/user identity rows
+- compact account product IDs (`accounts.public_id`)
 - membership and governance records
 - usage/billing records
 - audit/support/reporting queries
@@ -40,3 +41,15 @@ Tokyo remains appropriate for:
 ## Pre-GA Rule
 
 Do not add new widget-instance product behavior to Michael. The surviving product path is Roma -> Bob -> Tokyo.
+
+## PRD 098 Account Identity
+
+`accounts.id` remains the private relational UUID. `accounts.public_id` is the first-class account product/storage identity:
+
+- format: exactly 8 uppercase base36 characters (`^[0-9A-Z]{8}$`)
+- unique and not nullable
+- minted with secure random bytes by Berlin on new account creation
+- backfilled once for existing pre-GA accounts
+- never derived from `accounts.id`
+
+Overlay IDs use `accountPublicId`, not the relational UUID.

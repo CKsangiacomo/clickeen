@@ -231,6 +231,12 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 - Add question: append to `sections[i].faqs` (must include `id`)
 - Reorder question: move within `sections[i].faqs`
 
+## Overlay Primitive Graph
+The widget-owned text primitive graph lives in `spec.json` under `overlays.v = 1`.
+Babel and future producers must use that graph to extract concrete paths such as
+`sections.0.faqs.0.question` before producing values. Do not add a second path file
+for translation or editing.
+
 ## Prohibited
-- Do not write ops for paths outside this widget’s allowlists (`localization.json`, `layers/*.allowlist.json`); they are rejected fail-closed.
+- Do not write values for paths outside this widget's `spec.json` primitive graph; they are rejected fail-closed.
 - Do not include non-allowed HTML tags/attrs in `sections[].faqs[].question|answer` (only the allowed inline tags listed above are supported).
