@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d83b4036d7a0bcac6310d5bfd2bc0b96db54f71371b849cb5aac64713eabee8a",
+  "baseUpdatedAt": "2026-02-04T05:36:55.804Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "カウントダウンの例 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "ローンチ、セール、イベント向けのカウントダウンタイマーの例。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "カウントダウンの例"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "チームがローンチ、セール、イベントでカウントダウンをどのように活用しているかをご覧ください。"
+    }
+  ],
+  "v": 1
+}

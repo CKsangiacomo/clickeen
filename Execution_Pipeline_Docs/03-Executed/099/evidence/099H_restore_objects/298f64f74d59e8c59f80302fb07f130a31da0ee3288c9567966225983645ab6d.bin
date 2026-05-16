@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Приклади FAQ — Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Реальні приклади FAQ для кожної галузі."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Приклади FAQ‑віджетів за галузями"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Подивіться, як команди в туризмі, гостинності та сервісних бізнесах використовують один FAQ‑віджет, щоб швидше відповідати на повторювані запитання."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Готелі та курорти"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Відповідайте на запитання про заїзд, паркування та сніданок ще до прибуття гостей і зменшуйте кількість звернень на рецепції."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Ресторани, кафе та бари"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Зробіть інформацію про меню, алергени та години роботи зрозумілою на мобільних — щоб гості швидше ухвалювали рішення без зайвих уточнень з персоналом."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Оренда для відпочинку та керування нерухомістю"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Утримуйте інструкції з заїзду, дані Wi‑Fi та правила помешкання узгодженими для всіх об’єктів завдяки одному процесу публікації."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Глобальні відвідувачі очікують миттєвої ясності"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Опублікуйте один раз і показуйте відповіді потрібною мовою вже з першого кліку."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Туроператори та туристичні агенції"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Заздалегідь поясніть точки збору, правила скасування та погодні умови — щоб бронювання приймалися впевнено."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Атракціони, музеї та тематичні парки"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Проясніть квитки, правила входу та інформацію про доступність до візиту — щоб прибуття було комфортнішим для всіх."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Простий операційний цикл"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Зафіксуйте повторювані запитання один раз, швидко публікуйте оновлення й тримайте всі сторінки узгодженими, коли змінюються деталі."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Додайте найпопулярніші запитання"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Опублікуйте один раз"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Підтримуйте синхронізацію всіх мов"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Почніть із повторюваних запитань, які відвідувачі ставлять перед тим, як ухвалити рішення."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Один клік — і ваші найсвіжіші відповіді з’являються на кожній сторінці."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Коли змінюється базовий контент, переклади оновлюються — і ваше повідомлення залишається узгодженим."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Створено для реального використання"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Швидкість на глобальному edge, гнучкі варіанти вбудовування та простий процес публікації, що тримає відповіді актуальними."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Швидко"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Гнучко"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Актуально"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Глобальна доставка на периферії мережі."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Стандартні варіанти вбудовування та без скриптів."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Опублікуйте один раз, щоб оновити кожну активну сторінку."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Вирішіть це з Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Почніть безкоштовно, адаптуйте дизайн під свій бренд і опублікуйте живий FAQ, який масштабується на всі сторінки."
+    }
+  ],
+  "v": 1
+}

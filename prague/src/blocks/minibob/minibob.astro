@@ -9,11 +9,15 @@ type Props = {
   page: string;
   heading: string;
   subhead: string;
+  accountPublicId: string;
   instanceId: string;
 };
 
-const { widget, locale, heading, subhead, instanceId } = Astro.props;
+const { widget, locale, heading, subhead, accountPublicId, instanceId } = Astro.props;
 
+if (!String(accountPublicId || '').trim()) {
+  throw new Error('[prague] minibob requires an explicit accountInstanceRef.accountPublicId');
+}
 if (!String(instanceId || '').trim()) {
   throw new Error('[prague] minibob requires an explicit accountInstanceRef.instanceId');
 }
@@ -61,6 +65,7 @@ const createHref = (() => {
   <div class="ck-inline">
     <div class="ck-minibob__embed">
       <InstanceEmbed
+        accountPublicId={accountPublicId}
         instanceId={instanceId}
         locale={locale}
         widgetType={widget}

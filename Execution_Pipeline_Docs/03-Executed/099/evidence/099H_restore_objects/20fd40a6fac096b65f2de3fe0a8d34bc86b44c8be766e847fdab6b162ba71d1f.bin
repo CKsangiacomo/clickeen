@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Příklady FAQ – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Příklady FAQ z praxe pro každé odvětví."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Příklady FAQ widgetu podle oboru"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Podívejte se, jak týmy v cestování, pohostinství a službách používají jeden FAQ widget k rychlejším odpovědím na opakované dotazy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Hotely a resorty"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Zodpovězte dotazy na check-in, parkování a snídaně ještě před příjezdem hostů a omezte vyrušování na recepci."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Restaurace, kavárny a bary"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Mějte na mobilu jasně menu, alergeny i otevírací dobu, aby se hosté rozhodovali rychleji a personál nemusel řešit nekonečné doplňující dotazy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Rekreační pronájmy a správci nemovitostí"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Udržte postupy check-inu, Wi‑Fi údaje i domovní pravidla jednotné napříč objekty díky jednomu publikačnímu procesu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Zahraniční návštěvníci čekají okamžitou srozumitelnost"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Publikujte jednou a nabídněte odpovědi ve správném jazyce hned od prvního kliknutí."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Cestovní kanceláře a tour operátoři"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Vyjasněte si předem nástupní místa, storno podmínky i pravidla pro špatné počasí, aby se lidé rozhodovali k rezervaci s jistotou."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Atrakce, muzea a zábavní parky"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Upřesněte vstupenky, pravidla vstupu i informace o bezbariérovosti ještě před návštěvou, aby byl příchod pro všechny hladší."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Jednoduchý provozní cyklus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Zachyťte opakované dotazy jednou, aktualizace publikujte rychle a udržte všechny živé stránky v souladu, i když se detaily mění."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Přidejte nejčastější dotazy"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Publikujte jednou"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Udržujte všechny jazyky synchronně"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Začněte otázkami, které návštěvníci opakovaně pokládají ještě před rozhodnutím."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Jediným kliknutím zveřejníte nejnovější odpovědi na každé stránce."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Když se změní zdrojový obsah, překlady se obnoví, takže sdělení zůstane konzistentní."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Navrženo pro ostrý provoz"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Rychlost na globální edge síti, flexibilní možnosti vložení a jednoduché publikování, díky kterému jsou odpovědi vždy aktuální."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Rychlé"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Flexibilní"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Aktuální"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Globální doručování na edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Standardní i bezskriptové možnosti vložení."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Publikujte jednou a aktualizujte každou živou stránku."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Vyřešte to s Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Začněte zdarma, přizpůsobte design své značce a publikujte živé FAQ, které se škáluje napříč stránkami."
+    }
+  ],
+  "v": 1
+}

@@ -98,7 +98,7 @@ Note: localization overlays are **not** “fallbacks for config.” The base con
 
 ## Tenet 1: Widget Files Are Complete Truth
 
-Every widget is defined by **core runtime files + contract files** in Tokyo:
+Every widget is defined by **core runtime files + contract files** authored in the repo and deployed to Tokyo R2:
 
 ```
 tokyo/product/widgets/{widgetname}/
@@ -108,16 +108,23 @@ tokyo/product/widgets/{widgetname}/
 ├── widget.client.js       ← Runtime behavior
 ├── agent.md               ← AI editing contract
 ├── limits.json            ← Entitlements caps/flags consumed by shared policy enforcement
-├── catalog.json           ← Widget catalog metadata and capability declarations
-└── pages/*.json           ← Prague marketing pages (overview/features/etc.)
+└── catalog.json           ← Widget catalog metadata and capability declarations
+```
+
+Their deployed R2 home is:
+
+```text
+product/widgets/{widgetname}/
 ```
 
 ### What This Means
 
 - Core runtime files contain **everything** about widget behavior
-- Contract files define limits/localization; Prague pages define the marketing surface
+- Contract files define widget capabilities and editor/runtime validation
+- Prague pages and retained Prague localization belong under the `prague/` root, not inside widget storage
 - No other system adds, removes, or modifies widget behavior
 - If it's not in these files, it doesn't exist
+- Friendly URLs may serve widget files from `/widgets/{widgetname}/...`, but root `widgets/` is not a storage authority
 
 ### Data Flow
 
@@ -314,12 +321,39 @@ If a normal product flow requires the browser to repeatedly restate "which accou
 
 ---
 
+## Tenet 6: Storage Follows Ownership
+
+Tokyo R2 roots encode durable ownership and deploy boundaries, not URL shapes.
+
+The canonical roots are:
+
+```text
+accounts/
+dieter/
+fonts/
+product/
+prague/
+```
+
+Only `accounts/` is runtime-managed account storage. It owns account instances, uploaded assets, overlays, and account-scoped published projections under `accounts/{accountPublicId}/...`.
+
+The non-account roots are git-authored deploy artifacts synced to R2:
+
+- `dieter/` for shared design-system media
+- `fonts/` for global Clickeen font CDN files
+- `product/` for product media and widget software
+- `prague/` for marketing/site/GTM content
+
+Root `widgets/`, `public/`, `published/`, and `l10n/` are not product storage boundaries. Public routing, publication state, and localization must not create fake root storage authorities.
+
+---
+
 ## System Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        TOKYO                                │
-│      Widget definitions, Dieter assets, account artifacts    │
+│ accounts runtime + git-authored product/dieter/fonts/prague  │
 └─────────────────────────────────────────────────────────────┘
                               │
            ┌──────────────────┼──────────────────┐
@@ -331,7 +365,7 @@ If a normal product flow requires the browser to repeatedly restate "which accou
     │             │    │             │    │             │
     │ Compiles    │    │ Serves      │    │ Saves       │
     │ spec.json   │    │ published   │    │ instances,  │
-    │ to UI       │    │ artifacts   │    │ assets,l10n │
+    │ to UI       │    │ projections │    │ assets,proj │
     └──────┬──────┘    └─────────────┘    └──────┬──────┘
            │                                     │
            └─────────────────┬───────────────────┘
@@ -373,7 +407,7 @@ If no → the change is correct
 | Change | Why it’s correct |
 |--------|------------------|
 | Bob renders ToolDrawer from `spec.json` | Bob compiles the widget definition into UI; it doesn’t invent widget semantics. |
-| Venice fetches `widget.html` and serves it | Venice passes through widget assets; it doesn’t mutate widget meaning. |
+| Public embed serving returns generated static files by `publicEmbedId` | Public serving does not mutate widget meaning or compose widgets per view. |
 | Roma opens/saves account instances through Tokyo-backed routes | Roma orchestrates the product command, but widget semantics still live in the widget package. |
 
 ---
@@ -401,3 +435,5 @@ These panels ensure consistency across all widgets. Widget developers use the st
 | **2** | Orchestrators are dumb pipes |
 | **3** | System fails visibly |
 | **4** | All styling uses Dieter tokens |
+| **5** | SaaS shells operate from minted current-account truth |
+| **6** | Storage follows ownership |

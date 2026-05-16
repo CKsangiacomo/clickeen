@@ -10,10 +10,12 @@ Deploy plane:
 - GitHub Actions may verify the build contract, but must not create Pages projects, sync Pages secrets, or deploy Venice artifacts.
 
 Key routes (shipped):
-- `GET /widget/:instanceId` (SSR embed HTML)
+- `GET /widget/:accountPublicId/:instanceId` (SSR embed HTML)
 - `GET /widgets/*` and `GET /dieter/*` (Tokyo asset proxy)
 - `GET /embed/latest/loader.js` and `GET /embed/v2/loader.js` (embed loader)
-- `GET /renders/widgets/:instanceId/live/r.json`, `/config.json`, `/overlays/:overlayId.json`, and SEO/GEO meta pack routes (Tokyo published render proxies)
+- `GET /renders/accounts/:accountPublicId/instances/:instanceId/live/r.json`, `/config.json`, `/overlays/:overlayId.json`, and SEO/GEO meta pack routes (Tokyo published render proxies)
+
+Venice is a public PBX: it proxies account-scoped published projections that already exist, and otherwise returns a miss. Publish, unpublish, commercial policy, lifecycle, eligibility, and account-operation decisions belong to Roma/account ops before the projection reaches Tokyo.
 
 Required env (deployed environments):
 - `TOKYO_URL` (or `TOKYO_BASE_URL` / `NEXT_PUBLIC_TOKYO_URL`)

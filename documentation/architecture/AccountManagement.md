@@ -88,7 +88,9 @@ Account identity has two names with different jobs:
 - `accountId`: private relational UUID used for Michael joins and existing account-management APIs.
 - `accountPublicId`: 8-character uppercase base36 product/storage identity stored as `accounts.public_id`.
 
-`accountPublicId` is minted once by Berlin/Michael at account creation, backfilled once for pre-GA accounts, and never derived from `accountId`. Overlay-era storage and overlay IDs use `accountPublicId`; Roma and Bob must carry it from bootstrap instead of computing it.
+`accountPublicId` is minted once by Berlin/Michael at account creation, backfilled once for pre-GA accounts, and never derived from `accountId`. Account runtime storage, overlays, published projections, and public references use `accountPublicId`; Roma and Bob must carry it from bootstrap instead of computing it.
+
+The Clickeen/admin account reserves `accountPublicId` `00000001`. It is still a normal account: admin examples, curation fixtures, and product references use `accounts/00000001/instances/{instanceId}/` and must not create a separate admin widget lane.
 
 ### Account Membership
 
@@ -177,10 +179,12 @@ Owns:
 - tier/billing-facing settings
 - locale policy
 - account-level controls
+- management-plane decisions for publish/unpublish/delete/downgrade/caps/tiers/correctness once account truth is resolved
 
 Rules:
 - product shells may surface current plan/tier state
 - customer-facing account settings do not directly mutate commercial plan/tier truth
+- Roma/system account operations own the lifecycle decision for account-owned instances and published projections. Tokyo-worker persists Tokyo objects and projections as directed; Venice serves or misses published projections and does not evaluate policy.
 
 ### Team
 
@@ -217,8 +221,10 @@ Rules:
 - `Roma` = account-scoped customer/member shell
 - `DevStudio` = internal toolbench for platform curation, verification, and local utility pages
 - `Bob` = editor kernel and consumer of account truth
+- `Tokyo-worker` = Tokyo storage PBX after the account/product command is authorized
+- `Venice` = public serving PBX for already-published projections
 
-DevStudio may host internal tools, but it must not invent a second account or provider model, it must not teach internal humans to act like privileged customers browsing accounts, and it must not recreate the removed local widget-authoring lane.
+DevStudio may host internal tools, but it must not invent a second account or provider model, it must not teach internal humans to act like privileged customers browsing accounts, and it must not recreate the removed local widget-authoring lane. Admin curation uses account `00000001` as normal account-owned instance data.
 
 ---
 
@@ -344,11 +350,15 @@ Rules:
 | Internal toolbench (curation/authoring/verification) | DevStudio |
 | Editor account consumption | Bob |
 | Account management runtime | Berlin + Roma |
-| Instance/l10n orchestration after account truth is resolved | Tokyo-worker |
+| Instance lifecycle management plane after account truth is resolved | Roma/system account operations |
+| Publish/unpublish/delete/downgrade/cap/tier correctness for instances and published projections | Roma/system account operations |
+| Tokyo object writes, reads, storage validation, and published-projection materialization | Tokyo-worker PBX |
+| Public published projection serving/miss behavior | Venice PBX |
 
 Hard rule:
 - no product surface reads account-management truth directly from Michael
 - account-management runtime paths stay behind Berlin/Roma product boundaries
+- Tokyo-worker and Venice are not policy engines. They must not decide billing, tier, compliance, publication eligibility, downgrade state, caps, or whether an account should still have public projections.
 
 ---
 

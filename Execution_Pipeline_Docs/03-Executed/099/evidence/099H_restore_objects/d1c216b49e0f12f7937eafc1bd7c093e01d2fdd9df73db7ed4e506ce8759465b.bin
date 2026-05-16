@@ -1,0 +1,9 @@
+{
+  "baseFingerprint": "8d78a3a2283336fd69eae808169121f4b4d0ffb9cc7619d7d6013c0bdf1ad21f",
+  "publicId": "wgt_main_countdown",
+  "snapshot": {
+    "actions.after.text": "",
+    "actions.during.text": "Purchase now"
+  },
+  "v": 1
+}

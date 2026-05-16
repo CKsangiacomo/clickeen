@@ -11,6 +11,7 @@ import Carousel from '../../components/Carousel.astro';
 
 type CarouselItem = {
   accountInstanceRef: {
+    accountPublicId: string;
     instanceId: string;
     locale: string;
     title?: string;
@@ -27,6 +28,7 @@ type Props = {
   widgetType?: string;
   accountInstanceRef?: {
     instanceId: string;
+    accountPublicId: string;
     locale: string;
     title?: string;
     embedMode?: 'iframe' | 'indexable';
@@ -92,6 +94,7 @@ const headerPrimitives = assertPrimitives(
         ) : accountInstanceRef ? (
           <InstanceEmbed
             instanceId={accountInstanceRef.instanceId}
+            accountPublicId={accountInstanceRef.accountPublicId}
             locale={accountInstanceRef.locale}
             title={accountInstanceRef.title ?? 'Widget preview'}
             embedMode={accountInstanceRef.embedMode}

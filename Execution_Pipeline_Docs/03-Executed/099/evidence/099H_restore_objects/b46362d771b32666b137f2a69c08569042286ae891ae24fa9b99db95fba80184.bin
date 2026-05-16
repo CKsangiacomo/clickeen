@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "fde9605ffe75645067414a708e89929b615f9a05c8f750f37a517d5f80284fdc",
+  "baseUpdatedAt": "2026-02-04T05:36:55.818Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logóbemutató widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Emelje ki ügyfelei logóit egy gyors, rugalmas bemutató widgettel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logóbemutató. Azonnali társadalmi bizonyíték."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Mutasd be ügyfeleid logóit gyönyörűen – építs bizalmat és növeld a konverziókat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Logógaléria"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Mutassa be logóit lenyűgözően. Építsen bizalmat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Hogyan működik"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Logók hozzáadása"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Elrendezés"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Beágyazás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Töltsd fel ügyfeleid logóit (SVG/PNG) másodpercek alatt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Válaszd ki az elrendezést és a térközöket, hogy illeszkedjen az oldaladhoz."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Illeszd be a kódrészletet bármelyik platformba."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Hozd létre a logóbemutatódat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kezdd ingyenesen. Publikáld, amikor készen állsz."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Próbáld ki élőben"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Szerkessz egy demó példányt a minibobban. Tedd közzé, amikor készen állsz."
+    }
+  ],
+  "v": 1
+}

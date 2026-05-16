@@ -26,7 +26,7 @@ documentation/
 │   ├── dieter.md            # Design system
 │   ├── devstudio.md         # Internal toolbench
 │   ├── tokyo.md             # Asset CDN
-│   ├── tokyo-worker.md      # Asset uploads + l10n publisher
+│   ├── tokyo-worker.md      # Account storage + asset/published-projection PBX
 │   ├── sanfrancisco.md      # AI workforce OS
 │   ├── venice.md            # Embed runtime
 │   ├── michael.md           # Database schema
@@ -93,6 +93,29 @@ This repo is operated by **1 human architect + multiple AI dev teams**. The syst
 - **Automation intent:** local changes are designed to propagate through the local DevStudio operating lane automatically. Cloud-dev propagation is explicit (promote/deploy).
 - **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.
 
+## Tokyo R2 Storage Contract
+
+Tokyo R2 is an ownership model, not a URL map. The only canonical roots are:
+
+```text
+accounts/
+dieter/
+fonts/
+product/
+prague/
+```
+
+Only `accounts/` is runtime-managed by account/product operations. It stores account-owned instances, uploads, overlays, and published projection material under `accounts/{accountPublicId}/...`.
+
+The other roots are git-authored deploy artifacts synced to R2:
+
+- `dieter/` for shared design-system media
+- `fonts/` for global Clickeen-provided fonts
+- `product/` for logged-in product media and widget software
+- `prague/` for marketing/site/GTM content, including retained Prague localization under `prague/l10n/`
+
+Do not introduce root `widgets/`, `public/`, `published/`, or `l10n/` storage. Friendly URLs such as `/widgets/{widgetType}/...` may exist, but they must resolve to the canonical storage home, for example `product/widgets/{widgetType}/...`.
+
 ---
 
 ## End-to-End Journey (widget folder → Roma, DevStudio, Bob, Prague)
@@ -104,11 +127,11 @@ Local runtime:
 
 ### A) Widget definition path (local)
 
-Source of truth: `tokyo/product/widgets/{widget}/` (spec + runtime + marketing JSON).
+Source of truth: `tokyo/product/widgets/{widget}/` (spec + runtime + widget contract). Deployed R2 storage home: `product/widgets/{widget}/`.
 
 1. **Local Tokyo CDN stub** serves the widget folder (optional local debug path):
    - `tokyo/dev-server.mjs` -> `http://localhost:4000`
-   - Serves `/widgets/**` and `/dieter/**` directly from the repo.
+   - Serves friendly `/widgets/**` and `/dieter/**` routes directly from the repo. These are route aliases, not root R2 storage folders.
 2. **Bob runtime** reads widget definitions/assets from Tokyo:
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
 3. **Local DevStudio** remains the internal toolbench:
@@ -133,7 +156,7 @@ Invariant:
 
 ### B) Instance + asset path (local)
 
-Instances are data (not code) and live in Michael/Tokyo. Assets live in Tokyo.
+Instances are account-owned data, not code. Tokyo/R2 stores them under `accounts/{accountPublicId}/instances/{instanceId}/`; Michael/Berlin hold account relational truth, not a parallel widget-instance storage lane. Account assets live under `accounts/{accountPublicId}/assets/`.
 
 1. **Roma + Bob handle account widget instance flows**:
    - Roma Widgets lists, duplicates, renames, publishes, unpublishes, and deletes real account-owned instances through current-account same-origin routes.
@@ -179,13 +202,16 @@ If you change runtime behavior, update docs in the same PR/commit:
   - Update `documentation/capabilities/localization.md` + `documentation/services/prague/*.md`
 - **Instance l10n / locale resolution**
   - Update `documentation/capabilities/localization.md` + `documentation/services/venice.md` (and `documentation/capabilities/seo-geo.md` when schema/excerpt behavior changes)
+- **Tokyo R2 root/storage changes**
+  - Update `documentation/architecture/Overview.md`, `documentation/architecture/Tenets.md`, and the owning system docs
+  - Re-check that only `accounts/` is runtime-managed and that `dieter/`, `fonts/`, `product/`, and `prague/` remain deploy-managed roots
 
 ---
 
 ## Security rules for docs
 
 - Never commit or paste real secrets into docs (`AI_GRANT_HMAC_SECRET`, API keys, Supabase keys, JWTs, etc.).
-- Use placeholders: `<secret>`, `<token>`, `<baseUrl>`, `wgt_...`.
+- Use placeholders: `<secret>`, `<token>`, `<baseUrl>`, `{instanceId}`.
 - If an endpoint requires auth, describe the header shape, not the value.
 
 ---
@@ -197,5 +223,6 @@ If you change runtime behavior, update docs in the same PR/commit:
   - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/account/instances/.*/copilot|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
   - `rg -n "claims/minibob/complete|/api/account/assets|POST /api/instance\\b" documentation --glob '*.md'`
   - `rg -n "/api/bootstrap|/api/account/widgets|/api/session/finish|/api/account/assets" documentation --glob '*.md'`
+  - `rg -n "published/widgets|/renders/widgets|accounts/.*/widgets|l10n/prague|root (widgets|public|published|l10n)" documentation --glob '*.md'`
 
 When drift is found: update docs to match the shipped code/config immediately; treat mismatches as P0 doc bugs.

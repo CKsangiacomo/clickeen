@@ -1,0 +1,19 @@
+{
+  "baseFingerprint": "f4ef885ddc66b7ad0239e90a1ca4dc0bf53a9cb757d66e3396d439606404d4ae",
+  "publicId": "wgt_curated_faq_lightblurs_generic",
+  "snapshot": {
+    "cta.label": "Contact us ",
+    "header.subtitleHtml": "Find here the answers to the most commonly asked questions.",
+    "header.title": "Frequenty asked questions",
+    "sections.0.faqs.0.answer": "Liquid Marketing is a SaaS company that specializes in marketing automation, offering advanced tools for email campaigns, customer segmentation, and analytics.",
+    "sections.0.faqs.0.question": "What is Liquid Marketing?",
+    "sections.0.faqs.1.answer": "Simply sign up, integrate your data, and start creating automated campaigns with our intuitive platform.",
+    "sections.0.faqs.1.question": "How do I start using Liquid Marketing?",
+    "sections.0.faqs.2.answer": "Yes, Liquid Marketing offers a free trial with access to basic features. Upgrade for more advanced capabilities.",
+    "sections.0.faqs.2.question": "Is there a free trial available?",
+    "sections.0.faqs.3.answer": "Liquid Marketing provides a robust platform with easy-to-use automation tools, detailed analytics, and excellent customer support, making it ideal for businesses looking to streamline their marketing efforts.",
+    "sections.0.faqs.3.question": "Why should I choose Liquid Marketing for my marketing needs?",
+    "sections.0.title": "All Questions"
+  },
+  "v": 1
+}

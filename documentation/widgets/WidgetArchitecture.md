@@ -10,7 +10,8 @@ Related:
 ---
 
 ## System invariants
-- Widget files in Tokyo are the source of truth.
+- Widget software files in `tokyo/product/widgets/{widgetType}/` are the product software source of truth.
+- Account-owned widget instance runtime data lives under `accounts/{accountPublicId}/instances/{instanceId}/`; accounts have instances and assets, not widget folders.
 - `spec.json` owns the widget primitive variable graph. ToolDrawer, Copilot, Babel, Tokyo validation, Bob preview, and Venice runtime must use that same graph.
 - Orchestrators avoid widget-specific logic; they may route calls and apply the shared single-overlay resolver only at the named boundary.
 - Base-config and overlay contract violations must fail visibly. Runtime must not substitute another overlay, repair values, or infer product meaning from bodies.
@@ -80,7 +81,8 @@ tokyo/product/themes/themes.json -> Bob compiles theme dropdown/presets from loc
 
 Embed flow (Venice):
 ```
-Browser -> Venice /widget/{instanceId}?locale=... -> Venice loads live projection + config pack + overlay values + widget files (Tokyo)
+Browser -> Venice /widget/{accountPublicId}/{instanceId}?locale=...
+-> Venice loads account-scoped live projection + config pack + published overlay values + widget files (Tokyo)
 -> Venice injects window.CK_WIDGET (state + locale) -> widget.client.js applyState
 ```
 
@@ -113,11 +115,11 @@ Location: `tokyo/product/widgets/shared/`
 
 ---
 
-## Asset origin
-Widgets must use canonical root-relative asset paths:
-- `/assets/account/*` for account-owned immutable assets
-- `/dieter/*` for design-system assets
-- `/widgets/*` for widget package assets
+## Media And Asset Origin
+Widgets must use canonical root-relative paths:
+- `/assets/account/{accountPublicId}/*` for account-owned assets backed by `accounts/{accountPublicId}/assets/`
+- `/dieter/*` for design-system media
+- `/widgets/*` for widget package media
 
 Runtime must not depend on `window.CK_ASSET_ORIGIN`; Venice owns proxying these paths on the public embed origin.
 
@@ -127,8 +129,8 @@ Runtime must not depend on `window.CK_ASSET_ORIGIN`; Venice owns proxying these 
 
 | System | Does | Does NOT |
 | --- | --- | --- |
-| Tokyo | Store widget definitions | Store instance data |
+| Tokyo | Store widget software under `product/widgets/` and account runtime objects under `accounts/{accountPublicId}/instances/` | Treat account instances as widget software or use `widgetCode` as a storage locator |
 | Bob | Compile spec, render ToolDrawer, hold working state | Apply widget-specific defaults at runtime |
 | Roma | Open/save account editor state through same-origin routes backed by Tokyo | Transform widget state |
-| Venice | Serve published pointer/config/overlay/widget bytes for public embeds | Modify widget state or fetch product databases at request time |
+| Venice | Serve account-scoped published projection/config/overlay/widget bytes for public embeds | Modify widget state, read authoring instance objects, or fetch product databases at request time |
 | Michael | Persist account/registry metadata and relational state | Per-widget validation or public embed assembly |

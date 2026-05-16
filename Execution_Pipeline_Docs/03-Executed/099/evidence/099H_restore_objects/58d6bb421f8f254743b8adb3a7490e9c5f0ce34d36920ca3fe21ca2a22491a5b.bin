@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "ce3406e8218797e114aca1052dc141ca8afe3a247a3f3ac0d370a80459c001ff",
+  "baseUpdatedAt": "2026-02-04T15:59:12.732Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget đếm ngược - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tạo cảm giác cấp bách với bộ hẹn giờ đếm ngược có thể tùy chỉnh. Ra mắt, bán hàng và thông báo một cách tự tin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Tiện ích hẹn giờ đếm ngược"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Tạo cảm giác khẩn trương và thúc đẩy hành động với các bộ đếm ngược nhanh, linh hoạt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Đếm ngược"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Tạo cảm giác gấp rút với các bộ hẹn giờ linh hoạt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Thử trực tiếp"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Chỉnh sửa một phiên bản demo trong minibob. Xuất bản khi bạn sẵn sàng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Tiện ích hẹn giờ đếm ngược"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Tạo cảm giác cấp bách và thúc đẩy hành động với các bộ hẹn giờ đếm ngược có thể tùy chỉnh."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Các chế độ hẹn giờ linh hoạt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Bộ đếm dựa trên ngày, cá nhân hoặc theo số lượng cho mọi tình huống."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Biến sự chú ý thành hành động"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Sử dụng bộ đếm thời gian phù hợp cho ra mắt sản phẩm, chương trình giảm giá, sự kiện và mục tiêu cá nhân. Thiết lập một lần và để nó chạy ở mọi nơi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Dễ dàng tùy chỉnh"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Điều chỉnh giao diện, bố cục và các hành động để phù hợp với thương hiệu của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Ra mắt nhanh hơn với bộ đếm ngược"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Từ thiết lập đến xuất bản chỉ trong vài phút."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Chọn bộ đếm thời gian của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Phù hợp với thương hiệu của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Xuất bản và bản địa hóa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Chọn bộ đếm theo ngày, evergreen hoặc theo số lượng cho nhu cầu của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Tùy chỉnh màu sắc, nhãn và bố cục để phù hợp với mọi trang web."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Lên sóng nhanh và tiếp cận khán giả toàn cầu với tính năng bản địa hóa tích hợp sẵn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Tăng tỷ lệ chuyển đổi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Khuyến khích hành động ngay lập tức với các ưu đãi có thời hạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Tối ưu hóa SEO và GEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Hỗ trợ sẵn schema và bản địa hóa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Tạo sự cấp bách, thúc đẩy doanh số"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Bộ hẹn giờ đếm ngược mạnh mẽ giúp chuyển đổi khách truy cập thành khách hàng."
+    }
+  ],
+  "v": 1
+}

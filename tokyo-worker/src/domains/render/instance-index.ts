@@ -6,7 +6,7 @@ import {
   accountInstanceDocumentKey,
   accountInstanceIndexKey,
   accountInstancePublishKey,
-  accountWidgetsRoot,
+  accountInstancesRoot,
 } from './keys';
 import {
   normalizeAccountInstanceDocument,
@@ -104,7 +104,7 @@ function sortIndexEntries(entries: AccountInstanceIndexEntry[]): AccountInstance
 }
 
 async function listInstanceDocumentKeys(env: Env, accountId: string): Promise<string[]> {
-  const prefix = `${accountWidgetsRoot(accountId)}/`;
+  const prefix = `${accountInstancesRoot(accountId)}/`;
   const suffix = '/instance.json';
   const keys: string[] = [];
   let cursor: string | undefined = undefined;

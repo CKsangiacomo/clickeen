@@ -1,0 +1,12 @@
+tokyo-worker/src/account-assets-contract.test.ts:17:      key: `accounts/A1B2C3D4/assets/${ASSET_ID}/blob/hero.png`,
+tokyo-worker/src/account-assets-contract.test.ts:23:    parseAccountAssetBlobKey(`accounts/A1B2C3D4/assets/${ASSET_ID}/blob/hero.png`),
+tokyo-worker/src/account-assets-contract.test.ts:28:      key: `accounts/A1B2C3D4/assets/${ASSET_ID}/blob/hero.png`,
+tokyo-worker/src/account-assets-contract.test.ts:38:  assert.equal(parseAccountAssetBlobKey(`accounts/${uuidAccountId}/assets/${ASSET_ID}/blob/hero.png`), null);
+packages/ck-contracts/src/index.ts:263:    key: `accounts/${accountId}/assets/${assetId}/blob/${filename}`,
+packages/ck-contracts/src/index.ts:283:    key: `accounts/${accountId}/assets/${assetId}/blob/${filename}`,
+roma/lib/account-instance-translations.ts:150:        path: `/__internal/overlays/${encodeURIComponent(overlayId)}.json`,
+tokyo-worker/src/domains/render/keys.ts:2:  return `accounts/${accountId}/instances`;
+tokyo-worker/src/domains/render/keys.ts:36:  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/${overlayId}.json`;
+tokyo-worker/src/domains/render/keys.ts:45:  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/${overlayIdPrefix}`;
+tokyo-worker/src/domains/render/keys.ts:56:  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/selected-overlays/${languageCode}/${experiment}/${personalization}.json`;
+tokyo-worker/src/domains/render/keys.ts:64:  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/selected-overlays/`;

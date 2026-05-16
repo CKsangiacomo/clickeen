@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga tampok ng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Paano gumagana ang FAQ widget: SEO, localization, flow ng pag-publish, at AI-assisted na pag-edit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Paano gumagana ang FAQ widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Mula AI drafting hanggang localization at SEO—ito ang mga system na nagpapanatiling tama at madaling mahanap ang mga sagot."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Ilarawan mo nang isang beses. AI na ang magda-draft ng iba."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Gumawa ng structured drafts sa loob ng editor, tapos tanggapin, i-edit, o i-reject ang bawat suggestion bago i-publish."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Hanggang 29 wika sa iisang widget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Awtomatikong mag-serve ng mga naisaling sagot at i-fine-tune nang mano-mano kapag mahalaga ang brand voice o nuance."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "I-publish nang isang beses. I-update ang bawat page."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Mag-edit nang isang beses sa iisang source, tapos i-publish at i-push ang pinakabagong sagot sa lahat ng live embed."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "Nababasa ng mga search engine ang mga sagot mo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "Server-rendered na mga sagot, schema output, at deep links ang tumutulong sa mga search engine na ma-index at maipakita ang tamang content."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Nakikita ng Google ang bawat salita"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Mga rich snippet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Deep linking"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "Pinapanatiling indexable ang mga sagot mo ng server-side rendering, na halos walang layout shift."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "Tumutulong ang awtomatikong JSON-LD para maipakita ng mga search engine ang mga sagot mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Ituro ang mga user sa mismong sagot na kailangan nila gamit ang isang matatag na URL."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Isang living knowledge base na lumalago kasama mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Panatilihing tama ang mga sagot habang nagbabago ang produkto, mga polisiya, at audience mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Maaasahan by design"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "Ang versioned publishing at malinaw na live boundaries ang nagpapanatiling kontrolado ang madalas na updates para sa mga team."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Versioned na mga pagbabago"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Publish boundary"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "Naka-edge cache"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Bawat publish ay may version, kaya makaka-iterate ang mga team nang may kontrol."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "Nagbabago lang ang live content pagkatapos ng malinaw na pag-publish."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "Mahalaga ang mga millisecond. Inihahatid namin ang mga sagot mula sa lokasyong pinakamalapit sa iyong user."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Buong kontrol sa disenyo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Kontrolin ang radius, shadows, borders, spacing, at typography sa visual editor na ginawa para sa consistent na brand."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Mga layout"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Tipograpiya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Mga theme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Accordion, list, at card structures na may responsive spacing controls."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Role-based typography para sa mga title, tanong, sagot, at CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Suporta sa light at dark mode na may kontrol sa brand colors."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Global delivery by default"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Pagsamahin ang localization, SEO, at edge delivery sa iisang system para manatiling mabilis at malinaw ang global pages."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Edge delivery"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Localization"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Ibine-serve mula sa edge infrastructure."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Hanggang 29 wika na may override support."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Structured na mga sagot na may JSON-LD support."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Ginawa para sa production sites"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Gumamit ng standard o scriptless embeds at panatilihing predictable ang live updates gamit ang malinaw na publish control."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Mga embed mode"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Publish control"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Composability"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Standard na script embed at scriptless iframe options."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Malinaw na publish flow para sa live updates."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Pinagsasama ang styles, content, at languages nang walang forks."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Gumawa ng mas magandang FAQ experience"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Magsimula nang libre, mag-publish nang mabilis, at panatilihing updated ang FAQ mo sa bawat page at wika."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "GYIK funkciók – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Így működik a GYIK widget: SEO, lokalizáció, közzétételi folyamat és AI-támogatott szerkesztés."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Így működik a GYIK widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Az AI-alapú vázlatkészítéstől a lokalizáción és SEO-n át: ezek a rendszerek tartják a válaszokat pontosan és könnyen megtalálhatóan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Írd le egyszer. A többit megírja az AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Készíts strukturált vázlatokat közvetlenül a szerkesztőben, majd publikálás előtt fogadd el, módosítsd vagy utasítsd el az egyes javaslatokat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Akár 29 nyelv egyetlen widgetben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "A lefordított válaszok automatikusan megjelennek, te pedig kézzel finomhangolhatod a szöveget, amikor a márkahang vagy a нюanszok számítanak."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Publikálj egyszer. Frissíts minden oldalt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Szerkessz egyetlen forrásban, majd publikálj, és told ki a legfrissebb válaszokat az összes élő beágyazásba."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "A keresőmotorok el tudják olvasni a válaszaidat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "A szerveroldali renderelés, a schema-kimenet és a mélylinkek segítik a keresőmotorokat a megfelelő tartalom indexelésében és megjelenítésében."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "A Google minden szót lát"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Gazdag kivonatok"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Mélylinkelés"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "A szerveroldali renderelés indexelhetővé teszi a válaszokat, szinte nulla elrendezés-ugrással."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "Az automatikus JSON-LD segít, hogy a keresők kiemeljék a válaszaidat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Stabil URL-lel irányítsd a felhasználókat pontosan arra a válaszra, amire szükségük van."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Élő tudásbázis, ami veled együtt nő."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Tartsd pontosan a válaszokat, ahogy a terméked, a szabályzataid és a közönséged változik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Megbízható, mert így terveztük"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "A verziózott publikálás és az egyértelmű éles határok kontrolláltá teszik a gyakori frissítéseket csapatok számára."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Verziózott módosítások"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Publikálási határ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "Edge-gyorsítótárazott"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Minden közzététel verziózva van, így a csapatok kontrolláltan iterálhatnak."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "Az éles tartalom csak kifejezett publikálás után változik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "A milliszekundumok számítanak. A válaszokat a felhasználóidhoz legközelebbi helyszínről szolgáltatjuk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Teljes dizájnkontroll"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Állítsd a lekerekítést, árnyékokat, szegélyeket, térközöket és tipográfiát egy vizuális szerkesztőben, amely a márkakonzisztenciára készült."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Elrendezések"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Tipográfia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Témák"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Accordion-, lista- és kártyaelrendezések reszponzív térköz-kezeléssel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Szerepkör-alapú tipográfia címekhez, kérdésekhez, válaszokhoz és CTA-khoz."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Világos és sötét mód támogatás, a márkaszínek feletti kontrollal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Alapból globális kiszolgálás"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Egy rendszerben kombinálhatod a lokalizációt, a SEO-t és az edge kézbesítést, hogy a globális oldalak gyorsak és egyértelműek maradjanak."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Edge kézbesítés"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Lokalizáció"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Edge infrastruktúráról kiszolgálva."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Akár 29 nyelv felülbírálási lehetőséggel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Strukturált válaszok JSON-LD támogatással."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Éles, nagyforgalmú oldalakra tervezve"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Használj standard vagy script nélküli beágyazást, és tartsd kiszámíthatóan az éles frissítéseket kifejezett publikálási kontrollal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Beágyazási módok"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Publikálási kontroll"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Komponálhatóság"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Standard szkriptes beágyazás és script nélküli iframe opciók."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Kifejezett publikálási folyamat az éles frissítésekhez."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Stílusok, tartalom és nyelvek együtt, elágazások nélkül."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Építs jobb GYIK-élményt"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kezdd ingyen, publikálj gyorsan, és tartsd naprakészen a GYIK-ot minden oldalon és nyelven."
+    }
+  ],
+  "v": 1
+}

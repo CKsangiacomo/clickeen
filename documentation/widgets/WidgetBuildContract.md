@@ -5,6 +5,7 @@ OWNER: Platform / Widget System
 
 SCOPE
 - This contract applies to widget definitions in `tokyo/product/widgets/{widgetType}/`.
+- Widget definitions are product software. Account-owned runtime data for configured widgets lives under `accounts/{accountPublicId}/instances/{instanceId}/`, never under widget-definition folders.
 
 INPUTS
 - `widgetType` (explicit)
@@ -220,6 +221,7 @@ MUST NOT
 - Create `localization.json`, layer path sidecars, or a second path schema for translation/editing.
 - Send repeatable declaration paths to producers.
 - Build a multi-overlay resolver in widget code.
+- Use `widgetCode` or widget-definition folder names as account instance storage locators. `widgetCode` is metadata/codebook identity for overlay IDs and contracts only.
 
 ### 8) Binding Map (anti-dead-controls)
 MUST
@@ -237,8 +239,13 @@ Binding Map template:
 | `content.title` | `[data-role="title"]` | dom | `el.textContent = state.content.title` |
 
 ### 9) Assets
+MUST
+- Store account-owned asset bytes under `accounts/{accountPublicId}/assets/`.
+- Materialize runtime asset references as root-relative `/assets/account/{accountPublicId}/{assetId}/{filename}` paths when a widget needs a public asset URL.
+
 MUST NOT
 - Ship defaults containing `data:` or `blob:` URLs.
+- Store account-owned assets under widget software folders or private UUID account folders.
 
 ---
 

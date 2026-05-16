@@ -316,7 +316,7 @@ async function main() {
   writeDieterManifest({ dist, repoRoot });
   assertExists('manifest.json', path.join(dist, 'manifest.json'));
 
-  console.log(`[build-dieter] Built Dieter assets into ${dist}${usingOverrides ? ' (with svg_new overrides)' : ''}`);
+  console.log(`[build-dieter] Built Dieter media into ${dist}${usingOverrides ? ' (with svg_new overrides)' : ''}`);
 }
 
 main().catch((err) => {

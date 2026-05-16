@@ -14,6 +14,7 @@ on:
       - "scripts/infra/**"
       - "scripts/verify/**"
       - "scripts/tokyo-fonts-sync.mjs"
+      - "scripts/tokyo-r2-deploy-sync.mjs"
       - ".github/workflows/cloud-dev-workers.yml"
   workflow_dispatch: {}
 
@@ -59,5 +60,5 @@ jobs:
       - name: Deploy tokyo-assets-dev (tokyo-worker)
         run: pnpm -C tokyo-worker run deploy
 
-      - name: Sync Tokyo fonts to R2 (cloud-dev)
-        run: node scripts/tokyo-fonts-sync.mjs --remote
+      - name: Sync Tokyo deploy roots to R2 (cloud-dev)
+        run: node scripts/tokyo-r2-deploy-sync.mjs --remote

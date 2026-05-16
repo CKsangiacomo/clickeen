@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "type": "l10n",
+  "locale": "es",
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "status": "ready",
+  "ops": [],
+  "textPack": {
+    "cta.label": "Contáctanos",
+    "header.subtitleHtml": "Widgets modernos para sitios web: rápidos de lanzar, fáciles de personalizar y pensados para ayudarte a convertir.",
+    "header.title": "Preguntas frecuentes",
+    "sections.0.faqs.0.answer": "Clickeen es una plataforma SaaS de widgets que te permite añadir widgets pulidos y de alto rendimiento a tu sitio web en minutos, sin necesidad de un gran trabajo de desarrollo.",
+    "sections.0.faqs.0.question": "¿Qué es Clickeen?",
+    "sections.0.faqs.1.answer": "Sí. El plan Free incluye 1 widget activo con funciones esenciales para que puedas probar Clickeen en un sitio en producción.",
+    "sections.0.faqs.1.question": "¿Ofrecen un plan gratuito?",
+    "sections.0.faqs.2.answer": "Crea tu widget, copia el código de inserción y pégalo justo antes de la etiqueta de cierre </body> en tu sitio web. Los cambios que hagas en Clickeen se actualizan al instante.",
+    "sections.0.faqs.2.question": "¿Cómo instalo un widget en mi sitio?",
+    "sections.0.faqs.3.answer": "Lanza más rápido con controles de diseño flexibles, actualizaciones sencillas y un rendimiento fiable, para que tu equipo pueda publicar mejoras sin mantener código personalizado.",
+    "sections.0.faqs.3.question": "¿Por qué usar Clickeen en lugar de crear widgets desde cero?",
+    "sections.0.title": "Primeros pasos"
+  },
+  "updatedAt": "2026-03-23T18:57:29.518Z"
+}

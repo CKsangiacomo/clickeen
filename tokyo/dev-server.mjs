@@ -10,6 +10,8 @@
  *   - GET /fonts/**       → static files from tokyo/product/fonts/**
  *   - GET /themes/**      → static files from tokyo/product/themes/**
  *   - GET /widgets/**     → static files from tokyo/product/widgets/**
+ *   - GET /prague/l10n/** → static files from tokyo/prague/l10n/**
+ *   - GET /prague/assets/** → static files from tokyo/prague/assets/**
  *   - GET /assets/account/** → proxy to tokyo-worker canonical account assets
  *
  * This lets Bob and other surfaces talk to a CDN-style base URL
@@ -24,6 +26,7 @@ import crypto from 'node:crypto';
 
 // Keep the Tokyo dev stub self-contained so CI can boot it with plain `node`.
 const INSTANCE_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$/;
+const ACCOUNT_PUBLIC_ID_RE = /^[0-9A-Z]{8}$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ACCOUNT_ASSET_PATH_RE = /^\/assets\/account\/([^/?#]+)\/([^/?#]+)\/([^/?#]+)$/;
 
@@ -60,6 +63,11 @@ function isUuid(raw) {
   return Boolean(value && UUID_RE.test(value));
 }
 
+function isAccountPublicId(raw) {
+  const value = typeof raw === 'string' ? raw.trim() : '';
+  return Boolean(value && ACCOUNT_PUBLIC_ID_RE.test(value));
+}
+
 function parseAccountAssetRef(raw) {
   const pathname = pathnameFromRawAssetRef(raw);
   if (!pathname) return null;
@@ -69,7 +77,7 @@ function parseAccountAssetRef(raw) {
   const accountId = decodePathPart(match[1]);
   const assetId = decodePathPart(match[2]);
   const filename = decodePathPart(match[3]);
-  if (!isUuid(accountId) || !isUuid(assetId)) return null;
+  if (!isAccountPublicId(accountId) || !isUuid(assetId)) return null;
   if (!filename || filename === '.' || filename === '..' || filename.includes('/')) return null;
 
   return {
@@ -91,7 +99,6 @@ const romaDir = path.join(baseDir, 'roma');
 const tokyoWorkerBase = String(process.env.TOKYO_WORKER_BASE_URL || 'http://localhost:8791')
   .trim()
   .replace(/\/+$/, '');
-const TOKYO_L10N_BRIDGE_HEADER = 'x-tokyo-l10n-bridge';
 
 function getContentType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -200,29 +207,8 @@ function sendJson(res, status, payload) {
   res.end(JSON.stringify(payload));
 }
 
-function isTokyoWorkerBridgeRequest(req) {
-  const raw = req.headers[TOKYO_L10N_BRIDGE_HEADER];
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  return String(value || '').trim() === '1';
-}
-
 function shouldProxyMutableToWorker(req, pathname) {
-  if (isTokyoWorkerBridgeRequest(req)) return false;
-  const isAccountInstanceL10nRead =
-    pathname.startsWith('/l10n/widgets/') || /^\/l10n\/v\/[^/]+\/widgets\//.test(pathname);
-  if ((req.method === 'GET' || req.method === 'HEAD') && isAccountInstanceL10nRead) {
-    return true;
-  }
-  if (
-    (req.method === 'PUT' || req.method === 'DELETE') &&
-    /^\/assets\/[0-9a-f-]{36}\/[0-9a-f-]{36}$/i.test(pathname)
-  ) {
-    return true;
-  }
   if ((req.method === 'GET' || req.method === 'HEAD') && parseAccountAssetRef(pathname)) {
-    return true;
-  }
-  if ((req.method === 'POST' || req.method === 'DELETE') && pathname.startsWith('/l10n/widgets/')) {
     return true;
   }
   return false;
@@ -296,12 +282,8 @@ function resolveStaticRoot(prefix, relativePathPosix) {
     }
     return { root: path.join(productDir, 'widgets'), relativePathPosix };
   }
-  if (prefix === '/l10n/') {
-    if (relativePathPosix.startsWith('prague/')) {
-      return { root: path.join(pragueDir, 'l10n'), relativePathPosix: relativePathPosix.slice('prague/'.length) };
-    }
-    return { root: path.join(pragueDir, 'l10n'), relativePathPosix: '__not_found__' };
-  }
+  if (prefix === '/prague/l10n/') return { root: path.join(pragueDir, 'l10n'), relativePathPosix };
+  if (prefix === '/prague/assets/') return { root: path.join(pragueDir, 'assets'), relativePathPosix };
   return { root: baseDir, relativePathPosix };
 }
 
@@ -314,12 +296,6 @@ function serveStatic(req, res, prefix) {
   }
 
   let relativePathPosix = pathname.slice(prefix.length);
-  if (prefix === '/l10n/' && relativePathPosix.startsWith('l10n/v/')) {
-    relativePathPosix = relativePathPosix.replace(/^l10n\/v\/[^/]+\//, 'l10n/');
-  }
-  if (prefix === '/l10n/' && relativePathPosix.startsWith('v/')) {
-    relativePathPosix = relativePathPosix.replace(/^v\/[^/]+\//, '');
-  }
   const resolvedStatic = resolveStaticRoot(prefix, relativePathPosix);
   const relativePath = resolvedStatic.relativePathPosix;
   const cacheControlFor = () => {
@@ -333,7 +309,7 @@ function serveStatic(req, res, prefix) {
       }
       return 'public, max-age=31536000, immutable';
     }
-    if (prefix === '/l10n/') {
+    if (prefix === '/prague/l10n/') {
       if (relativePathPosix.endsWith('/index.json')) {
         return 'public, max-age=300, stale-while-revalidate=600';
       }
@@ -393,7 +369,7 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, authorization, x-account-id, x-instance-id, x-widget-type, x-filename, x-asset-id, x-source, x-tokyo-l10n-bridge'
+    'Content-Type, authorization, x-account-id, x-instance-id, x-widget-type, x-filename, x-asset-id, x-source'
   );
 
   if (req.method === 'OPTIONS') {
@@ -491,7 +467,8 @@ const server = http.createServer((req, res) => {
     serveStatic(req, res, '/dieter/') ||
     serveStatic(req, res, '/i18n/') ||
     serveStatic(req, res, '/fonts/') ||
-    serveStatic(req, res, '/l10n/') ||
+    serveStatic(req, res, '/prague/l10n/') ||
+    serveStatic(req, res, '/prague/assets/') ||
     serveStatic(req, res, '/themes/') ||
     serveStatic(req, res, '/widgets/')
   ) {

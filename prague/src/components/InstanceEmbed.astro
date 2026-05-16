@@ -3,6 +3,7 @@ import Icon from './Icon.astro';
 import { resolvePragueWidgetLabel } from '../lib/widgetCatalog';
 
 type Props = {
+  accountPublicId?: string;
   instanceId?: string;
   locale: string;
   localeOverride?: string;
@@ -17,6 +18,7 @@ const { locale, localeOverride, title = 'Widget preview', loading = 'lazy', embe
   Astro.props;
 
 const props = Astro.props as Props;
+const accountPublicId = String(props.accountPublicId || '').trim();
 const instanceId = String(props.instanceId || '').trim();
 const showShareChrome = props.showShareChrome !== false;
 const PRAGUE_EMBED_MIN_HEIGHT = 420;
@@ -35,8 +37,8 @@ const tsToken = import.meta.env.DEV ? String(Date.now()) : '';
 const ts = tsToken ? `&ts=${encodeURIComponent(tsToken)}` : '';
 const resolvedLocale = String(localeOverride || locale || 'en').trim();
 const loaderSrc = VENICE_URL ? `${VENICE_URL.replace(/\/+$/, '')}/embed/latest/loader.js` : null;
-const iframeSrc = VENICE_URL
-  ? `${VENICE_URL.replace(/\/+$/, '')}/widget/${encodeURIComponent(instanceId)}?locale=${encodeURIComponent(resolvedLocale)}${ts}`
+const iframeSrc = VENICE_URL && accountPublicId
+  ? `${VENICE_URL.replace(/\/+$/, '')}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}?locale=${encodeURIComponent(resolvedLocale)}${ts}`
   : null;
 
 const anchorId = `ck-instance-${instanceId.replace(/[^a-z0-9_-]+/gi, '-')}`;
@@ -71,6 +73,7 @@ const brandSvgs = {
         <script
           src={loaderSrc}
           defer
+          data-account-public-id={accountPublicId}
           data-instance-id={instanceId}
           data-trigger="immediate"
           data-ck-optimization="seo-geo"

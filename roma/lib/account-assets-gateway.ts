@@ -11,6 +11,7 @@ import {
 type AccountAssetGatewayContext = {
   accountId: string;
   accountCapsule: string;
+  authzPayload: CurrentAccountRouteContext['authzPayload'];
   requestId: string;
   sessionSetCookies?: CurrentAccountRouteContext['setCookies'];
 };
@@ -66,8 +67,9 @@ export async function resolveCurrentAccountAssetGatewayContext(args: {
     return {
       ok: true,
       value: {
-        accountId: current.value.authzPayload.accountId,
+        accountId: current.value.authzPayload.accountPublicId,
         accountCapsule: current.value.authzToken,
+        authzPayload: current.value.authzPayload,
         requestId: current.value.requestId,
         sessionSetCookies: current.value.setCookies,
       },

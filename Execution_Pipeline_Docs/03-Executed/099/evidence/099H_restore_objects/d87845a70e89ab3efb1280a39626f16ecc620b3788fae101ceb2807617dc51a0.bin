@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "UKK-ominaisuudet – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Näin UKK-widget toimii: SEO, lokalisointi, julkaisuprosessi ja tekoälyavusteinen muokkaus."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Näin UKK-widget toimii"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Tekoälyluonnoksista lokalisointiin ja SEO:hon — nämä järjestelmät pitävät vastaukset oikein ja helposti löydettävinä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Kuvaile kerran. Tekoäly luonnostelee loput."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Luo rakenteiset luonnokset suoraan editorissa ja hyväksy, muokkaa tai hylkää jokainen ehdotus ennen julkaisua."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Jopa 29 kieltä yhdessä widgetissä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Tarjoa käännetyt vastaukset automaattisesti ja hienosäädä sanamuotoa käsin, kun brändiääni tai vivahteet merkitsevät."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Julkaise kerran. Päivitä jokainen sivu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Muokkaa kerran yhdessä lähteessä, julkaise ja toimita uusimmat vastaukset jokaiseen live-upotukseen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "Hakukoneet pystyvät lukemaan vastauksesi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "Palvelinrenderöidyt vastaukset, schema-tuotanto ja syvälinkit auttavat hakukoneita indeksoimaan ja nostamaan esiin oikean sisällön."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google näkee jokaisen sanan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Rikkaat katkelmat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Syvälinkitys"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "Palvelinpuolen renderöinti pitää vastaukset indeksoitavina lähes ilman asettelun hyppimistä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "Automaattinen JSON-LD auttaa hakukoneita nostamaan vastauksesi esiin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Ohjaa käyttäjät juuri siihen vastaukseen, jota he tarvitsevat, vakaalla URL-osoitteella."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Elävä tietopankki, joka kasvaa kanssasi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Pidä vastaukset oikein, kun tuotteesi, käytäntösi ja yleisösi kehittyvät."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Luotettava suunnittelusta asti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "Versioitu julkaisu ja selkeät live-rajat pitävät tiheät päivitykset hallinnassa tiimeille."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Versioidut muutokset"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Julkaisuraja"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "Reunavälimuistissa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Jokainen julkaisu versioidaan, jotta tiimit voivat kehittää hallitusti."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "Live-sisältö muuttuu vasta erillisellä julkaisulla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "Millisekunnit merkitsevät. Toimitamme vastaukset käyttäjääsi lähimpänä olevasta sijainnista."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Täysi kontrolli ulkoasuun"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Hallitse pyöristyksiä, varjoja, reunoja, välistyksiä ja typografiaa visuaalisessa editorissa, joka on tehty brändin yhtenäisyyttä varten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Asettelut"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Typografia"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Teemat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Haitari-, lista- ja korttirakenteet sekä responsiiviset välistyssäädöt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Roolipohjainen typografia otsikoille, kysymyksille, vastauksille ja CTA:ille."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Tuki vaalealle ja tummalle tilalle sekä brändivärien hallinta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Globaali toimitus oletuksena"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Yhdistä lokalisointi, SEO ja edge-toimitus yhdeksi järjestelmäksi, jotta globaalit sivut pysyvät nopeina ja selkeinä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Edge-toimitus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Lokalisointi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Toimitetaan edge-infrastruktuurista."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Jopa 29 kieltä ja ylikirjoitusten tuki."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Rakenteiset vastaukset JSON-LD-tuella."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Tehty tuotantosivustoille"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Käytä vakio- tai skriptittömiä upotuksia ja pidä live-päivitykset ennakoitavina selkeällä julkaisukontrollilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Upotusvaihtoehdot"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Julkaisun hallinta"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Koostettavuus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Vakio skriptiupotus sekä skriptittömät iframe-vaihtoehdot."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Selkeä julkaisuprosessi live-päivityksille."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Tyylit, sisältö ja kielet yhdistyvät ilman haaroja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Rakenna parempi UKK-kokemus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Aloita ilmaiseksi, julkaise nopeasti ja pidä UKK ajan tasalla jokaisella sivulla ja jokaisella kielellä."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,79 @@
+{
+  "accountId": "00000000-0000-0000-0000-000000000100",
+  "entries": [
+    {
+      "accountId": "00000000-0000-0000-0000-000000000100",
+      "displayName": "wgt_main_countdown",
+      "id": "ins_01KR8R6ZYTPM6B3CHS8KZ0CEC9",
+      "publishStatus": "published",
+      "updatedAt": "2026-04-27T16:01:54.928Z",
+      "widgetType": "countdown"
+    },
+    {
+      "accountId": "00000000-0000-0000-0000-000000000100",
+      "displayName": "photo.hospitality.westcoast",
+      "id": "ins_01KR8R6ZYZBDXE0DT2FB8PB0NN",
+      "publishStatus": "unpublished",
+      "updatedAt": "2026-05-14T06:28:24.387Z",
+      "widgetType": "faq"
+    },
+    {
+      "accountId": "00000000-0000-0000-0000-000000000100",
+      "displayName": "lightblurs.generic",
+      "id": "ins_01KR8R6ZYZZNDEZA0R8KCSWEEG",
+      "publishStatus": "published",
+      "updatedAt": "2026-04-28T05:38:05.005Z",
+      "widgetType": "faq"
+    },
+    {
+      "accountId": "00000000-0000-0000-0000-000000000100",
+      "displayName": "wgt_curated_faq_photo_museum_art",
+      "id": "ins_01KR8R6ZYZWXEWPYHVBWVD4PPZ",
+      "publishStatus": "published",
+      "updatedAt": "2026-04-27T16:03:12.399Z",
+      "widgetType": "faq"
+    },
+    {
+      "accountId": "00000000-0000-0000-0000-000000000100",
+      "displayName": "wgt_curated_faq_minimal_whitegreen_museum",
+      "id": "ins_01KR8R6ZZ0SXP6MSSHRNV0S52R",
+      "publishStatus": "published",
+      "updatedAt": "2026-04-27T16:02:55.509Z",
+      "widgetType": "faq"
+    },
+    {
+      "accountId": "00000000-0000-0000-0000-000000000100",
+      "displayName": "wgt_curated_faq_photo_restaurant_highend",
+      "id": "ins_01KR8R6ZZ0M5RN6CVDR0X5G6DR",
+      "publishStatus": "published",
+      "updatedAt": "2026-04-27T16:02:41.585Z",
+      "widgetType": "faq"
+    },
+    {
+      "accountId": "00000000-0000-0000-0000-000000000100",
+      "displayName": "wgt_curated_faq_minimal_techpalette",
+      "id": "ins_01KR8R6ZZ0F8CKMC45CXEB5BKX",
+      "publishStatus": "published",
+      "updatedAt": "2026-04-27T16:02:25.823Z",
+      "widgetType": "faq"
+    },
+    {
+      "accountId": "00000000-0000-0000-0000-000000000100",
+      "displayName": "wgt_main_faq",
+      "id": "ins_01KR8R6ZZ0TXQMJQ3VPS9WM2QJ",
+      "publishStatus": "published",
+      "updatedAt": "2026-04-27T16:01:10.921Z",
+      "widgetType": "faq"
+    },
+    {
+      "accountId": "00000000-0000-0000-0000-000000000100",
+      "displayName": "wgt_main_logoshowcase",
+      "id": "ins_01KR8R6ZZ07S5PMJVSRKM4M7K8",
+      "publishStatus": "published",
+      "updatedAt": "2026-04-27T16:01:41.366Z",
+      "widgetType": "logoshowcase"
+    }
+  ],
+  "updatedAt": "2026-05-14T06:28:28.169Z",
+  "v": 1
+}

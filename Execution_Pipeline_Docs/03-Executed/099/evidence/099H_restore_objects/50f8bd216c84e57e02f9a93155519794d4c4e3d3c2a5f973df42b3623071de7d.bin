@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQの例 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "あらゆる業界向けの実例FAQ集。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "業界別FAQウィジェット事例"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "旅行・ホスピタリティ・サービス業のチームが、1つのFAQウィジェットでよくある質問に素早く答えている方法をご紹介します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "ホテル＆リゾート"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "到着前にチェックイン、駐車場、朝食の疑問を解消し、フロントへの問い合わせを減らします。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "レストラン・カフェ・バー"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "メニュー、アレルゲン情報、営業時間をモバイルで分かりやすく提示。スタッフとのやり取りを減らし、来店判断を早めます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "バケーションレンタル＆プロパティマネージャー"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "1回の公開フローで、チェックイン手順、Wi‑Fi情報、ハウスルールを物件間で統一して運用できます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "世界中の訪問者は“すぐに分かる”ことを求めています"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "一度公開すれば、最初のクリックから適切な言語で回答を提供できます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "ツアーオペレーター＆旅行代理店"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "集合場所、キャンセル規定、天候時の対応を事前に明確化し、自信を持って予約できる状態にします。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "観光施設・博物館・テーマパーク"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "チケット、入場ルール、アクセシビリティ情報を来場前に明確化。到着時の流れをスムーズにします。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "シンプルな運用サイクル"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "繰り返しの質問を一度まとめ、更新を素早く公開。内容の変更に合わせて、公開中の全ページを常に揃えます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "よくある質問を追加"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "一度公開"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "全言語を同期"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "検討前に訪問者が繰り返し尋ねる質問から始めましょう。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "ワンクリックで、最新の回答を全ページに反映します。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "元の内容が変わると翻訳も更新され、メッセージの一貫性を保てます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "本番運用のために設計"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "グローバルなエッジ速度、柔軟な埋め込み方法、回答を最新に保つシンプルな公開フロー。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "高速"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "柔軟"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "常に最新"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "グローバルなエッジ配信。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "標準の埋め込みとスクリプト不要の埋め込みに対応。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "一度の公開で、すべての公開ページを更新できます。"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Clickeenで解決しよう"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "無料で開始。デザインをブランドに合わせて調整し、ページ全体に拡張できるライブFAQを公開しましょう。"
+    }
+  ],
+  "v": 1
+}

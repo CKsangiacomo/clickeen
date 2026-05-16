@@ -17,7 +17,8 @@
         "subheadline": "Design it your way, publish once, and every live FAQ on your site updates with the latest answers."
       },
       "accountInstanceRef": {
-        "instanceId": "INST000001"
+        "accountPublicId": "00000001",
+        "instanceId": "UZ3JEJSHII"
       }
     },
     {
@@ -32,7 +33,8 @@
       "id": "minibob",
       "type": "minibob",
       "accountInstanceRef": {
-        "instanceId": "INST000001"
+        "accountPublicId": "00000001",
+        "instanceId": "UZ3JEJSHII"
       },
       "copy": {
         "heading": "Preview a live FAQ",
@@ -85,7 +87,8 @@
         "subtitle": "Welcome every website visitor like a local. Instant, natural translations for a global audience."
       },
       "accountInstanceRef": {
-        "instanceId": "INST000001"
+        "accountPublicId": "00000001",
+        "instanceId": "UZ3JEJSHII"
       }
     },
     {
@@ -119,7 +122,8 @@
         "subheadline": "Radius. Shadows. Borders. Spacing. Tune every property in our visual editor without writing a single line of CSS."
       },
       "accountInstanceRef": {
-        "instanceId": "INST000001"
+        "accountPublicId": "00000001",
+        "instanceId": "UZ3JEJSHII"
       }
     },
     {

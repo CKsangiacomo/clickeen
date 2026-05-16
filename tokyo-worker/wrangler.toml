@@ -5,7 +5,11 @@ compatibility_flags = ["global_fetch_strictly_public"]
 workers_dev = false
 routes = [
   { pattern = "tokyo.dev.clickeen.com/healthz", zone_name = "clickeen.com" },
-  { pattern = "tokyo.dev.clickeen.com/l10n/*", zone_name = "clickeen.com" },
+  { pattern = "tokyo.dev.clickeen.com/widgets/*", zone_name = "clickeen.com" },
+  { pattern = "tokyo.dev.clickeen.com/dieter/*", zone_name = "clickeen.com" },
+  { pattern = "tokyo.dev.clickeen.com/themes/*", zone_name = "clickeen.com" },
+  { pattern = "tokyo.dev.clickeen.com/prague/l10n/*", zone_name = "clickeen.com" },
+  { pattern = "tokyo.dev.clickeen.com/prague/assets/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/assets/account/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/fonts/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/renders/*", zone_name = "clickeen.com" },

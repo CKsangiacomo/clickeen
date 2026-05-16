@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "UKK-esimerkit – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Käytännön FAQ-esimerkkejä jokaiselle toimialalle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "UKK-widgetin esimerkkejä toimialoittain"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Katso, miten matkailu-, majoitus- ja palvelualan tiimit käyttävät yhtä UKK-widgetiä vastatakseen toistuviin kysymyksiin nopeammin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Hotellit & resortit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Vastaa sisäänkirjautumiseen, pysäköintiin ja aamiaiseen liittyviin kysymyksiin jo ennen saapumista ja vähennä vastaanoton keskeytyksiä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Ravintolat, kahvilat & baarit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Pidä menutiedot, allergeenit ja aukioloajat selkeinä mobiilissa, jotta asiakkaat päättävät nopeammin ja henkilökunnan edestakainen viestintä vähenee."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Loma-asunnot & kiinteistönhoitajat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Pidä sisäänkirjautumisohjeet, Wi‑Fi-tiedot ja talon säännöt yhtenäisinä kaikissa kohteissa yhdellä julkaisuprosessilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Kansainväliset kävijät odottavat välitöntä selkeyttä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Julkaise kerran ja tarjoa vastaukset oikealla kielellä heti ensimmäisestä klikkauksesta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Matkanjärjestäjät & matkatoimistot"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Kerro noutopisteet, peruutusehdot ja sääkäytännöt etukäteen, jotta varauspäätökset syntyvät luottavaisin mielin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Nähtävyydet, museot & huvipuistot"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Selkeytä liput, sisäänpääsysäännöt ja esteettömyystiedot ennen vierailua, jotta saapuminen sujuu kaikille helpommin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Yksinkertainen toimintokierto"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Kerää toistuvat kysymykset kerran, julkaise päivitykset nopeasti ja pidä kaikki sivut linjassa, kun tiedot muuttuvat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Lisää tärkeimmät kysymykset"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Julkaise kerran"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Pidä kaikki kielet synkassa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Aloita toistuvista kysymyksistä, joita kävijät esittävät ennen päätöksen tekemistä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Yksi klikkaus julkaisee uusimmat vastauksesi kaikilla sivuilla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Kun perussisältö muuttuu, käännökset päivittyvät, jotta viestisi pysyy yhtenäisenä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Rakennettu tuotantokäyttöön"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Nopeus globaalilla reunaverkolla, joustavat upotusvaihtoehdot ja helppo julkaisuprosessi, joka pitää vastaukset ajan tasalla."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Nopea"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Joustava"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Ajan tasalla"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Globaali edge-toimitus."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Vakiomuotoiset ja skriptittömät upotusvaihtoehdot."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Julkaise kerran ja päivitä kaikki live-sivut."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Ratkaise se Clickeenillä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Aloita ilmaiseksi, muokkaa ulkoasu brändiisi sopivaksi ja julkaise UKK, joka skaalautuu useille sivuille."
+    }
+  ],
+  "v": 1
+}

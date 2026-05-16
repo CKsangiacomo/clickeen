@@ -1,0 +1,48 @@
+{
+  "v": 1,
+  "id": "ins_01KR8R6ZZ07S5PMJVSRKM4M7K8",
+  "accountId": "00000000-0000-0000-0000-000000000100",
+  "widgetType": "logoshowcase",
+  "displayName": "wgt_main_logoshowcase",
+  "meta": null,
+  "createdAt": "2026-04-27T16:01:41.366Z",
+  "updatedAt": "2026-04-27T16:01:41.366Z",
+  "l10n": {
+    "baseFingerprint": "dfd6641cdf6fbc9280fd987820f041f13eb3d8d6c6816076d19d381501f23cd2",
+    "summary": {
+      "baseLocale": "en",
+      "desiredLocales": [
+        "en",
+        "ar",
+        "bn",
+        "cs",
+        "da",
+        "de",
+        "es",
+        "fi",
+        "fil",
+        "fr",
+        "he",
+        "hi",
+        "hu",
+        "id",
+        "it",
+        "ja",
+        "ko",
+        "nb",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sv",
+        "th",
+        "tr",
+        "uk",
+        "vi",
+        "zh-hans",
+        "zh-tw"
+      ]
+    }
+  },
+  "configFp": "87f5047de7e76da547a72bb44d3917c7996ca96249e61ca1f875057c250d8304"
+}

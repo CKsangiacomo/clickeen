@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "דוגמאות לשאלות נפוצות - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "דוגמאות לשאלות נפוצות מהעולם האמיתי לכל ענף."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "דוגמאות לווידג׳ט FAQ לפי תחום"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ראו איך צוותים בתיירות, אירוח ועסקי שירות משתמשים בווידג׳ט FAQ אחד כדי לענות מהר יותר על שאלות חוזרות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "מלונות ואתרי נופש"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "ענו מראש על שאלות על צ׳ק-אין, חניה וארוחת בוקר לפני שהאורחים מגיעים—והפחיתו הפרעות בדלפק הקבלה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "מסעדות, בתי קפה וברים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "הציגו בצורה ברורה בנייד פרטי תפריט, אלרגנים ושעות פתיחה—כדי שהאורחים יחליטו מהר יותר עם פחות הלוך־ושוב מול הצוות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "דירות נופש ומנהלי נכסים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "שמרו על עקביות בהנחיות צ׳ק-אין, פרטי Wi‑Fi וכללי הבית בכל הנכסים, עם תהליך פרסום אחד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "מבקרים מכל העולם מצפים לבהירות מיידית"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "מפרסמים פעם אחת ומגישים תשובות בשפה הנכונה כבר מהקליק הראשון."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "מפעילי טיולים וסוכנויות נסיעות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "הבהירו מראש נקודות איסוף, כללי ביטול ומדיניות מזג אוויר—כדי שהחלטות הזמנה יתקבלו בביטחון."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "אטרקציות, מוזיאונים ופארקי שעשועים"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "הבהירו כרטיסים, כללי כניסה ומידע על נגישות עוד לפני ההגעה—כדי שהכניסה תהיה חלקה יותר לכולם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "לולאת תפעול פשוטה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "אוספים פעם אחת שאלות שחוזרות על עצמן, מפרסמים עדכונים במהירות, ושומרים שכל עמוד חי יישאר מתואם כשהפרטים משתנים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "הוסיפו את השאלות המובילות שלכם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "פרסמו פעם אחת"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "שמרו על סנכרון בכל שפה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "התחילו מהשאלות החוזרות שמבקרים שואלים לפני שהם מחליטים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "קליק אחד מעלה לאוויר את התשובות העדכניות בכל עמוד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "כשיש שינוי בתוכן הבסיסי, התרגומים מתעדכנים כדי שהמסר יישאר מתואם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "נבנה לשימוש בפרודקשן"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "מהירות גלובלית בקצה, אפשרויות הטמעה גמישות, ותהליך פרסום פשוט ששומר שהתשובות יישארו מעודכנות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "מהיר"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "גמיש"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "מעודכן"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "הפצה גלובלית בקצה הרשת."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "אפשרויות הטמעה סטנדרטיות וללא סקריפטים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "מפרסמים פעם אחת כדי לעדכן כל עמוד חי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "פתרו את זה עם Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "התחילו בחינם, התאימו את העיצוב למותג שלכם, ופרסמו FAQ חי שמתרחב בקלות על פני עמודים."
+    }
+  ],
+  "v": 1
+}

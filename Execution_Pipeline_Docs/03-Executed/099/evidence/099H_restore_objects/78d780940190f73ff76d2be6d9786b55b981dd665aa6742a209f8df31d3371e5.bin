@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "type": "l10n",
+  "locale": "de",
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "status": "ready",
+  "ops": [],
+  "textPack": {
+    "cta.label": "Kontakt",
+    "header.subtitleHtml": "Moderne Website-Widgets – schnell live, einfach anzupassen und dafür gemacht, mehr Conversions zu erzielen.",
+    "header.title": "FAQs",
+    "sections.0.faqs.0.answer": "Clickeen ist eine Widget-SaaS-Plattform, mit der du in wenigen Minuten hochwertige, performante Widgets auf deiner Website einbauen kannst – ganz ohne großen Entwicklungsaufwand.",
+    "sections.0.faqs.0.question": "Was ist Clickeen?",
+    "sections.0.faqs.1.answer": "Ja. Der Free-Plan enthält 1 aktives Widget mit den wichtigsten Funktionen, damit du Clickeen auf einer Live-Website testen kannst.",
+    "sections.0.faqs.1.question": "Bietet ihr einen kostenlosen Plan an?",
+    "sections.0.faqs.2.answer": "Erstelle dein Widget, kopiere den Embed-Code und füge ihn direkt vor dem schließenden </body>-Tag auf deiner Website ein. Änderungen in Clickeen werden sofort übernommen.",
+    "sections.0.faqs.2.question": "Wie installiere ich ein Widget auf meiner Website?",
+    "sections.0.faqs.3.answer": "Schneller live gehen – mit flexiblen Design-Optionen, einfachen Updates und zuverlässiger Performance, damit dein Team Verbesserungen ausliefern kann, ohne eigenen Code pflegen zu müssen.",
+    "sections.0.faqs.3.question": "Warum Clickeen nutzen, statt Widgets von Grund auf selbst zu bauen?",
+    "sections.0.title": "Erste Schritte"
+  },
+  "updatedAt": "2026-03-23T18:57:29.518Z"
+}

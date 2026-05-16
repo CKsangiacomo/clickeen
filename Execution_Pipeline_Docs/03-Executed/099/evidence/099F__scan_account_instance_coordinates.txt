@@ -1,0 +1,148 @@
+bob/lib/session/sessionTypes.ts:35:  accountPublicId?: string;
+bob/lib/session/sessionTypes.ts:70:  accountPublicId?: string;
+prague/src/components/WidgetBlocks.astro:35:  accountInstanceRef?: { accountPublicId?: string; instanceId?: string; embedMode?: string };
+prague/src/components/WidgetBlocks.astro:68:  blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.accountInstanceRef?.accountPublicId === 'string')?.accountInstanceRef?.accountPublicId ??
+prague/src/components/WidgetBlocks.astro:76:  blocks.find((b) => b && b.accountInstanceRef && typeof b.accountInstanceRef.accountPublicId === 'string')?.accountInstanceRef?.accountPublicId ??
+prague/src/components/WidgetBlocks.astro:132:  const accountPublicId = String(value || '').trim();
+prague/src/components/WidgetBlocks.astro:133:  if (!accountPublicId) {
+prague/src/components/WidgetBlocks.astro:134:    throw new Error(`[prague] ${widget}/${activeSubpage}: ${context} requires explicit accountInstanceRef.accountPublicId`);
+prague/src/components/WidgetBlocks.astro:136:  return accountPublicId;
+prague/src/components/WidgetBlocks.astro:158:      const accountPublicId = block.accountInstanceRef?.accountPublicId;
+prague/src/components/WidgetBlocks.astro:171:      const heroPreviewAccountPublicId = accountPublicId || showcaseAccountPublicId;
+prague/src/components/WidgetBlocks.astro:178:                accountPublicId: heroPreviewAccountPublicId,
+prague/src/components/WidgetBlocks.astro:201:            accountPublicId && accountInstanceId
+prague/src/components/WidgetBlocks.astro:202:              ? { accountPublicId, instanceId: accountInstanceId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: accountInstanceEmbedMode }
+prague/src/components/WidgetBlocks.astro:214:      const accountPublicId = block.accountInstanceRef?.accountPublicId;
+prague/src/components/WidgetBlocks.astro:229:            accountPublicId && accountInstanceId
+prague/src/components/WidgetBlocks.astro:230:              ? { accountPublicId, instanceId: accountInstanceId, locale, title: `${widget} ${activeSubpage} split`, embedMode: accountInstanceEmbedMode }
+prague/src/components/WidgetBlocks.astro:344:      const minibobAccountPublicId = requireAccountPublicId('minibob', block.accountInstanceRef?.accountPublicId);
+prague/src/components/WidgetBlocks.astro:354:            accountPublicId={minibobAccountPublicId}
+prague/src/components/WidgetBlocks.astro:359:              accountPublicId={minibobAccountPublicId}
+prague/src/components/WidgetBlocks.astro:373:      const localeShowcaseAccountPublicId = requireAccountPublicId('locale-showcase', block.accountInstanceRef?.accountPublicId ?? showcaseAccountPublicId);
+prague/src/components/WidgetBlocks.astro:380:          accountPublicId={localeShowcaseAccountPublicId}
+prague/src/lib/instanceL10n.ts:41:export async function resolveTokyoInstanceLocales(accountPublicId: string, instanceId: string): Promise<string[] | null> {
+prague/src/lib/instanceL10n.ts:42:  const accountId = String(accountPublicId || '').trim();
+prague/src/lib/instanceL10n.ts:48:    `${baseUrl}/renders/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(id)}/live/r.json`,
+prague/README.md:33:Prague widget pages embed explicit Clickeen-owned account instances by `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId`.
+prague/README.md:43:- `PUBLIC_VENICE_URL=https://venice.dev.clickeen.com` (must serve `GET /widget/:accountPublicId/:instanceId`)
+prague/src/components/Carousel.astro:6:    accountPublicId: string;
+prague/src/components/Carousel.astro:33:                  accountPublicId={item.accountInstanceRef.accountPublicId}
+roma/lib/domains.ts:23:  { key: 'widgets', label: 'Widgets', href: '/widgets', description: 'Manage account-owned instances.' },
+roma/lib/domains.ts:24:  { key: 'builder', label: 'Builder', href: '/builder', description: 'Edit widget instances in Bob.' },
+prague/src/lib/blockRegistry.ts:221:    const accountPublicId = (block.accountInstanceRef as { accountPublicId?: unknown }).accountPublicId;
+prague/src/lib/blockRegistry.ts:222:    if (accountPublicId != null && typeof accountPublicId !== 'string') {
+prague/src/lib/blockRegistry.ts:223:      throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef.accountPublicId must be a string`);
+prague/src/components/InstanceEmbed.astro:6:  accountPublicId?: string;
+prague/src/components/InstanceEmbed.astro:21:const accountPublicId = String(props.accountPublicId || '').trim();
+prague/src/components/InstanceEmbed.astro:40:const iframeSrc = VENICE_URL && accountPublicId
+prague/src/components/InstanceEmbed.astro:41:  ? `${VENICE_URL.replace(/\/+$/, '')}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}?locale=${encodeURIComponent(resolvedLocale)}${ts}`
+prague/src/components/InstanceEmbed.astro:76:          data-account-public-id={accountPublicId}
+prague/src/components/InstanceEmbed.astro:471:  const instances = document.querySelectorAll('.ck-instanceEmbed');
+prague/src/components/InstanceEmbed.astro:472:  instances.forEach((instance) => {
+bob/lib/session/useSessionBoot.ts:57:          accountPublicId: message.accountPublicId,
+prague/src/lib/markdown.ts:19:async function assertAccountInstanceExists(args: { accountPublicId: string; instanceId: string; pagePath: string }): Promise<void> {
+prague/src/lib/markdown.ts:26:  const accountPublicId = String(args.accountPublicId || '').trim();
+prague/src/lib/markdown.ts:28:  if (!isCompactAccountPublicId(accountPublicId)) {
+prague/src/lib/markdown.ts:30:      `[prague] ${args.pagePath}: accountInstanceRef.accountPublicId must be a PRD 099 account public id, got "${args.accountPublicId}"`,
+prague/src/lib/markdown.ts:39:  const cacheKey = `${accountPublicId}/${instanceId}`;
+prague/src/lib/markdown.ts:44:    const url = `${baseUrl}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`;
+prague/src/lib/markdown.ts:77:      const accountPublicId = String((accountInstanceRef as any).accountPublicId || '').trim();
+prague/src/lib/markdown.ts:79:      return accountPublicId || instanceId ? { accountPublicId, instanceId } : null;
+prague/src/lib/markdown.ts:81:    .filter((value): value is { accountPublicId: string; instanceId: string } => Boolean(value));
+roma/lib/account-assets-gateway.ts:70:        accountId: current.value.authzPayload.accountPublicId,
+prague/src/blocks/minibob/minibob.astro:12:  accountPublicId: string;
+prague/src/blocks/minibob/minibob.astro:16:const { widget, locale, heading, subhead, accountPublicId, instanceId } = Astro.props;
+prague/src/blocks/minibob/minibob.astro:18:if (!String(accountPublicId || '').trim()) {
+prague/src/blocks/minibob/minibob.astro:19:  throw new Error('[prague] minibob requires an explicit accountInstanceRef.accountPublicId');
+prague/src/blocks/minibob/minibob.astro:68:        accountPublicId={accountPublicId}
+prague/src/blocks/locale-showcase/locale-showcase.astro:5:  accountPublicId: string;
+prague/src/blocks/locale-showcase/locale-showcase.astro:15:  accountPublicId,
+prague/src/blocks/locale-showcase/locale-showcase.astro:45:              accountPublicId={accountPublicId}
+prague/src/blocks/hero/hero.astro:14:    accountPublicId: string;
+prague/src/blocks/hero/hero.astro:31:    accountPublicId: string;
+prague/src/blocks/hero/hero.astro:97:            accountPublicId={accountInstanceRef.accountPublicId}
+prague/src/blocks/split/split.astro:20:    accountPublicId: string;
+prague/src/blocks/split/split.astro:85:              accountPublicId={accountInstanceRef.accountPublicId}
+prague/src/blocks/split/split.astro:117:              accountPublicId={accountInstanceRef.accountPublicId}
+roma/lib/account-babel-save-followup.ts:65:  accountPublicId: string;
+roma/lib/account-babel-save-followup.ts:95:    accountId: args.accountPublicId,
+roma/lib/account-babel-save-followup.ts:161:        accountId: args.accountPublicId,
+roma/lib/account-babel-save-followup.ts:215:        accountId: args.accountPublicId,
+prague/src/blocks/split-carousel/SplitCarousel.astro:14:    accountPublicId: string;
+roma/components/home-domain.tsx:21:            <p className="body-s">Create your first widget instance or open existing instances.</p>
+roma/components/home-domain.tsx:30:            <p className="body-s">Open existing widget instances and jump into Builder.</p>
+bob/components/Workspace.tsx:331:    // When switching instances/devices/modes, allow the iframe to re-measure.
+bob/components/EmbedModal.tsx:39:  const accountPublicId = session.meta?.accountPublicId ? String(session.meta.accountPublicId) : '';
+bob/components/EmbedModal.tsx:72:    const canRender = Boolean(isPublished && accountPublicId && instanceId && loaderSrc);
+bob/components/EmbedModal.tsx:75:      ? `<div data-account-public-id="${accountPublicId}" data-clickeen-id="${instanceId}"></div>
+bob/components/EmbedModal.tsx:76:<script src="${loaderSrc}" async data-account-public-id="${accountPublicId}"></script>`
+bob/components/EmbedModal.tsx:81:  src="${veniceBase}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}"
+bob/components/EmbedModal.tsx:92:  data-account-public-id="${accountPublicId}"
+bob/components/EmbedModal.tsx:99:<script src="${loaderSrc}" async data-account-public-id="${accountPublicId}"></script>`
+bob/components/EmbedModal.tsx:102:    const previewSeoGeoHref = accountPublicId && instanceId
+bob/components/EmbedModal.tsx:103:      ? `/bob/preview-shadow?accountPublicId=${encodeURIComponent(accountPublicId)}&instanceId=${encodeURIComponent(instanceId)}&mode=seo-geo`
+bob/components/EmbedModal.tsx:107:  }, [accountPublicId, instanceId, isPublished]);
+bob/components/EmbedModal.tsx:133:        {instanceId && !accountPublicId ? <div className="settings-panel__error">Account public ID missing.</div> : null}
+roma/components/widgets-domain.tsx:27:  const productAccountId = accountContext.accountPublicId;
+roma/components/widgets-domain.tsx:32:  const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
+roma/components/widgets-domain.tsx:44:    setWidgetInstances(widgets.instances);
+roma/components/widgets-domain.tsx:110:      .map(([widgetType, instances]) => ({
+roma/components/widgets-domain.tsx:112:        instances: instances.slice().sort((a, b) => a.instanceId.localeCompare(b.instanceId)),
+roma/components/widgets-domain.tsx:138:        }>('/api/account/instances', {
+roma/components/widgets-domain.tsx:169:        }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/duplicate`, {
+roma/components/widgets-domain.tsx:194:        await accountApi.fetchJson<{ deleted?: boolean }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}`, {
+roma/components/widgets-domain.tsx:216:          `/api/account/instances/${encodeURIComponent(instance.instanceId)}/${nextStatus === 'published' ? 'publish' : 'unpublish'}`,
+roma/components/widgets-domain.tsx:266:        }>(`/api/account/instances/${encodeURIComponent(instance.instanceId)}/rename`, {
+roma/components/widgets-domain.tsx:277:          instances: current.instances.map((entry) => (entry.instanceId === instance.instanceId ? { ...entry, displayName: resolvedDisplayName } : entry)),
+roma/components/widgets-domain.tsx:309:              <p className="body-m">No editable instances yet.</p>
+roma/components/widgets-domain.tsx:340:                {group.instances.length} {group.instances.length === 1 ? 'instance' : 'instances'}
+roma/components/widgets-domain.tsx:354:                {group.instances.map((instance) => {
+roma/components/widgets-domain.tsx:501:                {group.instances.length === 0 ? (
+roma/components/widgets-domain.tsx:504:                      No instances yet.
+roma/components/builder-domain.tsx:64:  accountPublicId: string;
+roma/components/builder-domain.tsx:144:        path: `/api/account/instances/${encodeURIComponent(instanceId)}`,
+roma/components/builder-domain.tsx:165:        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations`,
+roma/components/builder-domain.tsx:171:        path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot`,
+roma/components/builder-domain.tsx:177:        path: `/api/account/instances/${encodeURIComponent(instanceId)}/copilot/outcome`,
+roma/components/builder-domain.tsx:429:        accountPublicId: activeAccount.accountPublicId,
+roma/components/builder-domain.tsx:453:  }, [accountApi, accountPolicy, activeAccount.accountPublicId, activeAccount.l10nPolicy, activeInstanceId, postOpenEditorAndWait]);
+roma/components/use-roma-widgets.ts:60:  instances: WidgetInstance[];
+roma/components/use-roma-widgets.ts:143:  const instances = Array.isArray(record.instances)
+roma/components/use-roma-widgets.ts:144:    ? record.instances
+roma/components/use-roma-widgets.ts:157:    instances,
+roma/app/api/account/widgets/route.ts:43:  const accountId = current.value.authzPayload.accountPublicId;
+roma/app/api/account/widgets/route.ts:138:    instances: accountInstances,
+bob/app/bob/preview-shadow/page.tsx:10:  const accountPublicId = typeof searchParams.accountPublicId === 'string' ? searchParams.accountPublicId : '';
+bob/app/bob/preview-shadow/page.tsx:23:        data-account-public-id={accountPublicId}
+roma/components/use-roma-me.ts:17:  accountPublicId: string;
+roma/components/use-roma-me.ts:68:    accountPublicId?: string | null;
+roma/components/use-roma-me.ts:83:  accountPublicId: string | null;
+roma/components/use-roma-me.ts:181:  const accountPublicId = normalizeAccountPublicId(activeAccount.accountPublicId);
+roma/components/use-roma-me.ts:187:  if (!accountId || !accountPublicId || !role || !profile || !status || !name || !slug || typeof activeAccount.isPlatform !== 'boolean') {
+roma/components/use-roma-me.ts:197:  const accountPublicId = normalizeAccountPublicId(authz.accountPublicId);
+roma/components/use-roma-me.ts:204:  if (!accountId || !accountPublicId || !role || !profile || !authzVersion || !issuedAt || !expiresAt) {
+roma/components/use-roma-me.ts:219:  const activeAccountPublicId = normalizeAccountPublicId(data?.activeAccount?.accountPublicId);
+roma/components/use-roma-me.ts:220:  if (!activeAccountId || activeAccountId !== accountId || !activeAccountPublicId || activeAccountPublicId !== accountPublicId) {
+roma/components/use-roma-me.ts:229:  const accountPublicId = normalizeAccountPublicId(activeAccount.accountPublicId);
+roma/components/use-roma-me.ts:235:  if (!accountId || !accountPublicId || !role || !name || !slug || !tier || !status || typeof activeAccount.isPlatform !== 'boolean') {
+roma/components/use-roma-me.ts:240:    accountPublicId,
+roma/components/use-roma-me.ts:259:    accountPublicId: activeAccount?.accountPublicId ?? null,
+roma/components/roma-account-context.tsx:25:    accountPublicId: string;
+roma/components/roma-account-context.tsx:55:    const accountPublicId = accountContext.accountPublicId;
+roma/components/roma-account-context.tsx:56:    if (!activeAccount || !accountId || !accountPublicId || !accountContext.accountName || !accountContext.accountSlug) {
+roma/components/roma-account-context.tsx:67:        accountPublicId,
+roma/app/api/account/locales/route.ts:59:      accountId: current.value.authzPayload.accountPublicId,
+roma/app/api/account/locales/route.ts:178:      accountId: current.value.authzPayload.accountPublicId,
+roma/app/api/account/usage/route.ts:17:      accountId: current.value.authzPayload.accountPublicId,
+roma/app/api/account/usage/route.ts:24:        accountId: current.value.authzPayload.accountPublicId,
+roma/app/api/builder/[instanceId]/open/route.ts:28:    accountId: current.value.authzPayload.accountPublicId,
+roma/app/api/account/instances/route.ts:53:  const accountId = current.value.authzPayload.accountPublicId;
+roma/app/api/account/instances/[instanceId]/route.ts:21:  const accountId = current.value.authzPayload.accountPublicId;
+roma/app/api/account/instances/[instanceId]/route.ts:127:    accountPublicId: accountId,
+roma/app/api/account/instances/[instanceId]/route.ts:147:  const accountId = current.value.authzPayload.accountPublicId;
+roma/app/api/account/instances/[instanceId]/translations/route.ts:17:  const accountId = current.value.authzPayload.accountPublicId;
+roma/app/api/account/instances/[instanceId]/duplicate/route.ts:17:  const accountId = current.value.authzPayload.accountPublicId;
+roma/app/api/account/instances/[instanceId]/publish/route.ts:16:  const productAccountId = current.value.authzPayload.accountPublicId;
+roma/app/api/account/instances/[instanceId]/rename/route.ts:24:  const accountId = current.value.authzPayload.accountPublicId;
+roma/app/api/account/instances/[instanceId]/unpublish/route.ts:14:  const accountId = current.value.authzPayload.accountPublicId;
+roma/app/api/account/instances/[instanceId]/copilot/route.ts:77:      accountId: current.value.authzPayload.accountPublicId,

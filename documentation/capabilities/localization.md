@@ -1,6 +1,6 @@
 # Localization Capability
 
-STATUS: REFERENCE - PRD 098 MODEL
+STATUS: REFERENCE - PRD 098 MODEL + PRD 099 PUBLIC STORAGE
 
 Localization is the first Babel application of the overlay primitive. It translates widget-owned text primitives into locale overlay objects.
 
@@ -98,13 +98,35 @@ Partial overlay values are not selectable. Stale old values must not be shown as
 
 Venice serves only published projection truth.
 
-For a locale request, Venice reads the published projection, fetches the exact overlay object by `overlayId`, and resolves:
+The public serving coordinate is:
+
+```txt
+accountPublicId + instanceId
+```
+
+The Venice iframe route is:
+
+```txt
+/widget/{accountPublicId}/{instanceId}
+```
+
+For a locale request, Venice reads Tokyo's account-scoped published projection routes, fetches the exact published overlay object by `overlayId`, and resolves:
 
 ```txt
 publishedBaseConfig + one overlay values object
 ```
 
-If the published projection does not contain a usable overlay for that locale, the locale is unavailable at the named boundary. Venice must not fallback to an unrelated language or compose old overlay shapes.
+Projection reads use:
+
+```txt
+/renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json
+/renders/accounts/{accountPublicId}/instances/{instanceId}/config.json
+/renders/accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json
+```
+
+If the published projection does not exist, does not contain a usable overlay for that locale, or the overlay object is missing, the locale is unavailable at the named boundary. Venice returns a miss such as `404` for missing widget projections and must not fallback to an unrelated language, compose old overlay shapes, inspect account policy, or read raw authoring overlay state.
+
+Venice must not check billing, tier, compliance, caps, or publish eligibility. Those decisions belong to Roma/system account operations and Tokyo publication. Venice only observes whether the published projection exists.
 
 ## Prague
 
@@ -123,3 +145,6 @@ The following are not part of the active account-widget localization capability:
 - User-authored translation layers.
 - Locale-suffixed instance IDs.
 - Public serving from old `/l10n/widgets/**` truth as an identity authority.
+- Instance-only public widget routes such as `/widget/{instanceId}`.
+- Instance-only public render routes such as `/renders/widgets/{instanceId}/...`.
+- Root `published/`, root `public/`, or root `l10n/` lookup folders as public localization authority.

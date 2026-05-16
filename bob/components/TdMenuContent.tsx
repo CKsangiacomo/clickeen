@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
-import { type DieterAssets } from './td-menu-content/dom';
+import { type DieterMedia } from './td-menu-content/dom';
 import { resolvePathFromTarget } from './td-menu-content/fieldValue';
 import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './td-menu-content/showIf';
 import { useTdMenuBindings } from './td-menu-content/useTdMenuBindings';
@@ -16,7 +16,7 @@ type TdMenuContentProps = {
   instanceData: Record<string, unknown>;
   applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
   lastUpdate?: { source: 'field' | 'load' | 'external' | 'ops' | 'unknown'; path: string; ts: number } | null;
-  dieterAssets?: DieterAssets;
+  dieterMedia?: DieterMedia;
   header?: ReactNode;
   footer?: ReactNode;
 };
@@ -27,7 +27,7 @@ export function TdMenuContent({
   widgetKey,
   instanceData,
   applyOps,
-  dieterAssets,
+  dieterMedia,
   lastUpdate,
   header,
   footer,
@@ -78,7 +78,7 @@ export function TdMenuContent({
     widgetKey,
     widgetName: session.compiled?.widgetname ?? null,
     accountAssets: session.accountAssets,
-    dieterAssets,
+    dieterMedia,
     instanceDataRef,
     showIfEntriesRef,
     setRenderKey,

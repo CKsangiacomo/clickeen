@@ -54,9 +54,11 @@ export function useSessionBoot(args: {
         setPolicy(nextPolicy);
         setCopilot(nextCopilot);
         setMeta({
+          accountPublicId: message.accountPublicId,
           instanceId: message.instanceId,
           baseLocale,
           widgetname: compiled.widgetname,
+          publishStatus: message.publishStatus,
           label: nextLabel,
           meta: message.meta ?? null,
         });

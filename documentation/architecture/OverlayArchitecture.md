@@ -1,14 +1,14 @@
 # Overlay Architecture
 
-STATUS: REFERENCE - MUST MATCH PRD 098
+STATUS: REFERENCE - MUST MATCH PRD 098 IDENTITY + PRD 099 STORAGE
 
-PRD 098 is the active overlay truth. Older l10n/text-pack/readiness storage is pre-GA residue and must not be preserved as a compatibility system.
+PRD 098 is the active overlay identity and body truth. PRD 099 is the active physical account runtime storage truth. Older l10n/text-pack/readiness storage and PRD 098-era account-widget folder paths are pre-GA residue and must not be preserved as a compatibility system.
 
 ## Core Tenet
 
 An overlay is a SKU-like product object. The `overlayId` is the only overlay identity.
 
-There is no separate overlay hash, value name, content address, or body-derived identity. Tokyo can manage overlays by ID the same way a warehouse manages products by SKU: the ID tells the system the account, widget, instance, language coordinate, experiment coordinate, personalization coordinate, version, and checksum without opening the overlay body.
+There is no separate overlay hash, value name, content address, storage-path identity, or body-derived identity. Tokyo can manage overlays by ID the same way a warehouse manages products by SKU: the ID tells the system the account, widget codebook coordinate, instance, language coordinate, experiment coordinate, personalization coordinate, version, and checksum without opening the overlay body. The R2 path supplies ownership and containment; it does not create another identity.
 
 ## Fixed Layout
 
@@ -23,7 +23,7 @@ Segments:
 | Segment | Width | Meaning |
 | --- | ---: | --- |
 | account | 8 | `accountPublicId` from Michael/Berlin account truth |
-| widget | 3 | widget code from the shared widget codebook |
+| widget | 3 | widget code from the shared widget codebook; metadata/codebook identity, not a storage locator |
 | instance | 10 | compact instance ID minted by Tokyo-worker |
 | language | 4 | language code from the shared Babel codebook |
 | experiment | 3 | experiment coordinate, default `A01` |
@@ -33,15 +33,31 @@ Segments:
 
 Only `@clickeen/ck-contracts` parses, builds, and validates this ID.
 
-## Object Body
+## Physical Storage
 
-Overlay objects live at:
+Overlay objects live under the owning account instance:
 
 ```txt
-overlays/{overlayId}.json
+accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json
 ```
 
-The body is only values:
+Selected overlay pointers for authoring/runtime selection live under the same instance:
+
+```txt
+accounts/{accountPublicId}/instances/{instanceId}/selected-overlays/{languageCode}/{experiment}/{personalization}.json
+```
+
+Published overlay objects are derived public-serving projection material and live only under the instance published projection:
+
+```txt
+accounts/{accountPublicId}/instances/{instanceId}/published/overlays/{overlayId}.json
+```
+
+`widgetCode` is encoded in `overlayId` because it is part of the shared overlay codebook. It is never required to locate instance storage and must not reintroduce `accounts/{accountPublicId}/widgets/{widgetCode}/...`.
+
+## Object Body
+
+The authoring overlay body is only values:
 
 ```json
 {
@@ -50,7 +66,7 @@ The body is only values:
 }
 ```
 
-No account ID, instance ID, language, status, job state, readiness, base revision, fingerprint, or reason field belongs inside the overlay body. Those coordinates are in the ID or in the calling workflow.
+No account ID, instance ID, language, status, job state, readiness, base revision, fingerprint, storage path, or reason field belongs inside the overlay body. Those coordinates are in the ID, the account instance path, or the calling workflow.
 
 ## Primitive Value Rule
 

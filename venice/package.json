@@ -8,6 +8,7 @@
     "build:cf": "node ../scripts/build-venice-cf.mjs",
     "start": "next start",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm verify:runtime",
     "verify:runtime": "playwright test -c playwright.runtime.config.ts"
   },
   "dependencies": {

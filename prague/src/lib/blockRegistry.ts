@@ -218,6 +218,10 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
     if (typeof block.accountInstanceRef !== 'object' || Array.isArray(block.accountInstanceRef)) {
       throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef must be an object`);
     }
+    const accountPublicId = (block.accountInstanceRef as { accountPublicId?: unknown }).accountPublicId;
+    if (accountPublicId != null && typeof accountPublicId !== 'string') {
+      throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef.accountPublicId must be a string`);
+    }
     const instanceId = (block.accountInstanceRef as { instanceId?: unknown }).instanceId;
     if (instanceId != null && typeof instanceId !== 'string') {
       throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef.instanceId must be a string`);

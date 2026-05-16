@@ -1,0 +1,270 @@
+{
+  "generatedAt": "2026-05-15T18:27:41.716Z",
+  "bucket": "tokyo-assets-dev",
+  "sourceAccount": "00000000-0000-0000-0000-000000000100",
+  "destinationAccount": "00000001",
+  "copied": [
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/0852d3a0-03ea-4399-b0e0-533ad1d44a6e/blob/DesignWaves.jpg",
+      "destinationKey": "accounts/00000001/assets/0852d3a0-03ea-4399-b0e0-533ad1d44a6e/blob/DesignWaves.jpg",
+      "size": 278581,
+      "etag": "c5521a732acc35d1b3227433ad243a7d",
+      "contentType": "image/jpeg",
+      "destinationEtag": "c5521a732acc35d1b3227433ad243a7d",
+      "destinationSize": 278581,
+      "sha256": "f3f1b541538c7672fcb306b8b9fb4f1bfe97ce396efde02378fca77d10f57702"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/0852d3a0-03ea-4399-b0e0-533ad1d44a6e/manifest.json",
+      "destinationKey": "accounts/00000001/assets/0852d3a0-03ea-4399-b0e0-533ad1d44a6e/manifest.json",
+      "size": 537,
+      "etag": "58ac47f256775e425af1c4008c8f9ff7",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "58ac47f256775e425af1c4008c8f9ff7",
+      "destinationSize": 537,
+      "sha256": "ea0d2a2170e3ebd722f4f9f4954ffba0803a28d284199364dd8afb7f646b0bd6"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/0c333b1f-dfde-4667-b3f9-ad955f8c9a26/blob/oregon.jpg",
+      "destinationKey": "accounts/00000001/assets/0c333b1f-dfde-4667-b3f9-ad955f8c9a26/blob/oregon.jpg",
+      "size": 175651,
+      "etag": "9ecdff9393b2873cba2c95509673e1e2",
+      "contentType": "image/jpeg",
+      "destinationEtag": "9ecdff9393b2873cba2c95509673e1e2",
+      "destinationSize": 175651,
+      "sha256": "c2485929466fa696e006761c1b3e0b645d7a878c27470bec96c3f77296567652"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/0c333b1f-dfde-4667-b3f9-ad955f8c9a26/manifest.json",
+      "destinationKey": "accounts/00000001/assets/0c333b1f-dfde-4667-b3f9-ad955f8c9a26/manifest.json",
+      "size": 522,
+      "etag": "4182c4fd76c30024fe7995e810590fee",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "4182c4fd76c30024fe7995e810590fee",
+      "destinationSize": 522,
+      "sha256": "f6b56dd748131ac0a4a9de0b9b0eedad3568b0784fafba795594f3708bb9f8b3"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/461566e8-9167-4f68-984b-54b7edf0e29d/blob/original.jpg",
+      "destinationKey": "accounts/00000001/assets/461566e8-9167-4f68-984b-54b7edf0e29d/blob/original.jpg",
+      "size": 220799,
+      "etag": "eaefbb57842e4ef28a4c2dbe87b4dd5b",
+      "contentType": "image/jpeg",
+      "destinationEtag": "eaefbb57842e4ef28a4c2dbe87b4dd5b",
+      "destinationSize": 220799,
+      "sha256": "756095c7411336b3260666b820c12a6bb75c6917bb1972c120e83f225b5285de"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/461566e8-9167-4f68-984b-54b7edf0e29d/manifest.json",
+      "destinationKey": "accounts/00000001/assets/461566e8-9167-4f68-984b-54b7edf0e29d/manifest.json",
+      "size": 528,
+      "etag": "c8eeb1628681ac6597abbd05ac92c397",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "c8eeb1628681ac6597abbd05ac92c397",
+      "destinationSize": 528,
+      "sha256": "b2d5422b37c89903533658b8e4398761659a59be1b9391e979220ca2de897cf4"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/47614e7e-f955-4563-b282-2608f1ee7129/blob/museum-art.jpg",
+      "destinationKey": "accounts/00000001/assets/47614e7e-f955-4563-b282-2608f1ee7129/blob/museum-art.jpg",
+      "size": 10420,
+      "etag": "7b1ab35473a113860f7dc470eb6bf477",
+      "contentType": "image/jpeg",
+      "destinationEtag": "7b1ab35473a113860f7dc470eb6bf477",
+      "destinationSize": 10420,
+      "sha256": "f4df396ad31d7105f9ef47e8ccd2b4a603096516fa5a75ff29e7d745806c3222"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/47614e7e-f955-4563-b282-2608f1ee7129/manifest.json",
+      "destinationKey": "accounts/00000001/assets/47614e7e-f955-4563-b282-2608f1ee7129/manifest.json",
+      "size": 533,
+      "etag": "4b8751c471c4ac57061589c7747f8dd5",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "4b8751c471c4ac57061589c7747f8dd5",
+      "destinationSize": 533,
+      "sha256": "088888e44142468a56601b7e64319dd39159065f5f46c8f24a3a15a41cb9b364"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/494d53a2-7d01-4d70-966f-66aa64e29752/blob/restaurant-highend.jpg",
+      "destinationKey": "accounts/00000001/assets/494d53a2-7d01-4d70-966f-66aa64e29752/blob/restaurant-highend.jpg",
+      "size": 11203,
+      "etag": "90ed8fcad323ca76a0773b7cc4f98b88",
+      "contentType": "image/jpeg",
+      "destinationEtag": "90ed8fcad323ca76a0773b7cc4f98b88",
+      "destinationSize": 11203,
+      "sha256": "47b8407bf24354d927067670500460274a622204b29264754ae4293c9acc7db8"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/494d53a2-7d01-4d70-966f-66aa64e29752/manifest.json",
+      "destinationKey": "accounts/00000001/assets/494d53a2-7d01-4d70-966f-66aa64e29752/manifest.json",
+      "size": 557,
+      "etag": "27b350607d3893b9405a4225a66ec288",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "27b350607d3893b9405a4225a66ec288",
+      "destinationSize": 557,
+      "sha256": "02ae1679e66ef417e7a509d44d08d29c1b62340eeb9ce5708556b71c20f7d00e"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/5d07d73c-ba98-493c-98cb-8002221f42ef/blob/Veg.jpg",
+      "destinationKey": "accounts/00000001/assets/5d07d73c-ba98-493c-98cb-8002221f42ef/blob/Veg.jpg",
+      "size": 364425,
+      "etag": "1bf07eddf0945363f39178e2e39bf616",
+      "contentType": "image/jpeg",
+      "destinationEtag": "1bf07eddf0945363f39178e2e39bf616",
+      "destinationSize": 364425,
+      "sha256": "8d4d073ddc28b113c14a8273946fc96571dfe71627ed4727a7422d3a4b39d8d2"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/5d07d73c-ba98-493c-98cb-8002221f42ef/manifest.json",
+      "destinationKey": "accounts/00000001/assets/5d07d73c-ba98-493c-98cb-8002221f42ef/manifest.json",
+      "size": 513,
+      "etag": "74428b2bf272849bc8056b893713fc9c",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "74428b2bf272849bc8056b893713fc9c",
+      "destinationSize": 513,
+      "sha256": "8aa0df788f810d1166836b9311373ff465eb0a8f138a36619eb7c15c8898e04f"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/873aebf2-fd4c-4157-a3a9-fe3f50a5a1af/blob/waves.jpg",
+      "destinationKey": "accounts/00000001/assets/873aebf2-fd4c-4157-a3a9-fe3f50a5a1af/blob/waves.jpg",
+      "size": 110719,
+      "etag": "752bd5c9414622b93e306f52140bae3a",
+      "contentType": "image/jpeg",
+      "destinationEtag": "752bd5c9414622b93e306f52140bae3a",
+      "destinationSize": 110719,
+      "sha256": "a6f292cfb4495a7e777c542e2c132d3738ab2c8fc20674645f322d52a6a5a5df"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/873aebf2-fd4c-4157-a3a9-fe3f50a5a1af/manifest.json",
+      "destinationKey": "accounts/00000001/assets/873aebf2-fd4c-4157-a3a9-fe3f50a5a1af/manifest.json",
+      "size": 519,
+      "etag": "1f51717a697f045cda587e87d1afee43",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "1f51717a697f045cda587e87d1afee43",
+      "destinationSize": 519,
+      "sha256": "b057ad28fd4b0dd216f0b2794e197eac96f8c1825a044b889969f6beb9889c19"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/9f21817d-a7b5-48ad-981b-0bbff370c887/blob/original.jpg",
+      "destinationKey": "accounts/00000001/assets/9f21817d-a7b5-48ad-981b-0bbff370c887/blob/original.jpg",
+      "size": 175651,
+      "etag": "9ecdff9393b2873cba2c95509673e1e2",
+      "contentType": "image/jpeg",
+      "destinationEtag": "9ecdff9393b2873cba2c95509673e1e2",
+      "destinationSize": 175651,
+      "sha256": "c2485929466fa696e006761c1b3e0b645d7a878c27470bec96c3f77296567652"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/9f21817d-a7b5-48ad-981b-0bbff370c887/manifest.json",
+      "destinationKey": "accounts/00000001/assets/9f21817d-a7b5-48ad-981b-0bbff370c887/manifest.json",
+      "size": 528,
+      "etag": "ee72b13de91b530f8aa5f6896415e48b",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "ee72b13de91b530f8aa5f6896415e48b",
+      "destinationSize": 528,
+      "sha256": "339d6abbeedbd6f6311ba438403919ba134b02db1ddb6606a4b59b0925ff51e9"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/ad1299cc-73c7-48ff-b3a2-14251fd2e88c/blob/original.jpg",
+      "destinationKey": "accounts/00000001/assets/ad1299cc-73c7-48ff-b3a2-14251fd2e88c/blob/original.jpg",
+      "size": 67047,
+      "etag": "ff360acd99ebe3329bcce26db53dd2bb",
+      "contentType": "image/jpeg",
+      "destinationEtag": "ff360acd99ebe3329bcce26db53dd2bb",
+      "destinationSize": 67047,
+      "sha256": "d949de1be0c3c30f296342647c3538b4a79179b7d8af199141d3b632ed7e44c4"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/ad1299cc-73c7-48ff-b3a2-14251fd2e88c/manifest.json",
+      "destinationKey": "accounts/00000001/assets/ad1299cc-73c7-48ff-b3a2-14251fd2e88c/manifest.json",
+      "size": 527,
+      "etag": "366e4d2a13c0d684d592285fd8263ef6",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "366e4d2a13c0d684d592285fd8263ef6",
+      "destinationSize": 527,
+      "sha256": "c96f85464f1a7765c992076f0d2885dec4c91e9b82a48adc4bd58083832f7b25"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/c81ccae1-9a99-448a-b6aa-cc263b31a9e0/blob/hospitality-westcoast.jpg",
+      "destinationKey": "accounts/00000001/assets/c81ccae1-9a99-448a-b6aa-cc263b31a9e0/blob/hospitality-westcoast.jpg",
+      "size": 11203,
+      "etag": "90ed8fcad323ca76a0773b7cc4f98b88",
+      "contentType": "image/jpeg",
+      "destinationEtag": "90ed8fcad323ca76a0773b7cc4f98b88",
+      "destinationSize": 11203,
+      "sha256": "47b8407bf24354d927067670500460274a622204b29264754ae4293c9acc7db8"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/c81ccae1-9a99-448a-b6aa-cc263b31a9e0/manifest.json",
+      "destinationKey": "accounts/00000001/assets/c81ccae1-9a99-448a-b6aa-cc263b31a9e0/manifest.json",
+      "size": 566,
+      "etag": "368c1437ab54d4ffe23f34e918c0408c",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "368c1437ab54d4ffe23f34e918c0408c",
+      "destinationSize": 566,
+      "sha256": "348366c395d46c1519ab1729f12b620502ef8c2d5abbd955db74e55dbe0e53e1"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/cb3e2606-c35a-4d77-ab1e-15cd523edc48/blob/lightblurs-generic.jpg",
+      "destinationKey": "accounts/00000001/assets/cb3e2606-c35a-4d77-ab1e-15cd523edc48/blob/lightblurs-generic.jpg",
+      "size": 16779,
+      "etag": "0322e1f0876913bc3118592d7121b503",
+      "contentType": "image/jpeg",
+      "destinationEtag": "0322e1f0876913bc3118592d7121b503",
+      "destinationSize": 16779,
+      "sha256": "17ba2aa4952ffdaf4b4dfe3cfe49760e3f7094f0a81404e063b29f794dd1e385"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/cb3e2606-c35a-4d77-ab1e-15cd523edc48/manifest.json",
+      "destinationKey": "accounts/00000001/assets/cb3e2606-c35a-4d77-ab1e-15cd523edc48/manifest.json",
+      "size": 557,
+      "etag": "505780629d619040a19409fd2b79f0ce",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "505780629d619040a19409fd2b79f0ce",
+      "destinationSize": 557,
+      "sha256": "97824fbb788e73453435705ba8cefdcc8b2f4d75fb7184da76ec63d44964f592"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/cc0e3d56-5019-4cc3-852c-9826c038368e/blob/LightBlursPeach01.jpg",
+      "destinationKey": "accounts/00000001/assets/cc0e3d56-5019-4cc3-852c-9826c038368e/blob/LightBlursPeach01.jpg",
+      "size": 67047,
+      "etag": "ff360acd99ebe3329bcce26db53dd2bb",
+      "contentType": "image/jpeg",
+      "destinationEtag": "ff360acd99ebe3329bcce26db53dd2bb",
+      "destinationSize": 67047,
+      "sha256": "d949de1be0c3c30f296342647c3538b4a79179b7d8af199141d3b632ed7e44c4"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/cc0e3d56-5019-4cc3-852c-9826c038368e/manifest.json",
+      "destinationKey": "accounts/00000001/assets/cc0e3d56-5019-4cc3-852c-9826c038368e/manifest.json",
+      "size": 554,
+      "etag": "a1fdc02797831238bf15a9b04848c9bf",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "a1fdc02797831238bf15a9b04848c9bf",
+      "destinationSize": 554,
+      "sha256": "fcbf56f01340c557f2d22b82a664d78e5225a566be0bc4b73f296a271f5404f2"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/f44fe8d2-04a8-40e5-b8d5-70f95ab0b5ef/blob/museum-art.jpg",
+      "destinationKey": "accounts/00000001/assets/f44fe8d2-04a8-40e5-b8d5-70f95ab0b5ef/blob/museum-art.jpg",
+      "size": 11203,
+      "etag": "90ed8fcad323ca76a0773b7cc4f98b88",
+      "contentType": "image/jpeg",
+      "destinationEtag": "90ed8fcad323ca76a0773b7cc4f98b88",
+      "destinationSize": 11203,
+      "sha256": "47b8407bf24354d927067670500460274a622204b29264754ae4293c9acc7db8"
+    },
+    {
+      "sourceKey": "accounts/00000000-0000-0000-0000-000000000100/assets/f44fe8d2-04a8-40e5-b8d5-70f95ab0b5ef/manifest.json",
+      "destinationKey": "accounts/00000001/assets/f44fe8d2-04a8-40e5-b8d5-70f95ab0b5ef/manifest.json",
+      "size": 533,
+      "etag": "5f9f21885ffb687ca8b746b98c1dc55f",
+      "contentType": "application/json; charset=utf-8",
+      "destinationEtag": "5f9f21885ffb687ca8b746b98c1dc55f",
+      "destinationSize": 533,
+      "sha256": "42de853c5d1f13a3d1c153acc9f095b643c775c02e43bacaa94d0e231024ae2e"
+    }
+  ],
+  "skipped": [],
+  "status": "green"
+}

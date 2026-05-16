@@ -1,6 +1,7 @@
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import { isUuid } from './ids';
+import { isCompactAccountPublicId } from './overlay-identity';
 export { UUID_RE, isUuid } from './ids';
 export * from './overlay-codebooks';
 export * from './overlay-identity';
@@ -252,7 +253,7 @@ export function parseAccountAssetRef(raw: unknown): AssetRef | null {
   const accountId = decodePathPart(publicMatch[1]);
   const assetId = decodePathPart(publicMatch[2]);
   const filename = decodePathPart(publicMatch[3]);
-  if (!isUuid(accountId) || !isUuid(assetId)) return null;
+  if (!isCompactAccountPublicId(accountId) || !isUuid(assetId)) return null;
   if (!filename || filename === '.' || filename === '..' || filename.includes('/')) return null;
 
   return {
@@ -273,7 +274,7 @@ export function parseAccountAssetBlobKey(raw: unknown): AssetRef | null {
   const accountId = decodePathPart(match[1]);
   const assetId = decodePathPart(match[2]);
   const filename = decodePathPart(match[3]);
-  if (!isUuid(accountId) || !isUuid(assetId)) return null;
+  if (!isCompactAccountPublicId(accountId) || !isUuid(assetId)) return null;
   if (!filename || filename === '.' || filename === '..' || filename.includes('/')) return null;
   return {
     accountId,

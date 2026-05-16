@@ -9,7 +9,7 @@ import {
   isOverlayPersonalizationCode,
   parseOverlayId,
 } from '@clickeen/ck-contracts/overlay-identity';
-import { resolvePolicyFromEntitlementsSnapshot, type RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
+import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import {
   normalizeStorageId,
   normalizeSha256Hex,
@@ -52,6 +52,8 @@ import {
 import { roleRank } from '../domains/assets';
 import type { Env } from '../types';
 
+const OVERLAY_VERSION_TECHNICAL_MAX = 100;
+
 function normalizeAccountPublicId(value: unknown): string {
   const accountId = String(value || '').trim().toUpperCase();
   return isCompactAccountPublicId(accountId) ? accountId : '';
@@ -64,18 +66,6 @@ function normalizeOverlaySegment(value: unknown, fallback: string, guard: (entry
 
 function normalizeOverlayValues(value: unknown): Record<string, unknown> | null {
   return isRecord(value) ? value : null;
-}
-
-function resolveL10nVersionsMax(capsule: RomaAccountAuthzCapsulePayload): number {
-  const policy = resolvePolicyFromEntitlementsSnapshot({
-    profile: capsule.profile,
-    role: capsule.role,
-    entitlements: capsule.entitlements ?? null,
-  });
-  const limit = policy.limits['l10n.versions.max'];
-  return typeof limit === 'number' && Number.isFinite(limit)
-    ? Math.max(1, Math.min(100, Math.floor(limit)))
-    : 100;
 }
 
 function transitionErrorResponse(error: unknown): Response {
@@ -103,14 +93,6 @@ function transitionErrorResponse(error: unknown): Response {
     },
     { status: 502 },
   );
-}
-
-function toAccountAuthzSnapshot(capsule: RomaAccountAuthzCapsulePayload) {
-  return {
-    profile: capsule.profile,
-    role: capsule.role,
-    entitlements: capsule.entitlements ?? null,
-  };
 }
 
 function logInternalRenderWarning(args: {
@@ -237,7 +219,7 @@ export async function tryHandleInternalRenderRoutes(
           experiment,
           personalization,
         },
-        maxVersions: resolveL10nVersionsMax(auth.capsule),
+        maxVersions: OVERLAY_VERSION_TECHNICAL_MAX,
       });
       await writeOverlayObject({ env, overlayId, values });
       await writeSelectedOverlayPointer({ env, overlayId });
@@ -622,7 +604,6 @@ export async function tryHandleInternalRenderRoutes(
     }
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
-    const { capsule } = auth;
 
     const body = (await readInternalRenderJsonBody({
       req,
@@ -645,7 +626,6 @@ export async function tryHandleInternalRenderRoutes(
         hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
         meta: body.meta,
         hasMeta: Object.prototype.hasOwnProperty.call(body, 'meta'),
-        accountAuthz: toAccountAuthzSnapshot(capsule),
       });
       return respond(
         json({
@@ -674,14 +654,12 @@ export async function tryHandleInternalRenderRoutes(
     }
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
-    const { capsule } = auth;
 
     try {
       const duplicated = await duplicateAccountInstanceTransition({
         env,
         accountId,
         sourceInstanceId: sourceInstanceId!,
-        accountAuthz: toAccountAuthzSnapshot(capsule),
       });
       return respond(json({ ok: true, ...duplicated }, { status: 201 }));
     } catch (error) {
@@ -703,14 +681,12 @@ export async function tryHandleInternalRenderRoutes(
     }
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
-    const { capsule } = auth;
 
     try {
       const published = await publishAccountInstanceTransition({
         env,
         accountId,
         instanceId: instanceId!,
-        accountAuthz: toAccountAuthzSnapshot(capsule),
       });
       return respond(json({ ok: true, ...published }));
     } catch (error) {

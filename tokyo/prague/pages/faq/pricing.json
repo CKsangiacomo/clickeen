@@ -17,7 +17,8 @@
         "subheadline": "Simple tiers. Upgrade when you need more widgets and remove branding."
       },
       "accountInstanceRef": {
-        "instanceId": "INST000001"
+        "accountPublicId": "00000001",
+        "instanceId": "UZ3JEJSHII"
       }
     }
   ]

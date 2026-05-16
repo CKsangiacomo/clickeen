@@ -70,7 +70,7 @@ Display Instagram posts from a public profile. Follows Behold.so's simpler model
 | **No Fallbacks** | widget.client.js throws errors on missing data |
 | **Widget Files = Truth** | Core runtime files + contracts in tokyo/product/widgets/instagramfeed/ |
 | **Dieter Tokens** | All colors use Dieter tokens by default |
-| **Venice = Dumb Pipe** | Venice fetches and combines, doesn't transform |
+| **Static Embed Serving** | Public serving returns generated static files; it does not compose widgets per view |
 
 ---
 

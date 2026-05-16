@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d41d4a0b02cdb929a2ec512341c9b767ed0bf338a58a7fcee2272de063044077",
+  "baseUpdatedAt": "2026-02-04T05:36:55.817Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Funcționalități prezentare logo-uri - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Rapid, flexibil și conceput să arate excelent oriunde."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Funcționalități pentru prezentarea logo-urilor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Rapid, flexibil și conceput să arate excelent oriunde."
+    }
+  ],
+  "v": 1
+}

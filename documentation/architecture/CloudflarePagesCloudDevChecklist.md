@@ -1,12 +1,16 @@
 # Cloudflare Pages Cloud-Dev Checklist
 
-Status: FINAL STATE AFTER PRD 063  
+Status: FINAL STATE AFTER PRD 063 + PRD 099B DEPLOY ROOT CONTRACT
 Owner: Human architect for dashboard alignment; repo/runtime owners for app-local build contracts
 
 This checklist is the canonical manual setup contract for Cloudflare Pages `cloud-dev`.
 
 Rules:
 - Cloudflare Pages Git build is the deploy plane for Bob, Roma, Venice, and Prague.
+- Tokyo/R2 git-authored deploy roots are `dieter/`, `fonts/`, `product/`, and `prague/`; only `accounts/` is runtime-managed account storage.
+- Tokyo Pages/static output is a source/deploy and friendly-serving convenience. It must not become a second authority for product widget software, Dieter media, fonts, product media, or Prague content.
+- Widget software is served from canonical R2 `product/widgets/**`. Friendly `/widgets/**` routes must resolve there, not to root `widgets/**` or stale static output.
+- Retained Prague localization must deploy under R2 `prague/l10n/**`, never root `l10n/prague/**`.
 - GitHub Actions must not create Pages projects or sync Pages secrets.
 - Each app builds from its own root and writes only to its own output directory.
 - Bob and Roma must use custom `*.dev.clickeen.com` hosts for authenticated Builder flows. `*.pages.dev` is not a valid public runtime host for those apps.
@@ -142,6 +146,28 @@ Env contract:
 
 Dashboard action:
 - Keep the 3 public base URLs in the Cloudflare Pages dashboard.
+
+## Tokyo/R2 Git-Authored Asset Roots
+
+These roots are deployed from git-authored repo sources into R2. They are not mutated by account runtime operations.
+
+| Repo source | Canonical R2 root | Notes |
+| --- | --- | --- |
+| `tokyo/product/dieter/**` | `dieter/**` | Built Dieter manifest, tokens, components, and icons. |
+| `tokyo/product/fonts/**` | `fonts/**` | Global Clickeen font CDN media. Account-uploaded fonts stay under `accounts/{accountPublicId}/...`. |
+| `tokyo/product/widgets/**` | `product/widgets/**` | Widget software. Friendly `/widgets/**` routes must serve these objects. |
+| `tokyo/product/media/**` | `product/media/**` | Product-owned media. |
+| `tokyo/product/themes/**` | `product/themes/**` | Product-owned theme media. |
+| `tokyo/roma/**` | `product/roma/**` | Product app/static support media. |
+| `tokyo/prague/**` | `prague/**` | Prague page/content/GTM media, including retained `prague/l10n/**`. |
+
+Forbidden deploy targets for these git-authored media:
+- root `widgets/**`
+- root `l10n/prague/**`
+- root `public/**`
+- root `published/**`
+
+`published/**`, while it may exist during PRD 099 execution, is runtime/public projection state and must not be normalized as a deploy destination for git-authored media.
 
 ## Live-Only Secrets And External State
 

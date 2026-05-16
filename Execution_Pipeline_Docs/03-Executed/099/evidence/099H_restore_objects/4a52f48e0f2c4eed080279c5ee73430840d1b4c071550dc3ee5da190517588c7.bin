@@ -1,0 +1,574 @@
+{
+  "appearance": {
+    "cardwrapper": {
+      "border": {
+        "color": "#efeff2",
+        "enabled": false,
+        "width": 1
+      },
+      "insideShadow": {
+        "all": {
+          "alpha": 66,
+          "blur": 52,
+          "color": "#34c759",
+          "enabled": true,
+          "inset": true,
+          "spread": -27,
+          "x": 8,
+          "y": 24
+        },
+        "bottom": {
+          "alpha": 66,
+          "blur": 52,
+          "color": "#34c759",
+          "enabled": true,
+          "inset": true,
+          "spread": -27,
+          "x": 8,
+          "y": 24
+        },
+        "layer": "below-content",
+        "left": {
+          "alpha": 66,
+          "blur": 52,
+          "color": "#34c759",
+          "enabled": true,
+          "inset": true,
+          "spread": -27,
+          "x": 8,
+          "y": 24
+        },
+        "linked": true,
+        "right": {
+          "alpha": 66,
+          "blur": 52,
+          "color": "#34c759",
+          "enabled": true,
+          "inset": true,
+          "spread": -27,
+          "x": 8,
+          "y": 24
+        },
+        "top": {
+          "alpha": 66,
+          "blur": 52,
+          "color": "#34c759",
+          "enabled": true,
+          "inset": true,
+          "spread": -27,
+          "x": 8,
+          "y": 24
+        }
+      },
+      "radius": "none",
+      "radiusBL": "none",
+      "radiusBR": "none",
+      "radiusLinked": true,
+      "radiusTL": "none",
+      "radiusTR": "none",
+      "shadow": {
+        "alpha": 13,
+        "blur": 0,
+        "color": "#007aff",
+        "enabled": true,
+        "inset": false,
+        "spread": -4,
+        "x": -1,
+        "y": 14
+      }
+    },
+    "ctaBackground": {
+      "color": "#212121",
+      "type": "color"
+    },
+    "ctaBorder": {
+      "color": "var(--color-system-blue)",
+      "enabled": false,
+      "width": 1
+    },
+    "ctaIconSize": 16,
+    "ctaIconSizePreset": "m",
+    "ctaPaddingBlock": 12,
+    "ctaPaddingInline": 16,
+    "ctaPaddingLinked": false,
+    "ctaRadius": "md",
+    "ctaSizePreset": "custom",
+    "ctaTextColor": "var(--color-system-white)",
+    "iconColor": {
+      "color": "#1a546f",
+      "type": "color"
+    },
+    "iconStyle": "plus",
+    "itemBackground": {
+      "color": "var(--color-system-white)",
+      "type": "none"
+    },
+    "itemCard": {
+      "border": {
+        "color": "#e0f1e5",
+        "enabled": true,
+        "width": 1
+      },
+      "radius": "2xl",
+      "radiusBL": "2xl",
+      "radiusBR": "2xl",
+      "radiusLinked": true,
+      "radiusTL": "2xl",
+      "radiusTR": "2xl",
+      "shadow": {
+        "alpha": 17,
+        "blur": 16,
+        "color": "#35aebb",
+        "enabled": true,
+        "inset": false,
+        "spread": 0,
+        "x": 5,
+        "y": 14
+      }
+    },
+    "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
+    "linkStyle": "color",
+    "linkTextColor": {
+      "color": "#1a546f",
+      "type": "color"
+    },
+    "linkUnderlineColor": "var(--color-system-blue)",
+    "podBorder": {
+      "color": "#1a546f",
+      "enabled": true,
+      "width": 8
+    },
+    "theme": "custom"
+  },
+  "behavior": {
+    "displayImages": true,
+    "displayVideos": true,
+    "expandAll": false,
+    "expandFirst": true,
+    "multiOpen": false,
+    "showBacklink": true
+  },
+  "context": {
+    "websiteUrl": ""
+  },
+  "cta": {
+    "enabled": true,
+    "href": "https://example.com",
+    "iconEnabled": false,
+    "iconName": "checkmark",
+    "iconPlacement": "right",
+    "label": "Make a reservation",
+    "openMode": "same-tab"
+  },
+  "displayCategoryTitles": false,
+  "geo": {
+    "answerFormat": "direct-first",
+    "enableDeepLinks": true
+  },
+  "header": {
+    "alignment": "left",
+    "ctaPlacement": "below",
+    "enabled": true,
+    "gap": 80,
+    "innerGap": 16,
+    "placement": "bottom",
+    "showSubtitle": false,
+    "subtitleHtml": "Discover the charm and comfort of our USA bed and breakfast.",
+    "textGap": 4,
+    "title": "Modern Art Museum FAQs"
+  },
+  "layout": {
+    "cardsLayout": "grid",
+    "columns": {
+      "desktop": 2,
+      "mobile": 1
+    },
+    "gap": 40,
+    "itemPadding": 0,
+    "itemPaddingBottom": 0,
+    "itemPaddingLeft": 0,
+    "itemPaddingLinked": true,
+    "itemPaddingRight": 0,
+    "itemPaddingTop": 0,
+    "itemQaGapCustom": 8,
+    "itemQaGapPreset": "m",
+    "type": "accordion"
+  },
+  "pod": {
+    "background": {
+      "color": "rgba(255, 255, 255, 0.96)",
+      "type": "color"
+    },
+    "contentWidth": 960,
+    "insideShadow": {
+      "all": {
+        "alpha": 38,
+        "blur": 35,
+        "color": "#212121",
+        "enabled": false,
+        "inset": true,
+        "spread": -35,
+        "x": 12,
+        "y": 10
+      },
+      "bottom": {
+        "alpha": 38,
+        "blur": 35,
+        "color": "#212121",
+        "enabled": false,
+        "inset": true,
+        "spread": -35,
+        "x": 12,
+        "y": 10
+      },
+      "layer": "below-content",
+      "left": {
+        "alpha": 38,
+        "blur": 35,
+        "color": "#212121",
+        "enabled": false,
+        "inset": true,
+        "spread": -35,
+        "x": 12,
+        "y": 10
+      },
+      "linked": true,
+      "right": {
+        "alpha": 38,
+        "blur": 35,
+        "color": "#212121",
+        "enabled": false,
+        "inset": true,
+        "spread": -35,
+        "x": 12,
+        "y": 10
+      },
+      "top": {
+        "alpha": 38,
+        "blur": 35,
+        "color": "#212121",
+        "enabled": false,
+        "inset": true,
+        "spread": -35,
+        "x": 12,
+        "y": 10
+      }
+    },
+    "padding": {
+      "desktop": {
+        "all": 100,
+        "bottom": 100,
+        "left": 100,
+        "linked": true,
+        "right": 100,
+        "top": 100
+      },
+      "mobile": {
+        "all": 28,
+        "bottom": 28,
+        "left": 28,
+        "linked": true,
+        "right": 28,
+        "top": 28
+      }
+    },
+    "radius": "none",
+    "radiusBL": "none",
+    "radiusBR": "none",
+    "radiusLinked": true,
+    "radiusTL": "none",
+    "radiusTR": "none",
+    "shadow": {
+      "alpha": 18,
+      "blur": 24,
+      "color": "#000000",
+      "enabled": false,
+      "inset": false,
+      "spread": 0,
+      "x": 0,
+      "y": 8
+    },
+    "widthMode": "full"
+  },
+  "sections": [
+    {
+      "faqs": [
+        {
+          "answer": "We offer a variety of <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">modern art exhibits</a> including <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">contemporary artists</a> , sculptures, and <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">installations</a> .",
+          "defaultOpen": false,
+          "id": "q1",
+          "question": "What types of art exhibits are available?"
+        },
+        {
+          "answer": "The museum is open daily from 10 AM to 6 PM.",
+          "defaultOpen": false,
+          "id": "q3",
+          "question": "What are the visiting hours?"
+        },
+        {
+          "answer": "No, all ages are welcome.",
+          "defaultOpen": false,
+          "id": "q2",
+          "question": "Is there an age restriction?"
+        },
+        {
+          "answer": "Yes, we offer group discounts and special event packages.",
+          "defaultOpen": false,
+          "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
+          "question": "Do you offer any special packages?"
+        },
+        {
+          "answer": "Cancellations must be made 24 hours in advance to avoid a fee.",
+          "defaultOpen": false,
+          "id": "q4",
+          "question": "What is your cancellation policy?"
+        },
+        {
+          "answer": "Yes, we offer educational tours and programs for schools and groups.",
+          "defaultOpen": false,
+          "id": "q5",
+          "question": "Do you offer any educational programs?"
+        }
+      ],
+      "id": "s1",
+      "title": "Modern Art Museum Experience"
+    }
+  ],
+  "seo": {
+    "businessType": "online-service",
+    "canonicalUrl": "",
+    "enableSchema": true
+  },
+  "seoGeo": {
+    "enabled": true
+  },
+  "showTitle": true,
+  "stage": {
+    "alignment": "bottom",
+    "background": {
+      "image": {
+        "assetId": "47614e7e-f955-4563-b282-2608f1ee7129",
+        "fit": "cover",
+        "name": "museum-art.jpg",
+        "position": "center",
+        "repeat": "no-repeat"
+      },
+      "type": "image"
+    },
+    "canvas": {
+      "height": 0,
+      "mode": "viewport",
+      "width": 0
+    },
+    "insideShadow": {
+      "all": {
+        "alpha": 63,
+        "blur": 24,
+        "color": "#ffffff",
+        "enabled": false,
+        "inset": true,
+        "spread": 40,
+        "x": -8,
+        "y": 0
+      },
+      "bottom": {
+        "alpha": 63,
+        "blur": 24,
+        "color": "#ffffff",
+        "enabled": false,
+        "inset": true,
+        "spread": 40,
+        "x": -8,
+        "y": 0
+      },
+      "layer": "below-content",
+      "left": {
+        "alpha": 63,
+        "blur": 24,
+        "color": "#ffffff",
+        "enabled": false,
+        "inset": true,
+        "spread": 40,
+        "x": -8,
+        "y": 0
+      },
+      "linked": true,
+      "right": {
+        "alpha": 63,
+        "blur": 24,
+        "color": "#ffffff",
+        "enabled": false,
+        "inset": true,
+        "spread": 40,
+        "x": -8,
+        "y": 0
+      },
+      "top": {
+        "alpha": 63,
+        "blur": 24,
+        "color": "#ffffff",
+        "enabled": false,
+        "inset": true,
+        "spread": 40,
+        "x": -8,
+        "y": 0
+      }
+    },
+    "padding": {
+      "desktop": {
+        "all": 80,
+        "bottom": 40,
+        "left": 40,
+        "linked": false,
+        "right": 40,
+        "top": 60
+      },
+      "mobile": {
+        "all": 24,
+        "bottom": 24,
+        "left": 24,
+        "linked": true,
+        "right": 24,
+        "top": 24
+      }
+    },
+    "shadow": {
+      "alpha": 18,
+      "blur": 24,
+      "color": "#000000",
+      "enabled": false,
+      "inset": false,
+      "spread": 0,
+      "x": 0,
+      "y": 8
+    }
+  },
+  "title": "Frequently Asked Questions",
+  "typography": {
+    "globalFamily": "Inter",
+    "roleScales": {
+      "answer": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "body": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "button": {
+        "l": "20px",
+        "m": "18px",
+        "s": "15px",
+        "xl": "24px",
+        "xs": "13px"
+      },
+      "question": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "section": {
+        "l": "16px",
+        "m": "14px",
+        "s": "13px",
+        "xl": "18px",
+        "xs": "12px"
+      },
+      "title": {
+        "l": "44px",
+        "m": "36px",
+        "s": "28px",
+        "xl": "60px",
+        "xs": "20px"
+      }
+    },
+    "roles": {
+      "answer": {
+        "color": {
+          "color": "rgba(33, 33, 33, 0.78)",
+          "type": "color"
+        },
+        "family": "Montserrat",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "tight",
+        "sizeCustom": "15px",
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "body": {
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+        "family": "Montserrat",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": 14,
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "button": {
+        "color": "var(--color-system-white)",
+        "family": "Montserrat",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": 14,
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "600"
+      },
+      "question": {
+        "color": "var(--color-system-black)",
+        "family": "Montserrat",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "16px",
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "600"
+      },
+      "section": {
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
+        "family": "Montserrat",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "14px",
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "600"
+      },
+      "title": {
+        "color": {
+          "color": "#1a546f",
+          "type": "color"
+        },
+        "family": "Montserrat",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "24px",
+        "sizePreset": "xl",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "200"
+      }
+    }
+  }
+}

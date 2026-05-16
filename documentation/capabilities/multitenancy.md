@@ -13,7 +13,7 @@ Clickeen is multi-tenant from day 1 with no artificial limits on collaboration. 
 
 This doc mixes shipped behavior with target packaging. Shipped enforcement today is limited to:
 - Global entitlements matrix: `packages/ck-policy/entitlements.matrix.json`
-- Per-widget limits mapping: `tokyo/product/widgets/{widget}/limits.json` (ops + publish reject; load sanitize for blocked flags)
+- Per-widget limits mapping: `tokyo/product/widgets/{widget}/limits.json` for editor/runtime capability context; account-level publish, upload/storage, tier, and downgrade enforcement belongs to Roma/system account operations
 - Comments collaboration is target packaging only right now (comment APIs/UI are not shipped in this repo snapshot).
 - Cloud-dev is intentionally collapsed to the seeded platform-owned account after PRD 60. The schema remains account-scoped, but Roma does not expose cross-account switching there.
 
@@ -151,20 +151,22 @@ Account
     └── ...
 ```
 
-**Widgets belong to accounts, not users.** If an editor leaves, their widgets stay.
+**Instances belong to accounts, not users.** If an editor leaves, the account-owned instances stay. Widget software belongs to the product plane under `product/widgets/`, not to any account.
 
 ## Account-Only Tenancy (Shipped)
 
 Accounts are the primary tenant boundary:
 - Collaboration boundary (roles, comments, instance ownership)
-- Ownership/metering boundary for uploads (Tokyo asset authority always requires `account_id`; browser path is Roma account routes only)
+- Ownership/metering boundary for uploads (Tokyo asset authority uses the account's `accountPublicId`; browser path is Roma account routes only)
 - Policy/entitlement context for editor surfaces (Roma/Bob)
+- Management-plane boundary for publish/unpublish/delete/downgrade/cap/tier correctness
 
 ```
 account
   ├── widget instances (account-owned)
   ├── members/roles (account boundary)
   ├── account-owned assets
+  ├── published projections for account-owned instances
   └── authz + entitlement context
 ```
 
@@ -172,7 +174,8 @@ Key boundary rules:
 - Instances, assets, locales, and membership are all account-scoped.
 - Roma asset reads are account-canonical (`/api/account/assets`).
 - Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped product-control calls.
-- Curated platform content is owned by a platform account row and remains globally readable; runtime policy must use `accounts.is_platform` plus `owner_account_id`, not `ADMIN_ACCOUNT_ID`.
+- Curated platform content uses the normal Clickeen/admin account `00000001`; references carry `accountPublicId + instanceId` and do not get a special admin storage lane.
+- Tokyo-worker and Venice are PBX layers, not policy engines. They do not decide billing tier, cap eligibility, downgrade correctness, or whether an account may keep a published projection.
 
 ---
 
@@ -293,13 +296,13 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 
 **Plan limits:**
 - Plan limits are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls).
-- Plan limits are **metered and enforced server-side** at the point where cost is incurred (Roma/Tokyo-worker/Venice/San Francisco, depending on the cost driver); Bob uses the resolved policy for UX gating + upsell messaging.
+- Plan limits are **decided and enforced by the account management plane** (Roma/system account operations) before or during the product mutation that would exceed policy. Storage/serve systems may return usage facts or perform technical safety checks, but Tokyo-worker and Venice do not own product policy decisions; Bob uses the resolved policy for UX gating + upsell messaging.
 - Plan limits are defined by the real account policy plus explicit demo-surface gates, not by a fake `minibob` subject profile and not by individual widgets.
 
 **How this appears in widget PRDs (required):**
 - PRDs list **which entitlement keys** a widget uses and **how they map** to widget state (paths + metrics).
 - Tier values live only in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
-- Widget enforcement lives in `tokyo/product/widgets/{widget}/limits.json` (flags/limits). Plan limits are global and metered server-side.
+- Widget capability metadata lives in `tokyo/product/widgets/{widget}/limits.json` (flags/limits). Plan limits are global and enforced by Roma/system account operations.
 - Template: `documentation/widgets/_templates/SubjectPolicyMatrices.md` (no per-widget tier matrices).
 
 **Upsell popup standard (durable):**
@@ -317,7 +320,7 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 **What still matters:**
 - Uploads and Copilot remain bounded by server-side policy limit enforcement.
 - Widget type creation is bounded by the account policy catalog path: Roma filters unavailable catalog options and rejects direct create requests that would exceed `widgets.types.max`.
-- Monthly public view limits remain a named pre-GA enforcement gap, not a customer-facing active claim. Before GA, `views.monthly.max` needs Venice-side monthly counters keyed by account/instance and a public embed deny/upsell behavior once policy is exceeded.
+- Monthly public view limits remain a named pre-GA enforcement gap, not a customer-facing active claim. Before GA, public view usage may be observed from the serving plane, but over-limit policy and published-projection correctness must be driven by Roma/system account operations; Venice must not become a tier/cap policy engine.
 - Shared Builder should not carry `if (minibob)` checks or other fake editor identities.
 
 **Why this scales:**
@@ -332,7 +335,7 @@ Current shipped behavior:
 - Widget catalog creation uses `widgets.types.max` to hide unavailable create options and reject direct create requests.
 - There is no shipped seat-limit write-path enforcement yet.
 - There is no shipped `SEAT_LIMIT_EXCEEDED` runtime error yet.
-- There is no shipped `views.monthly.max` public embed enforcement yet; do not advertise it as an active runtime limit until Venice telemetry and over-limit behavior exist.
+- There is no shipped `views.monthly.max` public embed enforcement yet; do not advertise it as an active runtime limit until telemetry, management-plane enforcement, and public miss/deny behavior are specified.
 
 Planned behavior (not shipped):
 - Add member management write endpoints.
@@ -350,7 +353,7 @@ Planned behavior (not shipped):
 
 ### Michael Schema
 
-The old comments table was part of the workspace/widget-instance era and is no longer part of the active schema after the PRD 89 hard cut. Current account membership truth stays in `account_members`; account widget instance truth stays in Tokyo.
+The old comments table was part of the workspace/widget-instance era and is no longer part of the active schema after the PRD 89 hard cut. Current account membership truth stays in `account_members`; account instance truth stays in Tokyo under `accounts/{accountPublicId}/instances/{instanceId}/`.
 
 ```sql
 CREATE TABLE account_members (
@@ -370,7 +373,7 @@ CREATE TABLE account_members (
 1. **Viewers are always unlimited** — at every tier, including Free
 2. **Viewers can comment** — collaboration without editing
 3. **Editor seats are the upgrade lever** — capped in Free/Tier 1, unlimited in Tier 2/3
-4. **Widgets belong to accounts** — portable, team-owned
+4. **Instances belong to accounts** — portable, team-owned
 5. **No sales call for teams** — self-serve collaboration from day 1
 
 This is the Figma model applied to widgets: make adoption frictionless, let stickiness compound, charge for serious usage.

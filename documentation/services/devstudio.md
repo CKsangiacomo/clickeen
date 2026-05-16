@@ -27,6 +27,8 @@ DevStudio may surface internal tools for Clickeen operations, but it must not in
 
 Future company-plane actions such as moderation, commercial overrides, support authority, or sponsored-account ops belong to the separate internal control plane, not to Berlin product roles and not to a fake DevStudio account shell.
 
+Under PRD 099, Admin is not a separate product lane. The Clickeen/admin account is the normal account with `accountPublicId` `00000001`, and admin-owned example instances live under `accounts/00000001/instances/{instanceId}/` like every customer-owned instance. DevStudio may help inspect or curate those references locally, but it must not create `admin/widgets`, account-UUID widget folders, instance-only public references, or any other special storage lane.
+
 ## Environment
 
 ### Local
@@ -41,6 +43,7 @@ Local contract:
 - local DevStudio does **not** require Roma-style login semantics by default
 - local DevStudio is never treated as a product user session or account-switch authority
 - the removed widget-authoring workspace must not be recreated through a new hidden local API lane
+- admin curation references must carry `accountPublicId: "00000001"` plus `instanceId`; `00000001` is a normal account coordinate, not a superadmin bypass
 
 There is no canonical Cloudflare DevStudio runtime.
 
@@ -63,6 +66,7 @@ That remains a valid internal-toolbench use case.
 Local lane note:
 - `bash scripts/dev-up.sh` starts the local DevStudio operating lane and verifies the local stack before finishing
 - DevStudio no longer seeds a fake platform/account lane; product state must come from the real Roma -> Bob -> Tokyo account path
+- DevStudio no longer has a special admin widget lane. Platform examples are normal account-owned instances in account `00000001`, opened and saved through the same Roma -> Bob -> Tokyo path when edited.
 - do not reintroduce cloud-derived or blob-only repair logic into boot
 
 Removed local lanes:

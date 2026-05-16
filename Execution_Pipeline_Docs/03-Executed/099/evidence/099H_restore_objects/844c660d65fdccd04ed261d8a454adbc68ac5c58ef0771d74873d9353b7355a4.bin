@@ -1,0 +1,559 @@
+{
+  "appearance": {
+    "cardwrapper": {
+      "border": {
+        "color": "#efeff2",
+        "enabled": true,
+        "width": 1
+      },
+      "insideShadow": {
+        "all": {
+          "alpha": 12,
+          "blur": 24,
+          "color": "#000000",
+          "enabled": false,
+          "inset": true,
+          "spread": 0,
+          "x": 0,
+          "y": 0
+        },
+        "bottom": {
+          "alpha": 12,
+          "blur": 16,
+          "color": "#000000",
+          "enabled": false,
+          "inset": true,
+          "spread": -12,
+          "x": 0,
+          "y": -12
+        },
+        "layer": "below-content",
+        "left": {
+          "alpha": 12,
+          "blur": 16,
+          "color": "#000000",
+          "enabled": false,
+          "inset": true,
+          "spread": -12,
+          "x": 12,
+          "y": 0
+        },
+        "linked": true,
+        "right": {
+          "alpha": 12,
+          "blur": 16,
+          "color": "#000000",
+          "enabled": false,
+          "inset": true,
+          "spread": -12,
+          "x": -12,
+          "y": 0
+        },
+        "top": {
+          "alpha": 12,
+          "blur": 16,
+          "color": "#000000",
+          "enabled": false,
+          "inset": true,
+          "spread": -12,
+          "x": 0,
+          "y": 12
+        }
+      },
+      "radius": "2xl",
+      "radiusBL": "2xl",
+      "radiusBR": "2xl",
+      "radiusLinked": true,
+      "radiusTL": "2xl",
+      "radiusTR": "2xl",
+      "shadow": {
+        "alpha": 38,
+        "blur": 21,
+        "color": "#e5e5ea",
+        "enabled": true,
+        "inset": false,
+        "spread": -5,
+        "x": 23,
+        "y": 12
+      }
+    },
+    "ctaBackground": "var(--color-system-blue)",
+    "ctaBorder": {
+      "color": "var(--color-system-blue)",
+      "enabled": false,
+      "width": 1
+    },
+    "ctaIconSize": 16,
+    "ctaIconSizePreset": "m",
+    "ctaPaddingBlock": 12,
+    "ctaPaddingInline": 16,
+    "ctaPaddingLinked": false,
+    "ctaRadius": "md",
+    "ctaSizePreset": "custom",
+    "ctaTextColor": "var(--color-system-white)",
+    "iconColor": "var(--typo-question-color)",
+    "iconStyle": "plus",
+    "itemBackground": {
+      "color": "var(--color-system-white)",
+      "type": "color"
+    },
+    "itemCard": {
+      "border": {
+        "color": "#efeff2",
+        "enabled": true,
+        "width": 1
+      },
+      "radius": "2xl",
+      "radiusBL": "2xl",
+      "radiusBR": "2xl",
+      "radiusLinked": true,
+      "radiusTL": "2xl",
+      "radiusTR": "2xl",
+      "shadow": {
+        "alpha": 13,
+        "blur": 16,
+        "color": "#007aff",
+        "enabled": true,
+        "inset": false,
+        "spread": 0,
+        "x": 7,
+        "y": 7
+      }
+    },
+    "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
+    "linkStyle": "underline",
+    "linkTextColor": "var(--color-system-blue)",
+    "linkUnderlineColor": "var(--color-system-blue)",
+    "podBorder": {
+      "color": "var(--color-system-gray-5)",
+      "enabled": false,
+      "width": 1
+    },
+    "theme": "custom"
+  },
+  "behavior": {
+    "displayImages": true,
+    "displayVideos": true,
+    "expandAll": false,
+    "expandFirst": true,
+    "multiOpen": false,
+    "showBacklink": true
+  },
+  "context": {
+    "websiteUrl": ""
+  },
+  "cta": {
+    "enabled": true,
+    "href": "https://example.com",
+    "iconEnabled": true,
+    "iconName": "arrowshape.turn.up.right",
+    "iconPlacement": "right",
+    "label": "Contact us",
+    "openMode": "same-tab"
+  },
+  "displayCategoryTitles": false,
+  "geo": {
+    "answerFormat": "direct-first",
+    "enableDeepLinks": true
+  },
+  "header": {
+    "alignment": "left",
+    "ctaPlacement": "right",
+    "enabled": true,
+    "gap": 28,
+    "innerGap": 16,
+    "placement": "top",
+    "showSubtitle": false,
+    "subtitleHtml": "Modern website widgets—fast to launch, easy to customize, and built to help you convert.",
+    "textGap": 4,
+    "title": "FAQs"
+  },
+  "layout": {
+    "cardsLayout": "grid",
+    "columns": {
+      "desktop": 2,
+      "mobile": 1
+    },
+    "gap": 16,
+    "itemPadding": 20,
+    "itemPaddingBottom": 20,
+    "itemPaddingLeft": 20,
+    "itemPaddingLinked": true,
+    "itemPaddingRight": 20,
+    "itemPaddingTop": 20,
+    "itemQaGapCustom": 8,
+    "itemQaGapPreset": "s",
+    "type": "list"
+  },
+  "pod": {
+    "background": {
+      "color": "var(--color-system-white)",
+      "type": "color"
+    },
+    "contentWidth": 960,
+    "insideShadow": {
+      "all": {
+        "alpha": 12,
+        "blur": 24,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": 0,
+        "x": 0,
+        "y": 0
+      },
+      "bottom": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 0,
+        "y": -12
+      },
+      "layer": "below-content",
+      "left": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 12,
+        "y": 0
+      },
+      "linked": true,
+      "right": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": -12,
+        "y": 0
+      },
+      "top": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 0,
+        "y": 12
+      }
+    },
+    "padding": {
+      "desktop": {
+        "all": 60,
+        "bottom": 60,
+        "left": 60,
+        "linked": true,
+        "right": 60,
+        "top": 60
+      },
+      "mobile": {
+        "all": 28,
+        "bottom": 28,
+        "left": 28,
+        "linked": true,
+        "right": 28,
+        "top": 28
+      }
+    },
+    "radius": "4xl",
+    "radiusBL": "4xl",
+    "radiusBR": "4xl",
+    "radiusLinked": true,
+    "radiusTL": "4xl",
+    "radiusTR": "4xl",
+    "shadow": {
+      "alpha": 18,
+      "blur": 24,
+      "color": "#ff3b30",
+      "enabled": false,
+      "inset": false,
+      "spread": 0,
+      "x": 0,
+      "y": 8
+    },
+    "widthMode": "full"
+  },
+  "sections": [
+    {
+      "faqs": [
+        {
+          "answer": "Clickeen is a widget SaaS platform that lets you add polished, high-performing widgets to your website in minutes—no heavy dev work required.",
+          "defaultOpen": false,
+          "id": "q1",
+          "question": "What is Clickeen?"
+        },
+        {
+          "answer": "Yes. The Free plan includes 1 active widget with essential features so you can try Clickeen on a live site.",
+          "defaultOpen": false,
+          "id": "q2",
+          "question": "Do you offer a free plan?"
+        },
+        {
+          "answer": "Create your widget, copy the embed code, and paste it right before the closing </body> tag on your website. Changes you make in Clickeen update instantly.",
+          "defaultOpen": false,
+          "id": "q3",
+          "question": "How do I install a widget on my site?"
+        },
+        {
+          "answer": "Launch faster with flexible design controls, simple updates, and reliable performance—so your team can ship improvements without maintaining custom code.",
+          "defaultOpen": false,
+          "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
+          "question": "Why use Clickeen instead of building widgets from scratch?"
+        }
+      ],
+      "id": "s1",
+      "title": "Getting started"
+    }
+  ],
+  "seo": {
+    "businessType": "online-service",
+    "canonicalUrl": "",
+    "enableSchema": true
+  },
+  "seoGeo": {
+    "enabled": false
+  },
+  "showTitle": true,
+  "stage": {
+    "alignment": "center",
+    "background": {
+      "image": {
+        "assetId": "5d07d73c-ba98-493c-98cb-8002221f42ef",
+        "fit": "cover",
+        "name": "Veg.jpg",
+        "position": "center",
+        "repeat": "no-repeat"
+      },
+      "type": "image"
+    },
+    "canvas": {
+      "height": 0,
+      "mode": "viewport",
+      "width": 0
+    },
+    "insideShadow": {
+      "all": {
+        "alpha": 12,
+        "blur": 24,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": 0,
+        "x": 0,
+        "y": 0
+      },
+      "bottom": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 0,
+        "y": -12
+      },
+      "layer": "below-content",
+      "left": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 12,
+        "y": 0
+      },
+      "linked": true,
+      "right": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": -12,
+        "y": 0
+      },
+      "top": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 0,
+        "y": 12
+      }
+    },
+    "padding": {
+      "desktop": {
+        "all": 40,
+        "bottom": 40,
+        "left": 40,
+        "linked": true,
+        "right": 40,
+        "top": 40
+      },
+      "mobile": {
+        "all": 24,
+        "bottom": 24,
+        "left": 24,
+        "linked": true,
+        "right": 24,
+        "top": 24
+      }
+    },
+    "shadow": {
+      "alpha": 18,
+      "blur": 24,
+      "color": "#000000",
+      "enabled": false,
+      "inset": false,
+      "spread": 0,
+      "x": 0,
+      "y": 8
+    }
+  },
+  "title": "Frequently Asked Questions",
+  "typography": {
+    "globalFamily": "Inter",
+    "roleScales": {
+      "answer": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "body": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "button": {
+        "l": "20px",
+        "m": "18px",
+        "s": "15px",
+        "xl": "24px",
+        "xs": "13px"
+      },
+      "question": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "section": {
+        "l": "16px",
+        "m": "14px",
+        "s": "13px",
+        "xl": "18px",
+        "xs": "12px"
+      },
+      "title": {
+        "l": "44px",
+        "m": "36px",
+        "s": "28px",
+        "xl": "60px",
+        "xs": "20px"
+      }
+    },
+    "roles": {
+      "answer": {
+        "color": {
+          "color": "#585858",
+          "type": "color"
+        },
+        "family": "Inter",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "15px",
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "body": {
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+        "family": "Inter",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": 14,
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "button": {
+        "color": "var(--color-system-white)",
+        "family": "Inter",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": 14,
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "600"
+      },
+      "question": {
+        "color": {
+          "color": "#212121",
+          "type": "color"
+        },
+        "family": "Inter",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "16px",
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "600"
+      },
+      "section": {
+        "color": {
+          "color": "#757575",
+          "type": "color"
+        },
+        "family": "Inter",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "14px",
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "title": {
+        "color": {
+          "color": "#545456",
+          "type": "color"
+        },
+        "family": "Inter",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "24px",
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "600"
+      }
+    }
+  }
+}

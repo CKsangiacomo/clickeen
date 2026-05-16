@@ -9,6 +9,9 @@ import {
 } from '../domains/assets';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
 
+const ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT = '([0-9A-Z]{8})';
+const ASSET_ID_ROUTE_SEGMENT = '([0-9a-f-]{36})';
+
 export async function tryHandleAssetRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
@@ -20,7 +23,7 @@ export async function tryHandleAssetRoutes(
   }
 
   const accountAssetsListMatch = pathname.match(
-    /^\/__internal\/assets\/account\/([0-9a-f-]{36})$/i,
+    new RegExp(`^/__internal/assets/account/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}$`),
   );
   if (accountAssetsListMatch) {
     const accountId = decodeURIComponent(accountAssetsListMatch[1] || '');
@@ -31,7 +34,7 @@ export async function tryHandleAssetRoutes(
   }
 
   const accountAssetsUsageMatch = pathname.match(
-    /^\/__internal\/assets\/account\/([0-9a-f-]{36})\/usage$/i,
+    new RegExp(`^/__internal/assets/account/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}/usage$`),
   );
   if (accountAssetsUsageMatch) {
     const accountId = decodeURIComponent(accountAssetsUsageMatch[1] || '');
@@ -42,7 +45,7 @@ export async function tryHandleAssetRoutes(
   }
 
   const accountAssetsResolveMatch = pathname.match(
-    /^\/__internal\/assets\/account\/([0-9a-f-]{36})\/resolve$/i,
+    new RegExp(`^/__internal/assets/account/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}/resolve$`),
   );
   if (accountAssetsResolveMatch) {
     const accountId = decodeURIComponent(accountAssetsResolveMatch[1] || '');
@@ -53,7 +56,7 @@ export async function tryHandleAssetRoutes(
   }
 
   const accountAssetMatch = pathname.match(
-    /^\/__internal\/assets\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i,
+    new RegExp(`^/__internal/assets/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}/${ASSET_ID_ROUTE_SEGMENT}$`, 'i'),
   );
   if (accountAssetMatch) {
     const accountId = decodeURIComponent(accountAssetMatch[1] || '');
@@ -64,7 +67,9 @@ export async function tryHandleAssetRoutes(
     return respondMethodNotAllowed(respond);
   }
 
-  const accountAssetIntegrityMatch = pathname.match(/^\/assets\/integrity\/([0-9a-f-]{36})$/i);
+  const accountAssetIntegrityMatch = pathname.match(
+    new RegExp(`^/assets/integrity/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}$`),
+  );
   if (accountAssetIntegrityMatch) {
     const accountId = decodeURIComponent(accountAssetIntegrityMatch[1] || '');
     if (req.method === 'GET') {
@@ -74,7 +79,7 @@ export async function tryHandleAssetRoutes(
   }
 
   const accountAssetIdentityIntegrityMatch = pathname.match(
-    /^\/assets\/integrity\/([0-9a-f-]{36})\/([0-9a-f-]{36})$/i,
+    new RegExp(`^/assets/integrity/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}/${ASSET_ID_ROUTE_SEGMENT}$`, 'i'),
   );
   if (accountAssetIdentityIntegrityMatch) {
     const accountId = decodeURIComponent(accountAssetIdentityIntegrityMatch[1] || '');

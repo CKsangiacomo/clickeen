@@ -1,0 +1,35 @@
+venice/lib/tokyo-proxy.ts:110:  const response = await tokyoFetch(`/assets/account/${accountId}/${assetId}/${filename}${request.nextUrl.search}`, {
+roma/lib/account-storage-usage.ts:26:    path: `/__internal/assets/account/${encodeURIComponent(args.accountId)}/usage`,
+roma/lib/account-assets-gateway.ts:1:import { isUuid } from '@clickeen/ck-contracts';
+roma/lib/account-assets-gateway.ts:18:export { isUuid };
+packages/ck-contracts/src/index.ts:3:import { isUuid } from './ids';
+packages/ck-contracts/src/index.ts:5:export { UUID_RE, isUuid } from './ids';
+packages/ck-contracts/src/index.ts:228:  if (!isUuid(assetId) || !filename) return null;
+packages/ck-contracts/src/index.ts:243:  if (!isUuid(assetId) || !url) return null;
+packages/ck-contracts/src/index.ts:256:  if (!isCompactAccountPublicId(accountId) || !isUuid(assetId)) return null;
+packages/ck-contracts/src/index.ts:277:  if (!isCompactAccountPublicId(accountId) || !isUuid(assetId)) return null;
+packages/ck-contracts/src/index.ts:285:    pathname: `/assets/account/${encodeURIComponent(accountId)}/${encodeURIComponent(assetId)}/${encodeURIComponent(filename)}`,
+packages/ck-contracts/src/index.ts:434:  if (!assetId || !isUuid(assetId)) return null;
+packages/ck-contracts/src/index.ts:450:    if (isUuid(assetId)) out.add(assetId);
+packages/ck-contracts/src/index.ts:457:    if (isUuid(assetId)) out.add(assetId);
+packages/ck-contracts/src/index.ts:458:    if (isUuid(posterAssetId)) out.add(posterAssetId);
+packages/ck-contracts/src/index.ts:467:  if (isUuid(assetId)) out.add(assetId);
+roma/components/accept-invite-domain.tsx:3:import { isUuid } from '@clickeen/ck-contracts';
+roma/components/accept-invite-domain.tsx:69:  if (!isUuid(token)) {
+tokyo-worker/src/domains/assets-handlers.ts:27:import { isUuid } from '@clickeen/ck-contracts';
+tokyo-worker/src/domains/assets-handlers.ts:627:      if (!assetId || !isUuid(assetId) || seen.has(assetId)) return false;
+tokyo-worker/src/domains/assets-handlers.ts:680:  if (!assetId || !isUuid(assetId)) {
+tokyo-worker/src/domains/assets-handlers.ts:754:  if (!assetId || !isUuid(assetId)) {
+packages/ck-contracts/src/ids.ts:3:export function isUuid(raw: unknown): boolean {
+roma/app/api/invitations/[token]/accept/route.ts:1:import { isUuid } from '@clickeen/ck-contracts';
+roma/app/api/invitations/[token]/accept/route.ts:19:  if (!isUuid(token)) {
+roma/app/api/account/assets/route.ts:31:      path: `/__internal/assets/account/${encodeURIComponent(gateway.value.accountId)}${request.nextUrl.search}`,
+roma/app/api/account/team/invitations/[invitationId]/route.ts:1:import { isUuid } from '@clickeen/ck-contracts';
+roma/app/api/account/team/invitations/[invitationId]/route.ts:18:  if (!isUuid(invitationId)) {
+roma/app/api/account/assets/[assetId]/route.ts:4:  isUuid,
+roma/app/api/account/assets/[assetId]/route.ts:16:  if (!isUuid(normalizedAssetId)) {
+roma/app/api/account/team/members/[memberId]/route.ts:1:import { isUuid } from '@clickeen/ck-contracts';
+roma/app/api/account/team/members/[memberId]/route.ts:30:  if (!isUuid(memberId)) {
+roma/app/api/account/team/members/[memberId]/route.ts:49:  if (!isUuid(memberId)) {
+roma/app/api/account/team/members/[memberId]/route.ts:71:  if (!isUuid(memberId)) {
+roma/app/api/account/assets/resolve/route.ts:20:    path: `/__internal/assets/account/${encodeURIComponent(gateway.value.accountId)}/resolve`,

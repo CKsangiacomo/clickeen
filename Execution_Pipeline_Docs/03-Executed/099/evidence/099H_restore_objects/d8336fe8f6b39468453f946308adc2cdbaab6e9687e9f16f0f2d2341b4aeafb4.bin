@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "type": "l10n",
+  "locale": "tr",
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "status": "ready",
+  "ops": [],
+  "textPack": {
+    "cta.label": "Bize ulaşın",
+    "header.subtitleHtml": "Modern web sitesi widget’ları—hızlıca yayına alın, kolayca özelleştirin ve dönüşüm artırmak için tasarlandı.",
+    "header.title": "SSS",
+    "sections.0.faqs.0.answer": "Clickeen, dakikalar içinde web sitenize şık ve yüksek performanslı widget’lar eklemenizi sağlayan bir widget SaaS platformudur—yoğun geliştirme işi gerekmez.",
+    "sections.0.faqs.0.question": "Clickeen nedir?",
+    "sections.0.faqs.1.answer": "Evet. Ücretsiz plan, Clickeen’i canlı bir sitede denemeniz için temel özelliklerle 1 aktif widget içerir.",
+    "sections.0.faqs.1.question": "Ücretsiz bir plan sunuyor musunuz?",
+    "sections.0.faqs.2.answer": "Widget’ınızı oluşturun, yerleştirme kodunu kopyalayın ve web sitenizdeki kapanış </body> etiketinden hemen önce yapıştırın. Clickeen’de yaptığınız değişiklikler anında güncellenir.",
+    "sections.0.faqs.2.question": "Siteme bir widget’ı nasıl kurarım?",
+    "sections.0.faqs.3.answer": "Esnek tasarım kontrolleri, kolay güncellemeler ve güvenilir performansla daha hızlı yayına alın—böylece ekibiniz özel kodu bakımını üstlenmeden iyileştirmeleri yayınlayabilir.",
+    "sections.0.faqs.3.question": "Widget’ları sıfırdan geliştirmek yerine neden Clickeen’i kullanmalıyım?",
+    "sections.0.title": "Başlarken"
+  },
+  "updatedAt": "2026-03-23T18:57:29.518Z"
+}

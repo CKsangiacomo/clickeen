@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "GYIK-példák – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Valós FAQ-példák minden iparág számára."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "GYIK widget példák iparágak szerint"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Nézze meg, hogyan használnak az utazási, vendéglátó- és szolgáltató csapatok egyetlen GYIK widgetet a visszatérő kérdések gyorsabb megválaszolására."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Hotelek és üdülőhelyek"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Válaszolja meg a bejelentkezéssel, parkolással és reggelivel kapcsolatos kérdéseket még az érkezés előtt, és csökkentse a recepciós megszakításokat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Éttermek, kávézók és bárok"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Tegye egyértelművé mobilon az étlapot, az allergéneket és a nyitvatartást, hogy a vendégek gyorsabban döntsenek, kevesebb egyeztetéssel a személyzettel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Nyaralóingatlanok és ingatlankezelők"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Tartsa egységesen a bejelentkezési lépéseket, a Wi‑Fi adatokat és a házirendet az összes ingatlanban egyetlen közzétételi folyamattal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "A nemzetközi látogatók azonnali egyértelműséget várnak"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Tegye közzé egyszer, és az első kattintástól a megfelelő nyelven adjon válaszokat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Utazásszervezők és utazási irodák"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Tisztázza előre a felvételi pontokat, a lemondási szabályokat és az időjárási irányelveket, hogy a foglalási döntések magabiztosan szülessenek meg."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Látványosságok, múzeumok és vidámparkok"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Tegye egyértelművé a jegyeket, a belépési szabályokat és az akadálymentesítési információkat még az érkezés előtt, hogy mindenki számára gördülékenyebb legyen a belépés."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Egyszerű működési kör"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Rögzítse egyszer a visszatérő kérdéseket, tegye közzé gyorsan a frissítéseket, és tartsa összehangolva az összes élő oldalt a változásokkal."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Adja hozzá a legfontosabb kérdéseket"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Tegye közzé egyszer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Tartsa szinkronban az összes nyelvet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Induljon a visszatérő kérdésekkel, amelyeket a látogatók a döntés előtt feltesznek."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Egy kattintás, és a legfrissebb válaszok minden oldalon élesben megjelennek."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Ha az alap tartalom változik, a fordítások frissülnek, így az üzenet egységes marad."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Éles üzemre tervezve"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Globális edge-sebesség, rugalmas beágyazási lehetőségek és egyszerű közzétételi folyamat, amely naprakészen tartja a válaszokat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Gyors"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Rugalmas"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Naprakész"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Globális edge-kiszolgálás."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Beágyazás standard módon vagy script nélkül."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Tegye közzé egyszer, és frissítse az összes élő oldalt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Oldd meg a Clickeennel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Kezdje ingyen, igazítsa a dizájnt a márkájához, és tegyen közzé egy élő GYIK-et, amely több oldalon is könnyedén skálázódik."
+    }
+  ],
+  "v": 1
+}

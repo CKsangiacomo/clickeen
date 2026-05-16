@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "type": "l10n",
+  "locale": "zh-tw",
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "status": "ready",
+  "ops": [],
+  "textPack": {
+    "cta.label": "聯絡我們",
+    "header.subtitleHtml": "現代化網站小工具—快速上線、輕鬆自訂，專為提升轉換而打造。",
+    "header.title": "常見問題",
+    "sections.0.faqs.0.answer": "Clickeen 是一個小工具 SaaS 平台，讓你在幾分鐘內把精緻、高效能的小工具加入網站—不需要繁重的開發工作。",
+    "sections.0.faqs.0.question": "Clickeen 是什麼？",
+    "sections.0.faqs.1.answer": "有。Free 方案包含 1 個啟用中的小工具與必要功能，讓你能在正式網站上試用 Clickeen。",
+    "sections.0.faqs.1.question": "有提供免費方案嗎？",
+    "sections.0.faqs.2.answer": "建立小工具後，複製嵌入程式碼，並貼到你網站的結尾 </body> 標籤之前。你在 Clickeen 的變更會立即更新。",
+    "sections.0.faqs.2.question": "如何在我的網站上安裝小工具？",
+    "sections.0.faqs.3.answer": "透過彈性的設計控制、簡單的更新方式與穩定可靠的效能更快上線—讓團隊能持續推出改進，而不用維護自訂程式碼。",
+    "sections.0.faqs.3.question": "為什麼要用 Clickeen，而不是從零自建小工具？",
+    "sections.0.title": "快速開始"
+  },
+  "updatedAt": "2026-03-23T18:57:29.518Z"
+}

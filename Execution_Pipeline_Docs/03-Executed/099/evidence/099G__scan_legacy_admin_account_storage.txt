@@ -1,0 +1,8 @@
+scripts/prd99g-admin-account-recreate.mjs:34:const oldAccountId = '00000000-0000-0000-0000-000000000100';
+scripts/prd99g-admin-account-recreate.mjs:36:const baseOldPrefix = `accounts/${oldAccountId}/widgets`;
+scripts/prd99g-admin-account-recreate.mjs:47:    oldInstanceId: 'ins_01KR8R6ZYZBDXE0DT2FB8PB0NN',
+scripts/prd99g-admin-account-recreate.mjs:53:    oldInstanceId: 'ins_01KR8R6ZYTPM6B3CHS8KZ0CEC9',
+scripts/prd99g-admin-account-recreate.mjs:59:    oldInstanceId: 'ins_01KR8R6ZZ07S5PMJVSRKM4M7K8',
+tokyo-worker/src/account-assets-contract.test.ts:36:  const uuidAccountId = '00000000-0000-0000-0000-000000000100';
+tokyo-worker/src/route-helpers.test.ts:12:  assert.equal(isValidScopedInstance('ins_legacy_instance', ACCOUNT_ID), false);
+tokyo-worker/src/route-helpers.test.ts:16:  assert.equal(isValidScopedInstance('A1B2C3D4E5', '00000000-0000-0000-0000-000000000100'), false);

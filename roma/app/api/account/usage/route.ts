@@ -14,14 +14,14 @@ export async function GET(request: NextRequest) {
 
   try {
     const storageBytesUsed = await readAccountStorageBytesUsed({
-      accountId: current.value.authzPayload.accountId,
+      accountId: current.value.authzPayload.accountPublicId,
       accountCapsule: current.value.authzToken,
       requestId: current.value.requestId,
     });
     return withSession(
       request,
       NextResponse.json({
-        accountId: current.value.authzPayload.accountId,
+        accountId: current.value.authzPayload.accountPublicId,
         storageBytesUsed,
       }),
       current.value.setCookies,

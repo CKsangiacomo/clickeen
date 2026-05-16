@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "2e3f8977ce48623e862f8aeab9876469349397101f6cb3ff0463cf6221796603",
+  "baseUpdatedAt": "2026-02-04T05:36:55.817Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Przykłady prezentacji logo – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Zobacz typowe miejsca prezentacji logo i przykłady zastosowań."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Przykłady prezentacji logo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Zobacz typowe umiejscowienia i przypadki użycia."
+    }
+  ],
+  "v": 1
+}

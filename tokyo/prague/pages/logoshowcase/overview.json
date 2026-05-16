@@ -59,7 +59,8 @@
       "id": "minibob",
       "type": "minibob",
       "accountInstanceRef": {
-        "instanceId": "INST000001"
+        "accountPublicId": "00000001",
+        "instanceId": "8FMVZFFPJV"
       },
       "copy": {
         "heading": "Try it live",

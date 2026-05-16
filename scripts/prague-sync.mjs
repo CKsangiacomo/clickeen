@@ -205,7 +205,7 @@ async function publishOverlays() {
   const modeFlag = publishRemote ? '--remote' : '--local';
   const tasks = files.map((filePath) => {
     const relFromPragueL10n = path.relative(PRAGUE_L10N_ROOT, filePath).replace(/\\/g, '/');
-    const key = path.posix.join('l10n', 'prague', relFromPragueL10n);
+    const key = path.posix.join('prague', 'l10n', relFromPragueL10n);
     const objectPath = `${R2_BUCKET}/${key}`;
     return { key, objectPath, filePath, modeFlag };
   });

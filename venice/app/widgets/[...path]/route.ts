@@ -15,7 +15,7 @@ function isAllowedWidgetPath(parts: string[]): boolean {
     return file === 'agent.md' || file === 'limits.json' || file === 'spec.json' || /^widget\.(css|html|client\.js|dom\.js)$/.test(file);
   }
   if (parts.length === 3 && parts[1] === 'layers') return parts[2] === 'user.allowlist.json';
-  if (parts.length >= 3 && parts[1] === 'base-assets') return parts.slice(2).every((part) => SIMPLE_FILE_RE.test(part));
+  if (parts.length >= 3 && parts[1] === 'media') return parts.slice(2).every((part) => SIMPLE_FILE_RE.test(part));
   return false;
 }
 

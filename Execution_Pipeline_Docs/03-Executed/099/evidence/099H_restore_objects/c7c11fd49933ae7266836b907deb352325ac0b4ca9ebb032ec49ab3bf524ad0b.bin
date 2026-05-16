@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Tính năng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Cách widget FAQ hoạt động: SEO, bản địa hóa, quy trình xuất bản và chỉnh sửa có trợ lý AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget FAQ hoạt động như thế nào"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Từ soạn thảo bằng AI đến bản địa hóa và SEO—đây là những hệ thống giúp câu trả lời luôn chính xác và dễ được tìm thấy."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Mô tả một lần. AI soạn phần còn lại."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Tạo bản nháp có cấu trúc ngay trong trình chỉnh sửa, rồi duyệt, chỉnh sửa hoặc từ chối từng gợi ý trước khi xuất bản."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Tối đa 29 ngôn ngữ trong một widget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Tự động hiển thị câu trả lời đã dịch và tinh chỉnh thủ công khi cần đúng giọng thương hiệu hoặc sắc thái."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Xuất bản một lần. Cập nhật mọi trang."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Chỉnh một lần ở một nguồn duy nhất, rồi xuất bản để đẩy câu trả lời mới nhất đến mọi bản nhúng đang hoạt động."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "Công cụ tìm kiếm có thể đọc câu trả lời của bạn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "Câu trả lời được render phía máy chủ, schema output và liên kết sâu giúp công cụ tìm kiếm lập chỉ mục và hiển thị đúng nội dung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google thấy từng từ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Rich snippet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Liên kết sâu"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "Render phía máy chủ giúp câu trả lời có thể được lập chỉ mục với dịch chuyển bố cục gần như bằng 0."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "JSON-LD tự động giúp công cụ tìm kiếm hiển thị câu trả lời của bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Dẫn người dùng đến đúng câu trả lời họ cần với một URL ổn định."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Kho tri thức sống, lớn lên cùng bạn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Giữ câu trả lời luôn chính xác khi sản phẩm, chính sách và người dùng của bạn thay đổi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Đáng tin cậy ngay từ thiết kế"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "Xuất bản theo phiên bản và ranh giới live rõ ràng giúp đội ngũ kiểm soát tốt các cập nhật thường xuyên."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Thay đổi theo phiên bản"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Ranh giới xuất bản"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "Được cache ở edge"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Mỗi lần xuất bản đều được version hóa để đội ngũ cải tiến có kiểm soát."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "Nội dung live chỉ thay đổi sau khi bạn xuất bản một cách rõ ràng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "Mili giây cũng quan trọng. Chúng tôi phân phối câu trả lời từ vị trí gần người dùng của bạn nhất."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Toàn quyền kiểm soát thiết kế"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Tùy chỉnh bo góc, đổ bóng, viền, khoảng cách và typography trong trình chỉnh sửa trực quan, tối ưu cho nhất quán thương hiệu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Bố cục"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Kiểu chữ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Chủ đề"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Bố cục accordion, danh sách và thẻ (card) với điều khiển khoảng cách responsive."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Typography theo vai trò cho tiêu đề, câu hỏi, câu trả lời và CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Hỗ trợ chế độ sáng/tối cùng kiểm soát màu thương hiệu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Phân phối toàn cầu theo mặc định"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Kết hợp bản địa hóa, SEO và phân phối edge trong một hệ thống để trang toàn cầu luôn nhanh và rõ ràng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Phân phối edge"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Bản địa hóa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Phục vụ từ hạ tầng edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Tối đa 29 ngôn ngữ, hỗ trợ ghi đè."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Câu trả lời có cấu trúc với hỗ trợ JSON-LD."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Tối ưu cho website chạy thực tế"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Dùng bản nhúng tiêu chuẩn hoặc scriptless, và giữ cập nhật live dễ dự đoán với kiểm soát xuất bản rõ ràng."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Chế độ nhúng"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Kiểm soát xuất bản"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Tính kết hợp (composable)"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Nhúng script tiêu chuẩn và tùy chọn iframe không cần script."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Quy trình xuất bản rõ ràng cho cập nhật live."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Kết hợp style, nội dung và ngôn ngữ mà không cần tách nhánh."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Xây dựng trải nghiệm FAQ tốt hơn"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Bắt đầu miễn phí, xuất bản nhanh và luôn cập nhật FAQ trên mọi trang và mọi ngôn ngữ."
+    }
+  ],
+  "v": 1
+}

@@ -1,7 +1,7 @@
 import type { Env } from '../../types';
 import {
+  accountInstanceRoot,
   accountInstancePublishKey,
-  publishedWidgetLookupKey,
 } from './keys';
 import {
   patchAccountInstanceIndexEntry,
@@ -15,7 +15,6 @@ import type {
   LiveRenderPointer,
   LocalePolicy,
   PublishDocument,
-  PublishedWidgetLookupDocument,
   SyncLiveSurfaceJob,
 } from './types';
 import { normalizeFingerprint, normalizeStorageId } from './utils';
@@ -26,15 +25,6 @@ const DEFAULT_LOCALE_POLICY: LocalePolicy = {
   ip: { enabled: false, countryToLocale: {} },
   switcher: { enabled: false },
 };
-
-async function restorePublishDocument(
-  env: Env,
-  publishKey: string,
-  previous: PublishDocument | null,
-  fallback: PublishDocument,
-): Promise<void> {
-  await putJson(env, publishKey, previous ?? fallback);
-}
 
 export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promise<void> {
   const instanceId = normalizeStorageId(job.instanceId);
@@ -51,7 +41,6 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
   if (!location) throw new Error('[tokyo] sync-live-surface missing instance location');
 
   const publishKey = accountInstancePublishKey(location.accountId, location.widgetCode, location.instanceId);
-  const previousPublish = normalizePublishDocument(await loadJson(env, publishKey));
   if (!job.live) {
     const unpublished = {
       v: 1,
@@ -64,12 +53,6 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
       updatedAt: new Date().toISOString(),
     } satisfies PublishDocument;
     await putJson(env, publishKey, unpublished);
-    try {
-      await env.TOKYO_R2.delete(publishedWidgetLookupKey(location.instanceId));
-    } catch (error) {
-      await restorePublishDocument(env, publishKey, previousPublish, unpublished);
-      throw error;
-    }
     await patchAccountInstanceIndexEntry({
       env,
       accountId: location.accountId,
@@ -103,29 +86,6 @@ export async function syncLiveSurface(env: Env, job: SyncLiveSurfaceJob): Promis
     updatedAt,
   } satisfies PublishDocument;
   await putJson(env, publishKey, published);
-  try {
-    await putJson(env, publishedWidgetLookupKey(location.instanceId), {
-      v: 1,
-      id: location.instanceId,
-      accountId: location.accountId,
-      widgetCode: location.widgetCode,
-      widgetType: location.widgetType,
-      status: 'published',
-      updatedAt,
-    } satisfies PublishedWidgetLookupDocument);
-  } catch (error) {
-    await restorePublishDocument(env, publishKey, previousPublish, {
-      v: 1,
-      id: location.instanceId,
-      accountId: location.accountId,
-      widgetCode: location.widgetCode,
-      widgetType: location.widgetType,
-      status: 'unpublished',
-      configFp: null,
-      updatedAt,
-    });
-    throw error;
-  }
   await patchAccountInstanceIndexEntry({
     env,
     accountId: location.accountId,
@@ -172,9 +132,8 @@ export async function deleteInstanceMirror(env: Env, instanceId: string, account
   });
   const existed = Boolean(location);
   if (location) {
-    await deletePrefix(env, `accounts/${location.accountId}/widgets/${location.widgetCode}/${location.instanceId}/`);
+    await deletePrefix(env, `${accountInstanceRoot(location.accountId, location.widgetCode, location.instanceId)}/`);
   }
-  await env.TOKYO_R2.delete(publishedWidgetLookupKey(normalized));
   await removeAccountInstanceIndexEntry({ env, accountId: normalizedAccount, instanceId: normalized });
   return { existed };
 }
@@ -196,8 +155,8 @@ export function buildLiveRenderPointer(args: {
     ...(args.publish.seoGeo
       ? {
           seoGeo: {
-            metaLiveBase: `seo/meta/live`,
-            metaPacksBase: `seo/meta`,
+            metaLiveBase: `published/seo/meta/live`,
+            metaPacksBase: `published/seo/meta`,
           },
         }
       : {}),

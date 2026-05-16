@@ -33,9 +33,9 @@ Michael remains appropriate for:
 
 Tokyo remains appropriate for:
 
-- account assets
-- account widget instance documents
-- published widget lookup/bytes
+- account assets under `accounts/{accountPublicId}/assets/`
+- account instance documents under `accounts/{accountPublicId}/instances/`
+- account-scoped published projection bytes under `accounts/{accountPublicId}/instances/{instanceId}/published/`
 - account-instance l10n overlays
 
 ## Pre-GA Rule
@@ -53,3 +53,7 @@ Do not add new widget-instance product behavior to Michael. The surviving produc
 - never derived from `accounts.id`
 
 Overlay IDs use `accountPublicId`, not the relational UUID.
+
+PRD 099 extends that same boundary to account runtime storage: Tokyo/R2 account folders, account asset manifests, account asset URLs, account instance paths, and published projection paths must use `accountPublicId`, never `accounts.id`. Michael may keep private UUIDs for relational joins, RLS, billing/support records, audit, and account governance, but it must not become a second account-asset or widget-instance storage authority.
+
+Migration and cleanup reports may mention historical UUID R2 keys only as stale source material. Deleting those keys requires a dry-run report, an object-level restore manifest, and a rollback rehearsal on local/dev R2 before remote deletion.

@@ -1,7 +1,4 @@
-import {
-  resolvePolicyFromEntitlementsSnapshot,
-  type RomaAccountAuthzCapsulePayload,
-} from '@clickeen/ck-policy';
+import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import {
   buildAccountAssetKey,
   buildAccountAssetPublicPath,
@@ -25,8 +22,8 @@ import {
 } from '../auth';
 import type { Env } from '../types';
 import { isUuid } from '@clickeen/ck-contracts';
+import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import {
-  UPLOAD_SIZE_LIMIT_KEY,
   type AccountAssetManifest,
   type MemberRole,
   deleteAccountAssetByIdentity,
@@ -38,9 +35,7 @@ import {
   loadAccountAssetBlobKeys,
   normalizeAccountAssetSource,
   persistAccountAssetMetadata,
-  resolveUploadSizeLimitBytes,
   roleRank,
-  STORAGE_BYTES_LIMIT_KEY,
   sumAccountAssetManifestSizeBytes,
 } from './assets';
 
@@ -55,10 +50,6 @@ const ASSET_INTEGRITY_REASON_BLOB_MISSING_FOR_ASSET = 'coreui.errors.assets.inte
 
 type UploadTierResolutionResult =
   | { ok: true; accountAuthz: RomaAccountAuthzCapsulePayload }
-  | { ok: false; response: Response };
-
-type UploadStorageResult =
-  | { ok: true }
   | { ok: false; response: Response };
 
 type AccountAssetAuthorizationResult =
@@ -91,20 +82,6 @@ type AssetIdentityIntegritySnapshot = {
   orphanInR2: string[];
 };
 
-function denyEntitlement(reasonKey: string, detail: string, status: number): Response {
-  return json(
-    {
-      error: {
-        kind: 'DENY',
-        reasonKey,
-        upsell: 'UP',
-        detail,
-      },
-    },
-    { status },
-  );
-}
-
 async function resolveUploadTierAndAuthorization(args: {
   env: Env;
   auth: { ok: true; principal: { accountAuthz: RomaAccountAuthzCapsulePayload } };
@@ -113,7 +90,7 @@ async function resolveUploadTierAndAuthorization(args: {
 }): Promise<UploadTierResolutionResult> {
   const { env, auth, accountId, minRole = 'editor' } = args;
   const capsule = auth.principal.accountAuthz;
-  if (capsule.accountId !== accountId || roleRank(capsule.role) < roleRank(minRole)) {
+  if (capsule.accountPublicId !== accountId || roleRank(capsule.role) < roleRank(minRole)) {
     return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
   }
   return { ok: true, accountAuthz: capsule };
@@ -167,32 +144,6 @@ async function authorizeAccountAssetAccess(args: {
 }): Promise<Response | null> {
   const authorized = await resolveAccountAssetAuthorization(args);
   return authorized.ok ? null : authorized.response;
-}
-
-async function enforceAccountStorageLimit(args: {
-  env: Env;
-  accountId: string;
-  storageBytesMax: number | null;
-  bodyBytes: number;
-}): Promise<UploadStorageResult> {
-  const { env, accountId, storageBytesMax, bodyBytes } = args;
-  try {
-    const currentStoredBytes = await loadAccountStoredBytesUsage(env, accountId);
-    const nextStoredBytes = currentStoredBytes + bodyBytes;
-    if (storageBytesMax != null && nextStoredBytes > storageBytesMax) {
-      return {
-        ok: false,
-        response: denyEntitlement('coreui.upsell.reason.limitReached', `${STORAGE_BYTES_LIMIT_KEY}=${storageBytesMax}`, 403),
-      };
-    }
-    return { ok: true };
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return {
-      ok: false,
-      response: json({ error: { kind: 'INTERNAL', reasonKey: 'coreui.errors.db.readFailed', detail } }, { status: 500 }),
-    };
-  }
 }
 
 function resolveAccountAssetNamespacePrefix(accountId: string): string {
@@ -398,7 +349,7 @@ async function buildAccountAssetMirrorIntegrity(env: Env, accountId: string): Pr
 
 async function handleUploadAccountAsset(req: Request, env: Env): Promise<Response> {
   const accountId = (req.headers.get('x-account-id') || '').trim();
-  if (!accountId || !isUuid(accountId)) {
+  if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
   const unsupportedVariant = (req.headers.get('x-variant') || '').trim();
@@ -446,35 +397,6 @@ async function handleUploadAccountAsset(req: Request, env: Env): Promise<Respons
   if (accountAuthz && accountAuthz.accountStatus !== 'active') {
     return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
   }
-  const policy = accountAuthz
-    ? resolvePolicyFromEntitlementsSnapshot({
-        profile: accountAuthz.profile,
-        role: accountAuthz.role,
-        entitlements: accountAuthz.entitlements ?? null,
-      })
-    : null;
-  const uploadSizeLimit = policy ? policy.limits[UPLOAD_SIZE_LIMIT_KEY] : null;
-  const maxBytes =
-    uploadSizeLimit === null || (typeof uploadSizeLimit === 'number' && Number.isFinite(uploadSizeLimit) && uploadSizeLimit > 0)
-      ? uploadSizeLimit
-      : null;
-  const storageLimit = policy ? policy.limits[STORAGE_BYTES_LIMIT_KEY] ?? null : null;
-  const storageBytesMax =
-    storageLimit === null || (typeof storageLimit === 'number' && Number.isFinite(storageLimit) && storageLimit >= 0)
-      ? storageLimit
-      : null;
-  if (maxBytes != null && body.byteLength > maxBytes) {
-    return denyEntitlement('coreui.upsell.reason.limitReached', `${UPLOAD_SIZE_LIMIT_KEY}=${maxBytes}`, 413);
-  }
-
-  const storageLimitResult = await enforceAccountStorageLimit({
-    env,
-    accountId,
-    storageBytesMax,
-    bodyBytes: body.byteLength,
-  });
-  if (!storageLimitResult.ok) return storageLimitResult.response;
-
   const assetId = crypto.randomUUID();
   const bodySha256 = await sha256Hex(body);
   const key = buildAccountAssetKey(accountId, assetId, filename);
@@ -549,7 +471,7 @@ async function handleListAccountAssetMetadata(
   accountIdRaw: string,
 ): Promise<Response> {
   const accountId = String(accountIdRaw || '').trim();
-  if (!accountId || !isUuid(accountId)) {
+  if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
   const authErr = await authorizeAccountAssetAccess({
@@ -575,7 +497,7 @@ async function handleGetAccountAssetUsage(
   accountIdRaw: string,
 ): Promise<Response> {
   const accountId = String(accountIdRaw || '').trim();
-  if (!accountId || !isUuid(accountId)) {
+  if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
   const authErr = await authorizeAccountAssetAccess({
@@ -599,7 +521,7 @@ async function handleResolveAccountAssetMetadata(
   accountIdRaw: string,
 ): Promise<Response> {
   const accountId = String(accountIdRaw || '').trim();
-  if (!accountId || !isUuid(accountId)) {
+  if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
   const authErr = await authorizeAccountAssetAccess({
@@ -672,7 +594,7 @@ async function handleGetAccountAssetIdentityIntegrity(
   });
   if (authErr) return authErr;
   const accountId = String(accountIdRaw || '').trim();
-  if (!accountId || !isUuid(accountId)) {
+  if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
   const assetId = String(assetIdRaw || '').trim();
@@ -706,7 +628,7 @@ async function handleGetAccountAssetMirrorIntegrity(
   });
   if (authErr) return authErr;
   const accountId = String(accountIdRaw || '').trim();
-  if (!accountId || !isUuid(accountId)) {
+  if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
 
@@ -739,7 +661,7 @@ async function handleDeleteAccountAsset(
   assetIdRaw: string,
 ): Promise<Response> {
   const accountId = String(accountIdRaw || '').trim();
-  if (!accountId || !isUuid(accountId)) {
+  if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
   const authErr = await authorizeAccountAssetAccess({

@@ -1,0 +1,568 @@
+{
+  "appearance": {
+    "cardwrapper": {
+      "border": {
+        "color": "#efeff2",
+        "enabled": false,
+        "width": 1
+      },
+      "insideShadow": {
+        "all": {
+          "alpha": 66,
+          "blur": 52,
+          "color": "#34c759",
+          "enabled": true,
+          "inset": true,
+          "spread": -27,
+          "x": 8,
+          "y": 24
+        },
+        "bottom": {
+          "alpha": 66,
+          "blur": 52,
+          "color": "#34c759",
+          "enabled": true,
+          "inset": true,
+          "spread": -27,
+          "x": 8,
+          "y": 24
+        },
+        "layer": "below-content",
+        "left": {
+          "alpha": 66,
+          "blur": 52,
+          "color": "#34c759",
+          "enabled": true,
+          "inset": true,
+          "spread": -27,
+          "x": 8,
+          "y": 24
+        },
+        "linked": true,
+        "right": {
+          "alpha": 66,
+          "blur": 52,
+          "color": "#34c759",
+          "enabled": true,
+          "inset": true,
+          "spread": -27,
+          "x": 8,
+          "y": 24
+        },
+        "top": {
+          "alpha": 66,
+          "blur": 52,
+          "color": "#34c759",
+          "enabled": true,
+          "inset": true,
+          "spread": -27,
+          "x": 8,
+          "y": 24
+        }
+      },
+      "radius": "none",
+      "radiusBL": "none",
+      "radiusBR": "none",
+      "radiusLinked": true,
+      "radiusTL": "none",
+      "radiusTR": "none",
+      "shadow": {
+        "alpha": 47,
+        "blur": 0,
+        "color": "#34c759",
+        "enabled": true,
+        "inset": false,
+        "spread": -28,
+        "x": -26,
+        "y": 30
+      }
+    },
+    "ctaBackground": {
+      "color": "#34c759",
+      "type": "color"
+    },
+    "ctaBorder": {
+      "color": "var(--color-system-blue)",
+      "enabled": false,
+      "width": 1
+    },
+    "ctaIconSize": 16,
+    "ctaIconSizePreset": "m",
+    "ctaPaddingBlock": 12,
+    "ctaPaddingInline": 16,
+    "ctaPaddingLinked": false,
+    "ctaRadius": "md",
+    "ctaSizePreset": "custom",
+    "ctaTextColor": "var(--color-system-white)",
+    "iconColor": {
+      "color": "#34c759",
+      "type": "color"
+    },
+    "iconStyle": "plus",
+    "itemBackground": {
+      "color": "var(--color-system-white)",
+      "type": "none"
+    },
+    "itemCard": {
+      "border": {
+        "color": "#e0f1e5",
+        "enabled": true,
+        "width": 1
+      },
+      "radius": "2xl",
+      "radiusBL": "2xl",
+      "radiusBR": "2xl",
+      "radiusLinked": true,
+      "radiusTL": "2xl",
+      "radiusTR": "2xl",
+      "shadow": {
+        "alpha": 17,
+        "blur": 16,
+        "color": "#35aebb",
+        "enabled": true,
+        "inset": false,
+        "spread": 0,
+        "x": 5,
+        "y": 14
+      }
+    },
+    "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
+    "linkStyle": "underline",
+    "linkTextColor": "var(--color-system-blue)",
+    "linkUnderlineColor": {
+      "color": "#34c759",
+      "type": "color"
+    },
+    "podBorder": {
+      "color": "var(--color-system-gray-5)",
+      "enabled": false,
+      "width": 1
+    },
+    "theme": "custom"
+  },
+  "behavior": {
+    "displayImages": true,
+    "displayVideos": true,
+    "expandAll": false,
+    "expandFirst": true,
+    "multiOpen": false,
+    "showBacklink": true
+  },
+  "context": {
+    "websiteUrl": ""
+  },
+  "cta": {
+    "enabled": true,
+    "href": "https://example.com",
+    "iconEnabled": false,
+    "iconName": "checkmark",
+    "iconPlacement": "right",
+    "label": "Make a reservation",
+    "openMode": "same-tab"
+  },
+  "displayCategoryTitles": false,
+  "geo": {
+    "answerFormat": "direct-first",
+    "enableDeepLinks": true
+  },
+  "header": {
+    "alignment": "left",
+    "ctaPlacement": "below",
+    "enabled": true,
+    "gap": 40,
+    "innerGap": 16,
+    "placement": "left",
+    "showSubtitle": false,
+    "subtitleHtml": "Discover the charm and comfort of our USA bed and breakfast.",
+    "textGap": 4,
+    "title": "Soho Art Gallery FAQs"
+  },
+  "layout": {
+    "cardsLayout": "grid",
+    "columns": {
+      "desktop": 2,
+      "mobile": 1
+    },
+    "gap": 40,
+    "itemPadding": 0,
+    "itemPaddingBottom": 20,
+    "itemPaddingLeft": 0,
+    "itemPaddingLinked": false,
+    "itemPaddingRight": 0,
+    "itemPaddingTop": 0,
+    "itemQaGapCustom": 8,
+    "itemQaGapPreset": "m",
+    "type": "accordion"
+  },
+  "pod": {
+    "background": {
+      "color": "var(--color-system-white)",
+      "type": "none"
+    },
+    "contentWidth": 960,
+    "insideShadow": {
+      "all": {
+        "alpha": 38,
+        "blur": 35,
+        "color": "#212121",
+        "enabled": false,
+        "inset": true,
+        "spread": -35,
+        "x": 12,
+        "y": 10
+      },
+      "bottom": {
+        "alpha": 38,
+        "blur": 35,
+        "color": "#212121",
+        "enabled": false,
+        "inset": true,
+        "spread": -35,
+        "x": 12,
+        "y": 10
+      },
+      "layer": "below-content",
+      "left": {
+        "alpha": 38,
+        "blur": 35,
+        "color": "#212121",
+        "enabled": false,
+        "inset": true,
+        "spread": -35,
+        "x": 12,
+        "y": 10
+      },
+      "linked": true,
+      "right": {
+        "alpha": 38,
+        "blur": 35,
+        "color": "#212121",
+        "enabled": false,
+        "inset": true,
+        "spread": -35,
+        "x": 12,
+        "y": 10
+      },
+      "top": {
+        "alpha": 38,
+        "blur": 35,
+        "color": "#212121",
+        "enabled": false,
+        "inset": true,
+        "spread": -35,
+        "x": 12,
+        "y": 10
+      }
+    },
+    "padding": {
+      "desktop": {
+        "all": 80,
+        "bottom": 40,
+        "left": 0,
+        "linked": false,
+        "right": 0,
+        "top": 0
+      },
+      "mobile": {
+        "all": 28,
+        "bottom": 28,
+        "left": 28,
+        "linked": true,
+        "right": 28,
+        "top": 28
+      }
+    },
+    "radius": "none",
+    "radiusBL": "none",
+    "radiusBR": "none",
+    "radiusLinked": true,
+    "radiusTL": "none",
+    "radiusTR": "none",
+    "shadow": {
+      "alpha": 18,
+      "blur": 24,
+      "color": "#000000",
+      "enabled": false,
+      "inset": false,
+      "spread": 0,
+      "x": 0,
+      "y": 8
+    },
+    "widthMode": "full"
+  },
+  "sections": [
+    {
+      "faqs": [
+        {
+          "answer": "We feature contemporary art from <a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">local</a> and i<a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\"></a><a href=\"https://www.clickeen.com/\" class=\"diet-dropdown-edit-link\">nternational artists</a> .",
+          "defaultOpen": false,
+          "id": "q1",
+          "question": "What types of art are displayed?"
+        },
+        {
+          "answer": "The gallery is open Tuesday to Sunday from 10 AM to 6 PM.",
+          "defaultOpen": false,
+          "id": "q3",
+          "question": "What are the gallery hours?"
+        },
+        {
+          "answer": "Admission is free, but donations are appreciated.",
+          "defaultOpen": false,
+          "id": "q2",
+          "question": "Is there an admission fee?"
+        },
+        {
+          "answer": "Yes, you can purchase art directly from the gallery.",
+          "defaultOpen": false,
+          "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
+          "question": "Can I purchase art at the gallery?"
+        },
+        {
+          "answer": "Check our website for information on upcoming exhibitions and events.",
+          "defaultOpen": false,
+          "id": "q4",
+          "question": "Are there any upcoming events?"
+        },
+        {
+          "answer": "Yes, we offer private event hosting for a fee.",
+          "defaultOpen": false,
+          "id": "q5",
+          "question": "Can I host a private event at the gallery?"
+        }
+      ],
+      "id": "s1",
+      "title": "Gallery Information"
+    }
+  ],
+  "seo": {
+    "businessType": "online-service",
+    "canonicalUrl": "",
+    "enableSchema": true
+  },
+  "seoGeo": {
+    "enabled": true
+  },
+  "showTitle": true,
+  "stage": {
+    "alignment": "center",
+    "background": {
+      "color": "#ffffff",
+      "type": "color"
+    },
+    "canvas": {
+      "height": 0,
+      "mode": "viewport",
+      "width": 0
+    },
+    "insideShadow": {
+      "all": {
+        "alpha": 63,
+        "blur": 24,
+        "color": "#ffffff",
+        "enabled": false,
+        "inset": true,
+        "spread": 40,
+        "x": -8,
+        "y": 0
+      },
+      "bottom": {
+        "alpha": 63,
+        "blur": 24,
+        "color": "#ffffff",
+        "enabled": false,
+        "inset": true,
+        "spread": 40,
+        "x": -8,
+        "y": 0
+      },
+      "layer": "below-content",
+      "left": {
+        "alpha": 63,
+        "blur": 24,
+        "color": "#ffffff",
+        "enabled": false,
+        "inset": true,
+        "spread": 40,
+        "x": -8,
+        "y": 0
+      },
+      "linked": true,
+      "right": {
+        "alpha": 63,
+        "blur": 24,
+        "color": "#ffffff",
+        "enabled": false,
+        "inset": true,
+        "spread": 40,
+        "x": -8,
+        "y": 0
+      },
+      "top": {
+        "alpha": 63,
+        "blur": 24,
+        "color": "#ffffff",
+        "enabled": false,
+        "inset": true,
+        "spread": 40,
+        "x": -8,
+        "y": 0
+      }
+    },
+    "padding": {
+      "desktop": {
+        "all": 80,
+        "bottom": 60,
+        "left": 40,
+        "linked": false,
+        "right": 40,
+        "top": 60
+      },
+      "mobile": {
+        "all": 24,
+        "bottom": 24,
+        "left": 24,
+        "linked": true,
+        "right": 24,
+        "top": 24
+      }
+    },
+    "shadow": {
+      "alpha": 18,
+      "blur": 24,
+      "color": "#000000",
+      "enabled": false,
+      "inset": false,
+      "spread": 0,
+      "x": 0,
+      "y": 8
+    }
+  },
+  "title": "Frequently Asked Questions",
+  "typography": {
+    "globalFamily": "Inter",
+    "roleScales": {
+      "answer": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "body": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "button": {
+        "l": "20px",
+        "m": "18px",
+        "s": "15px",
+        "xl": "24px",
+        "xs": "13px"
+      },
+      "question": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "section": {
+        "l": "16px",
+        "m": "14px",
+        "s": "13px",
+        "xl": "18px",
+        "xs": "12px"
+      },
+      "title": {
+        "l": "44px",
+        "m": "36px",
+        "s": "28px",
+        "xl": "60px",
+        "xs": "20px"
+      }
+    },
+    "roles": {
+      "answer": {
+        "color": {
+          "color": "rgba(33, 33, 33, 0.78)",
+          "type": "color"
+        },
+        "family": "Michroma",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "tight",
+        "sizeCustom": "15px",
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "body": {
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+        "family": "Lora",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": 14,
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "button": {
+        "color": "var(--color-system-white)",
+        "family": "Michroma",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": 14,
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "question": {
+        "color": "var(--color-system-black)",
+        "family": "Michroma",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "16px",
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "section": {
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
+        "family": "Inter",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "14px",
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "600"
+      },
+      "title": {
+        "color": {
+          "color": "#212121",
+          "type": "color"
+        },
+        "family": "Michroma",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "24px",
+        "sizePreset": "l",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      }
+    }
+  }
+}

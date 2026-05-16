@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "2e3f8977ce48623e862f8aeab9876469349397101f6cb3ff0463cf6221796603",
+  "baseUpdatedAt": "2026-02-04T05:36:55.817Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga halimbawa ng logo showcase - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Tingnan ang mga karaniwang paglalagay ng logo showcase at mga kaso ng paggamit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Mga halimbawa ng logo showcase"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Tingnan ang mga karaniwang placement at mga use case."
+    }
+  ],
+  "v": 1
+}

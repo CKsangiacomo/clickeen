@@ -1,0 +1,100 @@
+{
+  "accountId": "00000000-0000-0000-0000-000000000100",
+  "configFp": "645d2de31db986486bd418c6af7004f96861c688d2fdac2ee4a6b3292da29f88",
+  "createdAt": "2026-04-28T05:40:25.169Z",
+  "displayName": "photo.hospitality.westcoast",
+  "id": "ins_01KR8R6ZYZBDXE0DT2FB8PB0NN",
+  "l10n": {
+    "baseFingerprint": "805b8cf656846c4bf0aa1240e2b000f5f70b99780d4a51bc34dd752b89fdf150",
+    "failedLocales": [
+      {
+        "locale": "he",
+        "reasonKey": "tokyo_translation_locale_not_ready"
+      },
+      {
+        "locale": "hu",
+        "reasonKey": "tokyo_translation_locale_not_ready"
+      },
+      {
+        "locale": "nl",
+        "reasonKey": "tokyo_translation_locale_not_ready"
+      },
+      {
+        "locale": "tr",
+        "reasonKey": "tokyo_translation_locale_not_ready"
+      }
+    ],
+    "finishedAt": "2026-05-14T06:29:24.950Z",
+    "generationId": "65e1a7fb-e3f9-4081-9333-ceefc9fa5395",
+    "readyLocales": [
+      "en",
+      "ar",
+      "bn",
+      "cs",
+      "da",
+      "de",
+      "es",
+      "fi",
+      "fil",
+      "fr",
+      "hi",
+      "id",
+      "it",
+      "ja",
+      "ko",
+      "nb",
+      "pl",
+      "pt",
+      "ro",
+      "sv",
+      "th",
+      "uk",
+      "vi",
+      "zh-hans",
+      "zh-tw"
+    ],
+    "status": "failed",
+    "summary": {
+      "baseLocale": "en",
+      "desiredLocales": [
+        "en",
+        "ar",
+        "bn",
+        "cs",
+        "da",
+        "de",
+        "es",
+        "fi",
+        "fil",
+        "fr",
+        "he",
+        "hi",
+        "hu",
+        "id",
+        "it",
+        "ja",
+        "ko",
+        "nb",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sv",
+        "th",
+        "tr",
+        "uk",
+        "vi",
+        "zh-hans",
+        "zh-tw"
+      ]
+    },
+    "updatedAt": "2026-05-14T06:29:25.202Z"
+  },
+  "meta": {
+    "styleName": "photo.hospitality.westcoast",
+    "styleSlug": "photo_hospitality_westcoast"
+  },
+  "updatedAt": "2026-05-14T06:28:24.387Z",
+  "v": 1,
+  "widgetType": "faq"
+}

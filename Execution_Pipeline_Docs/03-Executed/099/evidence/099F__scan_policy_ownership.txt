@@ -1,0 +1,30 @@
+roma/lib/tokyo-asset-control.ts:32:  headers.set('x-account-id', args.accountId);
+admin/src/html/tools/entitlements.html:370:      if (key === 'uploads.size.max' || key === 'storage.bytes.max') return formatBytes(value);
+admin/src/html/tools/entitlements.html:492:    const isBytes = key === 'uploads.size.max' || key === 'storage.bytes.max';
+roma/lib/tokyo-product-control.ts:34:  headers.set('x-account-id', args.accountId);
+roma/components/usage-domain.tsx:20:  const storageLimit = entitlements?.limits?.['storage.bytes.max'] ?? null;
+roma/components/assets-domain.tsx:116:    const raw = entitlements?.limits?.['uploads.size.max'];
+roma/components/assets-domain.tsx:119:  const storageLimit = entitlements?.limits?.['storage.bytes.max'] ?? null;
+roma/app/api/account/route.ts:15:    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}`,
+roma/app/api/account/owner-transfer/route.ts:15:    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/owner-transfer`,
+roma/app/api/account/locales/route.ts:36:      accountId: current.value.authzPayload.accountId,
+roma/app/api/account/locales/route.ts:86:        accountId: current.value.authzPayload.accountId,
+roma/app/api/account/locales/route.ts:155:      accountId: current.value.authzPayload.accountId,
+roma/app/api/account/locales/route.ts:227:      `${berlinBase}/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/locales`,
+roma/app/api/account/locales/route.ts:257:      accountId: current.value.authzPayload.accountId,
+roma/app/api/account/assets/upload/route.ts:73:  const uploadSizeLimit = resolvePositiveLimit(policy.limits['uploads.size.max']);
+roma/app/api/account/assets/upload/route.ts:74:  const storageLimit = resolvePositiveLimit(policy.limits['storage.bytes.max']);
+roma/app/api/account/assets/upload/route.ts:98:      detail: 'uploads.size.max',
+roma/app/api/account/assets/upload/route.ts:113:          detail: 'storage.bytes.max',
+roma/app/api/account/assets/upload/route.ts:141:  const headerAccountId = (request.headers.get('x-account-id') || '').trim();
+roma/app/api/account/lifecycle/tier-drop/dismiss/route.ts:15:    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/lifecycle/tier-drop/dismiss`,
+roma/app/api/account/team/route.ts:15:    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members`,
+roma/app/api/account/instances/[instanceId]/translations/route.ts:29:    berlinAccountId: current.value.authzPayload.accountId,
+roma/app/api/account/team/invitations/route.ts:15:    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations`,
+roma/app/api/account/team/invitations/route.ts:28:    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations`,
+roma/app/api/account/instances/[instanceId]/publish/route.ts:15:  const accountId = current.value.authzPayload.accountId;
+roma/app/api/account/team/invitations/[invitationId]/route.ts:33:    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/invitations/${encodeURIComponent(invitationId)}`,
+roma/app/api/account/team/members/[memberId]/route.ts:38:    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members/${encodeURIComponent(memberId)}`,
+roma/app/api/account/team/members/[memberId]/route.ts:57:    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members/${encodeURIComponent(memberId)}`,
+roma/app/api/account/team/members/[memberId]/route.ts:79:    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/members/${encodeURIComponent(memberId)}`,
+roma/app/api/account/instances/[instanceId]/copilot/outcome/route.ts:51:      accountIdHash: await hashCopilotAccountId(current.value.authzPayload.accountId),

@@ -26,7 +26,7 @@ Only read these:
 - `documentation/services/prague/blocks.md`
 - `documentation/capabilities/localization.md`
 - `prague/src/lib/blockRegistry.ts` (required keys + meta fields)
-- `tokyo/prague/pages/{widget}/{overview|templates|examples|features|pricing}.json`
+- `tokyo/prague/pages/{widget}/{overview|templates|examples|features|pricing}.json` (repo-authored source; deployed R2 home is `prague/pages/**`)
 - `prague/content/allowlists/v1/**`
 
 Do **not** repo-grep or read other folders unless explicitly instructed.
@@ -42,7 +42,7 @@ Only if the PRD explicitly requires new string keys:
 - `prague/content/allowlists/v1/blocks/{blockKind}.allowlist.json`
 
 Do **not** edit:
-- `tokyo/prague/l10n/**` (generated overlays)
+- Prague generated localization/overlay output (deployed under `prague/l10n/**`)
 
 ---
 
@@ -80,7 +80,9 @@ Rules:
 - Page JSON is the **single source of truth** for base copy; overlays overwrite `blocks[].copy` at runtime.
 - `id` is unique and stable per page.
 - `type` must match a registered block type.
-- `visual` is only allowed for block types that support it (see registry). For embeds, use `accountInstanceRef.instanceId` only when the page intentionally points at a real account widget instance.
+- `visual` is only allowed for block types that support it (see registry). For embeds, use `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` only when the page intentionally points at a real account widget instance.
+- Admin examples are normal account-owned instances under account `00000001`; there is no admin-specific lane and no hidden instance-only lookup.
+- Do not use old `wgt_*` / `ins_*` names or private UUID account folders as current product identity.
 
 Example shape:
 ```json
@@ -89,7 +91,7 @@ Example shape:
   "blocks": [
     { "id": "page-meta", "type": "page-meta", "copy": { "title": "...", "description": "..." } },
     { "id": "navmeta", "type": "navmeta", "copy": { "title": "...", "description": "..." } },
-    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true, "accountInstanceRef": { "instanceId": "INST000001" } },
+    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true, "accountInstanceRef": { "accountPublicId": "00000001", "instanceId": "UZ3JEJSHII" } },
     { "id": "minibob", "type": "minibob", "copy": { "heading": "...", "subhead": "..." } }
   ]
 }

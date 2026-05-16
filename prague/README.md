@@ -30,7 +30,7 @@ Optional:
 
 - `PUBLIC_ROMA_URL` (used by `/{market}/{locale}/create` redirect bridge to Roma `/home`)
 
-Prague widget pages embed explicit Clickeen-owned account instances by `accountInstanceRef.instanceId`.
+Prague widget pages embed explicit Clickeen-owned account instances by `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId`.
 
 Local defaults (when running `scripts/dev-up.sh`):
 
@@ -40,7 +40,7 @@ Local defaults (when running `scripts/dev-up.sh`):
 Cloudflare (dev):
 
 - `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com`
-- `PUBLIC_VENICE_URL=https://venice.dev.clickeen.com` (must serve `GET /widget/:instanceId`)
+- `PUBLIC_VENICE_URL=https://venice.dev.clickeen.com` (must serve `GET /widget/:accountPublicId/:instanceId`)
 
 If you're not using `scripts/dev-up.sh`, create `prague/.env.local` with the values you want.
 

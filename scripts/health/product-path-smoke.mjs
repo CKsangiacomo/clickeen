@@ -23,6 +23,7 @@ Required for authenticated checks:
 Options:
   --roma-base <url>            Roma base URL (default: ${DEFAULT_ROMA_BASE})
   --venice-base <url>          Venice base URL (default: ${DEFAULT_VENICE_BASE})
+  --account-public-id <id>     Account public ID for Venice read checks
   --instance-id <id>           Published instanceId for Venice read checks
   --source-instance-id <id>    Account instanceId to duplicate during --write checks
   --concurrency <n>            Concurrent auth/account probes (default: ${DEFAULT_CONCURRENCY})
@@ -39,6 +40,7 @@ function parseArgs(argv) {
     romaBase: process.env.ROMA_BASE_URL || process.env.CK_ROMA_BASE_URL || DEFAULT_ROMA_BASE,
     veniceBase: process.env.VENICE_BASE_URL || process.env.CK_VENICE_BASE_URL || DEFAULT_VENICE_BASE,
     cookie: process.env.CK_ROMA_COOKIE || process.env.ROMA_COOKIE || '',
+    accountPublicId: process.env.CK_HEALTH_ACCOUNT_PUBLIC_ID || process.env.VENICE_ACCOUNT_PUBLIC_ID || '',
     instanceId: process.env.CK_HEALTH_INSTANCE_ID || process.env.VENICE_INSTANCE_ID || '',
     sourceInstanceId: process.env.CK_HEALTH_SOURCE_INSTANCE_ID || '',
     concurrency: DEFAULT_CONCURRENCY,
@@ -78,6 +80,11 @@ function parseArgs(argv) {
       i += 1;
       continue;
     }
+    if (token === '--account-public-id') {
+      args.accountPublicId = String(argv[i + 1] || '').trim();
+      i += 1;
+      continue;
+    }
     if (token === '--cookie') {
       args.cookie = String(argv[i + 1] || '').trim();
       i += 1;
@@ -109,10 +116,11 @@ function parseArgs(argv) {
   args.romaBase = normalizeBaseUrl(args.romaBase, 'roma-base');
   args.veniceBase = normalizeBaseUrl(args.veniceBase, 'venice-base');
   args.cookie = normalizeCookie(args.cookie);
+  args.accountPublicId = args.accountPublicId.trim();
   args.instanceId = args.instanceId.trim();
   args.sourceInstanceId = args.sourceInstanceId.trim();
-  if (args.publicOnly && !args.instanceId) {
-    throw new Error('--public-only requires --instance-id / CK_HEALTH_INSTANCE_ID / VENICE_INSTANCE_ID');
+  if (args.publicOnly && (!args.accountPublicId || !args.instanceId)) {
+    throw new Error('--public-only requires --account-public-id and --instance-id');
   }
   if (args.write && !args.sourceInstanceId) {
     throw new Error('--write requires --source-instance-id / CK_HEALTH_SOURCE_INSTANCE_ID');
@@ -169,6 +177,19 @@ function selectAccountInstance(instances) {
 
 function selectPublishedInstance(instances) {
   return instances.find((entry) => entry.status === 'published' && typeof entry.instanceId === 'string') || null;
+}
+
+function extractAccountPublicId(payload) {
+  if (!isRecord(payload)) return '';
+  const candidates = [
+    payload.accountPublicId,
+    isRecord(payload.accountContext) ? payload.accountContext.accountPublicId : null,
+    isRecord(payload.activeAccount) ? payload.activeAccount.accountPublicId : null,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
+  }
+  return '';
 }
 
 class HealthRunner {
@@ -298,6 +319,12 @@ async function runAuthConcurrency(runner) {
   });
 }
 
+async function loadBootstrapAccountPublicId(runner) {
+  const result = await runner.request(runner.args.romaBase, '/api/bootstrap');
+  if (result.status < 200 || result.status >= 300) return '';
+  return extractAccountPublicId(result.payload);
+}
+
 async function loadWidgets(runner) {
   return runner.check('Roma widget catalog', 'roma.widgets', async () => {
     const result = await runner.request(runner.args.romaBase, '/api/account/widgets');
@@ -407,24 +434,27 @@ async function runDuplicateWrite(runner, sourceInstance) {
   return createdInstanceId || null;
 }
 
-async function runVenice(runner, instanceId) {
+async function runVenice(runner, accountPublicId, instanceId) {
   await runner.check('Venice loader', 'venice.public', async () => {
     const result = await runner.request(runner.args.veniceBase, '/embed/latest/loader.js');
     assert2xx(result, 'GET /embed/latest/loader.js');
     return `HTTP ${result.status}`;
   });
 
-  if (!instanceId) {
-    runner.skip('Venice public instance read', 'venice.public', 'no published instanceId supplied or discovered');
+  if (!accountPublicId || !instanceId) {
+    runner.skip('Venice public instance read', 'venice.public', 'no accountPublicId or published instanceId supplied or discovered');
     return;
   }
 
   await runner.check('Venice public instance read', 'venice.public', async () => {
-    const pointer = await runner.request(runner.args.veniceBase, `/renders/widgets/${encodeURIComponent(instanceId)}/live/r.json`);
-    assert2xx(pointer, `GET /renders/widgets/${instanceId}/live/r.json`);
-    const embed = await runner.request(runner.args.veniceBase, `/widget/${encodeURIComponent(instanceId)}`);
-    assert2xx(embed, `GET /widget/${instanceId}`);
-    return instanceId;
+    const pointer = await runner.request(
+      runner.args.veniceBase,
+      `/renders/accounts/${encodeURIComponent(accountPublicId)}/instances/${encodeURIComponent(instanceId)}/live/r.json`,
+    );
+    assert2xx(pointer, `GET /renders/accounts/${accountPublicId}/instances/${instanceId}/live/r.json`);
+    const embed = await runner.request(runner.args.veniceBase, `/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`);
+    assert2xx(embed, `GET /widget/${accountPublicId}/${instanceId}`);
+    return `${accountPublicId}/${instanceId}`;
   });
 }
 
@@ -446,7 +476,7 @@ async function main() {
   const runner = new HealthRunner(args);
 
   await runUnauthenticatedBoundary(runner);
-  await runVenice(runner, args.publicOnly ? args.instanceId : '');
+  await runVenice(runner, args.publicOnly ? args.accountPublicId : '', args.publicOnly ? args.instanceId : '');
 
   if (args.publicOnly) {
     printResults(runner.results, args.json);
@@ -478,7 +508,8 @@ async function main() {
   }
 
   const publishedInstanceId = args.instanceId || selectPublishedInstance(instances)?.instanceId || '';
-  await runVenice(runner, publishedInstanceId);
+  const accountPublicId = args.accountPublicId || (await loadBootstrapAccountPublicId(runner));
+  await runVenice(runner, accountPublicId, publishedInstanceId);
 
   printResults(runner.results, args.json);
   process.exit(runner.results.some((result) => !result.ok) ? 1 : 0);

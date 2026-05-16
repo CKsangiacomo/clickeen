@@ -17,6 +17,7 @@ type Props = {
   actionGroup?: ActionGroup;
   widgetType?: string;
   accountInstanceRef?: {
+    accountPublicId: string;
     instanceId: string;
     locale: string;
     title?: string;
@@ -81,6 +82,7 @@ const headerPrimitives = assertPrimitives(
           {accountInstanceRef ? (
             <InstanceEmbed
               instanceId={accountInstanceRef.instanceId}
+              accountPublicId={accountInstanceRef.accountPublicId}
               locale={accountInstanceRef.locale}
               title={accountInstanceRef.title ?? 'Widget preview'}
               embedMode={accountInstanceRef.embedMode}
@@ -112,6 +114,7 @@ const headerPrimitives = assertPrimitives(
           {accountInstanceRef ? (
             <InstanceEmbed
               instanceId={accountInstanceRef.instanceId}
+              accountPublicId={accountInstanceRef.accountPublicId}
               locale={accountInstanceRef.locale}
               title={accountInstanceRef.title ?? 'Widget preview'}
               embedMode={accountInstanceRef.embedMode}

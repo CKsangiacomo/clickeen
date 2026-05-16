@@ -1,0 +1,51 @@
+{
+  "accountId": "00000000-0000-0000-0000-000000000100",
+  "configFp": "b0a6ffa7b075fb9e9c304bd0544da5982e098c4bc59d56d7514fd10d043e62af",
+  "id": "ins_01KR8R6ZZ0SXP6MSSHRNV0S52R",
+  "localePolicy": {
+    "baseLocale": "en",
+    "ip": {
+      "countryToLocale": {},
+      "enabled": false
+    },
+    "readyLocales": [
+      "en",
+      "ar",
+      "bn",
+      "cs",
+      "da",
+      "de",
+      "es",
+      "fi",
+      "fil",
+      "fr",
+      "he",
+      "hi",
+      "hu",
+      "id",
+      "it",
+      "ja",
+      "ko",
+      "nb",
+      "nl",
+      "pl",
+      "pt",
+      "ro",
+      "sv",
+      "th",
+      "tr",
+      "uk",
+      "vi",
+      "zh-hans",
+      "zh-tw"
+    ],
+    "switcher": {
+      "enabled": false
+    }
+  },
+  "seoGeo": true,
+  "status": "published",
+  "updatedAt": "2026-05-12T09:08:36.012Z",
+  "v": 1,
+  "widgetType": "faq"
+}

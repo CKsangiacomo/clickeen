@@ -6,7 +6,7 @@ For the canonical account-management model Bob must consume rather than own, see
 
 This document describes the **current** repo implementation.
 
-For the 075 authoring simplification track, Bob's governing product path is Roma-hosted account editing: Roma opens one saved widget document for the current account, Bob edits it in memory, and save delegates back to Roma. Non-account boot paths do not define account authoring truth.
+For the 075 authoring simplification track, Bob's governing product path is Roma-hosted account editing: Roma opens one saved widget document for the current account, Bob edits it in memory, and save delegates back to Roma. Non-account boot paths do not define account authoring truth. Public/embed references generated from Bob must carry the account-scoped coordinate `accountPublicId + instanceId`; instance-only public URLs are not the surviving PRD 099 contract.
 
 ---
 
@@ -25,8 +25,8 @@ Between load and save, Bob does not write intermediate edits to the saved revisi
 
 Bob intentionally separates:
 
-- **Saving config** (writes through Bob/Roma same-origin routes to Tokyo): appears as a plain **Save** action. Save persists the one widget document currently open in Builder. Builder no longer treats localization as a second save lane and no longer carries a shadow saved-document model just to drive dirty/discard UI.
-- **Copy code in Bob** is only the embed-code affordance for published instances: the **Copy code** button opens a modal containing the snippets needed to place the widget on a website (safe iframe + gated iframe++ SEO/GEO). Unpublished instances show no live snippets.
+- **Saving config** (delegated to Roma same-origin routes, then to Tokyo): appears as a plain **Save** action. Save persists the one widget document currently open in Builder. Builder no longer treats localization as a second save lane and no longer carries a shadow saved-document model just to drive dirty/discard UI.
+- **Copy code in Bob** is only the embed-code affordance for published instances: the **Copy code** button opens a modal containing the snippets needed to place the widget on a website (safe iframe + gated iframe++ SEO/GEO) using `/widget/{accountPublicId}/{instanceId}` public references. Unpublished instances show no live snippets.
 - **Bob has no live/unlive toggle** and does not manage published/unpublished state.
 - Active account routes authorize from the Berlin-issued bootstrap account authz capsule carried by Roma/Bob. They do not re-read account membership on normal editor open/save paths.
 
@@ -69,7 +69,7 @@ Bob compiles the spec into a deterministic contract:
 
 ### Host bootstrap contract (current repo behavior)
 
-Active account authoring host path: Roma Builder fetches the saved document envelope (`compiled`, `instanceData`, `policy`, `instanceId`, `displayName`, `source`, `meta`), then waits for Bob session readiness and sends `ck:open-editor`.
+Active account authoring host path: Roma Builder fetches the saved document envelope (`compiled`, `instanceData`, `policy`, `accountPublicId`, `instanceId`, `displayName`, `source`, `meta`), then waits for Bob session readiness and sends `ck:open-editor`.
 
 That open envelope carries the saved authoring document plus Tokyo-owned `publishStatus` for copy-code gating. It does not give Bob authority to publish or unpublish.
 
@@ -87,6 +87,7 @@ Then they wait for Bob session readiness and post into Bob:
   compiled,
   instanceData,
   policy,
+  accountPublicId,
   instanceId,
   label,
   source,
@@ -108,7 +109,7 @@ Together they:
 - Requires an explicit `instanceData` document on open; Bob does not promote `compiled.defaults` into visible widget truth
 - Fails the open request when `instanceData` is missing or invalid; Bob does not invent `{}` as a replacement widget
 - Stores `{ compiled, instanceData }` in React state
-- Never auto-picks a different instance when `instanceId` is missing.
+- Never auto-picks a different instance when `accountPublicId` or `instanceId` is missing.
 - Replies with terminal `bob:open-editor-applied` or `bob:open-editor-failed` for the current host request.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
 - Local Bob may run as an editor runtime for debugging, but it is not a product account shell. Hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma account routes. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
@@ -125,7 +126,7 @@ Bob’s active account-mode host surface is Roma.
 
 ### Instance write surfaces (current)
 
-- Roma user flows can duplicate, rename, publish, unpublish, and delete account widget instances through Roma same-origin routes plus canonical account instance routes. Account widget creation is not an active Bob-owned surface.
+- Roma user flows can duplicate, rename, publish, unpublish, and delete account instances through Roma same-origin routes plus canonical account instance routes. Account instance creation is not an active Bob-owned surface; accounts own instances, not widget software.
 - In hosted account mode, Bob does not own account transport. It emits explicit editor read/write intents back to the parent host, and the host executes the named account/tool routes on Bob's behalf.
 - Roma hosts customer account sessions through Roma same-origin current-account routes (`/api/account/...`).
 - Prague demo no longer boots Bob as a second editor. Public demo playback is Venice-owned; Bob no longer exposes MiniBob helper routes or a public editor boot path.
@@ -144,7 +145,7 @@ Core base-config lifecycle per open session:
    Bob sends the current document metadata back with the save (`widgetType`, `displayName`, `source`, `meta`, `config`) so Roma/Tokyo do not reconstruct sibling identity from the previously saved row.
    Base save success clears the base dirty state and keeps the same in-memory widget truth; Bob does not swap in a server-returned replacement copy of the widget. If Tokyo reports translation follow-up acceptance failure, Bob keeps the base save as saved but surfaces a visible translation warning.
 4. Bob opens the saved document it was given. It does not merge missing widget defaults into account-hosted config on load. If Roma/Tokyo surface malformed saved widget payload, Builder fails open at that boundary instead of healing or masking the bad row.
-5. Bob carries Tokyo-owned `publishStatus` in session metadata only to gate public embed copy. Unpublished instances do not expose live snippets; publish/unpublish remains a Widgets-domain action.
+5. Bob carries Tokyo-owned `publishStatus` in session metadata only to gate public embed copy. Unpublished instances do not expose live snippets; publish/unpublish remains a Widgets-domain action. Published snippets must carry `accountPublicId + instanceId`.
 6. Bob does not own instance rename. Widgets-domain rename mutates the Tokyo saved document separately, and Bob save does not re-author identity through a second authority.
 
 Copilot account path:
@@ -173,7 +174,7 @@ tokyo/product/widgets/{widget}/
   pages/*.json
 ```
 
-Bob consumes `spec.json` + runtime assets and loads `limits.json` for entitlements. `spec.json.overlays.text[]` is the widget primitive graph for Builder controls, Copilot, Babel text production, Bob preview, Tokyo validation, and runtime overlay resolution. Widget `localization.json` files and layer sidecars are not active product truth.
+Bob consumes `spec.json` + runtime media from product widget media and loads `limits.json` for entitlement UX. The authored repo source is `tokyo/product/widgets/{widget}/`; the deployed Tokyo/R2 software authority is `product/widgets/{widget}/`, even when served through friendly `/widgets/{widget}/...` routes. `spec.json.overlays.text[]` is the widget primitive graph for Builder controls, Copilot, Babel text production, Bob preview, Tokyo validation, and runtime overlay resolution. Widget `localization.json` files and layer sidecars are not active product truth.
 
 Widget spec contract:
 
@@ -182,7 +183,7 @@ Widget spec contract:
 
 ### Preview contract (Bob ↔ runtime)
 
-Bob loads `compiled.assets.htmlUrl` into an iframe and posts:
+Bob loads `compiled.media.htmlUrl` into an iframe and posts:
 
 ```js
 {
@@ -202,9 +203,9 @@ Widget runtime code (`tokyo/product/widgets/{widget}/widget.client.js`) must:
 - Avoid runtime default merges and random ID generation.
 - Treat shared runtime modules as required when used (e.g. `CKStagePod`, `CKTypography`).
 
-### Tokyo asset proxy (preview)
+### Tokyo Media Proxy (Preview)
 
-Bob serves widget and Dieter assets through same-origin routes so the preview iframe can load canonical asset URLs safely:
+Bob serves widget and Dieter media through same-origin routes so the preview iframe can load canonical media URLs safely:
 
 - `bob/app/widgets/[...path]/route.ts` (`/widgets/*`)
 - `bob/app/dieter/[...path]/route.ts` (`/dieter/*`)
@@ -215,7 +216,7 @@ Bob’s preview-shadow route (`/bob/preview-shadow`) is a diagnostic/internal em
 
 Modes (shipped):
 
-- Default: passes `data-force-shadow="true"` to preview shadow DOM rendering via Venice `/renders/widgets/:instanceId/live/r.json` (diagnostics only).
+- Default: passes `data-force-shadow="true"` to preview shadow DOM rendering via Venice/Tokyo published-projection routes such as `/renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json` (diagnostics only).
 - `?mode=seo-geo`: previews the **iframe++ SEO/GEO optimized embed** by passing `data-ck-optimization="seo-geo"` (UI stays iframe; loader injects host metadata).
 
 Requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin.
@@ -247,9 +248,9 @@ Requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin
 3. Expands `<tooldrawer-field ...>` macros into Dieter component markup using stencils:
    - Stencil HTML lives in `tokyo/product/dieter/components/{component}/{component}.html`
 4. Emits `compiled.controls[]` by walking spec markup + stencils.
-5. Builds `compiled.assets`:
+5. Builds `compiled.media`:
    - Widget runtime URLs (`widget.html`, `widget.css`, `widget.client.js`)
-   - Dieter assets required by this widget’s controls (`tokens/tokens.css` + per-component CSS/JS)
+   - Dieter media required by this widget’s controls (`tokens/tokens.css` + per-component CSS/JS)
 
 ### Strict compiler rules (authoring constraints)
 
@@ -279,7 +280,7 @@ There are no golden compiler fixtures yet. The surviving guardrails are repo-loc
 `TdMenuContent` and `bob/components/td-menu-content/*` together:
 
 1. Injects `panelHtml` into `.tdmenucontent__fields`.
-2. Loads Dieter assets declared by `compiled.assets.dieter` (styles + scripts).
+2. Loads Dieter media declared by `compiled.media.dieter` (styles + scripts).
 3. Runs Dieter hydrators within the injected scope.
 4. Applies i18n to the injected DOM (if `data-i18n-key` is present).
 
@@ -313,11 +314,11 @@ Asset authoring is restored on the active account Builder path through one curre
   - `GET /api/account/assets`
   - `POST /api/account/assets/resolve`
   - `POST /api/account/assets/upload`
-- In hosted Builder, Bob installs one explicit Dieter asset transport with three methods only: `listAssets`, `resolveAssets`, and `uploadAsset`. Bob delegates those concerns through one hosted asset-command seam: `list-assets`, `resolve-assets`, and `upload-asset`. Bob does not expose a hosted asset bridge, dataset fallback, consumer-owned route selection logic, route-table round-tripping, or ambient fetch patching.
+- In hosted Builder, Bob installs one explicit account asset transport with three methods only: `listAssets`, `resolveAssets`, and `uploadAsset`. Bob delegates those concerns through one hosted asset-command seam: `list-assets`, `resolve-assets`, and `upload-asset`. Bob does not expose a hosted asset bridge, dataset fallback, consumer-owned route selection logic, route-table round-tripping, or ambient fetch patching.
 - Authored media identity stays logical (`assetId`, optional `posterAssetId`). Bob/Dieter resolve those ids through the Roma account asset boundary for editor preview and assignment.
 - `dropdown-upload` is asset-backed only. It requires `meta-path`, persists logical asset identity in meta only, and uses resolved URLs for preview without writing the uploaded delivery URL back into widget state.
 - Asset resolve now uses one shared Builder helper, and asset denial now uses one shared `bob-upsell` emitter path. Builder no longer emits a parallel host-only asset denial event.
-- Assets remain immutable on this path. Upload creates a new asset identity, canonical `/assets/account/{accountId}/{assetId}/{filename}` delivery stays aggressively cacheable, and delete is the only destructive lifecycle action.
+- Assets remain immutable on this path. Upload creates a new asset identity under the owning account, canonical account-public delivery stays aggressively cacheable, and delete is the only destructive lifecycle action. Bob must not derive asset storage paths from private `accountId`; account-owned asset references resolve through Roma/Tokyo using `accountPublicId`.
 
 Operational baseline (local smoke, 2026-02-17):
 
@@ -412,7 +413,7 @@ This is the foundation for both strict manual editing and future Copilot editing
 
 `bob/components/Workspace.tsx`:
 
-- Loads the widget runtime iframe at `compiled.assets.htmlUrl` (canonical preview path).
+- Loads the widget runtime iframe at `compiled.media.htmlUrl` (canonical preview path).
 - Standard preview is Tokyo-runtime only; SEO/GEO “iframe++” is a **Venice embed optimization** and does not change the Bob preview engine.
 - Waits for iframe `load`.
 - Posts `ck:state-update` with `{ widgetname, state: instanceData, device, theme }`.

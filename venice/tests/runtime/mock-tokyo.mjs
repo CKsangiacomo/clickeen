@@ -1,6 +1,7 @@
 import http from 'node:http';
 
 const port = Number(process.env.CK_VENICE_MOCK_TOKYO_PORT || 3927);
+const accountPublicId = '00000001';
 const instanceId = 'INST000001';
 const overlayId = 'ACCT0001FAQINST000001IT00A010000026';
 const metaFp = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
@@ -81,7 +82,9 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (pathname === `/renders/widgets/${instanceId}/live/r.json`) {
+  const renderBase = `/renders/accounts/${accountPublicId}/instances/${instanceId}`;
+
+  if (pathname === `${renderBase}/live/r.json`) {
     json(
       res,
       200,
@@ -99,8 +102,8 @@ const server = http.createServer((req, res) => {
         overlays: { languages: { IT00: overlayId } },
         localeLabels: { en: 'English', it: 'Italiano' },
         seoGeo: {
-          metaLiveBase: 'seo/meta/live',
-          metaPacksBase: 'seo/meta',
+          metaLiveBase: 'published/seo/meta/live',
+          metaPacksBase: 'published/seo/meta',
         },
       },
       { 'x-ck-geo-country': 'US' },
@@ -108,22 +111,22 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (pathname === `/renders/widgets/${instanceId}/config.json`) {
+  if (pathname === `${renderBase}/config.json`) {
     json(res, 200, { v: 1, config: baseState });
     return;
   }
 
-  if (pathname === `/renders/widgets/${instanceId}/overlays/${overlayId}.json`) {
+  if (pathname === `${renderBase}/overlays/${overlayId}.json`) {
     json(res, 200, { v: 1, overlayId, values: overlayValues });
     return;
   }
 
-  if (pathname === `/renders/widgets/${instanceId}/meta/live/en.json`) {
+  if (pathname === `${renderBase}/meta/live/en.json`) {
     json(res, 200, { v: 1, id: instanceId, locale: 'en', metaFp });
     return;
   }
 
-  if (pathname === `/renders/widgets/${instanceId}/meta/en/${metaFp}.json`) {
+  if (pathname === `${renderBase}/meta/en/${metaFp}.json`) {
     json(res, 200, {
       schemaJsonLd: JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', name: baseState.title }),
       excerptHtml: '<p>Bed and Breakfast FAQs</p>',

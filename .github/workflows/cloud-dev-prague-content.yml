@@ -63,7 +63,7 @@ jobs:
           const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
           const base = String(process.env.PUBLIC_TOKYO_URL || '').replace(/\/+$/, '');
           if (!base) throw new Error('PUBLIC_TOKYO_URL is required');
-          const indexUrl = `${base}/l10n/prague/widgets/faq/index.json`;
+          const indexUrl = `${base}/prague/l10n/widgets/faq/index.json`;
           let indexRes = null;
           for (let attempt = 1; attempt <= 30; attempt += 1) {
             indexRes = await fetch(indexUrl);
@@ -78,7 +78,7 @@ jobs:
           if (!fingerprint || typeof fingerprint !== 'string') {
             throw new Error('Prague FAQ index missing fr lastPublishedFingerprint');
           }
-          const overlayUrl = `${base}/l10n/prague/widgets/faq/locale/fr/${encodeURIComponent(fingerprint)}.ops.json`;
+          const overlayUrl = `${base}/prague/l10n/widgets/faq/locale/fr/${encodeURIComponent(fingerprint)}.ops.json`;
           let overlayRes = null;
           for (let attempt = 1; attempt <= 30; attempt += 1) {
             overlayRes = await fetch(overlayUrl);

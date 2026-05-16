@@ -19,7 +19,7 @@ const GROUP_LABELS: Record<string, string> = {
   podstagelayout: 'Stage/Pod layout',
 };
 
-export type DieterAssets = {
+export type DieterMedia = {
   styles?: string[];
   scripts?: string[];
 };
@@ -70,14 +70,14 @@ function labelForGroup(key: string | null): string {
   return GROUP_LABELS[key] || key.replace(/-/g, ' ');
 }
 
-export function resetDieterAssetCaches() {
+export function resetDieterMediaCaches() {
   loadedStyles.clear();
   loadedScripts.clear();
 }
 
-export async function ensureAssets(dieterAssets: DieterAssets | undefined): Promise<void> {
-  const styleLoads = (dieterAssets?.styles || []).map((href) => loadStyle(href));
-  const scriptList = dieterAssets?.scripts || [];
+export async function ensureMedia(dieterMedia: DieterMedia | undefined): Promise<void> {
+  const styleLoads = (dieterMedia?.styles || []).map((href) => loadStyle(href));
+  const scriptList = dieterMedia?.scripts || [];
 
   const scriptsPromise = scriptList.reduce<Promise<void>>(async (chain, src) => {
     await chain;
@@ -89,7 +89,7 @@ export async function ensureAssets(dieterAssets: DieterAssets | undefined): Prom
 
   if (failures.length > 0 && process.env.NODE_ENV === 'development') {
     failures.forEach((failure) => {
-      console.warn('[TdMenuContent] Dieter asset load warning', failure.reason);
+      console.warn('[TdMenuContent] Dieter media load warning', failure.reason);
     });
   }
 }

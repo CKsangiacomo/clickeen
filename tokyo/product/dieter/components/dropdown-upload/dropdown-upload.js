@@ -1160,6 +1160,69 @@ var Dieter = (() => {
     }
   ];
 
+  // ../packages/ck-contracts/src/ids.ts
+  var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  function isUuid(raw) {
+    const value = typeof raw === "string" ? raw.trim() : "";
+    return Boolean(value && UUID_RE.test(value));
+  }
+
+  // ../packages/ck-contracts/src/overlay-identity.ts
+  var COMPACT_ACCOUNT_ID_LENGTH = 8;
+  var WIDGET_CODE_LENGTH = 3;
+  var COMPACT_INSTANCE_ID_LENGTH = 10;
+  var OVERLAY_LANGUAGE_CODE_LENGTH = 4;
+  var OVERLAY_EXPERIMENT_CODE_LENGTH = 3;
+  var OVERLAY_PERSONALIZATION_CODE_LENGTH = 3;
+  var OVERLAY_VERSION_LENGTH = 2;
+  var OVERLAY_CHECKSUM_LENGTH = 2;
+  var OVERLAY_ID_PREFIX_LENGTH = COMPACT_ACCOUNT_ID_LENGTH + WIDGET_CODE_LENGTH + COMPACT_INSTANCE_ID_LENGTH + OVERLAY_LANGUAGE_CODE_LENGTH + OVERLAY_EXPERIMENT_CODE_LENGTH + OVERLAY_PERSONALIZATION_CODE_LENGTH + OVERLAY_VERSION_LENGTH;
+  var OVERLAY_ID_LENGTH = OVERLAY_ID_PREFIX_LENGTH + OVERLAY_CHECKSUM_LENGTH;
+
+  // ../packages/ck-contracts/src/overlay-codebooks.ts
+  var WIDGET_OVERLAY_CODES = Object.freeze({
+    faq: "FAQ",
+    countdown: "CTD",
+    logoshowcase: "LGS"
+  });
+  var LANGUAGE_OVERLAY_CODES = Object.freeze({
+    en: "EN00",
+    es: "ES00",
+    pt: "PT00",
+    de: "DE00",
+    fr: "FR00",
+    it: "IT00",
+    nl: "NL00",
+    ja: "JA00",
+    "zh-hans": "ZHHS",
+    "zh-tw": "ZHTW",
+    hi: "HI00",
+    ko: "KO00",
+    pl: "PL00",
+    tr: "TR00",
+    ar: "AR00",
+    vi: "VI00",
+    id: "ID00",
+    th: "TH00",
+    he: "HE00",
+    uk: "UK00",
+    cs: "CS00",
+    ro: "RO00",
+    hu: "HU00",
+    sv: "SV00",
+    da: "DA00",
+    nb: "NB00",
+    fi: "FI00",
+    fil: "FIL0",
+    bn: "BN00"
+  });
+  var WIDGET_TYPES_BY_CODE = new Map(
+    Object.entries(WIDGET_OVERLAY_CODES).map(([widgetType, code]) => [code, widgetType])
+  );
+  var LOCALES_BY_CODE = new Map(
+    Object.entries(LANGUAGE_OVERLAY_CODES).map(([locale, code]) => [code, locale])
+  );
+
   // ../packages/ck-contracts/src/user-settings-geo.ts
   var USER_SETTINGS_COUNTRY_TIMEZONES = Object.freeze({
     AD: Object.freeze(["Europe/Andorra"]),
@@ -1562,7 +1625,6 @@ var Dieter = (() => {
   };
 
   // ../packages/ck-contracts/src/index.ts
-  var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   var CK_ERROR_CODE = Object.freeze({
     VALIDATION: "VALIDATION",
     NOT_FOUND: "NOT_FOUND",
@@ -1578,10 +1640,6 @@ var Dieter = (() => {
     DELETE: "delete"
   });
   var SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(locales_default).map((entry) => entry.code));
-  function isUuid(raw) {
-    const value = typeof raw === "string" ? raw.trim() : "";
-    return Boolean(value && UUID_RE.test(value));
-  }
 
   // components/shared/account-assets.ts
   var ACCOUNT_ASSET_UPSELL_REASONS = /* @__PURE__ */ new Set([

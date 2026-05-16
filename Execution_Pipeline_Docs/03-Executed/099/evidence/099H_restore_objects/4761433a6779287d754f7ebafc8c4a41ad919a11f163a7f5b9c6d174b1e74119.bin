@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "תכונות שאלות נפוצות - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "איך וידג'ט השאלות הנפוצות עובד: SEO, לוקליזציה, תהליך פרסום ועריכה בסיוע AI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "איך וידג'ט השאלות הנפוצות עובד"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "מטיוטות בעזרת AI ועד לוקליזציה ו-SEO — אלו המערכות ששומרות על התשובות מדויקות וקלות לגילוי."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "מתארים פעם אחת. ה-AI מנסח את השאר."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "צרו טיוטות מובנות בתוך העורך, ואז אשרו, ערכו או דחו כל הצעה לפני הפרסום."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "עד 29 שפות בווידג'ט אחד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "הציגו תשובות מתורגמות אוטומטית, ושייפו את הניסוח ידנית כשקול המותג או הניואנס חשובים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "מפרסמים פעם אחת. מעדכנים כל עמוד."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "עורכים פעם אחת במקור אחד, ואז מפרסמים ומעדכנים את התשובות האחרונות בכל הטמעה חיה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "מנועי חיפוש יכולים לקרוא את התשובות שלכם"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "תשובות שמרונדרות בצד השרת, פלט סכמה וקישורים עמוקים עוזרים למנועי חיפוש לאנדקס ולהציג את התוכן הנכון."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google רואה כל מילה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "תוצאות עשירות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "קישור עמוק"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "רינדור בצד השרת שומר את התשובות ניתנות לאינדוקס עם כמעט אפס שינויי פריסה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "JSON-LD אוטומטי עוזר למנועי חיפוש להציג את התשובות שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "הפנו משתמשים לתשובה הספציפית שהם צריכים באמצעות URL יציב."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "בסיס ידע חי שצומח יחד איתכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "שמרו על תשובות מדויקות ככל שהמוצר, המדיניות והקהל שלכם משתנים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "אמין כברירת מחדל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "פרסום עם גרסאות וגבולות לייב ברורים שומרים עדכונים תכופים בשליטה עבור צוותים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "שינויים מבוססי גרסאות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "גבול פרסום"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "מאוחסן במטמון בקצה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "כל פרסום נשמר כגרסה, כך שצוותים יכולים לשפר עם שליטה מלאה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "התוכן בלייב משתנה רק אחרי פרסום מפורש."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "מילישניות חשובות. אנחנו מספקים תשובות מהמיקום הקרוב ביותר למשתמש שלכם."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "שליטה מלאה בעיצוב"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "שלטו ברדיוס, צללים, גבולות, מרווחים וטיפוגרפיה בעורך ויזואלי שנבנה לעקביות מותגית."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "פריסות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "טיפוגרפיה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "ערכות נושא"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "מבני אקורדיון, רשימה וכרטיסים עם בקרת מרווחים רספונסיבית."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "טיפוגרפיה לפי תפקיד: כותרות, שאלות, תשובות ו-CTA."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "תמיכה במצב בהיר וכהה עם שליטה בצבעי המותג."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "הפצה גלובלית כברירת מחדל"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "אחדו לוקליזציה, SEO והפצה ב-Edge למערכת אחת — כדי שדפים גלובליים יישארו מהירים וברורים."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "הפצה ב-Edge"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "לוקליזציה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "מוגש מתשתית Edge."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "עד 29 שפות עם אפשרות לעקיפה."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "תשובות מובנות עם תמיכה ב-JSON-LD."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "נבנה לאתרים בפרודקשן"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "השתמשו בהטמעות סטנדרטיות או ללא סקריפט, ושמרו עדכונים בלייב צפויים עם שליטת פרסום מפורשת."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "מצבי הטמעה"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "שליטת פרסום"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "קומפוזביליות"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "הטמעה סטנדרטית עם סקריפט ואפשרויות iframe ללא סקריפט."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "תהליך פרסום מפורש לעדכונים בלייב."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "סגנונות, תוכן ושפות משתלבים בלי לפצל לגרסאות."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "בנו חוויית FAQ טובה יותר"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "התחילו בחינם, פרסמו מהר, ושמרו את ה-FAQ מעודכן בכל עמוד ובכל שפה."
+    }
+  ],
+  "v": 1
+}

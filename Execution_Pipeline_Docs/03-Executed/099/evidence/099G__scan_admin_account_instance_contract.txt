@@ -1,0 +1,111 @@
+scripts/prd99a-r2-inventory.mjs:91:        reason: "legacy UUID account storage; PRD99 requires account public IDs such as 00000001",
+scripts/health/product-path-smoke.mjs:452:      `/renders/accounts/${encodeURIComponent(accountPublicId)}/instances/${encodeURIComponent(instanceId)}/live/r.json`,
+scripts/health/product-path-smoke.mjs:454:    assert2xx(pointer, `GET /renders/accounts/${accountPublicId}/instances/${instanceId}/live/r.json`);
+tokyo-worker/src/routes/render-routes.test.ts:45:    [`accounts/${ACCOUNT_ID}/instances/index.json`]: {
+tokyo-worker/src/routes/render-routes.test.ts:61:    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/publish.json`]: {
+tokyo-worker/src/routes/render-routes.test.ts:76:    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/published/config.json`]: {
+tokyo-worker/src/routes/render-routes.test.ts:84:    `/renders/accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/live/r.json`,
+tokyo-worker/src/routes/render-routes.test.ts:94:    `/renders/accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/config.json`,
+tokyo-worker/src/route-helpers.test.ts:16:  assert.equal(isValidScopedInstance('A1B2C3D4E5', '00000000-0000-0000-0000-000000000100'), false);
+scripts/prd99g-admin-account-recreate.mjs:34:const oldAccountId = '00000000-0000-0000-0000-000000000100';
+scripts/prd99g-admin-account-recreate.mjs:35:const adminAccountPublicId = '00000001';
+scripts/prd99g-admin-account-recreate.mjs:37:const targetPrefix = `accounts/${adminAccountPublicId}/instances`;
+scripts/prd99g-admin-account-recreate.mjs:189:function assertOverlayBelongs(overlayId, instanceId) {
+scripts/prd99g-admin-account-recreate.mjs:190:  const parsed = parseOverlayId(overlayId);
+scripts/prd99g-admin-account-recreate.mjs:191:  if (!parsed.ok) throw new Error(`overlay_id_invalid:${overlayId}:${parsed.reason}`);
+scripts/prd99g-admin-account-recreate.mjs:193:    throw new Error(`overlay_id_wrong_owner:${overlayId}`);
+scripts/prd99g-admin-account-recreate.mjs:260:    const overlayId = buildOverlayId({
+scripts/prd99g-admin-account-recreate.mjs:269:    assertOverlayBelongs(overlayId, source.instanceId);
+scripts/prd99g-admin-account-recreate.mjs:272:    outputs.push(await writeLocalJson(outDir, `${source.targetRoot}/overlays/${overlayId}.json`, overlay));
+scripts/prd99g-admin-account-recreate.mjs:277:        { v: 1, overlayId },
+scripts/prd99g-admin-account-recreate.mjs:280:    overlayLanguages[languageCode] = overlayId;
+scripts/prd99g-admin-account-recreate.mjs:372:    for (const overlayId of Object.values(publish.overlays?.languages ?? {})) {
+scripts/prd99g-admin-account-recreate.mjs:373:      assertOverlayBelongs(overlayId, source.instanceId);
+scripts/prd99g-admin-account-recreate.mjs:374:      await getObjectJson(`${root}/overlays/${overlayId}.json`, tmpDir);
+scripts/prd99g-admin-account-recreate.mjs:393:    const liveUrl = `${tokyoBase}/renders/accounts/${adminAccountPublicId}/instances/${source.instanceId}/live/r.json`;
+scripts/prd99g-admin-account-recreate.mjs:394:    const configUrl = `${tokyoBase}/renders/accounts/${adminAccountPublicId}/instances/${source.instanceId}/config.json`;
+scripts/prd99g-admin-account-recreate.mjs:428:    'PRD99 keeps widget software in `product/widgets/` and keeps account runtime state under `accounts/{accountPublicId}/instances/{instanceId}/`. The recreation therefore creates one normal admin account instance per real product widget and does not preserve the old duplicate account-owned widget lane.',
+tokyo-worker/src/account-assets-contract.test.ts:36:  const uuidAccountId = '00000000-0000-0000-0000-000000000100';
+tokyo-worker/src/routes/internal-render-routes.ts:212:      const overlayId = await allocateOverlayId({
+tokyo-worker/src/routes/internal-render-routes.ts:224:      await writeOverlayObject({ env, overlayId, values });
+tokyo-worker/src/routes/internal-render-routes.ts:225:      await writeSelectedOverlayPointer({ env, overlayId });
+tokyo-worker/src/routes/internal-render-routes.ts:226:      return respond(json({ ok: true, overlayId }));
+tokyo-worker/src/routes/internal-render-routes.ts:335:    return respond(json({ ok: true, overlayId: selected?.overlayId ?? null }));
+tokyo-worker/src/routes/internal-render-routes.ts:340:    const overlayId = decodeURIComponent(internalOverlayObjectMatch[1]);
+tokyo-worker/src/routes/internal-render-routes.ts:341:    if (!isOverlayId(overlayId)) {
+tokyo-worker/src/routes/internal-render-routes.ts:344:    const parsed = parseOverlayId(overlayId);
+tokyo-worker/src/routes/internal-render-routes.ts:363:      const object = await readOverlayObject({ env, overlayId });
+tokyo-worker/src/routes/internal-render-routes.ts:367:      return respond(json({ ok: true, overlayId, ...object }));
+tokyo-worker/src/routes/render-routes.ts:112:    const overlayId = decodeURIComponent(accountRenderOverlayMatch[3]);
+tokyo-worker/src/routes/render-routes.ts:113:    const parsed = parseOverlayId(overlayId);
+tokyo-worker/src/routes/render-routes.ts:125:    const isPublishedOverlay = Object.values(resolved.publish.overlays?.languages ?? {}).includes(overlayId);
+tokyo-worker/src/routes/render-routes.ts:127:    const overlay = await readOverlayObject({ env, overlayId });
+tokyo-worker/src/routes/render-routes.ts:194:    const overlayId = decodeURIComponent(renderOverlayMatch[2]);
+tokyo-worker/src/routes/render-routes.ts:195:    if (!instanceId || !isOverlayId(overlayId)) return respondValidation(respond, 'tokyo.errors.render.invalidInstanceId');
+bob/lib/translations-preview.ts:6:  overlayId: string | null;
+bob/lib/translations-preview.ts:38:  const overlayId = asTrimmedString(raw.overlayId);
+bob/lib/translations-preview.ts:42:    overlayId: overlayId ?? null,
+bob/lib/translations-preview.ts:67:    if (!language.overlayId) continue;
+bob/lib/translations-preview.ts:93:      .filter((entry) => Boolean(entry.overlayId && data.valuesByLanguage[entry.language]))
+bob/lib/translations-preview.test.ts:14:      { language: 'it', label: 'Italiano', overlayId: 'OVERLAY1' },
+bob/lib/translations-preview.test.ts:15:      { language: 'cs', label: 'Czech', overlayId: null },
+bob/lib/translations-preview.test.ts:35:    languages: [{ language: 'it', label: 'Italiano', overlayId: 'OVERLAY1' }],
+roma/lib/account-instance-direct.ts:454:  | { ok: true; value: { overlayId: string } }
+roma/lib/account-instance-direct.ts:472:  const overlayId = asTrimmedString(payload?.overlayId);
+roma/lib/account-instance-direct.ts:473:  if (!overlayId) return invalidTokyoPayload('invalid Tokyo overlay write payload');
+roma/lib/account-instance-direct.ts:474:  return { ok: true, value: { overlayId } };
+tokyo-worker/src/domains/render/normalize.ts:57:  for (const [languageCode, overlayId] of Object.entries(languagesRaw)) {
+tokyo-worker/src/domains/render/normalize.ts:58:    if (!/^[0-9A-Z]{4}$/.test(languageCode) || !isOverlayId(overlayId)) return null;
+tokyo-worker/src/domains/render/normalize.ts:59:    languages[languageCode] = overlayId;
+roma/lib/account-babel-save-followup.ts:21:    | { locale: string; ok: true; overlayId: string }
+roma/lib/account-babel-save-followup.ts:234:        overlayId: stored.value.overlayId,
+tokyo-worker/src/domains/render/keys.ts:2:  return `accounts/${accountId}/instances`;
+tokyo-worker/src/domains/render/keys.ts:34:  overlayId: string,
+tokyo-worker/src/domains/render/keys.ts:36:  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/${overlayId}.json`;
+tokyo-worker/src/domains/render/keys.ts:43:  overlayIdPrefix = '',
+tokyo-worker/src/domains/render/keys.ts:45:  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/${overlayIdPrefix}`;
+tokyo-worker/src/domains/render/types.ts:113:  overlayId: string;
+roma/lib/account-instance-translations.ts:23:    overlayId: string | null;
+roma/lib/account-instance-translations.ts:103:    let overlayId: string | null = null;
+roma/lib/account-instance-translations.ts:109:        overlayId: null,
+roma/lib/account-instance-translations.ts:134:    overlayId = asTrimmedString(selectedPayload?.overlayId);
+roma/lib/account-instance-translations.ts:135:    if (!overlayId) {
+roma/lib/account-instance-translations.ts:139:        overlayId: null,
+roma/lib/account-instance-translations.ts:150:        path: `/__internal/overlays/${encodeURIComponent(overlayId)}.json`,
+roma/lib/account-instance-translations.ts:165:      overlayId,
+tokyo-worker/src/domains/render/overlays.ts:77:  if (payload.v !== 1 || typeof payload.overlayId !== 'string') return null;
+tokyo-worker/src/domains/render/overlays.ts:78:  return { v: 1, overlayId: payload.overlayId };
+tokyo-worker/src/domains/render/overlays.ts:126:      if (pointer) ids.push(pointer.overlayId);
+tokyo-worker/src/domains/render/overlays.ts:147:      const parsed = parseOverlayId(pointer.overlayId);
+tokyo-worker/src/domains/render/overlays.ts:149:      languages[parsed.value.languageCode] = pointer.overlayId;
+tokyo-worker/src/domains/render/overlays.ts:159:  overlayId: string;
+tokyo-worker/src/domains/render/overlays.ts:162:  if (selectedIds.includes(args.overlayId)) return true;
+tokyo-worker/src/domains/render/overlays.ts:169:  return Object.values(publish?.overlays?.languages ?? {}).includes(args.overlayId);
+tokyo-worker/src/domains/render/overlays.ts:187:      const overlayId = buildCoordinateOverlayId(coordinate, version);
+tokyo-worker/src/domains/render/overlays.ts:188:      if (!existing.has(overlayId)) return overlayId;
+tokyo-worker/src/domains/render/overlays.ts:194:    const overlayId = buildCoordinateOverlayId(coordinate, version);
+tokyo-worker/src/domains/render/overlays.ts:195:    if (!existing.has(overlayId)) continue;
+tokyo-worker/src/domains/render/overlays.ts:196:    if (!(await isOverlayIdReferenced({ env: args.env, coordinate, overlayId }))) return overlayId;
+tokyo-worker/src/domains/render/overlays.ts:203:  overlayId: string;
+tokyo-worker/src/domains/render/overlays.ts:206:  const parsed = parseOverlayId(args.overlayId);
+tokyo-worker/src/domains/render/overlays.ts:214:      args.overlayId,
+tokyo-worker/src/domains/render/overlays.ts:227:    overlayId: args.overlayId,
+tokyo-worker/src/domains/render/overlays.ts:238:      args.overlayId,
+tokyo-worker/src/domains/render/overlays.ts:247:  overlayId: string;
+tokyo-worker/src/domains/render/overlays.ts:249:  const parsed = parseOverlayId(args.overlayId);
+tokyo-worker/src/domains/render/overlays.ts:258:        args.overlayId,
+tokyo-worker/src/domains/render/overlays.ts:266:  overlayId: string;
+tokyo-worker/src/domains/render/overlays.ts:268:  const parsed = parseOverlayId(args.overlayId);
+tokyo-worker/src/domains/render/overlays.ts:270:  const pointer = { v: 1, overlayId: args.overlayId } satisfies SelectedOverlayPointerDocument;
+tokyo-worker/src/domains/render/overlays.test.ts:71:  const overlayId = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 5 });
+tokyo-worker/src/domains/render/overlays.test.ts:73:  await writeOverlayObject({ env, overlayId, values: { title: 'Domande frequenti' } });
+tokyo-worker/src/domains/render/overlays.test.ts:74:  await writeSelectedOverlayPointer({ env, overlayId });
+tokyo-worker/src/domains/render/overlays.test.ts:76:  assert.deepEqual(await readOverlayObject({ env, overlayId }), {
+tokyo-worker/src/domains/render/overlays.test.ts:82:    overlayId,
+tokyo-worker/src/domains/render/overlays.test.ts:90:    languages: { IT00: overlayId },
+tokyo-worker/src/domains/render/overlays.test.ts:96:  const overlayId = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 1 });
+tokyo-worker/src/domains/render/overlays.test.ts:97:  await writeOverlayObject({ env, overlayId, values: { title: 'Versione uno' } });
+tokyo-worker/src/domains/render/overlays.test.ts:98:  await writeSelectedOverlayPointer({ env, overlayId });
+tokyo-worker/src/domains/render/overlays.test.ts:105:    () => writeOverlayObject({ env, overlayId, values: { title: 'Overwrite' } }),
+bob/components/TranslationsPanel.tsx:96:    (entry) => Boolean(entry.overlayId && translationsData?.valuesByLanguage[entry.language]),
+bob/components/TranslationsPanel.tsx:99:    .filter((entry) => !entry.overlayId || !translationsData?.valuesByLanguage[entry.language])

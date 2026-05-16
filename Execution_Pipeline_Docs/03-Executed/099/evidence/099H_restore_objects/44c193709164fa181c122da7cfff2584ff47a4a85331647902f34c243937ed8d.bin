@@ -1,0 +1,24 @@
+{
+  "baseFingerprint": "8d78a3a2283336fd69eae808169121f4b4d0ffb9cc7619d7d6013c0bdf1ad21f",
+  "locale": "id",
+  "ops": [
+    {
+      "op": "set",
+      "path": "actions.after.text",
+      "value": ""
+    },
+    {
+      "op": "set",
+      "path": "actions.during.text",
+      "value": "Beli sekarang"
+    }
+  ],
+  "status": "ready",
+  "textPack": {
+    "actions.after.text": "",
+    "actions.during.text": "Beli sekarang"
+  },
+  "type": "l10n",
+  "updatedAt": "2026-05-12T09:04:43.681Z",
+  "v": 1
+}

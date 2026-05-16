@@ -15,6 +15,22 @@ Local boot topology:
 
 There are no alternate local runtime modes behind `dev-up`. Local development should not require developers to reason about multiple boot topologies behind one script.
 
+Tokyo-worker keeps the same PBX boundary locally that it has in deployed runtime. It may validate auth/dev tooling credentials, account capsule to path match, method/path/ID shape, widget codebook, object schema, R2 existence, and technical request bounds; it does not decide product policy, billing/tier state, publication eligibility, l10n version caps, upload entitlements, or account storage caps. Product state and policy still come from the real Roma -> Bob -> Tokyo account path.
+
+Local Tokyo storage follows the PRD 099 root model:
+
+```txt
+accounts/
+dieter/
+fonts/
+product/
+prague/
+```
+
+Account-owned runtime bytes live under `accounts/{accountPublicId}/instances/{instanceId}/` and `accounts/{accountPublicId}/assets/`. Widget software lives under `product/widgets/`. Published projection reads use `/renders/accounts/{accountPublicId}/instances/{instanceId}/...` and map to the instance `published/` subtree. Local routes must not rely on root `published/widgets`, root `widgets`, or account `widgets` storage.
+
+Friendly local asset routes are URL conveniences only: `/widgets/{widgetType}/...` maps to `product/widgets/{widgetType}/...`; `/dieter/...` maps to `dieter/...`; `/fonts/...` maps to `fonts/...`; `/themes/...` maps to the canonical Dieter/theme asset root; Prague-friendly paths map to `prague/...`. Friendly route shape must not create a matching R2 root.
+
 Rules:
 - `dev-up` is one-command local boot.
 - `dev-up` exists to make the local DevStudio operating lane usable.

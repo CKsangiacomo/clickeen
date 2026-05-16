@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-Funktionen – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "So funktioniert das FAQ-Widget: SEO, Lokalisierung, Publishing-Flow und KI-gestütztes Editing."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "So funktioniert das FAQ-Widget"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Von KI-Entwürfen über Lokalisierung bis SEO: Diese Systeme sorgen dafür, dass Antworten korrekt und leicht auffindbar bleiben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Einmal beschreiben. Den Rest entwirft die KI."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Erstelle strukturierte Entwürfe direkt im Editor und akzeptiere, bearbeite oder verwerfe jeden Vorschlag vor dem Publish."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Bis zu 29 Sprachen in einem Widget."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Spiele übersetzte Antworten automatisch aus und optimiere Formulierungen manuell, wenn Tonalität oder Nuancen zählen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Einmal veröffentlichen. Jede Seite aktualisieren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Einmal an einer Quelle bearbeiten, dann veröffentlichen und die neuesten Antworten in jedes Live-Embed ausspielen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "Suchmaschinen können deine Antworten lesen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "Serverseitig gerenderte Antworten, Schema-Output und Deep Links helfen Suchmaschinen, die richtigen Inhalte zu indexieren und auszuspielen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google sieht jedes Wort"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Rich Snippets"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Deep Linking"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "Server-Side Rendering hält deine Antworten indexierbar – mit nahezu keiner Layout-Verschiebung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "Automatisches JSON-LD hilft Suchmaschinen, deine Antworten prominent auszuspielen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Leite Nutzer mit einer stabilen URL direkt zur Antwort, die sie brauchen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Eine lebendige Wissensdatenbank, die mit dir wächst."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Halte Antworten aktuell, während sich Produkt, Richtlinien und Zielgruppe weiterentwickeln."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Zuverlässig – by design"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "Versioniertes Publishing und klare Live-Grenzen machen häufige Updates für Teams kontrollierbar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Versionierte Änderungen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Publish-Grenze"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "Edge-gecacht"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Jeder Publish wird versioniert – so können Teams kontrolliert iterieren."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "Live-Inhalte ändern sich erst nach einem expliziten Publish."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "Millisekunden zählen. Wir liefern Antworten vom Standort, der deinem Nutzer am nächsten ist."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Volle Designkontrolle"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Steuere Radius, Schatten, Rahmen, Abstände und Typografie in einem visuellen Editor – für konsistente Markenführung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Layouts"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Typografie"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Themes"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Akkordeon-, Listen- und Karten-Layouts mit responsiver Abstandssteuerung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Rollenbasierte Typografie für Titel, Fragen, Antworten und CTAs."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Light- und Dark-Mode inklusive Kontrolle der Markenfarben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Standardmäßig global ausgeliefert"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Kombiniere Lokalisierung, SEO und Edge-Auslieferung in einem System – damit globale Seiten schnell und klar bleiben."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Edge-Auslieferung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Lokalisierung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Auslieferung über Edge-Infrastruktur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Bis zu 29 Sprachen mit Override-Unterstützung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "Strukturierte Antworten mit JSON-LD-Unterstützung."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Für Produktionsseiten gemacht"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Nutze Standard- oder scriptlose Embeds und halte Live-Updates mit expliziter Publish-Steuerung planbar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Embed-Modi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Publish-Steuerung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Komponierbarkeit"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Standard Script-Embed und scriptlose iFrame-Optionen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Expliziter Publish-Flow für Live-Updates."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Styles, Inhalte und Sprachen kombinieren – ohne Forks."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Schaffe ein besseres FAQ-Erlebnis"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Starte kostenlos, veröffentliche schnell und halte deine FAQs auf jeder Seite und in jeder Sprache aktuell."
+    }
+  ],
+  "v": 1
+}

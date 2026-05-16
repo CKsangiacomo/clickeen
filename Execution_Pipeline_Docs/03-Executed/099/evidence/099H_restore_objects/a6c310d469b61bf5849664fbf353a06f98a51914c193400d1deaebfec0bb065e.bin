@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "type": "l10n",
+  "locale": "hu",
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "status": "ready",
+  "ops": [],
+  "textPack": {
+    "cta.label": "Kapcsolat",
+    "header.subtitleHtml": "Modern weboldal-widgetek – gyorsan indíthatók, könnyen testreszabhatók, és a konverzió növelésére készültek.",
+    "header.title": "GYIK",
+    "sections.0.faqs.0.answer": "A Clickeen egy widget SaaS platform, amellyel percek alatt adhatsz letisztult, nagy teljesítményű widgeteket a weboldaladhoz – komoly fejlesztői munka nélkül.",
+    "sections.0.faqs.0.question": "Mi az a Clickeen?",
+    "sections.0.faqs.1.answer": "Igen. Az ingyenes csomag 1 aktív widgetet tartalmaz az alapvető funkciókkal, így éles oldalon is kipróbálhatod a Clickeent.",
+    "sections.0.faqs.1.question": "Van ingyenes csomag?",
+    "sections.0.faqs.2.answer": "Készítsd el a widgeted, másold ki a beágyazási kódot, majd illeszd be közvetlenül a weboldaladon a záró </body> tag elé. A Clickeenben végzett módosítások azonnal frissülnek.",
+    "sections.0.faqs.2.question": "Hogyan telepíthetek egy widgetet a weboldalamra?",
+    "sections.0.faqs.3.answer": "Indíts gyorsabban rugalmas dizájnvezérléssel, egyszerű frissítésekkel és megbízható teljesítménnyel – így a csapatod fejlesztéseket tud szállítani egyedi kód karbantartása nélkül.",
+    "sections.0.faqs.3.question": "Miért érdemes a Clickeent választani a saját fejlesztés helyett?",
+    "sections.0.title": "Első lépések"
+  },
+  "updatedAt": "2026-03-23T18:57:29.518Z"
+}

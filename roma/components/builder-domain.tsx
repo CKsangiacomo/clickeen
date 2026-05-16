@@ -61,12 +61,14 @@ type HostAccountCommandResultMessage = {
 type BobOpenEditorMessage = {
   type: 'ck:open-editor';
   requestId: string;
+  accountPublicId: string;
   instanceId: string;
   baseLocale: string;
   label: string;
   widgetname: string;
   compiled: unknown;
   instanceData: Record<string, unknown>;
+  publishStatus?: 'published' | 'unpublished';
   meta?: Record<string, unknown> | null;
   policy?: unknown;
   copilot?: unknown;
@@ -79,6 +81,7 @@ type BuilderOpenResponse = {
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
+  publishStatus?: 'published' | 'unpublished';
   meta?: Record<string, unknown> | null;
   copilot?: unknown;
 };
@@ -423,12 +426,14 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       const baseLocale = parseAccountL10nPolicyStrict(activeAccount.l10nPolicy).baseLocale;
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
+        accountPublicId: activeAccount.accountPublicId,
         instanceId: resolvedInstanceId,
         baseLocale,
         label,
         widgetname: widgetType,
         compiled,
         instanceData: config,
+        publishStatus: builderOpen.publishStatus,
         meta: builderOpen.meta ?? null,
         policy: accountPolicy,
         copilot: builderOpen.copilot ?? null,
@@ -445,7 +450,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [accountApi, accountPolicy, activeAccount.l10nPolicy, activeInstanceId, postOpenEditorAndWait]);
+  }, [accountApi, accountPolicy, activeAccount.accountPublicId, activeAccount.l10nPolicy, activeInstanceId, postOpenEditorAndWait]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {

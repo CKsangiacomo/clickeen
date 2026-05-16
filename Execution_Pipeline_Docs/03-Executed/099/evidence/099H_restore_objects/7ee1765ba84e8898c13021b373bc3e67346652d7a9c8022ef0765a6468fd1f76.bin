@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "ميزات الأسئلة الشائعة - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "كيف تعمل أداة الأسئلة الشائعة: تحسين محركات البحث، التعريب، سير النشر، والتحرير بمساعدة الذكاء الاصطناعي."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "كيف تعمل أداة الأسئلة الشائعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "من صياغة المسودات بالذكاء الاصطناعي إلى التعريب وSEO—هذه الأنظمة هي ما يجعل الإجابات دقيقة وسهلة الاكتشاف."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "اشرَحها مرة واحدة. والذكاء الاصطناعي يُعد الباقي."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "أنشئ مسودات منظّمة داخل المحرر، ثم اقبل كل اقتراح أو عدّله أو ارفضه قبل النشر."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "حتى 29 لغة في أداة واحدة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "اعرض الإجابات المترجمة تلقائياً، واضبط الصياغة يدوياً عندما تهم نبرة العلامة أو الدقة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "انشر مرة واحدة. وحدث كل الصفحات."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "عدّل مرة واحدة من مصدر واحد، ثم انشر وادفع أحدث الإجابات إلى كل تضمين مباشر."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "محركات البحث تستطيع قراءة إجاباتك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "الإجابات المُولَّدة من الخادم، ومخرجات المخطط (Schema)، والروابط العميقة تساعد محركات البحث على الفهرسة وإبراز المحتوى الصحيح."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google يرى كل كلمة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "مقتطفات غنية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "روابط عميقة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "التصيير من جهة الخادم يبقي إجاباتك قابلة للفهرسة مع شبه انعدام في اهتزاز التخطيط."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "JSON-LD تلقائي يساعد محركات البحث على إبراز إجاباتك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "وجّه المستخدمين إلى الإجابة المحددة التي يحتاجونها عبر عنوان URL ثابت."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "قاعدة معرفة حيّة تنمو معك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "حافظ على دقة الإجابات مع تطور منتجك وسياساتك وجمهورك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "موثوقية مصممة من الأساس"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "النشر بالإصدارات وحدود النشر المباشرة والواضحة تُبقي التحديثات المتكررة تحت السيطرة للفرق."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "تغييرات بإصدارات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "حدّ النشر"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "مخزّن مؤقتًا على الحافة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "كل عملية نشر تُحفظ كإصدار، ليتمكن الفريق من التحسين مع تحكم كامل."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "لا تتغير المحتويات المباشرة إلا بعد نشرٍ صريح."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "الميلي ثانية مهمة. نُسلّم الإجابات من الموقع الأقرب إلى المستخدم لديك."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "تحكم كامل في التصميم"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "تحكم في نصف القطر والظلال والحدود والمسافات والطباعة عبر محرر مرئي مصمم لاتساق العلامة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "التخطيطات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "الطباعة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "السمات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "هياكل أكورديون وقوائم وبطاقات مع تحكم بالمسافات المتجاوبة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "طباعة حسب الدور للعناوين والأسئلة والإجابات ونداءات الإجراء."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "دعم الوضعين الفاتح والداكن مع تحكم بألوان العلامة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "توصيل عالمي افتراضياً"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "اجمع التعريب وSEO والتوصيل عبر الحافة في نظام واحد لتبقى الصفحات العالمية سريعة وواضحة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "التوصيل عبر الحافة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "التعريب"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "يُقدَّم عبر بنية تحتية على الحافة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "حتى 29 لغة مع دعم التجاوز."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "إجابات منظّمة مع دعم JSON-LD."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "مصممة لمواقع الإنتاج"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "استخدم تضمينات قياسية أو بدون سكربت، واجعل التحديثات المباشرة قابلة للتنبؤ عبر تحكم نشر واضح."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "أوضاع التضمين"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "تحكم النشر"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "قابلية التركيب"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "تضمين سكربت قياسي وخيارات iframe بدون سكربت."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "سير نشر صريح للتحديثات المباشرة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "تجتمع الأنماط والمحتوى واللغات دون نسخ متفرعة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "ابنِ تجربة أسئلة شائعة أفضل"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "ابدأ مجاناً، وانشر بسرعة، وأبقِ أسئلتك الشائعة محدّثة عبر كل صفحة وكل لغة."
+    }
+  ],
+  "v": 1
+}

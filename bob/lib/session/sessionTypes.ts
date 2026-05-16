@@ -32,6 +32,7 @@ export type SessionState = {
 };
 
 export type SessionMeta = {
+  accountPublicId?: string;
   instanceId?: string;
   baseLocale?: string;
   widgetname?: string;
@@ -66,7 +67,9 @@ export type EditorOpenMessage = {
   compiled: CompiledWidget;
   instanceData?: Record<string, unknown> | null;
   policy?: Policy;
+  accountPublicId?: string;
   instanceId?: string;
+  publishStatus?: 'published' | 'unpublished';
   label?: string;
   meta?: Record<string, unknown> | null;
   copilot?: CopilotRuntimeUi;

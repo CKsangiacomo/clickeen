@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "2117e442f13493f814e8ccb8d70d962e3c7ed0bd1ac039db30f59a3bdda46f05",
+  "baseUpdatedAt": "2026-02-04T17:11:45.000Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 요금제 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "FAQ 위젯을 위한 간단한 요금제. 더 필요할 때 업그레이드하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "FAQ 요금제"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "간단한 티어. 더 많은 위젯이 필요하거나 브랜딩을 제거하려면 업그레이드하세요."
+    }
+  ],
+  "v": 1
+}

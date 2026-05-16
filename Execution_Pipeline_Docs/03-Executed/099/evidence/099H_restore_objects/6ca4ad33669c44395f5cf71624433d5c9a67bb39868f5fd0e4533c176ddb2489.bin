@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "2e3f8977ce48623e862f8aeab9876469349397101f6cb3ff0463cf6221796603",
+  "baseUpdatedAt": "2026-02-04T05:36:55.817Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Exemple de prezentare a logo-urilor - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Vezi plasări și cazuri de utilizare comune pentru prezentarea logo-urilor."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Exemple de prezentare a logo-urilor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vezi poziționări obișnuite și cazuri de utilizare."
+    }
+  ],
+  "v": 1
+}

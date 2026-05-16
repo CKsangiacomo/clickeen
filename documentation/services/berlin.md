@@ -47,7 +47,7 @@ The signed account authz capsule carries stable account authz truth only. Mutabl
 - Supabase Auth provider redirects are legacy residue and must not be reintroduced as the browser-visible customer login path.
 - The current linked-identity source is `public.login_identities`; Berlin writes provider/profile state through its service-role boundary and product shells must not consume Supabase Auth identities as provider/account truth.
 - Bootstrap is read-only. It resolves real user/account state and mints session/bootstrap truth; it must not silently repair missing profile, membership, or account state on the hot path.
-- Bootstrap exposes both `accountId` and `accountPublicId`. `accountId` is the private relational UUID; `accountPublicId` is the compact product/storage identity used by PRD 098 overlay IDs.
+- Bootstrap exposes both `accountId` and `accountPublicId`. `accountId` is the private relational UUID; `accountPublicId` is the compact product/storage identity used by PRD 098 overlay IDs and PRD 099 account R2 storage paths.
 - Missing canonical profile, membership, or active account state at bootstrap is a producer bug and must fail explicitly.
 - Active account resolution comes only from persisted active-account preference or deterministic real membership truth. Berlin must never open a privileged fallback account.
 - Invalid persisted profile/account locale-policy truth must fail explicitly in canonical product/account routes. Berlin logs the defect and does not silently default it away.
@@ -108,6 +108,8 @@ Residual public account-management routes:
 - `GET /v1/accounts/:id/publish-containment`
 
 `GET /v1/accounts/:id/publish-containment` is a policy-only read used by Roma's publish action boundary. Berlin reads `account_publish_containment` for the account block state and reason only; Tokyo remains the owner of widget instance inventory, editable config, display metadata, localization overlays, and publish/live state.
+
+Berlin does not build, validate, migrate, or clean Tokyo/R2 account paths. Account-owned assets and instances use `accountPublicId` in Tokyo storage; private UUIDs stay relational and session-scoped. Product policy that affects asset storage, publication, downgrade, suspension, or stale-root cleanup belongs to Roma/system account operations, with Berlin only supplying the stable session/account truth and narrow account-governance reads named above.
 
 Internal routes:
 
@@ -190,7 +192,7 @@ Registry/account product dependencies:
 - Berlin only answers account governance and account-level publish-containment policy questions for this area.
 - Berlin does not own widget instance inventory, instance IDs, display names, saved config, l10n overlays, or publish state.
 
-## PRD 098 Account Public ID
+## PRD 098/099 Account Public ID
 
 Berlin writes `accounts.public_id` when it creates a new account:
 
@@ -200,6 +202,8 @@ Berlin writes `accounts.public_id` when it creates a new account:
 - retried on collision
 
 Existing pre-GA account rows are backfilled by the Supabase migration. Berlin does not derive, repair, or recompute `accountPublicId` during bootstrap.
+
+PRD 099 cleanup must not introduce UUID account folders in Tokyo. Any CI guard or migration dry-run that finds `accounts/{uuid}/assets/**`, `accounts/{uuid}/widgets/**`, or `accounts/{uuid}/instances/wgt_*` treats those keys as stale migration material requiring a restore manifest and rollback rehearsal before deletion.
 
 ## Environment
 

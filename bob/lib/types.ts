@@ -82,7 +82,7 @@ export interface CompiledWidget {
   presets?: WidgetPresets;
   normalization?: WidgetNormalizationSpec;
   limits?: LimitsSpec | null;
-  assets: {
+  media: {
     htmlUrl: string;
     cssUrl: string;
     jsUrl: string;

@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "2e3f8977ce48623e862f8aeab9876469349397101f6cb3ff0463cf6221796603",
+  "baseUpdatedAt": "2026-02-04T05:36:55.817Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Esempi di vetrina di loghi - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Scopri i posizionamenti e i casi d'uso più comuni per una vetrina di loghi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Esempi di vetrina di loghi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Scopri posizionamenti e casi d’uso comuni."
+    }
+  ],
+  "v": 1
+}

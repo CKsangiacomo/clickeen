@@ -72,9 +72,14 @@ function buildSeoGeoSource(): string {
     body.innerHTML = excerptHtml;
   }
 
-  async function loadSeoGeoMeta(opts, targetInstanceId, fixedLocaleOverride, anchorEl, maxWidthPx) {
+  async function loadSeoGeoMeta(opts, targetAccountPublicId, targetInstanceId, fixedLocaleOverride, anchorEl, maxWidthPx) {
     try {
-      const pointerRes = await fetch(embedUrlFor(opts, '/renders/widgets/' + encodeURIComponent(targetInstanceId) + '/live/r.json'), {
+      const renderBase =
+        '/renders/accounts/' +
+        encodeURIComponent(targetAccountPublicId) +
+        '/instances/' +
+        encodeURIComponent(targetInstanceId);
+      const pointerRes = await fetch(embedUrlFor(opts, renderBase + '/live/r.json'), {
         mode: 'cors',
         credentials: 'omit',
       });
@@ -90,7 +95,7 @@ function buildSeoGeoSource(): string {
 
       const effectiveLocale = computeEffectiveLocale(resolveLocaleRuntimePolicy(pointer), geoCountry, fixedLocaleOverride);
       const metaPointerRes = await fetch(
-        embedUrlFor(opts, '/renders/widgets/' + encodeURIComponent(targetInstanceId) + '/meta/live/' + encodeURIComponent(effectiveLocale) + '.json'),
+        embedUrlFor(opts, renderBase + '/meta/live/' + encodeURIComponent(effectiveLocale) + '.json'),
         { mode: 'cors', credentials: 'omit' },
       );
       const metaPointer = await metaPointerRes.json().catch(() => null);
@@ -103,8 +108,7 @@ function buildSeoGeoSource(): string {
       const metaPackRes = await fetch(
         embedUrlFor(
           opts,
-          '/renders/widgets/' +
-            encodeURIComponent(targetInstanceId) +
+          renderBase +
             '/meta/' +
             encodeURIComponent(effectiveLocale) +
             '/' +
@@ -140,7 +144,7 @@ function buildScript(options: LoaderOptions): string {
   const inlineSeoGeoMount = options.includeSeoGeo
     ? `
 		    if (seoGeoOptimization) {
-		      await loadSeoGeoMeta({ tsParam }, instanceId, fixedLocale, container, maxWidthValue);
+		      await loadSeoGeoMeta({ tsParam }, accountPublicId, instanceId, fixedLocale, container, maxWidthValue);
 		    }`
     : '';
   const placeholderSeoGeoMount = options.includeSeoGeo
@@ -148,7 +152,7 @@ function buildScript(options: LoaderOptions): string {
     const hostOptimization = typeof hostEl.dataset.ckOptimization === 'string' ? hostEl.dataset.ckOptimization.trim().toLowerCase() : '';
     const hostSeoGeoOptimization = hostOptimization === 'seo-geo';
     if (hostSeoGeoOptimization) {
-      loadSeoGeoMeta({ tsParam: hostTsParam }, pid, hostFixedLocale, hostEl, hostMaxWidth);
+      loadSeoGeoMeta({ tsParam: hostTsParam }, hostAccountPublicId, pid, hostFixedLocale, hostEl, hostMaxWidth);
     }`
     : '';
   return `(() => {
@@ -157,6 +161,7 @@ function buildScript(options: LoaderOptions): string {
 
 			  const {
 			    instanceId,
+			    accountPublicId,
 			    trigger = 'immediate',
 			    delay = '0',
 			    scrollPct,
@@ -243,14 +248,14 @@ ${EMBED_LOCALE_RUNTIME_SOURCE}
 			    missingIdErrorEl = null;
 			  };
 			  const scheduleMissingIdError = () => {
-			    if (instanceId) return;
+			    if (instanceId && accountPublicId) return;
 			    clearMissingIdError();
 			    missingIdErrorTimer = setTimeout(() => {
 			      if (document.querySelector(PLACEHOLDER_SELECTOR)) return;
 			      missingIdErrorEl = createHostErrorCard(
 			        'Clickeen embed error',
-			        'Missing data-instance-id on the loader script (and no data-clickeen-id placeholders found).',
-			        'Fix: either add data-instance-id=\"ins_...\" to the <script> tag OR add <div data-clickeen-id=\"ins_...\"></div> placeholders.',
+			        'Missing account public ID or instance ID on the loader script (and no complete data-clickeen-id placeholders found).',
+			        'Fix: add data-account-public-id plus data-instance-id on the <script> tag, or add data-account-public-id plus data-clickeen-id placeholders.',
 			        640,
 			      );
 			      if (scriptEl.parentNode) scriptEl.parentNode.insertBefore(missingIdErrorEl, scriptEl);
@@ -410,6 +415,7 @@ ${seoGeoFlag}
 
 	  function mountFrame(opts) {
 	    const targetEl = opts.targetEl;
+	    const targetAccountPublicId = opts.accountPublicId;
 	    const targetInstanceId = opts.instanceId;
 	    const targetLocale = opts.locale;
 	    const targetTsParam = opts.tsParam || {};
@@ -420,7 +426,7 @@ ${seoGeoFlag}
 	    const iframe = document.createElement('iframe');
 	    const frameSrc = embedUrlFor(
 	      { tsParam: targetTsParam },
-	      '/widget/' + encodeURIComponent(targetInstanceId),
+	      '/widget/' + encodeURIComponent(targetAccountPublicId) + '/' + encodeURIComponent(targetInstanceId),
 	      targetLocale ? { locale: targetLocale } : {},
 	    );
 	    iframe.setAttribute('loading', loading);
@@ -518,6 +524,7 @@ ${seoGeoFlag}
 	  function mountIframe() {
 	    mountFrame({
 	      targetEl: container,
+	      accountPublicId,
 	      instanceId,
 	      locale: fixedLocale,
 	      tsParam,
@@ -596,10 +603,17 @@ ${inlineSeoGeoMount}
     if (hostEl.getAttribute('data-ck-mounted') === '1') return;
 
     const pid = typeof hostEl.dataset.clickeenId === 'string' ? hostEl.dataset.clickeenId.trim() : '';
-    if (!pid) return;
+    const hostAccountPublicId =
+      typeof hostEl.dataset.accountPublicId === 'string' && hostEl.dataset.accountPublicId.trim()
+        ? hostEl.dataset.accountPublicId.trim()
+        : typeof accountPublicId === 'string'
+          ? accountPublicId.trim()
+          : '';
+    if (!pid || !hostAccountPublicId) return;
 
     hostEl.setAttribute('data-ck-mounted', '1');
     hostEl.setAttribute('data-ck-instance-id', pid);
+    hostEl.setAttribute('data-ck-account-public-id', hostAccountPublicId);
     clearMissingIdError();
 
 	    const hostFixedLocale = normalizeLocaleToken(hostEl.dataset.locale);
@@ -624,6 +638,7 @@ ${inlineSeoGeoMount}
 
     mountFrame({
       targetEl: hostEl,
+      accountPublicId: hostAccountPublicId,
       instanceId: pid,
       locale: hostFixedLocale,
       tsParam: hostTsParam,
@@ -641,7 +656,13 @@ ${placeholderSeoGeoMount}
     if (mounted === '1' || mounted === 'pending') return;
 
     const pid = typeof hostEl.dataset.clickeenId === 'string' ? hostEl.dataset.clickeenId.trim() : '';
-    if (!pid) return;
+    const hostAccountPublicId =
+      typeof hostEl.dataset.accountPublicId === 'string' && hostEl.dataset.accountPublicId.trim()
+        ? hostEl.dataset.accountPublicId.trim()
+        : typeof accountPublicId === 'string'
+          ? accountPublicId.trim()
+          : '';
+    if (!pid || !hostAccountPublicId) return;
 
     if (typeof IntersectionObserver === 'undefined') {
       mountPlaceholderNow(hostEl);
@@ -706,7 +727,7 @@ ${placeholderSeoGeoMount}
     loaderState.observer.observe(document.documentElement, { childList: true, subtree: true });
   }
 
-  if (instanceId) scheduleMount();
+  if (instanceId && accountPublicId) scheduleMount();
 })();
 `;
 }

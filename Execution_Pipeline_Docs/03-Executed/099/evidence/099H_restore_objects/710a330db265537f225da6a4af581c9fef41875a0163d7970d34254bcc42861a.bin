@@ -1,0 +1,22 @@
+{
+  "v": 1,
+  "id": "ins_01KR8R6ZZ07S5PMJVSRKM4M7K8",
+  "accountId": "00000000-0000-0000-0000-000000000100",
+  "widgetType": "logoshowcase",
+  "status": "published",
+  "configFp": "87f5047de7e76da547a72bb44d3917c7996ca96249e61ca1f875057c250d8304",
+  "localePolicy": {
+    "baseLocale": "en",
+    "ip": {
+      "countryToLocale": {},
+      "enabled": false
+    },
+    "readyLocales": [
+      "en"
+    ],
+    "switcher": {
+      "enabled": false
+    }
+  },
+  "updatedAt": "2026-05-10T12:45:17.592Z"
+}

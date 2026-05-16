@@ -1,21 +1,14 @@
-export function accountWidgetsRoot(accountId: string): string {
-  return `accounts/${accountId}/widgets`;
-}
-
-export function accountWidgetRoot(accountId: string, widgetCode: string): string {
-  return `${accountWidgetsRoot(accountId)}/${widgetCode}`;
-}
-
-export function accountWidgetDocumentKey(accountId: string, widgetCode: string): string {
-  return `${accountWidgetRoot(accountId, widgetCode)}/widget.json`;
+export function accountInstancesRoot(accountId: string): string {
+  return `accounts/${accountId}/instances`;
 }
 
 export function accountInstanceRoot(accountId: string, widgetCode: string, instanceId: string): string {
-  return `${accountWidgetRoot(accountId, widgetCode)}/${instanceId}`;
+  void widgetCode;
+  return `${accountInstancesRoot(accountId)}/${instanceId}`;
 }
 
 export function accountInstanceIndexKey(accountId: string): string {
-  return `${accountWidgetsRoot(accountId)}/index.json`;
+  return `${accountInstancesRoot(accountId)}/index.json`;
 }
 
 export function accountInstanceDocumentKey(accountId: string, widgetCode: string, instanceId: string): string {
@@ -72,13 +65,9 @@ export function accountInstanceSelectedOverlayPrefix(
 }
 
 export function accountInstanceRenderMetaLivePointerKey(accountId: string, widgetCode: string, instanceId: string, locale: string): string {
-  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/seo/meta/live/${locale}.json`;
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/published/seo/meta/live/${locale}.json`;
 }
 
 export function accountInstanceRenderMetaPackKey(accountId: string, widgetCode: string, instanceId: string, locale: string, metaFp: string): string {
-  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/seo/meta/${locale}/${metaFp}.json`;
-}
-
-export function publishedWidgetLookupKey(instanceId: string): string {
-  return `published/widgets/${instanceId}.json`;
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/published/seo/meta/${locale}/${metaFp}.json`;
 }

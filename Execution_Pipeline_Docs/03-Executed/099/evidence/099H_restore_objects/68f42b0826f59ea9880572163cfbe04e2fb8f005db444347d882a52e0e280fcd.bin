@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "2e3f8977ce48623e862f8aeab9876469349397101f6cb3ff0463cf6221796603",
+  "baseUpdatedAt": "2026-02-04T05:36:55.817Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "লোগো শোকেস উদাহরণসমূহ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "সাধারণ লোগো শোকেসের অবস্থান ও ব্যবহারক্ষেত্র দেখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "লোগো প্রদর্শনীর উদাহরণসমূহ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "সাধারণ অবস্থান ও ব্যবহারের ক্ষেত্রগুলো দেখুন।"
+    }
+  ],
+  "v": 1
+}

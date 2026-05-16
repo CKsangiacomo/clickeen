@@ -3,7 +3,6 @@ import {
   accountInstanceConfigKey,
   accountInstanceDocumentKey,
   accountInstancePublishKey,
-  accountWidgetDocumentKey,
 } from './keys';
 import { patchAccountInstanceIndexEntry, resolveAccountInstanceLocation } from './instance-index';
 import {
@@ -16,7 +15,6 @@ import { loadJson, putJson } from './storage';
 import { resolveWidgetCode } from '../widget-catalog';
 import type {
   AccountInstanceDocument,
-  AccountWidgetDocument,
   InstanceServeState,
   SavedRenderDocumentReadFailure,
   SavedRenderDocumentReadResult,
@@ -36,31 +34,6 @@ function normalizeMeta(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
-}
-
-async function ensureWidgetDocument(args: {
-  env: Env;
-  accountId: string;
-  widgetCode: string;
-  widgetType: string;
-  now: string;
-}): Promise<void> {
-  const key = accountWidgetDocumentKey(args.accountId, args.widgetCode);
-  const existing = await loadJson<AccountWidgetDocument>(args.env, key);
-  const createdAt =
-    existing && typeof existing === 'object' && typeof (existing as any).createdAt === 'string'
-      ? String((existing as any).createdAt)
-      : args.now;
-  await putJson(args.env, key, {
-    v: 1,
-    accountId: args.accountId,
-    widgetCode: args.widgetCode,
-    widgetType: args.widgetType,
-    status: 'active',
-    lockedReason: null,
-    createdAt,
-    updatedAt: args.now,
-  } satisfies AccountWidgetDocument);
 }
 
 function toSavedPointer(args: {
@@ -101,7 +74,6 @@ export async function writeSavedRenderConfig(args: {
   }
 
   const now = nowIso();
-  await ensureWidgetDocument({ env: args.env, accountId, widgetCode, widgetType, now });
   const configFp = await jsonSha256Hex(args.config);
   await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), args.config);
 

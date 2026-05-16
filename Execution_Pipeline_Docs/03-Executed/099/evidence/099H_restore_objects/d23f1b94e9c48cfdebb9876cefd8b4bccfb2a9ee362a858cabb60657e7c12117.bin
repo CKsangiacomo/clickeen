@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ উদাহরণ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "প্রতিটি শিল্পের জন্য বাস্তব-জগতের FAQ উদাহরণ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "শিল্পভিত্তিক FAQ উইজেটের উদাহরণ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ট্রাভেল, হসপিটালিটি ও সার্ভিস টিমগুলো কীভাবে একটি FAQ উইজেট দিয়ে বারবার আসা প্রশ্নের উত্তর দ্রুত দেয়—দেখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "হোটেল ও রিসোর্ট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "অতিথিরা আসার আগেই চেক-ইন, পার্কিং ও ব্রেকফাস্ট সংক্রান্ত প্রশ্নের উত্তর দিন—ফ্রন্ট-ডেস্কে বিঘ্ন কমান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "রেস্টুরেন্ট, ক্যাফে ও বার"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "মোবাইলে মেনুর তথ্য, অ্যালার্জেন ও সময়সূচি স্পষ্ট রাখুন—অতিথিরা দ্রুত সিদ্ধান্ত নেবে, স্টাফের বারবার ব্যাখ্যায় সময় কমবে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "ভ্যাকেশন রেন্টাল ও প্রপার্টি ম্যানেজার"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "একটি পাবলিশ ফ্লো দিয়ে সব প্রপার্টিতে চেক-ইন ধাপ, Wi‑Fi তথ্য ও হাউস রুলস একরকম রাখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "গ্লোবাল ভিজিটররা সঙ্গে সঙ্গে স্পষ্টতা চায়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "একবার পাবলিশ করুন, প্রথম ক্লিক থেকেই সঠিক ভাষায় উত্তর দেখান।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "ট্যুর অপারেটর ও ট্রাভেল এজেন্সি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "পিকআপ পয়েন্ট, ক্যানসেলেশন নিয়ম ও আবহাওয়া নীতিমালা আগে থেকেই পরিষ্কার করুন—যাতে আত্মবিশ্বাসের সঙ্গে বুকিং হয়।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "আকর্ষণীয় স্থান, মিউজিয়াম ও থিম পার্ক"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "ভিজিটর আসার আগে টিকিট, প্রবেশের নিয়ম ও অ্যাক্সেসিবিলিটি তথ্য পরিষ্কার করুন—সবার জন্য আগমন হবে আরও মসৃণ।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "একটি সহজ অপারেটিং লুপ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "পুনরাবৃত্ত প্রশ্ন একবার সংগ্রহ করুন, দ্রুত আপডেট পাবলিশ করুন, আর তথ্য বদলালে সব লাইভ পেজকে একসাথে সামঞ্জস্যে রাখুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "আপনার শীর্ষ প্রশ্নগুলো যোগ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "একবার পাবলিশ করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "সব ভাষা সিঙ্কে রাখুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "ভিজিটররা সিদ্ধান্ত নেওয়ার আগে যে প্রশ্নগুলো বারবার করে, সেগুলো দিয়ে শুরু করুন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "এক ক্লিকেই আপনার সর্বশেষ উত্তরগুলো সব পেজে লাইভ হয়ে যাবে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "বেস কনটেন্ট বদলালে অনুবাদও আপডেট হয়—আপনার বার্তা থাকে একদম একইসুরে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "প্রোডাকশন ব্যবহারের জন্য তৈরি"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "গ্লোবাল এজ স্পিড, নমনীয় এমবেড অপশন, আর সহজ পাবলিশ ফ্লো—যা উত্তরগুলো সবসময় আপ-টু-ডেট রাখে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "দ্রুত"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "নমনীয়"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "আপ-টু-ডেট"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "গ্লোবাল এজ ডেলিভারি।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "স্ট্যান্ডার্ড ও স্ক্রিপ্টবিহীন এমবেড অপশন।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "একবার পাবলিশ করলেই সব লাইভ পেজ আপডেট হবে।"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Clickeen দিয়ে সমাধান করুন"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "ফ্রি দিয়ে শুরু করুন, আপনার ব্র্যান্ড অনুযায়ী ডিজাইন মানিয়ে নিন, আর পেজজুড়ে স্কেল করে এমন একটি লাইভ FAQ পাবলিশ করুন।"
+    }
+  ],
+  "v": 1
+}

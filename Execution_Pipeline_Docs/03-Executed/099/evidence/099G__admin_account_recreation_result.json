@@ -1,0 +1,84 @@
+{
+  "adminAccountPublicId": "00000001",
+  "bucket": "tokyo-assets-dev",
+  "generatedAt": "2026-05-15T15:56:40.372Z",
+  "instances": [
+    {
+      "instanceId": "UZ3JEJSHII",
+      "oldInstanceId": "ins_01KR8R6ZYZBDXE0DT2FB8PB0NN",
+      "oldRoot": "accounts/00000000-0000-0000-0000-000000000100/widgets/faq/ins_01KR8R6ZYZBDXE0DT2FB8PB0NN",
+      "overlayCount": 28,
+      "seoMetaCount": 58,
+      "targetRoot": "accounts/00000001/instances/UZ3JEJSHII",
+      "widgetType": "faq"
+    },
+    {
+      "instanceId": "H7IF9M2K9B",
+      "oldInstanceId": "ins_01KR8R6ZYTPM6B3CHS8KZ0CEC9",
+      "oldRoot": "accounts/00000000-0000-0000-0000-000000000100/widgets/countdown/ins_01KR8R6ZYTPM6B3CHS8KZ0CEC9",
+      "overlayCount": 28,
+      "seoMetaCount": 0,
+      "targetRoot": "accounts/00000001/instances/H7IF9M2K9B",
+      "widgetType": "countdown"
+    },
+    {
+      "instanceId": "8FMVZFFPJV",
+      "oldInstanceId": "ins_01KR8R6ZZ07S5PMJVSRKM4M7K8",
+      "oldRoot": "accounts/00000000-0000-0000-0000-000000000100/widgets/logoshowcase/ins_01KR8R6ZZ07S5PMJVSRKM4M7K8",
+      "overlayCount": 0,
+      "seoMetaCount": 0,
+      "targetRoot": "accounts/00000001/instances/8FMVZFFPJV",
+      "widgetType": "logoshowcase"
+    }
+  ],
+  "mode": "remote",
+  "publicSmoke": {
+    "checks": [
+      {
+        "configStatus": 200,
+        "instanceId": "UZ3JEJSHII",
+        "liveStatus": 200,
+        "widgetType": "faq"
+      },
+      {
+        "configStatus": 200,
+        "instanceId": "H7IF9M2K9B",
+        "liveStatus": 200,
+        "widgetType": "countdown"
+      },
+      {
+        "configStatus": 200,
+        "instanceId": "8FMVZFFPJV",
+        "liveStatus": 200,
+        "widgetType": "logoshowcase"
+      }
+    ],
+    "skipped": false
+  },
+  "remoteVerification": {
+    "checks": [
+      {
+        "instanceId": "UZ3JEJSHII",
+        "overlays": 28,
+        "seoGeo": false,
+        "status": "published",
+        "widgetType": "faq"
+      },
+      {
+        "instanceId": "H7IF9M2K9B",
+        "overlays": 28,
+        "seoGeo": false,
+        "status": "published",
+        "widgetType": "countdown"
+      },
+      {
+        "instanceId": "8FMVZFFPJV",
+        "overlays": 0,
+        "seoGeo": false,
+        "status": "published",
+        "widgetType": "logoshowcase"
+      }
+    ],
+    "indexEntries": 3
+  }
+}

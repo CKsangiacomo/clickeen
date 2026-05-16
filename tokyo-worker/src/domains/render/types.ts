@@ -14,19 +14,6 @@ export type PublishedOverlayProjection = {
   languages: Record<string, string>;
 };
 
-export type WidgetStatus = 'active' | 'locked_over_plan';
-
-export type AccountWidgetDocument = {
-  v: 1;
-  accountId: string;
-  widgetCode: string;
-  widgetType: string;
-  status: WidgetStatus;
-  lockedReason: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type AccountInstanceDocument = {
   v: 1;
   id: string;
@@ -50,16 +37,6 @@ export type PublishDocument = {
   localePolicy?: LocalePolicy;
   overlays?: PublishedOverlayProjection;
   seoGeo?: boolean;
-  updatedAt: string;
-};
-
-export type PublishedWidgetLookupDocument = {
-  v: 1;
-  id: string;
-  accountId: string;
-  widgetCode: string;
-  widgetType: string;
-  status: 'published';
   updatedAt: string;
 };
 

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const instanceId = process.env.CK_VENICE_TEST_INSTANCE_ID || 'INST000001';
+const accountPublicId = process.env.CK_VENICE_TEST_ACCOUNT_PUBLIC_ID || '00000001';
 
 function loaderUrl(baseURL: string, path: string): string {
   return new URL(path, baseURL).toString();
@@ -24,12 +25,13 @@ test('default immutable loader mounts one iframe without host globals or console
     <script
       src="${loaderUrl(rootURL, '/embed/v2.0.0/loader.js')}"
       async
+      data-account-public-id="${accountPublicId}"
       data-instance-id="${instanceId}"
     ></script>
     </body></html>`);
 
   await expect(page.locator('iframe')).toHaveCount(1);
-  await expect(page.locator('iframe')).toHaveAttribute('src', new RegExp(`/widget/${instanceId}$`));
+  await expect(page.locator('iframe')).toHaveAttribute('src', new RegExp(`/widget/${accountPublicId}/${instanceId}$`));
   await expect
     .poll(() =>
       page.evaluate(() => ({
@@ -46,8 +48,8 @@ test('placeholder loader mounts multiple widgets without shared host globals', a
   const rootURL = requireBaseURL(baseURL);
   await page.setContent(`<!doctype html>
     <html><head><meta charset="utf-8" /></head><body>
-    <div data-clickeen-id="${instanceId}"></div>
-    <div data-clickeen-id="${instanceId}"></div>
+    <div data-account-public-id="${accountPublicId}" data-clickeen-id="${instanceId}"></div>
+    <div data-account-public-id="${accountPublicId}" data-clickeen-id="${instanceId}"></div>
     <script src="${loaderUrl(rootURL, '/embed/v2.0.0/loader.js')}" async></script>
     </body></html>`);
 
@@ -67,18 +69,27 @@ test('direct iframe snippet serves resolved widget html', async ({ page, baseURL
   const rootURL = requireBaseURL(baseURL);
   await page.setContent(`<!doctype html>
     <html><head><meta charset="utf-8" /></head><body>
-    <iframe src="${loaderUrl(rootURL, `/widget/${instanceId}`)}"></iframe>
+    <iframe src="${loaderUrl(rootURL, `/widget/${accountPublicId}/${instanceId}`)}"></iframe>
     </body></html>`);
 
   await expect(page.locator('iframe')).toHaveCount(1);
   await expect(page.frameLocator('iframe').locator('[data-ck-widget="faq"]')).toHaveCount(1);
 });
 
+test('legacy instance-only public routes miss', async ({ request, baseURL }) => {
+  const rootURL = requireBaseURL(baseURL);
+  const widgetRes = await request.get(loaderUrl(rootURL, `/widget/${instanceId}`));
+  expect(widgetRes.status()).toBe(404);
+
+  const renderRes = await request.get(loaderUrl(rootURL, `/renders/widgets/${instanceId}/live/r.json`));
+  expect(renderRes.status()).toBe(404);
+});
+
 test('direct iframe snippet applies selected published language overlay', async ({ page, baseURL }) => {
   const rootURL = requireBaseURL(baseURL);
   await page.setContent(`<!doctype html>
     <html><head><meta charset="utf-8" /></head><body>
-    <iframe src="${loaderUrl(rootURL, `/widget/${instanceId}?locale=it`)}"></iframe>
+    <iframe src="${loaderUrl(rootURL, `/widget/${accountPublicId}/${instanceId}?locale=it`)}"></iframe>
     </body></html>`);
 
   const frame = page.frameLocator('iframe');
@@ -96,6 +107,7 @@ test('seo geo loader preserves explicit metadata enhancement path', async ({ pag
     <script
       src="${loaderUrl(rootURL, '/embed/v2.0.0/seo-geo-loader.js')}"
       async
+      data-account-public-id="${accountPublicId}"
       data-instance-id="${instanceId}"
       data-ck-optimization="seo-geo"
     ></script>
@@ -119,6 +131,7 @@ test('csp frame blocking produces a host-page error card', async ({ page, baseUR
     <script
       src="${loaderUrl(rootURL, '/embed/v2.0.0/loader.js')}"
       async
+      data-account-public-id="${accountPublicId}"
       data-instance-id="${instanceId}"
     ></script>
     </body></html>`,

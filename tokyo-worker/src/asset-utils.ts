@@ -157,6 +157,63 @@ function normalizeTokyoFontKey(pathname: string): string | null {
   return normalized;
 }
 
+const TOKYO_DEPLOY_ASSET_ROUTES: ReadonlyArray<{ prefix: string; keyPrefix: string }> = [
+  { prefix: '/widgets/', keyPrefix: 'product/widgets/' },
+  { prefix: '/dieter/', keyPrefix: 'dieter/' },
+  { prefix: '/themes/', keyPrefix: 'product/themes/' },
+  { prefix: '/prague/l10n/', keyPrefix: 'prague/l10n/' },
+  { prefix: '/prague/assets/', keyPrefix: 'prague/assets/' },
+];
+
+function normalizeDeployAssetRelativePath(raw: string): string | null {
+  let decoded = '';
+  try {
+    decoded = decodeURIComponent(String(raw || '').trim());
+  } catch {
+    return null;
+  }
+  if (!decoded) return null;
+  const segments = decoded.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return null;
+  return segments.join('/');
+}
+
+function normalizeTokyoDeployAssetKey(pathname: string): string | null {
+  const normalizedPathname = String(pathname || '').trim();
+  for (const route of TOKYO_DEPLOY_ASSET_ROUTES) {
+    if (!normalizedPathname.startsWith(route.prefix)) continue;
+    const relativePath = normalizeDeployAssetRelativePath(normalizedPathname.slice(route.prefix.length));
+    if (!relativePath) return null;
+    return `${route.keyPrefix}${relativePath}`;
+  }
+  return null;
+}
+
+function cacheControlForDeployAssetKey(key: string): string {
+  if (key.startsWith('prague/l10n/')) {
+    if (key.endsWith('/index.json')) return 'public, max-age=300, stale-while-revalidate=600';
+    return 'public, max-age=31536000, immutable';
+  }
+  return 'public, max-age=0, must-revalidate';
+}
+
+export async function handleGetTokyoDeployAsset(env: Env, pathname: string): Promise<Response | null> {
+  const key = normalizeTokyoDeployAssetKey(pathname);
+  if (!key) return null;
+  const obj = await env.TOKYO_R2.get(key);
+  if (!obj) return new Response('Not found', { status: 404 });
+
+  const ext = key.split('.').pop() || '';
+  const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
+  const cacheControl = cacheControlForDeployAssetKey(key);
+  const headers = new Headers();
+  headers.set('content-type', contentType);
+  headers.set('cache-control', cacheControl);
+  headers.set('cdn-cache-control', cacheControl);
+  headers.set('cloudflare-cdn-cache-control', cacheControl);
+  return new Response(obj.body, { status: 200, headers });
+}
+
 export async function handleGetTokyoFontAsset(env: Env, pathname: string): Promise<Response> {
   const key = normalizeTokyoFontKey(pathname);
   if (!key) return new Response('Not found', { status: 404 });

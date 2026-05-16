@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "141ec2ccd3097d0a5ff351e4a42f00d8f6062b3462eb6166ff3a83a85f7d1b1c",
+  "baseUpdatedAt": "2026-02-04T05:36:55.819Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Preços do portfólio de logótipos - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Preços simples para o widget de portfólio de logótipos. Comece grátis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Preços da vitrine de logotipos"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Comece grátis. Faça upgrade quando quiser mais widgets e sem branding."
+    }
+  ],
+  "v": 1
+}

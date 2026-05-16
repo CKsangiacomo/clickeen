@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "2117e442f13493f814e8ccb8d70d962e3c7ed0bd1ac039db30f59a3bdda46f05",
+  "baseUpdatedAt": "2026-02-04T17:11:45.000Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Bảng giá FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Bảng giá đơn giản cho widget FAQ. Nâng cấp khi bạn cần nhiều hơn."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Bảng giá FAQ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Các gói đơn giản. Nâng cấp khi bạn cần thêm nhiều widget và gỡ thương hiệu."
+    }
+  ],
+  "v": 1
+}

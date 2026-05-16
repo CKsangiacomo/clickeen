@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Mga halimbawa ng FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Mga halimbawa ng FAQ sa totoong mundo para sa bawat industriya."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Mga halimbawa ng FAQ widget ayon sa industriya"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Tingnan kung paano gumagamit ang mga team sa travel, hospitality, at service businesses ng iisang FAQ widget para mas mabilis masagot ang paulit-ulit na tanong."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Mga Hotel at Resort"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Sagutin na ang mga tanong tungkol sa check-in, parking, at almusal bago pa dumating ang guests at bawasan ang abala sa front desk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Mga Restaurant, Cafe at Bar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Panatilihing malinaw sa mobile ang menu details, allergens, at oras ng operasyon para mas mabilis makapagdesisyon ang guests at mas kaunti ang back-and-forth sa staff."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Mga Vacation Rental at Property Manager"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Panatilihing pare-pareho ang check-in steps, Wi‑Fi details, at house rules sa lahat ng property gamit ang iisang publish flow."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Inaasahan ng mga bisitang mula sa iba’t ibang bansa ang malinaw na sagot agad"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Mag-publish nang isang beses at maghatid ng mga sagot sa tamang wika mula sa unang click."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Mga Tour Operator at Travel Agency"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Ayusin na agad ang pickup points, cancellation rules, at weather policies para makapag-book ang customers nang may kumpiyansa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Mga Attraction, Museum at Theme Park"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Linawin ang tickets, entry rules, at accessibility info bago pa dumating ang visitors para mas smooth ang pagdating para sa lahat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Isang simpleng operating loop"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Kolektahin ang paulit-ulit na tanong nang minsan, mag-publish ng updates nang mabilis, at panatilihing tugma ang bawat live page habang nagbabago ang mga detalye."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Idagdag ang mga pangunahing tanong"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Mag-publish nang isang beses"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Panatilihing naka-sync ang bawat wika"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Magsimula sa mga paulit-ulit na tanong na itinatanong ng visitors bago sila magdesisyon."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Isang click lang at live na ang pinakabagong sagot mo sa bawat page."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Kapag may nagbago sa base content, nare-refresh ang mga translation para laging tugma ang mensahe mo."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Dinisenyo para sa production"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Mabilis sa global edge, flexible na embed options, at simpleng publish flow para laging updated ang mga sagot."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Mabilis"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Flexible"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Laging updated"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Pandaigdigang edge delivery."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Standard at scriptless na mga embed option."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Mag-publish nang isang beses para ma-update ang bawat live page."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Ayusin ito gamit ang Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Magsimula nang libre, iangkop ang disenyo sa brand mo, at mag-publish ng live FAQ na kayang mag-scale sa maraming page."
+    }
+  ],
+  "v": 1
+}

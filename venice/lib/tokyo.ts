@@ -33,7 +33,7 @@ export function getTokyoBase() {
   }
 
   // Fail-fast in deployed environments: Tokyo base is an infrastructure contract and must be explicit.
-  throw new Error('[Venice] Missing TOKYO_URL (base URL for Tokyo widget assets)');
+  throw new Error('[Venice] Missing TOKYO_URL (base URL for Tokyo widget media)');
 }
 
 type NextRevalidate = { revalidate?: number };
@@ -44,12 +44,15 @@ function resolveTokyoCache(pathname: string): { cache: RequestCache; next?: Next
   const isI18nManifest = isI18n && normalized.endsWith('/manifest.json');
   const isAccountAsset = normalized.startsWith('/assets/account/');
   const isRender = normalized.startsWith('/renders/');
-  const isRenderLivePointer = isRender && /^\/renders\/widgets\/[^/]+\/live\/r\.json$/i.test(normalized);
-  const isRenderConfigPack = isRender && /^\/renders\/widgets\/[^/]+\/config\.json$/i.test(normalized);
-  const isRenderOverlay = isRender && /^\/renders\/widgets\/[^/]+\/overlays\/[^/]+\.json$/i.test(normalized);
-  const isRenderMetaLivePointer = isRender && /^\/renders\/widgets\/[^/]+\/meta\/live\/[^/]+\.json$/i.test(normalized);
+  const accountInstanceRender = String.raw`\/renders\/accounts\/[0-9A-Z]{8}\/instances\/[0-9A-Z]{10}`;
+  const isRenderLivePointer = isRender && new RegExp(`^${accountInstanceRender}\\/live\\/r\\.json$`, 'i').test(normalized);
+  const isRenderConfigPack = isRender && new RegExp(`^${accountInstanceRender}\\/config\\.json$`, 'i').test(normalized);
+  const isRenderOverlay =
+    isRender && new RegExp(`^${accountInstanceRender}\\/overlays\\/[0-9A-Z]{35}\\.json$`, 'i').test(normalized);
+  const isRenderMetaLivePointer =
+    isRender && new RegExp(`^${accountInstanceRender}\\/meta\\/live\\/[^/]+\\.json$`, 'i').test(normalized);
   const isRenderMetaPack =
-    isRender && /^\/renders\/widgets\/[^/]+\/meta\/[^/]+\/[a-f0-9]{64}\.json$/i.test(normalized);
+    isRender && new RegExp(`^${accountInstanceRender}\\/meta\\/[^/]+\\/[a-f0-9]{64}\\.json$`, 'i').test(normalized);
   const isRenderPack = isRenderConfigPack || isRenderMetaPack;
   const isDieter = normalized.startsWith('/dieter/');
   const isWidget = normalized.startsWith('/widgets/');

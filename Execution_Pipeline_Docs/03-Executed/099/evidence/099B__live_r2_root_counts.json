@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-05-15T12:58:01.369Z",
+  "total": 2640,
+  "roots": {
+    "accounts": 810,
+    "dieter": 253,
+    "fonts": 7,
+    "l10n": 1041,
+    "prague": 434,
+    "product": 67,
+    "public": 18,
+    "published": 8,
+    "widgets": 2
+  }
+}

@@ -1,0 +1,16 @@
+tokyo-worker/src/asset-utils.ts:161:  { prefix: '/widgets/', keyPrefix: 'product/widgets/' },
+tokyo-worker/src/routes/render-routes.test.ts:45:    [`accounts/${ACCOUNT_ID}/instances/index.json`]: {
+tokyo-worker/src/routes/render-routes.test.ts:61:    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/publish.json`]: {
+tokyo-worker/src/routes/render-routes.test.ts:76:    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/published/config.json`]: {
+tokyo-worker/src/routes/render-routes.test.ts:84:    `/renders/accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/live/r.json`,
+tokyo-worker/src/routes/render-routes.test.ts:94:    `/renders/accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/config.json`,
+tokyo-worker/src/domains/render/live-surface.ts:158:            metaLiveBase: `published/seo/meta/live`,
+tokyo-worker/src/domains/render/live-surface.ts:159:            metaPacksBase: `published/seo/meta`,
+tokyo-worker/src/domains/render/keys.ts:2:  return `accounts/${accountId}/instances`;
+tokyo-worker/src/domains/render/keys.ts:27:  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/published/config.json`;
+tokyo-worker/src/domains/render/keys.ts:68:  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/published/seo/meta/live/${locale}.json`;
+tokyo-worker/src/domains/render/keys.ts:72:  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/published/seo/meta/${locale}/${metaFp}.json`;
+tokyo-worker/src/domains/widget-catalog.ts:4:import widgetsManifest from "../../../tokyo/product/widgets/manifest.json";
+tokyo-worker/src/generated/widget-seo-geo-registry.ts:2:import type { SeoGeoMetaPackGenerator } from "../../../tokyo/product/widgets/shared/seo-geo";
+tokyo-worker/src/generated/widget-seo-geo-registry.ts:4:import { generateSeoGeoMetaPack as faqSeoGeoMetaPack } from "../../../tokyo/product/widgets/faq/seo-geo";
+tokyo-worker/src/generated/widget-seo-geo-registry.ts:5:import { generateSeoGeoMetaPack as countdownSeoGeoMetaPack } from "../../../tokyo/product/widgets/countdown/seo-geo";

@@ -379,11 +379,11 @@ Defaults are the authoritative state shape. They must be complete (no missing pa
 If any item below is undecided, the implementer must stop and ask; do not guess.
 We intentionally ship **no custom tint** in v1. `appearance.logoLook` is limited to `original | grayscale` (no `customColor` mode).
 
-### Asset handling (implemented contract)
+### Asset Handling
 - **Upload path**: `dropdown-upload` uploads immediately through the Roma account asset gateway (`POST /api/account/assets/upload`), which forwards to Tokyo-worker over the private asset-control binding.
-- **Persistence**: canonical uploaded-logo identity is stored as `strips[i].logos[j].asset.assetId`.
-- **Runtime**: widget consumes materialized `logoFill` only. If the asset cannot be materialized, the logo is missing (no fallback/healing).
-- **No replace flow**: changing a logo file creates a new immutable asset ref.
+- **Persistence**: uploaded logos are account assets. Widget instance config stores a reference to the account asset.
+- **Runtime**: generated widget output references account assets. If an asset cannot be resolved, the logo is missing at the named boundary.
+- **Replace flow**: replacing the account asset bytes keeps the same account asset reference and must not require rebuilding every instance that references it.
 
 ### Global defaults (apply to all types)
 The full defaults object (used verbatim as `spec.json` → `defaults`):

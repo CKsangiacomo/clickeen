@@ -1,7 +1,7 @@
 import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
 import type { CompiledPanel, CompiledWidget, WidgetPresets } from './types';
 import { RawWidget, decodeHtmlEntities, parseTooldrawerAttributes, parsePanels } from './compiler.shared';
-import { buildWidgetAssets } from './compiler/assets';
+import { buildWidgetMedia } from './compiler/media';
 import { compileControlsFromPanels, expandTooldrawerClusters, groupKeyToLabel } from './compiler/controls';
 import { buildEditorHtmlLines } from './compiler/editor-contract';
 import { buildContext, loadComponentStencil, renderComponentStencil } from './compiler/stencils';
@@ -349,7 +349,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     }),
   );
 
-  const assets = await buildWidgetAssets({
+  const media = await buildWidgetMedia({
     widgetname,
     requiredUsages: parsed.usages.required,
     optionalUsages: parsed.usages.optional,
@@ -363,6 +363,6 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     controls,
     ...(presets ? { presets } : {}),
     ...(normalization ? { normalization } : {}),
-    assets,
+    media,
   };
 }

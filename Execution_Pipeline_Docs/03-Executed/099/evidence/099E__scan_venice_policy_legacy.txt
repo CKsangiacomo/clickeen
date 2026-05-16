@@ -1,0 +1,9 @@
+venice/lib/html.ts:1:export function escapeHtml(value: string): string {
+venice/lib/html.ts:12:    return escapeHtml(JSON.stringify(value, null, 2));
+venice/lib/html.ts:14:    return escapeHtml(String(value));
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:19:import { escapeHtml } from '@venice/lib/html';
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:111:  return withRuntime.replace(/<html(\b[^>]*)\blang=(["']).*?\2/i, `<html$1 lang="${escapeHtml(locale)}"`);
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:149:    <title>${escapeHtml(title)}</title>
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:163:        <h1 class="ck-error__title">${escapeHtml(title)}</h1>
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:164:        <p class="ck-error__body">${escapeHtml(body)}</p>
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:165:        ${detail ? `<pre class="ck-error__detail">${escapeHtml(detail)}</pre>` : ''}

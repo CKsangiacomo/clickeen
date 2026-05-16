@@ -8,7 +8,8 @@
     "build:cf": "node ../scripts/build-roma-cf.mjs",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm typecheck"
   },
   "dependencies": {
     "@clickeen/bob": "workspace:*",

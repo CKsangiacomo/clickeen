@@ -5,6 +5,10 @@
 
 ---
 
+## Instance Reference Contract
+
+FAQ Prague visuals that embed real widgets must reference normal account-owned instances with `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`. Admin/example FAQ instances use `accountPublicId: "00000001"` and live under `accounts/00000001/instances/{instanceId}/`; this PRD must not introduce `wgt_*`, `ins_*`, private UUID account folders, or a hidden instance-only lookup.
+
 ## 1. Overview Page (`/widgets/faq`)
 
 ### Configuration

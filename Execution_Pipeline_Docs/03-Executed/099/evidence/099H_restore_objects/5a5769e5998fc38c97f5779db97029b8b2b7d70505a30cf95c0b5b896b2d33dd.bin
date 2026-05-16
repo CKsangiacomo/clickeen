@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Contoh FAQ - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Contoh FAQ dunia nyata untuk setiap industri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Contoh widget FAQ berdasarkan industri"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Lihat bagaimana tim di industri perjalanan, hospitality, dan bisnis layanan menggunakan satu widget FAQ untuk menjawab pertanyaan berulang lebih cepat."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Hotel & Resor"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Jawab pertanyaan tentang check-in, parkir, dan sarapan sebelum tamu datang, serta kurangi interupsi di front desk."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Restoran, Kafe & Bar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Tampilkan detail menu, alergen, dan jam operasional dengan jelas di mobile agar tamu lebih cepat memutuskan tanpa bolak-balik tanya staf."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Sewa Liburan & Pengelola Properti"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Samakan langkah check-in, detail Wi‑Fi, dan aturan rumah di semua properti dengan satu alur publikasi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Pengunjung global mengharapkan kejelasan instan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Publikasikan sekali dan sajikan jawaban dalam bahasa yang tepat sejak klik pertama."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Operator Tur & Agen Perjalanan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Jelaskan titik penjemputan, aturan pembatalan, dan kebijakan cuaca di awal agar keputusan pemesanan dibuat dengan percaya diri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Atraksi, Museum & Taman Hiburan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Perjelas tiket, aturan masuk, dan info aksesibilitas sebelum pengunjung datang, agar proses kedatangan lebih lancar untuk semua."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Siklus operasional yang sederhana"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Tangkap pertanyaan berulang sekali, publikasikan pembaruan dengan cepat, dan jaga setiap halaman live tetap selaras saat detail berubah."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Tambahkan pertanyaan teratas Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Publikasikan sekali"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Sinkronkan semua bahasa"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Mulai dari pertanyaan yang sering ditanyakan pengunjung sebelum mereka memutuskan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Satu klik membuat jawaban terbaru Anda tayang di setiap halaman."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Saat konten dasar berubah, terjemahan ikut diperbarui sehingga pesan Anda tetap konsisten."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Dibuat untuk penggunaan produksi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Kecepatan edge global, opsi embed yang fleksibel, dan alur publikasi sederhana yang menjaga jawaban tetap terbaru."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Cepat"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Fleksibel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Selalu terbaru"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Pengiriman edge global."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Opsi embed standar dan tanpa script."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Publikasikan sekali untuk memperbarui setiap halaman live."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Selesaikan dengan Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Mulai gratis, sesuaikan desain dengan brand Anda, dan publikasikan FAQ live yang dapat diskalakan di berbagai halaman."
+    }
+  ],
+  "v": 1
+}

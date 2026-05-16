@@ -1,0 +1,50 @@
+.github/workflows/cloud-dev-roma-app.yml:11:      - "tokyo/product/widgets/**"
+.github/workflows/cloud-dev-roma-app.yml:12:      - "tokyo/product/dieter/**"
+.github/workflows/cloud-dev-roma-app.yml:13:      - "tokyo/product/fonts/**"
+prague/src/lib/widgetCatalog.ts:2:import widgetsManifest from '../../../tokyo/product/widgets/manifest.json';
+.github/workflows/cloud-dev-workers.yml:10:      - "tokyo/product/widgets/**"
+.github/workflows/cloud-dev-workers.yml:11:      - "tokyo/product/fonts/**"
+.github/workflows/cloud-dev-workers.yml:13:      - "tokyo/product/dieter/**"
+.github/workflows/cloud-dev-prague-content.yml:8:      - "tokyo/prague/l10n/**"
+.github/workflows/cloud-dev-prague-content.yml:66:          const indexUrl = `${base}/prague/l10n/widgets/faq/index.json`;
+.github/workflows/cloud-dev-prague-content.yml:81:          const overlayUrl = `${base}/prague/l10n/widgets/faq/locale/fr/${encodeURIComponent(fingerprint)}.ops.json`;
+.github/workflows/cloud-dev-prague-app.yml:13:      - "tokyo/product/widgets/**"
+.github/workflows/cloud-dev-prague-app.yml:15:      - "tokyo/prague/l10n/**"
+tokyo-worker/src/domains/widget-catalog.ts:4:import widgetsManifest from "../../../tokyo/product/widgets/manifest.json";
+tokyo-worker/src/asset-utils.ts:161:  { prefix: '/widgets/', keyPrefix: 'product/widgets/' },
+tokyo-worker/src/asset-utils.ts:164:  { prefix: '/prague/l10n/', keyPrefix: 'prague/l10n/' },
+tokyo-worker/src/asset-utils.ts:193:  if (key.startsWith('prague/l10n/')) {
+tokyo/_redirects:1:/widgets/* /product/widgets/:splat 200
+tokyo-worker/src/generated/widget-seo-geo-registry.ts:2:import type { SeoGeoMetaPackGenerator } from "../../../tokyo/product/widgets/shared/seo-geo";
+tokyo-worker/src/generated/widget-seo-geo-registry.ts:4:import { generateSeoGeoMetaPack as faqSeoGeoMetaPack } from "../../../tokyo/product/widgets/faq/seo-geo";
+tokyo-worker/src/generated/widget-seo-geo-registry.ts:5:import { generateSeoGeoMetaPack as countdownSeoGeoMetaPack } from "../../../tokyo/product/widgets/countdown/seo-geo";
+tokyo/dev-server.mjs:8: *   - GET /dieter/**      → static files from tokyo/product/dieter/**
+tokyo/dev-server.mjs:10: *   - GET /fonts/**       → static files from tokyo/product/fonts/**
+tokyo/dev-server.mjs:12: *   - GET /widgets/**     → static files from tokyo/product/widgets/**
+tokyo/dev-server.mjs:13: *   - GET /prague/l10n/** → static files from tokyo/prague/l10n/**
+tokyo/dev-server.mjs:301:  if (prefix === '/prague/l10n/') return { root: path.join(pragueDir, 'l10n'), relativePathPosix };
+tokyo/dev-server.mjs:340:    if (prefix === '/l10n/' || prefix === '/prague/l10n/') {
+tokyo/dev-server.mjs:498:    serveStatic(req, res, '/prague/l10n/') ||
+scripts/build-dieter.js:3: Build @ck/dieter artifacts directly into tokyo/product/dieter:
+scripts/build-dieter.js:29:    // don't dirty `tokyo/product/dieter/manifest.json` on every unrelated commit.
+tokyo-worker/wrangler.toml:11:  { pattern = "tokyo.dev.clickeen.com/prague/l10n/*", zone_name = "clickeen.com" },
+scripts/dev-up.sh:266:  local widgets_dir="$ROOT_DIR/tokyo/product/widgets"
+scripts/dev-up.sh:278:    # Skip non-widget support folders in tokyo/product/widgets.
+scripts/tokyo-fonts-sync.mjs:101:    console.log('[tokyo-fonts-sync] No files found under tokyo/product/fonts; nothing to sync.');
+scripts/prd99a-r2-inventory.mjs:105:        reason: "accounts must never own widget software; widgets live under product/widgets",
+scripts/prd99a-r2-inventory.mjs:142:      reason: "legacy root widget software; PRD99 serves widget software from product/widgets",
+scripts/tokyo-r2-deploy-sync.mjs:34:  { source: 'tokyo/product/widgets', target: 'product/widgets' },
+scripts/tokyo-r2-deploy-sync.mjs:37:  { source: 'tokyo/product/dieter', target: 'dieter' },
+scripts/tokyo-r2-deploy-sync.mjs:38:  { source: 'tokyo/product/fonts', target: 'fonts' },
+scripts/build-widget-catalog.mjs:9:const widgetsRoot = path.join(repoRoot, "tokyo/product/widgets");
+scripts/build-widget-catalog.mjs:214:    return `import { generateSeoGeoMetaPack as ${alias} } from "../../../tokyo/product/widgets/${widgetType}/seo-geo";`;
+scripts/build-widget-catalog.mjs:226:import type { SeoGeoMetaPackGenerator } from "../../../tokyo/product/widgets/shared/seo-geo";
+tokyo/product/widgets/logoshowcase/agent.md:13:Set by the global Header primitive (`tokyo/product/widgets/shared/header.js`):
+tokyo/product/widgets/logoshowcase/agent.md:119:- Header richtext is sanitized by `tokyo/product/widgets/shared/header.js`:
+tokyo/product/widgets/logoshowcase/agent.md:127:- It is injected globally by `tokyo/product/widgets/shared/branding.js` into the closest `.pod` as `.ck-branding`.
+tokyo/prague/assets/share-icons/README.md:5:- **Functional glyphs** (`share.svg`, `copy.svg`, `sms.svg`, `email.svg`, `more.svg`) are copied from the Dieter icon set at `tokyo/product/dieter/icons/svg/`.
+tokyo/product/widgets/faq/agent.md:136:- Header richtext is sanitized by `tokyo/product/widgets/shared/header.js`:
+tokyo/product/widgets/faq/agent.md:143:- It is injected globally by `tokyo/product/widgets/shared/branding.js` into the closest `.pod` as `.ck-branding`.
+tokyo/product/widgets/faq/agent.md:220:| `behavior.showBacklink` | `.ck-branding` | dom | `tokyo/product/widgets/shared/branding.js` |
+tokyo/product/widgets/countdown/agent.md:16:Set by shared Header primitive (`tokyo/product/widgets/shared/header.js`):
+tokyo/product/widgets/countdown/agent.md:20:Set by shared Stage/Pod primitive (`tokyo/product/widgets/shared/stagePod.js`):

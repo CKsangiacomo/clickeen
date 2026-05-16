@@ -8,7 +8,6 @@ import type {
   LocalePolicy,
   PublishDocument,
   PublishedOverlayProjection,
-  PublishedWidgetLookupDocument,
   SavedRenderPointer,
 } from './types';
 import { normalizeFingerprint, normalizeStorageId } from './utils';
@@ -112,18 +111,6 @@ export function normalizePublishDocument(raw: unknown): PublishDocument | null {
     ...(payload.seoGeo === true ? { seoGeo: true } : {}),
     updatedAt,
   };
-}
-
-export function normalizePublishedWidgetLookupDocument(raw: unknown): PublishedWidgetLookupDocument | null {
-  const payload = asRecord(raw);
-  if (!payload || payload.v !== 1 || payload.status !== 'published') return null;
-  const id = normalizeStorageId(payload.id) ?? '';
-  const accountId = normalizeStorageId(payload.accountId) ?? '';
-  const widgetCode = asTrimmedString(payload.widgetCode) ?? '';
-  const widgetType = asTrimmedString(payload.widgetType) ?? '';
-  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
-  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || !isWidgetOverlayCode(widgetCode) || !widgetType || !updatedAt) return null;
-  return { v: 1, id, accountId, widgetCode, widgetType, status: 'published', updatedAt };
 }
 
 export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | null {

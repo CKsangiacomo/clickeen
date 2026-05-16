@@ -3,7 +3,7 @@ import { sha256Hex } from '@clickeen/ck-contracts/security';
 import { parseLimitsSpec } from '@clickeen/ck-policy';
 import { compileWidgetServer } from '../compiler.server';
 import type { RawWidget } from '../compiler.shared';
-import { requireTokyoUrl } from '../compiler/assets';
+import { requireTokyoUrl } from '../compiler/media';
 import { resolveCorsHeaders } from './cors';
 
 type CompiledWidgetPayload = Awaited<ReturnType<typeof compileWidgetServer>> & { limits: unknown };

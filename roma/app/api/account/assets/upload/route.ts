@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizeAccountAssetRecord } from '@clickeen/ck-contracts';
+import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   accountAssetUploadOptionsResponse,
   finalizeAccountAssetResponse,
   parseJsonOrNull,
   resolveCurrentAccountAssetGatewayContext,
 } from '@roma/lib/account-assets-gateway';
+import { readAccountStorageBytesUsed } from '@roma/lib/account-storage-usage';
 import {
   buildTokyoAssetControlHeaders,
   fetchTokyoAssetControl,
@@ -15,6 +17,31 @@ export const runtime = 'edge';
 
 export function OPTIONS() {
   return accountAssetUploadOptionsResponse();
+}
+
+function resolvePositiveLimit(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.trunc(value) : null;
+}
+
+function accountLimitResponse(args: {
+  request: NextRequest;
+  setCookies: Parameters<typeof finalizeAccountAssetResponse>[0]['setCookies'];
+  detail: string;
+}) {
+  return finalizeAccountAssetResponse({
+    request: args.request,
+    response: NextResponse.json(
+      {
+        error: {
+          kind: 'DENY',
+          reasonKey: 'coreui.upsell.reason.limitReached',
+          detail: args.detail,
+        },
+      },
+      { status: 403 },
+    ),
+    setCookies: args.setCookies,
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -36,6 +63,67 @@ export async function POST(request: NextRequest) {
       ),
       setCookies: gateway.value.sessionSetCookies,
     });
+  }
+
+  const policy = resolvePolicyFromEntitlementsSnapshot({
+    profile: gateway.value.authzPayload.profile,
+    role: gateway.value.authzPayload.role,
+    entitlements: gateway.value.authzPayload.entitlements ?? null,
+  });
+  const uploadSizeLimit = resolvePositiveLimit(policy.limits['uploads.size.max']);
+  const storageLimit = resolvePositiveLimit(policy.limits['storage.bytes.max']);
+  const uploadBytes = contentLength !== null && Number.isFinite(contentLength) ? Math.trunc(contentLength) : null;
+
+  if ((uploadSizeLimit !== null || storageLimit !== null) && uploadBytes === null) {
+    return finalizeAccountAssetResponse({
+      request,
+      response: NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.payload.invalid',
+            detail: 'content_length_required_for_account_asset_limits',
+          },
+        },
+        { status: 411 },
+      ),
+      setCookies: gateway.value.sessionSetCookies,
+    });
+  }
+
+  if (uploadBytes !== null && uploadSizeLimit !== null && uploadBytes > uploadSizeLimit) {
+    return accountLimitResponse({
+      request,
+      setCookies: gateway.value.sessionSetCookies,
+      detail: 'uploads.size.max',
+    });
+  }
+
+  if (uploadBytes !== null && storageLimit !== null) {
+    try {
+      const storageBytesUsed = await readAccountStorageBytesUsed({
+        accountId: gateway.value.accountId,
+        accountCapsule: gateway.value.accountCapsule,
+        requestId: gateway.value.requestId,
+      });
+      if (storageBytesUsed + uploadBytes > storageLimit) {
+        return accountLimitResponse({
+          request,
+          setCookies: gateway.value.sessionSetCookies,
+          detail: 'storage.bytes.max',
+        });
+      }
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      return finalizeAccountAssetResponse({
+        request,
+        response: NextResponse.json(
+          { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'roma.errors.proxy.tokyo_unavailable', detail } },
+          { status: 502 },
+        ),
+        setCookies: gateway.value.sessionSetCookies,
+      });
+    }
   }
 
   const bodyStream = request.body;

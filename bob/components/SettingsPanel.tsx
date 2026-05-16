@@ -199,7 +199,7 @@ export function SettingsPanel() {
         instanceData={session.instanceData}
         applyOps={session.applyOps}
         lastUpdate={session.lastUpdate}
-        dieterAssets={compiled.assets.dieter}
+        dieterMedia={compiled.media.dieter}
         header={
           <div className="settings-panel__fullwidth">
             <button

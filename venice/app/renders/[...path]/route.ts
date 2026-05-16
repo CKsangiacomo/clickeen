@@ -1,3 +1,7 @@
+import {
+  isCompactAccountPublicId,
+  isCompactInstanceId,
+} from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeTokyoPathParts, proxyTokyoPath } from '@venice/lib/tokyo-proxy';
 
 export const runtime = 'edge';
@@ -8,20 +12,24 @@ const LOCALE_JSON_RE = /^[A-Za-z0-9_-]+\.json$/;
 const OVERLAY_ID_JSON_RE = /^[0-9A-Z]{35}\.json$/;
 
 function isAllowedRenderPath(parts: string[]): boolean {
-  if (parts[0] !== 'widgets') return false;
-  const instanceId = parts[1] || '';
-  if (!instanceId) return false;
+  if (parts[0] !== 'accounts') return false;
+  const accountPublicId = parts[1] || '';
+  if (!isCompactAccountPublicId(accountPublicId)) return false;
+  if (parts[2] !== 'instances') return false;
+  const instanceId = parts[3] || '';
+  if (!isCompactInstanceId(instanceId)) return false;
+  const tail = parts.slice(4);
 
-  if (parts.length === 3) {
-    return parts[2] === 'config.json';
+  if (tail.length === 1) {
+    return tail[0] === 'config.json';
   }
-  if (parts.length === 4) {
-    if (parts[2] === 'overlays') return OVERLAY_ID_JSON_RE.test(parts[3] || '');
-    return parts[2] === 'live' && parts[3] === 'r.json';
+  if (tail.length === 2) {
+    if (tail[0] === 'overlays') return OVERLAY_ID_JSON_RE.test(tail[1] || '');
+    return tail[0] === 'live' && tail[1] === 'r.json';
   }
-  if (parts.length === 5 && parts[2] === 'meta') {
-    if (parts[3] === 'live') return LOCALE_JSON_RE.test(parts[4] || '');
-    return parts[3] !== 'live' && META_FP_RE.test(parts[4] || '');
+  if (tail.length === 3 && tail[0] === 'meta') {
+    if (tail[1] === 'live') return LOCALE_JSON_RE.test(tail[2] || '');
+    return tail[1] !== 'live' && META_FP_RE.test(tail[2] || '');
   }
 
   return false;

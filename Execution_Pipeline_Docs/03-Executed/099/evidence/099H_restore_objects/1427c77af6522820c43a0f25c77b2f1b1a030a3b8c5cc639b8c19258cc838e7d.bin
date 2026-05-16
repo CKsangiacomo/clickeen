@@ -1,0 +1,27 @@
+{
+  "baseFingerprint": "d83b4036d7a0bcac6310d5bfd2bc0b96db54f71371b849cb5aac64713eabee8a",
+  "baseUpdatedAt": "2026-02-04T05:36:55.804Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "ตัวอย่างการนับถอยหลัง - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "ตัวอย่างตัวจับเวลานับถอยหลังสำหรับการเปิดตัว การลดราคา และกิจกรรมต่างๆ"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "ตัวอย่างการนับถอยหลัง"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "ดูว่าทีมต่างๆ ใช้การนับถอยหลังสำหรับการเปิดตัว การลดราคา และอีเวนต์อย่างไร"
+    }
+  ],
+  "v": 1
+}

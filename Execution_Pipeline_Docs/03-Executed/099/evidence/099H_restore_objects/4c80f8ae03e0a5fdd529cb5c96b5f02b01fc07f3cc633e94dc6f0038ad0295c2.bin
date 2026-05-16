@@ -1,0 +1,19 @@
+{
+  "baseFingerprint": "bd8901ae935f09dc57fa58f3054e644bcaa498d7a0e79002f4c330771e7f50be",
+  "publicId": "wgt_main_faq",
+  "snapshot": {
+    "cta.label": "Contact us",
+    "header.subtitleHtml": "Modern website widgets—fast to launch, easy to customize, and built to help you convert.",
+    "header.title": "FAQs",
+    "sections.0.faqs.0.answer": "Clickeen is a widget SaaS platform that lets you add polished, high-performing widgets to your website in minutes—no heavy dev work required.",
+    "sections.0.faqs.0.question": "What is Clickeen?",
+    "sections.0.faqs.1.answer": "Yes. The Free plan includes 1 active widget with essential features so you can try Clickeen on a live site.",
+    "sections.0.faqs.1.question": "Do you offer a free plan?",
+    "sections.0.faqs.2.answer": "Create your widget, copy the embed code, and paste it right before the closing </body> tag on your website. Changes you make in Clickeen update instantly.",
+    "sections.0.faqs.2.question": "How do I install a widget on my site?",
+    "sections.0.faqs.3.answer": "Launch faster with flexible design controls, simple updates, and reliable performance—so your team can ship improvements without maintaining custom code.",
+    "sections.0.faqs.3.question": "Why use Clickeen instead of building widgets from scratch?",
+    "sections.0.title": "Getting started"
+  },
+  "v": 1
+}

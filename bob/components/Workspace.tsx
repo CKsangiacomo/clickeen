@@ -167,7 +167,7 @@ export function Workspace({
 
   const iframeSrc = useMemo(() => {
     if (!hasWidget || !compiled) return 'about:blank';
-    return compiled.assets.htmlUrl;
+    return compiled.media.htmlUrl;
   }, [hasWidget, compiled]);
 
   const iframeBackdrop = (() => {

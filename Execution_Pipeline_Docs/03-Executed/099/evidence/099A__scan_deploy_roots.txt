@@ -1,0 +1,3 @@
+.github/workflows/cloud-dev-prague-content.yml:66:          const indexUrl = `${base}/l10n/prague/widgets/faq/index.json`;
+.github/workflows/cloud-dev-prague-content.yml:81:          const overlayUrl = `${base}/l10n/prague/widgets/faq/locale/fr/${encodeURIComponent(fingerprint)}.ops.json`;
+tokyo-worker/src/domains/render/keys.ts:83:  return `published/widgets/${instanceId}.json`;

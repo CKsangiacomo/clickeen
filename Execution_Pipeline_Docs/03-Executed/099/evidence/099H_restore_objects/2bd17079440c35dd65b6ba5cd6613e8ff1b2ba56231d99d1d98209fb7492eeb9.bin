@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ 예시 - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "모든 산업을 위한 실전 FAQ 예시."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "업종별 FAQ 위젯 예시"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "여행, 호스피탈리티, 서비스 업계 팀이 하나의 FAQ 위젯으로 반복 질문에 더 빠르게 답하는 방법을 확인해 보세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "호텔 & 리조트"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "체크인, 주차, 조식 문의를 도착 전에 해결해 프런트 데스크의 중단을 줄이세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "레스토랑, 카페 & 바"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "모바일에서 메뉴 정보, 알레르기, 영업시간을 명확히 보여줘 손님이 더 빨리 결정하고 직원과의 반복 문의를 줄이세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "휴가용 숙소 & 숙소 관리자"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "한 번의 게시 흐름으로 체크인 절차, Wi‑Fi 정보, 하우스 룰을 모든 숙소에 일관되게 적용하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "전 세계 방문자는 즉각적인 명확성을 기대합니다"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "한 번만 게시하면 첫 클릭부터 올바른 언어로 답변을 제공할 수 있어요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "투어 운영사 & 여행사"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "픽업 장소, 취소 규정, 기상 정책을 사전에 안내해 고객이 확신을 갖고 예약하도록 도와주세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "관광지, 박물관 & 테마파크"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "티켓, 입장 규정, 접근성 정보를 방문 전에 명확히 안내해 모두에게 더 매끄러운 입장을 제공하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "간단한 운영 루프"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "반복 질문을 한 번만 정리하고, 업데이트는 빠르게 게시하며, 내용이 바뀌어도 모든 라이브 페이지를 일관되게 유지하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "주요 질문 추가"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "한 번만 게시"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "모든 언어를 동기화"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "방문자가 결정 전에 자주 묻는 반복 질문부터 시작하세요."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "클릭 한 번으로 최신 답변이 모든 페이지에 바로 반영됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "기본 콘텐츠가 바뀌면 번역도 함께 갱신되어 메시지가 항상 일치합니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "실서비스용으로 설계"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "글로벌 엣지 속도, 유연한 임베드 옵션, 그리고 답변을 최신으로 유지하는 간단한 게시 흐름."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "빠름"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "유연함"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "최신 유지"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "글로벌 엣지 전송."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "표준 방식과 스크립트 없이도 가능한 임베드 옵션."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "한 번 게시하면 모든 라이브 페이지가 업데이트됩니다."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Clickeen으로 해결하세요"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "무료로 시작해 브랜드에 맞게 디자인을 조정하고, 여러 페이지로 확장되는 라이브 FAQ를 게시하세요."
+    }
+  ],
+  "v": 1
+}

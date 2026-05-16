@@ -1,0 +1,4 @@
+.github/workflows/cloud-dev-prague-app.yml:8:      - "prague/public/**"
+tokyo/_redirects:4:/i18n/* /roma/i18n/public/:splat 200
+tokyo/dev-server.mjs:9: *   - GET /i18n/**        → static files from tokyo/roma/i18n/public/**
+tokyo-worker/src/domains/render/keys.ts:27:  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/published/config.json`;

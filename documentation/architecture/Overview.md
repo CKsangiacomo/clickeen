@@ -34,7 +34,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | Principle                      | Rule                                                                                                                                                                                                                     |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **No Fallbacks**               | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Public renders must be revision-coherent (single published revision; missing locale artifacts fail visibly). |
-| **Widget Files = Truth**       | Core runtime files + contract files in `tokyo/product/widgets/{name}/` define widget behavior and validation.                                                                                                                    |
+| **Widget Files = Truth**       | Core runtime files + contract files in `tokyo/product/widgets/{name}/` define widget behavior and validation; their deployed Tokyo R2 home is `product/widgets/{name}/`.                                                                                                                    |
 | **Orchestrators = Dumb Pipes** | Bob/Roma/Tokyo-worker/Venice avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. overlay composition, artifact materialization) but must not “fix” state ad hoc.                    |
 | **Dieter Tokens**              | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB.                                                                                                                   |
 | **Locale Is Not Identity**     | Locale is a runtime parameter. IDs (`instanceId`) must be locale-free; localization is applied via overlays, not DB fan-out.                                                                                               |
@@ -57,11 +57,11 @@ Mutable pointer  (tiny, always fetched fresh)
 
 | Domain       | Mutable pointer                                                        | Immutable artifact                                                                    |
 | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **Serve state** | Tokyo live pointer / serve flag (`no-store`)                           | Render artifacts at `/renders/widgets/{instanceId}/{fingerprint}/...` (cache forever) |
-| **Assets**   | _(authoring stores logical `assetId`; runtime serves `/assets/account/{accountId}/{assetId}/{filename}`)_ | Asset bytes at `/assets/account/{accountId}/{assetId}/{filename}`                                                  |
+| **Serve state** | Tokyo live pointer / serve flag (`no-store`)                           | Published projection material under `accounts/{accountPublicId}/instances/{instanceId}/published/` |
+| **Assets**   | Authoring stores logical `assetId`; runtime/account APIs carry `accountPublicId` | Asset bytes under `accounts/{accountPublicId}/assets/` |
 | **Auth**     | JWT (short-lived, refreshable)                                         | userId claim (stable identity)                                                        |
 | **Authz**    | HMAC-signed capsule (expires)                                          | Role/account snapshot at issuance                                                     |
-| **Overlays** | Layer pointer in DB                                                    | Materialized overlay file on R2 (fingerprinted)                                       |
+| **Overlays** | Selected/published overlay pointer under the owning instance             | Overlay object at `accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json` |
 
 For instance serving, `published` / `unpublished` is only the Tokyo-owned per-instance serve flag. It tells Venice whether public serving is allowed. It is not widget-type state, not overlay readiness, and not broad account/business lifecycle truth.
 
@@ -81,7 +81,7 @@ Traditional systems treat objects as mutable: update in place, invalidate caches
 
 This is the same principle that underpins content-addressed storage, Git, and distributed ledgers: if data is immutable and addressed by content, you can distribute it globally and cache it indefinitely without coordination.
 
-Every service section below is an instance of this pattern. Tokyo stores immutable artifacts. Tokyo-worker materializes published artifacts and flips live pointers. Venice reads pointers and serves cached artifacts. Bob creates working artifacts. Roma orchestrates the account-scoped product cycle, while DevStudio remains the internal toolbench for platform work and local verification pages.
+Every service section below is an instance of this pattern. Tokyo stores immutable artifacts and account-owned runtime state under the canonical R2 roots. Tokyo-worker materializes account-scoped published projections and flips live pointers. Venice reads projected public material and serves cached artifacts. Bob creates working artifacts. Roma orchestrates the account-scoped product cycle, while DevStudio remains the internal toolbench for platform work and local verification pages.
 
 ---
 
@@ -97,8 +97,8 @@ Every service section below is an instance of this pattern. Tokyo stores immutab
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
 | **Dieter**        | `dieter/`       | (build artifact)                     | Design system: tokens, 16+ components                                   | ✅ Active   |
-| **Tokyo**         | `tokyo/`        | Cloudflare R2                        | Widget definitions (runtime + contracts), Dieter assets, shared runtime | ✅ Active   |
-| **Tokyo Worker**  | `tokyo-worker/` | Cloudflare Workers + Queues          | Account-owned asset uploads, l10n publisher, render snapshots           | ✅ Active   |
+| **Tokyo**         | `tokyo/`        | Cloudflare R2                        | Canonical product asset roots, account runtime storage, Dieter/fonts/Prague artifacts | ✅ Active   |
+| **Tokyo Worker**  | `tokyo-worker/` | Cloudflare Workers + Queues          | Tokyo PBX for account storage, assets, and published projections         | ✅ Active   |
 
 ---
 
@@ -172,6 +172,36 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 - **Queues**:
   - San Francisco: `sanfrancisco-events-dev`, `sanfrancisco-events-prod`
 
+### Tokyo R2 root model
+
+Tokyo R2 has five canonical roots:
+
+```text
+accounts/
+dieter/
+fonts/
+product/
+prague/
+```
+
+Only `accounts/` is runtime-managed by product/account operations. It owns account instances, uploaded assets, selected overlays, private overlay objects, and account-scoped published projection material:
+
+```text
+accounts/{accountPublicId}/instances/{instanceId}/...
+accounts/{accountPublicId}/assets/...
+```
+
+The non-account roots are git-authored deploy artifacts synced into R2 from the repo/deploy pipeline:
+
+```text
+dieter/
+fonts/
+product/
+prague/
+```
+
+They may be served by Tokyo-worker through friendly public routes, but Roma, Venice, Tokyo-worker, and account lifecycle operations must not mutate them as account runtime state. Root `widgets/`, `public/`, `published/`, and `l10n/` are not storage authorities.
+
 ### Routes & bindings (high level)
 
 #### Bob (Pages)
@@ -200,36 +230,38 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 #### Venice (Workers)
 
 - Public embed surface (third-party websites only talk to Venice).
-- Runtime reads only Tokyo live pointers, published config, selected overlay IDs, overlay objects, SEO/GEO packs, and widget bytes.
-- Public `/widget/:instanceId` and `/renders/widgets/:instanceId/live/r.json` do **0** Supabase calls at request time.
+- Runtime reads only account-scoped published projection material and widget bytes.
+- Public `/widget/{accountPublicId}/{instanceId}` and `/renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json` do **0** Supabase calls at request time.
 - Public snapshot serving is revision-coherent: Venice reads one published revision and never mixes artifacts from previous revisions.
 - If a locale artifact is missing in the current revision, Venice returns unavailable for that locale (no serve-time locale fallback).
-- Public `/widget/:instanceId` and `/renders/widgets/:instanceId/live/r.json` serve snapshots from published pointers only (no public dynamic fallback). Dynamic rendering is restricted to controlled internal bypass.
+- Public routes serve snapshots from account-scoped published projections only (no public dynamic fallback). Dynamic rendering is restricted to controlled internal bypass.
 
 #### Tokyo (R2)
 
-- Serves widget definitions and Dieter build artifacts (`/widgets/**`, `/dieter/**`).
-- **Deterministic compilation contract** depends on `tokyo/product/dieter/manifest.json`.
-- Serves published instance render artifacts and overlay objects written by Roma/Tokyo-worker. PRD 098 overlay identity is fixed-layout `overlayId`; old l10n indexes, text packs, and base fingerprints are not active product truth.
-- Prague website base copy lives in `tokyo/prague/pages/*/*.json` (single source per page). Account-widget overlays are resolved by Venice from Tokyo published overlay IDs; Prague does not own a separate widget localization runtime.
+- Serves product widget software from R2 `product/widgets/**` through friendly `/widgets/**` routes.
+- Serves Dieter from R2 `dieter/**`, global fonts from `fonts/**`, and Prague content from `prague/**`.
+- **Deterministic compilation contract** depends on the deployed Dieter manifest under the canonical `dieter/` root.
+- Serves account-owned published projection material from `accounts/{accountPublicId}/instances/{instanceId}/published/`. PRD 098 overlay identity is fixed-layout `overlayId`; old l10n indexes, text packs, and base fingerprints are not active product truth.
+- Prague website base copy lives in the `prague/` root. Account-widget overlays are resolved by Venice from account-scoped published overlay IDs; Prague does not own a separate widget localization runtime.
 
 #### Tokyo Worker (Workers + Queues)
 
 - Canonical asset management contract (cross-surface behavior): [AssetManagement.md](./AssetManagement.md)
-- Handles private Roma-bound account asset authority routes and stores asset bytes + manifest metadata in Tokyo R2.
-- Tokyo-worker validates/materializes account-owned asset refs during instance sync and runtime-pack assembly, but this repo snapshot does not persist a canonical "where used" table in Michael.
-- Serves immutable account asset reads (`GET /assets/account/{accountId}/{assetId}/{filename}`); legacy non-account asset paths are hard-failed.
-- Asset delete is synchronous hard delete (`metadata + blob delete`) with no snapshot rebuild enqueue or runtime healing.
+- Handles private Roma-bound account asset authority routes and stores accepted account assets under `accounts/{accountPublicId}/assets/`.
+- Tokyo-worker validates/resolves account-owned asset refs for authoring and build consumption, but this repo snapshot does not persist a canonical "where used" table in Michael.
+- Serves account asset reads on routes carrying `accountPublicId`; legacy non-account asset paths are hard-failed.
+- In-place account asset byte replacement keeps the same account asset reference and must not require instance rebuilds.
+- Asset delete is synchronous and explicit, with no silent runtime healing.
 - Tokyo-worker exposes integrity endpoints for managed surfaces (`GET /assets/integrity/:accountId`, `GET /assets/integrity/:accountId/:assetId`).
-- Writes account-instance l10n text/meta/config packs and live pointers to Tokyo/R2 from explicit Tokyo-worker instance-sync execution triggered by Roma widget/localization routes; Tokyo-worker does not read Michael/Supabase to discover overlay state.
-- Materializes render snapshots under account-first instance storage, then publishes public projection pointers for Venice fast-path serving.
+- Writes account-instance config, overlay, SEO/meta, and published projection material under `accounts/{accountPublicId}/instances/{instanceId}/` from explicit Roma/system operations. Tokyo-worker does not read Michael/Supabase to discover overlay state.
+- Materializes render snapshots under account-first instance storage, then exposes account-scoped published projection routes for Venice fast-path serving.
 
 #### Asset ownership model (canonical)
 
-- Ownership boundary is account (`account_id`).
+- Ownership boundary is account (`accountPublicId` for R2 storage; private UUIDs remain relational implementation details).
 - End-to-end flow:
   1. Bob uploads through Roma (`POST /api/account/assets/upload`), and Roma forwards to Tokyo-worker over the `TOKYO_ASSET_CONTROL` Cloudflare service binding with optional public/widget trace headers.
-  2. Tokyo-worker writes blob bytes + per-asset manifest metadata in Tokyo R2 and returns canonical immutable URL (`/assets/account/{accountId}/{assetId}/{filename}`).
+  2. Tokyo-worker writes the accepted account asset under `accounts/{accountPublicId}/assets/` and returns the account asset reference used by Bob/Roma.
   3. Roma validates account commands at the product boundary and Tokyo/Tokyo-worker enforce canonical asset/config contracts on write.
   4. Roma Assets reads/deletes via Roma asset routes (`/api/account/assets*`) which forward to Tokyo-worker through the private service binding plus the Roma account capsule; Tokyo-worker enforces account membership role.
 
@@ -252,7 +284,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **Hard security rule:**
 
-- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies, while account-widget l10n generation uses the Tokyo-worker -> San Francisco `SANFRANCISCO_L10N` binding.
+- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies, while account-widget translation generation uses the Tokyo-worker -> San Francisco `SANFRANCISCO_L10N` binding.
 
 **Local auth rule:**
 
@@ -272,8 +304,8 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 
 **Caching**
 
-- Tokyo (`/dieter/**`, `/widgets/**`) uses long caching for versioned assets; avoid caching `spec.json` aggressively in dev.
-- Venice uses three cache classes: short-cache embed shell (`/e`), `no-store` live pointers (`/r`, locale/meta live pointers), and immutable fingerprinted packs/assets.
+- Tokyo (`/dieter/**`, `/widgets/**`) uses long caching for versioned media; avoid caching `spec.json` aggressively in dev.
+- Public embed serving uses cached generated files by `publicEmbedId`; Venice is not the normal public widget composer after PRD 100.
 
 **Access control**
 
@@ -318,10 +350,10 @@ Non-negotiable:
 - **Secrets isolation**:
   - Provider keys live only in San Francisco.
   - Supabase service role lives only in Berlin/Tokyo-worker where explicitly required.
-  - Roma Copilot/outcome and Prague string-translation calls use HMAC body signatures. Roma -> Tokyo/Tokyo-worker account product control uses private Cloudflare service bindings; account-widget l10n generation uses the private Tokyo-worker -> San Francisco service binding.
+  - Roma Copilot/outcome and Prague string-translation calls use HMAC body signatures. Roma -> Tokyo/Tokyo-worker account product control uses private Cloudflare service bindings; account-widget translation generation uses the private Tokyo-worker -> San Francisco service binding.
 - **Caching**:
-  - Tokyo assets are long-cacheable when versioned; avoid cache on `spec.json` when iterating in dev.
-  - Venice serves short-cache shell HTML, `no-store` live pointers, and immutable fingerprinted packs/assets.
+  - Tokyo deploy-managed media is long-cacheable when versioned; avoid cache on widget `spec.json` when iterating in dev.
+  - Public embed serving returns generated static files by `publicEmbedId`; Venice does not compose widgets for normal public traffic after PRD 100.
 
 ---
 
@@ -363,10 +395,11 @@ Non-negotiable:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           EMBED FLOW                                    │
 │                                                                         │
-│  ┌──────────────┐    GET /widget/:instanceId    ┌─────────┐    ┌─────────┐   │
-│  │ Third-party  │ ──────────────────────►│ Venice  │───►│  Tokyo  │   │
-│  │   Website    │                        │  Edge   │    │   R2    │   │
-│  └──────────────┘ ◄──────────────────────└─────────┘    └─────────┘   │
+│  ┌──────────────┐   GET /widget/{accountPublicId}/{instanceId}         │
+│  │ Third-party  │ ──────────────────────► ┌─────────┐ ───► ┌─────────┐ │
+│  │   Website    │                         │ Venice  │      │  Tokyo  │ │
+│  └──────────────┘ ◄────────────────────── │  Edge   │ ◄─── │   R2    │ │
+│                                           └─────────┘      └─────────┘ │
 │                     SSR HTML + bootstrapped state                       │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -433,7 +466,7 @@ Preview reflects the widget Bob is editing. It is not a second widget-shaped sta
 
 ### Tokyo Widget Folder
 
-Each widget type has a complete definition in Tokyo:
+Each widget type has a complete authored definition in the repo and a deployed R2 home under `product/widgets/{widgetType}/`:
 
 ```
 tokyo/product/widgets/{widgetType}/
@@ -443,6 +476,8 @@ tokyo/product/widgets/{widgetType}/
 ├── widget.client.js   # applyState() for live DOM updates
 └── agent.md           # AI contract (required for AI editing)
 ```
+
+Friendly `/widgets/{widgetType}/...` URLs are route aliases. They must resolve to `product/widgets/{widgetType}/...` in R2 and must not create a root `widgets/` storage authority.
 
 ### Shared Runtime Modules
 
@@ -511,7 +546,7 @@ interface CompiledWidget {
   defaults: Record<string, unknown>;
   panels: Array<{ id: string; label: string; html: string }>;
   controls: Array<{ path: string; kind: string; ... }>;  // AI ops allowlist
-  assets: { htmlUrl, cssUrl, jsUrl, dieter: { styles[], scripts[] } };
+  media: { htmlUrl, cssUrl, jsUrl, dieter: { styles[], scripts[] } };
 }
 ```
 
@@ -528,8 +563,9 @@ Located in `bob/lib/compiler/modules/`:
 
 `<tooldrawer-field>` macros are expanded using Dieter component stencils:
 
-- Stencil HTML: `tokyo/product/dieter/components/{component}/{component}.html`
-- Specs: `tokyo/product/dieter/components/{component}/{component}.spec.json`
+- Repo-authored stencil HTML: `tokyo/product/dieter/components/{component}/{component}.html`
+- Repo-authored specs: `tokyo/product/dieter/components/{component}/{component}.spec.json`
+- Deployed R2 home: `dieter/components/{component}/...`
 - Adds `data-bob-path` for binding, `data-bob-showif` for conditionals
 
 ---
@@ -563,18 +599,18 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 ## Venice Embed Architecture
 
-**Current Status:** Shipped DB-free public embed runtime. Venice assembles `/widget/:instanceId` from Tokyo-only bytes and Tokyo-owned serve pointers only. Submission and compatibility routes are hard-cut before GA unless a current PRD names an owner and reason.
+**Current Status:** Superseded for public widget serving by PRD 100. Public embeds serve generated static files by `publicEmbedId`; Venice must not compose widgets for normal public traffic.
 
 ### Endpoints
 
 | Route                                | Purpose                                   |
 | ------------------------------------ | ----------------------------------------- |
-| `GET /widget/:instanceId`                   | Embed shell HTML + runtime bootstrap      |
-| `GET /renders/widgets/:instanceId/live/r.json`                   | Live serve pointer proxy (`no-store`) |
-| `GET /renders/widgets/:instanceId/config.json`                   | Published config pack proxy              |
-| `GET /renders/widgets/:instanceId/overlays/:overlayId.json`      | Published overlay object proxy (`no-store`) |
-| `GET /renders/widgets/:instanceId/meta/live/:locale.json`        | SEO/GEO meta pointer proxy (`no-store`)   |
-| `GET /renders/widgets/:instanceId/meta/:locale/:metaFp.json`     | SEO/GEO meta pack proxy                   |
+| `GET /widget/{accountPublicId}/{instanceId}` | Embed shell HTML + runtime bootstrap |
+| `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json` | Live serve pointer proxy (`no-store`) |
+| `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/config.json` | Published config pack proxy |
+| `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json` | Published overlay object proxy (`no-store`) |
+| `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/meta/live/{locale}.json` | SEO/GEO meta pointer proxy (`no-store`) |
+| `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/meta/{locale}/{metaFp}.json` | SEO/GEO meta pack proxy |
 | `/embed/latest/loader.js`            | Canonical loader alias                    |
 | `/embed/v2/loader.js`                | Compatibility v2 loader alias             |
 | `/embed/v2.0.0/loader.js`            | Immutable versioned loader                |
@@ -584,20 +620,20 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 | Artifact                                        | Cache-Control                         |
 | ----------------------------------------------- | ------------------------------------- |
-| `/widget/:instanceId` shell HTML                       | `public, max-age=60, s-maxage=86400`  |
+| `/widget/{accountPublicId}/{instanceId}` shell HTML | `public, max-age=60, s-maxage=86400` |
 | `/embed/latest/loader.js`, `/embed/v2/loader.js`       | `public, max-age=300, s-maxage=600`   |
 | `/embed/v2.0.0/loader.js`                              | `public, max-age=31536000, immutable` |
 | `/embed/v2.0.0/seo-geo-loader.js`                      | `public, max-age=31536000, immutable` |
 | Live pointers (`/r`, locale/meta live pointers) | `no-store`                            |
-| Fingerprinted packs + widget assets             | `public, max-age=31536000, immutable` |
+| Fingerprinted packs + widget media              | `public, max-age=31536000, immutable` |
 
 ### Front-Door Pattern
 
-All third-party embed traffic terminates at Venice:
+PRD 100 changes the public embed front door:
 
-- Browsers call Venice for public embeds
-- Venice fetches only Tokyo live pointers and immutable runtime bytes
-- Tokyo-worker publishes those bytes ahead of time during explicit sync/publish flows
+- Browsers call `embed.clickeen.com/{publicEmbedId}` for public embeds.
+- Public serving returns cached static files keyed by `publicEmbedId`.
+- Venice does not compose widgets for normal public traffic.
 - If required Tokyo bytes are missing, Venice returns unavailable instead of healing or falling back
 
 ---
@@ -619,9 +655,9 @@ User opens widget → Roma GET /api/builder/:instanceId/open
 ### 2. Embed View Flow
 
 ```
-Visitor loads embed → Venice GET /widget/:instanceId
-                    → Venice GET /renders/widgets/:instanceId/live/r.json (Tokyo live pointer)
-                    → Venice GET Tokyo config pack + locale text pointer + text pack + widget HTML
+Visitor loads embed → Venice GET /widget/{accountPublicId}/{instanceId}
+                    → Venice GET /renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json
+                    → Venice GET Tokyo published config, overlay/meta projection material, and widget HTML
                     → Venice returns SSR HTML / bootstraps CK_WIDGET
 ```
 

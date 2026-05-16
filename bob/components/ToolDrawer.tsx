@@ -162,7 +162,7 @@ export function ToolDrawer({
       instanceData={session.instanceData}
       applyOps={session.applyOps}
       lastUpdate={session.lastUpdate}
-      dieterAssets={compiled.assets.dieter}
+      dieterMedia={compiled.media.dieter}
     />
   );
 

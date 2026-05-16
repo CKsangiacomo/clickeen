@@ -1,14 +1,14 @@
 # Clickeen Babel Protocol
 
-STATUS: REFERENCE - MUST MATCH PRD 098
+STATUS: REFERENCE - MUST MATCH PRD 098 IDENTITY + PRD 099 STORAGE
 
-Babel is Clickeen's locale overlay application. It is not a separate translation schema and it is not a runtime fallback system.
+Babel is Clickeen's locale overlay application. It is not a separate translation schema, a runtime fallback system, or a storage locator layer.
 
 ## Product Boundary
 
 Builder edits one account-owned widget instance in the account base locale.
 
-After save, Roma orchestrates locale work from the current saved config. San Francisco receives concrete text primitive values and returns concrete translated text primitive values. Tokyo-worker stores exact overlay objects and projections. Venice serves published projection truth.
+After save, Roma orchestrates locale work from the current saved config. San Francisco receives concrete text primitive values and returns concrete translated text primitive values. Tokyo-worker stores exact overlay objects under the owning account instance and writes public copies only into the instance published projection. Venice serves published projection truth.
 
 ## Source Of Text Truth
 
@@ -56,7 +56,7 @@ For a given saved config and widget primitive graph:
 
 The system does not normalize, drop, repair, coerce, or infer producer output.
 
-## Overlay Object
+## Overlay Object And Storage
 
 The result is stored as a PRD 098 overlay object:
 
@@ -70,7 +70,25 @@ The result is stored as a PRD 098 overlay object:
 }
 ```
 
-The body contains only values. It does not contain locale, account, instance, readiness, job state, base revision, fingerprint, or hash identity. Identity lives in `overlayId`.
+The authoring object lives at:
+
+```txt
+accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json
+```
+
+Selected overlay pointers live at:
+
+```txt
+accounts/{accountPublicId}/instances/{instanceId}/selected-overlays/{languageCode}/{experiment}/{personalization}.json
+```
+
+Published public copies live at:
+
+```txt
+accounts/{accountPublicId}/instances/{instanceId}/published/overlays/{overlayId}.json
+```
+
+The body contains only values. It does not contain locale, account, instance, readiness, job state, base revision, fingerprint, hash identity, or storage path. Identity lives in `overlayId`; ownership and containment live in the account instance path. `widgetCode` is codebook metadata inside `overlayId`, not an R2 path segment for locating storage.
 
 ## Runtime Resolution
 
@@ -92,6 +110,7 @@ Tokyo-worker must not:
 - Inspect overlay bodies to understand identity.
 - Repair values it produced or accepted.
 - Preserve old l10n path shapes.
+- Preserve old `accounts/{accountPublicId}/widgets/{widgetCode}/...` storage shapes.
 
 ## Deleted Pre-GA Model
 

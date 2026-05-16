@@ -1,0 +1,229 @@
+{
+  "actions": {
+    "after": {
+      "text": "",
+      "type": "hide",
+      "url": ""
+    },
+    "during": {
+      "newTab": true,
+      "style": "primary",
+      "text": "Purchase now",
+      "type": "link",
+      "url": ""
+    }
+  },
+  "appearance": {
+    "animation": "fade",
+    "itemBackground": {
+      "color": "var(--color-system-gray-5)",
+      "type": "color"
+    },
+    "itemCard": {
+      "border": {
+        "color": "var(--color-system-gray-5)",
+        "enabled": false,
+        "width": 1
+      },
+      "radius": "2xl",
+      "radiusBL": "2xl",
+      "radiusBR": "2xl",
+      "radiusLinked": true,
+      "radiusTL": "2xl",
+      "radiusTR": "2xl",
+      "shadow": {
+        "alpha": 18,
+        "blur": 24,
+        "color": "#000000",
+        "enabled": false,
+        "inset": false,
+        "spread": 0,
+        "x": 0,
+        "y": 8
+      }
+    },
+    "podBorder": {
+      "color": "var(--color-system-gray-5)",
+      "enabled": false,
+      "width": 1
+    },
+    "separator": ":",
+    "textColor": {
+      "color": "var(--color-system-black)",
+      "type": "color"
+    },
+    "theme": "custom"
+  },
+  "behavior": {
+    "showBacklink": true
+  },
+  "layout": {
+    "position": "inline"
+  },
+  "pod": {
+    "background": {
+      "color": "var(--color-system-white)",
+      "type": "color"
+    },
+    "contentWidth": 960,
+    "padding": {
+      "desktop": {
+        "all": 60,
+        "bottom": 60,
+        "left": 60,
+        "linked": true,
+        "right": 60,
+        "top": 60
+      },
+      "mobile": {
+        "all": 28,
+        "bottom": 28,
+        "left": 28,
+        "linked": true,
+        "right": 28,
+        "top": 28
+      }
+    },
+    "radius": "4xl",
+    "radiusBL": "4xl",
+    "radiusBR": "4xl",
+    "radiusLinked": true,
+    "radiusTL": "4xl",
+    "radiusTR": "4xl",
+    "shadow": {
+      "alpha": 18,
+      "blur": 24,
+      "color": "#000000",
+      "enabled": false,
+      "inset": false,
+      "spread": 0,
+      "x": 0,
+      "y": 8
+    },
+    "widthMode": "wrap"
+  },
+  "seoGeo": {
+    "enabled": false
+  },
+  "stage": {
+    "alignment": "center",
+    "background": {
+      "color": "var(--color-system-gray-5)",
+      "type": "color"
+    },
+    "canvas": {
+      "height": 0,
+      "mode": "viewport",
+      "width": 0
+    },
+    "padding": {
+      "desktop": {
+        "all": 80,
+        "bottom": 80,
+        "left": 80,
+        "linked": true,
+        "right": 80,
+        "top": 80
+      },
+      "mobile": {
+        "all": 24,
+        "bottom": 24,
+        "left": 24,
+        "linked": true,
+        "right": 24,
+        "top": 24
+      }
+    }
+  },
+  "timer": {
+    "countDuration": 5,
+    "headline": "Sales are coming soon!!!🎯",
+    "mode": "date",
+    "repeat": "never",
+    "startingNumber": 0,
+    "targetDate": "2026-01-20T12:00",
+    "targetNumber": 1000,
+    "timeAmount": 1,
+    "timeUnit": "hours",
+    "timezone": "UTC"
+  },
+  "typography": {
+    "globalFamily": "Inter",
+    "roleScales": {
+      "button": {
+        "l": "18px",
+        "m": "16px",
+        "s": "14px",
+        "xl": "20px",
+        "xs": "12px"
+      },
+      "heading": {
+        "l": "36px",
+        "m": "32px",
+        "s": "28px",
+        "xl": "40px",
+        "xs": "24px"
+      },
+      "label": {
+        "l": "16px",
+        "m": "14px",
+        "s": "12px",
+        "xl": "18px",
+        "xs": "11px"
+      },
+      "timer": {
+        "l": "56px",
+        "m": "48px",
+        "s": "40px",
+        "xl": "64px",
+        "xs": "32px"
+      }
+    },
+    "roles": {
+      "button": {
+        "color": {
+          "color": "var(--color-system-white)",
+          "type": "color"
+        },
+        "family": "Inter",
+        "fontStyle": "normal",
+        "sizeCustom": "16px",
+        "sizePreset": "custom",
+        "weight": "500"
+      },
+      "heading": {
+        "color": {
+          "color": "var(--color-system-black)",
+          "type": "color"
+        },
+        "family": "Inter",
+        "fontStyle": "normal",
+        "sizeCustom": "32px",
+        "sizePreset": "custom",
+        "weight": "600"
+      },
+      "label": {
+        "color": {
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+          "type": "color"
+        },
+        "family": "Inter",
+        "fontStyle": "normal",
+        "sizeCustom": "14px",
+        "sizePreset": "custom",
+        "weight": "400"
+      },
+      "timer": {
+        "color": {
+          "color": "var(--color-system-black)",
+          "type": "color"
+        },
+        "family": "Inter",
+        "fontStyle": "normal",
+        "sizeCustom": "48px",
+        "sizePreset": "custom",
+        "weight": "700"
+      }
+    }
+  }
+}

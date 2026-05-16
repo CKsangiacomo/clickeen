@@ -1,0 +1,207 @@
+{
+  "baseFingerprint": "1bba8d2cc9d3b031ca58402f5f0008e0866f9928c64e72f4a3d76aee515d51f0",
+  "baseUpdatedAt": null,
+  "ops": [
+    {
+      "op": "set",
+      "path": "strings.nav.widgets",
+      "value": "ווידג׳טים"
+    },
+    {
+      "op": "set",
+      "path": "strings.nav.viewAllWidgets",
+      "value": "צפו בכל הווידג׳טים"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.overview",
+      "value": "סקירה"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.examples",
+      "value": "דוגמאות"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.features",
+      "value": "תכונות"
+    },
+    {
+      "op": "set",
+      "path": "strings.tabs.pricing",
+      "value": "תמחור"
+    },
+    {
+      "op": "set",
+      "path": "strings.cta.createFree",
+      "value": "צרו בחינם"
+    },
+    {
+      "op": "set",
+      "path": "strings.common.comingSoon",
+      "value": "בקרוב."
+    },
+    {
+      "op": "set",
+      "path": "strings.creative.useThisWidgetOnYourWebsite",
+      "value": "השתמשו בווידג׳ט הזה באתר שלכם"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.title",
+      "value": "נבנה כדי לדבר בכל שפה"
+    },
+    {
+      "op": "set",
+      "path": "strings.localeShowcase.subtitle",
+      "value": "אותו ווידג׳ט נבחר. שלושה לוקאלים. אותו קוד."
+    },
+    {
+      "op": "set",
+      "path": "strings.share.share",
+      "value": "שיתוף"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copy",
+      "value": "העתקת קישור"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.copied",
+      "value": "הועתק"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.more",
+      "value": "עוד"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sms",
+      "value": "SMS"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.email",
+      "value": "אימייל"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.whatsapp",
+      "value": "WhatsApp"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.telegram",
+      "value": "Telegram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.signal",
+      "value": "Signal"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.messenger",
+      "value": "Messenger"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.wechat",
+      "value": "WeChat"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.line",
+      "value": "LINE"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.slack",
+      "value": "Slack"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.teams",
+      "value": "Teams"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.discord",
+      "value": "Discord"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.x",
+      "value": "X"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.linkedin",
+      "value": "LinkedIn"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.facebook",
+      "value": "Facebook"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.reddit",
+      "value": "Reddit"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.instagram",
+      "value": "Instagram"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.tiktok",
+      "value": "TikTok"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.title",
+      "value": "ווידג׳ט של Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.text",
+      "value": "השתמשו בווידג׳ט הזה באתר שלכם."
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionMessageTitle",
+      "value": "Send this widget as message"
+    },
+    {
+      "op": "set",
+      "path": "strings.share.sectionSocialTitle",
+      "value": "Share this widget on social"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.brand",
+      "value": "Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.pricing",
+      "value": "תמחור"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.widgets",
+      "value": "ווידג׳טים"
+    },
+    {
+      "op": "set",
+      "path": "strings.footer.rights",
+      "value": "כל הזכויות שמורות."
+    }
+  ],
+  "v": 1
+}

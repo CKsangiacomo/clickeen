@@ -1,0 +1,277 @@
+{
+  "baseFingerprint": "0b100a5d1ae83ab52e896df8966d63df65d2506af0b7ba59037512898a1584a1",
+  "baseUpdatedAt": "2026-02-10T05:01:38.052Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "SSS özellikleri - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "SSS widget’ı nasıl çalışır: SEO, yerelleştirme, yayın akışı ve yapay zekâ destekli düzenleme."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "SSS widget’ı nasıl çalışır"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Yapay zekâ ile taslaktan yerelleştirme ve SEO’ya kadar, yanıtları doğru ve kolay bulunur kılan sistemler."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.headline",
+      "value": "Bir kez anlatın. Gerisini yapay zekâ taslaklasın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-ai.copy.subheadline",
+      "value": "Editör içinde yapılandırılmış taslaklar oluşturun; yayınlamadan önce her öneriyi tek tek kabul edin, düzenleyin veya reddedin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.headline",
+      "value": "Tek bir widget’ta 29 dile kadar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-global.copy.subheadline",
+      "value": "Çevrilmiş yanıtları otomatik olarak sunun; marka tonu veya incelikler önemli olduğunda metni elle ince ayarlayın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.headline",
+      "value": "Bir kez yayınlayın. Her sayfayı güncelleyin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-composable.copy.subheadline",
+      "value": "Tek bir kaynaktan bir kez düzenleyin; ardından yayınlayın ve en güncel yanıtları tüm canlı yerleştirmelere aktarın."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.title",
+      "value": "Arama motorları yanıtlarınızı okuyabilir"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.subhead",
+      "value": "Sunucu tarafında render edilen yanıtlar, şema çıktısı ve derin bağlantılar, arama motorlarının doğru içeriği indeksleyip öne çıkarmasına yardımcı olur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.title",
+      "value": "Google her kelimeyi görür"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.title",
+      "value": "Zengin snippet'ler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.title",
+      "value": "Derin bağlantılama"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.0.body",
+      "value": "Sunucu tarafı render, yanıtlarınızı neredeyse sıfır düzen kaymasıyla indekslenebilir tutar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.1.body",
+      "value": "Otomatik JSON-LD, arama motorlarının yanıtlarınızı daha görünür şekilde sunmasına yardımcı olur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-diff.copy.items.2.body",
+      "value": "Kullanıcıları, ihtiyaç duydukları belirli yanıta sabit bir URL ile yönlendirin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Sizinle birlikte büyüyen canlı bir bilgi tabanı."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Ürününüz, politikalarınız ve kitleniz değiştikçe yanıtları doğru ve güncel tutun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.title",
+      "value": "Tasarım gereği güvenilir"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.subhead",
+      "value": "Sürümlü yayınlama ve net canlı sınırlar, sık güncellemeleri ekipler için kontrollü hale getirir."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.title",
+      "value": "Sürümlü değişiklikler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.title",
+      "value": "Yayın sınırı"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.title",
+      "value": "Edge önbellekli"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.0.body",
+      "value": "Her yayınlama sürümlenir; ekipler kontrolle iterasyon yapabilir."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.1.body",
+      "value": "Canlı içerik yalnızca açıkça yayınladıktan sonra değişir."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps-eco.copy.items.2.body",
+      "value": "Milisaniyeler önemlidir. Yanıtları kullanıcınıza en yakın konumdan sunuyoruz."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.title",
+      "value": "Tam tasarım kontrolü"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.subhead",
+      "value": "Marka tutarlılığı için tasarlanmış görsel bir editörde köşe yuvarlama, gölge, kenarlık, boşluklar ve tipografiyi yönetin."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.title",
+      "value": "Düzenler"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.title",
+      "value": "Tipografi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.title",
+      "value": "Temalar"
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.0.body",
+      "value": "Duyarlı boşluk kontrolleriyle akordeon, liste ve kart yapıları."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.1.body",
+      "value": "Başlıklar, sorular, yanıtlar ve CTA’lar için rol tabanlı tipografi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.control-moat.copy.items.2.body",
+      "value": "Marka renk kontrolüyle açık ve koyu mod desteği."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.title",
+      "value": "Varsayılan olarak global dağıtım"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.subhead",
+      "value": "Yerelleştirme, SEO ve edge dağıtımını tek bir sistemde birleştirerek global sayfaları hızlı ve anlaşılır tutun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.title",
+      "value": "Edge dağıtım"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.title",
+      "value": "Yerelleştirme"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.title",
+      "value": "SEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.0.body",
+      "value": "Edge altyapısından sunulur."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.1.body",
+      "value": "Geçersiz kılma (override) desteğiyle 29 dile kadar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.global-moat.copy.items.2.body",
+      "value": "JSON-LD destekli yapılandırılmış yanıtlar."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Prodüksiyon siteleri için üretildi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Standart veya scriptsiz yerleştirmeler kullanın; açık yayın kontrolüyle canlı güncellemeleri öngörülebilir tutun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Yerleştirme modları"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Yayın kontrolü"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Birleştirilebilirlik"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Standart script yerleştirme ve scriptsiz iframe seçenekleri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Canlı güncellemeler için açık yayın akışı."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Stiller, içerik ve diller çatallanma olmadan bir araya gelir."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Daha iyi bir SSS deneyimi oluşturun"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Ücretsiz başlayın, hızlı yayınlayın ve SSS’nizi her sayfa ve dilde güncel tutun."
+    }
+  ],
+  "v": 1
+}

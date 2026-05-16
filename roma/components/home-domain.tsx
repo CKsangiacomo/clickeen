@@ -18,10 +18,10 @@ export function HomeDomain() {
         <div className="roma-grid roma-grid--three">
           <article className="roma-card">
             <h2 className="heading-6">Widgets</h2>
-            <p className="body-s">Create your first account widget or open existing instances.</p>
+            <p className="body-s">Create your first widget instance or open existing instances.</p>
             <div className="rd-canvas-module__actions">
               <Link href="/widgets" className="diet-btn-txt" data-size="md" data-variant="primary">
-                <span className="diet-btn-txt__label body-m">Create widget</span>
+                <span className="diet-btn-txt__label body-m">Create instance</span>
               </Link>
             </div>
           </article>

@@ -3,6 +3,7 @@ import InstanceEmbed from './InstanceEmbed.astro';
 
 type CarouselItem = {
   accountInstanceRef: {
+    accountPublicId: string;
     instanceId: string;
     locale: string;
     title?: string;
@@ -29,6 +30,7 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}`, widge
               {item.accountInstanceRef ? (
                 <InstanceEmbed
                   instanceId={item.accountInstanceRef.instanceId}
+                  accountPublicId={item.accountInstanceRef.accountPublicId}
                   locale={item.accountInstanceRef.locale}
                   title={item.accountInstanceRef.title ?? `Widget preview ${index + 1}`}
                   embedMode={item.accountInstanceRef.embedMode}

@@ -1,4 +1,3 @@
-import { getEntitlementsMatrix } from '@clickeen/ck-policy';
 import {
   classifyAccountAssetType,
   type AccountAssetType,
@@ -6,61 +5,6 @@ import {
 } from '../asset-utils';
 import { supabaseFetch } from '../supabase';
 import type { Env } from '../types';
-
-const L10N_VERSION_LIMIT_KEY = 'l10n.versions.max';
-export const UPLOAD_SIZE_LIMIT_KEY = 'uploads.size.max';
-export const STORAGE_BYTES_LIMIT_KEY = 'storage.bytes.max';
-
-function resolveEntitlementTierOrThrow(tier: string | null): string {
-  const normalized = typeof tier === 'string' ? tier.trim() : '';
-  if (!normalized) {
-    throw new Error('[tokyo] Missing account tier for entitlement resolution');
-  }
-  const matrix = getEntitlementsMatrix();
-  if (!matrix.tiers.includes(normalized as typeof matrix.tiers[number])) {
-    throw new Error(`[tokyo] Invalid account tier for entitlement resolution: ${normalized}`);
-  }
-  return normalized;
-}
-
-export function resolveL10nVersionLimit(tier: string | null): number | null {
-  const matrix = getEntitlementsMatrix();
-  const entry = matrix.entitlements[L10N_VERSION_LIMIT_KEY];
-  if (!entry || entry.kind !== 'limit') throw new Error(`[tokyo] Missing entitlement limit: ${L10N_VERSION_LIMIT_KEY}`);
-  const profile = resolveEntitlementTierOrThrow(tier) as keyof typeof entry.values;
-  const value = entry.values[profile];
-  if (value == null) return null;
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    throw new Error(`[tokyo] Invalid entitlement limit value for ${L10N_VERSION_LIMIT_KEY}`);
-  }
-  return Math.max(1, Math.floor(value));
-}
-
-export function resolveUploadSizeLimitBytes(tier: string | null): number | null {
-  const matrix = getEntitlementsMatrix();
-  const entry = matrix.entitlements[UPLOAD_SIZE_LIMIT_KEY];
-  if (!entry || entry.kind !== 'limit') throw new Error(`[tokyo] Missing entitlement limit: ${UPLOAD_SIZE_LIMIT_KEY}`);
-  const profile = resolveEntitlementTierOrThrow(tier) as keyof typeof entry.values;
-  const value = entry.values[profile];
-  if (value == null) return null;
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
-    throw new Error(`[tokyo] Invalid entitlement limit value for ${UPLOAD_SIZE_LIMIT_KEY}`);
-  }
-  return Math.max(1, Math.floor(value));
-}
-
-export function resolveStorageBytesLimit(tier: string | null): number | null {
-  const matrix = getEntitlementsMatrix();
-  const entry = matrix.entitlements[STORAGE_BYTES_LIMIT_KEY];
-  if (!entry || entry.kind !== 'limit') throw new Error(`[tokyo] Missing entitlement limit: ${STORAGE_BYTES_LIMIT_KEY}`);
-  const profile = resolveEntitlementTierOrThrow(tier) as keyof typeof entry.values;
-  const value = entry.values[profile];
-  if (value == null) return null;
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-    throw new Error(`[tokyo] Invalid entitlement limit value for ${STORAGE_BYTES_LIMIT_KEY}`);
-  }
-  return Math.floor(value);
-}
 
 function normalizeNonNegativeInt(value: number): number {
   if (!Number.isFinite(value) || value <= 0) return 0;

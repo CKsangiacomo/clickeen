@@ -416,7 +416,7 @@ if [ "$DEV_UP_FULL_REBUILD" = "1" ]; then
   echo "[dev-up] Full rebuild requested (--full): running workspace build"
   pnpm -w build
 else
-  echo "[dev-up] Building Dieter assets for local Tokyo"
+  echo "[dev-up] Building Dieter media for local Tokyo"
   pnpm --filter @ck/dieter build
 
   echo "[dev-up] Building i18n bundles"

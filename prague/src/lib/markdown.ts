@@ -1,5 +1,5 @@
 import { validateBlockMeta, validateBlockStrings } from './blockRegistry';
-import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
+import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 
 const ACCOUNT_INSTANCE_VALIDATE =
   process.env.PRAGUE_VALIDATE_ACCOUNT_INSTANCE === '1' ||
@@ -16,25 +16,32 @@ function resolveVeniceBaseUrl(): string | null {
   return null;
 }
 
-async function assertAccountInstanceExists(args: { instanceId: string; pagePath: string }): Promise<void> {
+async function assertAccountInstanceExists(args: { accountPublicId: string; instanceId: string; pagePath: string }): Promise<void> {
   if (!ACCOUNT_INSTANCE_VALIDATE) return;
   const baseUrl = resolveVeniceBaseUrl();
   if (!baseUrl) {
     throw new Error('[prague] Account instance validation requires PUBLIC_VENICE_URL.');
   }
 
+  const accountPublicId = String(args.accountPublicId || '').trim();
   const instanceId = String(args.instanceId || '').trim();
+  if (!isCompactAccountPublicId(accountPublicId)) {
+    throw new Error(
+      `[prague] ${args.pagePath}: accountInstanceRef.accountPublicId must be a PRD 099 account public id, got "${args.accountPublicId}"`,
+    );
+  }
   if (!isCompactInstanceId(instanceId)) {
     throw new Error(
       `[prague] ${args.pagePath}: accountInstanceRef.instanceId must be a PRD 098 compact instance id, got "${args.instanceId}"`,
     );
   }
 
-  const cached = ACCOUNT_INSTANCE_VALIDATION_CACHE.get(instanceId);
+  const cacheKey = `${accountPublicId}/${instanceId}`;
+  const cached = ACCOUNT_INSTANCE_VALIDATION_CACHE.get(cacheKey);
   if (cached) return cached;
 
   const task = (async () => {
-    const url = `${baseUrl}/widget/${encodeURIComponent(instanceId)}`;
+    const url = `${baseUrl}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`;
     let res: Response | null = null;
     try {
       res = await fetch(url, { method: 'GET' });
@@ -56,23 +63,24 @@ async function assertAccountInstanceExists(args: { instanceId: string; pagePath:
     console.warn(message);
   })();
 
-  ACCOUNT_INSTANCE_VALIDATION_CACHE.set(instanceId, task);
+  ACCOUNT_INSTANCE_VALIDATION_CACHE.set(cacheKey, task);
   return task;
 }
 
 async function validateAccountInstanceRefs(args: { pagePath: string; blocks: unknown[] }): Promise<void> {
   if (!ACCOUNT_INSTANCE_VALIDATE) return;
-  const accountInstanceIds = args.blocks
+  const accountInstanceRefs = args.blocks
     .map((block) => {
       if (!block || typeof block !== 'object' || Array.isArray(block)) return null;
       const accountInstanceRef = (block as any).accountInstanceRef;
       if (!accountInstanceRef || typeof accountInstanceRef !== 'object' || Array.isArray(accountInstanceRef)) return null;
+      const accountPublicId = String((accountInstanceRef as any).accountPublicId || '').trim();
       const instanceId = String((accountInstanceRef as any).instanceId || '').trim();
-      return instanceId ? instanceId : null;
+      return accountPublicId || instanceId ? { accountPublicId, instanceId } : null;
     })
-    .filter((value): value is string => Boolean(value));
-  if (accountInstanceIds.length === 0) return;
-  await Promise.all(accountInstanceIds.map((instanceId) => assertAccountInstanceExists({ instanceId, pagePath: args.pagePath })));
+    .filter((value): value is { accountPublicId: string; instanceId: string } => Boolean(value));
+  if (accountInstanceRefs.length === 0) return;
+  await Promise.all(accountInstanceRefs.map((ref) => assertAccountInstanceExists({ ...ref, pagePath: args.pagePath })));
 }
 
 function isRealWidgetDir(name: string): boolean {

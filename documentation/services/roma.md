@@ -15,10 +15,13 @@ Roma is the authenticated product shell for account users. It owns:
 - Account-scoped Team list and member-detail UI over Berlin-owned membership contracts
 - Lightweight catalog/list APIs for product UX
 - Bob editor orchestration via explicit host-open message
+- Account/system management-plane decisions for account instance lifecycle, including publish, unpublish, delete, downgrade/suspension follow-up, tier/cap enforcement, and published-state correctness
 
 Roma is a host/orchestrator. Bob remains the editor kernel.
 
 For the 075 authoring simplification track, Roma's governing authoring path is one boring account flow: resolve current account, open one saved widget document, host Bob editing in memory, and save that document back to Tokyo.
+
+Under PRD 099, Roma/system account operations are the management plane. Tokyo-worker is the Tokyo storage PBX for account objects and published projections; Venice is the public serving PBX. Neither Tokyo-worker nor Venice is the account policy engine for billing tier, publication eligibility, downgrade correctness, or account caps.
 
 ## Deploy plane (cloud-dev/prod)
 
@@ -89,7 +92,7 @@ Bootstrap payload includes:
 - Signed account authz capsule (`authz.accountCapsule`, expiry metadata)
 - Account entitlement snapshot (`authz.entitlements`) resolved once at bootstrap (`flags`, `caps`, `budgets{max}`)
 - The signed capsule itself carries only stable authz truth. Mutable locale settings and live `used` counters are not part of the signed capsule.
-- Roma carries both `accountId` and `accountPublicId`. `accountId` remains the private relational UUID for existing Berlin account routes; `accountPublicId` is the compact PRD 098 product/storage identity. Roma must never derive it from the UUID.
+- Roma carries both `accountId` and `accountPublicId`. `accountId` remains the private relational UUID for existing Berlin account routes; `accountPublicId` is the compact PRD 099 product/storage identity used for Tokyo account runtime paths. Roma must never derive it from the UUID.
 
 Client behavior (`use-roma-me.ts`):
 
@@ -115,7 +118,7 @@ Roma talks to upstream systems only through same-origin API routes:
 
 - Browser code stays on `roma/app/api/**`.
 - Normal customer product routes are explicit and owned in Roma (`/api/account/**`, `/api/session/**`).
-- Those routes call the real owners directly: Berlin for auth/account truth, Tokyo/Tokyo-worker for saved/artifact truth, and San Francisco for AI execution.
+- Those routes call the real owners directly: Berlin for auth/account truth, Tokyo/Tokyo-worker for saved/artifact bytes and projections, and San Francisco for AI execution. Product decisions about account lifecycle, tiers, caps, publish eligibility, and downgrade/suspension correctness stay in Roma/system account operations.
 - There is no generic cross-service proxy in the active Roma product path.
 - Account-scoped same-origin responses now stamp `x-request-id`, emit one structured completion log per request, and apply a first per-account KV-backed rate-limit floor on normal `/api/account/**` mutation routes (asset upload/delete included; AI copilot routes excluded from this floor).
 - Roma emits structured server-side logs and failures for Cloudflare ingestion. Pages-specific observability toggles are dashboard-owned; Worker-only `wrangler.toml` observability blocks are not valid for the Roma Pages project.
@@ -126,9 +129,9 @@ Client fetch behavior:
 - `fetchSameOriginJson` in the browser is just a no-store fetch + timeout/reason wrapper.
 - Server routes resolve the bearer from Roma’s httpOnly session cookies and forward upstream.
 - Post-bootstrap product-path actions carry `x-ck-authz-capsule` on the active Roma path where Roma authorizes against the bootstrap capsule (`/api/account/widgets`, `/api/account/assets*`, `/api/account/team*`, `/api/account/locales`, Builder/account routes).
-- Roma -> Tokyo/Tokyo-worker product control calls now execute through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
-- Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL`; Copilot uses a Roma-minted grant and outcome writes use HMAC signing. Account-widget Babel text production is also Roma-orchestrated: Roma mints a `widget.instance.translator` grant, sends concrete primitive text values to San Francisco, and then asks Tokyo-worker to store the returned overlay values.
-- Roma no longer calls Berlin for a Michael/PostgREST token. Account registry reads/writes go through Berlin product endpoints with the current Berlin bearer, while Tokyo/Tokyo-worker remain the saved-document and serve-state owners.
+- Roma -> Tokyo/Tokyo-worker product control calls now execute through the private `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule and `accountPublicId` coordinate for account-owned runtime storage.
+- Roma -> San Francisco calls require explicit `SANFRANCISCO_BASE_URL`; Copilot uses a Roma-minted grant and outcome writes use HMAC signing. Account-instance Babel text production is also Roma-orchestrated: Roma mints a `widget.instance.translator` grant, sends concrete primitive text values to San Francisco, and then asks Tokyo-worker to store the returned overlay values.
+- Roma no longer calls Berlin for a Michael/PostgREST token. Account registry reads/writes go through Berlin product endpoints with the current Berlin bearer, while Tokyo/Tokyo-worker remain the saved-document and serve-state storage boundary.
 
 ## Bob orchestration contract (Roma Builder)
 
@@ -138,7 +141,7 @@ Client fetch behavior:
 2. Load one Builder-open envelope from Roma same-origin (`GET /api/builder/:instanceId/open`), which resolves the saved authoring revision server-side.
 3. Load compiled payload (`/api/widgets/:widgetname/compiled`).
 4. Wait for Bob `bob:session-ready`.
-5. Send `ck:open-editor` with `requestId`, `widgetname`, `compiled`, `instanceData`, `policy`, `instanceId`, `label`, `source`, and `meta`.
+5. Send `ck:open-editor` with `requestId`, `widgetname`, `compiled`, `instanceData`, `policy`, `accountPublicId`, `instanceId`, `label`, `source`, and `meta`.
 6. Wait for terminal open result (`bob:open-editor-applied` or `bob:open-editor-failed`).
 
 This is the governing product-path authoring flow for the 075 authoring simplification track.
@@ -149,13 +152,13 @@ Notes:
 - Builder-open carries the saved document plus Tokyo-owned `publishStatus` so Bob can gate public embed copy. Bob still does not own publish/unpublish actions.
 - Roma no longer uses one mixed helper for both Builder-open document loading and broad publish/serve-state lookup. Builder-open reads only the one opened instance's Tokyo publish status for copy-code gating; widgets-domain/account routes that need serve-state ask the Tokyo live plane separately.
 - Invalid saved-document failures now surface at the Tokyo saved-document control boundary. Roma forwards that boundary result to Builder instead of re-validating the same saved payload again on read.
-- Roma now consumes the saved-document identity returned by Tokyo on that path instead of reconstructing `instanceId` / `accountId` locally after Tokyo has already answered.
+- Roma now consumes the saved-document identity returned by Tokyo on that path instead of reconstructing `accountPublicId` / `instanceId` / `accountId` locally after Tokyo has already answered.
 - The Builder host now trusts the successful Builder-open envelope for widget identity instead of running another local `widgetType` proof step before opening Bob.
-- On save, Roma sends the current account command to one Tokyo-worker save transition. Tokyo-worker proves the existing saved document, rejects widget-type mismatch, preserves omitted display metadata, writes the saved config, reads its own publish state, and accepts translation/live follow-up from the same boundary.
+- On save, Roma sends the current account command to one Tokyo-worker save transition using `accountPublicId + instanceId`. Tokyo-worker proves the existing saved document, rejects widget-type mismatch, preserves omitted display metadata, writes the saved config, reads its own publish state, and accepts translation/live follow-up from the same boundary.
 - Product-path save must stay one user action with one owner in product language: the user saves the instance, and Tokyo-worker reconciles that instance and its derived artifacts. Any transport details behind that handoff are implementation residue, not product meaning, and must not turn into a second save mode or a second user-facing workflow.
 - Roma no longer exposes a mixed account-instance reader that combines saved document truth with instance serve-state in one payload. Builder-open remains the document read boundary; widgets-domain serve-state flows ask the Tokyo live plane separately.
-- Widgets-domain account instance identity now comes from Tokyo saved documents. Canonical publish/unpublish truth is Tokyo's per-instance serve flag. Michael status residue must not be treated as surviving authority.
-- Account-widget rename now reads the current Tokyo saved document and writes the renamed document back through the same Tokyo save boundary. It no longer patches Michael `display_name` as product identity truth.
+- Widgets-domain account instance identity now comes from Tokyo saved documents. Canonical published/unpublished storage state is Tokyo's per-instance serve flag and published projection under `accounts/{accountPublicId}/instances/{instanceId}/published/`; the decision to publish, unpublish, delete, downgrade, enforce caps, or repair published-state correctness belongs to Roma/system account operations. Michael status residue must not be treated as surviving authority.
+- Account-instance rename now reads the current Tokyo saved document and writes the renamed document back through the same Tokyo save boundary. It no longer patches Michael `display_name` as product identity truth.
 - Account duplicate is one Tokyo-worker transition. Tokyo-worker reads the source saved document, mints the new compact 10-character instance ID, writes the duplicated saved document, and reports any translation follow-up acceptance separately. Roma does not mint IDs or perform cleanup compensation for Tokyo-owned duplicate state.
 - Asset picker/upload/resolve behavior on the active Builder path now runs through the Roma current-account asset routes, delegated from Bob through one hosted account-command seam. Roma handles `list-assets`, `resolve-assets`, and `upload-asset` directly against those current-account routes and does not feed a hosted asset bridge into Bob for this path.
 - In hosted account-editing flows, Bob sends account read/write intents back to Roma over postMessage. Roma executes the named same-origin account routes and returns the result payload to Bob. This keeps Bob as editor kernel and Roma as the product command boundary.
@@ -174,10 +177,12 @@ Roma `widgets` is the product surface that brokers per-instance serve-state chan
 - `Rename` happens in `/widgets`
 - Bob does not expose published/unpublished state changes
 - Bob does not persist instance rename inline
-- `/widgets` reads account-instance identity from Tokyo and must converge to Tokyo serve-state truth for publish/unpublish. Michael status residue is not the target architecture.
+- `/widgets` reads account-instance identity from Tokyo and must converge to account-scoped Tokyo serve-state storage for publish/unpublish. Michael status residue is not the target architecture.
 - `GET /api/account/widgets` is a Tokyo-owned account instance list read. It does not call Berlin publish-containment on the dashboard hot path; containment is enforced by the publish action boundary.
-- `Publish` is the explicit serve-on boundary in Widgets: Roma applies account containment checks on the action, then calls one Tokyo-worker publish transition. Tokyo-worker owns already-published detection, published-limit counting, runtime materialization, live pointer writes, and published overlay projection.
-- `Unpublish` calls one Tokyo-worker unpublish transition. Tokyo-worker owns already-unpublished detection and live-surface removal so Venice stops serving the instance without deleting saved or internal overlay state.
+- `Publish` is the explicit serve-on boundary in Widgets: Roma/system account operations apply account containment, tier, cap, and downgrade/suspension checks on the action, then call one Tokyo-worker publish transition. Tokyo-worker performs storage/PBX validation, writes the serve flag, materializes the account-scoped published projection, writes live pointers, and projects published overlays; it does not decide account policy.
+- `Unpublish` calls one Tokyo-worker unpublish transition after Roma/system account operations decide the mutation. Tokyo-worker performs the storage removal/update so Venice stops serving the instance without deleting saved or internal overlay state; it does not decide whether policy requires unpublish.
+- `Delete` is a Roma/system account operation over one account-owned instance. Tokyo-worker removes or tombstones only the addressed `accounts/{accountPublicId}/instances/{instanceId}/` subtree and derived published projection as directed by the product operation.
+- Downgrade, suspension, tier/cap correction, and other account correctness jobs are Roma/system account operations. Their durable effect is to make account-owned instance state and published projections correct before Venice observes them.
 - Duplicate-from-widget creates account-owned instances from an existing same-account source through one Tokyo-worker duplicate transition.
 - The old settings-level “unpublish all instances” product action is not part of the active product surface
 
@@ -196,10 +201,10 @@ Usage, billing, and AI domain behavior:
 Assets domain behavior:
 
 - `AssetsDomain` reads account inventory and `storageBytesUsed` from `/api/account/assets` and performs per-asset delete via `/api/account/assets/:assetId`.
-- Roma exposes account-level asset routes (`/api/account/assets`, `/api/account/assets/resolve`, `/api/account/assets/:assetId`, `/api/account/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule.
+- Roma exposes account-level asset routes (`/api/account/assets`, `/api/account/assets/resolve`, `/api/account/assets/:assetId`, `/api/account/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule and `accountPublicId` storage coordinate.
 - On the active Builder path, Bob delegates asset list/resolve/upload back to these same Roma routes through the normal host account-command seam. Bob owns the explicit asset transport; Roma owns the direct current-account route handling for those commands.
 - `/api/account/usage` remains the Usage domain surface, but it now reads storage bytes from the same Tokyo-worker asset authority as `/api/account/assets`. Assets does not double-read storage truth from both routes on the same screen.
-- Roma widget/assets list surfaces no longer rely on fixed client-side `200/500` caps; Tokyo-worker account instance indexes and asset inventory return the current account manifests.
+- Roma widget/assets list surfaces no longer rely on fixed client-side `200/500` caps; Tokyo-worker account instance indexes and asset inventory return the current account manifests. Product caps and tier limits are enforced by Roma/system account operations, with Tokyo-worker returning storage facts rather than account-policy decisions.
 - Account asset upload is same-origin Roma product traffic. The active product path no longer exposes wildcard CORS on `/api/account/assets/upload`.
 - Roma exposes private non-asset product control routes to Tokyo-worker through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Public Tokyo HTTP is no longer the Builder open/save authoring seam.
 - Asset inventory/upload payloads expose `assetId` and metadata only; delivery URL comes from `/api/account/assets/resolve`, and Roma delete uses `assetId` directly.
@@ -220,6 +225,7 @@ Assets domain behavior:
 - Uses cloud-dev Berlin/Tokyo/Bob/San Francisco URLs from env/config.
 - Cloud product auth presents Berlin provider auth only in customer UI, with Google as the enabled cloud-dev provider. Roma no longer carries a hidden email/password session route for CI smoke.
 - Cloud-dev currently runs as one effective product account: admin. Roma does not expose customer account switching there or in the normal Roma product shell.
+- The admin account is the normal account with `accountPublicId` `00000001`; admin-owned examples and product references must use the same `accounts/00000001/instances/{instanceId}/` model as every other account, with no admin storage lane.
 
 ## Operational notes
 

@@ -1,0 +1,92 @@
+{
+  "baseFingerprint": "11b13fc8cf15ccc9628da4be25e35f846dc1f8345caca9076a9a42800f5dc624",
+  "baseUpdatedAt": "2026-05-15T07:03:15.479Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Logoesittely-widget – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Nosta asiakaslogot esiin nopealla ja joustavalla esittely-widgetillä."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Logoesittely. Välitön sosiaalinen todiste."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Esittele asiakaslogot tyylikkäästi -- rakenna luottamusta ja lisää konversioita."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Logoesittely"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Esittele logot tyylikkäästi. Rakenna luottamusta."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Näin se toimii"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Lisää logot"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Järjestä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Upota"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Lataa asiakaslogosi (SVG/PNG) sekunneissa."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Valitse asettelu ja välistys, jotta se sopii sivustoosi."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Liitä koodinpätkä mille tahansa alustalle."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Luo logoesittelysi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Aloita ilmaiseksi. Julkaise, kun olet valmis."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Kokeile livenä"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Katso esikatselu aidosta Clickeen-widgetistä ja luo sitten ilmainen tili, jotta voit muokata oman widgetisi."
+    }
+  ],
+  "v": 1
+}

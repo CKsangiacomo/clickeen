@@ -1,0 +1,412 @@
+{
+  "appearance": {
+    "ctaBackground": "var(--color-system-blue)",
+    "ctaRadius": "md",
+    "ctaTextColor": "var(--color-system-white)",
+    "itemBackground": "transparent",
+    "itemCard": {
+      "border": {
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)",
+        "enabled": false,
+        "width": 1
+      },
+      "radius": "4xl",
+      "radiusBL": "4xl",
+      "radiusBR": "4xl",
+      "radiusLinked": true,
+      "radiusTL": "4xl",
+      "radiusTR": "4xl",
+      "shadow": {
+        "alpha": 18,
+        "blur": 24,
+        "color": "#000000",
+        "enabled": false,
+        "inset": false,
+        "spread": 0,
+        "x": 0,
+        "y": 8
+      }
+    },
+    "logoLook": "original",
+    "logoOpacity": 0.9,
+    "textColor": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
+    "titleColor": "var(--color-system-black)"
+  },
+  "behavior": {
+    "randomOrder": false,
+    "showBacklink": true
+  },
+  "cta": {
+    "enabled": true,
+    "href": "https://example.com/contact",
+    "label": "Contact us",
+    "style": "filled"
+  },
+  "header": {
+    "alignment": "center",
+    "enabled": true,
+    "textHtml": "Trusted by teams worldwide.",
+    "title": "Some of our best clients"
+  },
+  "pod": {
+    "background": "var(--color-system-white)",
+    "contentWidth": 960,
+    "padding": {
+      "desktop": {
+        "all": 24,
+        "bottom": 24,
+        "left": 24,
+        "linked": true,
+        "right": 24,
+        "top": 24
+      },
+      "mobile": {
+        "all": 16,
+        "bottom": 16,
+        "left": 16,
+        "linked": true,
+        "right": 16,
+        "top": 16
+      }
+    },
+    "radius": "4xl",
+    "radiusBL": "4xl",
+    "radiusBR": "4xl",
+    "radiusLinked": true,
+    "radiusTL": "4xl",
+    "radiusTR": "4xl",
+    "shadow": {
+      "alpha": 18,
+      "blur": 24,
+      "color": "#000000",
+      "enabled": false,
+      "inset": false,
+      "spread": 0,
+      "x": 0,
+      "y": 8
+    },
+    "widthMode": "fixed"
+  },
+  "seoGeo": {
+    "enabled": false
+  },
+  "spacing": {
+    "gap": 20,
+    "logoHeight": 40,
+    "mobileGap": 16,
+    "mobileStripGap": 12,
+    "rowGap": 16,
+    "stripGap": 16
+  },
+  "stage": {
+    "alignment": "center",
+    "background": "var(--color-system-gray-5)",
+    "canvas": {
+      "height": 0,
+      "mode": "viewport",
+      "width": 0
+    },
+    "padding": {
+      "desktop": {
+        "all": 80,
+        "bottom": 80,
+        "left": 80,
+        "linked": true,
+        "right": 80,
+        "top": 80
+      },
+      "mobile": {
+        "all": 24,
+        "bottom": 24,
+        "left": 24,
+        "linked": true,
+        "right": 24,
+        "top": 24
+      }
+    }
+  },
+  "strips": [
+    {
+      "id": "s1",
+      "logos": [
+        {
+          "alt": "",
+          "asset": {
+            "name": "Audi.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l1",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Audi.svg) center / contain no-repeat",
+          "name": "Audi",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "BMW.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l2",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/BMW.svg) center / contain no-repeat",
+          "name": "BMW",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Chana.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l3",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Chana.svg) center / contain no-repeat",
+          "name": "Chana",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Daihatsu.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l4",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Daihatsu.svg) center / contain no-repeat",
+          "name": "Daihatsu",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Ford.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l5",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Ford.svg) center / contain no-repeat",
+          "name": "Ford",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Honda.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l6",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Honda.svg) center / contain no-repeat",
+          "name": "Honda",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Isuzu.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l7",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Isuzu.svg) center / contain no-repeat",
+          "name": "Isuzu",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Lambo.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l8",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Lambo.svg) center / contain no-repeat",
+          "name": "Lambo",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Perodua.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l9",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Perodua.svg) center / contain no-repeat",
+          "name": "Perodua",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Peugeot.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l10",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Peugeot.svg) center / contain no-repeat",
+          "name": "Peugeot",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Proton.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l11",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Proton.svg) center / contain no-repeat",
+          "name": "Proton",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Suzuki.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l12",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Suzuki.svg) center / contain no-repeat",
+          "name": "Suzuki",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Tesla.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l13",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Tesla.svg) center / contain no-repeat",
+          "name": "Tesla",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Toyota.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l14",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Toyota.svg) center / contain no-repeat",
+          "name": "Toyota",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "VW.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l15",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/VW.svg) center / contain no-repeat",
+          "name": "VW",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        },
+        {
+          "alt": "",
+          "asset": {
+            "name": "Volvo.svg"
+          },
+          "caption": "",
+          "href": "",
+          "id": "l16",
+          "logoFill": "url(https://tokyo-assets-dev.clickeen.workers.dev/widgets/logoshowcase/base-assets/Volvo.svg) center / contain no-repeat",
+          "name": "Volvo",
+          "nofollow": false,
+          "targetBlank": false,
+          "title": ""
+        }
+      ]
+    }
+  ],
+  "type": "grid",
+  "typeConfig": {
+    "carousel": {
+      "allowSwipe": true,
+      "autoSlideDelayMs": 2500,
+      "autoplay": false,
+      "direction": "left",
+      "mode": "paged",
+      "pauseOnHover": true,
+      "showArrows": true,
+      "speed": 30,
+      "step": "page",
+      "transitionMs": 350
+    },
+    "grid": {}
+  },
+  "typography": {
+    "globalFamily": "Inter",
+    "roleScales": {
+      "body": {
+        "l": "16px",
+        "m": "14px",
+        "s": "13px",
+        "xl": "18px",
+        "xs": "12px"
+      },
+      "title": {
+        "l": "28px",
+        "m": "24px",
+        "s": "20px",
+        "xl": "32px",
+        "xs": "18px"
+      }
+    },
+    "roles": {
+      "body": {
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 25%)",
+        "family": "Inter",
+        "fontStyle": "normal",
+        "sizeCustom": "14px",
+        "sizePreset": "m",
+        "weight": "400"
+      },
+      "title": {
+        "color": "var(--color-system-black)",
+        "family": "Inter",
+        "fontStyle": "normal",
+        "sizeCustom": "24px",
+        "sizePreset": "m",
+        "weight": "700"
+      }
+    }
+  }
+}

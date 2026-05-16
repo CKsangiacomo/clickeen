@@ -463,7 +463,7 @@ Clickeen Stack:
 **Directory structure example:**
 ```
 tokyo/
-├── widgets/faq/
+├── product/widgets/faq/
 │   ├── spec.json                    # Widget definition
 │   ├── widget.html                  # Template
 │   ├── widget.css                   # Styles
@@ -473,14 +473,16 @@ tokyo/
 │   ├── localization.json            # Locale allowlist
 │   ├── layers/*.allowlist.json      # Non-locale allowlists
 │   └── pages/*.json                 # Prague base copy
-├── accounts/{accountId}/widgets/faq/{instanceId}/
+├── accounts/{accountPublicId}/instances/{instanceId}/
 │   ├── instance.json                # Account instance metadata
 │   ├── config.json                  # Saved source config
 │   ├── publish.json                 # Published/saved status pointer
-│   └── overlays/l10n/
-│       ├── fr/overlay.json
-│       ├── es/overlay.json
-│       └── ja/overlay.json
+│   ├── overlays/{overlayId}.json
+│   ├── selected-overlays/{language}/{experiment}/{personalization}.json
+│   └── published/
+│       ├── live/r.json
+│       ├── config.json
+│       └── overlays/{overlayId}.json
 ```
 
 **Why this matters:**
@@ -539,13 +541,13 @@ tokyo/
 
 **Request flow:**
 ```
-User visits: /widget/{instanceId}?locale=fr
+User visits: /widget/{accountPublicId}/{instanceId}?locale=fr
     ↓
-Venice receives request and resolves the requested locale against Tokyo's current-ready locale policy
+Venice receives the request and asks Tokyo for the account-scoped published projection
     ↓
 Loads the current live config pack from Tokyo
     ↓
-Loads the current-ready French overlay from Tokyo only when that locale is currently servable
+Loads the selected French overlay only if it exists in the published projection
     ↓
 Applies ops to base config for the current fingerprint only
     ↓
@@ -1474,7 +1476,7 @@ LOOP REPEATS (exponential growth)
 │  • Detect translatable fields (title, body, cta, etc.)      │
 │  • Check existing translations (baseFingerprint match?)     │
 │  • If fingerprint changed → translate delta only            │
-│  • Store as account overlay (accounts/{accountId}/widgets/{widgetType}/{instanceId}/overlays/l10n/{locale}/overlay.json) │
+│  • Store as account overlay (accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json) │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -1501,7 +1503,8 @@ LOOP REPEATS (exponential growth)
 
 ```json
 {
-  "instanceId": "INST000001",
+  "accountPublicId": "00000001",
+  "instanceId": "UZ3JEJSHII",
   "widgetType": "faq",
   "status": "published",
   "config": {

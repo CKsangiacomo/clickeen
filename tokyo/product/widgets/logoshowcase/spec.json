@@ -273,7 +273,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Audi.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Audi.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -287,7 +287,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/BMW.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/BMW.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -301,7 +301,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Chana.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Chana.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -315,7 +315,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Daihatsu.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Daihatsu.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -329,7 +329,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Ford.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Ford.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -343,7 +343,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Honda.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Honda.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -357,7 +357,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Isuzu.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Isuzu.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -371,7 +371,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Lambo.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Lambo.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -385,7 +385,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Perodua.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Perodua.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -399,7 +399,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Peugeot.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Peugeot.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -413,7 +413,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Proton.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Proton.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -427,7 +427,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Suzuki.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Suzuki.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -441,7 +441,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Tesla.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Tesla.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -455,7 +455,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Toyota.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Toyota.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -469,7 +469,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/VW.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/VW.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           },
@@ -483,7 +483,7 @@
             },
             "title": "",
             "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/base-assets/Volvo.svg) center / contain no-repeat",
+            "logoFill": "url(/widgets/logoshowcase/media/Volvo.svg) center / contain no-repeat",
             "nofollow": false,
             "targetBlank": false
           }

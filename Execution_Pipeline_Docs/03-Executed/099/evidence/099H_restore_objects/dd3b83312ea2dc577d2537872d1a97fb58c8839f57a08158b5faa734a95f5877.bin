@@ -1,0 +1,25 @@
+{
+  "baseFingerprint": "fde9605ffe75645067414a708e89929b615f9a05c8f750f37a517d5f80284fdc",
+  "baseUpdatedAt": "2026-02-04T17:11:45.006Z",
+  "pageId": "widgets/logoshowcase",
+  "snapshot": {
+    "blocks.cta.copy.headline": "Create your logo showcase",
+    "blocks.cta.copy.subheadline": "Start free. Publish when you're ready.",
+    "blocks.hero.copy.headline": "Logo showcase. Instant social proof.",
+    "blocks.hero.copy.subheadline": "Show customer logos beautifully -- build trust and increase conversions.",
+    "blocks.minibob.copy.heading": "Try it live",
+    "blocks.minibob.copy.subhead": "Edit a demo instance in minibob. Publish when you're ready.",
+    "blocks.navmeta.copy.description": "Show logos beautifully. Build trust.",
+    "blocks.navmeta.copy.title": "Logo showcase",
+    "blocks.page-meta.copy.description": "Highlight customer logos with a fast, flexible showcase widget.",
+    "blocks.page-meta.copy.title": "Logo showcase widget - Clickeen",
+    "blocks.steps.copy.items.0.body": "Upload your customer logos (SVG/PNG) in seconds.",
+    "blocks.steps.copy.items.0.title": "Add logos",
+    "blocks.steps.copy.items.1.body": "Choose layout + spacing to match your site.",
+    "blocks.steps.copy.items.1.title": "Arrange",
+    "blocks.steps.copy.items.2.body": "Paste the snippet into any platform.",
+    "blocks.steps.copy.items.2.title": "Embed",
+    "blocks.steps.copy.title": "How it works"
+  },
+  "v": 1
+}

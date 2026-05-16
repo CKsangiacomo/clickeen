@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-05-15T18:32:20.631Z",
+  "bucket": "tokyo-assets-dev",
+  "sourceKey": "widgets/faq/localization.json",
+  "temporaryKey": "product/__prd99h_restore_rehearsal/0d82dcf8420650cfbcba5728abdbe31dc5575533eb7391ff0a8e62ffbe25204c/localization.json",
+  "sourceSha256": "0d82dcf8420650cfbcba5728abdbe31dc5575533eb7391ff0a8e62ffbe25204c",
+  "restoredSha256": "0d82dcf8420650cfbcba5728abdbe31dc5575533eb7391ff0a8e62ffbe25204c",
+  "bytes": 255,
+  "status": "green"
+}

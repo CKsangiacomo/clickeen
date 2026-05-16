@@ -18,7 +18,7 @@ Prague uses a tiny set of CSS utilities (no framework):
 - `ck-row` — horizontal layout (`flex-wrap: wrap`)
 - `ck-split` — two-column hero split (stacks on mobile)
 
-Source: `prague/public/styles/layout.css`
+Source: `prague/public/styles/layout.css` in the repo. When Prague content/assets are synced to Tokyo R2, their storage home is under root `prague/`, never root `l10n/`, `published/`, or account runtime folders.
 
 ## The “don’t die” contract (wrapper jail prevention)
 

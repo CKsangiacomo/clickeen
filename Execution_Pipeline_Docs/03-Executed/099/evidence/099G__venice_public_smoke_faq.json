@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "results": [
+    {
+      "name": "Roma unauthenticated account API rejects",
+      "boundary": "roma.auth",
+      "ok": true,
+      "ms": 579,
+      "detail": "HTTP 401"
+    },
+    {
+      "name": "Venice loader",
+      "boundary": "venice.public",
+      "ok": true,
+      "ms": 105,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "Venice public instance read",
+      "boundary": "venice.public",
+      "ok": true,
+      "ms": 1954,
+      "detail": "00000001/UZ3JEJSHII"
+    }
+  ]
+}

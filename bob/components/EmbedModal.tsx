@@ -36,6 +36,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
 export function EmbedModal({ open, onClose }: EmbedModalProps) {
   const session = useWidgetSessionChrome();
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const accountPublicId = session.meta?.accountPublicId ? String(session.meta.accountPublicId) : '';
   const instanceId = session.meta?.instanceId ? String(session.meta.instanceId) : '';
   const isPublished = session.meta?.publishStatus === 'published';
 
@@ -68,16 +69,16 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
       veniceBase = '';
     }
     const loaderSrc = veniceBase ? `${veniceBase}/embed/latest/loader.js` : '';
-    const canRender = Boolean(isPublished && instanceId && loaderSrc);
+    const canRender = Boolean(isPublished && accountPublicId && instanceId && loaderSrc);
 
     const safeSnippet = canRender
-      ? `<div data-clickeen-id="${instanceId}"></div>
-<script src="${loaderSrc}" async></script>`
+      ? `<div data-account-public-id="${accountPublicId}" data-clickeen-id="${instanceId}"></div>
+<script src="${loaderSrc}" async data-account-public-id="${accountPublicId}"></script>`
       : '';
 
     const scriptlessSnippet = canRender
       ? `<iframe
-  src="${veniceBase}/widget/${encodeURIComponent(instanceId)}"
+  src="${veniceBase}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}"
   title="Clickeen widget"
   loading="lazy"
   referrerpolicy="no-referrer"
@@ -88,21 +89,22 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
 
     const seoGeoSnippet = canRender
       ? `<div
+  data-account-public-id="${accountPublicId}"
   data-clickeen-id="${instanceId}"
   data-ck-optimization="seo-geo"
   data-max-width="0"
   data-min-height="420"
   data-width="100%"
 ></div>
-<script src="${loaderSrc}" async></script>`
+<script src="${loaderSrc}" async data-account-public-id="${accountPublicId}"></script>`
       : '';
 
-    const previewSeoGeoHref = instanceId
-      ? `/bob/preview-shadow?instanceId=${encodeURIComponent(instanceId)}&mode=seo-geo`
+    const previewSeoGeoHref = accountPublicId && instanceId
+      ? `/bob/preview-shadow?accountPublicId=${encodeURIComponent(accountPublicId)}&instanceId=${encodeURIComponent(instanceId)}&mode=seo-geo`
       : '/bob/preview-shadow?mode=seo-geo';
 
     return { veniceBase, loaderSrc, canRender, safeSnippet, scriptlessSnippet, seoGeoSnippet, previewSeoGeoHref };
-  }, [instanceId, isPublished]);
+  }, [accountPublicId, instanceId, isPublished]);
 
   const copySnippet = useCallback(async (label: string, snippet: string) => {
     setCopyStatus(null);
@@ -128,6 +130,7 @@ export function EmbedModal({ open, onClose }: EmbedModalProps) {
         </div>
 
         {!instanceId ? <div className="settings-panel__error">Instance instanceId missing.</div> : null}
+        {instanceId && !accountPublicId ? <div className="settings-panel__error">Account public ID missing.</div> : null}
         {instanceId && !isPublished ? (
           <div className="settings-panel__error">Publish this widget before copying embed code.</div>
         ) : null}

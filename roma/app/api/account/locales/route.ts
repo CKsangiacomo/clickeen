@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     const baseLocaleLock = await loadAccountBaseLocaleLockState({
-      accountId: current.value.authzPayload.accountId,
+      accountId: current.value.authzPayload.accountPublicId,
       accountCapsule: current.value.authzToken,
       requestId: current.value.requestId,
     });
@@ -175,7 +175,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const baseLocaleLock = await loadAccountBaseLocaleLockState({
-      accountId: current.value.authzPayload.accountId,
+      accountId: current.value.authzPayload.accountPublicId,
       accountCapsule: current.value.authzToken,
       requestId: current.value.requestId,
     });

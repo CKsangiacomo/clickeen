@@ -1,5 +1,5 @@
 import { resolveLocaleForLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
-import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
+import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import type { PragueMarket } from './markets';
@@ -38,12 +38,15 @@ async function fetchJson(url: string): Promise<{ status: number; ok: boolean; js
   return { status: res.status, ok: res.ok, json };
 }
 
-export async function resolveTokyoInstanceLocales(instanceId: string): Promise<string[] | null> {
+export async function resolveTokyoInstanceLocales(accountPublicId: string, instanceId: string): Promise<string[] | null> {
+  const accountId = String(accountPublicId || '').trim();
   const id = String(instanceId || '').trim();
-  if (!isCompactInstanceId(id)) return null;
+  if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(id)) return null;
 
   const baseUrl = getTokyoBaseUrl();
-  const { status, ok, json } = await fetchJson(`${baseUrl}/renders/widgets/${encodeURIComponent(id)}/live/r.json`);
+  const { status, ok, json } = await fetchJson(
+    `${baseUrl}/renders/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(id)}/live/r.json`,
+  );
   if (status === 404) return null;
   if (!ok || !json || typeof json !== 'object') return null;
 

@@ -4,12 +4,12 @@ import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } 
 import { applyI18nToDom } from '../../lib/i18n/dom';
 import {
   applyGroupHeaders,
-  ensureAssets,
+  ensureMedia,
   getClusterBody,
   installClusterCollapseBehavior,
-  resetDieterAssetCaches,
+  resetDieterMediaCaches,
   runHydrators,
-  type DieterAssets,
+  type DieterMedia,
 } from './dom';
 import type { AccountAssetsClient } from '../../../dieter/components/shared/account-assets';
 import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './showIf';
@@ -20,7 +20,7 @@ export function useTdMenuHydration(args: {
   widgetKey?: string;
   widgetName: string | null;
   accountAssets: AccountAssetsClient;
-  dieterAssets?: DieterAssets;
+  dieterMedia?: DieterMedia;
   instanceDataRef: MutableRefObject<Record<string, unknown>>;
   showIfEntriesRef: MutableRefObject<ShowIfEntry[]>;
   setRenderKey: Dispatch<SetStateAction<number>>;
@@ -28,7 +28,7 @@ export function useTdMenuHydration(args: {
   const {
     accountAssets,
     containerRef,
-    dieterAssets,
+    dieterMedia,
     instanceDataRef,
     panelHtml,
     setRenderKey,
@@ -38,7 +38,7 @@ export function useTdMenuHydration(args: {
   } = args;
 
   useEffect(() => {
-    resetDieterAssetCaches();
+    resetDieterMediaCaches();
   }, [widgetKey]);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export function useTdMenuHydration(args: {
     showIfEntriesRef.current = buildShowIfEntries(container);
     applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
 
-    ensureAssets(dieterAssets)
+    ensureMedia(dieterMedia)
       .then(() => {
         if (!container) return;
         runHydrators(container, { accountAssets });
@@ -69,12 +69,12 @@ export function useTdMenuHydration(args: {
       })
       .catch((err) => {
         if (process.env.NODE_ENV === 'development') {
-          console.error('[TdMenuContent] Failed to load Dieter assets', err);
+          console.error('[TdMenuContent] Failed to load Dieter media', err);
         }
       });
 
     return () => {
       cleanupCollapse();
     };
-  }, [accountAssets, containerRef, dieterAssets, instanceDataRef, panelHtml, setRenderKey, showIfEntriesRef, widgetName]);
+  }, [accountAssets, containerRef, dieterMedia, instanceDataRef, panelHtml, setRenderKey, showIfEntriesRef, widgetName]);
 }

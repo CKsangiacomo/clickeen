@@ -74,7 +74,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const selectedModel = selectedModelResult.ok ? selectedModelResult.value : null;
 
     const currentInstance = await loadTokyoAccountInstanceDocument({
-      accountId: current.value.authzPayload.accountId,
+      accountId: current.value.authzPayload.accountPublicId,
       instanceId,
       accountCapsule: current.value.authzToken,
       requestId: current.value.requestId,

@@ -1,0 +1,68 @@
+{
+  "generatedAt": "2026-05-15T19:40:31.675Z",
+  "results": [
+    {
+      "name": "widget-faq",
+      "url": "https://tokyo.dev.clickeen.com/widgets/faq/catalog.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "public, max-age=0, must-revalidate"
+    },
+    {
+      "name": "widget-countdown",
+      "url": "https://tokyo.dev.clickeen.com/widgets/countdown/catalog.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "public, max-age=0, must-revalidate"
+    },
+    {
+      "name": "widget-logoshowcase",
+      "url": "https://tokyo.dev.clickeen.com/widgets/logoshowcase/catalog.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "public, max-age=0, must-revalidate"
+    },
+    {
+      "name": "prague-l10n",
+      "url": "https://tokyo.dev.clickeen.com/prague/l10n/chrome/index.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "public, max-age=300, stale-while-revalidate=600"
+    },
+    {
+      "name": "old-root-l10n",
+      "url": "https://tokyo.dev.clickeen.com/l10n/prague/chrome/index.json",
+      "status": 404,
+      "contentType": null,
+      "cacheControl": "no-store"
+    },
+    {
+      "name": "venice-faq",
+      "url": "https://venice.dev.clickeen.com/widget/00000001/UZ3JEJSHII",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "public, max-age=60, s-maxage=86400"
+    },
+    {
+      "name": "venice-missing",
+      "url": "https://venice.dev.clickeen.com/widget/00000001/ZZZZZZZZZZ",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "public, max-age=60, s-maxage=86400"
+    },
+    {
+      "name": "tokyo-render",
+      "url": "https://tokyo.dev.clickeen.com/renders/accounts/00000001/instances/UZ3JEJSHII/live/r.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "cacheControl": "public, max-age=60, s-maxage=300"
+    },
+    {
+      "name": "tokyo-old-render",
+      "url": "https://tokyo.dev.clickeen.com/renders/widgets/UZ3JEJSHII/live/r.json",
+      "status": 404,
+      "contentType": "text/plain;charset=UTF-8",
+      "cacheControl": null
+    }
+  ]
+}

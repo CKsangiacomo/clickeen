@@ -1,0 +1,300 @@
+scripts/health/product-path-smoke.mjs:27:  --instance-id <id>           Published instanceId for Venice read checks
+scripts/health/product-path-smoke.mjs:28:  --source-instance-id <id>    Account instanceId to duplicate during --write checks
+scripts/health/product-path-smoke.mjs:43:    accountPublicId: process.env.CK_HEALTH_ACCOUNT_PUBLIC_ID || process.env.VENICE_ACCOUNT_PUBLIC_ID || '',
+scripts/health/product-path-smoke.mjs:44:    instanceId: process.env.CK_HEALTH_INSTANCE_ID || process.env.VENICE_INSTANCE_ID || '',
+scripts/health/product-path-smoke.mjs:84:      args.accountPublicId = String(argv[i + 1] || '').trim();
+scripts/health/product-path-smoke.mjs:94:      args.instanceId = String(argv[i + 1] || '').trim();
+scripts/health/product-path-smoke.mjs:119:  args.accountPublicId = args.accountPublicId.trim();
+scripts/health/product-path-smoke.mjs:120:  args.instanceId = args.instanceId.trim();
+scripts/health/product-path-smoke.mjs:122:  if (args.publicOnly && (!args.accountPublicId || !args.instanceId)) {
+scripts/health/product-path-smoke.mjs:175:  return instances.find((entry) => typeof entry.instanceId === 'string') || null;
+scripts/health/product-path-smoke.mjs:179:  return instances.find((entry) => entry.status === 'published' && typeof entry.instanceId === 'string') || null;
+scripts/health/product-path-smoke.mjs:185:    payload.accountPublicId,
+scripts/health/product-path-smoke.mjs:186:    isRecord(payload.accountContext) ? payload.accountContext.accountPublicId : null,
+scripts/health/product-path-smoke.mjs:187:    isRecord(payload.activeAccount) ? payload.activeAccount.accountPublicId : null,
+scripts/health/product-path-smoke.mjs:344:  const instanceId = accountInstance.instanceId;
+scripts/health/product-path-smoke.mjs:346:    const result = await runner.request(runner.args.romaBase, `/api/builder/${encodeURIComponent(instanceId)}/open`);
+scripts/health/product-path-smoke.mjs:347:    assert2xx(result, `GET /api/builder/${instanceId}/open`);
+scripts/health/product-path-smoke.mjs:351:    return instanceId;
+scripts/health/product-path-smoke.mjs:354:    const result = await runner.request(runner.args.romaBase, `/api/account/instances/${encodeURIComponent(instanceId)}/translations`);
+scripts/health/product-path-smoke.mjs:355:    assert2xx(result, `GET /api/account/instances/${instanceId}/translations`);
+scripts/health/product-path-smoke.mjs:410:      `/api/account/instances/${encodeURIComponent(sourceInstance.instanceId)}/duplicate`,
+scripts/health/product-path-smoke.mjs:413:    assertHttp(duplicate, 201, `POST /api/account/instances/${sourceInstance.instanceId}/duplicate`);
+scripts/health/product-path-smoke.mjs:414:    if (!isRecord(duplicate.payload) || typeof duplicate.payload.instanceId !== 'string') {
+scripts/health/product-path-smoke.mjs:415:      throw new Error('duplicate payload missing instanceId');
+scripts/health/product-path-smoke.mjs:417:    createdInstanceId = duplicate.payload.instanceId;
+scripts/health/product-path-smoke.mjs:432:    return `duplicated ${sourceInstance.instanceId} to ${createdInstanceId}, opened, checked l10n, deleted`;
+scripts/health/product-path-smoke.mjs:437:async function runVenice(runner, accountPublicId, instanceId) {
+scripts/health/product-path-smoke.mjs:444:  if (!accountPublicId || !instanceId) {
+scripts/health/product-path-smoke.mjs:445:    runner.skip('Venice public instance read', 'venice.public', 'no accountPublicId or published instanceId supplied or discovered');
+scripts/health/product-path-smoke.mjs:452:      `/renders/accounts/${encodeURIComponent(accountPublicId)}/instances/${encodeURIComponent(instanceId)}/live/r.json`,
+scripts/health/product-path-smoke.mjs:454:    assert2xx(pointer, `GET /renders/accounts/${accountPublicId}/instances/${instanceId}/live/r.json`);
+scripts/health/product-path-smoke.mjs:455:    const embed = await runner.request(runner.args.veniceBase, `/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`);
+scripts/health/product-path-smoke.mjs:456:    assert2xx(embed, `GET /widget/${accountPublicId}/${instanceId}`);
+scripts/health/product-path-smoke.mjs:457:    return `${accountPublicId}/${instanceId}`;
+scripts/health/product-path-smoke.mjs:479:  await runVenice(runner, args.publicOnly ? args.accountPublicId : '', args.publicOnly ? args.instanceId : '');
+scripts/health/product-path-smoke.mjs:507:    await runDuplicateWrite(runner, { instanceId: args.sourceInstanceId });
+scripts/health/product-path-smoke.mjs:510:  const publishedInstanceId = args.instanceId || selectPublishedInstance(instances)?.instanceId || '';
+scripts/health/product-path-smoke.mjs:511:  const accountPublicId = args.accountPublicId || (await loadBootstrapAccountPublicId(runner));
+scripts/health/product-path-smoke.mjs:512:  await runVenice(runner, accountPublicId, publishedInstanceId);
+venice/lib/tokyo-proxy.ts:92:  params: { accountId: string; assetId: string; filename: string },
+venice/lib/tokyo-proxy.ts:96:  const accountId = safeSegment(params.accountId);
+venice/lib/tokyo-proxy.ts:99:  if (!accountId || !assetId || !filename) {
+venice/lib/tokyo-proxy.ts:110:  const response = await tokyoFetch(`/assets/account/${accountId}/${assetId}/${filename}${request.nextUrl.search}`, {
+venice/README.md:13:- `GET /widget/:accountPublicId/:instanceId` (SSR embed HTML)
+venice/README.md:16:- `GET /renders/accounts/:accountPublicId/instances/:instanceId/live/r.json`, `/config.json`, `/overlays/:overlayId.json`, and SEO/GEO meta pack routes (Tokyo published render proxies)
+venice/README.md:18:Venice is a public PBX: it proxies account-scoped published projections that already exist, and otherwise returns a miss. Publish, unpublish, commercial policy, lifecycle, eligibility, and account-operation decisions belong to Roma/account ops before the projection reaches Tokyo.
+venice/lib/request-ops.ts:63:  instanceId?: string | null;
+venice/lib/request-ops.ts:87:    instanceId: args.instanceId ?? null,
+venice/tests/runtime/mock-tokyo.mjs:4:const accountPublicId = '00000001';
+venice/tests/runtime/mock-tokyo.mjs:5:const instanceId = 'INST000001';
+venice/tests/runtime/mock-tokyo.mjs:85:  const renderBase = `/renders/accounts/${accountPublicId}/instances/${instanceId}`;
+venice/tests/runtime/mock-tokyo.mjs:93:        id: instanceId,
+venice/tests/runtime/mock-tokyo.mjs:125:    json(res, 200, { v: 1, id: instanceId, locale: 'en', metaFp });
+venice/tests/runtime/embed-runtime.spec.ts:3:const instanceId = process.env.CK_VENICE_TEST_INSTANCE_ID || 'INST000001';
+venice/tests/runtime/embed-runtime.spec.ts:4:const accountPublicId = process.env.CK_VENICE_TEST_ACCOUNT_PUBLIC_ID || '00000001';
+venice/tests/runtime/embed-runtime.spec.ts:28:      data-account-public-id="${accountPublicId}"
+venice/tests/runtime/embed-runtime.spec.ts:29:      data-instance-id="${instanceId}"
+venice/tests/runtime/embed-runtime.spec.ts:34:  await expect(page.locator('iframe')).toHaveAttribute('src', new RegExp(`/widget/${accountPublicId}/${instanceId}$`));
+venice/tests/runtime/embed-runtime.spec.ts:51:    <div data-account-public-id="${accountPublicId}" data-clickeen-id="${instanceId}"></div>
+venice/tests/runtime/embed-runtime.spec.ts:52:    <div data-account-public-id="${accountPublicId}" data-clickeen-id="${instanceId}"></div>
+venice/tests/runtime/embed-runtime.spec.ts:72:    <iframe src="${loaderUrl(rootURL, `/widget/${accountPublicId}/${instanceId}`)}"></iframe>
+venice/tests/runtime/embed-runtime.spec.ts:81:  const widgetRes = await request.get(loaderUrl(rootURL, `/widget/${instanceId}`));
+venice/tests/runtime/embed-runtime.spec.ts:84:  const renderRes = await request.get(loaderUrl(rootURL, `/renders/widgets/${instanceId}/live/r.json`));
+venice/tests/runtime/embed-runtime.spec.ts:92:    <iframe src="${loaderUrl(rootURL, `/widget/${accountPublicId}/${instanceId}?locale=it`)}"></iframe>
+venice/tests/runtime/embed-runtime.spec.ts:110:      data-account-public-id="${accountPublicId}"
+venice/tests/runtime/embed-runtime.spec.ts:111:      data-instance-id="${instanceId}"
+venice/tests/runtime/embed-runtime.spec.ts:134:      data-account-public-id="${accountPublicId}"
+venice/tests/runtime/embed-runtime.spec.ts:135:      data-instance-id="${instanceId}"
+bob/lib/session/sessionTypes.ts:35:  accountPublicId?: string;
+bob/lib/session/sessionTypes.ts:36:  instanceId?: string;
+bob/lib/session/sessionTypes.ts:70:  accountPublicId?: string;
+bob/lib/session/sessionTypes.ts:71:  instanceId?: string;
+bob/lib/session/sessionTypes.ts:85:  instanceId?: string;
+bob/lib/session/sessionTypes.ts:107:  instanceId?: string;
+bob/lib/session/sessionTypes.ts:116:  instanceId?: string;
+prague/README.md:33:Prague widget pages embed explicit Clickeen-owned account instances by `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId`.
+prague/README.md:43:- `PUBLIC_VENICE_URL=https://venice.dev.clickeen.com` (must serve `GET /widget/:accountPublicId/:instanceId`)
+bob/components/TopDrawer.tsx:14:  const currentInstanceId = typeof meta?.instanceId === 'string' ? meta.instanceId : '';
+bob/components/EmbedModal.tsx:39:  const accountPublicId = session.meta?.accountPublicId ? String(session.meta.accountPublicId) : '';
+bob/components/EmbedModal.tsx:40:  const instanceId = session.meta?.instanceId ? String(session.meta.instanceId) : '';
+bob/components/EmbedModal.tsx:72:    const canRender = Boolean(isPublished && accountPublicId && instanceId && loaderSrc);
+bob/components/EmbedModal.tsx:75:      ? `<div data-account-public-id="${accountPublicId}" data-clickeen-id="${instanceId}"></div>
+bob/components/EmbedModal.tsx:76:<script src="${loaderSrc}" async data-account-public-id="${accountPublicId}"></script>`
+bob/components/EmbedModal.tsx:81:  src="${veniceBase}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}"
+bob/components/EmbedModal.tsx:92:  data-account-public-id="${accountPublicId}"
+bob/components/EmbedModal.tsx:93:  data-clickeen-id="${instanceId}"
+bob/components/EmbedModal.tsx:99:<script src="${loaderSrc}" async data-account-public-id="${accountPublicId}"></script>`
+bob/components/EmbedModal.tsx:102:    const previewSeoGeoHref = accountPublicId && instanceId
+bob/components/EmbedModal.tsx:103:      ? `/bob/preview-shadow?accountPublicId=${encodeURIComponent(accountPublicId)}&instanceId=${encodeURIComponent(instanceId)}&mode=seo-geo`
+bob/components/EmbedModal.tsx:107:  }, [accountPublicId, instanceId, isPublished]);
+bob/components/EmbedModal.tsx:132:        {!instanceId ? <div className="settings-panel__error">Instance instanceId missing.</div> : null}
+bob/components/EmbedModal.tsx:133:        {instanceId && !accountPublicId ? <div className="settings-panel__error">Account public ID missing.</div> : null}
+bob/components/EmbedModal.tsx:134:        {instanceId && !isPublished ? (
+bob/components/EmbedModal.tsx:137:        {instanceId && isPublished && !embed.veniceBase ? (
+bob/lib/session/useSessionSaving.ts:57:    const instanceId = meta?.instanceId ? String(meta.instanceId) : '';
+bob/lib/session/useSessionSaving.ts:59:    if (!instanceId) {
+bob/lib/session/useSessionSaving.ts:90:        instanceId,
+bob/components/Workspace.tsx:33:  const instanceId = chrome.meta?.instanceId ?? '';
+bob/components/Workspace.tsx:90:    instanceId,
+bob/components/Workspace.tsx:103:      instanceId,
+bob/components/Workspace.tsx:114:    instanceId,
+bob/components/Workspace.tsx:220:          instanceId: snapshot.instanceId,
+bob/components/Workspace.tsx:264:      instanceId,
+bob/components/Workspace.tsx:277:    instanceId,
+bob/app/bob/preview-shadow/page.tsx:10:  const accountPublicId = typeof searchParams.accountPublicId === 'string' ? searchParams.accountPublicId : '';
+bob/app/bob/preview-shadow/page.tsx:11:  const instanceId = typeof searchParams.instanceId === 'string' ? searchParams.instanceId : '';
+bob/app/bob/preview-shadow/page.tsx:23:        data-account-public-id={accountPublicId}
+bob/app/bob/preview-shadow/page.tsx:24:        data-instance-id={instanceId}
+bob/components/BuilderApp.tsx:30:  const instanceId = chrome.meta?.instanceId ?? '';
+bob/components/BuilderApp.tsx:38:      instanceId &&
+bob/components/BuilderApp.tsx:48:    instanceId,
+bob/components/BuilderApp.tsx:59:  }, [instanceId]);
+bob/components/useTranslationsPreviewState.ts:44:  instanceId: string;
+bob/components/useTranslationsPreviewState.ts:58:  }, [args.instanceId]);
+bob/components/useTranslationsPreviewState.ts:61:    if (!args.instanceId) {
+bob/components/useTranslationsPreviewState.ts:78:    loadTranslations({ instanceId: args.instanceId })
+bob/components/useTranslationsPreviewState.ts:123:    args.instanceId,
+bob/lib/session/sessionTransport.ts:12:  instanceId: string;
+bob/lib/session/sessionTransport.ts:21:  instanceId: string;
+bob/lib/session/sessionTransport.ts:114:      instanceId?: string;
+bob/lib/session/sessionTransport.ts:128:        ...(String(commandArgs.instanceId || '').trim() ? { instanceId: String(commandArgs.instanceId || '').trim() } : {}),
+bob/lib/session/sessionTransport.ts:181:      const instanceId = String(args.metaRef.current?.instanceId || '').trim();
+bob/lib/session/sessionTransport.ts:184:        ...(instanceId ? { instanceId } : {}),
+bob/lib/session/sessionTransport.ts:226:    const instanceId = String(args.metaRef.current?.instanceId || '').trim();
+bob/lib/session/sessionTransport.ts:228:      if (!instanceId) {
+bob/lib/session/sessionTransport.ts:234:        instanceId,
+bob/lib/session/sessionTransport.ts:262:        instanceId: commandArgs.instanceId,
+bob/lib/session/sessionTransport.ts:272:      const instanceId = String(commandArgs.instanceId || '').trim();
+bob/lib/session/sessionTransport.ts:275:        instanceId,
+bob/app/assets/account/[accountId]/[assetId]/[filename]/route.ts:8:  ctx: { params: Promise<{ accountId: string; assetId: string; filename: string }> },
+bob/app/assets/account/[accountId]/[assetId]/[filename]/route.ts:15:  ctx: { params: Promise<{ accountId: string; assetId: string; filename: string }> },
+prague/src/components/WidgetBlocks.astro:35:  accountInstanceRef?: { accountPublicId?: string; instanceId?: string; embedMode?: string };
+prague/src/components/WidgetBlocks.astro:65:  blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.accountInstanceRef?.instanceId === 'string')?.accountInstanceRef?.instanceId ??
+prague/src/components/WidgetBlocks.astro:68:  blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.accountInstanceRef?.accountPublicId === 'string')?.accountInstanceRef?.accountPublicId ??
+prague/src/components/WidgetBlocks.astro:72:  blocks.find((b) => b && b.accountInstanceRef && typeof b.accountInstanceRef.instanceId === 'string')?.accountInstanceRef?.instanceId ??
+prague/src/components/WidgetBlocks.astro:76:  blocks.find((b) => b && b.accountInstanceRef && typeof b.accountInstanceRef.accountPublicId === 'string')?.accountInstanceRef?.accountPublicId ??
+prague/src/components/WidgetBlocks.astro:124:  const instanceId = String(value || '').trim();
+prague/src/components/WidgetBlocks.astro:125:  if (!instanceId) {
+prague/src/components/WidgetBlocks.astro:126:    throw new Error(`[prague] ${widget}/${activeSubpage}: ${context} requires explicit accountInstanceRef.instanceId`);
+prague/src/components/WidgetBlocks.astro:128:  return instanceId;
+prague/src/components/WidgetBlocks.astro:132:  const accountPublicId = String(value || '').trim();
+prague/src/components/WidgetBlocks.astro:133:  if (!accountPublicId) {
+prague/src/components/WidgetBlocks.astro:134:    throw new Error(`[prague] ${widget}/${activeSubpage}: ${context} requires explicit accountInstanceRef.accountPublicId`);
+prague/src/components/WidgetBlocks.astro:136:  return accountPublicId;
+prague/src/components/WidgetBlocks.astro:158:      const accountPublicId = block.accountInstanceRef?.accountPublicId;
+prague/src/components/WidgetBlocks.astro:159:      const accountInstanceId = block.accountInstanceRef?.instanceId;
+prague/src/components/WidgetBlocks.astro:171:      const heroPreviewAccountPublicId = accountPublicId || showcaseAccountPublicId;
+prague/src/components/WidgetBlocks.astro:178:                accountPublicId: heroPreviewAccountPublicId,
+prague/src/components/WidgetBlocks.astro:179:                instanceId: heroPreviewInstanceId,
+prague/src/components/WidgetBlocks.astro:201:            accountPublicId && accountInstanceId
+prague/src/components/WidgetBlocks.astro:202:              ? { accountPublicId, instanceId: accountInstanceId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: accountInstanceEmbedMode }
+prague/src/components/WidgetBlocks.astro:214:      const accountPublicId = block.accountInstanceRef?.accountPublicId;
+prague/src/components/WidgetBlocks.astro:215:      const accountInstanceId = block.accountInstanceRef?.instanceId;
+prague/src/components/WidgetBlocks.astro:229:            accountPublicId && accountInstanceId
+prague/src/components/WidgetBlocks.astro:230:              ? { accountPublicId, instanceId: accountInstanceId, locale, title: `${widget} ${activeSubpage} split`, embedMode: accountInstanceEmbedMode }
+prague/src/components/WidgetBlocks.astro:344:      const minibobAccountPublicId = requireAccountPublicId('minibob', block.accountInstanceRef?.accountPublicId);
+prague/src/components/WidgetBlocks.astro:345:      const minibobInstanceId = requireInstanceId('minibob', block.accountInstanceRef?.instanceId);
+prague/src/components/WidgetBlocks.astro:354:            accountPublicId={minibobAccountPublicId}
+prague/src/components/WidgetBlocks.astro:355:            instanceId={minibobInstanceId}
+prague/src/components/WidgetBlocks.astro:359:              accountPublicId={minibobAccountPublicId}
+prague/src/components/WidgetBlocks.astro:360:              instanceId={minibobInstanceId}
+prague/src/components/WidgetBlocks.astro:373:      const localeShowcaseAccountPublicId = requireAccountPublicId('locale-showcase', block.accountInstanceRef?.accountPublicId ?? showcaseAccountPublicId);
+prague/src/components/WidgetBlocks.astro:374:      const localeShowcaseInstanceId = requireInstanceId('locale-showcase', block.accountInstanceRef?.instanceId ?? showcaseInstanceId);
+prague/src/components/WidgetBlocks.astro:380:          accountPublicId={localeShowcaseAccountPublicId}
+prague/src/components/WidgetBlocks.astro:381:          instanceId={localeShowcaseInstanceId}
+bob/components/CopilotPane.tsx:130:  const instanceId = chrome.meta?.instanceId ?? null;
+bob/components/CopilotPane.tsx:143:    return `${widgetType}:${instanceId ?? 'local'}`;
+bob/components/CopilotPane.tsx:144:  }, [widgetType, instanceId]);
+bob/lib/session/useSessionBoot.ts:27:    ): Promise<{ ok: true; instanceId?: string; widgetname?: string } | { ok: false; error: string }> => {
+bob/lib/session/useSessionBoot.ts:51:          nextLabel = String(message.instanceId || '').trim() || 'Untitled widget';
+bob/lib/session/useSessionBoot.ts:57:          accountPublicId: message.accountPublicId,
+bob/lib/session/useSessionBoot.ts:58:          instanceId: message.instanceId,
+bob/lib/session/useSessionBoot.ts:80:          instanceId: message.instanceId,
+bob/lib/session/useSessionBoot.ts:144:                instanceId: result.instanceId,
+prague/src/components/Carousel.astro:6:    accountPublicId: string;
+prague/src/components/Carousel.astro:7:    instanceId: string;
+prague/src/components/Carousel.astro:32:                  instanceId={item.accountInstanceRef.instanceId}
+prague/src/components/Carousel.astro:33:                  accountPublicId={item.accountInstanceRef.accountPublicId}
+venice/app/assets/account/[accountId]/[assetId]/[filename]/route.ts:8:  context: { params: Promise<{ accountId: string; assetId: string; filename: string }> },
+venice/app/assets/account/[accountId]/[assetId]/[filename]/route.ts:15:  context: { params: Promise<{ accountId: string; assetId: string; filename: string }> },
+prague/src/components/InstanceEmbed.astro:6:  accountPublicId?: string;
+prague/src/components/InstanceEmbed.astro:7:  instanceId?: string;
+prague/src/components/InstanceEmbed.astro:21:const accountPublicId = String(props.accountPublicId || '').trim();
+prague/src/components/InstanceEmbed.astro:22:const instanceId = String(props.instanceId || '').trim();
+prague/src/components/InstanceEmbed.astro:40:const iframeSrc = VENICE_URL && accountPublicId
+prague/src/components/InstanceEmbed.astro:41:  ? `${VENICE_URL.replace(/\/+$/, '')}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}?locale=${encodeURIComponent(resolvedLocale)}${ts}`
+prague/src/components/InstanceEmbed.astro:44:const anchorId = `ck-instance-${instanceId.replace(/[^a-z0-9_-]+/gi, '-')}`;
+prague/src/components/InstanceEmbed.astro:76:          data-account-public-id={accountPublicId}
+prague/src/components/InstanceEmbed.astro:77:          data-instance-id={instanceId}
+prague/src/lib/instanceL10n.ts:41:export async function resolveTokyoInstanceLocales(accountPublicId: string, instanceId: string): Promise<string[] | null> {
+prague/src/lib/instanceL10n.ts:42:  const accountId = String(accountPublicId || '').trim();
+prague/src/lib/instanceL10n.ts:43:  const id = String(instanceId || '').trim();
+prague/src/lib/instanceL10n.ts:44:  if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(id)) return null;
+prague/src/lib/instanceL10n.ts:48:    `${baseUrl}/renders/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(id)}/live/r.json`,
+prague/src/lib/markdown.ts:19:async function assertAccountInstanceExists(args: { accountPublicId: string; instanceId: string; pagePath: string }): Promise<void> {
+prague/src/lib/markdown.ts:26:  const accountPublicId = String(args.accountPublicId || '').trim();
+prague/src/lib/markdown.ts:27:  const instanceId = String(args.instanceId || '').trim();
+prague/src/lib/markdown.ts:28:  if (!isCompactAccountPublicId(accountPublicId)) {
+prague/src/lib/markdown.ts:30:      `[prague] ${args.pagePath}: accountInstanceRef.accountPublicId must be a PRD 099 account public id, got "${args.accountPublicId}"`,
+prague/src/lib/markdown.ts:33:  if (!isCompactInstanceId(instanceId)) {
+prague/src/lib/markdown.ts:35:      `[prague] ${args.pagePath}: accountInstanceRef.instanceId must be a PRD 098 compact instance id, got "${args.instanceId}"`,
+prague/src/lib/markdown.ts:39:  const cacheKey = `${accountPublicId}/${instanceId}`;
+prague/src/lib/markdown.ts:44:    const url = `${baseUrl}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`;
+prague/src/lib/markdown.ts:51:      const warning = `[prague] ${args.pagePath}: account instance validation skipped (Venice unreachable) for ${instanceId}${detail}`;
+prague/src/lib/markdown.ts:58:      throw new Error(`[prague] Account instance validation failed for ${instanceId} (${res.status})`);
+prague/src/lib/markdown.ts:61:    const message = `[prague] ${args.pagePath}: instance ${instanceId} is not published in Venice.`;
+prague/src/lib/markdown.ts:77:      const accountPublicId = String((accountInstanceRef as any).accountPublicId || '').trim();
+prague/src/lib/markdown.ts:78:      const instanceId = String((accountInstanceRef as any).instanceId || '').trim();
+prague/src/lib/markdown.ts:79:      return accountPublicId || instanceId ? { accountPublicId, instanceId } : null;
+prague/src/lib/markdown.ts:81:    .filter((value): value is { accountPublicId: string; instanceId: string } => Boolean(value));
+prague/src/lib/blockRegistry.ts:221:    const accountPublicId = (block.accountInstanceRef as { accountPublicId?: unknown }).accountPublicId;
+prague/src/lib/blockRegistry.ts:222:    if (accountPublicId != null && typeof accountPublicId !== 'string') {
+prague/src/lib/blockRegistry.ts:223:      throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef.accountPublicId must be a string`);
+prague/src/lib/blockRegistry.ts:225:    const instanceId = (block.accountInstanceRef as { instanceId?: unknown }).instanceId;
+prague/src/lib/blockRegistry.ts:226:    if (instanceId != null && typeof instanceId !== 'string') {
+prague/src/lib/blockRegistry.ts:227:      throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef.instanceId must be a string`);
+prague/src/blocks/minibob/minibob.astro:12:  accountPublicId: string;
+prague/src/blocks/minibob/minibob.astro:13:  instanceId: string;
+prague/src/blocks/minibob/minibob.astro:16:const { widget, locale, heading, subhead, accountPublicId, instanceId } = Astro.props;
+prague/src/blocks/minibob/minibob.astro:18:if (!String(accountPublicId || '').trim()) {
+prague/src/blocks/minibob/minibob.astro:19:  throw new Error('[prague] minibob requires an explicit accountInstanceRef.accountPublicId');
+prague/src/blocks/minibob/minibob.astro:21:if (!String(instanceId || '').trim()) {
+prague/src/blocks/minibob/minibob.astro:22:  throw new Error('[prague] minibob requires an explicit accountInstanceRef.instanceId');
+prague/src/blocks/minibob/minibob.astro:68:        accountPublicId={accountPublicId}
+prague/src/blocks/minibob/minibob.astro:69:        instanceId={instanceId}
+prague/src/blocks/embed-carousel/embed-carousel.astro:3:  items?: { instanceId?: string; accountInstanceRef?: { instanceId: string } }[];
+venice/app/embed/v2/loader.ts:78:        '/renders/accounts/' +
+venice/app/embed/v2/loader.ts:147:		      await loadSeoGeoMeta({ tsParam }, accountPublicId, instanceId, fixedLocale, container, maxWidthValue);
+venice/app/embed/v2/loader.ts:163:			    instanceId,
+venice/app/embed/v2/loader.ts:164:			    accountPublicId,
+venice/app/embed/v2/loader.ts:251:			    if (instanceId && accountPublicId) return;
+venice/app/embed/v2/loader.ts:418:	    const targetAccountPublicId = opts.accountPublicId;
+venice/app/embed/v2/loader.ts:419:	    const targetInstanceId = opts.instanceId;
+venice/app/embed/v2/loader.ts:429:	      '/widget/' + encodeURIComponent(targetAccountPublicId) + '/' + encodeURIComponent(targetInstanceId),
+venice/app/embed/v2/loader.ts:527:	      accountPublicId,
+venice/app/embed/v2/loader.ts:528:	      instanceId,
+venice/app/embed/v2/loader.ts:607:      typeof hostEl.dataset.accountPublicId === 'string' && hostEl.dataset.accountPublicId.trim()
+venice/app/embed/v2/loader.ts:608:        ? hostEl.dataset.accountPublicId.trim()
+venice/app/embed/v2/loader.ts:609:        : typeof accountPublicId === 'string'
+venice/app/embed/v2/loader.ts:610:          ? accountPublicId.trim()
+venice/app/embed/v2/loader.ts:641:      accountPublicId: hostAccountPublicId,
+venice/app/embed/v2/loader.ts:642:      instanceId: pid,
+venice/app/embed/v2/loader.ts:660:      typeof hostEl.dataset.accountPublicId === 'string' && hostEl.dataset.accountPublicId.trim()
+venice/app/embed/v2/loader.ts:661:        ? hostEl.dataset.accountPublicId.trim()
+venice/app/embed/v2/loader.ts:662:        : typeof accountPublicId === 'string'
+venice/app/embed/v2/loader.ts:663:          ? accountPublicId.trim()
+venice/app/embed/v2/loader.ts:730:  if (instanceId && accountPublicId) scheduleMount();
+prague/src/blocks/hero/hero.astro:14:    accountPublicId: string;
+prague/src/blocks/hero/hero.astro:15:    instanceId: string;
+prague/src/blocks/hero/hero.astro:30:    instanceId: string;
+prague/src/blocks/hero/hero.astro:31:    accountPublicId: string;
+prague/src/blocks/hero/hero.astro:96:            instanceId={accountInstanceRef.instanceId}
+prague/src/blocks/hero/hero.astro:97:            accountPublicId={accountInstanceRef.accountPublicId}
+bob/lib/tokyo-static-proxy.ts:82:  params: { accountId: string; assetId: string; filename: string },
+bob/lib/tokyo-static-proxy.ts:86:    const accountId = assertSafeSegment(params.accountId);
+bob/lib/tokyo-static-proxy.ts:89:    const url = appendSearch(request, buildTokyoUrl(`/assets/account/${accountId}/${assetId}/${filename}`));
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:115:  accountPublicId: string;
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:116:  instanceId: string;
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:125:      accountPublicId: args.accountPublicId,
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:126:      instanceId: args.instanceId,
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:189:function renderPath(accountPublicId: string, instanceId: string, suffix: string): string {
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:190:  return `/renders/accounts/${encodeURIComponent(accountPublicId)}/instances/${encodeURIComponent(instanceId)}${suffix}`;
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:193:export async function GET(req: Request, ctx: { params: Promise<{ accountPublicId: string; instanceId: string }> }) {
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:195:  const { accountPublicId, instanceId } = await ctx.params;
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:205:      instanceId,
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:208:  if (!isCompactAccountPublicId(accountPublicId)) {
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:212:        'Invalid accountPublicId in URL.',
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:213:        `accountPublicId=${accountPublicId}`,
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:216:      'coreui.errors.accountPublicId.invalid',
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:221:  if (!isCompactInstanceId(instanceId)) {
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:223:      errorResponse('Clickeen embed error', 'Invalid instanceId in URL.', `instanceId=${instanceId}`, 400),
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:224:      'coreui.errors.instanceId.invalid',
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:230:  const pointerRes = await tokyoFetch(renderPath(accountPublicId, instanceId, '/live/r.json'), {
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:237:      errorResponse('Widget unavailable', 'This widget is not live.', `instanceId=${instanceId}`, pointerRes.status),
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:244:      errorResponse('Widget unavailable', 'Invalid runtime pointer.', `instanceId=${instanceId}`, 502),
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:254:      errorResponse('Widget unavailable', 'Missing widget metadata.', `instanceId=${instanceId}`, 502),
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:263:  const configRes = await tokyoFetch(renderPath(accountPublicId, instanceId, '/config.json'), {
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:271:      errorResponse('Widget unavailable', configRes.ok ? 'Config invalid.' : 'Config missing.', `instanceId=${instanceId}`, 502),
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:283:        errorResponse('Widget unavailable', 'Text overlay missing.', `instanceId=${instanceId} locale=${locale}`, 404),
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:289:    const overlayRes = await tokyoFetch(renderPath(accountPublicId, instanceId, `/overlays/${encodeURIComponent(overlayId)}.json`), {
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:297:        errorResponse('Widget unavailable', 'Text overlay invalid.', `instanceId=${instanceId} locale=${locale}`, overlayRes.status || 502),
+venice/app/widget/[accountPublicId]/[instanceId]/route.ts:333:  const runtimeScript = buildRuntimeScript({ accountPublicId, instanceId, locale, state, localeLabels, localePolicy: policy });
+prague/src/blocks/locale-showcase/locale-showcase.astro:5:  accountPublicId: string;
+prague/src/blocks/locale-showcase/locale-showcase.astro:6:  instanceId: string;
+prague/src/blocks/locale-showcase/locale-showcase.astro:14:  instanceId,
+prague/src/blocks/locale-showcase/locale-showcase.astro:15:  accountPublicId,
+prague/src/blocks/locale-showcase/locale-showcase.astro:45:              accountPublicId={accountPublicId}
+prague/src/blocks/locale-showcase/locale-showcase.astro:46:              instanceId={instanceId}
+prague/src/blocks/split/split.astro:20:    accountPublicId: string;
+prague/src/blocks/split/split.astro:21:    instanceId: string;
+prague/src/blocks/split/split.astro:84:              instanceId={accountInstanceRef.instanceId}
+prague/src/blocks/split/split.astro:85:              accountPublicId={accountInstanceRef.accountPublicId}
+prague/src/blocks/split/split.astro:116:              instanceId={accountInstanceRef.instanceId}
+prague/src/blocks/split/split.astro:117:              accountPublicId={accountInstanceRef.accountPublicId}
+venice/app/renders/[...path]/route.ts:16:  const accountPublicId = parts[1] || '';
+venice/app/renders/[...path]/route.ts:17:  if (!isCompactAccountPublicId(accountPublicId)) return false;
+venice/app/renders/[...path]/route.ts:19:  const instanceId = parts[3] || '';
+venice/app/renders/[...path]/route.ts:20:  if (!isCompactInstanceId(instanceId)) return false;
+prague/src/blocks/split-carousel/SplitCarousel.astro:14:    accountPublicId: string;
+prague/src/blocks/split-carousel/SplitCarousel.astro:15:    instanceId: string;

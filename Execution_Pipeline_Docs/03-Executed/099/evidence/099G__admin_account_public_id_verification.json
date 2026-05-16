@@ -1,0 +1,12 @@
+{
+  "generatedAt": "2026-05-15T15:58:20.353Z",
+  "status": 200,
+  "adminAccount": {
+    "id": "00000000-0000-0000-0000-000000000100",
+    "public_id": "00000001",
+    "name": "Clickeen Admin",
+    "slug": "clickeen-admin",
+    "is_platform": true,
+    "status": "active"
+  }
+}

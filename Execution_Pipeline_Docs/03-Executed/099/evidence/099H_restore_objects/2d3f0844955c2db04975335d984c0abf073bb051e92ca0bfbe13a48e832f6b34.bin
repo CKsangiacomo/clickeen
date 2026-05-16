@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "FAQ-voorbeelden - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Praktijkvoorbeelden van FAQ's voor elke branche."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Voorbeelden van FAQ-widgets per branche"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Ontdek hoe teams in travel, hospitality en servicebedrijven één FAQ-widget gebruiken om terugkerende vragen sneller te beantwoorden."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "Hotels & Resorts"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "Beantwoord vragen over inchecken, parkeren en ontbijt nog vóór aankomst en verminder onderbrekingen bij de receptie."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "Restaurants, cafés & bars"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "Houd menu-informatie, allergenen en openingstijden mobiel helder, zodat gasten sneller kiezen met minder heen-en-weer met je team."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "Vakantieverhuur & vastgoedbeheerders"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "Houd incheckstappen, wifi-details en huisregels consistent voor al je locaties met één publicatiestroom."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Wereldwijde bezoekers verwachten meteen duidelijkheid"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Publiceer één keer en serveer antwoorden in de juiste taal vanaf de eerste klik."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "Touroperators & reisbureaus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "Maak ophaalpunten, annuleringsvoorwaarden en weerbeleid vooraf duidelijk, zodat boekingskeuzes met vertrouwen worden gemaakt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "Attracties, musea & pretparken"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "Maak tickets, toegangsregels en toegankelijkheidsinfo duidelijk vóór bezoekers komen, zodat de aankomst voor iedereen soepeler verloopt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Een eenvoudige werklus"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Leg terugkerende vragen één keer vast, publiceer updates snel en houd elke live pagina gelijk—ook als details veranderen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Voeg je belangrijkste vragen toe"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Publiceer één keer"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Houd alle talen synchroon"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Begin met de terugkerende vragen die bezoekers stellen vóór ze beslissen."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Met één klik staan je nieuwste antwoorden live op elke pagina."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Als de basiscontent verandert, worden vertalingen vernieuwd zodat je boodschap overal klopt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "Gemaakt voor productiegebruik"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "Wereldwijde edge-snelheid, flexibele embedopties en een eenvoudige publicatiestroom die antwoorden actueel houdt."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "Snel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "Flexibel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "Actueel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "Wereldwijde edge-delivery."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "Standaard en scriptloze embedopties."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "Publiceer één keer om elke live pagina bij te werken."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Los het op met Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Start gratis, pas het ontwerp aan je merk aan en publiceer een live FAQ die moeiteloos schaalt over meerdere pagina’s."
+    }
+  ],
+  "v": 1
+}

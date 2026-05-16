@@ -1,0 +1,51 @@
+{
+  "accountId": "00000000-0000-0000-0000-000000000100",
+  "configFp": "307600b4c42532d42e73e93ba999e653257abf6eb5a2bbb5f915f3186b01ac02",
+  "id": "ins_01KR8R6ZYTPM6B3CHS8KZ0CEC9",
+  "localePolicy": {
+    "baseLocale": "en",
+    "ip": {
+      "countryToLocale": {},
+      "enabled": false
+    },
+    "readyLocales": [
+      "en",
+      "ar",
+      "bn",
+      "cs",
+      "da",
+      "de",
+      "es",
+      "fi",
+      "fil",
+      "fr",
+      "he",
+      "hi",
+      "hu",
+      "id",
+      "it",
+      "ja",
+      "ko",
+      "nb",
+      "nl",
+      "pl",
+      "pt",
+      "ro",
+      "sv",
+      "th",
+      "tr",
+      "uk",
+      "vi",
+      "zh-hans",
+      "zh-tw"
+    ],
+    "switcher": {
+      "enabled": false
+    }
+  },
+  "seoGeo": false,
+  "status": "published",
+  "updatedAt": "2026-05-12T09:05:00.456Z",
+  "v": 1,
+  "widgetType": "countdown"
+}

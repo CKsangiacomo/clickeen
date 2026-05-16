@@ -2,7 +2,7 @@
 
 STATUS: Runtime reality (this repo)
 Created: 2024-12-27
-Last updated: 2026-04-27
+Last updated: 2026-05-15
 
 ---
 
@@ -13,12 +13,18 @@ Prague is the marketing + SEO surface, implemented as an **Astro** app deployed 
 Deploy contract:
 - Prague has **one deploy plane**: Git-connected Cloudflare Pages build.
 - Canonical cloud-dev host: `https://prague.dev.clickeen.com`
-- GitHub Actions may verify Prague builds and publish Prague content to Tokyo/R2, but must not create Pages projects, sync Pages secrets, or deploy Prague artifacts.
+- GitHub Actions may verify Prague builds and publish git-authored Prague content to Tokyo/R2 `prague/**`, but must not create Pages projects, sync Pages secrets, or deploy Prague Pages artifacts.
 - Prague’s Pages build contract is app-local:
   - root: `prague/`
   - build command: `pnpm build`
   - output: `prague/dist`
 - Manual Cloudflare project/env alignment is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
+
+Tokyo/R2 content contract:
+- `tokyo/prague/**` is git-authored source/deploy content that syncs to canonical R2 `prague/**`.
+- Retained Prague localization lives under `prague/l10n/**` in R2, sourced from `tokyo/prague/l10n/**` if retained.
+- Prague localization must not publish to root `l10n/prague/**`.
+- Tokyo Pages/static output may serve friendly URLs, but it is a deploy/source convenience and not a second Prague content authority.
 
 In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy). Chrome UI strings remain in `prague/content/base/v1/chrome.json`. Prague does not own account-widget locale overlays.
 
@@ -112,7 +118,7 @@ Prague widget pages are rendered from **block JSON** in Tokyo. They are marketin
 
 ---
 
-## 2) Content source of truth (Tokyo → Prague)
+## 2) Content source of truth (Git -> Tokyo/R2 -> Prague)
 
 ### 2.1 Canonical page JSONs (required)
 
@@ -140,9 +146,11 @@ Required non-visual blocks:
 
 Notes:
 - Page JSON is the **single source of truth** for layout + base copy on Prague.
-- Visual embeds are explicit: use `accountInstanceRef.instanceId` on blocks that should embed a account instance.
+- Visual embeds are explicit: use `accountInstanceRef.accountPublicId` plus `accountInstanceRef.instanceId` on blocks that should embed an account instance. Admin/example embeds use `accountPublicId: "00000001"`.
+- Prague page JSON deploys under R2 `prague/pages/**`; retained Prague localization deploys under R2 `prague/l10n/**`.
+- Root `l10n/prague/**` is not a Prague storage or deploy target.
 
-Prague does not merge localized page overlays in this runtime. Account-widget locale overlays are selected and served by Venice through the published render pointer and `/renders/widgets/{instanceId}/overlays/{overlayId}.json`.
+Prague does not merge localized page overlays in this runtime. Account-instance locale overlays are selected by account/product operations and served by Venice through the account-scoped published projection route `/renders/accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json`.
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.
@@ -168,7 +176,7 @@ What it no longer does:
 - does not start a server-side handoff
 
 Defaults (local/dev):
-- instanceId is derived from the widget slug as `wgt_main_{widget}` (no override)
+- example embeds must use explicit `accountPublicId + instanceId` refs. Prague must not derive instance identity from widget slug, `wgt_main_{widget}`, or any hidden lookup.
 
 Demo locale visibility contract:
 - the demo can view locales that are already public-live through Venice/Tokyo truth

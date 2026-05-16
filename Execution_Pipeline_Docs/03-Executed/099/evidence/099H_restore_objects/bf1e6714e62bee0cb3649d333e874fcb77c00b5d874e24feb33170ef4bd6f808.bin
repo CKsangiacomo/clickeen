@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "ce3406e8218797e114aca1052dc141ca8afe3a247a3f3ac0d370a80459c001ff",
+  "baseUpdatedAt": "2026-02-04T15:59:12.732Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget hitung mundur - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Ciptakan rasa urgensi dengan timer hitung mundur yang dapat disesuaikan. Luncurkan, jual, dan umumkan dengan percaya diri."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget pengatur waktu hitung mundur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Ciptakan urgensi dan dorong tindakan dengan hitung mundur yang cepat dan fleksibel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Hitung Mundur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Tambahkan rasa urgensi dengan timer yang fleksibel."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Coba langsung"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Edit instance demo di minibob. Publikasikan saat Anda siap."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Widget pengatur waktu hitung mundur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Ciptakan rasa urgensi dan dorong tindakan dengan pengatur waktu hitung mundur yang dapat disesuaikan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Mode pengatur waktu fleksibel"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Berbasis tanggal, personal, atau penghitung angka untuk skenario apa pun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Ubah perhatian menjadi tindakan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Gunakan timer yang cocok untuk peluncuran, penjualan, acara, dan tujuan pribadi. Atur sekali dan biarkan berjalan di mana saja."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Kustomisasi mudah"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Sesuaikan tampilan, tata letak, dan tindakan agar sesuai dengan merek Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Luncurkan lebih cepat dengan hitung mundur"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Dari penyiapan hingga terbit dalam hitungan menit."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Pilih timer Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Selaraskan dengan merek Anda"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Terbitkan dan lokalkan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Pilih penghitung tanggal, evergreen, atau angka sesuai kebutuhan Anda."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Sesuaikan warna, label, dan tata letak agar cocok untuk situs apa pun."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Cepat tayang dan jangkau audiens global dengan pelokalan bawaan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Tingkatkan konversi"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Dorong tindakan segera dengan penawaran yang terbatas waktu."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Dioptimalkan untuk SEO dan GEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Dukungan skema dan lokalisasi bawaan."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Ciptakan urgensi, tingkatkan penjualan"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Timer hitung mundur yang kuat yang mengubah pengunjung menjadi pelanggan."
+    }
+  ],
+  "v": 1
+}

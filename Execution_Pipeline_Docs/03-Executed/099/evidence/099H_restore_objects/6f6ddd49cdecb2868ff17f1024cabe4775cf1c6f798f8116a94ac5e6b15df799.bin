@@ -1,0 +1,568 @@
+{
+  "appearance": {
+    "cardwrapper": {
+      "border": {
+        "color": "#e5e5ea",
+        "enabled": true,
+        "width": 1
+      },
+      "insideShadow": {
+        "all": {
+          "alpha": 12,
+          "blur": 24,
+          "color": "#000000",
+          "enabled": false,
+          "inset": true,
+          "spread": 0,
+          "x": 0,
+          "y": 0
+        },
+        "bottom": {
+          "alpha": 12,
+          "blur": 16,
+          "color": "#000000",
+          "enabled": false,
+          "inset": true,
+          "spread": -12,
+          "x": 0,
+          "y": -12
+        },
+        "layer": "below-content",
+        "left": {
+          "alpha": 12,
+          "blur": 16,
+          "color": "#000000",
+          "enabled": false,
+          "inset": true,
+          "spread": -12,
+          "x": 12,
+          "y": 0
+        },
+        "linked": true,
+        "right": {
+          "alpha": 12,
+          "blur": 16,
+          "color": "#000000",
+          "enabled": false,
+          "inset": true,
+          "spread": -12,
+          "x": -12,
+          "y": 0
+        },
+        "top": {
+          "alpha": 12,
+          "blur": 16,
+          "color": "#000000",
+          "enabled": false,
+          "inset": true,
+          "spread": -12,
+          "x": 0,
+          "y": 12
+        }
+      },
+      "radius": "none",
+      "radiusBL": "none",
+      "radiusBR": "none",
+      "radiusLinked": true,
+      "radiusTL": "none",
+      "radiusTR": "none",
+      "shadow": {
+        "alpha": 64,
+        "blur": 0,
+        "color": "#007aff",
+        "enabled": true,
+        "inset": false,
+        "spread": 0,
+        "x": 0,
+        "y": 2
+      }
+    },
+    "ctaBackground": {
+      "color": "#007aff",
+      "type": "color"
+    },
+    "ctaBorder": {
+      "color": "var(--color-system-blue)",
+      "enabled": false,
+      "width": 1
+    },
+    "ctaIconSize": 16,
+    "ctaIconSizePreset": "m",
+    "ctaPaddingBlock": 12,
+    "ctaPaddingInline": 16,
+    "ctaPaddingLinked": false,
+    "ctaRadius": "md",
+    "ctaSizePreset": "custom",
+    "ctaTextColor": "var(--color-system-white)",
+    "iconColor": {
+      "color": "#007aff",
+      "type": "color"
+    },
+    "iconStyle": "plus",
+    "itemBackground": {
+      "color": "#ffffff",
+      "type": "color"
+    },
+    "itemCard": {
+      "border": {
+        "color": "#e0f1e5",
+        "enabled": true,
+        "width": 1
+      },
+      "radius": "2xl",
+      "radiusBL": "2xl",
+      "radiusBR": "2xl",
+      "radiusLinked": true,
+      "radiusTL": "2xl",
+      "radiusTR": "2xl",
+      "shadow": {
+        "alpha": 17,
+        "blur": 16,
+        "color": "#35aebb",
+        "enabled": true,
+        "inset": false,
+        "spread": 0,
+        "x": 5,
+        "y": 14
+      }
+    },
+    "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
+    "linkStyle": "underline",
+    "linkTextColor": "var(--color-system-blue)",
+    "linkUnderlineColor": "var(--color-system-blue)",
+    "podBorder": {
+      "color": "var(--color-system-gray-5)",
+      "enabled": false,
+      "width": 1
+    },
+    "theme": "custom"
+  },
+  "behavior": {
+    "displayImages": true,
+    "displayVideos": true,
+    "expandAll": false,
+    "expandFirst": true,
+    "multiOpen": false,
+    "showBacklink": true
+  },
+  "context": {
+    "websiteUrl": ""
+  },
+  "cta": {
+    "enabled": true,
+    "href": "https://example.com",
+    "iconEnabled": true,
+    "iconName": "arrowshape.turn.up.right",
+    "iconPlacement": "right",
+    "label": "Contact Ive Engineering",
+    "openMode": "same-tab"
+  },
+  "displayCategoryTitles": true,
+  "geo": {
+    "answerFormat": "direct-first",
+    "enableDeepLinks": true
+  },
+  "header": {
+    "alignment": "center",
+    "ctaPlacement": "below",
+    "enabled": true,
+    "gap": 28,
+    "innerGap": 16,
+    "placement": "top",
+    "showSubtitle": true,
+    "subtitleHtml": "Your go-to for engineering solutions and services.",
+    "textGap": 4,
+    "title": "Ive Engineering FAQ"
+  },
+  "layout": {
+    "cardsLayout": "grid",
+    "columns": {
+      "desktop": 2,
+      "mobile": 1
+    },
+    "gap": 20,
+    "itemPadding": 20,
+    "itemPaddingBottom": 20,
+    "itemPaddingLeft": 20,
+    "itemPaddingLinked": true,
+    "itemPaddingRight": 20,
+    "itemPaddingTop": 20,
+    "itemQaGapCustom": 8,
+    "itemQaGapPreset": "s",
+    "type": "accordion"
+  },
+  "pod": {
+    "background": {
+      "color": "#ffffff",
+      "type": "color"
+    },
+    "contentWidth": 960,
+    "insideShadow": {
+      "all": {
+        "alpha": 12,
+        "blur": 24,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": 0,
+        "x": 0,
+        "y": 0
+      },
+      "bottom": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 0,
+        "y": -12
+      },
+      "layer": "below-content",
+      "left": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 12,
+        "y": 0
+      },
+      "linked": true,
+      "right": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": -12,
+        "y": 0
+      },
+      "top": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 0,
+        "y": 12
+      }
+    },
+    "padding": {
+      "desktop": {
+        "all": 32,
+        "bottom": 64,
+        "left": 32,
+        "linked": false,
+        "right": 32,
+        "top": 32
+      },
+      "mobile": {
+        "all": 28,
+        "bottom": 28,
+        "left": 28,
+        "linked": true,
+        "right": 28,
+        "top": 28
+      }
+    },
+    "radius": "4xl",
+    "radiusBL": "4xl",
+    "radiusBR": "4xl",
+    "radiusLinked": true,
+    "radiusTL": "4xl",
+    "radiusTR": "4xl",
+    "shadow": {
+      "alpha": 18,
+      "blur": 24,
+      "color": "#000000",
+      "enabled": false,
+      "inset": false,
+      "spread": 0,
+      "x": 0,
+      "y": 8
+    },
+    "widthMode": "full"
+  },
+  "sections": [
+    {
+      "faqs": [
+        {
+          "answer": "Ive Engineering is a global firm specializing in innovative engineering solutions and services.",
+          "defaultOpen": false,
+          "id": "q1",
+          "question": "What is Ive Engineering?"
+        },
+        {
+          "answer": "Simply reach out to us, discuss your project needs, and we'll guide you through our service offerings.",
+          "defaultOpen": false,
+          "id": "q3",
+          "question": "How do I start using Ive Engineering's services?"
+        },
+        {
+          "answer": "Yes, Ive Engineering offers free consultations to understand your project requirements better.",
+          "defaultOpen": false,
+          "id": "q2",
+          "question": "Is there a consultation available?"
+        },
+        {
+          "answer": "Ive Engineering provides cutting-edge solutions, experienced professionals, and tailored services to meet your specific engineering needs.",
+          "defaultOpen": false,
+          "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
+          "question": "Why should I choose Ive Engineering for my engineering needs?"
+        },
+        {
+          "answer": "Ive Engineering values innovation, integrity, and excellence in all its projects and services.",
+          "defaultOpen": false,
+          "id": "q4",
+          "question": "What are the core values of Ive Engineering?"
+        },
+        {
+          "answer": "You can contact Ive Engineering through our website, email, or phone number provided on our contact page.",
+          "defaultOpen": false,
+          "id": "q5",
+          "question": "How can I get in touch with Ive Engineering?"
+        }
+      ],
+      "id": "s1",
+      "title": "All Questions"
+    }
+  ],
+  "seo": {
+    "businessType": "online-service",
+    "canonicalUrl": "",
+    "enableSchema": true
+  },
+  "seoGeo": {
+    "enabled": true
+  },
+  "showTitle": true,
+  "stage": {
+    "alignment": "center",
+    "background": {
+      "color": "#ffffff",
+      "type": "color"
+    },
+    "canvas": {
+      "height": 800,
+      "mode": "viewport",
+      "width": 0
+    },
+    "insideShadow": {
+      "all": {
+        "alpha": 12,
+        "blur": 24,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": 0,
+        "x": 0,
+        "y": 0
+      },
+      "bottom": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 0,
+        "y": -12
+      },
+      "layer": "below-content",
+      "left": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 12,
+        "y": 0
+      },
+      "linked": true,
+      "right": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": -12,
+        "y": 0
+      },
+      "top": {
+        "alpha": 12,
+        "blur": 16,
+        "color": "#000000",
+        "enabled": false,
+        "inset": true,
+        "spread": -12,
+        "x": 0,
+        "y": 12
+      }
+    },
+    "padding": {
+      "desktop": {
+        "all": 80,
+        "bottom": 0,
+        "left": 0,
+        "linked": false,
+        "right": 0,
+        "top": 0
+      },
+      "mobile": {
+        "all": 24,
+        "bottom": 24,
+        "left": 24,
+        "linked": true,
+        "right": 24,
+        "top": 24
+      }
+    },
+    "shadow": {
+      "alpha": 18,
+      "blur": 24,
+      "color": "#000000",
+      "enabled": false,
+      "inset": false,
+      "spread": 0,
+      "x": 0,
+      "y": 8
+    }
+  },
+  "title": "Frequently Asked Questions",
+  "typography": {
+    "globalFamily": "Inter",
+    "roleScales": {
+      "answer": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "body": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "button": {
+        "l": "20px",
+        "m": "18px",
+        "s": "15px",
+        "xl": "24px",
+        "xs": "13px"
+      },
+      "question": {
+        "l": "22px",
+        "m": "18px",
+        "s": "16px",
+        "xl": "24px",
+        "xs": "14px"
+      },
+      "section": {
+        "l": "16px",
+        "m": "14px",
+        "s": "13px",
+        "xl": "18px",
+        "xs": "12px"
+      },
+      "title": {
+        "l": "44px",
+        "m": "36px",
+        "s": "28px",
+        "xl": "60px",
+        "xs": "20px"
+      }
+    },
+    "roles": {
+      "answer": {
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+        "family": "Manrope",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "15px",
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "body": {
+        "color": "color-mix(in oklab, var(--color-system-black), transparent 45%)",
+        "family": "Manrope",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": 14,
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "button": {
+        "color": "var(--color-system-white)",
+        "family": "Manrope",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": 14,
+        "sizePreset": "s",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "600"
+      },
+      "question": {
+        "color": {
+          "color": "#212121",
+          "type": "color"
+        },
+        "family": "Manrope",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "16px",
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "normal",
+        "weight": "400"
+      },
+      "section": {
+        "color": {
+          "color": "#aeaeb2",
+          "type": "color"
+        },
+        "family": "Manrope",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "tight",
+        "sizeCustom": "14px",
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "tight",
+        "weight": "400"
+      },
+      "title": {
+        "color": {
+          "color": "#212121",
+          "type": "color"
+        },
+        "family": "Manrope",
+        "fontStyle": "normal",
+        "lineHeightCustom": 1.4,
+        "lineHeightPreset": "normal",
+        "sizeCustom": "24px",
+        "sizePreset": "m",
+        "trackingCustom": 0,
+        "trackingPreset": "tight",
+        "weight": "400"
+      }
+    }
+  }
+}

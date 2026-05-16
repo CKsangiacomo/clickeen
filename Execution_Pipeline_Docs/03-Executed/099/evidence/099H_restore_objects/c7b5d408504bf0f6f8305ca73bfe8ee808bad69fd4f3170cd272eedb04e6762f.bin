@@ -1,0 +1,50 @@
+{
+  "v": 1,
+  "id": "ins_01KR8R6ZZ0TXQMJQ3VPS9WM2QJ",
+  "accountId": "00000000-0000-0000-0000-000000000100",
+  "widgetType": "faq",
+  "status": "published",
+  "configFp": "c34818505c4271cb89f2fcea04fbcbfd99984ad99ca22dc3e48399b2a986efc8",
+  "localePolicy": {
+    "baseLocale": "en",
+    "ip": {
+      "countryToLocale": {},
+      "enabled": false
+    },
+    "readyLocales": [
+      "en",
+      "ar",
+      "bn",
+      "cs",
+      "da",
+      "de",
+      "es",
+      "fi",
+      "fil",
+      "fr",
+      "he",
+      "hi",
+      "hu",
+      "id",
+      "it",
+      "ja",
+      "ko",
+      "nb",
+      "nl",
+      "pl",
+      "pt",
+      "ro",
+      "sv",
+      "th",
+      "tr",
+      "uk",
+      "vi",
+      "zh-hans",
+      "zh-tw"
+    ],
+    "switcher": {
+      "enabled": false
+    }
+  },
+  "updatedAt": "2026-05-10T12:45:17.592Z"
+}

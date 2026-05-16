@@ -119,7 +119,7 @@ prague/src/blocks/cta/cta.astro
 - Resolves mega menu content from the canonical widget registry + each widget’s page JSON:
   - `title` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.title`
   - `description` comes from `blocks[].id=="navmeta" && type=="navmeta"` → `copy.description`
-  - Source: `tokyo/prague/pages/{widget}/overview.json`
+  - Authored source: `tokyo/prague/pages/{widget}/overview.json`; deployed R2 home: `prague/pages/{widget}/overview.json`
 
 `site/footer`
 - Props: `{ market: string, locale: string }`
@@ -131,7 +131,7 @@ Non-visual block contracts (required):
 ### 2.2 Hero
 
 `blocks/hero/hero`
-- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup, accountInstanceRef?: { instanceId: string, locale: string, embedMode?: 'iframe' | 'indexable', height?: string, title?: string } }`
+- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup, accountInstanceRef?: { accountPublicId: string, instanceId: string, locale: string, embedMode?: 'iframe' | 'indexable', height?: string, title?: string } }`
 - Owns: H1 + subhead + primary/secondary CTA + account instance embed (optional)
 
 Copy contract:
@@ -139,13 +139,15 @@ Copy contract:
 - CTA labels come from Prague chrome strings (`prague.cta.*`), not from page copy.
 
 **Contract (non-negotiable):**
-- The hero visual is rendered only when a account instance is explicitly provided via `accountInstanceRef.instanceId`.
-- Pages opt in by adding `accountInstanceRef.instanceId` to the hero block in the canonical page spec.
+- The hero visual is rendered only when an account instance is explicitly provided via `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`.
+- Pages opt in by adding the complete `accountInstanceRef` to the hero block in the canonical page spec.
 - `visual: true` is legacy metadata only; it does not embed anything by itself.
 
 **Embed rule (strict):**
-- Prague embeds Venice with the canonical locale-free `instanceId` and passes locale only as a query param.
-- `ins_*.<locale>` is invalid and must 404 (no legacy support).
+- Prague embeds Venice with the canonical account-scoped route: `/widget/{accountPublicId}/{instanceId}`.
+- Locale is passed only as a query param or embed option; locale is never encoded into `instanceId`.
+- Prague must not depend on a hidden instance-only lookup, root `published/` registry, or instance-only `/widget/{instanceId}` route.
+- `wgt_*`, `ins_*`, and `ins_*.<locale>` are invalid current product identities and must fail at the boundary (no legacy support).
 
 **Embed mode (accountInstanceRef.embedMode):**
 - default (omitted): iframe embed
@@ -170,7 +172,7 @@ Copy contract:
 - `headline`, `subheadline`
 
 Embed rules:
-- Account instance visuals render only when `accountInstanceRef.instanceId` is present.
+- Account instance visuals render only when `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` are present.
 
 ### 2.5 How-it-works (steps)
 
@@ -244,14 +246,14 @@ Copy contract:
 
 `blocks/locale-showcase/locale-showcase`
 - Purpose: show the **same instance** in a few real locales (default tiles: `en`, `es`, `ja`) to prove global-by-default and layout adaptivity.
-- Props: `{ title: string, subtitle: string, accountInstanceRef?: { instanceId: string } }`
+- Props: `{ title: string, subtitle: string, accountInstanceRef?: { accountPublicId: string, instanceId: string } }`
 - Placement:
   - Preferred: include a `locale-showcase` block explicitly in page JSON (deterministic placement).
   - Convenience: if a widget page includes `minibob` but no explicit `locale-showcase`, Prague injects a default locale showcase immediately after `minibob` (see `prague/src/components/WidgetBlocks.astro`).
 - Instance selection:
-  - If the explicit `locale-showcase` block provides `accountInstanceRef.instanceId`, use that.
-  - Else use the first `accountInstanceRef.instanceId` found in the page blocks.
-  - Else fall back to `wgt_main_{widget}`.
+  - If the explicit `locale-showcase` block provides `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`, use that.
+  - Else use the first complete account instance ref found in the page blocks.
+  - Else do not embed an account instance. Prague must not infer an instance from widget type, `wgt_main_{widget}`, or any hidden instance-only lookup.
 
 Copy contract:
 - `title`, `subtitle`
@@ -260,15 +262,15 @@ Copy contract:
 
 `blocks/minibob/minibob`
 - Island: the only Prague section that ships JS.
-- Responsibility: render the public demo instance and send the visitor to account signup.
+- Responsibility: render the public demo experience and send the visitor to account signup.
 - Structure (non-negotiable):
   - Stage: heading + subhead (from compiled strings for `blocks[].id=="minibob"`)
-  - Pod: public demo embed
+  - Pod: public demo interaction or explicit account-scoped embed when configured
 - Contract:
   - It must not introduce global CSS (only block-scoped styles).
   - It must not access host cookies/storage.
   - It must not boot Bob or start a draft handoff flow.
-  - `instanceId` is always derived as `wgt_main_{widget}` (no override).
+  - It must not derive storage identity from widget type. If it embeds a real example widget, that reference must be a normal account instance ref carrying `accountPublicId` + `instanceId` (`00000001` for admin examples).
 
 ## 3) Page Composition
 
@@ -287,11 +289,16 @@ Pages are lists of blocks in a fixed order. Example (widget landing):
 Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 
 - Canonical widget pages:
-  - Source of truth: `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`
-  - Prague renders `blocks[]` by `type` and embeds account instances only when `accountInstanceRef.instanceId` is present.
-  - Prague validates `accountInstanceRef.instanceId` during page load; missing account instances fail fast in dev/build.
+  - Authored source in this repo: `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`.
+  - Deployed R2 home: `prague/pages/{widget}/{overview|examples|features|pricing}.json`.
+  - Prague renders `blocks[]` by `type` and embeds account instances only when a complete `accountInstanceRef` is present.
+  - Prague validates `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` during page load; missing account instances fail fast in dev/build.
   - Page JSON is layout + base copy.
   - Account-widget overlays are not Prague page overlays; they are resolved by Venice from Tokyo published overlay IDs when a Prague page embeds a live instance.
+- Admin/example references:
+  - Admin examples are normal account-owned instances under `accounts/00000001/instances/{instanceId}/`.
+  - Prague page JSON must reference them as `{ "accountPublicId": "00000001", "instanceId": "{instanceId}" }`.
+  - Prague must not store or resolve examples as old `wgt_*` / `ins_*` identities, account UUID folders, or an admin-specific storage lane.
 - Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[market]/[locale]/widgets/[widget]/index.astro`.
 
 ---
@@ -304,7 +311,7 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 ### 2.14 Embed Carousel (Premium)
 
 `blocks/embed-carousel/embed-carousel`
-- Props: `{ items: { instanceId: string, accountInstanceRef?: { instanceId: string } }[], options: Object }`
+- Props: `{ items: { accountInstanceRef: { accountPublicId: string, instanceId: string } }[], options: Object }`
 - Behavior: Horizontal scroll snap carousel of lazy−loaded Clickeen widgets.
 - Used for: "Made with Clickeen" galleries.
 

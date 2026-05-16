@@ -28,7 +28,7 @@ This doc is intentionally operational. It is not a creative brainstorm doc.
 Before writing any page JSON, collect:
 
 1. `widgetType`
-2. Account widget instance references available for the page (`accountInstanceRef.instanceId`), if the page intentionally embeds a real account widget instance
+2. Account widget instance references available for the page (`accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`), if the page intentionally embeds a real account widget instance
 3. Widget-specific claim bank (from `WidgetGTMStrategy.md` section 5)
 4. Platform claims selected for this widget
 5. Source PRD for the widget
@@ -120,11 +120,13 @@ Create a compact internal object before page writing:
       "rationale": "Mobile-first questions on menu, allergens, and opening hours."
     }
   ],
-  "accountInstanceRefs": [{ "instanceId": "INST000001" }]
+  "accountInstanceRefs": [{ "accountPublicId": "00000001", "instanceId": "UZ3JEJSHII" }]
 }
 ```
 
 This avoids narrative drift while drafting multiple pages.
+
+Account instance refs are account-scoped product refs, not aliases. Admin examples use the normal admin account `00000001`, so a Prague page points at `accounts/00000001/instances/{instanceId}/` by carrying both fields in JSON. Do not use old `wgt_*` / `ins_*` names, private UUID account folders, or a hidden instance-only lookup.
 
 ### Step 2 - Build each page from its job
 
@@ -280,7 +282,7 @@ Because Prague copy is localized across many locales:
 2. Block contract validity (required fields present).
 3. Claim audit complete (no unsupported strong claims).
 4. Localization-safe style pass done.
-5. System instance refs resolve to real instances.
+5. Account instance refs include `accountPublicId` + `instanceId` and resolve to real account-owned instances.
 
 Recommended local checks:
 - `pnpm --filter @clickeen/prague typecheck`

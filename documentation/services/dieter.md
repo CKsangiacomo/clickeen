@@ -1,8 +1,8 @@
 # Dieter System Overview
 
-This document is the canonical reference for Clickeen’s design system and its preview harness. It replaces older scattered notes and should be kept aligned with the Dieter source tree.
+This document is the canonical reference for Clickeen's design system and its preview harness. It replaces older scattered notes and should be kept aligned with the Dieter source tree.
 
-**Last updated:** 2026-03-20 — Always verify against `dieter/components/*/*.css`, `dieter/components/*/*.spec.json`, `dieter/tokens/tokens.css`, and the DevStudio Dieter showcases when making changes.
+**Last updated:** 2026-05-15 - Always verify against `dieter/components/*/*.css`, `dieter/components/*/*.spec.json`, `dieter/tokens/tokens.css`, and the DevStudio Dieter showcases when making changes.
 
 - [1. Dieter Core](#1-dieter-core)
 - [2. Dieter Admin](#2-dieter-admin)
@@ -11,14 +11,21 @@ This document is the canonical reference for Clickeen’s design system and its 
 
 ## 1. Dieter Core
 
-Dieter is Clickeen's shared design system: a token-first library consumed by Bob, Venice, marketing surfaces, and internal tools. It ships CSS plus optional JS hydrators for interactive components (see `componentsWithJs` in the manifest) under the package name `@ck/dieter` with accompanying static assets copied into each app under `/dieter/**`.
+Dieter is Clickeen's shared design system: a token-first library consumed by Bob, Venice, marketing surfaces, and internal tools. It ships CSS plus optional JS hydrators for interactive components (see `componentsWithJs` in the manifest) under the package name `@ck/dieter` with accompanying static media served from `/dieter/**`.
+
+Distribution boundary:
+- Dieter source lives in the repo under `dieter/`.
+- The build writes repo deploy artifacts to `tokyo/product/dieter/**`.
+- PRD 099B deploy sync publishes those artifacts to the canonical R2 root `dieter/**`.
+- `/dieter/**` is the friendly public path for canonical R2 `dieter/**`; it must not be treated as a second media authority.
+- Dieter is a git-authored deploy root, not account-owned runtime data. Account-uploaded fonts or assets belong under `accounts/{accountPublicId}/...`, not under root `dieter/`.
 
 Authoring boundary (current, explicit):
 - Dieter owns authoring primitives, including interactive editor controls such as `dropdown-fill` and `dropdown-upload`.
 - Bob/Roma still own host/account context, session/auth, persistence, entitlements, and route boundaries.
 - Active account Builder asset behavior is explicit and narrow inside Dieter primitives. `dropdown-fill` and `dropdown-upload` use one shared current-account asset helper plus one shared Builder resolve helper. On hosted Builder, Bob installs an explicit asset transport (`listAssets`, `resolveAssets`, `uploadAsset`) through the host command seam. Dieter no longer carries hosted asset bridges, dataset fallbacks, consumer-owned route selection logic, route-table round-tripping, or ambient fetch interception.
 - `dropdown-upload` is asset-backed only. It requires `meta-path`, persists logical asset identity in meta, and treats resolved delivery URLs as preview-only. Uploaded delivery URLs are not written back into widget document truth.
-- Missing/not-missing truth for Builder-owned assets comes only from the shared resolve path. Asset upsell denial for those controls uses one shared `bob-upsell` emitter path. Local preview render failures are UI-only errors; Dieter controls must not re-probe resolved URLs or reinterpret preview media failures as asset deletion/missing truth.
+- Missing/not-missing truth for account assets in Builder controls comes only from the shared resolve path. Asset upsell denial for those controls uses one shared `bob-upsell` emitter path. Local preview render failures are UI-only errors; Dieter controls must not re-probe resolved URLs or reinterpret preview media failures as asset deletion/missing truth.
 - Dieter does **not** own account policy, persistence, or product routing; it owns the primitive behavior that runs inside the authoring surface.
 
 ### Bundling manifest (executed)
@@ -96,7 +103,7 @@ dieter/components/
 ```
 
 **For widget definitions:**
-Widget definitions (via `spec.json` and compiled ToolDrawer panels) contain HTML using Dieter components. They only load the specific Dieter assets they need. This keeps each widget's footprint tiny while allowing Dieter to grow infinitely.
+Widget definitions (via `spec.json` and compiled ToolDrawer panels) contain HTML using Dieter components. They only load the specific Dieter media they need. This keeps each widget's footprint tiny while allowing Dieter to grow infinitely.
 
 See [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details on how widgets use Dieter components.
 
@@ -104,11 +111,11 @@ See [Widget Architecture](../widgets/WidgetArchitecture.md) for complete details
 
 | Path | Description |
 | --- | --- |
-| `tokens/` | Canonical design tokens (source). Built output lands in `tokyo/product/dieter/tokens/`. |
+| `tokens/` | Canonical design tokens (source). Built output lands in `tokyo/product/dieter/tokens/` and syncs to R2 `dieter/tokens/`. |
 | `components/` | Per-component folders with `*.css`, `*.html`, `*.spec.json`, and optional `*.ts`. |
 | `icons/` | Source SVGs normalized to `fill="currentColor"` plus the generated registry (`icons/icons.json`). |
 | `dieteradmin/` | Static HTML fragments for icon showcase (generated; not a standalone app). |
-| `tokyo/product/dieter/` | Build output (manifest, tokens, components, icons). |
+| `tokyo/product/dieter/` | Repo deploy output (manifest, tokens, components, icons) synced to canonical R2 `dieter/`. |
 
 ### 1.2 Using Dieter in an Application
 
@@ -259,13 +266,13 @@ Every control must consume the shared size ladder. Adjusting token mappings here
 ### 1.6 Icons
 
 - Source SVGs: `icons/svg/*.svg` (normalized to `fill="currentColor"`).
-- Build output: `tokyo/product/dieter/icons/svg/*` plus the registry (`tokyo/product/dieter/icons/icons.json`).
+- Build output: `tokyo/product/dieter/icons/svg/*` plus the registry (`tokyo/product/dieter/icons/icons.json`), synced to R2 `dieter/icons/**`.
 - Build process: `pnpm --filter @ck/dieter build` (writes into `tokyo/product/dieter`).
 - Consumption rules:
   - Inline SVG markup from the registry (`tokyo/product/dieter/icons/icons.json`).
   - Bob housed icons can use local helpers (e.g., a React wrapper) but must source markup from the registry.
   - Venice embeds MUST inline SVG during SSR; client-side fetches are forbidden to protect loader budgets.
-  - No ad-hoc icon bundles: update source SVGs, rebuild, copy assets.
+  - No ad-hoc icon bundles: update source SVGs, rebuild, copy media.
 
 ### 1.7 Component Contracts
 
@@ -281,7 +288,7 @@ Use the DevStudio Dieter showcase to review the current component set and render
 Whenever tokens or component CSS changes:
 
 1. Update source files in `tokens/` or `components/` (including `*.spec.json` / `*.html` contracts).
-2. Build Dieter assets into Tokyo:
+2. Build Dieter media into Tokyo:
    ```bash
    pnpm --filter @ck/dieter build
    ```
@@ -290,7 +297,7 @@ Whenever tokens or component CSS changes:
    pnpm --filter @clickeen/devstudio dev
    ```
    - Visit `http://localhost:5173/#/dieter/` or `http://localhost:5173/#/dieter-components-new/`
-4. Commit changes; consuming apps should use the rebuilt `tokyo/product/dieter` assets.
+4. Commit changes; consuming apps should use `/dieter/**`, backed by rebuilt `tokyo/product/dieter` deploy artifacts synced to R2 `dieter/**`.
 
 Never hand-edit `/bob/public/dieter/**`; treat it as a generated artifact.
 

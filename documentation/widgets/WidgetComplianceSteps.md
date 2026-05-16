@@ -231,9 +231,11 @@ GATE
 
 OUTPUT
 
-- `tokyo/prague/pages/{widgetType}/*.json` exist and contain valid `blocks[]`.
-- `accountInstanceRef.instanceId` is present only when a Prague page intentionally points at a real account widget instance.
-- `accountInstanceRef.instanceId` uses a PRD 098 compact instance ID.
+- `tokyo/prague/pages/{widgetType}/*.json` exist and contain valid `blocks[]`; repo-authored Prague page JSON syncs to R2 under `prague/pages/{widgetType}/*.json`.
+- `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId` are present only when a Prague page intentionally points at a real account widget instance.
+- Admin/example instance refs use `accountPublicId: "00000001"` and resolve to normal instances under `accounts/00000001/instances/{instanceId}/`.
+- `accountInstanceRef.instanceId` uses the current compact instance ID.
+- Prague pages must not use old `wgt_*` / `ins_*` identities, private UUID account folders, root `l10n/`, an admin-specific storage lane, or hidden instance-only lookup.
 - Prague page copy is page JSON truth. Account-widget overlays are not Prague page overlays; they are served by Venice from Tokyo published overlay IDs.
 
 GATE (local)
@@ -259,7 +261,7 @@ OUTPUT
 
 GATE
 
-- `GET /renders/widgets/{instanceId}/meta/live/{locale}.json` returns expected SEO/GEO payloads by widget contract when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
+- `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/meta/live/{locale}.json` returns expected SEO/GEO payloads by widget contract when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
 
 ---
 
@@ -280,5 +282,5 @@ Required checks
 Manual smoke (fast)
 
 - Bob preview: each panel control updates the preview deterministically.
-- Venice embed: `/widget/{instanceId}` loads without console errors.
+- Venice embed: `/widget/{accountPublicId}/{instanceId}` loads without console errors.
 - Localization: switching locale uses only current ready overlays for the active base fingerprint; missing current overlays fail visibly instead of silently falling back.

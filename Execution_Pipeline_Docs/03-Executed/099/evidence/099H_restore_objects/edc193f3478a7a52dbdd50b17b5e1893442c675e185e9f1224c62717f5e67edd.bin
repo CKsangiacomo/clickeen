@@ -1,0 +1,157 @@
+{
+  "baseFingerprint": "ce3406e8218797e114aca1052dc141ca8afe3a247a3f3ac0d370a80459c001ff",
+  "baseUpdatedAt": "2026-02-04T15:59:12.732Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "Widget odpočítávání – Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "Vytvořte pocit naléhavosti pomocí přizpůsobitelných odpočítávacích časovačů. Spouštějte, prodávejte a oznamujte s jistotou."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "Widget s odpočítávacím časovačem"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "Vytvářejte naléhavost a podpořte akci pomocí rychlých a flexibilních odpočtů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.title",
+      "value": "Odpočet"
+    },
+    {
+      "op": "set",
+      "path": "blocks.navmeta.copy.description",
+      "value": "Zvyšte naléhavost pomocí flexibilních časovačů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.heading",
+      "value": "Vyzkoušejte si to naživo"
+    },
+    {
+      "op": "set",
+      "path": "blocks.minibob.copy.subhead",
+      "value": "Upravte si demo instanci v minibob. Až budete připraveni, publikujte."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.headline",
+      "value": "Widget odpočítávacího časovače"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right.copy.subheadline",
+      "value": "Vytvořte pocit naléhavosti a podpořte akci pomocí přizpůsobitelných odpočítávacích časovačů."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.headline",
+      "value": "Flexibilní režimy časovače"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left.copy.subheadline",
+      "value": "Časovače podle data, osobní nebo číselné počítadlo pro jakýkoli scénář."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "Proměňte pozornost v akci"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "Používejte časovače, které se hodí pro spuštění, slevy, akce i osobní cíle. Nastavte je jednou a nechte je běžet všude."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.headline",
+      "value": "Snadné přizpůsobení"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-stacked.copy.subheadline",
+      "value": "Upravte vzhled, rozvržení i akce tak, aby odpovídaly vaší značce."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "Spusťte se rychleji s odpočítáváním"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "Od nastavení po publikování během pár minut."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "Vyberte si časovač"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "Slaďte s vaší značkou"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "Publikujte a lokalizujte"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "Zvolte datumové odpočítávání, evergreen nebo číselné počítadlo podle vašeho použití."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "Přizpůsobte barvy, popisky a rozvržení tak, aby seděly na jakýkoli web."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "Spusťte se rychle a oslovte globální publikum díky vestavěné lokalizaci."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.headline",
+      "value": "Zvyšte konverze"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-right-2.copy.subheadline",
+      "value": "Podpořte okamžitou akci díky časově omezeným nabídkám."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.headline",
+      "value": "Optimalizováno pro SEO i GEO"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-left-2.copy.subheadline",
+      "value": "Vestavěná podpora schémat a lokalizace."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "Vytvořte naléhavost, zvyšte prodeje"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "Výkonné odpočítávací časovače, které promění návštěvníky v zákazníky."
+    }
+  ],
+  "v": 1
+}

@@ -1,0 +1,177 @@
+{
+  "baseFingerprint": "6ee19ebd0cfbc54425d7d6ca9ae2fc04c47db84105b4ca54b907caf8c1939e97",
+  "baseUpdatedAt": "2026-02-10T05:01:15.355Z",
+  "ops": [
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.title",
+      "value": "أمثلة الأسئلة الشائعة - Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.page-meta.copy.description",
+      "value": "أمثلة واقعية للأسئلة الشائعة لكل قطاع."
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.headline",
+      "value": "أمثلة على ويدجت الأسئلة الشائعة حسب المجال"
+    },
+    {
+      "op": "set",
+      "path": "blocks.hero.copy.subheadline",
+      "value": "شاهد كيف تستخدم فرق السفر والضيافة والأعمال الخدمية ويدجت أسئلة شائعة واحدًا للإجابة عن الأسئلة المتكررة بسرعة أكبر."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.headline",
+      "value": "الفنادق والمنتجعات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-1.copy.subheadline",
+      "value": "أجب عن أسئلة تسجيل الوصول والمواقف والإفطار قبل وصول الضيوف وقلّل مقاطعات مكتب الاستقبال."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.headline",
+      "value": "المطاعم والمقاهي والبارات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-2.copy.subheadline",
+      "value": "اجعل تفاصيل القائمة والمواد المسببة للحساسية وساعات العمل واضحة على الجوال، ليقرر الضيوف أسرع وبأقل تواصل ذهابًا وإيابًا مع الموظفين."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.headline",
+      "value": "بيوت العطلات ومديرو العقارات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-3.copy.subheadline",
+      "value": "حافظ على خطوات تسجيل الوصول وتفاصيل Wi‑Fi وقواعد المنزل موحّدة عبر جميع العقارات من خلال مسار نشر واحد."
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.headline",
+      "value": "الزوار من كل أنحاء العالم يتوقعون وضوحًا فوريًا"
+    },
+    {
+      "op": "set",
+      "path": "blocks.big-bang.copy.body",
+      "value": "انشر مرة واحدة وقدّم الإجابات باللغة المناسبة من أول نقرة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.headline",
+      "value": "منظمو الجولات ووكالات السفر"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-4.copy.subheadline",
+      "value": "وضّح نقاط الالتقاط وقواعد الإلغاء وسياسات الطقس مسبقًا لتتم قرارات الحجز بثقة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.headline",
+      "value": "المعالم والمتاحف والمتنزهات الترفيهية"
+    },
+    {
+      "op": "set",
+      "path": "blocks.split-icp-5.copy.subheadline",
+      "value": "وضّح التذاكر وقواعد الدخول ومعلومات سهولة الوصول قبل وصول الزوار، لتكون تجربة الوصول أسهل للجميع."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.title",
+      "value": "حلقة تشغيل بسيطة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.subhead",
+      "value": "التقط الأسئلة المتكررة مرة واحدة، وانشر التحديثات بسرعة، وحافظ على اتساق كل صفحة مباشرة مع تغيّر التفاصيل."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.title",
+      "value": "أضف أهم أسئلتك"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.title",
+      "value": "انشر مرة واحدة"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.title",
+      "value": "حافظ على تزامن كل اللغات"
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.0.body",
+      "value": "ابدأ بالأسئلة المتكررة التي يطرحها الزوار قبل اتخاذ قرارهم."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.1.body",
+      "value": "نقرة واحدة تجعل أحدث إجاباتك مباشرة على كل صفحة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.steps.copy.items.2.body",
+      "value": "عند تغيّر المحتوى الأساسي، تتحدّث الترجمات لتبقى رسالتك متسقة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.title",
+      "value": "مصمّم للاستخدام في بيئات الإنتاج"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.subhead",
+      "value": "سرعة عالمية على الحافة، وخيارات تضمين مرنة، ومسار نشر بسيط يحافظ على تحديث الإجابات."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.title",
+      "value": "سريع"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.title",
+      "value": "مرن"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.title",
+      "value": "محدَّث"
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.0.body",
+      "value": "توزيع عالمي عبر الحافة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.1.body",
+      "value": "خيارات تضمين قياسية وبدون سكربت."
+    },
+    {
+      "op": "set",
+      "path": "blocks.platform-strip.copy.items.2.body",
+      "value": "انشر مرة واحدة لتحديث كل صفحة مباشرة."
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.headline",
+      "value": "حلّها مع Clickeen"
+    },
+    {
+      "op": "set",
+      "path": "blocks.cta.copy.subheadline",
+      "value": "ابدأ مجانًا، وخصّص التصميم لعلامتك التجارية، وانشر أسئلة شائعة مباشرة تتوسع عبر الصفحات."
+    }
+  ],
+  "v": 1
+}

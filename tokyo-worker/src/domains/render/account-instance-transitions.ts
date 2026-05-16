@@ -1,10 +1,8 @@
 import { createCompactInstanceId, isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
-import { resolvePolicyFromEntitlementsSnapshot, type RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import type { Env } from '../../types';
 import {
   resolveWidgetDefaults,
 } from '../widget-catalog';
-import { readAccountInstanceIndex } from './instance-index';
 import { syncLiveSurface } from './live-surface';
 import {
   readInstanceServeState,
@@ -35,11 +33,6 @@ export class AccountInstanceTransitionError extends Error {
     this.paths = args.issues?.map((issue) => issue.path);
   }
 }
-
-type AccountAuthzSnapshot = Pick<
-  RomaAccountAuthzCapsulePayload,
-  'profile' | 'role' | 'entitlements'
->;
 
 function assertScopedIds(accountIdRaw: string, instanceIdRaw: string): {
   accountId: string;
@@ -144,7 +137,6 @@ export async function saveAccountInstanceTransition(args: {
   hasDisplayName: boolean;
   meta?: unknown;
   hasMeta: boolean;
-  accountAuthz: AccountAuthzSnapshot;
 }): Promise<{
   ok: true;
   pointer: SavedRenderPointer;
@@ -193,7 +185,6 @@ export async function duplicateAccountInstanceTransition(args: {
   env: Env;
   accountId: string;
   sourceInstanceId: string;
-  accountAuthz: AccountAuthzSnapshot;
 }): Promise<{
   accountId: string;
   sourceInstanceId: string;
@@ -237,7 +228,6 @@ export async function publishAccountInstanceTransition(args: {
   env: Env;
   accountId: string;
   instanceId: string;
-  accountAuthz: AccountAuthzSnapshot;
 }): Promise<{ instanceId: string; status: 'published'; changed: boolean }> {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
   const existing = await readSavedRenderConfig({ env: args.env, accountId, instanceId });
@@ -255,48 +245,6 @@ export async function publishAccountInstanceTransition(args: {
       configFp: existing.value.pointer.configFp,
     });
     return { instanceId, status: 'published', changed: false };
-  }
-
-  const policy = resolvePolicyFromEntitlementsSnapshot({
-    profile: args.accountAuthz.profile,
-    role: args.accountAuthz.role,
-    entitlements: args.accountAuthz.entitlements ?? null,
-  });
-  const publishedLimitRaw = policy.limits['instances.published.max'];
-  const publishedLimit =
-    typeof publishedLimitRaw === 'number' && Number.isFinite(publishedLimitRaw)
-      ? Math.max(0, Math.floor(publishedLimitRaw))
-      : null;
-  if (publishedLimit != null) {
-    if (publishedLimit === 0) {
-      throw new AccountInstanceTransitionError({
-        status: 403,
-        kind: 'DENY',
-        reasonKey: 'coreui.upsell.reason.limitReached',
-        detail: `instances.published.max=${publishedLimit}`,
-      });
-    }
-    const index = await readAccountInstanceIndex({
-      env: args.env,
-      accountId,
-    });
-    if (!index.ok) {
-      throw new AccountInstanceTransitionError({
-        status: index.kind === 'NOT_FOUND' ? 404 : 422,
-        kind: index.kind === 'NOT_FOUND' ? 'NOT_FOUND' : 'VALIDATION',
-        reasonKey: index.reasonKey,
-        detail: index.detail,
-      });
-    }
-    const publishedCount = index.value.entries.filter((entry) => entry.publishStatus === 'published').length;
-    if (publishedCount >= publishedLimit) {
-      throw new AccountInstanceTransitionError({
-        status: 403,
-        kind: 'DENY',
-        reasonKey: 'coreui.upsell.reason.limitReached',
-        detail: `instances.published.max=${publishedLimit}`,
-      });
-    }
   }
 
   await syncLiveSurface(args.env, {

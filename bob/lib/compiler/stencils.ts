@@ -1,7 +1,7 @@
 import type { TooldrawerAttrs } from '../compiler.shared';
 import { parseTooldrawerAttributes } from '../compiler.shared';
 import { getIcon } from '../icons';
-import { requireTokyoUrl } from './assets';
+import { requireTokyoUrl } from './media';
 import { interpolateStencilContext, renderStencil } from './stencil-renderer';
 
 type ComponentSpec = {
