@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  collectConfigMediaAssetIds,
+  collectConfigMediaAssetRefs,
   materializeConfigMedia,
   resolveOverlay,
   type ResolvedAccountAsset,
@@ -45,17 +45,17 @@ export function Workspace({
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
   const [resolvedAssets, setResolvedAssets] = useState<Map<string, ResolvedAccountAsset>>(() => new Map());
-  const mediaAssetIds = useMemo(
-    () => collectConfigMediaAssetIds(instanceData),
+  const mediaAssetRefs = useMemo(
+    () => collectConfigMediaAssetRefs(instanceData),
     [instanceData],
   );
   const previewInstanceData = useMemo(() => {
-    if (!mediaAssetIds.length) return instanceData;
+    if (!mediaAssetRefs.length) return instanceData;
     const materialized = materializeConfigMedia(instanceData, resolvedAssets);
     return materialized && typeof materialized === 'object' && !Array.isArray(materialized)
       ? (materialized as Record<string, unknown>)
       : instanceData;
-  }, [instanceData, mediaAssetIds, resolvedAssets]);
+  }, [instanceData, mediaAssetRefs, resolvedAssets]);
   const effectivePreviewableLocales = useMemo(() => {
     const previewableLocales = Array.from(
       new Set(
@@ -122,28 +122,28 @@ export function Workspace({
 
   useEffect(() => {
     let cancelled = false;
-    if (!mediaAssetIds.length) {
+    if (!mediaAssetRefs.length) {
       return () => {
         cancelled = true;
       };
     }
 
-    const missingAssetIds = mediaAssetIds.filter((assetId) => !resolvedAssets.has(assetId));
-    if (!missingAssetIds.length) {
+    const missingAssetRefs = mediaAssetRefs.filter((assetRef) => !resolvedAssets.has(assetRef));
+    if (!missingAssetRefs.length) {
       return () => {
         cancelled = true;
       };
     }
 
     void accountAssets
-      .resolveAssets(missingAssetIds)
-      .then(({ assetsById }) => {
+      .resolveAssets(missingAssetRefs)
+      .then(({ assetsByRef }) => {
         if (cancelled) return;
         setResolvedAssets((current) => {
           let changed = false;
           const next = new Map(current);
-          assetsById.forEach((asset, assetId) => {
-            next.set(assetId, asset);
+          assetsByRef.forEach((asset, assetRef) => {
+            next.set(assetRef, asset);
             changed = true;
           });
           return changed ? next : current;
@@ -157,7 +157,7 @@ export function Workspace({
     return () => {
       cancelled = true;
     };
-  }, [accountAssets, mediaAssetIds, resolvedAssets]);
+  }, [accountAssets, mediaAssetRefs, resolvedAssets]);
 
   useEffect(() => {
     if (!switcherNotice) return undefined;

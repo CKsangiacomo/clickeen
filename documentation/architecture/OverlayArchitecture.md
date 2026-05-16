@@ -41,16 +41,10 @@ Overlay objects live under the owning account instance:
 accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json
 ```
 
-Selected overlay pointers for authoring/runtime selection live under the same instance:
+Generated public locale output is browser HTML written by the coding agent from `instance.json` plus overlay inputs:
 
 ```txt
-accounts/{accountPublicId}/instances/{instanceId}/selected-overlays/{languageCode}/{experiment}/{personalization}.json
-```
-
-Published overlay objects are derived public-serving projection material and live only under the instance published projection:
-
-```txt
-accounts/{accountPublicId}/instances/{instanceId}/published/overlays/{overlayId}.json
+accounts/{accountPublicId}/instances/{instanceId}/{locale}.html
 ```
 
 `widgetCode` is encoded in `overlayId` because it is part of the shared overlay codebook. It is never required to locate instance storage and must not reintroduce `accounts/{accountPublicId}/widgets/{widgetCode}/...`.
@@ -70,7 +64,7 @@ No account ID, instance ID, language, status, job state, readiness, base revisio
 
 ## Primitive Value Rule
 
-Every widget declares its primitive variable graph once. ToolDrawer, Copilot, Babel, Bob preview, Tokyo, and Venice consume that same declaration.
+Every widget declares its primitive variable graph once. ToolDrawer, Copilot, Babel, Bob preview, Tokyo, and San Francisco consume that same declaration.
 
 Locale/Babel v1 writes text primitive values only. Later value overlays for colors, fills, typography, layout, or other Dieter token values must still use the same primitive graph. No producer may invent paths outside the widget declaration.
 

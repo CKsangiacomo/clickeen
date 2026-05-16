@@ -1,4 +1,3 @@
-import { resolveLocaleForLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
@@ -6,60 +5,11 @@ import type { PragueMarket } from './markets';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 
-type LiveRenderPointer = {
-  v: 1;
-  localePolicy?: {
-    baseLocale?: string;
-  };
-  overlays?: {
-    languages?: Record<string, string>;
-  };
-};
-
-function readEnv(name: string): string | undefined {
-  const proc = typeof process !== 'undefined' ? process : undefined;
-  const procValue = proc?.env ? proc.env[name] : undefined;
-  if (typeof procValue === 'string' && procValue.trim()) return procValue.trim();
-  return undefined;
-}
-
-function getTokyoBaseUrl(): string {
-  const meta = String((import.meta as any)?.env?.PUBLIC_TOKYO_URL || '').trim();
-  const raw = meta || readEnv('PUBLIC_TOKYO_URL') || '';
-  if (!raw.trim()) {
-    throw new Error('[prague] PUBLIC_TOKYO_URL is required to resolve instance locales');
-  }
-  return raw.replace(/\/+$/, '');
-}
-
-async function fetchJson(url: string): Promise<{ status: number; ok: boolean; json: unknown | null }> {
-  const res = await fetch(url, { method: 'GET' });
-  const json = await res.json().catch(() => null);
-  return { status: res.status, ok: res.ok, json };
-}
-
 export async function resolveTokyoInstanceLocales(accountPublicId: string, instanceId: string): Promise<string[] | null> {
   const accountId = String(accountPublicId || '').trim();
   const id = String(instanceId || '').trim();
   if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(id)) return null;
-
-  const baseUrl = getTokyoBaseUrl();
-  const { status, ok, json } = await fetchJson(
-    `${baseUrl}/renders/accounts/${encodeURIComponent(accountId)}/instances/${encodeURIComponent(id)}/live/r.json`,
-  );
-  if (status === 404) return null;
-  if (!ok || !json || typeof json !== 'object') return null;
-
-  const parsed = json as LiveRenderPointer;
-  if (parsed.v !== 1) return null;
-
-  const baseLocale = normalizeLocaleToken(parsed.localePolicy?.baseLocale) ?? 'en';
-  const overlayLocales: string[] = [];
-  for (const code of Object.keys(parsed.overlays?.languages ?? {})) {
-    const locale = resolveLocaleForLanguageOverlayCode(code);
-    if (typeof locale === 'string') overlayLocales.push(locale);
-  }
-  return Array.from(new Set([baseLocale, ...overlayLocales]));
+  return null;
 }
 
 export function chooseShowcaseTiles(allLocales: string[]): string[] {

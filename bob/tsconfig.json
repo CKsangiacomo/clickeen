@@ -5,12 +5,6 @@
     "paths": {
       "@bob/*": [
         "./*"
-      ],
-      "@venice/*": [
-        "../venice/*"
-      ],
-      "@venice/lib/*": [
-        "../venice/lib/*"
       ]
     },
     "plugins": [

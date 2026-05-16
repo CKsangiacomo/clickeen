@@ -1,6 +1,6 @@
 import {
   normalizeInstanceId,
-  parseAccountAssetBlobKey,
+  parseAccountAssetKey,
   parseAccountAssetRef,
   toAccountAssetPublicPath,
 } from '@clickeen/ck-contracts';
@@ -78,10 +78,9 @@ const ACCOUNT_ASSET_CANONICAL_PREFIX = 'accounts/';
 
 export function buildAccountAssetKey(
   accountId: string,
-  assetId: string,
-  filename: string,
+  assetRef: string,
 ): string {
-  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/assets/${assetId}/blob/${filename}`;
+  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/assets/${assetRef.replace(/^\/+/, '')}`;
 }
 
 export function normalizeAccountAssetReadKey(pathname: string): string | null {
@@ -89,11 +88,11 @@ export function normalizeAccountAssetReadKey(pathname: string): string | null {
   if (!raw) return null;
   const publicRef = parseAccountAssetRef(raw);
   if (publicRef) return publicRef.key;
-  const keyRef = parseAccountAssetBlobKey(raw.replace(/^\/+/, ''));
+  const keyRef = parseAccountAssetKey(raw.replace(/^\/+/, ''));
   return keyRef ? keyRef.key : null;
 }
 
-type AccountAssetIdentity = { accountId: string; assetId: string };
+type AccountAssetIdentity = { accountId: string; assetRef: string };
 
 export function buildAccountAssetPublicPath(assetKey: string): string {
   const publicPath = toAccountAssetPublicPath(assetKey);
@@ -104,8 +103,8 @@ export function buildAccountAssetPublicPath(assetKey: string): string {
 export function parseAccountAssetIdentityFromKey(key: string): AccountAssetIdentity | null {
   const normalized = normalizeAccountAssetReadKey(key);
   if (!normalized) return null;
-  const parsed = parseAccountAssetBlobKey(normalized);
-  return parsed ? { accountId: parsed.accountId, assetId: parsed.assetId } : null;
+  const parsed = parseAccountAssetKey(normalized);
+  return parsed ? { accountId: parsed.accountId, assetRef: parsed.assetRef } : null;
 }
 
 export function guessContentTypeFromExt(ext: string): string {

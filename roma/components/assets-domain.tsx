@@ -9,7 +9,7 @@ import { useRomaAccountContext } from './roma-account-context';
 
 type DeleteAssetPayload = {
   accountId: string;
-  assetId: string;
+  assetRef: string;
   deleted: boolean;
 };
 
@@ -35,9 +35,6 @@ const DELETE_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to manage assets.',
   'coreui.errors.auth.forbidden': 'You do not have permission to manage this asset.',
   'coreui.errors.db.writeFailed': 'Asset delete failed on the server. Please try again.',
-  'coreui.errors.assets.integrity.dbPointerMissingBlob': 'Delete blocked: this asset points to missing blobs in storage. Resolve in Assets panel.',
-  'coreui.errors.assets.integrity.orphanBlob': 'Delete blocked: storage contains orphan blobs for this asset. Resolve in Assets panel.',
-  'coreui.errors.assets.integrity.blobMissingForAsset': 'Delete blocked: this asset has no storage blob key. Resolve in Assets panel.',
   'coreui.errors.assets.integrityUnavailable': 'Delete blocked: asset integrity check is unavailable right now. Try again.',
 };
 
@@ -72,9 +69,9 @@ function resolveDeleteErrorCopy(reason: string): string {
 async function requestDeleteAsset(
   accountApi: Pick<RomaAccountApi, 'fetchRaw'>,
   accountId: string,
-  assetId: string,
+  assetRef: string,
 ): Promise<DeleteAssetPayload> {
-  const response = await accountApi.fetchRaw(`/api/account/assets/${encodeURIComponent(assetId)}`, {
+  const response = await accountApi.fetchRaw(`/api/account/assets/${encodeURIComponent(assetRef)}`, {
     method: 'DELETE',
   });
   const payload = (await response.json().catch(() => null)) as DeleteAssetPayload | { error?: unknown } | null;
@@ -82,7 +79,7 @@ async function requestDeleteAsset(
     const reason = parseApiErrorReason(payload, response.status);
     throw new Error(reason);
   }
-  return (payload as DeleteAssetPayload) ?? { accountId, assetId, deleted: true };
+  return (payload as DeleteAssetPayload) ?? { accountId, assetRef, deleted: true };
 }
 
 async function requestUploadAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, file: File, source: string): Promise<AccountAssetRecord> {
@@ -122,7 +119,7 @@ export function AssetsDomain() {
   const [storageBytesUsed, setStorageBytesUsed] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [deletingAssetId, setDeletingAssetId] = useState<string | null>(null);
+  const [deletingAssetRef, setDeletingAssetRef] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [singleUploadError, setSingleUploadError] = useState<string | null>(null);
   const [singleUploadBusy, setSingleUploadBusy] = useState(false);
@@ -168,20 +165,20 @@ export function AssetsDomain() {
   const deleteAsset = useCallback(
     async (asset: AccountAssetRecord) => {
       if (!accountId) return;
-      if (!asset.assetId) {
-        setDeleteError('Asset delete failed. Invalid assetId.');
+      if (!asset.assetRef) {
+        setDeleteError('Asset delete failed. Invalid asset reference.');
         return;
       }
-      setDeletingAssetId(asset.assetId);
+      setDeletingAssetRef(asset.assetRef);
       setDeleteError(null);
       try {
-        await requestDeleteAsset(accountApi, accountId, asset.assetId);
+        await requestDeleteAsset(accountApi, accountId, asset.assetRef);
         await refreshAssets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setDeleteError(resolveDeleteErrorCopy(message));
       } finally {
-        setDeletingAssetId(null);
+        setDeletingAssetRef(null);
       }
     },
     [accountApi, accountId, refreshAssets],
@@ -369,7 +366,7 @@ export function AssetsDomain() {
           </thead>
           <tbody>
             {assetRows.map((asset) => (
-              <tr key={asset.assetId}>
+              <tr key={asset.assetRef}>
                 <td className="body-s">{asset.filename}</td>
                 <td className="body-s">{asset.assetType}</td>
                 <td className="body-s">{asset.contentType}</td>
@@ -381,9 +378,9 @@ export function AssetsDomain() {
                     data-variant="secondary"
                     type="button"
                     onClick={() => handleDeleteAsset(asset)}
-                    disabled={deletingAssetId === asset.assetId}
+                    disabled={deletingAssetRef === asset.assetRef}
                   >
-                    <span className="diet-btn-txt__label body-m">{deletingAssetId === asset.assetId ? 'Deleting...' : 'Delete'}</span>
+                    <span className="diet-btn-txt__label body-m">{deletingAssetRef === asset.assetRef ? 'Deleting...' : 'Delete'}</span>
                   </button>
                 </td>
               </tr>

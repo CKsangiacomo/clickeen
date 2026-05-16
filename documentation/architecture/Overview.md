@@ -58,7 +58,7 @@ Mutable pointer  (tiny, always fetched fresh)
 | Domain       | Mutable pointer                                                        | Immutable artifact                                                                    |
 | ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | **Serve state** | Tokyo live pointer / serve flag (`no-store`)                           | Published projection material under `accounts/{accountPublicId}/instances/{instanceId}/published/` |
-| **Assets**   | Authoring stores logical `assetId`; runtime/account APIs carry `accountPublicId` | Asset bytes under `accounts/{accountPublicId}/assets/` |
+| **Assets**   | Authoring stores account asset refs; runtime/account APIs carry `accountPublicId` | Asset bytes under `accounts/{accountPublicId}/assets/{assetRef}` |
 | **Auth**     | JWT (short-lived, refreshable)                                         | userId claim (stable identity)                                                        |
 | **Authz**    | HMAC-signed capsule (expires)                                          | Role/account snapshot at issuance                                                     |
 | **Overlays** | Selected/published overlay pointer under the owning instance             | Overlay object at `accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json` |
@@ -133,7 +133,7 @@ Each release proceeds in 3 steps:
 | **Bob**           | `https://bob.dev.clickeen.com`               | `https://app.clickeen.com`          |
 | **Roma**          | `https://roma.dev.clickeen.com`              | `https://app.clickeen.com`          |
 | **Prague**        | `https://prague.dev.clickeen.com` (optional) | `https://clickeen.com`              |
-| **Venice**        | `https://venice.dev.clickeen.com`            | `https://embed.clickeen.com`        |
+| **Public embeds** | `https://clk.live`                           | `https://clk.live`                  |
 | **Tokyo**         | `https://tokyo.dev.clickeen.com`             | `https://tokyo.clickeen.com`        |
 | **San Francisco** | `https://sanfrancisco.dev.clickeen.com`      | `https://sanfrancisco.clickeen.com` |
 
@@ -227,22 +227,21 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 - In local development, DevStudio is a local Vite toolbench for static/internal verification pages; removed widget-authoring and company-plane action lanes must not be reintroduced there.
 - There is no canonical Cloudflare DevStudio runtime. DevStudio is local-only.
 
-#### Venice (Workers)
+#### Public Embeds (`clk.live`)
 
-- Public embed surface (third-party websites only talk to Venice).
-- Runtime reads only account-scoped published projection material and widget bytes.
-- Public `/widget/{accountPublicId}/{instanceId}` and `/renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json` do **0** Supabase calls at request time.
-- Public snapshot serving is revision-coherent: Venice reads one published revision and never mixes artifacts from previous revisions.
-- If a locale artifact is missing in the current revision, Venice returns unavailable for that locale (no serve-time locale fallback).
-- Public routes serve snapshots from account-scoped published projections only (no public dynamic fallback). Dynamic rendering is restricted to controlled internal bypass.
+- Public embed surface: third-party websites load generated static files from `clk.live`.
+- Serving maps `/{accountPublicId}/{instanceId}` to the owning account instance `index.html`.
+- Public requests perform no product-service lookup, runtime composition, overlay resolution, or database call.
+- If `index.html` is missing, the public URL returns 404.
+- Locale variants and SEO/GEO output are generated ahead of serving by agent jobs.
 
 #### Tokyo (R2)
 
 - Serves product widget software from R2 `product/widgets/**` through friendly `/widgets/**` routes.
 - Serves Dieter from R2 `dieter/**`, global fonts from `fonts/**`, and Prague content from `prague/**`.
 - **Deterministic compilation contract** depends on the deployed Dieter manifest under the canonical `dieter/` root.
-- Serves account-owned published projection material from `accounts/{accountPublicId}/instances/{instanceId}/published/`. PRD 098 overlay identity is fixed-layout `overlayId`; old l10n indexes, text packs, and base fingerprints are not active product truth.
-- Prague website base copy lives in the `prague/` root. Account-widget overlays are resolved by Venice from account-scoped published overlay IDs; Prague does not own a separate widget localization runtime.
+- Serves account-owned generated browser files from `accounts/{accountPublicId}/instances/{instanceId}/`. PRD 098 overlay identity is fixed-layout `overlayId`; old l10n indexes, text packs, and base fingerprints are not active product truth.
+- Prague website base copy lives in the `prague/` root. Account-widget overlays are build inputs for generated instance files; Prague does not own a separate widget localization runtime.
 
 #### Tokyo Worker (Workers + Queues)
 
@@ -252,7 +251,6 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 - Serves account asset reads on routes carrying `accountPublicId`; legacy non-account asset paths are hard-failed.
 - In-place account asset byte replacement keeps the same account asset reference and must not require instance rebuilds.
 - Asset delete is synchronous and explicit, with no silent runtime healing.
-- Tokyo-worker exposes integrity endpoints for managed surfaces (`GET /assets/integrity/:accountId`, `GET /assets/integrity/:accountId/:assetId`).
 - Writes account-instance config, overlay, SEO/meta, and published projection material under `accounts/{accountPublicId}/instances/{instanceId}/` from explicit Roma/system operations. Tokyo-worker does not read Michael/Supabase to discover overlay state.
 - Materializes render snapshots under account-first instance storage, then exposes account-scoped published projection routes for Venice fast-path serving.
 
@@ -275,7 +273,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 | Surface                     | Variable                    | Dev                                     | Prod                                | Notes                                                                            |
 | --------------------------- | --------------------------- | --------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
 | **Bob (Pages)**             | `NEXT_PUBLIC_TOKYO_URL`     | `https://tokyo.dev.clickeen.com`        | `https://tokyo.clickeen.com`        | Compiler fetches widget specs over HTTP (even locally)                           |
-| **Bob (Pages)**             | `NEXT_PUBLIC_VENICE_URL`    | `https://venice.dev.clickeen.com`       | `https://embed.clickeen.com`        | Bob preview/embed target                                                         |
+| **Bob (Pages)**             | `NEXT_PUBLIC_CLK_LIVE_URL`  | `https://clk.live`                      | `https://clk.live`                  | Optional public embed origin override                                            |
 | **Bob (Pages)**             | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Explicit base URL for Copilot execution (San Francisco); no fallback probing |
 | **Roma (Pages)**            | `NEXT_PUBLIC_BOB_URL`       | `https://bob.dev.clickeen.com`          | `https://app.clickeen.com`          | Builder iframe origin (no query override; configured per environment)            |
 | **Roma/San Francisco (trusted backends)** | `ENV_STAGE`   | `cloud-dev`                             | `ga`                                | Exposure stage stamped into AI grants on the active product/internal issuer path |
@@ -294,8 +292,8 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 
 **DNS & custom domains**
 
-- `bob.dev`, `roma.dev`, `tokyo.dev`, `venice.dev`, and `sanfrancisco.dev` point at the corresponding Pages/Workers deployments.
-- Production domains (`app`, `tokyo`, `embed`, `sanfrancisco`) are configured similarly.
+- `bob.dev`, `roma.dev`, `tokyo.dev`, `clk.live`, and `sanfrancisco.dev` point at the corresponding Pages/Workers deployments.
+- Production domains (`app`, `tokyo`, `clk.live`, `sanfrancisco`) are configured similarly.
 
 **Pages build settings**
 
@@ -305,7 +303,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 **Caching**
 
 - Tokyo (`/dieter/**`, `/widgets/**`) uses long caching for versioned media; avoid caching `spec.json` aggressively in dev.
-- Public embed serving uses cached generated files by `publicEmbedId`; Venice is not the normal public widget composer after PRD 100.
+- Public embed serving uses cached generated files from `clk.live/{accountPublicId}/{instanceId}`.
 
 **Access control**
 
@@ -353,7 +351,7 @@ Non-negotiable:
   - Roma Copilot/outcome and Prague string-translation calls use HMAC body signatures. Roma -> Tokyo/Tokyo-worker account product control uses private Cloudflare service bindings; account-widget translation generation uses the private Tokyo-worker -> San Francisco service binding.
 - **Caching**:
   - Tokyo deploy-managed media is long-cacheable when versioned; avoid cache on widget `spec.json` when iterating in dev.
-  - Public embed serving returns generated static files by `publicEmbedId`; Venice does not compose widgets for normal public traffic after PRD 100.
+  - Public embed serving returns generated static files from `clk.live/{accountPublicId}/{instanceId}`.
 
 ---
 
@@ -395,9 +393,9 @@ Non-negotiable:
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           EMBED FLOW                                    │
 │                                                                         │
-│  ┌──────────────┐   GET /widget/{accountPublicId}/{instanceId}         │
+│  ┌──────────────┐   GET clk.live/{accountPublicId}/{instanceId}       │
 │  │ Third-party  │ ──────────────────────► ┌─────────┐ ───► ┌─────────┐ │
-│  │   Website    │                         │ Venice  │      │  Tokyo  │ │
+│  │   Website    │                         │ Static  │      │  Tokyo  │ │
 │  └──────────────┘ ◄────────────────────── │  Edge   │ ◄─── │   R2    │ │
 │                                           └─────────┘      └─────────┘ │
 │                     SSR HTML + bootstrapped state                       │
@@ -597,44 +595,15 @@ Each component has: CSS contract, HTML stencil, hydration script, spec.json.
 
 ---
 
-## Venice Embed Architecture
+## Static Embed Architecture
 
-**Current Status:** Superseded for public widget serving by PRD 100. Public embeds serve generated static files by `publicEmbedId`; Venice must not compose widgets for normal public traffic.
+Public embeds serve generated static files from:
 
-### Endpoints
+```txt
+https://clk.live/{accountPublicId}/{instanceId}
+```
 
-| Route                                | Purpose                                   |
-| ------------------------------------ | ----------------------------------------- |
-| `GET /widget/{accountPublicId}/{instanceId}` | Embed shell HTML + runtime bootstrap |
-| `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json` | Live serve pointer proxy (`no-store`) |
-| `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/config.json` | Published config pack proxy |
-| `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json` | Published overlay object proxy (`no-store`) |
-| `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/meta/live/{locale}.json` | SEO/GEO meta pointer proxy (`no-store`) |
-| `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/meta/{locale}/{metaFp}.json` | SEO/GEO meta pack proxy |
-| `/embed/latest/loader.js`            | Canonical loader alias                    |
-| `/embed/v2/loader.js`                | Compatibility v2 loader alias             |
-| `/embed/v2.0.0/loader.js`            | Immutable versioned loader                |
-| `/embed/v2.0.0/seo-geo-loader.js`    | Immutable versioned SEO/GEO enhancement loader |
-
-### Caching Strategy
-
-| Artifact                                        | Cache-Control                         |
-| ----------------------------------------------- | ------------------------------------- |
-| `/widget/{accountPublicId}/{instanceId}` shell HTML | `public, max-age=60, s-maxage=86400` |
-| `/embed/latest/loader.js`, `/embed/v2/loader.js`       | `public, max-age=300, s-maxage=600`   |
-| `/embed/v2.0.0/loader.js`                              | `public, max-age=31536000, immutable` |
-| `/embed/v2.0.0/seo-geo-loader.js`                      | `public, max-age=31536000, immutable` |
-| Live pointers (`/r`, locale/meta live pointers) | `no-store`                            |
-| Fingerprinted packs + widget media              | `public, max-age=31536000, immutable` |
-
-### Front-Door Pattern
-
-PRD 100 changes the public embed front door:
-
-- Browsers call `embed.clickeen.com/{publicEmbedId}` for public embeds.
-- Public serving returns cached static files keyed by `publicEmbedId`.
-- Venice does not compose widgets for normal public traffic.
-- If required Tokyo bytes are missing, Venice returns unavailable instead of healing or falling back
+The serving layer validates the two coordinates, checks a positive browser-file allowlist, rewrites to the matching Tokyo/R2 object under the account instance folder, and returns either the file or 404. It does not compose widgets per request.
 
 ---
 
@@ -655,10 +624,9 @@ User opens widget → Roma GET /api/builder/:instanceId/open
 ### 2. Embed View Flow
 
 ```
-Visitor loads embed → Venice GET /widget/{accountPublicId}/{instanceId}
-                    → Venice GET /renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json
-                    → Venice GET Tokyo published config, overlay/meta projection material, and widget HTML
-                    → Venice returns SSR HTML / bootstraps CK_WIDGET
+Visitor loads embed → clk.live/{accountPublicId}/{instanceId}
+                    → static serving reads accounts/{accountPublicId}/instances/{instanceId}/index.html
+                    → browser loads allowed sibling CSS/JS/assets only
 ```
 
 ### 3. Form Submission Flow

@@ -1,5 +1,4 @@
 import {
-  isUuid,
   normalizeAccountAssetRecord,
   normalizeResolvedAccountAsset,
   type AccountAssetRecord,
@@ -10,7 +9,7 @@ export type { AccountAssetRecord, ResolvedAccountAsset } from '@clickeen/ck-cont
 
 export type AccountAssetsTransport = {
   listAssets: () => Promise<Response>;
-  resolveAssets: (assetIds: string[]) => Promise<Response>;
+  resolveAssets: (assetRefs: string[]) => Promise<Response>;
   uploadAsset: (file: File, source?: string) => Promise<Response>;
 };
 
@@ -21,9 +20,9 @@ const ACCOUNT_ASSET_UPSELL_REASONS = new Set([
 
 export type AccountAssetsClient = {
   listAssets: () => Promise<AccountAssetRecord[]>;
-  resolveAssets: (assetIdsRaw: string[]) => Promise<{
-    assetsById: Map<string, ResolvedAccountAsset>;
-    missingAssetIds: string[];
+  resolveAssets: (assetRefsRaw: string[]) => Promise<{
+    assetsByRef: Map<string, ResolvedAccountAsset>;
+    missingAssetRefs: string[];
   }>;
   uploadAsset: (file: File, source?: string) => Promise<AccountAssetRecord>;
 };
@@ -35,12 +34,12 @@ type AccountAssetsListResponse = {
 
 type AccountAssetsResolveResponse = {
   assets?: unknown;
-  missingAssetIds?: unknown;
+  missingAssetRefs?: unknown;
   error?: { reasonKey?: unknown; detail?: unknown };
 };
 
 type AccountAssetUploadResponse = {
-  assetId?: unknown;
+  assetRef?: unknown;
   assetType?: unknown;
   filename?: unknown;
   url?: unknown;
@@ -96,44 +95,44 @@ export function createAccountAssetsClient(transport: AccountAssetsTransport): Ac
       return assets.map(normalizeAccountAssetRecord).filter((asset): asset is AccountAssetRecord => Boolean(asset));
     },
 
-    async resolveAssets(assetIdsRaw: string[]): Promise<{
-      assetsById: Map<string, ResolvedAccountAsset>;
-      missingAssetIds: string[];
+    async resolveAssets(assetRefsRaw: string[]): Promise<{
+      assetsByRef: Map<string, ResolvedAccountAsset>;
+      missingAssetRefs: string[];
     }> {
       const seen = new Set<string>();
-      const assetIds = assetIdsRaw
+      const assetRefs = assetRefsRaw
         .map((entry) => asTrimmedString(entry))
-        .filter((assetId) => {
-          if (!isUuid(assetId) || seen.has(assetId)) return false;
-          seen.add(assetId);
+        .filter((assetRef) => {
+          if (!assetRef || assetRef.includes('..') || seen.has(assetRef)) return false;
+          seen.add(assetRef);
           return true;
         });
 
-      if (!assetIds.length) {
-        return { assetsById: new Map(), missingAssetIds: [] };
+      if (!assetRefs.length) {
+        return { assetsByRef: new Map(), missingAssetRefs: [] };
       }
 
-      const response = await transport.resolveAssets(assetIds);
+      const response = await transport.resolveAssets(assetRefs);
       const payload = (await response.json().catch(() => null)) as AccountAssetsResolveResponse | null;
       if (!response.ok) {
         throw new Error(resolveApiErrorReason(payload, response.status, 'coreui.errors.db.readFailed'));
       }
 
-      const assetsById = new Map<string, ResolvedAccountAsset>();
+      const assetsByRef = new Map<string, ResolvedAccountAsset>();
       const assets = Array.isArray(payload?.assets) ? payload.assets : [];
       for (const asset of assets) {
         const normalized = normalizeResolvedAccountAsset(asset);
         if (!normalized) continue;
-        assetsById.set(normalized.assetId, normalized);
+        assetsByRef.set(normalized.assetRef, normalized);
       }
 
-      const missingAssetIds = Array.isArray(payload?.missingAssetIds)
-        ? payload.missingAssetIds
+      const missingAssetRefs = Array.isArray(payload?.missingAssetRefs)
+        ? payload.missingAssetRefs
             .map((entry) => asTrimmedString(entry))
             .filter((entry): entry is string => Boolean(entry))
         : [];
 
-      return { assetsById, missingAssetIds };
+      return { assetsByRef, missingAssetRefs };
     },
 
     async uploadAsset(file: File, source = 'api'): Promise<AccountAssetRecord> {

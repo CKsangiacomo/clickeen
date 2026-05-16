@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
@@ -120,21 +120,32 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const babel = await runBabelTextFollowupAfterSave({
-    authz: current.value.authzPayload,
-    accessToken: current.value.accessToken,
-    accountCapsule: current.value.authzToken,
-    accountPublicId: accountId,
-    instanceId,
-    widgetType,
-    config,
-    requestId: current.value.requestId,
+  after(async () => {
+    const babel = await runBabelTextFollowupAfterSave({
+      authz: current.value.authzPayload,
+      accessToken: current.value.accessToken,
+      accountCapsule: current.value.authzToken,
+      accountPublicId: accountId,
+      instanceId,
+      widgetType,
+      config,
+      requestId: current.value.requestId,
+    });
+    if (!babel.ok) {
+      console.warn('[roma account instance save] async babel follow-up failed', {
+        accountId,
+        instanceId,
+        requestId: current.value.requestId,
+        results: babel.results,
+      });
+    }
   });
   return withSession(
     request,
     NextResponse.json({
       ok: true,
-      babel,
+      sourceVersion: result.value.sourceVersion,
+      generation: result.value.generation,
     }),
     current.value.setCookies,
   );

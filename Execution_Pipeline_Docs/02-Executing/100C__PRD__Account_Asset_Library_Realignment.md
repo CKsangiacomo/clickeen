@@ -7,7 +7,7 @@ Parent: PRD 100 - Core Instance Mini-Sites And Static Embed Delivery
 
 ## Purpose
 
-PRD 100 moves public widget delivery to generated static mini-sites. Account assets must support that model without becoming instance-owned files, public ID registries, hash-addressed blobs, or embed-agent-managed storage.
+PRD 100 moves public widget delivery to generated static mini-sites. Account assets must support that model without becoming instance-owned files, public ID registries, generated hash storage, or embed-agent-managed storage.
 
 This sub-PRD realigns account-owned uploads to the simple product contract:
 
@@ -27,13 +27,13 @@ In scope:
 - Tokyo-worker storage and serving for accepted account assets under `accounts/{accountPublicId}/assets/`.
 - Upload, list, resolve, replace bytes in place, delete, and reuse from Bob controls.
 - Upload validation before acceptance.
-- Pre-GA cleanup or containment of current UUID/blob/manifest/sha256 drift.
+- Pre-GA cleanup or containment of current generated-ID/generated-storage/manifest/content-hash drift.
 - Static embed generation consuming saved account asset references without managing assets.
 
 Out of scope:
 
 - Clickeen-owned product media. Product-owned files are `media`, not account `assets`.
-- `publicAssetId`, `assets.clickeen.com`, hash folders, blob registries, immutable histories, or asset version timelines.
+- generated public asset identifiers, separate asset domains, hash folders, byte registries, immutable histories, or asset version timelines.
 - Folder organization, bulk library operations, advanced DAM features, CDN cache-busting product models, or long-lived asset migrations.
 - Rebuilding instances solely because account asset bytes were replaced in place.
 
@@ -41,11 +41,11 @@ Out of scope:
 
 Current implementation drift exists and must be removed or explicitly contained before GA:
 
-- Uploaded assets are identified by generated UUID `assetId`.
-- Bytes are stored under an internal `blob/` segment.
+- Uploaded assets are identified by generated IDs instead of account asset refs.
+- Bytes are hidden behind generated storage indirection.
 - Metadata is stored in per-asset `manifest.json`.
 - `sha256` is recorded as product-facing asset metadata.
-- Resolved URLs are built from `accountPublicId`, `assetId`, and filename.
+- Resolved URLs are built from multiple generated identity pieces plus filename.
 
 That shape is implementation reality, not product truth. New PRD 100 embed architecture must not depend on it.
 
@@ -82,7 +82,7 @@ Storage must not introduce:
 
 - public asset IDs
 - asset hostnames separate from `clk.live`/Tokyo serving decisions
-- hash-addressed account asset folders
+- hash-derived account asset folders
 - per-instance asset copies
 - blob registry manifests as product model
 
@@ -126,8 +126,8 @@ Only accepted bytes are written to the account `assets/` library. Quarantined by
 - Generated instance output references account assets from the account library and does not copy them into `accounts/{accountPublicId}/instances/{instanceId}/`.
 - In-place asset replacement preserves the same reference and does not require instance rebuilds.
 - Unsafe uploads are rejected before acceptance.
-- Current UUID/blob/manifest/sha256 drift is removed or explicitly contained as pre-GA cleanup that cannot leak into product APIs or generated embeds.
-- No `publicAssetId`, `assets.clickeen.com`, hash folder, blob registry, or immutable asset history appears in the product contract.
+- Current generated-ID/generated-storage/manifest/content-hash drift is removed or explicitly contained as pre-GA cleanup that cannot leak into product APIs or generated embeds.
+- No generated public asset identifier, separate asset domain, hash folder, byte registry, or immutable asset history appears in the product contract.
 
 ## Implementation Notes
 
@@ -140,7 +140,7 @@ Only accepted bytes are written to the account `assets/` library. Quarantined by
 
 ## Risks/Guards
 
-- Risk: Old UUID/blob drift becomes the implicit new product model. Guard: block new public API fields and generated embeds from using `assetId`, `blob/`, `manifest.json`, or `sha256` as product identity.
+- Risk: Old generated-ID/generated-storage drift becomes the implicit new product model. Guard: block new public API fields and generated embeds from using generated upload IDs, storage indirection, manifests, or content hashes as product identity.
 - Risk: Replacing bytes silently changes public visuals. Guard: validation must succeed before replacement; failed replacement preserves prior bytes.
 - Risk: Deleting referenced assets breaks live embeds. Guard: reference checks or explicit blocked deletion errors are required before deletion ships.
 - Risk: Bob and Roma diverge into separate libraries. Guard: both must call the same Roma/Tokyo account asset operations and list from the same account source.
@@ -157,7 +157,7 @@ Required coverage:
 - Replace keeps the same saved reference and updates resolved bytes without touching instance source or triggering rebuild.
 - Generated embed output references account asset paths/references and does not contain copied account asset bytes under the instance folder.
 - Delete blocks or clearly fails when an accepted asset is still referenced by an instance.
-- No new tests or snapshots assert `publicAssetId`, `assets.clickeen.com`, hash folders, `blob/`, UUID asset identity, manifest product identity, or `sha256` product metadata.
+- No new tests or snapshots assert generated public asset identifiers, separate asset domains, hash folders, storage indirection, generated upload identity, manifest product identity, or content-hash product metadata.
 
 ## Rollout/Cutover
 
@@ -166,7 +166,7 @@ Required coverage:
 3. Add or realign Roma/Tokyo operations for upload, list, resolve, replace, and delete.
 4. Move Bob upload and picker flows onto the shared Roma/Tokyo account asset operations.
 5. Update embed generation to consume saved account asset references only and to reject attempts to copy account assets into instance folders.
-6. Remove or contain UUID/blob/manifest/sha256 drift behind Tokyo-worker until any pre-GA test assets are cleaned.
+6. Remove or contain generated-ID/generated-storage/manifest/content-hash drift behind Tokyo-worker until any pre-GA test assets are cleaned.
 7. Run validation tests and a manual Bob-to-Roma-to-embed smoke path:
 
 ```text

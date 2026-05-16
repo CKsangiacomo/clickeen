@@ -407,7 +407,7 @@ If no → the change is correct
 | Change | Why it’s correct |
 |--------|------------------|
 | Bob renders ToolDrawer from `spec.json` | Bob compiles the widget definition into UI; it doesn’t invent widget semantics. |
-| Public embed serving returns generated static files by `publicEmbedId` | Public serving does not mutate widget meaning or compose widgets per view. |
+| Public embed serving returns generated static files from `clk.live/{accountPublicId}/{instanceId}` | Public serving does not mutate widget meaning or compose widgets per view. |
 | Roma opens/saves account instances through Tokyo-backed routes | Roma orchestrates the product command, but widget semantics still live in the widget package. |
 
 ---

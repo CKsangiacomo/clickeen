@@ -12,7 +12,6 @@ import {
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import {
   normalizeStorageId,
-  normalizeSha256Hex,
 } from '../asset-utils';
 import { assertRomaAccountCapsuleAuth, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '../auth';
 import { json } from '../http';
@@ -31,7 +30,6 @@ import {
   readSavedRenderConfig,
   readSelectedOverlayPointer,
   saveAccountInstanceTransition,
-  syncLiveSurface,
   unpublishAccountInstanceTransition,
   writeOverlayObject,
   writeSavedRenderConfig,
@@ -632,6 +630,8 @@ export async function tryHandleInternalRenderRoutes(
           ok: true,
           instanceId,
           widgetType: result.pointer.widgetType,
+          sourceVersion: result.pointer.sourceVersion,
+          generation: result.pointer.generation,
           live: result.live,
         }),
       );
@@ -718,91 +718,6 @@ export async function tryHandleInternalRenderRoutes(
     } catch (error) {
       return respond(transitionErrorResponse(error));
     }
-  }
-
-  const internalRenderLivePointerMatch = pathname.match(
-    /^\/__internal\/renders\/widgets\/([^/]+)\/live\/r\.json$/,
-  );
-  if (internalRenderLivePointerMatch) {
-    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderLivePointerMatch[1]));
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'POST') {
-      return respondMethodNotAllowed(respond);
-    }
-    const authErr = await authorizeRomaAccountScopedRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'editor',
-    });
-    if (authErr) return respond(authErr);
-
-    const body = (await readInternalRenderJsonBody({
-      req,
-      env,
-      boundary: 'internal.render.livePointer.body',
-      instanceId,
-      accountId,
-    })) as Record<string, unknown> | null;
-    const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-    const configFp = normalizeSha256Hex(body?.configFp);
-    const localePolicy = body?.localePolicy;
-    if (!widgetType || !configFp || !isRecord(localePolicy)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-
-    await syncLiveSurface(env, {
-      v: 1,
-      kind: 'sync-live-surface',
-      instanceId: instanceId!,
-      accountId,
-      live: true,
-      widgetType,
-      configFp,
-      localePolicy: localePolicy as any,
-      seoGeo: body?.seoGeo === true,
-    });
-
-    return respond(
-      json({
-        ok: true,
-        instanceId,
-        live: true,
-        configFp,
-      }),
-    );
-  }
-
-  const internalRenderLiveSurfaceMatch = pathname.match(
-    /^\/__internal\/renders\/widgets\/([^/]+)\/live\.json$/,
-  );
-  if (internalRenderLiveSurfaceMatch) {
-    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderLiveSurfaceMatch[1]));
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'DELETE') {
-      return respondMethodNotAllowed(respond);
-    }
-    const authErr = await authorizeRomaAccountScopedRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'editor',
-    });
-    if (authErr) return respond(authErr);
-    await syncLiveSurface(env, {
-      v: 1,
-      kind: 'sync-live-surface',
-      instanceId: instanceId!,
-      accountId,
-      live: false,
-    });
-    return respond(json({ ok: true, instanceId, live: false }));
   }
 
   const internalRenderSavedMatch = pathname.match(

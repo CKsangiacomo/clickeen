@@ -414,6 +414,8 @@ export async function saveAccountInstanceInTokyo(args: {
       ok: true;
       value: {
         live: boolean;
+        sourceVersion: number | null;
+        generation: Record<string, unknown> | null;
       };
     }
   | RouteFailure
@@ -437,6 +439,8 @@ export async function saveAccountInstanceInTokyo(args: {
     ok: true,
     value: {
       live: payload.live === true,
+      sourceVersion: typeof payload.sourceVersion === 'number' ? payload.sourceVersion : null,
+      generation: isRecord(payload.generation) ? payload.generation : null,
     },
   };
 }

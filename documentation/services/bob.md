@@ -26,7 +26,7 @@ Between load and save, Bob does not write intermediate edits to the saved revisi
 Bob intentionally separates:
 
 - **Saving config** (delegated to Roma same-origin routes, then to Tokyo): appears as a plain **Save** action. Save persists the one widget document currently open in Builder. Builder no longer treats localization as a second save lane and no longer carries a shadow saved-document model just to drive dirty/discard UI.
-- **Copy code in Bob** is only the embed-code affordance for published instances: the **Copy code** button opens a modal containing the snippets needed to place the widget on a website (safe iframe + gated iframe++ SEO/GEO) using `/widget/{accountPublicId}/{instanceId}` public references. Unpublished instances show no live snippets.
+- **Copy code in Bob** is only the embed-code affordance for published instances: the **Copy code** button opens a modal containing the snippets needed to place the widget on a website using `https://clk.live/{accountPublicId}/{instanceId}` static public references. Unpublished instances show no live snippets.
 - **Bob has no live/unlive toggle** and does not manage published/unpublished state.
 - Active account routes authorize from the Berlin-issued bootstrap account authz capsule carried by Roma/Bob. They do not re-read account membership on normal editor open/save paths.
 
@@ -210,16 +210,9 @@ Bob serves widget and Dieter media through same-origin routes so the preview ifr
 - `bob/app/widgets/[...path]/route.ts` (`/widgets/*`)
 - `bob/app/dieter/[...path]/route.ts` (`/dieter/*`)
 
-### Preview shadow (Venice)
+### Public Embed Preview
 
-Bob’s preview-shadow route (`/bob/preview-shadow`) is a diagnostic/internal embed-parity surface (not triggered by standard preview).
-
-Modes (shipped):
-
-- Default: passes `data-force-shadow="true"` to preview shadow DOM rendering via Venice/Tokyo published-projection routes such as `/renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json` (diagnostics only).
-- `?mode=seo-geo`: previews the **iframe++ SEO/GEO optimized embed** by passing `data-ck-optimization="seo-geo"` (UI stays iframe; loader injects host metadata).
-
-Requires `NEXT_PUBLIC_VENICE_URL` (or `VENICE_URL`) to resolve the loader origin.
+Bob standard preview remains the editor iframe fed from the in-memory working copy. Public embed snippets point at `clk.live` static files only; SEO/GEO preview belongs to the PRD 101 coding-agent build shape and is not a Venice loader route.
 
 ---
 
@@ -315,10 +308,10 @@ Asset authoring is restored on the active account Builder path through one curre
   - `POST /api/account/assets/resolve`
   - `POST /api/account/assets/upload`
 - In hosted Builder, Bob installs one explicit account asset transport with three methods only: `listAssets`, `resolveAssets`, and `uploadAsset`. Bob delegates those concerns through one hosted asset-command seam: `list-assets`, `resolve-assets`, and `upload-asset`. Bob does not expose a hosted asset bridge, dataset fallback, consumer-owned route selection logic, route-table round-tripping, or ambient fetch patching.
-- Authored media identity stays logical (`assetId`, optional `posterAssetId`). Bob/Dieter resolve those ids through the Roma account asset boundary for editor preview and assignment.
+- Authored media identity stays as account asset references (`assetRef`, optional `posterAssetRef`). Bob/Dieter resolve those refs through the Roma account asset boundary for editor preview and assignment.
 - `dropdown-upload` is asset-backed only. It requires `meta-path`, persists logical asset identity in meta only, and uses resolved URLs for preview without writing the uploaded delivery URL back into widget state.
 - Asset resolve now uses one shared Builder helper, and asset denial now uses one shared `bob-upsell` emitter path. Builder no longer emits a parallel host-only asset denial event.
-- Assets remain immutable on this path. Upload creates a new asset identity under the owning account, canonical account-public delivery stays aggressively cacheable, and delete is the only destructive lifecycle action. Bob must not derive asset storage paths from private `accountId`; account-owned asset references resolve through Roma/Tokyo using `accountPublicId`.
+- Account assets remain account-owned library files on this path. Upload creates or replaces a stable asset reference under the owning account, and delete is the destructive lifecycle action. Bob must not derive asset storage paths from private `accountId`; account-owned asset references resolve through Roma/Tokyo using `accountPublicId`.
 
 Operational baseline (local smoke, 2026-02-17):
 
@@ -508,7 +501,7 @@ Reference:
 
 ### Optional
 
-- `NEXT_PUBLIC_VENICE_URL` or `VENICE_URL` (required for the diagnostic `/bob/preview-shadow` route; local dev defaults to `http://localhost:3003`)
+- `NEXT_PUBLIC_CLK_LIVE_URL` (defaults to `https://clk.live` for copied public embed snippets)
 
 Important boundary:
 

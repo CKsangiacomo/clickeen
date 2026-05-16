@@ -24,7 +24,7 @@ Canonical routes in this repo snapshot:
 Prague is strict: these env vars are required at build/runtime (because they are used in `*.astro`):
 
 - `PUBLIC_TOKYO_URL` — base URL for Tokyo assets (Dieter + widget specs + i18n)
-- `PUBLIC_VENICE_URL` — base URL for Venice embed runtime (used for account instance iframes)
+- `PUBLIC_CLK_LIVE_URL` — optional base URL for static account instance mini-sites (defaults to `https://clk.live`)
 
 Optional:
 
@@ -35,12 +35,12 @@ Prague widget pages embed explicit Clickeen-owned account instances by `accountI
 Local defaults (when running `scripts/dev-up.sh`):
 
 - `PUBLIC_TOKYO_URL=http://localhost:4000`
-- `PUBLIC_VENICE_URL=http://localhost:3003`
+- `PUBLIC_CLK_LIVE_URL=https://clk.live`
 
 Cloudflare (dev):
 
 - `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com`
-- `PUBLIC_VENICE_URL=https://venice.dev.clickeen.com` (must serve `GET /widget/:accountPublicId/:instanceId`)
+- `PUBLIC_CLK_LIVE_URL=https://clk.live`
 
 If you're not using `scripts/dev-up.sh`, create `prague/.env.local` with the values you want.
 

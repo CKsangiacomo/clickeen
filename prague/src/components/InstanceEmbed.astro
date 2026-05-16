@@ -14,7 +14,7 @@ type Props = {
   widgetType?: string;
 };
 
-const { locale, localeOverride, title = 'Widget preview', loading = 'lazy', embedMode = 'iframe' } =
+const { locale, localeOverride, title = 'Widget preview', loading = 'lazy' } =
   Astro.props;
 
 const props = Astro.props as Props;
@@ -24,7 +24,7 @@ const showShareChrome = props.showShareChrome !== false;
 const PRAGUE_EMBED_MIN_HEIGHT = 420;
 const PRAGUE_EMBED_MAX_HEIGHT = 800;
 
-const VENICE_URL = import.meta.env.PUBLIC_VENICE_URL;
+const CLK_LIVE_URL = String(import.meta.env.PUBLIC_CLK_LIVE_URL || 'https://clk.live').replace(/\/+$/, '');
 
 const widgetType = typeof props.widgetType === 'string' ? props.widgetType.trim() : '';
 const widgetLabel = widgetType ? resolvePragueWidgetLabel(widgetType) : '';
@@ -34,11 +34,11 @@ if (showShareChrome && !widgetLabel) {
 
 // Local-dev cache-bust only: production embeds should be CDN/snapshot cache-friendly by default.
 const tsToken = import.meta.env.DEV ? String(Date.now()) : '';
-const ts = tsToken ? `&ts=${encodeURIComponent(tsToken)}` : '';
+const ts = tsToken ? `?ts=${encodeURIComponent(tsToken)}` : '';
 const resolvedLocale = String(localeOverride || locale || 'en').trim();
-const loaderSrc = VENICE_URL ? `${VENICE_URL.replace(/\/+$/, '')}/embed/latest/loader.js` : null;
-const iframeSrc = VENICE_URL && accountPublicId
-  ? `${VENICE_URL.replace(/\/+$/, '')}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}?locale=${encodeURIComponent(resolvedLocale)}${ts}`
+const localePath = resolvedLocale && resolvedLocale !== 'en' ? `/${encodeURIComponent(resolvedLocale)}.html` : '';
+const iframeSrc = CLK_LIVE_URL && accountPublicId && instanceId
+  ? `${CLK_LIVE_URL}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}${localePath}${ts}`
   : null;
 
 const anchorId = `ck-instance-${instanceId.replace(/[^a-z0-9_-]+/gi, '-')}`;
@@ -69,30 +69,14 @@ const brandSvgs = {
 >
   {iframeSrc ? (
     <>
-      {embedMode === 'indexable' && loaderSrc ? (
-        <script
-          src={loaderSrc}
-          defer
-          data-account-public-id={accountPublicId}
-          data-instance-id={instanceId}
-          data-trigger="immediate"
-          data-ck-optimization="seo-geo"
-          data-locale={resolvedLocale}
-          data-max-width="0"
-          data-min-height="420"
-          data-width="100%"
-          data-ts={tsToken}
-        />
-      ) : (
-        <iframe
-          class="ck-instanceEmbed__iframe"
-          title={title}
-          src={iframeSrc}
-          loading={loading}
-          referrerpolicy="no-referrer"
-          sandbox="allow-scripts allow-same-origin allow-forms"
-        />
-      )}
+      <iframe
+        class="ck-instanceEmbed__iframe"
+        title={title}
+        src={iframeSrc}
+        loading={loading}
+        referrerpolicy="no-referrer"
+        sandbox="allow-scripts allow-same-origin allow-forms"
+      />
 
       {showShareChrome ? (
         <>

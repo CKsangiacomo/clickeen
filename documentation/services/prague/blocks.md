@@ -144,9 +144,9 @@ Copy contract:
 - `visual: true` is legacy metadata only; it does not embed anything by itself.
 
 **Embed rule (strict):**
-- Prague embeds Venice with the canonical account-scoped route: `/widget/{accountPublicId}/{instanceId}`.
-- Locale is passed only as a query param or embed option; locale is never encoded into `instanceId`.
-- Prague must not depend on a hidden instance-only lookup, root `published/` registry, or instance-only `/widget/{instanceId}` route.
+- Prague embeds the canonical static account-scoped route: `https://clk.live/{accountPublicId}/{instanceId}`.
+- Locale variants are generated static browser files; locale is never encoded into `instanceId`.
+- Prague must not depend on a hidden instance-only lookup, root published registry, or instance-only public route.
 - `wgt_*`, `ins_*`, and `ins_*.<locale>` are invalid current product identities and must fail at the boundary (no legacy support).
 
 **Embed mode (accountInstanceRef.embedMode):**

@@ -57,7 +57,7 @@ export type DropdownFillState = {
   removeButton: HTMLButtonElement | null;
   fileInput: HTMLInputElement | null;
   imageSrc: string | null;
-  imageAssetId: string | null;
+  imageAssetRef: string | null;
   imageName: string | null;
   imageObjectUrl: string | null;
   imageResolveRequestId: number;
@@ -72,8 +72,8 @@ export type DropdownFillState = {
   videoRemoveButton: HTMLButtonElement | null;
   videoFileInput: HTMLInputElement | null;
   videoSrc: string | null;
-  videoAssetId: string | null;
-  videoPosterAssetId: string | null;
+  videoAssetRef: string | null;
+  videoPosterAssetRef: string | null;
   videoName: string | null;
   videoObjectUrl: string | null;
   videoResolveRequestId: number;

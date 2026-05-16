@@ -1,11 +1,11 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
 import {
   parseFillValue,
-  readImageAssetId,
+  readImageAssetRef,
   readImageName,
-  readVideoAssetId,
+  readVideoAssetRef,
   readVideoName,
-  readVideoPosterAssetId,
+  readVideoPosterAssetRef,
   resolveModeFromFill,
 } from './fill-parser';
 import { DEFAULT_GRADIENT, MODE_ORDER, type FillMode, type FillValue } from './fill-types';
@@ -217,7 +217,7 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     removeButton,
     fileInput,
     imageSrc: null,
-    imageAssetId: null,
+    imageAssetRef: null,
     imageName: null,
     imageObjectUrl: null,
     imageResolveRequestId: 0,
@@ -232,8 +232,8 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     videoRemoveButton,
     videoFileInput,
     videoSrc: null,
-    videoAssetId: null,
-    videoPosterAssetId: null,
+    videoAssetRef: null,
+    videoPosterAssetRef: null,
     videoName: null,
     videoObjectUrl: null,
     videoResolveRequestId: 0,
@@ -468,15 +468,15 @@ function syncFromValue(state: DropdownFillState, raw: string) {
   if (fill.type === 'none') {
     if (nextMode === 'image') {
       state.imageResolveRequestId += 1;
-      state.imageAssetId = null;
+      state.imageAssetRef = null;
       state.imageName = null;
       setImageSrc(state, null, { commit: false });
       return;
     }
     if (nextMode === 'video') {
       state.videoResolveRequestId += 1;
-      state.videoAssetId = null;
-      state.videoPosterAssetId = null;
+      state.videoAssetRef = null;
+      state.videoPosterAssetRef = null;
       state.videoName = null;
       setVideoSrc(state, null, { commit: false });
       return;
@@ -514,7 +514,7 @@ function syncFromValue(state: DropdownFillState, raw: string) {
   }
 
   if (fill.type === 'image') {
-    state.imageAssetId = readImageAssetId(fill);
+    state.imageAssetRef = readImageAssetRef(fill);
     state.imageName = readImageName(fill);
     setImageSrc(state, null, { commit: false });
     void resolveImageAssetCore(state, mediaDeps());
@@ -522,8 +522,8 @@ function syncFromValue(state: DropdownFillState, raw: string) {
   }
 
   if (fill.type === 'video') {
-    state.videoAssetId = readVideoAssetId(fill);
-    state.videoPosterAssetId = readVideoPosterAssetId(fill);
+    state.videoAssetRef = readVideoAssetRef(fill);
+    state.videoPosterAssetRef = readVideoPosterAssetRef(fill);
     state.videoName = readVideoName(fill);
     setVideoSrc(state, null, { commit: false });
     void resolveVideoAssetCore(state, mediaDeps());

@@ -261,7 +261,7 @@ OUTPUT
 
 GATE
 
-- `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/meta/live/{locale}.json` returns expected SEO/GEO payloads by widget contract when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
+- PRD 101 will define generated static SEO/GEO payloads for `clk.live` output when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
 
 ---
 
@@ -282,5 +282,5 @@ Required checks
 Manual smoke (fast)
 
 - Bob preview: each panel control updates the preview deterministically.
-- Venice embed: `/widget/{accountPublicId}/{instanceId}` loads without console errors.
+- Static embed: `clk.live/{accountPublicId}/{instanceId}` loads without console errors.
 - Localization: switching locale uses only current ready overlays for the active base fingerprint; missing current overlays fail visibly instead of silently falling back.

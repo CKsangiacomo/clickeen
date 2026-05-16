@@ -9,19 +9,15 @@ const ACCOUNT_INSTANCE_VALIDATE_STRICT =
   (process.env.NODE_ENV === 'production' && process.env.PRAGUE_VALIDATE_ACCOUNT_INSTANCE === '1');
 const ACCOUNT_INSTANCE_VALIDATION_CACHE = new Map<string, Promise<void>>();
 
-function resolveVeniceBaseUrl(): string | null {
-  const raw = String(process.env.PUBLIC_VENICE_URL || '').trim();
+function resolveClkLiveBaseUrl(): string {
+  const raw = String(process.env.PUBLIC_CLK_LIVE_URL || '').trim();
   if (raw) return raw.replace(/\/+$/, '');
-  if (process.env.NODE_ENV !== 'production') return 'http://localhost:3003';
-  return null;
+  return 'https://clk.live';
 }
 
 async function assertAccountInstanceExists(args: { accountPublicId: string; instanceId: string; pagePath: string }): Promise<void> {
   if (!ACCOUNT_INSTANCE_VALIDATE) return;
-  const baseUrl = resolveVeniceBaseUrl();
-  if (!baseUrl) {
-    throw new Error('[prague] Account instance validation requires PUBLIC_VENICE_URL.');
-  }
+  const baseUrl = resolveClkLiveBaseUrl();
 
   const accountPublicId = String(args.accountPublicId || '').trim();
   const instanceId = String(args.instanceId || '').trim();
@@ -41,14 +37,14 @@ async function assertAccountInstanceExists(args: { accountPublicId: string; inst
   if (cached) return cached;
 
   const task = (async () => {
-    const url = `${baseUrl}/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`;
+    const url = `${baseUrl}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`;
     let res: Response | null = null;
     try {
       res = await fetch(url, { method: 'GET' });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       const detail = message ? ` (${message})` : '';
-      const warning = `[prague] ${args.pagePath}: account instance validation skipped (Venice unreachable) for ${instanceId}${detail}`;
+      const warning = `[prague] ${args.pagePath}: account instance validation skipped (clk.live unreachable) for ${instanceId}${detail}`;
       if (ACCOUNT_INSTANCE_VALIDATE_STRICT) throw new Error(warning);
       console.warn(warning);
       return;
@@ -58,7 +54,7 @@ async function assertAccountInstanceExists(args: { accountPublicId: string; inst
       throw new Error(`[prague] Account instance validation failed for ${instanceId} (${res.status})`);
     }
 
-    const message = `[prague] ${args.pagePath}: instance ${instanceId} is not published in Venice.`;
+    const message = `[prague] ${args.pagePath}: instance ${instanceId} is not available on clk.live.`;
     if (ACCOUNT_INSTANCE_VALIDATE_STRICT) throw new Error(message);
     console.warn(message);
   })();

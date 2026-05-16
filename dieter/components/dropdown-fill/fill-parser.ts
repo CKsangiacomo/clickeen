@@ -1,4 +1,4 @@
-import { isUuid } from '@clickeen/ck-contracts';
+import { normalizeAccountAssetRef } from '@clickeen/ck-contracts';
 import {
   DEFAULT_GRADIENT,
   MODE_ORDER,
@@ -11,9 +11,8 @@ import {
 } from './fill-types';
 import { clampNumber, parseColor } from './color-utils';
 
-function normalizeAssetId(raw: unknown): string {
-  const value = typeof raw === 'string' ? raw.trim() : '';
-  return isUuid(value) ? value : '';
+function normalizeAssetRef(raw: unknown): string {
+  return normalizeAccountAssetRef(raw) ?? '';
 }
 
 function normalizeImageValue(raw: unknown): ImageValue {
@@ -21,13 +20,13 @@ function normalizeImageValue(raw: unknown): ImageValue {
     return { fit: 'cover', position: 'center', repeat: 'no-repeat' };
   }
   const value = raw as Record<string, unknown>;
-  const assetId = normalizeAssetId(value.assetId);
+  const assetRef = normalizeAssetRef(value.assetRef);
   const name = typeof value.name === 'string' ? value.name.trim() : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
   const repeat = typeof value.repeat === 'string' && value.repeat.trim() ? value.repeat.trim() : 'no-repeat';
   return {
-    ...(assetId ? { assetId } : {}),
+    ...(assetRef ? { assetRef } : {}),
     ...(name ? { name } : {}),
     fit,
     position,
@@ -40,8 +39,8 @@ function normalizeVideoValue(raw: unknown): VideoValue {
     return { fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true };
   }
   const value = raw as Record<string, unknown>;
-  const assetId = normalizeAssetId(value.assetId);
-  const posterAssetId = normalizeAssetId(value.posterAssetId);
+  const assetRef = normalizeAssetRef(value.assetRef);
+  const posterAssetRef = normalizeAssetRef(value.posterAssetRef);
   const name = typeof value.name === 'string' ? value.name.trim() : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
@@ -49,8 +48,8 @@ function normalizeVideoValue(raw: unknown): VideoValue {
   const muted = typeof value.muted === 'boolean' ? value.muted : true;
   const autoplay = typeof value.autoplay === 'boolean' ? value.autoplay : true;
   return {
-    ...(assetId ? { assetId } : {}),
-    ...(posterAssetId ? { posterAssetId } : {}),
+    ...(assetRef ? { assetRef } : {}),
+    ...(posterAssetRef ? { posterAssetRef } : {}),
     ...(name ? { name } : {}),
     fit,
     position,
@@ -156,19 +155,16 @@ export function readVideoName(fill: FillValue): string | null {
   return typeof fill.video?.name === 'string' && fill.video.name.trim() ? fill.video.name.trim() : null;
 }
 
-export function readImageAssetId(fill: FillValue): string | null {
-  const assetId = typeof fill.image?.assetId === 'string' ? fill.image.assetId.trim() : '';
-  return isUuid(assetId) ? assetId : null;
+export function readImageAssetRef(fill: FillValue): string | null {
+  return normalizeAccountAssetRef(fill.image?.assetRef);
 }
 
-export function readVideoAssetId(fill: FillValue): string | null {
-  const assetId = typeof fill.video?.assetId === 'string' ? fill.video.assetId.trim() : '';
-  return isUuid(assetId) ? assetId : null;
+export function readVideoAssetRef(fill: FillValue): string | null {
+  return normalizeAccountAssetRef(fill.video?.assetRef);
 }
 
-export function readVideoPosterAssetId(fill: FillValue): string | null {
-  const assetId = typeof fill.video?.posterAssetId === 'string' ? fill.video.posterAssetId.trim() : '';
-  return isUuid(assetId) ? assetId : null;
+export function readVideoPosterAssetRef(fill: FillValue): string | null {
+  return normalizeAccountAssetRef(fill.video?.posterAssetRef);
 }
 
 export function defaultGradientAngle(): number {

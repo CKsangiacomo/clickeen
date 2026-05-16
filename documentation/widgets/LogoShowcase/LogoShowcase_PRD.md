@@ -171,9 +171,9 @@ This section lists **only controls that apply to every Type**. Type-specific con
   - **changes**: which logos are rendered inside that strip, the selected image (in-memory while editing), link behavior, and hover caption text
   - **how**:
     - runtime renders children under the strip’s `[data-role="logos"]`
-- `strips[i].logos[j].asset.assetId` → logical uploaded-logo identity used for materialization
+- `strips[i].logos[j].asset.assetRef` → account uploaded-logo reference used for materialization
 - `strips[i].logos[j].logoFill` → static/base logo fill or runtime-materialized uploaded logo background
-    - `strips[i].logos[j].asset` → file metadata for editor display (object with `name`, optional `mime`, optional `source`, optional `assetId`)
+    - `strips[i].logos[j].asset` → file metadata for editor display (object with `name`, optional `mime`, optional `source`, optional `assetRef`)
     - `strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)
 - `strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s)
 - `strips[i].logos[j].targetBlank=true` → set `target="_blank"`
@@ -186,7 +186,7 @@ Note: Links + media metadata are baseline product behavior (not tier-gated). Inv
 
   - **Editor control**:
     - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-upload` (image accept)
-      - uploaded logos persist `strips[i].logos[j].asset.assetId`
+      - uploaded logos persist `strips[i].logos[j].asset.assetRef`
       - static/base logos keep `logoFill` directly
     - the popover template stays minimal (caption/name only; see Section 4)
       - selecting an image updates asset metadata immediately through upload (no replace-in-place flow)
@@ -285,7 +285,7 @@ Below the Type picker, always show:
 #### Logo item editor (required, global pattern)
 Each logo item must use `dropdown-upload` for the logo image, and keep the per-item UI minimal.
 - **Logo image**: `dropdown-upload` bound to `strips[i].logos[j].logoFill`
-  - uploaded logos persist `strips[i].logos[j].asset.assetId`
+  - uploaded logos persist `strips[i].logos[j].asset.assetRef`
   - runtime image source is the materialized `strips[i].logos[j].logoFill`
   - `template="..."` includes (allowed in all subjects):
     - `textfield` for `strips[i].logos[j].caption`

@@ -53,7 +53,7 @@ Under PRD 099, Roma/system account operations are the management plane. Tokyo-wo
   - `/settings`
 - `/builder` and `/builder/:instanceId`
 - `/widgets/:instanceId` (redirects back to `/widgets?selected=:instanceId`; widgets list is the canonical status-owner surface)
-- `/assets/:assetId` (detail placeholder)
+- `/assets/:assetRef` (detail placeholder)
 
 ### URL path isolation (Builder)
 
@@ -200,14 +200,14 @@ Usage, billing, and AI domain behavior:
 
 Assets domain behavior:
 
-- `AssetsDomain` reads account inventory and `storageBytesUsed` from `/api/account/assets` and performs per-asset delete via `/api/account/assets/:assetId`.
-- Roma exposes account-level asset routes (`/api/account/assets`, `/api/account/assets/resolve`, `/api/account/assets/:assetId`, `/api/account/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule and `accountPublicId` storage coordinate.
+- `AssetsDomain` reads account inventory and `storageBytesUsed` from `/api/account/assets` and performs per-asset delete via `/api/account/assets/:assetRef`.
+- Roma exposes account-level asset routes (`/api/account/assets`, `/api/account/assets/resolve`, `/api/account/assets/:assetRef`, `/api/account/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule and `accountPublicId` storage coordinate.
 - On the active Builder path, Bob delegates asset list/resolve/upload back to these same Roma routes through the normal host account-command seam. Bob owns the explicit asset transport; Roma owns the direct current-account route handling for those commands.
 - `/api/account/usage` remains the Usage domain surface, but it now reads storage bytes from the same Tokyo-worker asset authority as `/api/account/assets`. Assets does not double-read storage truth from both routes on the same screen.
 - Roma widget/assets list surfaces no longer rely on fixed client-side `200/500` caps; Tokyo-worker account instance indexes and asset inventory return the current account manifests. Product caps and tier limits are enforced by Roma/system account operations, with Tokyo-worker returning storage facts rather than account-policy decisions.
 - Account asset upload is same-origin Roma product traffic. The active product path no longer exposes wildcard CORS on `/api/account/assets/upload`.
 - Roma exposes private non-asset product control routes to Tokyo-worker through the `TOKYO_PRODUCT_CONTROL` Cloudflare service binding plus the Roma account authz capsule. Public Tokyo HTTP is no longer the Builder open/save authoring seam.
-- Asset inventory/upload payloads expose `assetId` and metadata only; delivery URL comes from `/api/account/assets/resolve`, and Roma delete uses `assetId` directly.
+- Asset inventory/upload payloads expose `assetRef` and metadata only; delivery URL comes from `/api/account/assets/resolve`, and Roma delete uses `assetRef` directly.
 - Builder save writes the base instance through the Tokyo/Tokyo-worker transition boundary first. After base save succeeds, Roma reads Berlin account language policy, extracts concrete text primitives from the widget primitive graph, calls San Francisco once per target language, validates the exact returned path set, and calls Tokyo-worker's overlay PBX verbs to write `overlays/{overlayId}.json` plus the selected-overlay pointer. A failed language follow-up is returned as save-response operational information only; it does not undo the base save and it is not durable overlay truth.
 - While Builder `Translations` is open, Bob reads one Roma same-origin route: `GET /api/account/instances/:instanceId/translations`. Roma stays read-only on that path and returns `{ v: 1, baseLanguage, languages, valuesByLanguage, progress }`: target language rows include a selected `overlayId` only when Tokyo has one, and `valuesByLanguage[language]` contains the exact overlay values for previewable languages. `progress` is UI information only. The route does not expose or preserve readiness/status/fingerprint/text-pack truth.
 - When account locale settings change, Roma updates Berlin account language policy. New language overlay values are produced by the next base save; Tokyo-worker does not queue San Francisco work from locale settings.

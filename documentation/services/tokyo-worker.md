@@ -1,8 +1,8 @@
-# System: Tokyo-worker - PBX Routes And Published Projection Bytes
+# System: Tokyo-worker - PBX Routes And Instance Storage
 
-STATUS: REFERENCE - MUST MATCH PRD 099
+STATUS: REFERENCE - MUST MATCH PRD 100
 
-Tokyo-worker is the Tokyo object PBX for account-owned assets, account widget instances, overlay object storage, published projection bytes, and friendly asset serving.
+Tokyo-worker is the Tokyo object PBX for account-owned assets, account widget instances, overlay object storage, generated embed mini-site bytes, and friendly asset serving.
 
 It is not an account authority, product-policy owner, or orchestrator. Roma and system account operations decide account/product policy, publication eligibility, cap enforcement, downgrade consequences, and correctness of published state. Roma carries verified account context to Tokyo-worker through private service bindings. Tokyo-worker validates the named boundary, routes the operation to the exact storage object, and returns the result.
 
@@ -12,7 +12,7 @@ Allowed Tokyo-worker PBX validations are narrow:
 - account capsule to path coordinate match
 - HTTP method, route, and ID shape
 - widget codebook and widget type existence
-- object schema and published projection contract shape
+- object schema and generated embed file contract shape
 - R2 object existence or absence at the requested canonical key
 - bounded technical request limits needed to protect the worker/R2 interface
 
@@ -33,30 +33,23 @@ Active widget catalog truth is widget-owned under `tokyo/product/widgets/{widget
 1. Account assets: route and mutate account-owned asset objects under `accounts/{accountPublicId}/assets/`.
 2. Account instances: route open, save, rename, delete, publish, and unpublish byte operations under `accounts/{accountPublicId}/instances/{instanceId}/`.
 3. Account-instance overlays: store/read exact `overlays/{overlayId}.json` objects under the owning instance.
-4. Published projection bytes: write/read derived public-serving bytes under the owning instance's `published/` subtree.
+4. Generated embed mini-site bytes: write/read static browser files under the owning instance folder.
 5. Friendly asset routes: serve public asset URLs from canonical R2 roots without creating route-shaped storage roots.
 
 ## Account Storage
 
 ```txt
 accounts/{accountPublicId}/
-  assets/{assetId}/
-    manifest.json
-    blob/{filename}
+  assets/
+    {assetRef}
   instances/
     index.json
     {instanceId}/
       instance.json
-      config.json
-      publish.json
+      index.html
+      styles.css
+      script.js
       overlays/{overlayId}.json
-      selected-overlays/{languageCode}/{experiment}/{personalization}.json
-      published/
-        live/r.json
-        config.json
-        overlays/{overlayId}.json
-        seo/meta/live/{locale}.json
-        seo/meta/{locale}/{metaFp}.json
 ```
 
 Rules:
@@ -65,44 +58,46 @@ Rules:
 - Account instances live directly under `instances/{instanceId}/`. There is no account `widgets/` storage lane, no `widgets/{widgetCode}` grouping folder, and no account-level `widget.json` authority.
 - Widget software lives only under `product/widgets/{widgetType}/`. `widgetType` and `widgetCode` may appear in `instance.json` and overlay IDs as metadata/codebook identity; they are never R2 locators for account instances.
 - `{instanceId}` is a stable generated 10-character uppercase base36 ID. It is not derived from widget type, display name, UUID, timestamp, or any old `ins_*` string.
-- `instance.json` stores identity and display metadata.
-- `config.json` stores the saved authoring config.
-- `publish.json` stores Tokyo-owned instance serve-state and published projection metadata. It is not a billing, tier, compliance, cap, or lifecycle policy document.
-- `overlays/{overlayId}.json` stores one exact overlay value object: `{ "v": 1, "values": {} }`. The ID is the only overlay identity.
-- `selected-overlays/{languageCode}/{experiment}/{personalization}.json` stores `{ "v": 1, "overlayId": "..." }`.
-- `publish.json` projects selected overlay IDs under `overlays.languages` at publish/sync time.
-- `instances/index.json`, `published/config.json`, `published/live/r.json`, `published/overlays/**`, and `published/seo/meta/**` are generated artifacts. They are read models or serving bytes; they are not source truth for identity, ownership, saved config, or publish state.
-- `published/seo/meta/**` is intentionally kept as the generated per-instance SEO serving namespace inside the account instance published projection.
+- `instance.json` is the one top-level source JSON for identity, display metadata, saved authoring config, source version, generation status, and Roma-visible publish status.
+- New saves must not create sibling `config.json`, `publish.json`, `embed.json`, or `translations.json`.
+- `overlays/{overlayId}.json` stores one exact overlay value object: `{ "v": 1, "values": {} }`. The ID is the only overlay identity. Locale translations are overlays, not a second translations document.
+- `index.html`, `styles.css`, and `script.js` are generated static browser files written from `instance.json` plus overlays by the embed agent flow.
+- `instances/index.json` is a generated product inventory. It is a read model, not source truth for identity, ownership, saved config, generation status, or public serving.
 - `POST /__internal/renders/widgets/index/rebuild.json` rebuilds the generated account inventory from source instance documents. Product reads do not rebuild this index; if it is missing or invalid, Tokyo fails the read and the operator repair boundary must be called explicitly.
 
 ## Public Serving
 
-Tokyo-worker does not maintain a second copied public instance tree or a root published registry. Published instances are resolved by the explicit public coordinate:
+Tokyo-worker does not maintain a runtime widget renderer, a copied public instance tree, or a root published registry. Published mini-sites are resolved by the explicit public coordinate:
 
 ```txt
 accountPublicId + instanceId
 ```
 
-The published projection lives only under:
+The static mini-site lives under:
 
 ```txt
-accounts/{accountPublicId}/instances/{instanceId}/published/
+accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
-Public read routes:
+The canonical public serving URL after PRD 100 is:
 
-- `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json`
-- `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/config.json`
-- `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json`
-- `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/meta/live/{locale}.json`
-- `GET /renders/accounts/{accountPublicId}/instances/{instanceId}/meta/{locale}/{metaFp}.json`
+```txt
+https://clk.live/{accountPublicId}/{instanceId}
+```
 
-These routes map directly to the corresponding object under the account instance `published/` subtree. Requests missing either `accountPublicId` or `instanceId` fail at the route boundary. If required published bytes are missing, the route returns unavailable. It does not heal, infer, backfill, search account indexes, read authoring bytes, or fall back to root `published/widgets`.
+Serving maps that URL to generated files in the instance folder. It must not read `instance.json`, compute HTML from config, heal, infer, backfill, search account indexes, or fall back to old runtime projections.
+
+Public availability is physical file presence:
+
+- `accounts/{accountPublicId}/instances/{instanceId}/index.html` exists: `https://clk.live/{accountPublicId}/{instanceId}` may serve.
+- `index.html` is missing: the public URL returns 404.
+- Support files only serve from the same instance folder when their filename is on the generated-browser-file allowlist.
+- `instance.json`, `config.json`, `publish.json`, `embed.json`, `translations.json`, `overlays/`, `published/`, source maps, hidden files, directories, and unknown files return 404 even if the object physically exists.
 
 The following are not surviving public product contracts:
 
-- `published/widgets/{instanceId}.json`
-- `GET /renders/widgets/{instanceId}/...`
+- root published widget registries
+- public render JSON routes for account or instance runtime projections
 - root `published/`
 - root `widgets/` as a storage folder
 
@@ -147,8 +142,10 @@ Queue jobs are DB-free and operate from Tokyo account storage:
 
 Queue jobs must not read Supabase to rediscover state. Tokyo-worker has no language generation queue and no San Francisco binding.
 
-## Delete And Unpublish
+## Delete, Publish, And Unpublish
 
-- Unpublish removes the account instance `published/` projection bytes and leaves account-owned saved state intact.
-- Delete removes the account-owned instance subtree, including any generated `published/` projection bytes.
+- Publish/republish restores `index.html.off` to `index.html` when needed, or confirms an existing `index.html`.
+- Unpublish renames `index.html` to `index.html.off` and leaves account-owned saved state plus support files intact.
+- If neither `index.html` nor `index.html.off` exists, publish fails clearly because the generated embed files are not ready.
+- Delete removes the account-owned instance subtree.
 - Neither operation writes or deletes root `published/widgets` because that registry does not exist in the PRD 099 product model.

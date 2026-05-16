@@ -241,7 +241,7 @@ Binding Map template:
 ### 9) Assets
 MUST
 - Store account-owned asset bytes under `accounts/{accountPublicId}/assets/`.
-- Materialize runtime asset references as root-relative `/assets/account/{accountPublicId}/{assetId}/{filename}` paths when a widget needs a public asset URL.
+- Materialize runtime asset references as root-relative `/assets/account/{accountPublicId}/{assetRef}` paths when a widget needs a public asset URL.
 
 MUST NOT
 - Ship defaults containing `data:` or `blob:` URLs.

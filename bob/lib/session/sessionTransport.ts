@@ -193,12 +193,12 @@ export function useSessionTransport(args: {
   if (!accountAssets.current) {
     accountAssets.current = {
       listAssets: async () => dispatchHostedAssetCommand({ command: 'list-assets' }),
-      resolveAssets: async (assetIds: string[]) => {
+      resolveAssets: async (assetRefs: string[]) => {
         const headers = {
           accept: 'application/json',
           'content-type': 'application/json',
         };
-        const body = { assetIds };
+        const body = { assetRefs };
         return dispatchHostedAssetCommand({
           command: 'resolve-assets',
           headers,

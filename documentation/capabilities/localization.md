@@ -94,9 +94,9 @@ baseConfig + one overlay values object
 
 Partial overlay values are not selectable. Stale old values must not be shown as if they are current. If the user edits the base widget, Bob clears language preview selection until the next save completes. Operational messages may explain that values are unavailable for the current save, but they must not become overlay truth.
 
-## Venice Runtime
+## Public Static Locale Serving
 
-Venice serves only published projection truth.
+PRD 100 removes runtime locale composition from public visitor traffic.
 
 The public serving coordinate is:
 
@@ -104,29 +104,23 @@ The public serving coordinate is:
 accountPublicId + instanceId
 ```
 
-The Venice iframe route is:
+The public static route is:
 
 ```txt
-/widget/{accountPublicId}/{instanceId}
+https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-For a locale request, Venice reads Tokyo's account-scoped published projection routes, fetches the exact published overlay object by `overlayId`, and resolves:
+For a locale build, the translation agent writes overlay objects under the instance. The coding agent consumes `instance.json` plus overlays after save and writes generated locale browser files directly under the same instance folder:
 
 ```txt
-publishedBaseConfig + one overlay values object
+accounts/{accountPublicId}/instances/{instanceId}/
+  index.html
+  {locale}.html
+  styles.css
+  script.js
 ```
 
-Projection reads use:
-
-```txt
-/renders/accounts/{accountPublicId}/instances/{instanceId}/live/r.json
-/renders/accounts/{accountPublicId}/instances/{instanceId}/config.json
-/renders/accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json
-```
-
-If the published projection does not exist, does not contain a usable overlay for that locale, or the overlay object is missing, the locale is unavailable at the named boundary. Venice returns a miss such as `404` for missing widget projections and must not fallback to an unrelated language, compose old overlay shapes, inspect account policy, or read raw authoring overlay state.
-
-Venice must not check billing, tier, compliance, caps, or publish eligibility. Those decisions belong to Roma/system account operations and Tokyo publication. Venice only observes whether the published projection exists.
+If the generated locale file does not exist, that public locale URL returns 404. The serving layer does not compose overlays, inspect account policy, or repair stale language output on visitor requests.
 
 ## Prague
 
@@ -145,6 +139,6 @@ The following are not part of the active account-widget localization capability:
 - User-authored translation layers.
 - Locale-suffixed instance IDs.
 - Public serving from old `/l10n/widgets/**` truth as an identity authority.
-- Instance-only public widget routes such as `/widget/{instanceId}`.
-- Instance-only public render routes such as `/renders/widgets/{instanceId}/...`.
+- Instance-only public widget routes.
+- Instance-only public render routes.
 - Root `published/`, root `public/`, or root `l10n/` lookup folders as public localization authority.

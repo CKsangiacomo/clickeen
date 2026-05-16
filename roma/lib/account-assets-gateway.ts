@@ -1,4 +1,3 @@
-import { isUuid } from '@clickeen/ck-contracts';
 import type { MemberRole } from '@clickeen/ck-policy';
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveCurrentAccountRouteContext, withNoStore, withSession, type CurrentAccountRouteContext } from './current-account-route';
@@ -15,8 +14,6 @@ type AccountAssetGatewayContext = {
   requestId: string;
   sessionSetCookies?: CurrentAccountRouteContext['setCookies'];
 };
-
-export { isUuid };
 
 export function finalizeAccountAssetResponse(args: {
   request: NextRequest;

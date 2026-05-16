@@ -150,7 +150,7 @@ Notes:
 - Prague page JSON deploys under R2 `prague/pages/**`; retained Prague localization deploys under R2 `prague/l10n/**`.
 - Root `l10n/prague/**` is not a Prague storage or deploy target.
 
-Prague does not merge localized page overlays in this runtime. Account-instance locale overlays are selected by account/product operations and served by Venice through the account-scoped published projection route `/renders/accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json`.
+Prague does not merge localized page overlays in this runtime. Account-instance locale overlays are build inputs for generated static instance files served from `clk.live`.
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.

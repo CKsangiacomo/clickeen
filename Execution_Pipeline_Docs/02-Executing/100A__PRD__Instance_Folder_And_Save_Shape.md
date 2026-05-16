@@ -94,7 +94,7 @@ Required invariants:
 - product-approved `embedBuildShape`
 - `sourceVersion` for the latest Save
 - translation/build status tied to that source version
-- last successful embed build metadata, including widget software version
+- last successful embed build metadata tied to the source version
 
 Minimum `embedBuildShape`:
 
@@ -133,7 +133,6 @@ Required generation coordination fields:
       "updatedAt": "2026-05-16T00:00:00.000Z",
       "lastSuccessful": {
         "sourceVersion": 11,
-        "widgetSoftwareVersion": "faq@2026-05-16",
         "completedAt": "2026-05-16T00:00:00.000Z"
       }
     }

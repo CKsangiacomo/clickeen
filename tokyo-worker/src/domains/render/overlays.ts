@@ -12,11 +12,7 @@ import type { Env } from '../../types';
 import {
   accountInstanceOverlayObjectKey,
   accountInstanceOverlayObjectPrefix,
-  accountInstancePublishKey,
-  accountInstanceSelectedOverlayKey,
-  accountInstanceSelectedOverlayPrefix,
 } from './keys';
-import { normalizePublishDocument } from './normalize';
 import { loadJson, putJson } from './storage';
 import type {
   OverlayObjectDocument,
@@ -71,13 +67,6 @@ function normalizeOverlayObject(raw: unknown): OverlayObjectDocument | null {
   return { v: 1, values: assertValues(payload.values) };
 }
 
-function normalizeSelectedOverlayPointer(raw: unknown): SelectedOverlayPointerDocument | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const payload = raw as Record<string, unknown>;
-  if (payload.v !== 1 || typeof payload.overlayId !== 'string') return null;
-  return { v: 1, overlayId: payload.overlayId };
-}
-
 function coordinatePrefix(coordinate: OverlayCoordinate): string {
   return `${coordinate.accountId}${coordinate.widgetCode}${coordinate.instanceId}${coordinate.languageCode}${coordinate.experiment}${coordinate.personalization}`;
 }
@@ -115,19 +104,13 @@ async function listOverlayIdsForCoordinate(env: Env, coordinate: OverlayCoordina
   return Array.from(new Set(ids));
 }
 
-async function listSelectedOverlayIds(env: Env, coordinate: OverlayCoordinate): Promise<string[]> {
-  const prefix = accountInstanceSelectedOverlayPrefix(coordinate.accountId, coordinate.widgetCode, coordinate.instanceId);
-  const ids: string[] = [];
-  let cursor: string | undefined = undefined;
-  do {
-    const listed = await env.TOKYO_R2.list({ prefix, cursor });
-    for (const object of listed.objects) {
-      const pointer = normalizeSelectedOverlayPointer(await loadJson(env, object.key));
-      if (pointer) ids.push(pointer.overlayId);
-    }
-    cursor = listed.truncated ? listed.cursor : undefined;
-  } while (cursor);
-  return ids;
+function overlayVersionValue(overlayId: string): number {
+  const parsed = parseOverlayId(overlayId);
+  return parsed.ok ? Number.parseInt(parsed.value.version, 10) : -1;
+}
+
+function pickLatestOverlayId(ids: string[]): string | null {
+  return ids.sort((left, right) => overlayVersionValue(right) - overlayVersionValue(left))[0] ?? null;
 }
 
 export async function readSelectedOverlayProjection(args: {
@@ -136,20 +119,24 @@ export async function readSelectedOverlayProjection(args: {
   widgetCode: string;
   instanceId: string;
 }): Promise<PublishedOverlayProjection> {
-  const prefix = accountInstanceSelectedOverlayPrefix(args.accountId, args.widgetCode, args.instanceId);
-  const languages: Record<string, string> = {};
+  const prefix = accountInstanceOverlayObjectPrefix(args.accountId, args.widgetCode, args.instanceId);
+  const byLanguage: Record<string, string[]> = {};
   let cursor: string | undefined = undefined;
   do {
     const listed = await args.env.TOKYO_R2.list({ prefix, cursor });
     for (const object of listed.objects) {
-      const pointer = normalizeSelectedOverlayPointer(await loadJson(args.env, object.key));
-      if (!pointer) continue;
-      const parsed = parseOverlayId(pointer.overlayId);
+      const overlayId = object.key.slice(object.key.lastIndexOf('/') + 1).replace(/\.json$/, '');
+      const parsed = parseOverlayId(overlayId);
       if (!parsed.ok) continue;
-      languages[parsed.value.languageCode] = pointer.overlayId;
+      byLanguage[parsed.value.languageCode] = [...(byLanguage[parsed.value.languageCode] ?? []), overlayId];
     }
     cursor = listed.truncated ? listed.cursor : undefined;
   } while (cursor);
+  const languages: Record<string, string> = {};
+  for (const [languageCode, ids] of Object.entries(byLanguage)) {
+    const selected = pickLatestOverlayId(ids);
+    if (selected) languages[languageCode] = selected;
+  }
   return { languages };
 }
 
@@ -158,15 +145,8 @@ async function isOverlayIdReferenced(args: {
   coordinate: OverlayCoordinate;
   overlayId: string;
 }): Promise<boolean> {
-  const selectedIds = await listSelectedOverlayIds(args.env, args.coordinate);
-  if (selectedIds.includes(args.overlayId)) return true;
-  const publish = normalizePublishDocument(
-    await loadJson(
-      args.env,
-      accountInstancePublishKey(args.coordinate.accountId, args.coordinate.widgetCode, args.coordinate.instanceId),
-    ),
-  );
-  return Object.values(publish?.overlays?.languages ?? {}).includes(args.overlayId);
+  const current = await readSelectedOverlayPointer({ env: args.env, coordinate: args.coordinate });
+  return current?.overlayId === args.overlayId;
 }
 
 export async function allocateOverlayId(args: {
@@ -267,20 +247,8 @@ export async function writeSelectedOverlayPointer(args: {
 }): Promise<SelectedOverlayPointerDocument> {
   const parsed = parseOverlayId(args.overlayId);
   if (!parsed.ok) throw new Error(`tokyo.overlay.id_invalid:${parsed.reason}`);
-  const pointer = { v: 1, overlayId: args.overlayId } satisfies SelectedOverlayPointerDocument;
-  await putJson(
-    args.env,
-    accountInstanceSelectedOverlayKey(
-      parsed.value.accountPublicId,
-      parsed.value.widgetCode,
-      parsed.value.instanceId,
-      parsed.value.languageCode,
-      parsed.value.experiment,
-      parsed.value.personalization,
-    ),
-    pointer,
-  );
-  return pointer;
+  void args.env;
+  return { v: 1, overlayId: args.overlayId };
 }
 
 export async function deleteSelectedOverlayPointer(args: {
@@ -291,16 +259,16 @@ export async function deleteSelectedOverlayPointer(args: {
   };
 }): Promise<void> {
   const coordinate = normalizeCoordinate(args.coordinate);
-  await args.env.TOKYO_R2.delete(
-    accountInstanceSelectedOverlayKey(
+  const ids = await listOverlayIdsForCoordinate(args.env, coordinate);
+  const keys = ids.map((overlayId) =>
+    accountInstanceOverlayObjectKey(
       coordinate.accountId,
       coordinate.widgetCode,
       coordinate.instanceId,
-      coordinate.languageCode,
-      coordinate.experiment,
-      coordinate.personalization,
+      overlayId,
     ),
   );
+  if (keys.length) await args.env.TOKYO_R2.delete(keys);
 }
 
 export async function readSelectedOverlayPointer(args: {
@@ -311,17 +279,6 @@ export async function readSelectedOverlayPointer(args: {
   };
 }): Promise<SelectedOverlayPointerDocument | null> {
   const coordinate = normalizeCoordinate(args.coordinate);
-  return normalizeSelectedOverlayPointer(
-    await loadJson(
-      args.env,
-      accountInstanceSelectedOverlayKey(
-        coordinate.accountId,
-        coordinate.widgetCode,
-        coordinate.instanceId,
-        coordinate.languageCode,
-        coordinate.experiment,
-        coordinate.personalization,
-      ),
-    ),
-  );
+  const selected = pickLatestOverlayId(await listOverlayIdsForCoordinate(args.env, coordinate));
+  return selected ? { v: 1, overlayId: selected } : null;
 }

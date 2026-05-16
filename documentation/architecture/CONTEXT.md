@@ -2,7 +2,7 @@
 
 This is the technical reference for working in the Clickeen codebase. For strategy and vision, see `documentation/strategy/WhyClickeen.md`.
 
-**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, ad‑hoc fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Overlay truth is PRD 098: `overlayId` is the only overlay identity, overlay bodies are exact value maps, and missing selected/published overlays are system failures at the named boundary. Physical account runtime storage truth is PRD 099: account-owned instances live at `accounts/{accountPublicId}/instances/{instanceId}/`, account-owned assets live at `accounts/{accountPublicId}/assets/`, and widget software lives under `product/widgets/`. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/product/widgets/*`), defaults (`spec.json` -> `defaults`), and system/admin-owned local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high-impact changes, still use safety rails (feature flags, rollback switches, and data-safety checks) when a change can affect runtime behavior.
+**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, ad‑hoc fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Overlay truth is PRD 100: `overlayId` is the only overlay identity and overlay bodies are exact value maps under the owning instance `overlays/` folder. Physical account runtime storage truth is PRD 100: account-owned instances live at `accounts/{accountPublicId}/instances/{instanceId}/`, each instance has one source JSON (`instance.json`), account-owned assets live at `accounts/{accountPublicId}/assets/`, and widget software lives under `product/widgets/`. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/product/widgets/*`), defaults (`spec.json` -> `defaults`), and system/admin-owned local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high-impact changes, still use safety rails (feature flags, rollback switches, and data-safety checks) when a change can affect runtime behavior.
 
 **Debugging order (when something is unclear):**
 
@@ -46,7 +46,7 @@ Non-negotiable negative truths:
 
 - It is **instance state**, not widget-type state.
 - It is **Tokyo-owned**.
-- It means only: may Venice serve this instance publicly right now?
+- It means only: should the generated static entry file be present for public serving right now?
 - It exists to gate public serving and enforce lower-tier served-instance caps.
 - It does **not** mean draft state, overlay health, translation readiness, or broad business lifecycle.
 - Michael status columns may still exist in schema or route code during cutover, but they are not the surviving publish/unpublish authority.
@@ -95,19 +95,15 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `catalog.json`, `spec.json`, `agent.md`, and widget-owned runtime assets. `spec.json.overlays.v = 1` owns the widget primitive variable graph used by ToolDrawer, Copilot, Babel, Bob preview, Tokyo validation, and Venice runtime. Separate l10n path lists are not product truth.
 - Platform-controlled; **not stored in Michael**
 
-**Instance** = THE ACCOUNT-OWNED DATA
+**Instance** = THE ACCOUNT-OWNED DATA AND STATIC MINI-SITE SOURCE
 
-- One saved configured widget owned by one account
-- Owns saved config, display metadata, asset refs, selected overlay IDs, projected public overlay IDs, and publish/live state.
-- Stored in Tokyo under the owning account at `accounts/{accountPublicId}/instances/{instanceId}/`. PRD 099 supersedes the PRD 098-era physical `accounts/{accountPublicId}/widgets/{widgetCode}/{instanceId}/` path while preserving PRD 098 overlay identity and body shape.
-- Source truth is the account instance subtree: `instance.json` for identity/ownership/display metadata, `config.json` for saved base config, and `publish.json` for publish/live state. Overlay objects are separate exact objects at `overlays/{overlayId}.json` under the same instance. `accounts/{accountPublicId}/instances/index.json` is a generated account read model, not an identity authority.
-- Kept generated account-instance artifacts are explicit derived artifacts:
-  - `accounts/{accountPublicId}/instances/index.json`: generated product inventory. Tokyo-worker writes or patches it on save/delete and through the named repair/rebuild boundary; Roma reads it for Widgets navigation. It is rebuildable from instance subtrees and must not be treated as instance identity authority.
-  - `published/config.json`: generated public runtime config pack under `accounts/{accountPublicId}/instances/{instanceId}/published/`. Tokyo-worker writes it from saved config during publish/sync; public Tokyo render routes read it only with the `accountPublicId + instanceId` coordinate.
-  - `published/live/r.json`: generated public live projection under the same instance. It is the public serving projection, not a root registry.
-  - `published/overlays/{overlayId}.json`: generated public overlay object copies under the same instance. Venice reads public overlay bytes only from the published projection, never from authoring `overlays/`.
-  - `published/seo/meta/live/{locale}.json` and `published/seo/meta/{locale}/{metaFp}.json`: generated per-instance serving namespace for public SEO metadata under the instance published projection.
-- No generated artifact is required to determine account instance identity, ownership, saved base config truth, or publish truth. If a generated artifact is missing or stale, Tokyo-worker either rebuilds it through the named repair boundary or the public/read route fails at Tokyo; product paths must not infer a second source of truth.
+- One saved configured widget owned by one account.
+- Stored in Tokyo under the owning account at `accounts/{accountPublicId}/instances/{instanceId}/`.
+- `instance.json` is the only top-level source JSON for identity, ownership, display metadata, saved config, source version, generation status, and Roma-visible publish status. There is no sibling `config.json`, `publish.json`, `embed.json`, or `translations.json`.
+- Overlay objects are separate exact objects at `overlays/{overlayId}.json` under the same instance. The first/current overlay family is locale translation overlays.
+- Generated browser files for the public mini-site live in the same instance folder as `index.html`, `styles.css`, and `script.js`. The canonical public URL is `https://clk.live/{accountPublicId}/{instanceId}` and maps directly to that folder. Public serving is controlled by `index.html` physical presence, not by a runtime render pointer or product-service lookup.
+- `accounts/{accountPublicId}/instances/index.json` is a generated account read model for Roma navigation. It is rebuildable from instance subtrees and must not be treated as instance identity authority.
+- No generated artifact is required to determine account instance identity, ownership, saved config truth, or generation status. If generated browser files are missing or stale, Roma shows that status; public serving does not synthesize a widget at request time.
 - Tokyo instance indexes are prepared read models for product navigation. Hot list reads validate the index contract and must not perform full R2 integrity audits; save/publish/delete mutation paths patch one affected index entry. Full rebuild is a repair/read-missing boundary, not steady-state mutation work.
 - Michael does not keep a parallel account widget instance table. Support, billing/account reporting, and audit flows must use account/user relational data plus Tokyo-owned instance documents, not a Michael `widget_instances` projection.
 - Product-path account open resolves the saved authoring revision from Tokyo; instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
@@ -128,22 +124,11 @@ accounts/{accountPublicId}/
     index.json
     {instanceId}/
       instance.json
-      config.json
-      publish.json
+      index.html
+      styles.css
+      script.js
       overlays/
         {overlayId}.json
-      selected-overlays/
-        {languageCode}/{experiment}/{personalization}.json
-      published/
-        live/
-          r.json
-        config.json
-        overlays/
-          {overlayId}.json
-        seo/
-          meta/
-            live/{locale}.json
-            {locale}/{metaFp}.json
 ```
 
 `widgetCode` may appear in `instance.json` and in `overlayId` because it is shared codebook metadata. It is never required to locate an instance in R2 storage.
@@ -178,8 +163,8 @@ In the browser the active account-mode host path is:
 Bob does not URL-bootstrap account mode. Account editing is host-only.
 
 Babel is separate from Builder authoring: Berlin-backed Roma Settings owns account locale policy, and translation/runtime locale convergence happens downstream from the one widget save path. Each widget declares text primitives in `spec.json.overlays.text[]`; producers receive only concrete primitive paths extracted from the saved config, such as `sections.0.faqs.0.question`.
-For account-widget locales, Roma orchestrates product work, San Francisco translates concrete text primitive values, and Tokyo-worker acts as the PBX: validate `overlayId`, write exact overlay objects, read exact overlay objects, and project selected/published IDs. Tokyo-worker does not infer product meaning from overlay bodies and does not repair data it produced.
-Builder translation preview is account-authenticated read-only inspection: Bob asks Roma/Tokyo for selected overlay IDs and value maps, then applies one overlay value map over the current in-memory base state with the shared resolver before posting state to the preview iframe. If the base widget has unsaved edits or a target language has no selected overlay values, Bob previews the base language and does not show stale old overlay values. Unpublished Builder preview must not depend on public Venice/Tokyo locale URLs, because public serving is gated by Tokyo publish state.
+For account-widget locales, Roma orchestrates product work, San Francisco translates concrete text primitive values, and Tokyo-worker acts as the PBX: validate `overlayId`, write exact overlay objects, and read exact overlay objects under the owning instance `overlays/` folder. Tokyo-worker does not infer product meaning from overlay bodies and does not repair data it produced.
+Builder translation preview is account-authenticated read-only inspection: Bob asks Roma/Tokyo for overlay IDs and value maps, then applies one overlay value map over the current in-memory base state with the shared resolver before posting state to the preview iframe. If the base widget has unsaved edits or a target language has no overlay values, Bob previews the base language and does not show stale old overlay values. Unpublished Builder preview must not depend on public Venice/Tokyo locale URLs, because public serving is controlled by generated static file presence.
 
 Between open and save:
 
@@ -239,12 +224,12 @@ Publishing semantics: `published` / `unpublished` is a Tokyo instance serve-stat
 | **Bob**           | Account Builder editor runtime; the real widget authoring UI                    | Cloudflare Pages (Next.js)      | `bob/`          |
 | **Roma**          | Current-account product shell + Builder host orchestration                      | Cloudflare Pages (Next.js)      | `roma/`         |
 | **DevStudio**     | Internal toolbench for platform curation, verification, and local utility pages | Local Vite toolbench            | `admin/`        |
-| **Venice**        | SSR embed runtime                                                               | Cloudflare Pages (Next.js Edge) | `venice/`       |
+| **Venice**        | Legacy embed runtime being removed by PRD 100                                   | Cloudflare Pages (Next.js Edge) | `venice/`       |
 | **San Francisco** | AI Workforce OS (agents, learning)                                              | Workers (D1/KV/R2/Queues)       | `sanfrancisco/` |
 | **Michael**       | Database                                                                        | Supabase Postgres               | `supabase/`     |
 | **Dieter**        | Design system                                                                   | Build artifacts in Tokyo        | `dieter/`       |
-| **Tokyo**         | Asset storage & CDN                                                             | Cloudflare R2                   | `tokyo/`        |
-| **Tokyo Worker**  | Account-owned asset uploads + overlay PBX/storage + render snapshots            | Cloudflare Workers + R2         | `tokyo-worker/` |
+| **Tokyo**         | Account storage, static mini-site bytes, assets & CDN                           | Cloudflare R2                   | `tokyo/`        |
+| **Tokyo Worker**  | Account-owned asset uploads + instance source/overlay storage                    | Cloudflare Workers + R2         | `tokyo-worker/` |
 | **Atlas**         | Edge config cache (read-only)                                                   | Cloudflare KV                   | —               |
 
 ---
@@ -257,25 +242,24 @@ Publishing semantics: `published` / `unpublished` is a Tokyo instance serve-stat
 
 **DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, verification, and small local utility pages. The old local DevStudio widget-authoring lane is removed. DevStudio must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 
-**Venice** — SSR embed runtime. Serves public embeds from Tokyo account-scoped published projections (`/widget/:accountPublicId/:instanceId`, `/renders/accounts/:accountPublicId/instances/:instanceId/live/r.json`) with revision-coherent resolution (single published revision; requested locale must exist in that revision or the response is unavailable). Venice uses `accountPublicId + instanceId` to resolve public projection material; it must not depend on root `published/` lookups or instance-only global registries. Dynamic rendering remains an internal bypass path only. Third-party pages only ever talk to Venice.
+**Venice** — Legacy SSR embed runtime being removed by PRD 100. It is not the surviving public serving plane. The surviving model is static mini-site delivery from Tokyo at `https://clk.live/{accountPublicId}/{instanceId}`; browser requests must receive generated files, not Venice-computed widget HTML.
 
 **San Francisco** — AI Workforce Operating System. Runs customer copilots and internal system agents such as Builder Copilot, Widget Instance Translator, and Prague Copy Translator. Manages agent sessions, learning pipelines, and prompt evolution. See `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentation/ai/infrastructure.md`.
 
 **Michael** — Supabase PostgreSQL database. Stores account/user data, submissions, usage events, and relational support records. It does not store account widget instance source or projection tables. RLS is enforced for user/account tables, while widget instance inventory, editable config, display name, publish state, and example availability are Tokyo-owned.
 
-**Tokyo** — Asset storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, account-owned runtime instance trees, account-owned published projections, and account-owned upload blobs. Runtime-managed account data lives only under `accounts/{accountPublicId}/`; git-authored product resources live under `product/`, `dieter/`, `fonts/`, and `prague/`.
+**Tokyo** — Account storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, account-owned instance mini-sites, overlays, and account-owned uploaded files. Runtime-managed account data lives only under `accounts/{accountPublicId}/`; git-authored product resources live under `product/`, `dieter/`, `fonts/`, and `prague/`.
 
-**Tokyo Worker** — Cloudflare Worker that serves immutable account asset paths (`/assets/account/{accountPublicId}/{assetId}/{filename}`), exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, validates overlay IDs, stores exact overlay value objects under the owning instance, projects selected/published overlay IDs under that instance, and publishes Venice render snapshots under `accounts/{accountPublicId}/instances/{instanceId}/published/`. Tokyo-worker is a PBX/control-plane switchboard: it routes storage operations and must not orchestrate San Francisco, infer product meaning from overlay bodies, or repair data it produced.
+**Tokyo Worker** — Cloudflare Worker that serves account asset references from `accounts/{accountPublicId}/assets/{assetRef}`, exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, validates overlay IDs, stores exact overlay value objects under the owning instance, and writes the one `instance.json` source package for Bob/Roma/San Francisco. Tokyo-worker is a PBX/control-plane switchboard: it routes storage operations and must not orchestrate San Francisco, infer product meaning from overlay bodies, or render public widgets at request time.
 
 **Asset URL contract (pre-GA strict):**
 
 - Full canonical contract: [AssetManagement.md](./AssetManagement.md)
-- Fill/media authoring config now stores logical asset identity (`assetId`, optional `posterAssetId`) while runtime/materialized config packs resolve those ids to canonical root-relative paths: `/assets/account/{accountPublicId}/{assetId}/{filename}`. The backing R2 object lives under `accounts/{accountPublicId}/assets/`.
-- Logo/media authoring surfaces use the same split: uploaded logos persist `asset.assetId` plus editor metadata, while runtime consumes only the materialized `logoFill`.
+- Fill/media authoring config now stores account asset references (`assetRef`, optional `posterAssetRef`) while runtime/materialized config packs resolve those refs to canonical root-relative paths: `/assets/account/{accountPublicId}/{assetRef}`. The backing R2 object lives under `accounts/{accountPublicId}/assets/{assetRef}`.
+- Logo/media authoring surfaces use the same split: uploaded logos persist `asset.assetRef` plus editor metadata, while runtime consumes only the materialized `logoFill`.
 - Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and persisted account-asset URL backed `logoFill` strings) are outside contract and rejected on write.
 - Legacy non-account media paths are outside the runtime contract and are rejected on new writes.
-- `DELETE` on an account asset is synchronous in the delete path (metadata + blob) with no snapshot rebuild/healing side effects; subsequent `/assets/account/**` reads return unavailable.
-- Managed asset APIs expose explicit integrity checks (`/assets/integrity/:accountPublicId` and `/assets/integrity/:accountPublicId/:assetId`) so Roma can surface DB↔R2 mismatch states.
+- `DELETE` on an account asset is synchronous in the delete path with no instance rebuild/healing side effects; subsequent `/assets/account/**` reads return unavailable.
 - Runtime does not rely on `CK_ASSET_ORIGIN`; asset paths remain canonical root-relative and environment portability is provided by Bob/Venice proxy routes.
 - Legacy host-pinned/legacy paths (for example `/curated-assets/**`) are not supported.
 

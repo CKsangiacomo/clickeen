@@ -33,6 +33,13 @@ Paid SEO/GEO mode produces a richer static widget build optimized for search eng
 
 The difference is the generated code, not the serving architecture.
 
+PRD 101 must keep two growth loops separate:
+
+- paid SEO/GEO optimizes the customer's widget content for the customer
+- free widget attribution can create an honest Clickeen SEO/GEO loop through visible "Made with Clickeen" attribution and backlinks
+
+Free widgets must not receive full customer SEO/GEO output by default. Free attribution is Clickeen's growth surface, not a replacement for the paid SEO/GEO feature.
+
 ## Product Boundary
 
 PRD 101 will only apply after PRD 100 establishes:
@@ -72,6 +79,7 @@ PRD 101 will define the paid SEO/GEO contract for the embed coding agent, includ
 - Prague dogfooding requirements for Clickeen's own widget pages
 - validation reports surfaced in Roma
 - CI checks for generated SEO/GEO output
+- free-widget attribution/backlink rules for Clickeen's own SEO/GEO loop
 
 ## Examples Of Richer Paid Output
 
@@ -88,12 +96,39 @@ For FAQ widgets, paid SEO/GEO may require:
 
 For review, pricing, event, article, or other future widgets, PRD 101 will map each widget type to the correct semantic and structured-data contract.
 
+## Free Widget Attribution Note
+
+PRD 101 should define a small, honest attribution contract for free widgets.
+
+The purpose is not to give free customers full SEO/GEO optimization. The purpose is to let Clickeen earn legitimate discovery and backlinks from free widgets that are publicly embedded.
+
+Example attribution shape:
+
+```html
+<p class="ck-attribution">
+  Made with <a href="https://clickeen.com/widgets/faq">Clickeen FAQ Widget</a>
+</p>
+```
+
+Expected rules:
+
+- attribution is visible, honest, and not hidden text
+- the link points to the relevant Prague widget page when possible
+- the copy stays short and product-true
+- paid plans may remove attribution according to entitlement
+- attribution must not keyword-stuff customer pages
+- attribution must not claim the customer's widget has paid SEO/GEO optimization unless the feature is enabled
+- generated attribution must remain static, accessible, and crawler-readable
+
+This creates a Clickeen SEO/GEO wedge without making `seoMode: full` free by default.
+
 ## Non-Negotiables
 
 - SEO/GEO is a paid embed build mode.
 - SEO/GEO is produced by the embed coding agent at build time.
 - Public visitors never choose or trigger SEO/GEO mode.
 - Free/base embeds must remain functional and static.
+- Free/base embeds may include honest Clickeen attribution/backlinks as a separate growth loop.
 - Paid SEO/GEO embeds must remain static and CDN-friendly.
 - The embed coding agent must not invent business claims, reviews, prices, locations, offers, or facts.
 - Generated structured data must come from saved instance source, overlays, account assets, or approved product/widget contracts.
@@ -125,4 +160,3 @@ Expected PRD 101 child slices:
 ## Done
 
 This stub is done when the team agrees that PRD 101 is the post-PRD-100 product document for paid SEO/GEO embed generation by the coding agent.
-

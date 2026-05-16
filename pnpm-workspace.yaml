@@ -7,7 +7,6 @@ packages:
   - roma
   - sanfrancisco
   - tokyo-worker
-  - venice
   - packages/ck-policy
   - packages/ck-contracts
   - packages/l10n

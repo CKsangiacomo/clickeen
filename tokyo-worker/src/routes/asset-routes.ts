@@ -1,21 +1,33 @@
 import {
+  parseAccountAssetRef,
+} from '@clickeen/ck-contracts';
+import {
   handleDeleteAccountAsset,
-  handleGetAccountAssetIdentityIntegrity,
-  handleGetAccountAssetMirrorIntegrity,
+  handleGetAccountAsset,
   handleGetAccountAssetUsage,
   handleListAccountAssetMetadata,
   handleResolveAccountAssetMetadata,
   handleUploadAccountAsset,
-} from '../domains/assets';
+} from '../domains/assets-handlers';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
 
 const ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT = '([0-9A-Z]{8})';
-const ASSET_ID_ROUTE_SEGMENT = '([0-9a-f-]{36})';
+const ASSET_REF_ROUTE_SEGMENT = '(.+)';
 
 export async function tryHandleAssetRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
   const { req, env, pathname, respond } = args;
+
+  const accountAsset = parseAccountAssetRef(pathname);
+  if (accountAsset) {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return respondMethodNotAllowed(respond);
+    const response = await handleGetAccountAsset(env, accountAsset.key);
+    if (req.method === 'HEAD') {
+      return respond(new Response(null, { status: response.status, headers: response.headers }));
+    }
+    return respond(response);
+  }
 
   if (pathname === '/__internal/assets/upload') {
     if (req.method !== 'POST') return respondMethodNotAllowed(respond);
@@ -56,38 +68,13 @@ export async function tryHandleAssetRoutes(
   }
 
   const accountAssetMatch = pathname.match(
-    new RegExp(`^/__internal/assets/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}/${ASSET_ID_ROUTE_SEGMENT}$`, 'i'),
+    new RegExp(`^/__internal/assets/account/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}/asset/${ASSET_REF_ROUTE_SEGMENT}$`, 'i'),
   );
   if (accountAssetMatch) {
     const accountId = decodeURIComponent(accountAssetMatch[1] || '');
-    const assetId = decodeURIComponent(accountAssetMatch[2] || '');
+    const assetRef = decodeURIComponent(accountAssetMatch[2] || '');
     if (req.method === 'DELETE') {
-      return respond(await handleDeleteAccountAsset(req, env, accountId, assetId));
-    }
-    return respondMethodNotAllowed(respond);
-  }
-
-  const accountAssetIntegrityMatch = pathname.match(
-    new RegExp(`^/assets/integrity/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}$`),
-  );
-  if (accountAssetIntegrityMatch) {
-    const accountId = decodeURIComponent(accountAssetIntegrityMatch[1] || '');
-    if (req.method === 'GET') {
-      return respond(await handleGetAccountAssetMirrorIntegrity(req, env, accountId));
-    }
-    return respondMethodNotAllowed(respond);
-  }
-
-  const accountAssetIdentityIntegrityMatch = pathname.match(
-    new RegExp(`^/assets/integrity/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}/${ASSET_ID_ROUTE_SEGMENT}$`, 'i'),
-  );
-  if (accountAssetIdentityIntegrityMatch) {
-    const accountId = decodeURIComponent(accountAssetIdentityIntegrityMatch[1] || '');
-    const assetId = decodeURIComponent(accountAssetIdentityIntegrityMatch[2] || '');
-    if (req.method === 'GET') {
-      return respond(
-        await handleGetAccountAssetIdentityIntegrity(req, env, accountId, assetId),
-      );
+      return respond(await handleDeleteAccountAsset(req, env, accountId, assetRef));
     }
     return respondMethodNotAllowed(respond);
   }

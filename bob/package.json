@@ -14,7 +14,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "rm -rf /tmp/clickeen-bob-tests && esbuild lib/translations-preview.test.ts --bundle --platform=node --format=esm --outdir=/tmp/clickeen-bob-tests && node --test /tmp/clickeen-bob-tests/translations-preview.test.js"
+    "test": "rm -rf /tmp/clickeen-bob-tests && esbuild lib/translations-preview.test.ts lib/embed-snippets.test.ts --bundle --platform=node --format=esm --outdir=/tmp/clickeen-bob-tests && node --test /tmp/clickeen-bob-tests/translations-preview.test.js /tmp/clickeen-bob-tests/embed-snippets.test.js"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

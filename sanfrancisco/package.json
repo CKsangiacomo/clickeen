@@ -7,7 +7,7 @@
     "dev": "wrangler dev --local --port 8787",
     "deploy": "node ../scripts/infra/ensure-queues.mjs --write --queues sanfrancisco-events-dev && wrangler deploy",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "rm -rf /tmp/clickeen-sanfrancisco-tests && esbuild src/l10n-account-routes.test.ts --bundle --platform=node --format=esm --external:cloudflare:workers --outdir=/tmp/clickeen-sanfrancisco-tests && node --test /tmp/clickeen-sanfrancisco-tests/l10n-account-routes.test.js"
+    "test": "rm -rf /tmp/clickeen-sanfrancisco-tests && esbuild src/l10n-account-routes.test.ts src/widget-generation-jobs.test.ts src/embed-file-writer.test.ts --bundle --platform=node --format=esm --external:cloudflare:workers --outdir=/tmp/clickeen-sanfrancisco-tests && node --test /tmp/clickeen-sanfrancisco-tests/l10n-account-routes.test.js /tmp/clickeen-sanfrancisco-tests/widget-generation-jobs.test.js /tmp/clickeen-sanfrancisco-tests/embed-file-writer.test.js"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

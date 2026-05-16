@@ -281,11 +281,11 @@ Generated instance output must reference account assets from the account library
 
 In-place replacement of an account asset keeps the same account asset reference and must not require rebuilding instances that reference it.
 
-The asset identity must be understandable as account-owned library state. It must not require the embed agent to understand hash folders, blob internals, immutable histories, or generated public asset identifiers.
+The asset identity must be understandable as account-owned library state. It must not require the embed agent to understand hash folders, generated storage indirection, immutable histories, or generated public asset identifiers.
 
 The embed agent must not manage account-owned assets.
 
-The embed agent must not mint asset IDs, invent public asset URLs, hash files, create blob folders, version assets, or decide account asset serving.
+The embed agent must not mint asset identities, invent public asset URLs, hash files, create generated storage indirection, version assets, or decide account asset serving.
 
 If generated HTML/CSS/JS needs to reference an account-owned asset, it must consume the account asset reference already saved in `instance.json` and resolve it through the one Roma/Tokyo account-asset contract.
 
@@ -293,13 +293,13 @@ PRD 100 does not make the embed agent an asset manager.
 
 However, code audit found that the current Roma/Tokyo account-asset contract is not yet the intended simple account library shape.
 
-Current implementation drift:
+Pre-100 implementation drift to delete:
 
-- uploaded assets are identified by generated UUID `assetId`
-- bytes are stored under an internal `blob/` segment
+- uploaded assets are identified by generated IDs instead of account asset refs
+- bytes are hidden behind generated storage indirection
 - metadata is stored in per-asset `manifest.json`
 - `sha256` is recorded as asset metadata
-- resolved URLs are built from `accountPublicId`, `assetId`, and filename
+- resolved URLs are built from multiple generated identity pieces plus filename
 
 That current shape is implementation reality, not product truth for PRD 100.
 
@@ -406,7 +406,6 @@ It owns:
 - embed build shape
 - embed build status for Roma Widgets
 - translation/overlay generation status if needed for Roma Widgets
-- source widget software version used by the last successful embed build
 
 `embedBuildShape` is the bounded build decision record for the embed agent.
 
@@ -572,11 +571,7 @@ When product widget software changes, existing public embeds do not recompute on
 
 Existing instances keep serving their last successfully written static output until a rebuild writes new output.
 
-`instance.json` must record the widget software version used by the last successful embed build.
-
-If the current product widget software version is newer than the last built version, Roma Widgets must be able to show the instance as stale relative to widget software.
-
-Rebuilds caused by widget software changes are background San Francisco jobs.
+Clickeen may schedule internal rebuild jobs for affected instances after product widget software changes.
 
 They must be scheduled with bounded concurrency and backpressure. A product widget software change must not create an unbounded simultaneous rebuild of every affected instance.
 

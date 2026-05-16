@@ -147,12 +147,12 @@ export function setImageSrc(
   }
   state.imageSrc = src;
   if (opts.commit) {
-    const assetId = String(state.imageAssetId || '').trim();
-    const fill: FillValue = assetId
+    const assetRef = String(state.imageAssetRef || '').trim();
+    const fill: FillValue = assetRef
       ? {
           type: 'image',
           image: {
-            assetId,
+            assetRef,
             ...(state.imageName ? { name: state.imageName } : {}),
             fit: 'cover',
             position: 'center',
@@ -180,14 +180,14 @@ export function setVideoSrc(
   }
   state.videoSrc = src;
   if (opts.commit) {
-    const assetId = String(state.videoAssetId || '').trim();
-    const fill: FillValue = assetId
+    const assetRef = String(state.videoAssetRef || '').trim();
+    const fill: FillValue = assetRef
       ? {
           type: 'video',
           video: {
-            assetId,
+            assetRef,
             ...(state.videoName ? { name: state.videoName } : {}),
-            ...(state.videoPosterAssetId ? { posterAssetId: state.videoPosterAssetId } : {}),
+            ...(state.videoPosterAssetRef ? { posterAssetRef: state.videoPosterAssetRef } : {}),
             fit: 'cover',
             position: 'center',
             loop: true,
@@ -249,11 +249,11 @@ function renderAssetBrowserRows(args: {
     button.addEventListener('click', (event) => {
       event.preventDefault();
       if (args.kind === 'image') {
-        commitImageAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+        commitImageAssetSelection(args.state, asset.assetRef, asset.filename, true, args.deps);
         setBrowserOpen(args.state.imageBrowser, args.state.chooseButton, false);
         return;
       }
-      commitVideoAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+      commitVideoAssetSelection(args.state, asset.assetRef, asset.filename, true, args.deps);
       setBrowserOpen(args.state.videoBrowser, args.state.videoChooseButton, false);
     });
 
@@ -320,11 +320,11 @@ async function handleAssetUpload(args: {
   try {
     const asset = await args.state.accountAssets.uploadAsset(args.file, 'api');
     if (args.kind === 'image') {
-      commitImageAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+      commitImageAssetSelection(args.state, asset.assetRef, asset.filename, true, args.deps);
       setBrowserOpen(args.state.imageBrowser, args.state.chooseButton, false);
       return;
     }
-    commitVideoAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+    commitVideoAssetSelection(args.state, asset.assetRef, asset.filename, true, args.deps);
     setBrowserOpen(args.state.videoBrowser, args.state.videoChooseButton, false);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
@@ -339,12 +339,12 @@ async function handleAssetUpload(args: {
 
 function commitImageAssetSelection(
   state: DropdownFillState,
-  assetId: string,
+  assetRef: string,
   filename: string,
   commit: boolean,
   deps: MediaControllerDeps,
 ): void {
-  state.imageAssetId = assetId;
+  state.imageAssetRef = assetRef;
   state.imageName = filename;
   setAssetPanelMessage(state.imageMessage, '');
   setImageSrc(state, null, { commit }, deps);
@@ -353,12 +353,12 @@ function commitImageAssetSelection(
 
 function commitVideoAssetSelection(
   state: DropdownFillState,
-  assetId: string,
+  assetRef: string,
   filename: string,
   commit: boolean,
   deps: MediaControllerDeps,
 ): void {
-  state.videoAssetId = assetId;
+  state.videoAssetRef = assetRef;
   state.videoName = filename;
   setAssetPanelMessage(state.videoMessage, '');
   setVideoSrc(state, null, { commit }, deps);
@@ -368,13 +368,13 @@ function commitVideoAssetSelection(
 export async function resolveImageAsset(state: DropdownFillState, deps: MediaControllerDeps): Promise<void> {
   return resolveSingleAccountAsset({
     accountAssets: state.accountAssets,
-    getAssetId: () => String(state.imageAssetId || '').trim(),
+    getAssetRef: () => String(state.imageAssetRef || '').trim(),
     beginRequest: () => {
       state.imageResolveRequestId += 1;
       return state.imageResolveRequestId;
     },
-    isCurrent: (requestId, assetId) =>
-      state.imageResolveRequestId === requestId && String(state.imageAssetId || '').trim() === assetId,
+    isCurrent: (requestId, assetRef) =>
+      state.imageResolveRequestId === requestId && String(state.imageAssetRef || '').trim() === assetRef,
     onStart: () => setAssetPanelMessage(state.imageMessage, ''),
     onMissing: () => {
       setAssetPanelMessage(state.imageMessage, 'Asset unavailable.');
@@ -392,13 +392,13 @@ export async function resolveImageAsset(state: DropdownFillState, deps: MediaCon
 export async function resolveVideoAsset(state: DropdownFillState, deps: MediaControllerDeps): Promise<void> {
   return resolveSingleAccountAsset({
     accountAssets: state.accountAssets,
-    getAssetId: () => String(state.videoAssetId || '').trim(),
+    getAssetRef: () => String(state.videoAssetRef || '').trim(),
     beginRequest: () => {
       state.videoResolveRequestId += 1;
       return state.videoResolveRequestId;
     },
-    isCurrent: (requestId, assetId) =>
-      state.videoResolveRequestId === requestId && String(state.videoAssetId || '').trim() === assetId,
+    isCurrent: (requestId, assetRef) =>
+      state.videoResolveRequestId === requestId && String(state.videoAssetRef || '').trim() === assetRef,
     onStart: () => setAssetPanelMessage(state.videoMessage, ''),
     onMissing: () => {
       setAssetPanelMessage(state.videoMessage, 'Asset unavailable.');
@@ -445,7 +445,7 @@ export function installImageHandlers(state: DropdownFillState, deps: MediaContro
         URL.revokeObjectURL(state.imageObjectUrl);
         state.imageObjectUrl = null;
       }
-      state.imageAssetId = null;
+      state.imageAssetRef = null;
       state.imageName = null;
       setAssetPanelMessage(state.imageMessage, '');
       setBrowserOpen(state.imageBrowser, state.chooseButton, false);
@@ -499,8 +499,8 @@ export function installVideoHandlers(state: DropdownFillState, deps: MediaContro
         URL.revokeObjectURL(state.videoObjectUrl);
         state.videoObjectUrl = null;
       }
-      state.videoAssetId = null;
-      state.videoPosterAssetId = null;
+      state.videoAssetRef = null;
+      state.videoPosterAssetRef = null;
       state.videoName = null;
       setAssetPanelMessage(state.videoMessage, '');
       setBrowserOpen(state.videoBrowser, state.videoChooseButton, false);

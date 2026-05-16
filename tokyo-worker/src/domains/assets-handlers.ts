@@ -4,13 +4,8 @@ import {
   buildAccountAssetPublicPath,
   classifyAccountAssetType,
   guessContentTypeFromExt,
-  normalizeAccountAssetReadKey,
-  normalizeStorageId,
-  normalizeWidgetType,
-  parseAccountAssetIdentityFromKey,
   pickExtension,
   validateUploadFilename,
-  sha256Hex,
 } from '../asset-utils';
 import { json } from '../http';
 import {
@@ -21,89 +16,46 @@ import {
   TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
 } from '../auth';
 import type { Env } from '../types';
-import { isUuid } from '@clickeen/ck-contracts';
 import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import {
-  type AccountAssetManifest,
+  type AccountAssetFile,
   type MemberRole,
-  deleteAccountAssetByIdentity,
-  loadAccountAssetByIdentity,
-  loadAccountAssetManifestByIdentity,
+  deleteAccountAssetByRef,
+  listAccountAssetFilesByAccount,
+  loadAccountAssetByRef,
   loadAccountStoredBytesUsage,
-  listAccountAssetManifestsByAccount,
-  loadAccountAssetBlobIdentitiesByAccount,
-  loadAccountAssetBlobKeys,
   normalizeAccountAssetSource,
-  persistAccountAssetMetadata,
   roleRank,
-  sumAccountAssetManifestSizeBytes,
+  sumAccountAssetFileSizeBytes,
 } from './assets';
-
-const ACCOUNT_ASSET_NAMESPACE_PREFIX = 'accounts/';
-const ACCOUNT_ASSET_R2_LIST_PAGE_SIZE = 1000;
-const ASSET_INTEGRITY_SAMPLE_LIMIT = 50;
-const ASSET_IDENTITY_INTEGRITY_SAMPLE_LIMIT = 50;
-
-const ASSET_INTEGRITY_REASON_POINTER_MISSING_BLOB = 'coreui.errors.assets.integrity.dbPointerMissingBlob';
-const ASSET_INTEGRITY_REASON_ORPHAN_BLOB = 'coreui.errors.assets.integrity.orphanBlob';
-const ASSET_INTEGRITY_REASON_BLOB_MISSING_FOR_ASSET = 'coreui.errors.assets.integrity.blobMissingForAsset';
-
-type UploadTierResolutionResult =
-  | { ok: true; accountAuthz: RomaAccountAuthzCapsulePayload }
-  | { ok: false; response: Response };
 
 type AccountAssetAuthorizationResult =
   | { ok: true; accountAuthz: RomaAccountAuthzCapsulePayload | null }
   | { ok: false; response: Response };
 
-type AssetMirrorIntegritySampleRef = {
-  assetId: string;
-  r2Key: string;
-};
+const SCRIPTABLE_OR_EXECUTABLE_EXTENSIONS = new Set([
+  'html',
+  'htm',
+  'js',
+  'mjs',
+  'cjs',
+  'ts',
+  'tsx',
+  'jsx',
+  'svg',
+  'xml',
+  'xhtml',
+  'wasm',
+  'sh',
+  'bat',
+  'cmd',
+  'exe',
+  'dmg',
+  'pkg',
+]);
 
-type AssetMirrorIntegritySnapshot = {
-  ok: boolean;
-  dbBlobCount: number;
-  r2ObjectCount: number;
-  missingInR2Count: number;
-  orphanInR2Count: number;
-  missingInR2: AssetMirrorIntegritySampleRef[];
-  orphanInR2: string[];
-};
-
-type AssetIdentityIntegritySnapshot = {
-  ok: boolean;
-  reasonKey: string | null;
-  dbBlobCount: number;
-  r2ObjectCount: number;
-  missingInR2Count: number;
-  orphanInR2Count: number;
-  missingInR2: string[];
-  orphanInR2: string[];
-};
-
-async function resolveUploadTierAndAuthorization(args: {
-  env: Env;
-  auth: { ok: true; principal: { accountAuthz: RomaAccountAuthzCapsulePayload } };
-  accountId: string;
-  minRole?: MemberRole;
-}): Promise<UploadTierResolutionResult> {
-  const { env, auth, accountId, minRole = 'editor' } = args;
-  const capsule = auth.principal.accountAuthz;
-  if (capsule.accountPublicId !== accountId || roleRank(capsule.role) < roleRank(minRole)) {
-    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
-  }
-  return { ok: true, accountAuthz: capsule };
-}
-
-function resolveTokyoAssetPublicBaseUrl(env: Env, req: Request): string {
-  const configured =
-    typeof env.TOKYO_PUBLIC_BASE_URL === 'string' ? env.TOKYO_PUBLIC_BASE_URL.trim() : '';
-  if (configured) {
-    return configured.replace(/\/+$/, '');
-  }
-  return new URL(req.url).origin.replace(/\/+$/, '');
-}
+const ALLOWED_MIME_PREFIXES = ['image/', 'video/', 'audio/'];
+const ALLOWED_EXACT_MIME_TYPES = new Set(['application/pdf']);
 
 async function resolveAccountAssetAuthorization(args: {
   req: Request;
@@ -126,14 +78,11 @@ async function resolveAccountAssetAuthorization(args: {
   });
   if (!auth.ok) return { ok: false, response: auth.response };
 
-  const authorized = await resolveUploadTierAndAuthorization({
-    env: args.env,
-    auth,
-    accountId: args.accountId,
-    minRole: args.minRole,
-  });
-  if (!authorized.ok) return authorized;
-  return { ok: true, accountAuthz: authorized.accountAuthz };
+  const capsule = auth.principal.accountAuthz;
+  if (capsule.accountPublicId !== args.accountId || roleRank(capsule.role) < roleRank(args.minRole)) {
+    return { ok: false, response: json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } }, { status: 403 }) };
+  }
+  return { ok: true, accountAuthz: capsule };
 }
 
 async function authorizeAccountAssetAccess(args: {
@@ -146,299 +95,127 @@ async function authorizeAccountAssetAccess(args: {
   return authorized.ok ? null : authorized.response;
 }
 
-function resolveAccountAssetNamespacePrefix(accountId: string): string {
-  return `${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/assets/`;
+function resolveTokyoAssetPublicBaseUrl(env: Env, req: Request): string {
+  const configured =
+    typeof env.TOKYO_PUBLIC_BASE_URL === 'string' ? env.TOKYO_PUBLIC_BASE_URL.trim() : '';
+  if (configured) return configured.replace(/\/+$/, '');
+  return new URL(req.url).origin.replace(/\/+$/, '');
 }
 
-function resolveAccountAssetIdentityPrefix(accountId: string, assetId: string): string {
-  return `${resolveAccountAssetNamespacePrefix(accountId)}${assetId}/blob/`;
+function normalizeAssetRef(raw: unknown): string | null {
+  const value = String(raw || '').trim().replace(/^\/+/, '');
+  if (!value || value.length > 240) return null;
+  if (value.includes('\\') || /[\u0000-\u001f\u007f]/.test(value)) return null;
+  const segments = value.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return null;
+  if (segments.some((segment) => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(segment))) return null;
+  return segments.join('/');
 }
 
-function isAccountAssetBlobKeyForAccount(key: string, accountId: string): boolean {
-  const canonical = normalizeAccountAssetReadKey(key);
-  if (!canonical) return false;
-  return canonical.startsWith(`${ACCOUNT_ASSET_NAMESPACE_PREFIX}${accountId}/assets/`) && canonical.includes('/blob/');
+function assertAcceptedUpload(args: {
+  filename: string;
+  contentType: string;
+}): { ok: true } | { ok: false; reasonKey: string; detail: string } {
+  const ext = (args.filename.split('.').pop() || '').trim().toLowerCase();
+  if (!ext || SCRIPTABLE_OR_EXECUTABLE_EXTENSIONS.has(ext)) {
+    return {
+      ok: false,
+      reasonKey: 'coreui.errors.assets.typeRejected',
+      detail: 'scriptable_or_executable_upload_rejected',
+    };
+  }
+  const mime = args.contentType.split(';')[0]?.trim().toLowerCase() || 'application/octet-stream';
+  const allowedMime = ALLOWED_EXACT_MIME_TYPES.has(mime) || ALLOWED_MIME_PREFIXES.some((prefix) => mime.startsWith(prefix));
+  if (!allowedMime) {
+    return {
+      ok: false,
+      reasonKey: 'coreui.errors.assets.typeRejected',
+      detail: `mime_rejected:${mime}`,
+    };
+  }
+  return { ok: true };
 }
 
-function serializeAccountAssetRecord(
-  manifest: AccountAssetManifest,
-): Record<string, unknown> {
+function serializeAccountAssetRecord(file: AccountAssetFile): Record<string, unknown> {
   return {
-    assetId: manifest.assetId,
-    assetType: manifest.assetType,
-    contentType: manifest.contentType,
-    sizeBytes: manifest.sizeBytes,
-    filename: manifest.normalizedFilename,
-    createdAt: manifest.createdAt,
+    assetRef: file.assetRef,
+    assetType: file.assetType,
+    contentType: file.contentType,
+    sizeBytes: file.sizeBytes,
+    filename: file.normalizedFilename,
+    createdAt: file.createdAt,
   };
 }
 
 function serializeResolvedAccountAsset(
-  manifest: AccountAssetManifest,
+  file: AccountAssetFile,
   origin: string,
 ): Record<string, unknown> {
-  const blobKey = String(manifest.key || '').trim();
   return {
-    ...serializeAccountAssetRecord(manifest),
-    url: `${origin}${buildAccountAssetPublicPath(blobKey)}`,
+    ...serializeAccountAssetRecord(file),
+    url: `${origin}${buildAccountAssetPublicPath(file.key)}`,
   };
 }
 
-async function listAccountAssetR2Keys(env: Env, accountId: string): Promise<string[]> {
-  const prefix = resolveAccountAssetNamespacePrefix(accountId);
-  const keys: string[] = [];
-  let cursor: string | undefined;
-  do {
-    const listed = await env.TOKYO_R2.list({
-      prefix,
-      limit: ACCOUNT_ASSET_R2_LIST_PAGE_SIZE,
-      cursor,
-    });
-    listed.objects.forEach((obj: { key?: string }) => {
-      const key = typeof obj.key === 'string' ? obj.key.trim() : '';
-      if (key && isAccountAssetBlobKeyForAccount(key, accountId)) keys.push(key);
-    });
-    cursor = listed.truncated ? listed.cursor : undefined;
-  } while (cursor);
-  return keys;
-}
-
-async function listAccountAssetR2KeysByIdentity(env: Env, accountId: string, assetId: string): Promise<string[]> {
-  const prefix = resolveAccountAssetIdentityPrefix(accountId, assetId);
-  const keys: string[] = [];
-  let cursor: string | undefined;
-  do {
-    const listed = await env.TOKYO_R2.list({
-      prefix,
-      limit: ACCOUNT_ASSET_R2_LIST_PAGE_SIZE,
-      cursor,
-    });
-    listed.objects.forEach((obj: { key?: string }) => {
-      const key = typeof obj.key === 'string' ? obj.key.trim() : '';
-      if (key) keys.push(key);
-    });
-    cursor = listed.truncated ? listed.cursor : undefined;
-  } while (cursor);
-  return keys;
-}
-
-function resolveAssetIdentityIntegrityReasonKey(args: {
-  dbBlobCount: number;
-  missingInR2Count: number;
-  orphanInR2Count: number;
-}): string | null {
-  if (args.dbBlobCount === 0) return ASSET_INTEGRITY_REASON_BLOB_MISSING_FOR_ASSET;
-  if (args.missingInR2Count > 0) return ASSET_INTEGRITY_REASON_POINTER_MISSING_BLOB;
-  if (args.orphanInR2Count > 0) return ASSET_INTEGRITY_REASON_ORPHAN_BLOB;
-  return null;
-}
-
-async function buildAccountAssetIdentityIntegrity(
-  env: Env,
-  accountId: string,
-  assetId: string,
-): Promise<AssetIdentityIntegritySnapshot> {
-  const [blobKeys, r2Keys] = await Promise.all([
-    loadAccountAssetBlobKeys(env, accountId, assetId),
-    listAccountAssetR2KeysByIdentity(env, accountId, assetId),
-  ]);
-  const blobKeySet = new Set<string>(blobKeys);
-  const missingInR2: string[] = [];
-  for (const key of blobKeys) {
-    const found = await env.TOKYO_R2.head(key);
-    if (!found) missingInR2.push(key);
-  }
-  const orphanInR2 = r2Keys.filter((key) => !blobKeySet.has(key));
-  const reasonKey = resolveAssetIdentityIntegrityReasonKey({
-    dbBlobCount: blobKeys.length,
-    missingInR2Count: missingInR2.length,
-    orphanInR2Count: orphanInR2.length,
-  });
-  return {
-    ok: reasonKey == null,
-    reasonKey,
-    dbBlobCount: blobKeys.length,
-    r2ObjectCount: r2Keys.length,
-    missingInR2Count: missingInR2.length,
-    orphanInR2Count: orphanInR2.length,
-    missingInR2: missingInR2.slice(0, ASSET_IDENTITY_INTEGRITY_SAMPLE_LIMIT),
-    orphanInR2: orphanInR2.slice(0, ASSET_IDENTITY_INTEGRITY_SAMPLE_LIMIT),
-  };
-}
-
-function jsonAssetIdentityIntegrityMismatch(
-  accountId: string,
-  assetId: string,
-  snapshot: AssetIdentityIntegritySnapshot,
-): Response {
-  const reasonKey = snapshot.reasonKey || 'coreui.errors.assets.integrityMismatch';
-  return json(
-    {
-      error: {
-        kind: 'INTEGRITY',
-        reasonKey,
-        detail: 'Asset metadata and stored blobs are out of sync for this asset identity.',
-      },
-      accountId,
-      assetId,
-      integrity: snapshot,
-    },
-    { status: 409 },
-  );
-}
-
-async function deleteAccountAssetMetadataWithRetries(args: {
-  env: Env;
-  accountId: string;
-  assetId: string;
-  attempts?: number;
-}): Promise<void> {
-  const attempts = Number.isFinite(args.attempts as number) ? Math.max(1, Math.floor(args.attempts as number)) : 3;
-  let lastError: unknown = null;
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    try {
-      await deleteAccountAssetByIdentity(args.env, args.accountId, args.assetId);
-      return;
-    } catch (error) {
-      lastError = error;
-      if (attempt >= attempts) break;
-      await new Promise((resolve) => setTimeout(resolve, attempt * 75));
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error(String(lastError ?? 'unknown metadata delete failure'));
-}
-
-async function sweepResidualAssetBlobs(args: {
-  env: Env;
-  accountId: string;
-  assetId: string;
-  attempts?: number;
-}): Promise<string[]> {
-  const attempts = Number.isFinite(args.attempts as number) ? Math.max(1, Math.floor(args.attempts as number)) : 2;
-  let remaining: string[] = [];
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    remaining = await listAccountAssetR2KeysByIdentity(args.env, args.accountId, args.assetId);
-    if (!remaining.length) return [];
-    await args.env.TOKYO_R2.delete(remaining);
-  }
-  return listAccountAssetR2KeysByIdentity(args.env, args.accountId, args.assetId);
-}
-
-async function buildAccountAssetMirrorIntegrity(env: Env, accountId: string): Promise<AssetMirrorIntegritySnapshot> {
-  const [storedBlobRefs, r2Keys] = await Promise.all([
-    loadAccountAssetBlobIdentitiesByAccount(env, accountId),
-    listAccountAssetR2Keys(env, accountId),
-  ]);
-  const dbKeySet = new Set<string>();
-  storedBlobRefs.forEach((ref) => dbKeySet.add(ref.r2Key));
-  const r2KeySet = new Set<string>(r2Keys);
-
-  const missingInR2 = storedBlobRefs.filter((ref) => !r2KeySet.has(ref.r2Key));
-  const orphanInR2 = r2Keys.filter((key) => !dbKeySet.has(key));
-
-  return {
-    ok: missingInR2.length === 0 && orphanInR2.length === 0,
-    dbBlobCount: storedBlobRefs.length,
-    r2ObjectCount: r2Keys.length,
-    missingInR2Count: missingInR2.length,
-    orphanInR2Count: orphanInR2.length,
-    missingInR2: missingInR2.slice(0, ASSET_INTEGRITY_SAMPLE_LIMIT),
-    orphanInR2: orphanInR2.slice(0, ASSET_INTEGRITY_SAMPLE_LIMIT),
-  };
-}
-
-async function handleUploadAccountAsset(req: Request, env: Env): Promise<Response> {
+export async function handleUploadAccountAsset(req: Request, env: Env): Promise<Response> {
   const accountId = (req.headers.get('x-account-id') || '').trim();
   if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
-  const unsupportedVariant = (req.headers.get('x-variant') || '').trim();
-  if (unsupportedVariant) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.variantUnsupported' } }, { status: 422 });
-  }
-
   const source = normalizeAccountAssetSource(req.headers.get('x-source'));
-  if (!source) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.source.invalid' } }, { status: 422 });
-  }
+  if (!source) return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.source.invalid' } }, { status: 422 });
 
-  const authorized = await resolveAccountAssetAuthorization({
-    req,
-    env,
-    accountId,
-    minRole: 'editor',
-  });
+  const authorized = await resolveAccountAssetAuthorization({ req, env, accountId, minRole: 'editor' });
   if (!authorized.ok) return authorized.response;
-  const accountAuthz = authorized.accountAuthz;
+  if (authorized.accountAuthz && authorized.accountAuthz.accountStatus !== 'active') {
+    return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
+  }
 
   const filenameRaw = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
   const filenameValidation = validateUploadFilename(filenameRaw);
   if (!filenameValidation.ok) {
-    return json(
-      {
-        error: {
-          kind: 'VALIDATION',
-          reasonKey: 'coreui.errors.filename.invalid',
-          detail: filenameValidation.detail,
-        },
-      },
-      { status: 422 },
-    );
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.filename.invalid', detail: filenameValidation.detail } }, { status: 422 });
   }
   const filename = filenameValidation.filename;
   const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
-  const ext = pickExtension(filename, contentType);
-  const assetType = classifyAccountAssetType(contentType, ext);
+  const accepted = assertAcceptedUpload({ filename, contentType });
+  if (!accepted.ok) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: accepted.reasonKey, detail: accepted.detail } }, { status: 422 });
+  }
 
   const body = await req.arrayBuffer();
   if (!body || body.byteLength === 0) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
   }
-  if (accountAuthz && accountAuthz.accountStatus !== 'active') {
-    return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
-  }
-  const assetId = crypto.randomUUID();
-  const bodySha256 = await sha256Hex(body);
-  const key = buildAccountAssetKey(accountId, assetId, filename);
-  await env.TOKYO_R2.put(key, body, { httpMetadata: { contentType } });
 
-  try {
-    await persistAccountAssetMetadata({
-      env,
-      accountId,
-      assetId,
-      key,
-      source,
+  const assetRef = filename;
+  const key = buildAccountAssetKey(accountId, assetRef);
+  const existing = await loadAccountAssetByRef(env, accountId, assetRef);
+  await env.TOKYO_R2.put(key, body, {
+    httpMetadata: { contentType },
+    customMetadata: {
+      filename,
       originalFilename: filenameRaw,
-      normalizedFilename: filename,
-      contentType,
-      assetType,
-      sizeBytes: body.byteLength,
-      sha256: bodySha256,
-    });
-  } catch (error) {
-    await env.TOKYO_R2.delete(key);
-    const detail = error instanceof Error ? error.message : String(error);
-    return json(
-      { error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.assets.metadataWriteFailed', detail } },
-      { status: 500 },
-    );
-  }
+      source,
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
+      sizeBytes: String(body.byteLength),
+    },
+  });
 
   return json(
     {
-      assetId,
+      assetRef,
       filename,
-      assetType,
+      assetType: classifyAccountAssetType(contentType, pickExtension(filename, contentType)),
       contentType,
       sizeBytes: body.byteLength,
-      createdAt: new Date().toISOString(),
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
     },
     { status: 200 },
   );
 }
 
-function respondImmutableR2Asset(
+function respondAccountAsset(
   key: string,
   obj: { body: ReadableStream | null; httpMetadata?: { contentType?: string | null } | null },
 ): Response {
@@ -446,338 +223,95 @@ function respondImmutableR2Asset(
   const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
   const headers = new Headers();
   headers.set('content-type', contentType);
-  headers.set('cache-control', 'public, max-age=31536000, immutable');
-  headers.set('cdn-cache-control', 'public, max-age=31536000, immutable');
-  headers.set('cloudflare-cdn-cache-control', 'public, max-age=31536000, immutable');
+  headers.set('cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
+  headers.set('cdn-cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
+  headers.set('cloudflare-cdn-cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
   return new Response(obj.body, { status: 200, headers });
 }
 
-async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
-  const canonical = normalizeAccountAssetReadKey(key.startsWith('/') ? key : `/${key}`);
-  const identity = canonical ? parseAccountAssetIdentityFromKey(canonical) : null;
-  if (!canonical || !identity) return new Response('Not found', { status: 404 });
-
-  const assetRow = await loadAccountAssetByIdentity(env, identity.accountId, identity.assetId);
-  if (!assetRow) return new Response('Not found', { status: 404 });
-
-  const canonicalObj = await env.TOKYO_R2.get(canonical);
-  if (canonicalObj) return respondImmutableR2Asset(canonical, canonicalObj);
-  return new Response('Not found', { status: 404 });
+export async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
+  const normalized = key.startsWith('/') ? key : `/${key}`;
+  const parsed = normalized.match(/^\/?accounts\/([0-9A-Z]{8})\/assets\/(.+)$/)
+    ? { key: normalized.replace(/^\/+/, '') }
+    : null;
+  const directKey = parsed?.key ?? null;
+  if (!directKey) return new Response('Not found', { status: 404 });
+  const obj = await env.TOKYO_R2.get(directKey);
+  return obj ? respondAccountAsset(directKey, obj) : new Response('Not found', { status: 404 });
 }
 
-async function handleListAccountAssetMetadata(
-  req: Request,
-  env: Env,
-  accountIdRaw: string,
-): Promise<Response> {
+export async function handleListAccountAssetMetadata(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
   const accountId = String(accountIdRaw || '').trim();
   if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
-  const authErr = await authorizeAccountAssetAccess({
-    req,
-    env,
-    accountId,
-    minRole: 'viewer',
-  });
+  const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'viewer' });
   if (authErr) return authErr;
-  const manifests = await listAccountAssetManifestsByAccount(env, accountId);
-  manifests.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-  const storageBytesUsed = sumAccountAssetManifestSizeBytes(manifests);
+  const files = await listAccountAssetFilesByAccount(env, accountId);
+  files.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
   return json({
     accountId,
-    storageBytesUsed,
-    assets: manifests.map((manifest) => serializeAccountAssetRecord(manifest)),
+    storageBytesUsed: sumAccountAssetFileSizeBytes(files),
+    assets: files.map((file) => serializeAccountAssetRecord(file)),
   });
 }
 
-async function handleGetAccountAssetUsage(
-  req: Request,
-  env: Env,
-  accountIdRaw: string,
-): Promise<Response> {
+export async function handleGetAccountAssetUsage(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
   const accountId = String(accountIdRaw || '').trim();
   if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
-  const authErr = await authorizeAccountAssetAccess({
-    req,
-    env,
-    accountId,
-    minRole: 'viewer',
-  });
+  const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'viewer' });
   if (authErr) return authErr;
-
-  const storageBytesUsed = await loadAccountStoredBytesUsage(env, accountId);
-  return json({
-    accountId,
-    storageBytesUsed,
-  });
+  return json({ accountId, storageBytesUsed: await loadAccountStoredBytesUsage(env, accountId) });
 }
 
-async function handleResolveAccountAssetMetadata(
-  req: Request,
-  env: Env,
-  accountIdRaw: string,
-): Promise<Response> {
+export async function handleResolveAccountAssetMetadata(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
   const accountId = String(accountIdRaw || '').trim();
   if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
-  const authErr = await authorizeAccountAssetAccess({
-    req,
-    env,
-    accountId,
-    minRole: 'viewer',
-  });
+  const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'viewer' });
   if (authErr) return authErr;
-
-  const body = (await req.json().catch(() => null)) as { assetIds?: unknown } | null;
-  const rawAssetIds = Array.isArray(body?.assetIds) ? body.assetIds : null;
-  if (!rawAssetIds) {
-    return json(
-      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidPayload' } },
-      { status: 422 },
-    );
+  const body = (await req.json().catch(() => null)) as { assetRefs?: unknown } | null;
+  const rawAssetRefs = Array.isArray(body?.assetRefs) ? body.assetRefs : null;
+  if (!rawAssetRefs) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidPayload' } }, { status: 422 });
   }
-
   const seen = new Set<string>();
-  const assetIds = rawAssetIds
-    .map((entry) => String(entry || '').trim())
-    .filter((assetId) => {
-      if (!assetId || !isUuid(assetId) || seen.has(assetId)) return false;
-      seen.add(assetId);
+  const assetRefs = rawAssetRefs
+    .map((entry) => normalizeAssetRef(entry))
+    .filter((assetRef): assetRef is string => {
+      if (!assetRef || seen.has(assetRef)) return false;
+      seen.add(assetRef);
       return true;
     });
-
-  if (assetIds.length !== rawAssetIds.length) {
-    return json(
-      { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidAssetIds' } },
-      { status: 422 },
-    );
+  if (assetRefs.length !== rawAssetRefs.length) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidAssetRefs' } }, { status: 422 });
   }
 
   const publicBaseUrl = resolveTokyoAssetPublicBaseUrl(env, req);
-  const resolvedEntries = await Promise.all(
-    assetIds.map(async (assetId) => ({
-      assetId,
-      manifest: await loadAccountAssetManifestByIdentity(env, accountId, assetId),
-    })),
+  const resolved = await Promise.all(
+    assetRefs.map(async (assetRef) => ({ assetRef, file: await loadAccountAssetByRef(env, accountId, assetRef) })),
   );
-
-  const assets: Record<string, unknown>[] = [];
-  const missingAssetIds: string[] = [];
-
-  for (const entry of resolvedEntries) {
-    if (!entry.manifest) {
-      missingAssetIds.push(entry.assetId);
-      continue;
-    }
-    assets.push(serializeResolvedAccountAsset(entry.manifest, publicBaseUrl));
-  }
-
   return json({
     accountId,
-    assets,
-    missingAssetIds,
+    assets: resolved.filter((entry) => entry.file).map((entry) => serializeResolvedAccountAsset(entry.file!, publicBaseUrl)),
+    missingAssetRefs: resolved.filter((entry) => !entry.file).map((entry) => entry.assetRef),
   });
 }
 
-async function handleGetAccountAssetIdentityIntegrity(
-  req: Request,
-  env: Env,
-  accountIdRaw: string,
-  assetIdRaw: string,
-): Promise<Response> {
-  const authErr = requireDevAuth(req, env, {
-    allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
-  });
-  if (authErr) return authErr;
+export async function handleDeleteAccountAsset(req: Request, env: Env, accountIdRaw: string, assetRefRaw: string): Promise<Response> {
   const accountId = String(accountIdRaw || '').trim();
   if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
-  const assetId = String(assetIdRaw || '').trim();
-  if (!assetId || !isUuid(assetId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' } }, { status: 422 });
-  }
-
-  const existing = await loadAccountAssetByIdentity(env, accountId, assetId);
-  if (!existing) {
-    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
-  }
-
-  const snapshot = await buildAccountAssetIdentityIntegrity(env, accountId, assetId);
-  if (snapshot.ok) {
-    return json({
-      accountId,
-      assetId,
-      integrity: snapshot,
-    });
-  }
-  return jsonAssetIdentityIntegrityMismatch(accountId, assetId, snapshot);
-}
-
-async function handleGetAccountAssetMirrorIntegrity(
-  req: Request,
-  env: Env,
-  accountIdRaw: string,
-): Promise<Response> {
-  const authErr = requireDevAuth(req, env, {
-    allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
-  });
+  const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'editor' });
   if (authErr) return authErr;
-  const accountId = String(accountIdRaw || '').trim();
-  if (!accountId || !isCompactAccountPublicId(accountId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
-  }
-
-  const snapshot = await buildAccountAssetMirrorIntegrity(env, accountId);
-  if (snapshot.ok) {
-    return json({
-      accountId,
-      integrity: snapshot,
-    });
-  }
-
-  return json(
-    {
-      error: {
-        kind: 'INTEGRITY',
-        reasonKey: 'coreui.errors.assets.integrityMismatch',
-        detail: 'Account asset metadata and R2 namespace are out of sync.',
-      },
-      accountId,
-      integrity: snapshot,
-    },
-    { status: 409 },
-  );
+  const assetRef = normalizeAssetRef(assetRefRaw);
+  if (!assetRef) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetRef.invalid' } }, { status: 422 });
+  const existing = await loadAccountAssetByRef(env, accountId, assetRef);
+  if (!existing) return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
+  await deleteAccountAssetByRef(env, accountId, assetRef);
+  return json({ accountId, assetRef, deleted: true }, { status: 200 });
 }
-
-async function handleDeleteAccountAsset(
-  req: Request,
-  env: Env,
-  accountIdRaw: string,
-  assetIdRaw: string,
-): Promise<Response> {
-  const accountId = String(accountIdRaw || '').trim();
-  if (!accountId || !isCompactAccountPublicId(accountId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
-  }
-  const authErr = await authorizeAccountAssetAccess({
-    req,
-    env,
-    accountId,
-    minRole: 'editor',
-  });
-  if (authErr) return authErr;
-  const assetId = String(assetIdRaw || '').trim();
-  if (!assetId || !isUuid(assetId)) {
-    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetId.invalid' } }, { status: 422 });
-  }
-
-  const existing = await loadAccountAssetByIdentity(env, accountId, assetId);
-  if (!existing) {
-    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
-  }
-
-  const integritySnapshot = await buildAccountAssetIdentityIntegrity(env, accountId, assetId);
-  if (!integritySnapshot.ok) {
-    return jsonAssetIdentityIntegrityMismatch(accountId, assetId, integritySnapshot);
-  }
-
-  const blobKeys = await loadAccountAssetBlobKeys(env, accountId, assetId);
-  try {
-    if (blobKeys.length) {
-      await env.TOKYO_R2.delete(blobKeys);
-    }
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.db.writeFailed',
-          detail: `failed to delete asset blobs: ${detail}`,
-        },
-      },
-      { status: 500 },
-    );
-  }
-
-  try {
-    await deleteAccountAssetMetadataWithRetries({ env, accountId, assetId, attempts: 3 });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.db.writeFailed',
-          detail,
-        },
-      },
-      { status: 500 },
-    );
-  }
-
-  try {
-    const residualKeys = await sweepResidualAssetBlobs({ env, accountId, assetId, attempts: 2 });
-    if (residualKeys.length > 0) {
-      return json(
-        {
-          error: {
-            kind: 'INTEGRITY',
-            reasonKey: 'coreui.errors.assets.integrityMismatch',
-            detail: `Residual blobs remain after delete (${residualKeys.length})`,
-          },
-          accountId,
-          assetId,
-          integrity: {
-            ok: false,
-            reasonKey: ASSET_INTEGRITY_REASON_ORPHAN_BLOB,
-            dbBlobCount: 0,
-            r2ObjectCount: residualKeys.length,
-            missingInR2Count: 0,
-            orphanInR2Count: residualKeys.length,
-            missingInR2: [],
-            orphanInR2: residualKeys.slice(0, ASSET_IDENTITY_INTEGRITY_SAMPLE_LIMIT),
-          },
-        },
-        { status: 409 },
-      );
-    }
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return json(
-      {
-        error: {
-          kind: 'INTERNAL',
-          reasonKey: 'coreui.errors.db.writeFailed',
-          detail,
-        },
-      },
-      { status: 500 },
-    );
-  }
-
-  return json(
-    {
-      accountId,
-      assetId,
-      deleted: true,
-    },
-    { status: 200 },
-  );
-}
-
-export {
-  handleDeleteAccountAsset,
-  handleGetAccountAsset,
-  handleGetAccountAssetIdentityIntegrity,
-  handleGetAccountAssetUsage,
-  handleListAccountAssetMetadata,
-  handleResolveAccountAssetMetadata,
-  handleGetAccountAssetMirrorIntegrity,
-  handleUploadAccountAsset,
-};

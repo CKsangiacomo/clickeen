@@ -79,11 +79,11 @@ tokyo/product/themes/themes.json -> Bob compiles theme dropdown/presets from loc
 -> runtime reads final state only
 ```
 
-Embed flow (Venice):
+Embed flow (PRD 100 static):
 ```
-Browser -> Venice /widget/{accountPublicId}/{instanceId}?locale=...
--> Venice loads account-scoped live projection + config pack + published overlay values + widget files (Tokyo)
--> Venice injects window.CK_WIDGET (state + locale) -> widget.client.js applyState
+Browser -> clk.live/{accountPublicId}/{instanceId}
+-> static serving reads generated browser files from the account instance folder
+-> widget client behavior runs from the generated support files only
 ```
 
 postMessage payload (Bob -> preview):

@@ -9,7 +9,7 @@ export type GradientValue = {
 };
 
 export type ImageValue = {
-  assetId?: string;
+  assetRef?: string;
   name?: string;
   fit?: 'cover' | 'contain';
   position?: string;
@@ -17,9 +17,9 @@ export type ImageValue = {
 };
 
 export type VideoValue = {
-  assetId?: string;
+  assetRef?: string;
   name?: string;
-  posterAssetId?: string;
+  posterAssetRef?: string;
   fit?: 'cover' | 'contain';
   position?: string;
   loop?: boolean;

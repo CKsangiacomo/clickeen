@@ -16,9 +16,9 @@ Generated instance embed output references account assets from the account libra
 
 In-place replacement of an account asset keeps the same account asset reference and must not require rebuilding instances that reference it.
 
-The account asset library is not a blob registry, not a hash-addressed storage model, and not a second public identity system.
+The account asset library is not a generated-ID registry, not a hash-derived storage model, and not a second public identity system.
 
-Do not introduce a second public asset namespace, account asset hash folders, account asset blob versioning, or immutable asset histories as product behavior.
+Do not introduce a second public asset namespace, account asset hash folders, account asset byte-versioning, or immutable asset histories as product behavior.
 
 ## Naming Boundary
 
@@ -75,27 +75,23 @@ Only accepted files are written into the account `assets/` folder.
 
 The embed agent is not an asset manager.
 
-The embed agent must not mint asset IDs, invent public asset URLs, hash files, create blob folders, version assets, or decide account asset serving.
+The embed agent must not mint asset identities, invent public asset URLs, hash files, create generated storage indirection, version assets, or decide account asset serving.
 
 If generated HTML/CSS/JS needs an account asset, it consumes the account asset reference saved in the instance source and resolves it through the one Roma/Tokyo account asset library contract.
 
 Asset byte replacement is handled by the account asset serving layer, not by rebuilding every referencing instance.
 
-## Current Implementation Drift
+## Removed Implementation Drift
 
-The current implementation still contains pre-PRD100 drift:
+PRD 100 removes this old account asset shape from active product contracts:
 
-- generated UUID `assetId` is used as asset identity
-- bytes are stored under an internal `blob/` segment
+- generated UUID identity for account uploads
+- internal byte indirection under each uploaded file
 - metadata is stored in per-asset `manifest.json`
-- `sha256` is recorded as asset metadata
-- resolved URLs are built from `accountPublicId`, `assetId`, and filename
+- content hashes recorded as product-facing asset metadata
+- resolved URLs built from multiple generated identity pieces plus filename
 
-That shape is implementation reality, not product truth.
-
-PRD 100 slice `100F` must realign the account asset contract with the library model above and define the migration/cleanup path for any pre-GA uploaded test assets.
-
-Old implementation shape must not leak into new generated embed architecture.
+Old implementation shape must not leak into generated embed architecture, Bob controls, Roma library APIs, or Tokyo-worker account asset serving.
 
 ## Surface Ownership
 
@@ -114,4 +110,4 @@ Old implementation shape must not leak into new generated embed architecture.
 - In-place account asset byte replacement does not require instance rebuilds.
 - Unsafe uploads are rejected before becoming account assets.
 - Clickeen-owned product files are called `media`, not assets.
-- Old UUID/blob/manifest implementation shape is either removed or explicitly contained as pre-GA migration/cleanup work.
+- Old generated-ID/manifest implementation shape is removed from active product APIs and generated embeds.

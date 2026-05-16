@@ -1,39 +1,16 @@
 # System: Venice
 
-STATUS: SUPERSEDED FOR PUBLIC WIDGET SERVING BY PRD 100
+STATUS: REMOVED FROM PUBLIC WIDGET SERVING BY PRD 100F
 
-PRD 100 removes Venice from the normal public embed hot path.
+Venice is no longer an active product service for public widget delivery.
 
-Public widget serving target:
+The surviving public serving contract is:
 
-```text
-public visitor -> embed.clickeen.com/{publicEmbedId} -> cached static files
+```txt
+https://clk.live/{accountPublicId}/{instanceId}
+  -> accounts/{accountPublicId}/instances/{instanceId}/index.html
 ```
 
-Not:
+Public widget views are static file delivery from Tokyo/R2 through the `clk.live` serving surface. The browser must not call a Venice runtime to resolve identity, fetch config, apply overlays, assemble HTML, or proxy widget software.
 
-```text
-public visitor -> Venice -> config/overlay/render decision
-```
-
-Because Clickeen is pre-GA, old Venice runtime embed routes do not require customer compatibility. They may be deleted, blocked, or replaced as part of PRD 100.
-
-If any Venice route remains during PRD 100 execution, it is dev-only scaffolding for local/internal verification. It must not appear in copied embed code, define production architecture, own account lifecycle behavior, or become a public serving dependency.
-
-Venice must not:
-
-- fetch instance config JSON for public views
-- fetch overlay JSON for public views
-- apply overlays
-- fetch widget HTML and assemble a response
-- run publish/unpublish policy
-- call Roma, Bob, Berlin, Michael, or San Francisco
-- resolve account storage on normal public traffic
-
-The copied embed code is:
-
-```text
-https://embed.clickeen.com/{publicEmbedId}
-```
-
-Any remaining Venice code must be treated as removal/migration work under PRD 100 slice `100I`.
+Because Clickeen is pre-GA, old Venice routes and loaders were deleted rather than preserved as compatibility shims.

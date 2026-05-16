@@ -85,7 +85,7 @@ accounts/{accountPublicId}/instances/{instanceId}/selected-overlays/{languageCod
 Published public copies live at:
 
 ```txt
-accounts/{accountPublicId}/instances/{instanceId}/published/overlays/{overlayId}.json
+accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json
 ```
 
 The body contains only values. It does not contain locale, account, instance, readiness, job state, base revision, fingerprint, hash identity, or storage path. Identity lives in `overlayId`; ownership and containment live in the account instance path. `widgetCode` is codebook metadata inside `overlayId`, not an R2 path segment for locating storage.

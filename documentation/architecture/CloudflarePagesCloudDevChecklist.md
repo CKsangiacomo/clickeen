@@ -46,7 +46,7 @@ Env contract:
 | Variable | Required | Cloud-dev value | Source-of-truth owner |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `bob/wrangler.toml` |
-| `NEXT_PUBLIC_VENICE_URL` | yes | `https://venice.dev.clickeen.com` | `bob/wrangler.toml` |
+| `NEXT_PUBLIC_CLK_LIVE_URL` | optional | `https://clk.live` | `bob/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `bob/wrangler.toml` |
 | `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |
 | `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | Cloudflare Pages dashboard + GitHub Actions env |
@@ -93,31 +93,9 @@ Dashboard action:
 - Configure the `TOKYO_PRODUCT_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
 - Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`
 
-## Venice
+## Public Embeds
 
-Project:
-- `venice-dev`
-
-Git settings:
-- Repo: `CKsangiacomo/clickeen`
-- Production branch: `main`
-- Root directory: `venice`
-- Build command: `pnpm build:cf`
-- Output directory: `.vercel/output/static`
-- Deploy trigger: Git-connected Cloudflare Pages build only
-
-Public host:
-- Canonical host: `https://venice.dev.clickeen.com`
-- Required: yes
-
-Env contract:
-
-| Variable | Required | Cloud-dev value | Source-of-truth owner |
-| --- | --- | --- | --- |
-| `TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | Cloudflare Pages dashboard |
-
-Dashboard action:
-- Keep this runtime var in the Cloudflare Pages dashboard.
+Public widget serving is not a Pages project. PRD 100F routes public embeds through `clk.live` static serving backed by Tokyo/R2 generated instance files.
 
 ## Prague
 
@@ -141,7 +119,7 @@ Env contract:
 | Variable | Required | Cloud-dev value | Source-of-truth owner |
 | --- | --- | --- | --- |
 | `PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | Cloudflare Pages dashboard |
-| `PUBLIC_VENICE_URL` | yes | `https://venice.dev.clickeen.com` | Cloudflare Pages dashboard |
+| `PUBLIC_CLK_LIVE_URL` | optional | `https://clk.live` | Cloudflare Pages dashboard |
 | `PUBLIC_ROMA_URL` | yes | `https://roma.dev.clickeen.com` | Cloudflare Pages dashboard |
 
 Dashboard action:
@@ -196,14 +174,14 @@ Rules:
 
 ## PRD 63 Completion Proof
 
-- Bob, Roma, Venice, and Prague are Git-connected Pages projects.
-- Git build is the active deploy behavior for Bob, Roma, Venice, and Prague.
+- Bob, Roma, and Prague are Git-connected Pages projects.
+- Git build is the active deploy behavior for Bob, Roma, and Prague.
 - Bob and Roma non-secret vars are present in `wrangler.toml`, not duplicated in the Cloudflare dashboard.
-- Venice and Prague runtime vars are present in the Cloudflare dashboard.
+- Prague runtime vars are present in the Cloudflare dashboard.
 - Bob and Roma custom-domain bindings are active on `*.dev.clickeen.com`.
 - No GitHub workflow still creates Pages projects, syncs Pages secrets, or deploys Pages artifacts.
 - Verified cloud-dev host behavior on 2026-03-10:
   - `https://bob.dev.clickeen.com/bob` returns `200`
   - `https://roma.dev.clickeen.com/home` redirects to login when unauthenticated
-  - `https://venice.dev.clickeen.com/embed/latest/loader.js` returns `200`
+  - `https://clk.live/{accountPublicId}/{instanceId}` returns generated static HTML for a known published instance
   - `https://prague.dev.clickeen.com/us/en/` returns `200`

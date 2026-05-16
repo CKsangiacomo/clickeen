@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const DEFAULT_ROMA_BASE = 'https://roma.dev.clickeen.com';
-const DEFAULT_VENICE_BASE = 'https://venice.dev.clickeen.com';
+const DEFAULT_CLK_LIVE_BASE = 'https://clk.live';
 const DEFAULT_TIMEOUT_MS = 20_000;
 const DEFAULT_CONCURRENCY = 6;
 
@@ -15,16 +15,16 @@ const ONE_BY_ONE_GIF = new Uint8Array([
 function printUsage() {
   console.log(`Usage: pnpm health:product-path [options]
 
-Runs product-path smoke checks against Roma and Venice.
+Runs product-path smoke checks against Roma and clk.live static serving.
 
 Required for authenticated checks:
   --cookie <cookie>            Roma browser cookie header. Also reads CK_ROMA_COOKIE or ROMA_COOKIE.
 
 Options:
   --roma-base <url>            Roma base URL (default: ${DEFAULT_ROMA_BASE})
-  --venice-base <url>          Venice base URL (default: ${DEFAULT_VENICE_BASE})
-  --account-public-id <id>     Account public ID for Venice read checks
-  --instance-id <id>           Published instanceId for Venice read checks
+  --clk-base <url>             clk.live base URL (default: ${DEFAULT_CLK_LIVE_BASE})
+  --account-public-id <id>     Account public ID for static public read checks
+  --instance-id <id>           Published instanceId for static public read checks
   --source-instance-id <id>    Account instanceId to duplicate during --write checks
   --concurrency <n>            Concurrent auth/account probes (default: ${DEFAULT_CONCURRENCY})
   --timeout-ms <n>             Request timeout (default: ${DEFAULT_TIMEOUT_MS})
@@ -38,10 +38,10 @@ Options:
 function parseArgs(argv) {
   const args = {
     romaBase: process.env.ROMA_BASE_URL || process.env.CK_ROMA_BASE_URL || DEFAULT_ROMA_BASE,
-    veniceBase: process.env.VENICE_BASE_URL || process.env.CK_VENICE_BASE_URL || DEFAULT_VENICE_BASE,
+    clkBase: process.env.CLK_LIVE_BASE_URL || process.env.CK_CLK_LIVE_BASE_URL || DEFAULT_CLK_LIVE_BASE,
     cookie: process.env.CK_ROMA_COOKIE || process.env.ROMA_COOKIE || '',
-    accountPublicId: process.env.CK_HEALTH_ACCOUNT_PUBLIC_ID || process.env.VENICE_ACCOUNT_PUBLIC_ID || '',
-    instanceId: process.env.CK_HEALTH_INSTANCE_ID || process.env.VENICE_INSTANCE_ID || '',
+    accountPublicId: process.env.CK_HEALTH_ACCOUNT_PUBLIC_ID || process.env.CLK_LIVE_ACCOUNT_PUBLIC_ID || '',
+    instanceId: process.env.CK_HEALTH_INSTANCE_ID || process.env.CLK_LIVE_INSTANCE_ID || '',
     sourceInstanceId: process.env.CK_HEALTH_SOURCE_INSTANCE_ID || '',
     concurrency: DEFAULT_CONCURRENCY,
     timeoutMs: DEFAULT_TIMEOUT_MS,
@@ -75,8 +75,8 @@ function parseArgs(argv) {
       i += 1;
       continue;
     }
-    if (token === '--venice-base') {
-      args.veniceBase = String(argv[i + 1] || '').trim();
+    if (token === '--clk-base') {
+      args.clkBase = String(argv[i + 1] || '').trim();
       i += 1;
       continue;
     }
@@ -114,7 +114,7 @@ function parseArgs(argv) {
   }
 
   args.romaBase = normalizeBaseUrl(args.romaBase, 'roma-base');
-  args.veniceBase = normalizeBaseUrl(args.veniceBase, 'venice-base');
+  args.clkBase = normalizeBaseUrl(args.clkBase, 'clk-base');
   args.cookie = normalizeCookie(args.cookie);
   args.accountPublicId = args.accountPublicId.trim();
   args.instanceId = args.instanceId.trim();
@@ -373,7 +373,7 @@ async function runAssetRead(runner) {
 }
 
 async function runAssetWrite(runner) {
-  let assetId = '';
+  let assetRef = '';
   await runner.check('Roma asset upload/delete', 'roma.assets', async () => {
     const filename = `ck-health-${Date.now().toString(36)}.gif`;
     const upload = await runner.request(runner.args.romaBase, '/api/account/assets/upload', {
@@ -386,15 +386,15 @@ async function runAssetWrite(runner) {
       body: ONE_BY_ONE_GIF,
     });
     assert2xx(upload, 'POST /api/account/assets/upload');
-    if (!isRecord(upload.payload) || typeof upload.payload.assetId !== 'string') {
-      throw new Error('upload payload missing assetId');
+    if (!isRecord(upload.payload) || typeof upload.payload.assetRef !== 'string') {
+      throw new Error('upload payload missing assetRef');
     }
-    assetId = upload.payload.assetId;
-    const cleanup = await runner.request(runner.args.romaBase, `/api/account/assets/${encodeURIComponent(assetId)}`, {
+    assetRef = upload.payload.assetRef;
+    const cleanup = await runner.request(runner.args.romaBase, `/api/account/assets/${encodeURIComponent(assetRef)}`, {
       method: 'DELETE',
     });
-    assert2xx(cleanup, `DELETE /api/account/assets/${assetId}`);
-    return `uploaded and deleted ${assetId}`;
+    assert2xx(cleanup, `DELETE /api/account/assets/${assetRef}`);
+    return `uploaded and deleted ${assetRef}`;
   });
 }
 
@@ -434,26 +434,17 @@ async function runDuplicateWrite(runner, sourceInstance) {
   return createdInstanceId || null;
 }
 
-async function runVenice(runner, accountPublicId, instanceId) {
-  await runner.check('Venice loader', 'venice.public', async () => {
-    const result = await runner.request(runner.args.veniceBase, '/embed/latest/loader.js');
-    assert2xx(result, 'GET /embed/latest/loader.js');
-    return `HTTP ${result.status}`;
-  });
-
+async function runStaticPublicServing(runner, accountPublicId, instanceId) {
   if (!accountPublicId || !instanceId) {
-    runner.skip('Venice public instance read', 'venice.public', 'no accountPublicId or published instanceId supplied or discovered');
+    runner.skip('clk.live public instance read', 'clk.public', 'no accountPublicId or published instanceId supplied or discovered');
     return;
   }
 
-  await runner.check('Venice public instance read', 'venice.public', async () => {
-    const pointer = await runner.request(
-      runner.args.veniceBase,
-      `/renders/accounts/${encodeURIComponent(accountPublicId)}/instances/${encodeURIComponent(instanceId)}/live/r.json`,
-    );
-    assert2xx(pointer, `GET /renders/accounts/${accountPublicId}/instances/${instanceId}/live/r.json`);
-    const embed = await runner.request(runner.args.veniceBase, `/widget/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`);
-    assert2xx(embed, `GET /widget/${accountPublicId}/${instanceId}`);
+  await runner.check('clk.live public instance read', 'clk.public', async () => {
+    const embed = await runner.request(runner.args.clkBase, `/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`);
+    assert2xx(embed, `GET /${accountPublicId}/${instanceId}`);
+    const privateSource = await runner.request(runner.args.clkBase, `/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}/instance.json`);
+    assertHttp(privateSource, 404, `GET /${accountPublicId}/${instanceId}/instance.json`);
     return `${accountPublicId}/${instanceId}`;
   });
 }
@@ -476,7 +467,7 @@ async function main() {
   const runner = new HealthRunner(args);
 
   await runUnauthenticatedBoundary(runner);
-  await runVenice(runner, args.publicOnly ? args.accountPublicId : '', args.publicOnly ? args.instanceId : '');
+  await runStaticPublicServing(runner, args.publicOnly ? args.accountPublicId : '', args.publicOnly ? args.instanceId : '');
 
   if (args.publicOnly) {
     printResults(runner.results, args.json);
@@ -509,7 +500,7 @@ async function main() {
 
   const publishedInstanceId = args.instanceId || selectPublishedInstance(instances)?.instanceId || '';
   const accountPublicId = args.accountPublicId || (await loadBootstrapAccountPublicId(runner));
-  await runVenice(runner, accountPublicId, publishedInstanceId);
+  await runStaticPublicServing(runner, accountPublicId, publishedInstanceId);
 
   printResults(runner.results, args.json);
   process.exit(runner.results.some((result) => !result.ok) ? 1 : 0);

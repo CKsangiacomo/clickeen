@@ -3,9 +3,9 @@ import type { AccountAssetsClient } from './account-assets';
 
 type ResolveSingleAccountAssetArgs = {
   accountAssets: AccountAssetsClient;
-  getAssetId: () => string;
+  getAssetRef: () => string;
   beginRequest: () => number;
-  isCurrent: (requestId: number, assetId: string) => boolean;
+  isCurrent: (requestId: number, assetRef: string) => boolean;
   onStart?: () => void;
   onMissing: () => void;
   onResolved: (asset: ResolvedAccountAsset) => void;
@@ -13,26 +13,26 @@ type ResolveSingleAccountAssetArgs = {
 };
 
 export async function resolveSingleAccountAsset(args: ResolveSingleAccountAssetArgs): Promise<void> {
-  const assetId = String(args.getAssetId() || '').trim();
+  const assetRef = String(args.getAssetRef() || '').trim();
   const requestId = args.beginRequest();
   args.onStart?.();
-  if (!assetId) return;
+  if (!assetRef) return;
 
   try {
-    const { assetsById, missingAssetIds } = await args.accountAssets.resolveAssets([assetId]);
-    if (!args.isCurrent(requestId, assetId)) return;
-    if (missingAssetIds.includes(assetId)) {
+    const { assetsByRef, missingAssetRefs } = await args.accountAssets.resolveAssets([assetRef]);
+    if (!args.isCurrent(requestId, assetRef)) return;
+    if (missingAssetRefs.includes(assetRef)) {
       args.onMissing();
       return;
     }
-    const asset = assetsById.get(assetId);
+    const asset = assetsByRef.get(assetRef);
     if (!asset) {
       args.onMissing();
       return;
     }
     args.onResolved(asset);
   } catch (error) {
-    if (!args.isCurrent(requestId, assetId)) return;
+    if (!args.isCurrent(requestId, assetRef)) return;
     args.onError(error instanceof Error ? error.message : 'coreui.errors.db.readFailed');
   }
 }

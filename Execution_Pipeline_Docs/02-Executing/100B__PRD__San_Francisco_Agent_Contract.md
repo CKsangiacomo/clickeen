@@ -199,7 +199,6 @@ any publicly available state -> unavailable
 - latest successful translation version by locale
 - latest queued embed version
 - latest successful embed version
-- widget software version used by the last successful embed build
 - last failure summary for Roma Widgets
 
 Failure summaries must be explicit and bounded. They should identify the failed phase, locale when relevant, job id, source version, and retry state. They must not store provider prompts, secrets, or large logs in `instance.json`.
@@ -240,7 +239,6 @@ If the conditional status write fails because a newer save exists, the job exits
 - Older jobs cannot mark newer saves ready.
 - Agent outputs do not create extra top-level JSON truth.
 - Generated public code does not call Clickeen internal product/config endpoints on normal visitor views.
-- Widget software version used by the last successful embed build is recorded in `instance.json`.
 
 ## Implementation Notes
 

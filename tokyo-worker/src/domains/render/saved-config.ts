@@ -1,13 +1,9 @@
 import type { Env } from '../../types';
-import {
-  accountInstanceConfigKey,
-  accountInstanceDocumentKey,
-  accountInstancePublishKey,
-} from './keys';
+import { normalizeLocale } from '../../asset-utils';
+import { accountInstanceDocumentKey } from './keys';
 import { patchAccountInstanceIndexEntry, resolveAccountInstanceLocation } from './instance-index';
 import {
   normalizeAccountInstanceDocument,
-  normalizePublishDocument,
   normalizeSavedRenderPointer,
   resolveSavedRenderValidationReason,
 } from './normalize';
@@ -20,7 +16,7 @@ import type {
   SavedRenderDocumentReadResult,
   SavedRenderPointer,
 } from './types';
-import { jsonSha256Hex, normalizeStorageId } from './utils';
+import { normalizeStorageId } from './utils';
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -36,20 +32,70 @@ function normalizeMeta(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function toSavedPointer(args: {
-  instance: AccountInstanceDocument;
-  configFp: string;
-}): SavedRenderPointer {
+function normalizeLocaleArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return Array.from(new Set(value.map((entry) => normalizeLocale(entry)).filter((entry): entry is string => Boolean(entry))));
+}
+
+function resolveBaseLocale(meta: Record<string, unknown> | null, existing?: AccountInstanceDocument | null): string {
+  const fromMeta = normalizeLocale(meta?.baseLocale);
+  return fromMeta ?? existing?.baseLocale ?? 'en';
+}
+
+function resolveTargetLocales(meta: Record<string, unknown> | null, existing?: AccountInstanceDocument | null): string[] {
+  const fromMeta = normalizeLocaleArray(meta?.targetLocales);
+  return fromMeta.length > 0 ? fromMeta : existing?.targetLocales ?? [];
+}
+
+function resolveEmbedBuildShape(args: {
+  baseLocale: string;
+  targetLocales: string[];
+  existing?: AccountInstanceDocument | null;
+}): AccountInstanceDocument['embedBuildShape'] {
+  const locales = Array.from(new Set([args.baseLocale, ...args.targetLocales]));
+  return {
+    rendering: args.existing?.embedBuildShape.rendering ?? 'html',
+    seoMode: args.existing?.embedBuildShape.seoMode ?? 'off',
+    locales,
+    clientSide: args.existing?.embedBuildShape.clientSide ?? 'minimal-js',
+  };
+}
+
+function buildGenerationState(args: {
+  sourceVersion: number;
+  previous?: AccountInstanceDocument | null;
+  now: string;
+}): AccountInstanceDocument['generation'] {
+  const previous = args.previous?.generation;
+  return {
+    translations: {
+      status: 'queued',
+      sourceVersion: args.sourceVersion,
+      requestedAt: args.now,
+      updatedAt: args.now,
+    },
+    embed: {
+      status: previous?.embed.status === 'ready' ? 'stale' : 'queued',
+      sourceVersion: args.sourceVersion,
+      requestedAt: args.now,
+      updatedAt: args.now,
+    },
+  };
+}
+
+function toSavedPointer(instance: AccountInstanceDocument): SavedRenderPointer {
   return {
     v: 1,
-    id: args.instance.id,
-    accountId: args.instance.accountId,
-    widgetCode: args.instance.widgetCode,
-    widgetType: args.instance.widgetType,
-    displayName: args.instance.displayName,
-    meta: args.instance.meta ?? null,
-    configFp: args.configFp,
-    updatedAt: args.instance.updatedAt,
+    id: instance.id,
+    accountId: instance.accountId,
+    widgetCode: instance.widgetCode,
+    widgetType: instance.widgetType,
+    displayName: instance.displayName,
+    meta: instance.meta ?? null,
+    sourceVersion: instance.sourceVersion,
+    generation: instance.generation,
+    publishStatus: instance.publishStatus,
+    updatedAt: instance.updatedAt,
   };
 }
 
@@ -74,30 +120,38 @@ export async function writeSavedRenderConfig(args: {
   }
 
   const now = nowIso();
-  const configFp = await jsonSha256Hex(args.config);
-  await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), args.config);
-
   const existing = normalizeAccountInstanceDocument(
     await loadJson(args.env, accountInstanceDocumentKey(accountId, widgetCode, instanceId)),
   );
+  const sourceVersion = (existing?.sourceVersion ?? 0) + 1;
 
-  const instance: AccountInstanceDocument & { configFp: string } = {
+  const meta = normalizeMeta(args.meta);
+  const baseLocale = resolveBaseLocale(meta, existing);
+  const targetLocales = resolveTargetLocales(meta, existing);
+  const instance: AccountInstanceDocument = {
     v: 1,
     id: instanceId,
     accountId,
+    accountPublicId: accountId,
     widgetCode,
     widgetType,
     displayName: normalizeDisplayName(args.displayName),
-    meta: normalizeMeta(args.meta),
+    meta,
+    config: args.config,
+    baseLocale,
+    targetLocales,
+    embedBuildShape: resolveEmbedBuildShape({ baseLocale, targetLocales, existing }),
+    sourceVersion,
+    generation: buildGenerationState({ sourceVersion, previous: existing, now }),
+    publishStatus: existing?.publishStatus ?? 'unpublished',
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
-    configFp,
   };
 
   await putJson(args.env, accountInstanceDocumentKey(accountId, widgetCode, instanceId), instance);
   await patchAccountInstanceIndexEntry({ env: args.env, accountId, widgetType, instanceId });
   return {
-    pointer: toSavedPointer({ instance, configFp }),
+    pointer: toSavedPointer(instance),
   };
 }
 
@@ -122,12 +176,7 @@ export async function readSavedRenderPointer(args: {
   const raw = await loadJson(args.env, accountInstanceDocumentKey(location.accountId, location.widgetCode, location.instanceId));
   if (!raw) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' };
   const instance = normalizeAccountInstanceDocument(raw);
-  const pointer = instance
-    ? normalizeSavedRenderPointer({
-        ...instance,
-        configFp: (raw as Record<string, unknown>).configFp,
-      })
-    : null;
+  const pointer = instance ? normalizeSavedRenderPointer(instance) : null;
   if (!pointer) {
     return { ok: false, kind: 'VALIDATION', reasonKey: resolveSavedRenderValidationReason(raw) };
   }
@@ -146,14 +195,13 @@ export async function readSavedRenderConfig(args: {
   const pointerResult = await readSavedRenderPointer(args);
   if (!pointerResult.ok) return pointerResult;
   const pointer = pointerResult.value;
-  const config = await loadJson<Record<string, unknown>>(
-    args.env,
-    accountInstanceConfigKey(pointer.accountId, pointer.widgetCode, pointer.id),
+  const instance = normalizeAccountInstanceDocument(
+    await loadJson(args.env, accountInstanceDocumentKey(pointer.accountId, pointer.widgetCode, pointer.id)),
   );
-  if (!config || typeof config !== 'object' || Array.isArray(config)) {
+  if (!instance || !instance.config || typeof instance.config !== 'object' || Array.isArray(instance.config)) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.config.invalid' };
   }
-  return { ok: true, value: { pointer, config } };
+  return { ok: true, value: { pointer, config: instance.config } };
 }
 
 export async function readInstanceServeState(args: {
@@ -172,8 +220,40 @@ export async function readInstanceServeState(args: {
     widgetType: args.widgetType,
   });
   if (!location) return 'unpublished';
-  const publish = normalizePublishDocument(
-    await loadJson(args.env, accountInstancePublishKey(location.accountId, location.widgetCode, location.instanceId)),
+  const instance = normalizeAccountInstanceDocument(
+    await loadJson(args.env, accountInstanceDocumentKey(location.accountId, location.widgetCode, location.instanceId)),
   );
-  return publish?.status === 'published' ? 'published' : 'unpublished';
+  return instance?.publishStatus === 'published' ? 'published' : 'unpublished';
+}
+
+export async function writeInstanceServeState(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  status: InstanceServeState;
+  widgetType?: string | null;
+}): Promise<{ changed: boolean }> {
+  const instanceId = normalizeStorageId(args.instanceId);
+  const accountId = normalizeStorageId(args.accountId);
+  if (!instanceId || !accountId) throw new Error('tokyo.errors.render.invalid');
+  const location = await resolveAccountInstanceLocation({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetType: args.widgetType,
+  });
+  if (!location) throw new Error('tokyo.errors.render.notFound');
+  const key = accountInstanceDocumentKey(location.accountId, location.widgetCode, location.instanceId);
+  const instance = normalizeAccountInstanceDocument(await loadJson(args.env, key));
+  if (!instance) throw new Error('tokyo.errors.instance.documentInvalid');
+  const changed = instance.publishStatus !== args.status;
+  const next = { ...instance, publishStatus: args.status, updatedAt: nowIso() } satisfies AccountInstanceDocument;
+  await putJson(args.env, key, next);
+  await patchAccountInstanceIndexEntry({
+    env: args.env,
+    accountId: location.accountId,
+    widgetType: location.widgetType,
+    instanceId: location.instanceId,
+  });
+  return { changed };
 }

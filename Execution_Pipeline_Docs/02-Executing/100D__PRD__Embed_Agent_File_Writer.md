@@ -50,8 +50,7 @@ Required job inputs:
 - `accountPublicId`
 - `instanceId`
 - saved `instance.json` version or revision marker
-- widget software version intended for the build
-- target build reason: save, retry, or product widget software rebuild
+- target build reason: save, retry, or Clickeen-initiated rebuild
 
 Required storage inputs:
 
@@ -65,7 +64,7 @@ Required storage inputs:
   - optional widget-local runtime helpers
   - `agent.md`
 
-The writer must validate that `accountPublicId`, `instanceId`, `widgetType`, base locale, enabled locales, saved config, required locale overlay references, `embedBuildShape`, and widget software version are present and internally consistent before writing public output.
+The writer must validate that `accountPublicId`, `instanceId`, `widgetType`, base locale, enabled locales, saved config, required locale overlay references, and `embedBuildShape` are present and internally consistent before writing public output.
 
 ## Outputs
 
@@ -162,10 +161,10 @@ The writer must:
 The writer must not:
 
 - copy account asset files into the instance folder
-- mint asset IDs
+- mint asset identities
 - invent public asset URLs
 - hash asset files
-- create blob folders or version folders
+- create generated storage-indirection folders or version folders
 - validate uploads, scan files, rename files, or manage the account asset library
 - treat Clickeen-owned product media as account assets
 
@@ -193,7 +192,6 @@ The writer must update the schema fields finalized by PRD 100B/100C with these s
 
 - status: not_generated, queued, building, ready, stale, failed, or unavailable
 - saved source version/revision the build describes
-- widget software version used by the build
 - generated file list for the last successful build
 - build start and finish timestamps
 - failure code/message when failed
@@ -231,7 +229,6 @@ If a newer save exists, the job may record an ignored/stale job result in job lo
 - Target-locale output is not marked ready until required overlays exist and have been applied.
 - Failed builds preserve the last successful public `index.html`.
 - `instance.json` records readiness for Roma Widgets and prevents stale jobs from marking newer saves ready.
-- The last successful build records the widget software version used.
 
 ## Implementation Notes
 
@@ -250,7 +247,6 @@ If a newer save exists, the job may record an ignored/stale job result in job lo
 - **Runtime regression:** generated code must be scanned for forbidden service calls and internal config fetches.
 - **Asset duplication:** tests must reject copied files from `accounts/{accountPublicId}/assets/` into the instance folder.
 - **Locale drift:** missing overlays must block locale-dependent output and record an overlay-blocked reason.
-- **Widget software drift:** status must record the widget software version used so Roma Widgets can show stale builds.
 - **Folder drift:** tests must fail if output appears in `embed/`, `public/`, `published/`, or another promotion namespace.
 
 ## Validation/Tests

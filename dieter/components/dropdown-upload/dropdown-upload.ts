@@ -1,5 +1,5 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
-import { isUuid } from '@clickeen/ck-contracts';
+import { normalizeAccountAssetRef } from '@clickeen/ck-contracts';
 import { dispatchAccountAssetUpsell, type AccountAssetsClient } from '../shared/account-assets';
 import { resolveSingleAccountAsset } from '../shared/account-asset-resolve';
 
@@ -7,7 +7,7 @@ type Kind = 'empty' | 'image' | 'video' | 'doc' | 'unknown';
 
 type UploadMeta = {
   name?: string;
-  assetId?: string;
+  assetRef?: string;
   source?: string;
 };
 
@@ -231,7 +231,7 @@ function installHandlers(state: DropdownUploadState) {
         state,
         {
           name: asset.filename,
-          assetId: asset.assetId,
+          assetRef: asset.assetRef,
           source: 'user',
         },
         true,
@@ -337,9 +337,8 @@ function readMeta(state: DropdownUploadState): UploadMeta | null {
   }
 }
 
-function readMetaAssetId(meta: UploadMeta | null): string {
-  const assetId = typeof meta?.assetId === 'string' ? meta.assetId.trim() : '';
-  return isUuid(assetId) ? assetId : '';
+function readMetaAssetRef(meta: UploadMeta | null): string {
+  return normalizeAccountAssetRef(meta?.assetRef) ?? '';
 }
 
 function invalidateResolve(state: DropdownUploadState): void {
@@ -385,11 +384,11 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   if (key === 'transparent') key = '';
   const placeholder = state.headerValue?.dataset.placeholder ?? '';
   const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
-  const assetId = readMetaAssetId(meta);
+  const assetRef = readMetaAssetRef(meta);
   const displayName = metaName || 'Uploaded file';
-  const currentAssetId = assetId;
+  const currentAssetRef = assetRef;
 
-  if (!key && !currentAssetId && !metaName) {
+  if (!key && !currentAssetRef && !metaName) {
     invalidateResolve(state);
     clearError(state);
     setHeaderEmpty(state, placeholder);
@@ -400,7 +399,7 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   }
 
   state.root.dataset.hasFile = 'true';
-  if (currentAssetId) {
+  if (currentAssetRef) {
     setHeaderWithFile(state, displayName, false);
     setPreview(state, {
       kind: 'unknown',
@@ -410,7 +409,7 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
       hasFile: true,
     });
     clearError(state);
-    void resolveStoredAssetPreview(state, currentAssetId, displayName);
+    void resolveStoredAssetPreview(state, currentAssetRef, displayName);
     return;
   }
 
@@ -426,17 +425,17 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
   setError(state, 'Missing asset identity. Upload a new file to restore it.');
 }
 
-async function resolveStoredAssetPreview(state: DropdownUploadState, assetId: string, displayName: string) {
+async function resolveStoredAssetPreview(state: DropdownUploadState, assetRef: string, displayName: string) {
   return resolveSingleAccountAsset({
     accountAssets: state.accountAssets,
-    getAssetId: () => assetId,
+    getAssetRef: () => assetRef,
     beginRequest: () => {
       state.resolveRequestId += 1;
       return state.resolveRequestId;
     },
-    isCurrent: (requestId, currentAssetId) => {
+    isCurrent: (requestId, currentAssetRef) => {
       if (state.resolveRequestId !== requestId) return false;
-      return readMetaAssetId(readMeta(state)) === currentAssetId;
+      return readMetaAssetRef(readMeta(state)) === currentAssetRef;
     },
     onMissing: () => {
       setError(state, MISSING_ASSET_MESSAGE);

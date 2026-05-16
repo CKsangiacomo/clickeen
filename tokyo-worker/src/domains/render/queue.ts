@@ -9,13 +9,7 @@ export function isTokyoMirrorJob(value: unknown): value is TokyoMirrorQueueJob {
   if (!job.kind) return false;
   if (typeof job.instanceId !== 'string') return false;
   if (typeof job.accountId !== 'string') return false;
-  return (
-    job.kind === 'write-config-pack' ||
-    job.kind === 'write-meta-pack' ||
-    job.kind === 'sync-live-surface' ||
-    job.kind === 'enforce-live-surface' ||
-    job.kind === 'delete-instance-mirror'
-  );
+  return job.kind === 'delete-instance-mirror';
 }
 
 export async function enqueueTokyoMirrorJob(

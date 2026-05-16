@@ -15,9 +15,9 @@ type StoredObject = {
   body: unknown;
 };
 
-function createTestEnv(): Env {
+function createTestEnv(): { env: Env; objects: Map<string, StoredObject> } {
   const objects = new Map<string, StoredObject>();
-  return {
+  const env = {
     TOKYO_DEV_JWT: 'test',
     TOKYO_R2: {
       async put(key: string, value: unknown) {
@@ -55,6 +55,7 @@ function createTestEnv(): Env {
       },
     } as unknown as R2Bucket,
   } as Env;
+  return { env, objects };
 }
 
 const COORDINATE = {
@@ -66,8 +67,8 @@ const COORDINATE = {
   personalization: DEFAULT_OVERLAY_PERSONALIZATION,
 };
 
-test('overlay storage writes exact object body and selected pointer', async () => {
-  const env = createTestEnv();
+test('overlay storage writes exact object body under overlays only', async () => {
+  const { env, objects } = createTestEnv();
   const overlayId = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 5 });
 
   await writeOverlayObject({ env, overlayId, values: { title: 'Domande frequenti' } });
@@ -81,6 +82,7 @@ test('overlay storage writes exact object body and selected pointer', async () =
     v: 1,
     overlayId,
   });
+  assert.equal([...objects.keys()].some((key) => key.includes('/selected-overlays/')), false);
   assert.deepEqual(await readSelectedOverlayProjection({
     env,
     accountId: COORDINATE.accountId,
@@ -92,7 +94,7 @@ test('overlay storage writes exact object body and selected pointer', async () =
 });
 
 test('version allocation refuses when the retained slot is referenced', async () => {
-  const env = createTestEnv();
+  const { env } = createTestEnv();
   const overlayId = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 1 });
   await writeOverlayObject({ env, overlayId, values: { title: 'Versione uno' } });
   await writeSelectedOverlayPointer({ env, overlayId });

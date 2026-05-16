@@ -2,23 +2,19 @@ import { asTrimmedString } from '@clickeen/ck-contracts';
 import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import {
-  accountInstanceConfigKey,
   accountInstanceDocumentKey,
   accountInstanceIndexKey,
-  accountInstancePublishKey,
   accountInstancesRoot,
 } from './keys';
 import {
   normalizeAccountInstanceDocument,
   normalizeIndexDocument,
-  normalizePublishDocument,
 } from './normalize';
 import { loadJson, putJson } from './storage';
 import type {
   AccountInstanceIndexDocument,
   AccountInstanceIndexEntry,
   AccountInstanceDocument,
-  InstanceServeState,
 } from './types';
 import { resolveWidgetCode } from '../widget-catalog';
 import { normalizeStorageId } from './utils';
@@ -53,42 +49,16 @@ function displayNameFromInstance(instance: AccountInstanceDocument): string {
   );
 }
 
-async function readServeState(args: {
-  env: Env;
-  accountId: string;
-  widgetCode: string;
-  instanceId: string;
-}): Promise<InstanceServeState> {
-  const publish = normalizePublishDocument(
-    await loadJson(args.env, accountInstancePublishKey(args.accountId, args.widgetCode, args.instanceId)),
-  );
-  return publish?.status === 'published' ? 'published' : 'unpublished';
-}
-
 async function buildEntryFromInstance(args: {
-  env: Env;
   instance: AccountInstanceDocument;
 }): Promise<AccountInstanceIndexEntry> {
-  const config = await loadJson(
-    args.env,
-    accountInstanceConfigKey(args.instance.accountId, args.instance.widgetCode, args.instance.id),
-  );
-  if (!config || typeof config !== 'object' || Array.isArray(config)) {
-    throw new Error(`instance_config_missing:${args.instance.accountId}:${args.instance.id}`);
-  }
-
   return {
     accountId: args.instance.accountId,
     id: args.instance.id,
     widgetCode: args.instance.widgetCode,
     widgetType: args.instance.widgetType,
     displayName: displayNameFromInstance(args.instance),
-    publishStatus: await readServeState({
-      env: args.env,
-      accountId: args.instance.accountId,
-      widgetCode: args.instance.widgetCode,
-      instanceId: args.instance.id,
-    }),
+    publishStatus: args.instance.publishStatus,
     updatedAt: args.instance.updatedAt,
   };
 }
@@ -125,7 +95,7 @@ async function buildIndexDocument(env: Env, accountId: string): Promise<AccountI
     if (!instance || instance.accountId !== accountId) {
       throw new Error(`instance_document_invalid:${key}`);
     }
-    entries.push(await buildEntryFromInstance({ env, instance }));
+    entries.push(await buildEntryFromInstance({ instance }));
   }
   return { v: 1, accountId, entries: sortIndexEntries(entries), updatedAt: new Date().toISOString() };
 }
@@ -165,7 +135,7 @@ export async function patchAccountInstanceIndexEntry(args: {
   if (!instance || instance.accountId !== accountId || instance.widgetCode !== widgetCode || instance.widgetType !== widgetType || instance.id !== instanceId) {
     throw new Error('tokyo.errors.instance.documentInvalid');
   }
-  const entry = await buildEntryFromInstance({ env: args.env, instance });
+  const entry = await buildEntryFromInstance({ instance });
   const index = await readIndexForMutation(args.env, accountId);
   const entries = [
     ...index.entries.filter((candidate) => candidate.id !== instanceId),

@@ -1,10 +1,6 @@
 import {
   deleteInstanceMirror,
-  enforceLiveSurface,
   isTokyoMirrorJob,
-  syncLiveSurface,
-  writeConfigPack,
-  writeMetaPack,
 } from './domains/render';
 import type { Env } from './types';
 
@@ -30,18 +26,6 @@ export async function handleTokyoQueue(
 
     try {
       switch (body.kind) {
-        case 'write-config-pack':
-          await writeConfigPack(env, body);
-          break;
-        case 'write-meta-pack':
-          await writeMetaPack(env, body);
-          break;
-        case 'sync-live-surface':
-          await syncLiveSurface(env, body);
-          break;
-        case 'enforce-live-surface':
-          await enforceLiveSurface(env, body);
-          break;
         case 'delete-instance-mirror':
           await deleteInstanceMirror(env, body.instanceId ?? body.instanceId ?? '', body.accountId);
           break;
