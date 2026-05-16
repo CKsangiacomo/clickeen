@@ -44,7 +44,7 @@ tokyo/prague/**           -> prague/**
 
 Tokyo Pages/static output and friendly static routes are source/deploy and serving convenience only. They must not become a second authority for widget software, Dieter media, fonts, product media, or Prague content. For example, `/widgets/{widgetType}/spec.json` is a friendly serving path for the canonical R2 object `product/widgets/{widgetType}/spec.json`, not a root `widgets/` storage truth.
 
-Deploy tooling must not publish git-authored media to root `widgets/`, root `l10n/prague/`, root `public/`, or root `published/`. Published projection keys are account-owned runtime/public serving state under the owning instance, not a deploy-root pattern.
+Deploy tooling must not publish git-authored media to root `widgets/`, root `l10n/`, root `public/`, or root `published/`. Published projection keys are account-owned runtime/public serving state under the owning instance, not a deploy-root pattern.
 
 ## Runtime Account Shape
 
@@ -92,7 +92,7 @@ That route maps to `accounts/{accountPublicId}/instances/{instanceId}/index.html
 - No hidden `listed` / `duplicable` / distribution flags inside customer instance data.
 - No Prague-specific widget storage.
 - No root `widgets/` tree for widget software; widget software is served from `product/widgets/`.
-- No root `l10n/prague/` tree for Prague localization; retained Prague localization belongs under `prague/l10n/`.
+- No root `l10n/` tree for Prague localization; Prague page translations stay beside page JSON under `prague/pages/{widget}/{page}.translations/{locale}.json`.
 
 Platform-owned references, when needed, live outside instance data. Example: Prague page JSON may point at a normal account-owned instance through `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId`.
 

@@ -10,7 +10,7 @@ Rules:
 - Tokyo/R2 git-authored deploy roots are `dieter/`, `fonts/`, `product/`, and `prague/`; only `accounts/` is runtime-managed account storage.
 - Tokyo Pages/static output is a source/deploy and friendly-serving convenience. It must not become a second authority for product widget software, Dieter media, fonts, product media, or Prague content.
 - Widget software is served from canonical R2 `product/widgets/**`. Friendly `/widgets/**` routes must resolve there, not to root `widgets/**` or stale static output.
-- Retained Prague localization must deploy under R2 `prague/l10n/**`, never root `l10n/prague/**`.
+- Prague page translations deploy beside page JSON under `prague/pages/{widget}/{page}.translations/{locale}.json`, never under root `l10n/**`.
 - GitHub Actions must not create Pages projects or sync Pages secrets.
 - Each app builds from its own root and writes only to its own output directory.
 - Bob and Roma must use custom `*.dev.clickeen.com` hosts for authenticated Builder flows. `*.pages.dev` is not a valid public runtime host for those apps.
@@ -137,11 +137,11 @@ These roots are deployed from git-authored repo sources into R2. They are not mu
 | `tokyo/product/media/**` | `product/media/**` | Product-owned media. |
 | `tokyo/product/themes/**` | `product/themes/**` | Product-owned theme media. |
 | `tokyo/roma/**` | `product/roma/**` | Product app/static support media. |
-| `tokyo/prague/**` | `prague/**` | Prague page/content/GTM media, including retained `prague/l10n/**`. |
+| `tokyo/prague/**` | `prague/**` | Prague page/content/GTM media, including page-local translation sidecars. |
 
 Forbidden deploy targets for these git-authored media:
 - root `widgets/**`
-- root `l10n/prague/**`
+- root `l10n/**`
 - root `public/**`
 - root `published/**`
 

@@ -87,7 +87,9 @@ function isRealWidgetDir(name: string): boolean {
 }
 
 const TOKYO_PRAGUE_PAGE_GLOB = import.meta.glob('../../../tokyo/prague/pages/**/*.json', { import: 'default' });
+const TOKYO_PRAGUE_PAGE_TRANSLATION_GLOB = import.meta.glob('../../../tokyo/prague/pages/**/*.translations/*.json', { import: 'default' });
 const WIDGET_PAGE_LOADERS = new Map<string, () => Promise<unknown>>();
+const WIDGET_PAGE_TRANSLATION_LOADERS = new Map<string, () => Promise<unknown>>();
 const WIDGET_SET = new Set<string>();
 
 for (const [filePath, loader] of Object.entries(TOKYO_PRAGUE_PAGE_GLOB)) {
@@ -108,11 +110,108 @@ for (const [filePath, loader] of Object.entries(TOKYO_PRAGUE_PAGE_GLOB)) {
   WIDGET_SET.add(widget);
 }
 
+for (const [filePath, loader] of Object.entries(TOKYO_PRAGUE_PAGE_TRANSLATION_GLOB)) {
+  const normalized = filePath.replace(/\\/g, '/');
+  const marker = '/tokyo/prague/pages/';
+  const markerIndex = normalized.lastIndexOf(marker);
+  if (markerIndex === -1) continue;
+  const rest = normalized.slice(markerIndex + marker.length);
+  const parts = rest.split('/');
+  if (parts.length !== 3) continue;
+  const widget = parts[0];
+  if (!isRealWidgetDir(widget)) continue;
+  const translationsDir = parts[1];
+  const localeFile = parts[2];
+  if (!translationsDir.endsWith('.translations')) continue;
+  if (!localeFile.endsWith('.json')) continue;
+  const page = translationsDir.slice(0, -'.translations'.length);
+  const locale = localeFile.slice(0, -'.json'.length).trim().toLowerCase();
+  if (!page || !locale) continue;
+  WIDGET_PAGE_TRANSLATION_LOADERS.set(`${widget}/${page}/${locale}`, loader as () => Promise<unknown>);
+}
+
 export async function loadWidgetPageJson(opts: { widget: string; page: string }): Promise<unknown | null> {
   const key = `${opts.widget}/${opts.page}`;
   const loader = WIDGET_PAGE_LOADERS.get(key);
   if (!loader) return null;
   return loader();
+}
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function setTranslatedValue(root: Record<string, unknown>, path: string, value: string): void {
+  const parts = String(path || '').split('.').map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 3 || parts[0] !== 'blocks') {
+    throw new Error(`[prague] Invalid Prague translation path: ${path}`);
+  }
+
+  const blocks = root.blocks;
+  if (!Array.isArray(blocks)) throw new Error('[prague] Cannot apply Prague translation: blocks[] missing');
+  const block = blocks.find((candidate) => isPlainObject(candidate) && candidate.id === parts[1]);
+  if (!isPlainObject(block)) throw new Error(`[prague] Cannot apply Prague translation: block "${parts[1]}" missing`);
+
+  let cursor: unknown = block;
+  for (let i = 2; i < parts.length - 1; i += 1) {
+    const segment = parts[i];
+    if (Array.isArray(cursor)) {
+      const index = Number(segment);
+      if (!Number.isInteger(index) || index < 0 || index >= cursor.length) {
+        throw new Error(`[prague] Cannot apply Prague translation: invalid array segment "${segment}" in ${path}`);
+      }
+      cursor = cursor[index];
+      continue;
+    }
+    if (!isPlainObject(cursor)) {
+      throw new Error(`[prague] Cannot apply Prague translation: invalid object path ${path}`);
+    }
+    cursor = cursor[segment];
+  }
+
+  const last = parts[parts.length - 1];
+  if (Array.isArray(cursor)) {
+    const index = Number(last);
+    if (!Number.isInteger(index) || index < 0 || index >= cursor.length) {
+      throw new Error(`[prague] Cannot apply Prague translation: invalid final array segment "${last}" in ${path}`);
+    }
+    cursor[index] = value;
+    return;
+  }
+  if (!isPlainObject(cursor)) {
+    throw new Error(`[prague] Cannot apply Prague translation: invalid final object path ${path}`);
+  }
+  cursor[last] = value;
+}
+
+async function loadPageTranslation(opts: { widget: string; page: string; locale: string }): Promise<unknown | null> {
+  const locale = String(opts.locale || '').trim().toLowerCase();
+  if (!locale || locale === 'en') return null;
+  const loader = WIDGET_PAGE_TRANSLATION_LOADERS.get(`${opts.widget}/${opts.page}/${locale}`);
+  if (!loader) return null;
+  return loader();
+}
+
+async function applyPageTranslation(
+  opts: { widget: string; page: string; locale: string; pageJson: Record<string, unknown> },
+): Promise<Record<string, unknown>> {
+  const translation = await loadPageTranslation(opts);
+  if (!translation) return opts.pageJson;
+  if (!isPlainObject(translation) || translation.v !== 1 || !Array.isArray(translation.ops)) {
+    throw new Error(`[prague] Invalid Prague page translation: tokyo/prague/pages/${opts.widget}/${opts.page}.translations/${opts.locale}.json`);
+  }
+  const translated = cloneJson(opts.pageJson);
+  for (const op of translation.ops) {
+    if (!isPlainObject(op) || op.op !== 'set' || typeof op.path !== 'string' || typeof op.value !== 'string') {
+      throw new Error(`[prague] Invalid Prague page translation op: tokyo/prague/pages/${opts.widget}/${opts.page}.translations/${opts.locale}.json`);
+    }
+    setTranslatedValue(translated, op.path, op.value);
+  }
+  return translated;
 }
 
 function buildWidgetPagePath(widget: string, page: string): string {
@@ -122,15 +221,21 @@ function buildWidgetPagePath(widget: string, page: string): string {
 export async function loadWidgetPageJsonForLocale(
   opts: { widget: string; page: string; locale: string },
 ): Promise<unknown | null> {
-  const pageJson = await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
-  if (!pageJson) return null;
+  const basePageJson = await loadWidgetPageJson({ widget: opts.widget, page: opts.page });
+  if (!basePageJson) return null;
 
   const pagePath = buildWidgetPagePath(opts.widget, opts.page);
   const pageFilePath = `tokyo/prague/pages/${opts.widget}/${opts.page}.json`;
-  if (!pageJson || typeof pageJson !== 'object' || Array.isArray(pageJson)) {
+  if (typeof basePageJson !== 'object' || Array.isArray(basePageJson)) {
     throw new Error(`[prague] Invalid base JSON for ${pageFilePath}`);
   }
-  const baseBlocks = (pageJson as any).blocks;
+  const pageJson = await applyPageTranslation({
+    widget: opts.widget,
+    page: opts.page,
+    locale: opts.locale,
+    pageJson: basePageJson as Record<string, unknown>,
+  });
+  const baseBlocks = pageJson.blocks;
   if (!Array.isArray(baseBlocks)) {
     throw new Error(`[prague] Missing blocks[] in ${pageFilePath}`);
   }
@@ -154,7 +259,7 @@ export async function loadWidgetPageJsonForLocale(
     return { ...block, id: blockId, type: blockType, copy };
   });
 
-  return { ...(pageJson as any), blocks: mergedBlocks };
+  return { ...pageJson, blocks: mergedBlocks };
 }
 
 export async function loadRequiredWidgetPageJsonForLocale(

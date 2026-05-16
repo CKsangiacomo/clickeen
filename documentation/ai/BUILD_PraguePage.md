@@ -42,7 +42,7 @@ Only if the PRD explicitly requires new string keys:
 - `prague/content/allowlists/v1/blocks/{blockKind}.allowlist.json`
 
 Do **not** edit:
-- Prague generated localization/overlay output (deployed under `prague/l10n/**`)
+- Prague generated page translation sidecars unless the task is explicitly localization work (`tokyo/prague/pages/{widget}/{page}.translations/{locale}.json`)
 
 ---
 

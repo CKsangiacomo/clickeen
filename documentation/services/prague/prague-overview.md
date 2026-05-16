@@ -22,11 +22,11 @@ Deploy contract:
 
 Tokyo/R2 content contract:
 - `tokyo/prague/**` is git-authored source/deploy content that syncs to canonical R2 `prague/**`.
-- Retained Prague localization lives under `prague/l10n/**` in R2, sourced from `tokyo/prague/l10n/**` if retained.
-- Prague localization must not publish to root `l10n/prague/**`.
+- Prague page translations live beside the page JSON: `tokyo/prague/pages/{widget}/{page}.translations/{locale}.json`, deployed to `prague/pages/{widget}/{page}.translations/{locale}.json`.
+- Prague localization must not publish to root `l10n/**`.
 - Tokyo Pages/static output may serve friendly URLs, but it is a deploy/source convenience and not a second Prague content authority.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy). Chrome UI strings remain in `prague/content/base/v1/chrome.json`. Prague does not own account-widget locale overlays.
+In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy). Prague page translations are page-owned sidecars beside those JSON files. Prague does not own account-widget locale overlays.
 
 At build time, Prague:
 - enumerates widgets by scanning `tokyo/product/widgets/*` (excluding `_*/` and `shared/`)
@@ -147,10 +147,10 @@ Required non-visual blocks:
 Notes:
 - Page JSON is the **single source of truth** for layout + base copy on Prague.
 - Visual embeds are explicit: use `accountInstanceRef.accountPublicId` plus `accountInstanceRef.instanceId` on blocks that should embed an account instance. Admin/example embeds use `accountPublicId: "00000001"`.
-- Prague page JSON deploys under R2 `prague/pages/**`; retained Prague localization deploys under R2 `prague/l10n/**`.
-- Root `l10n/prague/**` is not a Prague storage or deploy target.
+- Prague page JSON and page-owned translation sidecars deploy under R2 `prague/pages/**`.
+- Root `l10n/**` is not a Prague storage or deploy target.
 
-Prague does not merge localized page overlays in this runtime. Account-instance locale overlays are build inputs for generated static instance files served from `clk.live`.
+Prague merges page-owned translation sidecars for localized marketing pages. Account-instance locale overlays are build inputs for generated static instance files served from `clk.live`.
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.

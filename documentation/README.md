@@ -112,7 +112,7 @@ The other roots are git-authored deploy artifacts synced to R2:
 - `dieter/` for shared design-system media
 - `fonts/` for global Clickeen-provided fonts
 - `product/` for logged-in product media and widget software
-- `prague/` for marketing/site/GTM content, including retained Prague localization under `prague/l10n/`
+- `prague/` for marketing/site/GTM content; Prague page translations stay beside each page JSON as `{page}.translations/{locale}.json`
 
 Do not introduce root `widgets/`, `public/`, `published/`, or `l10n/` storage. Friendly URLs such as `/widgets/{widgetType}/...` may exist, but they must resolve to the canonical storage home, for example `product/widgets/{widgetType}/...`.
 
@@ -223,6 +223,6 @@ If you change runtime behavior, update docs in the same PR/commit:
   - `rg -n "/api/ai/widget-copilot|/api/ai/outcome|/api/account/instances/.*/copilot|/v1/execute|SANFRANCISCO_BASE_URL|AI_GRANT_HMAC_SECRET" documentation`
   - `rg -n "claims/minibob/complete|/api/account/assets|POST /api/instance\\b" documentation --glob '*.md'`
   - `rg -n "/api/bootstrap|/api/account/widgets|/api/session/finish|/api/account/assets" documentation --glob '*.md'`
-  - `rg -n "published/widgets|/renders/widgets|accounts/.*/widgets|l10n/prague|root (widgets|public|published|l10n)" documentation --glob '*.md'`
+  - `rg -n "published/widgets|/renders/widgets|accounts/.*/widgets|root (widgets|public|published|l10n)" documentation --glob '*.md'`
 
 When drift is found: update docs to match the shipped code/config immediately; treat mismatches as P0 doc bugs.

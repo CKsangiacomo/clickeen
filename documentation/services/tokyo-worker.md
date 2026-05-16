@@ -130,7 +130,7 @@ Friendly public asset routes are URL conveniences. They must always map to canon
 | `/themes/...` | canonical Dieter/theme asset root, not root `themes/` |
 | Prague-friendly paths | `prague/...` |
 
-Friendly routes must not create root `widgets/`, `themes/`, `public/`, `published/`, or `l10n/` storage folders. If retained Prague localization is served through a friendly route, the canonical storage home is `prague/l10n/...`, never root `l10n/...`.
+Friendly routes must not create root `widgets/`, `themes/`, `public/`, `published/`, or `l10n/` storage folders. Prague page translations live beside their page JSON under `prague/pages/{widget}/{page}.translations/{locale}.json`.
 
 ## Queue Jobs
 
