@@ -22,6 +22,7 @@ import {
   deleteInstanceMirror,
   duplicateAccountInstanceTransition,
   createAccountInstanceFromDefaults,
+  listLocaleOverlayInventory,
   publishAccountInstanceTransition,
   readOverlayObject,
   readInstanceServeState,
@@ -331,6 +332,36 @@ export async function tryHandleInternalRenderRoutes(
       },
     });
     return respond(json({ ok: true, overlayId: selected?.overlayId ?? null }));
+  }
+
+  if (pathname === '/__internal/overlays/languages/list.json') {
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || req.method !== 'POST') {
+      return !accountId
+        ? respondValidation(respond, 'tokyo.errors.render.invalid')
+        : respondMethodNotAllowed(respond);
+    }
+    const authErr = await authorizeSavedRenderControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+
+    const body = (await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.overlay.languageList.body',
+      accountId,
+    })) as Record<string, unknown> | null;
+    const instanceId = normalizeStorageId(body?.instanceId);
+    const baseLocale = typeof body?.baseLocale === 'string' ? body.baseLocale.trim() : '';
+    if (!instanceId || !baseLocale || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    const overlays = await listLocaleOverlayInventory({ env, accountId, instanceId });
+    return respond(json({ ok: true, v: 1, baseLocale, overlays }));
   }
 
   const internalOverlayObjectMatch = pathname.match(/^\/__internal\/overlays\/([^/]+)\.json$/);

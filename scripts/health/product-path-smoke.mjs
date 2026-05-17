@@ -338,7 +338,7 @@ async function loadWidgets(runner) {
 async function runBuilderAndL10n(runner, accountInstance) {
   if (!accountInstance) {
     runner.skip('Roma builder open', 'roma.builder', 'no account-owned instance available');
-    runner.skip('Roma translations panel', 'roma.l10n', 'no account-owned instance available');
+    runner.skip('Roma locale overlay inventory', 'roma.l10n', 'no account-owned instance available');
     return;
   }
   const instanceId = accountInstance.instanceId;
@@ -350,12 +350,21 @@ async function runBuilderAndL10n(runner, accountInstance) {
     }
     return instanceId;
   });
-  await runner.check('Roma translations panel', 'roma.l10n', async () => {
-    const result = await runner.request(runner.args.romaBase, `/api/account/instances/${encodeURIComponent(instanceId)}/translations`);
-    assert2xx(result, `GET /api/account/instances/${instanceId}/translations`);
-    if (!isRecord(result.payload)) throw new Error('translations payload is not an object');
-    const state = isRecord(result.payload.summary) ? result.payload.summary.state : result.payload.state;
-    return state ? `state=${String(state)}` : 'payload ok';
+  await runner.check('Roma locale overlay inventory', 'roma.l10n', async () => {
+    const result = await runner.request(
+      runner.args.romaBase,
+      `/api/account/instances/${encodeURIComponent(instanceId)}/locale-overlays/list`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ baseLocale: 'en' }),
+      },
+    );
+    assert2xx(result, `POST /api/account/instances/${instanceId}/locale-overlays/list`);
+    if (!isRecord(result.payload) || !Array.isArray(result.payload.overlays)) {
+      throw new Error('locale overlay inventory payload missing overlays[]');
+    }
+    return `${result.payload.overlays.length} stored locale overlays`;
   });
 }
 
@@ -419,17 +428,22 @@ async function runDuplicateWrite(runner, sourceInstance) {
     const open = await runner.request(runner.args.romaBase, `/api/builder/${encodeURIComponent(createdInstanceId)}/open`);
     assert2xx(open, `GET /api/builder/${createdInstanceId}/open`);
 
-    const translations = await runner.request(
+    const localeOverlays = await runner.request(
       runner.args.romaBase,
-      `/api/account/instances/${encodeURIComponent(createdInstanceId)}/translations`,
+      `/api/account/instances/${encodeURIComponent(createdInstanceId)}/locale-overlays/list`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ baseLocale: 'en' }),
+      },
     );
-    assert2xx(translations, `GET /api/account/instances/${createdInstanceId}/translations`);
+    assert2xx(localeOverlays, `POST /api/account/instances/${createdInstanceId}/locale-overlays/list`);
 
     const cleanup = await runner.request(runner.args.romaBase, `/api/account/instances/${encodeURIComponent(createdInstanceId)}`, {
       method: 'DELETE',
     });
     assert2xx(cleanup, `DELETE /api/account/instances/${createdInstanceId}`);
-    return `duplicated ${sourceInstance.instanceId} to ${createdInstanceId}, opened, checked l10n, deleted`;
+    return `duplicated ${sourceInstance.instanceId} to ${createdInstanceId}, opened, checked l10n overlays, deleted`;
   });
   return createdInstanceId || null;
 }

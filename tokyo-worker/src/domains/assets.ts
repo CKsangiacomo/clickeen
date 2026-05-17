@@ -1,3 +1,4 @@
+import { normalizeAccountAssetRef } from '@clickeen/ck-contracts';
 import {
   classifyAccountAssetType,
   type AccountAssetType,
@@ -73,6 +74,24 @@ function assetRefFromKey(accountId: string, key: string): string | null {
   return key.startsWith(prefix) ? key.slice(prefix.length) || null : null;
 }
 
+function listedAccountAssetRefFromKey(accountId: string, key: string): string | null {
+  const assetRef = assetRefFromKey(accountId, key);
+  const normalized = normalizeAccountAssetRef(assetRef);
+  if (!normalized || normalized !== assetRef) return null;
+
+  const segments = normalized.split('/');
+  const filename = segments[segments.length - 1]?.toLowerCase() || '';
+
+  if (filename === 'manifest.json') return null;
+  if (segments.includes('blob')) return null;
+
+  // Current PRD 100 product surface writes accepted account assets as direct
+  // account-owned files. Folder UX can evolve later as an explicit contract.
+  if (segments.length !== 1) return null;
+
+  return normalized;
+}
+
 function normalizeCustomMetadata(value: unknown): Record<string, string> {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? Object.fromEntries(
@@ -141,19 +160,23 @@ export async function listAccountAssetFilesByAccount(
   const files: AccountAssetFile[] = [];
   let cursor: string | undefined;
   do {
-    const listed = await env.TOKYO_R2.list({ prefix, cursor, limit: 1000 });
+    const listed = await env.TOKYO_R2.list({
+      prefix,
+      cursor,
+      limit: 1000,
+      include: ['httpMetadata', 'customMetadata'],
+    } as R2ListOptions & { include: ('httpMetadata' | 'customMetadata')[] });
     for (const object of listed.objects) {
       const key = typeof object.key === 'string' ? object.key.trim() : '';
-      const assetRef = key ? assetRefFromKey(accountId, key) : null;
+      const assetRef = key ? listedAccountAssetRefFromKey(accountId, key) : null;
       if (!assetRef) continue;
-      const head = await env.TOKYO_R2.head(key);
       files.push(fileFromObject({
         accountId,
         assetRef,
-        size: head?.size ?? object.size,
-        uploaded: head?.uploaded ?? object.uploaded,
-        httpMetadata: head?.httpMetadata,
-        customMetadata: head?.customMetadata,
+        size: object.size,
+        uploaded: object.uploaded,
+        httpMetadata: object.httpMetadata,
+        customMetadata: object.customMetadata,
       }));
     }
     cursor = listed.truncated ? listed.cursor : undefined;

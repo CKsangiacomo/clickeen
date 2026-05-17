@@ -61,6 +61,7 @@ export function useSessionBoot(args: {
           publishStatus: message.publishStatus,
           label: nextLabel,
           meta: message.meta ?? null,
+          translationSetup: message.translationSetup ?? null,
         });
         setState((prev) => ({
           ...prev,

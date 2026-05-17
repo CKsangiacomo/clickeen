@@ -19,7 +19,9 @@ export async function resolveSingleAccountAsset(args: ResolveSingleAccountAssetA
   if (!assetRef) return;
 
   try {
-    const { assetsByRef, missingAssetRefs } = await args.accountAssets.resolveAssets([assetRef]);
+    const resolved = await args.accountAssets.resolveAssets([assetRef]);
+    const assetsByRef = resolved?.assetsByRef instanceof Map ? resolved.assetsByRef : new Map<string, ResolvedAccountAsset>();
+    const missingAssetRefs = Array.isArray(resolved?.missingAssetRefs) ? resolved.missingAssetRefs : [];
     if (!args.isCurrent(requestId, assetRef)) return;
     if (missingAssetRefs.includes(assetRef)) {
       args.onMissing();

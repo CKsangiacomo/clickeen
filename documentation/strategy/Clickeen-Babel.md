@@ -452,13 +452,14 @@ Clickeen Stack:
 
 ### The Babel Protocol Components
 
-#### 1. Content-Addressed Creative Storage
+#### 1. Account-Owned Static Storage
 
 **What it means:**
-- Every creative asset is stored by its content hash (SHA-256)
-- Immutable artifacts (content never changes once published)
-- Version control built-in (every change creates new hash)
-- CDN-friendly (cache forever, invalidate by hash)
+- Widget software lives under `product/widgets/`.
+- Account-owned instances live under `accounts/{accountPublicId}/instances/{instanceId}/`.
+- Each account-owned instance has one source JSON: `instance.json`.
+- Instance overlays, including locale overlays, live under that instance's `overlays/` folder.
+- Account-owned assets live under `accounts/{accountPublicId}/assets/`.
 
 **Directory structure example:**
 ```
@@ -469,25 +470,21 @@ tokyo/
 │   ├── widget.css                   # Styles
 │   ├── widget.client.js             # Behavior
 │   ├── agent.md                     # AI contract
-│   ├── limits.json                  # Entitlement caps
-│   ├── localization.json            # Locale allowlist
-│   ├── layers/*.allowlist.json      # Non-locale allowlists
-│   └── pages/*.json                 # Prague base copy
+│   └── limits.json                  # Entitlement caps
 ├── accounts/{accountPublicId}/instances/{instanceId}/
-│   ├── instance.json                # Account instance metadata
-│   ├── config.json                  # Saved source config
-│   ├── publish.json                 # Published/saved status pointer
-│   ├── overlays/{overlayId}.json
-│   ├── selected-overlays/{language}/{experiment}/{personalization}.json
-│   └── published/
-│       ├── live/r.json
-│       ├── config.json
-│       └── overlays/{overlayId}.json
+│   ├── instance.json                # Saved source config + metadata
+│   ├── index.html                   # Public static entry when published
+│   ├── styles.css                   # Generated embed CSS
+│   ├── script.js                    # Generated embed JS if needed
+│   └── overlays/{overlayId}.json    # Instance overlays, including locales
+└── accounts/{accountPublicId}/assets/
+    └── {assetRef}                   # Account-owned asset bytes
 ```
 
 **Why this matters:**
-- Immutability enables aggressive caching
-- Content hashing prevents collisions
+- The browser reads generated HTML/CSS/JS from Tokyo/static serving.
+- Bob edits source instance data; agents update derived files asynchronously after save.
+- Account asset replacement is in-place and must not require instance rebuilds.
 - Rollback is trivial (revert to previous hash)
 - Distributed teams can work without conflicts
 

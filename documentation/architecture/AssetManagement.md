@@ -55,6 +55,14 @@ PRD 100 requires these account asset library operations:
 
 Folder organization, bulk library management, and richer file-management UX can evolve later without changing the asset authority.
 
+The active PRD 100 implementation stores accepted uploads as direct files under the account asset folder:
+
+```text
+accounts/{accountPublicId}/assets/{filename}
+```
+
+The account asset list path is a prepared metadata list. It must not read per-asset manifests, hash folders, blob folders, or run one object-integrity `HEAD` check per listed file.
+
 ## Upload Boundary
 
 Validation happens before a file becomes an account asset.

@@ -4,6 +4,7 @@ import { DEFAULT_OVERLAY_EXPERIMENT, DEFAULT_OVERLAY_PERSONALIZATION } from '@cl
 import type { Env } from '../../types.ts';
 import {
   allocateOverlayId,
+  listLocaleOverlayInventory,
   readOverlayObject,
   readSelectedOverlayPointer,
   readSelectedOverlayProjection,
@@ -91,6 +92,41 @@ test('overlay storage writes exact object body under overlays only', async () =>
   }), {
     languages: { IT00: overlayId },
   });
+});
+
+test('locale overlay inventory lists actual overlay files only', async () => {
+  const { env, objects } = createTestEnv();
+  const firstIt = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 5 });
+  await writeOverlayObject({ env, overlayId: firstIt, values: { title: 'Versione uno' } });
+  await writeSelectedOverlayPointer({ env, overlayId: firstIt });
+
+  const secondIt = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 5 });
+  await writeOverlayObject({ env, overlayId: secondIt, values: { title: 'Versione due' } });
+  await writeSelectedOverlayPointer({ env, overlayId: secondIt });
+
+  const csOverlay = await allocateOverlayId({
+    env,
+    coordinate: {
+      ...COORDINATE,
+      languageCode: 'CS00',
+    },
+    maxVersions: 5,
+  });
+  await writeOverlayObject({ env, overlayId: csOverlay, values: { title: 'Casto' } });
+  await writeSelectedOverlayPointer({ env, overlayId: csOverlay });
+
+  objects.set(`accounts/${COORDINATE.accountId}/instances/${COORDINATE.instanceId}/overlays/not-an-overlay.json`, {
+    body: { v: 1, values: { title: 'Ignore me' } },
+  });
+
+  assert.deepEqual(await listLocaleOverlayInventory({
+    env,
+    accountId: COORDINATE.accountId,
+    instanceId: COORDINATE.instanceId,
+  }), [
+    { locale: 'cs', overlayId: csOverlay },
+    { locale: 'it', overlayId: secondIt },
+  ]);
 });
 
 test('version allocation refuses when the retained slot is referenced', async () => {

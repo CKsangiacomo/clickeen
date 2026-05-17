@@ -19,6 +19,7 @@ type StoredObject = {
 
 function createTestEnv() {
   const objects = new Map<string, StoredObject>();
+  let headCount = 0;
   const env = {
     TOKYO_DEV_JWT: 'test',
     TOKYO_PUBLIC_BASE_URL: 'https://clk.live',
@@ -54,6 +55,7 @@ function createTestEnv() {
         };
       },
       async head(key: string) {
+        headCount += 1;
         const stored = objects.get(key);
         if (!stored) return null;
         return {
@@ -83,7 +85,11 @@ function createTestEnv() {
       },
     } as unknown as R2Bucket,
   } as Env;
-  return { env, objects };
+  return {
+    env,
+    objects,
+    getHeadCount: () => headCount,
+  };
 }
 
 function authedRequest(path: string, init?: RequestInit & { filename?: string }): Request {
@@ -135,7 +141,7 @@ test('account asset upload stores safe bytes at a stable account asset ref', asy
 });
 
 test('account asset list and resolve share the same account asset truth', async () => {
-  const { env } = createTestEnv();
+  const { env, getHeadCount } = createTestEnv();
   await handleUploadAccountAsset(
     authedRequest('/__internal/assets/account/upload', {
       method: 'POST',
@@ -151,6 +157,7 @@ test('account asset list and resolve share the same account asset truth', async 
   assert.equal(list.status, 200);
   assert.equal(Array.isArray(listed.assets), true);
   assert.equal((listed.assets as Array<Record<string, unknown>>)[0]?.assetRef, 'hero.jpg');
+  assert.equal(getHeadCount(), 1);
 
   const resolve = await handleResolveAccountAssetMetadata(
     authedRequest('/__internal/assets/account/A1B2C3D4/resolve', {
@@ -165,6 +172,51 @@ test('account asset list and resolve share the same account asset truth', async 
   assert.equal(resolve.status, 200);
   assert.equal((resolved.assets as Array<Record<string, unknown>>)[0]?.url, 'https://clk.live/assets/account/A1B2C3D4/hero.jpg');
   assert.deepEqual(resolved.missingAssetRefs, ['missing.png']);
+});
+
+test('account asset list is a direct metadata list and hides legacy manifest assets', async () => {
+  const { env, objects, getHeadCount } = createTestEnv();
+  const uploaded = new Date();
+  objects.set(`accounts/${ACCOUNT_ID}/assets/logo.png`, {
+    body: new Uint8Array([1, 2, 3]),
+    httpMetadata: { contentType: 'image/png' },
+    customMetadata: {
+      filename: 'logo.png',
+      originalFilename: 'logo.png',
+      source: 'api',
+      createdAt: uploaded.toISOString(),
+      sizeBytes: '3',
+    },
+    uploaded,
+  });
+  objects.set(`accounts/${ACCOUNT_ID}/assets/legacy-asset/manifest.json`, {
+    body: new TextEncoder().encode('{}'),
+    httpMetadata: { contentType: 'application/json' },
+    customMetadata: {},
+    uploaded,
+  });
+  objects.set(`accounts/${ACCOUNT_ID}/assets/legacy-asset/blob/original.jpg`, {
+    body: new Uint8Array([4, 5]),
+    httpMetadata: { contentType: 'image/jpeg' },
+    customMetadata: {},
+    uploaded,
+  });
+  objects.set(`accounts/${ACCOUNT_ID}/assets/folder/hero.jpg`, {
+    body: new Uint8Array([6]),
+    httpMetadata: { contentType: 'image/jpeg' },
+    customMetadata: {},
+    uploaded,
+  });
+
+  const list = await handleListAccountAssetMetadata(authedRequest('/__internal/assets/account/A1B2C3D4', { method: 'GET' }), env, ACCOUNT_ID);
+  const listed = await jsonBody(list);
+  assert.equal(list.status, 200);
+  assert.deepEqual(
+    (listed.assets as Array<Record<string, unknown>>).map((asset) => asset.assetRef),
+    ['logo.png'],
+  );
+  assert.equal(listed.storageBytesUsed, 3);
+  assert.equal(getHeadCount(), 0);
 });
 
 test('account asset upload rejects unsafe names and scriptable file types', async () => {

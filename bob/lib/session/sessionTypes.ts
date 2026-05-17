@@ -2,6 +2,7 @@ import type { CompiledWidget } from '../types';
 import type { WidgetOpError } from '../ops';
 import type { Policy } from '@clickeen/ck-policy';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
+import type { TranslationSetup } from '../translations-preview';
 
 export type UpdateMeta = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
@@ -39,6 +40,7 @@ export type SessionMeta = {
   publishStatus?: 'published' | 'unpublished';
   label?: string;
   meta?: Record<string, unknown> | null;
+  translationSetup?: TranslationSetup | null;
 } | null;
 
 export type SessionUpsell = {
@@ -73,6 +75,7 @@ export type EditorOpenMessage = {
   label?: string;
   meta?: Record<string, unknown> | null;
   copilot?: CopilotRuntimeUi;
+  translationSetup?: TranslationSetup | null;
 };
 
 export type BobSessionReadyMessage = {
@@ -96,7 +99,8 @@ export type BobOpenEditorFailedMessage = {
 export type BobAccountCommand =
   | 'update-instance'
   | AccountAssetHostCommand
-  | 'load-translations'
+  | 'list-locale-overlays'
+  | 'read-locale-overlay'
   | 'run-copilot'
   | 'attach-ai-outcome';
 

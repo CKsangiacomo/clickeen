@@ -28,7 +28,8 @@ export type WidgetDocumentSessionValue = {
 };
 
 type WidgetSessionTransportValue = {
-  loadTranslations: ReturnType<typeof useSessionTransport>['loadTranslations'];
+  listLocaleOverlays: ReturnType<typeof useSessionTransport>['listLocaleOverlays'];
+  readLocaleOverlay: ReturnType<typeof useSessionTransport>['readLocaleOverlay'];
 };
 
 const WidgetDocumentSessionContext = createContext<WidgetDocumentSessionValue | null>(null);
@@ -68,9 +69,10 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
   const accountAssets = useMemo(() => createAccountAssetsClient(transport.accountAssets), [transport.accountAssets]);
   const transportValue = useMemo<WidgetSessionTransportValue>(
     () => ({
-      loadTranslations: transport.loadTranslations,
+      listLocaleOverlays: transport.listLocaleOverlays,
+      readLocaleOverlay: transport.readLocaleOverlay,
     }),
-    [transport.loadTranslations],
+    [transport.listLocaleOverlays, transport.readLocaleOverlay],
   );
 
   const value = useMemo<WidgetDocumentSessionValue>(

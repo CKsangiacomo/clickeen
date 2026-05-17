@@ -464,12 +464,11 @@ Current product truth:
 - Bob edits one widget document in memory.
 - Roma saves that one widget document.
 - Account locale policy/settings remain Roma-owned.
-- Translation and locale follow-up work happen after the base save, orchestrated by Roma and San Francisco, with Tokyo storing selected overlay values.
-- When `Translations` is open and the widget has no unsaved edits, Bob reads one Roma route: `GET /api/account/instances/:instanceId/translations`.
-- That route returns `baseLanguage`, target `languages`, selected `overlayId`s, and exact `valuesByLanguage`. It does not return legacy localization bundles, availability flags, fingerprints, or public locale URLs.
-- Bob applies one selected overlay value map with the shared `resolveOverlay(baseConfig, overlayValues)` resolver before posting preview state to the widget iframe.
-- If a language has no selected overlay values for the current save, it is unavailable in the dropdown and Bob keeps the preview in the base language.
-- If the user edits the base widget, Bob clears language preview selection until the new save completes; stale older language values are not shown as current.
+- Translation and locale follow-up work happen after the base save, orchestrated by Roma and San Francisco, with Tokyo storing exact overlay value objects.
+- When `Translations` is open, the top summary comes from Roma's account context: base locale, plan translation allowance, and active account translations.
+- Bob populates the preview dropdown from actual Tokyo/R2 overlay files for the instance through Roma's authenticated storage pass-through. The list route returns only `{ v, baseLocale, overlays: [{ locale, overlayId }] }`; the read route returns one exact `{ v, overlayId, values }` object.
+- Bob applies one exact overlay value map with the shared `resolveOverlay(baseConfig, overlayValues)` resolver before posting preview state to the widget iframe.
+- If a locale overlay file does not exist, that locale is absent from the dropdown. Bob does not show policy-derived unavailable rows or translation progress.
 - Save remains visible for both published and unpublished instances. Publish state only gates public embed-code copy, not editing or saving.
 - Commercial upsell copy stays outside the language overlay panel.
 

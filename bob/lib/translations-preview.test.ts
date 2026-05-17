@@ -2,46 +2,42 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolveOverlay } from '@clickeen/ck-contracts';
 import {
-  listPreviewableLanguages,
-  normalizeTranslationsPreviewData,
+  listPreviewableLocales,
+  normalizeLocaleOverlayInventory,
+  normalizeLocaleOverlayObject,
+  normalizeTranslationSetup,
 } from './translations-preview';
 
-test('normalizes selected overlay values for previewable languages', () => {
-  const data = normalizeTranslationsPreviewData({
+test('normalizes Roma-owned translation setup separately from overlays', () => {
+  const data = normalizeTranslationSetup({
     v: 1,
-    baseLanguage: 'en',
-    languages: [
-      { language: 'it', label: 'Italiano', overlayId: 'OVERLAY1' },
-      { language: 'cs', label: 'Czech', overlayId: null },
-    ],
-    valuesByLanguage: {
-      it: {
-        title: 'Domande frequenti',
-        'sections.0.faqs.0.question': 'Che stanze offrite?',
-      },
-    },
-    progress: [],
+    baseLocale: 'en',
+    planTranslationsMax: 29,
+    activeLocales: ['en', 'it', 'cs', 'it'],
   });
 
   assert.ok(data);
-  assert.deepEqual(listPreviewableLanguages(data), ['en', 'it']);
-  assert.equal(data.valuesByLanguage.it['sections.0.faqs.0.question'], 'Che stanze offrite?');
+  assert.equal(data.baseLocale, 'en');
+  assert.equal(data.planTranslationsMax, 29);
+  assert.deepEqual(data.activeLocales, ['it', 'cs']);
 });
 
-test('rejects overlay rows that point at missing values', () => {
-  const data = normalizeTranslationsPreviewData({
+test('normalizes Tokyo-owned overlay inventory from actual storage facts', () => {
+  const data = normalizeLocaleOverlayInventory({
     v: 1,
-    baseLanguage: 'en',
-    languages: [{ language: 'it', label: 'Italiano', overlayId: 'OVERLAY1' }],
-    valuesByLanguage: {},
-    progress: [],
+    baseLocale: 'en',
+    overlays: [
+      { locale: 'it', overlayId: 'OVERLAY1' },
+      { locale: 'cs', overlayId: 'OVERLAY2' },
+    ],
   });
 
-  assert.equal(data, null);
+  assert.ok(data);
+  assert.deepEqual(listPreviewableLocales(data), ['en', 'it', 'cs']);
 });
 
-test('rejects legacy translation payloads', () => {
-  const data = normalizeTranslationsPreviewData({
+test('rejects old mixed translations panel payloads', () => {
+  const data = normalizeLocaleOverlayInventory({
     baseLocale: 'en',
     requestedLocales: ['en', 'it'],
     ['ready' + 'Locales']: ['en', 'it'],
@@ -51,6 +47,20 @@ test('rejects legacy translation payloads', () => {
   });
 
   assert.equal(data, null);
+});
+
+test('normalizes one exact overlay object for preview', () => {
+  const overlay = normalizeLocaleOverlayObject({
+    v: 1,
+    overlayId: 'OVERLAY1',
+    values: {
+      title: 'Domande frequenti',
+      'sections.0.faqs.0.question': 'Che stanze offrite?',
+    },
+  });
+
+  assert.ok(overlay);
+  assert.equal(overlay.values['sections.0.faqs.0.question'], 'Che stanze offrite?');
 });
 
 test('resolves FAQ language values across title CTA section questions and answers', () => {

@@ -131,7 +131,6 @@ Prague website copy is not account-widget authoring truth. PRD 098F decides whet
 The following are not part of the active account-widget localization capability:
 
 - Widget `localization.json`.
-- Widget `layers/*.allowlist.json`.
 - `textPack`.
 - `L10nOp`.
 - Base snapshots/fingerprints as overlay identity.

@@ -117,7 +117,6 @@ Tokyo-worker must not:
 The following are not active product truth:
 
 - Widget `localization.json`.
-- Widget `layers/*.allowlist.json`.
 - `textPack`.
 - `L10nOp`.
 - Base snapshot/fingerprint identity for account-widget overlays.

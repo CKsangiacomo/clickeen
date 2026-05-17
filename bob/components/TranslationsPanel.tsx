@@ -8,8 +8,8 @@ import {
 } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import { useWidgetSession } from '../lib/session/useWidgetSession';
-import type { TranslationsPreviewData } from './useTranslationsPreviewState';
-import { listPreviewableLanguages } from '../lib/translations-preview';
+import type { LocaleOverlayInventoryData, TranslationSetup } from './useLocaleOverlayPreviewState';
+import { listPreviewableLocales } from '../lib/translations-preview';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
@@ -63,46 +63,43 @@ function SelectField({
 export function TranslationsPanel({
   overlayPreviewLocale,
   onOverlayPreviewLocaleChange,
-  translationsData,
-  translationsLoading,
-  translationsError,
+  translationSetup,
+  localeOverlayInventory,
+  localeOverlayLoading,
+  localeOverlayError,
 }: {
   overlayPreviewLocale: string;
   onOverlayPreviewLocaleChange: (locale: string) => void;
-  translationsData: TranslationsPreviewData | null;
-  translationsLoading: boolean;
-  translationsError: string | null;
+  translationSetup: TranslationSetup | null;
+  localeOverlayInventory: LocaleOverlayInventoryData | null;
+  localeOverlayLoading: boolean;
+  localeOverlayError: string | null;
 }) {
   const session = useWidgetSession();
+  const baseLocale = translationSetup?.baseLocale || localeOverlayInventory?.baseLocale || '';
 
   const localeOptions = useMemo(() => {
-    if (!translationsData) return [];
-    const previewable = new Set(listPreviewableLanguages(translationsData));
+    if (!baseLocale) return [];
+    const previewable = new Set(listPreviewableLocales(localeOverlayInventory));
+    previewable.add(baseLocale);
     return [
       {
-        value: translationsData.baseLanguage,
-        label: `${resolveLocaleLabel(translationsData.baseLanguage)} (base)`,
+        value: baseLocale,
+        label: `${resolveLocaleLabel(baseLocale)} (base)`,
       },
-      ...translationsData.languages
-        .filter((entry) => previewable.has(entry.language))
+      ...(localeOverlayInventory?.overlays ?? [])
+        .filter((entry) => previewable.has(entry.locale))
         .map((entry) => ({
-          value: entry.language,
-          label: entry.label || resolveLocaleLabel(entry.language),
+          value: entry.locale,
+          label: resolveLocaleLabel(entry.locale),
         })),
     ];
-  }, [translationsData]);
-  const targetLanguages = translationsData?.languages ?? [];
-  const previewableTargetCount = targetLanguages.filter(
-    (entry) => Boolean(entry.overlayId && translationsData?.valuesByLanguage[entry.language]),
-  ).length;
-  const unavailableLabels = targetLanguages
-    .filter((entry) => !entry.overlayId || !translationsData?.valuesByLanguage[entry.language])
-    .map((entry) => entry.label || resolveLocaleLabel(entry.language));
+  }, [baseLocale, localeOverlayInventory]);
 
   const localeValue =
     overlayPreviewLocale && localeOptions.some((option) => option.value === overlayPreviewLocale)
       ? overlayPreviewLocale
-      : translationsData?.baseLanguage || localeOptions[0]?.value || '';
+      : baseLocale || localeOptions[0]?.value || '';
 
   const selectOptions =
     localeOptions.length > 0
@@ -110,41 +107,15 @@ export function TranslationsPanel({
       : [
           {
             value: '',
-            label: translationsLoading
-              ? 'Checking language values...'
-              : translationsError
-                ? 'Language values unavailable'
-                : session.isDirty
-                  ? 'Save before previewing languages'
-                  : 'Base language only',
+            label: 'Base locale only',
           },
         ];
-  const translationStatusTitle = (() => {
-    if (session.isDirty) return 'Save changes first';
-    if (translationsLoading) return 'Checking language values';
-    if (translationsError) return 'Language values unavailable';
-    if (translationsData && targetLanguages.length > 0 && previewableTargetCount === targetLanguages.length) {
-      return 'Language overlays available';
-    }
-    if (translationsData && previewableTargetCount > 0) return 'Some language overlays available';
-    return 'Base language preview';
-  })();
-  const translationStatusBody = (() => {
-    if (session.isDirty) {
-      return 'Save the current widget before previewing language overlays.';
-    }
-    if (translationsLoading) {
-      return 'Builder is reading selected language overlays for this widget.';
-    }
-    if (translationsError) return translationsError;
-    if (translationsData && targetLanguages.length > 0) {
-      const base = `${previewableTargetCount} of ${targetLanguages.length} target language overlays can be previewed now.`;
-      return unavailableLabels.length
-        ? `${base} Not available for this save: ${unavailableLabels.join(', ')}.`
-        : base;
-    }
-    return 'No target language overlay is selected for this widget.';
-  })();
+  const planTranslationsCopy =
+    translationSetup?.planTranslationsMax == null
+      ? 'unlimited'
+      : String(translationSetup.planTranslationsMax);
+  const activeTranslationsCount = translationSetup?.activeLocales.length ?? 0;
+  const hasStoredOverlays = Boolean(localeOverlayInventory?.overlays.length);
 
   if (!session.compiled) {
     return (
@@ -160,17 +131,30 @@ export function TranslationsPanel({
       <div className="heading-3">Translations</div>
       <div className="tdmenucontent__fields">
         <div className="tdmenucontent__cluster">
-          <div className="label-s label-muted">Translation status</div>
-          <div className="body-s">{translationStatusTitle}</div>
-          <div className="label-s label-muted">{translationStatusBody}</div>
+          <div className="label-s label-muted">Base locale</div>
+          <div className="body-s">{baseLocale ? resolveLocaleLabel(baseLocale) : 'Not set'}</div>
+        </div>
+        <div className="tdmenucontent__cluster">
+          <div className="label-s label-muted">Translations available in your plan</div>
+          <div className="body-s">{planTranslationsCopy}</div>
+        </div>
+        <div className="tdmenucontent__cluster">
+          <div className="label-s label-muted">Active translations</div>
+          <div className="body-s">{activeTranslationsCount}</div>
         </div>
         <SelectField
-          label="Display locale"
+          label="Preview locale"
           value={localeValue}
           onChange={onOverlayPreviewLocaleChange}
           options={selectOptions}
           disabled={!selectOptions[0]?.value}
         />
+        {!localeOverlayLoading && !hasStoredOverlays && !localeOverlayError ? (
+          <div className="label-s label-muted">No saved translation overlays yet.</div>
+        ) : null}
+        {localeOverlayError ? (
+          <div className="label-s label-muted">{localeOverlayError}</div>
+        ) : null}
       </div>
     </div>
   );

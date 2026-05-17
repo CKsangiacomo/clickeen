@@ -1,6 +1,6 @@
 'use client';
 
-import { parseAccountL10nPolicyStrict } from '@clickeen/ck-contracts';
+import { parseAccountL10nPolicyStrict, parseAccountLocaleListStrict } from '@clickeen/ck-contracts';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -36,7 +36,13 @@ type BobOpenEditorFailedMessage = {
   message?: string | null;
 };
 
-type BobAccountCommand = 'update-instance' | AccountAssetHostCommand | 'load-translations' | 'run-copilot' | 'attach-ai-outcome';
+type BobAccountCommand =
+  | 'update-instance'
+  | AccountAssetHostCommand
+  | 'list-locale-overlays'
+  | 'read-locale-overlay'
+  | 'run-copilot'
+  | 'attach-ai-outcome';
 
 type BobAccountCommandMessage = {
   type: 'bob:account-command';
@@ -72,6 +78,12 @@ type BobOpenEditorMessage = {
   meta?: Record<string, unknown> | null;
   policy?: unknown;
   copilot?: unknown;
+  translationSetup?: {
+    v: 1;
+    baseLocale: string;
+    planTranslationsMax: number | null;
+    activeLocales: string[];
+  };
 };
 
 type BobOpenEditorPayload = Omit<BobOpenEditorMessage, 'requestId'>;
@@ -158,11 +170,17 @@ function resolveBobAccountCommandRequest(args: {
         method: 'POST',
         path: '/api/account/assets/upload',
       };
-    case 'load-translations':
+    case 'list-locale-overlays':
       if (!instanceId) return null;
       return {
-        method: 'GET',
-        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations`,
+        method: 'POST',
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/locale-overlays/list`,
+      };
+    case 'read-locale-overlay':
+      if (!instanceId) return null;
+      return {
+        method: 'POST',
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/locale-overlays/read`,
       };
     case 'run-copilot':
       if (!instanceId) return null;
@@ -179,6 +197,24 @@ function resolveBobAccountCommandRequest(args: {
     default:
       return null;
   }
+}
+
+function buildTranslationSetup(args: {
+  baseLocale: string;
+  activeAccount: ReturnType<typeof useRomaAccountContext>['activeAccount'];
+  accountPolicy: ReturnType<typeof useRomaAccountContext>['accountPolicy'];
+}): BobOpenEditorPayload['translationSetup'] {
+  const accountLocales = parseAccountLocaleListStrict(args.activeAccount.l10nLocales);
+  const activeLocales = accountLocales.filter((locale) => locale !== args.baseLocale);
+  const planTranslationsMax = args.accountPolicy.limits['l10n.locales.max'];
+  return {
+    v: 1,
+    baseLocale: args.baseLocale,
+    planTranslationsMax: typeof planTranslationsMax === 'number' && Number.isFinite(planTranslationsMax)
+      ? Math.max(0, Math.floor(planTranslationsMax))
+      : null,
+    activeLocales,
+  };
 }
 
 function isAccountAssetCommand(command: BobAccountCommand): boolean {
@@ -424,6 +460,11 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       const label = typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim() ? builderOpen.displayName.trim() : resolvedInstanceId;
       const config = builderOpen.config as Record<string, unknown>;
       const baseLocale = parseAccountL10nPolicyStrict(activeAccount.l10nPolicy).baseLocale;
+      const translationSetup = buildTranslationSetup({
+        baseLocale,
+        activeAccount,
+        accountPolicy,
+      });
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
         accountPublicId: activeAccount.accountPublicId,
@@ -437,6 +478,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         meta: builderOpen.meta ?? null,
         policy: accountPolicy,
         copilot: builderOpen.copilot ?? null,
+        translationSetup,
       };
       await postOpenEditorAndWait({
         targetWindow,
@@ -450,7 +492,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       const message = error instanceof Error ? error.message : String(error);
       setOpenError(message);
     }
-  }, [accountApi, accountPolicy, activeAccount.accountPublicId, activeAccount.l10nPolicy, activeInstanceId, postOpenEditorAndWait]);
+  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, postOpenEditorAndWait]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {

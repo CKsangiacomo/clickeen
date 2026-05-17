@@ -1160,13 +1160,6 @@ var Dieter = (() => {
     }
   ];
 
-  // ../packages/ck-contracts/src/ids.ts
-  var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  function isUuid(raw) {
-    const value = typeof raw === "string" ? raw.trim() : "";
-    return Boolean(value && UUID_RE.test(value));
-  }
-
   // ../packages/ck-contracts/src/overlay-identity.ts
   var COMPACT_ACCOUNT_ID_LENGTH = 8;
   var WIDGET_CODE_LENGTH = 3;
@@ -1505,13 +1498,10 @@ var Dieter = (() => {
     "coreui.errors.aiRuntime.notFound",
     "coreui.errors.aiRuntime.updateFailed",
     "coreui.errors.asset.notFound",
-    "coreui.errors.assetId.invalid",
-    "coreui.errors.assets.integrity.blobMissingForAsset",
-    "coreui.errors.assets.integrity.dbPointerMissingBlob",
-    "coreui.errors.assets.integrity.orphanBlob",
+    "coreui.errors.assetRef.invalid",
     "coreui.errors.assets.integrityMismatch",
     "coreui.errors.assets.integrityUnavailable",
-    "coreui.errors.assets.resolve.invalidAssetIds",
+    "coreui.errors.assets.resolve.invalidAssetRefs",
     "coreui.errors.assets.resolve.invalidPayload",
     "coreui.errors.assets.uploadFailed",
     "coreui.errors.assets.variantUnsupported",
@@ -1640,6 +1630,15 @@ var Dieter = (() => {
     DELETE: "delete"
   });
   var SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(locales_default).map((entry) => entry.code));
+  function normalizeAccountAssetRef(raw) {
+    const value = typeof raw === "string" ? raw.trim().replace(/^\/+/, "") : "";
+    if (!value || value.length > 240) return null;
+    if (value.includes("\\") || /[\u0000-\u001f\u007f]/.test(value)) return null;
+    const segments = value.split("/");
+    if (segments.some((segment) => !segment || segment === "." || segment === "..")) return null;
+    if (segments.some((segment) => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(segment))) return null;
+    return segments.join("/");
+  }
 
   // components/shared/account-assets.ts
   var ACCOUNT_ASSET_UPSELL_REASONS = /* @__PURE__ */ new Set([
@@ -1666,25 +1665,27 @@ var Dieter = (() => {
 
   // components/shared/account-asset-resolve.ts
   async function resolveSingleAccountAsset(args) {
-    const assetId = String(args.getAssetId() || "").trim();
+    const assetRef = String(args.getAssetRef() || "").trim();
     const requestId = args.beginRequest();
     args.onStart?.();
-    if (!assetId) return;
+    if (!assetRef) return;
     try {
-      const { assetsById, missingAssetIds } = await args.accountAssets.resolveAssets([assetId]);
-      if (!args.isCurrent(requestId, assetId)) return;
-      if (missingAssetIds.includes(assetId)) {
+      const resolved = await args.accountAssets.resolveAssets([assetRef]);
+      const assetsByRef = resolved?.assetsByRef instanceof Map ? resolved.assetsByRef : /* @__PURE__ */ new Map();
+      const missingAssetRefs = Array.isArray(resolved?.missingAssetRefs) ? resolved.missingAssetRefs : [];
+      if (!args.isCurrent(requestId, assetRef)) return;
+      if (missingAssetRefs.includes(assetRef)) {
         args.onMissing();
         return;
       }
-      const asset = assetsById.get(assetId);
+      const asset = assetsByRef.get(assetRef);
       if (!asset) {
         args.onMissing();
         return;
       }
       args.onResolved(asset);
     } catch (error) {
-      if (!args.isCurrent(requestId, assetId)) return;
+      if (!args.isCurrent(requestId, assetRef)) return;
       args.onError(error instanceof Error ? error.message : "coreui.errors.db.readFailed");
     }
   }
@@ -1844,7 +1845,7 @@ var Dieter = (() => {
           state,
           {
             name: asset.filename,
-            assetId: asset.assetId,
+            assetRef: asset.assetRef,
             source: "user"
           },
           true
@@ -1932,9 +1933,8 @@ var Dieter = (() => {
       return null;
     }
   }
-  function readMetaAssetId(meta) {
-    const assetId = typeof meta?.assetId === "string" ? meta.assetId.trim() : "";
-    return isUuid(assetId) ? assetId : "";
+  function readMetaAssetRef(meta) {
+    return normalizeAccountAssetRef(meta?.assetRef) ?? "";
   }
   function invalidateResolve(state) {
     state.resolveRequestId += 1;
@@ -1974,10 +1974,10 @@ var Dieter = (() => {
     if (key === "transparent") key = "";
     const placeholder = state.headerValue?.dataset.placeholder ?? "";
     const metaName = typeof meta?.name === "string" ? meta.name.trim() : "";
-    const assetId = readMetaAssetId(meta);
+    const assetRef = readMetaAssetRef(meta);
     const displayName = metaName || "Uploaded file";
-    const currentAssetId = assetId;
-    if (!key && !currentAssetId && !metaName) {
+    const currentAssetRef = assetRef;
+    if (!key && !currentAssetRef && !metaName) {
       invalidateResolve(state);
       clearError(state);
       setHeaderEmpty(state, placeholder);
@@ -1987,7 +1987,7 @@ var Dieter = (() => {
       return;
     }
     state.root.dataset.hasFile = "true";
-    if (currentAssetId) {
+    if (currentAssetRef) {
       setHeaderWithFile(state, displayName, false);
       setPreview(state, {
         kind: "unknown",
@@ -1997,7 +1997,7 @@ var Dieter = (() => {
         hasFile: true
       });
       clearError(state);
-      void resolveStoredAssetPreview(state, currentAssetId, displayName);
+      void resolveStoredAssetPreview(state, currentAssetRef, displayName);
       return;
     }
     setPreview(state, {
@@ -2011,17 +2011,17 @@ var Dieter = (() => {
     setHeaderWithFile(state, displayName, true);
     setError(state, "Missing asset identity. Upload a new file to restore it.");
   }
-  async function resolveStoredAssetPreview(state, assetId, displayName) {
+  async function resolveStoredAssetPreview(state, assetRef, displayName) {
     return resolveSingleAccountAsset({
       accountAssets: state.accountAssets,
-      getAssetId: () => assetId,
+      getAssetRef: () => assetRef,
       beginRequest: () => {
         state.resolveRequestId += 1;
         return state.resolveRequestId;
       },
-      isCurrent: (requestId, currentAssetId) => {
+      isCurrent: (requestId, currentAssetRef) => {
         if (state.resolveRequestId !== requestId) return false;
-        return readMetaAssetId(readMeta(state)) === currentAssetId;
+        return readMetaAssetRef(readMeta(state)) === currentAssetRef;
       },
       onMissing: () => {
         setError(state, MISSING_ASSET_MESSAGE);

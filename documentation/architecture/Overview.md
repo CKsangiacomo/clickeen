@@ -184,7 +184,7 @@ product/
 prague/
 ```
 
-Only `accounts/` is runtime-managed by product/account operations. It owns account instances, uploaded assets, selected overlays, private overlay objects, and account-scoped published projection material:
+Only `accounts/` is runtime-managed by product/account operations. It owns account instances, uploaded assets, private overlay objects, and generated account-scoped browser files:
 
 ```text
 accounts/{accountPublicId}/instances/{instanceId}/...

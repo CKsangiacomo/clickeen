@@ -1,22 +1,27 @@
 import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 
-export type TranslationPreviewLanguage = {
-  language: string;
-  label: string;
-  overlayId: string | null;
-};
-
-export type TranslationPreviewProgress = {
-  language: string;
-  message: string;
-};
-
-export type TranslationsPreviewData = {
+export type TranslationSetup = {
   v: 1;
-  baseLanguage: string;
-  languages: TranslationPreviewLanguage[];
-  valuesByLanguage: Record<string, Record<string, string>>;
-  progress: TranslationPreviewProgress[];
+  baseLocale: string;
+  planTranslationsMax: number | null;
+  activeLocales: string[];
+};
+
+export type LocaleOverlayInventoryEntry = {
+  locale: string;
+  overlayId: string;
+};
+
+export type LocaleOverlayInventoryData = {
+  v: 1;
+  baseLocale: string;
+  overlays: LocaleOverlayInventoryEntry[];
+};
+
+export type LocaleOverlayObjectData = {
+  v: 1;
+  overlayId: string;
+  values: Record<string, string>;
 };
 
 function normalizeValueMap(raw: unknown): Record<string, string> | null {
@@ -30,67 +35,75 @@ function normalizeValueMap(raw: unknown): Record<string, string> | null {
   return values;
 }
 
-function normalizeLanguageRow(raw: unknown): TranslationPreviewLanguage | null {
+function normalizeLocaleList(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return Array.from(
+    new Set(
+      raw
+        .map((entry) => asTrimmedString(entry))
+        .filter((entry): entry is string => Boolean(entry)),
+    ),
+  );
+}
+
+function normalizeOverlayEntry(raw: unknown): LocaleOverlayInventoryEntry | null {
   if (!isRecord(raw)) return null;
-  const language = asTrimmedString(raw.language);
-  if (!language) return null;
-  const label = asTrimmedString(raw.label) ?? language;
   const overlayId = asTrimmedString(raw.overlayId);
+  const locale = asTrimmedString(raw.locale);
+  if (!locale || !overlayId) return null;
   return {
-    language,
-    label,
-    overlayId: overlayId ?? null,
+    locale,
+    overlayId,
   };
 }
 
-function normalizeProgressRow(raw: unknown): TranslationPreviewProgress | null {
-  if (!isRecord(raw)) return null;
-  const language = asTrimmedString(raw.language);
-  const message = asTrimmedString(raw.message);
-  if (!language || !message) return null;
-  return { language, message };
+export function normalizeTranslationSetup(payload: unknown): TranslationSetup | null {
+  if (!isRecord(payload) || payload.v !== 1) return null;
+  const baseLocale = asTrimmedString(payload.baseLocale);
+  if (!baseLocale) return null;
+  const planTranslationsMax =
+    typeof payload.planTranslationsMax === 'number' && Number.isFinite(payload.planTranslationsMax)
+      ? Math.max(0, Math.floor(payload.planTranslationsMax))
+      : null;
+  return {
+    v: 1,
+    baseLocale,
+    planTranslationsMax,
+    activeLocales: normalizeLocaleList(payload.activeLocales).filter((locale) => locale !== baseLocale),
+  };
 }
 
-export function normalizeTranslationsPreviewData(payload: unknown): TranslationsPreviewData | null {
+export function normalizeLocaleOverlayInventory(payload: unknown): LocaleOverlayInventoryData | null {
   if (!isRecord(payload) || payload.v !== 1) return null;
-  const baseLanguage = asTrimmedString(payload.baseLanguage);
-  if (!baseLanguage || !Array.isArray(payload.languages)) return null;
+  const baseLocale = asTrimmedString(payload.baseLocale);
+  if (!baseLocale || !Array.isArray(payload.overlays)) return null;
 
-  const languages = payload.languages
-    .map((entry) => normalizeLanguageRow(entry))
-    .filter((entry): entry is TranslationPreviewLanguage => Boolean(entry));
-  if (languages.length !== payload.languages.length) return null;
-
-  const valuesByLanguageRaw = isRecord(payload.valuesByLanguage) ? payload.valuesByLanguage : {};
-  const valuesByLanguage: Record<string, Record<string, string>> = {};
-  for (const language of languages) {
-    if (!language.overlayId) continue;
-    const values = normalizeValueMap(valuesByLanguageRaw[language.language]);
-    if (!values) return null;
-    valuesByLanguage[language.language] = values;
-  }
-
-  const progress = Array.isArray(payload.progress)
-    ? payload.progress
-        .map((entry) => normalizeProgressRow(entry))
-        .filter((entry): entry is TranslationPreviewProgress => Boolean(entry))
-    : [];
+  const overlays = payload.overlays
+    .map((entry) => normalizeOverlayEntry(entry))
+    .filter((entry): entry is LocaleOverlayInventoryEntry => Boolean(entry));
+  if (overlays.length !== payload.overlays.length) return null;
 
   return {
     v: 1,
-    baseLanguage,
-    languages,
-    valuesByLanguage,
-    progress,
+    baseLocale,
+    overlays,
   };
 }
 
-export function listPreviewableLanguages(data: TranslationsPreviewData | null): string[] {
+export function normalizeLocaleOverlayObject(payload: unknown): LocaleOverlayObjectData | null {
+  if (!isRecord(payload) || payload.v !== 1) return null;
+  const overlayId = asTrimmedString(payload.overlayId);
+  if (!overlayId) return null;
+  const values = normalizeValueMap(payload.values);
+  if (!values) return null;
+  return {
+    v: 1,
+    overlayId,
+    values,
+  };
+}
+
+export function listPreviewableLocales(data: LocaleOverlayInventoryData | null): string[] {
   if (!data) return [];
-  return [
-    data.baseLanguage,
-    ...data.languages
-      .filter((entry) => Boolean(entry.overlayId && data.valuesByLanguage[entry.language]))
-      .map((entry) => entry.language),
-  ];
+  return Array.from(new Set([data.baseLocale, ...data.overlays.map((entry) => entry.locale)]));
 }

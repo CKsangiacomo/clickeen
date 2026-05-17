@@ -7,8 +7,8 @@ import { UpsellPopup } from './UpsellPopup';
 import { Workspace } from './Workspace';
 import { WidgetSessionProvider } from '../lib/session/useWidgetSession';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
-import { useTranslationsPreviewState } from './useTranslationsPreviewState';
-import { listPreviewableLanguages } from '../lib/translations-preview';
+import { useLocaleOverlayPreviewState } from './useLocaleOverlayPreviewState';
+import { listPreviewableLocales } from '../lib/translations-preview';
 
 function UpsellPopupHost() {
   const session = useWidgetSessionChrome();
@@ -36,18 +36,19 @@ function BuilderShell() {
   const translationsEnabled = Boolean(
     session.compiled &&
       instanceId &&
-      previewMode === 'translations' &&
-      !session.isDirty &&
-      !session.isSaving,
+      baseLocale &&
+      previewMode === 'translations',
   );
   const {
-    data: translationsData,
-    loading: translationsLoading,
-    error: translationsError,
-  } = useTranslationsPreviewState({
+    inventory: localeOverlayInventory,
+    valuesByLocale: localeOverlayValuesByLocale,
+    loading: localeOverlayLoading,
+    error: localeOverlayError,
+  } = useLocaleOverlayPreviewState({
     instanceId,
-    bootBaseLocale: baseLocale,
+    baseLocale,
     enabled: translationsEnabled,
+    selectedLocale: overlayPreviewLocale,
     refreshVersion: translationsRefreshVersion,
   });
 
@@ -59,12 +60,6 @@ function BuilderShell() {
   }, [instanceId]);
 
   useEffect(() => {
-    if (session.isDirty && overlayPreviewLocale) {
-      setOverlayPreviewLocale('');
-    }
-  }, [overlayPreviewLocale, session.isDirty]);
-
-  useEffect(() => {
     const justFinishedSave = previousSavingRef.current && !session.isSaving;
     previousSavingRef.current = session.isSaving;
     if (!justFinishedSave) return;
@@ -73,11 +68,8 @@ function BuilderShell() {
   }, [session.error?.source, session.isSaving]);
 
   const previewableTranslationLocales = useMemo(() => {
-    return listPreviewableLanguages(translationsData);
-  }, [translationsData]);
-  const translationOverlayValuesByLanguage = useMemo(() => {
-    return translationsData?.valuesByLanguage ?? {};
-  }, [translationsData]);
+    return listPreviewableLocales(localeOverlayInventory);
+  }, [localeOverlayInventory]);
 
   useEffect(() => {
     if (!overlayPreviewLocale) return;
@@ -95,9 +87,10 @@ function BuilderShell() {
             overlayPreviewLocale={overlayPreviewLocale}
             onOverlayPreviewLocaleChange={setOverlayPreviewLocale}
             onPreviewModeChange={setPreviewMode}
-            translationsData={translationsData}
-            translationsLoading={translationsLoading}
-            translationsError={translationsError}
+            translationSetup={chrome.meta?.translationSetup ?? null}
+            localeOverlayInventory={localeOverlayInventory}
+            localeOverlayLoading={localeOverlayLoading}
+            localeOverlayError={localeOverlayError}
           />
           <Workspace
             baseLocale={baseLocale}
@@ -105,7 +98,7 @@ function BuilderShell() {
             overlayPreviewLocale={overlayPreviewLocale}
             onOverlayPreviewLocaleChange={setOverlayPreviewLocale}
             previewablePreviewLocales={previewableTranslationLocales}
-            overlayValuesByLanguage={translationOverlayValuesByLanguage}
+            overlayValuesByLanguage={localeOverlayValuesByLocale}
           />
         </div>
       </div>

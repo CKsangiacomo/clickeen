@@ -8,6 +8,7 @@ import {
   isOverlayVersion,
   parseOverlayId,
 } from '@clickeen/ck-contracts/overlay-identity';
+import { resolveLocaleForLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import type { Env } from '../../types';
 import {
   accountInstanceOverlayObjectKey,
@@ -27,6 +28,11 @@ export type OverlayCoordinate = {
   languageCode: string;
   experiment: string;
   personalization: string;
+};
+
+export type LocaleOverlayInventoryEntry = {
+  locale: string;
+  overlayId: string;
 };
 
 function assertValues(value: unknown): Record<string, unknown> {
@@ -138,6 +144,37 @@ export async function readSelectedOverlayProjection(args: {
     if (selected) languages[languageCode] = selected;
   }
   return { languages };
+}
+
+export async function listLocaleOverlayInventory(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+}): Promise<LocaleOverlayInventoryEntry[]> {
+  const prefix = accountInstanceOverlayObjectPrefix(args.accountId, '', args.instanceId);
+  const byLanguage: Record<string, string[]> = {};
+  let cursor: string | undefined = undefined;
+  do {
+    const listed = await args.env.TOKYO_R2.list({ prefix, cursor });
+    for (const object of listed.objects) {
+      const overlayId = object.key.slice(object.key.lastIndexOf('/') + 1).replace(/\.json$/, '');
+      const parsed = parseOverlayId(overlayId);
+      if (!parsed.ok) continue;
+      if (parsed.value.accountPublicId !== args.accountId || parsed.value.instanceId !== args.instanceId) continue;
+      const locale = resolveLocaleForLanguageOverlayCode(parsed.value.languageCode);
+      if (!locale) continue;
+      byLanguage[parsed.value.languageCode] = [...(byLanguage[parsed.value.languageCode] ?? []), overlayId];
+    }
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+
+  const inventory: LocaleOverlayInventoryEntry[] = [];
+  for (const [languageCode, ids] of Object.entries(byLanguage)) {
+      const overlayId = pickLatestOverlayId(ids);
+      const locale = resolveLocaleForLanguageOverlayCode(languageCode);
+      if (overlayId && locale) inventory.push({ locale, overlayId });
+  }
+  return inventory.sort((left, right) => left.locale.localeCompare(right.locale));
 }
 
 async function isOverlayIdReferenced(args: {

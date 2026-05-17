@@ -12,7 +12,7 @@ const APPROVED_CANONICAL_FILES = new Set([
 const SCANNED_PATHS = [
   'bob/components/CopilotPane.tsx',
   'bob/components/td-menu-content/linkedOps.ts',
-  'bob/components/useTranslationsPreviewState.ts',
+  'bob/components/useLocaleOverlayPreviewState.ts',
   'bob/lib/compiler.server.ts',
   'bob/lib/compiler/editor-contract.ts',
   'bob/lib/compiler/modules/normalization.ts',

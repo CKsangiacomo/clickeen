@@ -98,6 +98,6 @@ Missing required paths and extra producer paths are rejected by the producer bou
 
 ## Tokyo PBX Rule
 
-Tokyo-worker is the PBX/control-plane switchboard. It validates IDs, writes exact objects, reads exact objects, and updates selected/published pointers. It does not decide product meaning, run translation orchestration, inspect overlay bodies to understand identity, or repair data it produced.
+Tokyo-worker is the PBX/control-plane switchboard. It validates IDs, writes exact objects, lists actual overlay files under an instance, and reads exact objects. It does not decide product meaning, run translation orchestration, inspect overlay bodies to understand identity, synthesize desired-locale availability, or repair data it produced.
 
-Roma orchestrates product flows. San Francisco produces text values. Tokyo stores. Venice serves published truth.
+Roma orchestrates product flows. San Francisco produces text values after Save. Tokyo stores. Public serving reads generated browser files, not overlay source truth.

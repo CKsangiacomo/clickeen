@@ -17,12 +17,22 @@ export type ExecuteAccountCommand = (
   commandArgs: ExecuteAccountCommandArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
-export type LoadTranslationsArgs = {
+export type ListLocaleOverlaysArgs = {
   instanceId: string;
+  baseLocale: string;
 };
 
-export type LoadTranslations = (
-  args: LoadTranslationsArgs
+export type ListLocaleOverlays = (
+  args: ListLocaleOverlaysArgs
+) => Promise<{ ok: boolean; status: number; json: any }>;
+
+export type ReadLocaleOverlayArgs = {
+  instanceId: string;
+  overlayId: string;
+};
+
+export type ReadLocaleOverlay = (
+  args: ReadLocaleOverlayArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
 const HOST_ORIGIN_WAIT_MS = 3_000;
@@ -267,12 +277,31 @@ export function useSessionTransport(args: {
     [dispatchHostAccountCommand],
   );
 
-  const loadTranslations: LoadTranslations = useCallback(
-    async (commandArgs: LoadTranslationsArgs) => {
+  const listLocaleOverlays: ListLocaleOverlays = useCallback(
+    async (commandArgs: ListLocaleOverlaysArgs) => {
       const instanceId = String(commandArgs.instanceId || '').trim();
       const result = await dispatchHostAccountCommand({
-        command: 'load-translations',
+        command: 'list-locale-overlays',
         instanceId,
+        body: {
+          baseLocale: commandArgs.baseLocale,
+        },
+      });
+      return { ok: result.ok, status: result.status, json: result.payload };
+    },
+    [dispatchHostAccountCommand],
+  );
+
+  const readLocaleOverlay: ReadLocaleOverlay = useCallback(
+    async (commandArgs: ReadLocaleOverlayArgs) => {
+      const instanceId = String(commandArgs.instanceId || '').trim();
+      const overlayId = String(commandArgs.overlayId || '').trim();
+      const result = await dispatchHostAccountCommand({
+        command: 'read-locale-overlay',
+        instanceId,
+        body: {
+          overlayId,
+        },
       });
       return { ok: result.ok, status: result.status, json: result.payload };
     },
@@ -284,6 +313,7 @@ export function useSessionTransport(args: {
     hostOriginRef,
     fetchApi,
     executeAccountCommand,
-    loadTranslations,
+    listLocaleOverlays,
+    readLocaleOverlay,
   };
 }

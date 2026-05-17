@@ -1160,13 +1160,6 @@ var Dieter = (() => {
     }
   ];
 
-  // ../packages/ck-contracts/src/ids.ts
-  var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  function isUuid(raw) {
-    const value = typeof raw === "string" ? raw.trim() : "";
-    return Boolean(value && UUID_RE.test(value));
-  }
-
   // ../packages/ck-contracts/src/overlay-identity.ts
   var COMPACT_ACCOUNT_ID_LENGTH = 8;
   var WIDGET_CODE_LENGTH = 3;
@@ -1505,13 +1498,10 @@ var Dieter = (() => {
     "coreui.errors.aiRuntime.notFound",
     "coreui.errors.aiRuntime.updateFailed",
     "coreui.errors.asset.notFound",
-    "coreui.errors.assetId.invalid",
-    "coreui.errors.assets.integrity.blobMissingForAsset",
-    "coreui.errors.assets.integrity.dbPointerMissingBlob",
-    "coreui.errors.assets.integrity.orphanBlob",
+    "coreui.errors.assetRef.invalid",
     "coreui.errors.assets.integrityMismatch",
     "coreui.errors.assets.integrityUnavailable",
-    "coreui.errors.assets.resolve.invalidAssetIds",
+    "coreui.errors.assets.resolve.invalidAssetRefs",
     "coreui.errors.assets.resolve.invalidPayload",
     "coreui.errors.assets.uploadFailed",
     "coreui.errors.assets.variantUnsupported",
@@ -1640,6 +1630,15 @@ var Dieter = (() => {
     DELETE: "delete"
   });
   var SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(locales_default).map((entry) => entry.code));
+  function normalizeAccountAssetRef(raw) {
+    const value = typeof raw === "string" ? raw.trim().replace(/^\/+/, "") : "";
+    if (!value || value.length > 240) return null;
+    if (value.includes("\\") || /[\u0000-\u001f\u007f]/.test(value)) return null;
+    const segments = value.split("/");
+    if (segments.some((segment) => !segment || segment === "." || segment === "..")) return null;
+    if (segments.some((segment) => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(segment))) return null;
+    return segments.join("/");
+  }
 
   // components/dropdown-fill/fill-types.ts
   var MODE_ORDER = ["color", "gradient", "image", "video"];
@@ -1916,22 +1915,21 @@ var Dieter = (() => {
   }
 
   // components/dropdown-fill/fill-parser.ts
-  function normalizeAssetId(raw) {
-    const value = typeof raw === "string" ? raw.trim() : "";
-    return isUuid(value) ? value : "";
+  function normalizeAssetRef(raw) {
+    return normalizeAccountAssetRef(raw) ?? "";
   }
   function normalizeImageValue(raw) {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
       return { fit: "cover", position: "center", repeat: "no-repeat" };
     }
     const value = raw;
-    const assetId = normalizeAssetId(value.assetId);
+    const assetRef = normalizeAssetRef(value.assetRef);
     const name = typeof value.name === "string" ? value.name.trim() : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
     const repeat = typeof value.repeat === "string" && value.repeat.trim() ? value.repeat.trim() : "no-repeat";
     return {
-      ...assetId ? { assetId } : {},
+      ...assetRef ? { assetRef } : {},
       ...name ? { name } : {},
       fit,
       position,
@@ -1943,8 +1941,8 @@ var Dieter = (() => {
       return { fit: "cover", position: "center", loop: true, muted: true, autoplay: true };
     }
     const value = raw;
-    const assetId = normalizeAssetId(value.assetId);
-    const posterAssetId = normalizeAssetId(value.posterAssetId);
+    const assetRef = normalizeAssetRef(value.assetRef);
+    const posterAssetRef = normalizeAssetRef(value.posterAssetRef);
     const name = typeof value.name === "string" ? value.name.trim() : "";
     const fit = value.fit === "contain" ? "contain" : "cover";
     const position = typeof value.position === "string" && value.position.trim() ? value.position.trim() : "center";
@@ -1952,8 +1950,8 @@ var Dieter = (() => {
     const muted = typeof value.muted === "boolean" ? value.muted : true;
     const autoplay = typeof value.autoplay === "boolean" ? value.autoplay : true;
     return {
-      ...assetId ? { assetId } : {},
-      ...posterAssetId ? { posterAssetId } : {},
+      ...assetRef ? { assetRef } : {},
+      ...posterAssetRef ? { posterAssetRef } : {},
       ...name ? { name } : {},
       fit,
       position,
@@ -2044,17 +2042,14 @@ var Dieter = (() => {
   function readVideoName(fill) {
     return typeof fill.video?.name === "string" && fill.video.name.trim() ? fill.video.name.trim() : null;
   }
-  function readImageAssetId(fill) {
-    const assetId = typeof fill.image?.assetId === "string" ? fill.image.assetId.trim() : "";
-    return isUuid(assetId) ? assetId : null;
+  function readImageAssetRef(fill) {
+    return normalizeAccountAssetRef(fill.image?.assetRef);
   }
-  function readVideoAssetId(fill) {
-    const assetId = typeof fill.video?.assetId === "string" ? fill.video.assetId.trim() : "";
-    return isUuid(assetId) ? assetId : null;
+  function readVideoAssetRef(fill) {
+    return normalizeAccountAssetRef(fill.video?.assetRef);
   }
-  function readVideoPosterAssetId(fill) {
-    const assetId = typeof fill.video?.posterAssetId === "string" ? fill.video.posterAssetId.trim() : "";
-    return isUuid(assetId) ? assetId : null;
+  function readVideoPosterAssetRef(fill) {
+    return normalizeAccountAssetRef(fill.video?.posterAssetRef);
   }
 
   // components/dropdown-fill/dropdown-fill-gradient.ts
@@ -2592,25 +2587,27 @@ var Dieter = (() => {
 
   // components/shared/account-asset-resolve.ts
   async function resolveSingleAccountAsset(args) {
-    const assetId = String(args.getAssetId() || "").trim();
+    const assetRef = String(args.getAssetRef() || "").trim();
     const requestId = args.beginRequest();
     args.onStart?.();
-    if (!assetId) return;
+    if (!assetRef) return;
     try {
-      const { assetsById, missingAssetIds } = await args.accountAssets.resolveAssets([assetId]);
-      if (!args.isCurrent(requestId, assetId)) return;
-      if (missingAssetIds.includes(assetId)) {
+      const resolved = await args.accountAssets.resolveAssets([assetRef]);
+      const assetsByRef = resolved?.assetsByRef instanceof Map ? resolved.assetsByRef : /* @__PURE__ */ new Map();
+      const missingAssetRefs = Array.isArray(resolved?.missingAssetRefs) ? resolved.missingAssetRefs : [];
+      if (!args.isCurrent(requestId, assetRef)) return;
+      if (missingAssetRefs.includes(assetRef)) {
         args.onMissing();
         return;
       }
-      const asset = assetsById.get(assetId);
+      const asset = assetsByRef.get(assetRef);
       if (!asset) {
         args.onMissing();
         return;
       }
       args.onResolved(asset);
     } catch (error) {
-      if (!args.isCurrent(requestId, assetId)) return;
+      if (!args.isCurrent(requestId, assetRef)) return;
       args.onError(error instanceof Error ? error.message : "coreui.errors.db.readFailed");
     }
   }
@@ -2718,11 +2715,11 @@ var Dieter = (() => {
     }
     state.imageSrc = src;
     if (opts.commit) {
-      const assetId = String(state.imageAssetId || "").trim();
-      const fill = assetId ? {
+      const assetRef = String(state.imageAssetRef || "").trim();
+      const fill = assetRef ? {
         type: "image",
         image: {
-          assetId,
+          assetRef,
           ...state.imageName ? { name: state.imageName } : {},
           fit: "cover",
           position: "center",
@@ -2743,13 +2740,13 @@ var Dieter = (() => {
     }
     state.videoSrc = src;
     if (opts.commit) {
-      const assetId = String(state.videoAssetId || "").trim();
-      const fill = assetId ? {
+      const assetRef = String(state.videoAssetRef || "").trim();
+      const fill = assetRef ? {
         type: "video",
         video: {
-          assetId,
+          assetRef,
           ...state.videoName ? { name: state.videoName } : {},
-          ...state.videoPosterAssetId ? { posterAssetId: state.videoPosterAssetId } : {},
+          ...state.videoPosterAssetRef ? { posterAssetRef: state.videoPosterAssetRef } : {},
           fit: "cover",
           position: "center",
           loop: true,
@@ -2798,11 +2795,11 @@ var Dieter = (() => {
       button.addEventListener("click", (event) => {
         event.preventDefault();
         if (args.kind === "image") {
-          commitImageAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+          commitImageAssetSelection(args.state, asset.assetRef, asset.filename, true, args.deps);
           setBrowserOpen(args.state.imageBrowser, args.state.chooseButton, false);
           return;
         }
-        commitVideoAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+        commitVideoAssetSelection(args.state, asset.assetRef, asset.filename, true, args.deps);
         setBrowserOpen(args.state.videoBrowser, args.state.videoChooseButton, false);
       });
       row.appendChild(meta);
@@ -2852,11 +2849,11 @@ var Dieter = (() => {
     try {
       const asset = await args.state.accountAssets.uploadAsset(args.file, "api");
       if (args.kind === "image") {
-        commitImageAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+        commitImageAssetSelection(args.state, asset.assetRef, asset.filename, true, args.deps);
         setBrowserOpen(args.state.imageBrowser, args.state.chooseButton, false);
         return;
       }
-      commitVideoAssetSelection(args.state, asset.assetId, asset.filename, true, args.deps);
+      commitVideoAssetSelection(args.state, asset.assetRef, asset.filename, true, args.deps);
       setBrowserOpen(args.state.videoBrowser, args.state.videoChooseButton, false);
     } catch (error) {
       const message = error instanceof Error ? error.message : "coreui.errors.assets.uploadFailed";
@@ -2868,15 +2865,15 @@ var Dieter = (() => {
       setFillUploadingState(args.state, false);
     }
   }
-  function commitImageAssetSelection(state, assetId, filename, commit, deps) {
-    state.imageAssetId = assetId;
+  function commitImageAssetSelection(state, assetRef, filename, commit, deps) {
+    state.imageAssetRef = assetRef;
     state.imageName = filename;
     setAssetPanelMessage(state.imageMessage, "");
     setImageSrc(state, null, { commit }, deps);
     void resolveImageAsset(state, deps);
   }
-  function commitVideoAssetSelection(state, assetId, filename, commit, deps) {
-    state.videoAssetId = assetId;
+  function commitVideoAssetSelection(state, assetRef, filename, commit, deps) {
+    state.videoAssetRef = assetRef;
     state.videoName = filename;
     setAssetPanelMessage(state.videoMessage, "");
     setVideoSrc(state, null, { commit }, deps);
@@ -2885,12 +2882,12 @@ var Dieter = (() => {
   async function resolveImageAsset(state, deps) {
     return resolveSingleAccountAsset({
       accountAssets: state.accountAssets,
-      getAssetId: () => String(state.imageAssetId || "").trim(),
+      getAssetRef: () => String(state.imageAssetRef || "").trim(),
       beginRequest: () => {
         state.imageResolveRequestId += 1;
         return state.imageResolveRequestId;
       },
-      isCurrent: (requestId, assetId) => state.imageResolveRequestId === requestId && String(state.imageAssetId || "").trim() === assetId,
+      isCurrent: (requestId, assetRef) => state.imageResolveRequestId === requestId && String(state.imageAssetRef || "").trim() === assetRef,
       onStart: () => setAssetPanelMessage(state.imageMessage, ""),
       onMissing: () => {
         setAssetPanelMessage(state.imageMessage, "Asset unavailable.");
@@ -2907,12 +2904,12 @@ var Dieter = (() => {
   async function resolveVideoAsset(state, deps) {
     return resolveSingleAccountAsset({
       accountAssets: state.accountAssets,
-      getAssetId: () => String(state.videoAssetId || "").trim(),
+      getAssetRef: () => String(state.videoAssetRef || "").trim(),
       beginRequest: () => {
         state.videoResolveRequestId += 1;
         return state.videoResolveRequestId;
       },
-      isCurrent: (requestId, assetId) => state.videoResolveRequestId === requestId && String(state.videoAssetId || "").trim() === assetId,
+      isCurrent: (requestId, assetRef) => state.videoResolveRequestId === requestId && String(state.videoAssetRef || "").trim() === assetRef,
       onStart: () => setAssetPanelMessage(state.videoMessage, ""),
       onMissing: () => {
         setAssetPanelMessage(state.videoMessage, "Asset unavailable.");
@@ -2958,7 +2955,7 @@ var Dieter = (() => {
           URL.revokeObjectURL(state.imageObjectUrl);
           state.imageObjectUrl = null;
         }
-        state.imageAssetId = null;
+        state.imageAssetRef = null;
         state.imageName = null;
         setAssetPanelMessage(state.imageMessage, "");
         setBrowserOpen(state.imageBrowser, state.chooseButton, false);
@@ -3011,8 +3008,8 @@ var Dieter = (() => {
           URL.revokeObjectURL(state.videoObjectUrl);
           state.videoObjectUrl = null;
         }
-        state.videoAssetId = null;
-        state.videoPosterAssetId = null;
+        state.videoAssetRef = null;
+        state.videoPosterAssetRef = null;
         state.videoName = null;
         setAssetPanelMessage(state.videoMessage, "");
         setBrowserOpen(state.videoBrowser, state.videoChooseButton, false);
@@ -3177,7 +3174,7 @@ var Dieter = (() => {
       removeButton,
       fileInput,
       imageSrc: null,
-      imageAssetId: null,
+      imageAssetRef: null,
       imageName: null,
       imageObjectUrl: null,
       imageResolveRequestId: 0,
@@ -3192,8 +3189,8 @@ var Dieter = (() => {
       videoRemoveButton,
       videoFileInput,
       videoSrc: null,
-      videoAssetId: null,
-      videoPosterAssetId: null,
+      videoAssetRef: null,
+      videoPosterAssetRef: null,
       videoName: null,
       videoObjectUrl: null,
       videoResolveRequestId: 0,
@@ -3397,15 +3394,15 @@ var Dieter = (() => {
     if (fill.type === "none") {
       if (nextMode === "image") {
         state.imageResolveRequestId += 1;
-        state.imageAssetId = null;
+        state.imageAssetRef = null;
         state.imageName = null;
         setImageSrc2(state, null, { commit: false });
         return;
       }
       if (nextMode === "video") {
         state.videoResolveRequestId += 1;
-        state.videoAssetId = null;
-        state.videoPosterAssetId = null;
+        state.videoAssetRef = null;
+        state.videoPosterAssetRef = null;
         state.videoName = null;
         setVideoSrc2(state, null, { commit: false });
         return;
@@ -3440,15 +3437,15 @@ var Dieter = (() => {
       return;
     }
     if (fill.type === "image") {
-      state.imageAssetId = readImageAssetId(fill);
+      state.imageAssetRef = readImageAssetRef(fill);
       state.imageName = readImageName(fill);
       setImageSrc2(state, null, { commit: false });
       void resolveImageAsset(state, mediaDeps());
       return;
     }
     if (fill.type === "video") {
-      state.videoAssetId = readVideoAssetId(fill);
-      state.videoPosterAssetId = readVideoPosterAssetId(fill);
+      state.videoAssetRef = readVideoAssetRef(fill);
+      state.videoPosterAssetRef = readVideoPosterAssetRef(fill);
       state.videoName = readVideoName(fill);
       setVideoSrc2(state, null, { commit: false });
       void resolveVideoAsset(state, mediaDeps());
