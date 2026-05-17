@@ -39,7 +39,7 @@ Entitlement keys:
 - `l10n.locales.max`
 - `l10n.versions.max`
 
-Account active locales are managed in Roma Settings. Builder edits only one base-locale widget at a time; translation is async follow-up work after save.
+Account active locales are managed in Roma Settings. Builder edits only one base-locale widget at a time; translation is save-triggered follow-up work after the base config is persisted.
 
 ## Widget Text Primitive Source
 
@@ -69,7 +69,7 @@ sections.0.faqs.0.answer
 
 1. User saves one widget instance in Bob.
 2. Roma saves the base config through the account product boundary.
-3. Roma orchestrates Babel follow-up for account active locales.
+3. Roma orchestrates Babel follow-up for account active locales before returning the Save response.
 4. San Francisco receives concrete text primitive paths and base values.
 5. San Francisco returns concrete translated text values.
 6. The receiving boundary rejects missing or extra paths with the path named.
@@ -79,6 +79,8 @@ sections.0.faqs.0.answer
 No step repairs values, drops paths, guesses paths, or scans widget JSON to rediscover meaning.
 
 Base save success is independent from language production. If Czech fails and Italian succeeds, Roma returns base save success with per-language follow-up details and Tokyo stores the successful Italian overlay. The failed language has no selected overlay update.
+
+The follow-up result must be visible to Bob in the Save response. It must not be hidden in a post-response callback that can fail after Bob already believes translation work succeeded.
 
 ## Builder Preview
 

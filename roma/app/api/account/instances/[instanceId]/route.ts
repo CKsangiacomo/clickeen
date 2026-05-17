@@ -1,4 +1,4 @@
-import { after, NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
@@ -120,8 +120,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  after(async () => {
-    const babel = await runBabelTextFollowupAfterSave({
+  let babel: Awaited<ReturnType<typeof runBabelTextFollowupAfterSave>>;
+  try {
+    babel = await runBabelTextFollowupAfterSave({
       authz: current.value.authzPayload,
       accessToken: current.value.accessToken,
       accountCapsule: current.value.authzToken,
@@ -131,21 +132,38 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       config,
       requestId: current.value.requestId,
     });
-    if (!babel.ok) {
-      console.warn('[roma account instance save] async babel follow-up failed', {
-        accountId,
-        instanceId,
-        requestId: current.value.requestId,
-        results: babel.results,
-      });
-    }
-  });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    babel = {
+      ok: false,
+      baseLocale: null,
+      results: [
+        {
+          locale: '<followup>',
+          ok: false,
+          reasonKey: 'babel.text.followup_failed',
+          detail,
+        },
+      ],
+    };
+  }
+
+  if (!babel.ok) {
+    console.warn('[roma account instance save] babel follow-up failed', {
+      accountId,
+      instanceId,
+      requestId: current.value.requestId,
+      results: babel.results,
+    });
+  }
+
   return withSession(
     request,
     NextResponse.json({
       ok: true,
       sourceVersion: result.value.sourceVersion,
       generation: result.value.generation,
+      babel,
     }),
     current.value.setCookies,
   );
