@@ -35,7 +35,7 @@ const mappings = [
   { source: 'tokyo/product/media', target: 'product/media', optional: true },
   { source: 'tokyo/product/themes', target: 'product/themes', optional: true },
   { source: 'tokyo/product/dieter', target: 'dieter' },
-  { source: 'tokyo/product/fonts', target: 'fonts' },
+  { source: 'tokyo/product/fonts', target: 'fonts', optional: true },
   { source: 'tokyo/roma', target: 'product/roma', optional: true },
   { source: 'tokyo/prague', target: 'prague' },
 ];
