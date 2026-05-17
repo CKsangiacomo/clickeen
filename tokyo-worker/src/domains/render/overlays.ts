@@ -9,11 +9,20 @@ import {
   parseOverlayId,
 } from '@clickeen/ck-contracts/overlay-identity';
 import { resolveLocaleForLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
+import {
+  extractTextPrimitiveValues,
+  validateOverlayValuesForTextPrimitives,
+} from '@clickeen/ck-contracts/overlay-primitives';
 import type { Env } from '../../types';
+import {
+  resolveWidgetCatalogEntry,
+  resolveWidgetTypeFromCode,
+} from '../widget-catalog';
 import {
   accountInstanceOverlayObjectKey,
   accountInstanceOverlayObjectPrefix,
 } from './keys';
+import { readSavedRenderConfig } from './saved-config';
 import { loadJson, putJson } from './storage';
 import type {
   OverlayObjectDocument,
@@ -34,6 +43,15 @@ export type LocaleOverlayInventoryEntry = {
   locale: string;
   overlayId: string;
 };
+
+export type OverlayCompletenessResult =
+  | { ok: true }
+  | {
+      ok: false;
+      reasonKey: string;
+      detail: string;
+      path?: string;
+    };
 
 function assertValues(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -119,6 +137,100 @@ function pickLatestOverlayId(ids: string[]): string | null {
   return ids.sort((left, right) => overlayVersionValue(right) - overlayVersionValue(left))[0] ?? null;
 }
 
+export async function validateOverlayObjectForSavedInstance(args: {
+  env: Env;
+  overlayId: string;
+  values: unknown;
+}): Promise<OverlayCompletenessResult> {
+  const parsed = parseOverlayId(args.overlayId);
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      reasonKey: 'tokyo.overlay.id_invalid',
+      detail: parsed.reason,
+    };
+  }
+  const widgetType = resolveWidgetTypeFromCode(parsed.value.widgetCode);
+  if (!widgetType) {
+    return {
+      ok: false,
+      reasonKey: 'tokyo.overlay.widget_unknown',
+      detail: `No widget type for overlay widget code ${parsed.value.widgetCode}`,
+    };
+  }
+  const saved = await readSavedRenderConfig({
+    env: args.env,
+    accountId: parsed.value.accountPublicId,
+    instanceId: parsed.value.instanceId,
+    widgetType,
+  });
+  if (!saved.ok) {
+    return {
+      ok: false,
+      reasonKey: saved.reasonKey,
+      detail: saved.reasonKey,
+    };
+  }
+  const catalogEntry = resolveWidgetCatalogEntry(saved.value.pointer.widgetType);
+  if (!catalogEntry) {
+    return {
+      ok: false,
+      reasonKey: 'tokyo.overlay.widget_contract_missing',
+      detail: `Missing widget overlay contract for ${saved.value.pointer.widgetType}`,
+    };
+  }
+
+  let requiredItems;
+  try {
+    requiredItems = extractTextPrimitiveValues({
+      spec: { overlays: catalogEntry.overlays },
+      config: saved.value.config,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      reasonKey: 'tokyo.overlay.widget_contract_invalid',
+      detail: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  const validation = validateOverlayValuesForTextPrimitives(requiredItems, args.values);
+  if (!validation.ok) {
+    return {
+      ok: false,
+      reasonKey: `tokyo.overlay.${validation.reason}`,
+      detail: `overlay values ${validation.reason}: ${validation.path}`,
+      path: validation.path,
+    };
+  }
+  return { ok: true };
+}
+
+async function isCompleteOverlayObject(args: {
+  env: Env;
+  overlayId: string;
+}): Promise<boolean> {
+  const object = await readOverlayObject({ env: args.env, overlayId: args.overlayId });
+  if (!object) return false;
+  const validation = await validateOverlayObjectForSavedInstance({
+    env: args.env,
+    overlayId: args.overlayId,
+    values: object.values,
+  });
+  return validation.ok;
+}
+
+async function pickLatestCompleteOverlayId(args: {
+  env: Env;
+  ids: string[];
+}): Promise<string | null> {
+  const sorted = [...args.ids].sort((left, right) => overlayVersionValue(right) - overlayVersionValue(left));
+  for (const overlayId of sorted) {
+    if (await isCompleteOverlayObject({ env: args.env, overlayId })) return overlayId;
+  }
+  return null;
+}
+
 export async function readSelectedOverlayProjection(args: {
   env: Env;
   accountId: string;
@@ -140,7 +252,7 @@ export async function readSelectedOverlayProjection(args: {
   } while (cursor);
   const languages: Record<string, string> = {};
   for (const [languageCode, ids] of Object.entries(byLanguage)) {
-    const selected = pickLatestOverlayId(ids);
+    const selected = await pickLatestCompleteOverlayId({ env: args.env, ids });
     if (selected) languages[languageCode] = selected;
   }
   return { languages };
@@ -170,7 +282,7 @@ export async function listLocaleOverlayInventory(args: {
 
   const inventory: LocaleOverlayInventoryEntry[] = [];
   for (const [languageCode, ids] of Object.entries(byLanguage)) {
-      const overlayId = pickLatestOverlayId(ids);
+      const overlayId = await pickLatestCompleteOverlayId({ env: args.env, ids });
       const locale = resolveLocaleForLanguageOverlayCode(languageCode);
       if (overlayId && locale) inventory.push({ locale, overlayId });
   }
@@ -316,6 +428,9 @@ export async function readSelectedOverlayPointer(args: {
   };
 }): Promise<SelectedOverlayPointerDocument | null> {
   const coordinate = normalizeCoordinate(args.coordinate);
-  const selected = pickLatestOverlayId(await listOverlayIdsForCoordinate(args.env, coordinate));
+  const selected = await pickLatestCompleteOverlayId({
+    env: args.env,
+    ids: await listOverlayIdsForCoordinate(args.env, coordinate),
+  });
   return selected ? { v: 1, overlayId: selected } : null;
 }

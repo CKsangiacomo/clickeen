@@ -2,6 +2,7 @@ import { CK_REQUEST_ID_HEADER, isRecord, serializeCkLogEvent } from '@clickeen/c
 import {
   DEFAULT_OVERLAY_EXPERIMENT,
   DEFAULT_OVERLAY_PERSONALIZATION,
+  buildOverlayId,
   isCompactAccountPublicId,
   isOverlayExperimentCode,
   isOverlayId,
@@ -32,6 +33,7 @@ import {
   readSelectedOverlayPointer,
   saveAccountInstanceTransition,
   unpublishAccountInstanceTransition,
+  validateOverlayObjectForSavedInstance,
   writeOverlayObject,
   writeSavedRenderConfig,
   writeSelectedOverlayPointer,
@@ -203,6 +205,35 @@ export async function tryHandleInternalRenderRoutes(
         json(
           { error: { kind: saved.kind, reasonKey: saved.reasonKey } },
           { status: saved.kind === 'NOT_FOUND' ? 404 : 422 },
+        ),
+      );
+    }
+
+    const validation = await validateOverlayObjectForSavedInstance({
+      env,
+      overlayId: buildOverlayId({
+        accountPublicId: accountId,
+        widgetCode: saved.value.pointer.widgetCode,
+        instanceId,
+        languageCode,
+        experiment,
+        personalization,
+        version: '00',
+      }),
+      values,
+    });
+    if (!validation.ok) {
+      return respond(
+        json(
+          {
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: validation.reasonKey,
+              detail: validation.detail,
+              ...(validation.path ? { path: validation.path } : {}),
+            },
+          },
+          { status: 422 },
         ),
       );
     }
@@ -392,6 +423,26 @@ export async function tryHandleInternalRenderRoutes(
       const object = await readOverlayObject({ env, overlayId });
       if (!object) {
         return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.overlay.notFound' } }, { status: 404 }));
+      }
+      const validation = await validateOverlayObjectForSavedInstance({
+        env,
+        overlayId,
+        values: object.values,
+      });
+      if (!validation.ok) {
+        return respond(
+          json(
+            {
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: validation.reasonKey,
+                detail: validation.detail,
+                ...(validation.path ? { path: validation.path } : {}),
+              },
+            },
+            { status: 422 },
+          ),
+        );
       }
       return respond(json({ ok: true, overlayId, ...object }));
     } catch (error) {

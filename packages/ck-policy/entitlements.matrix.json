@@ -12,8 +12,8 @@
       "values": {
         "free": 0,
         "tier1": 3,
-        "tier2": null,
-        "tier3": null
+        "tier2": 28,
+        "tier3": 28
       }
     },
     "l10n.versions.max": {

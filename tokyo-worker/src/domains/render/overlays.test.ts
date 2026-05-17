@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { DEFAULT_OVERLAY_EXPERIMENT, DEFAULT_OVERLAY_PERSONALIZATION } from '@clickeen/ck-contracts/overlay-identity';
+import {
+  buildOverlayTextValueMap,
+  extractTextPrimitiveValues,
+} from '@clickeen/ck-contracts/overlay-primitives';
+import faqSpec from '../../../../tokyo/product/widgets/faq/spec.json';
 import type { Env } from '../../types.ts';
 import {
   allocateOverlayId,
@@ -8,9 +13,11 @@ import {
   readOverlayObject,
   readSelectedOverlayPointer,
   readSelectedOverlayProjection,
+  validateOverlayObjectForSavedInstance,
   writeOverlayObject,
   writeSelectedOverlayPointer,
 } from './overlays.ts';
+import { writeSavedRenderConfig } from './saved-config.ts';
 
 type StoredObject = {
   body: unknown;
@@ -68,16 +75,36 @@ const COORDINATE = {
   personalization: DEFAULT_OVERLAY_PERSONALIZATION,
 };
 
+async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
+  const config = structuredClone((faqSpec as { defaults: Record<string, unknown> }).defaults);
+  await writeSavedRenderConfig({
+    env,
+    accountId: COORDINATE.accountId,
+    instanceId: COORDINATE.instanceId,
+    widgetType: 'faq',
+    config,
+    displayName: 'FAQ example',
+    meta: null,
+  });
+  return buildOverlayTextValueMap(
+    extractTextPrimitiveValues({
+      spec: faqSpec,
+      config,
+    }),
+  );
+}
+
 test('overlay storage writes exact object body under overlays only', async () => {
   const { env, objects } = createTestEnv();
+  const fullValues = await seedSavedFaqInstance(env);
   const overlayId = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 5 });
 
-  await writeOverlayObject({ env, overlayId, values: { title: 'Domande frequenti' } });
+  await writeOverlayObject({ env, overlayId, values: fullValues });
   await writeSelectedOverlayPointer({ env, overlayId });
 
   assert.deepEqual(await readOverlayObject({ env, overlayId }), {
     v: 1,
-    values: { title: 'Domande frequenti' },
+    values: fullValues,
   });
   assert.deepEqual(await readSelectedOverlayPointer({ env, coordinate: COORDINATE }), {
     v: 1,
@@ -96,13 +123,18 @@ test('overlay storage writes exact object body under overlays only', async () =>
 
 test('locale overlay inventory lists actual overlay files only', async () => {
   const { env, objects } = createTestEnv();
+  const fullValues = await seedSavedFaqInstance(env);
   const firstIt = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 5 });
-  await writeOverlayObject({ env, overlayId: firstIt, values: { title: 'Versione uno' } });
+  await writeOverlayObject({ env, overlayId: firstIt, values: fullValues });
   await writeSelectedOverlayPointer({ env, overlayId: firstIt });
 
   const secondIt = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 5 });
-  await writeOverlayObject({ env, overlayId: secondIt, values: { title: 'Versione due' } });
+  await writeOverlayObject({ env, overlayId: secondIt, values: fullValues });
   await writeSelectedOverlayPointer({ env, overlayId: secondIt });
+
+  const partialLatestIt = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 5 });
+  await writeOverlayObject({ env, overlayId: partialLatestIt, values: { 'header.title': 'Solo titolo' } });
+  await writeSelectedOverlayPointer({ env, overlayId: partialLatestIt });
 
   const csOverlay = await allocateOverlayId({
     env,
@@ -112,7 +144,7 @@ test('locale overlay inventory lists actual overlay files only', async () => {
     },
     maxVersions: 5,
   });
-  await writeOverlayObject({ env, overlayId: csOverlay, values: { title: 'Casto' } });
+  await writeOverlayObject({ env, overlayId: csOverlay, values: fullValues });
   await writeSelectedOverlayPointer({ env, overlayId: csOverlay });
 
   objects.set(`accounts/${COORDINATE.accountId}/instances/${COORDINATE.instanceId}/overlays/not-an-overlay.json`, {
@@ -129,10 +161,34 @@ test('locale overlay inventory lists actual overlay files only', async () => {
   ]);
 });
 
+test('saved instance overlay validation rejects partial FAQ values', async () => {
+  const { env } = createTestEnv();
+  const fullValues = await seedSavedFaqInstance(env);
+  const overlayId = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 5 });
+
+  assert.deepEqual(await validateOverlayObjectForSavedInstance({
+    env,
+    overlayId,
+    values: fullValues,
+  }), { ok: true });
+
+  assert.deepEqual(await validateOverlayObjectForSavedInstance({
+    env,
+    overlayId,
+    values: { 'header.title': 'Questions frequentes' },
+  }), {
+    ok: false,
+    reasonKey: 'tokyo.overlay.missing_path',
+    detail: 'overlay values missing_path: header.subtitleHtml',
+    path: 'header.subtitleHtml',
+  });
+});
+
 test('version allocation refuses when the retained slot is referenced', async () => {
   const { env } = createTestEnv();
+  const fullValues = await seedSavedFaqInstance(env);
   const overlayId = await allocateOverlayId({ env, coordinate: COORDINATE, maxVersions: 1 });
-  await writeOverlayObject({ env, overlayId, values: { title: 'Versione uno' } });
+  await writeOverlayObject({ env, overlayId, values: fullValues });
   await writeSelectedOverlayPointer({ env, overlayId });
 
   await assert.rejects(
@@ -140,7 +196,7 @@ test('version allocation refuses when the retained slot is referenced', async ()
     /tokyo\.overlay\.version_slots_exhausted/,
   );
   await assert.rejects(
-    () => writeOverlayObject({ env, overlayId, values: { title: 'Overwrite' } }),
+    () => writeOverlayObject({ env, overlayId, values: fullValues }),
     /tokyo\.overlay\.referenced_overwrite_denied/,
   );
 });

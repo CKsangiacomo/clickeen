@@ -84,7 +84,7 @@ Base save success is independent from language production. If Czech fails and It
 
 The Builder Translations panel is read-only inspection of locale overlays.
 
-Bob reads selected overlay values through Roma's account route. A target language is selectable only when the route returns both a selected `overlayId` and the exact value map for that language. Account-enabled languages without a selected overlay may be named as unavailable UI rows, but they are not preview options.
+Roma shows only account setup: base locale, plan translation allowance, and active account translations. Bob's preview dropdown is populated only from complete locale overlay files that Tokyo lists for the saved instance. Account-enabled languages without a complete overlay file are absent from the dropdown.
 
 When a locale overlay is selected, Bob preview resolves:
 
@@ -92,7 +92,7 @@ When a locale overlay is selected, Bob preview resolves:
 baseConfig + one overlay values object
 ```
 
-Partial overlay values are not selectable. Stale old values must not be shown as if they are current. If the user edits the base widget, Bob clears language preview selection until the next save completes. Operational messages may explain that values are unavailable for the current save, but they must not become overlay truth.
+Partial overlay values are not stored, listed, read, or selectable. Tokyo validates overlay values against the saved instance config plus widget text primitive declaration before accepting them. Stale old values must not be shown as if they are current.
 
 ## Public Static Locale Serving
 

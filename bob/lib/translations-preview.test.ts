@@ -12,13 +12,13 @@ test('normalizes Roma-owned translation setup separately from overlays', () => {
   const data = normalizeTranslationSetup({
     v: 1,
     baseLocale: 'en',
-    planTranslationsMax: 29,
+    planTranslationsMax: 28,
     activeLocales: ['en', 'it', 'cs', 'it'],
   });
 
   assert.ok(data);
   assert.equal(data.baseLocale, 'en');
-  assert.equal(data.planTranslationsMax, 29);
+  assert.equal(data.planTranslationsMax, 28);
   assert.deepEqual(data.activeLocales, ['it', 'cs']);
 });
 

@@ -21,6 +21,7 @@ test('FAQ primitive graph extracts concrete text paths for every question and an
   const items = extractTextPrimitiveValues({ spec, config: spec.defaults });
   const paths = items.map((item) => item.path);
 
+  assert.equal(paths.length, 12);
   assert(paths.includes('header.title'));
   assert(paths.includes('header.subtitleHtml'));
   assert(paths.includes('cta.label'));
