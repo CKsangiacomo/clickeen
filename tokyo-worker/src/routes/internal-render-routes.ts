@@ -231,24 +231,6 @@ export async function tryHandleInternalRenderRoutes(
         ),
       );
     }
-    const expectedSourceVersion =
-      typeof body?.sourceVersion === 'number' && Number.isInteger(body.sourceVersion) && body.sourceVersion >= 1
-        ? body.sourceVersion
-        : null;
-    if (expectedSourceVersion != null && saved.value.pointer.sourceVersion !== expectedSourceVersion) {
-      return respond(
-        json(
-          {
-            error: {
-              kind: 'VALIDATION',
-              reasonKey: 'tokyo.errors.render.sourceVersionMismatch',
-              detail: 'source_version_mismatch',
-            },
-          },
-          { status: 409 },
-        ),
-      );
-    }
 
     const validation = await validateOverlayObjectForSavedInstance({
       env,

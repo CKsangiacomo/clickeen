@@ -129,7 +129,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     widgetType,
     config,
     previousConfig: result.value.previousConfig,
-    sourceVersion: result.value.sourceVersion,
     requestId: current.value.requestId,
   });
 

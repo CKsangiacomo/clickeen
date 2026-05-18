@@ -68,7 +68,6 @@ export async function writeInstanceLanguageOverlayToTokyo(args: {
   accountPublicId: string;
   instanceId: string;
   widgetType: string;
-  sourceVersion: number;
   targetLocale: string;
   values: Record<string, string>;
   requestId?: string | null;
@@ -88,7 +87,6 @@ export async function writeInstanceLanguageOverlayToTokyo(args: {
     body: {
       instanceId: args.instanceId,
       widgetType: args.widgetType,
-      sourceVersion: args.sourceVersion,
       languageCode,
       values: args.values,
     },

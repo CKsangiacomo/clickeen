@@ -16,7 +16,6 @@ export type InstanceTranslationJob = {
   userId: string;
   instanceId: string;
   widgetType: 'faq';
-  sourceVersion: number;
   widgetContractVersion: number;
   baseLocale: string;
   targetLocale: string;
@@ -127,7 +126,6 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
   const accountPublicId = asTrimmedString(raw.accountPublicId);
   const userId = asTrimmedString(raw.userId);
   const instanceId = asTrimmedString(raw.instanceId);
-  const sourceVersion = normalizePositiveInteger(raw.sourceVersion);
   const widgetContractVersion = normalizePositiveInteger(raw.widgetContractVersion);
   const baseLocale = normalizeLocaleToken(raw.baseLocale);
   const targetLocale = normalizeLocaleToken(raw.targetLocale);
@@ -152,7 +150,6 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     !userId ||
     !instanceId ||
     raw.widgetType !== 'faq' ||
-    sourceVersion == null ||
     widgetContractVersion == null ||
     !baseLocale ||
     !targetLocale ||
@@ -179,7 +176,6 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     userId,
     instanceId,
     widgetType: 'faq',
-    sourceVersion,
     widgetContractVersion,
     baseLocale,
     targetLocale,

@@ -60,9 +60,9 @@ Health contract:
 - Triggered by Roma after a base widget save succeeds, or when Bob asks Roma to generate missing translations.
 - Roma owns account-command acceptance and queue production. San Francisco owns AI value production. Tokyo-worker owns saved overlay storage.
 - Queue binding: `INSTANCE_TRANSLATION_JOBS`.
-- Job payloads contain account/job coordinates, sourceVersion, base/target locale, the FAQ current saved text graph, previous saved text graph, previous language values, changed fields, deleted field keys, and the resolved runtime policy.
+- Job payloads contain account/job coordinates, base/target locale, the FAQ current saved text graph, previous saved text graph, previous language values, changed fields, deleted field keys, and the resolved runtime policy.
 - San Francisco translates only `changedFields`, merges them with previous values into complete current-language values, validates the exact current path set, and writes one Tokyo language overlay using `x-ck-internal-service: sanfrancisco.translation`.
-- Tokyo rejects stale queue writes when the job `sourceVersion` no longer matches the saved instance.
+- Tokyo validates and writes the complete current-language overlay object under the owning instance.
 - The HTTP `translate-saved-instance` endpoint remains for direct diagnostics and tests; it is not the active save/generate product orchestration boundary.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext translation uses one structured path: San Francisco extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.

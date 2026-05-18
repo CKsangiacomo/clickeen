@@ -130,7 +130,6 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
     accountPublicId: job.accountPublicId,
     instanceId: job.instanceId,
     widgetType: job.widgetType,
-    sourceVersion: job.sourceVersion,
     targetLocale: job.targetLocale,
     values,
     requestId: job.requestId,
@@ -174,12 +173,11 @@ function retryDelaySeconds(attempt: number): number {
 
 function isNonRetryable(error: unknown): boolean {
   if (!(error instanceof HttpError)) return false;
-  if (error.status === 400 || error.status === 403 || error.status === 404 || error.status === 409 || error.status === 422) {
+  if (error.status === 400 || error.status === 403 || error.status === 404 || error.status === 422) {
     return true;
   }
   const message = String(error.error?.message || '').toLowerCase();
   return (
-    message.includes('source_version_mismatch') ||
     message.includes('missing deepseek_api_key') ||
     message.includes('missing openai_api_key')
   );

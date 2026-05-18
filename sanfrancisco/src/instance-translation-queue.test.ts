@@ -80,7 +80,6 @@ function translationJob(): InstanceTranslationJob {
     userId: 'usr_test',
     instanceId: INSTANCE_ID,
     widgetType: 'faq',
-    sourceVersion: 3,
     widgetContractVersion: 1,
     baseLocale: 'en',
     targetLocale: 'it',
@@ -129,7 +128,6 @@ test('San Francisco queue job merges changed values and writes one complete Toky
   assert.equal(handled, true);
   assert.equal(acked, true);
   assert.equal(writes.length, 1);
-  assert.equal(writes[0]?.sourceVersion, 3);
   assert.equal(writes[0]?.languageCode, 'IT00');
   assert.equal(writes[0]?.values['sections.0.faqs.0.answer'], 'https://example.com/new-room-list');
   assert.equal(writes[0]?.values['header.title'], 'it-old:FAQs');

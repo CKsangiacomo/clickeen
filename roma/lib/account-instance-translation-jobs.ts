@@ -152,20 +152,11 @@ async function buildAcceptedTranslationJobs(args: {
   widgetType: string;
   config: Record<string, unknown>;
   previousConfig: Record<string, unknown> | null;
-  sourceVersion: number | null;
   translateAllCurrentFields?: boolean;
   skipReadyLocales?: boolean;
   targetLocales?: string[];
   requestId?: string | null;
 }): Promise<TranslationJobBuildResult> {
-  if (!Number.isInteger(args.sourceVersion) || (args.sourceVersion ?? 0) < 1) {
-    return acceptanceFailure({
-      baseLocale: null,
-      reasonKey: 'instance.translation.source_version_missing',
-      detail: 'Tokyo did not return a saved source version for translation.',
-    });
-  }
-
   const queue = resolveTranslationQueue();
   if (!queue) {
     return acceptanceFailure({
@@ -349,7 +340,6 @@ async function buildAcceptedTranslationJobs(args: {
       userId: args.authz.userId,
       instanceId: args.instanceId,
       widgetType: 'faq',
-      sourceVersion: args.sourceVersion as number,
       widgetContractVersion: entry.content.v,
       baseLocale,
       targetLocale: locale,
@@ -384,7 +374,6 @@ export async function acceptInstanceTranslationJobs(args: {
   widgetType: string;
   config: Record<string, unknown>;
   previousConfig: Record<string, unknown> | null;
-  sourceVersion: number | null;
   translateAllCurrentFields?: boolean;
   skipReadyLocales?: boolean;
   targetLocales?: string[];

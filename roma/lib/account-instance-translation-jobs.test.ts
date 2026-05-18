@@ -186,14 +186,12 @@ test('Roma save accepts a durable translation job for changed FAQ fields only', 
       widgetType: 'faq',
       config: after,
       previousConfig: before,
-      sourceVersion: 2,
       requestId: 'req_queue_save',
     });
 
     assert.equal(result.ok, true);
     assert.equal(result.ok ? result.accepted : false, true);
     assert.equal(queued.length, 1);
-    assert.equal(queued[0]?.sourceVersion, 2);
     assert.equal(queued[0]?.targetLocale, 'it');
     assert.deepEqual(
       queued[0]?.changedFields.map((field) => field.identity.path),
@@ -223,7 +221,6 @@ test('Roma generate accepts jobs for every missing target locale without awaitin
       widgetType: 'faq',
       config: previousConfig(),
       previousConfig: null,
-      sourceVersion: 1,
       translateAllCurrentFields: true,
       skipReadyLocales: true,
       requestId: 'req_queue_generate',

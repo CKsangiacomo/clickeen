@@ -48,7 +48,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     widgetType: instance.value.row.widgetType,
     config: instance.value.config,
     previousConfig: null,
-    sourceVersion: instance.value.row.sourceVersion ?? null,
     translateAllCurrentFields: true,
     skipReadyLocales: true,
     requestId: current.value.requestId,
