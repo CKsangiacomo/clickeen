@@ -10,6 +10,9 @@ import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidg
 import { useLocaleOverlayPreviewState } from './useLocaleOverlayPreviewState';
 import { listPreviewableLocales } from '../lib/translations-preview';
 
+const TRANSLATION_SAVE_POLL_MS = 3_000;
+const TRANSLATION_SAVE_MAX_POLL_MS = 120_000;
+
 function UpsellPopupHost() {
   const session = useWidgetSessionChrome();
   const upsell = session.upsell;
@@ -33,6 +36,7 @@ function BuilderShell() {
   const [previewMode, setPreviewMode] = useState<'editing' | 'translations'>('editing');
   const [overlayPreviewLocale, setOverlayPreviewLocale] = useState('');
   const [translationsRefreshVersion, setTranslationsRefreshVersion] = useState(0);
+  const [translationPollingUntil, setTranslationPollingUntil] = useState<number | null>(null);
   const previousSavingRef = useRef(false);
   const translationsEnabled = Boolean(
     session.compiled &&
@@ -57,6 +61,7 @@ function BuilderShell() {
     setPreviewMode('editing');
     setOverlayPreviewLocale('');
     setTranslationsRefreshVersion(0);
+    setTranslationPollingUntil(null);
     previousSavingRef.current = false;
   }, [instanceId]);
 
@@ -66,17 +71,40 @@ function BuilderShell() {
     if (!justFinishedSave) return;
     if (session.error?.source === 'save') return;
     setTranslationsRefreshVersion((prev) => prev + 1);
-  }, [session.error?.source, session.isSaving]);
+    if (previewMode === 'translations' && translationSetup?.activeLocales?.length) {
+      setTranslationPollingUntil(Date.now() + TRANSLATION_SAVE_MAX_POLL_MS);
+    }
+  }, [previewMode, session.error?.source, session.isSaving, translationSetup?.activeLocales?.length]);
   const requestLocaleOverlayRefresh = () => {
     setTranslationsRefreshVersion((prev) => prev + 1);
   };
 
+  const expectedTranslationLocales = useMemo(() => {
+    return new Set((translationSetup?.activeLocales ?? []).filter((locale) => locale !== baseLocale));
+  }, [baseLocale, translationSetup]);
+  const readyTranslationCount = useMemo(() => {
+    return (localeOverlayInventory?.overlays ?? []).filter((entry) => expectedTranslationLocales.has(entry.locale)).length;
+  }, [expectedTranslationLocales, localeOverlayInventory]);
+  const allTranslationsReady =
+    expectedTranslationLocales.size > 0 && readyTranslationCount === expectedTranslationLocales.size;
+
+  useEffect(() => {
+    if (!translationPollingUntil) return;
+    if (allTranslationsReady || Date.now() > translationPollingUntil) {
+      setTranslationPollingUntil(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setTranslationsRefreshVersion((prev) => prev + 1);
+    }, TRANSLATION_SAVE_POLL_MS);
+    return () => window.clearTimeout(timer);
+  }, [allTranslationsReady, translationPollingUntil, translationsRefreshVersion]);
+
   const previewableTranslationLocales = useMemo(() => {
-    const expected = new Set(translationSetup?.activeLocales ?? []);
     return listPreviewableLocales(localeOverlayInventory).filter(
-      (locale) => locale === baseLocale || expected.has(locale),
+      (locale) => locale === baseLocale || expectedTranslationLocales.has(locale),
     );
-  }, [baseLocale, localeOverlayInventory, translationSetup]);
+  }, [baseLocale, expectedTranslationLocales, localeOverlayInventory]);
 
   useEffect(() => {
     if (!overlayPreviewLocale) return;

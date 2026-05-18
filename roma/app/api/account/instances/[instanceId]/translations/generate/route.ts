@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-direct';
 import { runInstanceTranslationFollowupAfterSave } from '@roma/lib/account-instance-translation-followup';
+import { getOptionalCloudflareRequestContext } from '@roma/lib/cloudflare-request-context';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -10,6 +11,39 @@ import {
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
+type CloudflareContextWithWaitUntil = {
+  env?: unknown;
+  ctx?: {
+    waitUntil?: (promise: Promise<unknown>) => void;
+  };
+  waitUntil?: (promise: Promise<unknown>) => void;
+};
+
+function attachTranslationGenerationToRequestLifetime(promise: Promise<unknown>): void {
+  const context = getOptionalCloudflareRequestContext<CloudflareContextWithWaitUntil>();
+  const waitUntil = context?.ctx?.waitUntil ?? context?.waitUntil;
+  if (typeof waitUntil === 'function') {
+    waitUntil.call(context?.ctx ?? context, promise);
+    return;
+  }
+  void promise;
+}
+
+function logTranslationGenerationFailure(args: {
+  accountId: string;
+  instanceId: string;
+  requestId?: string | null;
+  detail?: string;
+  results?: Awaited<ReturnType<typeof runInstanceTranslationFollowupAfterSave>>['results'];
+}): void {
+  console.warn('[roma account instance translations generate] generation failed', {
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    requestId: args.requestId,
+    ...(args.detail ? { detail: args.detail } : {}),
+    ...(args.results ? { results: args.results } : {}),
+  });
+}
 
 export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
@@ -39,7 +73,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const translation = await runInstanceTranslationFollowupAfterSave({
+  const generation = runInstanceTranslationFollowupAfterSave({
     authz: current.value.authzPayload,
     accessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
@@ -50,14 +84,36 @@ export async function POST(request: NextRequest, context: RouteContext) {
     previousConfig: null,
     translateAllCurrentFields: true,
     requestId: current.value.requestId,
-  });
+  })
+    .then((translation) => {
+      if (!translation.ok) {
+        logTranslationGenerationFailure({
+          accountId,
+          instanceId,
+          requestId: current.value.requestId,
+          results: translation.results,
+        });
+      }
+    })
+    .catch((error) => {
+      logTranslationGenerationFailure({
+        accountId,
+        instanceId,
+        requestId: current.value.requestId,
+        detail: error instanceof Error ? error.message : String(error),
+      });
+    });
+
+  attachTranslationGenerationToRequestLifetime(generation);
 
   return withSession(
     request,
     NextResponse.json({
-      ok: translation.ok,
-      translation,
-    }),
+      ok: true,
+      translation: {
+        accepted: true,
+      },
+    }, { status: 202 }),
     current.value.setCookies,
   );
 }

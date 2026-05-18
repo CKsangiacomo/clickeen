@@ -3,6 +3,8 @@ import test from 'node:test';
 import {
   buildGenerateTranslationsButtonState,
   buildOverlayValuesAfterTranslationEdit,
+  isTranslationGenerationAccepted,
+  resolveGenerateTranslationsMessage,
   TranslationReviewRows,
 } from './TranslationsPanel';
 
@@ -112,5 +114,20 @@ test('generate translations button does not translate unsaved Bob edits', () => 
       label: 'Generate translations',
       message: 'Save changes before generating translations.',
     },
+  );
+});
+
+test('generate translations accepts background generation response', () => {
+  const payload = {
+    ok: true,
+    translation: {
+      accepted: true,
+    },
+  };
+
+  assert.equal(isTranslationGenerationAccepted(payload), true);
+  assert.equal(
+    resolveGenerateTranslationsMessage(payload),
+    'Generating translations. This can take a little while.',
   );
 });

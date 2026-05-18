@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   normalizeCanonicalLocalesFile,
   normalizeLocaleToken,
@@ -19,6 +19,8 @@ import type { TranslationReview } from '../lib/translations-preview';
 
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
+const TRANSLATION_GENERATION_POLL_MS = 3_000;
+const TRANSLATION_GENERATION_MAX_POLL_MS = 120_000;
 
 function resolveLocaleLabel(locale: string): string {
   const normalized = normalizeLocaleToken(locale) ?? '';
@@ -109,7 +111,21 @@ export function buildGenerateTranslationsButtonState(args: {
   return { disabled: false, label: 'Generate translations', message: null };
 }
 
-function resolveGenerateTranslationsMessage(payload: unknown): string {
+export function isTranslationGenerationAccepted(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
+  const translation = (payload as Record<string, unknown>).translation;
+  return Boolean(
+    translation &&
+      typeof translation === 'object' &&
+      !Array.isArray(translation) &&
+      (translation as Record<string, unknown>).accepted === true,
+  );
+}
+
+export function resolveGenerateTranslationsMessage(payload: unknown): string {
+  if (isTranslationGenerationAccepted(payload)) {
+    return 'Generating translations. This can take a little while.';
+  }
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return 'Translations generated.';
   }
@@ -219,6 +235,8 @@ export function TranslationsPanel({
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [isGeneratingTranslations, setIsGeneratingTranslations] = useState(false);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
+  const generationStartedAtRef = useRef<number | null>(null);
+  const readyCountAtGenerationStartRef = useRef(0);
   const baseLocale = translationSetup?.baseLocale || localeOverlayInventory?.baseLocale || '';
   const localeState = useMemo(
     () =>
@@ -285,6 +303,8 @@ export function TranslationsPanel({
     setGenerateMessage(null);
     setSaveMessage(null);
     setIsGeneratingTranslations(true);
+    generationStartedAtRef.current = Date.now();
+    readyCountAtGenerationStartRef.current = localeState.readyTranslationsCount;
     try {
       const response = await generateTranslations({ instanceId });
       if (!response.ok) {
@@ -292,12 +312,51 @@ export function TranslationsPanel({
       }
       setGenerateMessage(resolveGenerateTranslationsMessage(response.json));
       onRequestLocaleOverlayRefresh();
+      if (!isTranslationGenerationAccepted(response.json)) {
+        setIsGeneratingTranslations(false);
+        generationStartedAtRef.current = null;
+      }
     } catch (error) {
       setGenerateMessage(error instanceof Error ? error.message : 'Translations could not be generated.');
-    } finally {
       setIsGeneratingTranslations(false);
+      generationStartedAtRef.current = null;
     }
   };
+  useEffect(() => {
+    if (!isGeneratingTranslations) return;
+    if (localeState.allExpectedTranslationsReady) {
+      setGenerateMessage('Translations ready.');
+      setIsGeneratingTranslations(false);
+      generationStartedAtRef.current = null;
+      return;
+    }
+
+    const startedAt = generationStartedAtRef.current ?? Date.now();
+    generationStartedAtRef.current = startedAt;
+    if (Date.now() - startedAt > TRANSLATION_GENERATION_MAX_POLL_MS) {
+      setGenerateMessage('Translations are still generating. Open the language dropdown in a moment.');
+      setIsGeneratingTranslations(false);
+      generationStartedAtRef.current = null;
+      return;
+    }
+
+    if (localeState.readyTranslationsCount > readyCountAtGenerationStartRef.current) {
+      setGenerateMessage(
+        `${localeState.readyTranslationsCount} of ${localeState.expectedTranslationsCount} translations ready.`,
+      );
+    }
+
+    const timer = window.setTimeout(() => {
+      onRequestLocaleOverlayRefresh();
+    }, TRANSLATION_GENERATION_POLL_MS);
+    return () => window.clearTimeout(timer);
+  }, [
+    isGeneratingTranslations,
+    localeState.allExpectedTranslationsReady,
+    localeState.expectedTranslationsCount,
+    localeState.readyTranslationsCount,
+    onRequestLocaleOverlayRefresh,
+  ]);
   const saveTranslationValue = async (path: string) => {
     if (!selectedValues || !localeValue || localeValue === baseLocale || !instanceId) return;
     const nextValue = draftValues[path] ?? selectedValues[path] ?? '';
@@ -347,7 +406,7 @@ export function TranslationsPanel({
           <div className="body-s">{planTranslationsCopy}</div>
         </div>
         <div className="tdmenucontent__cluster">
-          <div className="label-s label-muted">Active translations</div>
+          <div className="label-s label-muted">Target translations</div>
           <div className="body-s">{localeState.expectedTranslationsCount}</div>
         </div>
         <div className="tdmenucontent__cluster">
