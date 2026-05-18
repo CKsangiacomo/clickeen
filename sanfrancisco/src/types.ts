@@ -121,6 +121,8 @@ export type Env = {
   OPENAI_MODEL?: string;
   SF_KV: KVNamespace;
   SF_EVENTS?: Queue<InteractionEvent>;
+  INSTANCE_TRANSLATION_JOBS?: Queue<unknown>;
+  TOKYO_PRODUCT_CONTROL?: Fetcher;
   SF_D1: D1Database;
   SF_R2: R2Bucket;
 };

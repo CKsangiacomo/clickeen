@@ -43,7 +43,7 @@ The product boundary is the Instance Translation Agent. The old text-value route
 - Removed the active San Francisco old text-value route.
 - Removed `handleBabelTextValues` from San Francisco.
 - Renamed active Roma save-follow-up files/functions away from Babel naming:
-  - `roma/lib/account-instance-translation-followup.ts`
+  - `roma/lib/account-instance-translation-jobs.ts`
   - `roma/lib/instance-translation-agent-client.ts`
   - `roma/lib/account-translation-policy.ts`
 - Roma save still calls the Instance Translation Agent route.

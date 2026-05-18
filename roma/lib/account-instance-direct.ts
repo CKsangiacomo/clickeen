@@ -32,6 +32,7 @@ export type AccountInstanceCoreRow = {
   widgetId?: string;
   accountId: string;
   widgetType: string;
+  sourceVersion?: number | null;
   publishStatus?: AccountInstanceLiveStatus;
   meta?: Record<string, unknown> | null;
 };
@@ -296,6 +297,7 @@ function normalizeSavedPayload(payload: unknown):
       updatedAt: asTrimmedString(payload.updatedAt),
       accountId,
       widgetType,
+      sourceVersion: typeof payload.sourceVersion === 'number' ? payload.sourceVersion : null,
       publishStatus: payload.publishStatus === 'published' ? 'published' : payload.publishStatus === 'unpublished' ? 'unpublished' : undefined,
       meta: isRecord(payload.meta) ? payload.meta : null,
     },

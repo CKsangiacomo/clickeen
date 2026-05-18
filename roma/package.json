@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "rm -rf /tmp/clickeen-roma-tests && esbuild lib/account-instance-translation-followup.test.ts lib/account-instance-locale-overlays.test.ts --bundle --platform=node --format=esm --outdir=/tmp/clickeen-roma-tests && node --test /tmp/clickeen-roma-tests/account-instance-translation-followup.test.js /tmp/clickeen-roma-tests/account-instance-locale-overlays.test.js"
+    "test": "rm -rf /tmp/clickeen-roma-tests && esbuild lib/account-instance-translation-jobs.test.ts lib/account-instance-locale-overlays.test.ts --bundle --platform=node --format=esm --outdir=/tmp/clickeen-roma-tests && node --test /tmp/clickeen-roma-tests/account-instance-translation-jobs.test.js /tmp/clickeen-roma-tests/account-instance-locale-overlays.test.js"
   },
   "dependencies": {
     "@clickeen/bob": "workspace:*",

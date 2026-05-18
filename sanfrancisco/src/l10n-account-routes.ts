@@ -5,6 +5,7 @@ import {
 } from '@clickeen/ck-contracts/overlay-primitives';
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { assertCap, verifyGrant } from './grants';
+import { resolveModelSelection } from './ai/modelRouter';
 import { HttpError, asTrimmedString, isRecord, json, noStore, readJson } from './http';
 import type { AIGrant, Env, InteractionEvent, Usage } from './types';
 import {
@@ -80,6 +81,23 @@ function bearerToken(request: Request): string | null {
   const [scheme, token] = header.split(' ');
   if (!scheme || scheme.toLowerCase() !== 'bearer' || !token) return null;
   return token.trim() || null;
+}
+
+function assertProviderConfigured(env: Env, provider: string): void {
+  if (provider === 'deepseek' && !env.DEEPSEEK_API_KEY) {
+    throw new HttpError(502, {
+      code: 'PROVIDER_ERROR',
+      provider: 'deepseek',
+      message: 'Missing DEEPSEEK_API_KEY',
+    });
+  }
+  if (provider === 'openai' && !env.OPENAI_API_KEY) {
+    throw new HttpError(502, {
+      code: 'PROVIDER_ERROR',
+      provider: 'openai',
+      message: 'Missing OPENAI_API_KEY',
+    });
+  }
 }
 
 function normalizeSavedTextItems(raw: unknown): SavedTextGraphItem[] | null {
@@ -378,4 +396,36 @@ export async function handleInstanceTranslationAgent(
     startedAtMs,
   });
   return noStore(json(result));
+}
+
+export async function handleInstanceTranslationRuntimeStatus(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const resolvedAgent = resolveAiAgent(TRANSLATOR_AGENT_ID);
+  if (!resolvedAgent) {
+    throw new HttpError(500, {
+      code: 'PROVIDER_ERROR',
+      provider: 'sanfrancisco',
+      message: 'Missing AI registry entry for Instance Translation Agent',
+    });
+  }
+
+  const token = bearerToken(request);
+  if (!token) {
+    throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Missing AI grant' });
+  }
+  const grant = await verifyGrant(token, env.AI_GRANT_HMAC_SECRET);
+  assertCap(grant, `agent:${resolvedAgent.canonicalId}`);
+  const selection = resolveModelSelection({ grant, agentId: resolvedAgent.canonicalId });
+  assertProviderConfigured(env, selection.provider);
+
+  return noStore(
+    json({
+      ok: true,
+      agentId: resolvedAgent.canonicalId,
+      provider: selection.provider,
+      model: selection.model,
+    }),
+  );
 }

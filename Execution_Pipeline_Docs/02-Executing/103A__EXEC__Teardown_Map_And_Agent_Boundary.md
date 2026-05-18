@@ -20,11 +20,9 @@ One FAQ save now flows through:
 
 1. Bob edits one widget instance in the active locale.
 2. Roma `PUT /account/instances/[instanceId]` saves the config to Tokyo.
-3. Roma immediately calls `runInstanceTranslationFollowupAfterSave`.
-4. Roma loads account language policy, loads the Tokyo widget catalog, and derives saved text from authored `content.json`.
-5. Roma mints a grant for `widget.instance.translator` and calls the Instance Translation Agent.
-6. San Francisco normalizes the saved-instance request, uses `l10nTranslationCore`, and returns translated current language values.
-7. Roma validates exact paths and writes language overlay values to Tokyo.
+3. Roma loads account language policy, loads the Tokyo widget catalog, derives saved text from authored `content.json`, and accepts concrete per-locale translation jobs on `INSTANCE_TRANSLATION_JOBS`.
+4. Roma preflights San Francisco translator runtime readiness before accepting the jobs.
+5. San Francisco consumes the jobs, uses `l10nTranslationCore`, merges complete current language values, and writes source-version-guarded language overlays to Tokyo.
 8. Bob reads overlay inventory/object values and applies them with `resolveOverlay` for preview.
 9. San Francisco embed generation applies overlay values with `resolveOverlay` when generating locale files.
 
@@ -34,9 +32,9 @@ One FAQ save now flows through:
 | --- | --- | --- | --- |
 | Product operation | Save-triggered translation for a saved account widget instance | keep | `translate saved instance` is the only product operation. |
 | Roma save boundary | `roma/app/api/account/instances/[instanceId]/route.ts` | keep | Real account save boundary. It may trigger translation after save, but the route itself is not the translation product boundary. |
-| Roma follow-up name | `runInstanceTranslationFollowupAfterSave` | keep | Instance Translation Agent follow-up entrypoint. |
+| Roma translation job acceptance | `acceptInstanceTranslationJobs` | keep | Durable Instance Translation job acceptance entrypoint. |
 | Roma producer client | `roma/lib/instance-translation-agent-client.ts` | keep | Client for `translate saved instance`; grant minting/policy resolution remains an implementation detail. |
-| San Francisco route | Instance Translation Agent route | keep | Product boundary route for saved-instance translation. |
+| San Francisco route | Instance Translation Agent route | diagnostic | Direct endpoint remains for diagnostics/tests; active product execution is queue consumption. |
 | San Francisco translator implementation | `sanfrancisco/src/l10n-account-routes.ts` | replace | Keep prompt/model execution pieces that serve the agent, but rename away from Babel/text producer and accept the canonical saved-instance text contract. |
 | Translator agent id | `widget.instance.translator` | keep | Surviving agent identity, backed by `ck-contracts` registry and `ck-policy` runtime matrix. |
 | Copilot agent id | `cs.widget.copilot.v1` | keep | Surviving editor copilot identity. It must consume the widget package, not the translator's narrow field list. |

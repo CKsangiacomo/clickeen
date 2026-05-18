@@ -14,7 +14,12 @@ import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import {
   normalizeStorageId,
 } from '../asset-utils';
-import { assertRomaAccountCapsuleAuth, TOKYO_INTERNAL_SERVICE_ROMA_EDGE } from '../auth';
+import {
+  INTERNAL_SERVICE_HEADER,
+  TOKYO_INTERNAL_SERVICE_SANFRANCISCO_TRANSLATION,
+  assertRomaAccountCapsuleAuth,
+  TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
+} from '../auth';
 import { json } from '../http';
 import {
   AccountInstanceTransitionError,
@@ -167,6 +172,24 @@ async function authorizeRomaEditorTransition(args: {
   return { ok: true, capsule };
 }
 
+async function authorizeLanguageOverlayWriteTransition(args: {
+  req: Request;
+  env: Env;
+  accountId: string;
+}): Promise<
+  | { ok: true }
+  | { ok: false; response: Response }
+> {
+  const internalServiceId = String(args.req.headers.get(INTERNAL_SERVICE_HEADER) || '')
+    .trim()
+    .toLowerCase();
+  if (internalServiceId === TOKYO_INTERNAL_SERVICE_SANFRANCISCO_TRANSLATION) {
+    return { ok: true };
+  }
+  const auth = await authorizeRomaEditorTransition(args);
+  return auth.ok ? { ok: true } : auth;
+}
+
 export async function tryHandleInternalRenderRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
@@ -179,7 +202,7 @@ export async function tryHandleInternalRenderRoutes(
         ? respondValidation(respond, 'tokyo.errors.render.invalid')
         : respondMethodNotAllowed(respond);
     }
-    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+    const auth = await authorizeLanguageOverlayWriteTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
 
     const body = (await readInternalRenderJsonBody({
@@ -205,6 +228,24 @@ export async function tryHandleInternalRenderRoutes(
         json(
           { error: { kind: saved.kind, reasonKey: saved.reasonKey } },
           { status: saved.kind === 'NOT_FOUND' ? 404 : 422 },
+        ),
+      );
+    }
+    const expectedSourceVersion =
+      typeof body?.sourceVersion === 'number' && Number.isInteger(body.sourceVersion) && body.sourceVersion >= 1
+        ? body.sourceVersion
+        : null;
+    if (expectedSourceVersion != null && saved.value.pointer.sourceVersion !== expectedSourceVersion) {
+      return respond(
+        json(
+          {
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: 'tokyo.errors.render.sourceVersionMismatch',
+              detail: 'source_version_mismatch',
+            },
+          },
+          { status: 409 },
         ),
       );
     }

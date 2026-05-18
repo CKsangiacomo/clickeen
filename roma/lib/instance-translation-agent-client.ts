@@ -1,4 +1,4 @@
-import { CK_REQUEST_ID_HEADER, asTrimmedString, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
+import { CK_REQUEST_ID_HEADER, asTrimmedString } from '@clickeen/ck-contracts';
 import {
   resolveAiRuntimeBudget,
   resolveAiRuntimePolicy,
@@ -7,27 +7,6 @@ import {
 import { resolveAiAgent, type AiGrantPolicy } from '@clickeen/ck-contracts/ai';
 import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
 import { resolveSanfranciscoBaseUrl } from './env/sanfrancisco';
-
-type SavedTextGraphItem = {
-  path: string;
-  type: 'string' | 'richtext';
-  label?: string;
-  role?: string;
-  value: string;
-};
-
-type InstanceTranslationRequest = {
-  v: 1;
-  widgetType: string;
-  sourceLanguage: string;
-  targetLanguage: string;
-  items: SavedTextGraphItem[];
-};
-
-type CurrentLanguageValues = {
-  v: 1;
-  values: Record<string, string>;
-};
 
 type AIGrant = {
   v: 1;
@@ -90,7 +69,7 @@ async function mintGrant(grant: AIGrant): Promise<string> {
   return `v1.${payloadB64}.${sigB64}`;
 }
 
-async function issueInstanceTranslationGrant(args: {
+export async function issueInstanceTranslationGrant(args: {
   authz: RomaAccountAuthzCapsulePayload;
   instanceId: string;
 }): Promise<string> {
@@ -123,6 +102,23 @@ async function issueInstanceTranslationGrant(args: {
   });
 }
 
+function normalizeRuntimeStatusResponse(payload: unknown): { ok: true } | { ok: false; detail: string } {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return { ok: false, detail: 'sanfrancisco_instance_translation_runtime_invalid_payload' };
+  }
+  const record = payload as Record<string, unknown>;
+  if (record.ok === true) return { ok: true };
+  const error = record.error && typeof record.error === 'object' && !Array.isArray(record.error)
+    ? (record.error as Record<string, unknown>)
+    : null;
+  const detail =
+    asTrimmedString(error?.message) ??
+    asTrimmedString(error?.detail) ??
+    asTrimmedString(record.detail) ??
+    'sanfrancisco_instance_translation_runtime_unavailable';
+  return { ok: false, detail };
+}
+
 function safeJsonParse(text: string): unknown {
   if (!text) return null;
   try {
@@ -132,82 +128,32 @@ function safeJsonParse(text: string): unknown {
   }
 }
 
-function summarizeUpstreamError(args: { baseUrl: string; status: number; bodyText: string }): string {
-  const base = args.baseUrl ? args.baseUrl.replace(/\/$/, '') : '(missing)';
-  if (looksLikeHtmlErrorPage(args.bodyText)) {
-    return `SanFrancisco returned an HTML error page (HTTP ${args.status}). Check SANFRANCISCO_BASE_URL (currently: ${base}).`;
-  }
-  return args.bodyText || `SanFrancisco error (${args.status})`;
-}
-
-function normalizeInstanceTranslationResponse(payload: unknown): CurrentLanguageValues | null {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const record = payload as Record<string, unknown>;
-  const currentLanguageValues =
-    record.currentLanguageValues && typeof record.currentLanguageValues === 'object' && !Array.isArray(record.currentLanguageValues)
-      ? (record.currentLanguageValues as Record<string, unknown>)
-      : null;
-  if (
-    record.v === 1 &&
-    record.operation === 'translate_saved_instance' &&
-    currentLanguageValues?.v === 1 &&
-    currentLanguageValues.values &&
-    typeof currentLanguageValues.values === 'object' &&
-    !Array.isArray(currentLanguageValues.values)
-  ) {
-    const values: Record<string, string> = {};
-    for (const [path, value] of Object.entries(currentLanguageValues.values as Record<string, unknown>)) {
-      if (typeof value !== 'string') return null;
-      values[path] = value;
-    }
-    return { v: 1, values };
-  }
-  if (record.v !== 1 || !record.values || typeof record.values !== 'object' || Array.isArray(record.values)) {
-    return null;
-  }
-  const values: Record<string, string> = {};
-  for (const [path, value] of Object.entries(record.values as Record<string, unknown>)) {
-    if (typeof value !== 'string') return null;
-    values[path] = value;
-  }
-  return { v: 1, values };
-}
-
-export async function produceInstanceTranslationValues(args: {
+export async function assertInstanceTranslationRuntimeReady(args: {
   authz: RomaAccountAuthzCapsulePayload;
   instanceId: string;
-  request: InstanceTranslationRequest;
   requestId?: string | null;
-}): Promise<
-  | { ok: true; value: CurrentLanguageValues }
-  | { ok: false; detail: string }
-> {
-  const baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
-  const grant = await issueInstanceTranslationGrant({
-    authz: args.authz,
-    instanceId: args.instanceId,
-  });
+}): Promise<{ ok: true } | { ok: false; detail: string }> {
+  let baseUrl: string;
+  let grant: string;
+  try {
+    baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
+    grant = await issueInstanceTranslationGrant({
+      authz: args.authz,
+      instanceId: args.instanceId,
+    });
+  } catch (error) {
+    return { ok: false, detail: error instanceof Error ? error.message : String(error) };
+  }
+
   let response: Response;
   try {
-    response = await fetch(`${baseUrl}/v1/agents/instance-translation/translate-saved-instance`, {
+    response = await fetch(`${baseUrl}/v1/agents/instance-translation/runtime-status`, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${grant}`,
-        'content-type': 'application/json',
         accept: 'application/json',
         ...(args.requestId ? { [CK_REQUEST_ID_HEADER]: args.requestId } : {}),
       },
-      body: JSON.stringify({
-        v: 1,
-        operation: 'translate_saved_instance',
-        accountId: args.authz.accountId,
-        instanceId: args.instanceId,
-        widgetType: args.request.widgetType,
-        baseLocale: args.request.sourceLanguage,
-        targetLocale: args.request.targetLanguage,
-        jobId: crypto.randomUUID(),
-        currentSavedTextGraph: args.request.items,
-      }),
       cache: 'no-store',
     });
   } catch (error) {
@@ -217,19 +163,9 @@ export async function produceInstanceTranslationValues(args: {
   const text = await response.text().catch(() => '');
   const payload = safeJsonParse(text);
   if (!response.ok) {
-    const message =
-      payload && typeof payload === 'object' && !Array.isArray(payload)
-        ? asTrimmedString((payload as Record<string, unknown>).error && (payload as any).error.message)
-        : null;
-    return {
-      ok: false,
-      detail: message ?? summarizeUpstreamError({ baseUrl, status: response.status, bodyText: text }),
-    };
+    const normalized = normalizeRuntimeStatusResponse(payload);
+    return normalized.ok ? { ok: false, detail: `SanFrancisco runtime unavailable (${response.status})` } : normalized;
   }
-
-  const normalized = normalizeInstanceTranslationResponse(payload);
-  if (!normalized) {
-    return { ok: false, detail: 'sanfrancisco_instance_translation_invalid_payload' };
-  }
-  return { ok: true, value: normalized };
+  const normalized = normalizeRuntimeStatusResponse(payload);
+  return normalized.ok ? { ok: true } : normalized;
 }

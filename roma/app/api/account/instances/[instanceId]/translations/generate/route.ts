@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-direct';
-import { loadAccountInstanceLocaleOverlayInventory } from '@roma/lib/account-instance-locale-overlays';
-import { loadAccountTranslationLanguagePolicy } from '@roma/lib/account-translation-policy';
-import { runInstanceTranslationFollowupAfterSave } from '@roma/lib/account-instance-translation-followup';
+import { acceptInstanceTranslationJobs } from '@roma/lib/account-instance-translation-jobs';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -41,69 +39,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const policy = await loadAccountTranslationLanguagePolicy({
-    accessToken: current.value.accessToken,
-    accountId: current.value.authzPayload.accountId,
-    requestId: current.value.requestId,
-  });
-  if (!policy.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: policy.error }, { status: policy.status }),
-      current.value.setCookies,
-    );
-  }
-
-  const baseLocale = policy.value.baseLocale;
-  const targetLocales = policy.value.desiredLocales.filter((locale) => locale !== baseLocale);
-  if (!targetLocales.length) {
-    return withSession(
-      request,
-      NextResponse.json({
-        ok: true,
-        translation: {
-          ok: true,
-          baseLocale,
-          results: [],
-        },
-      }),
-      current.value.setCookies,
-    );
-  }
-
-  const inventory = await loadAccountInstanceLocaleOverlayInventory({
-    accountId,
-    instanceId,
-    baseLocale,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!inventory.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: inventory.error }, { status: inventory.status }),
-      current.value.setCookies,
-    );
-  }
-
-  const readyLocales = new Set(inventory.value.overlays.map((overlay) => overlay.locale));
-  const nextLocale = targetLocales.find((locale) => !readyLocales.has(locale));
-  if (!nextLocale) {
-    return withSession(
-      request,
-      NextResponse.json({
-        ok: true,
-        translation: {
-          ok: true,
-          baseLocale,
-          results: [],
-        },
-      }),
-      current.value.setCookies,
-    );
-  }
-
-  const translation = await runInstanceTranslationFollowupAfterSave({
+  const translation = await acceptInstanceTranslationJobs({
     authz: current.value.authzPayload,
     accessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
@@ -112,17 +48,33 @@ export async function POST(request: NextRequest, context: RouteContext) {
     widgetType: instance.value.row.widgetType,
     config: instance.value.config,
     previousConfig: null,
+    sourceVersion: instance.value.row.sourceVersion ?? null,
     translateAllCurrentFields: true,
-    targetLocales: [nextLocale],
+    skipReadyLocales: true,
     requestId: current.value.requestId,
   });
+  if (!translation.ok) {
+    return withSession(
+      request,
+      NextResponse.json({
+        ok: false,
+        error: {
+          kind: 'UPSTREAM_UNAVAILABLE',
+          reasonKey: translation.reasonKey,
+          detail: translation.detail,
+        },
+        translation,
+      }, { status: 502 }),
+      current.value.setCookies,
+    );
+  }
 
   return withSession(
     request,
     NextResponse.json({
-      ok: translation.ok,
+      ok: true,
       translation,
-    }, { status: translation.ok ? 200 : 502 }),
+    }, { status: translation.accepted ? 202 : 200 }),
     current.value.setCookies,
   );
 }

@@ -2,6 +2,7 @@ import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l
 import localesJson from '@clickeen/l10n/locales.json';
 import { isCompactAccountPublicId } from './overlay-identity';
 export { UUID_RE, isUuid } from './ids';
+export * from './instance-translation-jobs';
 export * from './overlay-codebooks';
 export * from './overlay-identity';
 export * from './overlay-primitives';

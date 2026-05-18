@@ -18,6 +18,7 @@ import {
 } from './l10n-routes';
 import {
   handleInstanceTranslationAgent,
+  handleInstanceTranslationRuntimeStatus,
 } from './l10n-account-routes';
 import {
   buildLearningSample,
@@ -27,6 +28,7 @@ import {
   resolveLearningCaptureDecision,
   verifyOutcomeSignature,
 } from './telemetry';
+import { handleInstanceTranslationQueueMessage } from './instance-translation-queue';
 import type {
   AIGrant,
   Env,
@@ -243,6 +245,13 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
           boundary: 'agent.instanceTranslation.translateSavedInstance',
         });
       }
+      if (request.method === 'POST' && url.pathname === '/v1/agents/instance-translation/runtime-status') {
+        return finalizeSanFranciscoObservedResponse({
+          context: requestContext,
+          response: await handleInstanceTranslationRuntimeStatus(request, this.env),
+          boundary: 'agent.instanceTranslation.runtimeStatus',
+        });
+      }
 
       throw new HttpError(404, { code: 'BAD_REQUEST', message: 'Not found' });
     } catch (err: unknown) {
@@ -266,15 +275,23 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
     }
   }
 
-  async queue(batch: MessageBatch<InteractionEvent>): Promise<void> {
+  async queue(batch: MessageBatch<unknown>): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
     for (const msg of batch.messages) {
+      if (await handleInstanceTranslationQueueMessage(this.env, msg)) {
+        continue;
+      }
       const e = msg.body;
-      await indexCopilotEvent(this.env, e);
-      const decision = resolveLearningCaptureDecision(e);
+      if (!e || typeof e !== 'object' || Array.isArray(e)) {
+        msg.ack();
+        continue;
+      }
+      const event = e as InteractionEvent;
+      await indexCopilotEvent(this.env, event);
+      const decision = resolveLearningCaptureDecision(event);
       if (decision.captureRaw) {
-        const key = `learning/${this.env.ENVIRONMENT ?? 'unknown'}/${e.agentId}/${today}/${e.requestId}.json`;
-        const sample = buildLearningSample(e, decision);
+        const key = `learning/${this.env.ENVIRONMENT ?? 'unknown'}/${event.agentId}/${today}/${event.requestId}.json`;
+        const sample = buildLearningSample(event, decision);
         try {
           await this.env.SF_R2.put(key, JSON.stringify(sample), { httpMetadata: { contentType: 'application/json' } });
         } catch (err) {

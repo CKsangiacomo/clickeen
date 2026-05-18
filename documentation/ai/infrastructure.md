@@ -52,7 +52,7 @@ Provider/model policy:
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, token ceiling, turn ceiling, and timeout ceiling.
 - **Prague strings L10n**: `website.prague.copy.translator`, OpenAI via the Prague tooling route.
-- **Account-widget Instance Translation Agent**: `widget.instance.translator`. Roma calls `POST /v1/agents/instance-translation/translate-saved-instance` after base save with a Roma-minted AI grant. San Francisco verifies the grant, enforces the signed runtime policy, receives the current saved text graph, and returns exact current-language values.
+- **Account-widget Instance Translation Agent**: `widget.instance.translator`. Roma accepts translation work after a successful Tokyo save by building concrete per-locale jobs and enqueueing them on `INSTANCE_TRANSLATION_JOBS`. San Francisco consumes those jobs, enforces the embedded `AgentRuntimePolicy`, produces exact changed-field values, merges complete current-language values, and writes the source-version-guarded overlay through Tokyo-worker.
 
 ## 3) HTTP endpoints
 
@@ -85,8 +85,16 @@ Auth:
 Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
 
+### `POST /v1/agents/instance-translation/runtime-status`
+Purpose: fast readiness check before Roma accepts queued account-widget translation work.
+
+Boundary:
+- Roma calls this through the explicit `SANFRANCISCO_BASE_URL`.
+- The request requires `Authorization: Bearer <AI grant>` with `agent:widget.instance.translator`.
+- San Francisco verifies the selected/default provider is configured in the current worker environment. Missing provider secrets fail before Roma tells Bob that background translation was accepted.
+
 ### `POST /v1/agents/instance-translation/translate-saved-instance`
-Purpose: run the account-widget Instance Translation Agent for Roma save follow-up.
+Purpose: run the account-widget Instance Translation Agent for direct diagnostics and legacy tests. The active save/generate product path uses `INSTANCE_TRANSLATION_JOBS`.
 
 Boundary:
 - Roma calls this through the explicit `SANFRANCISCO_BASE_URL`.

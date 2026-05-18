@@ -14,6 +14,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./ai": "./src/ai.ts",
+    "./instance-translation-jobs": "./src/instance-translation-jobs.ts",
     "./ids": "./src/ids.ts",
     "./faq-language-values": "./src/faq-language-values.ts",
     "./overlay-codebooks": "./src/overlay-codebooks.ts",

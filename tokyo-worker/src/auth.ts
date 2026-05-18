@@ -19,6 +19,7 @@ type ProductAccountAuthResult =
 export const INTERNAL_SERVICE_HEADER = 'x-ck-internal-service';
 export const TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL = 'devstudio.local';
 export const TOKYO_INTERNAL_SERVICE_ROMA_EDGE = 'roma.edge';
+export const TOKYO_INTERNAL_SERVICE_SANFRANCISCO_TRANSLATION = 'sanfrancisco.translation';
 
 const BERLIN_ACCOUNT_CAPSULE_JWKS_CACHE_KEY = '__CK_TOKYO_ACCOUNT_CAPSULE_JWKS_V2__';
 const DEFAULT_BERLIN_BASE_URL = 'https://berlin-dev.clickeen.workers.dev';

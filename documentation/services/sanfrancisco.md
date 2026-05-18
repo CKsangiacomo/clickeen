@@ -9,10 +9,12 @@
 - Queue consumers for agent jobs.
 - HTTP endpoints for AI outcomes.
 - `POST /v1/agents/instance-translation/translate-saved-instance` for Roma-orchestrated account-widget instance translation.
+- `POST /v1/agents/instance-translation/runtime-status` for Roma translation acceptance preflight.
 
 ## Dependencies
-- Roma (account-mode save follow-up caller)
-- Widget primitive graph from `spec.json.overlays.text[]` via Roma request payloads
+- Roma (account-mode translation job producer)
+- Tokyo-worker (source-version-guarded overlay writes through `TOKYO_PRODUCT_CONTROL`)
+- Widget content graph from FAQ `content.json` via queued Roma job payloads
 - Cloudflare KV/R2/Queues (state, logs, scheduling)
 
 ## Deployment
@@ -47,7 +49,7 @@ Health contract:
 
 ## Entrypoint posture
 - `sanfrancisco/src/index.ts` is now a thin route shell.
-- The default export is a Cloudflare `WorkerEntrypoint`; account-widget instance translation uses the grant-protected Instance Translation Agent endpoint owned by Roma's save follow-up.
+- The default export is a Cloudflare `WorkerEntrypoint`; account-widget instance translation uses queued jobs accepted by Roma and consumed by San Francisco.
 - Extracted runtime modules own:
   - request-signature helpers: `sanfrancisco/src/signatures.ts`
   - concurrency limiting: `sanfrancisco/src/concurrency.ts`
@@ -55,14 +57,13 @@ Health contract:
   - account-widget instance translation handlers: `sanfrancisco/src/l10n-account-routes.ts`
 
 ## Account-widget Instance Translation flow (active)
-- Triggered by Roma after a base widget save succeeds.
-- Roma owns orchestration, San Francisco owns value production, and Tokyo-worker owns overlay storage.
-- Endpoint: `POST /v1/agents/instance-translation/translate-saved-instance`.
-- Auth: `Authorization: Bearer <Roma-minted AI grant>` with capability `agent:widget.instance.translator`.
-- Request payloads contain only `{ v, widgetType, sourceLanguage, targetLanguage, items }`, where each item is one concrete primitive text path and value from the current saved config.
-- San Francisco does not receive widget configs, wildcard path declarations, account storage paths, selected-overlay pointers, live pointer state, publication state, previous values, or patch operations.
-- San Francisco returns `{ v: 1, values }` with the exact same path set it received: no more and no fewer.
-- Roma validates the exact path set before calling Tokyo-worker storage verbs. San Francisco does not write Tokyo overlay objects.
+- Triggered by Roma after a base widget save succeeds, or when Bob asks Roma to generate missing translations.
+- Roma owns account-command acceptance and queue production. San Francisco owns AI value production. Tokyo-worker owns saved overlay storage.
+- Queue binding: `INSTANCE_TRANSLATION_JOBS`.
+- Job payloads contain account/job coordinates, sourceVersion, base/target locale, the FAQ current saved text graph, previous saved text graph, previous language values, changed fields, deleted field keys, and the resolved runtime policy.
+- San Francisco translates only `changedFields`, merges them with previous values into complete current-language values, validates the exact current path set, and writes one Tokyo language overlay using `x-ck-internal-service: sanfrancisco.translation`.
+- Tokyo rejects stale queue writes when the job `sourceVersion` no longer matches the saved instance.
+- The HTTP `translate-saved-instance` endpoint remains for direct diagnostics and tests; it is not the active save/generate product orchestration boundary.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext translation uses one structured path: San Francisco extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.
 - l10n translation calls go through the shared policy router via `callChatCompletion` (same request/token enforcement + provider/model allowlist).
@@ -73,8 +74,8 @@ Health contract:
 - San Francisco must not write Prague overlay files or resurrect a Prague-specific widget localization path.
 
 ## Rules
-- Active account-widget instance translation returns exact current-language value maps to Roma; San Francisco does not own Tokyo overlay writes.
-- Agent writes must not invent paths, patch formats, readiness state, or layer authoring surfaces. The active instance-locale path returns concrete primitive values only; Roma orchestrates and Tokyo-worker stores.
+- Active account-widget instance translation writes exact current-language value maps to Tokyo from San Francisco queue jobs after Roma acceptance.
+- Agent writes must not invent paths, patch formats, readiness state, or layer authoring surfaces. The active instance-locale path stores concrete primitive values only; Roma orchestrates acceptance, San Francisco executes, and Tokyo-worker stores.
 
 ## Links
 - AI overview: `documentation/ai/overview.md`

@@ -147,6 +147,27 @@ export function resolveGenerateTranslationsMessage(payload: unknown): string {
   return `Generated ${generated} translations.`;
 }
 
+function resolveGenerateTranslationsError(payload: unknown): string {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return 'Translations could not be generated.';
+  }
+  const error = (payload as Record<string, unknown>).error;
+  if (error && typeof error === 'object' && !Array.isArray(error)) {
+    const detail = (error as Record<string, unknown>).detail;
+    const reasonKey = (error as Record<string, unknown>).reasonKey;
+    if (typeof detail === 'string' && detail.trim()) return detail.trim();
+    if (typeof reasonKey === 'string' && reasonKey.trim()) return reasonKey.trim();
+  }
+  const translation = (payload as Record<string, unknown>).translation;
+  if (translation && typeof translation === 'object' && !Array.isArray(translation)) {
+    const detail = (translation as Record<string, unknown>).detail;
+    const reasonKey = (translation as Record<string, unknown>).reasonKey;
+    if (typeof detail === 'string' && detail.trim()) return detail.trim();
+    if (typeof reasonKey === 'string' && reasonKey.trim()) return reasonKey.trim();
+  }
+  return 'Translations could not be generated.';
+}
+
 export function TranslationReviewRows({
   review,
   draftValues,
@@ -308,7 +329,7 @@ export function TranslationsPanel({
     try {
       const response = await generateTranslations({ instanceId });
       if (!response.ok) {
-        throw new Error('Translations could not be generated.');
+        throw new Error(resolveGenerateTranslationsError(response.json));
       }
       setGenerateMessage(resolveGenerateTranslationsMessage(response.json));
       onRequestLocaleOverlayRefresh();
