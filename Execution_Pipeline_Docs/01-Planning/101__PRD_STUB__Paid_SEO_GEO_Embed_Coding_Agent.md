@@ -1,8 +1,8 @@
 # PRD 101 Stub - Paid SEO/GEO Embed Coding Agent
 
-Status: Stub  
-Owner: Product + Architecture  
-Date: 2026-05-16  
+Status: Planning
+Owner: Product + Architecture
+Date: 2026-05-16
 Depends on: PRD 100 - Static Public Embed Delivery
 
 ## Purpose

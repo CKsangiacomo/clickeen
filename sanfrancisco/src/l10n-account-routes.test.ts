@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  normalizeBabelTextProducerRequest,
-  produceBabelTextValues,
+  handleInstanceTranslationAgent,
+  normalizeInstanceTranslationAgentRequest,
+  produceInstanceTranslationValues,
 } from './l10n-account-routes.ts';
-import type { AIGrant, Env } from './types.ts';
+import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
+import { resolveAiRuntimePolicy } from '@clickeen/ck-policy';
+import { buildUserPrompt } from './agents/l10nTranslationCore.ts';
+import type { AIGrant, Env, InteractionEvent } from './types.ts';
 
 const grant: AIGrant = {
   v: 1,
@@ -20,45 +24,121 @@ const env = {
   AI_GRANT_HMAC_SECRET: 'test-secret',
 } as Env;
 
-test('Babel text producer request accepts exact concrete paths only', () => {
-  const request = normalizeBabelTextProducerRequest({
-    v: 1,
-    widgetType: 'faq',
-    sourceLanguage: 'en',
-    targetLanguage: 'it',
-    items: [
-      { path: 'header.title', type: 'string', value: 'FAQ' },
-      { path: 'sections.0.faqs.0.question', type: 'string', value: 'https://example.com' },
-      { path: 'sections.0.faqs.0.answer', type: 'richtext', value: '' },
-    ],
-  });
+function base64UrlEncodeBytes(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
 
-  assert.equal(request?.items.length, 3);
-  assert.deepEqual(
-    request?.items.map((item) => item.path),
-    ['header.title', 'sections.0.faqs.0.question', 'sections.0.faqs.0.answer'],
-  );
+async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+  return base64UrlEncodeBytes(new Uint8Array(sig));
+}
+
+async function mintGrant(payload: AIGrant, secret = 'test-secret'): Promise<string> {
+  const payloadB64 = base64UrlEncodeBytes(new TextEncoder().encode(JSON.stringify(payload)));
+  const sigB64 = await hmacSha256Base64Url(secret, `v1.${payloadB64}`);
+  return `v1.${payloadB64}.${sigB64}`;
+}
+
+test('translator prompt carries field labels and roles from the content contract', () => {
+  const prompt = buildUserPrompt([
+    {
+      path: 'sections.0.faqs.0.question',
+      type: 'string',
+      label: 'FAQ question',
+      role: 'faq-question',
+      value: 'What is Clickeen?',
+    },
+  ]);
+
+  assert.match(prompt, /"label":"FAQ question"/);
+  assert.match(prompt, /"role":"faq-question"/);
 });
 
-test('Babel text producer request rejects pattern and duplicate paths', () => {
+test('Instance Translation Agent rejects loose legacy value requests', () => {
   assert.equal(
-    normalizeBabelTextProducerRequest({
+    normalizeInstanceTranslationAgentRequest({
       v: 1,
       widgetType: 'faq',
       sourceLanguage: 'en',
       targetLanguage: 'it',
-      items: [{ path: 'sections[].faqs[].question', type: 'string', value: 'Question?' }],
+      items: [{ path: 'header.title', type: 'string', value: 'FAQ' }],
+    }),
+    null,
+  );
+});
+
+test('Instance Translation Agent returns current language values for one saved instance', async () => {
+  const request = normalizeInstanceTranslationAgentRequest({
+    v: 1,
+    operation: 'translate_saved_instance',
+    accountId: 'acc_test',
+    instanceId: 'INSTFAQ001',
+    widgetType: 'faq',
+    baseLocale: 'en',
+    targetLocale: 'it',
+    jobId: 'job-translate-1',
+    currentSavedTextGraph: [
+      {
+        path: 'cta.label',
+        type: 'string',
+        label: 'CTA label',
+        role: 'cta-label',
+        value: '',
+      },
+      {
+        path: 'sections.0.faqs.0.question',
+        type: 'string',
+        label: 'FAQ question',
+        role: 'faq-question',
+        value: 'https://example.com',
+      },
+    ],
+  });
+  assert(request);
+
+  const produced = await produceInstanceTranslationValues({ env, grant, request });
+  assert.deepEqual(produced.currentLanguageValues, {
+    v: 1,
+    values: {
+      'cta.label': '',
+      'sections.0.faqs.0.question': 'https://example.com',
+    },
+  });
+  assert.equal(produced.operation, 'translate_saved_instance');
+  assert.equal(produced.jobId, 'job-translate-1');
+});
+
+test('Instance Translation Agent rejects pattern and duplicate saved text paths', () => {
+  assert.equal(
+    normalizeInstanceTranslationAgentRequest({
+      v: 1,
+      operation: 'translate_saved_instance',
+      accountId: 'acc_test',
+      instanceId: 'INSTFAQ001',
+      widgetType: 'faq',
+      baseLocale: 'en',
+      targetLocale: 'it',
+      jobId: 'job-invalid',
+      currentSavedTextGraph: [{ path: 'sections[].faqs[].question', type: 'string', value: 'Question?' }],
     }),
     null,
   );
 
   assert.equal(
-    normalizeBabelTextProducerRequest({
+    normalizeInstanceTranslationAgentRequest({
       v: 1,
+      operation: 'translate_saved_instance',
+      accountId: 'acc_test',
+      instanceId: 'INSTFAQ001',
       widgetType: 'faq',
-      sourceLanguage: 'en',
-      targetLanguage: 'it',
-      items: [
+      baseLocale: 'en',
+      targetLocale: 'it',
+      jobId: 'job-invalid',
+      currentSavedTextGraph: [
         { path: 'header.title', type: 'string', value: 'FAQ' },
         { path: 'header.title', type: 'string', value: 'FAQ again' },
       ],
@@ -67,25 +147,71 @@ test('Babel text producer request rejects pattern and duplicate paths', () => {
   );
 });
 
-test('Babel text producer returns exact value set for direct non-translatable values', async () => {
-  const request = normalizeBabelTextProducerRequest({
+test('Instance Translation Agent audit event carries policy version and resolved model usage', async () => {
+  const resolved = resolveAiAgent('widget.instance.translator');
+  assert(resolved);
+  const ai = resolveAiRuntimePolicy({ entry: resolved.entry, policyProfile: 'free' });
+  const events: InteractionEvent[] = [];
+  const auditEnv = {
+    ...env,
+    SF_EVENTS: {
+      send: async (event: InteractionEvent) => {
+        events.push(event);
+      },
+    },
+  } as Env;
+  const token = await mintGrant({
     v: 1,
-    widgetType: 'faq',
-    sourceLanguage: 'en',
-    targetLanguage: 'it',
-    items: [
-      { path: 'cta.label', type: 'string', value: '' },
-      { path: 'sections.0.faqs.0.question', type: 'string', value: 'https://example.com' },
-    ],
-  });
-  assert(request);
-
-  const produced = await produceBabelTextValues({ env, grant, request });
-  assert.deepEqual(produced, {
-    v: 1,
-    values: {
-      'cta.label': '',
-      'sections.0.faqs.0.question': 'https://example.com',
+    iss: 'roma',
+    sub: { kind: 'user', userId: 'usr_test', accountId: 'acc_test' },
+    exp: Math.floor(Date.now() / 1000) + 60,
+    caps: ['agent:widget.instance.translator'],
+    budgets: { maxTokens: ai.maxTokensPerCall, timeoutMs: ai.timeoutMs },
+    mode: 'ops',
+    ai,
+    trace: {
+      sessionId: 'sess_103h',
+      instancePublicId: 'INSTFAQ001',
+      envStage: 'test',
     },
   });
+
+  const response = await handleInstanceTranslationAgent(
+    new Request('https://sf.test/v1/agents/instance-translation/translate-saved-instance', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        v: 1,
+        operation: 'translate_saved_instance',
+        accountId: 'acc_test',
+        instanceId: 'INSTFAQ001',
+        widgetType: 'faq',
+        baseLocale: 'en',
+        targetLocale: 'it',
+        jobId: 'job-103h',
+        currentSavedTextGraph: [
+          { path: 'cta.label', type: 'string', label: 'CTA label', role: 'cta-label', value: '' },
+        ],
+      }),
+    }),
+    auditEnv,
+    undefined,
+    'req_103h_translation',
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(events.length, 1);
+  assert.equal(events[0]?.requestId, 'req_103h_translation');
+  assert.equal(events[0]?.subject.kind, 'user');
+  assert.equal(events[0]?.agentId, 'widget.instance.translator');
+  assert.equal(events[0]?.ai?.policyProfile, 'free');
+  assert.equal(events[0]?.ai?.policyVersion, ai.policyVersion);
+  assert.equal(events[0]?.ai?.taskClass, 'l10n.instance');
+  assert.equal(events[0]?.usage.provider, 'deepseek');
+  assert.equal(events[0]?.usage.model, 'deepseek-chat');
+  assert.equal(events[0]?.usage.promptTokens, 0);
+  assert.equal(events[0]?.usage.completionTokens, 0);
 });

@@ -1,18 +1,18 @@
 import { normalizeDesiredAccountLocales } from './account-locales';
 import { loadCurrentAccountLocalesState } from './account-locales-state';
 
-export type AccountBabelLanguagePolicy = {
+export type AccountTranslationLanguagePolicy = {
   baseLocale: string;
   desiredLocales: string[];
   countryToLocale: Record<string, string>;
 };
 
-export async function loadAccountBabelLanguagePolicy(args: {
+export async function loadAccountTranslationLanguagePolicy(args: {
   accessToken: string;
   accountId: string;
   requestId?: string | null;
 }): Promise<
-  | { ok: true; value: AccountBabelLanguagePolicy }
+  | { ok: true; value: AccountTranslationLanguagePolicy }
   | {
       ok: false;
       status: number;

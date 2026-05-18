@@ -8,7 +8,7 @@
 - `GET /healthz`
 - Queue consumers for agent jobs.
 - HTTP endpoints for AI outcomes.
-- `POST /v1/babel/text-values` for Roma-orchestrated account-widget Babel text production.
+- `POST /v1/agents/instance-translation/translate-saved-instance` for Roma-orchestrated account-widget instance translation.
 
 ## Dependencies
 - Roma (account-mode save follow-up caller)
@@ -47,17 +47,17 @@ Health contract:
 
 ## Entrypoint posture
 - `sanfrancisco/src/index.ts` is now a thin route shell.
-- The default export is a Cloudflare `WorkerEntrypoint`; account-widget Babel production uses the grant-protected HTTP endpoint owned by Roma's save follow-up.
+- The default export is a Cloudflare `WorkerEntrypoint`; account-widget instance translation uses the grant-protected Instance Translation Agent endpoint owned by Roma's save follow-up.
 - Extracted runtime modules own:
   - request-signature helpers: `sanfrancisco/src/signatures.ts`
   - concurrency limiting: `sanfrancisco/src/concurrency.ts`
   - telemetry and outcome persistence: `sanfrancisco/src/telemetry.ts`
-  - account-widget Babel text handlers: `sanfrancisco/src/l10n-account-routes.ts`
+  - account-widget instance translation handlers: `sanfrancisco/src/l10n-account-routes.ts`
 
-## Account-widget Babel text flow (active)
+## Account-widget Instance Translation flow (active)
 - Triggered by Roma after a base widget save succeeds.
 - Roma owns orchestration, San Francisco owns value production, and Tokyo-worker owns overlay storage.
-- Endpoint: `POST /v1/babel/text-values`.
+- Endpoint: `POST /v1/agents/instance-translation/translate-saved-instance`.
 - Auth: `Authorization: Bearer <Roma-minted AI grant>` with capability `agent:widget.instance.translator`.
 - Request payloads contain only `{ v, widgetType, sourceLanguage, targetLanguage, items }`, where each item is one concrete primitive text path and value from the current saved config.
 - San Francisco does not receive widget configs, wildcard path declarations, account storage paths, selected-overlay pointers, live pointer state, publication state, previous values, or patch operations.
@@ -73,7 +73,7 @@ Health contract:
 - San Francisco must not write Prague overlay files or resurrect a Prague-specific widget localization path.
 
 ## Rules
-- Active account-widget Babel returns exact text value maps to Roma; San Francisco does not own Tokyo overlay writes.
+- Active account-widget instance translation returns exact current-language value maps to Roma; San Francisco does not own Tokyo overlay writes.
 - Agent writes must not invent paths, patch formats, readiness state, or layer authoring surfaces. The active instance-locale path returns concrete primitive values only; Roma orchestrates and Tokyo-worker stores.
 
 ## Links

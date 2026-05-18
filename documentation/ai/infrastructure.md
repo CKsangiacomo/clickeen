@@ -52,7 +52,7 @@ Provider/model policy:
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, token ceiling, turn ceiling, and timeout ceiling.
 - **Prague strings L10n**: `website.prague.copy.translator`, OpenAI via the Prague tooling route.
-- **Account-widget Babel text production**: `widget.instance.translator`. Roma calls `POST /v1/babel/text-values` after base save with a Roma-minted AI grant. San Francisco verifies the grant, enforces the signed runtime policy, receives concrete primitive text values, and returns exact concrete values.
+- **Account-widget Instance Translation Agent**: `widget.instance.translator`. Roma calls `POST /v1/agents/instance-translation/translate-saved-instance` after base save with a Roma-minted AI grant. San Francisco verifies the grant, enforces the signed runtime policy, receives the current saved text graph, and returns exact current-language values.
 
 ## 3) HTTP endpoints
 
@@ -85,8 +85,8 @@ Auth:
 Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
 
-### `POST /v1/babel/text-values`
-Purpose: produce account-widget locale overlay text values for Roma save follow-up.
+### `POST /v1/agents/instance-translation/translate-saved-instance`
+Purpose: run the account-widget Instance Translation Agent for Roma save follow-up.
 
 Boundary:
 - Roma calls this through the explicit `SANFRANCISCO_BASE_URL`.

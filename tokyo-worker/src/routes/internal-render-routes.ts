@@ -714,6 +714,7 @@ export async function tryHandleInternalRenderRoutes(
           widgetType: result.pointer.widgetType,
           sourceVersion: result.pointer.sourceVersion,
           generation: result.pointer.generation,
+          previousConfig: result.previousConfig,
           live: result.live,
         }),
       );

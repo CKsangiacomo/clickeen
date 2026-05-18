@@ -1,0 +1,62 @@
+{
+  "v": 1,
+  "widgetType": "faq",
+  "fields": [
+    {
+      "path": "header.title",
+      "label": "Header title",
+      "type": "richtext",
+      "role": "header-title",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "header.subtitleHtml",
+      "label": "Header subtitle",
+      "type": "richtext",
+      "role": "header-subtitle",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "cta.label",
+      "label": "CTA label",
+      "type": "string",
+      "role": "cta-label",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "sections[].title",
+      "label": "Section title",
+      "type": "string",
+      "role": "section-title",
+      "arrayItemIdentity": [
+        "sections[].id"
+      ],
+      "limits": []
+    },
+    {
+      "path": "sections[].faqs[].question",
+      "label": "FAQ question",
+      "type": "string",
+      "role": "faq-question",
+      "arrayItemIdentity": [
+        "sections[].id",
+        "sections[].faqs[].id"
+      ],
+      "limits": []
+    },
+    {
+      "path": "sections[].faqs[].answer",
+      "label": "FAQ answer",
+      "type": "richtext",
+      "role": "faq-answer",
+      "arrayItemIdentity": [
+        "sections[].id",
+        "sections[].faqs[].id"
+      ],
+      "limits": []
+    }
+  ]
+}

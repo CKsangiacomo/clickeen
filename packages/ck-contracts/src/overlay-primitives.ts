@@ -8,6 +8,22 @@ export type WidgetTextPrimitiveDeclaration = {
   path: string;
   label: string;
   type: WidgetTextPrimitiveType;
+  role?: string;
+};
+
+export type WidgetContentField = {
+  path: string;
+  type: WidgetTextPrimitiveType;
+  label: string;
+  role: string;
+  arrayItemIdentity: string[];
+  limits: unknown[];
+};
+
+export type WidgetContentContract = {
+  v: 1;
+  widgetType: string;
+  fields: WidgetContentField[];
 };
 
 export type WidgetOverlayContract = {
@@ -24,6 +40,8 @@ export type OverlayValueMap = Record<string, string>;
 export type BabelTextProducerItem = {
   path: string;
   type: WidgetTextPrimitiveType;
+  label?: string;
+  role?: string;
   value: string;
 };
 
@@ -64,6 +82,15 @@ function asNonEmptyString(value: unknown): string | null {
 
 function parsePrimitiveType(value: unknown): WidgetTextPrimitiveType {
   return value === 'richtext' ? 'richtext' : 'string';
+}
+
+function parseStringArray(value: unknown, label: string): string[] {
+  if (!Array.isArray(value)) throw new Error(`${label}_invalid`);
+  return value.map((entry, index) => {
+    const normalized = asNonEmptyString(entry);
+    if (!normalized) throw new Error(`${label}_entry_invalid:${index}`);
+    return normalized;
+  });
 }
 
 function assertPathSegment(segment: string, path: string): ParsedPathStep {
@@ -121,6 +148,7 @@ export function readWidgetOverlayContract(spec: unknown): WidgetOverlayContract 
       path,
       label,
       type: parsePrimitiveType(entry.type),
+      ...(asNonEmptyString(entry.role) ? { role: asNonEmptyString(entry.role)! } : {}),
     };
   });
 
@@ -131,6 +159,57 @@ export function readWidgetOverlayContract(spec: unknown): WidgetOverlayContract 
   }
 
   return { v: 1, text };
+}
+
+export function readWidgetContentContract(content: unknown): WidgetContentContract {
+  if (!isRecord(content) || content.v !== 1 || !Array.isArray(content.fields)) {
+    throw new Error('widget_content_contract_invalid');
+  }
+  const widgetType = asNonEmptyString(content.widgetType);
+  if (!widgetType) throw new Error('widget_content_widget_type_missing');
+
+  const fields = content.fields.map((entry, index): WidgetContentField => {
+    if (!isRecord(entry)) throw new Error(`widget_content_field_invalid:${index}`);
+    const path = asNonEmptyString(entry.path);
+    const label = asNonEmptyString(entry.label);
+    const role = asNonEmptyString(entry.role);
+    if (!path) throw new Error(`widget_content_field_path_missing:${index}`);
+    if (!label) throw new Error(`widget_content_field_label_missing:${path}`);
+    if (!role) throw new Error(`widget_content_field_role_missing:${path}`);
+    parsePrimitivePath(path);
+    if (entry.type !== 'string' && entry.type !== 'richtext') {
+      throw new Error(`widget_content_field_type_invalid:${path}`);
+    }
+    const type = entry.type;
+    return {
+      path,
+      type,
+      label,
+      role,
+      arrayItemIdentity: parseStringArray(entry.arrayItemIdentity, `widget_content_field_array_identity:${path}`),
+      limits: Array.isArray(entry.limits) ? entry.limits.slice() : [],
+    };
+  });
+
+  const seen = new Set<string>();
+  for (const field of fields) {
+    if (seen.has(field.path)) throw new Error(`widget_content_field_duplicate:${field.path}`);
+    seen.add(field.path);
+  }
+
+  return { v: 1, widgetType, fields };
+}
+
+export function widgetContentToOverlayContract(contract: WidgetContentContract): WidgetOverlayContract {
+  return {
+    v: 1,
+    text: contract.fields.map((field) => ({
+      path: field.path,
+      label: field.label,
+      type: field.type,
+      role: field.role,
+    })),
+  };
 }
 
 function extractForDeclaration(args: {

@@ -89,6 +89,7 @@ export function useLocaleOverlayPreviewState(args: {
         const payload = normalizeLocaleOverlayInventory(response.json);
         if (!payload) throw new Error('coreui.errors.payload.invalid');
         if (payload.baseLocale !== args.baseLocale) throw new Error('coreui.errors.payload.invalid');
+        setValuesByLocale({});
         setInventory(payload);
       })
       .catch((caught) => {

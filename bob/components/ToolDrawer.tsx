@@ -85,17 +85,21 @@ function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidget
 export function ToolDrawer({
   overlayPreviewLocale,
   onOverlayPreviewLocaleChange,
+  onRequestLocaleOverlayRefresh,
   onPreviewModeChange,
   translationSetup,
   localeOverlayInventory,
+  localeOverlayValuesByLocale,
   localeOverlayLoading,
   localeOverlayError,
 }: {
   overlayPreviewLocale: string;
   onOverlayPreviewLocaleChange: (locale: string) => void;
+  onRequestLocaleOverlayRefresh: () => void;
   onPreviewModeChange: (mode: 'editing' | 'translations') => void;
   translationSetup: TranslationSetup | null;
   localeOverlayInventory: LocaleOverlayInventoryData | null;
+  localeOverlayValuesByLocale: Record<string, Record<string, string>>;
   localeOverlayLoading: boolean;
   localeOverlayError: string | null;
 }) {
@@ -152,8 +156,10 @@ export function ToolDrawer({
     <TranslationsPanel
       overlayPreviewLocale={overlayPreviewLocale}
       onOverlayPreviewLocaleChange={onOverlayPreviewLocaleChange}
+      onRequestLocaleOverlayRefresh={onRequestLocaleOverlayRefresh}
       translationSetup={translationSetup}
       localeOverlayInventory={localeOverlayInventory}
+      localeOverlayValuesByLocale={localeOverlayValuesByLocale}
       localeOverlayLoading={localeOverlayLoading}
       localeOverlayError={localeOverlayError}
     />

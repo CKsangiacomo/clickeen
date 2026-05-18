@@ -60,6 +60,7 @@ items.group.large.max  | limit | sections[].faqs[]          | count-total       
 Widget definition (the software): `tokyo/product/widgets/faq/`
 
 - `spec.json` — defaults + structured Builder editor contract
+- `content.json` — customer-visible translation fields
 - `widget.html` — semantic scaffold
 - `widget.css` — scoped styles (Dieter tokens)
 - `widget.client.js` — `applyState(state)` runtime
@@ -67,7 +68,7 @@ Widget definition (the software): `tokyo/product/widgets/faq/`
 - `limits.json` — entitlement limits/flags
 
 Source of truth for editor state is `tokyo/product/widgets/faq/spec.json` → `defaults`.
-Source of truth for overlay-editable text primitives is `tokyo/product/widgets/faq/spec.json` → `overlays.text[]`.
+Source of truth for translation fields is `tokyo/product/widgets/faq/content.json`.
 
 ## 2) Functional spec
 
@@ -200,10 +201,10 @@ Controls:
   - `cta.iconPlacement` (`left|right`)
 - `displayCategoryTitles` (toggle)
 
-Babel text primitives:
+Translation fields:
 
 - Localization/translation UI lives in Content (Translate mode).
-- The source is `tokyo/product/widgets/faq/spec.json.overlays.text[]`.
+- The source is `tokyo/product/widgets/faq/content.json`.
 - Required coverage:
   - `header.title`
   - `header.subtitleHtml`
@@ -213,7 +214,7 @@ Babel text primitives:
   - `sections[].faqs[].answer`
 - Before producer calls, repeatable declarations are expanded against the saved config into concrete paths such as `sections.0.faqs.0.question`.
 - FAQ must not add `localization.json`, layer sidecars, text packs, or wildcard producer payloads.
-- In Builder preview, selecting a language overlay must change FAQ title, subtitle, CTA text, section titles, every question, and every answer together. A target language without selected overlay values for the current save must not display stale FAQ text.
+- In Builder preview, selecting a language overlay must change FAQ title, subtitle, CTA text, section titles, every question, and every answer together. A target language without selected overlay values for the current save must not display old FAQ text.
 
 ### Panel: Layout (`layout`)
 

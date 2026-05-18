@@ -1,8 +1,4 @@
 import { CK_REQUEST_ID_HEADER, asTrimmedString, looksLikeHtmlErrorPage } from '@clickeen/ck-contracts';
-import type {
-  BabelTextProducerRequest,
-  BabelTextProducerResponse,
-} from '@clickeen/ck-contracts/overlay-primitives';
 import {
   resolveAiRuntimeBudget,
   resolveAiRuntimePolicy,
@@ -11,6 +7,27 @@ import {
 import { resolveAiAgent, type AiGrantPolicy } from '@clickeen/ck-contracts/ai';
 import { getOptionalCloudflareRequestContext } from './cloudflare-request-context';
 import { resolveSanfranciscoBaseUrl } from './env/sanfrancisco';
+
+type SavedTextGraphItem = {
+  path: string;
+  type: 'string' | 'richtext';
+  label?: string;
+  role?: string;
+  value: string;
+};
+
+type InstanceTranslationRequest = {
+  v: 1;
+  widgetType: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  items: SavedTextGraphItem[];
+};
+
+type CurrentLanguageValues = {
+  v: 1;
+  values: Record<string, string>;
+};
 
 type AIGrant = {
   v: 1;
@@ -73,12 +90,12 @@ async function mintGrant(grant: AIGrant): Promise<string> {
   return `v1.${payloadB64}.${sigB64}`;
 }
 
-async function issueBabelTextGrant(args: {
+async function issueInstanceTranslationGrant(args: {
   authz: RomaAccountAuthzCapsulePayload;
   instanceId: string;
 }): Promise<string> {
   const resolvedAgent = resolveAiAgent('widget.instance.translator');
-  if (!resolvedAgent) throw new Error('babel_text_agent_missing');
+  if (!resolvedAgent) throw new Error('instance_translation_agent_missing');
   const ai = resolveAiRuntimePolicy({
     entry: resolvedAgent.entry,
     policyProfile: args.authz.profile,
@@ -123,9 +140,28 @@ function summarizeUpstreamError(args: { baseUrl: string; status: number; bodyTex
   return args.bodyText || `SanFrancisco error (${args.status})`;
 }
 
-function normalizeBabelTextResponse(payload: unknown): BabelTextProducerResponse | null {
+function normalizeInstanceTranslationResponse(payload: unknown): CurrentLanguageValues | null {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
   const record = payload as Record<string, unknown>;
+  const currentLanguageValues =
+    record.currentLanguageValues && typeof record.currentLanguageValues === 'object' && !Array.isArray(record.currentLanguageValues)
+      ? (record.currentLanguageValues as Record<string, unknown>)
+      : null;
+  if (
+    record.v === 1 &&
+    record.operation === 'translate_saved_instance' &&
+    currentLanguageValues?.v === 1 &&
+    currentLanguageValues.values &&
+    typeof currentLanguageValues.values === 'object' &&
+    !Array.isArray(currentLanguageValues.values)
+  ) {
+    const values: Record<string, string> = {};
+    for (const [path, value] of Object.entries(currentLanguageValues.values as Record<string, unknown>)) {
+      if (typeof value !== 'string') return null;
+      values[path] = value;
+    }
+    return { v: 1, values };
+  }
   if (record.v !== 1 || !record.values || typeof record.values !== 'object' || Array.isArray(record.values)) {
     return null;
   }
@@ -137,23 +173,23 @@ function normalizeBabelTextResponse(payload: unknown): BabelTextProducerResponse
   return { v: 1, values };
 }
 
-export async function produceBabelTextValues(args: {
+export async function produceInstanceTranslationValues(args: {
   authz: RomaAccountAuthzCapsulePayload;
   instanceId: string;
-  request: BabelTextProducerRequest;
+  request: InstanceTranslationRequest;
   requestId?: string | null;
 }): Promise<
-  | { ok: true; value: BabelTextProducerResponse }
+  | { ok: true; value: CurrentLanguageValues }
   | { ok: false; detail: string }
 > {
   const baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
-  const grant = await issueBabelTextGrant({
+  const grant = await issueInstanceTranslationGrant({
     authz: args.authz,
     instanceId: args.instanceId,
   });
   let response: Response;
   try {
-    response = await fetch(`${baseUrl}/v1/babel/text-values`, {
+    response = await fetch(`${baseUrl}/v1/agents/instance-translation/translate-saved-instance`, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${grant}`,
@@ -161,7 +197,17 @@ export async function produceBabelTextValues(args: {
         accept: 'application/json',
         ...(args.requestId ? { [CK_REQUEST_ID_HEADER]: args.requestId } : {}),
       },
-      body: JSON.stringify(args.request),
+      body: JSON.stringify({
+        v: 1,
+        operation: 'translate_saved_instance',
+        accountId: args.authz.accountId,
+        instanceId: args.instanceId,
+        widgetType: args.request.widgetType,
+        baseLocale: args.request.sourceLanguage,
+        targetLocale: args.request.targetLanguage,
+        jobId: crypto.randomUUID(),
+        currentSavedTextGraph: args.request.items,
+      }),
       cache: 'no-store',
     });
   } catch (error) {
@@ -181,9 +227,9 @@ export async function produceBabelTextValues(args: {
     };
   }
 
-  const normalized = normalizeBabelTextResponse(payload);
+  const normalized = normalizeInstanceTranslationResponse(payload);
   if (!normalized) {
-    return { ok: false, detail: 'sanfrancisco_babel_text_invalid_payload' };
+    return { ok: false, detail: 'sanfrancisco_instance_translation_invalid_payload' };
   }
   return { ok: true, value: normalized };
 }

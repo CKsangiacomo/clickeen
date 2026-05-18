@@ -1,10 +1,11 @@
-import type { AiGrantPolicy, AiModelRef, AiProvider } from '@clickeen/ck-contracts/ai';
+import type { AiGrantPolicy, AiModelRef, AiPolicyProfile, AiProvider } from '@clickeen/ck-contracts/ai';
 import { timingSafeEqualBytes } from '@clickeen/ck-contracts/security';
 import type { AIGrant } from './types';
 import { HttpError, asNumber, asString, isRecord } from './http';
 
 const AI_GRANT_ISSUER_SET = new Set<AIGrant['iss']>(['roma', 'sanfrancisco']);
 const AI_PROVIDER_SET = new Set<AiProvider>(['deepseek', 'openai']);
+const AI_POLICY_PROFILE_SET = new Set<AiPolicyProfile>(['free', 'tier1', 'tier2', 'tier3']);
 
 function isAiGrantIssuer(value: string): value is AIGrant['iss'] {
   return AI_GRANT_ISSUER_SET.has(value as AIGrant['iss']);
@@ -106,11 +107,15 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
 function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
   if (!isRecord(value)) return undefined;
   const agentId = asString(value.agentId);
+  const policyProfileRaw = asString((value as any).policyProfile);
+  const policyProfile = AI_POLICY_PROFILE_SET.has(policyProfileRaw as AiPolicyProfile)
+    ? (policyProfileRaw as AiPolicyProfile)
+    : null;
   const enabled = (value as any).enabled === true;
   const defaultModel = normalizeAiModelRef((value as any).defaultModel);
   const modelsByProviderRaw = (value as any).modelsByProvider;
   const modelsByProvider: AiGrantPolicy['modelsByProvider'] = {};
-  if (!agentId || !enabled || !defaultModel || !isRecord(modelsByProviderRaw)) {
+  if (!agentId || !policyProfile || !enabled || !defaultModel || !isRecord(modelsByProviderRaw)) {
     throw new HttpError(401, { code: 'GRANT_INVALID', message: 'Grant ai policy missing required fields' });
   }
 
@@ -161,6 +166,7 @@ function normalizeAiPolicy(value: unknown): AiGrantPolicy | undefined {
 
   return {
     agentId,
+    policyProfile,
     enabled,
     defaultModel,
     modelsByProvider,

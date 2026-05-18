@@ -1,8 +1,8 @@
 # PRD 100B - San Francisco Agent Contract
 
-Status: Executing  
-Owner: Product + Architecture  
-Date: 2026-05-16  
+Status: Complete
+Owner: Product + Architecture
+Date: 2026-05-16
 Parent: PRD 100 - Core Instance Mini-Sites And Static Embed Delivery
 
 ## Purpose
@@ -251,19 +251,19 @@ If the conditional status write fails because a newer save exists, the job exits
 
 ## Risks / Guards
 
-- Risk: synchronous save waits on translation/build work.  
+- Risk: synchronous save waits on translation/build work.
   Guard: Save persists source and enqueues jobs; generation readiness is separate.
 
-- Risk: stale jobs overwrite newer saves.  
+- Risk: stale jobs overwrite newer saves.
   Guard: all writes are saved-version conditional.
 
-- Risk: agents invent folders or sidecar JSON.  
+- Risk: agents invent folders or sidecar JSON.
   Guard: contract tests fail any output outside `overlays/` or generated browser files.
 
-- Risk: embed generation becomes asset management.  
+- Risk: embed generation becomes asset management.
   Guard: embed agent consumes approved asset references only and never writes account asset files.
 
-- Risk: PRD 100 expands into a San Francisco rebuild.  
+- Risk: PRD 100 expands into a San Francisco rebuild.
   Guard: implement only the two production job runners, shared envelope, retries, status writes, and observability required here.
 
 ## Validation / Tests

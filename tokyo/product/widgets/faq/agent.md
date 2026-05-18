@@ -231,12 +231,19 @@ Stage/Pod (layout spacing lives here; no widget-level padding):
 - Add question: append to `sections[i].faqs` (must include `id`)
 - Reorder question: move within `sections[i].faqs`
 
-## Overlay Primitive Graph
-The widget-owned text primitive graph lives in `spec.json` under `overlays.v = 1`.
-Babel and future producers must use that graph to extract concrete paths such as
-`sections.0.faqs.0.question` before producing values. Do not add a second path file
-for translation or editing.
+## Content JSON
+The FAQ translation authority lives in `content.json`.
+It contains only customer-visible strings:
+- `header.title`
+- `header.subtitleHtml`
+- `cta.label`
+- `sections[].title`
+- `sections[].faqs[].question`
+- `sections[].faqs[].answer`
+
+IDs are identity. `defaultOpen` is behavior. Neither belongs in `content.json`.
+Copilot reads the widget package and may edit valid widget config according to user intent.
 
 ## Prohibited
-- Do not write values for paths outside this widget's `spec.json` primitive graph; they are rejected fail-closed.
+- Do not translate values outside `content.json`.
 - Do not include non-allowed HTML tags/attrs in `sections[].faqs[].question|answer` (only the allowed inline tags listed above are supported).

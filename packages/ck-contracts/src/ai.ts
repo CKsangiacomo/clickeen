@@ -28,6 +28,7 @@ export type AiLearningCapturePolicy = {
 
 export type AgentRuntimePolicy = {
   agentId: string;
+  policyProfile: AiPolicyProfile;
   enabled: boolean;
   defaultModel: AiModelRef;
   modelsByProvider: Partial<Record<AiProvider, AiModelPolicy>>;

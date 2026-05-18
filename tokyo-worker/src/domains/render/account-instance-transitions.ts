@@ -183,6 +183,7 @@ export async function saveAccountInstanceTransition(args: {
 }): Promise<{
   ok: true;
   pointer: SavedRenderPointer;
+  previousConfig: Record<string, unknown>;
   live: boolean;
 }> {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
@@ -220,6 +221,7 @@ export async function saveAccountInstanceTransition(args: {
   return {
     ok: true,
     pointer: saved.pointer,
+    previousConfig: existing.value.config,
     live,
   };
 }

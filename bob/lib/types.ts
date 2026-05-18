@@ -4,6 +4,7 @@
  */
 
 import type { LimitsSpec } from '@clickeen/ck-policy';
+import type { WidgetContentContract } from '@clickeen/ck-contracts/overlay-primitives';
 
 export type PanelId = string;
 
@@ -73,6 +74,24 @@ export interface WidgetNormalizationSpec {
   coerceRules?: WidgetNormalizationCoerceRule[];
 }
 
+export type WidgetPackageFileName =
+  | 'content.json'
+  | 'spec.json'
+  | 'widget.html'
+  | 'widget.css'
+  | 'widget.client.js';
+
+export interface WidgetPackageFileContext {
+  mediaType: 'application/json' | 'text/html' | 'text/css' | 'text/javascript';
+  source: string;
+}
+
+export interface WidgetPackageContext {
+  v: 1;
+  widgetType: string;
+  files: Partial<Record<WidgetPackageFileName, WidgetPackageFileContext>>;
+}
+
 export interface CompiledWidget {
   widgetname: string;
   displayName: string;
@@ -81,6 +100,8 @@ export interface CompiledWidget {
   controls: CompiledControl[];
   presets?: WidgetPresets;
   normalization?: WidgetNormalizationSpec;
+  content?: WidgetContentContract;
+  widgetPackage?: WidgetPackageContext;
   limits?: LimitsSpec | null;
   media: {
     htmlUrl: string;

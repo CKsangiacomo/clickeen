@@ -5,8 +5,11 @@ import {
   buildOverlayTextValueMap,
   extractTextPrimitiveValues,
 } from '@clickeen/ck-contracts/overlay-primitives';
-import faqSpec from '../../../../tokyo/product/widgets/faq/spec.json';
 import type { Env } from '../../types.ts';
+import {
+  resolveWidgetCatalogEntry,
+  resolveWidgetDefaults,
+} from '../widget-catalog.ts';
 import {
   allocateOverlayId,
   listLocaleOverlayInventory,
@@ -76,7 +79,10 @@ const COORDINATE = {
 };
 
 async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
-  const config = structuredClone((faqSpec as { defaults: Record<string, unknown> }).defaults);
+  const config = resolveWidgetDefaults('faq');
+  const catalogEntry = resolveWidgetCatalogEntry('faq');
+  assert(config, 'FAQ defaults missing from widget catalog');
+  assert(catalogEntry, 'FAQ catalog entry missing');
   await writeSavedRenderConfig({
     env,
     accountId: COORDINATE.accountId,
@@ -88,7 +94,7 @@ async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
   });
   return buildOverlayTextValueMap(
     extractTextPrimitiveValues({
-      spec: faqSpec,
+      spec: { overlays: catalogEntry.overlays },
       config,
     }),
   );

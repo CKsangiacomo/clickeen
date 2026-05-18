@@ -1,5 +1,10 @@
 import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
+import { resolveLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import { parseOverlayId } from '@clickeen/ck-contracts/overlay-identity';
+import {
+  loadTokyoAccountInstanceDocument,
+  writeLanguageOverlayToTokyo,
+} from './account-instance-direct';
 import { callTokyo } from './tokyo-client';
 
 type RouteFailure = {
@@ -149,4 +154,40 @@ export async function readAccountInstanceLocaleOverlayObject(args: {
   const value = normalizeOverlayObject(result.value);
   if (!value) return invalidPayload('tokyo_overlay_object_invalid_payload');
   return { ok: true, value };
+}
+
+export async function writeAccountInstanceLocaleOverlayValues(args: {
+  accountId: string;
+  instanceId: string;
+  locale: string;
+  values: Record<string, string>;
+  accountCapsule?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true; value: { overlayId: string } } | RouteFailure> {
+  const locale = asTrimmedString(args.locale);
+  const values = normalizeOverlayValues(args.values);
+  if (!locale) return invalidPayload('locale_missing');
+  if (!values) return invalidPayload('values_invalid');
+  const languageCode = resolveLanguageOverlayCode(locale);
+  if (!languageCode) return invalidPayload(`language_unsupported:${locale}`);
+
+  const current = await loadTokyoAccountInstanceDocument({
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
+  });
+  if (!current.ok) return current;
+
+  const stored = await writeLanguageOverlayToTokyo({
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    widgetType: current.value.row.widgetType,
+    languageCode,
+    values,
+    accountCapsule: args.accountCapsule,
+    requestId: args.requestId,
+  });
+  if (!stored.ok) return stored;
+  return { ok: true, value: stored.value };
 }

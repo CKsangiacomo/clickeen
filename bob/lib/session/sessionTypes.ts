@@ -101,6 +101,8 @@ export type BobAccountCommand =
   | AccountAssetHostCommand
   | 'list-locale-overlays'
   | 'read-locale-overlay'
+  | 'write-locale-overlay'
+  | 'generate-translations'
   | 'run-copilot'
   | 'attach-ai-outcome';
 

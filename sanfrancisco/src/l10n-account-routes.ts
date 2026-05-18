@@ -1,15 +1,12 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
-  validateOverlayValuesForProducerItems,
-  type BabelTextProducerItem,
-  type BabelTextProducerRequest,
-  type BabelTextProducerResponse,
+  validateOverlayValuesForProducerItems as validateOverlayValuesForSavedTextItems,
   type OverlayValueMap,
 } from '@clickeen/ck-contracts/overlay-primitives';
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { assertCap, verifyGrant } from './grants';
 import { HttpError, asTrimmedString, isRecord, json, noStore, readJson } from './http';
-import type { AIGrant, Env, Usage } from './types';
+import type { AIGrant, Env, InteractionEvent, Usage } from './types';
 import {
   MAX_TOTAL_INPUT_CHARS,
   MAX_TOTAL_ITEMS,
@@ -27,8 +24,54 @@ import {
 
 const TRANSLATOR_AGENT_ID = 'widget.instance.translator';
 
-export type BabelTextValuesResult = BabelTextProducerResponse & {
+export type SavedTextGraphItem = {
+  path: string;
+  type: 'string' | 'richtext';
+  label?: string;
+  role?: string;
+  value: string;
+};
+
+export type SavedTextGraphTranslationRequest = {
+  v: 1;
+  widgetType: string;
+  sourceLanguage: string;
+  targetLanguage: string;
+  items: SavedTextGraphItem[];
+};
+
+export type CurrentLanguageValuesResult = {
+  v: 1;
+  values: OverlayValueMap;
   usage?: Usage;
+};
+
+export type InstanceTranslationAgentRequest = {
+  v: 1;
+  operation: 'translate_saved_instance';
+  accountId: string;
+  instanceId: string;
+  widgetType: string;
+  baseLocale: string;
+  targetLocale: string;
+  jobId: string;
+  currentSavedTextGraph: SavedTextGraphItem[];
+};
+
+export type InstanceTranslationAgentResult = {
+  v: 1;
+  operation: 'translate_saved_instance';
+  accountId: string;
+  instanceId: string;
+  widgetType: string;
+  targetLocale: string;
+  jobId: string;
+  currentLanguageValues: CurrentLanguageValuesResult;
+  usage?: Usage;
+};
+
+type WaitUntilContext = {
+  waitUntil(promise: Promise<unknown>): void;
 };
 
 function bearerToken(request: Request): string | null {
@@ -39,13 +82,15 @@ function bearerToken(request: Request): string | null {
   return token.trim() || null;
 }
 
-function normalizeProducerItems(raw: unknown): BabelTextProducerItem[] | null {
+function normalizeSavedTextItems(raw: unknown): SavedTextGraphItem[] | null {
   if (!Array.isArray(raw)) return null;
   const items = raw
     .filter((entry) => isRecord(entry))
     .map((entry) => ({
       path: asTrimmedString(entry.path) ?? '',
       type: entry.type === 'richtext' ? ('richtext' as const) : ('string' as const),
+      ...(asTrimmedString(entry.label) ? { label: asTrimmedString(entry.label) as string } : {}),
+      ...(asTrimmedString(entry.role) ? { role: asTrimmedString(entry.role) as string } : {}),
       value: typeof entry.value === 'string' ? entry.value : null,
     }));
   if (items.some((entry) => !entry.path || entry.value == null)) return null;
@@ -55,41 +100,124 @@ function normalizeProducerItems(raw: unknown): BabelTextProducerItem[] | null {
     if (item.path.includes('*') || item.path.includes('[]')) return null;
     seen.add(item.path);
   }
-  return items as BabelTextProducerItem[];
+  return items as SavedTextGraphItem[];
 }
 
-export function normalizeBabelTextProducerRequest(raw: unknown): BabelTextProducerRequest | null {
-  if (!isRecord(raw) || raw.v !== 1) return null;
+export function normalizeInstanceTranslationAgentRequest(raw: unknown): InstanceTranslationAgentRequest | null {
+  if (!isRecord(raw) || raw.v !== 1 || raw.operation !== 'translate_saved_instance') return null;
+  const accountId = asTrimmedString(raw.accountId);
+  const instanceId = asTrimmedString(raw.instanceId);
   const widgetType = asTrimmedString(raw.widgetType);
-  const sourceLanguage = normalizeLocaleToken(raw.sourceLanguage);
-  const targetLanguage = normalizeLocaleToken(raw.targetLanguage);
-  const items = normalizeProducerItems(raw.items);
-  if (!widgetType || !sourceLanguage || !targetLanguage || sourceLanguage === targetLanguage || !items) {
+  const baseLocale = normalizeLocaleToken(raw.baseLocale);
+  const targetLocale = normalizeLocaleToken(raw.targetLocale);
+  const jobId = asTrimmedString(raw.jobId);
+  const currentSavedTextGraph = normalizeSavedTextItems(raw.currentSavedTextGraph);
+  if (
+    !accountId ||
+    !instanceId ||
+    !widgetType ||
+    !baseLocale ||
+    !targetLocale ||
+    baseLocale === targetLocale ||
+    !jobId ||
+    !currentSavedTextGraph
+  ) {
     return null;
   }
   return {
     v: 1,
+    operation: 'translate_saved_instance',
+    accountId,
+    instanceId,
     widgetType,
-    sourceLanguage,
-    targetLanguage,
-    items,
+    baseLocale,
+    targetLocale,
+    jobId,
+    currentSavedTextGraph,
   };
 }
 
-function asTranslationItem(item: BabelTextProducerItem): TranslationItem {
+function asTranslationItem(item: SavedTextGraphItem): TranslationItem {
   return {
     path: item.path,
     type: item.type,
+    label: item.label,
+    role: item.role,
     promptType: item.type,
     value: item.value,
   };
 }
 
-export async function produceBabelTextValues(args: {
+function usageForTranslationAudit(args: {
+  grant: AIGrant;
+  startedAtMs: number;
+  usage?: Usage;
+}): Usage {
+  if (args.usage) return args.usage;
+  const modelRef = args.grant.ai?.selectedModel ?? args.grant.ai?.defaultModel;
+  return {
+    provider: modelRef?.provider ?? 'unknown',
+    model: modelRef?.model ?? 'unknown',
+    promptTokens: 0,
+    completionTokens: 0,
+    latencyMs: Math.max(0, Date.now() - args.startedAtMs),
+  };
+}
+
+async function sendInstanceTranslationAudit(args: {
+  env: Env;
+  ctx?: WaitUntilContext;
+  requestId: string;
+  agentId: string;
+  grant: AIGrant;
+  request: InstanceTranslationAgentRequest;
+  result: InstanceTranslationAgentResult;
+  startedAtMs: number;
+}): Promise<void> {
+  if (!args.env.SF_EVENTS) return;
+  const event: InteractionEvent = {
+    v: 1,
+    requestId: args.requestId,
+    agentId: args.agentId,
+    occurredAtMs: args.startedAtMs,
+    subject: args.grant.sub,
+    trace: args.grant.trace,
+    ai: {
+      policyProfile: args.grant.ai?.policyProfile,
+      policyVersion: args.grant.ai?.policyVersion,
+      learningCapture: args.grant.ai?.learningCapture,
+      taskClass: resolveAiAgent(args.agentId)?.entry.taskClass,
+    },
+    input: args.request,
+    result: {
+      ...args.result,
+      meta: {
+        outcome: 'translated',
+        operation: args.result.operation,
+      },
+    },
+    usage: usageForTranslationAudit({
+      grant: args.grant,
+      startedAtMs: args.startedAtMs,
+      usage: args.result.usage,
+    }),
+  };
+
+  const sendPromise = args.env.SF_EVENTS.send(event).catch((err: unknown) => {
+    console.error('[sanfrancisco] SF_EVENTS.send failed', err);
+  });
+  if (args.ctx) {
+    args.ctx.waitUntil(sendPromise);
+    return;
+  }
+  await sendPromise;
+}
+
+export async function produceCurrentLanguageValues(args: {
   env: Env;
   grant: AIGrant;
-  request: BabelTextProducerRequest;
-}): Promise<BabelTextValuesResult> {
+  request: SavedTextGraphTranslationRequest;
+}): Promise<CurrentLanguageValuesResult> {
   const items = args.request.items.map(asTranslationItem);
   const directValues = new Map<string, string>();
   const modelItems: TranslationItem[] = [];
@@ -158,12 +286,12 @@ export async function produceBabelTextValues(args: {
     }
   }
 
-  const exact = validateOverlayValuesForProducerItems(args.request.items, values);
+  const exact = validateOverlayValuesForSavedTextItems(args.request.items, values);
   if (!exact.ok) {
     throw new HttpError(502, {
       code: 'PROVIDER_ERROR',
       provider: 'sanfrancisco',
-      message: `Producer output ${exact.reason}: ${exact.path}`,
+      message: `Instance Translation Agent output ${exact.reason}: ${exact.path}`,
     });
   }
 
@@ -174,13 +302,51 @@ export async function produceBabelTextValues(args: {
   };
 }
 
-export async function handleBabelTextValues(request: Request, env: Env): Promise<Response> {
+export async function produceInstanceTranslationValues(args: {
+  env: Env;
+  grant: AIGrant;
+  request: InstanceTranslationAgentRequest;
+}): Promise<InstanceTranslationAgentResult> {
+  const produced = await produceCurrentLanguageValues({
+    env: args.env,
+    grant: args.grant,
+    request: {
+      v: 1,
+      widgetType: args.request.widgetType,
+      sourceLanguage: args.request.baseLocale,
+      targetLanguage: args.request.targetLocale,
+      items: args.request.currentSavedTextGraph,
+    },
+  });
+
+  return {
+    v: 1,
+    operation: 'translate_saved_instance',
+    accountId: args.request.accountId,
+    instanceId: args.request.instanceId,
+    widgetType: args.request.widgetType,
+    targetLocale: args.request.targetLocale,
+    jobId: args.request.jobId,
+    currentLanguageValues: {
+      v: 1,
+      values: produced.values,
+    },
+    ...(produced.usage ? { usage: produced.usage } : {}),
+  };
+}
+
+export async function handleInstanceTranslationAgent(
+  request: Request,
+  env: Env,
+  ctx?: WaitUntilContext,
+  requestId: string = crypto.randomUUID(),
+): Promise<Response> {
   const resolvedAgent = resolveAiAgent(TRANSLATOR_AGENT_ID);
   if (!resolvedAgent) {
     throw new HttpError(500, {
       code: 'PROVIDER_ERROR',
       provider: 'sanfrancisco',
-      message: 'Missing AI registry entry for Babel text production',
+      message: 'Missing AI registry entry for Instance Translation Agent',
     });
   }
 
@@ -191,13 +357,25 @@ export async function handleBabelTextValues(request: Request, env: Env): Promise
   const grant = await verifyGrant(token, env.AI_GRANT_HMAC_SECRET);
   assertCap(grant, `agent:${resolvedAgent.canonicalId}`);
 
-  const body = normalizeBabelTextProducerRequest(await readJson(request));
+  const body = normalizeInstanceTranslationAgentRequest(await readJson(request));
   if (!body) {
     throw new HttpError(400, {
       code: 'BAD_REQUEST',
-      message: 'Expected Babel text producer request',
+      message: 'Expected translate saved instance request',
     });
   }
 
-  return noStore(json(await produceBabelTextValues({ env, grant, request: body })));
+  const startedAtMs = Date.now();
+  const result = await produceInstanceTranslationValues({ env, grant, request: body });
+  await sendInstanceTranslationAudit({
+    env,
+    ctx,
+    requestId,
+    agentId: resolvedAgent.canonicalId,
+    grant,
+    request: body,
+    result,
+    startedAtMs,
+  });
+  return noStore(json(result));
 }

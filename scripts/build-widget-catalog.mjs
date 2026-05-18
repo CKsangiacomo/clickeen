@@ -57,6 +57,73 @@ function stableStringify(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+function assertStringArray(value, label) {
+  if (!Array.isArray(value)) fail(`${label} must be an array`);
+  return value.map((entry, index) => assertString(entry, `${label}[${index}]`));
+}
+
+function readWidgetContentContract(content, widgetName) {
+  if (!isRecord(content) || content.v !== 1 || !Array.isArray(content.fields)) {
+    fail(`${widgetName}/content.json v=1 with fields[] is required`);
+  }
+  const widgetType = assertString(content.widgetType, `${widgetName}/content.json widgetType`);
+  if (widgetType !== widgetName) {
+    fail(`${widgetName}/content.json widgetType must match its folder name`);
+  }
+
+  const seen = new Set();
+  const fields = [];
+  for (const [index, field] of content.fields.entries()) {
+    if (!isRecord(field)) {
+      fail(`${widgetName}/content.json fields[${index}] must be an object`);
+    }
+    const pathValue = assertString(field.path, `${widgetName}/content.json fields[${index}].path`);
+    const label = assertString(field.label, `${widgetName}/content.json fields[${index}].label`);
+    const role = assertString(field.role, `${widgetName}/content.json fields[${index}].role`);
+    const type = assertString(field.type, `${widgetName}/content.json fields[${index}].type`);
+    if (type !== "string" && type !== "richtext") {
+      fail(`${widgetName}/content.json fields[${index}].type must be string or richtext`);
+    }
+    assertStringArray(field.arrayItemIdentity, `${widgetName}/content.json fields[${index}].arrayItemIdentity`);
+    if (!Array.isArray(field.limits)) {
+      fail(`${widgetName}/content.json fields[${index}].limits must be an array`);
+    }
+    if (seen.has(pathValue)) {
+      fail(`${widgetName}/content.json duplicate field path: ${pathValue}`);
+    }
+    seen.add(pathValue);
+    fields.push({
+      path: pathValue,
+      label,
+      type,
+      role,
+      arrayItemIdentity: field.arrayItemIdentity,
+      limits: field.limits,
+    });
+  }
+
+  return { v: 1, widgetType, fields };
+}
+
+function overlayContractFromContent(content) {
+  return {
+    v: 1,
+    text: content.fields.map((field) => ({
+      path: field.path,
+      label: field.label,
+      type: field.type,
+      role: field.role,
+    })),
+  };
+}
+
+function readWidgetOverlayContract(spec, widgetName) {
+  if (!isRecord(spec.overlays) || spec.overlays.v !== 1 || !Array.isArray(spec.overlays.text)) {
+    fail(`${widgetName}/spec.json overlays.v=1 with text[] is required`);
+  }
+  return spec.overlays;
+}
+
 function variableNameFor(widgetType) {
   return `${widgetType.replace(/[^a-zA-Z0-9]+(.)/g, (_match, char) => char.toUpperCase())}SeoGeoMetaPack`;
 }
@@ -110,6 +177,7 @@ const widgetOverlayCodes = readWidgetOverlayCodes();
 for (const widgetName of widgetNames) {
   const widgetDir = path.join(widgetsRoot, widgetName);
   const specPath = path.join(widgetDir, "spec.json");
+  const contentPath = path.join(widgetDir, "content.json");
   const catalogPath = path.join(widgetDir, "catalog.json");
   const seoGeoPath = path.join(widgetDir, "seo-geo.ts");
 
@@ -118,6 +186,9 @@ for (const widgetName of widgetNames) {
   }
 
   const spec = readJson(specPath);
+  const content = fs.existsSync(contentPath)
+    ? readWidgetContentContract(readJson(contentPath), widgetName)
+    : null;
   const catalog = readJson(catalogPath);
   const widgetType = assertString(
     spec.widgetname,
@@ -134,9 +205,7 @@ for (const widgetName of widgetNames) {
   if (!isRecord(spec.defaults)) {
     fail(`${widgetName}/spec.json defaults must be an object`);
   }
-  if (!isRecord(spec.overlays) || spec.overlays.v !== 1 || !Array.isArray(spec.overlays.text)) {
-    fail(`${widgetName}/spec.json overlays.v=1 with text[] is required`);
-  }
+  const overlays = content ? overlayContractFromContent(content) : readWidgetOverlayContract(spec, widgetName);
 
   if (!isRecord(catalog.capabilities)) {
     fail(`${widgetName}/catalog.json capabilities must be an object`);
@@ -177,7 +246,8 @@ for (const widgetName of widgetNames) {
       typeof spec.itemKey === "string" && spec.itemKey.trim()
         ? spec.itemKey.trim()
         : null,
-    overlays: spec.overlays,
+    ...(content ? { content } : {}),
+    overlays,
     defaults: spec.defaults,
   });
 }

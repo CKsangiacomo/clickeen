@@ -6,6 +6,8 @@ import { assertTranslationSafety, BRACE_PLACEHOLDER_PATTERN, HTML_TAG_PATTERN } 
 export type TranslationItem = {
   path: string;
   type: 'string' | 'richtext';
+  label?: string;
+  role?: string;
   value: string;
   promptType?: 'string' | 'richtext';
 };
@@ -23,7 +25,7 @@ export type StructuredTranslationPlan = {
 };
 
 export const PROMPT_VERSION = 'widget.instance.translator@2026-05-06.1';
-export const POLICY_VERSION = 'babel.text.values.v1';
+export const POLICY_VERSION = 'instance.translation.values.v1';
 
 const MAX_BATCH_ITEMS = 80;
 const MAX_BATCH_INPUT_CHARS = 4000;
@@ -77,6 +79,8 @@ export function buildUserPrompt(items: TranslationItem[]): string {
   const payload = items.map((item) => ({
     path: item.path,
     type: item.promptType ?? item.type,
+    ...(item.label ? { label: item.label } : {}),
+    ...(item.role ? { role: item.role } : {}),
     value: item.value,
   }));
   return [

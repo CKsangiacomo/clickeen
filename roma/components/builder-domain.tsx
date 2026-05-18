@@ -41,6 +41,8 @@ type BobAccountCommand =
   | AccountAssetHostCommand
   | 'list-locale-overlays'
   | 'read-locale-overlay'
+  | 'write-locale-overlay'
+  | 'generate-translations'
   | 'run-copilot'
   | 'attach-ai-outcome';
 
@@ -181,6 +183,18 @@ function resolveBobAccountCommandRequest(args: {
       return {
         method: 'POST',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/locale-overlays/read`,
+      };
+    case 'write-locale-overlay':
+      if (!instanceId) return null;
+      return {
+        method: 'POST',
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/locale-overlays/write`,
+      };
+    case 'generate-translations':
+      if (!instanceId) return null;
+      return {
+        method: 'POST',
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/generate`,
       };
     case 'run-copilot':
       if (!instanceId) return null;

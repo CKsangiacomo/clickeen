@@ -17,7 +17,7 @@ import {
   handlePragueStringsTranslate,
 } from './l10n-routes';
 import {
-  handleBabelTextValues,
+  handleInstanceTranslationAgent,
 } from './l10n-account-routes';
 import {
   buildLearningSample,
@@ -130,6 +130,7 @@ async function handleExecute(
       subject: grant.sub,
       trace: grant.trace,
       ai: {
+        policyProfile: grant.ai?.policyProfile,
         policyVersion: grant.ai?.policyVersion,
         learningCapture: grant.ai?.learningCapture,
         taskClass: resolvedAgent.entry.taskClass,
@@ -235,11 +236,11 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
           boundary: 'l10n.translate',
         });
       }
-      if (request.method === 'POST' && url.pathname === '/v1/babel/text-values') {
+      if (request.method === 'POST' && url.pathname === '/v1/agents/instance-translation/translate-saved-instance') {
         return finalizeSanFranciscoObservedResponse({
           context: requestContext,
-          response: await handleBabelTextValues(request, this.env),
-          boundary: 'babel.textValues',
+          response: await handleInstanceTranslationAgent(request, this.env, this.ctx, requestContext.requestId),
+          boundary: 'agent.instanceTranslation.translateSavedInstance',
         });
       }
 

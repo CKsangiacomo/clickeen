@@ -6,6 +6,11 @@
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*"
   },
+  "scripts": {
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "rm -rf /tmp/clickeen-ck-policy-tests && esbuild src/ai-runtime.test.ts --bundle --platform=node --format=esm --outdir=/tmp/clickeen-ck-policy-tests && node --test /tmp/clickeen-ck-policy-tests/ai-runtime.test.js"
+  },
   "exports": {
     ".": "./src/index.ts"
   }

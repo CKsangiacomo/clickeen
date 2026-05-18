@@ -44,6 +44,7 @@ type WidgetCopilotInput = {
   widgetType: string;
   currentConfig: Record<string, unknown>;
   controls: ControlSummary[];
+  widgetPackage: Record<string, unknown>;
 };
 
 type WidgetOp =
@@ -177,6 +178,9 @@ function parseWidgetCopilotInput(input: unknown): WidgetCopilotInput {
     ? input.currentConfig
     : null;
   const controls = Array.isArray(input.controls) ? input.controls : null;
+  const widgetPackage = isRecord(input.widgetPackage)
+    ? input.widgetPackage
+    : null;
 
   const issues: Array<{ path: string; message: string }> = [];
   if (!sessionId)
@@ -197,6 +201,11 @@ function parseWidgetCopilotInput(input: unknown): WidgetCopilotInput {
     issues.push({
       path: "input.controls",
       message: "controls must be an array",
+    });
+  if (!widgetPackage)
+    issues.push({
+      path: "input.widgetPackage",
+      message: "widgetPackage must be an object",
     });
   if (issues.length)
     throw new HttpError(400, {
@@ -241,6 +250,7 @@ function parseWidgetCopilotInput(input: unknown): WidgetCopilotInput {
     widgetType,
     currentConfig: currentConfig as Record<string, unknown>,
     controls: safeControls,
+    widgetPackage: widgetPackage as Record<string, unknown>,
   };
 }
 

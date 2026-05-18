@@ -1,5 +1,8 @@
 import { asTrimmedString, isRecord, serializeCkLogEvent } from '@clickeen/ck-contracts';
-import type { WidgetOverlayContract } from '@clickeen/ck-contracts/overlay-primitives';
+import type {
+  WidgetContentContract,
+  WidgetOverlayContract,
+} from '@clickeen/ck-contracts/overlay-primitives';
 import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,
@@ -59,6 +62,7 @@ export type TokyoWidgetCatalogEntry = {
   capabilities: {
     seoGeo: boolean;
   };
+  content?: WidgetContentContract;
   overlays: WidgetOverlayContract;
 };
 
@@ -262,6 +266,7 @@ function normalizeTokyoWidgetCatalogEntry(raw: unknown): TokyoWidgetCatalogEntry
     capabilities: {
       seoGeo: capabilitiesRaw.seoGeo === true,
     },
+    ...(isRecord(raw.content) ? { content: raw.content as WidgetContentContract } : {}),
     overlays,
   };
 }
@@ -416,6 +421,7 @@ export async function saveAccountInstanceInTokyo(args: {
         live: boolean;
         sourceVersion: number | null;
         generation: Record<string, unknown> | null;
+        previousConfig: Record<string, unknown> | null;
       };
     }
   | RouteFailure
@@ -441,6 +447,7 @@ export async function saveAccountInstanceInTokyo(args: {
       live: payload.live === true,
       sourceVersion: typeof payload.sourceVersion === 'number' ? payload.sourceVersion : null,
       generation: isRecord(payload.generation) ? payload.generation : null,
+      previousConfig: isRecord(payload.previousConfig) ? payload.previousConfig : null,
     },
   };
 }

@@ -6,8 +6,11 @@ import { fileURLToPath } from 'node:url';
 import {
   buildOverlayTextValueMap,
   extractTextPrimitiveValues,
+  readWidgetContentContract,
+  readWidgetOverlayContract,
   resolveOverlay,
   validateOverlayValuesForTextPrimitives,
+  widgetContentToOverlayContract,
 } from './overlay-primitives.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -16,8 +19,90 @@ function readJson(relativePath: string): unknown {
   return JSON.parse(fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'));
 }
 
-test('FAQ primitive graph extracts concrete text paths for every question and answer', () => {
+function readText(relativePath: string): string {
+  return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
+}
+
+function readFaqContent() {
+  return readWidgetContentContract(readJson('tokyo/product/widgets/faq/content.json'));
+}
+
+function readFaqSpecWithGeneratedOverlays(): { defaults: Record<string, unknown>; overlays: unknown } {
   const spec = readJson('tokyo/product/widgets/faq/spec.json') as { defaults: Record<string, unknown> };
+  return {
+    ...spec,
+    overlays: widgetContentToOverlayContract(readFaqContent()),
+  };
+}
+
+test('FAQ content JSON is the translation field authority', () => {
+  const spec = readJson('tokyo/product/widgets/faq/spec.json') as Record<string, unknown>;
+  const contract = readFaqContent();
+  assert.equal(spec.overlays, undefined);
+  assert.deepEqual(
+    contract.fields.map((field) => field.path),
+    [
+      'header.title',
+      'header.subtitleHtml',
+      'cta.label',
+      'sections[].title',
+      'sections[].faqs[].question',
+      'sections[].faqs[].answer',
+    ],
+  );
+});
+
+test('FAQ translation primitive graph derives from content JSON', () => {
+  const spec = readFaqSpecWithGeneratedOverlays();
+  const overlay = readWidgetOverlayContract(spec);
+  assert.deepEqual(overlay.text, [
+    { path: 'header.title', label: 'Header title', type: 'richtext', role: 'header-title' },
+    { path: 'header.subtitleHtml', label: 'Header subtitle', type: 'richtext', role: 'header-subtitle' },
+    { path: 'cta.label', label: 'CTA label', type: 'string', role: 'cta-label' },
+    { path: 'sections[].title', label: 'Section title', type: 'string', role: 'section-title' },
+    { path: 'sections[].faqs[].question', label: 'FAQ question', type: 'string', role: 'faq-question' },
+    { path: 'sections[].faqs[].answer', label: 'FAQ answer', type: 'richtext', role: 'faq-answer' },
+  ]);
+});
+
+test('FAQ manual editor and runtime paths are covered by content JSON', () => {
+  const contract = readFaqContent();
+  const paths = new Set(contract.fields.map((field) => field.path));
+  const faqSpecText = readText('tokyo/product/widgets/faq/spec.json');
+  const headerModule = readText('bob/lib/compiler/modules/header.ts');
+  const runtime = readText('tokyo/product/widgets/faq/widget.client.js');
+
+  for (const path of ['header.title', 'header.subtitleHtml', 'cta.label']) {
+    assert(paths.has(path));
+    assert(headerModule.includes(`path='${path}'`), `${path} missing from Bob shared header controls`);
+    assert(runtime.includes(path), `${path} missing from FAQ runtime`);
+  }
+
+  assert(paths.has('sections[].title'));
+  assert(
+    faqSpecText.includes('"label-path": "title"') ||
+      faqSpecText.includes('"labelPath": "sections.__SECTION__.title"'),
+    'sections[].title missing from FAQ editor controls',
+  );
+
+  for (const path of ['sections[].faqs[].question', 'sections[].faqs[].answer']) {
+    assert(paths.has(path));
+    const bobPath = path
+      .replace('sections[]', 'sections.__SECTION__')
+      .replace('faqs[]', 'faqs.__INDEX__');
+    assert(faqSpecText.includes(`"data-bob-path": "${bobPath}"`), `${path} missing from FAQ editor controls`);
+  }
+
+  assert(!paths.has('sections[].id'));
+  assert(!paths.has('sections[].faqs[].id'));
+  assert(!paths.has('sections[].faqs[].defaultOpen'));
+  assert(runtime.includes('section.id'), 'section identity missing from FAQ runtime');
+  assert(runtime.includes('faq.id'), 'FAQ identity missing from FAQ runtime');
+  assert(runtime.includes('faq.defaultOpen'), 'defaultOpen missing from FAQ runtime');
+});
+
+test('FAQ primitive graph extracts concrete text paths for every question and answer', () => {
+  const spec = readFaqSpecWithGeneratedOverlays();
   const items = extractTextPrimitiveValues({ spec, config: spec.defaults });
   const paths = items.map((item) => item.path);
 
@@ -34,7 +119,7 @@ test('FAQ primitive graph extracts concrete text paths for every question and an
 });
 
 test('overlay value validation rejects missing and extra concrete paths', () => {
-  const spec = readJson('tokyo/product/widgets/faq/spec.json') as { defaults: Record<string, unknown> };
+  const spec = readFaqSpecWithGeneratedOverlays();
   const items = extractTextPrimitiveValues({ spec, config: spec.defaults });
   const values = buildOverlayTextValueMap(items);
 

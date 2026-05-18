@@ -35,6 +35,24 @@ export type ReadLocaleOverlay = (
   args: ReadLocaleOverlayArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
+export type WriteLocaleOverlayArgs = {
+  instanceId: string;
+  locale: string;
+  values: Record<string, string>;
+};
+
+export type WriteLocaleOverlay = (
+  args: WriteLocaleOverlayArgs
+) => Promise<{ ok: boolean; status: number; json: any }>;
+
+export type GenerateTranslationsArgs = {
+  instanceId: string;
+};
+
+export type GenerateTranslations = (
+  args: GenerateTranslationsArgs
+) => Promise<{ ok: boolean; status: number; json: any }>;
+
 const HOST_ORIGIN_WAIT_MS = 3_000;
 const HOST_ORIGIN_POLL_MS = 25;
 
@@ -308,6 +326,34 @@ export function useSessionTransport(args: {
     [dispatchHostAccountCommand],
   );
 
+  const writeLocaleOverlay: WriteLocaleOverlay = useCallback(
+    async (commandArgs: WriteLocaleOverlayArgs) => {
+      const instanceId = String(commandArgs.instanceId || '').trim();
+      const result = await dispatchHostAccountCommand({
+        command: 'write-locale-overlay',
+        instanceId,
+        body: {
+          locale: commandArgs.locale,
+          values: commandArgs.values,
+        },
+      });
+      return { ok: result.ok, status: result.status, json: result.payload };
+    },
+    [dispatchHostAccountCommand],
+  );
+
+  const generateTranslations: GenerateTranslations = useCallback(
+    async (commandArgs: GenerateTranslationsArgs) => {
+      const instanceId = String(commandArgs.instanceId || '').trim();
+      const result = await dispatchHostAccountCommand({
+        command: 'generate-translations',
+        instanceId,
+      });
+      return { ok: result.ok, status: result.status, json: result.payload };
+    },
+    [dispatchHostAccountCommand],
+  );
+
   return {
     accountAssets: accountAssets.current,
     hostOriginRef,
@@ -315,5 +361,7 @@ export function useSessionTransport(args: {
     executeAccountCommand,
     listLocaleOverlays,
     readLocaleOverlay,
+    writeLocaleOverlay,
+    generateTranslations,
   };
 }

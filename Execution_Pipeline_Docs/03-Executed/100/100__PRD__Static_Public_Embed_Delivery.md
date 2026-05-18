@@ -1,8 +1,8 @@
 # PRD 100 - Core Instance Mini-Sites And Static Embed Delivery
 
-Status: Executing  
-Owner: Product + Architecture  
-Date: 2026-05-16  
+Status: Complete
+Owner: Product + Architecture
+Date: 2026-05-16
 Parent: PRD 099 - Tokyo R2 Product Storage Architecture Refactor
 
 ## Purpose

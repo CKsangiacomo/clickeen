@@ -3,7 +3,8 @@ import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
-import { runBabelTextFollowupAfterSave } from '@roma/lib/account-babel-save-followup';
+import { runInstanceTranslationFollowupAfterSave } from '@roma/lib/account-instance-translation-followup';
+import { getOptionalCloudflareRequestContext } from '@roma/lib/cloudflare-request-context';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -13,6 +14,77 @@ import {
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
+type CloudflareContextWithWaitUntil = {
+  env?: unknown;
+  ctx?: {
+    waitUntil?: (promise: Promise<unknown>) => void;
+  };
+  waitUntil?: (promise: Promise<unknown>) => void;
+};
+type TranslationFollowupResult = Awaited<
+  ReturnType<typeof runInstanceTranslationFollowupAfterSave>
+>;
+type TranslationFollowupResults = TranslationFollowupResult['results'];
+
+function attachTranslationFollowupToRequestLifetime(promise: Promise<unknown>): void {
+  const context = getOptionalCloudflareRequestContext<CloudflareContextWithWaitUntil>();
+  const waitUntil = context?.ctx?.waitUntil ?? context?.waitUntil;
+  if (typeof waitUntil === 'function') {
+    waitUntil.call(context?.ctx ?? context, promise);
+    return;
+  }
+  void promise;
+}
+
+function logTranslationFollowupFailure(args: {
+  accountId: string;
+  instanceId: string;
+  requestId?: string | null;
+  results?: TranslationFollowupResults;
+  detail?: string;
+}): void {
+  console.warn('[roma account instance save] translation follow-up failed', {
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    requestId: args.requestId,
+    ...(args.results ? { results: args.results } : {}),
+    ...(args.detail ? { detail: args.detail } : {}),
+  });
+}
+
+function startTranslationFollowupAfterSave(args: {
+  authz: Parameters<typeof runInstanceTranslationFollowupAfterSave>[0]['authz'];
+  accessToken: string;
+  accountCapsule: string;
+  accountPublicId: string;
+  instanceId: string;
+  widgetType: string;
+  config: Record<string, unknown>;
+  previousConfig: Record<string, unknown> | null;
+  requestId?: string | null;
+}): void {
+  const promise = runInstanceTranslationFollowupAfterSave(args)
+    .then((translation) => {
+      if (!translation.ok) {
+        logTranslationFollowupFailure({
+          accountId: args.accountPublicId,
+          instanceId: args.instanceId,
+          requestId: args.requestId,
+          results: translation.results,
+        });
+      }
+    })
+    .catch((error) => {
+      logTranslationFollowupFailure({
+        accountId: args.accountPublicId,
+        instanceId: args.instanceId,
+        requestId: args.requestId,
+        detail: error instanceof Error ? error.message : String(error),
+      });
+    });
+
+  attachTranslationFollowupToRequestLifetime(promise);
+}
 
 export async function PUT(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
@@ -120,42 +192,17 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  let babel: Awaited<ReturnType<typeof runBabelTextFollowupAfterSave>>;
-  try {
-    babel = await runBabelTextFollowupAfterSave({
-      authz: current.value.authzPayload,
-      accessToken: current.value.accessToken,
-      accountCapsule: current.value.authzToken,
-      accountPublicId: accountId,
-      instanceId,
-      widgetType,
-      config,
-      requestId: current.value.requestId,
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    babel = {
-      ok: false,
-      baseLocale: null,
-      results: [
-        {
-          locale: '<followup>',
-          ok: false,
-          reasonKey: 'babel.text.followup_failed',
-          detail,
-        },
-      ],
-    };
-  }
-
-  if (!babel.ok) {
-    console.warn('[roma account instance save] babel follow-up failed', {
-      accountId,
-      instanceId,
-      requestId: current.value.requestId,
-      results: babel.results,
-    });
-  }
+  startTranslationFollowupAfterSave({
+    authz: current.value.authzPayload,
+    accessToken: current.value.accessToken,
+    accountCapsule: current.value.authzToken,
+    accountPublicId: accountId,
+    instanceId,
+    widgetType,
+    config,
+    previousConfig: result.value.previousConfig,
+    requestId: current.value.requestId,
+  });
 
   return withSession(
     request,
@@ -163,7 +210,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       ok: true,
       sourceVersion: result.value.sourceVersion,
       generation: result.value.generation,
-      babel,
     }),
     current.value.setCookies,
   );

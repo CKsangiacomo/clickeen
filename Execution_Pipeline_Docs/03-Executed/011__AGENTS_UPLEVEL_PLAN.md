@@ -143,7 +143,7 @@ Recommended folder:
 Shared wrapper:
 - `sanfrancisco/src/ai/callLLM.ts`  
   Input: `{provider, model, messages, schema?, maxTokens, timeoutMs, temperature, ...}`  
-  Output: `{contentText, structuredJson?, usage}`
+  Output: `{text, structuredJson?, usage}`
 
 ### 4.3 Introduce “task classes” and make them first-class
 Agents should not be selected purely by `agentId` alone. Each agent must declare a `taskClass`, e.g.:

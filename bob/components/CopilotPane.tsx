@@ -275,6 +275,8 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
 
   const handleSend = async () => {
     if (uiDisabledReason) return;
+    const activeCompiled = compiled;
+    if (!activeCompiled) return;
     const prompt = draft.trim();
     if (!prompt) return;
 
@@ -374,6 +376,7 @@ function SharedCopilotPane({ session, surfaceContract }: SharedCopilotPaneProps)
           prompt,
           currentConfig: session.instanceData,
           controls: controlsForAi,
+          widgetPackage: activeCompiled.widgetPackage ?? null,
           sessionId,
           ...(selectedModel ? { selectedModel } : {}),
         }),

@@ -174,7 +174,7 @@ tokyo/product/widgets/{widget}/
   pages/*.json
 ```
 
-Bob consumes `spec.json` + runtime media from product widget media and loads `limits.json` for entitlement UX. The authored repo source is `tokyo/product/widgets/{widget}/`; the deployed Tokyo/R2 software authority is `product/widgets/{widget}/`, even when served through friendly `/widgets/{widget}/...` routes. `spec.json.overlays.text[]` is the widget primitive graph for Builder controls, Copilot, Babel text production, Bob preview, Tokyo validation, and runtime overlay resolution. Widget `localization.json` files and layer sidecars are not active product truth.
+Bob consumes compiled widget payloads + runtime media from product widget media and loads `limits.json` for entitlement UX. The authored repo source is `tokyo/product/widgets/{widget}/`; the deployed Tokyo/R2 software authority is `product/widgets/{widget}/`, even when served through friendly `/widgets/{widget}/...` routes. Authored widget `content.json` is the translation text authority for current-language overlays; Bob preview consumes validated Tokyo overlays rather than owning translation truth. Widget `localization.json` files and layer sidecars are not active product truth.
 
 Widget spec contract:
 

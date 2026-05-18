@@ -9,15 +9,32 @@ type ControlSummary = {
   max?: number;
 };
 
+type WidgetPackageContext = {
+  widgetType?: string;
+  files?: Record<string, unknown>;
+};
+
 type CsPromptInput = {
   prompt: string;
   widgetType: string;
   currentConfig: Record<string, unknown>;
   controls: ControlSummary[];
+  widgetPackage: WidgetPackageContext;
 };
 
 const MAX_PROMPT_CHARS = 7_200;
 const TOKEN_SEGMENT = /^__[^.]+__$/;
+const WIDGET_PACKAGE_FILE_NAMES = [
+  "content.json",
+  "spec.json",
+  "widget.html",
+  "widget.css",
+  "widget.client.js",
+] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
 
 function normalizeToken(input: string): string {
   return String(input || "")
@@ -119,6 +136,112 @@ function serializePromptValue(value: unknown, maxLen = 120): string {
   return out.slice(0, maxLen);
 }
 
+function compactSource(input: string, maxLen: number): string {
+  const out = String(input || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (out.length <= maxLen) return out;
+  return out.slice(0, maxLen);
+}
+
+function resolvePackageFileSource(file: unknown): string {
+  if (typeof file === "string") return file;
+  if (!isRecord(file)) return "";
+  const source = file.source;
+  if (typeof source === "string") return source;
+  return "";
+}
+
+function parseJsonSource(source: string): unknown {
+  if (!source.trim()) return null;
+  try {
+    return JSON.parse(source) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function summarizeContentJson(source: string): string {
+  const parsed = parseJsonSource(source);
+  if (!isRecord(parsed)) return compactSource(source, 520);
+  const fields = Array.isArray(parsed.fields) ? parsed.fields : [];
+  const rows = fields
+    .filter(isRecord)
+    .map((field) => {
+      const path = typeof field.path === "string" ? field.path : "";
+      const role = typeof field.role === "string" ? field.role : "";
+      const type = typeof field.type === "string" ? field.type : "";
+      return [path, role ? `role=${role}` : "", type ? `type=${type}` : ""]
+        .filter(Boolean)
+        .join(" ");
+    })
+    .filter(Boolean)
+    .slice(0, 30);
+  if (!rows.length) return compactSource(source, 520);
+  return `fields=${rows.join("; ")}`;
+}
+
+function summarizeSpecJson(source: string): string {
+  const parsed = parseJsonSource(source);
+  if (!isRecord(parsed)) return compactSource(source, 620);
+  const defaults = isRecord(parsed.defaults)
+    ? Object.keys(parsed.defaults).slice(0, 30)
+    : [];
+  const normalization = isRecord(parsed.normalization)
+    ? parsed.normalization
+    : null;
+  const idRules =
+    normalization && Array.isArray(normalization.idRules)
+      ? normalization.idRules.length
+      : 0;
+  const coerceRules =
+    normalization && Array.isArray(normalization.coerceRules)
+      ? normalization.coerceRules.length
+      : 0;
+  const panels = Array.isArray(parsed.panels)
+    ? parsed.panels
+        .filter(isRecord)
+        .map((panel) =>
+          typeof panel.id === "string"
+            ? panel.id
+            : typeof panel.label === "string"
+              ? panel.label
+              : "",
+        )
+        .filter(Boolean)
+        .slice(0, 30)
+    : [];
+  return [
+    `topLevel=${Object.keys(parsed).slice(0, 30).join(",")}`,
+    defaults.length ? `defaultRoots=${defaults.join(",")}` : "",
+    panels.length ? `panels=${panels.join(",")}` : "",
+    `normalization=idRules:${idRules},coerceRules:${coerceRules}`,
+  ]
+    .filter(Boolean)
+    .join("; ");
+}
+
+function buildWidgetPackageRows(widgetPackage: WidgetPackageContext): string[] {
+  const files = isRecord(widgetPackage.files) ? widgetPackage.files : {};
+  const rows: string[] = [];
+  for (const fileName of WIDGET_PACKAGE_FILE_NAMES) {
+    const source = resolvePackageFileSource(files[fileName]);
+    if (!source.trim()) continue;
+    if (fileName === "content.json") {
+      rows.push(`- content.json: ${summarizeContentJson(source)}`);
+      continue;
+    }
+    if (fileName === "spec.json") {
+      rows.push(`- spec.json: ${summarizeSpecJson(source)}`);
+      continue;
+    }
+    const maxLen =
+      fileName === "widget.client.js" ? 760 : fileName === "widget.css" ? 620 : 520;
+    rows.push(`- ${fileName}: ${compactSource(source, maxLen)}`);
+  }
+  return rows;
+}
+
 function scoreControlForPrompt(args: {
   promptTokens: Set<string>;
   promptNorm: string;
@@ -182,6 +305,16 @@ function dedupeByPath(controls: ControlSummary[]): ControlSummary[] {
   return out;
 }
 
+function resolveContractControls(input: CsPromptInput): ControlSummary[] {
+  return input.controls;
+}
+
+function resolveContractContentControlPaths(input: CsPromptInput, controls: ControlSummary[]): Set<string> | null {
+  void input;
+  void controls;
+  return null;
+}
+
 function buildConcreteValueRows(args: {
   controls: ControlSummary[];
   currentConfig: Record<string, unknown>;
@@ -220,6 +353,7 @@ function buildConcreteValueRows(args: {
 function buildPayload(args: {
   widgetType: string;
   prompt: string;
+  widgetRows: string[];
   controlRows: string[];
   valueRows: string[];
 }): string {
@@ -228,6 +362,9 @@ function buildPayload(args: {
     "",
     `User request: ${args.prompt}`,
     "Execution contract: use provided controls/context; never ask the user for controls JSON, path lists, or config snippets.",
+    "",
+    "WIDGET_PACKAGE_CONTEXT:",
+    args.widgetRows.join("\n"),
     "",
     "EDITABLE_CONTROLS:",
     args.controlRows.join("\n"),
@@ -241,6 +378,7 @@ function buildMinimalPayload(
   input: CsPromptInput,
   controls: ControlSummary[],
 ): string {
+  const widgetRows = buildWidgetPackageRows(input.widgetPackage).slice(0, 5);
   const minimalControls = controls.slice(0, 12).map((control) => {
     const label = control.label ? ` | label=${control.label}` : "";
     const kind = control.kind ? ` | kind=${control.kind}` : "";
@@ -267,6 +405,9 @@ function buildMinimalPayload(
     `User request: ${input.prompt}`,
     "Execution contract: use provided controls/context; never ask the user for controls JSON, path lists, or config snippets.",
     "",
+    "WIDGET_PACKAGE_CONTEXT:",
+    widgetRows.join("\n"),
+    "",
     "EDITABLE_CONTROLS:",
     minimalControls.join("\n"),
     "",
@@ -276,10 +417,13 @@ function buildMinimalPayload(
 }
 
 export function buildCsPromptPayload(input: CsPromptInput): string {
+  const controls = resolveContractControls(input);
+  const widgetRows = buildWidgetPackageRows(input.widgetPackage);
+  const contractContentControlPaths = resolveContractContentControlPaths(input, controls);
   const promptNorm = normalizeToken(input.prompt);
   const promptTokens = new Set(promptNorm.split(/\s+/).filter(Boolean));
 
-  const ranked = input.controls
+  const ranked = controls
     .map((control) => ({
       control,
       score: scoreControlForPrompt({ promptTokens, promptNorm, control }),
@@ -290,21 +434,23 @@ export function buildCsPromptPayload(input: CsPromptInput): string {
     .filter((entry) => entry.score > 0)
     .map((entry) => entry.control);
   const rewriteLike = isContentRewriteIntent(input.prompt);
-  const contentControls = dedupeByPath(input.controls.filter(isContentControl));
+  const contentControls = contractContentControlPaths
+    ? controls.filter((control) => contractContentControlPaths.has(control.path))
+    : dedupeByPath(controls.filter(isContentControl));
 
   const merged = dedupeByPath(
     rewriteLike
       ? [
           ...contentControls,
           ...bestMatches.slice(0, 36),
-          ...input.controls.slice(0, 16),
+          ...controls.slice(0, 16),
         ]
       : [
           ...(bestMatches.length
             ? bestMatches.slice(0, 24)
-            : input.controls.slice(0, 20)),
+            : controls.slice(0, 20)),
           ...contentControls.slice(0, 14),
-          ...input.controls.slice(0, 8),
+          ...controls.slice(0, 8),
         ],
   );
 
@@ -348,6 +494,7 @@ export function buildCsPromptPayload(input: CsPromptInput): string {
   let payload = buildPayload({
     widgetType: input.widgetType,
     prompt: input.prompt,
+    widgetRows,
     controlRows: trimmedControlRows,
     valueRows: trimmedValueRows,
   });
@@ -361,6 +508,7 @@ export function buildCsPromptPayload(input: CsPromptInput): string {
       payload = buildPayload({
         widgetType: input.widgetType,
         prompt: input.prompt,
+        widgetRows,
         controlRows: trimmedControlRows,
         valueRows: trimmedValueRows,
       });
@@ -370,6 +518,7 @@ export function buildCsPromptPayload(input: CsPromptInput): string {
       payload = buildPayload({
         widgetType: input.widgetType,
         prompt: input.prompt,
+        widgetRows,
         controlRows: trimmedControlRows,
         valueRows: trimmedValueRows,
       });
@@ -380,6 +529,7 @@ export function buildCsPromptPayload(input: CsPromptInput): string {
       payload = buildPayload({
         widgetType: input.widgetType,
         prompt: input.prompt,
+        widgetRows,
         controlRows: trimmedControlRows,
         valueRows: trimmedValueRows,
       });
@@ -392,6 +542,7 @@ export function buildCsPromptPayload(input: CsPromptInput): string {
       payload = buildPayload({
         widgetType: input.widgetType,
         prompt: input.prompt,
+        widgetRows,
         controlRows: trimmedControlRows,
         valueRows: trimmedValueRows,
       });

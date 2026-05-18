@@ -92,7 +92,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Complete functional software for a widget type (e.g. FAQ)
 - Surviving repo source lives in `tokyo/product/widgets/{widgetType}/`
 - Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, optional widget-local `widget.*.js` helpers, and `agent.md`
-- Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `catalog.json`, `spec.json`, `agent.md`, and widget-owned runtime assets. `spec.json.overlays.v = 1` owns the widget primitive variable graph used by ToolDrawer, Copilot, Babel, Bob preview, Tokyo validation, and Venice runtime. Separate l10n path lists are not product truth.
+- Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `catalog.json`, `spec.json`, widget `content.json` where present, `agent.md`, and widget-owned runtime assets. PRD 103 moves FAQ translation text authority to authored `content.json`; generated overlay primitives may still exist as internal path/value plumbing, but they are not the authored translation source.
 - Platform-controlled; **not stored in Michael**
 
 **Instance** = THE ACCOUNT-OWNED DATA AND STATIC MINI-SITE SOURCE
@@ -103,7 +103,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Overlay objects are separate exact objects at `overlays/{overlayId}.json` under the same instance. The first/current overlay family is locale translation overlays.
 - Generated browser files for the public mini-site live in the same instance folder as `index.html`, `styles.css`, and `script.js`. The canonical public URL is `https://clk.live/{accountPublicId}/{instanceId}` and maps directly to that folder. Public serving is controlled by `index.html` physical presence, not by a runtime render pointer or product-service lookup.
 - `accounts/{accountPublicId}/instances/index.json` is a generated account read model for Roma navigation. It is rebuildable from instance subtrees and must not be treated as instance identity authority.
-- No generated artifact is required to determine account instance identity, ownership, saved config truth, or generation status. If generated browser files are missing or stale, Roma shows that status; public serving does not synthesize a widget at request time.
+- No generated artifact is required to determine account instance identity, ownership, saved config truth, or generation status. If generated browser files are missing or out of date, Roma shows that state; public serving does not synthesize a widget at request time.
 - Tokyo instance indexes are prepared read models for product navigation. Hot list reads validate the index contract and must not perform full R2 integrity audits; save/publish/delete mutation paths patch one affected index entry. Full rebuild is a repair/read-missing boundary, not steady-state mutation work.
 - Michael does not keep a parallel account widget instance table. Support, billing/account reporting, and audit flows must use account/user relational data plus Tokyo-owned instance documents, not a Michael `widget_instances` projection.
 - Product-path account open resolves the saved authoring revision from Tokyo; instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
@@ -162,7 +162,7 @@ In the browser the active account-mode host path is:
 
 Bob does not URL-bootstrap account mode. Account editing is host-only.
 
-Babel is separate from Builder authoring: Berlin-backed Roma Settings owns account locale policy, and translation/runtime locale convergence happens downstream from the one widget save path. Each widget declares text primitives in `spec.json.overlays.text[]`; producers receive only concrete primitive paths extracted from the saved config, such as `sections.0.faqs.0.question`.
+Babel/translation is separate from Builder authoring: Berlin-backed Roma Settings owns account locale policy, and translation/runtime locale convergence happens downstream from the one widget save path. FAQ declares customer-visible translation fields in `tokyo/product/widgets/faq/content.json`; producers receive only concrete primitive paths extracted from the saved config, such as `sections.0.faqs.0.question`.
 For account-widget locales, Roma orchestrates product work, San Francisco translates concrete text primitive values, and Tokyo-worker acts as the PBX: validate `overlayId`, write exact overlay objects, and read exact overlay objects under the owning instance `overlays/` folder. Tokyo-worker does not infer product meaning from overlay bodies and does not repair data it produced.
 Builder translation preview is account-authenticated read-only inspection with split authority. Roma shows the account setup summary from real account context: base locale, plan translation allowance, and active account translations. Bob's preview dropdown is backed only by actual locale overlay files in Tokyo/R2 under the current instance `overlays/` folder. Roma may authenticate and pass storage reads through to Tokyo, but it must not call Berlin or synthesize desired-locale availability for the dropdown. Bob applies one exact overlay value map over the current in-memory base state with the shared resolver before posting state to the preview iframe. If an overlay file does not exist, that locale is absent from the dropdown. Unpublished Builder preview must not depend on public Venice/Tokyo locale URLs, because public serving is controlled by generated static file presence.
 
@@ -190,7 +190,8 @@ Between open and save:
 | `config`       | Persisted base instance values; active product account reads/writes use Tokyo's saved authoring snapshot |
 | `instanceData` | Working copy of config in Bob during editing                                                             |
 | `spec.json`    | Defaults + structured Builder editor contract (`editor.panels`); compiled by Bob                         |
-| `spec.json.overlays` | Widget-owned primitive variable graph; Babel v1 text primitives are declared here and extracted to concrete paths |
+| `content.json` | Widget-owned customer-visible translation field declaration where migrated; FAQ is the PRD 103 gold standard |
+| `spec.json.overlays` | Generated/internal primitive path graph where still needed for overlay validation and runtime path/value plumbing |
 | `agent.md`     | AI contract documenting editable paths and semantics                                                     |
 
 ### Clickeen-Owned Examples
@@ -354,7 +355,7 @@ Locale is a runtime parameter and must not be encoded into instance identity (`i
 - Instance/content translation truth is the first PRD 098 overlay application. Public embeds read only public projections that point to exact `overlayId` values and exact overlay value objects.
 - There is no repo-authored admin l10n lane and no repo-local instance overlay truth.
 - Canonical overlay truth for instances is PRD 098: fixed-layout `overlayId`, body `{ v, values }`, no body status/readiness/hash identity, and no compatibility bridge to old l10n overlay paths.
-- The widget primitive graph in `spec.json.overlays.text[]` is the only source for translatable account-widget paths. No widget `localization.json`, layer path sidecar, wildcard path schema, or text-pack schema survives.
+- Migrated widgets declare translatable account-widget paths in authored `content.json`; FAQ is the first PRD 103 example. Generated overlay primitives are allowed only as internal path/value plumbing. No widget `localization.json`, layer path sidecar, wildcard path schema, or text-pack schema survives.
 
 Canonical reference:
 

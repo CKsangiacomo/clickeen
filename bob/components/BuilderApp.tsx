@@ -29,6 +29,7 @@ function BuilderShell() {
   const chrome = useWidgetSessionChrome();
   const instanceId = chrome.meta?.instanceId ?? '';
   const baseLocale = chrome.meta?.baseLocale ?? '';
+  const translationSetup = chrome.meta?.translationSetup ?? null;
   const [previewMode, setPreviewMode] = useState<'editing' | 'translations'>('editing');
   const [overlayPreviewLocale, setOverlayPreviewLocale] = useState('');
   const [translationsRefreshVersion, setTranslationsRefreshVersion] = useState(0);
@@ -66,10 +67,16 @@ function BuilderShell() {
     if (session.error?.source === 'save') return;
     setTranslationsRefreshVersion((prev) => prev + 1);
   }, [session.error?.source, session.isSaving]);
+  const requestLocaleOverlayRefresh = () => {
+    setTranslationsRefreshVersion((prev) => prev + 1);
+  };
 
   const previewableTranslationLocales = useMemo(() => {
-    return listPreviewableLocales(localeOverlayInventory);
-  }, [localeOverlayInventory]);
+    const expected = new Set(translationSetup?.activeLocales ?? []);
+    return listPreviewableLocales(localeOverlayInventory).filter(
+      (locale) => locale === baseLocale || expected.has(locale),
+    );
+  }, [baseLocale, localeOverlayInventory, translationSetup]);
 
   useEffect(() => {
     if (!overlayPreviewLocale) return;
@@ -86,9 +93,11 @@ function BuilderShell() {
           <ToolDrawer
             overlayPreviewLocale={overlayPreviewLocale}
             onOverlayPreviewLocaleChange={setOverlayPreviewLocale}
+            onRequestLocaleOverlayRefresh={requestLocaleOverlayRefresh}
             onPreviewModeChange={setPreviewMode}
-            translationSetup={chrome.meta?.translationSetup ?? null}
+            translationSetup={translationSetup}
             localeOverlayInventory={localeOverlayInventory}
+            localeOverlayValuesByLocale={localeOverlayValuesByLocale}
             localeOverlayLoading={localeOverlayLoading}
             localeOverlayError={localeOverlayError}
           />

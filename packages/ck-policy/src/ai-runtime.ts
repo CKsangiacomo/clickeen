@@ -348,6 +348,7 @@ function buildRuntimePolicy(args: {
 
   const base: Omit<AgentRuntimePolicy, 'policyVersion'> = {
     agentId: args.entry.agentId,
+    policyProfile: args.policyProfile,
     enabled: true,
     defaultModel: args.config.defaultModel,
     modelsByProvider: args.config.modelsByProvider,

@@ -1,5 +1,8 @@
 import { isRecord } from "@clickeen/ck-contracts";
-import type { WidgetOverlayContract } from "@clickeen/ck-contracts/overlay-primitives";
+import type {
+  WidgetContentContract,
+  WidgetOverlayContract,
+} from "@clickeen/ck-contracts/overlay-primitives";
 import { isWidgetOverlayCode } from "@clickeen/ck-contracts/overlay-identity";
 import widgetsManifest from "../../../tokyo/product/widgets/manifest.json";
 
@@ -12,6 +15,7 @@ export type WidgetCatalogEntry = {
   capabilities: {
     seoGeo: boolean;
   };
+  content?: WidgetContentContract;
   overlays: WidgetOverlayContract;
 };
 
@@ -61,6 +65,7 @@ function publicEntry(entry: WidgetCatalogManifestEntry): WidgetCatalogEntry {
     capabilities: {
       seoGeo: entry.capabilities.seoGeo,
     },
+    ...(isRecord(entry.content) ? { content: entry.content as WidgetContentContract } : {}),
     overlays: entry.overlays,
   };
 }

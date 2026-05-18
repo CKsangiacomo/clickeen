@@ -1,8 +1,8 @@
 # PRD 102 - Translation Overlay Panel Simplification
 
-Status: Ready for peer review  
-Owner: Product + Architecture  
-Date: 2026-05-17  
+Status: Complete
+Owner: Product + Architecture
+Date: 2026-05-17
 Depends on: PRD 100 - Static Public Embed Delivery
 
 ## Purpose

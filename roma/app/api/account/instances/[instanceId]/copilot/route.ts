@@ -60,6 +60,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const sessionId = asTrimmedString(payload?.sessionId) ?? '';
     const currentConfig = payload?.currentConfig;
     const controls = payload?.controls;
+    const widgetPackage = payload?.widgetPackage;
     const selectedModelResult = parseSelectedModel(payload?.selectedModel);
 
     const issues: Array<{ path: string; message: string }> = [];
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (!sessionId) issues.push({ path: 'sessionId', message: 'sessionId is required' });
     if (!isRecord(currentConfig)) issues.push({ path: 'currentConfig', message: 'currentConfig must be an object' });
     if (!Array.isArray(controls)) issues.push({ path: 'controls', message: 'controls must be an array' });
+    if (!isRecord(widgetPackage)) issues.push({ path: 'widgetPackage', message: 'widgetPackage must be an object' });
     if (!selectedModelResult.ok) issues.push({ path: 'selectedModel', message: selectedModelResult.message });
     if (issues.length) {
       return withSession(request, NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 }), current.value.setCookies);
@@ -127,6 +129,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         widgetType,
         currentConfig,
         controls,
+        widgetPackage,
         sessionId,
       },
     });

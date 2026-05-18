@@ -1,8 +1,8 @@
 # PRD 100F - Remove Venice Runtime And CI Guards
 
-Status: Executing  
-Owner: Product + Engineering  
-Date: 2026-05-16  
+Status: Complete
+Owner: Product + Engineering
+Date: 2026-05-16
 Parent: `100__PRD__Static_Public_Embed_Delivery.md`
 
 ## Purpose

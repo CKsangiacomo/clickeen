@@ -9,7 +9,7 @@ import {
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
 
-function normalizeBabelFollowup(payload: unknown):
+function normalizeTranslationFollowup(payload: unknown):
   | { ok: true }
   | { ok: false; reasonKey: string; detail?: string } {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return { ok: true };
@@ -133,12 +133,12 @@ export function useSessionSaving(args: {
         isDirty: false,
         isSaving: false,
         error: (() => {
-          const babelFollowup = normalizeBabelFollowup(json?.babel);
-          if (babelFollowup.ok) return null;
+          const translationFollowup = normalizeTranslationFollowup(json?.translation);
+          if (translationFollowup.ok) return null;
           return {
             source: 'translation',
-            message: babelFollowup.reasonKey,
-            ...(babelFollowup.detail ? { detail: babelFollowup.detail } : {}),
+            message: translationFollowup.reasonKey,
+            ...(translationFollowup.detail ? { detail: translationFollowup.detail } : {}),
           };
         })(),
       };
