@@ -106,6 +106,7 @@ export async function runInstanceTranslationFollowupAfterSave(args: {
   config: Record<string, unknown>;
   previousConfig?: Record<string, unknown> | null;
   translateAllCurrentFields?: boolean;
+  targetLocales?: string[];
   requestId?: string | null;
 }): Promise<InstanceTranslationFollowupResult> {
   const policy = await loadAccountTranslationLanguagePolicy({
@@ -128,7 +129,17 @@ export async function runInstanceTranslationFollowupAfterSave(args: {
   }
 
   const baseLocale = policy.value.baseLocale;
-  const targetLocales = policy.value.desiredLocales.filter((locale) => locale !== baseLocale);
+  const desiredTargetLocales = policy.value.desiredLocales.filter((locale) => locale !== baseLocale);
+  const desiredTargetLocaleSet = new Set(desiredTargetLocales);
+  const targetLocales = Array.isArray(args.targetLocales)
+    ? Array.from(
+        new Set(
+          args.targetLocales
+            .map((locale) => String(locale || '').trim())
+            .filter((locale) => locale && locale !== baseLocale && desiredTargetLocaleSet.has(locale)),
+        ),
+      )
+    : desiredTargetLocales;
   if (!targetLocales.length) return { ok: true, baseLocale, results: [] };
 
   const catalog = await loadTokyoWidgetCatalog({
