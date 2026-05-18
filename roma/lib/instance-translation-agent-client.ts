@@ -54,12 +54,15 @@ function readTrimmedSecret(value: unknown): string {
 }
 
 function resolveAiGrantSecret(): string {
-  const fromRequestContext = getOptionalCloudflareRequestContext<{ env?: { AI_GRANT_HMAC_SECRET?: string } }>()
-    ?.env?.AI_GRANT_HMAC_SECRET;
+  const fromRequestContext = getOptionalCloudflareRequestContext<{
+    env?: { AI_GRANT_HMAC_SECRET?: string };
+  }>()?.env?.AI_GRANT_HMAC_SECRET;
   const requestSecret = readTrimmedSecret(fromRequestContext);
   if (requestSecret) return requestSecret;
 
-  const processSecret = readTrimmedSecret(typeof process !== 'undefined' ? process.env.AI_GRANT_HMAC_SECRET : undefined);
+  const processSecret = readTrimmedSecret(
+    typeof process !== 'undefined' ? process.env.AI_GRANT_HMAC_SECRET : undefined,
+  );
   if (processSecret) return processSecret;
 
   throw new Error('[Roma] Missing AI_GRANT_HMAC_SECRET');
@@ -73,13 +76,17 @@ function base64UrlEncodeBytes(bytes: Uint8Array): string {
 
 async function hmacSha256Base64Url(secret: string, message: string): Promise<string> {
   const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, [
+    'sign',
+  ]);
   const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
   return base64UrlEncodeBytes(new Uint8Array(sig));
 }
 
 function resolveEnvStage(): string {
-  const stage = String(process.env.ENV_STAGE || process.env.CF_PAGES_BRANCH || '').trim().toLowerCase();
+  const stage = String(process.env.ENV_STAGE || process.env.CF_PAGES_BRANCH || '')
+    .trim()
+    .toLowerCase();
   if (stage) return stage;
   return process.env.NODE_ENV === 'development' ? 'local' : 'cloud-dev';
 }
@@ -106,7 +113,11 @@ async function issueInstanceTranslationGrant(args: {
     v: 1,
     iss: 'roma',
     jti: crypto.randomUUID(),
-    sub: { kind: 'user', userId: args.authz.userId, accountId: args.authz.accountId },
+    sub: {
+      kind: 'user',
+      userId: args.authz.userId,
+      accountId: args.authz.accountId,
+    },
     exp: nowSec + 10 * 60,
     caps: [`agent:${resolvedAgent.canonicalId}`],
     budgets: {
@@ -144,7 +155,9 @@ function normalizeInstanceTranslationResponse(payload: unknown): CurrentLanguage
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
   const record = payload as Record<string, unknown>;
   const currentLanguageValues =
-    record.currentLanguageValues && typeof record.currentLanguageValues === 'object' && !Array.isArray(record.currentLanguageValues)
+    record.currentLanguageValues &&
+    typeof record.currentLanguageValues === 'object' &&
+    !Array.isArray(record.currentLanguageValues)
       ? (record.currentLanguageValues as Record<string, unknown>)
       : null;
   if (
@@ -178,15 +191,22 @@ export async function produceInstanceTranslationValues(args: {
   instanceId: string;
   request: InstanceTranslationRequest;
   requestId?: string | null;
-}): Promise<
-  | { ok: true; value: CurrentLanguageValues }
-  | { ok: false; detail: string }
-> {
-  const baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
-  const grant = await issueInstanceTranslationGrant({
-    authz: args.authz,
-    instanceId: args.instanceId,
-  });
+}): Promise<{ ok: true; value: CurrentLanguageValues } | { ok: false; detail: string }> {
+  let baseUrl: string;
+  let grant: string;
+  try {
+    baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
+    grant = await issueInstanceTranslationGrant({
+      authz: args.authz,
+      instanceId: args.instanceId,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      detail: error instanceof Error ? error.message : String(error),
+    };
+  }
+
   let response: Response;
   try {
     response = await fetch(`${baseUrl}/v1/agents/instance-translation/translate-saved-instance`, {
@@ -211,7 +231,10 @@ export async function produceInstanceTranslationValues(args: {
       cache: 'no-store',
     });
   } catch (error) {
-    return { ok: false, detail: error instanceof Error ? error.message : String(error) };
+    return {
+      ok: false,
+      detail: error instanceof Error ? error.message : String(error),
+    };
   }
 
   const text = await response.text().catch(() => '');
@@ -223,13 +246,22 @@ export async function produceInstanceTranslationValues(args: {
         : null;
     return {
       ok: false,
-      detail: message ?? summarizeUpstreamError({ baseUrl, status: response.status, bodyText: text }),
+      detail:
+        message ??
+        summarizeUpstreamError({
+          baseUrl,
+          status: response.status,
+          bodyText: text,
+        }),
     };
   }
 
   const normalized = normalizeInstanceTranslationResponse(payload);
   if (!normalized) {
-    return { ok: false, detail: 'sanfrancisco_instance_translation_invalid_payload' };
+    return {
+      ok: false,
+      detail: 'sanfrancisco_instance_translation_invalid_payload',
+    };
   }
   return { ok: true, value: normalized };
 }
