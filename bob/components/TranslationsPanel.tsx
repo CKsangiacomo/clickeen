@@ -88,7 +88,7 @@ export function buildGenerateTranslationsButtonState(args: {
   isGenerating: boolean;
 }): { disabled: boolean; label: string; message: string | null } {
   if (args.isGenerating) {
-    return { disabled: true, label: 'Generating...', message: null };
+    return { disabled: true, label: 'Generating translations...', message: null };
   }
   if (!args.instanceId) {
     return { disabled: true, label: 'Generate translations', message: null };
