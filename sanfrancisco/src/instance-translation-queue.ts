@@ -171,6 +171,11 @@ function retryDelaySeconds(attempt: number): number {
   return Math.min(90, 5 * Math.max(1, attempt));
 }
 
+function modelLabel(job: InstanceTranslationJob): string {
+  const model = job.ai.selectedModel ?? job.ai.defaultModel;
+  return `${job.ai.policyProfile}:${model.provider}:${model.model}`;
+}
+
 function isNonRetryable(error: unknown): boolean {
   if (!(error instanceof HttpError)) return false;
   if (error.status === 400 || error.status === 403 || error.status === 404 || error.status === 422) {
@@ -205,6 +210,7 @@ export async function handleInstanceTranslationQueueMessage(env: Env, msg: Queue
         job.accountPublicId,
         job.instanceId,
         job.targetLocale,
+        modelLabel(job),
         `attempt=${attempt}`,
         message,
       );
@@ -217,6 +223,7 @@ export async function handleInstanceTranslationQueueMessage(env: Env, msg: Queue
       job.accountPublicId,
       job.instanceId,
       job.targetLocale,
+      modelLabel(job),
       `attempt=${attempt}`,
       message,
     );
