@@ -7,7 +7,11 @@ import {
   resolveLocaleLabel as resolveCanonicalLocaleLabel,
 } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
-import { useWidgetSession, useWidgetSessionChrome, useWidgetSessionTransport } from '../lib/session/useWidgetSession';
+import {
+  useWidgetSession,
+  useWidgetSessionChrome,
+  useWidgetSessionTransport,
+} from '../lib/session/useWidgetSession';
 import type { LocaleOverlayInventoryData, TranslationSetup } from './useLocaleOverlayPreviewState';
 import { buildContentTranslationReview } from '../lib/translations-preview';
 import { buildTranslationPanelLocaleState } from '../lib/translations-preview';
@@ -86,11 +90,7 @@ export function buildGenerateTranslationsButtonState(args: {
   isGenerating: boolean;
 }): { disabled: boolean; label: string; message: string | null } {
   if (args.isGenerating) {
-    return {
-      disabled: true,
-      label: 'Generating translations...',
-      message: null,
-    };
+    return { disabled: true, label: 'Generating translations...', message: null };
   }
   if (!args.instanceId) {
     return { disabled: true, label: 'Generate translations', message: null };
@@ -145,34 +145,6 @@ export function resolveGenerateTranslationsMessage(payload: unknown): string {
   }
   if (generated <= 0) return 'No translations to generate.';
   return `Generated ${generated} translations.`;
-}
-
-function resolveGenerateTranslationsError(payload: unknown): string {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return 'Translations could not be generated.';
-  }
-  const record = payload as Record<string, unknown>;
-  const translation = record.translation;
-  if (translation && typeof translation === 'object' && !Array.isArray(translation)) {
-    const results = Array.isArray((translation as Record<string, unknown>).results)
-      ? ((translation as Record<string, unknown>).results as Array<Record<string, unknown>>)
-      : [];
-    const failed = results.find((result) => result?.ok === false);
-    if (failed) {
-      const detail = typeof failed.detail === 'string' && failed.detail.trim() ? failed.detail.trim() : '';
-      const locale = typeof failed.locale === 'string' && failed.locale.trim() ? failed.locale.trim() : '';
-      return [locale, detail].filter(Boolean).join(': ') || 'Translations could not be generated.';
-    }
-  }
-  const error = record.error;
-  if (error && typeof error === 'object' && !Array.isArray(error)) {
-    const detail =
-      typeof (error as Record<string, unknown>).detail === 'string'
-        ? ((error as Record<string, unknown>).detail as string).trim()
-        : '';
-    if (detail) return detail;
-  }
-  return 'Translations could not be generated.';
 }
 
 export function TranslationReviewRows({
@@ -298,10 +270,12 @@ export function TranslationsPanel({
           },
         ];
   const planTranslationsCopy =
-    translationSetup?.planTranslationsMax == null ? 'unlimited' : String(translationSetup.planTranslationsMax);
+    translationSetup?.planTranslationsMax == null
+      ? 'unlimited'
+      : String(translationSetup.planTranslationsMax);
   const selectedOverlayEntry = localeState.selectedOverlayEntry;
   const selectedValues =
-    localeValue && localeValue !== baseLocale ? (localeOverlayValuesByLocale[localeValue] ?? null) : null;
+    localeValue && localeValue !== baseLocale ? localeOverlayValuesByLocale[localeValue] ?? null : null;
   useEffect(() => {
     setDraftValues(selectedValues ?? {});
     setSavingPath(null);
@@ -334,7 +308,7 @@ export function TranslationsPanel({
     try {
       const response = await generateTranslations({ instanceId });
       if (!response.ok) {
-        throw new Error(resolveGenerateTranslationsError(response.json));
+        throw new Error('Translations could not be generated.');
       }
       setGenerateMessage(resolveGenerateTranslationsMessage(response.json));
       onRequestLocaleOverlayRefresh();
@@ -446,8 +420,12 @@ export function TranslationsPanel({
           >
             <span className="diet-btn-txt__label body-s">{generateButton.label}</span>
           </button>
-          {generateButton.message ? <div className="label-s label-muted">{generateButton.message}</div> : null}
-          {generateMessage ? <div className="label-s label-muted">{generateMessage}</div> : null}
+          {generateButton.message ? (
+            <div className="label-s label-muted">{generateButton.message}</div>
+          ) : null}
+          {generateMessage ? (
+            <div className="label-s label-muted">{generateMessage}</div>
+          ) : null}
         </div>
         <SelectField
           label="Preview locale"
@@ -462,7 +440,9 @@ export function TranslationsPanel({
             {localeState.readyTranslationsCount} of {localeState.expectedTranslationsCount} translations ready
           </div>
         ) : null}
-        {localeOverlayError ? <div className="label-s label-muted">{localeOverlayError}</div> : null}
+        {localeOverlayError ? (
+          <div className="label-s label-muted">{localeOverlayError}</div>
+        ) : null}
         {translationError ? (
           <div className="label-s label-muted">
             {translationError.detail || translationError.message || 'Translation failed.'}
@@ -480,7 +460,9 @@ export function TranslationsPanel({
         {!localeOverlayError && selectedValues && !session.compiled.content ? (
           <div className="label-s label-muted">No translation fields declared for this widget.</div>
         ) : null}
-        {saveMessage ? <div className="label-s label-muted">{saveMessage}</div> : null}
+        {saveMessage ? (
+          <div className="label-s label-muted">{saveMessage}</div>
+        ) : null}
         {!localeOverlayError && selectedReview ? (
           <TranslationReviewRows
             review={selectedReview}
