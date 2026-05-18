@@ -36,4 +36,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Venice Pages contract
-        run: pnpm -C venice build:cf
+        run: |
+          if [ ! -f venice/package.json ]; then
+            echo "Venice app is not present in this branch; skipping legacy Venice Pages verification."
+            exit 0
+          fi
+          pnpm -C venice build:cf

@@ -43,7 +43,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
+        if: ${{ hashFiles('venice/package.json') != '' }}
         run: pnpm exec playwright install chromium firefox webkit
 
       - name: Verify Venice runtime browser matrix
-        run: pnpm --filter @clickeen/venice verify:runtime
+        run: |
+          if [ ! -f venice/package.json ]; then
+            echo "Venice app is not present in this branch; skipping legacy Venice browser matrix."
+            exit 0
+          fi
+          pnpm --filter @clickeen/venice verify:runtime
