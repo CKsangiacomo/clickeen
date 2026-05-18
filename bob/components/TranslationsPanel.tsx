@@ -109,6 +109,28 @@ export function buildGenerateTranslationsButtonState(args: {
   return { disabled: false, label: 'Generate translations', message: null };
 }
 
+function resolveGenerateTranslationsMessage(payload: unknown): string {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return 'Translations generated.';
+  }
+  const translation = (payload as Record<string, unknown>).translation;
+  if (!translation || typeof translation !== 'object' || Array.isArray(translation)) {
+    return 'Translations generated.';
+  }
+  const results = Array.isArray((translation as Record<string, unknown>).results)
+    ? ((translation as Record<string, unknown>).results as Array<Record<string, unknown>>)
+    : [];
+  const generated = results.filter((result) => result?.ok === true).length;
+  const failed = results.find((result) => result?.ok === false);
+  if (failed) {
+    const detail = typeof failed.detail === 'string' && failed.detail.trim() ? failed.detail.trim() : '';
+    const locale = typeof failed.locale === 'string' && failed.locale.trim() ? failed.locale.trim() : '';
+    throw new Error([locale, detail].filter(Boolean).join(': ') || 'Translations could not be generated.');
+  }
+  if (generated <= 0) return 'No translations to generate.';
+  return `Generated ${generated} translations.`;
+}
+
 export function TranslationReviewRows({
   review,
   draftValues,
@@ -268,7 +290,7 @@ export function TranslationsPanel({
       if (!response.ok) {
         throw new Error('Translations could not be generated.');
       }
-      setGenerateMessage('Generating translations.');
+      setGenerateMessage(resolveGenerateTranslationsMessage(response.json));
       onRequestLocaleOverlayRefresh();
     } catch (error) {
       setGenerateMessage(error instanceof Error ? error.message : 'Translations could not be generated.');

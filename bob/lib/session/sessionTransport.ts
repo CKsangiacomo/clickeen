@@ -142,6 +142,7 @@ export function useSessionTransport(args: {
       instanceId?: string;
       headers?: Record<string, string>;
       body?: unknown;
+      timeoutMs?: number;
     }): Promise<{ ok: boolean; status: number; payload: any; message?: string }> => {
       const targetOrigin = await waitForHostOrigin();
       if (!targetOrigin) {
@@ -185,7 +186,7 @@ export function useSessionTransport(args: {
         timeoutTimer = window.setTimeout(() => {
           cleanup();
           reject(new Error('coreui.errors.builder.command.timeout'));
-        }, 15_000);
+        }, commandArgs.timeoutMs ?? 15_000);
 
         try {
           window.parent?.postMessage(message, targetOrigin);
@@ -348,6 +349,7 @@ export function useSessionTransport(args: {
       const result = await dispatchHostAccountCommand({
         command: 'generate-translations',
         instanceId,
+        timeoutMs: 120_000,
       });
       return { ok: result.ok, status: result.status, json: result.payload };
     },

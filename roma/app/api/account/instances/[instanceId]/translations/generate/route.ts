@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-direct';
 import { runInstanceTranslationFollowupAfterSave } from '@roma/lib/account-instance-translation-followup';
-import { getOptionalCloudflareRequestContext } from '@roma/lib/cloudflare-request-context';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -11,80 +10,6 @@ import {
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
-type CloudflareContextWithWaitUntil = {
-  env?: unknown;
-  ctx?: {
-    waitUntil?: (promise: Promise<unknown>) => void;
-  };
-  waitUntil?: (promise: Promise<unknown>) => void;
-};
-type TranslationFollowupResult = Awaited<
-  ReturnType<typeof runInstanceTranslationFollowupAfterSave>
->;
-type TranslationFollowupResults = TranslationFollowupResult['results'];
-
-function attachTranslationFollowupToRequestLifetime(promise: Promise<unknown>): void {
-  const context = getOptionalCloudflareRequestContext<CloudflareContextWithWaitUntil>();
-  const waitUntil = context?.ctx?.waitUntil ?? context?.waitUntil;
-  if (typeof waitUntil === 'function') {
-    waitUntil.call(context?.ctx ?? context, promise);
-    return;
-  }
-  void promise;
-}
-
-function logTranslationGenerateFailure(args: {
-  accountId: string;
-  instanceId: string;
-  requestId?: string | null;
-  results?: TranslationFollowupResults;
-  detail?: string;
-}): void {
-  console.warn('[roma account instance translations generate] translation follow-up failed', {
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    requestId: args.requestId,
-    ...(args.results ? { results: args.results } : {}),
-    ...(args.detail ? { detail: args.detail } : {}),
-  });
-}
-
-function startTranslationGenerate(args: {
-  authz: Parameters<typeof runInstanceTranslationFollowupAfterSave>[0]['authz'];
-  accessToken: string;
-  accountCapsule: string;
-  accountPublicId: string;
-  instanceId: string;
-  widgetType: string;
-  config: Record<string, unknown>;
-  requestId?: string | null;
-}): void {
-  const promise = runInstanceTranslationFollowupAfterSave({
-    ...args,
-    previousConfig: null,
-    translateAllCurrentFields: true,
-  })
-    .then((translation) => {
-      if (!translation.ok) {
-        logTranslationGenerateFailure({
-          accountId: args.accountPublicId,
-          instanceId: args.instanceId,
-          requestId: args.requestId,
-          results: translation.results,
-        });
-      }
-    })
-    .catch((error) => {
-      logTranslationGenerateFailure({
-        accountId: args.accountPublicId,
-        instanceId: args.instanceId,
-        requestId: args.requestId,
-        detail: error instanceof Error ? error.message : String(error),
-      });
-    });
-
-  attachTranslationFollowupToRequestLifetime(promise);
-}
 
 export async function POST(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
@@ -114,7 +39,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  startTranslationGenerate({
+  const translation = await runInstanceTranslationFollowupAfterSave({
     authz: current.value.authzPayload,
     accessToken: current.value.accessToken,
     accountCapsule: current.value.authzToken,
@@ -122,8 +47,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
     instanceId,
     widgetType: instance.value.row.widgetType,
     config: instance.value.config,
+    previousConfig: null,
+    translateAllCurrentFields: true,
     requestId: current.value.requestId,
   });
 
-  return withSession(request, NextResponse.json({ ok: true }), current.value.setCookies);
+  return withSession(
+    request,
+    NextResponse.json({
+      ok: translation.ok,
+      translation,
+    }),
+    current.value.setCookies,
+  );
 }
