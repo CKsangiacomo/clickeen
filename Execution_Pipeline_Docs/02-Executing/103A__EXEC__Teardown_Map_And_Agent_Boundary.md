@@ -22,7 +22,7 @@ One FAQ save now flows through:
 2. Roma `PUT /account/instances/[instanceId]` saves the config to Tokyo.
 3. Roma loads account language policy, loads the Tokyo widget catalog, derives saved text from authored `content.json`, and accepts concrete per-locale translation jobs on `INSTANCE_TRANSLATION_JOBS`.
 4. Roma preflights San Francisco translator runtime readiness before accepting the jobs.
-5. San Francisco consumes the jobs, uses `l10nTranslationCore`, merges complete current language values, and writes source-version-guarded language overlays to Tokyo.
+5. San Francisco consumes the jobs, uses `l10nTranslationCore`, merges complete current language values, and writes complete language overlays to Tokyo.
 8. Bob reads overlay inventory/object values and applies them with `resolveOverlay` for preview.
 9. San Francisco embed generation applies overlay values with `resolveOverlay` when generating locale files.
 

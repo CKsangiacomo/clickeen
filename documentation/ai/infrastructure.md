@@ -52,7 +52,7 @@ Provider/model policy:
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, token ceiling, turn ceiling, and timeout ceiling.
 - **Prague strings L10n**: `website.prague.copy.translator`, OpenAI via the Prague tooling route.
-- **Account-widget Instance Translation Agent**: `widget.instance.translator`. Roma accepts translation work after a successful Tokyo save by building concrete per-locale jobs and enqueueing them on `INSTANCE_TRANSLATION_JOBS`. San Francisco consumes those jobs, enforces the embedded `AgentRuntimePolicy`, produces exact changed-field values, merges complete current-language values, and writes the source-version-guarded overlay through Tokyo-worker.
+- **Account-widget Instance Translation Agent**: `widget.instance.translator`. Roma accepts translation work after a successful Tokyo save by building concrete per-locale jobs and enqueueing them on `INSTANCE_TRANSLATION_JOBS`. San Francisco consumes those jobs, enforces the embedded `AgentRuntimePolicy`, produces exact changed-field values, merges complete current-language values, and writes the complete overlay through Tokyo-worker.
 
 ## 3) HTTP endpoints
 

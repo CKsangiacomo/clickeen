@@ -13,7 +13,7 @@
 
 ## Dependencies
 - Roma (account-mode translation job producer)
-- Tokyo-worker (source-version-guarded overlay writes through `TOKYO_PRODUCT_CONTROL`)
+- Tokyo-worker (complete overlay writes through `TOKYO_PRODUCT_CONTROL`)
 - Widget content graph from FAQ `content.json` via queued Roma job payloads
 - Cloudflare KV/R2/Queues (state, logs, scheduling)
 
