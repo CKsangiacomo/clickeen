@@ -1,6 +1,6 @@
 # PRD 103E - Translation Panel Contract Text Review
 
-Status: Complete / Bob UI proof green
+Status: Reopened / Panel-owned generation cutover in progress
 Owner: Product + Architecture
 Date: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
@@ -20,7 +20,7 @@ Bob's production `TranslationsPanel` renders the translated rows through the gen
 
 - Executable without drift: the panel reads stored current language values, not preview-only state.
 - New systems are not allowed; the panel compares Roma settings with Tokyo overlays and displays found current language values.
-- End-to-end accuracy must prove Save -> Translation -> Bob panel review for authored content JSON text.
+- End-to-end accuracy must prove Save base -> Generate in Translations panel -> Translation -> Bob panel review for authored content JSON text.
 - All systems must say `current language values`, `Roma settings`, `Tokyo overlays`, and `translations ready`.
 - Blast radius includes Bob panel UI, preview dropdown, overlay application, language value storage reads, and tests.
 - Pre-work limit: do not build a full translation management UI before the read-only content-JSON review path works.
@@ -70,6 +70,8 @@ X of Y translations ready
 - Preview still works.
 - Missing language overlays are represented only by the `X of Y translations ready` count.
 - The review UI reads stored current language values, not preview-only state.
+- The Translations panel owns the only user-facing `Generate translations` trigger.
+- `Generate translations` uses the current saved instance and Tokyo language values; it does not send Bob form text or a Bob-computed diff.
 - The dropdown refresh behavior follows the two product cases: complete overlays do not refresh while the panel stays open; incomplete overlays refresh when the user clicks the dropdown.
 - Selecting a language with an overlay displays translated values. Selecting a language without an overlay shows only `Translation not ready yet.`
 - Fail if Bob needs `buildFaqTranslationReview()` or widget-specific path hardcoding to show translated values.

@@ -1,9 +1,9 @@
 # PRD 103 - Instance Translation Agent Teardown And Rebuild
 
-Status: Runtime fix green pending human UX re-smoke
+Status: Blocked / Widget-instance source model gate
 Owner: Product + Architecture
 Date: 2026-05-17
-Depends on: PRD 100 - Static Public Embed Delivery; PRD 102 - Translation Overlay Panel Simplification
+Depends on: PRD 100 - Static Public Embed Delivery; PRD 102 - Translation Overlay Panel Simplification; PRD 103_00; PRD 103_01; PRD 103_02
 
 ## Purpose
 
@@ -19,7 +19,7 @@ The product experience stays simple:
 One FAQ instance.
 One save action.
 Clickeen knows all editable text.
-Clickeen derives translation text from the widget's authored content JSON.
+Clickeen derives translation text from the widget's editable-fields contract and the saved instance content.
 Clickeen lets Copilot understand the whole widget folder.
 Clickeen translates what changed.
 Clickeen shows the translations.
@@ -44,6 +44,52 @@ Translate this saved FAQ instance into the enabled languages using the changed u
 
 The goal is not to invent a larger framework. The goal is to remove the automation-like pipeline as the product boundary and make the code read like the product.
 
+## Architecture Gate Before More Runtime Work
+
+PRD 103 must not continue until the pre-103 architecture PRDs are executed:
+
+- `103_00__PRD__Pre_103_Architecture_Gate.md`
+- `103_01__PRD__Widget_Source_And_Bootstrap_Script_Audit.md`
+- `103_02__PRD__Instance_Source_And_Public_Artifact_Model.md`
+
+These PRDs sit before 103A-103Z. They must complete before any PRD 103 runtime implementation resumes.
+
+This PRD is currently blocked because the active implementation still mixes too many unrelated authorities:
+
+- widget software defaults
+- starter account content
+- account instance content
+- non-content config
+- generated public browser files
+- generated account navigation indexes
+- editable/translatable field contracts
+- catalog metadata
+- SEO/GEO capability wiring
+
+The required direction is:
+
+- Widget software must not own starter business copy.
+- `content.json` must be renamed to `editable-fields.json` because it is a field contract, not content.
+- Account instance user-visible base content must live separately from non-content config.
+- Translation overlays apply to account instance content only.
+- `agent.md`, `catalog.json`, `seo-geo.ts`, generated widget manifests, generated public files, and account indexes must each have a named writer, reader, rebuild rule, and deletion/rebuild rule. Otherwise they are delete candidates.
+- Do not add `instance.meta.json` unless the current product/build/runtime system genuinely uses it. If metadata is not used, delete it instead of moving it.
+- Do not preserve version markers, sidecars, generated registries, or indexes just because they exist.
+
+`scripts/build-widget-catalog.mjs` is verified as currently used by root build/typecheck and by Tokyo-worker's generated widget catalog, but that does not make it a valid architecture. It bundles defaults, catalog metadata, editable fields, overlay contract derivation, and SEO/GEO registry generation into one generated artifact, then other code consumes that artifact instead of reading the simple source it actually needs.
+
+The target is to remove the catchall manifest dependency. Each product path must read the smallest direct source it actually needs, or use a narrow purpose-specific generated file only when direct source consumption is impossible. `scripts/build-widget-catalog.mjs` and `tokyo/product/widgets/manifest.json` are kill candidates until proven otherwise.
+
+The same audit applies to bootstrap-era `.mjs` scripts. Scripts that materialize product files, sync repo files to R2, translate repo-owned content, or generate shared manifests were useful when local Node scripts acted as the assembly line. In the Cloudflare-era product model, those scripts are not automatically valid. Before PRD 103 resumes, each materializer/syncer must be classified as:
+
+- keep: still required by a documented Cloudflare build/deploy/runtime contract
+- cloudify: move the responsibility into the Cloudflare-owned product/service boundary
+- dev-only: local setup helper, absent from product build/deploy/runtime
+- repair-only: explicit operator tool, never called by product paths
+- delete: local bootstrap artifact with no current product contract
+
+Verification scripts may remain only as non-mutating guards. They must not become hidden product writers or state repair paths.
+
 ## Product Truth
 
 A Clickeen user editing an FAQ widget in Bob should experience this:
@@ -53,11 +99,12 @@ A Clickeen user editing an FAQ widget in Bob should experience this:
 3. The user edits any FAQ text: title, subtitle, CTA, section titles, questions, answers.
 4. The user clicks Save.
 5. Clickeen saves the FAQ.
-6. Clickeen starts the translation follow-up after the save has succeeded.
-7. Bob shows those translations in the Translations panel.
-8. The user can preview and later edit/review translations.
-9. Publish serves the language versions for that same FAQ instance.
-10. The user can click `Generate translations` in the Translations panel to run the same translation agent for the current saved instance.
+6. Save does not enqueue translation. It only persists the base locale.
+7. The Translations panel owns translation generation.
+8. The user clicks `Generate translations` in the Translations panel to run the Instance Translation Agent for the current saved instance.
+9. Bob shows those translations in the Translations panel.
+10. The user can preview and later edit/review translations.
+11. Publish serves the language versions for that same FAQ instance.
 
 The user does not manage:
 
@@ -75,20 +122,20 @@ Those may exist internally only when they directly serve the product action and 
 
 - There is one account-owned widget instance.
 - Save is one user action.
-- Save returns after the base instance is saved; it must not wait for all enabled-language translations.
+- Save returns after the base instance is saved; it must not enqueue or wait for enabled-language translations.
 - Bob is the Builder editor for that one instance.
 - The widget folder is the source family.
-- The authored content JSON declares customer-visible content fields once.
-- The Translation Agent consumes only that content JSON projection plus current saved values.
-- The Copilot Agent consumes the whole widget package: authored config, editor model, defaults, limits, HTML, CSS, client runtime, and agent guidance.
-- `content.json` is the authored translation authority.
+- The widget editable-fields contract declares customer-visible content fields once.
+- The Translation Agent consumes only that editable-fields projection plus current saved instance content values.
+- The Copilot Agent consumes the approved widget package. `agent.md` is included only if it survives as useful guidance with a proven consumer.
+- `content.json` is not approved as a name. The approved target name is `editable-fields.json`.
 - `per-field Copilot allowlist` is not a content-field product concept.
-- `overlays.text[]` is not the canonical text declaration. It is deleted or derived from authored content JSON.
-- `agent.md` is not a schema authority. It is thin human guidance for the widget package.
+- `overlays.text[]` is not the canonical text declaration. It is deleted or derived from `editable-fields.json` only if a proven consumer requires it.
+- `agent.md` is not a schema authority. It is a kill candidate unless the source model gate proves a real consumer.
 - A Clickeen translation agent translates whole changed/new fields after Save.
 - Both Copilot and the translation agent select their LLM/model profile from account policy, not from widget code.
 - Bob shows the resulting translations.
-- Bob can manually trigger translation generation for the current saved instance.
+- Bob's Translations panel is the only user-facing trigger for translation generation for the current saved instance.
 - Publish serves generated language versions.
 - Translation does not create another widget.
 - Translation does not create another authoring mode.
@@ -104,8 +151,8 @@ PRD 103 must not be treated as a cleanup. It is a product cutover.
 The refactor is not allowed to close unless each failure mode below has a named prevention gate and proof.
 
 1. **Moved files but no surviving authority**
-   - Gate: FAQ has one authored content JSON for customer-visible text.
-   - Proof: Bob content controls, Translation, language values, Bob review, and generated overlay values derive from that authored content JSON.
+   - Gate: FAQ has one authored editable-fields contract for customer-visible text.
+   - Proof: Bob content controls, Translation, language values, Bob review, and generated overlay values derive from that editable-fields contract plus saved instance content.
    - Fail if: `spec.json`, `overlays.text[]`, compiled-control regexes, or `agent.md` can define FAQ translation text independently.
 
 2. **Translation becomes agent-shaped but not job-shaped**
@@ -114,7 +161,7 @@ The refactor is not allowed to close unless each failure mode below has a named 
    - Fail if: the product operation is still loose `{ path, type, value }` text production.
 
 3. **FAQ contract is not defined first**
-   - Gate: no Translation migration starts until FAQ's authored content JSON is approved.
+   - Gate: no Translation migration starts until FAQ's authored editable-fields contract and instance content/config split are approved.
    - Proof: FAQ content fixture exists and can expand current FAQ config into translatable customer-visible fields.
    - Fail if: Copilot or Translation needs a compatibility fallback to discover FAQ text.
 
@@ -154,7 +201,7 @@ The refactor is not allowed to close unless each failure mode below has a named 
    - Fail if: the panel only shows counts, inventory, or preview dropdowns without letting the user inspect translated FAQ text.
 
 11. **Publish is not part of the cutover**
-    - Gate: Save -> Translation -> language values -> generated files -> Publish is one tested product path.
+    - Gate: Save base -> Generate translations -> language values -> generated files -> Publish is one tested product path.
     - Proof: published static files serve the base FAQ and enabled language FAQ versions without Roma, Bob, Berlin, or San Francisco during visitor traffic.
     - Fail if: translation only works in Bob preview.
 
@@ -557,11 +604,11 @@ whole widget folder
 
 ### Save
 
-Save persists the current FAQ instance.
+Save persists the current FAQ instance and stops there.
 
-After the base save succeeds, Clickeen asks the instance translation agent to translate the saved instance changes.
+Translation is a Translations panel operation. When the user clicks `Generate translations`, Clickeen asks the Instance Translation Agent to translate the current saved instance delta.
 
-Before calling the agent, Clickeen compares the saved field graph against the previous saved field graph for this same instance.
+Before queueing changed-field agent work, PRD 103 must name the owned-system authority Clickeen uses to compare current saved fields with the current translated language values already in Tokyo.
 
 The result is:
 
@@ -598,6 +645,10 @@ But the product vocabulary should stay simple:
 ```text
 FAQ language values
 ```
+
+The overlay object must not carry provenance, generation state, or history. It is the current language value object only. If Generate needs a comparison source, that authority must be named at the Generate/job boundary, not hidden inside overlay storage.
+
+When Generate is clicked again while earlier translation work is queued or running, supersession must be solved through the owned Generate/job boundary. Do not add an overlay sidecar, readiness subsystem, or generation lane for PRD 103.
 
 not:
 
@@ -941,6 +992,8 @@ Roma writes it through Tokyo's existing language overlay primitive.
 Publish reads the selected overlay value.
 ```
 
+The edit is temporary. Clickeen does not store override status, review state, or protection metadata for the edited field. If the same field is regenerated, the new AI translation overwrites the manual edit.
+
 No provenance layer, review state, or second translation authority is part of PRD 103.
 
 ### Publish Cutover Gate
@@ -1063,7 +1116,7 @@ Immediate restart order after the deterministic audit:
 ```text
 1. Fix the Tokyo overlay test floor while keeping `content.json` as FAQ translation authority.
 2. Wire Bob's Translations panel to render review rows from the generic content projection.
-3. Prove Roma save follow-up uses the previous saved config, current saved config, changed whole fields, agent result, and Tokyo write.
+3. Name and prove the panel-owned Generate delta authority, then prove changed/missing whole fields, agent result, and Tokyo write.
 4. Upgrade 103V from helper proof to real product-path proof.
 5. Continue with Publish, policy/model routing, San Francisco runtime cleanup, then manual overrides.
 ```
@@ -1187,7 +1240,8 @@ Acceptance:
 - The dropdown lists only translations that have Tokyo overlays, plus the base locale.
 - While translations are incomplete, clicking the dropdown refreshes Tokyo overlay inventory; once all translations are ready, the dropdown does not refresh while the user stays in the panel.
 - The review UI reads stored current language values, not preview-only state.
-- The panel has a `Generate translations` button that asks Roma to run the Instance Translation Agent for the current saved instance and enabled target languages.
+- The panel has the only user-facing `Generate translations` button; Save does not enqueue translation.
+- `Generate translations` asks the product backend to run the Instance Translation Agent for the current saved instance and enabled target languages.
 - `Generate translations` does not send Bob form text or a Bob-computed diff.
 - Helper-only review tests are not enough; the production Translations panel must render the rows.
 
@@ -1289,7 +1343,7 @@ Decided:
 - Bob does not own translation status. Bob compares Roma settings with Tokyo overlays and may show `X of Y translations ready`.
 - Bob's dropdown lists only the base locale plus translations that have Tokyo overlays for enabled target locales.
 - While translations are incomplete, clicking the dropdown refreshes Tokyo overlay inventory. Once complete, Bob does not refresh while the user stays in the panel.
-- `Generate translations` is a manual trigger for the same saved-instance translation agent path, using the current saved instance and current account policy.
+- `Generate translations` is the translation trigger for the saved-instance translation agent path, using the current saved instance, current Tokyo language values, and current account policy.
 - Publish must prove static base and language files without adding a second readiness/status subsystem.
 
 Open:

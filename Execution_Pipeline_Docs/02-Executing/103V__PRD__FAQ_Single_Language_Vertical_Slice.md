@@ -1,6 +1,6 @@
 # PRD 103V - FAQ Single-Language Vertical Slice
 
-Status: Complete / Product vertical proof green
+Status: Reopened / Needs reproof after panel-owned Generate cutover
 Owner: Product + Architecture
 Date: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
@@ -13,6 +13,7 @@ Prove the smallest end-to-end product path before broader execution continues:
 ```text
 edit one FAQ field in Bob
 save
+click Generate in the Translations panel
 translate one target language
 store current language values
 show translated FAQ text in Bob
@@ -20,7 +21,7 @@ show translated FAQ text in Bob
 
 This is the anti-theatre slice. It blocks broad San Francisco cleanup, publish expansion, policy hardening, and override UX until the core product path works.
 
-The verifier is paired with product-path tests for Roma save follow-up, Tokyo overlay write/read, and Bob panel rendering.
+The verifier is paired with product-path tests for panel-owned Generate, Tokyo overlay write/read, and Bob panel rendering.
 
 ## Execution Contract
 
@@ -28,7 +29,7 @@ The verifier is paired with product-path tests for Roma save follow-up, Tokyo ov
 - New systems are not allowed unless they directly remove a blocker in this thin path.
 - End-to-end accuracy is limited to one FAQ instance, one edited text field, one target locale, and one visible translated result in Bob.
 - All systems must say `saved instance`, `changed field`, `Instance Translation Agent`, `current language values`, and `Translations panel`.
-- Blast radius includes Bob edit/save, Roma save trigger, San Francisco translation execution, Tokyo language value write/read, and Bob Translations panel.
+- Blast radius includes Bob edit/save, Translations panel Generate, San Francisco translation execution, Tokyo language value write/read, and Bob Translations panel.
 
 ## Scope
 
@@ -53,6 +54,7 @@ Out of scope:
 
 - User edits one FAQ title, question, or answer in Bob.
 - Save persists the base FAQ.
+- User clicks Generate in the Translations panel.
 - Clickeen detects only the changed field.
 - Instance Translation Agent translates that field for one target locale.
 - `buildCurrentLanguageValues()` writes a complete current language value set for that locale.
@@ -64,7 +66,7 @@ Out of scope:
 ## Verification
 
 - `pnpm verify:prd103-faq-vertical` must cover one changed FAQ answer from authored `content.json`, one Spanish target locale, job-shaped Instance Translation Agent request normalization, complete current language value merge, content-JSON Bob review rendering, preview overlay resolution, and the missing-translation failure fixture.
-- If `pnpm verify:prd103-faq-vertical` stays helper-only, it must be accompanied by product integration tests for Roma save follow-up, Tokyo overlay write/read, and Bob panel rendering.
+- If `pnpm verify:prd103-faq-vertical` stays helper-only, it must be accompanied by product integration tests for panel-owned Generate, Tokyo overlay write/read, and Bob panel rendering.
 - `pnpm --filter @clickeen/tokyo-worker test` is green.
 - `pnpm --filter @clickeen/ck-contracts test` is green.
 - `pnpm --filter @clickeen/ck-contracts typecheck` is green.

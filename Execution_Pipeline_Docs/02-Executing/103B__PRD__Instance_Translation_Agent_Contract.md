@@ -24,7 +24,7 @@ This sub-PRD must not create a new job framework unless the thin FAQ vertical sl
 - New systems are allowed only if they collapse the current endpoint/follow-up/producer split into the product agent boundary.
 - End-to-end accuracy must include saved instance identity, whole changed fields, existing language values, merge, Bob review, and Publish.
 - All systems must say `Instance Translation Agent`, `translate saved instance`, and `current language values`.
-- Blast radius includes Roma save follow-up, San Francisco execution, grants/policy, Tokyo-worker storage, Bob review, publish generation, logs, and tests.
+- Blast radius includes the Translations panel Generate trigger, San Francisco execution, grants/policy, Tokyo-worker storage, Bob review, publish generation, logs, and tests.
 
 ## Request Contract
 

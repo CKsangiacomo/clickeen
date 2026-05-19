@@ -1,6 +1,6 @@
 # PRD 103D - Changed Field Translation
 
-Status: Complete / Roma production follow-up proof green
+Status: Reopened / Panel Generate delta proof in progress
 Owner: Product + Architecture
 Date: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
@@ -8,7 +8,7 @@ Depends on: PRD 103B, PRD 103D.0
 
 ## Purpose
 
-Translate only the FAQ fields the user added or changed after Save, then build complete current language values for each enabled language.
+Translate only the FAQ fields that are missing, new, or changed when the user triggers Generate from the Translations panel, then build complete current language values for each enabled language.
 
 This is not word-level diffing. If a user changes one word in an answer, Clickeen sends the whole answer field to the Instance Translation Agent. If a user changes a question, Clickeen sends the whole question field. If a user changes a title, Clickeen sends the whole title field.
 
@@ -18,7 +18,7 @@ Initial implementation should prove one target locale first through PRD 103V. Mu
 
 - Executable without drift: changed-field translation must use authored FAQ `content.json` and `buildCurrentLanguageValues()`.
 - New systems are allowed only when they replace full-graph retranslating or duplicate merge behavior.
-- End-to-end accuracy must prove Save -> changed fields -> agent -> complete language values -> Bob review.
+- End-to-end accuracy must prove Save base -> Generate -> changed/missing fields -> agent -> complete language values -> Bob review.
 - All systems must say `changed fields`, `deleted fields`, `current language values`, and `locale job`.
 - Blast radius includes save snapshots, field graph extraction, translation queue/job, merge, language storage, Bob states, failure handling, and tests.
 
@@ -37,8 +37,10 @@ No word-level text diffing, sentence patching, token patching, or partial transl
 
 ```text
 Save FAQ
+  -> persist base locale only
+Generate translations
   -> extract current saved field graph from content.json
-  -> compare with previous saved field graph by stable field identity
+  -> compare against the PRD-approved previous/current field authority by stable field identity
   -> identify new/changed/deleted/unchanged fields
   -> run Instance Translation Agent for whole new/changed fields
   -> buildCurrentLanguageValues()
@@ -47,7 +49,7 @@ Save FAQ
 
 ## Current State
 
-The production-shaped Roma save follow-up proof reads the previous saved config, compares it with the current saved config, sends whole changed fields to the Instance Translation Agent, merges returned values, and writes the current language overlay back to Tokyo.
+The production path is being cut over from save follow-up to panel-owned Generate. The changed-field delta authority for existing translated overlays is blocked until named in product terms.
 
 ## Acceptance
 
@@ -66,8 +68,8 @@ The production-shaped Roma save follow-up proof reads the previous saved config,
 
 ## Verification
 
-- Fixtures cover new, changed, deleted, unchanged, reordered, and partial failure.
-- A production save/follow-up test covers one FAQ answer edit from Tokyo previous config through agent result and Tokyo overlay write.
+- Fixtures cover new, changed, missing, deleted, unchanged, reordered, and partial failure.
+- A production Generate test covers one FAQ answer edit through the named delta authority and job enqueue.
 - Usage/audit records show only whole changed/new fields were sent to the model.
 - Failed translation attempts must not write partial overlays; Bob only displays overlays Tokyo returns.
 - TPM signoff: user sees dependable translation after Save.

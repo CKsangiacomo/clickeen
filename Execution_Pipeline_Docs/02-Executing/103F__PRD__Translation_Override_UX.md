@@ -20,6 +20,9 @@ This slice is intentionally small. It does not add provenance, review states, au
 - Tokyo creates the next overlay version and selects it, using the same validation as Translation Agent writes.
 - Publish consumes the selected overlay value through the existing publish path.
 - Translation remains separate and still uses `content.json`-derived saved text graph/current language values.
+- A manual edit is temporary by design: it only overwrites the current overlay values object.
+- The system does not remember that the value was manually edited, does not store override status, and does not run protection checks for that value.
+- If that field is regenerated later, the new AI translation overwrites the manual edit.
 - No review-state status.
 - No base-text hash provenance.
 - No second translation authority.
