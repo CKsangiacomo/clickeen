@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
-  loadTokyoAccountInstanceIndex,
-  loadTokyoWidgetCatalog,
-  type TokyoWidgetCatalogEntry,
+  listAccountInstancesInTokyo,
+  listTokyoWidgetDefinitions,
+  type TokyoWidgetDefinition,
 } from '@roma/lib/account-instance-direct';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
@@ -24,7 +24,7 @@ type WidgetInstance = {
   };
 };
 
-type WidgetCatalogOption = Omit<TokyoWidgetCatalogEntry, 'overlays'> & {
+type WidgetCatalogOption = Pick<TokyoWidgetDefinition, 'widgetType' | 'widgetCode' | 'label' | 'description' | 'category'> & {
   canCreate: boolean;
   disabledReasonKey: string | null;
 };
@@ -41,44 +41,44 @@ export async function GET(request: NextRequest) {
   if (!current.ok) return current.response;
 
   const accountId = current.value.authzPayload.accountPublicId;
-  const widgetIndex = await loadTokyoAccountInstanceIndex({
+  const widgetInstances = await listAccountInstancesInTokyo({
     accountId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });
-  if (widgetIndex.ok === false) {
+  if (widgetInstances.ok === false) {
     return withSession(
       request,
       NextResponse.json(
         {
           error: {
-            kind: routeKind(widgetIndex.status),
-            reasonKey: widgetIndex.error.reasonKey,
-            detail: widgetIndex.error.detail,
+            kind: routeKind(widgetInstances.status),
+            reasonKey: widgetInstances.error.reasonKey,
+            detail: widgetInstances.error.detail,
           },
         },
-        { status: widgetIndex.status },
+        { status: widgetInstances.status },
       ),
       current.value.setCookies,
     );
   }
-  const widgetCatalog = await loadTokyoWidgetCatalog({
+  const widgetDefinitions = await listTokyoWidgetDefinitions({
     accountId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });
-  if (widgetCatalog.ok === false) {
+  if (widgetDefinitions.ok === false) {
     return withSession(
       request,
       NextResponse.json(
         {
           error: {
-            kind: routeKind(widgetCatalog.status),
-            reasonKey: widgetCatalog.error.reasonKey,
-            detail: widgetCatalog.error.detail,
+            kind: routeKind(widgetDefinitions.status),
+            reasonKey: widgetDefinitions.error.reasonKey,
+            detail: widgetDefinitions.error.detail,
           },
         },
-        { status: widgetCatalog.status },
+        { status: widgetDefinitions.status },
       ),
       current.value.setCookies,
     );
@@ -94,8 +94,8 @@ export async function GET(request: NextRequest) {
     typeof widgetsTypesLimitRaw === 'number' && Number.isFinite(widgetsTypesLimitRaw)
       ? Math.max(0, Math.floor(widgetsTypesLimitRaw))
       : null;
-  const usedWidgetTypes = new Set(widgetIndex.value.accountInstances.map((instance) => instance.widgetType));
-  const catalog: WidgetCatalogOption[] = widgetCatalog.value.widgets.map((entry) => {
+  const usedWidgetTypes = new Set(widgetInstances.value.accountInstances.map((instance) => instance.widgetType));
+  const catalog: WidgetCatalogOption[] = widgetDefinitions.value.widgetDefinitions.map((entry) => {
     const existingType = usedWidgetTypes.has(entry.widgetType);
     const withinTypeLimit = widgetTypesLimit == null || existingType || usedWidgetTypes.size < widgetTypesLimit;
     return {
@@ -104,7 +104,6 @@ export async function GET(request: NextRequest) {
       label: entry.label,
       description: entry.description,
       category: entry.category,
-      capabilities: entry.capabilities,
       canCreate: canMutate && withinTypeLimit,
       disabledReasonKey: canMutate
         ? withinTypeLimit
@@ -113,7 +112,7 @@ export async function GET(request: NextRequest) {
         : 'coreui.errors.auth.forbidden',
     };
   });
-  const accountInstances: WidgetInstance[] = widgetIndex.value.accountInstances.map((instance) => ({
+  const accountInstances: WidgetInstance[] = widgetInstances.value.accountInstances.map((instance) => ({
     instanceId: instance.instanceId,
     widgetType: instance.widgetType,
     displayName: instance.displayName,

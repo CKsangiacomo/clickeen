@@ -12,7 +12,6 @@ on:
       - "prague/tsconfig.json"
       - "tokyo/product/widgets/**"
       - "tokyo/prague/pages/**"
-      - "tokyo/prague/l10n/**"
       - "tokyo/prague/assets/**"
       - "scripts/prague-l10n/**"
       - "packages/l10n/locales.json"

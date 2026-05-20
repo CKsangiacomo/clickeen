@@ -44,7 +44,7 @@ Required input set for any widget:
 | Widget visitor problem | widget PRD | Core value proposition |
 | Widget actions (what it actually does) | widget PRD + `tokyo/product/widgets/{widgetType}/` | Prevent fake claims |
 | Supported layouts and visual range | `spec.json`, `widget.css`, pages | Templates/examples accuracy |
-| Localization behavior | `spec.json.overlays.text[]`, Babel/overlay docs | Correct language claims |
+| Localization behavior | `editable-fields.json`, Babel/overlay docs | Correct language claims |
 | Embed/runtime behavior | architecture docs + runtime code | Infra claims |
 | Curated instance references | `tokyo/prague/pages/{widgetType}/*.json` | Visual proof on Prague pages |
 

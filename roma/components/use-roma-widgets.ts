@@ -20,9 +20,6 @@ export type WidgetCatalogOption = {
   label: string;
   description: string;
   category: string;
-  capabilities: {
-    seoGeo: boolean;
-  };
   canCreate: boolean;
   disabledReasonKey: string | null;
 };
@@ -47,9 +44,6 @@ type RawWidgetCatalogOption = {
   label?: string | null;
   description?: string | null;
   category?: string | null;
-  capabilities?: {
-    seoGeo?: boolean | null;
-  } | null;
   canCreate?: boolean | null;
   disabledReasonKey?: string | null;
 };
@@ -111,7 +105,6 @@ export function normalizeWidgetCatalogOption(raw: RawWidgetCatalogOption): Widge
   const label = String(raw.label || '').trim() || widgetType;
   const description = String(raw.description || '').trim();
   const category = String(raw.category || '').trim() || 'Widgets';
-  const capabilities = raw.capabilities && typeof raw.capabilities === 'object' ? raw.capabilities : null;
   const disabledReasonKey = typeof raw.disabledReasonKey === 'string' && raw.disabledReasonKey.trim()
     ? raw.disabledReasonKey.trim()
     : null;
@@ -120,9 +113,6 @@ export function normalizeWidgetCatalogOption(raw: RawWidgetCatalogOption): Widge
     label,
     description,
     category,
-    capabilities: {
-      seoGeo: capabilities?.seoGeo === true,
-    },
     canCreate: raw.canCreate === true,
     disabledReasonKey,
   };

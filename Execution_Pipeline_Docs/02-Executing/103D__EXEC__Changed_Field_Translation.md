@@ -26,7 +26,7 @@ Non-FAQ widgets still use the old full-graph compatibility path until they recei
 
 ## Course Correction
 
-This execution was rebased after PRD 103C.0. The FAQ field graph now comes from authored FAQ `content.json` through the generated widget catalog contract. Roma fails the FAQ locale job if Tokyo does not provide `previousConfig`; it does not fall back to clear-and-full-retranslate.
+This execution was rebased again by 103_01.3a and 103_01.3b. The FAQ field graph now comes from authored FAQ `editable-fields.json` through the widget-definition operation, not a generated widget catalog. Roma fails the FAQ locale job if Tokyo does not provide the previous saved config; it does not fall back to clear-and-full-retranslate.
 
 ## Files Changed
 
@@ -39,13 +39,13 @@ This execution was rebased after PRD 103C.0. The FAQ field graph now comes from 
 - `roma/lib/account-babel-save-followup.ts`
 - `packages/ck-contracts/src/faq-language-values.ts`
 - `packages/ck-contracts/src/faq-language-values.test.ts`
-- `scripts/build-widget-catalog.mjs`
-- `tokyo/product/widgets/manifest.json`
+- historical `scripts/build-widget-catalog.mjs` path, deleted in 103_01.3b
+- historical `tokyo/product/widgets/manifest.json` path, deleted in 103_01.3b
 
 ## Verification
 
-- `pnpm build:widgets`
-- `pnpm build:widgets:check`
+- historical `pnpm build:widgets`
+- current replacement: `pnpm validate:widgets`
 - `pnpm --filter @clickeen/ck-contracts test`
 - `pnpm --filter @clickeen/bob test`
 - `pnpm --filter @clickeen/roma test`

@@ -1,38 +1,24 @@
 # Clickeen Babel Protocol
 
-STATUS: REFERENCE - MUST MATCH PRD 098 IDENTITY + PRD 099 STORAGE
+Status: PRD 103_00 product-operation model. Final PRD 103 resume still requires the manual smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
 
-Babel is Clickeen's locale overlay application. It is not a separate translation schema, a runtime fallback system, or a storage locator layer.
+Babel is Clickeen's translated-locale value protocol for account widgets. It is not a separate translation schema, a runtime fallback system, a selected-pointer system, or a storage locator layer.
 
 ## Product Boundary
 
 Builder edits one account-owned widget instance in the account base locale.
 
-After save, Roma orchestrates locale work from the current saved config. San Francisco receives concrete text primitive values and returns concrete translated text primitive values. Tokyo-worker stores exact overlay objects under the owning account instance and writes public copies only into the instance published projection. Venice serves published projection truth.
+After save, translation generation is explicit work from the Translations panel. Roma calls Tokyo once. Tokyo resolves the current instance content, widget editable-field contract, target locales, existing translated values, and delta. San Francisco receives concrete text primitive values and returns concrete translated text primitive values. Tokyo stores translated locale values and materializes public visitor artifacts when publish runs.
 
 ## Source Of Text Truth
 
-Each widget declares its primitive variable graph once in:
+Each widget declares its editable/translatable field graph once in:
 
 ```txt
-tokyo/product/widgets/{widgetType}/spec.json
+tokyo/product/widgets/{widgetType}/editable-fields.json
 ```
 
-The active contract is:
-
-```json
-{
-  "overlays": {
-    "v": 1,
-    "text": [
-      { "path": "header.title", "label": "Title" },
-      { "path": "sections[].faqs[].question", "label": "Question" }
-    ]
-  }
-}
-```
-
-Repeatable declaration paths are only extraction instructions inside the product boundary. Producer payloads always contain concrete paths:
+Repeatable declaration paths are extraction instructions inside the product boundary. Producer payloads always contain concrete paths:
 
 ```json
 {
@@ -44,25 +30,30 @@ No producer receives wildcard, glob, template, or sidecar paths.
 
 ## Exact Producer Contract
 
-For a given saved config and widget primitive graph:
+For a given saved `instance.content.json` and widget editable-field contract:
 
-1. Roma extracts the required concrete text primitive paths from the saved config and widget primitive graph.
-2. San Francisco receives exactly those paths and their current base values.
-3. San Francisco returns exactly those paths and translated values.
-4. Roma rejects the response if any required path is missing.
-5. Roma rejects the response if any undeclared path is present.
-6. Tokyo-worker validates the same value map at the storage boundary before writing the overlay object.
+1. Tokyo extracts required concrete text primitive paths.
+2. Tokyo decides the delta: missing locale values plus fields marked `changed`.
+3. San Francisco receives exactly those paths and their current base values.
+4. San Francisco returns exactly those paths and translated values.
+5. Tokyo rejects the response if any required path is missing.
+6. Tokyo rejects the response if any undeclared path is present.
 7. The rejection names the concrete offending path.
 
 The system does not normalize, drop, repair, coerce, or infer producer output.
 
-## Overlay Object And Storage
+## Translated Locale Values
 
-The result is stored as a PRD 098 overlay object:
+The product identity is:
+
+```txt
+instanceId + locale
+```
+
+The translated value body is an exact value map:
 
 ```json
 {
-  "v": 1,
   "values": {
     "header.title": "Domande frequenti",
     "sections.0.faqs.0.question": "Che stanze offrite?"
@@ -70,55 +61,43 @@ The result is stored as a PRD 098 overlay object:
 }
 ```
 
-The authoring object lives at:
+The body does not carry product identity, readiness, job state, source version, hash identity, or storage path. Product operations carry identity and state.
 
-```txt
-accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json
-```
-
-Selected overlay pointers live at:
-
-```txt
-accounts/{accountPublicId}/instances/{instanceId}/selected-overlays/{languageCode}/{experiment}/{personalization}.json
-```
-
-Published public copies live at:
-
-```txt
-accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json
-```
-
-The body contains only values. It does not contain locale, account, instance, readiness, job state, base revision, fingerprint, hash identity, or storage path. Identity lives in `overlayId`; ownership and containment live in the account instance path. `widgetCode` is codebook metadata inside `overlayId`, not an R2 path segment for locating storage.
+Tokyo may store the value map in any approved private storage shape. Bob, Roma, San Francisco, and product docs must not use private storage object IDs as locale identity.
 
 ## Runtime Resolution
 
-Babel v1 uses a single overlay at a time:
+Babel v1 uses one translated locale value map at a time:
 
 ```txt
-resolvedConfig = resolveOverlay(baseConfig, overlayValues)
+resolvedState = resolveTranslatedValues(baseState, translatedValues)
 ```
 
-No multi-layer precedence resolver is part of this protocol. A/B, geo, personalization, or stacked overlays require a later PRD.
+No multi-layer precedence resolver is part of this protocol. A/B, geo, personalization, or stacked transformations require a later PRD.
+
+Manual translation edits are temporary overrides of the current translated value map. The system does not store manual status, review status, provenance, or a protected override layer. If a field is regenerated, the regenerated translated value replaces the manual value.
 
 ## Tokyo PBX Rule
 
-Tokyo-worker validates `overlayId`, stores exact overlay objects, reads exact overlay objects, and projects selected/published overlay IDs.
+Tokyo-worker validates, stores, reads, generates, and completes translated locale values through named product operations.
 
 Tokyo-worker must not:
 
-- Orchestrate San Francisco work.
-- Inspect overlay bodies to understand identity.
+- Expose private storage object IDs as locale identity.
+- Orchestrate San Francisco work from Roma-side storage walks.
 - Repair values it produced or accepted.
-- Preserve old l10n path shapes.
-- Preserve old `accounts/{accountPublicId}/widgets/{widgetCode}/...` storage shapes.
+- Preserve old l10n route or path shapes.
+- Preserve old account/widget storage grouping shapes.
 
 ## Deleted Pre-GA Model
 
 The following are not active product truth:
 
 - Widget `localization.json`.
+- `spec.json.overlays.text`.
 - `textPack`.
 - `L10nOp`.
-- Base snapshot/fingerprint identity for account-widget overlays.
-- Readiness/status fields inside overlay bodies.
-- Compatibility readers for old overlay paths.
+- Base snapshot/fingerprint identity for account-widget translations.
+- Readiness/status fields inside translated value bodies.
+- Selected translation pointers.
+- Compatibility readers for old translation paths.

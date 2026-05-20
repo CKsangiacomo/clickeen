@@ -2,6 +2,8 @@
 
 This folder is the primary knowledge base for working in the Clickeen repo (especially for AI coding agents). It is a **living reference**: it must be updated alongside code changes.
 
+PRD 103_00 NOTE: the core docs have been narrowed to the product-operation vocabulary required before PRD 103 resumes. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+
 Docs are not a "single source of truth". When docs and code disagree, debug using runtime code + DB schema + deployed Cloudflare config, then update the docs to match reality.
 
 ---
@@ -26,7 +28,7 @@ documentation/
 │   ├── dieter.md            # Design system
 │   ├── devstudio.md         # Internal toolbench
 │   ├── tokyo.md             # Asset CDN
-│   ├── tokyo-worker.md      # Account storage + asset/published-projection PBX
+│   ├── tokyo-worker.md      # Account storage, assets, instances, translations, public artifacts
 │   ├── sanfrancisco.md      # AI workforce OS
 │   ├── venice.md            # Embed runtime
 │   ├── michael.md           # Database schema
@@ -89,7 +91,7 @@ Use `documentation/` for authoritative behavior; use `Execution_Pipeline_Docs/` 
 This repo is operated by **1 human architect + multiple AI dev teams**. The system is modular and contract-driven so AIs can work in parallel safely.
 
 - **Modular surfaces:** widgets in `tokyo/product/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
-- **Explicit contracts:** `spec.json`, `agent.md`, `*.allowlist.json`, PRDs, and service docs define what is safe to change. If it is not in a contract, assume it is unsafe.
+- **Explicit contracts:** `spec.json`, `editable-fields.json`, `*.allowlist.json`, PRDs, and service docs define what is safe to change. If it is not in a contract, assume it is unsafe.
 - **Automation intent:** local changes are designed to propagate through the local DevStudio operating lane automatically. Cloud-dev propagation is explicit (promote/deploy).
 - **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.
 
@@ -105,7 +107,7 @@ product/
 prague/
 ```
 
-Only `accounts/` is runtime-managed by account/product operations. It stores account-owned instances, uploads, overlays, and published projection material under `accounts/{accountPublicId}/...`.
+Only `accounts/` is runtime-managed by account/product operations. It stores account-owned instance source, uploads, translated locale values, and generated public artifacts under `accounts/{accountPublicId}/...`. Private storage object names must not become product API vocabulary.
 
 The other roots are git-authored deploy artifacts synced to R2:
 

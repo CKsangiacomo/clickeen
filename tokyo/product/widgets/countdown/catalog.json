@@ -3,8 +3,5 @@
   "order": 20,
   "label": "Countdown",
   "description": "Show launch, offer, or event timing in one active widget.",
-  "category": "Conversion",
-  "capabilities": {
-    "seoGeo": true
-  }
+  "category": "Conversion"
 }

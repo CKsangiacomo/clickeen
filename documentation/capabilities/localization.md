@@ -1,17 +1,18 @@
 # Localization Capability
 
-STATUS: REFERENCE - PRD 098 MODEL + PRD 099 PUBLIC STORAGE
+Status: PRD 103_00 product-operation model. Final PRD 103 resume still requires the manual smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
 
-Localization is the first Babel application of the overlay primitive. It translates widget-owned text primitives into locale overlay objects.
+Localization translates account-instance content values into translated locale values. It is not a storage-object protocol, a runtime fallback system, or a second widget source model.
 
 ## Core Principle
 
-- Locale is a runtime parameter for serving.
+- Locale is a runtime parameter for authoring preview and public serving.
 - Locale is not base instance identity.
-- Locale is encoded in `overlayId` because an overlay is a SKU-like value object.
-- The overlay body is only `{ "v": 1, "values": { ... } }`.
+- Product identity for account-widget translation is `instanceId + locale`.
+- Storage object names, overlay IDs, generated filenames, and private R2 keys are not product identity.
+- The translated value body is an exact path/value map.
 
-There is no account-widget `localization.json`, no layer sidecar, no text pack, no base-fingerprint overlay identity, and no compatibility bridge to the old pre-GA l10n model.
+There is no account-widget `localization.json`, layer sidecar, text pack, base-fingerprint identity, selected-locale pointer, or compatibility bridge to old pre-GA l10n storage.
 
 ## Canonical Locale Registry
 
@@ -24,81 +25,71 @@ Use `@clickeen/l10n` only for locale data helpers:
 - `normalizeCanonicalLocalesFile`
 - `resolveLocaleLabel`
 
-`@clickeen/l10n` must not own widget path extraction or overlay identity.
+`@clickeen/l10n` must not own widget path extraction, translation job assembly, or storage identity.
 
 ## Account Locale Policy
 
 Account-mode effective localization is:
 
 ```txt
-entitlements + account active locales + saved widget primitive graph
+entitlements + account active locales + saved instance content
 ```
 
-Entitlement keys:
+Entitlement keys include:
 
 - `l10n.locales.max`
 - `l10n.versions.max`
 
-Account active locales are managed in Roma Settings. Builder edits only one base-locale widget at a time; translation is save-triggered follow-up work after the base config is persisted.
+Account active locales are managed in Roma Settings. Builder edits one active base-locale instance at a time. Translation generation is explicit work from the Translations panel, not a hidden save side effect.
 
-## Widget Text Primitive Source
+## Widget Text Source
 
-Each widget declares translatable text in `spec.json`:
+Each widget declares customer-visible editable/translatable fields in:
 
-```json
-{
-  "overlays": {
-    "v": 1,
-    "text": [
-      { "path": "header.title", "label": "Title" },
-      { "path": "sections[].faqs[].question", "label": "Question" },
-      { "path": "sections[].faqs[].answer", "label": "Answer" }
-    ]
-  }
-}
+```txt
+tokyo/product/widgets/{widgetType}/editable-fields.json
 ```
 
-Collection declarations are never sent to producers. They are expanded against the saved config into concrete paths such as:
+Collection declarations are extraction instructions only. They are expanded against `instance.content.json` into concrete paths such as:
 
 ```txt
 sections.0.faqs.0.question
 sections.0.faqs.0.answer
 ```
 
-## Babel Save Flow
+Producers receive concrete paths and base values. No producer receives wildcard, glob, template, storage path, or sidecar paths.
 
-1. User saves one widget instance in Bob.
-2. Roma saves the base config through the account product boundary.
-3. Roma orchestrates Babel follow-up for account active locales before returning the Save response.
-4. San Francisco receives concrete text primitive paths and base values.
-5. San Francisco returns concrete translated text values.
-6. The receiving boundary rejects missing or extra paths with the path named.
-7. Tokyo-worker stores an exact overlay object under `overlays/{overlayId}.json`.
-8. Published runtime projection points to exact overlay IDs when public serving should expose them.
+## Translation Generate Flow
 
-No step repairs values, drops paths, guesses paths, or scans widget JSON to rediscover meaning.
+1. User saves one widget instance in Bob/Roma.
+2. Tokyo saves approved instance config/content and marks changed content fields for translation pickup.
+3. User opens the Translations panel and clicks Generate translations.
+4. Roma calls one Tokyo product command: generate translations for the account instance.
+5. Tokyo resolves target locales, editable fields, current `instance.content.json`, existing translated values, missing locales, and changed fields.
+6. Tokyo accepts async translation work and queues concrete locale jobs.
+7. San Francisco translates concrete text primitive paths and values.
+8. San Francisco completes the job through Tokyo.
+9. Tokyo validates exact paths and writes translated locale values by locale.
 
-Base save success is independent from language production. If Czech fails and Italian succeeds, Roma returns base save success with per-language follow-up details and Tokyo stores the successful Italian overlay. The failed language has no selected overlay update.
-
-The follow-up result must be visible to Bob in the Save response. It must not be hidden in a post-response callback that can fail after Bob already believes translation work succeeded.
+No step repairs values, drops paths, guesses paths, scans widget software to rediscover meaning, or exposes storage object identity to Bob/Roma.
 
 ## Builder Preview
 
-The Builder Translations panel is read-only inspection of locale overlays.
+The Builder Translations panel is inspection and manual value override for translated locale values.
 
-Roma shows only account setup: base locale, plan translation allowance, and active account translations. Bob's preview dropdown is populated only from complete locale overlay files that Tokyo lists for the saved instance. Account-enabled languages without a complete overlay file are absent from the dropdown.
+Roma shows account setup: base locale, plan translation allowance, target locales, and readiness counts. Bob's preview dropdown is populated from complete translated locales that Tokyo lists for the saved instance. Account-enabled languages without translated values for the current content are absent from the dropdown.
 
-When a locale overlay is selected, Bob preview resolves:
+When a translated locale is selected, Bob preview resolves:
 
 ```txt
-baseConfig + one overlay values object
+base instance state + one translated locale value map
 ```
 
-Partial overlay values are not stored, listed, read, or selectable. Tokyo validates overlay values against the saved instance config plus widget text primitive declaration before accepting them. Stale old values must not be shown as if they are current.
+Manual edits overwrite the current translated value map for that locale. The system does not store override status, review status, provenance, or a protected manual layer. If that field is regenerated, the new AI translation replaces the manual value.
 
 ## Public Static Locale Serving
 
-PRD 100 removes runtime locale composition from public visitor traffic.
+Public serving is generated static artifact delivery. It is not runtime translation composition.
 
 The public serving coordinate is:
 
@@ -112,7 +103,7 @@ The public static route is:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-For a locale build, the translation agent writes overlay objects under the instance. The coding agent consumes `instance.json` plus overlays after save and writes generated locale browser files directly under the same instance folder:
+Publish/materialization consumes approved instance config/content plus translated locale values and writes generated visitor files under the instance folder:
 
 ```txt
 accounts/{accountPublicId}/instances/{instanceId}/
@@ -120,13 +111,14 @@ accounts/{accountPublicId}/instances/{instanceId}/
   {locale}.html
   styles.css
   script.js
+  script.{locale}.js
 ```
 
-If the generated locale file does not exist, that public locale URL returns 404. The serving layer does not compose overlays, inspect account policy, or repair stale language output on visitor requests.
+Generated files are output. Publish status is product state. If the instance is unpublished or a requested generated artifact is missing, the public request returns 404. The serving layer does not compose translations, inspect account policy, or repair stale language output on visitor requests.
 
 ## Prague
 
-Prague website copy is not account-widget authoring truth. PRD 098F decides whether Prague routes through the Venice/account-widget overlay runtime or keeps a separate website-copy pipeline. It must not silently preserve old account-widget l10n concepts.
+Prague website copy is not account-widget authoring truth. Prague page translations are page-owned content beside page JSON. Prague must not preserve or reintroduce account-widget localization storage vocabulary.
 
 ## Deleted Pre-GA Concepts
 
@@ -135,10 +127,11 @@ The following are not part of the active account-widget localization capability:
 - Widget `localization.json`.
 - `textPack`.
 - `L10nOp`.
-- Base snapshots/fingerprints as overlay identity.
-- Overlay status/readiness inside overlay bodies.
+- Base snapshots/fingerprints as translation identity.
+- Overlay status/readiness inside translated value bodies.
 - User-authored translation layers.
 - Locale-suffixed instance IDs.
+- Selected-locale or selected-overlay pointers as product truth.
 - Public serving from old `/l10n/widgets/**` truth as an identity authority.
 - Instance-only public widget routes.
 - Instance-only public render routes.

@@ -14,6 +14,19 @@ Widget-specific enforcement lives in:
 
 Use the limits mapping for paths + metrics; do not duplicate per-tier matrices here.
 
+Entitlements mapping (must match `tokyo/product/widgets/logoshowcase/limits.json`):
+
+```text
+Key                    | Kind  | Path(s)                 | Metric/Mode          | Enforcement        | Notes
+---------------------- | ----- | ----------------------- | -------------------- | ------------------ | -----------------------------
+branding.remove        | flag  | behavior.showBacklink   | boolean (deny false) | load sanitize; ops | Bob gates/rejects editor ops; server save/publish is a named gap
+items.group.small.max  | limit | strips[]                | count                | ops                | strip count limit group
+items.group.medium.max | limit | strips[].logos[]        | count                | ops                | per-strip logo count limit group
+items.group.large.max  | limit | strips[].logos[]        | count-total          | ops                | total logo count limit group
+```
+
+Current implementation note: `limits.json` maps Logo Showcase state paths to real `ck-policy` keys. Bob enforces the mapping during editor operations today. Server save/publish enforcement is a named `ck-policy` gap and must not be implied until implemented.
+
 ### Non-negotiable widget implementation patterns (LogoShowcase-specific; do not copy another widget)
 These are required patterns to keep editor UX deterministic and prevent dead controls:
 - **Runtime skeleton**:
@@ -42,10 +55,9 @@ The widget must be implemented as the standard Tokyo package (core runtime + con
 - `tokyo/product/widgets/logoshowcase/widget.html`
 - `tokyo/product/widgets/logoshowcase/widget.css`
 - `tokyo/product/widgets/logoshowcase/widget.client.js`
-- `tokyo/product/widgets/logoshowcase/agent.md`
 - `tokyo/product/widgets/logoshowcase/limits.json`
 
-Overlay-editable text primitives are declared only in `tokyo/product/widgets/logoshowcase/spec.json.overlays.text[]`.
+Editable/translatable text primitives are declared in `tokyo/product/widgets/logoshowcase/editable-fields.json`.
 
 ### Non-negotiable platform constraints
 - **No fallbacks**: `widget.client.js` must not merge defaults. Missing required state must throw a clear error.

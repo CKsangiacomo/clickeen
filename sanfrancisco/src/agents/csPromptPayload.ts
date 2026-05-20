@@ -25,7 +25,7 @@ type CsPromptInput = {
 const MAX_PROMPT_CHARS = 7_200;
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 const WIDGET_PACKAGE_FILE_NAMES = [
-  "content.json",
+  "editable-fields.json",
   "spec.json",
   "widget.html",
   "widget.css",
@@ -161,7 +161,7 @@ function parseJsonSource(source: string): unknown {
   }
 }
 
-function summarizeContentJson(source: string): string {
+function summarizeEditableFieldsJson(source: string): string {
   const parsed = parseJsonSource(source);
   if (!isRecord(parsed)) return compactSource(source, 520);
   const fields = Array.isArray(parsed.fields) ? parsed.fields : [];
@@ -227,8 +227,8 @@ function buildWidgetPackageRows(widgetPackage: WidgetPackageContext): string[] {
   for (const fileName of WIDGET_PACKAGE_FILE_NAMES) {
     const source = resolvePackageFileSource(files[fileName]);
     if (!source.trim()) continue;
-    if (fileName === "content.json") {
-      rows.push(`- content.json: ${summarizeContentJson(source)}`);
+    if (fileName === "editable-fields.json") {
+      rows.push(`- editable-fields.json: ${summarizeEditableFieldsJson(source)}`);
       continue;
     }
     if (fileName === "spec.json") {

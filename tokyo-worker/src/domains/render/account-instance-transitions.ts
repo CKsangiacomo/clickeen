@@ -4,12 +4,16 @@ import {
   resolveWidgetDefaults,
 } from '../widget-catalog';
 import {
+  materializeInstancePublicArtifacts,
+  publicArtifactLocaleHtmlFile,
+  publicArtifactLocaleScriptFile,
+} from './public-artifacts';
+import {
   readInstanceServeState,
   readSavedRenderConfig,
   writeInstanceServeState,
   writeSavedRenderConfig,
 } from './saved-config';
-import { accountInstanceRoot } from './keys';
 import type { InstanceServeState, SavedRenderPointer } from './types';
 import { normalizeStorageId } from './utils';
 
@@ -67,45 +71,28 @@ function transitionFailureFromSavedRead(result: { kind: 'NOT_FOUND' | 'VALIDATIO
   });
 }
 
-function accountInstancePublicEntryKey(accountId: string, instanceId: string): string {
-  return `${accountInstanceRoot(accountId, '', instanceId)}/index.html`;
-}
-
-function accountInstanceUnpublishedEntryKey(accountId: string, instanceId: string): string {
-  return `${accountInstancePublicEntryKey(accountId, instanceId)}.off`;
-}
-
-async function renameR2Object(args: {
-  env: Env;
-  fromKey: string;
-  toKey: string;
-}): Promise<boolean> {
-  const source = await args.env.TOKYO_R2.get(args.fromKey);
-  if (!source) return false;
-  await args.env.TOKYO_R2.put(args.toKey, source.body, {
-    httpMetadata: source.httpMetadata ?? undefined,
-    customMetadata: source.customMetadata ?? undefined,
-  });
-  await args.env.TOKYO_R2.delete(args.fromKey);
-  return true;
-}
-
 async function purgeClkLiveEntryCache(args: {
   env: Env;
   accountId: string;
   instanceId: string;
+  locales?: string[];
 }): Promise<void> {
   const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
   const token = String(args.env.CLOUDFLARE_API_TOKEN || '').trim();
   if (!zoneId || !token) return;
   const base = `https://clk.live/${args.accountId}/${args.instanceId}`;
+  const files = new Set([base, `${base}/`, `${base}/index.html`, `${base}/styles.css`, `${base}/script.js`]);
+  for (const locale of args.locales ?? []) {
+    files.add(`${base}/${publicArtifactLocaleHtmlFile(locale)}`);
+    files.add(`${base}/${publicArtifactLocaleScriptFile(locale)}`);
+  }
   await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${token}`,
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ files: [base, `${base}/`, `${base}/index.html`] }),
+    body: JSON.stringify({ files: [...files] }),
   }).catch(() => undefined);
 }
 
@@ -275,50 +262,26 @@ export async function publishAccountInstanceTransition(args: {
   instanceId: string;
 }): Promise<{ instanceId: string; status: 'published'; changed: boolean }> {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
-  const existing = await readSavedRenderConfig({ env: args.env, accountId, instanceId });
-  if (!existing.ok) transitionFailureFromSavedRead(existing);
-
-  const entryKey = accountInstancePublicEntryKey(accountId, instanceId);
-  const unpublishedEntryKey = accountInstanceUnpublishedEntryKey(accountId, instanceId);
-  let changed = false;
-  if (!(await args.env.TOKYO_R2.get(entryKey))) {
-    const restored = await renameR2Object({
-      env: args.env,
-      fromKey: unpublishedEntryKey,
-      toKey: entryKey,
+  const materialized = await materializeInstancePublicArtifacts({ env: args.env, accountId, instanceId });
+  if (!materialized.ok) {
+    throw new AccountInstanceTransitionError({
+      status: 409,
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.errors.instance.embedNotReady',
+      detail: materialized.detail,
     });
-    if (!restored) {
-      throw new AccountInstanceTransitionError({
-        status: 409,
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.embedNotReady',
-        detail: 'index.html is missing; generated embed files are not ready to publish',
-      });
-    }
-    changed = true;
   }
 
   const liveStatus = await readInstanceServeState({ env: args.env, accountId, instanceId });
-  if (liveStatus === 'published' && !changed) {
-    await writeInstanceServeState({
-      env: args.env,
-      accountId,
-      instanceId,
-      widgetType: existing.value.pointer.widgetType,
-      status: 'published',
-    });
-    return { instanceId, status: 'published', changed: false };
-  }
-
   await writeInstanceServeState({
     env: args.env,
     accountId,
     instanceId,
-    widgetType: existing.value.pointer.widgetType,
+    widgetType: materialized.widgetType,
     status: 'published',
   });
-  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
-  return { instanceId, status: 'published', changed: true };
+  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId, locales: materialized.locales });
+  return { instanceId, status: 'published', changed: liveStatus !== 'published' || materialized.publicFiles.length > 0 };
 }
 
 export async function unpublishAccountInstanceTransition(args: {
@@ -329,15 +292,8 @@ export async function unpublishAccountInstanceTransition(args: {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
   const existing = await readSavedRenderConfig({ env: args.env, accountId, instanceId });
   if (!existing.ok) transitionFailureFromSavedRead(existing);
-  const entryKey = accountInstancePublicEntryKey(accountId, instanceId);
-  const unpublishedEntryKey = accountInstanceUnpublishedEntryKey(accountId, instanceId);
-  const renamed = await renameR2Object({
-    env: args.env,
-    fromKey: entryKey,
-    toKey: unpublishedEntryKey,
-  });
   const liveStatus = await readInstanceServeState({ env: args.env, accountId, instanceId });
-  if (liveStatus === 'unpublished' && !renamed) {
+  if (liveStatus === 'unpublished') {
     return { instanceId, status: 'unpublished', changed: false };
   }
   await writeInstanceServeState({
@@ -348,5 +304,5 @@ export async function unpublishAccountInstanceTransition(args: {
     status: 'unpublished',
   });
   await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
-  return { instanceId, status: 'unpublished', changed: renamed || liveStatus !== 'unpublished' };
+  return { instanceId, status: 'unpublished', changed: true };
 }

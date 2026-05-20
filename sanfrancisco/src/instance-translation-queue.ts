@@ -4,7 +4,6 @@ import {
   type InstanceTranslationJob,
 } from '@clickeen/ck-contracts/instance-translation-jobs';
 import {
-  buildCurrentLanguageValues,
   type FaqSavedTextField,
 } from '@clickeen/ck-contracts/faq-language-values';
 import { validateOverlayValuesForProducerItems } from '@clickeen/ck-contracts/overlay-primitives';
@@ -12,7 +11,7 @@ import { HttpError } from './http';
 import {
   produceCurrentLanguageValues,
 } from './l10n-account-routes';
-import { writeInstanceLanguageOverlayToTokyo } from './tokyo-translation-client';
+import { completeLocaleTranslationInTokyo } from './tokyo-translation-client';
 import type { AIGrant, Env, Usage } from './types';
 
 type QueueMessage = Message<unknown>;
@@ -46,10 +45,29 @@ function buildGrant(job: InstanceTranslationJob): AIGrant {
   };
 }
 
-function overlayValuesFromMerged(merged: Extract<ReturnType<typeof buildCurrentLanguageValues>, { ok: true }>): Record<string, string> {
-  return Object.fromEntries(
-    merged.values.map((value) => [value.identity.path, value.value]),
-  );
+function mergeProducedValues(job: InstanceTranslationJob, producedValues: Record<string, string>): Record<string, string> {
+  const changedPaths = new Set(job.changedFields.map((field) => field.identity.path));
+  const previousValues = new Map(job.previousLanguageValues.map((value) => [value.identity.path, value.value]));
+  const values: Record<string, string> = {};
+  for (const field of job.currentSavedTextGraph) {
+    if (changedPaths.has(field.identity.path)) {
+      const translated = producedValues[field.identity.path];
+      if (typeof translated !== 'string') {
+        throw new HttpError(502, {
+          code: 'PROVIDER_ERROR',
+          provider: 'sanfrancisco',
+          message: `Instance Translation Agent did not return path: ${field.identity.path}`,
+        });
+      }
+      values[field.identity.path] = translated;
+      continue;
+    }
+    const previous = previousValues.get(field.identity.path);
+    if (typeof previous === 'string') {
+      values[field.identity.path] = previous;
+    }
+  }
+  return values;
 }
 
 function usageForFailure(job: InstanceTranslationJob, startedAtMs: number): Usage {
@@ -82,37 +100,28 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
       : { v: 1 as const, values: {} };
 
   const changedByPath = new Map(job.changedFields.map((field) => [field.identity.path, field]));
-  const merged = buildCurrentLanguageValues({
-    previousSavedTextGraph: job.previousSavedTextGraph,
-    currentSavedTextGraph: job.currentSavedTextGraph,
-    previousLanguageValues: job.previousLanguageValues,
-    translatedValues: Object.entries(produced.values).map(([path, value]) => {
-      const field = changedByPath.get(path);
-      if (!field) {
-        throw new HttpError(502, {
-          code: 'PROVIDER_ERROR',
-          provider: 'sanfrancisco',
-          message: `Instance Translation Agent returned unknown path: ${path}`,
-        });
-      }
-      return {
-        identity: field.identity,
-        value,
-      };
-    }),
-    locale: job.targetLocale,
-    updatedAt: new Date().toISOString(),
-    jobId: job.jobId,
-  });
-  if (!merged.ok) {
+  for (const path of Object.keys(produced.values)) {
+    if (!changedByPath.has(path)) {
+      throw new HttpError(502, {
+        code: 'PROVIDER_ERROR',
+        provider: 'sanfrancisco',
+        message: `Instance Translation Agent returned unknown path: ${path}`,
+      });
+    }
+  }
+  const changedValidation = validateOverlayValuesForProducerItems(
+    job.changedFields.map(fieldToTranslationItem),
+    produced.values,
+  );
+  if (!changedValidation.ok) {
     throw new HttpError(502, {
       code: 'PROVIDER_ERROR',
       provider: 'sanfrancisco',
-      message: `current language merge failed: ${merged.reason}:${merged.fieldKey}`,
+      message: `changed translation values ${changedValidation.reason}: ${changedValidation.path}`,
     });
   }
 
-  const values = overlayValuesFromMerged(merged);
+  const values = mergeProducedValues(job, produced.values);
   const validation = validateOverlayValuesForProducerItems(
     job.currentSavedTextGraph.map(fieldToTranslationItem),
     values,
@@ -121,16 +130,16 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
     throw new HttpError(502, {
       code: 'PROVIDER_ERROR',
       provider: 'sanfrancisco',
-      message: `merged overlay values ${validation.reason}: ${validation.path}`,
+      message: `merged translation values ${validation.reason}: ${validation.path}`,
     });
   }
 
-  const stored = await writeInstanceLanguageOverlayToTokyo({
+  const completion = await completeLocaleTranslationInTokyo({
     env,
     accountPublicId: job.accountPublicId,
     instanceId: job.instanceId,
-    widgetType: job.widgetType,
     targetLocale: job.targetLocale,
+    job,
     values,
     requestId: job.requestId,
   });
@@ -158,9 +167,10 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
       },
       result: {
         operation: 'translate_saved_instance',
-        outcome: 'overlay_written',
+        outcome: completion.applied ? 'locale_translation_completed' : 'stale_completion_ignored',
         targetLocale: job.targetLocale,
-        overlayId: stored.overlayId,
+        ...(completion.reasonKey ? { reasonKey: completion.reasonKey } : {}),
+        ...(completion.detail ? { detail: completion.detail } : {}),
       },
       usage: produced.usage ?? usageForFailure(job, startedAtMs),
     });

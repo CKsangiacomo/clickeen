@@ -14,7 +14,7 @@ Renders a configurable countdown / personal countdown / number counter with opti
 ## Entitlements + limits (v1)
 
 - Tier values live in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
-- Widget enforcement lives in `tokyo/product/widgets/countdown/limits.json`.
+- Widget policy-key mapping lives in `tokyo/product/widgets/countdown/limits.json`.
 - The PRD lists entitlement keys and how they map to state paths; do not repeat per-tier matrices here.
 
 ### Limits mapping (initial)
@@ -37,9 +37,8 @@ Widget definition (the software): `tokyo/product/widgets/countdown/`
 - `widget.html` — semantic scaffold + stable `data-role` hooks
 - `widget.css` — scoped styles (Dieter tokens)
 - `widget.client.js` — deterministic `applyState(state)`
-- `agent.md` — AI editing contract (editable paths + enums + array semantics)
-- `limits.json` — entitlement limits/flags (server-side validation)
-- `spec.json.overlays.text[]` — Babel text primitive graph
+- `limits.json` — widget path/op mapping to `ck-policy` entitlement keys
+- `editable-fields.json` — editable/translatable text field contract
 
 ## 2) Types available (core framework)
 In Clickeen terms, **Type = miniwidget**.
@@ -64,7 +63,7 @@ Top-level groups:
 - `typography.*` — roles (explicitly declared shared typography panel)
 - `stage.*`, `pod.*` — Stage/Pod v2 (desktop+mobile padding objects)
 
-Babel text primitives live in `spec.json.overlays.text[]`. Countdown is WIP but still declares the PRD 098 contract for every customer-visible text path:
+Editable/translatable text primitives live in `tokyo/product/widgets/countdown/editable-fields.json`.
 
 - `header.title`
 - `header.subtitleHtml`
@@ -186,7 +185,7 @@ Defaults must include:
 - Unit controls: Show/hide individual units (days/hours/minutes/seconds); format: separated boxes or inline.
 - Separators: Customizable (colon, slash, etc.).
 - Limits: Include `copilot.turns.monthly.max` if AI interactions are added.
-- Babel/locales: default strings above are declared through `spec.json.overlays.text[]`; producer payloads use concrete paths only.
+- Babel/locales: default strings above are declared through `editable-fields.json`; producer payloads use concrete paths only.
 
 ## Links
 - `documentation/architecture/CONTEXT.md`

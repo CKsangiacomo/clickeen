@@ -5,6 +5,8 @@ Owner: Product + Engineering
 Date: 2026-05-16
 Parent: `100__PRD__Static_Public_Embed_Delivery.md`
 
+PRD 103_00 NOTE: this PRD is narrowed to public artifact generation internals. Its `instance.json`, overlay file, generation lane, generated file inventory, and exact filename assumptions must not govern authoring source, translated-locale product operations, publish readiness, or PRD 103 runtime contracts until the pre-103 gate resolves them.
+
 ## Purpose
 
 Build the file-writing slice of the PRD 100 embed agent.

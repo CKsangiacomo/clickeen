@@ -10,7 +10,6 @@
  *   - GET /fonts/**       → static files from tokyo/product/fonts/**
  *   - GET /themes/**      → static files from tokyo/product/themes/**
  *   - GET /widgets/**     → static files from tokyo/product/widgets/**
- *   - GET /prague/l10n/** → static files from tokyo/prague/l10n/**
  *   - GET /prague/assets/** → static files from tokyo/prague/assets/**
  *   - GET /assets/account/** → proxy to tokyo-worker canonical account assets
  *
@@ -282,7 +281,6 @@ function resolveStaticRoot(prefix, relativePathPosix) {
     }
     return { root: path.join(productDir, 'widgets'), relativePathPosix };
   }
-  if (prefix === '/prague/l10n/') return { root: path.join(pragueDir, 'l10n'), relativePathPosix };
   if (prefix === '/prague/assets/') return { root: path.join(pragueDir, 'assets'), relativePathPosix };
   return { root: baseDir, relativePathPosix };
 }
@@ -301,17 +299,10 @@ function serveStatic(req, res, prefix) {
   const cacheControlFor = () => {
     // Cache policy:
     // - i18n bundles are content-hashed; cache aggressively (manifest is the short-TTL indirection layer).
-    // - l10n overlays are content-addressed; cache aggressively (index.json is short-TTL).
     // - Dieter/widget assets are edited frequently in dev; allow caching but require revalidation to avoid staleness.
     if (prefix === '/i18n/') {
       if (relativePathPosix.endsWith('/manifest.json')) {
         return 'public, max-age=60, must-revalidate';
-      }
-      return 'public, max-age=31536000, immutable';
-    }
-    if (prefix === '/prague/l10n/') {
-      if (relativePathPosix.endsWith('/index.json')) {
-        return 'public, max-age=300, stale-while-revalidate=600';
       }
       return 'public, max-age=31536000, immutable';
     }
@@ -467,7 +458,6 @@ const server = http.createServer((req, res) => {
     serveStatic(req, res, '/dieter/') ||
     serveStatic(req, res, '/i18n/') ||
     serveStatic(req, res, '/fonts/') ||
-    serveStatic(req, res, '/prague/l10n/') ||
     serveStatic(req, res, '/prague/assets/') ||
     serveStatic(req, res, '/themes/') ||
     serveStatic(req, res, '/widgets/')

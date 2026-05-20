@@ -101,7 +101,7 @@ Spread across `roma/lib/account-assets-gateway.ts`, multiple Tokyo-worker domain
 - `loadTokyoAccountInstanceDocument`
 - `loadTokyoAccountInstanceServeStates`
 - `loadTokyoAccountInstanceIndex`
-- `loadTokyoWidgetCatalog`
+- historical `loadTokyoWidgetCatalog`, now `listTokyoWidgetDefinitions`
 - `loadSavedInstanceFromTokyo` (private)
 
 Every one of them follows the identical pattern: build args → call `fetchTokyoJson({ path, method, body, fallbackReasonKey, fallbackDetail })` → normalize payload via a hand-written `normalize*` function → return `{ ok: true, value }` or a `RouteFailure`.

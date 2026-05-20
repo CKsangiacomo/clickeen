@@ -7,7 +7,7 @@ import { UpsellPopup } from './UpsellPopup';
 import { Workspace } from './Workspace';
 import { WidgetSessionProvider } from '../lib/session/useWidgetSession';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
-import { useLocaleOverlayPreviewState } from './useLocaleOverlayPreviewState';
+import { useTranslationPreviewState } from './useTranslationPreviewState';
 import { listPreviewableLocales } from '../lib/translations-preview';
 
 const TRANSLATION_SAVE_POLL_MS = 3_000;
@@ -34,7 +34,7 @@ function BuilderShell() {
   const baseLocale = chrome.meta?.baseLocale ?? '';
   const translationSetup = chrome.meta?.translationSetup ?? null;
   const [previewMode, setPreviewMode] = useState<'editing' | 'translations'>('editing');
-  const [overlayPreviewLocale, setOverlayPreviewLocale] = useState('');
+  const [translationPreviewLocale, setTranslationPreviewLocale] = useState('');
   const [translationsRefreshVersion, setTranslationsRefreshVersion] = useState(0);
   const [translationPollingUntil, setTranslationPollingUntil] = useState<number | null>(null);
   const previousSavingRef = useRef(false);
@@ -45,21 +45,21 @@ function BuilderShell() {
       previewMode === 'translations',
   );
   const {
-    inventory: localeOverlayInventory,
-    valuesByLocale: localeOverlayValuesByLocale,
-    loading: localeOverlayLoading,
-    error: localeOverlayError,
-  } = useLocaleOverlayPreviewState({
+    inventory: translatedLocales,
+    valuesByLocale: translationValuesByLocale,
+    loading: translationsLoading,
+    error: translationsError,
+  } = useTranslationPreviewState({
     instanceId,
     baseLocale,
     enabled: translationsEnabled,
-    selectedLocale: overlayPreviewLocale,
+    selectedLocale: translationPreviewLocale,
     refreshVersion: translationsRefreshVersion,
   });
 
   useEffect(() => {
     setPreviewMode('editing');
-    setOverlayPreviewLocale('');
+    setTranslationPreviewLocale('');
     setTranslationsRefreshVersion(0);
     setTranslationPollingUntil(null);
     previousSavingRef.current = false;
@@ -75,7 +75,7 @@ function BuilderShell() {
       setTranslationPollingUntil(Date.now() + TRANSLATION_SAVE_MAX_POLL_MS);
     }
   }, [previewMode, session.error?.source, session.isSaving, translationSetup?.activeLocales?.length]);
-  const requestLocaleOverlayRefresh = () => {
+  const requestTranslationsRefresh = () => {
     setTranslationsRefreshVersion((prev) => prev + 1);
   };
 
@@ -83,8 +83,8 @@ function BuilderShell() {
     return new Set((translationSetup?.activeLocales ?? []).filter((locale) => locale !== baseLocale));
   }, [baseLocale, translationSetup]);
   const readyTranslationCount = useMemo(() => {
-    return (localeOverlayInventory?.overlays ?? []).filter((entry) => expectedTranslationLocales.has(entry.locale)).length;
-  }, [expectedTranslationLocales, localeOverlayInventory]);
+    return (translatedLocales?.translations ?? []).filter((entry) => expectedTranslationLocales.has(entry.locale)).length;
+  }, [expectedTranslationLocales, translatedLocales]);
   const allTranslationsReady =
     expectedTranslationLocales.size > 0 && readyTranslationCount === expectedTranslationLocales.size;
 
@@ -101,16 +101,16 @@ function BuilderShell() {
   }, [allTranslationsReady, translationPollingUntil, translationsRefreshVersion]);
 
   const previewableTranslationLocales = useMemo(() => {
-    return listPreviewableLocales(localeOverlayInventory).filter(
+    return listPreviewableLocales(translatedLocales).filter(
       (locale) => locale === baseLocale || expectedTranslationLocales.has(locale),
     );
-  }, [baseLocale, expectedTranslationLocales, localeOverlayInventory]);
+  }, [baseLocale, expectedTranslationLocales, translatedLocales]);
 
   useEffect(() => {
-    if (!overlayPreviewLocale) return;
-    if (previewableTranslationLocales.includes(overlayPreviewLocale)) return;
-    setOverlayPreviewLocale('');
-  }, [overlayPreviewLocale, previewableTranslationLocales]);
+    if (!translationPreviewLocale) return;
+    if (previewableTranslationLocales.includes(translationPreviewLocale)) return;
+    setTranslationPreviewLocale('');
+  }, [translationPreviewLocale, previewableTranslationLocales]);
 
   return (
     <>
@@ -119,23 +119,23 @@ function BuilderShell() {
 
         <div className="builder-app__content">
           <ToolDrawer
-            overlayPreviewLocale={overlayPreviewLocale}
-            onOverlayPreviewLocaleChange={setOverlayPreviewLocale}
-            onRequestLocaleOverlayRefresh={requestLocaleOverlayRefresh}
+            translationPreviewLocale={translationPreviewLocale}
+            onTranslationPreviewLocaleChange={setTranslationPreviewLocale}
+            onRequestTranslationsRefresh={requestTranslationsRefresh}
             onPreviewModeChange={setPreviewMode}
             translationSetup={translationSetup}
-            localeOverlayInventory={localeOverlayInventory}
-            localeOverlayValuesByLocale={localeOverlayValuesByLocale}
-            localeOverlayLoading={localeOverlayLoading}
-            localeOverlayError={localeOverlayError}
+            translatedLocales={translatedLocales}
+            translationValuesByLocale={translationValuesByLocale}
+            translationsLoading={translationsLoading}
+            translationsError={translationsError}
           />
           <Workspace
             baseLocale={baseLocale}
             previewMode={previewMode}
-            overlayPreviewLocale={overlayPreviewLocale}
-            onOverlayPreviewLocaleChange={setOverlayPreviewLocale}
+            translationPreviewLocale={translationPreviewLocale}
+            onTranslationPreviewLocaleChange={setTranslationPreviewLocale}
             previewablePreviewLocales={previewableTranslationLocales}
-            overlayValuesByLanguage={localeOverlayValuesByLocale}
+            translationValuesByLanguage={translationValuesByLocale}
           />
         </div>
       </div>

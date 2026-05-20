@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  loadTokyoAccountInstanceDocument,
-  saveAccountInstanceDirect,
+  renameAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../../../_lib/current-account-route';
@@ -58,50 +57,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const currentInstance = await loadTokyoAccountInstanceDocument({
+  const result = await renameAccountInstanceInTokyo({
     accountId,
     instanceId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!currentInstance.ok) {
-    const status =
-      currentInstance.status === 401
-        ? 401
-        : currentInstance.status === 403
-          ? 403
-          : currentInstance.status === 404
-            ? 404
-            : currentInstance.status === 422
-              ? 422
-              : 502;
-    const kind =
-      status === 401
-        ? 'AUTH'
-        : status === 403
-          ? 'DENY'
-          : status === 404
-            ? 'NOT_FOUND'
-            : status === 422
-              ? 'VALIDATION'
-              : 'UPSTREAM_UNAVAILABLE';
-    return withSession(
-      request,
-      NextResponse.json(
-        { error: { kind, reasonKey: currentInstance.error.reasonKey, detail: currentInstance.error.detail } },
-        { status },
-      ),
-      current.value.setCookies,
-    );
-  }
-
-  const result = await saveAccountInstanceDirect({
-    accountId,
-    instanceId,
-    widgetType: currentInstance.value.row.widgetType,
-    config: currentInstance.value.config,
     displayName,
-    meta: currentInstance.value.row.meta ?? null,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

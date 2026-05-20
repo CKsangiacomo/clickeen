@@ -86,7 +86,7 @@ export async function authorizeRomaAccountScopedRequest(args: {
   return null;
 }
 
-export async function authorizeSavedRenderControlRequest(args: {
+export async function authorizeAccountInstanceControlRequest(args: {
   req: Request;
   env: Env;
   accountId: string;

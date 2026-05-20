@@ -14,32 +14,6 @@ export type PublishedOverlayProjection = {
   languages: Record<string, string>;
 };
 
-export type InstanceGenerationStatus =
-  | 'not_generated'
-  | 'queued'
-  | 'building'
-  | 'ready'
-  | 'stale'
-  | 'failed'
-  | 'unavailable';
-
-export type InstanceGenerationLane = {
-  status: InstanceGenerationStatus;
-  sourceVersion: number;
-  requestedAt?: string;
-  updatedAt: string;
-  error?: string;
-  files?: string[];
-  startedAt?: string;
-  finishedAt?: string;
-  blockingReason?: string;
-};
-
-export type InstanceGenerationState = {
-  translations: InstanceGenerationLane;
-  embed: InstanceGenerationLane;
-};
-
 export type AccountInstanceDocument = {
   v: 1;
   id: string;
@@ -58,10 +32,49 @@ export type AccountInstanceDocument = {
     locales: string[];
     clientSide: 'static' | 'minimal-js' | 'interactive';
   };
-  sourceVersion: number;
-  generation: InstanceGenerationState;
   publishStatus: InstanceServeState;
   createdAt: string;
+  updatedAt: string;
+};
+
+export type AccountInstanceConfigDocument = {
+  id: string;
+  accountId: string;
+  accountPublicId: string;
+  widgetCode: string;
+  widgetType: string;
+  displayName: string | null;
+  meta?: Record<string, unknown> | null;
+  config: Record<string, unknown>;
+  baseLocale: string;
+  targetLocales: string[];
+  embedBuildShape: AccountInstanceDocument['embedBuildShape'];
+  publishStatus: InstanceServeState;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AccountInstanceSummary = {
+  accountId: string;
+  instanceId: string;
+  widgetCode: string;
+  widgetType: string;
+  displayName: string;
+  publishStatus: InstanceServeState;
+  updatedAt: string;
+};
+
+export type AccountInstanceContentFieldStatus = 'ok' | 'changed';
+
+export type AccountInstanceContentDocument = {
+  id: string;
+  accountId: string;
+  widgetType: string;
+  fields: Record<string, {
+    value: string;
+    status: AccountInstanceContentFieldStatus;
+    localeStatus?: Record<string, AccountInstanceContentFieldStatus>;
+  }>;
   updatedAt: string;
 };
 
@@ -73,8 +86,6 @@ export type SavedRenderPointer = {
   widgetType: string;
   displayName: string | null;
   meta?: Record<string, unknown> | null;
-  sourceVersion: number;
-  generation: InstanceGenerationState;
   publishStatus: InstanceServeState;
   updatedAt: string;
 };
@@ -125,12 +136,3 @@ export type SelectedOverlayPointerDocument = {
   v: 1;
   overlayId: string;
 };
-
-export type DeleteInstanceMirrorJob = {
-  v: 1;
-  kind: 'delete-instance-mirror';
-  instanceId: string;
-  accountId: string;
-};
-
-export type TokyoMirrorQueueJob = DeleteInstanceMirrorJob;

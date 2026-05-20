@@ -1,5 +1,6 @@
 import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { guessContentTypeFromExt } from '../asset-utils';
+import { readInstanceServeState } from '../domains/render';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
 
 const GENERATED_FILE_ALLOWLIST: ReadonlyArray<RegExp> = [
@@ -7,6 +8,7 @@ const GENERATED_FILE_ALLOWLIST: ReadonlyArray<RegExp> = [
   /^[a-z0-9][a-z0-9-]{0,19}\.html$/,
   /^styles\.css$/,
   /^script\.js$/,
+  /^script\.[a-z0-9][a-z0-9-]{0,19}\.js$/,
   /^styles\.v[1-9][0-9]*\.css$/,
   /^script\.v[1-9][0-9]*(?:\.[a-z0-9][a-z0-9-]{0,19})?\.js$/,
 ];
@@ -86,13 +88,12 @@ export async function tryHandleClkLiveStaticRoutes(
   if (!parsed) return null;
   if (req.method !== 'GET' && req.method !== 'HEAD') return respondMethodNotAllowed(respond);
 
-  const indexKey = instanceObjectKey(parsed.accountId, parsed.instanceId, 'index.html');
-  const index = await env.TOKYO_R2.get(indexKey);
-  if (!index) return respond(notFound());
-
-  if (parsed.file === 'index.html') {
-    return respond(responseForObject(indexKey, parsed.file, index, req.method === 'HEAD'));
-  }
+  const publishStatus = await readInstanceServeState({
+    env,
+    accountId: parsed.accountId,
+    instanceId: parsed.instanceId,
+  });
+  if (publishStatus !== 'published') return respond(notFound());
 
   const key = instanceObjectKey(parsed.accountId, parsed.instanceId, parsed.file);
   const obj = await env.TOKYO_R2.get(key);

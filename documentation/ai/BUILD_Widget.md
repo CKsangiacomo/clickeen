@@ -29,7 +29,6 @@ Only read these:
 - `tokyo/product/widgets/{widgetType}/widget.html`
 - `tokyo/product/widgets/{widgetType}/widget.css`
 - `tokyo/product/widgets/{widgetType}/widget.client.js`
-- `tokyo/product/widgets/{widgetType}/agent.md`
 - `tokyo/product/widgets/shared/stagePod.js`
 - `tokyo/product/widgets/shared/typography.js`
 - `tokyo/product/widgets/shared/branding.js`
@@ -50,9 +49,9 @@ Default scope:
 - `tokyo/product/widgets/{widgetType}/widget.html`
 - `tokyo/product/widgets/{widgetType}/widget.css`
 - `tokyo/product/widgets/{widgetType}/widget.client.js`
-- `tokyo/product/widgets/{widgetType}/agent.md`
 
 Only if the PRD explicitly says so:
+- `tokyo/product/widgets/{widgetType}/editable-fields.json`
 - `tokyo/product/widgets/{widgetType}/limits.json`
 
 Do **not** create new files outside `tokyo/product/widgets/{widgetType}/`.
@@ -91,10 +90,8 @@ If any path is ambiguous, stop and ask.
 Rules:
 - **Stage/Pod defaults are mandatory** (see `documentation/widgets/WidgetBuildContract.md`).
 - Keep **one breakpoint** (900px). Do not add other breakpoints.
-- Paths must be consistent across `spec.json`, `agent.md`, and runtime code.
-- Declare the widget primitive variable graph in `spec.json.overlays.v = 1`.
-- Put customer-visible text primitives in `spec.json.overlays.text[]`; repeatable collections use `[]` in the declaration and are extracted to concrete paths before producer calls.
-- Do not create a translation sidecar or a second path schema.
+- Paths must be consistent across `spec.json`, runtime code, and `editable-fields.json` when customer-visible text changes.
+- Do not create a second path schema.
 - Use 2‑space indentation (Prettier).
 
 Checklist:
@@ -160,17 +157,17 @@ Checklist:
 
 ---
 
-### Step 6 — Update `agent.md` (AI editing contract)
+### Step 6 — Update editable field contract when text changes
 
 Rules:
-- List all editable paths and allowed ops.
-- Arrays must define insert/remove/move behavior explicitly.
-- Disallow any structural change not supported by the widget.
+- If the widget has customer-visible text, those saved-content paths belong in `editable-fields.json`.
+- Do not use `agent.md`, `spec.json.overlays.text[]`, or docs as translation authority.
+- Arrays must use stable item identity; do not rely on array indexes for repeated content identity.
 
 Checklist:
-- Every path in `agent.md` exists in `spec.json`.
-- Examples show valid ops and invalid ops.
-- Non-editable paths are listed.
+- Every `editable-fields.json` path resolves against `spec.json.defaults`.
+- Non-text behavior/config paths are not listed as translatable text.
+- No duplicate path schema is created.
 
 ---
 
@@ -190,7 +187,7 @@ Before you finish:
 - Core widget files + contract files are consistent and compile.
 - No new files were created.
 - No shared runtime or system files were touched.
-- All state paths are consistent across `spec.json`, HTML, CSS, JS, and `agent.md`.
+- All state paths are consistent across `spec.json`, HTML, CSS, JS, and `editable-fields.json` when present.
 
 If any requirement is unmet, stop and ask.
 

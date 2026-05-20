@@ -1,6 +1,5 @@
 import { dispatchTokyoRoute } from './route-dispatch';
 import { createTokyoRequestContext, finalizeTokyoObservedResponse, json } from './http';
-import { handleTokyoQueue } from './queue-handler';
 import type { Env } from './types';
 
 export default {
@@ -34,9 +33,5 @@ export default {
         errorDetail: message,
       });
     }
-  },
-
-  async queue(batch: MessageBatch<unknown>, env: Env): Promise<void> {
-    await handleTokyoQueue(batch, env);
   },
 };

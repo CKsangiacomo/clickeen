@@ -14,17 +14,17 @@ const BLOCKED_SWITCHER_COPY =
 export function Workspace({
   baseLocale,
   previewMode,
-  overlayPreviewLocale,
-  onOverlayPreviewLocaleChange,
+  translationPreviewLocale,
+  onTranslationPreviewLocaleChange,
   previewablePreviewLocales,
-  overlayValuesByLanguage,
+  translationValuesByLanguage,
 }: {
   baseLocale: string;
   previewMode: 'editing' | 'translations';
-  overlayPreviewLocale: string;
-  onOverlayPreviewLocaleChange: (locale: string) => void;
+  translationPreviewLocale: string;
+  onTranslationPreviewLocaleChange: (locale: string) => void;
   previewablePreviewLocales: string[];
-  overlayValuesByLanguage: Record<string, Record<string, string>>;
+  translationValuesByLanguage: Record<string, Record<string, string>>;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
@@ -72,18 +72,18 @@ export function Workspace({
   const fallbackPreviewLocale = baseLocale || effectivePreviewableLocales[0] || '';
   const effectivePreviewLocale =
     previewMode === 'translations'
-      ? overlayPreviewLocale && effectivePreviewableLocales.includes(overlayPreviewLocale)
-        ? overlayPreviewLocale
+      ? translationPreviewLocale && effectivePreviewableLocales.includes(translationPreviewLocale)
+        ? translationPreviewLocale
         : fallbackPreviewLocale
       : fallbackPreviewLocale;
-  const selectedOverlayValues =
+  const selectedTranslationValues =
     previewMode === 'translations' && effectivePreviewLocale !== baseLocale
-      ? overlayValuesByLanguage[effectivePreviewLocale] ?? null
+      ? translationValuesByLanguage[effectivePreviewLocale] ?? null
       : null;
   const resolvedPreviewInstanceData = useMemo(() => {
-    if (!selectedOverlayValues) return previewInstanceData;
-    return resolveOverlay(previewInstanceData, selectedOverlayValues);
-  }, [previewInstanceData, selectedOverlayValues]);
+    if (!selectedTranslationValues) return previewInstanceData;
+    return resolveOverlay(previewInstanceData, selectedTranslationValues);
+  }, [previewInstanceData, selectedTranslationValues]);
   const latestRef = useRef({
     compiled,
     instanceData: resolvedPreviewInstanceData,
@@ -311,7 +311,7 @@ export function Workspace({
         if (!latestRef.current.previewablePreviewLocales.includes(requestedLocale)) {
           return;
         }
-        onOverlayPreviewLocaleChange(requestedLocale);
+        onTranslationPreviewLocaleChange(requestedLocale);
         return;
       }
       if (data.type !== 'ck:resize') return;
@@ -325,7 +325,7 @@ export function Workspace({
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onOverlayPreviewLocaleChange]);
+  }, [onTranslationPreviewLocaleChange]);
 
   useEffect(() => {
     // When switching instances/devices/modes, allow the iframe to re-measure.

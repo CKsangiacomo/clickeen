@@ -8,7 +8,7 @@ Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 
 The superseded execution put the FAQ translation field list in the wrong authored place.
 
-FAQ must use authored `content.json`.
+FAQ must use authored `editable-fields.json` for the translatable field contract.
 
 The FAQ spec must not declare `overlays.text[]` as its own authority. The low-level overlay primitive is derived from authored content fields.
 
@@ -19,7 +19,7 @@ San Francisco FAQ Copilot must move toward the whole widget package instead of r
 ## Surviving Authority
 
 ```text
-FAQ authored content.json
+FAQ authored editable-fields.json
 ```
 
 The contract covers:
@@ -33,9 +33,9 @@ The contract covers:
 
 ## Derivations
 
-- Translation paths must derive from authored `content.json`.
+- Translation paths must derive from authored `editable-fields.json`.
 - Copilot must consume the whole FAQ widget package, not a per-field allowlist.
-- Current widget catalog `overlays.text[]`, if still needed, must be generated from authored `content.json` so existing storage/publish primitives keep working without becoming authority.
+- Widget-definition `overlays.text[]`, if still needed, must be derived from authored `editable-fields.json` so existing storage/publish primitives keep working without becoming authority.
 - Bob manual-edit coverage is verified against the contract through shared header controls and FAQ editor declarations.
 - FAQ runtime validation coverage is verified against the same contract paths.
 
@@ -43,8 +43,8 @@ The contract covers:
 
 - `tokyo/product/widgets/faq/spec.json`
 - `tokyo/product/widgets/faq/agent.md`
-- `tokyo/product/widgets/manifest.json`
-- `scripts/build-widget-catalog.mjs`
+- historical `tokyo/product/widgets/manifest.json` path, deleted in 103_01.3b
+- historical `scripts/build-widget-catalog.mjs` path, deleted in 103_01.3b
 - `packages/ck-contracts/src/overlay-primitives.ts`
 - `packages/ck-contracts/src/overlay-primitives.test.ts`
 - `sanfrancisco/src/agents/csPromptPayload.ts`
@@ -53,8 +53,8 @@ The contract covers:
 
 ## Verification
 
-- `pnpm build:widgets`
-- `pnpm build:widgets:check`
+- historical `pnpm build:widgets`
+- current replacement: `pnpm validate:widgets`
 - `pnpm --filter @clickeen/ck-contracts test`
 - `pnpm --filter @clickeen/ck-contracts typecheck`
 - `pnpm --filter @clickeen/sanfrancisco test`
@@ -62,4 +62,4 @@ The contract covers:
 
 TPM signoff: Superseded. A Clickeen user still edits one FAQ instance normally in Bob, but the product field list was put in the wrong authored place.
 
-Dev Manager signoff: Superseded. FAQ translation authority is authored `content.json`.
+Dev Manager signoff: Superseded. FAQ translation authority is authored `editable-fields.json`.

@@ -11,7 +11,7 @@ export type WidgetTextPrimitiveDeclaration = {
   role?: string;
 };
 
-export type WidgetContentField = {
+export type WidgetEditableField = {
   path: string;
   type: WidgetTextPrimitiveType;
   label: string;
@@ -20,15 +20,10 @@ export type WidgetContentField = {
   limits: unknown[];
 };
 
-export type WidgetContentContract = {
+export type WidgetEditableFieldsContract = {
   v: 1;
   widgetType: string;
-  fields: WidgetContentField[];
-};
-
-export type WidgetOverlayContract = {
-  v: 1;
-  text: WidgetTextPrimitiveDeclaration[];
+  fields: WidgetEditableField[];
 };
 
 export type ExtractedTextPrimitiveValue = WidgetTextPrimitiveDeclaration & {
@@ -130,55 +125,24 @@ function assertConcretePath(path: string): string[] {
   return parts;
 }
 
-export function readWidgetOverlayContract(spec: unknown): WidgetOverlayContract {
-  if (!isRecord(spec)) throw new Error('overlay_contract_spec_invalid');
-  const overlays = spec.overlays;
-  if (!isRecord(overlays) || overlays.v !== 1 || !Array.isArray(overlays.text)) {
-    throw new Error('overlay_contract_missing');
-  }
-
-  const text = overlays.text.map((entry, index) => {
-    if (!isRecord(entry)) throw new Error(`overlay_contract_text_invalid:${index}`);
-    const path = asNonEmptyString(entry.path);
-    const label = asNonEmptyString(entry.label);
-    if (!path) throw new Error(`overlay_contract_text_path_missing:${index}`);
-    if (!label) throw new Error(`overlay_contract_text_label_missing:${path}`);
-    parsePrimitivePath(path);
-    return {
-      path,
-      label,
-      type: parsePrimitiveType(entry.type),
-      ...(asNonEmptyString(entry.role) ? { role: asNonEmptyString(entry.role)! } : {}),
-    };
-  });
-
-  const seen = new Set<string>();
-  for (const entry of text) {
-    if (seen.has(entry.path)) throw new Error(`overlay_contract_text_duplicate:${entry.path}`);
-    seen.add(entry.path);
-  }
-
-  return { v: 1, text };
-}
-
-export function readWidgetContentContract(content: unknown): WidgetContentContract {
+export function readWidgetEditableFieldsContract(content: unknown): WidgetEditableFieldsContract {
   if (!isRecord(content) || content.v !== 1 || !Array.isArray(content.fields)) {
-    throw new Error('widget_content_contract_invalid');
+    throw new Error('widget_editable_fields_contract_invalid');
   }
   const widgetType = asNonEmptyString(content.widgetType);
-  if (!widgetType) throw new Error('widget_content_widget_type_missing');
+  if (!widgetType) throw new Error('widget_editable_fields_widget_type_missing');
 
-  const fields = content.fields.map((entry, index): WidgetContentField => {
-    if (!isRecord(entry)) throw new Error(`widget_content_field_invalid:${index}`);
+  const fields = content.fields.map((entry, index): WidgetEditableField => {
+    if (!isRecord(entry)) throw new Error(`widget_editable_fields_field_invalid:${index}`);
     const path = asNonEmptyString(entry.path);
     const label = asNonEmptyString(entry.label);
     const role = asNonEmptyString(entry.role);
-    if (!path) throw new Error(`widget_content_field_path_missing:${index}`);
-    if (!label) throw new Error(`widget_content_field_label_missing:${path}`);
-    if (!role) throw new Error(`widget_content_field_role_missing:${path}`);
+    if (!path) throw new Error(`widget_editable_fields_field_path_missing:${index}`);
+    if (!label) throw new Error(`widget_editable_fields_field_label_missing:${path}`);
+    if (!role) throw new Error(`widget_editable_fields_field_role_missing:${path}`);
     parsePrimitivePath(path);
     if (entry.type !== 'string' && entry.type !== 'richtext') {
-      throw new Error(`widget_content_field_type_invalid:${path}`);
+      throw new Error(`widget_editable_fields_field_type_invalid:${path}`);
     }
     const type = entry.type;
     return {
@@ -186,30 +150,27 @@ export function readWidgetContentContract(content: unknown): WidgetContentContra
       type,
       label,
       role,
-      arrayItemIdentity: parseStringArray(entry.arrayItemIdentity, `widget_content_field_array_identity:${path}`),
+      arrayItemIdentity: parseStringArray(entry.arrayItemIdentity, `widget_editable_fields_field_array_identity:${path}`),
       limits: Array.isArray(entry.limits) ? entry.limits.slice() : [],
     };
   });
 
   const seen = new Set<string>();
   for (const field of fields) {
-    if (seen.has(field.path)) throw new Error(`widget_content_field_duplicate:${field.path}`);
+    if (seen.has(field.path)) throw new Error(`widget_editable_fields_field_duplicate:${field.path}`);
     seen.add(field.path);
   }
 
   return { v: 1, widgetType, fields };
 }
 
-export function widgetContentToOverlayContract(contract: WidgetContentContract): WidgetOverlayContract {
-  return {
-    v: 1,
-    text: contract.fields.map((field) => ({
-      path: field.path,
-      label: field.label,
-      type: field.type,
-      role: field.role,
-    })),
-  };
+export function widgetEditableFieldsToTextPrimitives(contract: WidgetEditableFieldsContract): WidgetTextPrimitiveDeclaration[] {
+  return contract.fields.map((field) => ({
+    path: field.path,
+    label: field.label,
+    type: field.type,
+    role: field.role,
+  }));
 }
 
 function extractForDeclaration(args: {
@@ -262,12 +223,11 @@ function extractForDeclaration(args: {
   });
 }
 
-export function extractTextPrimitiveValues(args: {
-  spec: unknown;
+export function extractTextPrimitiveValuesForEditableFields(args: {
+  contract: WidgetEditableFieldsContract;
   config: Record<string, unknown>;
 }): ExtractedTextPrimitiveValue[] {
-  const contract = readWidgetOverlayContract(args.spec);
-  return contract.text.flatMap((declaration) => {
+  return widgetEditableFieldsToTextPrimitives(args.contract).flatMap((declaration) => {
     const out: ExtractedTextPrimitiveValue[] = [];
     extractForDeclaration({
       root: args.config,

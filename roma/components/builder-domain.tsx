@@ -39,9 +39,9 @@ type BobOpenEditorFailedMessage = {
 type BobAccountCommand =
   | 'update-instance'
   | AccountAssetHostCommand
-  | 'list-locale-overlays'
-  | 'read-locale-overlay'
-  | 'write-locale-overlay'
+  | 'list-translations'
+  | 'read-translation'
+  | 'save-translation'
   | 'generate-translations'
   | 'run-copilot'
   | 'attach-ai-outcome';
@@ -147,8 +147,13 @@ function buildRomaBuilderRoute(args: { instanceId: string }): string {
 function resolveBobAccountCommandRequest(args: {
   command: BobAccountCommand;
   instanceId?: string;
+  body?: unknown;
 }): { method: 'GET' | 'PUT' | 'POST' | 'DELETE'; path: string } | null {
   const instanceId = String(args.instanceId || '').trim();
+  const body = args.body && typeof args.body === 'object' && !Array.isArray(args.body)
+    ? (args.body as Record<string, unknown>)
+    : null;
+  const locale = typeof body?.locale === 'string' ? body.locale.trim() : '';
 
   switch (args.command) {
     case 'update-instance':
@@ -172,23 +177,23 @@ function resolveBobAccountCommandRequest(args: {
         method: 'POST',
         path: '/api/account/assets/upload',
       };
-    case 'list-locale-overlays':
+    case 'list-translations':
       if (!instanceId) return null;
       return {
-        method: 'POST',
-        path: `/api/account/instances/${encodeURIComponent(instanceId)}/locale-overlays/list`,
+        method: 'GET',
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations`,
       };
-    case 'read-locale-overlay':
-      if (!instanceId) return null;
+    case 'read-translation':
+      if (!instanceId || !locale) return null;
       return {
-        method: 'POST',
-        path: `/api/account/instances/${encodeURIComponent(instanceId)}/locale-overlays/read`,
+        method: 'GET',
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/${encodeURIComponent(locale)}`,
       };
-    case 'write-locale-overlay':
-      if (!instanceId) return null;
+    case 'save-translation':
+      if (!instanceId || !locale) return null;
       return {
-        method: 'POST',
-        path: `/api/account/instances/${encodeURIComponent(instanceId)}/locale-overlays/write`,
+        method: 'PUT',
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/${encodeURIComponent(locale)}`,
       };
     case 'generate-translations':
       if (!instanceId) return null;
@@ -293,6 +298,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       const route = resolveBobAccountCommandRequest({
         command: args.command,
         instanceId: args.instanceId,
+        body: args.body,
       });
       const reply = (payload: Omit<HostAccountCommandResultMessage, 'type'>) => {
         const message: HostAccountCommandResultMessage = {

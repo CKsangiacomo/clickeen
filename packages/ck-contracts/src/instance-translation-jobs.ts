@@ -4,7 +4,7 @@ import type { FaqLanguageValue, FaqSavedTextField } from './faq-language-values'
 
 type JsonRecord = Record<string, unknown>;
 
-export const INSTANCE_TRANSLATION_JOB_KIND = 'instance.translation.render_overlay';
+export const INSTANCE_TRANSLATION_JOB_KIND = 'instance.translation.locale_values';
 export const INSTANCE_TRANSLATION_AGENT_ID = 'widget.instance.translator';
 
 export type InstanceTranslationJob = {
@@ -19,6 +19,7 @@ export type InstanceTranslationJob = {
   widgetContractVersion: number;
   baseLocale: string;
   targetLocale: string;
+  targetLocales: string[];
   requestedAt: string;
   requestId?: string;
   ai: AiGrantPolicy;
@@ -129,6 +130,7 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
   const widgetContractVersion = normalizePositiveInteger(raw.widgetContractVersion);
   const baseLocale = normalizeLocaleToken(raw.baseLocale);
   const targetLocale = normalizeLocaleToken(raw.targetLocale);
+  const targetLocales = normalizeStringArray(raw.targetLocales);
   const requestedAt = asTrimmedString(raw.requestedAt);
   const ai = normalizeAiGrantPolicy(raw.ai);
   const budgets = isRecord(raw.budgets) ? raw.budgets : null;
@@ -154,6 +156,7 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     !baseLocale ||
     !targetLocale ||
     baseLocale === targetLocale ||
+    !targetLocales ||
     !requestedAt ||
     !ai ||
     !budgets ||
@@ -179,6 +182,7 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     widgetContractVersion,
     baseLocale,
     targetLocale,
+    targetLocales,
     requestedAt,
     ...(asTrimmedString(raw.requestId) ? { requestId: asTrimmedString(raw.requestId) as string } : {}),
     ai,

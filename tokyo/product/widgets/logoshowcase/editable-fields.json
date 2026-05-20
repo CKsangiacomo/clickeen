@@ -1,0 +1,74 @@
+{
+  "v": 1,
+  "widgetType": "logoshowcase",
+  "fields": [
+    {
+      "path": "header.title",
+      "label": "Header title",
+      "type": "richtext",
+      "role": "header-title",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "header.subtitleHtml",
+      "label": "Header subtitle",
+      "type": "richtext",
+      "role": "header-subtitle",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "cta.label",
+      "label": "CTA label",
+      "type": "string",
+      "role": "cta-label",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "strips[].logos[].name",
+      "label": "Logo name",
+      "type": "string",
+      "role": "logo-name",
+      "arrayItemIdentity": [
+        "strips[].id",
+        "strips[].logos[].id"
+      ],
+      "limits": []
+    },
+    {
+      "path": "strips[].logos[].caption",
+      "label": "Logo caption",
+      "type": "string",
+      "role": "logo-caption",
+      "arrayItemIdentity": [
+        "strips[].id",
+        "strips[].logos[].id"
+      ],
+      "limits": []
+    },
+    {
+      "path": "strips[].logos[].alt",
+      "label": "Logo alt text",
+      "type": "string",
+      "role": "logo-alt",
+      "arrayItemIdentity": [
+        "strips[].id",
+        "strips[].logos[].id"
+      ],
+      "limits": []
+    },
+    {
+      "path": "strips[].logos[].title",
+      "label": "Logo title",
+      "type": "string",
+      "role": "logo-title",
+      "arrayItemIdentity": [
+        "strips[].id",
+        "strips[].logos[].id"
+      ],
+      "limits": []
+    }
+  ]
+}

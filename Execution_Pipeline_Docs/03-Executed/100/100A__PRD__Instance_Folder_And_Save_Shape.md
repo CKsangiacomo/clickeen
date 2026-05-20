@@ -5,6 +5,8 @@ Owner: Product + Architecture
 Date: 2026-05-16
 Parent: PRD 100 - Core Instance Mini-Sites And Static Embed Delivery
 
+PRD 103_00 NOTE: this PRD is narrowed to public static-serving internals. Its `instance.json` catchall source model, overlay folder assumptions, generated browser files, and file-presence semantics must not govern authoring, translation, catalog, or publish APIs while the pre-103 source-model gate is active.
+
 ## Purpose
 
 Make the account instance folder the single storage root for both source truth and generated public mini-site files.

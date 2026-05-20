@@ -13,12 +13,13 @@ import {
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
 test('widget overlay codebook covers the widget catalog exactly once', () => {
-  const manifestPath = path.join(repoRoot, 'tokyo/product/widgets/manifest.json');
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as {
-    widgets?: Array<{ widgetType?: unknown }>;
-  };
   const widgetTypes = new Set(
-    (manifest.widgets ?? []).flatMap((entry) => (typeof entry.widgetType === 'string' ? [entry.widgetType] : [])),
+    fs
+      .readdirSync(path.join(repoRoot, 'tokyo/product/widgets'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .filter((name) => name !== 'shared')
+      .filter((name) => fs.existsSync(path.join(repoRoot, 'tokyo/product/widgets', name, 'spec.json'))),
   );
   const codebook = listWidgetOverlayCodebook();
   const codebookWidgetTypes = new Set(codebook.map((entry) => entry.widgetType));

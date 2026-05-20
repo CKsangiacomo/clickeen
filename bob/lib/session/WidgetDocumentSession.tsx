@@ -28,9 +28,9 @@ export type WidgetDocumentSessionValue = {
 };
 
 type WidgetSessionTransportValue = {
-  listLocaleOverlays: ReturnType<typeof useSessionTransport>['listLocaleOverlays'];
-  readLocaleOverlay: ReturnType<typeof useSessionTransport>['readLocaleOverlay'];
-  writeLocaleOverlay: ReturnType<typeof useSessionTransport>['writeLocaleOverlay'];
+  listTranslations: ReturnType<typeof useSessionTransport>['listTranslations'];
+  readTranslation: ReturnType<typeof useSessionTransport>['readTranslation'];
+  saveTranslation: ReturnType<typeof useSessionTransport>['saveTranslation'];
   generateTranslations: ReturnType<typeof useSessionTransport>['generateTranslations'];
 };
 
@@ -71,16 +71,16 @@ export function WidgetDocumentSessionProvider({ children }: { children: ReactNod
   const accountAssets = useMemo(() => createAccountAssetsClient(transport.accountAssets), [transport.accountAssets]);
   const transportValue = useMemo<WidgetSessionTransportValue>(
     () => ({
-      listLocaleOverlays: transport.listLocaleOverlays,
-      readLocaleOverlay: transport.readLocaleOverlay,
-      writeLocaleOverlay: transport.writeLocaleOverlay,
+      listTranslations: transport.listTranslations,
+      readTranslation: transport.readTranslation,
+      saveTranslation: transport.saveTranslation,
       generateTranslations: transport.generateTranslations,
     }),
     [
       transport.generateTranslations,
-      transport.listLocaleOverlays,
-      transport.readLocaleOverlay,
-      transport.writeLocaleOverlay,
+      transport.listTranslations,
+      transport.readTranslation,
+      transport.saveTranslation,
     ],
   );
 

@@ -1,15 +1,5 @@
 import { CK_REQUEST_ID_HEADER, isRecord, serializeCkLogEvent } from '@clickeen/ck-contracts';
-import {
-  DEFAULT_OVERLAY_EXPERIMENT,
-  DEFAULT_OVERLAY_PERSONALIZATION,
-  buildOverlayId,
-  isCompactAccountPublicId,
-  isOverlayExperimentCode,
-  isOverlayId,
-  isOverlayLanguageCode,
-  isOverlayPersonalizationCode,
-  parseOverlayId,
-} from '@clickeen/ck-contracts/overlay-identity';
+import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import {
   normalizeStorageId,
@@ -23,33 +13,27 @@ import {
 import { json } from '../http';
 import {
   AccountInstanceTransitionError,
-  allocateOverlayId,
-  deleteSelectedOverlayPointer,
-  deleteInstanceMirror,
+  deleteAccountInstanceSubtree,
   duplicateAccountInstanceTransition,
   createAccountInstanceFromDefaults,
-  listLocaleOverlayInventory,
+  listTranslatedLocales,
+  completeLocaleTranslation,
+  generateInstanceTranslations,
+  listAccountInstancesBySource,
   publishAccountInstanceTransition,
-  readOverlayObject,
-  readInstanceServeState,
-  readAccountInstanceIndex,
-  rebuildAccountInstanceIndexes,
-  readSavedRenderConfig,
-  readSelectedOverlayPointer,
+  readAccountInstanceDocument,
+  readTranslatedLocaleValues,
+  renameAccountInstanceDisplay,
   saveAccountInstanceTransition,
   unpublishAccountInstanceTransition,
-  validateOverlayObjectForSavedInstance,
-  writeOverlayObject,
-  writeSavedRenderConfig,
-  writeSelectedOverlayPointer,
+  writeTranslatedLocaleValues,
 } from '../domains/render';
 import {
-  listWidgetCatalogEntries,
-  resolveWidgetCode,
+  listWidgetDefinitions,
 } from '../domains/widget-catalog';
 import {
   authorizeRomaAccountScopedRequest,
-  authorizeSavedRenderControlRequest,
+  authorizeAccountInstanceControlRequest,
   isValidScopedInstance,
   respondMethodNotAllowed,
   respondValidation,
@@ -58,20 +42,19 @@ import {
 import { roleRank } from '../domains/assets';
 import type { Env } from '../types';
 
-const OVERLAY_VERSION_TECHNICAL_MAX = 100;
-
 function normalizeAccountPublicId(value: unknown): string {
   const accountId = String(value || '').trim().toUpperCase();
   return isCompactAccountPublicId(accountId) ? accountId : '';
 }
 
-function normalizeOverlaySegment(value: unknown, fallback: string, guard: (entry: unknown) => boolean): string {
-  const segment = String(value || fallback).trim().toUpperCase();
-  return guard(segment) ? segment : '';
-}
-
-function normalizeOverlayValues(value: unknown): Record<string, unknown> | null {
-  return isRecord(value) ? value : null;
+function normalizeTranslatedValues(value: unknown): Record<string, string> | null {
+  if (!isRecord(value)) return null;
+  const values: Record<string, string> = {};
+  for (const [path, text] of Object.entries(value)) {
+    if (!path || typeof text !== 'string') return null;
+    values[path] = text;
+  }
+  return values;
 }
 
 function transitionErrorResponse(error: unknown): Response {
@@ -172,7 +155,7 @@ async function authorizeRomaEditorTransition(args: {
   return { ok: true, capsule };
 }
 
-async function authorizeLanguageOverlayWriteTransition(args: {
+async function authorizeTranslatedLocaleWriteTransition(args: {
   req: Request;
   env: Env;
   accountId: string;
@@ -190,452 +173,60 @@ async function authorizeLanguageOverlayWriteTransition(args: {
   return auth.ok ? { ok: true } : auth;
 }
 
+function authorizeTranslationCompletionTransition(req: Request): Response | null {
+  const internalServiceId = String(req.headers.get(INTERNAL_SERVICE_HEADER) || '')
+    .trim()
+    .toLowerCase();
+  if (internalServiceId === TOKYO_INTERNAL_SERVICE_SANFRANCISCO_TRANSLATION) return null;
+  return json(
+    { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
+    { status: 403 },
+  );
+}
+
 export async function tryHandleInternalRenderRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
   const { req, env, pathname, respond } = args;
 
-  if (pathname === '/__internal/overlays/languages/write.json') {
+  const internalAccountInstancesListMatch = pathname.match(/^\/__internal\/accounts\/([^/]+)\/instances$/);
+  if (internalAccountInstancesListMatch) {
+    const pathAccountId = normalizeAccountPublicId(decodeURIComponent(internalAccountInstancesListMatch[1] || ''));
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId || req.method !== 'POST') {
-      return !accountId
-        ? respondValidation(respond, 'tokyo.errors.render.invalid')
-        : respondMethodNotAllowed(respond);
-    }
-    const auth = await authorizeLanguageOverlayWriteTransition({ req, env, accountId });
-    if (!auth.ok) return respond(auth.response);
-
-    const body = (await readInternalRenderJsonBody({
-      req,
-      env,
-      boundary: 'internal.overlay.languageWrite.body',
-      accountId,
-    })) as Record<string, unknown> | null;
-    const instanceId = normalizeStorageId(body?.instanceId);
-    const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-    const widgetCode = widgetType ? resolveWidgetCode(widgetType) : null;
-    const languageCode = normalizeOverlaySegment(body?.languageCode, '', isOverlayLanguageCode);
-    const experiment = normalizeOverlaySegment(body?.experiment, DEFAULT_OVERLAY_EXPERIMENT, isOverlayExperimentCode);
-    const personalization = normalizeOverlaySegment(body?.personalization, DEFAULT_OVERLAY_PERSONALIZATION, isOverlayPersonalizationCode);
-    const values = normalizeOverlayValues(body?.values);
-    if (!instanceId || !widgetType || !widgetCode || !languageCode || !experiment || !personalization || !values || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-
-    const saved = await readSavedRenderConfig({ env, accountId, instanceId, widgetType });
-    if (!saved.ok) {
-      return respond(
-        json(
-          { error: { kind: saved.kind, reasonKey: saved.reasonKey } },
-          { status: saved.kind === 'NOT_FOUND' ? 404 : 422 },
-        ),
-      );
-    }
-
-    const validation = await validateOverlayObjectForSavedInstance({
-      env,
-      overlayId: buildOverlayId({
-        accountPublicId: accountId,
-        widgetCode: saved.value.pointer.widgetCode,
-        instanceId,
-        languageCode,
-        experiment,
-        personalization,
-        version: '00',
-      }),
-      values,
-    });
-    if (!validation.ok) {
-      return respond(
-        json(
-          {
-            error: {
-              kind: 'VALIDATION',
-              reasonKey: validation.reasonKey,
-              detail: validation.detail,
-              ...(validation.path ? { path: validation.path } : {}),
-            },
-          },
-          { status: 422 },
-        ),
-      );
-    }
-
-    try {
-      const overlayId = await allocateOverlayId({
-        env,
-        coordinate: {
-          accountId,
-          widgetCode: saved.value.pointer.widgetCode,
-          instanceId,
-          languageCode,
-          experiment,
-          personalization,
-        },
-        maxVersions: OVERLAY_VERSION_TECHNICAL_MAX,
-      });
-      await writeOverlayObject({ env, overlayId, values });
-      await writeSelectedOverlayPointer({ env, overlayId });
-      return respond(json({ ok: true, overlayId }));
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return respond(
-        json(
-          { error: { kind: 'VALIDATION', reasonKey: detail, detail } },
-          { status: detail === 'tokyo.overlay.version_slots_exhausted' ? 409 : 422 },
-        ),
-      );
-    }
-  }
-
-  if (pathname === '/__internal/overlays/languages/clear.json') {
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId || req.method !== 'POST') {
-      return !accountId
-        ? respondValidation(respond, 'tokyo.errors.render.invalid')
-        : respondMethodNotAllowed(respond);
-    }
-    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
-    if (!auth.ok) return respond(auth.response);
-
-    const body = (await readInternalRenderJsonBody({
-      req,
-      env,
-      boundary: 'internal.overlay.languageClear.body',
-      accountId,
-    })) as Record<string, unknown> | null;
-    const instanceId = normalizeStorageId(body?.instanceId);
-    const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-    const languageCode = normalizeOverlaySegment(body?.languageCode, '', isOverlayLanguageCode);
-    const experiment = normalizeOverlaySegment(body?.experiment, DEFAULT_OVERLAY_EXPERIMENT, isOverlayExperimentCode);
-    const personalization = normalizeOverlaySegment(body?.personalization, DEFAULT_OVERLAY_PERSONALIZATION, isOverlayPersonalizationCode);
-    if (!instanceId || !widgetType || !languageCode || !experiment || !personalization || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    const saved = await readSavedRenderConfig({ env, accountId, instanceId, widgetType });
-    if (!saved.ok) {
-      return respond(
-        json(
-          { error: { kind: saved.kind, reasonKey: saved.reasonKey } },
-          { status: saved.kind === 'NOT_FOUND' ? 404 : 422 },
-        ),
-      );
-    }
-
-    await deleteSelectedOverlayPointer({
-      env,
-      coordinate: {
-        accountId,
-        widgetCode: saved.value.pointer.widgetCode,
-        instanceId,
-        languageCode,
-        experiment,
-        personalization,
-      },
-    });
-    return respond(json({ ok: true }));
-  }
-
-  if (pathname === '/__internal/overlays/languages/selected.json') {
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId || req.method !== 'POST') {
-      return !accountId
-        ? respondValidation(respond, 'tokyo.errors.render.invalid')
-        : respondMethodNotAllowed(respond);
-    }
-    const authErr = await authorizeSavedRenderControlRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'viewer',
-    });
-    if (authErr) return respond(authErr);
-
-    const body = (await readInternalRenderJsonBody({
-      req,
-      env,
-      boundary: 'internal.overlay.languageSelected.body',
-      accountId,
-    })) as Record<string, unknown> | null;
-    const instanceId = normalizeStorageId(body?.instanceId);
-    const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
-    const languageCode = normalizeOverlaySegment(body?.languageCode, '', isOverlayLanguageCode);
-    const experiment = normalizeOverlaySegment(body?.experiment, DEFAULT_OVERLAY_EXPERIMENT, isOverlayExperimentCode);
-    const personalization = normalizeOverlaySegment(body?.personalization, DEFAULT_OVERLAY_PERSONALIZATION, isOverlayPersonalizationCode);
-    if (!instanceId || !widgetType || !languageCode || !experiment || !personalization || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    const saved = await readSavedRenderConfig({ env, accountId, instanceId, widgetType });
-    if (!saved.ok) {
-      return respond(
-        json(
-          { error: { kind: saved.kind, reasonKey: saved.reasonKey } },
-          { status: saved.kind === 'NOT_FOUND' ? 404 : 422 },
-        ),
-      );
-    }
-    const selected = await readSelectedOverlayPointer({
-      env,
-      coordinate: {
-        accountId,
-        widgetCode: saved.value.pointer.widgetCode,
-        instanceId,
-        languageCode,
-        experiment,
-        personalization,
-      },
-    });
-    return respond(json({ ok: true, overlayId: selected?.overlayId ?? null }));
-  }
-
-  if (pathname === '/__internal/overlays/languages/list.json') {
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId || req.method !== 'POST') {
-      return !accountId
-        ? respondValidation(respond, 'tokyo.errors.render.invalid')
-        : respondMethodNotAllowed(respond);
-    }
-    const authErr = await authorizeSavedRenderControlRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'viewer',
-    });
-    if (authErr) return respond(authErr);
-
-    const body = (await readInternalRenderJsonBody({
-      req,
-      env,
-      boundary: 'internal.overlay.languageList.body',
-      accountId,
-    })) as Record<string, unknown> | null;
-    const instanceId = normalizeStorageId(body?.instanceId);
-    const baseLocale = typeof body?.baseLocale === 'string' ? body.baseLocale.trim() : '';
-    if (!instanceId || !baseLocale || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    const overlays = await listLocaleOverlayInventory({ env, accountId, instanceId });
-    return respond(json({ ok: true, v: 1, baseLocale, overlays }));
-  }
-
-  const internalOverlayObjectMatch = pathname.match(/^\/__internal\/overlays\/([^/]+)\.json$/);
-  if (internalOverlayObjectMatch) {
-    const overlayId = decodeURIComponent(internalOverlayObjectMatch[1]);
-    if (!isOverlayId(overlayId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    const parsed = parseOverlayId(overlayId);
-    if (!parsed.ok) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId || accountId !== parsed.value.accountPublicId) {
+    if (!accountId || !pathAccountId || pathAccountId !== accountId) {
       return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
     }
-    if (req.method !== 'GET') {
-      return respondMethodNotAllowed(respond);
-    }
-    const authErr = await authorizeSavedRenderControlRequest({
+    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
+    const authErr = await authorizeAccountInstanceControlRequest({
       req,
       env,
       accountId,
       minRole: 'viewer',
     });
     if (authErr) return respond(authErr);
+
     try {
-      const object = await readOverlayObject({ env, overlayId });
-      if (!object) {
-        return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.overlay.notFound' } }, { status: 404 }));
-      }
-      const validation = await validateOverlayObjectForSavedInstance({
-        env,
-        overlayId,
-        values: object.values,
-      });
-      if (!validation.ok) {
-        return respond(
-          json(
-            {
-              error: {
-                kind: 'VALIDATION',
-                reasonKey: validation.reasonKey,
-                detail: validation.detail,
-                ...(validation.path ? { path: validation.path } : {}),
-              },
-            },
-            { status: 422 },
-          ),
-        );
-      }
-      return respond(json({ ok: true, overlayId, ...object }));
+      const accountInstances = await listAccountInstancesBySource({ env, accountId });
+      return respond(
+        json({
+          ok: true,
+          accountId,
+          accountInstances,
+          publishedCount: accountInstances.filter((entry) => entry.publishStatus === 'published').length,
+        }),
+      );
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));
     }
   }
 
-  if (pathname === '/__internal/renders/widgets/serve-state.json') {
+  if (pathname === '/__internal/instances') {
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'POST') {
-      return respondMethodNotAllowed(respond);
-    }
+    if (!accountId) return respondValidation(respond, 'tokyo.errors.render.invalid');
+    if (req.method !== 'POST') return respondMethodNotAllowed(respond);
 
-    const authErr = await authorizeSavedRenderControlRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'viewer',
-    });
-    if (authErr) return respond(authErr);
-
-    const body = (await readInternalRenderJsonBody({
-      req,
-      env,
-      boundary: 'internal.render.serveState.body',
-      accountId,
-    })) as Record<string, unknown> | null;
-    const rawInstanceIds = Array.isArray(body?.instanceIds) ? body.instanceIds : null;
-    if (!rawInstanceIds) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-
-    const instanceIds = Array.from(
-      new Set(
-        rawInstanceIds
-          .filter((entry): entry is string => typeof entry === 'string')
-          .map((entry) => normalizeStorageId(entry))
-          .filter((entry): entry is string => Boolean(entry)),
-      ),
-    );
-
-    if (instanceIds.length !== rawInstanceIds.length) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-
-    const serveEntries = await Promise.all(
-      instanceIds.map(async (instanceId) => [
-        instanceId,
-        await readInstanceServeState({ env, accountId, instanceId }),
-      ] as const),
-    );
-    const serveStates = Object.fromEntries(serveEntries);
-    const publishedCount = serveEntries.filter(([, state]) => state === 'published').length;
-
-    return respond(
-      json({
-        ok: true,
-        serveStates,
-        publishedCount,
-      }),
-    );
-  }
-
-  if (pathname === '/__internal/renders/widgets/index.json') {
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'GET') {
-      return respondMethodNotAllowed(respond);
-    }
-
-    const authErr = await authorizeSavedRenderControlRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'viewer',
-    });
-    if (authErr) return respond(authErr);
-
-    const accountIndex = await readAccountInstanceIndex({ env, accountId });
-    if (!accountIndex.ok) {
-      return respond(
-        json(
-          { error: { kind: accountIndex.kind, reasonKey: accountIndex.reasonKey, detail: accountIndex.detail } },
-          { status: accountIndex.kind === 'NOT_FOUND' ? 404 : 422 },
-        ),
-      );
-    }
-
-    return respond(
-      json({
-        ok: true,
-        accountId,
-        accountInstances: accountIndex.value.entries.map((entry) => ({ ...entry, instanceId: entry.id })),
-        publishedCount: accountIndex.value.entries.filter((entry) => entry.publishStatus === 'published').length,
-      }),
-    );
-  }
-
-  if (pathname === '/__internal/renders/widgets/catalog.json') {
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'GET') {
-      return respondMethodNotAllowed(respond);
-    }
-    const authErr = await authorizeRomaAccountScopedRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'viewer',
-    });
-    if (authErr) return respond(authErr);
-    return respond(json({ ok: true, widgets: listWidgetCatalogEntries() }));
-  }
-
-  if (pathname === '/__internal/renders/widgets/index/rebuild.json') {
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'POST') {
-      return respondMethodNotAllowed(respond);
-    }
-
-    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
-    if (!auth.ok) return respond(auth.response);
-
-    try {
-      const index = await rebuildAccountInstanceIndexes(env, accountId);
-      return respond(
-        json({
-          ok: true,
-          accountId,
-          entries: index.entries.length,
-          entryIds: index.entries.map((entry) => entry.id),
-        }),
-      );
-    } catch (error) {
-      return respond(
-        json(
-          {
-            error: {
-              kind: 'VALIDATION',
-              reasonKey: 'tokyo.errors.instance.indexInvalid',
-              detail: error instanceof Error ? error.message : String(error),
-            },
-          },
-          { status: 422 },
-        ),
-      );
-    }
-  }
-
-  if (pathname === '/__internal/renders/widgets/create.json') {
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'POST') {
-      return respondMethodNotAllowed(respond);
-    }
-
-    const authErr = await authorizeSavedRenderControlRequest({
+    const authErr = await authorizeAccountInstanceControlRequest({
       req,
       env,
       accountId,
@@ -646,31 +237,31 @@ export async function tryHandleInternalRenderRoutes(
     const rawBody = await readInternalRenderJsonBody({
       req,
       env,
-      boundary: 'internal.render.create.body',
+      boundary: 'internal.instance.create.body',
       accountId,
     });
-    if (!isRecord(rawBody)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    const body = rawBody;
-    const widgetType = typeof body.widgetType === 'string' ? body.widgetType.trim() : '';
-    if (!widgetType) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
+    if (!isRecord(rawBody)) return respondValidation(respond, 'tokyo.errors.render.invalid');
+    const widgetType = typeof rawBody.widgetType === 'string' ? rawBody.widgetType.trim() : '';
+    if (!widgetType) return respondValidation(respond, 'tokyo.errors.render.invalid');
 
     try {
       const created = await createAccountInstanceFromDefaults({
         env,
         accountId,
         widgetType,
-        displayName: body.displayName,
+        displayName: rawBody.displayName,
       });
       return respond(
         json(
           {
             ok: true,
-            ...created.pointer,
+            accountId,
             instanceId: created.pointer.id,
+            widgetCode: created.pointer.widgetCode,
+            widgetType: created.pointer.widgetType,
+            displayName: created.pointer.displayName,
+            publishStatus: created.pointer.publishStatus,
+            updatedAt: created.pointer.updatedAt,
             config: created.config,
           },
           { status: 201 },
@@ -693,71 +284,81 @@ export async function tryHandleInternalRenderRoutes(
     }
   }
 
-  const internalRenderSaveTransitionMatch = pathname.match(
-    /^\/__internal\/renders\/widgets\/([^/]+)\/save\.json$/,
-  );
-  if (internalRenderSaveTransitionMatch) {
-    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderSaveTransitionMatch[1]));
+  const internalInstanceRenameMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/rename$/);
+  if (internalInstanceRenameMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalInstanceRenameMatch[1] || ''));
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
     }
-    if (req.method !== 'POST') {
-      return respondMethodNotAllowed(respond);
-    }
+    if (req.method !== 'POST') return respondMethodNotAllowed(respond);
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
 
     const body = (await readInternalRenderJsonBody({
       req,
       env,
-      boundary: 'internal.render.save.body',
-      instanceId,
+      boundary: 'internal.instance.rename.body',
       accountId,
+      instanceId,
     })) as Record<string, unknown> | null;
-    if (!isRecord(body) || !isRecord(body.config)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
+    const displayName = typeof body?.displayName === 'string' ? body.displayName.trim() : '';
+    if (!displayName) return respondValidation(respond, 'tokyo.errors.render.invalid');
     try {
-      const result = await saveAccountInstanceTransition({
+      const renamed = await renameAccountInstanceDisplay({
         env,
         accountId,
-        instanceId: instanceId!,
-        submittedWidgetType: body.widgetType as string,
-        config: body.config,
-        displayName: body.displayName,
-        hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
-        meta: body.meta,
-        hasMeta: Object.prototype.hasOwnProperty.call(body, 'meta'),
+        instanceId,
+        displayName,
       });
+      return respond(json({ ok: true, ...renamed }));
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
       return respond(
-        json({
-          ok: true,
-          instanceId,
-          widgetType: result.pointer.widgetType,
-          sourceVersion: result.pointer.sourceVersion,
-          generation: result.pointer.generation,
-          previousConfig: result.previousConfig,
-          live: result.live,
-        }),
+        json(
+          {
+            error: {
+              kind: detail === 'tokyo.errors.render.notFound' ? 'NOT_FOUND' : 'VALIDATION',
+              reasonKey: detail,
+              detail,
+            },
+          },
+          { status: detail === 'tokyo.errors.render.notFound' ? 404 : 422 },
+        ),
       );
+    }
+  }
+
+  const internalInstancePublishMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/(publish|unpublish)$/);
+  if (internalInstancePublishMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalInstancePublishMatch[1] || ''));
+    const action = internalInstancePublishMatch[2] === 'publish' ? 'publish' : 'unpublish';
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+    }
+    if (req.method !== 'POST') return respondMethodNotAllowed(respond);
+    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+    if (!auth.ok) return respond(auth.response);
+
+    try {
+      const transition = action === 'publish'
+        ? await publishAccountInstanceTransition({ env, accountId, instanceId })
+        : await unpublishAccountInstanceTransition({ env, accountId, instanceId });
+      return respond(json({ ok: true, ...transition }));
     } catch (error) {
       return respond(transitionErrorResponse(error));
     }
   }
 
-  const internalRenderDuplicateTransitionMatch = pathname.match(
-    /^\/__internal\/renders\/widgets\/([^/]+)\/duplicate\.json$/,
-  );
-  if (internalRenderDuplicateTransitionMatch) {
-    const sourceInstanceId = normalizeStorageId(decodeURIComponent(internalRenderDuplicateTransitionMatch[1]));
+  const internalInstanceDuplicateMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/duplicate$/);
+  if (internalInstanceDuplicateMatch) {
+    const sourceInstanceId = normalizeStorageId(decodeURIComponent(internalInstanceDuplicateMatch[1] || ''));
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!isValidScopedInstance(sourceInstanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    if (!accountId || !sourceInstanceId || !isValidScopedInstance(sourceInstanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
     }
-    if (req.method !== 'POST') {
-      return respondMethodNotAllowed(respond);
-    }
+    if (req.method !== 'POST') return respondMethodNotAllowed(respond);
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
 
@@ -765,7 +366,7 @@ export async function tryHandleInternalRenderRoutes(
       const duplicated = await duplicateAccountInstanceTransition({
         env,
         accountId,
-        sourceInstanceId: sourceInstanceId!,
+        sourceInstanceId,
       });
       return respond(json({ ok: true, ...duplicated }, { status: 201 }));
     } catch (error) {
@@ -773,149 +374,303 @@ export async function tryHandleInternalRenderRoutes(
     }
   }
 
-  const internalRenderPublishTransitionMatch = pathname.match(
-    /^\/__internal\/renders\/widgets\/([^/]+)\/publish\.json$/,
-  );
-  if (internalRenderPublishTransitionMatch) {
-    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderPublishTransitionMatch[1]));
+  const internalInstanceMatch = pathname.match(/^\/__internal\/instances\/([^/]+)$/);
+  if (internalInstanceMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalInstanceMatch[1] || ''));
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'POST') {
-      return respondMethodNotAllowed(respond);
-    }
-    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
-    if (!auth.ok) return respond(auth.response);
-
-    try {
-      const published = await publishAccountInstanceTransition({
-        env,
-        accountId,
-        instanceId: instanceId!,
-      });
-      return respond(json({ ok: true, ...published }));
-    } catch (error) {
-      return respond(transitionErrorResponse(error));
-    }
-  }
-
-  const internalRenderUnpublishTransitionMatch = pathname.match(
-    /^\/__internal\/renders\/widgets\/([^/]+)\/unpublish\.json$/,
-  );
-  if (internalRenderUnpublishTransitionMatch) {
-    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderUnpublishTransitionMatch[1]));
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
-    }
-    if (req.method !== 'POST') {
-      return respondMethodNotAllowed(respond);
-    }
-    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
-    if (!auth.ok) return respond(auth.response);
-    try {
-      const unpublished = await unpublishAccountInstanceTransition({
-        env,
-        accountId,
-        instanceId: instanceId!,
-      });
-      return respond(json({ ok: true, ...unpublished }));
-    } catch (error) {
-      return respond(transitionErrorResponse(error));
-    }
-  }
-
-  const internalRenderSavedMatch = pathname.match(
-    /^\/__internal\/renders\/widgets\/([^/]+)\/saved\.json$/,
-  );
-  if (internalRenderSavedMatch) {
-    const instanceId = normalizeStorageId(decodeURIComponent(internalRenderSavedMatch[1]));
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
     }
 
     if (req.method === 'GET') {
-      const authErr = await authorizeSavedRenderControlRequest({
+      const authErr = await authorizeAccountInstanceControlRequest({
         req,
         env,
         accountId,
         minRole: 'viewer',
       });
       if (authErr) return respond(authErr);
-      const saved = await readSavedRenderConfig({ env, instanceId: instanceId!, accountId });
-      if (!saved.ok && saved.kind === 'NOT_FOUND') {
+      const instance = await readAccountInstanceDocument({ env, accountId, instanceId });
+      if (!instance.ok) {
         return respond(
           json(
-            { error: { kind: 'NOT_FOUND', reasonKey: saved.reasonKey } },
-            { status: 404 },
+            { error: { kind: instance.kind, reasonKey: instance.reasonKey } },
+            { status: instance.kind === 'NOT_FOUND' ? 404 : 422 },
           ),
         );
       }
-      if (!saved.ok) {
-        return respond(
-          json(
-            { error: { kind: 'VALIDATION', reasonKey: saved.reasonKey } },
-            { status: 422 },
-          ),
-        );
-      }
-      return respond(json({ ...saved.value.pointer, config: saved.value.config }));
-    }
-
-    if (req.method === 'PUT') {
-      const authErr = await authorizeSavedRenderControlRequest({
-        req,
-        env,
-        accountId,
-        minRole: 'editor',
-      });
-      if (authErr) return respond(authErr);
-      const rawBody = await readInternalRenderJsonBody({
-        req,
-        env,
-        boundary: 'internal.render.savedWrite.body',
-        instanceId,
-        accountId,
-      });
-      if (!isRecord(rawBody)) {
-        return respondValidation(respond, 'tokyo.errors.render.invalid');
-      }
-      const body = rawBody;
-      if (typeof body.widgetType !== 'string' || !isRecord(body.config)) {
-        return respondValidation(respond, 'tokyo.errors.render.invalid');
-      }
-      const savedWrite = await writeSavedRenderConfig({
-        env,
-        instanceId: instanceId!,
-        accountId,
-        widgetType: body.widgetType as string,
-        config: body.config as Record<string, unknown>,
-        displayName: body.displayName,
-        meta: body.meta,
-      });
       return respond(
         json({
-          ...savedWrite.pointer,
-          config: body?.config,
+          ok: true,
+          accountId,
+          instanceId: instance.value.id,
+          widgetCode: instance.value.widgetCode,
+          widgetType: instance.value.widgetType,
+          displayName: instance.value.displayName,
+          publishStatus: instance.value.publishStatus,
+          updatedAt: instance.value.updatedAt,
+          meta: instance.value.meta ?? null,
+          config: instance.value.config,
         }),
       );
     }
 
-    if (req.method === 'DELETE') {
-      const authErr = await authorizeSavedRenderControlRequest({
+    if (req.method === 'PUT') {
+      const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+      if (!auth.ok) return respond(auth.response);
+
+      const body = (await readInternalRenderJsonBody({
         req,
         env,
+        boundary: 'internal.instance.save.body',
+        instanceId,
         accountId,
-        minRole: 'editor',
-      });
-      if (authErr) return respond(authErr);
-      const deleted = await deleteInstanceMirror(env, instanceId!, accountId);
+      })) as Record<string, unknown> | null;
+      if (!isRecord(body) || !isRecord(body.config)) {
+        return respondValidation(respond, 'tokyo.errors.render.invalid');
+      }
+      try {
+        const result = await saveAccountInstanceTransition({
+          env,
+          accountId,
+          instanceId,
+          submittedWidgetType: body.widgetType as string,
+          config: body.config,
+          displayName: body.displayName,
+          hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
+          meta: body.meta,
+          hasMeta: Object.prototype.hasOwnProperty.call(body, 'meta'),
+        });
+        return respond(
+          json({
+            ok: true,
+            instanceId,
+            widgetType: result.pointer.widgetType,
+            displayName: result.pointer.displayName,
+            publishStatus: result.pointer.publishStatus,
+            updatedAt: result.pointer.updatedAt,
+            live: result.live,
+          }),
+        );
+      } catch (error) {
+        return respond(transitionErrorResponse(error));
+      }
+    }
+
+    if (req.method === 'DELETE') {
+      const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+      if (!auth.ok) return respond(auth.response);
+      const deleted = await deleteAccountInstanceSubtree(env, instanceId, accountId);
       return respond(json({ ok: true, deleted: deleted.existed, existed: deleted.existed }));
     }
 
     return respondMethodNotAllowed(respond);
+  }
+
+  const internalTranslationsGenerateMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations\/generate$/);
+  if (internalTranslationsGenerateMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationsGenerateMatch[1] || ''));
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+    }
+    if (req.method !== 'POST') return respondMethodNotAllowed(respond);
+    const auth = await authorizeRomaEditorTransition({ req, env, accountId });
+    if (!auth.ok) return respond(auth.response);
+
+    const body = (await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.instance.translationGenerate.body',
+      accountId,
+      instanceId,
+    })) as Record<string, unknown> | null;
+    const translation = await generateInstanceTranslations({
+      env,
+      accountId,
+      instanceId,
+      authz: auth.capsule,
+      baseLocale: body?.baseLocale,
+      targetLocales: body?.targetLocales,
+      requestId: req.headers.get(CK_REQUEST_ID_HEADER),
+    });
+    if (!translation.ok) {
+      return respond(
+        json(
+          {
+            ok: false,
+            error: {
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: translation.reasonKey,
+              detail: translation.detail,
+            },
+            translation,
+          },
+          { status: 502 },
+        ),
+      );
+    }
+    return respond(json({ ok: true, translation }, { status: translation.accepted ? 202 : 200 }));
+  }
+
+  const internalTranslationsListMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations$/);
+  if (internalTranslationsListMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationsListMatch[1] || ''));
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+    }
+    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
+    const authErr = await authorizeAccountInstanceControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+
+    const instance = await readAccountInstanceDocument({ env, accountId, instanceId });
+    if (!instance.ok) {
+      return respond(
+        json(
+          { error: { kind: instance.kind, reasonKey: instance.reasonKey } },
+          { status: instance.kind === 'NOT_FOUND' ? 404 : 422 },
+        ),
+      );
+    }
+    const translations = await listTranslatedLocales({ env, accountId, instanceId });
+    return respond(json({
+      ok: true,
+      v: 1,
+      baseLocale: instance.value.baseLocale,
+      translations,
+    }));
+  }
+
+  const internalTranslationCompletionMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations\/([^/]+)\/complete$/);
+  if (internalTranslationCompletionMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationCompletionMatch[1] || ''));
+    const locale = String(decodeURIComponent(internalTranslationCompletionMatch[2] || '')).trim();
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !instanceId || !locale || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+    }
+    if (req.method !== 'PUT') return respondMethodNotAllowed(respond);
+    const authErr = authorizeTranslationCompletionTransition(req);
+    if (authErr) return respond(authErr);
+
+    const body = (await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.instance.translationComplete.body',
+      accountId,
+      instanceId,
+    })) as Record<string, unknown> | null;
+    const values = normalizeTranslatedValues(body?.values);
+    if (!values) return respondValidation(respond, 'tokyo.errors.render.invalid');
+
+    const completion = await completeLocaleTranslation({
+      env,
+      accountId,
+      instanceId,
+      locale,
+      job: body?.job,
+      values,
+    });
+    if (!completion.ok) {
+      return respond(
+        json(
+          {
+            ok: false,
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: completion.reasonKey,
+              detail: completion.detail,
+            },
+            completion,
+          },
+          { status: 422 },
+        ),
+      );
+    }
+    return respond(json({ ok: true, completion }));
+  }
+
+  const internalTranslationValuesMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations\/([^/]+)$/);
+  if (internalTranslationValuesMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationValuesMatch[1] || ''));
+    const locale = String(decodeURIComponent(internalTranslationValuesMatch[2] || '')).trim();
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !instanceId || !locale || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+    }
+
+    if (req.method === 'GET') {
+      const authErr = await authorizeAccountInstanceControlRequest({
+        req,
+        env,
+        accountId,
+        minRole: 'viewer',
+      });
+      if (authErr) return respond(authErr);
+
+      const instance = await readAccountInstanceDocument({ env, accountId, instanceId });
+      if (!instance.ok) {
+        return respond(
+          json(
+            { error: { kind: instance.kind, reasonKey: instance.reasonKey } },
+            { status: instance.kind === 'NOT_FOUND' ? 404 : 422 },
+          ),
+        );
+      }
+      const translation = await readTranslatedLocaleValues({ env, accountId, instanceId, locale });
+      if (!translation) {
+        return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' } }, { status: 404 }));
+      }
+      return respond(json({ ok: true, v: 1, ...translation }));
+    }
+
+    if (req.method === 'PUT') {
+      const auth = await authorizeTranslatedLocaleWriteTransition({ req, env, accountId });
+      if (!auth.ok) return respond(auth.response);
+
+      const body = (await readInternalRenderJsonBody({
+        req,
+        env,
+        boundary: 'internal.instance.translationValues.body',
+        accountId,
+      })) as Record<string, unknown> | null;
+      const values = normalizeTranslatedValues(body?.values);
+      if (!values) return respondValidation(respond, 'tokyo.errors.render.invalid');
+
+      try {
+        const translation = await writeTranslatedLocaleValues({ env, accountId, instanceId, locale, values });
+        return respond(json({ ok: true, v: 1, locale: translation.locale }));
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        return respond(json({ error: { kind: 'VALIDATION', reasonKey: detail, detail } }, { status: 422 }));
+      }
+    }
+
+    return respondMethodNotAllowed(respond);
+  }
+
+  if (pathname === '/__internal/widgets/definitions') {
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid');
+    }
+    if (req.method !== 'GET') {
+      return respondMethodNotAllowed(respond);
+    }
+    const authErr = await authorizeRomaAccountScopedRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+    return respond(json({ ok: true, widgetDefinitions: listWidgetDefinitions() }));
   }
 
   return null;

@@ -58,7 +58,7 @@ items.group.large.max | limit | sections[].faqs[]   | count-total          | ops
 
 NOTES
 
-- Every row must correspond to an entry in `tokyo/product/widgets/{widgetType}/limits.json`; shared policy/ops/publish enforcement consumes that mapping.
+- Every row must correspond to an entry in `tokyo/product/widgets/{widgetType}/limits.json`; shared policy evaluation consumes that mapping. Current proven widget enforcement is Bob editor ops unless a server boundary is explicitly implemented and tested.
 - Use active global entitlement keys from `packages/ck-policy/entitlements.matrix.json`. If a limit is product truth but enforcement is missing, mark that enforcement gap in `packages/ck-policy/src/registry.ts` instead of deleting the limit.
 - If the PRD expects UI gating (e.g. disabling a control), it must be explicit; otherwise keep UI generic and rely on shared policy plus owner-correct server enforcement.
 
@@ -191,16 +191,16 @@ GATE
 
 ---
 
-## Step 6 - `agent.md`
+## Step 6 - Runtime binding map
 
 OUTPUT
 
-- DOM parts map (scoped selectors; query within widget root).
-- Editable paths list (grouped by intent).
-- Array ops semantics (add/remove/reorder + required `id` fields).
-- Binding Map summary (how each path affects DOM/CSS).
+- DOM parts map in the implementation notes or PRD execution record (scoped selectors; query within widget root).
+- Editable paths are declared in `spec.json` and, for customer-visible text, `editable-fields.json`.
+- Array ops semantics (add/remove/reorder + required `id` fields) are enforced by editor controls/runtime, not a separate `agent.md` file.
+- Binding map summary: how each path affects DOM/CSS.
 - Prohibited paths:
-  - Anything outside the widget primitive graph in `spec.json.overlays.text[]` for text overlays.
+  - Anything outside `editable-fields.json` for translatable text.
   - Any second path schema for translation, layer authoring, or runtime overlays.
 
 GATE
@@ -213,9 +213,9 @@ GATE
 
 OUTPUT
 
-- `catalog.json` with label, description, category, display order, and capabilities.
+- `catalog.json` with label, description, category, and display order.
 - `limits.json` (unless PRD opts out).
-- `spec.json.overlays.text[]` with all translatable primitive text paths.
+- `editable-fields.json` with all editable/translatable primitive text paths when the widget has customer-visible content. `spec.json.overlays.text[]` is deleted translation-field authority and must not be reintroduced.
 - `pages/*.json` (Prague widget pages: overview/features/examples/templates/pricing).
 
 GATE
@@ -223,7 +223,7 @@ GATE
 - Valid JSON.
 - No forbidden path segments (`__proto__`, `constructor`, `prototype`).
 - Allowlist paths resolve against `spec.json` defaults.
-- `node scripts/build-widget-catalog.mjs` regenerates `tokyo/product/widgets/manifest.json` and the Tokyo-worker SEO/GEO registry without hand-editing worker source.
+- `node scripts/validate-widget-source.mjs` validates widget source without writing generated product authority.
 
 ---
 
@@ -245,23 +245,11 @@ GATE (local)
 
 ---
 
-## Step 7.2 - SEO/GEO (Iframe++)
+## Step 7.2 - SEO/GEO
 
-Only applicable if the widget exposes `seoGeo.enabled` / an SEO/GEO toggle.
+Widget `seo-geo.ts` files and `catalog.capabilities.seoGeo` are deleted from the widget source model. Do not add them in widget build work.
 
-OUTPUT
-
-- Widget-owned schema/excerpt implementation:
-  - `tokyo/product/widgets/{widgetType}/seo-geo.ts` (excerptHtml required; schemaJsonLd only when semantically implemented)
-  - `catalog.json` declares `capabilities.seoGeo: true`
-  - `node scripts/build-widget-catalog.mjs` regenerates `tokyo-worker/src/generated/widget-seo-geo-registry.ts`
-- Gating matches `documentation/capabilities/seo-geo.md`:
-  - `seoGeo.enabled !== true` → emit empty strings
-  - widget-specific schema only when semantically safe
-
-GATE
-
-- PRD 101 will define generated static SEO/GEO payloads for `clk.live` output when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
+PRD 101 will define generated static SEO/GEO payloads for `clk.live` output when enabled (`excerptHtml` and optional `schemaJsonLd`), and empty strings when disabled.
 
 ---
 

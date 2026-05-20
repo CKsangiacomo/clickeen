@@ -11,11 +11,11 @@ import {
   type FaqLanguageValue,
   type FaqSavedTextField,
 } from './faq-language-values.ts';
-import { readWidgetContentContract } from './overlay-primitives.ts';
+import { readWidgetEditableFieldsContract } from './overlay-primitives.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const contract = readWidgetContentContract(
-  JSON.parse(fs.readFileSync(path.join(repoRoot, 'tokyo/product/widgets/faq/content.json'), 'utf8')),
+const contract = readWidgetEditableFieldsContract(
+  JSON.parse(fs.readFileSync(path.join(repoRoot, 'tokyo/product/widgets/faq/editable-fields.json'), 'utf8')),
 );
 
 function config() {

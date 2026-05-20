@@ -1,6 +1,6 @@
 # PRD 103 - Instance Translation Agent Teardown And Rebuild
 
-Status: Blocked / Widget-instance source model gate
+Status: Automated runtime proofs green; human Bob/Roma/public smoke is the next PRD 103 gate
 Owner: Product + Architecture
 Date: 2026-05-17
 Depends on: PRD 100 - Static Public Embed Delivery; PRD 102 - Translation Overlay Panel Simplification; PRD 103_00; PRD 103_01; PRD 103_02
@@ -52,9 +52,9 @@ PRD 103 must not continue until the pre-103 architecture PRDs are executed:
 - `103_01__PRD__Widget_Source_And_Bootstrap_Script_Audit.md`
 - `103_02__PRD__Instance_Source_And_Public_Artifact_Model.md`
 
-These PRDs sit before 103A-103Z. They must complete before any PRD 103 runtime implementation resumes.
+These PRDs sit before 103A-103Z. They completed the architecture gate before PRD 103 runtime implementation resumed.
 
-This PRD is currently blocked because the active implementation still mixes too many unrelated authorities:
+This PRD was blocked because the active implementation mixed too many unrelated authorities:
 
 - widget software defaults
 - starter account content
@@ -71,16 +71,16 @@ The required direction is:
 - Widget software must not own starter business copy.
 - `content.json` must be renamed to `editable-fields.json` because it is a field contract, not content.
 - Account instance user-visible base content must live separately from non-content config.
-- Translation overlays apply to account instance content only.
+- Translated locale values apply to account instance content only.
 - `agent.md`, `catalog.json`, `seo-geo.ts`, generated widget manifests, generated public files, and account indexes must each have a named writer, reader, rebuild rule, and deletion/rebuild rule. Otherwise they are delete candidates.
 - Do not add `instance.meta.json` unless the current product/build/runtime system genuinely uses it. If metadata is not used, delete it instead of moving it.
 - Do not preserve version markers, sidecars, generated registries, or indexes just because they exist.
 
-`scripts/build-widget-catalog.mjs` is verified as currently used by root build/typecheck and by Tokyo-worker's generated widget catalog, but that does not make it a valid architecture. It bundles defaults, catalog metadata, editable fields, overlay contract derivation, and SEO/GEO registry generation into one generated artifact, then other code consumes that artifact instead of reading the simple source it actually needs.
+`scripts/build-widget-catalog.mjs` was verified as a bootstrap-era product assembly script, and 103_01.3b deleted it. It bundled defaults, catalog metadata, editable fields, overlay contract derivation, and SEO/GEO registry generation into one generated artifact, then other code consumed that artifact instead of reading the simple source it actually needed.
 
-The target is to remove the catchall manifest dependency. Each product path must read the smallest direct source it actually needs, or use a narrow purpose-specific generated file only when direct source consumption is impossible. `scripts/build-widget-catalog.mjs` and `tokyo/product/widgets/manifest.json` are kill candidates until proven otherwise.
+The target is to keep the catchall manifest dependency deleted. Each product path must read the smallest direct source it actually needs, or use a named product operation. `scripts/build-widget-catalog.mjs` and `tokyo/product/widgets/manifest.json` must not return.
 
-The same audit applies to bootstrap-era `.mjs` scripts. Scripts that materialize product files, sync repo files to R2, translate repo-owned content, or generate shared manifests were useful when local Node scripts acted as the assembly line. In the Cloudflare-era product model, those scripts are not automatically valid. Before PRD 103 resumes, each materializer/syncer must be classified as:
+The same audit applies to bootstrap-era `.mjs` scripts. Scripts that materialize product files, sync repo files to R2, translate repo-owned content, or generate shared manifests were useful when local Node scripts acted as the assembly line. In the Cloudflare-era product model, those scripts are not automatically valid. Before any slice depends on one of these scripts, that materializer/syncer must be classified as:
 
 - keep: still required by a documented Cloudflare build/deploy/runtime contract
 - cloudify: move the responsibility into the Cloudflare-owned product/service boundary
@@ -152,7 +152,7 @@ The refactor is not allowed to close unless each failure mode below has a named 
 
 1. **Moved files but no surviving authority**
    - Gate: FAQ has one authored editable-fields contract for customer-visible text.
-   - Proof: Bob content controls, Translation, language values, Bob review, and generated overlay values derive from that editable-fields contract plus saved instance content.
+   - Proof: Bob content controls, Translation, translated locale values, Bob review, and generated public artifacts derive from that editable-fields contract plus saved instance content.
    - Fail if: `spec.json`, `overlays.text[]`, compiled-control regexes, or `agent.md` can define FAQ translation text independently.
 
 2. **Translation becomes agent-shaped but not job-shaped**
@@ -281,7 +281,7 @@ The current shape is wrong as the product architecture:
    - The code should make the agent/job/result visible in Clickeen language.
 
 7. Copilot and translation do not share one text base.
-   - Translation uses `spec.json.overlays.text[]`.
+   - Before the 103_01 source gate, translation used `spec.json.overlays.text[]`.
    - Copilot uses compiled editor controls plus heuristics for content-like fields.
    - This creates two different ways to decide what "FAQ text" is.
    - PRD 103 must remove that split.
@@ -523,7 +523,7 @@ FAQ
       defaultOpen
 ```
 
-The authored FAQ content JSON must carry only the meaning needed by Translation and Bob review:
+The FAQ editable-fields contract must carry only the meaning needed by Translation and Bob review:
 
 ```text
 path
@@ -537,7 +537,7 @@ array item identity
 
 The authored widget source is the authority.
 
-Translation Agent input, overlay values, and Bob translation review derive from authored content JSON.
+Translation Agent input, translated locale values, and Bob translation review derive from `editable-fields.json` plus saved `instance.content.json`.
 
 Copilot is different: it is a widget specialist and must understand the whole widget package, not a narrow translation text list.
 
@@ -545,24 +545,20 @@ Copilot is different: it is a widget specialist and must understand the whole wi
 
 The current 3k+ line `spec.json` shape is not scalable for hundreds of widgets or AI execution. PRD 103 must introduce an authored widget source split before more execution.
 
-Target FAQ authored source:
+Current approved FAQ source for PRD 103 runtime:
 
 ```text
 faq/
-  spec.json              # small entrypoint or generated compatibility artifact
-  content.json           # customer-visible content fields for Translation
-  editor.json            # Bob/ToolDrawer panels and controls
-  defaults.json          # default instance config
-  normalization.json     # ids/coercion rules
-  limits.json
-  catalog.json
-  widget.html
-  widget.css
-  widget.client.js
-  agent.md
+  spec.json              # current editor/default/config source; not translation field authority
+  editable-fields.json   # customer-visible editable/translatable field contract
+  widget.html            # runtime HTML scaffold
+  widget.css             # runtime styles
+  widget.client.js       # runtime applyState/client logic
+  catalog.json           # small listing metadata only while proven useful
+  limits.json            # widget path/operation/cap mappings to ck-policy
 ```
 
-For FAQ, `content.json` declares:
+For FAQ, `editable-fields.json` declares:
 
 ```text
 header.title
@@ -586,9 +582,9 @@ IDs are identity. `defaultOpen` is behavior/config state. Neither is customer-vi
 The split produces two different projections:
 
 ```text
-content.json
+editable-fields.json
   -> Translation Agent
-  -> language overlay values
+  -> translated locale values
   -> Bob translation review
   -> publish language files
 
@@ -598,9 +594,7 @@ whole widget folder
   -> runtime/render understanding
 ```
 
-`content.json` is hand-authored. Any compatibility artifact must be generated from it.
-
-`agent.md` must not repeat a separate schema. It should explain how the widget works for Copilot and future agents.
+`editable-fields.json` is the hand-authored translation field contract. `agent.md` is deleted as widget source and must not return as schema authority.
 
 ### Save
 
@@ -837,7 +831,7 @@ The difference between the two agents is scope:
 
 ```text
 Translation Agent:
-  scope = authored content JSON
+  scope = editable-fields contract plus saved instance.content.json
   job = localize saved customer-visible text after Save
 
 Copilot Agent:
@@ -845,7 +839,7 @@ Copilot Agent:
   job = understand the widget and apply valid config changes from user intent
 ```
 
-This does not mean Copilot should start reading `overlays.text[]` or a generated translation projection. It means Copilot needs a widget package view: content, editor controls, defaults, normalization, limits, HTML, CSS, client runtime, and `agent.md` guidance.
+This does not mean Copilot should start reading `overlays.text[]` or a generated translation projection. It means Copilot needs the approved widget package view: editable fields, editor controls, defaults/config shape, normalization, limits, HTML, CSS, and client runtime.
 
 ### Demote Overlay Declarations
 
@@ -973,14 +967,14 @@ The merge must be idempotent. Running it twice with the same inputs produces the
 
 Partial agent failure must not overwrite the last good current language set.
 
-### Manual Overlay Edits
+### Manual Translated-Locale Edits
 
-Manual translation editing is a direct edit to the selected current-language overlay values object.
+Manual translation editing is a direct edit to the current translated-locale values object.
 
-Each overlay remains:
+The product payload remains:
 
 ```text
-{ v: 1, values: Record<content path, translated string> }
+{ locale, values: Record<content path, translated string> }
 ```
 
 Product decision:
@@ -988,8 +982,8 @@ Product decision:
 ```text
 Bob edits an existing translated value.
 Bob writes the full current-language values object through Roma.
-Roma writes it through Tokyo's existing language overlay primitive.
-Publish reads the selected overlay value.
+Roma writes it through Tokyo's translated-locale value product operation.
+Publish reads the current translated-locale value.
 ```
 
 The edit is temporary. Clickeen does not store override status, review state, or protection metadata for the edited field. If the same field is regenerated, the new AI translation overwrites the manual edit.
@@ -1114,11 +1108,11 @@ Notes:
 Immediate restart order after the deterministic audit:
 
 ```text
-1. Fix the Tokyo overlay test floor while keeping `content.json` as FAQ translation authority.
+1. Fix the Tokyo translated-locale test floor while keeping `editable-fields.json` plus saved `instance.content.json` as FAQ translation authority.
 2. Wire Bob's Translations panel to render review rows from the generic content projection.
 3. Name and prove the panel-owned Generate delta authority, then prove changed/missing whole fields, agent result, and Tokyo write.
-4. Upgrade 103V from helper proof to real product-path proof.
-5. Continue with Publish, policy/model routing, San Francisco runtime cleanup, then manual overrides.
+4. Upgrade 103V from helper proof to real product-path proof. This is green as of 2026-05-20.
+5. Publish proof and manual override reproof are green as of 2026-05-20; continue with human Bob/Roma/public smoke as the next PRD 103 gate.
 ```
 
 ### 103A - Teardown Map And Agent Boundary
@@ -1154,9 +1148,9 @@ Split FAQ's authored widget source so `spec.json` stops being the 3k+ line monol
 
 Acceptance:
 
-- FAQ has an authored `content.json` containing only customer-visible content fields for Translation.
+- FAQ has an authored `editable-fields.json` containing only customer-visible editable/translatable field definitions for Translation.
 - FAQ has authored editor/defaults/normalization sources or an explicit composition plan that removes the monolithic hand-authored `spec.json` as the long-term source format.
-- `content.json` is the authored translation source.
+- `editable-fields.json` is the authored translation field contract; saved base values live in `instance.content.json`.
 - `per-field Copilot allowlist` is removed from the content-field model.
 - The authored source can still generate or supply the current Bob/Tokyo artifacts needed during migration.
 - Tokyo overlay tests pass from generated/content-derived translation contract data, not from a restored hand-authored FAQ translation section in `spec.json`.
@@ -1168,7 +1162,7 @@ Make Translation and Copilot consume the right projection from the same widget f
 
 Acceptance:
 
-- Translation receives declared text paths and labels from authored `content.json`.
+- Translation receives declared text paths and labels from authored `editable-fields.json` and saved base values from `instance.content.json`.
 - Copilot receives a widget package view, not only a translation text list.
 - Current state is not product-green while Copilot receives only compiled controls instead of the full widget package.
 - Copilot no longer decides FAQ content fields with regexes over path/label/group label.
@@ -1182,14 +1176,14 @@ Refactor FAQ so future widgets can copy its shape.
 
 Acceptance:
 
-- FAQ has one authored `content.json` for header, CTA, section titles, questions, and answers.
+- FAQ has one authored `editable-fields.json` for header, CTA, section titles, questions, and answers.
 - FAQ editor controls reference authored content fields instead of burying product meaning only in object-manager/repeater markup.
 - FAQ translation paths derive from authored content fields.
 - FAQ Copilot context derives from the whole FAQ widget package.
 - FAQ runtime validation/rendering consumes the same canonical state shape.
 - FAQ `agent.md` no longer acts as a separate schema authority.
 - No future widget needs to hand-maintain a separate overlay text graph to participate in translation.
-- A validation test fails if a translated field exists outside authored `content.json`.
+- A validation test fails if a translated field exists outside authored `editable-fields.json`.
 - A deletion/derivation decision is recorded for each duplicate source: `spec.json` translation fields, `overlays.text[]`, Copilot control heuristics, `agent.md`, and object-manager markup paths.
 - Future widget PRDs must use FAQ's corrected contract shape, not the current FAQ `spec.json` shape.
 
@@ -1233,7 +1227,7 @@ Turn the Translations panel from a preview selector into a review surface.
 Acceptance:
 
 - User selects a language.
-- Bob shows translated fields from authored content JSON / its generated translation projection.
+- Bob shows translated fields from the editable-fields/current-language-values review projection.
 - FAQ is the first proven contract shape, not a hardcoded Bob review path.
 - Preview still works.
 - Bob shows `X of Y translations ready` only while the number of ready Tokyo overlays is lower than the number of enabled target locales from Roma settings.
@@ -1256,7 +1250,7 @@ Acceptance:
 - Clickeen detects only the changed field.
 - Instance Translation Agent translates that field for one target locale.
 - `buildCurrentLanguageValues()` writes a complete current language value set for that locale.
-- Bob Translations panel shows the translated FAQ text through the authored content JSON review path.
+- Bob Translations panel shows the translated FAQ text through the editable-fields/current-language-values review path.
 - Preview uses the same current language values.
 - No `spec.json` translation field list, `overlays.text[]`, compiled-control regex, or preview-only state is used as authored text authority.
 - This proof runs through the real production path, not a demo lane.
@@ -1264,14 +1258,14 @@ Acceptance:
 
 ### 103F - Translation Override UX
 
-Add manual translation edits only as edits to the current-language overlay values object.
+Add manual translation edits only as edits to the current translated-locale values object.
 
 Acceptance:
 
 - User can edit a translated value.
-- Bob writes the full overlay values object for the same FAQ instance and same language.
-- Tokyo validates and versions the overlay through the same primitive used by Translation Agent writes.
-- Publish consumes the edited overlay value.
+- Bob writes the full translated-locale values object for the same FAQ instance and same language.
+- Tokyo validates the full values object through the saved instance editable-fields contract and rejects partial maps.
+- Publish consumes the edited translated locale value.
 - No second translation authority, provenance layer, or review-state layer is added.
 
 ### 103G - Save/Publish Generated Language Files
@@ -1281,7 +1275,7 @@ Make static language generation a direct product outcome.
 Acceptance:
 
 - After save/translation, current language values can be used to generate language files.
-- Generated base and enabled-language files are produced from the same saved instance version and language value version.
+- Generated base and enabled-language files are produced from the same saved instance content/config and current translated locale values.
 - Publish serves the generated base and language files.
 - Publish reads only saved instance state and current language values.
 - Publish does not call Bob, Roma editor state, or San Francisco LLMs.
@@ -1290,7 +1284,7 @@ Acceptance:
 - A post-publish verification test loads the public FAQ in the base locale and at least one translated locale.
 - Publish failure copy names the missing product outcome plainly.
 - Public visitor serving remains static.
-- This slice is blocked until 103V proves Tokyo write/read and Bob review in the real product path.
+- 103V has proven Tokyo translated-locale value write/read and Bob review in the real product path; this slice is the next runtime proof.
 
 ### 103H - Shared Agent Model Profiles
 

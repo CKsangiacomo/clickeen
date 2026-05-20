@@ -8,21 +8,24 @@ import {
   isOverlayVersion,
   parseOverlayId,
 } from '@clickeen/ck-contracts/overlay-identity';
-import { resolveLocaleForLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import {
-  extractTextPrimitiveValues,
+  resolveLanguageOverlayCode,
+  resolveLocaleForLanguageOverlayCode,
+} from '@clickeen/ck-contracts/overlay-codebooks';
+import {
+  extractTextPrimitiveValuesForEditableFields,
   validateOverlayValuesForTextPrimitives,
 } from '@clickeen/ck-contracts/overlay-primitives';
 import type { Env } from '../../types';
 import {
-  resolveWidgetCatalogEntry,
+  getWidgetDefinition,
   resolveWidgetTypeFromCode,
 } from '../widget-catalog';
 import {
   accountInstanceOverlayObjectKey,
   accountInstanceOverlayObjectPrefix,
 } from './keys';
-import { readSavedRenderConfig } from './saved-config';
+import { readAccountInstanceDocument, readSavedRenderConfig } from './saved-config';
 import { loadJson, putJson } from './storage';
 import type {
   OverlayObjectDocument,
@@ -44,6 +47,15 @@ export type LocaleOverlayInventoryEntry = {
   overlayId: string;
 };
 
+export type TranslatedLocaleSummary = {
+  locale: string;
+};
+
+export type TranslatedLocaleValues = {
+  locale: string;
+  values: Record<string, string>;
+};
+
 export type OverlayCompletenessResult =
   | { ok: true }
   | {
@@ -53,11 +65,23 @@ export type OverlayCompletenessResult =
       path?: string;
     };
 
+const OVERLAY_VERSION_TECHNICAL_MAX = 100;
+
 function assertValues(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('tokyo.overlay.values_invalid');
   }
   return value as Record<string, unknown>;
+}
+
+function normalizeStringValues(value: unknown): Record<string, string> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const values: Record<string, string> = {};
+  for (const [path, text] of Object.entries(value)) {
+    if (!path || typeof text !== 'string') return null;
+    values[path] = text;
+  }
+  return values;
 }
 
 function normalizeCoordinate(input: {
@@ -171,8 +195,8 @@ export async function validateOverlayObjectForSavedInstance(args: {
       detail: saved.reasonKey,
     };
   }
-  const catalogEntry = resolveWidgetCatalogEntry(saved.value.pointer.widgetType);
-  if (!catalogEntry) {
+  const widgetDefinition = getWidgetDefinition(saved.value.pointer.widgetType);
+  if (!widgetDefinition) {
     return {
       ok: false,
       reasonKey: 'tokyo.overlay.widget_contract_missing',
@@ -182,8 +206,8 @@ export async function validateOverlayObjectForSavedInstance(args: {
 
   let requiredItems;
   try {
-    requiredItems = extractTextPrimitiveValues({
-      spec: { overlays: catalogEntry.overlays },
+    requiredItems = extractTextPrimitiveValuesForEditableFields({
+      contract: widgetDefinition.editableFields,
       config: saved.value.config,
     });
   } catch (error) {
@@ -287,6 +311,90 @@ export async function listLocaleOverlayInventory(args: {
       if (overlayId && locale) inventory.push({ locale, overlayId });
   }
   return inventory.sort((left, right) => left.locale.localeCompare(right.locale));
+}
+
+export async function listTranslatedLocales(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+}): Promise<TranslatedLocaleSummary[]> {
+  const inventory = await listLocaleOverlayInventory(args);
+  return inventory.map((entry) => ({ locale: entry.locale }));
+}
+
+export async function readTranslatedLocaleValues(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  locale: string;
+}): Promise<TranslatedLocaleValues | null> {
+  const locale = String(args.locale || '').trim();
+  if (!locale) return null;
+  const inventory = await listLocaleOverlayInventory({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+  });
+  const entry = inventory.find((candidate) => candidate.locale === locale);
+  if (!entry) return null;
+  const object = await readOverlayObject({ env: args.env, overlayId: entry.overlayId });
+  const values = normalizeStringValues(object?.values);
+  return values ? { locale, values } : null;
+}
+
+export async function writeTranslatedLocaleValues(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  locale: string;
+  values: Record<string, string>;
+}): Promise<TranslatedLocaleValues> {
+  const locale = String(args.locale || '').trim();
+  const languageCode = resolveLanguageOverlayCode(locale);
+  const values = normalizeStringValues(args.values);
+  if (!locale || !languageCode || !values) {
+    throw new Error('tokyo.translation.values_invalid');
+  }
+
+  const instance = await readAccountInstanceDocument({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+  });
+  if (!instance.ok) {
+    throw new Error(instance.reasonKey);
+  }
+
+  const validationOverlayId = buildOverlayId({
+    accountPublicId: args.accountId,
+    widgetCode: instance.value.widgetCode,
+    instanceId: args.instanceId,
+    languageCode,
+    experiment: DEFAULT_OVERLAY_EXPERIMENT,
+    personalization: DEFAULT_OVERLAY_PERSONALIZATION,
+    version: '00',
+  });
+  const validation = await validateOverlayObjectForSavedInstance({
+    env: args.env,
+    overlayId: validationOverlayId,
+    values,
+  });
+  if (!validation.ok) {
+    throw new Error(validation.detail || validation.reasonKey);
+  }
+
+  const overlayId = await allocateOverlayId({
+    env: args.env,
+    coordinate: {
+      accountId: args.accountId,
+      widgetCode: instance.value.widgetCode,
+      instanceId: args.instanceId,
+      languageCode,
+    },
+    maxVersions: OVERLAY_VERSION_TECHNICAL_MAX,
+  });
+  await writeOverlayObject({ env: args.env, overlayId, values });
+  return { locale, values };
 }
 
 async function isOverlayIdReferenced(args: {

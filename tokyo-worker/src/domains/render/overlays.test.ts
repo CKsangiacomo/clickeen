@@ -3,22 +3,25 @@ import test from 'node:test';
 import { DEFAULT_OVERLAY_EXPERIMENT, DEFAULT_OVERLAY_PERSONALIZATION } from '@clickeen/ck-contracts/overlay-identity';
 import {
   buildOverlayTextValueMap,
-  extractTextPrimitiveValues,
+  extractTextPrimitiveValuesForEditableFields,
 } from '@clickeen/ck-contracts/overlay-primitives';
 import type { Env } from '../../types.ts';
 import {
-  resolveWidgetCatalogEntry,
+  getWidgetDefinition,
   resolveWidgetDefaults,
 } from '../widget-catalog.ts';
 import {
   allocateOverlayId,
   listLocaleOverlayInventory,
+  listTranslatedLocales,
   readOverlayObject,
   readSelectedOverlayPointer,
   readSelectedOverlayProjection,
+  readTranslatedLocaleValues,
   validateOverlayObjectForSavedInstance,
   writeOverlayObject,
   writeSelectedOverlayPointer,
+  writeTranslatedLocaleValues,
 } from './overlays.ts';
 import { writeSavedRenderConfig } from './saved-config.ts';
 
@@ -80,9 +83,9 @@ const COORDINATE = {
 
 async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
   const config = resolveWidgetDefaults('faq');
-  const catalogEntry = resolveWidgetCatalogEntry('faq');
+  const widgetDefinition = getWidgetDefinition('faq');
   assert(config, 'FAQ defaults missing from widget catalog');
-  assert(catalogEntry, 'FAQ catalog entry missing');
+  assert(widgetDefinition, 'FAQ widget definition missing');
   await writeSavedRenderConfig({
     env,
     accountId: COORDINATE.accountId,
@@ -93,8 +96,8 @@ async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
     meta: null,
   });
   return buildOverlayTextValueMap(
-    extractTextPrimitiveValues({
-      spec: { overlays: catalogEntry.overlays },
+    extractTextPrimitiveValuesForEditableFields({
+      contract: widgetDefinition.editableFields,
       config,
     }),
   );
@@ -165,6 +168,51 @@ test('locale overlay inventory lists actual overlay files only', async () => {
     { locale: 'cs', overlayId: csOverlay },
     { locale: 'it', overlayId: secondIt },
   ]);
+});
+
+test('translated locale operations expose locale values without overlay identities', async () => {
+  const { env } = createTestEnv();
+  const fullValues = await seedSavedFaqInstance(env);
+
+  assert.deepEqual(await writeTranslatedLocaleValues({
+    env,
+    accountId: COORDINATE.accountId,
+    instanceId: COORDINATE.instanceId,
+    locale: 'it',
+    values: fullValues,
+  }), {
+    locale: 'it',
+    values: fullValues,
+  });
+
+  assert.deepEqual(await listTranslatedLocales({
+    env,
+    accountId: COORDINATE.accountId,
+    instanceId: COORDINATE.instanceId,
+  }), [
+    { locale: 'it' },
+  ]);
+
+  assert.deepEqual(await readTranslatedLocaleValues({
+    env,
+    accountId: COORDINATE.accountId,
+    instanceId: COORDINATE.instanceId,
+    locale: 'it',
+  }), {
+    locale: 'it',
+    values: fullValues,
+  });
+
+  await assert.rejects(
+    () => writeTranslatedLocaleValues({
+      env,
+      accountId: COORDINATE.accountId,
+      instanceId: COORDINATE.instanceId,
+      locale: 'it',
+      values: { 'header.title': 'Solo titolo' },
+    }),
+    /overlay values missing_path: header\.subtitleHtml/,
+  );
 });
 
 test('saved instance overlay validation rejects partial FAQ values', async () => {

@@ -106,9 +106,9 @@ tokyo/product/widgets/{widgetname}/
 ├── widget.html            ← HTML structure
 ├── widget.css             ← All styling
 ├── widget.client.js       ← Runtime behavior
-├── agent.md               ← AI editing contract
-├── limits.json            ← Entitlements caps/flags consumed by shared policy enforcement
-└── catalog.json           ← Widget catalog metadata and capability declarations
+├── editable-fields.json   ← Editable/translatable text contract when needed
+├── limits.json            ← Widget path/op mapping to ck-policy entitlement keys
+└── catalog.json           ← Small catalog listing metadata only
 ```
 
 Their deployed R2 home is:
@@ -120,7 +120,7 @@ product/widgets/{widgetname}/
 ### What This Means
 
 - Core runtime files contain **everything** about widget behavior
-- Contract files define widget capabilities and editor/runtime validation
+- Contract files define editor/runtime validation, translatable fields, and policy-key mappings
 - Prague pages and retained Prague localization belong under the `prague/` root, not inside widget storage
 - No other system adds, removes, or modifies widget behavior
 - If it's not in these files, it doesn't exist

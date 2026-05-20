@@ -15,6 +15,14 @@ export function accountInstanceDocumentKey(accountId: string, widgetCode: string
   return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/instance.json`;
 }
 
+export function accountInstanceConfigKey(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/instance.config.json`;
+}
+
+export function accountInstanceContentKey(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/instance.content.json`;
+}
+
 export function accountInstanceOverlayObjectKey(
   accountId: string,
   widgetCode: string,

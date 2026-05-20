@@ -1,4 +1,4 @@
-import type { WidgetContentContract, WidgetContentField } from './overlay-primitives';
+import type { WidgetEditableFieldsContract, WidgetEditableField } from './overlay-primitives';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -82,13 +82,13 @@ function assertUniqueField(out: FaqSavedTextField[], field: FaqSavedTextField): 
   out.push(field);
 }
 
-function textType(field: WidgetContentField): 'string' | 'richtext' {
+function textType(field: WidgetEditableField): 'string' | 'richtext' {
   return field.type;
 }
 
 function makeField(args: {
   instanceId: string;
-  field: WidgetContentField;
+  field: WidgetEditableField;
   path: string;
   sectionId?: string;
   faqId?: string;
@@ -109,14 +109,14 @@ function makeField(args: {
   };
 }
 
-function fieldByPath(contract: WidgetContentContract, path: string): WidgetContentField {
+function fieldByPath(contract: WidgetEditableFieldsContract, path: string): WidgetEditableField {
   const field = contract.fields.find((candidate) => candidate.path === path);
   if (!field) throw new Error(`faq_language.contract_field_missing:${path}`);
   return field;
 }
 
 export function buildFaqSavedTextGraph(args: {
-  contract: WidgetContentContract;
+  contract: WidgetEditableFieldsContract;
   config: Record<string, unknown>;
   instanceId: string;
 }): FaqSavedTextField[] {

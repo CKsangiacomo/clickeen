@@ -5,6 +5,8 @@ Owner: Product + Engineering
 Date: 2026-05-16
 Parent: `100__PRD__Static_Public_Embed_Delivery.md`
 
+PRD 103_00 NOTE: this PRD is narrowed to public static file serving internals. `index.html` or support-file presence must not be cited as authoring, translation, publish, or workflow product state while the pre-103 gate is active.
+
 ## Purpose
 
 Define the public serving contract for generated PRD 100 instance mini-sites on the canonical public hostname:

@@ -2,7 +2,9 @@
 
 This is the technical reference for working in the Clickeen codebase. For strategy and vision, see `documentation/strategy/WhyClickeen.md`.
 
-**PRE‑GA / AI iteration contract (read first):** Clickeen is **pre‑GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions). This does **not** mean “take shortcuts” — build clean, scalable primitives and keep the architecture disciplined. But it **does** mean: avoid public‑facing backward compatibility shims, long‑lived migrations, ad‑hoc fallback behavior, defensive edge‑case handling, or multi‑version support unless a PRD explicitly requires it. Overlay truth is PRD 100: `overlayId` is the only overlay identity and overlay bodies are exact value maps under the owning instance `overlays/` folder. Physical account runtime storage truth is PRD 100: account-owned instances live at `accounts/{accountPublicId}/instances/{instanceId}/`, each instance has one source JSON (`instance.json`), account-owned assets live at `accounts/{accountPublicId}/assets/`, and widget software lives under `product/widgets/`. Assume we can make breaking changes across the stack and update the current widget definitions (`tokyo/product/widgets/*`), defaults (`spec.json` -> `defaults`), and system/admin-owned local/dev instances accordingly. Prefer **strict contracts + fail‑fast** (clear errors when inputs/contracts are wrong) over “try to recover” logic. For high-impact changes, still use safety rails (feature flags, rollback switches, and data-safety checks) when a change can affect runtime behavior.
+PRD 103_00 NOTE: this file now describes the intended product-operation model after the pre-103 source-model cleanup. Final PRD 103 resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+
+**PRE-GA / AI iteration contract (read first):** Clickeen is **pre-GA**. We are actively building the core product surfaces (Dieter components, Bob controls, compiler/runtime, widget definitions, Roma account Builder, Tokyo account instance operations, and San Francisco agents). This does **not** mean "take shortcuts" -- build clean, scalable primitives and keep the architecture disciplined. It does mean: avoid public-facing backward compatibility shims, long-lived migrations, ad-hoc fallback behavior, defensive edge-case handling, or multi-version support unless a PRD explicitly requires it. Product services speak product-operation vocabulary. Storage objects, generated files, queues, and R2 paths may exist only as implementation details behind those operations. Assume we can make breaking changes across the stack and update current widget definitions, starter/admin-owned instances, and dev data accordingly. Prefer **strict contracts + fail-fast** over "try to recover" logic. For high-impact changes, still use safety rails when runtime behavior or customer data can be affected.
 
 **Debugging order (when something is unclear):**
 
@@ -91,24 +93,24 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 - Complete functional software for a widget type (e.g. FAQ)
 - Surviving repo source lives in `tokyo/product/widgets/{widgetType}/`
-- Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, optional widget-local `widget.*.js` helpers, and `agent.md`
-- Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `catalog.json`, `spec.json`, widget `content.json` where present, `agent.md`, and widget-owned runtime assets. PRD 103 moves FAQ translation text authority to authored `content.json`; generated overlay primitives may still exist as internal path/value plumbing, but they are not the authored translation source.
+- Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, and optional widget-local `widget.*.js` helpers.
+- Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `catalog.json`, `spec.json`, `editable-fields.json` where present, `limits.json`, and widget-owned runtime assets. `agent.md` is deleted widget source; do not use it as schema, guidance, or publish input.
 - Platform-controlled; **not stored in Michael**
 
-**Instance** = THE ACCOUNT-OWNED DATA AND STATIC MINI-SITE SOURCE
+**Instance** = THE ACCOUNT-OWNED WIDGET SOURCE AND PUBLIC ARTIFACT INPUT
 
 - One saved configured widget owned by one account.
-- Stored in Tokyo under the owning account at `accounts/{accountPublicId}/instances/{instanceId}/`.
-- `instance.json` is the only top-level source JSON for identity, ownership, display metadata, saved config, source version, generation status, and Roma-visible publish status. There is no sibling `config.json`, `publish.json`, `embed.json`, or `translations.json`.
-- Overlay objects are separate exact objects at `overlays/{overlayId}.json` under the same instance. The first/current overlay family is locale translation overlays.
-- Generated browser files for the public mini-site live in the same instance folder as `index.html`, `styles.css`, and `script.js`. The canonical public URL is `https://clk.live/{accountPublicId}/{instanceId}` and maps directly to that folder. Public serving is controlled by `index.html` physical presence, not by a runtime render pointer or product-service lookup.
-- `accounts/{accountPublicId}/instances/index.json` is a generated account read model for Roma navigation. It is rebuildable from instance subtrees and must not be treated as instance identity authority.
-- No generated artifact is required to determine account instance identity, ownership, saved config truth, or generation status. If generated browser files are missing or out of date, Roma shows that state; public serving does not synthesize a widget at request time.
-- Tokyo instance indexes are prepared read models for product navigation. Hot list reads validate the index contract and must not perform full R2 integrity audits; save/publish/delete mutation paths patch one affected index entry. Full rebuild is a repair/read-missing boundary, not steady-state mutation work.
-- Michael does not keep a parallel account widget instance table. Support, billing/account reporting, and audit flows must use account/user relational data plus Tokyo-owned instance documents, not a Michael `widget_instances` projection.
-- Product-path account open resolves the saved authoring revision from Tokyo; instance serve-state (`published` / `unpublished`) and localization/publication truth belong in the Tokyo/Tokyo-worker plane
-- On the active account authoring path, user-facing instance identity (`widgetType`, `displayName`, `source`, `meta`) is Tokyo-owned.
-- Bob holds working copy in memory as `instanceData` during editing
+- Tokyo owns instance product operations for `accountPublicId + instanceId`: list, open, save, rename, create, duplicate, delete, generate translations, read/write translated locale values, publish, and unpublish.
+- Source is split by product meaning:
+  - `instance.config.json` carries non-text settings, structure, style, behavior, identity/display metadata, widget type/code, base locale, target locales, publish status, and timestamps.
+  - `instance.content.json` carries user-visible base text in the same editable paths Bob exposes, plus `ok` / `changed` status for translation pickup.
+- `instance.json` may exist only as a transitional compatibility mirror. It is not the product source authority and must not receive new product meaning.
+- Translated locale values are addressed by `instanceId + locale` at product boundaries. Tokyo may persist exact value maps privately; Bob, Roma, and San Francisco must not use overlay IDs or storage paths as locale identity.
+- Public browser files such as `index.html`, `styles.css`, `script.js`, `{locale}.html`, and `script.{locale}.js` are generated artifacts. They are output of publish/materialization, not authoring truth and not publish state.
+- Publish status is Tokyo-owned product state. Public serving checks publish status and requested artifact availability; `index.html` physical presence does not define whether the instance is published.
+- `accounts/{accountPublicId}/instances/index.json`, if present during transition, is a private cache/read model below `listAccountInstances`. Roma must not call or reason about it.
+- Michael does not keep a parallel account widget instance table. Support, billing/account reporting, and audit flows must use account/user relational data plus Tokyo-owned instance product operations.
+- Bob holds the working copy in memory during editing and sends changes back through Roma/Tokyo product routes.
 
 **Account** = THE OWNERSHIP BOUNDARY
 
@@ -121,17 +123,20 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 accounts/{accountPublicId}/
   assets/
   instances/
-    index.json
+    index.json                  # transitional private cache only
     {instanceId}/
-      instance.json
-      index.html
-      styles.css
-      script.js
-      overlays/
-        {overlayId}.json
+      instance.config.json       # approved non-text source + identity/display/locale/publish metadata
+      instance.content.json      # approved base user-visible text source + translation pickup status
+      instance.json              # transitional compatibility mirror only
+      index.html                 # generated public artifact
+      styles.css                 # generated public artifact
+      script.js                  # generated public artifact
+      {locale}.html              # generated public artifact
+      script.{locale}.js         # generated public artifact
+      translated-locale-values/  # private implementation shape; not product vocabulary
 ```
 
-`widgetCode` may appear in `instance.json` and in `overlayId` because it is shared codebook metadata. It is never required to locate an instance in R2 storage.
+`widgetCode` may appear in instance metadata because it is shared codebook metadata. It is never required to locate an instance in R2 storage.
 
 **Clickeen-Owned Example Instance** = A NORMAL ACCOUNT INSTANCE USED BY PRODUCT FILES
 
@@ -147,12 +152,12 @@ Core account editing currently uses direct app-owned read/write paths for the on
 
 For the 075 authoring simplification track, this account-mode Roma -> Bob -> Tokyo chain is the governing authoring path; non-account/helper flows do not define account authoring truth.
 
-1. **Open core instance**: `GET /api/builder/:instanceId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads one saved authoring envelope from Tokyo through the private product-control binding, and then sends Bob one `ck:open-editor` payload. Builder open is an authoring boundary: it requires the saved widget config and account authorization, not publish/serve state. Publish/unpublish state remains owned by Tokyo's serve-state flows and must not block opening an unpublished widget for editing.
-2. **Save**: `PUT /api/account/instances/:instanceId` when the editor saves. Roma validates the account request, then calls one Tokyo-worker save transition for that existing instance. Tokyo-worker verifies the saved document, rejects widget-type mismatch, preserves omitted display metadata, writes the saved config, reads its own publish state, and returns base-save success. Translation/Babel follow-up is orchestrated by Roma + San Francisco after the save boundary; Tokyo-worker does not queue or generate translations.
-3. **Widgets list + rename identity**: Roma reads user-instance identity for `/widgets` from Tokyo saved documents. The surviving publish/unpublish authority is Tokyo's per-instance serve flag, not a Michael status row. Rename writes that Tokyo identity directly instead of patching Michael `display_name`.
-4. **Create/duplicate**: account instance creation is a Tokyo-owned storage verb. Roma sends account create or duplicate intent, Tokyo-worker mints the compact 10-character uppercase base36 instance ID, sources create config from the current widget definition defaults or duplicate config from the existing saved document, writes the account instance documents, and returns the new instance to Roma. Roma does not mint IDs or run compensation cleanup for Tokyo-owned duplicate state.
+1. **Open core instance**: `GET /api/builder/:instanceId/open` once per Roma Builder open. Roma resolves the active account from the signed bootstrap capsule, loads one account instance authoring envelope from Tokyo through the private product-control binding, and then sends Bob one `ck:open-editor` payload. Builder open is an authoring boundary: it requires approved instance config/content and account authorization, not public artifact availability.
+2. **Save**: `PUT /api/account/instances/:instanceId` when the editor saves. Roma validates the account request, then calls one Tokyo-worker save transition for that existing instance. Tokyo-worker verifies the account instance, rejects widget-type mismatch, preserves omitted display metadata, writes approved config/content, marks changed content fields for translation pickup, and returns base-save success. Save does not generate translations.
+3. **Widgets list + rename identity**: Roma reads user-instance identity for `/widgets` through `listAccountInstances`. The surviving publish/unpublish authority is Tokyo publish status, not a Michael status row and not an account index file. Rename writes that Tokyo identity directly instead of patching Michael `display_name`.
+4. **Create/duplicate**: account instance creation is a Tokyo-owned product operation. Roma sends account create or duplicate intent, Tokyo-worker mints the compact 10-character uppercase base36 instance ID, sources new-instance content from the approved starter/default source for that widget, or duplicates config/content from an existing account instance, writes the account instance source, and returns the new instance to Roma. Roma does not mint IDs or run compensation cleanup for Tokyo-owned duplicate state.
 5. **Authz**: browser requests prove the Roma session with httpOnly session cookies. Roma stores the signed account authz capsule in a server-owned httpOnly cookie, validates it on current-account API routes, and forwards that capsule only on Roma-to-Tokyo private service calls. Browser JavaScript must not read or replay `x-ck-authz-capsule`. Active product routes do not re-read account membership or recompute policy on each open/save call; the signed capsule carries stable authz truth, while live mutable counters are enforced at the canonical owner when needed.
-6. **Babel/live follow-up**: translation and locale convergence remain downstream work owned outside Bob. Product-path save triggers the product orchestration boundary that creates new locale overlay IDs from the current saved primitive graph.
+6. **Translations**: translation generation is an explicit Translations-panel product command. Roma calls Tokyo's generate operation; Tokyo resolves current instance content, editable field contracts, target locales, existing translated values, and changed/missing fields, then queues the translation work. The product result is translated locale values by locale.
 
 On the real product path, editor routes are account-mode routes. If non-account/demo/helper route shapes still exist in code while being reduced, they do not define shared editor semantics or account authoring truth. On `account` product routes, policy/entitlement truth comes from Roma's server-owned account authz capsule.
 
@@ -162,20 +167,20 @@ In the browser the active account-mode host path is:
 
 Bob does not URL-bootstrap account mode. Account editing is host-only.
 
-Babel/translation is separate from Builder authoring: Berlin-backed Roma Settings owns account locale policy, and translation/runtime locale convergence happens downstream from the one widget save path. FAQ declares customer-visible translation fields in `tokyo/product/widgets/faq/content.json`; producers receive only concrete primitive paths extracted from the saved config, such as `sections.0.faqs.0.question`.
-For account-widget locales, Roma orchestrates product work, San Francisco translates concrete text primitive values, and Tokyo-worker acts as the PBX: validate `overlayId`, write exact overlay objects, and read exact overlay objects under the owning instance `overlays/` folder. Tokyo-worker does not infer product meaning from overlay bodies and does not repair data it produced.
-Builder translation preview is account-authenticated read-only inspection with split authority. Roma shows the account setup summary from real account context: base locale, plan translation allowance, and active account translations. Bob's preview dropdown is backed only by actual locale overlay files in Tokyo/R2 under the current instance `overlays/` folder. Roma may authenticate and pass storage reads through to Tokyo, but it must not call Berlin or synthesize desired-locale availability for the dropdown. Bob applies one exact overlay value map over the current in-memory base state with the shared resolver before posting state to the preview iframe. If an overlay file does not exist, that locale is absent from the dropdown. Unpublished Builder preview must not depend on public Venice/Tokyo locale URLs, because public serving is controlled by generated static file presence.
+Babel/translation is separate from Builder authoring: Roma Settings owns account locale policy, and translation/runtime locale convergence happens after base content is saved. Widgets declare customer-visible translation fields in `tokyo/product/widgets/{widgetType}/editable-fields.json`; producers receive only concrete primitive paths extracted from `instance.content.json`, such as `sections.0.faqs.0.question`.
+For account-widget locales, Tokyo owns the generate/read/write/complete translated-locale operations. San Francisco translates concrete text primitive values. Tokyo validates and stores exact translated value maps by locale. Tokyo-worker does not expose storage object IDs as product identity and does not repair data it produced.
+Builder translation preview is account-authenticated read-only inspection. Roma shows the account setup summary from real account context: base locale, plan translation allowance, and active account translations. Bob's preview dropdown is backed by translated locale summaries from Tokyo through Roma, not overlay file inventories. Bob reads translated values by locale, applies one exact value map over the current in-memory base state with the shared resolver, and posts the resolved preview state to the widget iframe. If translated values for a locale do not exist, that locale is absent from the dropdown. Unpublished Builder preview must not depend on public `clk.live` locale URLs.
 
 Between open and save:
 
-- Base config edits happen in Bob's React state (in memory)
+- Base config/content edits happen in Bob's React state (in memory)
 - Preview updates via postMessage
 - Core account instance open stays on Roma/Bob/Tokyo product routes
 - Core account instance persistence stays on Roma/Bob/Tokyo product routes
 - ZERO database writes for base config during normal product open/save
-- Base config is not required to be English; Builder authors the account `baseLocale`, and translation to other locales is async follow-up work after save while overlay preview remains read-only inspection.
+- Base content is not required to be English; Builder authors the account `baseLocale`, and translation to other locales is async work triggered from the Translations panel while translated-locale preview remains read-only inspection.
 - No demo/non-account surface writes durable account widget truth.
-- Overlay resolution is always `baseConfig + one overlayValues` in PRD 098. Multi-layer precedence is out of scope until a later PRD specifies it.
+- Translation preview resolution is always base instance state plus one translated locale value map. Multi-layer precedence is out of scope until a later PRD specifies it.
 
 **Why:** 10,000 users editing simultaneously = no server load for base config. Babel writes scoped overlay objects, enabling async translation while preserving user edits. Millions of landing page visitors = zero DB pollution until signup + publish.
 
@@ -185,14 +190,13 @@ Between open and save:
 | -------------- | -------------------------------------------------------------------------------------------------------- |
 | `instanceId`   | Compact 10-character uppercase base36 instance identifier minted by Tokyo-worker                         |
 | `widgetType`   | Human/product widget identifier referencing the definition (e.g., "faq")                                 |
-| `widgetCode`   | 3-character widget code from the shared PRD 098 codebook, used in overlay IDs and metadata/codebook identity; never an R2 storage locator |
+| `widgetCode`   | 3-character widget code from the shared widget codebook, used as metadata/codebook identity; never an R2 storage locator |
 | `accountPublicId` | 8-character account product/storage identity from Michael/Berlin account truth                       |
-| `config`       | Persisted base instance values; active product account reads/writes use Tokyo's saved authoring snapshot |
-| `instanceData` | Working copy of config in Bob during editing                                                             |
+| `config`       | Persisted non-text instance settings, structure, style, behavior, identity/display, locale, and publish metadata |
+| `content`      | Persisted base user-visible text values for the instance; translation input and status live here |
+| `instanceData` | Working copy of config/content in Bob during editing                                                     |
 | `spec.json`    | Defaults + structured Builder editor contract (`editor.panels`); compiled by Bob                         |
-| `content.json` | Widget-owned customer-visible translation field declaration where migrated; FAQ is the PRD 103 gold standard |
-| `spec.json.overlays` | Generated/internal primitive path graph where still needed for overlay validation and runtime path/value plumbing |
-| `agent.md`     | AI contract documenting editable paths and semantics                                                     |
+| `editable-fields.json` | Widget-owned editable/translatable field declaration where customer-visible text exists; FAQ is the PRD 103 gold standard |
 
 ### Clickeen-Owned Examples
 
@@ -213,7 +217,7 @@ Why:
 - No hidden distribution metadata: global/platform decisions stay out of normal customer instance data.
 - Future marketplace-compatible: a creator can later be another account whose instances are referenced from catalog data.
 
-Publishing semantics: `published` / `unpublished` is a Tokyo instance serve-state concept. It means only whether Venice may serve that instance publicly.
+Publishing semantics: `published` / `unpublished` is Tokyo-owned instance product state. It means only whether `clk.live` may serve generated public artifacts for that instance.
 
 ---
 
@@ -237,9 +241,9 @@ Publishing semantics: `published` / `unpublished` is a Tokyo instance serve-stat
 
 ## Glossary
 
-**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance `config` in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo saved authoring state, and saves by writing Tokyo's saved revision directly. Bob does not own serve-state changes; publish/unpublish toggles the Tokyo instance serve flag from Roma widgets-domain flows, and Builder open must not require that serve-state in order to edit a saved widget. Bob is the real account authoring UI. Shared Bob code must model the account Builder product path, not preserve demo/funnel identities as co-equal editor modes. Copilot browser entrypoint is `POST /api/ai/widget-copilot`, and Roma resolves widget identity server-side from the instance being edited.
+**Bob** — Widget builder. React app that loads widget definitions from Tokyo (compiled for the editor), holds instance config/content in state, syncs preview via postMessage, opens account instances through same-origin routes backed by Tokyo account instance operations, and saves through Roma/Tokyo. Bob does not own publish state, translation generation, or public artifact readiness. Bob is the real account authoring UI. Shared Bob code must model the account Builder product path, not preserve demo/funnel identities as co-equal editor modes. Copilot browser entrypoint is `POST /api/ai/widget-copilot`, and Roma resolves widget identity server-side from the instance being edited.
 
-**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps session and account authz in httpOnly cookies, opens Bob by waiting for `bob:session-ready` and sending one `ck:open-editor` payload, reads core account instance state through same-origin routes backed by Tokyo saved authoring state, and saves that one widget document back through the same account boundary. Browser JavaScript does not own the raw account authz capsule; Roma server code validates it and forwards it to Tokyo over private service bindings. Roma's authed shell owns account bootstrap, auth-required redirect, account-context failure, and the ready account context exposed to domains; individual domain pages must not render their own account-loading, account-error, no-account, or default fake account states. On the active Widgets/Builder path, Roma treats Tokyo as the user-facing instance identity owner and canonical instance serve-state owner. Michael may still carry registry/status residue during cutover, but it is not the surviving publish/unpublish authority. In product terms, `Save` is one handoff of the instance to Tokyo-worker so Tokyo-worker can reconcile the instance and its derived artifacts. `Publish` / `Unpublish` remains the separate Widgets-domain action that flips whether Venice may publicly serve that instance. Current Roma is a single-current-account customer shell and does not expose customer account switching. Roma is the real account/product boundary for Builder. It must not model a fake anonymous editor/account mode inside shared account truth. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
+**Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps session and account authz in httpOnly cookies, opens Bob by waiting for `bob:session-ready` and sending one `ck:open-editor` payload, reads account instance state through same-origin routes backed by Tokyo product operations, and saves that one widget instance back through the same account boundary. Browser JavaScript does not own the raw account authz capsule; Roma server code validates it and forwards it to Tokyo over private service bindings. Roma's authed shell owns account bootstrap, auth-required redirect, account-context failure, and the ready account context exposed to domains; individual domain pages must not render their own account-loading, account-error, no-account, or default fake account states. On the active Widgets/Builder path, Roma treats Tokyo as the user-facing instance identity, translated locale value, publish state, and public artifact owner. Michael may still carry registry/status residue during cutover, but it is not the surviving publish/unpublish authority. In product terms, `Save` writes approved instance config/content; `Generate translations` asks Tokyo to queue missing/changed locale work; `Publish` / `Unpublish` changes whether `clk.live` may serve generated artifacts. Current Roma is a single-current-account customer shell and does not expose customer account switching. Roma is the real account/product boundary for Builder. It must not model a fake anonymous editor/account mode inside shared account truth. In cloud-dev, this still usually collapses to one effective account: the seeded platform-owned account.
 
 **DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, verification, and small local utility pages. The old local DevStudio widget-authoring lane is removed. DevStudio must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 
@@ -249,9 +253,9 @@ Publishing semantics: `published` / `unpublished` is a Tokyo instance serve-stat
 
 **Michael** — Supabase PostgreSQL database. Stores account/user data, submissions, usage events, and relational support records. It does not store account widget instance source or projection tables. RLS is enforced for user/account tables, while widget instance inventory, editable config, display name, publish state, and example availability are Tokyo-owned.
 
-**Tokyo** — Account storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, account-owned instance mini-sites, overlays, and account-owned uploaded files. Runtime-managed account data lives only under `accounts/{accountPublicId}/`; git-authored product resources live under `product/`, `dieter/`, `fonts/`, and `prague/`.
+**Tokyo** — Account storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, account-owned instance source, translated locale value storage, generated account mini-site artifacts, and account-owned uploaded files. Runtime-managed account data lives only under `accounts/{accountPublicId}/`; git-authored product resources live under `product/`, `dieter/`, `fonts/`, and `prague/`.
 
-**Tokyo Worker** — Cloudflare Worker that serves account asset references from `accounts/{accountPublicId}/assets/{assetRef}`, exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, validates overlay IDs, stores exact overlay value objects under the owning instance, and writes the one `instance.json` source package for Bob/Roma/San Francisco. Tokyo-worker is a PBX/control-plane switchboard: it routes storage operations and must not orchestrate San Francisco, infer product meaning from overlay bodies, or render public widgets at request time.
+**Tokyo Worker** — Cloudflare Worker that serves account asset references from `accounts/{accountPublicId}/assets/{assetRef}`, exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, owns account instance config/content persistence, stores translated locale value maps, queues translation jobs, materializes public artifacts, and serves generated public artifacts when publish state allows. Tokyo-worker is a PBX/control-plane switchboard for approved product operations: it must not infer product meaning from private storage object names, preserve storage-object vocabulary at product boundaries, or render public widgets from authoring source at visitor request time.
 
 **Asset URL contract (pre-GA strict):**
 
@@ -268,10 +272,6 @@ Publishing semantics: `published` / `unpublished` is a Tokyo instance serve-stat
 
 **Atlas** — Cloudflare KV. Read-only runtime cache. Admin overrides require INTERNAL_ADMIN_KEY and CEO approval.
 
-**agent.md** — Per-widget AI contract. Documents editable paths, parts/roles, enums, and safe list operations. Required for AI editing.
-
----
-
 ## Widget Architecture
 
 ### Tokyo Widget Folder Structure
@@ -282,8 +282,8 @@ tokyo/product/widgets/{widgetType}/
 ├── widget.html        # Semantic HTML with data-role attributes
 ├── widget.css         # Scoped styles using Dieter tokens
 ├── widget.client.js   # applyState() for live DOM updates
-├── agent.md           # AI contract (required for AI editing)
 ├── catalog.json       # Widget catalog metadata
+├── editable-fields.json # Editable/translatable text contract when needed
 └── limits.json        # Entitlements caps/flags consumed by shared policy enforcement
 ```
 
@@ -348,14 +348,14 @@ All ops are validated against `compiled.controls[]` allowlist. Invalid ops are r
 
 ## Localization (Layered)
 
-Locale is a runtime parameter and must not be encoded into instance identity (`instanceId`). Locale is encoded in PRD 098 overlay IDs because overlays are SKU-like value objects, not base instance identity.
+Locale is a runtime parameter and must not be encoded into instance identity (`instanceId`).
 
 - Roma/account product UI strings live under `tokyo/roma/i18n/**` and are served through Tokyo as product UI catalogs.
 - Prague marketing/showcase copy and localization source live under `tokyo/prague/**`.
-- Instance/content translation truth is the first PRD 098 overlay application. Public embeds read only public projections that point to exact `overlayId` values and exact overlay value objects.
-- There is no repo-authored admin l10n lane and no repo-local instance overlay truth.
-- Canonical overlay truth for instances is PRD 098: fixed-layout `overlayId`, body `{ v, values }`, no body status/readiness/hash identity, and no compatibility bridge to old l10n overlay paths.
-- Migrated widgets declare translatable account-widget paths in authored `content.json`; FAQ is the first PRD 103 example. Generated overlay primitives are allowed only as internal path/value plumbing. No widget `localization.json`, layer path sidecar, wildcard path schema, or text-pack schema survives.
+- Account-widget translation truth is locale-keyed translated content values for one account instance. Product identity is `instanceId + locale`, not an overlay ID or storage object name.
+- Public embeds read generated visitor artifacts that were materialized from approved instance config/content plus translated locale values.
+- There is no repo-authored admin l10n lane and no repo-local instance translation truth.
+- Widgets declare translatable account-widget paths in authored `editable-fields.json`. Internal path/value plumbing is allowed only below the product operation. No widget `localization.json`, layer path sidecar, wildcard path schema, `spec.json.overlays.text[]`, or text-pack schema survives.
 
 Canonical reference:
 
@@ -459,7 +459,7 @@ Pages deploy rule:
 ### Deterministic compilation contract (anti-drift)
 
 - **Dieter bundling manifest (authoritative)**: `tokyo/product/dieter/manifest.json` after PRD 79 Phase 1 (public `/dieter/**` can remain a serving route)
-- **Widget catalog manifest (generated)**: `tokyo/product/widgets/manifest.json`, built from widget-owned `catalog.json` + `spec.json` by `scripts/build-widget-catalog.mjs`; Tokyo-worker consumes the manifest and generated SEO/GEO registry instead of hand-registering widgets. Prague may read this generated manifest for public widget labels, and unknown widget labels must fail at the page/content boundary rather than falling back to slug title-casing.
+- **Widget definition source**: widget-owned `catalog.json`, `spec.json`, optional `editable-fields.json`, runtime assets, and policy-linked limit metadata under `tokyo/product/widgets/{widgetType}/`. Tokyo-worker resolves widget definitions through `listWidgetDefinitions` and `getWidgetDefinition`; Prague reads the same widget source metadata for public labels. `scripts/validate-widget-source.mjs` is a non-mutating guard, not a generated manifest writer.
 - **Rule**: ToolDrawer `type="..."` drives required bundles; CSS classnames never add bundles.
 - **Verification plane**: compilation discipline is enforced through repo typecheck/build and Cloudflare verification, not a localhost Bob HTTP gate.
 

@@ -3,7 +3,6 @@ import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
-import { acceptInstanceTranslationJobs } from '@roma/lib/account-instance-translation-jobs';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -120,25 +119,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const translation = await acceptInstanceTranslationJobs({
-    authz: current.value.authzPayload,
-    accessToken: current.value.accessToken,
-    accountCapsule: current.value.authzToken,
-    accountPublicId: accountId,
-    instanceId,
-    widgetType,
-    config,
-    previousConfig: result.value.previousConfig,
-    requestId: current.value.requestId,
-  });
-
   return withSession(
     request,
     NextResponse.json({
       ok: true,
-      sourceVersion: result.value.sourceVersion,
-      generation: result.value.generation,
-      translation,
     }),
     current.value.setCookies,
   );

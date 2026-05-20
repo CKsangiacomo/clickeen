@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sha256Hex } from '@clickeen/ck-contracts/security';
-import { readWidgetContentContract, type WidgetContentContract } from '@clickeen/ck-contracts/overlay-primitives';
+import { readWidgetEditableFieldsContract, type WidgetEditableFieldsContract } from '@clickeen/ck-contracts/overlay-primitives';
 import { parseLimitsSpec } from '@clickeen/ck-policy';
 import { compileWidgetServer } from '../compiler.server';
 import type { RawWidget } from '../compiler.shared';
@@ -10,7 +10,7 @@ import { resolveCorsHeaders } from './cors';
 
 type CompiledWidgetPayload = Awaited<ReturnType<typeof compileWidgetServer>> & {
   limits: unknown;
-  content?: WidgetContentContract;
+  editableFields?: WidgetEditableFieldsContract;
   widgetPackage?: WidgetPackageContext;
 };
 
@@ -50,7 +50,7 @@ async function readRequiredWidgetSource(res: Response): Promise<string> {
 function buildWidgetPackage(args: {
   widgetname: string;
   specText: string;
-  contentSource: string;
+  editableFieldsSource: string;
   htmlText: string;
   cssText: string;
   jsText: string;
@@ -73,10 +73,10 @@ function buildWidgetPackage(args: {
       source: args.jsText,
     },
   };
-  if (args.contentSource.trim()) {
-    files['content.json'] = {
+  if (args.editableFieldsSource.trim()) {
+    files['editable-fields.json'] = {
       mediaType: 'application/json',
-      source: args.contentSource,
+      source: args.editableFieldsSource,
     } satisfies WidgetPackageFileContext;
   }
   return {
@@ -99,7 +99,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
   try {
     const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
     const specUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/spec.json`;
-    const contentUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/content.json`;
+    const editableFieldsUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/editable-fields.json`;
     const limitsUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/limits.json`;
     const htmlUrl = buildWidgetSourceUrl({ tokyoRoot, widgetname, fileName: 'widget.html' });
     const cssUrl = buildWidgetSourceUrl({ tokyoRoot, widgetname, fileName: 'widget.css' });
@@ -120,9 +120,9 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
 
     const fetchInit: RequestInit = {};
     if (cacheBust) fetchInit.cache = 'no-store';
-    const [specRes, contentRes, limitsRes, htmlRes, cssRes, jsRes] = await Promise.all([
+    const [specRes, editableFieldsRes, limitsRes, htmlRes, cssRes, jsRes] = await Promise.all([
       fetch(specUrl, fetchInit),
-      fetch(contentUrl, fetchInit),
+      fetch(editableFieldsUrl, fetchInit),
       fetch(limitsUrl, fetchInit),
       fetch(htmlUrl, fetchInit),
       fetch(cssUrl, fetchInit),
@@ -149,9 +149,9 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       );
     }
 
-    if (!contentRes.ok && contentRes.status !== 404) {
+    if (!editableFieldsRes.ok && editableFieldsRes.status !== 404) {
       return NextResponse.json(
-        { error: `[Bob] Failed to fetch widget content contract from Tokyo (${contentRes.status} ${contentRes.statusText})` },
+        { error: `[Bob] Failed to fetch widget editable-fields contract from Tokyo (${editableFieldsRes.status} ${editableFieldsRes.statusText})` },
         { status: 502, headers: corsHeaders },
       );
     }
@@ -170,13 +170,13 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     }
 
     const specValidator = getFreshnessValidator(specRes);
-    const contentValidator = getFreshnessValidator(contentRes);
+    const editableFieldsValidator = getFreshnessValidator(editableFieldsRes);
     const limitsValidator = getFreshnessValidator(limitsRes);
     const htmlValidator = getFreshnessValidator(htmlRes);
     const cssValidator = getFreshnessValidator(cssRes);
     const jsValidator = getFreshnessValidator(jsRes);
     const specText = await specRes.text();
-    const contentContractBody = contentRes.ok ? await contentRes.text() : '';
+    const editableFieldsContractBody = editableFieldsRes.ok ? await editableFieldsRes.text() : '';
     const limitsText = limitsRes.ok ? await limitsRes.text() : '';
     const [htmlText, cssText, jsText] = await Promise.all([
       readRequiredWidgetSource(htmlRes),
@@ -194,7 +194,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     let freshnessKey = [
       `widget=${widgetname}`,
       buildSourceSignal('spec', specRes.status, specValidator),
-      buildSourceSignal('content', contentRes.status, contentValidator),
+      buildSourceSignal('editableFields', editableFieldsRes.status, editableFieldsValidator),
       buildSourceSignal('limits', limitsRes.status, limitsValidator),
       buildSourceSignal('html', htmlRes.status, htmlValidator),
       buildSourceSignal('css', cssRes.status, cssValidator),
@@ -206,7 +206,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       if (
         cached &&
         hasStrongFreshnessSignal(specValidator) &&
-        (contentRes.status === 404 || hasStrongFreshnessSignal(contentValidator)) &&
+        (editableFieldsRes.status === 404 || hasStrongFreshnessSignal(editableFieldsValidator)) &&
         (limitsRes.status === 404 || hasStrongFreshnessSignal(limitsValidator)) &&
         hasStrongFreshnessSignal(htmlValidator) &&
         hasStrongFreshnessSignal(cssValidator) &&
@@ -234,9 +234,9 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       const limitsHash = await sha256Hex(limitsText);
       freshnessKey = `${freshnessKey}|limitsHash=${limitsHash}`;
     }
-    if (contentRes.ok && !hasStrongFreshnessSignal(contentValidator)) {
-      const contentHash = await sha256Hex(contentContractBody);
-      freshnessKey = `${freshnessKey}|contentHash=${contentHash}`;
+    if (editableFieldsRes.ok && !hasStrongFreshnessSignal(editableFieldsValidator)) {
+      const editableFieldsHash = await sha256Hex(editableFieldsContractBody);
+      freshnessKey = `${freshnessKey}|editableFieldsHash=${editableFieldsHash}`;
     }
     if (!hasStrongFreshnessSignal(htmlValidator)) {
       const htmlHash = await sha256Hex(htmlText);
@@ -268,8 +268,8 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     }
 
     const compiled = await compileWidgetServer(widgetJson);
-    const content = contentRes.ok && contentContractBody.trim()
-      ? readWidgetContentContract(JSON.parse(contentContractBody))
+    const editableFields = editableFieldsRes.ok && editableFieldsContractBody.trim()
+      ? readWidgetEditableFieldsContract(JSON.parse(editableFieldsContractBody))
       : undefined;
     let limits = null;
     if (limitsRes.ok && limitsText.trim()) {
@@ -279,12 +279,12 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     const widgetPackage = buildWidgetPackage({
       widgetname,
       specText,
-      contentSource: contentContractBody,
+      editableFieldsSource: editableFieldsContractBody,
       htmlText,
       cssText,
       jsText,
     });
-    const payload: CompiledWidgetPayload = { ...compiled, limits, widgetPackage, ...(content ? { content } : {}) };
+    const payload: CompiledWidgetPayload = { ...compiled, limits, widgetPackage, ...(editableFields ? { editableFields } : {}) };
     if (!cacheBust) {
       compiledWidgetCache.set(widgetname, {
         freshnessKey,

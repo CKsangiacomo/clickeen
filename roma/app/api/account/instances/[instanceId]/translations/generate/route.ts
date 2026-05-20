@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { loadTokyoAccountInstanceDocument } from '@roma/lib/account-instance-direct';
-import { acceptInstanceTranslationJobs } from '@roma/lib/account-instance-translation-jobs';
-import { requireInstanceIdParam } from '@roma/lib/route-helpers';
+import { generateAccountInstanceTranslations } from '@roma/lib/account-instance-translations';
+import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -25,55 +24,50 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const instance = await loadTokyoAccountInstanceDocument({
-    accountId,
-    instanceId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!instance.ok) {
+  const bodyResult = await readJsonPayloadOrValidation<{ baseLocale?: unknown; targetLocales?: unknown } | null>(request);
+  if (!bodyResult.ok) {
     return withSession(
       request,
-      NextResponse.json({ error: instance.error }, { status: instance.status }),
+      NextResponse.json({ error: bodyResult.error }, { status: bodyResult.status }),
       current.value.setCookies,
     );
   }
 
-  const translation = await acceptInstanceTranslationJobs({
-    authz: current.value.authzPayload,
-    accessToken: current.value.accessToken,
-    accountCapsule: current.value.authzToken,
-    accountPublicId: accountId,
-    instanceId,
-    widgetType: instance.value.row.widgetType,
-    config: instance.value.config,
-    previousConfig: null,
-    translateAllCurrentFields: true,
-    skipReadyLocales: true,
-    requestId: current.value.requestId,
-  });
-  if (!translation.ok) {
+  const body = bodyResult.payload;
+  const baseLocale = typeof body?.baseLocale === 'string' ? body.baseLocale.trim() : '';
+  const targetLocales = Array.isArray(body?.targetLocales)
+    ? body.targetLocales.filter((entry): entry is string => typeof entry === 'string')
+    : [];
+  if (!baseLocale || targetLocales.some((locale) => !locale.trim())) {
     return withSession(
       request,
-      NextResponse.json({
-        ok: false,
-        error: {
-          kind: 'UPSTREAM_UNAVAILABLE',
-          reasonKey: translation.reasonKey,
-          detail: translation.detail,
-        },
-        translation,
-      }, { status: 502 }),
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+
+  const generated = await generateAccountInstanceTranslations({
+    accountId,
+    instanceId,
+    baseLocale,
+    targetLocales,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!generated.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: generated.error }, { status: generated.status }),
       current.value.setCookies,
     );
   }
 
   return withSession(
     request,
-    NextResponse.json({
-      ok: true,
-      translation,
-    }, { status: translation.accepted ? 202 : 200 }),
+    NextResponse.json(generated.value, { status: generated.status }),
     current.value.setCookies,
   );
 }

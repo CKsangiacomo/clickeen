@@ -457,8 +457,8 @@ Clickeen Stack:
 **What it means:**
 - Widget software lives under `product/widgets/`.
 - Account-owned instances live under `accounts/{accountPublicId}/instances/{instanceId}/`.
-- Each account-owned instance has one source JSON: `instance.json`.
-- Instance overlays, including locale overlays, live under that instance's `overlays/` folder.
+- Current instance source/public artifact shape is blocked by PRD 103_02 until the final product-operation model is executed.
+- Locale values are product data for an instance, not widget software.
 - Account-owned assets live under `accounts/{accountPublicId}/assets/`.
 
 **Directory structure example:**
@@ -469,14 +469,14 @@ tokyo/
 │   ├── widget.html                  # Template
 │   ├── widget.css                   # Styles
 │   ├── widget.client.js             # Behavior
-│   ├── agent.md                     # AI contract
-│   └── limits.json                  # Entitlement caps
+│   ├── editable-fields.json         # Editable/translatable text contract when needed
+│   └── limits.json                  # Widget path/op mapping to ck-policy entitlement keys
 ├── accounts/{accountPublicId}/instances/{instanceId}/
-│   ├── instance.json                # Saved source config + metadata
+│   ├── ...                          # PRD 103_02 final instance source model pending
 │   ├── index.html                   # Public static entry when published
 │   ├── styles.css                   # Generated embed CSS
 │   ├── script.js                    # Generated embed JS if needed
-│   └── overlays/{overlayId}.json    # Instance overlays, including locales
+│   └── ...                          # Locale value storage remains private implementation detail
 └── accounts/{accountPublicId}/assets/
     └── {assetRef}                   # Account-owned asset bytes
 ```

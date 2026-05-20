@@ -1,5 +1,5 @@
 import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
-import type { WidgetContentContract, WidgetContentField } from '@clickeen/ck-contracts/overlay-primitives';
+import type { WidgetEditableFieldsContract, WidgetEditableField } from '@clickeen/ck-contracts/overlay-primitives';
 
 export type TranslationSetup = {
   v: 1;
@@ -8,20 +8,19 @@ export type TranslationSetup = {
   activeLocales: string[];
 };
 
-export type LocaleOverlayInventoryEntry = {
+export type TranslatedLocaleEntry = {
   locale: string;
-  overlayId: string;
 };
 
-export type LocaleOverlayInventoryData = {
+export type TranslatedLocalesData = {
   v: 1;
   baseLocale: string;
-  overlays: LocaleOverlayInventoryEntry[];
+  translations: TranslatedLocaleEntry[];
 };
 
-export type LocaleOverlayObjectData = {
+export type TranslatedLocaleValuesData = {
   v: 1;
-  overlayId: string;
+  locale: string;
   values: Record<string, string>;
 };
 
@@ -48,7 +47,7 @@ export type TranslationPanelLocaleState = {
   allExpectedTranslationsReady: boolean;
   localeValues: string[];
   localeValue: string;
-  selectedOverlayEntry: LocaleOverlayInventoryEntry | null;
+  selectedTranslationEntry: TranslatedLocaleEntry | null;
   shouldRefreshOnDropdownOpen: boolean;
 };
 
@@ -74,15 +73,10 @@ function normalizeLocaleList(raw: unknown): string[] {
   );
 }
 
-function normalizeOverlayEntry(raw: unknown): LocaleOverlayInventoryEntry | null {
+function normalizeTranslatedLocaleEntry(raw: unknown): TranslatedLocaleEntry | null {
   if (!isRecord(raw)) return null;
-  const overlayId = asTrimmedString(raw.overlayId);
   const locale = asTrimmedString(raw.locale);
-  if (!locale || !overlayId) return null;
-  return {
-    locale,
-    overlayId,
-  };
+  return locale ? { locale } : null;
 }
 
 export function normalizeTranslationSetup(payload: unknown): TranslationSetup | null {
@@ -101,50 +95,50 @@ export function normalizeTranslationSetup(payload: unknown): TranslationSetup | 
   };
 }
 
-export function normalizeLocaleOverlayInventory(payload: unknown): LocaleOverlayInventoryData | null {
+export function normalizeTranslatedLocales(payload: unknown): TranslatedLocalesData | null {
   if (!isRecord(payload) || payload.v !== 1) return null;
   const baseLocale = asTrimmedString(payload.baseLocale);
-  if (!baseLocale || !Array.isArray(payload.overlays)) return null;
+  if (!baseLocale || !Array.isArray(payload.translations)) return null;
 
-  const overlays = payload.overlays
-    .map((entry) => normalizeOverlayEntry(entry))
-    .filter((entry): entry is LocaleOverlayInventoryEntry => Boolean(entry));
-  if (overlays.length !== payload.overlays.length) return null;
+  const translations = payload.translations
+    .map((entry) => normalizeTranslatedLocaleEntry(entry))
+    .filter((entry): entry is TranslatedLocaleEntry => Boolean(entry));
+  if (translations.length !== payload.translations.length) return null;
 
   return {
     v: 1,
     baseLocale,
-    overlays,
+    translations,
   };
 }
 
-export function normalizeLocaleOverlayObject(payload: unknown): LocaleOverlayObjectData | null {
+export function normalizeTranslatedLocaleValues(payload: unknown): TranslatedLocaleValuesData | null {
   if (!isRecord(payload) || payload.v !== 1) return null;
-  const overlayId = asTrimmedString(payload.overlayId);
-  if (!overlayId) return null;
+  const locale = asTrimmedString(payload.locale);
+  if (!locale) return null;
   const values = normalizeValueMap(payload.values);
   if (!values) return null;
   return {
     v: 1,
-    overlayId,
+    locale,
     values,
   };
 }
 
-export function listPreviewableLocales(data: LocaleOverlayInventoryData | null): string[] {
+export function listPreviewableLocales(data: TranslatedLocalesData | null): string[] {
   if (!data) return [];
-  return Array.from(new Set([data.baseLocale, ...data.overlays.map((entry) => entry.locale)]));
+  return Array.from(new Set([data.baseLocale, ...data.translations.map((entry) => entry.locale)]));
 }
 
 export function buildTranslationPanelLocaleState(args: {
   baseLocale: string;
   activeLocales: string[];
-  inventory: LocaleOverlayInventoryData | null;
+  inventory: TranslatedLocalesData | null;
   requestedLocale: string;
 }): TranslationPanelLocaleState {
   const expectedLocales = new Set(args.activeLocales.filter((locale) => locale !== args.baseLocale));
   const readyLocales = new Set(
-    (args.inventory?.overlays ?? [])
+    (args.inventory?.translations ?? [])
       .map((entry) => entry.locale)
       .filter((locale) => expectedLocales.has(locale)),
   );
@@ -155,7 +149,7 @@ export function buildTranslationPanelLocaleState(args: {
   const localeValues = args.baseLocale
     ? [
         args.baseLocale,
-        ...(args.inventory?.overlays ?? [])
+        ...(args.inventory?.translations ?? [])
           .filter((entry) => expectedLocales.has(entry.locale))
           .map((entry) => entry.locale),
       ]
@@ -164,9 +158,9 @@ export function buildTranslationPanelLocaleState(args: {
     args.requestedLocale && localeValues.includes(args.requestedLocale)
       ? args.requestedLocale
       : args.baseLocale || localeValues[0] || '';
-  const selectedOverlayEntry =
+  const selectedTranslationEntry =
     localeValue && localeValue !== args.baseLocale
-      ? args.inventory?.overlays.find((entry) => entry.locale === localeValue) ?? null
+      ? args.inventory?.translations.find((entry) => entry.locale === localeValue) ?? null
       : null;
 
   return {
@@ -175,7 +169,7 @@ export function buildTranslationPanelLocaleState(args: {
     allExpectedTranslationsReady,
     localeValues,
     localeValue,
-    selectedOverlayEntry,
+    selectedTranslationEntry,
     shouldRefreshOnDropdownOpen: readyTranslationsCount !== expectedTranslationsCount,
   };
 }
@@ -275,12 +269,12 @@ function reviewGroupTitle(args: {
   return index ? `${titleCaseSegment(lastText)} ${Number(index) + 1}` : titleCaseSegment(lastText);
 }
 
-function isReviewableTextField(field: WidgetContentField): boolean {
+function isReviewableTextField(field: WidgetEditableField): boolean {
   return field.type === 'string' || field.type === 'richtext';
 }
 
-export function buildContentTranslationReview(args: {
-  contract: WidgetContentContract;
+export function buildEditableFieldsTranslationReview(args: {
+  contract: WidgetEditableFieldsContract;
   config: Record<string, unknown>;
   values: Record<string, string>;
 }): TranslationReview {

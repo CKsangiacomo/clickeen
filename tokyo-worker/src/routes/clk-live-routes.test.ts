@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Env } from '../types.ts';
+import { writeSavedRenderConfig } from '../domains/render/saved-config.ts';
 import { tryHandleClkLiveStaticRoutes } from './clk-live-routes.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
@@ -32,6 +33,7 @@ function createTestEnv(initialObjects: Record<string, string> = {}) {
       async get(key: string) {
         const stored = objects.get(key);
         if (!stored) return null;
+        const text = new TextDecoder().decode(stored.body);
         return {
           body: new ReadableStream({
             start(controller) {
@@ -40,11 +42,64 @@ function createTestEnv(initialObjects: Record<string, string> = {}) {
             },
           }),
           httpMetadata: stored.httpMetadata,
+          async json() {
+            return JSON.parse(text) as unknown;
+          },
+          async text() {
+            return text;
+          },
+        };
+      },
+      async put(key: string, value: string | Uint8Array | ReadableStream | null, options?: { httpMetadata?: { contentType?: string } }) {
+        const text = typeof value === 'string'
+          ? value
+          : value instanceof Uint8Array
+            ? new TextDecoder().decode(value)
+            : await new Response(value).text();
+        objects.set(key, {
+          body: new TextEncoder().encode(text),
+          httpMetadata: options?.httpMetadata,
+        });
+      },
+      async list({ prefix }: { prefix?: string }) {
+        const normalizedPrefix = prefix ?? '';
+        return {
+          objects: [...objects.keys()]
+            .filter((key) => key.startsWith(normalizedPrefix))
+            .map((key) => ({ key })),
+          truncated: false,
         };
       },
     } as unknown as R2Bucket,
   } as Env;
   return { env, objects };
+}
+
+async function seedInstance(args: {
+  env: Env;
+  publishStatus: 'published' | 'unpublished';
+}): Promise<void> {
+  await writeSavedRenderConfig({
+    env: args.env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'faq',
+    displayName: 'FAQ',
+    meta: null,
+    config: { question: 'Q1', answer: 'A1' },
+  });
+  for (const key of [
+    `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`,
+    `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.config.json`,
+  ]) {
+    const current = await args.env.TOKYO_R2.get(key);
+    const text = await current?.text();
+    const json = JSON.parse(text ?? '{}') as Record<string, unknown>;
+    json.publishStatus = args.publishStatus;
+    await args.env.TOKYO_R2.put(key, JSON.stringify(json), {
+      httpMetadata: { contentType: 'application/json; charset=utf-8' },
+    });
+  }
 }
 
 async function callPublicRoute(args: {
@@ -68,6 +123,7 @@ test('clk.live canonical route serves instance index.html from account storage',
   const { env } = createTestEnv({
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>FAQ</h1>',
   });
+  await seedInstance({ env, publishStatus: 'published' });
 
   const response = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}` });
   assert.equal(response?.status, 200);
@@ -75,20 +131,21 @@ test('clk.live canonical route serves instance index.html from account storage',
   assert.equal(await response?.text(), '<h1>FAQ</h1>');
 });
 
-test('clk.live serves only allowlisted support files while index.html exists', async () => {
+test('clk.live serves only allowlisted support files while published and artifact-ready', async () => {
   const { env } = createTestEnv({
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>FAQ</h1>',
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`]: '.faq{}',
-    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/script.v2.it.js`]: 'console.log("it")',
+    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/script.it.js`]: 'console.log("it")',
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/private.txt`]: 'secret',
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`]: '{}',
   });
+  await seedInstance({ env, publishStatus: 'published' });
 
   const css = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/styles.css` });
   assert.equal(css?.status, 200);
   assert.equal(await css?.text(), '.faq{}');
 
-  const localeScript = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/script.v2.it.js` });
+  const localeScript = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/script.it.js` });
   assert.equal(localeScript?.status, 200);
   assert.equal(await localeScript?.text(), 'console.log("it")');
 
@@ -103,6 +160,7 @@ test('clk.live rejects invalid coordinates, directories, and traversal', async (
   const { env } = createTestEnv({
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>FAQ</h1>',
   });
+  await seedInstance({ env, publishStatus: 'published' });
 
   assert.equal(await callPublicRoute({ env, pathname: `/a1b2c3d4/${INSTANCE_ID}` }), null);
   assert.equal(await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/short` }), null);
@@ -110,22 +168,35 @@ test('clk.live rejects invalid coordinates, directories, and traversal', async (
   assert.equal(await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/%2e%2e/instance.json` }), null);
 });
 
-test('clk.live availability is controlled by index.html physical presence', async () => {
+test('clk.live availability requires published state and serves generated files directly', async () => {
   const { env } = createTestEnv({
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`]: '.faq{}',
   });
+  await seedInstance({ env, publishStatus: 'published' });
 
   const canonical = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}` });
   assert.equal(canonical?.status, 404);
 
   const support = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/styles.css` });
-  assert.equal(support?.status, 404);
+  assert.equal(support?.status, 200);
+  assert.equal(await support?.text(), '.faq{}');
+
+  const unpublished = createTestEnv({
+    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>FAQ</h1>',
+    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`]: '.faq{}',
+  });
+  await seedInstance({ env: unpublished.env, publishStatus: 'unpublished' });
+  const unpublishedCanonical = await callPublicRoute({ env: unpublished.env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}` });
+  assert.equal(unpublishedCanonical?.status, 404);
+  const unpublishedSupport = await callPublicRoute({ env: unpublished.env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/styles.css` });
+  assert.equal(unpublishedSupport?.status, 404);
 });
 
 test('clk.live supports HEAD for allowed files and redirects canonical http to https', async () => {
   const { env } = createTestEnv({
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>FAQ</h1>',
   });
+  await seedInstance({ env, publishStatus: 'published' });
 
   const head = await callPublicRoute({ env, method: 'HEAD', pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}` });
   assert.equal(head?.status, 200);

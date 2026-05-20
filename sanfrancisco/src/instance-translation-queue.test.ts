@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readWidgetContentContract } from '@clickeen/ck-contracts/overlay-primitives';
+import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/overlay-primitives';
 import type { InstanceTranslationJob } from '@clickeen/ck-contracts/instance-translation-jobs';
 import {
   buildFaqSavedTextGraph,
@@ -9,13 +9,13 @@ import {
 } from '@clickeen/ck-contracts/faq-language-values';
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { resolveAiRuntimeBudget, resolveAiRuntimePolicy } from '@clickeen/ck-policy';
-import contentContractJson from '../../tokyo/product/widgets/faq/content.json';
+import editableFieldsJson from '../../tokyo/product/widgets/faq/editable-fields.json';
 import { handleInstanceTranslationQueueMessage } from './instance-translation-queue';
 import type { Env } from './types';
 
 const ACCOUNT_PUBLIC_ID = 'A1B2C3D4';
 const INSTANCE_ID = 'I1B2C3D4E5';
-const contract = readWidgetContentContract(contentContractJson);
+const contract = readWidgetEditableFieldsContract(editableFieldsJson);
 
 function previousConfig() {
   return {
@@ -73,7 +73,7 @@ function translationJob(): InstanceTranslationJob {
   const budget = resolveAiRuntimeBudget(ai);
   return {
     v: 1,
-    kind: 'instance.translation.render_overlay',
+    kind: 'instance.translation.locale_values',
     jobId: 'job-queue-it',
     accountId: 'acct_test',
     accountPublicId: ACCOUNT_PUBLIC_ID,
@@ -83,6 +83,7 @@ function translationJob(): InstanceTranslationJob {
     widgetContractVersion: 1,
     baseLocale: 'en',
     targetLocale: 'it',
+    targetLocales: ['it'],
     requestedAt: '2026-05-18T00:00:00.000Z',
     requestId: 'req_queue_worker',
     ai,
@@ -95,7 +96,7 @@ function translationJob(): InstanceTranslationJob {
   };
 }
 
-test('San Francisco queue job merges changed values and writes one complete Tokyo overlay', async () => {
+test('San Francisco queue job merges changed values and completes one translated locale in Tokyo', async () => {
   const writes: Array<Record<string, any>> = [];
   let acked = false;
   const env = {
@@ -104,9 +105,9 @@ test('San Francisco queue job merges changed values and writes one complete Toky
       async fetch(input: RequestInfo | URL, init?: RequestInit) {
         const url = new URL(String(input));
         const body = init?.body ? JSON.parse(String(init.body)) : null;
-        if (url.pathname === '/__internal/overlays/languages/write.json') {
+        if (url.pathname === `/__internal/instances/${INSTANCE_ID}/translations/it/complete`) {
           writes.push(body);
-          return new Response(JSON.stringify({ ok: true, overlayId: 'A1B2C3D4FAQI1B2C3D4E5IT00A0100000' }), {
+          return new Response(JSON.stringify({ ok: true, completion: { ok: true, applied: true, locale: 'it' } }), {
             headers: { 'content-type': 'application/json' },
           });
         }
@@ -128,7 +129,7 @@ test('San Francisco queue job merges changed values and writes one complete Toky
   assert.equal(handled, true);
   assert.equal(acked, true);
   assert.equal(writes.length, 1);
-  assert.equal(writes[0]?.languageCode, 'IT00');
+  assert.equal(writes[0]?.job.jobId, 'job-queue-it');
   assert.equal(writes[0]?.values['sections.0.faqs.0.answer'], 'https://example.com/new-room-list');
   assert.equal(writes[0]?.values['header.title'], 'it-old:FAQs');
 });

@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useWidgetSessionTransport } from '../lib/session/useWidgetSession';
 import {
-  normalizeLocaleOverlayInventory,
-  normalizeLocaleOverlayObject,
-  type LocaleOverlayInventoryData,
+  normalizeTranslatedLocales,
+  normalizeTranslatedLocaleValues,
+  type TranslatedLocalesData,
 } from '../lib/translations-preview';
 
-export type { LocaleOverlayInventoryData, TranslationSetup } from '../lib/translations-preview';
+export type { TranslatedLocalesData, TranslationSetup } from '../lib/translations-preview';
 
 type ErrorPayload = {
   error?: {
@@ -32,20 +32,20 @@ function resolveStorageReadError(args: {
   status?: number;
   reasonKey?: string | null;
 }): string {
-  if (args.status === 404) return 'No saved translation overlays yet.';
-  if (args.reasonKey === 'coreui.errors.payload.invalid') return 'Saved translation overlays could not be read.';
-  return 'Saved translation overlays could not be read.';
+  if (args.status === 404) return 'No saved translations yet.';
+  if (args.reasonKey === 'coreui.errors.payload.invalid') return 'Saved translations could not be read.';
+  return 'Saved translations could not be read.';
 }
 
-export function useLocaleOverlayPreviewState(args: {
+export function useTranslationPreviewState(args: {
   instanceId: string;
   baseLocale: string;
   enabled: boolean;
   selectedLocale: string;
   refreshVersion: number;
 }) {
-  const { listLocaleOverlays, readLocaleOverlay } = useWidgetSessionTransport();
-  const [inventory, setInventory] = useState<LocaleOverlayInventoryData | null>(null);
+  const { listTranslations, readTranslation } = useWidgetSessionTransport();
+  const [inventory, setInventory] = useState<TranslatedLocalesData | null>(null);
   const [valuesByLocale, setValuesByLocale] = useState<Record<string, Record<string, string>>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +74,7 @@ export function useLocaleOverlayPreviewState(args: {
     setLoading(true);
     setError(null);
 
-    listLocaleOverlays({
+    listTranslations({
       instanceId: args.instanceId,
       baseLocale: args.baseLocale,
     })
@@ -86,7 +86,7 @@ export function useLocaleOverlayPreviewState(args: {
             reasonKey: resolveRouteErrorReason(response.json),
           };
         }
-        const payload = normalizeLocaleOverlayInventory(response.json);
+        const payload = normalizeTranslatedLocales(response.json);
         if (!payload) throw new Error('coreui.errors.payload.invalid');
         if (payload.baseLocale !== args.baseLocale) throw new Error('coreui.errors.payload.invalid');
         setValuesByLocale({});
@@ -94,7 +94,7 @@ export function useLocaleOverlayPreviewState(args: {
       })
       .catch((caught) => {
         if (cancelled) return;
-        setInventory({ v: 1, baseLocale: args.baseLocale, overlays: [] });
+        setInventory({ v: 1, baseLocale: args.baseLocale, translations: [] });
         const status =
           typeof (caught as { status?: unknown } | null | undefined)?.status === 'number'
             ? (caught as { status: number }).status
@@ -119,23 +119,23 @@ export function useLocaleOverlayPreviewState(args: {
     args.enabled,
     args.instanceId,
     args.refreshVersion,
-    listLocaleOverlays,
+    listTranslations,
   ]);
 
-  const selectedOverlay = useMemo(() => {
+  const selectedTranslation = useMemo(() => {
     if (!inventory) return null;
     if (!args.selectedLocale || args.selectedLocale === inventory.baseLocale) return null;
-    return inventory.overlays.find((entry) => entry.locale === args.selectedLocale) ?? null;
+    return inventory.translations.find((entry) => entry.locale === args.selectedLocale) ?? null;
   }, [args.selectedLocale, inventory]);
 
   useEffect(() => {
-    if (!args.enabled || !args.instanceId || !selectedOverlay) return;
-    if (valuesByLocale[selectedOverlay.locale]) return;
+    if (!args.enabled || !args.instanceId || !selectedTranslation) return;
+    if (valuesByLocale[selectedTranslation.locale]) return;
 
     let cancelled = false;
-    readLocaleOverlay({
+    readTranslation({
       instanceId: args.instanceId,
-      overlayId: selectedOverlay.overlayId,
+      locale: selectedTranslation.locale,
     })
       .then((response) => {
         if (cancelled) return;
@@ -145,13 +145,13 @@ export function useLocaleOverlayPreviewState(args: {
             reasonKey: resolveRouteErrorReason(response.json),
           };
         }
-        const payload = normalizeLocaleOverlayObject(response.json);
-        if (!payload || payload.overlayId !== selectedOverlay.overlayId) {
+        const payload = normalizeTranslatedLocaleValues(response.json);
+        if (!payload || payload.locale !== selectedTranslation.locale) {
           throw new Error('coreui.errors.payload.invalid');
         }
         setValuesByLocale((current) => ({
           ...current,
-          [selectedOverlay.locale]: payload.values,
+          [selectedTranslation.locale]: payload.values,
         }));
       })
       .catch((caught) => {
@@ -175,8 +175,8 @@ export function useLocaleOverlayPreviewState(args: {
   }, [
     args.enabled,
     args.instanceId,
-    readLocaleOverlay,
-    selectedOverlay,
+    readTranslation,
+    selectedTranslation,
     valuesByLocale,
   ]);
 

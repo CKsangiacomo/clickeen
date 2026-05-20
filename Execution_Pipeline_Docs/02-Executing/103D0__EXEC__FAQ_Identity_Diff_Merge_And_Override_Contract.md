@@ -11,7 +11,7 @@ Added the FAQ language value identity and merge contract in `@clickeen/ck-contra
 
 The new `buildFaqSavedTextGraph()` extracts FAQ text using stable section/FAQ IDs from the canonical FAQ content contract.
 
-After PRD 103C.0, extraction was rebased to authored FAQ `content.json`.
+After PRD 103_01.3a, extraction was rebased to authored FAQ `editable-fields.json`.
 
 The new `buildCurrentLanguageValues()` is the single merge authority for current language values. It carries unchanged translations forward, translates changed/new fields, removes deleted fields, and fails closed on partial missing translation.
 
@@ -44,7 +44,7 @@ Language values carry:
 - `pnpm --filter @clickeen/ck-contracts typecheck`
 - `pnpm --filter @clickeen/sanfrancisco test`
 - `pnpm --filter @clickeen/sanfrancisco typecheck`
-- `pnpm build:widgets:check`
+- `pnpm validate:widgets`
 
 Fixtures cover:
 
@@ -56,4 +56,4 @@ Fixtures cover:
 
 TPM signoff: Green. A user must not see translations jump to the wrong FAQ when content is reordered.
 
-Dev Manager signoff: Green. Merge semantics have one named authority, sourced from authored `content.json`.
+Dev Manager signoff: Green. Merge semantics have one named authority, sourced from authored `editable-fields.json`.

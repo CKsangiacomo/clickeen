@@ -34,11 +34,8 @@ binding = "TOKYO_R2"
 bucket_name = "tokyo-assets-dev"
 
 [[queues.producers]]
-binding = "RENDER_SNAPSHOT_QUEUE"
-queue = "instance-render-snapshot-cloud-dev"
-
-[[queues.consumers]]
-queue = "instance-render-snapshot-cloud-dev"
+binding = "INSTANCE_TRANSLATION_JOBS"
+queue = "instance-translation-jobs-dev"
 
 [env.local]
 name = "tokyo-assets-local"
@@ -58,8 +55,5 @@ binding = "TOKYO_R2"
 bucket_name = "tokyo-assets-dev"
 
 [[env.local.queues.producers]]
-binding = "RENDER_SNAPSHOT_QUEUE"
-queue = "instance-render-snapshot-local"
-
-[[env.local.queues.consumers]]
-queue = "instance-render-snapshot-local"
+binding = "INSTANCE_TRANSLATION_JOBS"
+queue = "instance-translation-jobs-local"

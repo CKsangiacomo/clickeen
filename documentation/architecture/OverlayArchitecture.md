@@ -2,6 +2,8 @@
 
 STATUS: REFERENCE - MUST MATCH PRD 098 IDENTITY + PRD 099 STORAGE
 
+PRD 103_02 NOTE: this document is under review for account-instance translation boundaries. `overlayId`, selected overlay pointers, overlay inventories, and physical overlay files must not be exposed as Roma/Bob/San Francisco product contracts after PRD 103_02. Treat the physical overlay model below as current Tokyo implementation evidence only until the translated-locale value operations are approved.
+
 PRD 098 is the active overlay identity and body truth. PRD 099 is the active physical account runtime storage truth. Older l10n/text-pack/readiness storage and PRD 098-era account-widget folder paths are pre-GA residue and must not be preserved as a compatibility system.
 
 ## Core Tenet

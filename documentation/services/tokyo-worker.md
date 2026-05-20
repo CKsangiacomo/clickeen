@@ -1,8 +1,10 @@
 # System: Tokyo-worker - PBX Routes And Instance Storage
 
-STATUS: REFERENCE - MUST MATCH PRD 100
+STATUS: REFERENCE - MUST MATCH RUNTIME DURING PRD 103 PRE-GATE
 
-Tokyo-worker is the Tokyo object PBX for account-owned assets, account widget instances, overlay object storage, generated embed mini-site bytes, and friendly asset serving.
+PRD 103_00 NOTE: this doc now uses the product-operation vocabulary required before PRD 103 resumes. Tokyo-worker may keep storage objects only as private implementation behind approved product operations. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+
+Tokyo-worker is the Tokyo object PBX for account-owned assets, account widget instances, translated locale value storage, public artifact bytes, and friendly asset serving.
 
 It is not an account authority, product-policy owner, or orchestrator. Roma and system account operations decide account/product policy, publication eligibility, cap enforcement, downgrade consequences, and correctness of published state. Roma carries verified account context to Tokyo-worker through private service bindings. Tokyo-worker validates the named boundary, routes the operation to the exact storage object, and returns the result.
 
@@ -22,18 +24,19 @@ Tokyo-worker must not own billing, tier, publication, l10n version, upload-size,
 
 Active widget catalog truth is widget-owned under `tokyo/product/widgets/{widgetType}/` in git and deployed to R2 under `product/widgets/{widgetType}/`:
 
-- `catalog.json` carries catalog label, description, category, display order, and capabilities.
+- `catalog.json` carries catalog label, description, category, and display order.
 - `spec.json` carries defaults and editor contract truth.
-- `seo-geo.ts` exists only for widgets whose `catalog.json` declares `capabilities.seoGeo: true`.
+- `editable-fields.json` carries the editable/translatable field contract where the widget has one.
+- Widget `seo-geo.ts` files and catalog SEO/GEO capability flags were deleted in PRD 103_01.3c.2. SEO/GEO can return only through a later named static publish/SEO operation.
 
-`scripts/build-widget-catalog.mjs` generates `tokyo/product/widgets/manifest.json` and `tokyo-worker/src/generated/widget-seo-geo-registry.ts` from those widget folders. The generated manifest includes the widget code from `@clickeen/ck-contracts`; adding a widget requires one shared widget-codebook entry and must not require editing Tokyo-worker source.
+Tokyo-worker resolves widget definitions through the `listWidgetDefinitions` and `getWidgetDefinition` domain operations. Those operations read approved widget source files directly. There is no generated widget manifest or generated SEO/GEO registry in the product path. `scripts/validate-widget-source.mjs` is a non-mutating source guard.
 
 ## Responsibilities
 
 1. Account assets: route and mutate account-owned asset objects under `accounts/{accountPublicId}/assets/`.
-2. Account instances: route open, save, rename, delete, publish, and unpublish byte operations under `accounts/{accountPublicId}/instances/{instanceId}/`.
-3. Account-instance overlays: store/read exact `overlays/{overlayId}.json` objects under the owning instance.
-4. Generated embed mini-site bytes: write/read static browser files under the owning instance folder.
+2. Account instances: route product open, save, list, create, rename, delete, publish, and unpublish operations for `accountPublicId + instanceId`.
+3. Account-instance translated locale values: store/read exact locale value maps under the owning instance while PRD 103 finishes removing overlay file vocabulary from product contracts.
+4. Public artifact materialization: publish renders static browser files under the owning instance folder before the instance becomes public.
 5. Friendly asset routes: serve public asset URLs from canonical R2 roots without creating route-shaped storage roots.
 
 ## Account Storage
@@ -43,27 +46,32 @@ accounts/{accountPublicId}/
   assets/
     {assetRef}
   instances/
-    index.json
+    index.json                  # transitional private cache/read model only
     {instanceId}/
-      instance.json
+      instance.config.json       # non-text config, identity/display/locale/publish metadata
+      instance.content.json      # base user-visible text fields and per-field translation status
+      instance.json              # transitional compatibility mirror; not a product source authority
       index.html
       styles.css
       script.js
-      overlays/{overlayId}.json
+      {locale}.html
+      script.{locale}.js
+      overlays/{overlayId}.json  # transitional storage shape for locale values
 ```
 
 Rules:
 
 - `accounts/{accountPublicId}` is the account ownership and storage boundary. The private account UUID remains only where relational systems require it; it must not be an R2 product folder name.
 - Account instances live directly under `instances/{instanceId}/`. There is no account `widgets/` storage lane, no `widgets/{widgetCode}` grouping folder, and no account-level `widget.json` authority.
-- Widget software lives only under `product/widgets/{widgetType}/`. `widgetType` and `widgetCode` may appear in `instance.json` and overlay IDs as metadata/codebook identity; they are never R2 locators for account instances.
+- Widget software lives only under `product/widgets/{widgetType}/`. `widgetType` and `widgetCode` may appear as metadata/codebook identity; they are never R2 locators for account instances.
 - `{instanceId}` is a stable generated 10-character uppercase base36 ID. It is not derived from widget type, display name, UUID, timestamp, or any old `ins_*` string.
-- `instance.json` is the one top-level source JSON for identity, display metadata, saved authoring config, source version, generation status, and Roma-visible publish status.
-- New saves must not create sibling `config.json`, `publish.json`, `embed.json`, or `translations.json`.
-- `overlays/{overlayId}.json` stores one exact overlay value object: `{ "v": 1, "values": {} }`. The ID is the only overlay identity. Locale translations are overlays, not a second translations document.
-- `index.html`, `styles.css`, and `script.js` are generated static browser files written from `instance.json` plus overlays by the embed agent flow.
-- `instances/index.json` is a generated product inventory. It is a read model, not source truth for identity, ownership, saved config, generation status, or public serving.
-- `POST /__internal/renders/widgets/index/rebuild.json` rebuilds the generated account inventory from source instance documents. Product reads do not rebuild this index; if it is missing or invalid, Tokyo fails the read and the operator repair boundary must be called explicitly.
+- `instance.config.json` carries non-text config plus instance identity/display, widget type/code, base locale, target locales, publish status, and timestamps.
+- `instance.content.json` carries base user-visible text values in the same editable paths Bob exposes, plus `ok`/`changed` translation pickup status. This is the translation input source.
+- `instance.json` remains a transitional compatibility mirror only. Runtime code may read it to migrate old instances, but new product meaning must not be added to it.
+- Saved source does not carry `sourceVersion` or generic generation lanes. Translation and publish work use product operation state, content field status, and queue/job boundaries.
+- `overlays/{overlayId}.json` is still the transitional storage shape for locale values. It is not a product UI contract and must not leak as locale identity.
+- Publish materializes `index.html`, `styles.css`, `script.js`, `{locale}.html`, and `script.{locale}.js` from saved instance source plus translated locale values.
+- `instances/index.json` is a transitional private cache/read model. Product operations must be able to read source documents directly and must not treat the index as source truth.
 
 ## Public Serving
 
@@ -85,12 +93,13 @@ The canonical public serving URL after PRD 100 is:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-Serving maps that URL to generated files in the instance folder. It must not read `instance.json`, compute HTML from config, heal, infer, backfill, search account indexes, or fall back to old runtime projections.
+Serving maps that URL to generated files in the instance folder. It checks the Tokyo-owned publish status before serving and then reads the requested public artifact directly. It must not compute HTML from config, heal, infer, backfill, search account indexes, or fall back to old runtime projections.
 
-Public availability is physical file presence:
+Public availability is product publish state plus artifact presence for the requested file:
 
-- `accounts/{accountPublicId}/instances/{instanceId}/index.html` exists: `https://clk.live/{accountPublicId}/{instanceId}` may serve.
-- `index.html` is missing: the public URL returns 404.
+- publish status is `published`: `https://clk.live/{accountPublicId}/{instanceId}` may serve if `index.html` exists.
+- publish status is not `published`: the public URL and support files return 404 even if objects physically exist.
+- if a requested generated file is missing while published, that request returns 404.
 - Support files only serve from the same instance folder when their filename is on the generated-browser-file allowlist.
 - `instance.json`, `config.json`, `publish.json`, `embed.json`, `translations.json`, `overlays/`, `published/`, source maps, hidden files, directories, and unknown files return 404 even if the object physically exists.
 
@@ -103,20 +112,25 @@ The following are not surviving public product contracts:
 
 ## Private Roma Product-Control Routes
 
-- `GET /__internal/renders/widgets/{instanceId}/saved.json`
-- `GET /__internal/renders/widgets/catalog.json`
-- `PUT /__internal/renders/widgets/{instanceId}/saved.json`
-- `DELETE /__internal/renders/widgets/{instanceId}/saved.json`
-- `POST /__internal/renders/widgets/serve-state.json`
-- `POST /__internal/renders/widgets/index/rebuild.json`
-- `POST /__internal/renders/widgets/index/rebuild.json` is an explicit operator repair route. Product reads and writes must not call it as a fallback.
-- `POST /__internal/overlays/languages/write.json`
-- `POST /__internal/overlays/languages/selected.json`
-- `GET /__internal/overlays/{overlayId}.json`
+- `GET /__internal/widgets/definitions`
+- `GET /__internal/accounts/{accountPublicId}/instances`
+- `POST /__internal/instances`
+- `GET /__internal/instances/{instanceId}`
+- `PUT /__internal/instances/{instanceId}`
+- `DELETE /__internal/instances/{instanceId}`
+- `POST /__internal/instances/{instanceId}/rename`
+- `POST /__internal/instances/{instanceId}/duplicate`
+- `POST /__internal/instances/{instanceId}/publish`
+- `POST /__internal/instances/{instanceId}/unpublish`
+- `GET /__internal/instances/{instanceId}/translations`
+- `POST /__internal/instances/{instanceId}/translations/generate`
+- `GET /__internal/instances/{instanceId}/translations/{locale}`
+- `PUT /__internal/instances/{instanceId}/translations/{locale}`
+- `PUT /__internal/instances/{instanceId}/translations/{locale}/complete`
 
 These routes require Roma internal service auth plus a valid Roma account authz capsule. The account coordinate from the capsule must match the storage path Tokyo-worker reads or writes. Local `TOKYO_DEV_JWT` is only for explicit internal tooling and never a product browser path.
 
-Internal route names may keep `widgets` as route vocabulary during cutover for Bob/Roma compatibility, but storage must remain `accounts/{accountPublicId}/instances/{instanceId}/...`. Route vocabulary is not storage topology.
+Internal route names must use product-operation vocabulary. The old `renders/widgets/*.json` route family is no longer a product-control surface.
 
 ## Friendly Asset Routes
 
@@ -134,18 +148,14 @@ Friendly routes must not create root `widgets/`, `themes/`, `public/`, `publishe
 
 ## Queue Jobs
 
-Queue jobs are DB-free and operate from Tokyo account storage:
+Tokyo-worker does not consume the old render snapshot/mirror queue.
 
-- write config bytes
-- sync published bytes
-- delete account instance subtree
-
-Queue jobs must not read Supabase to rediscover state. Tokyo-worker has no language generation queue and no San Francisco binding.
+The only queue binding Tokyo-worker currently owns in this area is the `INSTANCE_TRANSLATION_JOBS` producer. Generate translations resolves account instance content, editable field contracts, current translated values, and policy, then sends locale translation jobs for San Francisco to consume. Tokyo-worker does not use a queue to delete account instances or to mirror public artifacts.
 
 ## Delete, Publish, And Unpublish
 
-- Publish/republish restores `index.html.off` to `index.html` when needed, or confirms an existing `index.html`.
-- Unpublish renames `index.html` to `index.html.off` and leaves account-owned saved state plus support files intact.
-- If neither `index.html` nor `index.html.off` exists, publish fails clearly because the generated embed files are not ready.
+- Publish/republish materializes public artifacts from the approved saved instance source and translated locale values, then sets the instance publish status to `published`.
+- Unpublish sets the instance publish status to `unpublished` and leaves account-owned saved source plus generated files intact. Public serving rejects them while unpublished.
+- If artifact materialization fails, publish fails clearly and does not mark the instance as published.
 - Delete removes the account-owned instance subtree.
 - Neither operation writes or deletes root `published/widgets` because that registry does not exist in the PRD 099 product model.

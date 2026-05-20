@@ -17,36 +17,38 @@ export type ExecuteAccountCommand = (
   commandArgs: ExecuteAccountCommandArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
-export type ListLocaleOverlaysArgs = {
+export type ListTranslationsArgs = {
   instanceId: string;
   baseLocale: string;
 };
 
-export type ListLocaleOverlays = (
-  args: ListLocaleOverlaysArgs
+export type ListTranslations = (
+  args: ListTranslationsArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
-export type ReadLocaleOverlayArgs = {
+export type ReadTranslationArgs = {
   instanceId: string;
-  overlayId: string;
+  locale: string;
 };
 
-export type ReadLocaleOverlay = (
-  args: ReadLocaleOverlayArgs
+export type ReadTranslation = (
+  args: ReadTranslationArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
-export type WriteLocaleOverlayArgs = {
+export type SaveTranslationArgs = {
   instanceId: string;
   locale: string;
   values: Record<string, string>;
 };
 
-export type WriteLocaleOverlay = (
-  args: WriteLocaleOverlayArgs
+export type SaveTranslation = (
+  args: SaveTranslationArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
 export type GenerateTranslationsArgs = {
   instanceId: string;
+  baseLocale: string;
+  targetLocales: string[];
 };
 
 export type GenerateTranslations = (
@@ -296,11 +298,11 @@ export function useSessionTransport(args: {
     [dispatchHostAccountCommand],
   );
 
-  const listLocaleOverlays: ListLocaleOverlays = useCallback(
-    async (commandArgs: ListLocaleOverlaysArgs) => {
+  const listTranslations: ListTranslations = useCallback(
+    async (commandArgs: ListTranslationsArgs) => {
       const instanceId = String(commandArgs.instanceId || '').trim();
       const result = await dispatchHostAccountCommand({
-        command: 'list-locale-overlays',
+        command: 'list-translations',
         instanceId,
         body: {
           baseLocale: commandArgs.baseLocale,
@@ -311,15 +313,15 @@ export function useSessionTransport(args: {
     [dispatchHostAccountCommand],
   );
 
-  const readLocaleOverlay: ReadLocaleOverlay = useCallback(
-    async (commandArgs: ReadLocaleOverlayArgs) => {
+  const readTranslation: ReadTranslation = useCallback(
+    async (commandArgs: ReadTranslationArgs) => {
       const instanceId = String(commandArgs.instanceId || '').trim();
-      const overlayId = String(commandArgs.overlayId || '').trim();
+      const locale = String(commandArgs.locale || '').trim();
       const result = await dispatchHostAccountCommand({
-        command: 'read-locale-overlay',
+        command: 'read-translation',
         instanceId,
         body: {
-          overlayId,
+          locale,
         },
       });
       return { ok: result.ok, status: result.status, json: result.payload };
@@ -327,11 +329,11 @@ export function useSessionTransport(args: {
     [dispatchHostAccountCommand],
   );
 
-  const writeLocaleOverlay: WriteLocaleOverlay = useCallback(
-    async (commandArgs: WriteLocaleOverlayArgs) => {
+  const saveTranslation: SaveTranslation = useCallback(
+    async (commandArgs: SaveTranslationArgs) => {
       const instanceId = String(commandArgs.instanceId || '').trim();
       const result = await dispatchHostAccountCommand({
-        command: 'write-locale-overlay',
+        command: 'save-translation',
         instanceId,
         body: {
           locale: commandArgs.locale,
@@ -349,6 +351,10 @@ export function useSessionTransport(args: {
       const result = await dispatchHostAccountCommand({
         command: 'generate-translations',
         instanceId,
+        body: {
+          baseLocale: commandArgs.baseLocale,
+          targetLocales: commandArgs.targetLocales,
+        },
         timeoutMs: 120_000,
       });
       return { ok: result.ok, status: result.status, json: result.payload };
@@ -361,9 +367,9 @@ export function useSessionTransport(args: {
     hostOriginRef,
     fetchApi,
     executeAccountCommand,
-    listLocaleOverlays,
-    readLocaleOverlay,
-    writeLocaleOverlay,
+    listTranslations,
+    readTranslation,
+    saveTranslation,
     generateTranslations,
   };
 }

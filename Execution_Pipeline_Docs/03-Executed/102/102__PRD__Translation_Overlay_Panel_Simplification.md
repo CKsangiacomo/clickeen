@@ -5,6 +5,8 @@ Owner: Product + Architecture
 Date: 2026-05-17
 Depends on: PRD 100 - Static Public Embed Delivery
 
+PRD 103_02 SUPERSESSION NOTE: this executed PRD is historical for the panel simplification intent, but its overlay-inventory/`overlayId` preview contract is not current target architecture. PRD 103_02 owns the replacement with translated-locale list/read/write operations where Roma/Bob do not expose overlay object identity.
+
 ## Purpose
 
 Simplify the Builder Translations panel so it reflects the real product model instead of creating a runtime translation status machine.

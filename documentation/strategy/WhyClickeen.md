@@ -59,7 +59,7 @@ There is no playbook for this. No one has written the guide to "make software AI
 |-------------|---------------|---------------|
 | **Semantic tokens** | `data-variant="primary"` not `class="btn-blue-500"` | Discipline. Every component. No shortcuts. |
 | **Deterministic state** | Widget config is a pure JSON object. Ops are transforms. | No hidden state. No side effects. No "healing." |
-| **Documentation as interface** | `agent.md` contracts for every widget type | Docs must be precise enough for AI to execute |
+| **Documentation as interface** | PRDs, `spec.json`, `editable-fields.json`, and service docs | Docs must be precise enough for AI to execute |
 | **Structured schemas** | Every widget type has a JSON schema | No free-form config. No "it depends." |
 | **Fail-fast contracts** | Invalid ops are rejected, not recovered | Trust the error, not silent failure |
 | **No locale assumptions** | Geography is a parameter, not baked in | Every shortcut breaks the model |

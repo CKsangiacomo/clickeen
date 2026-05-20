@@ -8,7 +8,7 @@ import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { TdHeader } from '../bob_native_ui/tdheader/TdHeader';
 import { SettingsPanel } from './SettingsPanel';
 import { TranslationsPanel } from './TranslationsPanel';
-import type { LocaleOverlayInventoryData, TranslationSetup } from './useLocaleOverlayPreviewState';
+import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
 
 const BUILDER_ERROR_COPY: Record<string, string> = {
   'coreui.errors.auth.required': 'You need to sign in again to keep editing this widget.',
@@ -83,25 +83,25 @@ function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidget
 }
 
 export function ToolDrawer({
-  overlayPreviewLocale,
-  onOverlayPreviewLocaleChange,
-  onRequestLocaleOverlayRefresh,
+  translationPreviewLocale,
+  onTranslationPreviewLocaleChange,
+  onRequestTranslationsRefresh,
   onPreviewModeChange,
   translationSetup,
-  localeOverlayInventory,
-  localeOverlayValuesByLocale,
-  localeOverlayLoading,
-  localeOverlayError,
+  translatedLocales,
+  translationValuesByLocale,
+  translationsLoading,
+  translationsError,
 }: {
-  overlayPreviewLocale: string;
-  onOverlayPreviewLocaleChange: (locale: string) => void;
-  onRequestLocaleOverlayRefresh: () => void;
+  translationPreviewLocale: string;
+  onTranslationPreviewLocaleChange: (locale: string) => void;
+  onRequestTranslationsRefresh: () => void;
   onPreviewModeChange: (mode: 'editing' | 'translations') => void;
   translationSetup: TranslationSetup | null;
-  localeOverlayInventory: LocaleOverlayInventoryData | null;
-  localeOverlayValuesByLocale: Record<string, Record<string, string>>;
-  localeOverlayLoading: boolean;
-  localeOverlayError: string | null;
+  translatedLocales: TranslatedLocalesData | null;
+  translationValuesByLocale: Record<string, Record<string, string>>;
+  translationsLoading: boolean;
+  translationsError: string | null;
 }) {
   const session = useWidgetSession();
   const compiled = session.compiled;
@@ -154,14 +154,14 @@ export function ToolDrawer({
     <SettingsPanel />
   ) : activePanel === 'translations' ? (
     <TranslationsPanel
-      overlayPreviewLocale={overlayPreviewLocale}
-      onOverlayPreviewLocaleChange={onOverlayPreviewLocaleChange}
-      onRequestLocaleOverlayRefresh={onRequestLocaleOverlayRefresh}
+      translationPreviewLocale={translationPreviewLocale}
+      onTranslationPreviewLocaleChange={onTranslationPreviewLocaleChange}
+      onRequestTranslationsRefresh={onRequestTranslationsRefresh}
       translationSetup={translationSetup}
-      localeOverlayInventory={localeOverlayInventory}
-      localeOverlayValuesByLocale={localeOverlayValuesByLocale}
-      localeOverlayLoading={localeOverlayLoading}
-      localeOverlayError={localeOverlayError}
+      translatedLocales={translatedLocales}
+      translationValuesByLocale={translationValuesByLocale}
+      translationsLoading={translationsLoading}
+      translationsError={translationsError}
     />
   ) : (
     <TdMenuContent

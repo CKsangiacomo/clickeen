@@ -99,9 +99,9 @@ export type BobOpenEditorFailedMessage = {
 export type BobAccountCommand =
   | 'update-instance'
   | AccountAssetHostCommand
-  | 'list-locale-overlays'
-  | 'read-locale-overlay'
-  | 'write-locale-overlay'
+  | 'list-translations'
+  | 'read-translation'
+  | 'save-translation'
   | 'generate-translations'
   | 'run-copilot'
   | 'attach-ai-outcome';

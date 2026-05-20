@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildOverlayId } from '../../packages/ck-contracts/src/overlay-identity.ts';
-import { runEmbedFileWriter, type EmbedFileWriterStorage } from '../../sanfrancisco/src/embed-file-writer.ts';
-import type { WidgetGenerationJob } from '../../sanfrancisco/src/widget-generation-jobs.ts';
+import {
+  publishAccountInstanceTransition,
+  writeSavedRenderConfig,
+  writeTranslatedLocaleValues,
+} from '../../tokyo-worker/src/domains/render/index.ts';
 import { tryHandleClkLiveStaticRoutes } from '../../tokyo-worker/src/routes/clk-live-routes.ts';
 import type { Env } from '../../tokyo-worker/src/types.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
 const INSTANCE_ID = 'Z9Y8X7W6V5';
-const INSTANCE_ROOT = `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}`;
-const INSTANCE_KEY = `${INSTANCE_ROOT}/instance.json`;
 
 type StoredObject = {
   text: string;
@@ -24,29 +24,11 @@ function contentTypeForKey(key: string): string | undefined {
   return undefined;
 }
 
-function createStorage(seed: Record<string, string>) {
+function createTestEnv(seed: Record<string, string>) {
   const objects = new Map<string, StoredObject>(
     Object.entries(seed).map(([key, text]) => [key, { text, contentType: contentTypeForKey(key) }]),
   );
-  const storage: EmbedFileWriterStorage = {
-    async readText(key) {
-      return objects.get(key)?.text ?? null;
-    },
-    async writeText(key, value, options) {
-      objects.set(key, { text: value, contentType: options?.contentType ?? contentTypeForKey(key) });
-    },
-    async exists(key) {
-      return objects.has(key);
-    },
-    async listKeys(prefix) {
-      return [...objects.keys()].filter((key) => key.startsWith(prefix));
-    },
-  };
-  return { storage, objects };
-}
-
-function createPublicEnv(objects: Map<string, StoredObject>): Env {
-  return {
+  const env = {
     TOKYO_DEV_JWT: 'test',
     TOKYO_R2: {
       async get(key: string) {
@@ -60,10 +42,37 @@ function createPublicEnv(objects: Map<string, StoredObject>): Env {
             },
           }),
           httpMetadata: stored.contentType ? { contentType: stored.contentType } : undefined,
+          async json() {
+            return JSON.parse(stored.text) as unknown;
+          },
+          async text() {
+            return stored.text;
+          },
         };
+      },
+      async put(key: string, value: string | Uint8Array | ReadableStream | null, options?: { httpMetadata?: { contentType?: string } }) {
+        const text = typeof value === 'string'
+          ? value
+          : value instanceof Uint8Array
+            ? new TextDecoder().decode(value)
+            : await new Response(value).text();
+        objects.set(key, { text, contentType: options?.httpMetadata?.contentType ?? contentTypeForKey(key) });
+      },
+      async list({ prefix }: { prefix?: string }) {
+        const normalizedPrefix = prefix ?? '';
+        return {
+          objects: [...objects.keys()]
+            .filter((key) => key.startsWith(normalizedPrefix))
+            .map((key) => ({ key })),
+          truncated: false,
+        };
+      },
+      async delete(key: string) {
+        objects.delete(key);
       },
     } as unknown as R2Bucket,
   } as Env;
+  return { env, objects };
 }
 
 function productSources() {
@@ -77,71 +86,29 @@ function productSources() {
   <script src="./widget.client.js" defer></script>
 </div>
 </body></html>`,
-    'product/widgets/faq/spec.json': '{"v":1}',
-    'product/widgets/faq/agent.md': '# FAQ',
     'product/widgets/faq/widget.css': '.ck-faq{}',
     'product/widgets/faq/widget.client.js': 'window.__FAQ_STATE__ = window.CK_WIDGET.state;',
   };
 }
 
-function instanceDocument() {
+function faqConfig() {
   return {
-    v: 1,
-    id: INSTANCE_ID,
-    accountId: ACCOUNT_ID,
-    accountPublicId: ACCOUNT_ID,
-    widgetCode: 'FAQ',
-    widgetType: 'faq',
-    displayName: 'FAQ',
-    config: {
-      header: { title: 'Questions', subtitleHtml: 'Fast answers' },
-      cta: { label: 'Contact us' },
-      sections: [
-        {
-          id: 'general',
-          title: 'Basics',
-          faqs: [
-            {
-              id: 'pricing',
-              question: 'What does it cost?',
-              answer: 'Plans start free.',
-              defaultOpen: false,
-            },
-          ],
-        },
-      ],
-    },
-    baseLocale: 'en',
-    targetLocales: ['it'],
-    embedBuildShape: {
-      rendering: 'html',
-      seoMode: 'off',
-      locales: ['en', 'it'],
-      clientSide: 'minimal-js',
-    },
-    sourceVersion: 1,
-    generation: {
-      translations: { status: 'ready', sourceVersion: 1, updatedAt: '2026-05-18T00:00:00.000Z' },
-      embed: { status: 'queued', sourceVersion: 1, updatedAt: '2026-05-18T00:00:00.000Z' },
-    },
-    publishStatus: 'published',
-    createdAt: '2026-05-18T00:00:00.000Z',
-    updatedAt: '2026-05-18T00:00:00.000Z',
-  };
-}
-
-function embedJob(): WidgetGenerationJob {
-  return {
-    v: 1,
-    jobId: 'job-prd103g',
-    jobType: 'widget.embed',
-    accountPublicId: ACCOUNT_ID,
-    instanceId: INSTANCE_ID,
-    sourceVersion: 1,
-    attempt: 0,
-    queuedAt: '2026-05-18T00:00:00.000Z',
-    traceId: 'trace-prd103g',
-    agentId: 'widget.instance.embed',
+    header: { title: 'Questions', subtitleHtml: 'Fast answers' },
+    cta: { label: 'Contact us' },
+    sections: [
+      {
+        id: 'general',
+        title: 'Basics',
+        faqs: [
+          {
+            id: 'pricing',
+            question: 'What does it cost?',
+            answer: 'Plans start free.',
+            defaultOpen: false,
+          },
+        ],
+      },
+    ],
   };
 }
 
@@ -158,41 +125,39 @@ async function publicText(env: Env, pathname: string): Promise<string> {
   return response ? response.text() : '';
 }
 
-test('PRD 103G publishes base and translated FAQ files from saved instance and current language values', async () => {
-  const overlayId = buildOverlayId({
-    accountPublicId: ACCOUNT_ID,
-    widgetCode: 'FAQ',
+test('PRD 103G publishes base and translated FAQ files from Tokyo source and current translated values', async () => {
+  const { env } = createTestEnv(productSources());
+  await writeSavedRenderConfig({
+    env,
+    accountId: ACCOUNT_ID,
     instanceId: INSTANCE_ID,
-    languageCode: 'IT00',
-    experiment: 'A01',
-    personalization: '000',
-    version: '00',
+    widgetType: 'faq',
+    displayName: 'FAQ',
+    meta: { baseLocale: 'en', targetLocales: ['it'] },
+    config: faqConfig(),
   });
-  const { storage, objects } = createStorage({
-    ...productSources(),
-    [INSTANCE_KEY]: JSON.stringify(instanceDocument()),
-    [`${INSTANCE_ROOT}/overlays/${overlayId}.json`]: JSON.stringify({
-      v: 1,
-      overlayId,
-      values: {
-        'header.title': 'Domande',
-        'header.subtitleHtml': 'Risposte rapide',
-        'cta.label': 'Contattaci',
-        'sections.0.title': 'Nozioni di base',
-        'sections.0.faqs.0.question': 'Quanto costa?',
-        'sections.0.faqs.0.answer': 'I piani partono gratis, con modifica manuale.',
-      },
-    }),
+  await writeTranslatedLocaleValues({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+    values: {
+      'header.title': 'Domande',
+      'header.subtitleHtml': 'Risposte rapide',
+      'cta.label': 'Contattaci',
+      'sections.0.title': 'Nozioni di base',
+      'sections.0.faqs.0.question': 'Quanto costa?',
+      'sections.0.faqs.0.answer': 'I piani partono gratis, con modifica manuale.',
+    },
   });
 
-  const result = await runEmbedFileWriter({ storage, job: embedJob() });
-  assert.equal(result.ok, true);
+  const result = await publishAccountInstanceTransition({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });
+  assert.equal(result.status, 'published');
 
-  const env = createPublicEnv(objects);
   const baseHtml = await publicText(env, `/${ACCOUNT_ID}/${INSTANCE_ID}`);
   const translatedHtml = await publicText(env, `/${ACCOUNT_ID}/${INSTANCE_ID}/it.html`);
-  const baseScript = await publicText(env, `/${ACCOUNT_ID}/${INSTANCE_ID}/script.v1.js`);
-  const translatedScript = await publicText(env, `/${ACCOUNT_ID}/${INSTANCE_ID}/script.v1.it.js`);
+  const baseScript = await publicText(env, `/${ACCOUNT_ID}/${INSTANCE_ID}/script.js`);
+  const translatedScript = await publicText(env, `/${ACCOUNT_ID}/${INSTANCE_ID}/script.it.js`);
 
   assert.match(baseHtml, /lang="en"/);
   assert.match(translatedHtml, /lang="it"/);

@@ -43,7 +43,7 @@ async function mintGrant(payload: AIGrant, secret = 'test-secret'): Promise<stri
   return `v1.${payloadB64}.${sigB64}`;
 }
 
-test('translator prompt carries field labels and roles from the content contract', () => {
+test('translator prompt carries field labels and roles from the editable-fields contract', () => {
   const prompt = buildUserPrompt([
     {
       path: 'sections.0.faqs.0.question',

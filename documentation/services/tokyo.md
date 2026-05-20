@@ -2,6 +2,8 @@
 
 STATUS: REFERENCE - MUST MATCH PRD 099 DEPLOY ROOTS AND PRD 098 OVERLAY IDENTITY
 
+PRD 103_02 NOTE: this document still describes the current physical storage tree. It is not current product-boundary authority for account instances, translated locale values, publish state, or public artifact readiness until PRD 103_02 closes. Treat `instance.json`, `instances/index.json`, `overlays/{overlayId}.json`, `index.html`, `styles.css`, and `script.js` below as audit evidence and implementation candidates, not approved Roma/Bob/San Francisco contracts.
+
 Tokyo is the storage and static-serving plane. It is not an editor, account authority, or Prague-specific runtime.
 
 ## Product Model

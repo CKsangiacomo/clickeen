@@ -5,12 +5,11 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
   buildOverlayTextValueMap,
-  extractTextPrimitiveValues,
-  readWidgetContentContract,
-  readWidgetOverlayContract,
+  extractTextPrimitiveValuesForEditableFields,
+  readWidgetEditableFieldsContract,
   resolveOverlay,
   validateOverlayValuesForTextPrimitives,
-  widgetContentToOverlayContract,
+  widgetEditableFieldsToTextPrimitives,
 } from './overlay-primitives.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -23,21 +22,17 @@ function readText(relativePath: string): string {
   return fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
-function readFaqContent() {
-  return readWidgetContentContract(readJson('tokyo/product/widgets/faq/content.json'));
+function readFaqEditableFields() {
+  return readWidgetEditableFieldsContract(readJson('tokyo/product/widgets/faq/editable-fields.json'));
 }
 
-function readFaqSpecWithGeneratedOverlays(): { defaults: Record<string, unknown>; overlays: unknown } {
-  const spec = readJson('tokyo/product/widgets/faq/spec.json') as { defaults: Record<string, unknown> };
-  return {
-    ...spec,
-    overlays: widgetContentToOverlayContract(readFaqContent()),
-  };
+function readFaqSpec(): { defaults: Record<string, unknown> } {
+  return readJson('tokyo/product/widgets/faq/spec.json') as { defaults: Record<string, unknown> };
 }
 
-test('FAQ content JSON is the translation field authority', () => {
+test('FAQ editable-fields JSON is the translation field authority', () => {
   const spec = readJson('tokyo/product/widgets/faq/spec.json') as Record<string, unknown>;
-  const contract = readFaqContent();
+  const contract = readFaqEditableFields();
   assert.equal(spec.overlays, undefined);
   assert.deepEqual(
     contract.fields.map((field) => field.path),
@@ -52,10 +47,9 @@ test('FAQ content JSON is the translation field authority', () => {
   );
 });
 
-test('FAQ translation primitive graph derives from content JSON', () => {
-  const spec = readFaqSpecWithGeneratedOverlays();
-  const overlay = readWidgetOverlayContract(spec);
-  assert.deepEqual(overlay.text, [
+test('FAQ translation primitive graph derives from editable-fields JSON', () => {
+  const primitives = widgetEditableFieldsToTextPrimitives(readFaqEditableFields());
+  assert.deepEqual(primitives, [
     { path: 'header.title', label: 'Header title', type: 'richtext', role: 'header-title' },
     { path: 'header.subtitleHtml', label: 'Header subtitle', type: 'richtext', role: 'header-subtitle' },
     { path: 'cta.label', label: 'CTA label', type: 'string', role: 'cta-label' },
@@ -65,8 +59,8 @@ test('FAQ translation primitive graph derives from content JSON', () => {
   ]);
 });
 
-test('FAQ manual editor and runtime paths are covered by content JSON', () => {
-  const contract = readFaqContent();
+test('FAQ manual editor and runtime paths are covered by editable-fields JSON', () => {
+  const contract = readFaqEditableFields();
   const paths = new Set(contract.fields.map((field) => field.path));
   const faqSpecText = readText('tokyo/product/widgets/faq/spec.json');
   const headerModule = readText('bob/lib/compiler/modules/header.ts');
@@ -102,8 +96,9 @@ test('FAQ manual editor and runtime paths are covered by content JSON', () => {
 });
 
 test('FAQ primitive graph extracts concrete text paths for every question and answer', () => {
-  const spec = readFaqSpecWithGeneratedOverlays();
-  const items = extractTextPrimitiveValues({ spec, config: spec.defaults });
+  const spec = readFaqSpec();
+  const contract = readFaqEditableFields();
+  const items = extractTextPrimitiveValuesForEditableFields({ contract, config: spec.defaults });
   const paths = items.map((item) => item.path);
 
   assert.equal(paths.length, 12);
@@ -119,8 +114,9 @@ test('FAQ primitive graph extracts concrete text paths for every question and an
 });
 
 test('overlay value validation rejects missing and extra concrete paths', () => {
-  const spec = readFaqSpecWithGeneratedOverlays();
-  const items = extractTextPrimitiveValues({ spec, config: spec.defaults });
+  const spec = readFaqSpec();
+  const contract = readFaqEditableFields();
+  const items = extractTextPrimitiveValuesForEditableFields({ contract, config: spec.defaults });
   const values = buildOverlayTextValueMap(items);
 
   assert.deepEqual(validateOverlayValuesForTextPrimitives(items, values), { ok: true });

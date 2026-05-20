@@ -2,6 +2,8 @@
 
 This document describes system boundaries, data flows, and how the platform fits together.
 
+PRD 103_00 NOTE: this doc has been narrowed to the product-operation model needed before PRD 103 resumes. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+
 **For definitions and glossary:** See `CONTEXT.md`
 **For canonical asset behavior:** See [AssetManagement.md](./AssetManagement.md)
 **For strategy and vision:** See `documentation/strategy/WhyClickeen.md`
@@ -37,51 +39,39 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | **Widget Files = Truth**       | Core runtime files + contract files in `tokyo/product/widgets/{name}/` define widget behavior and validation; their deployed Tokyo R2 home is `product/widgets/{name}/`.                                                                                                                    |
 | **Orchestrators = Dumb Pipes** | Bob/Roma/Tokyo-worker/Venice avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. overlay composition, artifact materialization) but must not “fix” state ad hoc.                    |
 | **Dieter Tokens**              | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB.                                                                                                                   |
-| **Locale Is Not Identity**     | Locale is a runtime parameter. IDs (`instanceId`) must be locale-free; localization is applied via overlays, not DB fan-out.                                                                                               |
+| **Locale Is Not Identity**     | Locale is a runtime parameter. IDs (`instanceId`) must be locale-free; account-widget localization is applied through translated locale values and generated public artifacts, not DB fan-out.                              |
 
 ---
 
-## Core Object Model: Mutable Pointers to Immutable Artifacts
+## Product Operations Own State
 
-Every stateful object in Clickeen follows one pattern: a **thin mutable pointer** that references a **heavy immutable artifact**.
+Clickeen does use durable storage, generated files, caches, queues, and static artifacts. Those are implementation tools, not the product vocabulary.
 
+The account Builder path is intentionally direct:
+
+```text
+Roma sends one product command.
+The owning service resolves its own source once.
+The owning service returns product state or accepts named async work.
+Generated/public artifacts are written only by artifact builders.
 ```
-Mutable pointer  (tiny, always fetched fresh)
-    │
-    └──► Immutable artifact  (heavy, cached forever, content-addressed)
-```
 
-"Updating" something never mutates an existing object. It means: create a new immutable artifact, then atomically flip the pointer. The old artifact stays cached wherever it is — no invalidation cascade, no eventual consistency window.
+### Current Product Authorities
 
-### Where this applies
-
-| Domain       | Mutable pointer                                                        | Immutable artifact                                                                    |
-| ------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **Serve state** | Tokyo live pointer / serve flag (`no-store`)                           | Published projection material under `accounts/{accountPublicId}/instances/{instanceId}/published/` |
-| **Assets**   | Authoring stores account asset refs; runtime/account APIs carry `accountPublicId` | Asset bytes under `accounts/{accountPublicId}/assets/{assetRef}` |
-| **Auth**     | JWT (short-lived, refreshable)                                         | userId claim (stable identity)                                                        |
-| **Authz**    | HMAC-signed capsule (expires)                                          | Role/account snapshot at issuance                                                     |
-| **Overlays** | Selected/published overlay pointer under the owning instance             | Overlay object at `accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json` |
-
-For instance serving, `published` / `unpublished` is only the Tokyo-owned per-instance serve flag. It tells Venice whether public serving is allowed. It is not widget-type state, not overlay readiness, and not broad account/business lifecycle truth.
+| Concern | Product authority | Storage/artifact implementation rule |
+| --- | --- | --- |
+| Widget definitions | Approved widget source under `tokyo/product/widgets/{widgetType}/` read by widget-definition operations | Generated manifests are not source authority. |
+| Account instance source | Tokyo account instance operations over `instance.config.json` and `instance.content.json` | `instance.json` may exist only as a transitional compatibility mirror. |
+| Account instance listing | `listAccountInstances` | Any account index file is a private cache below the operation, not a Roma API. |
+| Translations | Translated locale value operations by `instanceId + locale` | Overlay IDs or object paths are private storage details if retained. |
+| Publish state | Tokyo publish/unpublish operations and publish status | Generated files are output, not the state machine. |
+| Public serving | `clk.live/{accountPublicId}/{instanceId}` serving generated artifacts for published instances | Missing artifacts fail visibly; visitor requests do not compose widgets from authoring source. |
 
 ### Why this matters
 
-**For caching:** The heavy part (artifacts, snapshots, overlay files) caches perfectly — CDN, edge, browser, forever. The mutable part (pointers, JWTs, capsules) is tiny and cheap to fetch fresh. One uncached pointer read, then everything it references hits cache.
+Product-operation boundaries keep the system fast and understandable. Roma must not make one product action by reading a catalog file, then an account index file, then overlay inventory, then several overlay objects. If a product action needs several pieces of Tokyo state, Tokyo owns the operation and reads those objects internally.
 
-**For safety:** Writes produce new artifacts, never modify shared state. If a write fails, nothing changed. If it succeeds, the artifact exists permanently. Rollback is just pointing back to the previous artifact.
-
-**For agents:** An AI agent's loop is verify state, take action, verify result. Pointer reads give deterministic current state. New artifact writes can't corrupt existing data. Pointer flips give binary confirmation. No locks, no race conditions, no partial states.
-
-**For scale:** 10,000 concurrent editors produce 10,000 independent artifacts. No write contention, no coordination between them. The pointer flip is the only serialization point and it's a single atomic write.
-
-### Contrast with traditional SaaS
-
-Traditional systems treat objects as mutable: update in place, invalidate caches everywhere, coordinate distributed reads, handle partial writes, build versioning schemes. Clickeen sidesteps all of this. The pointer is the only mutable thing, and it's trivially small.
-
-This is the same principle that underpins content-addressed storage, Git, and distributed ledgers: if data is immutable and addressed by content, you can distribute it globally and cache it indefinitely without coordination.
-
-Every service section below is an instance of this pattern. Tokyo stores immutable artifacts and account-owned runtime state under the canonical R2 roots. Tokyo-worker materializes account-scoped published projections and flips live pointers. Venice reads projected public material and serves cached artifacts. Bob creates working artifacts. Roma orchestrates the account-scoped product cycle, while DevStudio remains the internal toolbench for platform work and local verification pages.
+This keeps customer actions close to one cross-service request, removes stale read windows, and stops storage layouts from becoming accidental architecture.
 
 ---
 
@@ -98,7 +88,7 @@ Every service section below is an instance of this pattern. Tokyo stores immutab
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
 | **Dieter**        | `dieter/`       | (build artifact)                     | Design system: tokens, 16+ components                                   | ✅ Active   |
 | **Tokyo**         | `tokyo/`        | Cloudflare R2                        | Canonical product asset roots, account runtime storage, Dieter/fonts/Prague artifacts | ✅ Active   |
-| **Tokyo Worker**  | `tokyo-worker/` | Cloudflare Workers + Queues          | Tokyo PBX for account storage, assets, and published projections         | ✅ Active   |
+| **Tokyo Worker**  | `tokyo-worker/` | Cloudflare Workers + Queues          | Tokyo PBX for account storage, assets, account instances, translations, and public artifacts | ✅ Active   |
 
 ---
 
@@ -230,18 +220,18 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 #### Public Embeds (`clk.live`)
 
 - Public embed surface: third-party websites load generated static files from `clk.live`.
-- Serving maps `/{accountPublicId}/{instanceId}` to the owning account instance `index.html`.
+- Serving maps `/{accountPublicId}/{instanceId}` to generated public artifacts for the owning account instance.
 - Public requests perform no product-service lookup, runtime composition, overlay resolution, or database call.
-- If `index.html` is missing, the public URL returns 404.
-- Locale variants and SEO/GEO output are generated ahead of serving by agent jobs.
+- If the instance is unpublished or a requested generated artifact is missing, the public URL returns 404.
+- Locale variants and any SEO/GEO output are generated ahead of serving by named publish/artifact work.
 
 #### Tokyo (R2)
 
 - Serves product widget software from R2 `product/widgets/**` through friendly `/widgets/**` routes.
 - Serves Dieter from R2 `dieter/**`, global fonts from `fonts/**`, and Prague content from `prague/**`.
 - **Deterministic compilation contract** depends on the deployed Dieter manifest under the canonical `dieter/` root.
-- Serves account-owned generated browser files from `accounts/{accountPublicId}/instances/{instanceId}/`. PRD 098 overlay identity is fixed-layout `overlayId`; old l10n indexes, text packs, and base fingerprints are not active product truth.
-- Prague website base copy lives in the `prague/` root. Account-widget overlays are build inputs for generated instance files; Prague does not own a separate widget localization runtime.
+- Serves account-owned generated browser files from `accounts/{accountPublicId}/instances/{instanceId}/`.
+- Prague website base copy lives in the `prague/` root. Account-widget translated locale values are build inputs for generated instance files; Prague does not own a separate widget localization runtime.
 
 #### Tokyo Worker (Workers + Queues)
 
@@ -251,8 +241,8 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 - Serves account asset reads on routes carrying `accountPublicId`; legacy non-account asset paths are hard-failed.
 - In-place account asset byte replacement keeps the same account asset reference and must not require instance rebuilds.
 - Asset delete is synchronous and explicit, with no silent runtime healing.
-- Writes account-instance config, overlay, SEO/meta, and published projection material under `accounts/{accountPublicId}/instances/{instanceId}/` from explicit Roma/system operations. Tokyo-worker does not read Michael/Supabase to discover overlay state.
-- Materializes render snapshots under account-first instance storage, then exposes account-scoped published projection routes for Venice fast-path serving.
+- Writes account-instance config/content, translated locale values, and generated public artifacts under `accounts/{accountPublicId}/instances/{instanceId}/` from explicit Roma/system operations. Tokyo-worker does not read Michael/Supabase to discover translation state.
+- Publishes by materializing generated public artifacts and setting Tokyo-owned publish status.
 
 #### Asset ownership model (canonical)
 
@@ -472,7 +462,7 @@ tokyo/product/widgets/{widgetType}/
 ├── widget.html        # Semantic HTML with data-role attributes
 ├── widget.css         # Scoped styles using Dieter tokens
 ├── widget.client.js   # applyState() for live DOM updates
-└── agent.md           # AI contract (required for AI editing)
+└── editable-fields.json # Editable/translatable text contract when needed
 ```
 
 Friendly `/widgets/{widgetType}/...` URLs are route aliases. They must resolve to `product/widgets/{widgetType}/...` in R2 and must not create a root `widgets/` storage authority.
@@ -617,15 +607,15 @@ User opens widget → Roma GET /api/builder/:instanceId/open
                   → Bob stores in React state
                   → User edits (state changes, postMessage to preview)
                   → User clicks Save
-                  → Roma same-origin route writes Tokyo saved revision
-                  → Any translation/live follow-up happens outside the Builder save loop
+                  → Roma same-origin route saves approved instance config/content in Tokyo
+                  → Translations are generated later from the Translations panel
 ```
 
 ### 2. Embed View Flow
 
 ```
 Visitor loads embed → clk.live/{accountPublicId}/{instanceId}
-                    → static serving reads accounts/{accountPublicId}/instances/{instanceId}/index.html
+                    → static serving checks publish status and reads the requested generated artifact
                     → browser loads allowed sibling CSS/JS/assets only
 ```
 

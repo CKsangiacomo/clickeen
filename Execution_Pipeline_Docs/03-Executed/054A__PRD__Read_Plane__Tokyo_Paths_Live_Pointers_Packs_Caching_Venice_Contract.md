@@ -7,6 +7,8 @@ Priority: P0
 
 > **Execution Note (2026-03-05):** This PRD was executed and moved to `03-Executed`. Multiple parts of the rollout caused systemic failures across auth, runtime, and storage contracts. Those failures are addressed by subsequent PRDs (starting with PRD 56 and follow-ons). Treat this document as execution history, not the current runtime source of truth.
 
+> **PRD 103_00 NOTE (2026-05-19):** This document is historical only for public read-plane evolution. Hashed packs, live pointer files, and path/pointer vocabulary must not be cited as current authoring, translation, catalog, publish, or public-serving product architecture while the pre-103 gate is active.
+
 Part of:
 - PRD 54 (spine): `Execution_Pipeline_Docs/03-Executed/054__PRD__Snapshot_First_Rendering_Pipeline_Isolation_and_DB_Touch_Budgets.md`
 

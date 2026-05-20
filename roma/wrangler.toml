@@ -21,7 +21,3 @@ service = "tokyo-assets-dev"
 binding = "USAGE_KV"
 id = "eca50e55fa2a4f94a01fb81aeebf8377"
 preview_id = "b31d28eb386c4c068821e32d41fbc92a"
-
-[[queues.producers]]
-binding = "INSTANCE_TRANSLATION_JOBS"
-queue = "instance-translation-jobs-dev"

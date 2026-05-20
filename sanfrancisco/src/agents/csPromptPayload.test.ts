@@ -40,7 +40,7 @@ test('FAQ copilot prompt uses provided controls for editor context', () => {
       v: 1,
       widgetType: 'faq',
       files: {
-        'content.json': {
+        'editable-fields.json': {
           mediaType: 'application/json',
           source: JSON.stringify({
             v: 1,
@@ -117,7 +117,7 @@ test('FAQ copilot prompt uses provided controls for editor context', () => {
   });
 
   assert.match(payload, /WIDGET_PACKAGE_CONTEXT:/);
-  assert.match(payload, /content\.json: .*sections\[\]\.faqs\[\]\.question/);
+  assert.match(payload, /editable-fields\.json: .*sections\[\]\.faqs\[\]\.question/);
   assert.match(payload, /spec\.json: .*defaultRoots=header,sections,behavior/);
   assert.match(payload, /widget\.html: .*data-widget="faq"/);
   assert.match(payload, /widget\.css: .*ck-faq__question/);

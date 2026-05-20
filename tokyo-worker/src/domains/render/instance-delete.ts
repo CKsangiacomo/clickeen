@@ -4,7 +4,7 @@ import { removeAccountInstanceIndexEntry, resolveAccountInstanceLocation } from 
 import { deletePrefix } from './storage';
 import { normalizeStorageId } from './utils';
 
-export async function deleteInstanceMirror(env: Env, instanceId: string, accountId: string): Promise<{ existed: boolean }> {
+export async function deleteAccountInstanceSubtree(env: Env, instanceId: string, accountId: string): Promise<{ existed: boolean }> {
   const normalized = normalizeStorageId(instanceId);
   const normalizedAccount = normalizeStorageId(accountId);
   if (!normalized) throw new Error('[tokyo] delete-instance missing instanceId');

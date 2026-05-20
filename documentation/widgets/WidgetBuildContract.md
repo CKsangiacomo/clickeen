@@ -17,7 +17,6 @@ OUTPUTS
 - `widget.html`
 - `widget.css`
 - `widget.client.js`
-- `agent.md`
 - `limits.json` (unless PRD opts out)
 
 STOP CONDITIONS
@@ -144,7 +143,7 @@ MUST
       - `[data-role="header-subtitle"]`
       - `[data-role="header-cta"]`
     - `.ck-headerLayout__body` (direct child; holds widget-specific content)
-- Declare `header.title`, `header.subtitleHtml`, and `cta.label` in `spec.json.overlays.text` when they are customer-visible text.
+- Declare `header.title`, `header.subtitleHtml`, and `cta.label` in `editable-fields.json` when they are customer-visible text.
 - Keep all header layout variations purely via `data-*` + CSS (no DOM reparenting).
 - Mobile baseline (executed):
   - At widths `<= 900px`, header placements `left|right` collapse to a vertical stack (`top` semantics).
@@ -210,14 +209,14 @@ MUST
 
 ### 7) Overlay primitive graph
 MUST
-- `spec.json` includes `overlays.v = 1`.
-- `spec.json.overlays.text[]` declares every customer-visible text primitive the widget owns.
+- `editable-fields.json` declares every customer-visible text primitive the widget owns.
 - Repeatable collections use `[]` in the widget declaration, for example `sections[].faqs[].question`.
 - Producer payloads are extracted to concrete paths before leaving the product boundary, for example `sections.0.faqs.0.question`.
 - Reject prohibited segments: `__proto__`, `constructor`, `prototype`.
 - Extra producer paths and missing required paths are rejected visibly with the concrete path named.
 
 MUST NOT
+- Declare authored translation fields in `spec.json.overlays.text[]`.
 - Create `localization.json`, layer path sidecars, or a second path schema for translation/editing.
 - Send repeatable declaration paths to producers.
 - Build a multi-overlay resolver in widget code.
@@ -325,12 +324,9 @@ MUST NOT
 })();
 ```
 
-### agent.md
-```md
-# {widgetType} - Agent Contract
+### Deleted `agent.md`
 
-## Editable Paths
-- (list paths from defaults)
+`agent.md` is not widget source and must not be required by build, publish, Copilot, or embed generation. Widget behavior is governed by `spec.json`, runtime files, `limits.json`, and `editable-fields.json` where customer-visible text exists.
 
 ## Arrays and Ops
 - (arrays + insert/remove/move rules)

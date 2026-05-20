@@ -4,7 +4,7 @@
  */
 
 import type { LimitsSpec } from '@clickeen/ck-policy';
-import type { WidgetContentContract } from '@clickeen/ck-contracts/overlay-primitives';
+import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/overlay-primitives';
 
 export type PanelId = string;
 
@@ -75,7 +75,7 @@ export interface WidgetNormalizationSpec {
 }
 
 export type WidgetPackageFileName =
-  | 'content.json'
+  | 'editable-fields.json'
   | 'spec.json'
   | 'widget.html'
   | 'widget.css'
@@ -100,7 +100,7 @@ export interface CompiledWidget {
   controls: CompiledControl[];
   presets?: WidgetPresets;
   normalization?: WidgetNormalizationSpec;
-  content?: WidgetContentContract;
+  editableFields?: WidgetEditableFieldsContract;
   widgetPackage?: WidgetPackageContext;
   limits?: LimitsSpec | null;
   media: {

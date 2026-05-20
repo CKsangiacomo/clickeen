@@ -62,21 +62,21 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     },
   },
   'l10n.versions.max': {
-    label: 'Retained locale overlay versions',
-    description: 'Maximum overlay versions retained.',
+    label: 'Translation value history',
+    description: 'Maximum retained translated-value history entries if a later workflow enables history.',
     enforcement: {
-      status: 'enforced',
-      owner: 'Tokyo-worker overlay storage',
-      note: 'Tokyo-worker enforces retained overlay versions per account/widget/instance/language/experiment/personalization coordinate.',
+      status: 'gap',
+      owner: 'Unassigned translation workflow',
+      note: 'The active PRD 103 path stores the current translated locale values only. Manual edits overwrite the current value map, and regeneration may replace them. No active workflow retains multiple translated-value versions.',
     },
   },
   'branding.remove': {
     label: 'Remove branding',
     description: 'Allow removing Clickeen branding.',
     enforcement: {
-      status: 'enforced',
-      owner: 'Widget limits and policy evaluation',
-      note: 'Widget limits sanitize/reject hidden backlink state where the tier cannot remove branding.',
+      status: 'gap',
+      owner: 'Bob widget editor ops; save/publish boundary pending',
+      note: 'Widget limits map the backlink path to this policy key and Bob rejects editor ops when the account cannot remove branding. Server save/publish enforcement remains a named gap.',
     },
   },
   'embed.seoGeo.enabled': {
@@ -84,8 +84,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Allow generating and serving SEO/GEO optimized embed artifacts (Iframe++).',
     enforcement: {
       status: 'enforced',
-      owner: 'Bob embed UI and Tokyo-worker sync',
-      note: 'Bob gates the embed option; Tokyo-worker only syncs SEO/GEO artifacts when the flag is true.',
+      owner: 'Bob embed UI and Tokyo-worker public artifact operation',
+      note: 'Bob gates the embed option; Tokyo-worker materializes SEO/GEO public artifacts only when the flag is true.',
     },
   },
   'copilot.turns.monthly.max': {
@@ -146,27 +146,27 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     label: 'Items group (small)',
     description: 'Shared max items limit for small list-style widgets.',
     enforcement: {
-      status: 'enforced',
-      owner: 'Widget limits and policy evaluation',
-      note: 'Widget limits reject configs above the plan limit where a widget binds this group.',
+      status: 'gap',
+      owner: 'Bob widget editor ops; save/publish boundary pending',
+      note: 'Widget limits map widget paths to this policy key and Bob rejects editor ops above the plan limit. Server save/publish enforcement remains a named gap.',
     },
   },
   'items.group.medium.max': {
     label: 'Items group (medium)',
     description: 'Shared max items limit for medium list-style widgets.',
     enforcement: {
-      status: 'enforced',
-      owner: 'Widget limits and policy evaluation',
-      note: 'Widget limits reject configs above the plan limit where a widget binds this group.',
+      status: 'gap',
+      owner: 'Bob widget editor ops; save/publish boundary pending',
+      note: 'Widget limits map widget paths to this policy key and Bob rejects editor ops above the plan limit. Server save/publish enforcement remains a named gap.',
     },
   },
   'items.group.large.max': {
     label: 'Items group (large)',
     description: 'Shared max items limit for large list-style widgets.',
     enforcement: {
-      status: 'enforced',
-      owner: 'Widget limits and policy evaluation',
-      note: 'Widget limits reject aggregate item counts above the plan limit where a widget binds this group.',
+      status: 'gap',
+      owner: 'Bob widget editor ops; save/publish boundary pending',
+      note: 'Widget limits map aggregate widget paths to this policy key and Bob rejects editor ops above the plan limit. Server save/publish enforcement remains a named gap.',
     },
   },
 };

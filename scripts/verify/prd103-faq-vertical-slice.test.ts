@@ -10,25 +10,19 @@ import {
   type FaqSavedTextField,
 } from '../../packages/ck-contracts/src/faq-language-values.ts';
 import {
-  extractTextPrimitiveValues,
-  readWidgetContentContract,
+  extractTextPrimitiveValuesForEditableFields,
+  readWidgetEditableFieldsContract,
   resolveOverlay,
   validateOverlayValuesForTextPrimitives,
-  widgetContentToOverlayContract,
 } from '../../packages/ck-contracts/src/overlay-primitives.ts';
-import { buildContentTranslationReview } from '../../bob/lib/translations-preview.ts';
+import { buildEditableFieldsTranslationReview } from '../../bob/lib/translations-preview.ts';
 import { normalizeInstanceTranslationAgentRequest } from '../../sanfrancisco/src/l10n-account-routes.ts';
 
 const repoRoot = process.cwd();
 const spec = JSON.parse(fs.readFileSync(path.join(repoRoot, 'tokyo/product/widgets/faq/spec.json'), 'utf8'));
-const contract = readWidgetContentContract(
-  JSON.parse(fs.readFileSync(path.join(repoRoot, 'tokyo/product/widgets/faq/content.json'), 'utf8')),
+const contract = readWidgetEditableFieldsContract(
+  JSON.parse(fs.readFileSync(path.join(repoRoot, 'tokyo/product/widgets/faq/editable-fields.json'), 'utf8')),
 );
-const specWithGeneratedOverlays = {
-  ...spec,
-  overlays: widgetContentToOverlayContract(contract),
-};
-
 function previousFaqConfig() {
   return {
     header: { title: 'FAQs', subtitleHtml: 'Quick answers' },
@@ -129,13 +123,13 @@ test('PRD 103V: one FAQ edit produces complete current language values visible i
   assert.equal(currentLanguageValues['sections.0.faqs.0.answer'], 'Los planes empiezan en cero dolares.');
   assert.equal(currentLanguageValues['header.title'], 'es-old:FAQs');
 
-  const textItems = extractTextPrimitiveValues({
-    spec: specWithGeneratedOverlays,
+  const textItems = extractTextPrimitiveValuesForEditableFields({
+    contract,
     config: afterConfig,
   });
   assert.deepEqual(validateOverlayValuesForTextPrimitives(textItems, currentLanguageValues), { ok: true });
 
-  const review = buildContentTranslationReview({
+  const review = buildEditableFieldsTranslationReview({
     contract,
     config: afterConfig,
     values: currentLanguageValues,

@@ -3,11 +3,11 @@ import { isCompactAccountPublicId, isCompactInstanceId, isWidgetOverlayCode, isO
 import { normalizeLocale } from '../../asset-utils';
 import type {
   AccountInstanceDocument,
+  AccountInstanceConfigDocument,
+  AccountInstanceContentDocument,
+  AccountInstanceContentFieldStatus,
   AccountInstanceIndexDocument,
   AccountInstanceIndexEntry,
-  InstanceGenerationLane,
-  InstanceGenerationState,
-  InstanceGenerationStatus,
   LocalePolicy,
   PublishedOverlayProjection,
   SavedRenderPointer,
@@ -63,56 +63,6 @@ function normalizePublishedOverlayProjection(raw: unknown): PublishedOverlayProj
   return { languages };
 }
 
-function normalizeGenerationStatus(value: unknown): InstanceGenerationStatus | null {
-  return value === 'not_generated' ||
-    value === 'queued' ||
-    value === 'building' ||
-    value === 'ready' ||
-    value === 'stale' ||
-    value === 'failed' ||
-    value === 'unavailable'
-    ? value
-    : null;
-}
-
-function normalizeGenerationLane(raw: unknown): InstanceGenerationLane | null {
-  const payload = asRecord(raw);
-  if (!payload) return null;
-  const status = normalizeGenerationStatus(payload.status);
-  const sourceVersion = typeof payload.sourceVersion === 'number' && Number.isInteger(payload.sourceVersion) && payload.sourceVersion >= 0
-    ? payload.sourceVersion
-    : null;
-  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
-  const requestedAt = asTrimmedString(payload.requestedAt);
-  const error = asTrimmedString(payload.error);
-  const startedAt = asTrimmedString(payload.startedAt);
-  const finishedAt = asTrimmedString(payload.finishedAt);
-  const blockingReason = asTrimmedString(payload.blockingReason);
-  const files = Array.isArray(payload.files)
-    ? Array.from(new Set(payload.files.map(asTrimmedString).filter((entry): entry is string => Boolean(entry))))
-    : [];
-  if (!status || sourceVersion === null || !updatedAt) return null;
-  return {
-    status,
-    sourceVersion,
-    ...(requestedAt ? { requestedAt } : {}),
-    updatedAt,
-    ...(error ? { error } : {}),
-    ...(files.length ? { files } : {}),
-    ...(startedAt ? { startedAt } : {}),
-    ...(finishedAt ? { finishedAt } : {}),
-    ...(blockingReason ? { blockingReason } : {}),
-  };
-}
-
-function normalizeGenerationState(raw: unknown): InstanceGenerationState | null {
-  const payload = asRecord(raw);
-  if (!payload) return null;
-  const translations = normalizeGenerationLane(payload.translations);
-  const embed = normalizeGenerationLane(payload.embed);
-  return translations && embed ? { translations, embed } : null;
-}
-
 function normalizeEmbedBuildShape(raw: unknown): AccountInstanceDocument['embedBuildShape'] | null {
   const payload = asRecord(raw);
   if (!payload) return null;
@@ -141,12 +91,8 @@ export function normalizeAccountInstanceDocument(raw: unknown): AccountInstanceD
   const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
   const targetLocales = normalizeLocaleList(payload.targetLocales);
   const embedBuildShape = normalizeEmbedBuildShape(payload.embedBuildShape);
-  const sourceVersion = typeof payload.sourceVersion === 'number' && Number.isInteger(payload.sourceVersion) && payload.sourceVersion >= 1
-    ? payload.sourceVersion
-    : null;
-  const generation = normalizeGenerationState(payload.generation);
   const publishStatus = payload.publishStatus === 'published' ? 'published' : 'unpublished';
-  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || accountPublicId !== accountId || !isWidgetOverlayCode(widgetCode) || !widgetType || !config || !baseLocale || !embedBuildShape || sourceVersion === null || !generation || !createdAt || !updatedAt) return null;
+  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || accountPublicId !== accountId || !isWidgetOverlayCode(widgetCode) || !widgetType || !config || !baseLocale || !embedBuildShape || !createdAt || !updatedAt) return null;
   const meta = asRecord(payload.meta) ?? (payload.meta === null || payload.meta === undefined ? null : null);
   return {
     v: 1,
@@ -161,12 +107,83 @@ export function normalizeAccountInstanceDocument(raw: unknown): AccountInstanceD
     baseLocale,
     targetLocales,
     embedBuildShape,
-    sourceVersion,
-    generation,
     publishStatus,
     createdAt,
     updatedAt,
   };
+}
+
+export function normalizeAccountInstanceConfigDocument(raw: unknown): AccountInstanceConfigDocument | null {
+  const payload = asRecord(raw);
+  if (!payload) return null;
+  const id = normalizeStorageId(payload.id) ?? '';
+  const accountId = normalizeStorageId(payload.accountId) ?? '';
+  const widgetCode = asTrimmedString(payload.widgetCode) ?? '';
+  const widgetType = asTrimmedString(payload.widgetType) ?? '';
+  const displayName = asTrimmedString(payload.displayName);
+  const accountPublicId = normalizeStorageId(payload.accountPublicId) ?? accountId;
+  const createdAt = asTrimmedString(payload.createdAt) ?? '';
+  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
+  const config = asRecord(payload.config);
+  const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
+  const targetLocales = normalizeLocaleList(payload.targetLocales);
+  const embedBuildShape = normalizeEmbedBuildShape(payload.embedBuildShape);
+  const publishStatus = payload.publishStatus === 'published' ? 'published' : 'unpublished';
+  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || accountPublicId !== accountId || !isWidgetOverlayCode(widgetCode) || !widgetType || !config || !baseLocale || !embedBuildShape || !createdAt || !updatedAt) return null;
+  const meta = asRecord(payload.meta) ?? (payload.meta === null || payload.meta === undefined ? null : null);
+  return {
+    id,
+    accountId,
+    accountPublicId,
+    widgetCode,
+    widgetType,
+    displayName,
+    meta,
+    config,
+    baseLocale,
+    targetLocales,
+    embedBuildShape,
+    publishStatus,
+    createdAt,
+    updatedAt,
+  };
+}
+
+function normalizeContentFieldStatus(value: unknown): AccountInstanceContentFieldStatus | null {
+  return value === 'ok' || value === 'changed' ? value : null;
+}
+
+export function normalizeAccountInstanceContentDocument(raw: unknown): AccountInstanceContentDocument | null {
+  const payload = asRecord(raw);
+  if (!payload) return null;
+  const id = normalizeStorageId(payload.id) ?? '';
+  const accountId = normalizeStorageId(payload.accountId) ?? '';
+  const widgetType = asTrimmedString(payload.widgetType) ?? '';
+  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
+  const rawFields = asRecord(payload.fields);
+  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || !widgetType || !updatedAt || !rawFields) return null;
+  const fields: AccountInstanceContentDocument['fields'] = {};
+  for (const [path, rawField] of Object.entries(rawFields)) {
+    const field = asRecord(rawField);
+    const value = typeof field?.value === 'string' ? field.value : null;
+    const status = normalizeContentFieldStatus(field?.status);
+    if (value == null || !status) return null;
+    const rawLocaleStatus = asRecord(field?.localeStatus);
+    const localeStatus: Record<string, AccountInstanceContentFieldStatus> = {};
+    if (rawLocaleStatus) {
+      for (const [locale, rawStatus] of Object.entries(rawLocaleStatus)) {
+        const normalized = normalizeContentFieldStatus(rawStatus);
+        if (!normalized) return null;
+        localeStatus[locale] = normalized;
+      }
+    }
+    fields[path] = {
+      value,
+      status,
+      ...(Object.keys(localeStatus).length ? { localeStatus } : {}),
+    };
+  }
+  return { id, accountId, widgetType, fields, updatedAt };
 }
 
 export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | null {
@@ -180,8 +197,6 @@ export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | 
     widgetType: instance.widgetType,
     displayName: instance.displayName,
     meta: instance.meta ?? null,
-    sourceVersion: instance.sourceVersion,
-    generation: instance.generation,
     publishStatus: instance.publishStatus,
     updatedAt: instance.updatedAt,
   };

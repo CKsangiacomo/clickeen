@@ -1,20 +1,20 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolveOverlay } from '@clickeen/ck-contracts';
-import { readWidgetContentContract } from '@clickeen/ck-contracts/overlay-primitives';
-import faqContent from '../../tokyo/product/widgets/faq/content.json';
+import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/overlay-primitives';
+import faqContent from '../../tokyo/product/widgets/faq/editable-fields.json';
 import {
-  buildContentTranslationReview,
+  buildEditableFieldsTranslationReview,
   buildTranslationPanelLocaleState,
   listPreviewableLocales,
-  normalizeLocaleOverlayInventory,
-  normalizeLocaleOverlayObject,
+  normalizeTranslatedLocales,
+  normalizeTranslatedLocaleValues,
   normalizeTranslationSetup,
 } from './translations-preview';
 
-const faqContract = readWidgetContentContract(faqContent);
+const faqContract = readWidgetEditableFieldsContract(faqContent);
 
-test('normalizes Roma-owned translation setup separately from overlays', () => {
+test('normalizes Roma-owned translation setup separately from translated values', () => {
   const data = normalizeTranslationSetup({
     v: 1,
     baseLocale: 'en',
@@ -28,13 +28,13 @@ test('normalizes Roma-owned translation setup separately from overlays', () => {
   assert.deepEqual(data.activeLocales, ['it', 'cs']);
 });
 
-test('normalizes Tokyo-owned overlay inventory from actual storage facts', () => {
-  const data = normalizeLocaleOverlayInventory({
+test('normalizes Tokyo-owned translated locale list from current values', () => {
+  const data = normalizeTranslatedLocales({
     v: 1,
     baseLocale: 'en',
-    overlays: [
-      { locale: 'it', overlayId: 'OVERLAY1' },
-      { locale: 'cs', overlayId: 'OVERLAY2' },
+    translations: [
+      { locale: 'it' },
+      { locale: 'cs' },
     ],
   });
 
@@ -50,7 +50,7 @@ test('translation panel locale state refreshes dropdown only while translations 
     inventory: {
       v: 1,
       baseLocale: 'en',
-      overlays: [{ locale: 'it', overlayId: 'IT_OVERLAY' }],
+      translations: [{ locale: 'it' }],
     },
   });
 
@@ -67,9 +67,9 @@ test('translation panel locale state refreshes dropdown only while translations 
     inventory: {
       v: 1,
       baseLocale: 'en',
-      overlays: [
-        { locale: 'it', overlayId: 'IT_OVERLAY' },
-        { locale: 'cs', overlayId: 'CS_OVERLAY' },
+      translations: [
+        { locale: 'it' },
+        { locale: 'cs' },
       ],
     },
   });
@@ -79,11 +79,11 @@ test('translation panel locale state refreshes dropdown only while translations 
   assert.equal(complete.shouldRefreshOnDropdownOpen, false);
   assert.deepEqual(complete.localeValues, ['en', 'it', 'cs']);
   assert.equal(complete.localeValue, 'cs');
-  assert.deepEqual(complete.selectedOverlayEntry, { locale: 'cs', overlayId: 'CS_OVERLAY' });
+  assert.deepEqual(complete.selectedTranslationEntry, { locale: 'cs' });
 });
 
 test('rejects old mixed translations panel payloads', () => {
-  const data = normalizeLocaleOverlayInventory({
+  const data = normalizeTranslatedLocales({
     baseLocale: 'en',
     requestedLocales: ['en', 'it'],
     ['ready' + 'Locales']: ['en', 'it'],
@@ -95,18 +95,18 @@ test('rejects old mixed translations panel payloads', () => {
   assert.equal(data, null);
 });
 
-test('normalizes one exact overlay object for preview', () => {
-  const overlay = normalizeLocaleOverlayObject({
+test('normalizes one exact translated locale value object for preview', () => {
+  const translation = normalizeTranslatedLocaleValues({
     v: 1,
-    overlayId: 'OVERLAY1',
+    locale: 'it',
     values: {
       title: 'Domande frequenti',
       'sections.0.faqs.0.question': 'Che stanze offrite?',
     },
   });
 
-  assert.ok(overlay);
-  assert.equal(overlay.values['sections.0.faqs.0.question'], 'Che stanze offrite?');
+  assert.ok(translation);
+  assert.equal(translation.values['sections.0.faqs.0.question'], 'Che stanze offrite?');
 });
 
 test('resolves FAQ language values across title CTA section questions and answers', () => {
@@ -142,7 +142,7 @@ test('resolves FAQ language values across title CTA section questions and answer
 });
 
 test('builds translation review from stored current language values', () => {
-  const review = buildContentTranslationReview({
+  const review = buildEditableFieldsTranslationReview({
     contract: faqContract,
     config: {
       header: { title: 'FAQs', subtitleHtml: 'Quick answers' },
@@ -179,7 +179,7 @@ test('builds translation review from stored current language values', () => {
 });
 
 test('reports missing current language values in translation review', () => {
-  const review = buildContentTranslationReview({
+  const review = buildEditableFieldsTranslationReview({
     contract: faqContract,
     config: {
       header: { title: 'FAQs', subtitleHtml: 'Quick answers' },

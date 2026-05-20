@@ -13,8 +13,8 @@
 
 ## Dependencies
 - Roma (account-mode translation job producer)
-- Tokyo-worker (complete overlay writes through `TOKYO_PRODUCT_CONTROL`)
-- Widget content graph from FAQ `content.json` via queued Roma job payloads
+- Tokyo-worker (translated locale value writes through `TOKYO_PRODUCT_CONTROL`; overlay file vocabulary is transitional storage only)
+- Saved widget text graph expanded from widget `editable-fields.json` via queued Roma job payloads
 - Cloudflare KV/R2/Queues (state, logs, scheduling)
 
 ## Deployment
@@ -58,19 +58,19 @@ Health contract:
 
 ## Account-widget Instance Translation flow (active)
 - Triggered by Roma after a base widget save succeeds, or when Bob asks Roma to generate missing translations.
-- Roma owns account-command acceptance and queue production. San Francisco owns AI value production. Tokyo-worker owns saved overlay storage.
+- Roma owns account-command acceptance and queue production. San Francisco owns AI value production. Tokyo-worker owns saved locale value storage.
 - Queue binding: `INSTANCE_TRANSLATION_JOBS`.
 - Job payloads contain account/job coordinates, base/target locale, the FAQ current saved text graph, previous saved text graph, previous language values, changed fields, deleted field keys, and the resolved runtime policy.
-- San Francisco translates only `changedFields`, merges them with previous values into complete current-language values, validates the exact current path set, and writes one Tokyo language overlay using `x-ck-internal-service: sanfrancisco.translation`.
-- Tokyo validates and writes the complete current-language overlay object under the owning instance.
+- San Francisco translates only `changedFields`, merges them with previous values into complete current-language values, validates the exact current path set, and writes one complete Tokyo language value map using `x-ck-internal-service: sanfrancisco.translation`.
+- Tokyo validates and writes the complete current-language value object under the owning instance. The current storage object may still be named as an overlay during PRD 103 cutover, but overlay IDs are not product vocabulary.
 - The HTTP `translate-saved-instance` endpoint remains for direct diagnostics and tests; it is not the active save/generate product orchestration boundary.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext translation uses one structured path: San Francisco extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.
 - l10n translation calls go through the shared policy router via `callChatCompletion` (same request/token enforcement + provider/model allowlist).
 
 ## Prague posture
-- Prague does not own the account-widget overlay runtime.
-- Public widget locale overlays are generated from Builder saves and served by Venice from Tokyo published overlay IDs.
+- Prague does not own the account-widget locale runtime.
+- Public widget locale pages are materialized by Tokyo-worker from saved instance source plus translated locale values during publish. San Francisco produces translated values only; it does not write public widget files.
 - San Francisco must not write Prague overlay files or resurrect a Prague-specific widget localization path.
 
 ## Rules

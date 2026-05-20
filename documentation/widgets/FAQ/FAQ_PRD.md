@@ -49,26 +49,27 @@ Entitlements mapping (must match `tokyo/product/widgets/faq/limits.json`):
 ```text
 Key                        | Kind | Path(s)                    | Metric/Mode          | Enforcement        | Notes
 -------------------------- | ---- | -------------------------- | -------------------- | ------------------ | ----------------------------
-branding.remove            | flag | behavior.showBacklink      | boolean (deny false) | ops+save           | Bob gates the control; Roma rejects invalid saved config
+branding.remove            | flag | behavior.showBacklink      | boolean (deny false) | load sanitize; ops | Bob gates/rejects editor ops; server save/publish is a named gap
 items.group.small.max  | limit | sections[]                 | count                | ops+publish        | section count limit group
 items.group.medium.max | limit | sections[].faqs[]          | count                | ops+publish        | per-section Q/A count limit group
 items.group.large.max  | limit | sections[].faqs[]          | count-total          | ops+publish        | total Q/A count limit group
 ```
+
+Current implementation note: `limits.json` maps FAQ state paths to real `ck-policy` keys. Bob enforces the mapping during editor operations today. Server save/publish enforcement is a named `ck-policy` gap and must not be implied until implemented.
 
 ## 1) Where the widget lives
 
 Widget definition (the software): `tokyo/product/widgets/faq/`
 
 - `spec.json` — defaults + structured Builder editor contract
-- `content.json` — customer-visible translation fields
+- `editable-fields.json` — editable/translatable text field contract
 - `widget.html` — semantic scaffold
 - `widget.css` — scoped styles (Dieter tokens)
 - `widget.client.js` — `applyState(state)` runtime
-- `agent.md` — AI editing contract
 - `limits.json` — entitlement limits/flags
 
 Source of truth for editor state is `tokyo/product/widgets/faq/spec.json` → `defaults`.
-Source of truth for translation fields is `tokyo/product/widgets/faq/content.json`.
+Source of truth for translation fields is `tokyo/product/widgets/faq/editable-fields.json`.
 
 ## 2) Functional spec
 
@@ -204,7 +205,7 @@ Controls:
 Translation fields:
 
 - Localization/translation UI lives in Content (Translate mode).
-- The source is `tokyo/product/widgets/faq/content.json`.
+- The source is `tokyo/product/widgets/faq/editable-fields.json`.
 - Required coverage:
   - `header.title`
   - `header.subtitleHtml`
@@ -318,7 +319,9 @@ Controls:
 
 Entitlements enforcement:
 
-- Enforced by `tokyo/product/widgets/faq/limits.json`; Bob uses policy/limits for UX gating and Tokyo-worker validates saved config at the write boundary.
+- `tokyo/product/widgets/faq/limits.json` maps FAQ paths to `ck-policy` keys.
+- Bob uses policy/limits for editor UX gating and operation rejection today.
+- Tokyo/Roma save/publish server enforcement is not currently proven; it remains a named `ck-policy` enforcement gap.
 
 ### Panel: Typography (`typography`, explicitly declared shared panel)
 
@@ -377,9 +380,9 @@ Saved/open boundary requirements:
 When changing FAQ state/controls/runtime, keep the system coherent:
 
 1. `tokyo/product/widgets/faq/spec.json`: update defaults + panel controls (do not duplicate Typography controls into Appearance).
-   - If any customer-visible text path is added or moved, update `overlays.text[]` in the same file.
+   - If any customer-visible text path is added or moved, update `tokyo/product/widgets/faq/editable-fields.json`.
 2. `tokyo/product/widgets/faq/widget.client.js`: update `assertFaqState(...)` + `applyState(...)` so every control has a deterministic effect.
-3. `tokyo/product/widgets/faq/agent.md`: update the Editable Schema + Binding Map rows for any new/changed paths (no dead controls).
-4. `tokyo/product/widgets/faq/limits.json`: update entitlements limits if you add gated controls/metrics.
-5. SEO/GEO: update `tokyo/product/widgets/faq/seo-geo.ts` (schema + excerpt) and rerun `node scripts/build-widget-catalog.mjs` if SEO/GEO outputs change.
+3. Do not create `tokyo/product/widgets/faq/agent.md`; it is deleted widget source and not schema authority.
+4. `tokyo/product/widgets/faq/limits.json`: update policy-key mappings if you add gated controls/metrics.
+5. Do not add widget `seo-geo.ts` or `catalog.capabilities.seoGeo`; SEO/GEO output belongs to a later named static publish/SEO operation.
 6. Verify with repo typecheck/build and the relevant Cloudflare verification; do not use a localhost Bob HTTP compile gate.

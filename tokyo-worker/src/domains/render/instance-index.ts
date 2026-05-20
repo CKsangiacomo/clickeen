@@ -2,11 +2,13 @@ import { asTrimmedString } from '@clickeen/ck-contracts';
 import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import {
+  accountInstanceConfigKey,
   accountInstanceDocumentKey,
   accountInstanceIndexKey,
   accountInstancesRoot,
 } from './keys';
 import {
+  normalizeAccountInstanceConfigDocument,
   normalizeAccountInstanceDocument,
   normalizeIndexDocument,
 } from './normalize';
@@ -195,6 +197,18 @@ export async function resolveAccountInstanceLocation(args: {
   if (widgetType) {
     const widgetCode = resolveWidgetCode(widgetType);
     return widgetCode ? { accountId, widgetCode, widgetType, instanceId } : null;
+  }
+  const config = normalizeAccountInstanceConfigDocument(
+    await loadJson(args.env, accountInstanceConfigKey(accountId, '', instanceId)),
+  );
+  if (config && config.accountId === accountId && config.id === instanceId) {
+    return { accountId, widgetCode: config.widgetCode, widgetType: config.widgetType, instanceId };
+  }
+  const legacy = normalizeAccountInstanceDocument(
+    await loadJson(args.env, accountInstanceDocumentKey(accountId, '', instanceId)),
+  );
+  if (legacy && legacy.accountId === accountId && legacy.id === instanceId) {
+    return { accountId, widgetCode: legacy.widgetCode, widgetType: legacy.widgetType, instanceId };
   }
   const index = await readAccountInstanceIndex({
     env: args.env,

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildGenerateTranslationsButtonState,
-  buildOverlayValuesAfterTranslationEdit,
+  buildTranslationValuesAfterEdit,
   isTranslationGenerationAccepted,
   resolveGenerateTranslationsMessage,
   TranslationReviewRows,
@@ -62,14 +62,14 @@ test('TranslationsPanel review rows render generic content review sections and v
   assert.match(text, /Offriamo suite\./);
 });
 
-test('manual translation edit produces a full updated overlay values object', () => {
+test('manual translation edit produces a full updated translation values object', () => {
   const currentValues = {
     'header.title': 'Domande frequenti',
     'sections.0.faqs.0.question': 'Che stanze offrite?',
     'sections.0.faqs.0.answer': 'Offriamo suite.',
   };
 
-  const nextValues = buildOverlayValuesAfterTranslationEdit({
+  const nextValues = buildTranslationValuesAfterEdit({
     values: currentValues,
     path: 'sections.0.faqs.0.answer',
     value: 'Offriamo suite e camere familiari.',

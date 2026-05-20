@@ -21,5 +21,5 @@ items.group.large.max  | limit  | items[].subitems[]              | count-total 
 
 Notes:
 - **Flags**: define deny value + optional sanitize on load (e.g., force false/empty).
-- **Limits**: enforce on ops + publish for widget structure; global usage counters or storage quotas (ex: `copilot.turns.monthly.max`, `storage.bytes.max`) are metered/enforced server-side at the cost boundary and do not live in widget `limits.json`.
+- **Limits**: map widget paths/ops to global policy keys. Today the proven shared widget enforcement is Bob editor ops; save/publish enforcement must be explicit in code, tests, and `ck-policy` registry status before a PRD can claim it.
 - **Upsell**: implicit on any rejected plan limit; no per-row copy.

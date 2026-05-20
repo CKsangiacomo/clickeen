@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   createAccountInstanceInTokyo,
-  loadTokyoAccountInstanceIndex,
-  loadTokyoWidgetCatalog,
+  listAccountInstancesInTokyo,
+  listTokyoWidgetDefinitions,
 } from '@roma/lib/account-instance-direct';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
@@ -51,19 +51,19 @@ export async function POST(request: NextRequest) {
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
-  const catalog = await loadTokyoWidgetCatalog({
+  const widgetDefinitions = await listTokyoWidgetDefinitions({
     accountId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });
-  if (!catalog.ok) {
+  if (!widgetDefinitions.ok) {
     return withSession(
       request,
-      NextResponse.json({ error: catalog.error }, { status: catalog.status }),
+      NextResponse.json({ error: widgetDefinitions.error }, { status: widgetDefinitions.status }),
       current.value.setCookies,
     );
   }
-  if (!catalog.value.widgets.some((entry) => entry.widgetType === widgetType)) {
+  if (!widgetDefinitions.value.widgetDefinitions.some((entry) => entry.widgetType === widgetType)) {
     return withSession(
       request,
       NextResponse.json(
@@ -73,15 +73,15 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  const widgetIndex = await loadTokyoAccountInstanceIndex({
+  const widgetInstances = await listAccountInstancesInTokyo({
     accountId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });
-  if (!widgetIndex.ok) {
+  if (!widgetInstances.ok) {
     return withSession(
       request,
-      NextResponse.json({ error: widgetIndex.error }, { status: widgetIndex.status }),
+      NextResponse.json({ error: widgetInstances.error }, { status: widgetInstances.status }),
       current.value.setCookies,
     );
   }
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     typeof widgetTypesLimitRaw === 'number' && Number.isFinite(widgetTypesLimitRaw)
       ? Math.max(0, Math.floor(widgetTypesLimitRaw))
       : null;
-  const usedWidgetTypes = new Set(widgetIndex.value.accountInstances.map((instance) => instance.widgetType));
+  const usedWidgetTypes = new Set(widgetInstances.value.accountInstances.map((instance) => instance.widgetType));
   if (widgetTypesLimit != null && !usedWidgetTypes.has(widgetType) && usedWidgetTypes.size >= widgetTypesLimit) {
     return withSession(
       request,

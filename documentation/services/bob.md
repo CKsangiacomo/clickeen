@@ -1,5 +1,7 @@
 # Bob — Editor (Widget Builder)
 
+PRD 103_00 NOTE: this doc now uses the product-operation vocabulary required before PRD 103 resumes. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+
 Bob is Clickeen’s **editor**: it loads a widget definition (“Widget JSON”) and an instance (“state tree”), renders spec-driven controls, applies strict edits in memory, and streams state updates to a sandboxed preview.
 
 For the canonical account-management model Bob must consume rather than own, see `documentation/architecture/AccountManagement.md`.
@@ -169,12 +171,12 @@ tokyo/product/widgets/{widget}/
   widget.html
   widget.css
   widget.client.js
-  (optional) agent.md
+  editable-fields.json
   limits.json
   pages/*.json
 ```
 
-Bob consumes compiled widget payloads + runtime media from product widget media and loads `limits.json` for entitlement UX. The authored repo source is `tokyo/product/widgets/{widget}/`; the deployed Tokyo/R2 software authority is `product/widgets/{widget}/`, even when served through friendly `/widgets/{widget}/...` routes. Authored widget `content.json` is the translation text authority for current-language overlays; Bob preview consumes validated Tokyo overlays rather than owning translation truth. Widget `localization.json` files and layer sidecars are not active product truth.
+Bob consumes compiled widget payloads + runtime media from product widget media and loads `limits.json` for entitlement UX. The authored repo source is `tokyo/product/widgets/{widget}/`; the deployed Tokyo/R2 software authority is `product/widgets/{widget}/`, even when served through friendly `/widgets/{widget}/...` routes. Authored widget `editable-fields.json` is the editable/translatable field contract; Bob preview consumes validated translated locale values rather than owning translation truth. Widget `localization.json` files and layer sidecars are not active product truth.
 
 Widget spec contract:
 
@@ -455,22 +457,22 @@ See also:
 
 ---
 
-## l10n (Instance content overlays)
+## l10n (Translated Locale Values)
 
-Builder no longer owns localization generation, localization overlay authoring, localization snapshot rehydrate, or user-layer writes on the active account editing path.
+Builder no longer owns localization generation, translation job assembly, localization snapshot rehydrate, or durable user-layer writes on the active account editing path.
 
 Current product truth:
 
-- Bob edits one widget document in memory.
-- Roma saves that one widget document.
+- Bob edits one account instance in memory.
+- Roma saves that account instance through Tokyo product operations.
 - Account locale policy/settings remain Roma-owned.
-- Translation and locale follow-up work happen after the base save, orchestrated by Roma and San Francisco, with Tokyo storing exact overlay value objects.
+- Translation work happens only when the Translations panel asks Tokyo to generate missing/changed translated locale values.
 - When `Translations` is open, the top summary comes from Roma's account context: base locale, plan translation allowance, and active account translations.
-- Bob populates the preview dropdown from actual Tokyo/R2 overlay files for the instance through Roma's authenticated storage pass-through. The list route returns only `{ v, baseLocale, overlays: [{ locale, overlayId }] }`; the read route returns one exact `{ v, overlayId, values }` object.
-- Bob applies one exact overlay value map with the shared `resolveOverlay(baseConfig, overlayValues)` resolver before posting preview state to the widget iframe.
-- If a locale overlay file does not exist, that locale is absent from the dropdown. Bob does not show policy-derived unavailable rows or translation progress.
+- Bob populates the preview dropdown from translated locale summaries through Roma. Payloads expose locale codes and labels, not storage object IDs or file paths.
+- Bob reads one translated value map by locale and applies it with the shared resolver before posting preview state to the widget iframe.
+- If translated values for a locale do not exist, that locale is absent from the dropdown. Bob does not invent policy-derived unavailable rows.
 - Save remains visible for both published and unpublished instances. Publish state only gates public embed-code copy, not editing or saving.
-- Commercial upsell copy stays outside the language overlay panel.
+- Commercial upsell copy stays outside the translation panel.
 
 Reference:
 
@@ -587,4 +589,4 @@ Preview:
 ## Not solved yet (intentionally)
 
 - Copilot rollout/auth: account-mode Copilot now runs through Roma-owned backend routes. Production allowlists/flags still evolve with the release model.
-- Copilot policy hardening: post-model “light edits only” caps + scope confirmation + deeper grounding to per-widget `agent.md` contracts (in progress).
+- Copilot policy hardening: post-model “light edits only” caps + scope confirmation + deeper grounding to approved widget package contracts (in progress).

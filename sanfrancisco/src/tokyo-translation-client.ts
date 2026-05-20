@@ -1,5 +1,4 @@
 import { CK_REQUEST_ID_HEADER, asTrimmedString, isRecord } from '@clickeen/ck-contracts';
-import { resolveLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import { HttpError } from './http';
 import type { Env } from './types';
 
@@ -31,9 +30,10 @@ function resolveTokyoErrorDetail(payload: unknown, fallback: string): string {
   return fallback;
 }
 
-async function postTokyoJson(args: {
+async function sendTokyoJson(args: {
   env: Env;
   accountPublicId: string;
+  method: 'POST' | 'PUT';
   path: string;
   body: unknown;
   requestId?: string | null;
@@ -47,7 +47,7 @@ async function postTokyoJson(args: {
   });
   if (args.requestId) headers.set(CK_REQUEST_ID_HEADER, args.requestId);
   const response = await binding.fetch(new URL(args.path, TOKYO_PRODUCT_CONTROL_ORIGIN).toString(), {
-    method: 'POST',
+    method: args.method,
     headers,
     body: JSON.stringify(args.body),
     cache: 'no-store',
@@ -63,42 +63,40 @@ async function postTokyoJson(args: {
   return payload;
 }
 
-export async function writeInstanceLanguageOverlayToTokyo(args: {
+export async function completeLocaleTranslationInTokyo(args: {
   env: Env;
   accountPublicId: string;
   instanceId: string;
-  widgetType: string;
   targetLocale: string;
+  job: unknown;
   values: Record<string, string>;
   requestId?: string | null;
-}): Promise<{ overlayId: string }> {
-  const languageCode = resolveLanguageOverlayCode(args.targetLocale);
-  if (!languageCode) {
-    throw new HttpError(400, {
-      code: 'BAD_REQUEST',
-      message: `No overlay language code for locale ${args.targetLocale}`,
-    });
-  }
-
-  const payload = await postTokyoJson({
+}): Promise<{ applied: boolean; reasonKey?: string; detail?: string }> {
+  const payload = await sendTokyoJson({
     env: args.env,
     accountPublicId: args.accountPublicId,
-    path: '/__internal/overlays/languages/write.json',
+    method: 'PUT',
+    path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations/${encodeURIComponent(args.targetLocale)}/complete`,
     body: {
-      instanceId: args.instanceId,
-      widgetType: args.widgetType,
-      languageCode,
+      job: args.job,
       values: args.values,
     },
     requestId: args.requestId,
   });
-  const overlayId = isRecord(payload) ? asTrimmedString(payload.overlayId) : null;
-  if (!overlayId) {
+  const completion = isRecord(payload) && isRecord(payload.completion) ? payload.completion : null;
+  if (!completion || completion.ok !== true) {
     throw new HttpError(502, {
       code: 'PROVIDER_ERROR',
       provider: 'tokyo',
-      message: 'tokyo_overlay_language_write_invalid_payload',
+      message: 'tokyo_translation_completion_invalid_payload',
     });
   }
-  return { overlayId };
+  const applied = completion.applied === true;
+  const reasonKey = asTrimmedString(completion.reasonKey);
+  const detail = asTrimmedString(completion.detail);
+  return {
+    applied,
+    ...(reasonKey ? { reasonKey } : {}),
+    ...(detail ? { detail } : {}),
+  };
 }

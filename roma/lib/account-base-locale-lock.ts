@@ -1,4 +1,4 @@
-import { loadTokyoAccountInstanceIndex } from './account-instance-direct';
+import { listAccountInstancesInTokyo } from './account-instance-direct';
 
 type AccountBaseLocaleLockResult =
   | {
@@ -18,21 +18,21 @@ export async function loadAccountBaseLocaleLockState(args: {
   requestId?: string | null;
 }): Promise<AccountBaseLocaleLockResult> {
   try {
-    const index = await loadTokyoAccountInstanceIndex({
+    const instances = await listAccountInstancesInTokyo({
       accountId: args.accountId,
       accountCapsule: args.accountCapsule,
       requestId: args.requestId,
     });
-    if (!index.ok) {
+    if (!instances.ok) {
       return {
         ok: false,
-        status: index.status,
-        reasonKey: index.error.reasonKey,
-        detail: index.error.detail,
+        status: instances.status,
+        reasonKey: instances.error.reasonKey,
+        detail: instances.error.detail,
       };
     }
 
-    return { ok: true, locked: index.value.accountInstances.length > 0 };
+    return { ok: true, locked: instances.value.accountInstances.length > 0 };
   } catch (error) {
     return {
       ok: false,

@@ -12,8 +12,8 @@ import {
   useWidgetSessionChrome,
   useWidgetSessionTransport,
 } from '../lib/session/useWidgetSession';
-import type { LocaleOverlayInventoryData, TranslationSetup } from './useLocaleOverlayPreviewState';
-import { buildContentTranslationReview } from '../lib/translations-preview';
+import type { TranslatedLocalesData, TranslationSetup } from './useTranslationPreviewState';
+import { buildEditableFieldsTranslationReview } from '../lib/translations-preview';
 import { buildTranslationPanelLocaleState } from '../lib/translations-preview';
 import type { TranslationReview } from '../lib/translations-preview';
 
@@ -71,7 +71,7 @@ function SelectField({
   );
 }
 
-export function buildOverlayValuesAfterTranslationEdit(args: {
+export function buildTranslationValuesAfterEdit(args: {
   values: Record<string, string>;
   path: string;
   value: string;
@@ -230,27 +230,27 @@ export function TranslationReviewRows({
 }
 
 export function TranslationsPanel({
-  overlayPreviewLocale,
-  onOverlayPreviewLocaleChange,
-  onRequestLocaleOverlayRefresh,
+  translationPreviewLocale,
+  onTranslationPreviewLocaleChange,
+  onRequestTranslationsRefresh,
   translationSetup,
-  localeOverlayInventory,
-  localeOverlayValuesByLocale,
-  localeOverlayLoading,
-  localeOverlayError,
+  translatedLocales,
+  translationValuesByLocale,
+  translationsLoading,
+  translationsError,
 }: {
-  overlayPreviewLocale: string;
-  onOverlayPreviewLocaleChange: (locale: string) => void;
-  onRequestLocaleOverlayRefresh: () => void;
+  translationPreviewLocale: string;
+  onTranslationPreviewLocaleChange: (locale: string) => void;
+  onRequestTranslationsRefresh: () => void;
   translationSetup: TranslationSetup | null;
-  localeOverlayInventory: LocaleOverlayInventoryData | null;
-  localeOverlayValuesByLocale: Record<string, Record<string, string>>;
-  localeOverlayLoading: boolean;
-  localeOverlayError: string | null;
+  translatedLocales: TranslatedLocalesData | null;
+  translationValuesByLocale: Record<string, Record<string, string>>;
+  translationsLoading: boolean;
+  translationsError: string | null;
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const { generateTranslations, writeLocaleOverlay } = useWidgetSessionTransport();
+  const { generateTranslations, saveTranslation } = useWidgetSessionTransport();
   const [draftValues, setDraftValues] = useState<Record<string, string>>({});
   const [savingPath, setSavingPath] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -258,19 +258,19 @@ export function TranslationsPanel({
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
   const generationStartedAtRef = useRef<number | null>(null);
   const readyCountAtGenerationStartRef = useRef(0);
-  const baseLocale = translationSetup?.baseLocale || localeOverlayInventory?.baseLocale || '';
+  const baseLocale = translationSetup?.baseLocale || translatedLocales?.baseLocale || '';
   const localeState = useMemo(
     () =>
       buildTranslationPanelLocaleState({
         baseLocale,
         activeLocales: translationSetup?.activeLocales ?? [],
-        inventory: localeOverlayInventory,
-        requestedLocale: overlayPreviewLocale,
+        inventory: translatedLocales,
+        requestedLocale: translationPreviewLocale,
       }),
-    [baseLocale, localeOverlayInventory, overlayPreviewLocale, translationSetup?.activeLocales],
+    [baseLocale, translatedLocales, translationPreviewLocale, translationSetup?.activeLocales],
   );
   const refreshIfTranslationsMissing = () => {
-    if (localeState.shouldRefreshOnDropdownOpen) onRequestLocaleOverlayRefresh();
+    if (localeState.shouldRefreshOnDropdownOpen) onRequestTranslationsRefresh();
   };
 
   const localeOptions = useMemo(() => {
@@ -294,22 +294,22 @@ export function TranslationsPanel({
     translationSetup?.planTranslationsMax == null
       ? 'unlimited'
       : String(translationSetup.planTranslationsMax);
-  const selectedOverlayEntry = localeState.selectedOverlayEntry;
+  const selectedTranslationEntry = localeState.selectedTranslationEntry;
   const selectedValues =
-    localeValue && localeValue !== baseLocale ? localeOverlayValuesByLocale[localeValue] ?? null : null;
+    localeValue && localeValue !== baseLocale ? translationValuesByLocale[localeValue] ?? null : null;
   useEffect(() => {
     setDraftValues(selectedValues ?? {});
     setSavingPath(null);
     setSaveMessage(null);
   }, [localeValue, selectedValues]);
   const selectedReview = useMemo(() => {
-    if (!session.compiled?.content || !selectedValues) return null;
-    return buildContentTranslationReview({
-      contract: session.compiled.content,
+    if (!session.compiled?.editableFields || !selectedValues) return null;
+    return buildEditableFieldsTranslationReview({
+      contract: session.compiled.editableFields,
       config: session.instanceData,
       values: selectedValues,
     });
-  }, [selectedValues, session.compiled?.content, session.instanceData]);
+  }, [selectedValues, session.compiled?.editableFields, session.instanceData]);
   const translationError = session.error?.source === 'translation' ? session.error : null;
   const instanceId = chrome.meta?.instanceId ?? '';
   const generateButton = buildGenerateTranslationsButtonState({
@@ -327,12 +327,16 @@ export function TranslationsPanel({
     generationStartedAtRef.current = Date.now();
     readyCountAtGenerationStartRef.current = localeState.readyTranslationsCount;
     try {
-      const response = await generateTranslations({ instanceId });
+      const response = await generateTranslations({
+        instanceId,
+        baseLocale,
+        targetLocales: translationSetup?.activeLocales ?? [],
+      });
       if (!response.ok) {
         throw new Error(resolveGenerateTranslationsError(response.json));
       }
       setGenerateMessage(resolveGenerateTranslationsMessage(response.json));
-      onRequestLocaleOverlayRefresh();
+      onRequestTranslationsRefresh();
       if (!isTranslationGenerationAccepted(response.json)) {
         setIsGeneratingTranslations(false);
         generationStartedAtRef.current = null;
@@ -368,7 +372,7 @@ export function TranslationsPanel({
     }
 
     const timer = window.setTimeout(() => {
-      onRequestLocaleOverlayRefresh();
+      onRequestTranslationsRefresh();
     }, TRANSLATION_GENERATION_POLL_MS);
     return () => window.clearTimeout(timer);
   }, [
@@ -376,12 +380,12 @@ export function TranslationsPanel({
     localeState.allExpectedTranslationsReady,
     localeState.expectedTranslationsCount,
     localeState.readyTranslationsCount,
-    onRequestLocaleOverlayRefresh,
+    onRequestTranslationsRefresh,
   ]);
   const saveTranslationValue = async (path: string) => {
     if (!selectedValues || !localeValue || localeValue === baseLocale || !instanceId) return;
     const nextValue = draftValues[path] ?? selectedValues[path] ?? '';
-    const values = buildOverlayValuesAfterTranslationEdit({
+    const values = buildTranslationValuesAfterEdit({
       values: selectedValues,
       path,
       value: nextValue,
@@ -389,7 +393,7 @@ export function TranslationsPanel({
     setSavingPath(path);
     setSaveMessage(null);
     try {
-      const response = await writeLocaleOverlay({
+      const response = await saveTranslation({
         instanceId,
         locale: localeValue,
         values,
@@ -398,7 +402,7 @@ export function TranslationsPanel({
         throw new Error('Translated value could not be saved.');
       }
       setSaveMessage('Translation saved.');
-      onRequestLocaleOverlayRefresh();
+      onRequestTranslationsRefresh();
     } catch (error) {
       setSaveMessage(error instanceof Error ? error.message : 'Translated value could not be saved.');
     } finally {
@@ -451,7 +455,7 @@ export function TranslationsPanel({
         <SelectField
           label="Preview locale"
           value={localeValue}
-          onChange={onOverlayPreviewLocaleChange}
+          onChange={onTranslationPreviewLocaleChange}
           onClick={refreshIfTranslationsMissing}
           options={selectOptions}
           disabled={!selectOptions[0]?.value}
@@ -461,8 +465,8 @@ export function TranslationsPanel({
             {localeState.readyTranslationsCount} of {localeState.expectedTranslationsCount} translations ready
           </div>
         ) : null}
-        {localeOverlayError ? (
-          <div className="label-s label-muted">{localeOverlayError}</div>
+        {translationsError ? (
+          <div className="label-s label-muted">{translationsError}</div>
         ) : null}
         {translationError ? (
           <div className="label-s label-muted">
@@ -472,19 +476,19 @@ export function TranslationsPanel({
         {localeValue === baseLocale ? (
           <div className="label-s label-muted">Select a translated language to review it.</div>
         ) : null}
-        {!localeOverlayError && localeValue !== baseLocale && !selectedOverlayEntry && !localeOverlayLoading ? (
+        {!translationsError && localeValue !== baseLocale && !selectedTranslationEntry && !translationsLoading ? (
           <div className="label-s label-muted">Translation not ready yet.</div>
         ) : null}
-        {!localeOverlayError && selectedOverlayEntry && !selectedValues ? (
+        {!translationsError && selectedTranslationEntry && !selectedValues ? (
           <div className="label-s label-muted">Loading current language values...</div>
         ) : null}
-        {!localeOverlayError && selectedValues && !session.compiled.content ? (
+        {!translationsError && selectedValues && !session.compiled.editableFields ? (
           <div className="label-s label-muted">No translation fields declared for this widget.</div>
         ) : null}
         {saveMessage ? (
           <div className="label-s label-muted">{saveMessage}</div>
         ) : null}
-        {!localeOverlayError && selectedReview ? (
+        {!translationsError && selectedReview ? (
           <TranslationReviewRows
             review={selectedReview}
             draftValues={draftValues}

@@ -5,6 +5,8 @@ Owner: Product + Architecture
 Date: 2026-05-16
 Parent: PRD 100 - Core Instance Mini-Sites And Static Embed Delivery
 
+PRD 103_02 SUPERSESSION NOTE: this executed PRD is historical for the need for durable agent work, but its `instance.json` generation-state, overlay-output, and generated-file contract is not current target architecture. PRD 103_02 owns the replacement instance source model, translated-locale value operations, workflow primitive, and public artifact readiness model.
+
 ## Purpose
 
 Define the production contract for San Francisco-managed translation and embed generation jobs required by PRD 100.

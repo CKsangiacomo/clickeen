@@ -1,53 +1,41 @@
 import { isRecord } from '@clickeen/ck-contracts';
-import widgetsManifest from '../../../tokyo/product/widgets/manifest.json';
+import countdownCatalog from '../../../tokyo/product/widgets/countdown/catalog.json';
+import faqCatalog from '../../../tokyo/product/widgets/faq/catalog.json';
+import logoshowcaseCatalog from '../../../tokyo/product/widgets/logoshowcase/catalog.json';
 
 export type PragueWidgetCatalogEntry = {
   widgetType: string;
   label: string;
   description: string;
   category: string;
-  capabilities: {
-    seoGeo: boolean;
-  };
 };
 
-function parseWidgetCatalogEntry(value: unknown, index: number): PragueWidgetCatalogEntry {
+function parseWidgetCatalogEntry(widgetType: string, value: unknown, index: number): PragueWidgetCatalogEntry {
   if (!isRecord(value)) {
     throw new Error(`prague.widgetCatalog.invalidEntry:${index}`);
   }
 
-  const capabilities = value.capabilities;
   if (
-    typeof value.widgetType !== 'string' ||
     typeof value.label !== 'string' ||
     typeof value.description !== 'string' ||
-    typeof value.category !== 'string' ||
-    !isRecord(capabilities) ||
-    typeof capabilities.seoGeo !== 'boolean'
+    typeof value.category !== 'string'
   ) {
     throw new Error(`prague.widgetCatalog.invalidEntry:${index}`);
   }
 
   return {
-    widgetType: value.widgetType,
+    widgetType,
     label: value.label,
     description: value.description,
     category: value.category,
-    capabilities: {
-      seoGeo: capabilities.seoGeo,
-    },
   };
 }
 
-function parseWidgetCatalogManifest(raw: unknown): PragueWidgetCatalogEntry[] {
-  if (!isRecord(raw) || !Array.isArray(raw.widgets)) {
-    throw new Error('prague.widgetCatalog.invalidManifest');
-  }
-
-  return raw.widgets.map(parseWidgetCatalogEntry);
-}
-
-const WIDGET_CATALOG = parseWidgetCatalogManifest(widgetsManifest);
+const WIDGET_CATALOG = [
+  parseWidgetCatalogEntry('faq', faqCatalog, 0),
+  parseWidgetCatalogEntry('countdown', countdownCatalog, 1),
+  parseWidgetCatalogEntry('logoshowcase', logoshowcaseCatalog, 2),
+];
 
 export function resolvePragueWidgetCatalogEntry(widgetType: string): PragueWidgetCatalogEntry {
   const normalizedWidgetType = String(widgetType || '').trim();
