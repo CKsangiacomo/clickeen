@@ -256,6 +256,8 @@ export async function indexCopilotEvent(env: Env, e: InteractionEvent): Promise<
     const meta = isRecord((e.result as any).meta) ? ((e.result as any).meta as any) : null;
     intent = meta ? asTrimmedString(meta.intent) : null;
     outcome = meta ? asTrimmedString(meta.outcome) : null;
+    intent = intent ?? asTrimmedString((e.result as any).operation);
+    outcome = outcome ?? asTrimmedString((e.result as any).outcome);
     promptVersion = meta ? asTrimmedString(meta.promptVersion) : null;
     policyVersion = (meta ? asTrimmedString(meta.policyVersion) : null) ?? policyVersion;
     dictionaryHash = meta ? asTrimmedString(meta.dictionaryHash) : null;

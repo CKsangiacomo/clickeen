@@ -29,7 +29,7 @@ import {
   verifyOutcomeSignature,
 } from './telemetry';
 import {
-  handleInstanceTranslationQueueMessage,
+  handleInstanceTranslationQueueBatch,
   isInstanceTranslationQueueMessage,
 } from './instance-translation-queue';
 import type {
@@ -287,9 +287,7 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
       else nonTranslationMessages.push(msg);
     }
 
-    await Promise.all(
-      translationMessages.map((msg) => handleInstanceTranslationQueueMessage(this.env, msg)),
-    );
+    await handleInstanceTranslationQueueBatch(this.env, translationMessages);
 
     for (const msg of nonTranslationMessages) {
       const e = msg.body;

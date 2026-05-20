@@ -15,6 +15,7 @@ import { completeLocaleTranslationInTokyo } from './tokyo-translation-client';
 import type { AIGrant, Env, Usage } from './types';
 
 type QueueMessage = Message<unknown>;
+const INSTANCE_TRANSLATION_CONCURRENCY = 4;
 
 function fieldToTranslationItem(field: FaqSavedTextField) {
   return {
@@ -109,7 +110,7 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
   if (env.SF_EVENTS) {
     await env.SF_EVENTS.send({
       v: 1,
-      requestId: job.requestId ?? job.jobId,
+      requestId: job.jobId,
       agentId: INSTANCE_TRANSLATION_AGENT_ID,
       occurredAtMs: startedAtMs,
       subject: grant.sub,
@@ -141,6 +142,14 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
 
 function retryDelaySeconds(attempt: number): number {
   return Math.min(90, 5 * Math.max(1, attempt));
+}
+
+function retryJitterSeconds(jobId: string, attempt: number): number {
+  let checksum = attempt;
+  for (let index = 0; index < jobId.length; index += 1) {
+    checksum = (checksum + jobId.charCodeAt(index)) % 997;
+  }
+  return checksum % 7;
 }
 
 function modelLabel(job: InstanceTranslationJob): string {
@@ -199,7 +208,27 @@ export async function handleInstanceTranslationQueueMessage(env: Env, msg: Queue
       `attempt=${attempt}`,
       message,
     );
-    msg.retry({ delaySeconds: retryDelaySeconds(attempt) });
+    msg.retry({ delaySeconds: retryDelaySeconds(attempt) + retryJitterSeconds(job.jobId, attempt) });
   }
   return true;
+}
+
+export async function handleInstanceTranslationQueueBatch(
+  env: Env,
+  messages: QueueMessage[],
+): Promise<void> {
+  let nextIndex = 0;
+  const workerCount = Math.min(INSTANCE_TRANSLATION_CONCURRENCY, messages.length);
+
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      for (;;) {
+        const index = nextIndex;
+        nextIndex += 1;
+        const msg = messages[index];
+        if (!msg) return;
+        await handleInstanceTranslationQueueMessage(env, msg);
+      }
+    }),
+  );
 }
