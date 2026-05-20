@@ -42,6 +42,33 @@ function normalizeMeta(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+function normalizeTranslatedValueMap(value: unknown): Record<string, string> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const values: Record<string, string> = {};
+  for (const [path, text] of Object.entries(value)) {
+    if (!path || typeof text !== 'string') return null;
+    values[path] = text;
+  }
+  return values;
+}
+
+function assertTranslatedValuesMatchContent(args: {
+  content: AccountInstanceContentDocument;
+  values: Record<string, string>;
+}): void {
+  const contentPaths = new Set(Object.keys(args.content.fields));
+  for (const path of contentPaths) {
+    if (typeof args.values[path] !== 'string') {
+      throw new Error(`tokyo.translation.value_missing:${path}`);
+    }
+  }
+  for (const path of Object.keys(args.values)) {
+    if (!contentPaths.has(path)) {
+      throw new Error(`tokyo.translation.value_unexpected:${path}`);
+    }
+  }
+}
+
 function displayNameFromConfigDocument(configDoc: AccountInstanceConfigDocument): string {
   const displayName = normalizeDisplayName(configDoc.displayName);
   if (displayName) return displayName;
@@ -169,6 +196,7 @@ function extractContentFields(args: {
       value: item.value,
       status,
       ...(sameValue && previous?.localeStatus ? { localeStatus: { ...previous.localeStatus } } : {}),
+      ...(sameValue && previous?.translatedValues ? { translatedValues: { ...previous.translatedValues } } : {}),
     };
   }
   return fields;
@@ -582,6 +610,107 @@ export async function readAccountInstanceContentDocument(args: {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.content.invalid' };
   }
   return { ok: true, value: contentDoc };
+}
+
+export async function readAccountInstanceTranslatedLocaleValues(args: {
+  env: Env;
+  instanceId: string;
+  accountId: string;
+  widgetType?: string | null;
+  locale: string;
+}): Promise<{ ok: true; value: { locale: string; values: Record<string, string> } } | SavedRenderDocumentReadFailure> {
+  const locale = normalizeLocale(args.locale);
+  if (!locale) {
+    return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.translation.locale.invalid' };
+  }
+  const content = await readAccountInstanceContentDocument(args);
+  if (!content.ok) return content;
+  const values: Record<string, string> = {};
+  for (const [path, field] of Object.entries(content.value.fields)) {
+    if (field.localeStatus?.[locale] !== 'ok') {
+      return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' };
+    }
+    const translated = field.translatedValues?.[locale];
+    if (typeof translated !== 'string') {
+      return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' };
+    }
+    values[path] = translated;
+  }
+  return { ok: true, value: { locale, values } };
+}
+
+export async function readAccountInstanceCurrentTranslatedLocaleValues(args: {
+  env: Env;
+  instanceId: string;
+  accountId: string;
+  widgetType?: string | null;
+  locale: string;
+}): Promise<{ ok: true; value: { locale: string; values: Record<string, string> } } | SavedRenderDocumentReadFailure> {
+  const locale = normalizeLocale(args.locale);
+  if (!locale) {
+    return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.translation.locale.invalid' };
+  }
+  const content = await readAccountInstanceContentDocument(args);
+  if (!content.ok) return content;
+  const values: Record<string, string> = {};
+  for (const [path, field] of Object.entries(content.value.fields)) {
+    const translated = field.translatedValues?.[locale];
+    if (typeof translated === 'string') values[path] = translated;
+  }
+  return { ok: true, value: { locale, values } };
+}
+
+export async function writeAccountInstanceTranslatedLocaleValues(args: {
+  env: Env;
+  instanceId: string;
+  accountId: string;
+  widgetType?: string | null;
+  locale: string;
+  values: unknown;
+}): Promise<{ locale: string; values: Record<string, string> }> {
+  const instanceId = normalizeStorageId(args.instanceId);
+  const accountId = normalizeStorageId(args.accountId);
+  const locale = normalizeLocale(args.locale);
+  const values = normalizeTranslatedValueMap(args.values);
+  if (!instanceId || !accountId || !locale || !values) {
+    throw new Error('tokyo.translation.values_invalid');
+  }
+  const location = await resolveAccountInstanceLocation({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetType: args.widgetType,
+  });
+  if (!location) throw new Error('tokyo.errors.render.notFound');
+  const content = await readContentDocumentByLocation({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+  });
+  if (!content) throw new Error('coreui.errors.instance.content.invalid');
+  assertTranslatedValuesMatchContent({ content, values });
+
+  const next: AccountInstanceContentDocument = {
+    ...content,
+    fields: { ...content.fields },
+    updatedAt: nowIso(),
+  };
+  for (const [path, field] of Object.entries(content.fields)) {
+    next.fields[path] = {
+      ...field,
+      localeStatus: {
+        ...(field.localeStatus ?? {}),
+        [locale]: 'ok',
+      },
+      translatedValues: {
+        ...(field.translatedValues ?? {}),
+        [locale]: values[path]!,
+      },
+    };
+  }
+  await putJson(args.env, accountInstanceContentKey(location.accountId, location.widgetCode, location.instanceId), next);
+  return { locale, values };
 }
 
 export async function listAccountInstancesBySource(args: {

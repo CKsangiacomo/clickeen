@@ -614,15 +614,6 @@ export async function tryHandleInternalRenderRoutes(
       });
       if (authErr) return respond(authErr);
 
-      const instance = await readAccountInstanceDocument({ env, accountId, instanceId });
-      if (!instance.ok) {
-        return respond(
-          json(
-            { error: { kind: instance.kind, reasonKey: instance.reasonKey } },
-            { status: instance.kind === 'NOT_FOUND' ? 404 : 422 },
-          ),
-        );
-      }
       const translation = await readTranslatedLocaleValues({ env, accountId, instanceId, locale });
       if (!translation) {
         return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' } }, { status: 404 }));

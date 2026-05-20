@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Env } from '../../types.ts';
 import {
-  markAccountInstanceContentFieldsTranslated,
   materializeInstancePublicArtifacts,
   writeSavedRenderConfig,
   writeTranslatedLocaleValues,
@@ -137,14 +136,6 @@ test('Tokyo materializes base and translated public artifacts from instance sour
     instanceId: INSTANCE_ID,
     locale: 'it',
     values,
-  });
-  await markAccountInstanceContentFieldsTranslated({
-    env,
-    accountId: ACCOUNT_ID,
-    instanceId: INSTANCE_ID,
-    locale: 'it',
-    targetLocales: ['it'],
-    paths: Object.keys(values),
   });
 
   const result = await materializeInstancePublicArtifacts({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });

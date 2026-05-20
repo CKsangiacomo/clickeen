@@ -189,7 +189,7 @@ test('translated locale value read/write is direct by locale', async () => {
     env,
     accountId: COORDINATE.accountId,
     instanceId: COORDINATE.instanceId,
-  }), []);
+  }), [{ locale: 'it' }]);
 
   assert.deepEqual(await readTranslatedLocaleValues({
     env,
@@ -209,7 +209,7 @@ test('translated locale value read/write is direct by locale', async () => {
       locale: 'it',
       values: { 'header.title': 'Solo titolo' },
     }),
-    /overlay values missing_path: header\.subtitleHtml/,
+    /tokyo\.translation\.value_missing:/,
   );
 });
 

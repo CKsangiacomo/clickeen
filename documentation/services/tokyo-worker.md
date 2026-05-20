@@ -35,7 +35,7 @@ Tokyo-worker resolves widget definitions through the `listWidgetDefinitions` and
 
 1. Account assets: route and mutate account-owned asset objects under `accounts/{accountPublicId}/assets/`.
 2. Account instances: route product open, save, list, create, rename, delete, publish, and unpublish operations for `accountPublicId + instanceId`.
-3. Account-instance translated locale values: store/read exact locale value maps under the owning instance while PRD 103 finishes removing overlay file vocabulary from product contracts.
+3. Account-instance translated locale values: store/read exact locale values on the owning instance content fields by `instanceId + locale`.
 4. Public artifact materialization: publish renders static browser files under the owning instance folder before the instance becomes public.
 5. Friendly asset routes: serve public asset URLs from canonical R2 roots without creating route-shaped storage roots.
 
@@ -49,14 +49,13 @@ accounts/{accountPublicId}/
     index.json                  # transitional private cache/read model only
     {instanceId}/
       instance.config.json       # non-text config, identity/display/locale/publish metadata
-      instance.content.json      # base user-visible text fields and per-field translation status
+      instance.content.json      # base user-visible text fields, translated locale values, and per-field translation status
       instance.json              # transitional compatibility mirror; not a product source authority
       index.html
       styles.css
       script.js
       {locale}.html
       script.{locale}.js
-      overlays/{overlayId}.json  # transitional storage shape for locale values
 ```
 
 Rules:
@@ -66,10 +65,10 @@ Rules:
 - Widget software lives only under `product/widgets/{widgetType}/`. `widgetType` and `widgetCode` may appear as metadata/codebook identity; they are never R2 locators for account instances.
 - `{instanceId}` is a stable generated 10-character uppercase base36 ID. It is not derived from widget type, display name, UUID, timestamp, or any old `ins_*` string.
 - `instance.config.json` carries non-text config plus instance identity/display, widget type/code, base locale, target locales, publish status, and timestamps.
-- `instance.content.json` carries base user-visible text values in the same editable paths Bob exposes, plus `ok`/`changed` translation pickup status. This is the translation input source. Every value is a string; rich text is sanitized HTML string content, not an object.
+- `instance.content.json` carries base user-visible text values in the same editable paths Bob exposes, current translated locale values for those fields, plus `ok`/`changed` translation pickup status. This is the translation input and translation preview source. Every value is a string; rich text is sanitized HTML string content, not an object.
 - `instance.json` remains a transitional compatibility mirror only. Runtime code may read it to migrate old instances, but new product meaning must not be added to it.
 - Saved source does not carry `sourceVersion` or generic generation lanes. Translation and publish work use product operation state, content field status, and queue/job boundaries.
-- `overlays/{overlayId}.json` is still the transitional storage shape for locale values. It is not a product UI contract and must not leak as locale identity.
+- Legacy `overlays/{overlayId}.json` objects may exist until data cleanup, but no translation product operation reads or writes them as current locale value truth.
 - Publish materializes `index.html`, `styles.css`, `script.js`, `{locale}.html`, and `script.{locale}.js` from saved instance source plus translated locale values.
 - `instances/index.json` is a transitional private cache/read model. Product operations must be able to read source documents directly and must not treat the index as source truth.
 

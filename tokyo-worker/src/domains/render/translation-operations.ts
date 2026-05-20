@@ -22,10 +22,10 @@ import { getWidgetDefinition } from '../widget-catalog';
 import {
   markAccountInstanceContentFieldsTranslated,
   readAccountInstanceContentDocument,
+  readAccountInstanceCurrentTranslatedLocaleValues,
   readAccountInstanceDocument,
 } from './saved-config';
 import {
-  readTranslatedLocaleValues,
   writeTranslatedLocaleValues,
 } from './overlays';
 
@@ -410,7 +410,7 @@ export async function completeLocaleTranslation(args: {
     };
   }
 
-  const existing = await readTranslatedLocaleValues({
+  const existing = await readAccountInstanceCurrentTranslatedLocaleValues({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
@@ -422,7 +422,7 @@ export async function completeLocaleTranslation(args: {
     nextValues = composeTranslatedValues({
       fields: currentSavedTextGraph,
       changedFields: job.changedFields,
-      existingValues: existing?.values ?? {},
+      existingValues: existing.ok ? existing.value.values : {},
       completedValues: args.values,
     });
   } catch (error) {

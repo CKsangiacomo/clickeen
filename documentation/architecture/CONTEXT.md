@@ -103,7 +103,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Tokyo owns instance product operations for `accountPublicId + instanceId`: list, open, save, rename, create, duplicate, delete, generate translations, read/write translated locale values, publish, and unpublish.
 - Source is split by product meaning:
   - `instance.config.json` carries non-text settings, structure, style, behavior, identity/display metadata, widget type/code, base locale, target locales, publish status, and timestamps.
-  - `instance.content.json` carries user-visible base text in the same editable paths Bob exposes, plus `ok` / `changed` status for translation pickup.
+  - `instance.content.json` carries user-visible base text in the same editable paths Bob exposes, current translated locale values, plus `ok` / `changed` status for translation pickup.
 - `instance.json` may exist only as a transitional compatibility mirror. It is not the product source authority and must not receive new product meaning.
 - Translated locale values are addressed by `instanceId + locale` at product boundaries. Tokyo may persist exact value maps privately; Bob, Roma, and San Francisco must not use overlay IDs or storage paths as locale identity.
 - Public browser files such as `index.html`, `styles.css`, `script.js`, `{locale}.html`, and `script.{locale}.js` are generated artifacts. They are output of publish/materialization, not authoring truth and not publish state.
@@ -126,7 +126,7 @@ accounts/{accountPublicId}/
     index.json                  # transitional private cache only
     {instanceId}/
       instance.config.json       # approved non-text source + identity/display/locale/publish metadata
-      instance.content.json      # approved base user-visible text source + translation pickup status
+      instance.content.json      # approved base user-visible text source + translated values + translation pickup status
       instance.json              # transitional compatibility mirror only
       index.html                 # generated public artifact
       styles.css                 # generated public artifact
@@ -182,7 +182,7 @@ Between open and save:
 - No demo/non-account surface writes durable account widget truth.
 - Translation preview resolution is always base instance state plus one translated locale value map. Multi-layer precedence is out of scope until a later PRD specifies it.
 
-**Why:** 10,000 users editing simultaneously = no server load for base config. Babel writes scoped overlay objects, enabling async translation while preserving user edits. Millions of landing page visitors = zero DB pollution until signup + publish.
+**Why:** 10,000 users editing simultaneously = no server load for base config. Translation writes current locale values onto instance content fields after explicit Generate work, preserving base edits without creating a second widget truth. Millions of landing page visitors = zero DB pollution until signup + publish.
 
 ### Key Terms
 
@@ -352,7 +352,7 @@ Locale is a runtime parameter and must not be encoded into instance identity (`i
 
 - Roma/account product UI strings live under `tokyo/roma/i18n/**` and are served through Tokyo as product UI catalogs.
 - Prague marketing/showcase copy and localization source live under `tokyo/prague/**`.
-- Account-widget translation truth is locale-keyed translated content values for one account instance. Product identity is `instanceId + locale`, not an overlay ID or storage object name.
+- Account-widget translation truth is locale-keyed translated content values stored on the account instance content fields. Product identity is `instanceId + locale`, not an overlay ID or storage object name.
 - Public embeds read generated visitor artifacts that were materialized from approved instance config/content plus translated locale values.
 - There is no repo-authored admin l10n lane and no repo-local instance translation truth.
 - Widgets declare translatable account-widget paths in authored `editable-fields.json`. Internal path/value plumbing is allowed only below the product operation. No widget `localization.json`, layer path sidecar, wildcard path schema, `spec.json.overlays.text[]`, or text-pack schema survives.

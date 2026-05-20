@@ -74,6 +74,7 @@ export type AccountInstanceContentDocument = {
     value: string;
     status: AccountInstanceContentFieldStatus;
     localeStatus?: Record<string, AccountInstanceContentFieldStatus>;
+    translatedValues?: Record<string, string>;
   }>;
   updatedAt: string;
 };

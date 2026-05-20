@@ -177,10 +177,19 @@ export function normalizeAccountInstanceContentDocument(raw: unknown): AccountIn
         localeStatus[locale] = normalized;
       }
     }
+    const rawTranslatedValues = asRecord(field?.translatedValues);
+    const translatedValues: Record<string, string> = {};
+    if (rawTranslatedValues) {
+      for (const [locale, translatedValue] of Object.entries(rawTranslatedValues)) {
+        if (typeof translatedValue !== 'string') return null;
+        translatedValues[locale] = translatedValue;
+      }
+    }
     fields[path] = {
       value,
       status,
       ...(Object.keys(localeStatus).length ? { localeStatus } : {}),
+      ...(Object.keys(translatedValues).length ? { translatedValues } : {}),
     };
   }
   return { id, accountId, widgetType, fields, updatedAt };

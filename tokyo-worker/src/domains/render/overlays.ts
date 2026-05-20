@@ -8,10 +8,7 @@ import {
   isOverlayVersion,
   parseOverlayId,
 } from '@clickeen/ck-contracts/overlay-identity';
-import {
-  resolveLanguageOverlayCode,
-  resolveLocaleForLanguageOverlayCode,
-} from '@clickeen/ck-contracts/overlay-codebooks';
+import { resolveLocaleForLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import {
   extractTextPrimitiveValuesForEditableFields,
   validateOverlayValuesForTextPrimitives,
@@ -26,9 +23,10 @@ import {
   accountInstanceOverlayObjectPrefix,
 } from './keys';
 import {
+  readAccountInstanceTranslatedLocaleValues,
   readAccountInstanceContentDocument,
-  readAccountInstanceDocument,
   readSavedRenderConfig,
+  writeAccountInstanceTranslatedLocaleValues,
 } from './saved-config';
 import { loadJson, putJson } from './storage';
 import type {
@@ -69,23 +67,11 @@ export type OverlayCompletenessResult =
       path?: string;
     };
 
-const OVERLAY_VERSION_TECHNICAL_MAX = 100;
-
 function assertValues(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('tokyo.overlay.values_invalid');
   }
   return value as Record<string, unknown>;
-}
-
-function normalizeStringValues(value: unknown): Record<string, string> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  const values: Record<string, string> = {};
-  for (const [path, text] of Object.entries(value)) {
-    if (!path || typeof text !== 'string') return null;
-    values[path] = text;
-  }
-  return values;
 }
 
 function normalizeCoordinate(input: {
@@ -351,31 +337,13 @@ export async function readTranslatedLocaleValues(args: {
   instanceId: string;
   locale: string;
 }): Promise<TranslatedLocaleValues | null> {
-  const locale = String(args.locale || '').trim();
-  if (!locale) return null;
-  const languageCode = resolveLanguageOverlayCode(locale);
-  if (!languageCode) return null;
-  const instance = await readAccountInstanceDocument({
+  const translation = await readAccountInstanceTranslatedLocaleValues({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
+    locale: args.locale,
   });
-  if (!instance.ok) return null;
-  const overlayId = await pickLatestCompleteOverlayId({
-    env: args.env,
-    ids: await listOverlayIdsForCoordinate(args.env, {
-      accountId: args.accountId,
-      widgetCode: instance.value.widgetCode,
-      instanceId: args.instanceId,
-      languageCode,
-      experiment: DEFAULT_OVERLAY_EXPERIMENT,
-      personalization: DEFAULT_OVERLAY_PERSONALIZATION,
-    }),
-  });
-  if (!overlayId) return null;
-  const object = await readOverlayObject({ env: args.env, overlayId });
-  const values = normalizeStringValues(object?.values);
-  return values ? { locale, values } : null;
+  return translation.ok ? translation.value : null;
 }
 
 export async function writeTranslatedLocaleValues(args: {
@@ -385,52 +353,13 @@ export async function writeTranslatedLocaleValues(args: {
   locale: string;
   values: Record<string, string>;
 }): Promise<TranslatedLocaleValues> {
-  const locale = String(args.locale || '').trim();
-  const languageCode = resolveLanguageOverlayCode(locale);
-  const values = normalizeStringValues(args.values);
-  if (!locale || !languageCode || !values) {
-    throw new Error('tokyo.translation.values_invalid');
-  }
-
-  const instance = await readAccountInstanceDocument({
+  return writeAccountInstanceTranslatedLocaleValues({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
+    locale: args.locale,
+    values: args.values,
   });
-  if (!instance.ok) {
-    throw new Error(instance.reasonKey);
-  }
-
-  const validationOverlayId = buildOverlayId({
-    accountPublicId: args.accountId,
-    widgetCode: instance.value.widgetCode,
-    instanceId: args.instanceId,
-    languageCode,
-    experiment: DEFAULT_OVERLAY_EXPERIMENT,
-    personalization: DEFAULT_OVERLAY_PERSONALIZATION,
-    version: '00',
-  });
-  const validation = await validateOverlayObjectForSavedInstance({
-    env: args.env,
-    overlayId: validationOverlayId,
-    values,
-  });
-  if (!validation.ok) {
-    throw new Error(validation.detail || validation.reasonKey);
-  }
-
-  const overlayId = await allocateOverlayId({
-    env: args.env,
-    coordinate: {
-      accountId: args.accountId,
-      widgetCode: instance.value.widgetCode,
-      instanceId: args.instanceId,
-      languageCode,
-    },
-    maxVersions: OVERLAY_VERSION_TECHNICAL_MAX,
-  });
-  await writeOverlayObject({ env: args.env, overlayId, values });
-  return { locale, values };
 }
 
 async function isOverlayIdReferenced(args: {
