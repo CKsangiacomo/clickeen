@@ -10,6 +10,7 @@ import {
   normalizeTranslatedLocales,
   normalizeTranslatedLocaleValues,
   normalizeTranslationSetup,
+  retainTranslatedLocaleValues,
 } from './translations-preview';
 
 const faqContract = readWidgetEditableFieldsContract(faqContent);
@@ -40,6 +41,25 @@ test('normalizes Tokyo-owned translated locale list from current values', () => 
 
   assert.ok(data);
   assert.deepEqual(listPreviewableLocales(data), ['en', 'it', 'cs']);
+});
+
+test('retains loaded translation values across polling refreshes', () => {
+  assert.deepEqual(
+    retainTranslatedLocaleValues(
+      {
+        it: { 'header.title': 'Domande' },
+        cs: { 'header.title': 'Otazky' },
+      },
+      {
+        v: 1,
+        baseLocale: 'en',
+        translations: [{ locale: 'it' }],
+      },
+    ),
+    {
+      it: { 'header.title': 'Domande' },
+    },
+  );
 });
 
 test('translation panel locale state refreshes dropdown only while translations are incomplete', () => {

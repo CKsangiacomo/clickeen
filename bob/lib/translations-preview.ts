@@ -130,6 +130,18 @@ export function listPreviewableLocales(data: TranslatedLocalesData | null): stri
   return Array.from(new Set([data.baseLocale, ...data.translations.map((entry) => entry.locale)]));
 }
 
+export function retainTranslatedLocaleValues(
+  current: Record<string, Record<string, string>>,
+  inventory: TranslatedLocalesData,
+): Record<string, Record<string, string>> {
+  const readyLocales = new Set(inventory.translations.map((entry) => entry.locale));
+  const next: Record<string, Record<string, string>> = {};
+  for (const [locale, values] of Object.entries(current)) {
+    if (readyLocales.has(locale)) next[locale] = values;
+  }
+  return next;
+}
+
 export function buildTranslationPanelLocaleState(args: {
   baseLocale: string;
   activeLocales: string[];

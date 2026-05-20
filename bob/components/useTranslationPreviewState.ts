@@ -5,6 +5,7 @@ import { useWidgetSessionTransport } from '../lib/session/useWidgetSession';
 import {
   normalizeTranslatedLocales,
   normalizeTranslatedLocaleValues,
+  retainTranslatedLocaleValues,
   type TranslatedLocalesData,
 } from '../lib/translations-preview';
 
@@ -89,7 +90,7 @@ export function useTranslationPreviewState(args: {
         const payload = normalizeTranslatedLocales(response.json);
         if (!payload) throw new Error('coreui.errors.payload.invalid');
         if (payload.baseLocale !== args.baseLocale) throw new Error('coreui.errors.payload.invalid');
-        setValuesByLocale({});
+        setValuesByLocale((current) => retainTranslatedLocaleValues(current, payload));
         setInventory(payload);
       })
       .catch((caught) => {
@@ -128,14 +129,14 @@ export function useTranslationPreviewState(args: {
     return inventory.translations.find((entry) => entry.locale === args.selectedLocale) ?? null;
   }, [args.selectedLocale, inventory]);
 
-  useEffect(() => {
-    if (!args.enabled || !args.instanceId || !selectedTranslation) return;
-    if (valuesByLocale[selectedTranslation.locale]) return;
+  const selectedTranslationLocale = selectedTranslation?.locale ?? '';
 
+  useEffect(() => {
+    if (!args.enabled || !args.instanceId || !selectedTranslationLocale) return;
     let cancelled = false;
     readTranslation({
       instanceId: args.instanceId,
-      locale: selectedTranslation.locale,
+      locale: selectedTranslationLocale,
     })
       .then((response) => {
         if (cancelled) return;
@@ -146,12 +147,12 @@ export function useTranslationPreviewState(args: {
           };
         }
         const payload = normalizeTranslatedLocaleValues(response.json);
-        if (!payload || payload.locale !== selectedTranslation.locale) {
+        if (!payload || payload.locale !== selectedTranslationLocale) {
           throw new Error('coreui.errors.payload.invalid');
         }
         setValuesByLocale((current) => ({
           ...current,
-          [selectedTranslation.locale]: payload.values,
+          [selectedTranslationLocale]: payload.values,
         }));
       })
       .catch((caught) => {
@@ -175,9 +176,9 @@ export function useTranslationPreviewState(args: {
   }, [
     args.enabled,
     args.instanceId,
+    args.refreshVersion,
     readTranslation,
-    selectedTranslation,
-    valuesByLocale,
+    selectedTranslationLocale,
   ]);
 
   return {
