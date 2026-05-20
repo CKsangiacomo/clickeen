@@ -51,14 +51,71 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Detect changed worker surfaces
+        id: changes
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            {
+              echo "berlin=true"
+              echo "sanfrancisco=true"
+              echo "tokyo=true"
+              echo "tokyo_assets=true"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          before="${{ github.event.before }}"
+          after="${{ github.sha }}"
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            before="$(git rev-list --max-parents=0 "$after")"
+          fi
+
+          changed="$(git diff --name-only "$before" "$after")"
+          path_changed() {
+            printf '%s\n' "$changed" | grep -Eq "$1"
+          }
+
+          berlin=false
+          sanfrancisco=false
+          tokyo=false
+          tokyo_assets=false
+
+          if path_changed '^(berlin/|scripts/infra/)'; then
+            berlin=true
+          fi
+
+          if path_changed '^(sanfrancisco/|scripts/infra/)'; then
+            sanfrancisco=true
+          fi
+
+          if path_changed '^(tokyo-worker/|scripts/infra/)'; then
+            tokyo=true
+          fi
+
+          if path_changed '^(tokyo/product/widgets/|tokyo/product/fonts/|tokyo/product/themes/|tokyo/product/dieter/|scripts/tokyo-fonts-sync\.mjs|scripts/tokyo-r2-deploy-sync\.mjs)'; then
+            tokyo_assets=true
+          fi
+
+          {
+            echo "berlin=$berlin"
+            echo "sanfrancisco=$sanfrancisco"
+            echo "tokyo=$tokyo"
+            echo "tokyo_assets=$tokyo_assets"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Deploy berlin-dev
+        if: steps.changes.outputs.berlin == 'true'
         run: pnpm -C berlin run deploy
 
       - name: Deploy sanfrancisco-dev
+        if: steps.changes.outputs.sanfrancisco == 'true'
         run: pnpm -C sanfrancisco run deploy
 
       - name: Deploy tokyo-assets-dev (tokyo-worker)
+        if: steps.changes.outputs.tokyo == 'true'
         run: pnpm -C tokyo-worker run deploy
 
       - name: Sync Tokyo deploy roots to R2 (cloud-dev)
+        if: steps.changes.outputs.tokyo == 'true' || steps.changes.outputs.tokyo_assets == 'true'
         run: node scripts/tokyo-r2-deploy-sync.mjs --remote
