@@ -28,6 +28,10 @@ Non-FAQ widgets still use the old full-graph compatibility path until they recei
 
 This execution was rebased again by 103_01.3a and 103_01.3b. The FAQ field graph now comes from authored FAQ `editable-fields.json` through the widget-definition operation, not a generated widget catalog. Roma fails the FAQ locale job if Tokyo does not provide the previous saved config; it does not fall back to clear-and-full-retranslate.
 
+## 2026-05-20 Runtime Hardening
+
+Human smoke exposed that concurrent locale completions could overwrite each other inside `instance.content.json`: each completion read the whole content object, wrote translated values, then another completion could write an older copy back and erase locale status or translated values. Tokyo completion now performs one conditional content update with R2 ETag conflict detection and retry. The completion write updates translated values and changed-field status together, so a locale cannot be reported ready without the translated value being present.
+
 ## Files Changed
 
 - `Execution_Pipeline_Docs/02-Executing/103D__PRD__Changed_Text_Translation.md`

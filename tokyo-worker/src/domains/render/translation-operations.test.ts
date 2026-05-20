@@ -27,6 +27,7 @@ import {
 
 type StoredObject = {
   body: unknown;
+  httpEtag: string;
 };
 
 const ACCOUNT_PUBLIC_ID = 'A1B2C3D4';
@@ -35,6 +36,7 @@ const INSTANCE_ID = 'I1B2C3D4E5';
 function createTestEnv(): { env: Env; objects: Map<string, StoredObject>; queued: InstanceTranslationJob[] } {
   const objects = new Map<string, StoredObject>();
   const queued: InstanceTranslationJob[] = [];
+  let objectVersion = 0;
   const env = {
     TOKYO_DEV_JWT: 'test',
     INSTANCE_TRANSLATION_JOBS: {
@@ -43,18 +45,24 @@ function createTestEnv(): { env: Env; objects: Map<string, StoredObject>; queued
       },
     },
     TOKYO_R2: {
-      async put(key: string, value: unknown) {
+      async put(key: string, value: unknown, options?: { onlyIf?: { etagMatches?: string } }) {
+        await Promise.resolve();
+        const current = objects.get(key);
+        const expectedEtag = options?.onlyIf?.etagMatches;
+        if (expectedEtag && current?.httpEtag !== expectedEtag) return null;
         const body =
           value instanceof Uint8Array
             ? JSON.parse(new TextDecoder().decode(value))
             : value;
-        objects.set(key, { body });
-        return null;
+        const httpEtag = `"test-${++objectVersion}"`;
+        objects.set(key, { body, httpEtag });
+        return { key, httpEtag, etag: httpEtag };
       },
       async get(key: string) {
         const stored = objects.get(key);
         if (!stored) return null;
         return {
+          httpEtag: stored.httpEtag,
           async json() {
             return stored.body;
           },
@@ -356,6 +364,48 @@ test('Tokyo generate queues only changed fields for an existing translated local
   assert.equal(queued.length, 2);
 });
 
+test('Tokyo generate treats status-ok without a translated value as missing', async () => {
+  const { env, objects, queued } = createTestEnv();
+  const values = await seedSavedFaqInstance(env);
+
+  await generateInstanceTranslations({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    authz: authz(),
+    baseLocale: 'en',
+    targetLocales: ['it'],
+  });
+  assert.equal(queued.length, 1);
+  await completeLocaleTranslation({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+    job: queued[0],
+    values,
+  });
+
+  const contentKey = [...objects.keys()].find((key) => key.endsWith('/instance.content.json'));
+  assert(contentKey);
+  const stored = objects.get(contentKey);
+  assert(stored && stored.body && typeof stored.body === 'object' && !Array.isArray(stored.body));
+  const content = stored.body as { fields: Record<string, { translatedValues?: Record<string, string> }> };
+  delete content.fields['sections.0.faqs.0.question']?.translatedValues?.it;
+
+  await generateInstanceTranslations({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    authz: authz(),
+    baseLocale: 'en',
+    targetLocales: ['it'],
+  });
+
+  assert.equal(queued.length, 2);
+  assert.deepEqual(queued[1]?.changedFields.map((field) => field.identity.path), ['sections.0.faqs.0.question']);
+});
+
 test('content status clears changed fields only after every generated target locale completes', async () => {
   const { env, queued } = createTestEnv();
   const values = await seedSavedFaqInstance(env);
@@ -460,4 +510,49 @@ test('content status clears changed fields only after every generated target loc
   });
   assert.equal(content.ok, true);
   assert.equal(content.ok ? content.value.fields['sections.0.faqs.0.answer']?.status : null, 'ok');
+});
+
+test('concurrent locale completions preserve every locale value on instance content', async () => {
+  const { env, queued } = createTestEnv();
+  const values = await seedSavedFaqInstance(env);
+
+  await generateInstanceTranslations({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    authz: authz(),
+    baseLocale: 'en',
+    targetLocales: ['it', 'cs', 'fr', 'de'],
+  });
+  assert.equal(queued.length, 4);
+
+  await Promise.all(queued.map((job) => completeLocaleTranslation({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: job.targetLocale,
+    job,
+    values: Object.fromEntries(
+      Object.entries(values).map(([path, value]) => [path, `${job.targetLocale}:${value}`]),
+    ),
+  })));
+
+  const content = await readAccountInstanceContentDocument({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'faq',
+  });
+  assert.equal(content.ok, true);
+  const expectedLocales = ['cs', 'de', 'fr', 'it'];
+  for (const field of Object.values(content.ok ? content.value.fields : {})) {
+    assert.equal(field.status, 'ok');
+    assert.deepEqual(Object.keys(field.localeStatus ?? {}).sort(), expectedLocales);
+    assert.deepEqual(Object.keys(field.translatedValues ?? {}).sort(), expectedLocales);
+  }
+  assert.deepEqual(
+    (await listTranslatedLocales({ env, accountId: ACCOUNT_PUBLIC_ID, instanceId: INSTANCE_ID }))
+      .map((entry) => entry.locale),
+    expectedLocales,
+  );
 });

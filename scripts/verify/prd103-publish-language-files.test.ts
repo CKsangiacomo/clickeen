@@ -14,6 +14,7 @@ const INSTANCE_ID = 'Z9Y8X7W6V5';
 type StoredObject = {
   text: string;
   contentType?: string;
+  httpEtag: string;
 };
 
 function contentTypeForKey(key: string): string | undefined {
@@ -25,8 +26,9 @@ function contentTypeForKey(key: string): string | undefined {
 }
 
 function createTestEnv(seed: Record<string, string>) {
+  let objectVersion = 0;
   const objects = new Map<string, StoredObject>(
-    Object.entries(seed).map(([key, text]) => [key, { text, contentType: contentTypeForKey(key) }]),
+    Object.entries(seed).map(([key, text]) => [key, { text, contentType: contentTypeForKey(key), httpEtag: `"seed-${++objectVersion}"` }]),
   );
   const env = {
     TOKYO_DEV_JWT: 'test',
@@ -35,6 +37,7 @@ function createTestEnv(seed: Record<string, string>) {
         const stored = objects.get(key);
         if (!stored) return null;
         return {
+          httpEtag: stored.httpEtag,
           body: new ReadableStream({
             start(controller) {
               controller.enqueue(new TextEncoder().encode(stored.text));
@@ -50,13 +53,22 @@ function createTestEnv(seed: Record<string, string>) {
           },
         };
       },
-      async put(key: string, value: string | Uint8Array | ReadableStream | null, options?: { httpMetadata?: { contentType?: string } }) {
+      async put(
+        key: string,
+        value: string | Uint8Array | ReadableStream | null,
+        options?: { httpMetadata?: { contentType?: string }; onlyIf?: { etagMatches?: string } },
+      ) {
+        const current = objects.get(key);
+        const expectedEtag = options?.onlyIf?.etagMatches;
+        if (expectedEtag && current?.httpEtag !== expectedEtag) return null;
         const text = typeof value === 'string'
           ? value
           : value instanceof Uint8Array
             ? new TextDecoder().decode(value)
             : await new Response(value).text();
-        objects.set(key, { text, contentType: options?.httpMetadata?.contentType ?? contentTypeForKey(key) });
+        const httpEtag = `"test-${++objectVersion}"`;
+        objects.set(key, { text, contentType: options?.httpMetadata?.contentType ?? contentTypeForKey(key), httpEtag });
+        return { key, httpEtag, etag: httpEtag };
       },
       async list({ prefix }: { prefix?: string }) {
         const normalizedPrefix = prefix ?? '';

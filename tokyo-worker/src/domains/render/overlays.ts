@@ -321,12 +321,15 @@ export async function listTranslatedLocales(args: {
   const candidates = new Set<string>();
   for (const field of fields) {
     for (const [locale, status] of Object.entries(field.localeStatus ?? {})) {
-      if (status === 'ok') candidates.add(locale);
+      if (status === 'ok' && typeof field.translatedValues?.[locale] === 'string') candidates.add(locale);
     }
   }
 
   return Array.from(candidates)
-    .filter((locale) => fields.every((field) => field.localeStatus?.[locale] === 'ok'))
+    .filter((locale) => fields.every((field) => (
+      field.localeStatus?.[locale] === 'ok' &&
+      typeof field.translatedValues?.[locale] === 'string'
+    )))
     .sort((left, right) => left.localeCompare(right))
     .map((locale) => ({ locale }));
 }

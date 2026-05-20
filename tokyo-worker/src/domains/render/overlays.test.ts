@@ -27,25 +27,32 @@ import { writeSavedRenderConfig } from './saved-config.ts';
 
 type StoredObject = {
   body: unknown;
+  httpEtag: string;
 };
 
 function createTestEnv(): { env: Env; objects: Map<string, StoredObject> } {
   const objects = new Map<string, StoredObject>();
+  let objectVersion = 0;
   const env = {
     TOKYO_DEV_JWT: 'test',
     TOKYO_R2: {
-      async put(key: string, value: unknown) {
+      async put(key: string, value: unknown, options?: { onlyIf?: { etagMatches?: string } }) {
+        const current = objects.get(key);
+        const expectedEtag = options?.onlyIf?.etagMatches;
+        if (expectedEtag && current?.httpEtag !== expectedEtag) return null;
         const body =
           value instanceof Uint8Array
             ? JSON.parse(new TextDecoder().decode(value))
             : value;
-        objects.set(key, { body });
-        return null;
+        const httpEtag = `"test-${++objectVersion}"`;
+        objects.set(key, { body, httpEtag });
+        return { key, httpEtag, etag: httpEtag };
       },
       async get(key: string) {
         const stored = objects.get(key);
         if (!stored) return null;
         return {
+          httpEtag: stored.httpEtag,
           async json() {
             return stored.body;
           },

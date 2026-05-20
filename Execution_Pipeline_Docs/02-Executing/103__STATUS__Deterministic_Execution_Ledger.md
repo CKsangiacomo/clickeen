@@ -203,6 +203,7 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 - Removed invented sidecars. Tokyo language overlays remain exact current value objects only.
 - Changed-field Generate after an existing translated locale uses `instance.content.json` field status and has targeted Tokyo domain proof on `sections.0.faqs.0.answer`. Full product smoke is deferred until runtime implementation/proofs are complete.
 - Manual translation edits are temporary overlay value overwrites. The system does not remember override status; a later regeneration may overwrite the manual edit.
+- 2026-05-20 human smoke reopened a Tokyo completion race: parallel locale completions could overwrite `instance.content.json` because each completion performed whole-object writes. Tokyo now uses conditional R2 writes with retry for content updates and writes translated values plus completion status in one operation. Automated proof: `concurrent locale completions preserve every locale value on instance content`.
 
 ## Next Execution Order
 

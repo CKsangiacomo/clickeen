@@ -20,14 +20,11 @@ import { normalizeLocale } from '../../asset-utils';
 import type { Env } from '../../types';
 import { getWidgetDefinition } from '../widget-catalog';
 import {
-  markAccountInstanceContentFieldsTranslated,
+  completeAccountInstanceTranslatedLocaleValues,
   readAccountInstanceContentDocument,
   readAccountInstanceCurrentTranslatedLocaleValues,
   readAccountInstanceDocument,
 } from './saved-config';
-import {
-  writeTranslatedLocaleValues,
-} from './overlays';
 
 type TranslationQueue = {
   send(message: InstanceTranslationJob): Promise<void>;
@@ -286,7 +283,10 @@ export async function generateInstanceTranslations(args: {
     const previousSavedTextGraph = currentSavedTextGraph;
     const changedFields = currentSavedTextGraph.filter((field) => {
       const contentField = content.value.fields[field.identity.path];
-      return contentField?.localeStatus?.[locale] !== 'ok';
+      return (
+        contentField?.localeStatus?.[locale] !== 'ok' ||
+        typeof contentField?.translatedValues?.[locale] !== 'string'
+      );
     });
     if (!changedFields.length) {
       skippedLocales.push(locale);
@@ -435,14 +435,7 @@ export async function completeLocaleTranslation(args: {
   }
 
   try {
-    await writeTranslatedLocaleValues({
-      env: args.env,
-      accountId: args.accountId,
-      instanceId: args.instanceId,
-      locale,
-      values: nextValues,
-    });
-    await markAccountInstanceContentFieldsTranslated({
+    await completeAccountInstanceTranslatedLocaleValues({
       env: args.env,
       accountId: args.accountId,
       instanceId: args.instanceId,
@@ -450,6 +443,7 @@ export async function completeLocaleTranslation(args: {
       locale,
       targetLocales: job.targetLocales,
       paths: job.changedFields.map((field) => field.identity.path),
+      values: nextValues,
     });
   } catch (error) {
     return {

@@ -13,7 +13,7 @@ import {
   normalizeAccountInstanceDocument,
   normalizeSavedRenderPointer,
 } from './normalize';
-import { loadJson, putJson } from './storage';
+import { loadJson, loadJsonObject, putJson, putJsonIfUnchanged } from './storage';
 import { getWidgetDefinition, resolveWidgetCode } from '../widget-catalog';
 import { extractTextPrimitiveValuesForEditableFields } from '@clickeen/ck-contracts/overlay-primitives';
 import type {
@@ -387,6 +387,25 @@ async function readContentDocumentByLocation(args: {
   };
 }
 
+async function updateContentDocumentByLocation(args: {
+  env: Env;
+  accountId: string;
+  widgetCode: string;
+  instanceId: string;
+  update: (content: AccountInstanceContentDocument) => AccountInstanceContentDocument;
+}): Promise<AccountInstanceContentDocument> {
+  const key = accountInstanceContentKey(args.accountId, args.widgetCode, args.instanceId);
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const loaded = await loadJsonObject<unknown>(args.env, key);
+    const content = loaded ? normalizeAccountInstanceContentDocument(loaded.value) : null;
+    if (!loaded || !content) throw new Error('coreui.errors.instance.content.invalid');
+    const next = args.update(content);
+    const written = await putJsonIfUnchanged(args.env, key, next, loaded.httpEtag);
+    if (written) return next;
+  }
+  throw new Error('tokyo.translation.content_write_conflict');
+}
+
 async function readAccountInstanceSummaryByLocation(args: {
   env: Env;
   accountId: string;
@@ -682,34 +701,100 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
     widgetType: args.widgetType,
   });
   if (!location) throw new Error('tokyo.errors.render.notFound');
-  const content = await readContentDocumentByLocation({
+  await updateContentDocumentByLocation({
     env: args.env,
     accountId: location.accountId,
     widgetCode: location.widgetCode,
     instanceId: location.instanceId,
+    update(content) {
+      assertTranslatedValuesMatchContent({ content, values });
+      const next: AccountInstanceContentDocument = {
+        ...content,
+        fields: { ...content.fields },
+        updatedAt: nowIso(),
+      };
+      for (const [path, field] of Object.entries(content.fields)) {
+        next.fields[path] = {
+          ...field,
+          localeStatus: {
+            ...(field.localeStatus ?? {}),
+            [locale]: 'ok',
+          },
+          translatedValues: {
+            ...(field.translatedValues ?? {}),
+            [locale]: values[path]!,
+          },
+        };
+      }
+      return next;
+    },
   });
-  if (!content) throw new Error('coreui.errors.instance.content.invalid');
-  assertTranslatedValuesMatchContent({ content, values });
+  return { locale, values };
+}
 
-  const next: AccountInstanceContentDocument = {
-    ...content,
-    fields: { ...content.fields },
-    updatedAt: nowIso(),
-  };
-  for (const [path, field] of Object.entries(content.fields)) {
-    next.fields[path] = {
-      ...field,
-      localeStatus: {
-        ...(field.localeStatus ?? {}),
-        [locale]: 'ok',
-      },
-      translatedValues: {
-        ...(field.translatedValues ?? {}),
-        [locale]: values[path]!,
-      },
-    };
+export async function completeAccountInstanceTranslatedLocaleValues(args: {
+  env: Env;
+  instanceId: string;
+  accountId: string;
+  widgetType?: string | null;
+  locale: string;
+  targetLocales: string[];
+  paths: string[];
+  values: unknown;
+}): Promise<{ locale: string; values: Record<string, string> }> {
+  const instanceId = normalizeStorageId(args.instanceId);
+  const accountId = normalizeStorageId(args.accountId);
+  const locale = normalizeLocale(args.locale);
+  const values = normalizeTranslatedValueMap(args.values);
+  if (!instanceId || !accountId || !locale || !values) {
+    throw new Error('tokyo.translation.values_invalid');
   }
-  await putJson(args.env, accountInstanceContentKey(location.accountId, location.widgetCode, location.instanceId), next);
+  const location = await resolveAccountInstanceLocation({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetType: args.widgetType,
+  });
+  if (!location) throw new Error('tokyo.errors.render.notFound');
+  const targetLocales = Array.from(new Set(args.targetLocales.map((entry) => normalizeLocale(entry)).filter((entry): entry is string => Boolean(entry))));
+  const changedPaths = new Set(args.paths);
+  await updateContentDocumentByLocation({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+    update(content) {
+      assertTranslatedValuesMatchContent({ content, values });
+      const next: AccountInstanceContentDocument = {
+        ...content,
+        fields: { ...content.fields },
+        updatedAt: nowIso(),
+      };
+      for (const [path, field] of Object.entries(content.fields)) {
+        const localeStatus = {
+          ...(field.localeStatus ?? {}),
+          [locale]: 'ok' as const,
+        };
+        const translatedValues = {
+          ...(field.translatedValues ?? {}),
+          [locale]: values[path]!,
+        };
+        const allTargetsOk =
+          targetLocales.length === 0 ||
+          targetLocales.every((targetLocale) => (
+            localeStatus[targetLocale] === 'ok' &&
+            typeof translatedValues[targetLocale] === 'string'
+          ));
+        next.fields[path] = {
+          ...field,
+          localeStatus,
+          translatedValues,
+          status: changedPaths.has(path) && allTargetsOk ? 'ok' : field.status,
+        };
+      }
+      return next;
+    },
+  });
   return { locale, values };
 }
 
@@ -788,58 +873,6 @@ export async function renameAccountInstanceDisplay(args: {
     instanceId: location.instanceId,
   });
   return { instanceId: location.instanceId, displayName, updatedAt };
-}
-
-export async function markAccountInstanceContentFieldsTranslated(args: {
-  env: Env;
-  instanceId: string;
-  accountId: string;
-  widgetType?: string | null;
-  locale: string;
-  targetLocales: string[];
-  paths: string[];
-}): Promise<void> {
-  const instanceId = normalizeStorageId(args.instanceId);
-  const accountId = normalizeStorageId(args.accountId);
-  if (!instanceId || !accountId) throw new Error('tokyo.errors.render.invalid');
-  const location = await resolveAccountInstanceLocation({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetType: args.widgetType,
-  });
-  if (!location) throw new Error('tokyo.errors.render.notFound');
-  const content = await readContentDocumentByLocation({
-    env: args.env,
-    accountId: location.accountId,
-    widgetCode: location.widgetCode,
-    instanceId: location.instanceId,
-  });
-  if (!content) throw new Error('coreui.errors.instance.content.invalid');
-  const next: AccountInstanceContentDocument = {
-    ...content,
-    fields: { ...content.fields },
-    updatedAt: nowIso(),
-  };
-  for (const path of args.paths) {
-    const field = next.fields[path];
-    if (field) {
-      const localeStatus = {
-        ...(field.localeStatus ?? {}),
-        [args.locale]: 'ok' as const,
-      };
-      const targetLocales = Array.from(new Set(args.targetLocales));
-      const allTargetsOk =
-        targetLocales.length === 0 ||
-        targetLocales.every((targetLocale) => localeStatus[targetLocale] === 'ok');
-      next.fields[path] = {
-        ...field,
-        status: allTargetsOk ? 'ok' : field.status,
-        localeStatus,
-      };
-    }
-  }
-  await putJson(args.env, accountInstanceContentKey(location.accountId, location.widgetCode, location.instanceId), next);
 }
 
 export async function readSavedRenderConfig(args: {

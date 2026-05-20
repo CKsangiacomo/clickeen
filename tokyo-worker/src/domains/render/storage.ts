@@ -8,11 +8,32 @@ export async function putJson(env: Env, key: string, payload: unknown): Promise<
   });
 }
 
+export async function putJsonIfUnchanged(
+  env: Env,
+  key: string,
+  payload: unknown,
+  httpEtag: string,
+): Promise<boolean> {
+  const bytes = encodeStableJson(payload);
+  const result = await env.TOKYO_R2.put(key, bytes, {
+    onlyIf: { etagMatches: httpEtag },
+    httpMetadata: { contentType: 'application/json; charset=utf-8' },
+  });
+  return result != null;
+}
+
 export async function loadJson<T>(env: Env, key: string): Promise<T | null> {
   const obj = await env.TOKYO_R2.get(key);
   if (!obj) return null;
   const json = (await obj.json().catch(() => null)) as T | null;
   return json ?? null;
+}
+
+export async function loadJsonObject<T>(env: Env, key: string): Promise<{ value: T; httpEtag: string } | null> {
+  const obj = await env.TOKYO_R2.get(key);
+  if (!obj) return null;
+  const json = (await obj.json().catch(() => null)) as T | null;
+  return json == null ? null : { value: json, httpEtag: obj.httpEtag };
 }
 
 export async function deletePrefix(env: Env, prefix: string): Promise<void> {
