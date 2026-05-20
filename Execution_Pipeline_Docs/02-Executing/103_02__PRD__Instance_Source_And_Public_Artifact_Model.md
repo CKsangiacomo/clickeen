@@ -31,6 +31,8 @@ instance.config.json = every non-text setting plus instance identity, locale set
 
 `instance.content.json` includes all customer-visible copy that a user can edit in ToolDrawer, content panels, or widget-specific text controls: titles, subtitles, CTA labels, FAQ questions and answers, captions, item labels, and any other widget string. This is the translation input.
 
+Every editable content field is stored as a string. `richtext` means sanitized HTML string, not an object. Tokyo's save/source split is the single write boundary that materializes the widget editable-field contract so downstream translation, review, publish, and runtime paths do not re-interpret content shapes service by service.
+
 `instance.config.json` includes everything else: `instanceId`, widget type/code, display name, base locale, target locales, styles, layout, structure, behavior, non-text settings, publish state, and any other non-content control state.
 
 Translated locale values apply to `instance.content.json`, not to mixed config. The product model is `locale -> translated content values`; Roma and Bob must not see `overlayId` as translation identity.

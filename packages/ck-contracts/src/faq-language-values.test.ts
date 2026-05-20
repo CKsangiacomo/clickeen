@@ -35,7 +35,7 @@ function config() {
   };
 }
 
-function graph(currentConfig = config()): FaqSavedTextField[] {
+function graph(currentConfig: Record<string, unknown> = config()): FaqSavedTextField[] {
   return buildFaqSavedTextGraph({
     contract,
     config: currentConfig,
@@ -69,6 +69,28 @@ test('FAQ text graph uses stable IDs instead of array indexes for identity', () 
   const beforeKeys = before.map((field) => faqFieldIdentityKey(field.identity)).sort();
   const afterKeys = after.map((field) => faqFieldIdentityKey(field.identity)).sort();
   assert.deepEqual(afterKeys, beforeKeys);
+});
+
+test('FAQ text graph uses the shared editable text primitive contract', () => {
+  const fields = graph({
+    header: { title: 'FAQs', subtitleHtml: { html: 'bad shape' } },
+    cta: { label: 42 },
+    sections: [
+      {
+        id: 'general',
+        title: ['bad shape'],
+        faqs: [{ id: 'pricing', question: 'What does it cost?', answer: { html: 'bad shape' } }],
+      },
+    ],
+  });
+  const values = Object.fromEntries(fields.map((field) => [field.identity.path, field.baseText]));
+
+  assert.equal(values['header.title'], 'FAQs');
+  assert.equal(values['header.subtitleHtml'], '');
+  assert.equal(values['cta.label'], '');
+  assert.equal(values['sections.0.title'], '');
+  assert.equal(values['sections.0.faqs.0.question'], 'What does it cost?');
+  assert.equal(values['sections.0.faqs.0.answer'], '');
 });
 
 test('buildCurrentLanguageValues carries unchanged translations across reorder', () => {

@@ -75,6 +75,10 @@ function asNonEmptyString(value: unknown): string | null {
   return normalized || null;
 }
 
+export function readEditableTextPrimitiveValue(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
 function parsePrimitiveType(value: unknown): WidgetTextPrimitiveType {
   return value === 'richtext' ? 'richtext' : 'string';
 }
@@ -183,13 +187,10 @@ function extractForDeclaration(args: {
 }): void {
   if (args.stepIndex >= args.steps.length) {
     const path = concretePath(args.pathParts);
-    if (typeof args.root !== 'string') {
-      throw new Error(`overlay_primitive_value_not_string:${path}`);
-    }
     args.out.push({
       ...args.declaration,
       path,
-      value: args.root,
+      value: readEditableTextPrimitiveValue(args.root),
     });
     return;
   }

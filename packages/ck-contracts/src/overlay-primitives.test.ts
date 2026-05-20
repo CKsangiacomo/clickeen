@@ -113,6 +113,32 @@ test('FAQ primitive graph extracts concrete text paths for every question and an
   assert(!paths.some((itemPath) => itemPath.includes('[]') || itemPath.includes('*')));
 });
 
+test('FAQ primitive graph materializes editable text fields as strings', () => {
+  const contract = readFaqEditableFields();
+  const items = extractTextPrimitiveValuesForEditableFields({
+    contract,
+    config: {
+      header: { title: 'FAQs', subtitleHtml: { html: 'bad shape' } },
+      cta: { label: 42 },
+      sections: [
+        {
+          id: 'general',
+          title: ['bad shape'],
+          faqs: [{ id: 'pricing', question: 'What does it cost?', answer: { html: 'bad shape' } }],
+        },
+      ],
+    },
+  });
+  const values = buildOverlayTextValueMap(items);
+
+  assert.equal(values['header.title'], 'FAQs');
+  assert.equal(values['header.subtitleHtml'], '');
+  assert.equal(values['cta.label'], '');
+  assert.equal(values['sections.0.title'], '');
+  assert.equal(values['sections.0.faqs.0.question'], 'What does it cost?');
+  assert.equal(values['sections.0.faqs.0.answer'], '');
+});
+
 test('overlay value validation rejects missing and extra concrete paths', () => {
   const spec = readFaqSpec();
   const contract = readFaqEditableFields();

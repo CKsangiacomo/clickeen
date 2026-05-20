@@ -167,6 +167,66 @@ test('saved instance writes split source files under the instance folder', async
   assert.equal(Object.prototype.hasOwnProperty.call(saved.value.pointer, 'sourceVersion'), false);
 });
 
+test('saved instance source writes FAQ editable text fields as string content', async () => {
+  const { env, objects } = createTestEnv();
+
+  await writeSavedRenderConfig({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'faq',
+    displayName: 'FAQ',
+    meta: null,
+    config: {
+      header: { enabled: true, title: 'FAQs', subtitleHtml: { html: 'bad shape' } },
+      cta: { label: 42 },
+      sections: [
+        {
+          id: 'general',
+          title: ['bad shape'],
+          faqs: [{ id: 'pricing', question: 'What does it cost?', answer: { html: 'bad shape' }, defaultOpen: false }],
+        },
+      ],
+    },
+  });
+
+  const contentSource = jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.content.json`);
+  const fields = contentSource.fields as Record<string, { value: unknown; status: unknown }>;
+  assert.equal(fields['header.title']?.value, 'FAQs');
+  assert.equal(fields['header.subtitleHtml']?.value, '');
+  assert.equal(fields['cta.label']?.value, '');
+  assert.equal(fields['sections.0.title']?.value, '');
+  assert.equal(fields['sections.0.faqs.0.question']?.value, 'What does it cost?');
+  assert.equal(fields['sections.0.faqs.0.answer']?.value, '');
+
+  const configSource = jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.config.json`);
+  const sourceConfig = configSource.config as Record<string, unknown>;
+  const header = sourceConfig.header as Record<string, unknown>;
+  const cta = sourceConfig.cta as Record<string, unknown>;
+  const sections = sourceConfig.sections as Array<Record<string, unknown>>;
+  const faqs = sections[0]?.faqs as Array<Record<string, unknown>>;
+  assert.equal(header.title, undefined);
+  assert.equal(header.subtitleHtml, undefined);
+  assert.equal(cta.label, undefined);
+  assert.equal(sections[0]?.title, undefined);
+  assert.equal(faqs[0]?.question, undefined);
+  assert.equal(faqs[0]?.answer, undefined);
+
+  const saved = await readSavedRenderConfig({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });
+  assert.equal(saved.ok, true);
+  if (!saved.ok) return;
+  const savedHeader = saved.value.config.header as Record<string, unknown>;
+  const savedCta = saved.value.config.cta as Record<string, unknown>;
+  const savedSections = saved.value.config.sections as Array<Record<string, unknown>>;
+  const savedFaqs = savedSections[0]?.faqs as Array<Record<string, unknown>>;
+  assert.equal(savedHeader.title, 'FAQs');
+  assert.equal(savedHeader.subtitleHtml, '');
+  assert.equal(savedCta.label, '');
+  assert.equal(savedSections[0]?.title, '');
+  assert.equal(savedFaqs[0]?.question, 'What does it cost?');
+  assert.equal(savedFaqs[0]?.answer, '');
+});
+
 test('save updates source and publish materializes public artifacts without publish.json', async () => {
   const { env, objects } = createTestEnv();
   seedProductSources(objects);

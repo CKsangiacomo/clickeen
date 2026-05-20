@@ -66,7 +66,7 @@ Rules:
 - Widget software lives only under `product/widgets/{widgetType}/`. `widgetType` and `widgetCode` may appear as metadata/codebook identity; they are never R2 locators for account instances.
 - `{instanceId}` is a stable generated 10-character uppercase base36 ID. It is not derived from widget type, display name, UUID, timestamp, or any old `ins_*` string.
 - `instance.config.json` carries non-text config plus instance identity/display, widget type/code, base locale, target locales, publish status, and timestamps.
-- `instance.content.json` carries base user-visible text values in the same editable paths Bob exposes, plus `ok`/`changed` translation pickup status. This is the translation input source.
+- `instance.content.json` carries base user-visible text values in the same editable paths Bob exposes, plus `ok`/`changed` translation pickup status. This is the translation input source. Every value is a string; rich text is sanitized HTML string content, not an object.
 - `instance.json` remains a transitional compatibility mirror only. Runtime code may read it to migrate old instances, but new product meaning must not be added to it.
 - Saved source does not carry `sourceVersion` or generic generation lanes. Translation and publish work use product operation state, content field status, and queue/job boundaries.
 - `overlays/{overlayId}.json` is still the transitional storage shape for locale values. It is not a product UI contract and must not leak as locale identity.

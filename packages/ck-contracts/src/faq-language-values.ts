@@ -1,4 +1,8 @@
-import type { WidgetEditableFieldsContract, WidgetEditableField } from './overlay-primitives';
+import {
+  readEditableTextPrimitiveValue,
+  type WidgetEditableFieldsContract,
+  type WidgetEditableField,
+} from '@clickeen/ck-contracts/overlay-primitives';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -137,7 +141,7 @@ export function buildFaqSavedTextGraph(args: {
         instanceId: args.instanceId,
         field,
         path,
-        value: asString(value),
+        value: readEditableTextPrimitiveValue(value),
       }),
     );
   }
@@ -158,7 +162,7 @@ export function buildFaqSavedTextGraph(args: {
         field: fieldByPath(args.contract, 'sections[].title'),
         path: `sections.${sectionIndex}.title`,
         sectionId,
-        value: asString(rawSection.title),
+        value: readEditableTextPrimitiveValue(rawSection.title),
       }),
     );
 
@@ -180,7 +184,7 @@ export function buildFaqSavedTextGraph(args: {
             path: `sections.${sectionIndex}.faqs.${faqIndex}.${leaf}`,
             sectionId,
             faqId,
-            value: asString(rawFaq[leaf]),
+            value: readEditableTextPrimitiveValue(rawFaq[leaf]),
           }),
         );
       }
