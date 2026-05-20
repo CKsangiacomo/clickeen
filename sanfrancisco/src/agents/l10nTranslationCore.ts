@@ -31,9 +31,6 @@ const MAX_BATCH_ITEMS = 80;
 const MAX_BATCH_INPUT_CHARS = 4000;
 export const MAX_TOTAL_ITEMS = 800;
 export const MAX_TOTAL_INPUT_CHARS = 60000;
-const MAX_TOKENS = 900;
-const TIMEOUT_MS = 35_000;
-
 const URL_PATTERN = /^https?:\/\/\S+$/i;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UNICODE_LETTER_PATTERN = /[\p{L}\p{M}]/u;
@@ -107,8 +104,6 @@ export async function executeTranslationModel(args: {
       { role: 'user', content: args.user },
     ],
     temperature: 0.2,
-    maxTokens: MAX_TOKENS,
-    timeoutMs: TIMEOUT_MS,
   });
 }
 

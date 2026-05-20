@@ -156,6 +156,7 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 - Final widget catalog decision from 103_01.2: replace generated manifest authority with `listWidgetDefinitions` and `getWidgetDefinition`; keep `catalog.json` only as small listing metadata; delete broad manifest/catalog product assembly.
 - Current-language storage primitive: Tokyo overlay object `{ v: 1, values }` under the owning instance.
 - Delta source for Generate: `instance.content.json` marks editable text fields `changed` or `ok`, with per-locale completion status; Tokyo Generate selects missing translated values plus fields marked `changed`.
+- Instance Translation runtime budget authority: Tokyo queues the `widget.instance.translator` job with the `ck-policy` runtime budget, and San Francisco sends provider calls through `callChatCompletion` without a local hard-coded token/timeout cap.
 - Account instance authoring operations: Roma calls Tokyo product operations for list/create/open/save/rename/duplicate/delete, not `index.json`, `saved.json`, `save.json`, or storage-shaped duplicate/delete routes.
 - Account instance publish operations: Roma calls Tokyo product operations for publish/unpublish, not publish/unpublish storage file routes or `serve-state.json`.
 - Translation job acceptance implementation: Tokyo `generateTranslations`; Roma is only the account/request boundary.

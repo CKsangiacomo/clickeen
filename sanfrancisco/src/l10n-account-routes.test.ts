@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   handleInstanceTranslationAgent,
   normalizeInstanceTranslationAgentRequest,
+  produceCurrentLanguageValues,
   produceInstanceTranslationValues,
 } from './l10n-account-routes.ts';
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
@@ -214,4 +215,69 @@ test('Instance Translation Agent audit event carries policy version and resolved
   assert.equal(events[0]?.usage.model, 'deepseek-chat');
   assert.equal(events[0]?.usage.promptTokens, 0);
   assert.equal(events[0]?.usage.completionTokens, 0);
+});
+
+test('Instance Translation Agent model calls use the policy grant budget', async () => {
+  const resolved = resolveAiAgent('widget.instance.translator');
+  assert(resolved);
+  const ai = resolveAiRuntimePolicy({ entry: resolved.entry, policyProfile: 'tier3' });
+  assert.equal(ai.defaultModel.provider, 'openai');
+  assert.equal(ai.defaultModel.model, 'gpt-5-mini');
+
+  const originalFetch = globalThis.fetch;
+  let requestBody: Record<string, any> | null = null;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    requestBody = init?.body ? JSON.parse(String(init.body)) : null;
+    return new Response(
+      JSON.stringify({
+        model: 'gpt-5-mini-2025-08-07',
+        choices: [
+          {
+            finish_reason: 'stop',
+            message: {
+              content: JSON.stringify({
+                items: [{ path: 'cta.label', value: 'Jetzt buchen' }],
+              }),
+            },
+          },
+        ],
+        usage: {
+          prompt_tokens: 11,
+          completion_tokens: 20,
+          completion_tokens_details: { reasoning_tokens: 4 },
+        },
+      }),
+      { headers: { 'content-type': 'application/json' } },
+    );
+  }) as typeof fetch;
+
+  try {
+    const result = await produceCurrentLanguageValues({
+      env: { ...env, OPENAI_API_KEY: 'test-key' } as Env,
+      grant: {
+        v: 1,
+        iss: 'roma',
+        sub: { kind: 'user', userId: 'usr_test', accountId: 'acc_test' },
+        exp: Math.floor(Date.now() / 1000) + 60,
+        caps: ['agent:widget.instance.translator'],
+        budgets: { maxTokens: ai.maxTokensPerCall, timeoutMs: ai.timeoutMs },
+        mode: 'ops',
+        ai,
+      },
+      request: {
+        v: 1,
+        widgetType: 'faq',
+        sourceLanguage: 'en',
+        targetLanguage: 'de',
+        items: [{ path: 'cta.label', type: 'string', label: 'CTA label', role: 'cta-label', value: 'Book now' }],
+      },
+    });
+
+    assert.equal(result.values['cta.label'], 'Jetzt buchen');
+    assert.equal(requestBody?.model, 'gpt-5-mini');
+    assert.equal(requestBody?.max_completion_tokens, ai.maxTokensPerCall);
+    assert.equal(requestBody?.reasoning_effort, 'minimal');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

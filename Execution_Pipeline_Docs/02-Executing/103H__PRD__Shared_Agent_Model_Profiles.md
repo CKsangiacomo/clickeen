@@ -63,4 +63,5 @@ This PRD is not allowed to invent a policy layer. DevStudio-managed policy/caps/
 - `AgentRuntimePolicy` now carries `policyProfile` alongside `policyVersion`, provider, model, and budget.
 - Roma continues to mint both Copilot and Instance Translation grants from `ck-policy`.
 - San Francisco continues to resolve provider/model from the grant policy through `ai/modelRouter.ts`; product agents do not call provider adapters directly.
+- San Francisco Instance Translation model calls use the signed grant budget from `ck-policy`. The translation core no longer applies a local hard-coded token or timeout cap over the tier/profile budget.
 - The current shared model catalog does not contain `gpt-5.5`; Tier 3 Translation is therefore proven through the matrix/catalog path with the current OpenAI profile rather than hardcoding a model name outside the catalog.
