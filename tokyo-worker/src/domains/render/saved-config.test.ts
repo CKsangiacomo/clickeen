@@ -236,6 +236,94 @@ test('product instance list reads source files without account index handoff', a
   ]);
 });
 
+test('product instance list does not inspect FAQ content fields', async () => {
+  const { env, objects } = createTestEnv();
+  objects.set(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.config.json`, {
+    kind: 'json',
+    payload: {
+      id: INSTANCE_ID,
+      accountId: ACCOUNT_ID,
+      accountPublicId: ACCOUNT_ID,
+      widgetCode: 'FAQ',
+      widgetType: 'faq',
+      displayName: 'FAQ with rich subtitle',
+      meta: null,
+      config: {},
+      baseLocale: 'en',
+      targetLocales: [],
+      embedBuildShape: {
+        rendering: 'html',
+        seoMode: 'off',
+        locales: ['en'],
+        clientSide: 'minimal-js',
+      },
+      publishStatus: 'unpublished',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  });
+  objects.set(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.content.json`, {
+    kind: 'json',
+    payload: {
+      id: INSTANCE_ID,
+      accountId: ACCOUNT_ID,
+      widgetType: 'faq',
+      fields: {
+        'header.subtitleHtml': {
+          value: { html: 'Wrong shape from an old authoring save' },
+          status: 'changed',
+        },
+      },
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  });
+
+  const instances = await listAccountInstancesBySource({ env, accountId: ACCOUNT_ID });
+
+  assert.deepEqual(instances, [
+    {
+      accountId: ACCOUNT_ID,
+      instanceId: INSTANCE_ID,
+      widgetCode: 'FAQ',
+      widgetType: 'faq',
+      displayName: 'FAQ with rich subtitle',
+      publishStatus: 'unpublished',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ]);
+});
+
+test('product instance list ignores instance.json compatibility files', async () => {
+  const { env, objects } = createTestEnv();
+  objects.set(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`, {
+    kind: 'json',
+    payload: {
+      v: 1,
+      id: INSTANCE_ID,
+      accountId: ACCOUNT_ID,
+      accountPublicId: ACCOUNT_ID,
+      widgetCode: 'FAQ',
+      widgetType: 'faq',
+      displayName: 'Compatibility file only',
+      meta: null,
+      config: {},
+      baseLocale: 'en',
+      targetLocales: [],
+      embedBuildShape: {
+        rendering: 'html',
+        seoMode: 'off',
+        locales: ['en'],
+        clientSide: 'minimal-js',
+      },
+      publishStatus: 'unpublished',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  });
+
+  assert.deepEqual(await listAccountInstancesBySource({ env, accountId: ACCOUNT_ID }), []);
+});
+
 test('rename updates display state without rewriting content status', async () => {
   const { env, objects } = createTestEnv();
   await writeSavedRenderConfig({

@@ -42,27 +42,27 @@ function normalizeMeta(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function displayNameFromInstance(instance: AccountInstanceDocument): string {
-  const displayName = normalizeDisplayName(instance.displayName);
+function displayNameFromConfigDocument(configDoc: AccountInstanceConfigDocument): string {
+  const displayName = normalizeDisplayName(configDoc.displayName);
   if (displayName) return displayName;
-  const meta = instance.meta && typeof instance.meta === 'object' && !Array.isArray(instance.meta) ? instance.meta : null;
+  const meta = configDoc.meta && typeof configDoc.meta === 'object' && !Array.isArray(configDoc.meta) ? configDoc.meta : null;
   return (
     normalizeDisplayName(meta?.styleName) ??
     normalizeDisplayName(meta?.name) ??
     normalizeDisplayName(meta?.title) ??
-    instance.id
+    configDoc.id
   );
 }
 
-function summaryFromInstance(instance: AccountInstanceDocument): AccountInstanceSummary {
+function summaryFromConfigDocument(configDoc: AccountInstanceConfigDocument): AccountInstanceSummary {
   return {
-    accountId: instance.accountId,
-    instanceId: instance.id,
-    widgetCode: instance.widgetCode,
-    widgetType: instance.widgetType,
-    displayName: displayNameFromInstance(instance),
-    publishStatus: instance.publishStatus,
-    updatedAt: instance.updatedAt,
+    accountId: configDoc.accountId,
+    instanceId: configDoc.id,
+    widgetCode: configDoc.widgetCode,
+    widgetType: configDoc.widgetType,
+    displayName: displayNameFromConfigDocument(configDoc),
+    publishStatus: configDoc.publishStatus,
+    updatedAt: configDoc.updatedAt,
   };
 }
 
@@ -77,7 +77,7 @@ function sortAccountInstanceSummaries(entries: AccountInstanceSummary[]): Accoun
 }
 
 function extractInstanceIdFromSourceKey(key: string): string | null {
-  const match = key.match(/\/instances\/([^/]+)\/instance\.(?:config\.)?json$/);
+  const match = key.match(/\/instances\/([^/]+)\/instance\.config\.json$/);
   return match ? normalizeStorageId(match[1] || '') : null;
 }
 
@@ -359,6 +359,17 @@ async function readContentDocumentByLocation(args: {
   };
 }
 
+async function readAccountInstanceSummaryByLocation(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+}): Promise<AccountInstanceSummary | null> {
+  const configDoc = normalizeAccountInstanceConfigDocument(
+    await loadJson(args.env, accountInstanceConfigKey(args.accountId, '', args.instanceId)),
+  );
+  return configDoc ? summaryFromConfigDocument(configDoc) : null;
+}
+
 async function readComposedInstanceByLocation(args: {
   env: Env;
   accountId: string;
@@ -593,12 +604,8 @@ export async function listAccountInstancesBySource(args: {
 
   const summaries: AccountInstanceSummary[] = [];
   for (const instanceId of instanceIds) {
-    const instance = await readAccountInstanceDocument({ env: args.env, accountId, instanceId });
-    if (!instance.ok) {
-      if (instance.kind === 'NOT_FOUND') continue;
-      throw new Error(instance.reasonKey);
-    }
-    summaries.push(summaryFromInstance(instance.value));
+    const summary = await readAccountInstanceSummaryByLocation({ env: args.env, accountId, instanceId });
+    if (summary) summaries.push(summary);
   }
   return sortAccountInstanceSummaries(summaries);
 }
