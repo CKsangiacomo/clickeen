@@ -28,7 +28,10 @@ import {
   resolveLearningCaptureDecision,
   verifyOutcomeSignature,
 } from './telemetry';
-import { handleInstanceTranslationQueueMessage } from './instance-translation-queue';
+import {
+  handleInstanceTranslationQueueMessage,
+  isInstanceTranslationQueueMessage,
+} from './instance-translation-queue';
 import type {
   AIGrant,
   Env,
@@ -277,10 +280,18 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
 
   async queue(batch: MessageBatch<unknown>): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
+    const nonTranslationMessages: Message<unknown>[] = [];
+    const translationMessages: Message<unknown>[] = [];
     for (const msg of batch.messages) {
-      if (await handleInstanceTranslationQueueMessage(this.env, msg)) {
-        continue;
-      }
+      if (isInstanceTranslationQueueMessage(msg.body)) translationMessages.push(msg);
+      else nonTranslationMessages.push(msg);
+    }
+
+    await Promise.all(
+      translationMessages.map((msg) => handleInstanceTranslationQueueMessage(this.env, msg)),
+    );
+
+    for (const msg of nonTranslationMessages) {
       const e = msg.body;
       if (!e || typeof e !== 'object' || Array.isArray(e)) {
         msg.ack();
