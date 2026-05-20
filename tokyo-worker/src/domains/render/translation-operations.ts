@@ -8,7 +8,6 @@ import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import {
   buildFaqSavedTextGraph,
   faqFieldIdentityKey,
-  type FaqLanguageValue,
   type FaqSavedTextField,
 } from '@clickeen/ck-contracts/faq-language-values';
 import { resolveLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
@@ -115,21 +114,6 @@ function resolveTranslationRuntime(args: {
   };
 }
 
-function previousLanguageValuesFromMap(args: {
-  fields: FaqSavedTextField[];
-  locale: string;
-  values: Record<string, string>;
-}): FaqLanguageValue[] {
-  return args.fields
-    .filter((field) => typeof args.values[field.identity.path] === 'string')
-    .map((field) => ({
-      identity: field.identity,
-      locale: args.locale,
-      value: args.values[field.identity.path] as string,
-      updatedAt: new Date(0).toISOString(),
-    }));
-}
-
 function deletedFieldKeys(args: {
   previousSavedTextGraph: FaqSavedTextField[];
   currentSavedTextGraph: FaqSavedTextField[];
@@ -153,15 +137,6 @@ function fieldComparable(field: FaqSavedTextField): string {
   });
 }
 
-function languageValueComparable(value: FaqLanguageValue): string {
-  return JSON.stringify({
-    key: faqFieldIdentityKey(value.identity),
-    path: value.identity.path,
-    locale: value.locale,
-    value: value.value,
-  });
-}
-
 function sameChangedFieldBasis(args: {
   currentSavedTextGraph: FaqSavedTextField[];
   jobChangedFields: FaqSavedTextField[];
@@ -170,23 +145,6 @@ function sameChangedFieldBasis(args: {
   return args.jobChangedFields.every((field) => {
     const latest = current.get(faqFieldIdentityKey(field.identity));
     return Boolean(latest) && fieldComparable(latest!) === fieldComparable(field);
-  });
-}
-
-function sameChangedLanguageValueBasis(args: {
-  currentLanguageValues: FaqLanguageValue[];
-  previousLanguageValues: FaqLanguageValue[];
-  changedFields: FaqSavedTextField[];
-}): boolean {
-  const current = new Map(args.currentLanguageValues.map((value) => [faqFieldIdentityKey(value.identity), value]));
-  const previous = new Map(args.previousLanguageValues.map((value) => [faqFieldIdentityKey(value.identity), value]));
-  return args.changedFields.every((field) => {
-    const key = faqFieldIdentityKey(field.identity);
-    const currentValue = current.get(key);
-    const previousValue = previous.get(key);
-    if (!currentValue && !previousValue) return true;
-    if (!currentValue || !previousValue) return false;
-    return languageValueComparable(currentValue) === languageValueComparable(previousValue);
   });
 }
 
@@ -314,11 +272,6 @@ export async function generateInstanceTranslations(args: {
   const jobs: InstanceTranslationJob[] = [];
   const skippedLocales: string[] = [];
   const requestedAt = new Date().toISOString();
-  const changedContentPaths = new Set(
-    Object.entries(content.value.fields)
-      .filter(([, field]) => field.status === 'changed')
-      .map(([path]) => path),
-  );
 
   for (const locale of uniqueTargetLocales) {
     if (!resolveLanguageOverlayCode(locale)) {
@@ -330,28 +283,10 @@ export async function generateInstanceTranslations(args: {
       });
     }
 
-    const existing = await readTranslatedLocaleValues({
-      env: args.env,
-      accountId: args.accountId,
-      instanceId: args.instanceId,
-      locale,
-    });
-
     const previousSavedTextGraph = currentSavedTextGraph;
-    const previousLanguageValues = existing
-      ? previousLanguageValuesFromMap({
-          fields: currentSavedTextGraph,
-          locale,
-          values: existing.values,
-        })
-      : [];
-    const existingValueKeys = new Set(previousLanguageValues.map((value) => faqFieldIdentityKey(value.identity)));
     const changedFields = currentSavedTextGraph.filter((field) => {
-      const key = faqFieldIdentityKey(field.identity);
       const contentField = content.value.fields[field.identity.path];
-      const localeStatus = contentField?.localeStatus?.[locale];
-      const globallyChangedForLocale = changedContentPaths.has(field.identity.path) && localeStatus !== 'ok';
-      return globallyChangedForLocale || localeStatus === 'changed' || !existingValueKeys.has(key);
+      return contentField?.localeStatus?.[locale] !== 'ok';
     });
     if (!changedFields.length) {
       skippedLocales.push(locale);
@@ -377,7 +312,7 @@ export async function generateInstanceTranslations(args: {
       budgets: runtime.budgets,
       previousSavedTextGraph,
       currentSavedTextGraph,
-      previousLanguageValues,
+      previousLanguageValues: [],
       changedFields,
       deletedFieldKeys: deletedFieldKeys({ previousSavedTextGraph, currentSavedTextGraph }),
     });
@@ -481,26 +416,6 @@ export async function completeLocaleTranslation(args: {
     instanceId: args.instanceId,
     locale,
   });
-  const currentLanguageValues = existing
-    ? previousLanguageValuesFromMap({
-        fields: job.currentSavedTextGraph,
-        locale,
-        values: existing.values,
-      })
-    : [];
-  if (!sameChangedLanguageValueBasis({
-    currentLanguageValues,
-    previousLanguageValues: job.previousLanguageValues,
-    changedFields: job.changedFields,
-  })) {
-    return {
-      ok: true,
-      applied: false,
-      locale,
-      reasonKey: 'instance.translation.stale_locale_values',
-      detail: 'Current translated values for the translated fields no longer match the translation job basis.',
-    };
-  }
 
   let nextValues: Record<string, string>;
   try {

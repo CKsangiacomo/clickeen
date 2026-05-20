@@ -150,7 +150,7 @@ Friendly routes must not create root `widgets/`, `themes/`, `public/`, `publishe
 
 Tokyo-worker does not consume the old render snapshot/mirror queue.
 
-The only queue binding Tokyo-worker currently owns in this area is the `INSTANCE_TRANSLATION_JOBS` producer. Generate translations resolves account instance content, editable field contracts, current translated values, and policy, then sends locale translation jobs for San Francisco to consume. Tokyo-worker does not use a queue to delete account instances or to mirror public artifacts.
+The only queue binding Tokyo-worker currently owns in this area is the `INSTANCE_TRANSLATION_JOBS` producer. Generate translations resolves account instance content, editable field contracts, field-level locale status, and policy, then sends locale translation jobs for San Francisco to consume. It does not scan overlay files before queueing. Tokyo-worker does not use a queue to delete account instances or to mirror public artifacts.
 
 ## Delete, Publish, And Unpublish
 

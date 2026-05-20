@@ -96,7 +96,7 @@ function translationJob(): InstanceTranslationJob {
   };
 }
 
-test('San Francisco queue job merges changed values and completes one translated locale in Tokyo', async () => {
+test('San Francisco queue job completes one translated locale with changed values only', async () => {
   const writes: Array<Record<string, any>> = [];
   let acked = false;
   const env = {
@@ -131,5 +131,5 @@ test('San Francisco queue job merges changed values and completes one translated
   assert.equal(writes.length, 1);
   assert.equal(writes[0]?.job.jobId, 'job-queue-it');
   assert.equal(writes[0]?.values['sections.0.faqs.0.answer'], 'https://example.com/new-room-list');
-  assert.equal(writes[0]?.values['header.title'], 'it-old:FAQs');
+  assert.equal(Object.prototype.hasOwnProperty.call(writes[0]?.values ?? {}, 'header.title'), false);
 });

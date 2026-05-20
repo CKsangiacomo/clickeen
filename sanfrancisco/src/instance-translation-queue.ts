@@ -45,31 +45,6 @@ function buildGrant(job: InstanceTranslationJob): AIGrant {
   };
 }
 
-function mergeProducedValues(job: InstanceTranslationJob, producedValues: Record<string, string>): Record<string, string> {
-  const changedPaths = new Set(job.changedFields.map((field) => field.identity.path));
-  const previousValues = new Map(job.previousLanguageValues.map((value) => [value.identity.path, value.value]));
-  const values: Record<string, string> = {};
-  for (const field of job.currentSavedTextGraph) {
-    if (changedPaths.has(field.identity.path)) {
-      const translated = producedValues[field.identity.path];
-      if (typeof translated !== 'string') {
-        throw new HttpError(502, {
-          code: 'PROVIDER_ERROR',
-          provider: 'sanfrancisco',
-          message: `Instance Translation Agent did not return path: ${field.identity.path}`,
-        });
-      }
-      values[field.identity.path] = translated;
-      continue;
-    }
-    const previous = previousValues.get(field.identity.path);
-    if (typeof previous === 'string') {
-      values[field.identity.path] = previous;
-    }
-  }
-  return values;
-}
-
 function usageForFailure(job: InstanceTranslationJob, startedAtMs: number): Usage {
   const model = job.ai.selectedModel ?? job.ai.defaultModel;
   return {
@@ -121,26 +96,13 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
     });
   }
 
-  const values = mergeProducedValues(job, produced.values);
-  const validation = validateOverlayValuesForProducerItems(
-    job.currentSavedTextGraph.map(fieldToTranslationItem),
-    values,
-  );
-  if (!validation.ok) {
-    throw new HttpError(502, {
-      code: 'PROVIDER_ERROR',
-      provider: 'sanfrancisco',
-      message: `merged translation values ${validation.reason}: ${validation.path}`,
-    });
-  }
-
   const completion = await completeLocaleTranslationInTokyo({
     env,
     accountPublicId: job.accountPublicId,
     instanceId: job.instanceId,
     targetLocale: job.targetLocale,
     job,
-    values,
+    values: produced.values,
     requestId: job.requestId,
   });
 

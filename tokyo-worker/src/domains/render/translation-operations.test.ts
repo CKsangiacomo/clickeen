@@ -16,6 +16,7 @@ import {
   generateInstanceTranslations,
 } from './translation-operations.ts';
 import {
+  listTranslatedLocales,
   readTranslatedLocaleValues,
   writeTranslatedLocaleValues,
 } from './overlays.ts';
@@ -191,6 +192,13 @@ test('Tokyo completion writes locale values only while the saved text basis is c
     locale: 'it',
     values,
   });
+  assert.deepEqual(await listTranslatedLocales({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  }), [
+    { locale: 'it' },
+  ]);
 
   const nextConfig = resolveWidgetDefaults('faq');
   assert(nextConfig);
@@ -221,7 +229,7 @@ test('Tokyo completion writes locale values only while the saved text basis is c
   });
 });
 
-test('Tokyo completion ignores stale jobs after newer locale values exist', async () => {
+test('Tokyo completion overwrites generated fields after temporary locale edits', async () => {
   const { env, queued } = createTestEnv();
   const values = await seedSavedFaqInstance(env);
 
@@ -255,11 +263,15 @@ test('Tokyo completion ignores stale jobs after newer locale values exist', asyn
     values,
   }), {
     ok: true,
-    applied: false,
+    applied: true,
     locale: 'it',
-    reasonKey: 'instance.translation.stale_locale_values',
-    detail: 'Current translated values for the translated fields no longer match the translation job basis.',
   });
+  assert.equal((await readTranslatedLocaleValues({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+  }))?.values['header.title'], values['header.title']);
 });
 
 test('Tokyo generate queues only changed fields for an existing translated locale', async () => {

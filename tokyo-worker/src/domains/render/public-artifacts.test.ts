@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Env } from '../../types.ts';
 import {
+  markAccountInstanceContentFieldsTranslated,
   materializeInstancePublicArtifacts,
   writeSavedRenderConfig,
   writeTranslatedLocaleValues,
@@ -122,19 +123,28 @@ test('Tokyo materializes base and translated public artifacts from instance sour
     meta: { baseLocale: 'en', targetLocales: ['it'] },
     config: faqConfig(),
   });
+  const values = {
+    'header.title': 'Domande',
+    'header.subtitleHtml': 'Risposte rapide',
+    'cta.label': 'Contattaci',
+    'sections.0.title': 'Nozioni di base',
+    'sections.0.faqs.0.question': 'Quanto costa?',
+    'sections.0.faqs.0.answer': 'I piani partono gratis.',
+  };
   await writeTranslatedLocaleValues({
     env,
     accountId: ACCOUNT_ID,
     instanceId: INSTANCE_ID,
     locale: 'it',
-    values: {
-      'header.title': 'Domande',
-      'header.subtitleHtml': 'Risposte rapide',
-      'cta.label': 'Contattaci',
-      'sections.0.title': 'Nozioni di base',
-      'sections.0.faqs.0.question': 'Quanto costa?',
-      'sections.0.faqs.0.answer': 'I piani partono gratis.',
-    },
+    values,
+  });
+  await markAccountInstanceContentFieldsTranslated({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+    targetLocales: ['it'],
+    paths: Object.keys(values),
   });
 
   const result = await materializeInstancePublicArtifacts({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });

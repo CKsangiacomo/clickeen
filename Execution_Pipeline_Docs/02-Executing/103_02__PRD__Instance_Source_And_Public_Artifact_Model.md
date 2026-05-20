@@ -113,7 +113,7 @@ Audit and classify:
 - Manual translation edits overwrite current translated locale values temporarily. Regeneration may overwrite them.
 - Generated public files are not source authority and must not define publish state.
 - Delete `accounts/{accountPublicId}/instances/index.json` as a product model. `listAccountInstances` is the product operation. Do not preserve a JSON file handoff that Roma knows about.
-- Roma must not compute translation jobs from widget catalog artifacts plus overlay files. Roma's responsibility is to accept the user's Generate intent for an instance. The translation owner must load the saved instance content, editable-fields contract, existing translated values, policy/model profile, and delta rules.
+- Roma must not compute translation jobs from widget catalog artifacts plus overlay files. Roma's responsibility is to accept the user's Generate intent for an instance. The translation owner must load the saved instance content, editable-fields contract, field-level locale status, policy/model profile, and delta rules.
 - Roma must not expose overlay file/object identity as the UI contract. Bob/Roma should ask for translated locale inventory and translated locale values; Tokyo may store those as overlay files internally.
 - Delete `generation.translations.status`, `generation.embed.status`, file lanes, and generated file inventories from the instance source model. Async job state belongs to the queue/job/workflow infrastructure, not to `instance.content.json` or `instance.config.json`. Product operations may expose accepted/running/complete/error status from that infrastructure when needed.
 - Rename must not use the full saved-config/source write path if it only changes identity/display metadata.
@@ -134,7 +134,7 @@ Starter/default business copy belongs in normal account-owned starter instances 
 | `openAccountInstance` | Tokyo-worker with Roma authorization | Builder open loads one approved instance source; publish state must not block editing. |
 | `saveAccountInstance` / rename | Tokyo-worker | Save writes approved content/config source. Rename is an identity/display transition in config, not a content or generated-artifact rewrite. |
 | `generateTranslations` | Tokyo-worker operation owner; San Francisco text-production delegate | Roma accepts user intent only. Tokyo resolves source, fields, existing locale values, policy/model profile, and queued work. |
-| San Francisco translation production | San Francisco | SF translates text values but writes completion through Tokyo product operations, not overlay storage routes. |
+| San Francisco translation production | San Francisco | SF translates changed text values and writes completion through Tokyo product operations, not overlay storage routes. |
 | `completeLocaleTranslation`, `listTranslatedLocales`, `readTranslatedLocaleValues`, `writeTranslatedLocaleValues` | Tokyo-worker | Tokyo validates against approved instance content/editable-field contract and owns persisted locale values. |
 | Public artifact materialization | Tokyo-worker, with San Francisco as text/AI delegate only where needed | Tokyo owns readiness because it owns source, translation values, publish state, and public serving. |
 | `publishInstance` / `unpublishInstance` | Tokyo-worker | Product publish state lives in approved instance config/state and is not file presence or file rename state. |
@@ -196,8 +196,8 @@ Routes are implementation details. This is the concrete product-operation cleanu
 | `listAccountInstances` | `index.json` account read model as Roma product API | Tokyo returns account instance summaries. `instances/index.json` is deleted as product model; no Roma-facing JSON handoff survives. |
 | `openAccountInstance` | `saved.json` render-file source read | Tokyo returns approved instance config/content and product metadata. |
 | `saveAccountInstance` | save render config, re-read source, patch account index | Tokyo writes approved source once and returns saved state/summary. |
-| `generateTranslations` | Roma catalog fetch + overlay inventory list + N overlay reads + queue send | Tokyo resolves editable fields, content delta, existing translated values, policy/model profile, and queues work. |
-| `completeLocaleTranslation` | SF writes overlay object through storage route | Tokyo accepts one locale value map, records the current translation values, and triggers downstream artifact work if needed. |
+| `generateTranslations` | Roma catalog fetch + overlay inventory list + N overlay reads + queue send | Tokyo resolves editable fields, content field locale status, policy/model profile, and queues work. |
+| `completeLocaleTranslation` | SF writes overlay object through storage route | Tokyo accepts changed locale values, merges them into current translation values, and triggers downstream artifact work if needed. |
 | `listTranslatedLocales` | overlay inventory, selected pointer, latest complete overlay resolution | Tokyo returns locale summaries without exposing overlay IDs or file paths. |
 | `readTranslatedLocaleValues` | `overlays/{overlayId}.json` reads | Tokyo returns values by `instanceId + locale`, not overlay object identity. |
 | `writeTranslatedLocaleValues` | manual overlay write route | Tokyo overwrites current locale values; manual edits are temporary and may be replaced by regeneration. |
@@ -325,10 +325,10 @@ The following flows must be redesigned as direct product operations. The target 
 | --- | --- | --- | --- |
 | Save instance | Read existing instance, write instance JSON, re-read instance to patch account `index.json`, read index, write index. | A save updates source plus a derived file cache through read-after-write. | `saveAccountInstance` writes approved source once and returns instance summary. Derived cache is updated from in-memory result or deleted. |
 | List account instances | Roma reads `index.json`; repair path can rebuild by listing every instance document and reading each one. | Listing depends on generated read model and repair scans. | `listAccountInstances` is owned by Tokyo and sourced from the approved instance model. No Roma-facing index JSON handoff. |
-| Generate translations | Roma reads instance, reads widget catalog, lists overlay inventory, reads overlay object per locale, then sends queue jobs. | Generate reconstructs translation delta from storage artifacts before queueing. | `generateTranslations(instanceId)` accepts user intent; Tokyo resolves field contract, existing locale values, missing/changed fields, and queues work. |
+| Generate translations | Roma reads instance, reads widget catalog, lists overlay inventory, reads overlay object per locale, then sends queue jobs. | Generate reconstructs translation delta from storage artifacts before queueing. | `generateTranslations(instanceId)` accepts user intent; Tokyo resolves field contract, field-level locale status, missing/changed fields, and queues work. |
 | Translation review/list | Bob/Roma list overlay inventory, then read an overlay object by ID. Tokyo inventory lists files and validates latest complete overlay by re-reading source. | UI path pays R2 list + object reads + source reads to answer "which locales exist?" | `listTranslatedLocales(instanceId)` and `readTranslatedLocaleValues(instanceId, locale)` read product translation values directly. |
 | Manual translation edit | Roma reads saved instance only to discover widget type, then writes overlay object. | Edit uses source read as a workaround for overlay storage requirements. | `writeTranslatedLocaleValues(instanceId, locale, values)` validates and writes in Tokyo using approved instance content. |
-| San Francisco translation write | SF calls Tokyo overlay write; Tokyo reads saved instance, validates overlay against saved config, allocates version by listing overlay files, writes object, returns overlay ID. | One completed translation still triggers source read, list, validation, version-slot scan, and object write. | SF submits translated locale values; Tokyo upserts one locale translation object/value map with no version scan or overlay ID in product response. |
+| San Francisco translation write | SF calls Tokyo overlay write; Tokyo reads saved instance, validates overlay against saved config, allocates version by listing overlay files, writes object, returns overlay ID. | One completed translation still triggers source read, list, validation, version-slot scan, and object write. | SF submits changed translated locale values; Tokyo merges them into current locale values and returns no overlay ID in the product response. |
 | Publish | Tokyo reads instance, checks `index.html`, may rename `index.html.off`, reads publish state, writes publish state, purges cache. | Publish state is split between file presence and instance field. | `publishInstance` checks product readiness, sets publish status in approved config/state, and public serving uses publish status plus generated artifacts. |
 | Unpublish | Tokyo renames `index.html` to `index.html.off`, reads publish state, writes publish state, purges cache. | Unpublish is file surgery plus product state mutation. | `unpublishInstance` sets publish status; generated files may stay in place as unpublished artifacts. |
 | Public serving | For non-index files, serving first reads `index.html` to prove availability, then reads requested asset. | Every support asset can pay an extra R2 read. | Serving checks publish/artifact availability once through publish state or artifact manifest; support assets are served directly. |
@@ -341,7 +341,7 @@ The following flows must be redesigned as direct product operations. The target 
 - `listTranslatedLocales` does not list overlay files or validate translations by re-reading saved instance for every locale.
 - `readTranslatedLocaleValues` takes `instanceId + locale`, not `overlayId`.
 - `generateTranslations` does not make Roma assemble jobs from widget catalog artifacts plus overlay files.
-- Translation completion cannot overwrite newer instance source or newer locale values from an older queued job.
+- Translation completion cannot overwrite newer instance source for the fields in that job. Manual translated-locale edits are temporary overrides and may be overwritten by a later Generate completion for the same fields.
 - `publishInstance` and `unpublishInstance` do not model state as `index.html` or `index.html.off`.
 - Public serving does not use `index.html` existence as the only publish-state oracle for every support asset request.
 - Embed generation does not re-read every support file immediately after a successful write unless a documented storage consistency risk requires it.
@@ -352,7 +352,7 @@ These criteria are implementation-facing and must be checkable by code review, t
 
 - Roma has no product-path call sites for `/__internal/renders/widgets/{instanceId}/saved.json`, `/save.json`, `/index.json`, `/catalog.json`, `/serve-state.json`, `/__internal/overlays/languages/list.json`, `/__internal/overlays/{overlayId}.json`, or `/__internal/overlays/languages/write.json`.
 - Bob/Roma account routes and session commands no longer contain `locale-overlay` or `overlayId` in product-facing names or payloads.
-- San Francisco no longer calls Tokyo overlay storage write routes for instance translation completion.
+- San Francisco no longer calls Tokyo overlay storage write routes for instance translation completion and no longer sends a full merged locale overlay. It sends changed translated values; Tokyo owns merge/write.
 - Tokyo product operation responses do not include storage keys, overlay IDs, selected pointers, generated file inventories, or file lane names unless a later PRD explicitly approves one as product state.
 - `generation.translations.status` and `generation.embed.status` are deleted from authoring source. Product status, if needed, comes from the async job/workflow system through a named operation.
 - Publish and unpublish tests prove URL availability behavior without asserting `index.html.off` mechanics.
@@ -392,11 +392,11 @@ Still pending after 103_02.5:
 - Any future account-instance read model requires a separate approval and remains private below `listAccountInstances`.
 - Roma-facing overlay list/read/write paths no longer expose overlay object file names as the product API.
 - Translation Generate ownership is assigned to Tokyo; Roma does not plan rich translation jobs from catalog and overlay artifacts.
-- Translation Generate ownership/freshness is green in 103_02.3b: Roma forwards one intent, Tokyo assembles and queues work, San Francisco completes through Tokyo, and stale completion is ignored without a generic `sourceVersion`.
-- Changed-field delta for already-translated locales is closed in 103_02.3c. Tokyo writes `instance.content.json` field status, Generate selects fields that are missing or marked `changed`, and completion writes only those changed fields back into current translated locale values. Per-locale status prevents one completed locale from clearing a changed field before every Generate target locale finishes.
+- Translation Generate ownership/freshness is green in 103_02.3b: Roma forwards one intent, Tokyo assembles and queues work from `instance.content.json`, San Francisco completes through Tokyo, and stale source completion is ignored without a generic `sourceVersion`.
+- Changed-field delta for already-translated locales is closed in 103_02.3c. Tokyo writes `instance.content.json` field status, Generate selects fields whose locale status is not `ok`, and completion writes only those changed fields back into current translated locale values. Per-locale status prevents one completed locale from clearing a changed field before every Generate target locale finishes.
 - Public artifact materialization ownership is assigned. Publish readiness is checked through the named product/workflow state, not through `index.html` presence.
 - Async status fields are removed from authoring source. Any product-visible async status comes from a named job/workflow operation with one owner.
-- Stale translation queue completion cannot overwrite a newer save or newer locale value.
+- Stale translation queue completion cannot overwrite a newer save for the translated fields. Newer locale edits are temporary overrides and can be replaced by regeneration.
 - Rename has an explicit identity/display transition or the relevant metadata is deleted/split by the final source model.
 - Publish generated files are classified as generated public artifacts. Roma sees publish status and public URL behavior, not serve-state, generated file inventories, or artifact filenames.
 - The slow path inventory above is resolved or explicitly assigned to a later non-PRD-103 performance PRD with owner and rationale.

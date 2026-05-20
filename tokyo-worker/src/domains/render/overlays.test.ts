@@ -170,7 +170,7 @@ test('locale overlay inventory lists actual overlay files only', async () => {
   ]);
 });
 
-test('translated locale operations expose locale values without overlay identities', async () => {
+test('translated locale value read/write is direct by locale', async () => {
   const { env } = createTestEnv();
   const fullValues = await seedSavedFaqInstance(env);
 
@@ -189,9 +189,7 @@ test('translated locale operations expose locale values without overlay identiti
     env,
     accountId: COORDINATE.accountId,
     instanceId: COORDINATE.instanceId,
-  }), [
-    { locale: 'it' },
-  ]);
+  }), []);
 
   assert.deepEqual(await readTranslatedLocaleValues({
     env,

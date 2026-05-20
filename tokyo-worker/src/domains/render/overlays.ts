@@ -25,7 +25,11 @@ import {
   accountInstanceOverlayObjectKey,
   accountInstanceOverlayObjectPrefix,
 } from './keys';
-import { readAccountInstanceDocument, readSavedRenderConfig } from './saved-config';
+import {
+  readAccountInstanceContentDocument,
+  readAccountInstanceDocument,
+  readSavedRenderConfig,
+} from './saved-config';
 import { loadJson, putJson } from './storage';
 import type {
   OverlayObjectDocument,
@@ -318,8 +322,27 @@ export async function listTranslatedLocales(args: {
   accountId: string;
   instanceId: string;
 }): Promise<TranslatedLocaleSummary[]> {
-  const inventory = await listLocaleOverlayInventory(args);
-  return inventory.map((entry) => ({ locale: entry.locale }));
+  const content = await readAccountInstanceContentDocument({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+  });
+  if (!content.ok) return [];
+
+  const fields = Object.values(content.value.fields);
+  if (!fields.length) return [];
+
+  const candidates = new Set<string>();
+  for (const field of fields) {
+    for (const [locale, status] of Object.entries(field.localeStatus ?? {})) {
+      if (status === 'ok') candidates.add(locale);
+    }
+  }
+
+  return Array.from(candidates)
+    .filter((locale) => fields.every((field) => field.localeStatus?.[locale] === 'ok'))
+    .sort((left, right) => left.localeCompare(right))
+    .map((locale) => ({ locale }));
 }
 
 export async function readTranslatedLocaleValues(args: {
@@ -330,14 +353,27 @@ export async function readTranslatedLocaleValues(args: {
 }): Promise<TranslatedLocaleValues | null> {
   const locale = String(args.locale || '').trim();
   if (!locale) return null;
-  const inventory = await listLocaleOverlayInventory({
+  const languageCode = resolveLanguageOverlayCode(locale);
+  if (!languageCode) return null;
+  const instance = await readAccountInstanceDocument({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
   });
-  const entry = inventory.find((candidate) => candidate.locale === locale);
-  if (!entry) return null;
-  const object = await readOverlayObject({ env: args.env, overlayId: entry.overlayId });
+  if (!instance.ok) return null;
+  const overlayId = await pickLatestCompleteOverlayId({
+    env: args.env,
+    ids: await listOverlayIdsForCoordinate(args.env, {
+      accountId: args.accountId,
+      widgetCode: instance.value.widgetCode,
+      instanceId: args.instanceId,
+      languageCode,
+      experiment: DEFAULT_OVERLAY_EXPERIMENT,
+      personalization: DEFAULT_OVERLAY_PERSONALIZATION,
+    }),
+  });
+  if (!overlayId) return null;
+  const object = await readOverlayObject({ env: args.env, overlayId });
   const values = normalizeStringValues(object?.values);
   return values ? { locale, values } : null;
 }
