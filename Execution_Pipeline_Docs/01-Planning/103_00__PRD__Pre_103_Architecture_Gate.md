@@ -1,11 +1,15 @@
 # PRD 103_00 - Pre-103 Architecture Gate
 
-Status: 103_03 Automated Green / Human Smoke Pending
+Status: Planning Hold / Superseded By `103_DB_Pivot`
 Owner: Product + Architecture
-Date: 2026-05-19
+Date: 2026-05-21
 Blocks: PRD 103 and all 103A-103Z execution
 
 ## Purpose
+
+2026-05-21 update: this pre-103 gate is now itself blocked by the DB pivot. Its earlier service-vocabulary doctrine was correct but too shallow. It tried to delete storage-shaped product contracts while still allowing operational application state to live in Cloudflare/R2 JSON objects. The corrected architecture is now captured by `103_DB_Pivot`: operational state belongs in Supabase, public served artifacts belong in R2/CDN, and publish/materialization is the bridge.
+
+This file remains planning context only. Do not execute more product PRD 103 work from this plan until `103_DB_Pivot` is green.
 
 Stop PRD 103 execution until the source model is simple, explicit, and shared by every service.
 
@@ -270,7 +274,7 @@ These documents currently normalize storage-object vocabulary. They must be upda
 | `Execution_Pipeline_Docs/03-Executed/083__PRD__Tokyo_Owned_Widget_Instance_Index_And_DB_Projection_Cutover.md` | Canonicalizes `instances/index.json`, listed indexes, saved/live pointers, and scripts writing indexes. | Supersede product-boundary language; delete index/pointer concepts unless they are proven necessary physical implementations of approved operations. |
 | `Execution_Pipeline_Docs/03-Executed/098__PRD__Overlay_Primitive_And_Locales_First_Application.md` | Builds around selected-overlay records, overlay object paths, and published projection truth. | Supersede UI/Roma overlay-object vocabulary with translated locale operations. |
 | `Execution_Pipeline_Docs/03-Executed/100/100A__PRD__Instance_Folder_And_Save_Shape.md`, `100D`, `100E` | Correctly killed Venice runtime composition, but promoted `instance.json`, generated browser files, and physical `index.html` presence into product contracts. | Narrow PRD 100 to public serving internals; it must not govern authoring, translation, catalog, or publish APIs. |
-| `Execution_Pipeline_Docs/02-Executing/103C0__PRD__Widget_Source_Split_And_Content_JSON.md` | Historical PRD blesses `content.json` as widget-authored translation source. 103_01.3a moved FAQ to `editable-fields.json`; 103_01.3b deleted generated manifest/catalog authority. | Keep as historical proof only; do not use as current source authority. |
+| `Execution_Pipeline_Docs/01-Planning/103C0__PRD__Widget_Source_Split_And_Content_JSON.md` | Historical PRD blesses `content.json` as widget-authored translation source. 103_01.3a moved FAQ to `editable-fields.json`; 103_01.3b deleted generated manifest/catalog authority. | Keep as historical proof only; do not use as current source authority. |
 
 ## Audit Completion Rule
 

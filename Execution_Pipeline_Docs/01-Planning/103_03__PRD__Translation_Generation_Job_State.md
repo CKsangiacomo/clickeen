@@ -1,11 +1,13 @@
 # PRD 103_03 - Translation Generation Job State
 
-Status: Automated Green / Human Smoke Pending
+Status: Planning Hold / Superseded By `103_DB_Pivot`
 Owner: Product + Architecture
-Date: 2026-05-20
+Date: 2026-05-21
 Parent: `103_00__PRD__Pre_103_Architecture_Gate.md`
 
 ## Purpose
+
+2026-05-21 update: the automated job-state implementation improved the product behavior, but it still kept operational generation state in Tokyo object storage. Under the corrected DB pivot doctrine, translation generation job state belongs in Supabase-backed job rows. This PRD remains useful planning evidence, not the final architecture.
 
 Close the architectural gap exposed by human smoke on the FAQ instance `UZ3JEJSHII`.
 

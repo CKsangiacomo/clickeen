@@ -1,9 +1,19 @@
 # PRD 103_00 Execution - Pre-103 Architecture Gate
 
-Status: 103_03 Automated Green / Human Smoke Pending
-Date: 2026-05-19
+Status: Planning Hold / Superseded By `103_DB_Pivot`
+Date: 2026-05-21
 Parent: `103_00__PRD__Pre_103_Architecture_Gate.md`
 Blocks: `103_01`, `103_02`, `103_03`, and all PRD 103 runtime slices until their gate rows are green
+
+## 2026-05-21 Execution Hold
+
+This execution ledger is no longer active execution. It has moved back to planning because the surviving architecture boundary changed.
+
+The active execution ledger is:
+
+- `../02-Executing/103_DB_Pivot__EXEC__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
+
+Do not continue these slices until the DB pivot has moved operational state out of R2/object JSON and into Supabase-backed product operations.
 
 ## Execution Rule
 
@@ -230,7 +240,7 @@ Docs to update or mark superseded before PRD 103 resumes:
 | `Execution_Pipeline_Docs/03-Executed/083__PRD__Tokyo_Owned_Widget_Instance_Index_And_DB_Projection_Cutover.md` | Historical PRD canonicalizes instance indexes, listed indexes, saved/live pointers, and scripts writing indexes. | 103_00.4 | SUPERSESSION NOTE ADDED / final rewrite pending |
 | `Execution_Pipeline_Docs/03-Executed/098__PRD__Overlay_Primitive_And_Locales_First_Application.md` | Historical PRD builds around selected-overlay records, overlay object paths, and published projection truth. | 103_00.4 | SUPERSESSION NOTE ADDED / final rewrite pending |
 | `Execution_Pipeline_Docs/03-Executed/100/100A__PRD__Instance_Folder_And_Save_Shape.md`, `100D`, `100E` | PRD 100 static-serving exceptions leak back into authoring/translation/catalog/publish docs. | 103_00.4 | SCOPE-NARROWING NOTES ADDED / final rewrite pending |
-| `Execution_Pipeline_Docs/02-Executing/103C0__PRD__Widget_Source_Split_And_Content_JSON.md` | Historical PRD blessed `content.json`; 103_01.3a superseded the name with `editable-fields.json`; 103_01.3b deleted generated manifest/catalog authority. | 103_01 | SUPERSEDED BY 103_01.3a/103_01.3b; no 103_01 blocker |
+| `Execution_Pipeline_Docs/01-Planning/103C0__PRD__Widget_Source_Split_And_Content_JSON.md` | Historical PRD blessed `content.json`; 103_01.3a superseded the name with `editable-fields.json`; 103_01.3b deleted generated manifest/catalog authority. | 103_01 | SUPERSEDED BY 103_01.3a/103_01.3b; no 103_01 blocker |
 | `103_03__PRD__Translation_Generation_Job_State.md` | Blocker opened by human smoke; defines Tokyo-owned generation job state and deployed smoke gate. | 103_00.5 | AUTOMATED GREEN / HUMAN SMOKE PENDING |
 
 ## Slice 103_00.4 - Reconciliation And Resume Signoff

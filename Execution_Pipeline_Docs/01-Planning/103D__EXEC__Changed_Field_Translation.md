@@ -34,7 +34,7 @@ Human smoke exposed that concurrent locale completions could overwrite each othe
 
 ## Files Changed
 
-- `Execution_Pipeline_Docs/02-Executing/103D__PRD__Changed_Text_Translation.md`
+- `Execution_Pipeline_Docs/01-Planning/103D__PRD__Changed_Text_Translation.md`
 - `tokyo-worker/src/domains/render/account-instance-transitions.ts`
 - `tokyo-worker/src/routes/internal-render-routes.ts`
 - `tokyo-worker/src/domains/widget-catalog.ts`

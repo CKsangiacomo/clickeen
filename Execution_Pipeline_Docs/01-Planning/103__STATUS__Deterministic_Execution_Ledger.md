@@ -1,8 +1,29 @@
 # STATUS 103 - Deterministic Execution Ledger
 
-Status: 103_03 Automated Green / Human Smoke Pending
-Date: 2026-05-20
+Status: Planning Hold / Blocked By `103_DB_Pivot`
+Date: 2026-05-21
 Parent: `103__PRD__One_Save_Language_Overlay_Refactor.md`
+
+## 2026-05-21 DB Pivot Hold
+
+All PRD 103 planning, execution, and status artifacts have been moved back to `Execution_Pipeline_Docs/01-Planning`.
+
+PRD 103 is no longer blocked only by translation job-state smoke. The larger architectural blocker is now explicit: operational application state currently lives in Cloudflare/R2 JSON objects that the app treats as a database. That model is superseded.
+
+The active execution gate is:
+
+- `Execution_Pipeline_Docs/01-Planning/103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
+- `Execution_Pipeline_Docs/01-Planning/103_DB_Pivot__EXEC__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
+
+PRD 103 may not resume until the DB pivot is green.
+
+Corrected doctrine:
+
+```text
+Operational state lives in Supabase.
+Served artifacts live in Cloudflare R2/CDN.
+Publish/materialization is the bridge.
+```
 
 ## Product Truth
 

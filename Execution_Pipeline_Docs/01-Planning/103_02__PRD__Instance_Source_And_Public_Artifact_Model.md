@@ -1,12 +1,14 @@
 # PRD 103_02 - Instance Source And Public Artifact Model
 
-Status: Complete / Green; handed off to PRD 103 reopened proof path
+Status: Planning Hold / Superseded By `103_DB_Pivot`
 Owner: Product + Architecture
-Date: 2026-05-19
+Date: 2026-05-21
 Parent: `103_00__PRD__Pre_103_Architecture_Gate.md`
 Execution ledger: `103_02__EXEC__Instance_Source_And_Public_Artifact_Model.md`
 
 ## Purpose
+
+2026-05-21 update: this PRD's split-file model is no longer the target architecture. It remains evidence for field semantics, but the storage location is superseded. Instance authoring state, translated locale values, workflow state, and publish/materialization state must move to Supabase-backed product operations. R2 is only for public artifacts and other true blobs.
 
 Lock the account instance storage model before PRD 103 resumes.
 

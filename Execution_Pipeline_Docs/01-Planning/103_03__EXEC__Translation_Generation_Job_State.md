@@ -1,9 +1,13 @@
 # EXEC 103_03 - Translation Generation Job State
 
-Status: Automated Green / Human Smoke Pending
+Status: Planning Hold / Superseded By `103_DB_Pivot`
 Owner: Product + Architecture
-Date: 2026-05-20
+Date: 2026-05-21
 PRD: `103_03__PRD__Translation_Generation_Job_State.md`
+
+## 2026-05-21 Execution Hold
+
+This execution ledger is paused and moved back to planning. The slice produced useful behavior and tests, but its storage-backed job-state primitive is not the final architecture. `103_DB_Pivot` owns the next execution pass and must move translation generation job state into Supabase-backed product rows before PRD 103 resumes.
 
 ## Execution Rule
 

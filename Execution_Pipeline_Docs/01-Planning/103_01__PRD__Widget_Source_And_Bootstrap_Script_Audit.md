@@ -1,12 +1,14 @@
 # PRD 103_01 - Widget Source And Bootstrap Script Audit
 
-Status: Complete / Green
+Status: Planning Hold / Superseded By `103_DB_Pivot`
 Owner: Product + Architecture
-Date: 2026-05-19
+Date: 2026-05-21
 Parent: `103_00__PRD__Pre_103_Architecture_Gate.md`
 Execution ledger: `103_01__EXEC__Widget_Source_And_Bootstrap_Script_Audit.md`
 
 ## Purpose
+
+2026-05-21 update: this audit remains useful planning evidence, but PRD 103 cannot resume from it. The DB pivot now owns the deeper correction: application state belongs in Supabase, public artifacts belong in R2/CDN, and generated/bootstrap JSON must not be product coordination state.
 
 Lock the widget software source model before PRD 103 resumes.
 

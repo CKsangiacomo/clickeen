@@ -1,9 +1,13 @@
 # PRD 103_02 Execution - Instance Source And Public Artifact Model
 
-Status: Complete / Green; handed off to PRD 103 reopened proof path
-Date: 2026-05-19
+Status: Planning Hold / Superseded By `103_DB_Pivot`
+Date: 2026-05-21
 Parent: `103_02__PRD__Instance_Source_And_Public_Artifact_Model.md`
 Controlling gate: `103_00__EXEC__Pre_103_Architecture_Gate.md`
+
+## 2026-05-21 Execution Hold
+
+This execution ledger is paused planning evidence. The earlier `instance.config.json` / `instance.content.json` storage target is superseded by `103_DB_Pivot`; the field split remains useful semantics, but account authoring state must become Supabase-backed operational state.
 
 ## Execution Rule
 
