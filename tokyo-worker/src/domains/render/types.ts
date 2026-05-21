@@ -79,6 +79,83 @@ export type AccountInstanceContentDocument = {
   updatedAt: string;
 };
 
+export type TranslationGenerationJobStatus =
+  | 'queued'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'superseded';
+
+export type TranslationGenerationSummaryStatus =
+  | 'idle'
+  | TranslationGenerationJobStatus;
+
+export type TranslationGenerationLocaleStatus =
+  | 'queued'
+  | 'completed'
+  | 'failed'
+  | 'superseded';
+
+export type TranslationGenerationJobBasis = Array<{
+  locale: string;
+  fields: Array<{
+    path: string;
+    baseText: string;
+  }>;
+}>;
+
+export type TranslationGenerationLocaleState = {
+  locale: string;
+  status: TranslationGenerationLocaleStatus;
+  paths: string[];
+  updatedAt: string;
+  reasonKey?: string;
+  detail?: string;
+};
+
+export type TranslationGenerationJobDocument = {
+  jobId: string;
+  accountId: string;
+  instanceId: string;
+  widgetType: string;
+  baseLocale: string;
+  targetLocales: string[];
+  status: TranslationGenerationJobStatus;
+  requestedAt: string;
+  updatedAt: string;
+  totalLocales: number;
+  completedLocales: string[];
+  failedLocales: string[];
+  supersededLocales: string[];
+  pendingLocales: string[];
+  currentReadyLocales: string[];
+  locales: Record<string, TranslationGenerationLocaleState>;
+  basis: TranslationGenerationJobBasis;
+  previousJobId?: string;
+  supersededJobIds?: string[];
+  reasonKey?: string;
+  detail?: string;
+};
+
+export type TranslationGenerationJobSummary = {
+  instanceId: string;
+  baseLocale: string;
+  targetLocales: string[];
+  status: TranslationGenerationSummaryStatus;
+  requestedAt: string | null;
+  updatedAt: string | null;
+  totalLocales: number;
+  completedLocales: string[];
+  failedLocales: string[];
+  supersededLocales: string[];
+  pendingLocales: string[];
+  currentReadyLocales: string[];
+  jobId?: string;
+  reasonKey?: string;
+  detail?: string;
+  locales?: Record<string, TranslationGenerationLocaleState>;
+};
+
 export type SavedRenderPointer = {
   v: 1;
   id: string;

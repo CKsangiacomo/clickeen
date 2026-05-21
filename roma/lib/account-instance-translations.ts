@@ -37,8 +37,40 @@ export type InstanceTranslationsGeneratePayload = {
     queuedLocales: string[];
     skippedLocales: string[];
     jobIds: string[];
+    generation: InstanceTranslationGenerationSummary | null;
     results: Array<{ locale: string; ok: true; jobId: string }>;
   };
+};
+
+export type InstanceTranslationGenerationStatus =
+  | 'idle'
+  | 'queued'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'superseded';
+
+export type InstanceTranslationGenerationSummary = {
+  instanceId: string;
+  baseLocale: string;
+  targetLocales: string[];
+  status: InstanceTranslationGenerationStatus;
+  requestedAt: string | null;
+  updatedAt: string | null;
+  totalLocales: number;
+  completedLocales: string[];
+  failedLocales: string[];
+  supersededLocales: string[];
+  pendingLocales: string[];
+  currentReadyLocales: string[];
+  jobId?: string;
+  reasonKey?: string;
+  detail?: string;
+};
+
+export type InstanceTranslationGenerationPayload = {
+  ok: true;
+  generation: InstanceTranslationGenerationSummary;
 };
 
 function invalidPayload(detail: string): RouteFailure {
@@ -98,6 +130,71 @@ function normalizeStringArray(raw: unknown): string[] | null {
   return values as string[];
 }
 
+function normalizeGenerationStatus(raw: unknown): InstanceTranslationGenerationStatus | null {
+  return raw === 'idle' ||
+    raw === 'queued' ||
+    raw === 'running' ||
+    raw === 'completed' ||
+    raw === 'failed' ||
+    raw === 'superseded'
+    ? raw
+    : null;
+}
+
+function normalizeNullableString(raw: unknown): string | null {
+  if (raw == null) return null;
+  return asTrimmedString(raw);
+}
+
+function normalizeGenerationSummary(raw: unknown): InstanceTranslationGenerationSummary | null {
+  if (!isRecord(raw)) return null;
+  const instanceId = asTrimmedString(raw.instanceId);
+  const baseLocale = asTrimmedString(raw.baseLocale);
+  const targetLocales = normalizeStringArray(raw.targetLocales);
+  const status = normalizeGenerationStatus(raw.status);
+  const completedLocales = normalizeStringArray(raw.completedLocales);
+  const failedLocales = normalizeStringArray(raw.failedLocales);
+  const supersededLocales = normalizeStringArray(raw.supersededLocales);
+  const pendingLocales = normalizeStringArray(raw.pendingLocales);
+  const currentReadyLocales = normalizeStringArray(raw.currentReadyLocales);
+  const totalLocales = typeof raw.totalLocales === 'number' && Number.isFinite(raw.totalLocales)
+    ? Math.max(0, Math.floor(raw.totalLocales))
+    : null;
+  const requestedAt = normalizeNullableString(raw.requestedAt);
+  const updatedAt = normalizeNullableString(raw.updatedAt);
+  if (
+    !instanceId ||
+    !baseLocale ||
+    !targetLocales ||
+    !status ||
+    totalLocales == null ||
+    !completedLocales ||
+    !failedLocales ||
+    !supersededLocales ||
+    !pendingLocales ||
+    !currentReadyLocales
+  ) {
+    return null;
+  }
+  return {
+    instanceId,
+    baseLocale,
+    targetLocales,
+    status,
+    requestedAt,
+    updatedAt,
+    totalLocales,
+    completedLocales,
+    failedLocales,
+    supersededLocales,
+    pendingLocales,
+    currentReadyLocales,
+    ...(asTrimmedString(raw.jobId) ? { jobId: asTrimmedString(raw.jobId) as string } : {}),
+    ...(asTrimmedString(raw.reasonKey) ? { reasonKey: asTrimmedString(raw.reasonKey) as string } : {}),
+    ...(asTrimmedString(raw.detail) ? { detail: asTrimmedString(raw.detail) as string } : {}),
+  };
+}
+
 function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGeneratePayload | null {
   if (!isRecord(payload) || payload.ok !== true || !isRecord(payload.translation)) return null;
   const translation = payload.translation;
@@ -106,6 +203,10 @@ function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGenerat
   const queuedLocales = normalizeStringArray(translation.queuedLocales);
   const skippedLocales = normalizeStringArray(translation.skippedLocales);
   const jobIds = normalizeStringArray(translation.jobIds);
+  const generation =
+    translation.generation == null
+      ? null
+      : normalizeGenerationSummary(translation.generation);
   const results = Array.isArray(translation.results)
     ? translation.results.map((entry) => {
         if (!isRecord(entry) || entry.ok !== true) return null;
@@ -122,6 +223,7 @@ function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGenerat
     !queuedLocales ||
     !skippedLocales ||
     !jobIds ||
+    (generation === null && translation.generation != null) ||
     !results ||
     results.some((entry) => !entry)
   ) {
@@ -137,9 +239,16 @@ function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGenerat
       queuedLocales,
       skippedLocales,
       jobIds,
+      generation,
       results: results as Array<{ locale: string; ok: true; jobId: string }>,
     },
   };
+}
+
+function normalizeGenerationPayload(payload: unknown): InstanceTranslationGenerationPayload | null {
+  if (!isRecord(payload) || payload.ok !== true) return null;
+  const generation = normalizeGenerationSummary(payload.generation);
+  return generation ? { ok: true, generation } : null;
 }
 
 export async function loadAccountInstanceTranslations(args: {
@@ -199,6 +308,32 @@ export async function generateAccountInstanceTranslations(args: {
   const value = normalizeGeneratePayload(result.value);
   if (!value) return invalidPayload('tokyo_instance_translation_generate_invalid_payload');
   return { ok: true, value, status: result.status };
+}
+
+export async function readAccountInstanceTranslationGeneration(args: {
+  accountId: string;
+  instanceId: string;
+  accountCapsule?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true; value: InstanceTranslationGenerationPayload } | RouteFailure> {
+  const result = await callTokyo<unknown>(
+    {
+      accountId: args.accountId,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    },
+    {
+      path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations/generation`,
+      method: 'GET',
+      decode: (payload) => payload,
+      errorKey: 'tokyo.errors.translation.generationInvalid',
+      errorDetail: 'tokyo_instance_translation_generation_http_error',
+    },
+  );
+  if (!result.ok) return result;
+  const value = normalizeGenerationPayload(result.value);
+  if (!value) return invalidPayload('tokyo_instance_translation_generation_invalid_payload');
+  return { ok: true, value };
 }
 
 export async function readAccountInstanceTranslationValues(args: {

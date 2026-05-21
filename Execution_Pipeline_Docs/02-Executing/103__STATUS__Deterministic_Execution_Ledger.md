@@ -1,6 +1,6 @@
 # STATUS 103 - Deterministic Execution Ledger
 
-Status: Automated runtime proofs green; human Bob/Roma/public smoke is the next PRD 103 gate
+Status: 103_03 Automated Green / Human Smoke Pending
 Date: 2026-05-20
 Parent: `103__PRD__One_Save_Language_Overlay_Refactor.md`
 
@@ -18,7 +18,7 @@ Clickeen can generate translations on demand from the saved instance.
 Clickeen publishes generated files.
 ```
 
-Bob does not own translation status. Roma settings define expected target languages. Tokyo translated locale values define which translations are ready. Internal storage may still use overlay objects, but product payloads speak locale/value-map operations.
+Bob does not own translation status. Roma settings define expected target languages. Tokyo translated locale values define which translations are ready. Tokyo translation generation job state defines whether generation is idle, queued, running, completed, failed, or superseded. Internal storage may still use overlay objects, but product payloads speak locale/value-map operations and generation job operations.
 
 ```text
 X = translated locale values found for enabled target locales
@@ -27,17 +27,20 @@ Y = enabled target locales from Roma settings
 
 Bob may show `X of Y translations ready` while `X !== Y`. The preview dropdown contains only the base locale plus translated languages that have Tokyo translated locale values.
 
+Bob must not show "Generating translations..." from local state alone. Generate is real only when Tokyo accepts or returns a Tokyo-owned generation job.
+
 Save persists the base locale only. `Generate translations` is the translation trigger. Bob sends instance context only; the backend loads the saved instance and current language values from Tokyo.
 
 ## Source Model Gate
 
-PRD 103 is no longer blocked by the pre-103 architecture gate. Runtime translation work resumed one slice at a time. The reopened 103V proof path is green, 103G publish proof is green, and 103F translated-locale override reproof is green.
+PRD 103 was reopened by the pre-103 architecture gate after runtime translation work had resumed one slice at a time and the reopened 103V proof path, 103G publish proof, and 103F translated-locale override reproof were green. Human smoke on 2026-05-20 exposed a missing product primitive: translation generation job state. 103_03 is now automated green; deployed human smoke remains pending.
 
 Required pre-103 PRDs:
 
 - `103_00__PRD__Pre_103_Architecture_Gate.md`
 - `103_01__PRD__Widget_Source_And_Bootstrap_Script_Audit.md`
 - `103_02__PRD__Instance_Source_And_Public_Artifact_Model.md`
+- `103_03__PRD__Translation_Generation_Job_State.md`
 
 The blocker is not whether translation can call an agent. The blocker is that the current product source model mixes widget software, starter content, account instance content, config, generated public bytes, generated read models, and translation contracts in ways that are no longer acceptable.
 
@@ -60,6 +63,7 @@ The blocker is not whether translation can call an agent. The blocker is that th
 - `instance.json` and `accounts/{accountPublicId}/instances/index.json` are killed as product models.
 - Async job state belongs to queue/job/workflow infrastructure, not instance content/config. No generic `sourceVersion` is approved as product model; any freshness/revision rule must be named by the owning operation before coding.
 - Generated files are generated artifacts, not source truth or publish state. Roma sees publish status and public URL behavior, not serve-state, generated file inventories, artifact filenames, or file presence.
+- Translation generation job state is Tokyo-owned product state. Translated-locale inventory is readiness inventory, not generation status. Bob local state and San Francisco telemetry are not product job truth.
 
 ### Current Verified Widget Definition Reality
 
@@ -106,15 +110,15 @@ PRD 103_00 now executes through:
 
 - `103_00__EXEC__Pre_103_Architecture_Gate.md`
 
-Current rule: execute one slice at a time. Pre-103 slices are complete; runtime PRD 103 continues from the next named slice only.
+Current rule: execute one slice at a time. Pre-103 slices `103_00`, `103_01`, and `103_02` are complete. `103_03` automated implementation is green, but human smoke on the deployed Roma/Bob path is still pending before PRD 103 runtime can be treated as release-ready.
 
-Important: historical green for `103_00.1` meant only blocker/status wiring. PRD 103 became resumable only after `103_00`, `103_01`, and `103_02` closed green.
+Important: historical green for `103_00.1` meant only blocker/status wiring. PRD 103 became resumable only after `103_00`, `103_01`, and `103_02` closed green. `103_03` has automated green evidence, but deployed human smoke remains the final gate.
 
 ## Execution Status
 
 | Slice | Status | Evidence | Product Result |
 | --- | --- | --- | --- |
-| 103_00 - Pre-103 Architecture Gate | Complete / Green | `103_00__PRD__...`, `103_00__EXEC__...` | Widget-source, instance-source, product-operation vocabulary, docs, guards, and architecture resume signoff are green. PRD 103 runtime resumed at 103V. |
+| 103_00 - Pre-103 Architecture Gate | Automated Green / Human Smoke Pending | `103_00__PRD__...`, `103_00__EXEC__...`, `103_03__PRD__...`, `103_03__EXEC__...` | Widget-source, instance-source, product-operation vocabulary, docs, guards, and translation job-state automation are green. Deployed Roma/Bob human smoke remains pending. |
 | 103_00.1 - Execution ledger and blocker wiring | Green / Docs only | `103_00__EXEC__...` | Does not change runtime behavior. Green means only that the pre-103 ledger, blockers, and doc status banners exist. |
 | 103_01 - Widget Source And Bootstrap Script Audit | Complete / Green | `103_01__PRD__...`, `103_01__EXEC__...` | Consumer inventory, file-role decisions, FAQ editable-fields migration, widget-definition operation migration, `agent.md` deletion, SEO/GEO source deletion, non-FAQ editable-fields migration, limits mapping, stale Prague sync deletion, and closure/handoff are green. |
 | 103_01.1 - Widget source consumer inventory | Green / Docs only | `103_01__EXEC__...`, code/docs subagent scans, local repo search | Records all active consumers of widget source files, generated manifest/catalog output, and bootstrap scripts. Does not change runtime behavior. |
@@ -127,6 +131,7 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 | 103_01.3c.4 - Limits and bootstrap-script closure | Green / Code and docs | Widget source validator, ck-policy tests, root/package workflows, primitive drift guard, active docs | Widget `limits.json` cannot become detached policy truth, and the old Prague l10n sync/publish flow is deleted from scripts and GitHub Actions. |
 | 103_01.4 - Closure and 103_02 handoff | Green / Docs and verification | `103_01__EXEC__...`, `103_00__EXEC__...`, `103__STATUS__...`, active drift checks | All 103_01-owned blast-radius rows are GREEN. 103_00.2 went green and handed off to 103_02. |
 | 103_02 - Instance Source And Public Artifact Model | Complete / Green | `103_02__PRD__...`, `103_02__EXEC__...` | Inventory, immediate doc supersession notes, final field/state decisions, translated-locale read/write, Generate/complete ownership/freshness, changed-field delta from `instance.content.json`, product open/save/list/create/rename/duplicate/delete, publish-state serving, Tokyo-owned artifact materialization, old route cleanup, and mirror/snapshot queue deletion are green. |
+| 103_03 - Translation Generation Job State | Automated Green / Human Smoke Pending | `103_03__PRD__Translation_Generation_Job_State.md`, `103_03__EXEC__Translation_Generation_Job_State.md` | Tokyo-owned generation job state, San Francisco terminal outcome reporting, Bob/Roma job-state UX, duplicate/supersede rules, and invalid partial-state guard are implemented and tested. Deployed human smoke remains pending. |
 | 103Z - Verification Protocol | Draft / Gate only | `103Z__PRD__...` | Gate protocol exists; no implementation slice. |
 | 103A - Teardown Map And Agent Boundary | Complete / Green after wording correction | `103A__EXEC__...` | Product boundary named: translate saved instance. Outdated Copilot wording corrected to whole widget package. |
 | 103B - Instance Translation Agent Contract | Complete / Boundary green | `103B__EXEC__...`, San Francisco tests | Saved-instance translation route exists and rejects loose old text-value requests. The trigger is now panel-owned Generate, not Save. |
@@ -148,7 +153,7 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 - Instance source authority decision: `instance.content.json` is all editable customer-visible strings; `instance.config.json` is all non-text instance state plus identity/display/widget type/code/locale setup/publish state/timestamps.
 - Translated locale value decision: `locale -> translated content values`; overlay IDs, selected pointers, version slots, provenance, source hashes, generation IDs, and manual override status are not product payloads.
 - Current translated-locale product surface: Bob/Roma list/read/save translations by locale and value map only. Roma account `locale-overlays/*` routes are deleted.
-- Async workflow decision: generation state is removed from authoring source; job status comes from queue/job/workflow operations when needed. Generic `sourceVersion` and generation lanes are no longer written by Tokyo saved instance source.
+- Async workflow decision: generation state is removed from authoring source; translation generation job status comes from Tokyo-owned job operations implemented by 103_03. Generic `sourceVersion` and generation lanes are no longer written by Tokyo saved instance source.
 - Publish decision: publish state lives in approved config/state; public files are generated artifacts and not publish truth. Roma publish/unpublish now call Tokyo product operations; publish materializes artifacts in Tokyo before setting `published`; public serving checks `publishStatus` before generated artifacts.
 - FAQ translation field parser and overlay derivation: `packages/ck-contracts/src/overlay-primitives.ts`.
 - FAQ identity/diff/merge authority: `packages/ck-contracts/src/faq-language-values.ts`.
@@ -159,10 +164,10 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 - Instance Translation runtime budget authority: Tokyo queues the `widget.instance.translator` job with the `ck-policy` runtime budget, and San Francisco sends provider calls through `callChatCompletion` without a local hard-coded token/timeout cap.
 - Account instance authoring operations: Roma calls Tokyo product operations for list/create/open/save/rename/duplicate/delete, not `index.json`, `saved.json`, `save.json`, or storage-shaped duplicate/delete routes.
 - Account instance publish operations: Roma calls Tokyo product operations for publish/unpublish, not publish/unpublish storage file routes or `serve-state.json`.
-- Translation job acceptance implementation: Tokyo `generateTranslations`; Roma is only the account/request boundary.
-- Translation job execution implementation: San Francisco `instance-translation-queue.ts`, completing through Tokyo `completeLocaleTranslation`.
+- Translation job acceptance implementation: Tokyo `generateTranslations`; Roma is only the account/request boundary. Tokyo owns product-visible generation job state so acceptance cannot be confused with Bob local spinner state.
+- Translation job execution implementation: San Francisco `instance-translation-queue.ts`, completing or failing through Tokyo `completeLocaleTranslation` / `failLocaleTranslation`.
 - Instance Translation Agent endpoint: `sanfrancisco/src/l10n-account-routes.ts` and `sanfrancisco/src/index.ts`.
-- Bob expected/ready count source: Roma settings plus Tokyo overlay inventory.
+- Bob expected/ready count source: Roma settings plus Tokyo translated-locale inventory. Bob generation progress source must be Tokyo generation job state after 103_03, not inventory alone.
 - Copilot widget package source: Bob compiled widget payload `widgetPackage`, forwarded by Roma to San Francisco.
 - Copilot prompt package context: `sanfrancisco/src/agents/csPromptPayload.ts`.
 
@@ -187,14 +192,26 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 - `pnpm verify:prd103-publish-language-files`
 - Repo search for removed legacy translation field names and per-field Copilot allowlists is clean outside this status note.
 
+## Human Smoke Finding That Reopened Pre-103
+
+- On 2026-05-20, FAQ instance `UZ3JEJSHII` was stuck at `14/28`.
+- Tokyo content had 12 editable fields and one changed field: `sections.0.faqs.0.question`.
+- The remaining 14 locales were missing only that changed question translation.
+- Some missing locales had invalid partial state: `localeStatus: ok` without a translated string value.
+- After a Generate click, Tokyo tail showed repeated `GET /__internal/instances/UZ3JEJSHII/translations` inventory polling.
+- Tokyo did not receive `POST /__internal/instances/UZ3JEJSHII/translations/generate`.
+- San Francisco received no translation queue work and emitted no completion events.
+- Deterministic conclusion: Bob could show generation UI while no generation job existed. Inventory polling is not job state.
+
 ## Deferred Product Checks
 
 - Human product re-smoke is not a pre-103 architecture gate. It remains a PRD 103 completion/release gate after runtime implementation and automated product proofs are complete.
 
 ## Hard Blockers
 
-- Widget/instance source model gate is resolved. Continue PRD 103 runtime implementation only one slice at a time.
-- 103V, 103G, and 103F are complete. Human Bob/Roma/public smoke is now the next PRD 103 gate.
+- Widget/instance source model gate and translation generation job-state automation are resolved.
+- PRD 103 runtime release is blocked on deployed human smoke proving the product click path.
+- 103V, 103G, 103F, and 103_03 automated proof slices are green, but deployed human smoke remains the final release gate.
 
 ## Human Smoke Regression Reopened
 
@@ -208,8 +225,10 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 
 ## Next Execution Order
 
-1. Run human Bob/Roma/public smoke for the completed automated runtime path.
-2. Do not continue broad San Francisco runtime reshaping outside a named follow-up.
+1. Execute `103_03__PRD__Translation_Generation_Job_State.md` one slice at a time.
+2. Re-run automated Bob/Roma/Tokyo/San Francisco translation generation proofs.
+3. Run human Bob/Roma/public smoke for the completed runtime path.
+4. Do not continue broad San Francisco runtime reshaping outside a named follow-up.
 
 ## Do Not Proceed Gates
 
@@ -218,5 +237,5 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 - Do not keep bootstrap-era `.mjs` materializers/syncers in product build/runtime paths without a current Cloudflare-era contract.
 - Do not add a San Francisco runtime framework without an explicit new slice.
 - Do not introduce Bob-owned translation state names. Only `X of Y translations ready` is allowed.
-- Do not add a readiness subsystem for publish or translation.
+- Do not add Bob-owned readiness or generation status. Translation generation status is allowed only as the narrow Tokyo-owned product job-state primitive defined by 103_03.
 - Do not restore removed legacy translation field names, per-field Copilot allowlists, or `spec.json.overlays.text[]` as authored FAQ translation authority.

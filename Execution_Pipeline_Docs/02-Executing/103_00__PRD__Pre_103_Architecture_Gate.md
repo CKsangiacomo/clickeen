@@ -1,6 +1,6 @@
 # PRD 103_00 - Pre-103 Architecture Gate
 
-Status: Complete / Green; PRD 103 runtime may resume at the reopened proof path
+Status: 103_03 Automated Green / Human Smoke Pending
 Owner: Product + Architecture
 Date: 2026-05-19
 Blocks: PRD 103 and all 103A-103Z execution
@@ -11,7 +11,9 @@ Stop PRD 103 execution until the source model is simple, explicit, and shared by
 
 PRD 103 cannot continue while the system mixes widget software, starter content, account instance content, non-content config, generated files, generated indexes, manifest output, and translation contracts.
 
-This is a pre-103 gate. It exists before PRD 103. It is not a translation slice.
+This is a pre-103 gate. It exists before PRD 103.
+
+2026-05-20 update: human smoke exposed that translation generation still lacked a product-owned job-state primitive. Bob could show "Generating translations..." while Tokyo received only translated-locale inventory polling and no Generate product command. That is now captured as `103_03__PRD__Translation_Generation_Job_State.md`. The automated implementation is green; deployed Roma/Bob human smoke remains pending.
 
 ## Product Truth
 
@@ -53,7 +55,7 @@ In scope:
 Out of scope until this gate closes:
 
 - PRD 103A-103Z runtime implementation;
-- new translation UI behavior beyond renaming/removing storage-shaped preview commands;
+- new translation UI behavior beyond renaming/removing storage-shaped preview commands, except the 103_03 job-state slice opened by human smoke;
 - new widget capability work, starter-instance marketplace work, or Minibob/demo save behavior;
 - broad cleanup unrelated to widget source, account instance source, translation values, workflow state, publish state, or public artifacts;
 - backwards compatibility for fake product/storage concepts that are not on the real account authoring path.
@@ -107,6 +109,7 @@ list translated locales
 generate translations
 read translated locale values
 write translated locale values
+read translation generation job
 ```
 
 Tokyo may persist product concepts in R2, KV, D1, generated indexes, exact files, and public static files when that is the approved implementation. San Francisco may queue jobs. Public serving may emit generated static artifacts. Those physical forms are not allowed to survive as product concepts. They either implement an approved product concept or they are deleted.
@@ -187,6 +190,8 @@ Workflow state must not be a write-only field on a data object.
 
 Queues, Durable Objects, Cloudflare Workflows, or another named workflow primitive may own async state. A JSON field such as `generation.translations.status` or `generation.embed.status` is valid only if one named writer advances it and one named product operation consumes it. Write-once ghost flags must be deleted, not renamed.
 
+Translation generation job state is now a named pre-103 blocker. Bob's local spinner and translated-locale inventory are not job state. Tokyo must own the generation job product state; San Francisco must report every terminal locale outcome back to Tokyo; Bob must read job state through Roma/Tokyo instead of inferring progress from inventory polling.
+
 Wrong shape, current class of failure:
 
 ```text
@@ -220,7 +225,7 @@ These are architecture-level latency multipliers created by storage-shaped produ
 | Widget catalog lookup | Roma reads a generated widget catalog route backed by manifest/build output. | Roma asks for widget definitions through a product service/resolver; generated artifacts are not source authority. |
 | Account widget listing | Roma reads `index.json`, then separately reads catalog. | `listAccountInstances` returns account instance summaries; catalog is resolved from product source, not a generated index handoff. |
 | Instance save | Tokyo writes instance JSON, then re-reads source/index to patch account index. | Save persists approved instance source once and returns the instance summary; any cache is derived from in-memory result or deleted. |
-| Translation generate | Roma loads catalog, lists overlay inventory, reads overlay objects per locale, then queues jobs. | `generateTranslations(instanceId)` is one async command; translation owner resolves instance content, field contract, existing translation values, and delta. |
+| Translation generate | Roma loads catalog, lists overlay inventory, reads overlay objects per locale, then queues jobs; Bob can also show local generating state without a Tokyo job. | `generateTranslations(instanceId)` is one async command; Tokyo owns the job state, resolves instance content, field contract, existing translation values, and delta, and exposes accepted/running/failed/superseded progress. |
 | Translation review | UI lists overlay inventory, then reads exact overlay object by ID. | UI reads translated locales and translated locale values by locale; overlay IDs do not exist in the product path. |
 | Manual translation edit | Roma reads saved instance to discover widget type, then writes overlay JSON. | `writeTranslatedLocaleValues(instanceId, locale, values)` validates against approved instance source in the owning service. |
 | Publish/unpublish | Tokyo probes/renames `index.html`/`index.html.off`, reads publish state, then writes state. | Publish status is product state; public artifacts are generated output and are not the state machine. |
@@ -275,6 +280,7 @@ No PRD 103 runtime slice may proceed until:
 - every Roma-facing route currently named after a file or generated artifact is replaced by product vocabulary and the old storage-shaped route is removed after migration;
 - every product operation that currently reconstructs truth by reading/listing generated files has a direct owner and a product-operation replacement;
 - every async workflow state field has a named workflow primitive and writer, or the field is deleted;
+- translation generation has a Tokyo-owned job-state primitive, San Francisco terminal outcome reporting, Bob/Roma job-state reads, and no indefinite local spinner;
 - canonical docs are updated or historical PRDs are marked superseded so they cannot be cited as current product architecture;
 - PRD 100 static serving exceptions are narrowed to public static serving internals and cannot leak back into authoring, translation, catalog, or publish APIs.
 
@@ -284,15 +290,16 @@ Pre-103 execution order:
 
 1. Freeze PRD 103A-103Z runtime work. Docs may be edited only to mark blocking dependencies or supersession.
 2. Execute 103_01 first, then 103_02. 103_01 owns widget source, catalog, editable-field contract, and bootstrap scripts. 103_02 owns account instance source, translated locale values, workflow state, publish state, and public artifacts.
-3. Reconcile the two audits before route or type migration begins. The shared contract names must match: widget field contract, account instance config/content, translated locale values, widget catalog operation, and public artifact readiness.
-4. Replace cross-service contracts from the product boundary inward. Roma/Bob/San Francisco callers move to product operations before storage-shaped routes are deleted. Tokyo may keep private storage helpers only after the public/internal service boundary no longer exposes them.
-5. Delete old routes, shared types, and docs references in the same PRD pack that introduced the replacement. A shim that survives past its replacement PRD is a blocker unless the human architecture owner approves a dated exception.
-6. Run verification, close blast-radius ledger rows, update docs, and then request signoff.
+3. Execute 103_03 before resuming PRD 103 runtime. 103_03 owns translation generation job state, duplicate/supersede semantics, San Francisco terminal outcome reporting, Bob/Roma job-state UX, and invalid partial translated-locale cleanup.
+4. Reconcile the audits before route or type migration begins. The shared contract names must match: widget field contract, account instance config/content, translated locale values, translation generation job state, widget catalog operation, and public artifact readiness.
+5. Replace cross-service contracts from the product boundary inward. Roma/Bob/San Francisco callers move to product operations before storage-shaped routes are deleted. Tokyo may keep private storage helpers only after the public/internal service boundary no longer exposes them.
+6. Delete old routes, shared types, and docs references in the same PRD pack that introduced the replacement. A shim that survives past its replacement PRD is a blocker unless the human architecture owner approves a dated exception.
+7. Run verification, close blast-radius ledger rows, update docs, and then request signoff.
 
 Sequencing constraints:
 
 - 103_02 cannot finalize `instance.content.json` translation behavior until 103_01 finalizes the widget editable-field contract.
-- Translation generation ownership cannot finalize until 103_02 assigns the owner of existing translated locale values and delta calculation.
+- Translation generation ownership cannot finalize until 103_02 assigns the owner of existing translated locale values and delta calculation, and 103_03 assigns the owner of generation job state and terminal outcomes.
 - Publish readiness cannot finalize until 103_02 names the public artifact materialization owner and workflow primitive.
 - PRD 103 runtime work may not resume while any P0 or P1 blast-radius ledger row is open. P2 rows may remain only if they are doc/test-only, have an owner, and are not on the account open/save/translation/publish/public-serving path.
 
@@ -311,7 +318,8 @@ Required owner decisions:
 | Tokyo boundary | Tokyo-worker code owner | Tokyo owns product operations and keeps storage objects private or deletes them. |
 | San Francisco boundary | San Francisco code owner | Translation queue inputs/outputs use product operations, not overlay object inventory or storage snapshots. |
 | Public serving boundary | Tokyo/Venice owner | Public URLs serve from approved publish/artifact state, not authoring source or file-presence truth. |
-| Verification | Dev Manager or release owner | CI guard, tests, docs, and architecture evidence are attached to the ledger. End-to-end smoke evidence is required later, after PRD 103 runtime work is complete enough to test. |
+| Translation generation job state | 103_03 owner | Tokyo-owned job state, San Francisco terminal outcome reporting, Bob/Roma deterministic UX, duplicate/supersede rules, and invalid partial-state handling are green. |
+| Verification | Dev Manager or release owner | CI guard, tests, docs, and architecture evidence are attached to the ledger. End-to-end smoke evidence is required after 103_03 runtime work is complete enough to test. |
 
 The final architecture signoff must explicitly say: "PRD 103 may resume because the remaining contracts are product-operation contracts, not renamed storage-object contracts."
 

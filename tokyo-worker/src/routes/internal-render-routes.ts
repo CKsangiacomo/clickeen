@@ -18,10 +18,12 @@ import {
   createAccountInstanceFromDefaults,
   listTranslatedLocales,
   completeLocaleTranslation,
+  failLocaleTranslation,
   generateInstanceTranslations,
   listAccountInstancesBySource,
   publishAccountInstanceTransition,
   readAccountInstanceDocument,
+  readInstanceTranslationGeneration,
   readTranslatedLocaleValues,
   renameAccountInstanceDisplay,
   saveAccountInstanceTransition,
@@ -55,6 +57,11 @@ function normalizeTranslatedValues(value: unknown): Record<string, string> | nul
     values[path] = text;
   }
   return values;
+}
+
+function normalizeReasonText(value: unknown, fallback: string): string {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  return normalized || fallback;
 }
 
 function transitionErrorResponse(error: unknown): Response {
@@ -513,6 +520,42 @@ export async function tryHandleInternalRenderRoutes(
     return respond(json({ ok: true, translation }, { status: translation.accepted ? 202 : 200 }));
   }
 
+  const internalTranslationsGenerationMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations\/generation$/);
+  if (internalTranslationsGenerationMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationsGenerationMatch[1] || ''));
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+    }
+    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
+    const authErr = await authorizeAccountInstanceControlRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'viewer',
+    });
+    if (authErr) return respond(authErr);
+
+    const generation = await readInstanceTranslationGeneration({ env, accountId, instanceId });
+    if (!generation.ok) {
+      return respond(
+        json(
+          {
+            ok: false,
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: generation.reasonKey,
+              detail: generation.detail,
+            },
+            generation,
+          },
+          { status: 422 },
+        ),
+      );
+    }
+    return respond(json({ ok: true, generation: generation.generation }));
+  }
+
   const internalTranslationsListMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations$/);
   if (internalTranslationsListMatch) {
     const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationsListMatch[1] || ''));
@@ -594,6 +637,53 @@ export async function tryHandleInternalRenderRoutes(
       );
     }
     return respond(json({ ok: true, completion }));
+  }
+
+  const internalTranslationFailureMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations\/([^/]+)\/fail$/);
+  if (internalTranslationFailureMatch) {
+    const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationFailureMatch[1] || ''));
+    const locale = String(decodeURIComponent(internalTranslationFailureMatch[2] || '')).trim();
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !instanceId || !locale || !isValidScopedInstance(instanceId, accountId)) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+    }
+    if (req.method !== 'PUT') return respondMethodNotAllowed(respond);
+    const authErr = authorizeTranslationCompletionTransition(req);
+    if (authErr) return respond(authErr);
+
+    const body = (await readInternalRenderJsonBody({
+      req,
+      env,
+      boundary: 'internal.instance.translationFail.body',
+      accountId,
+      instanceId,
+    })) as Record<string, unknown> | null;
+    const failure = await failLocaleTranslation({
+      env,
+      accountId,
+      instanceId,
+      locale,
+      job: body?.job,
+      reasonKey: normalizeReasonText(body?.reasonKey, 'instance.translation.failed'),
+      detail: normalizeReasonText(body?.detail, 'Translation generation failed.'),
+    });
+    if (!failure.ok) {
+      return respond(
+        json(
+          {
+            ok: false,
+            error: {
+              kind: 'VALIDATION',
+              reasonKey: failure.reasonKey,
+              detail: failure.detail,
+            },
+            failure,
+          },
+          { status: 422 },
+        ),
+      );
+    }
+    return respond(json({ ok: true, failure }));
   }
 
   const internalTranslationValuesMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/translations\/([^/]+)$/);

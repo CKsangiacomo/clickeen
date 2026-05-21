@@ -1,9 +1,9 @@
 # PRD 103_00 Execution - Pre-103 Architecture Gate
 
-Status: Complete / Green; PRD 103 runtime may resume at the reopened proof path
+Status: 103_03 Automated Green / Human Smoke Pending
 Date: 2026-05-19
 Parent: `103_00__PRD__Pre_103_Architecture_Gate.md`
-Blocks: `103_01`, `103_02`, and all PRD 103 runtime slices until their gate rows are green
+Blocks: `103_01`, `103_02`, `103_03`, and all PRD 103 runtime slices until their gate rows are green
 
 ## Execution Rule
 
@@ -25,9 +25,10 @@ Execution rules:
 | 103_00.1 - Execution ledger and blocker wiring | Green | Create this execution ledger, wire PRD/status docs, seed blast-radius rows, and prove no runtime work moved. | `git diff --check` passes for the docs-only slice; all later work has a ledger row and owner slice. |
 | 103_00.2 - Widget source audit execution | Green | Execute `103_01`: widget folder roles, bootstrap scripts, manifest/catalog deletion decisions, docs/test blast radius. | `103_01` acceptance green and every widget-source ledger row closed or explicitly owned. |
 | 103_00.3 - Instance source/public artifact audit execution | Green / 103_02.5 cleanup complete | Execute `103_02`: instance config/content model, translation values, workflow state, publish/public artifact model, docs/test blast radius. | `103_02` acceptance green and every instance/public-artifact ledger row closed or explicitly owned. |
-| 103_00.4 - Contract reconciliation and resume decision | Green | Reconcile 103_01 and 103_02, run required verification, update canonical docs, and decide if PRD 103 can resume. | Product + Architecture signoff says remaining contracts are product-operation contracts, not renamed storage-object contracts. |
+| 103_00.4 - Contract reconciliation and resume decision | Previously Green / Reopened by human smoke | Reconcile 103_01 and 103_02, run required verification, update canonical docs, and decide if PRD 103 can resume. | Product + Architecture signoff said remaining contracts were product-operation contracts, not renamed storage-object contracts. Human smoke later exposed missing translation generation job state. |
+| 103_00.5 - Translation generation job-state execution | Automated Green / Human Smoke Pending | Execute `103_03`: Tokyo-owned generation job state, San Francisco terminal outcome reporting, Bob/Roma job-state UX, duplicate/supersede rules, invalid partial translated-locale cleanup. | Automated `103_03` acceptance is green. Human smoke must still prove Generate reaches Tokyo, San Francisco reports terminal outcomes, and Bob exits generating deterministically. |
 
-No later slice may begin until the preceding slice is green.
+No later slice may begin until the preceding slice is green. PRD 103 runtime cannot resume until 103_00.5 is green.
 
 ## 103_01.2 Decision Snapshot
 
@@ -163,6 +164,7 @@ Status values:
 | BR-032 | P1 | Publish verifier | `prd103-publish-language-files` seeds overlay paths and exact generated filenames | PRD 103 publish verifier | Public base/translated URLs through product serving boundary | 103_02 | GREEN / 103_02.4b | Verifier now publishes through Tokyo materialization and asserts public base/translated behavior without SF writer imports, sourceVersion, overlay paths, or versioned support filenames. |
 | BR-033 | P2 | Embed snippet tests | Snippet tests assert `/script.js` as product contract | Bob embed snippets | Public instance URL contract and serving-owned loadable entry | 103_02 | PENDING 103_02 | Tests assert public contract, not internal support filename as product state. |
 | BR-034 | P2 | Static/storage guards | Guards ban old strings but do not enforce product-operation vocabulary | PRD 99/100 guards, primitive drift verifier | Vocabulary/storage-boundary guard suite | 103_00.4 | GREEN / 103_00.4 | Guard suite blocks new product-boundary storage vocabulary. |
+| BR-035 | P0 | Translation generation job state | Bob local generating spinner plus translated-locale inventory polling can claim work while no Tokyo Generate job exists | Bob Translations panel, Roma account command bridge, Tokyo Generate, San Francisco queue | Tokyo-owned translation generation job state plus SF terminal outcome reporting | 103_03 | AUTOMATED GREEN / HUMAN SMOKE PENDING | 103_03 automated tests/typechecks/lints prove deterministic Generate/job/progress/failure behavior. Deployed smoke must still prove the live click path. |
 
 ## Ledger Closure Details
 
@@ -204,6 +206,7 @@ Each row above must also close these fields before it can turn green.
 | BR-032 | GREEN in 103_02.4b: publish verifier now publishes through Tokyo materialization and public serving, without SF writer imports, sourceVersion, overlay paths, or versioned support filenames. | Exact filenames may be asserted only as public artifact implementation, not authoring truth. |
 | BR-033 | Rewrite snippet tests to public URL contract. | Internal script filename assertion cannot define product state. |
 | BR-034 | GREEN in 103_00.4: guard suite blocks deleted route families, deleted product-authority files, mirror/snapshot queue vocabulary, Bob locale-overlay payloads, Roma saved-render routes, SF overlay completion routes, and Tokyo product-route saved-render vocabulary. | Broad historical-doc greps are intentionally not used as CI because historical PRDs may preserve superseded vocabulary. |
+| BR-035 | AUTOMATED GREEN in 103_00.5: Bob/Roma/Tokyo/San Francisco now share one generation job contract. | Deployed human smoke still required before release/resume signoff. |
 
 ## Documentation Update Queue
 
@@ -228,10 +231,13 @@ Docs to update or mark superseded before PRD 103 resumes:
 | `Execution_Pipeline_Docs/03-Executed/098__PRD__Overlay_Primitive_And_Locales_First_Application.md` | Historical PRD builds around selected-overlay records, overlay object paths, and published projection truth. | 103_00.4 | SUPERSESSION NOTE ADDED / final rewrite pending |
 | `Execution_Pipeline_Docs/03-Executed/100/100A__PRD__Instance_Folder_And_Save_Shape.md`, `100D`, `100E` | PRD 100 static-serving exceptions leak back into authoring/translation/catalog/publish docs. | 103_00.4 | SCOPE-NARROWING NOTES ADDED / final rewrite pending |
 | `Execution_Pipeline_Docs/02-Executing/103C0__PRD__Widget_Source_Split_And_Content_JSON.md` | Historical PRD blessed `content.json`; 103_01.3a superseded the name with `editable-fields.json`; 103_01.3b deleted generated manifest/catalog authority. | 103_01 | SUPERSEDED BY 103_01.3a/103_01.3b; no 103_01 blocker |
+| `103_03__PRD__Translation_Generation_Job_State.md` | Blocker opened by human smoke; defines Tokyo-owned generation job state and deployed smoke gate. | 103_00.5 | AUTOMATED GREEN / HUMAN SMOKE PENDING |
 
 ## Slice 103_00.4 - Reconciliation And Resume Signoff
 
-This slice is green. Product + Architecture accepted the pre-103 source/operation model and approved PRD 103 runtime resumption from the reopened proof path.
+This slice was green. Product + Architecture accepted the pre-103 source/operation model and approved PRD 103 runtime resumption from the reopened proof path.
+
+2026-05-20 update: human smoke reopened the gate because translation generation still lacked Tokyo-owned job state. Slice 103_00.5 / PRD 103_03 is now automated green; deployed human smoke remains pending.
 
 This is not the finished-product smoke gate. Manual end-to-end smoke belongs after PRD 103 runtime implementation is complete enough to test. Running human smoke here would confuse architecture readiness with product completion and would create false failures.
 

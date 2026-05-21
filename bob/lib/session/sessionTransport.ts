@@ -55,6 +55,14 @@ export type GenerateTranslations = (
   args: GenerateTranslationsArgs
 ) => Promise<{ ok: boolean; status: number; json: any }>;
 
+export type ReadTranslationGenerationArgs = {
+  instanceId: string;
+};
+
+export type ReadTranslationGeneration = (
+  args: ReadTranslationGenerationArgs
+) => Promise<{ ok: boolean; status: number; json: any }>;
+
 const HOST_ORIGIN_WAIT_MS = 3_000;
 const HOST_ORIGIN_POLL_MS = 25;
 
@@ -362,6 +370,18 @@ export function useSessionTransport(args: {
     [dispatchHostAccountCommand],
   );
 
+  const readTranslationGeneration: ReadTranslationGeneration = useCallback(
+    async (commandArgs: ReadTranslationGenerationArgs) => {
+      const instanceId = String(commandArgs.instanceId || '').trim();
+      const result = await dispatchHostAccountCommand({
+        command: 'read-translation-generation',
+        instanceId,
+      });
+      return { ok: result.ok, status: result.status, json: result.payload };
+    },
+    [dispatchHostAccountCommand],
+  );
+
   return {
     accountAssets: accountAssets.current,
     hostOriginRef,
@@ -371,5 +391,6 @@ export function useSessionTransport(args: {
     readTranslation,
     saveTranslation,
     generateTranslations,
+    readTranslationGeneration,
   };
 }

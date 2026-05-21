@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   generateAccountInstanceTranslations,
   loadAccountInstanceTranslations,
+  readAccountInstanceTranslationGeneration,
   readAccountInstanceTranslationValues,
   writeAccountInstanceTranslationValues,
 } from './account-instance-translations';
@@ -87,6 +88,21 @@ test('generates translations through one Tokyo product operation', async () => {
                 queuedLocales: ['it'],
                 skippedLocales: ['cs'],
                 jobIds: ['job-it'],
+                generation: {
+                  instanceId: INSTANCE_ID,
+                  baseLocale: 'en',
+                  targetLocales: ['it', 'cs'],
+                  status: 'queued',
+                  requestedAt: '2026-05-20T00:00:00.000Z',
+                  updatedAt: '2026-05-20T00:00:00.000Z',
+                  totalLocales: 2,
+                  completedLocales: [],
+                  failedLocales: [],
+                  supersededLocales: [],
+                  pendingLocales: ['it'],
+                  currentReadyLocales: ['cs'],
+                  jobId: 'job-it',
+                },
                 results: [{ locale: 'it', ok: true, jobId: 'job-it' }],
               },
             }, 202);
@@ -120,6 +136,21 @@ test('generates translations through one Tokyo product operation', async () => {
           queuedLocales: ['it'],
           skippedLocales: ['cs'],
           jobIds: ['job-it'],
+          generation: {
+            instanceId: INSTANCE_ID,
+            baseLocale: 'en',
+            targetLocales: ['it', 'cs'],
+            status: 'queued',
+            requestedAt: '2026-05-20T00:00:00.000Z',
+            updatedAt: '2026-05-20T00:00:00.000Z',
+            totalLocales: 2,
+            completedLocales: [],
+            failedLocales: [],
+            supersededLocales: [],
+            pendingLocales: ['it'],
+            currentReadyLocales: ['cs'],
+            jobId: 'job-it',
+          },
           results: [{ locale: 'it', ok: true, jobId: 'job-it' }],
         },
       },
@@ -130,6 +161,78 @@ test('generates translations through one Tokyo product operation', async () => {
         body: { baseLocale: 'en', targetLocales: ['it', 'cs'] },
       },
     ]);
+  } finally {
+    if (originalContext === undefined) delete (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
+    else (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = originalContext;
+  }
+});
+
+test('reads translation generation state through one Tokyo product operation', async () => {
+  const originalContext = (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
+  const tokyoReads: string[] = [];
+
+  (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = {
+    env: {
+      TOKYO_PRODUCT_CONTROL: {
+        async fetch(input: RequestInfo | URL) {
+          const url = new URL(String(input));
+          tokyoReads.push(url.pathname);
+          if (url.pathname === `/__internal/instances/${INSTANCE_ID}/translations/generation`) {
+            return jsonResponse({
+              ok: true,
+              generation: {
+                instanceId: INSTANCE_ID,
+                baseLocale: 'en',
+                targetLocales: ['it', 'cs'],
+                status: 'running',
+                requestedAt: '2026-05-20T00:00:00.000Z',
+                updatedAt: '2026-05-20T00:00:03.000Z',
+                totalLocales: 2,
+                completedLocales: ['it'],
+                failedLocales: [],
+                supersededLocales: [],
+                pendingLocales: ['cs'],
+                currentReadyLocales: ['it'],
+                jobId: 'job-it',
+              },
+            });
+          }
+          return jsonResponse({ error: { reasonKey: 'unexpected_tokyo_path', detail: url.pathname } }, 500);
+        },
+      },
+    },
+  };
+
+  try {
+    const result = await readAccountInstanceTranslationGeneration({
+      accountId: ACCOUNT_PUBLIC_ID,
+      instanceId: INSTANCE_ID,
+      accountCapsule: 'capsule',
+      requestId: 'req_translation_generation_read',
+    });
+
+    assert.deepEqual(result, {
+      ok: true,
+      value: {
+        ok: true,
+        generation: {
+          instanceId: INSTANCE_ID,
+          baseLocale: 'en',
+          targetLocales: ['it', 'cs'],
+          status: 'running',
+          requestedAt: '2026-05-20T00:00:00.000Z',
+          updatedAt: '2026-05-20T00:00:03.000Z',
+          totalLocales: 2,
+          completedLocales: ['it'],
+          failedLocales: [],
+          supersededLocales: [],
+          pendingLocales: ['cs'],
+          currentReadyLocales: ['it'],
+          jobId: 'job-it',
+        },
+      },
+    });
+    assert.deepEqual(tokyoReads, [`/__internal/instances/${INSTANCE_ID}/translations/generation`]);
   } finally {
     if (originalContext === undefined) delete (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
     else (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = originalContext;

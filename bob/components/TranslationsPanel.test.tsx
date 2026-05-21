@@ -3,8 +3,11 @@ import test from 'node:test';
 import {
   buildGenerateTranslationsButtonState,
   buildTranslationValuesAfterEdit,
+  isActiveTranslationGeneration,
   isTranslationGenerationAccepted,
+  normalizeTranslationGenerationSummary,
   resolveGenerateTranslationsMessage,
+  resolveTranslationGenerationStatusMessage,
   TranslationReviewRows,
 } from './TranslationsPanel';
 
@@ -90,6 +93,7 @@ test('generate translations button is enabled for a saved instance with active t
       expectedTranslationsCount: 28,
       isDirty: false,
       isSaving: false,
+      isStarting: false,
       isGenerating: false,
     }),
     {
@@ -107,6 +111,7 @@ test('generate translations button does not translate unsaved Bob edits', () => 
       expectedTranslationsCount: 28,
       isDirty: true,
       isSaving: false,
+      isStarting: false,
       isGenerating: false,
     }),
     {
@@ -118,6 +123,37 @@ test('generate translations button does not translate unsaved Bob edits', () => 
 });
 
 test('generate translations accepts background generation response', () => {
+  const generation = {
+    instanceId: 'I1B2C3D4E5',
+    baseLocale: 'en',
+    targetLocales: ['it', 'cs'],
+    status: 'queued',
+    requestedAt: '2026-05-20T00:00:00.000Z',
+    updatedAt: '2026-05-20T00:00:00.000Z',
+    totalLocales: 2,
+    completedLocales: [],
+    failedLocales: [],
+    supersededLocales: [],
+    pendingLocales: ['it', 'cs'],
+    currentReadyLocales: [],
+    jobId: 'job-1',
+  };
+  const payload = {
+    ok: true,
+    translation: {
+      accepted: true,
+      generation,
+    },
+  };
+
+  assert.equal(isTranslationGenerationAccepted(payload), true);
+  assert.equal(
+    resolveGenerateTranslationsMessage(payload),
+    'Queued 0 of 2 translations.',
+  );
+});
+
+test('generate translations does not accept a local spinner without Tokyo job state', () => {
   const payload = {
     ok: true,
     translation: {
@@ -125,9 +161,27 @@ test('generate translations accepts background generation response', () => {
     },
   };
 
-  assert.equal(isTranslationGenerationAccepted(payload), true);
-  assert.equal(
-    resolveGenerateTranslationsMessage(payload),
-    'Generating translations. This can take a little while.',
-  );
+  assert.equal(isTranslationGenerationAccepted(payload), false);
+});
+
+test('translation generation status messages come from Tokyo job state', () => {
+  const generation = normalizeTranslationGenerationSummary({
+    instanceId: 'I1B2C3D4E5',
+    baseLocale: 'en',
+    targetLocales: ['it', 'cs'],
+    status: 'running',
+    requestedAt: '2026-05-20T00:00:00.000Z',
+    updatedAt: '2026-05-20T00:00:03.000Z',
+    totalLocales: 2,
+    completedLocales: ['it'],
+    failedLocales: [],
+    supersededLocales: [],
+    pendingLocales: ['cs'],
+    currentReadyLocales: ['it'],
+    jobId: 'job-1',
+  });
+
+  assert(generation);
+  assert.equal(isActiveTranslationGeneration(generation), true);
+  assert.equal(resolveTranslationGenerationStatusMessage(generation), 'Generating 1 of 2 translations.');
 });

@@ -23,6 +23,10 @@ export function accountInstanceContentKey(accountId: string, widgetCode: string,
   return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/instance.content.json`;
 }
 
+export function accountInstanceTranslationGenerationJobKey(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/translation-generation-job.json`;
+}
+
 export function accountInstanceOverlayObjectKey(
   accountId: string,
   widgetCode: string,

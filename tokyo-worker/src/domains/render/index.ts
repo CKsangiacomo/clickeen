@@ -9,5 +9,6 @@ export * from './r2-object';
 export * from './instance-delete';
 export * from './instance-index';
 export * from './account-instance-transitions';
+export * from './translation-generation-state';
 export * from './translation-operations';
 export * from './public-artifacts';

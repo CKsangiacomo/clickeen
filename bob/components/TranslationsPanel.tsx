@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   normalizeCanonicalLocalesFile,
   normalizeLocaleToken,
@@ -20,7 +20,32 @@ import type { TranslationReview } from '../lib/translations-preview';
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
 const TRANSLATION_GENERATION_POLL_MS = 3_000;
-const TRANSLATION_GENERATION_MAX_POLL_MS = 120_000;
+
+type TranslationGenerationStatus =
+  | 'idle'
+  | 'queued'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'superseded';
+
+type TranslationGenerationSummary = {
+  instanceId: string;
+  baseLocale: string;
+  targetLocales: string[];
+  status: TranslationGenerationStatus;
+  requestedAt: string | null;
+  updatedAt: string | null;
+  totalLocales: number;
+  completedLocales: string[];
+  failedLocales: string[];
+  supersededLocales: string[];
+  pendingLocales: string[];
+  currentReadyLocales: string[];
+  jobId?: string;
+  reasonKey?: string;
+  detail?: string;
+};
 
 function resolveLocaleLabel(locale: string): string {
   const normalized = normalizeLocaleToken(locale) ?? '';
@@ -87,10 +112,14 @@ export function buildGenerateTranslationsButtonState(args: {
   expectedTranslationsCount: number;
   isDirty: boolean;
   isSaving: boolean;
+  isStarting: boolean;
   isGenerating: boolean;
 }): { disabled: boolean; label: string; message: string | null } {
   if (args.isGenerating) {
     return { disabled: true, label: 'Generating translations...', message: null };
+  }
+  if (args.isStarting) {
+    return { disabled: true, label: 'Generate translations', message: null };
   }
   if (!args.instanceId) {
     return { disabled: true, label: 'Generate translations', message: null };
@@ -111,18 +140,122 @@ export function buildGenerateTranslationsButtonState(args: {
   return { disabled: false, label: 'Generate translations', message: null };
 }
 
+function normalizeStringArray(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const next = value.map((entry) => (typeof entry === 'string' ? entry.trim() : ''));
+  return next.some((entry) => !entry) ? null : next;
+}
+
+function normalizeGenerationStatus(value: unknown): TranslationGenerationStatus | null {
+  return value === 'idle' ||
+    value === 'queued' ||
+    value === 'running' ||
+    value === 'completed' ||
+    value === 'failed' ||
+    value === 'superseded'
+    ? value
+    : null;
+}
+
+function normalizeNullableString(value: unknown): string | null {
+  if (value == null) return null;
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+export function normalizeTranslationGenerationSummary(raw: unknown): TranslationGenerationSummary | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const payload = raw as Record<string, unknown>;
+  const instanceId = typeof payload.instanceId === 'string' ? payload.instanceId.trim() : '';
+  const baseLocale = typeof payload.baseLocale === 'string' ? payload.baseLocale.trim() : '';
+  const targetLocales = normalizeStringArray(payload.targetLocales);
+  const status = normalizeGenerationStatus(payload.status);
+  const completedLocales = normalizeStringArray(payload.completedLocales);
+  const failedLocales = normalizeStringArray(payload.failedLocales);
+  const supersededLocales = normalizeStringArray(payload.supersededLocales);
+  const pendingLocales = normalizeStringArray(payload.pendingLocales);
+  const currentReadyLocales = normalizeStringArray(payload.currentReadyLocales);
+  const totalLocales = typeof payload.totalLocales === 'number' && Number.isFinite(payload.totalLocales)
+    ? Math.max(0, Math.floor(payload.totalLocales))
+    : null;
+  if (
+    !instanceId ||
+    !baseLocale ||
+    !targetLocales ||
+    !status ||
+    totalLocales == null ||
+    !completedLocales ||
+    !failedLocales ||
+    !supersededLocales ||
+    !pendingLocales ||
+    !currentReadyLocales
+  ) {
+    return null;
+  }
+  return {
+    instanceId,
+    baseLocale,
+    targetLocales,
+    status,
+    requestedAt: normalizeNullableString(payload.requestedAt),
+    updatedAt: normalizeNullableString(payload.updatedAt),
+    totalLocales,
+    completedLocales,
+    failedLocales,
+    supersededLocales,
+    pendingLocales,
+    currentReadyLocales,
+    ...(typeof payload.jobId === 'string' && payload.jobId.trim() ? { jobId: payload.jobId.trim() } : {}),
+    ...(typeof payload.reasonKey === 'string' && payload.reasonKey.trim() ? { reasonKey: payload.reasonKey.trim() } : {}),
+    ...(typeof payload.detail === 'string' && payload.detail.trim() ? { detail: payload.detail.trim() } : {}),
+  };
+}
+
+function normalizeTranslationGenerationFromPayload(payload: unknown): TranslationGenerationSummary | null {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+  const generation = (payload as Record<string, unknown>).generation;
+  if (generation) return normalizeTranslationGenerationSummary(generation);
+  const translation = (payload as Record<string, unknown>).translation;
+  if (translation && typeof translation === 'object' && !Array.isArray(translation)) {
+    return normalizeTranslationGenerationSummary((translation as Record<string, unknown>).generation);
+  }
+  return null;
+}
+
+export function isActiveTranslationGeneration(generation: TranslationGenerationSummary | null): boolean {
+  return generation?.status === 'queued' || generation?.status === 'running';
+}
+
 export function isTranslationGenerationAccepted(payload: unknown): boolean {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
   const translation = (payload as Record<string, unknown>).translation;
+  const generation = normalizeTranslationGenerationFromPayload(payload);
   return Boolean(
     translation &&
       typeof translation === 'object' &&
       !Array.isArray(translation) &&
-      (translation as Record<string, unknown>).accepted === true,
+      (translation as Record<string, unknown>).accepted === true &&
+      isActiveTranslationGeneration(generation),
   );
 }
 
+export function resolveTranslationGenerationStatusMessage(generation: TranslationGenerationSummary): string {
+  const readyCount = generation.currentReadyLocales.length;
+  const targetCount = generation.targetLocales.length || generation.totalLocales;
+  if (generation.status === 'queued') return `Queued ${readyCount} of ${targetCount} translations.`;
+  if (generation.status === 'running') return `Generating ${readyCount} of ${targetCount} translations.`;
+  if (generation.status === 'completed') return 'Translations ready.';
+  if (generation.status === 'failed') {
+    const failed = generation.failedLocales.length;
+    const detail = generation.detail || generation.reasonKey || '';
+    return `${failed || 'Some'} translations failed.${detail ? ` ${detail}` : ''}`;
+  }
+  if (generation.status === 'superseded') return 'Translation generation restarted.';
+  return 'No translations to generate.';
+}
+
 export function resolveGenerateTranslationsMessage(payload: unknown): string {
+  const generation = normalizeTranslationGenerationFromPayload(payload);
+  if (generation) return resolveTranslationGenerationStatusMessage(generation);
   if (isTranslationGenerationAccepted(payload)) {
     return 'Generating translations. This can take a little while.';
   }
@@ -250,14 +383,13 @@ export function TranslationsPanel({
 }) {
   const session = useWidgetSession();
   const chrome = useWidgetSessionChrome();
-  const { generateTranslations, saveTranslation } = useWidgetSessionTransport();
+  const { generateTranslations, readTranslationGeneration, saveTranslation } = useWidgetSessionTransport();
   const [draftValues, setDraftValues] = useState<Record<string, string>>({});
   const [savingPath, setSavingPath] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [isStartingTranslations, setIsStartingTranslations] = useState(false);
   const [isGeneratingTranslations, setIsGeneratingTranslations] = useState(false);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
-  const generationStartedAtRef = useRef<number | null>(null);
-  const readyCountAtGenerationStartRef = useRef(0);
   const baseLocale = translationSetup?.baseLocale || translatedLocales?.baseLocale || '';
   const localeState = useMemo(
     () =>
@@ -317,15 +449,14 @@ export function TranslationsPanel({
     expectedTranslationsCount: localeState.expectedTranslationsCount,
     isDirty: session.isDirty,
     isSaving: session.isSaving,
+    isStarting: isStartingTranslations,
     isGenerating: isGeneratingTranslations,
   });
   const runGenerateTranslations = async () => {
     if (generateButton.disabled || !instanceId) return;
     setGenerateMessage(null);
     setSaveMessage(null);
-    setIsGeneratingTranslations(true);
-    generationStartedAtRef.current = Date.now();
-    readyCountAtGenerationStartRef.current = localeState.readyTranslationsCount;
+    setIsStartingTranslations(true);
     try {
       const response = await generateTranslations({
         instanceId,
@@ -337,50 +468,40 @@ export function TranslationsPanel({
       }
       setGenerateMessage(resolveGenerateTranslationsMessage(response.json));
       onRequestTranslationsRefresh();
-      if (!isTranslationGenerationAccepted(response.json)) {
-        setIsGeneratingTranslations(false);
-        generationStartedAtRef.current = null;
-      }
+      setIsGeneratingTranslations(isTranslationGenerationAccepted(response.json));
     } catch (error) {
       setGenerateMessage(error instanceof Error ? error.message : 'Translations could not be generated.');
       setIsGeneratingTranslations(false);
-      generationStartedAtRef.current = null;
+    } finally {
+      setIsStartingTranslations(false);
     }
   };
   useEffect(() => {
-    if (!isGeneratingTranslations) return;
-    if (localeState.allExpectedTranslationsReady) {
-      setGenerateMessage('Translations ready.');
-      setIsGeneratingTranslations(false);
-      generationStartedAtRef.current = null;
-      return;
-    }
-
-    const startedAt = generationStartedAtRef.current ?? Date.now();
-    generationStartedAtRef.current = startedAt;
-    if (Date.now() - startedAt > TRANSLATION_GENERATION_MAX_POLL_MS) {
-      setGenerateMessage('Translations are still generating. Open the language dropdown in a moment.');
-      setIsGeneratingTranslations(false);
-      generationStartedAtRef.current = null;
-      return;
-    }
-
-    if (localeState.readyTranslationsCount > readyCountAtGenerationStartRef.current) {
-      setGenerateMessage(
-        `${localeState.readyTranslationsCount} of ${localeState.expectedTranslationsCount} translations ready.`,
-      );
-    }
+    if (!isGeneratingTranslations || !instanceId) return;
 
     const timer = window.setTimeout(() => {
-      onRequestTranslationsRefresh();
+      readTranslationGeneration({ instanceId })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(resolveGenerateTranslationsError(response.json));
+          }
+          const generation = normalizeTranslationGenerationFromPayload(response.json);
+          if (!generation) throw new Error('Translation generation state could not be read.');
+          setGenerateMessage(resolveTranslationGenerationStatusMessage(generation));
+          setIsGeneratingTranslations(isActiveTranslationGeneration(generation));
+          onRequestTranslationsRefresh();
+        })
+        .catch((error) => {
+          setGenerateMessage(error instanceof Error ? error.message : 'Translation generation state could not be read.');
+          setIsGeneratingTranslations(false);
+        });
     }, TRANSLATION_GENERATION_POLL_MS);
     return () => window.clearTimeout(timer);
   }, [
     isGeneratingTranslations,
-    localeState.allExpectedTranslationsReady,
-    localeState.expectedTranslationsCount,
-    localeState.readyTranslationsCount,
+    instanceId,
     onRequestTranslationsRefresh,
+    readTranslationGeneration,
   ]);
   const saveTranslationValue = async (path: string) => {
     if (!selectedValues || !localeValue || localeValue === baseLocale || !instanceId) return;

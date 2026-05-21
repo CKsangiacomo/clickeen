@@ -103,6 +103,7 @@ export type BobAccountCommand =
   | 'read-translation'
   | 'save-translation'
   | 'generate-translations'
+  | 'read-translation-generation'
   | 'run-copilot'
   | 'attach-ai-outcome';
 

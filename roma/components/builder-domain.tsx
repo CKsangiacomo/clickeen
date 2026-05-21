@@ -43,6 +43,7 @@ type BobAccountCommand =
   | 'read-translation'
   | 'save-translation'
   | 'generate-translations'
+  | 'read-translation-generation'
   | 'run-copilot'
   | 'attach-ai-outcome';
 
@@ -200,6 +201,12 @@ function resolveBobAccountCommandRequest(args: {
       return {
         method: 'POST',
         path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/generate`,
+      };
+    case 'read-translation-generation':
+      if (!instanceId) return null;
+      return {
+        method: 'GET',
+        path: `/api/account/instances/${encodeURIComponent(instanceId)}/translations/generation`,
       };
     case 'run-copilot':
       if (!instanceId) return null;

@@ -11,7 +11,10 @@ import { HttpError } from './http';
 import {
   produceCurrentLanguageValues,
 } from './l10n-account-routes';
-import { completeLocaleTranslationInTokyo } from './tokyo-translation-client';
+import {
+  completeLocaleTranslationInTokyo,
+  failLocaleTranslationInTokyo,
+} from './tokyo-translation-client';
 import type { AIGrant, Env, Usage } from './types';
 
 type QueueMessage = Message<unknown>;
@@ -169,6 +172,78 @@ function isNonRetryable(error: unknown): boolean {
   );
 }
 
+function terminalFailureReasonKey(error: unknown, attempt: number): string {
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  if (
+    message.includes('unknown path') ||
+    message.includes('values_invalid') ||
+    message.includes('output missing') ||
+    message.includes('output extra') ||
+    message.includes('translation values')
+  ) {
+    return 'instance.translation.validation_failed';
+  }
+  if (isNonRetryable(error)) return 'instance.translation.provider_unavailable';
+  if (attempt >= 8) return 'instance.translation.retry_exhausted';
+  return 'instance.translation.provider_failed';
+}
+
+async function reportTerminalFailureToTokyo(args: {
+  env: Env;
+  job: InstanceTranslationJob;
+  attempt: number;
+  error: unknown;
+}): Promise<void> {
+  const detail = args.error instanceof Error ? args.error.message : String(args.error);
+  const reasonKey = terminalFailureReasonKey(args.error, args.attempt);
+  const startedAtMs = Date.now();
+  const failure = await failLocaleTranslationInTokyo({
+    env: args.env,
+    accountPublicId: args.job.accountPublicId,
+    instanceId: args.job.instanceId,
+    targetLocale: args.job.targetLocale,
+    job: args.job,
+    reasonKey,
+    detail,
+    requestId: args.job.requestId,
+  });
+  if (args.env.SF_EVENTS) {
+    await args.env.SF_EVENTS.send({
+      v: 1,
+      requestId: args.job.jobId,
+      agentId: INSTANCE_TRANSLATION_AGENT_ID,
+      occurredAtMs: startedAtMs,
+      subject: { kind: 'user', userId: args.job.userId, accountId: args.job.accountId },
+      trace: {
+        sessionId: args.job.requestId ?? args.job.jobId,
+        instancePublicId: args.job.instanceId,
+        envStage: args.job.ai.policyProfile,
+      },
+      ai: {
+        policyProfile: args.job.ai.policyProfile,
+        policyVersion: args.job.ai.policyVersion,
+        learningCapture: args.job.ai.learningCapture,
+        taskClass: 'l10n.instance',
+      },
+      input: {
+        ...args.job,
+        previousSavedTextGraph: `[${args.job.previousSavedTextGraph.length} fields]`,
+        currentSavedTextGraph: `[${args.job.currentSavedTextGraph.length} fields]`,
+        previousLanguageValues: `[${args.job.previousLanguageValues.length} values]`,
+        changedFields: `[${args.job.changedFields.length} fields]`,
+      },
+      result: {
+        operation: 'translate_saved_instance',
+        outcome: failure.recorded ? 'locale_translation_failed' : 'stale_failure_ignored',
+        targetLocale: args.job.targetLocale,
+        reasonKey: failure.reasonKey ?? reasonKey,
+        detail: failure.detail ?? detail,
+      },
+      usage: usageForFailure(args.job, startedAtMs),
+    });
+  }
+}
+
 export function isInstanceTranslationQueueMessage(value: unknown): value is InstanceTranslationJob {
   return normalizeInstanceTranslationJob(value) != null;
 }
@@ -185,6 +260,23 @@ export async function handleInstanceTranslationQueueMessage(env: Env, msg: Queue
       typeof msg.attempts === 'number' && Number.isFinite(msg.attempts) ? msg.attempts : 0;
     const message = error instanceof Error ? error.message : String(error);
     if (isNonRetryable(error) || attempt >= 8) {
+      try {
+        await reportTerminalFailureToTokyo({ env, job, attempt, error });
+      } catch (reportError) {
+        const reportMessage = reportError instanceof Error ? reportError.message : String(reportError);
+        console.error(
+          '[sanfrancisco] failed to report terminal instance translation outcome to Tokyo',
+          job.jobId,
+          job.accountPublicId,
+          job.instanceId,
+          job.targetLocale,
+          modelLabel(job),
+          `attempt=${attempt}`,
+          reportMessage,
+        );
+        msg.retry({ delaySeconds: retryDelaySeconds(attempt) + retryJitterSeconds(job.jobId, attempt) });
+        return true;
+      }
       console.error(
         '[sanfrancisco] instance translation job failed permanently',
         job.jobId,

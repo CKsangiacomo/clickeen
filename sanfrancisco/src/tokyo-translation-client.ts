@@ -100,3 +100,43 @@ export async function completeLocaleTranslationInTokyo(args: {
     ...(detail ? { detail } : {}),
   };
 }
+
+export async function failLocaleTranslationInTokyo(args: {
+  env: Env;
+  accountPublicId: string;
+  instanceId: string;
+  targetLocale: string;
+  job: unknown;
+  reasonKey: string;
+  detail: string;
+  requestId?: string | null;
+}): Promise<{ recorded: boolean; reasonKey?: string; detail?: string }> {
+  const payload = await sendTokyoJson({
+    env: args.env,
+    accountPublicId: args.accountPublicId,
+    method: 'PUT',
+    path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations/${encodeURIComponent(args.targetLocale)}/fail`,
+    body: {
+      job: args.job,
+      reasonKey: args.reasonKey,
+      detail: args.detail,
+    },
+    requestId: args.requestId,
+  });
+  const failure = isRecord(payload) && isRecord(payload.failure) ? payload.failure : null;
+  if (!failure || failure.ok !== true) {
+    throw new HttpError(502, {
+      code: 'PROVIDER_ERROR',
+      provider: 'tokyo',
+      message: 'tokyo_translation_failure_invalid_payload',
+    });
+  }
+  const recorded = failure.recorded === true;
+  const reasonKey = asTrimmedString(failure.reasonKey);
+  const detail = asTrimmedString(failure.detail);
+  return {
+    recorded,
+    ...(reasonKey ? { reasonKey } : {}),
+    ...(detail ? { detail } : {}),
+  };
+}

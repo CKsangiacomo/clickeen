@@ -133,3 +133,110 @@ test('San Francisco queue job completes one translated locale with changed value
   assert.equal(writes[0]?.values['sections.0.faqs.0.answer'], 'https://example.com/new-room-list');
   assert.equal(Object.prototype.hasOwnProperty.call(writes[0]?.values ?? {}, 'header.title'), false);
 });
+
+test('San Francisco reports non-retryable provider failures to Tokyo before ack', async () => {
+  const failures: Array<Record<string, any>> = [];
+  let acked = false;
+  let retried = false;
+  const job = translationJob();
+  job.changedFields = job.changedFields.map((field) => ({
+    ...field,
+    baseText: 'Please translate this answer now.',
+  }));
+  const env = {
+    AI_GRANT_HMAC_SECRET: 'test-secret',
+    TOKYO_PRODUCT_CONTROL: {
+      async fetch(input: RequestInfo | URL, init?: RequestInit) {
+        const url = new URL(String(input));
+        const body = init?.body ? JSON.parse(String(init.body)) : null;
+        if (url.pathname === `/__internal/instances/${INSTANCE_ID}/translations/it/fail`) {
+          failures.push(body);
+          return new Response(JSON.stringify({
+            ok: true,
+            failure: {
+              ok: true,
+              recorded: true,
+              locale: 'it',
+              reasonKey: body.reasonKey,
+              detail: body.detail,
+            },
+          }), {
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({ error: { detail: url.pathname } }), { status: 500 });
+      },
+    },
+  } as Env;
+
+  const handled = await handleInstanceTranslationQueueMessage(env, {
+    body: job,
+    attempts: 1,
+    ack() {
+      acked = true;
+    },
+    retry() {
+      retried = true;
+    },
+  } as unknown as Message<unknown>);
+
+  assert.equal(handled, true);
+  assert.equal(acked, true);
+  assert.equal(retried, false);
+  assert.equal(failures.length, 1);
+  assert.equal(failures[0]?.job.jobId, 'job-queue-it');
+  assert.equal(failures[0]?.reasonKey, 'instance.translation.provider_unavailable');
+  assert.match(String(failures[0]?.detail), /Missing .*API_KEY/);
+});
+
+test('San Francisco reports retry-exhausted terminal failures to Tokyo', async () => {
+  const failures: Array<Record<string, any>> = [];
+  let acked = false;
+  let retried = false;
+  const env = {
+    AI_GRANT_HMAC_SECRET: 'test-secret',
+    TOKYO_PRODUCT_CONTROL: {
+      async fetch(input: RequestInfo | URL, init?: RequestInit) {
+        const url = new URL(String(input));
+        const body = init?.body ? JSON.parse(String(init.body)) : null;
+        if (url.pathname === `/__internal/instances/${INSTANCE_ID}/translations/it/complete`) {
+          return new Response(JSON.stringify({ error: { detail: 'temporary tokyo failure' } }), { status: 500 });
+        }
+        if (url.pathname === `/__internal/instances/${INSTANCE_ID}/translations/it/fail`) {
+          failures.push(body);
+          return new Response(JSON.stringify({
+            ok: true,
+            failure: {
+              ok: true,
+              recorded: true,
+              locale: 'it',
+              reasonKey: body.reasonKey,
+              detail: body.detail,
+            },
+          }), {
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({ error: { detail: url.pathname } }), { status: 500 });
+      },
+    },
+  } as Env;
+
+  const handled = await handleInstanceTranslationQueueMessage(env, {
+    body: translationJob(),
+    attempts: 8,
+    ack() {
+      acked = true;
+    },
+    retry() {
+      retried = true;
+    },
+  } as unknown as Message<unknown>);
+
+  assert.equal(handled, true);
+  assert.equal(acked, true);
+  assert.equal(retried, false);
+  assert.equal(failures.length, 1);
+  assert.equal(failures[0]?.reasonKey, 'instance.translation.retry_exhausted');
+  assert.match(String(failures[0]?.detail), /temporary tokyo failure/);
+});
