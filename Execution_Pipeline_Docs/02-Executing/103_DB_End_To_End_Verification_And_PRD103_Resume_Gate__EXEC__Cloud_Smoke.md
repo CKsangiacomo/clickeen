@@ -22,11 +22,14 @@ The gate is not a code-build gate only. It must prove the product path works end
 
 ## Current Verification
 
-Cloud deployment is green for the current head:
+Cloud deployment is green for the current code head:
 
-- `cloud-dev workers deploy`: success for head `c9403a91ba3c8380c83da21454c9ad10da1a79f3`
-- `cloud-dev roma app verify`: success for head `c9403a91ba3c8380c83da21454c9ad10da1a79f3`
-- `cloud-dev surface reachability`: success for head `c9403a91ba3c8380c83da21454c9ad10da1a79f3`
+- `cloud-dev workers deploy`: success for head `52b990ff4516924317cffc9b418122487d389e65` after rerunning a transient R2 bulk-sync HTTP 502 failure.
+- `cloud-dev surface reachability`: success for head `52b990ff4516924317cffc9b418122487d389e65`.
+
+Documentation head:
+
+- `74bc5f87` updates this gate readout. It does not change runtime behavior.
 
 Local targeted verification was already green before this gate:
 
@@ -93,6 +96,11 @@ GET /client/v4/zones?name=clk.live
 
 Current result: success with an empty result set. The token/project visible from this repo can read `clickeen.com`, but it does not see a `clk.live` zone.
 
+Operator confirmation:
+
+- `clk.live` has been purchased, but it has not been provisioned as a usable Cloudflare zone/DNS surface for this deployment account yet.
+- Therefore canonical `https://clk.live/...` smoke cannot pass until the domain is set up in Cloudflare and DNS resolves.
+
 Direct A/CNAME checks:
 
 ```bash
@@ -108,7 +116,7 @@ Forced Cloudflare edge check:
 curl -I --resolve clk.live:443:188.114.96.7 https://clk.live/00000001/UZ3JEJSHII
 ```
 
-Current result: HTTP 404 from Cloudflare/Tokyo worker.
+Current result: HTTP 404 with Tokyo-worker headers when an arbitrary Cloudflare edge IP is forced.
 
 Private source mirror check:
 
@@ -116,14 +124,14 @@ Private source mirror check:
 curl -I --resolve clk.live:443:188.114.96.7 https://clk.live/00000001/UZ3JEJSHII/instance.json
 ```
 
-Current result: HTTP 404 from Cloudflare/Tokyo worker.
+Current result: HTTP 404 with Tokyo-worker headers when an arbitrary Cloudflare edge IP is forced.
 
 ## Deterministic Readout
 
 The gate is blocked for two separate reasons:
 
-1. `clk.live` is not currently resolvable from the verification environment. The public canonical visitor URL cannot pass until DNS resolves.
-2. When forced through a Cloudflare edge IP, the Tokyo worker is reachable but the seeded FAQ instance returns HTTP 404. That means the seeded published instance does not currently have a materialized `index.html` public artifact at `accounts/00000001/instances/UZ3JEJSHII/index.html`.
+1. `clk.live` is not provisioned as a usable Cloudflare public domain for this deploy account yet. The public canonical visitor URL cannot pass until the zone/DNS/route setup exists and DNS resolves.
+2. The forced Cloudflare-edge check is useful only as an artificial worker-routing probe. It is not a substitute for canonical DNS. Under that artificial probe, the seeded FAQ instance returns HTTP 404, which means the seeded published instance still needs a materialized `index.html` public artifact at `accounts/00000001/instances/UZ3JEJSHII/index.html`.
 
 The private `instance.json` 404 is good. It proves the old source mirror is not accidentally exposed as a public artifact.
 

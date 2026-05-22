@@ -169,8 +169,8 @@ Current 103_DB.9 readout:
 
 - Blocked: cloud deploy and targeted code verification are green, but the product-path smoke gate is not green.
 - Green: commit `52b990ff` deployed after rerunning a transient Cloudflare R2 bulk-sync HTTP 502 failure, and cloud-dev surface reachability is green for that commit.
-- Blocked: canonical `clk.live` DNS does not currently resolve from the verification environment.
-- Blocked: forcing `clk.live` through a Cloudflare edge IP reaches the Tokyo worker, but the seeded FAQ public artifact returns HTTP 404, which means the published seeded instances have not been materialized under the new public artifact model.
+- Blocked: canonical `clk.live` is not provisioned as a usable Cloudflare public domain for this deploy account yet. The domain has been purchased, but zone/DNS/route setup is still pending.
+- Blocked: forcing `clk.live` through a Cloudflare edge IP reaches Tokyo-worker as an artificial probe, but the seeded FAQ public artifact returns HTTP 404, which means the published seeded instances have not been materialized under the new public artifact model.
 - Blocked: the new Tokyo repair operation is internal and tested, but `tokyo.dev.clickeen.com/__internal/*` is not publicly routed to Tokyo. It cannot be run from shell through the public custom domain. The allowed cloud path is a real Roma publish operation or a narrow Roma-owned internal repair caller.
 - Green: private source mirror access remains denied; forced `clk.live` access to `instance.json` returns HTTP 404.
 - Blocked: authenticated Roma human smoke still needs a real browser/session or Roma cookie and must prove open, save, Generate, translated preview, and publish before PRD 103 resumes.
