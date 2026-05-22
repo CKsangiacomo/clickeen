@@ -135,6 +135,13 @@ Deploy success does not mean PRD 103 can resume.
 
 At this stage the DB pivot code is deployed, but the serving bridge still needs a real materialization proof for existing seeded instances. The publish/materialization operation exists in Tokyo, but the seeded public artifacts must be created through an approved product/system operation before the smoke gate can pass.
 
+Latest deploy status:
+
+- Commit `52b990ff` deployed after a retry of the Cloudflare workers deploy workflow.
+- The rerun failure was an R2 bulk-sync Cloudflare HTTP 502, not a code failure.
+- The cloud-dev surface-reachability workflow for `52b990ff` is green.
+- That workflow still does not prove `clk.live`, because it does not include the canonical public serving domain.
+
 ## Repair Operation Added In This Slice
 
 This slice adds a narrow Tokyo system repair route:
@@ -162,6 +169,14 @@ Test proof:
 - authenticated repair materializes `index.html` for a published row;
 - repair does not create or expose `instance.json`.
 
+Cloud invocation status:
+
+- `https://tokyo.dev.clickeen.com/healthz` reaches the Tokyo worker and returns HTTP 200 with a worker `x-request-id`.
+- `https://tokyo.dev.clickeen.com/__internal/accounts/00000001/serving/restore-paid` returns HTTP 404 without a worker `x-request-id`.
+- This is because `tokyo.dev.clickeen.com/__internal/*` is not a public Cloudflare route for the Tokyo worker. Roma uses service binding for internal Tokyo calls.
+- Therefore the repair route exists and is tested, but it has not been run against cloud-dev seeded data from the shell.
+- Do not expose broad Tokyo `__internal/*` just to make this callable. If a manual cloud repair is needed, use a narrow Roma-owned account operation or the existing authenticated Roma publish path.
+
 ## Required Fix Before Green
 
 The gate can go green only after all of these are true:
@@ -178,7 +193,7 @@ The gate can go green only after all of these are true:
 Allowed paths:
 
 - A human product-path publish from Roma for seeded instances, proving the real publish operation materializes artifacts.
-- A documented, protected system repair operation that materializes all currently published rows. This must be scoped as a DB pivot repair path, not a new public product mode.
+- A documented, protected system repair operation that materializes all currently published rows. This must be scoped as a DB pivot repair path, not a new public product mode. If invoked from cloud-dev, it must be reached through an already-authorized internal service path, not by opening Tokyo internals broadly on the public custom domain.
 
 Not allowed:
 
