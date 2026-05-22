@@ -1,6 +1,6 @@
 # EXEC 103_DB.3 Tokyo Instance Registry/Control Row Wiring
 
-Status: In Progress - Runtime Cutover Ready For Cloud Deploy
+Status: In Progress - Cloud Deploy Green, Roma Auth Smoke Pending
 Date Started: 2026-05-22
 Parent PRD: `103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
 Child PRD: `103_DB_Instances__PRD__Instances_Table.md`
@@ -62,10 +62,28 @@ Local verification currently green:
 - `pnpm lint`
 - `git diff --check`
 
+Cloud verification green:
+
+- Runtime cutover commit: `6136887f feat(tokyo): use DB instance registry for lifecycle`
+- Deploy command fix commit: `b97ffb42 fix(tokyo): deploy worker without rewriting routes`
+- `cloud-dev workers deploy` run `26286347982`: success
+- `cloud-dev surface reachability` run `26286422662`: success
+- Tokyo health: `GET https://tokyo.dev.clickeen.com/healthz` returns `200 {"up":true}`
+- Tokyo worker secrets exist for the DB-backed registry path: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `TOKYO_DEV_JWT`
+
+Active product discovery guard:
+
+- No active code hits for `accountInstanceIndex`, `instance-index`, `AccountInstanceIndex`, `normalizeIndex`, or `listAccountInstancesBySource`.
+- No active code hits for `accounts/*/instances/index.json` or `instances/index.json`; the only remaining mentions are migration evidence in this EXEC doc.
+
+Deploy mechanics note:
+
+- Wrangler uploaded Tokyo successfully in run `26286011810`, then failed while rewriting Cloudflare zone routes because the GitHub Actions Cloudflare token does not have route mutation permission.
+- The Tokyo deploy command now uploads the worker without rewriting routes. Existing Cloudflare routes remain the serving boundary; route creation/mutation is not part of this runtime slice.
+
 ## Not Green Yet
 
 Do not close this slice until:
 
-- the Tokyo worker cutover is pushed and cloud-dev deploy is green;
 - Roma can list/open FAQ, Countdown, and Logo Showcase through Tokyo with DB-backed instance authority;
-- grep guard shows no active product path uses account index JSON or R2 listing for instance discovery.
+- human-auth Roma smoke confirms FAQ, Countdown, and Logo Showcase list/open in cloud-dev.
