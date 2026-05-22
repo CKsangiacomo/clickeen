@@ -4,9 +4,15 @@ import {
   accountInstanceConfigKey,
   accountInstanceContentKey,
   accountInstanceDocumentKey,
-  accountInstancesRoot,
 } from './keys';
-import { patchAccountInstanceIndexEntry, resolveAccountInstanceLocation } from './instance-index';
+import {
+  createInstanceRegistryRow,
+  listInstanceRegistryRows,
+  readInstanceRegistryRow,
+  resolveAccountInstanceLocation,
+  updateInstanceRegistryEditedAt,
+  updateInstanceRegistryPublishStatus,
+} from './instance-registry';
 import {
   normalizeAccountInstanceConfigDocument,
   normalizeAccountInstanceContentDocument,
@@ -91,21 +97,6 @@ function summaryFromConfigDocument(configDoc: AccountInstanceConfigDocument): Ac
     publishStatus: configDoc.publishStatus,
     updatedAt: configDoc.updatedAt,
   };
-}
-
-function sortAccountInstanceSummaries(entries: AccountInstanceSummary[]): AccountInstanceSummary[] {
-  return [...entries].sort((left, right) => {
-    const byWidget = left.widgetType.localeCompare(right.widgetType);
-    if (byWidget !== 0) return byWidget;
-    const byUpdated = right.updatedAt.localeCompare(left.updatedAt);
-    if (byUpdated !== 0) return byUpdated;
-    return left.instanceId.localeCompare(right.instanceId);
-  });
-}
-
-function extractInstanceIdFromSourceKey(key: string): string | null {
-  const match = key.match(/\/instances\/([^/]+)\/instance\.config\.json$/);
-  return match ? normalizeStorageId(match[1] || '') : null;
 }
 
 function normalizeLocaleArray(value: unknown): string[] {
@@ -409,12 +400,21 @@ async function updateContentDocumentByLocation(args: {
 async function readAccountInstanceSummaryByLocation(args: {
   env: Env;
   accountId: string;
+  widgetCode: string;
   instanceId: string;
+  publishStatus: InstanceServeState;
+  editedAt: string;
 }): Promise<AccountInstanceSummary | null> {
   const configDoc = normalizeAccountInstanceConfigDocument(
-    await loadJson(args.env, accountInstanceConfigKey(args.accountId, '', args.instanceId)),
+    await loadJson(args.env, accountInstanceConfigKey(args.accountId, args.widgetCode, args.instanceId)),
   );
-  return configDoc ? summaryFromConfigDocument(configDoc) : null;
+  return configDoc
+    ? {
+        ...summaryFromConfigDocument(configDoc),
+        publishStatus: args.publishStatus,
+        updatedAt: args.editedAt,
+      }
+    : null;
 }
 
 async function readComposedInstanceByLocation(args: {
@@ -524,7 +524,26 @@ export async function writeSavedRenderConfig(args: {
   await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), configDoc);
   await putJson(args.env, accountInstanceContentKey(accountId, widgetCode, instanceId), content);
   await putJson(args.env, accountInstanceDocumentKey(accountId, widgetCode, instanceId), instance);
-  await patchAccountInstanceIndexEntry({ env: args.env, accountId, widgetType, instanceId });
+  const registry = await readInstanceRegistryRow({ env: args.env, accountId, instanceId });
+  if (registry) {
+    await updateInstanceRegistryEditedAt({
+      env: args.env,
+      accountId,
+      instanceId,
+      editedAt: now,
+    });
+  } else {
+    await createInstanceRegistryRow({
+      env: args.env,
+      accountId,
+      instanceId,
+      widgetType,
+      publishStatus: configDoc.publishStatus,
+      translationStatus: 'idle',
+      createdAt: configDoc.createdAt,
+      editedAt: now,
+    });
+  }
   return {
     pointer: toSavedPointer(instance),
   };
@@ -561,7 +580,14 @@ export async function readSavedRenderPointer(args: {
   if (pointer.id !== instanceId || pointer.accountId !== accountId) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' };
   }
-  return { ok: true, value: pointer };
+  return {
+    ok: true,
+    value: {
+      ...pointer,
+      publishStatus: location.publishStatus,
+      updatedAt: location.editedAt,
+    },
+  };
 }
 
 export async function readAccountInstanceDocument(args: {
@@ -591,7 +617,14 @@ export async function readAccountInstanceDocument(args: {
   if (!instance || instance.id !== instanceId || instance.accountId !== accountId) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.config.invalid' };
   }
-  return { ok: true, value: instance };
+  return {
+    ok: true,
+    value: {
+      ...instance,
+      publishStatus: location.publishStatus,
+      updatedAt: location.editedAt,
+    },
+  };
 }
 
 export async function readAccountInstanceContentDocument(args: {
@@ -798,30 +831,27 @@ export async function completeAccountInstanceTranslatedLocaleValues(args: {
   return { locale, values };
 }
 
-export async function listAccountInstancesBySource(args: {
+export async function listAccountInstances(args: {
   env: Env;
   accountId: string;
 }): Promise<AccountInstanceSummary[]> {
   const accountId = normalizeStorageId(args.accountId);
   if (!accountId) throw new Error('tokyo.errors.render.invalid');
-  const prefix = `${accountInstancesRoot(accountId)}/`;
-  const instanceIds = new Set<string>();
-  let cursor: string | undefined = undefined;
-  do {
-    const listed = await args.env.TOKYO_R2.list({ prefix, cursor });
-    for (const object of listed.objects) {
-      const instanceId = extractInstanceIdFromSourceKey(object.key);
-      if (instanceId) instanceIds.add(instanceId);
-    }
-    cursor = listed.truncated ? listed.cursor : undefined;
-  } while (cursor);
-
+  const registryRows = await listInstanceRegistryRows({ env: args.env, accountId });
   const summaries: AccountInstanceSummary[] = [];
-  for (const instanceId of instanceIds) {
-    const summary = await readAccountInstanceSummaryByLocation({ env: args.env, accountId, instanceId });
-    if (summary) summaries.push(summary);
+  for (const row of registryRows) {
+    const summary = await readAccountInstanceSummaryByLocation({
+      env: args.env,
+      accountId,
+      widgetCode: row.widgetCode,
+      instanceId: row.id,
+      publishStatus: row.publishStatus,
+      editedAt: row.editedAt,
+    });
+    if (!summary) throw new Error('coreui.errors.instance.config.invalid');
+    summaries.push(summary);
   }
-  return sortAccountInstanceSummaries(summaries);
+  return summaries;
 }
 
 export async function renameAccountInstanceDisplay(args: {
@@ -866,11 +896,11 @@ export async function renameAccountInstanceDisplay(args: {
     displayName,
     updatedAt,
   } satisfies AccountInstanceDocument);
-  await patchAccountInstanceIndexEntry({
+  await updateInstanceRegistryEditedAt({
     env: args.env,
     accountId: location.accountId,
-    widgetType: location.widgetType,
     instanceId: location.instanceId,
+    editedAt: updatedAt,
   });
   return { instanceId: location.instanceId, displayName, updatedAt };
 }
@@ -912,13 +942,7 @@ export async function readInstanceServeState(args: {
     widgetType: args.widgetType,
   });
   if (!location) return 'unpublished';
-  const instance = await readComposedInstanceByLocation({
-    env: args.env,
-    accountId: location.accountId,
-    widgetCode: location.widgetCode,
-    instanceId: location.instanceId,
-  });
-  return instance?.publishStatus === 'published' ? 'published' : 'unpublished';
+  return location.publishStatus;
 }
 
 export async function writeInstanceServeState(args: {
@@ -938,36 +962,12 @@ export async function writeInstanceServeState(args: {
     widgetType: args.widgetType,
   });
   if (!location) throw new Error('tokyo.errors.render.notFound');
-  const key = accountInstanceDocumentKey(location.accountId, location.widgetCode, location.instanceId);
-  const instance = await readComposedInstanceByLocation({
+  const changed = location.publishStatus !== args.status;
+  await updateInstanceRegistryPublishStatus({
     env: args.env,
     accountId: location.accountId,
-    widgetCode: location.widgetCode,
     instanceId: location.instanceId,
-  });
-  if (!instance) throw new Error('tokyo.errors.instance.documentInvalid');
-  const changed = instance.publishStatus !== args.status;
-  const now = nowIso();
-  const next = { ...instance, publishStatus: args.status, updatedAt: now } satisfies AccountInstanceDocument;
-  const configDoc = await readConfigDocumentByLocation({
-    env: args.env,
-    accountId: location.accountId,
-    widgetCode: location.widgetCode,
-    instanceId: location.instanceId,
-  });
-  if (configDoc) {
-    await putJson(args.env, accountInstanceConfigKey(location.accountId, location.widgetCode, location.instanceId), {
-      ...configDoc,
-      publishStatus: args.status,
-      updatedAt: now,
-    } satisfies AccountInstanceConfigDocument);
-  }
-  await putJson(args.env, key, next);
-  await patchAccountInstanceIndexEntry({
-    env: args.env,
-    accountId: location.accountId,
-    widgetType: location.widgetType,
-    instanceId: location.instanceId,
+    publishStatus: args.status,
   });
   return { changed };
 }

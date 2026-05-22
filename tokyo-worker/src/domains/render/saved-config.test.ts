@@ -2,14 +2,16 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Env } from '../../types.ts';
 import {
-  listAccountInstancesBySource,
+  listAccountInstances,
   publishAccountInstanceTransition,
+  readInstanceServeState,
   readSavedRenderConfig,
   renameAccountInstanceDisplay,
   saveAccountInstanceTransition,
   unpublishAccountInstanceTransition,
   writeSavedRenderConfig,
 } from './index.ts';
+import { attachTestInstanceRegistry } from './test-instance-registry.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
 const INSTANCE_ID = 'Z9Y8X7W6V5';
@@ -88,7 +90,8 @@ function createTestEnv() {
       },
     } as unknown as R2Bucket,
   } as Env;
-  return { env, objects, writes };
+  const registryRows = attachTestInstanceRegistry(env);
+  return { env, objects, writes, registryRows };
 }
 
 function putText(objects: Map<string, StoredObject>, key: string, body: string, contentType: string): void {
@@ -263,13 +266,23 @@ test('save updates source and publish materializes public artifacts without publ
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/script.js`), true);
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`), true);
 
+  assert.equal(await readInstanceServeState({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID }), 'published');
   const instance = jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`);
-  assert.equal(instance.publishStatus, 'published');
+  assert.equal(instance.publishStatus, 'unpublished');
   assert.deepEqual(instance.config, { question: 'Q2', answer: 'A2' });
 });
 
-test('product instance list reads source files without account index handoff', async () => {
-  const { env, objects } = createTestEnv();
+test('product instance list reads registry rows without account index handoff', async () => {
+  const { env, objects, registryRows } = createTestEnv();
+  registryRows.set(`${ACCOUNT_ID}/${INSTANCE_ID}`, {
+    id: INSTANCE_ID,
+    account_id: ACCOUNT_ID,
+    widget_type: 'faq',
+    publish_status: 'unpublished',
+    translation_status: 'idle',
+    created_at: '2026-01-01T00:00:00.000Z',
+    edited_at: '2026-01-01T00:00:00.000Z',
+  });
   await writeSavedRenderConfig({
     env,
     accountId: ACCOUNT_ID,
@@ -279,9 +292,7 @@ test('product instance list reads source files without account index handoff', a
     meta: null,
     config: { question: 'Q1', answer: 'A1' },
   });
-  objects.delete(`accounts/${ACCOUNT_ID}/instances/index.json`);
-
-  const instances = await listAccountInstancesBySource({ env, accountId: ACCOUNT_ID });
+  const instances = await listAccountInstances({ env, accountId: ACCOUNT_ID });
 
   assert.deepEqual(instances, [
     {
@@ -297,7 +308,16 @@ test('product instance list reads source files without account index handoff', a
 });
 
 test('product instance list does not inspect FAQ content fields', async () => {
-  const { env, objects } = createTestEnv();
+  const { env, objects, registryRows } = createTestEnv();
+  registryRows.set(`${ACCOUNT_ID}/${INSTANCE_ID}`, {
+    id: INSTANCE_ID,
+    account_id: ACCOUNT_ID,
+    widget_type: 'faq',
+    publish_status: 'unpublished',
+    translation_status: 'idle',
+    created_at: '2026-01-01T00:00:00.000Z',
+    edited_at: '2026-01-01T00:00:00.000Z',
+  });
   objects.set(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.config.json`, {
     kind: 'json',
     payload: {
@@ -338,7 +358,7 @@ test('product instance list does not inspect FAQ content fields', async () => {
     },
   });
 
-  const instances = await listAccountInstancesBySource({ env, accountId: ACCOUNT_ID });
+  const instances = await listAccountInstances({ env, accountId: ACCOUNT_ID });
 
   assert.deepEqual(instances, [
     {
@@ -381,7 +401,7 @@ test('product instance list ignores instance.json compatibility files', async ()
     },
   });
 
-  assert.deepEqual(await listAccountInstancesBySource({ env, accountId: ACCOUNT_ID }), []);
+  assert.deepEqual(await listAccountInstances({ env, accountId: ACCOUNT_ID }), []);
 });
 
 test('rename updates display state without rewriting content status', async () => {

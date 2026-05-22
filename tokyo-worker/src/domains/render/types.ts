@@ -188,23 +188,6 @@ export type SavedRenderDocumentReadResult =
 
 export type InstanceServeState = 'published' | 'unpublished';
 
-export type AccountInstanceIndexEntry = {
-  accountId: string;
-  id: string;
-  widgetCode: string;
-  widgetType: string;
-  displayName: string;
-  publishStatus: InstanceServeState;
-  updatedAt: string;
-};
-
-export type AccountInstanceIndexDocument = {
-  v: 1;
-  accountId: string;
-  entries: AccountInstanceIndexEntry[];
-  updatedAt: string;
-};
-
 export type OverlayObjectDocument = {
   v: 1;
   values: Record<string, unknown>;

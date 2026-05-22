@@ -7,7 +7,7 @@ export * from './saved-config';
 export * from './storage';
 export * from './r2-object';
 export * from './instance-delete';
-export * from './instance-index';
+export * from './instance-registry';
 export * from './account-instance-transitions';
 export * from './translation-generation-state';
 export * from './translation-operations';

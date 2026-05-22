@@ -6,8 +6,6 @@ import type {
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,
   AccountInstanceContentFieldStatus,
-  AccountInstanceIndexDocument,
-  AccountInstanceIndexEntry,
   LocalePolicy,
   PublishedOverlayProjection,
   SavedRenderPointer,
@@ -216,30 +214,4 @@ export function resolveSavedRenderValidationReason(raw: unknown): string {
   const widgetType = asTrimmedString(payload?.widgetType);
   if (!widgetType) return 'coreui.errors.instance.widgetMissing';
   return 'coreui.errors.instance.config.invalid';
-}
-
-export function normalizeIndexEntry(raw: unknown): AccountInstanceIndexEntry | null {
-  const payload = asRecord(raw);
-  if (!payload) return null;
-  const accountId = normalizeStorageId(payload.accountId) ?? '';
-  const id = normalizeStorageId(payload.id) ?? '';
-  const widgetCode = asTrimmedString(payload.widgetCode) ?? '';
-  const widgetType = asTrimmedString(payload.widgetType) ?? '';
-  const displayName = asTrimmedString(payload.displayName) ?? id;
-  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
-  const publishStatus = payload.publishStatus === 'published' ? 'published' : 'unpublished';
-  if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(id) || !isWidgetOverlayCode(widgetCode) || !widgetType || !displayName || !updatedAt) return null;
-  return { accountId, id, widgetCode, widgetType, displayName, publishStatus, updatedAt };
-}
-
-export function normalizeIndexDocument(raw: unknown, accountId: string): AccountInstanceIndexDocument | null {
-  const payload = asRecord(raw);
-  if (!payload || payload.v !== 1) return null;
-  const docAccountId = normalizeStorageId(payload.accountId);
-  const updatedAt = asTrimmedString(payload.updatedAt);
-  const entriesRaw = Array.isArray(payload.entries) ? payload.entries : null;
-  if (docAccountId !== accountId || !updatedAt || !entriesRaw) return null;
-  const entries = entriesRaw.map((entry) => normalizeIndexEntry(entry));
-  if (entries.some((entry) => !entry)) return null;
-  return { v: 1, accountId, entries: entries as AccountInstanceIndexEntry[], updatedAt };
 }

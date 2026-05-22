@@ -20,7 +20,7 @@ import {
   completeLocaleTranslation,
   failLocaleTranslation,
   generateInstanceTranslations,
-  listAccountInstancesBySource,
+  listAccountInstances,
   publishAccountInstanceTransition,
   readAccountInstanceDocument,
   readInstanceTranslationGeneration,
@@ -213,7 +213,7 @@ export async function tryHandleInternalRenderRoutes(
     if (authErr) return respond(authErr);
 
     try {
-      const accountInstances = await listAccountInstancesBySource({ env, accountId });
+      const accountInstances = await listAccountInstances({ env, accountId });
       return respond(
         json({
           ok: true,

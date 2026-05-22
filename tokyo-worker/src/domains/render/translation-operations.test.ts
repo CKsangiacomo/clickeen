@@ -26,6 +26,7 @@ import {
   readAccountInstanceContentDocument,
   writeSavedRenderConfig,
 } from './saved-config.ts';
+import { attachTestInstanceRegistry } from './test-instance-registry.ts';
 
 type StoredObject = {
   body: unknown;
@@ -88,6 +89,7 @@ function createTestEnv(): { env: Env; objects: Map<string, StoredObject>; queued
       },
     } as unknown as R2Bucket,
   } as Env;
+  attachTestInstanceRegistry(env);
   return { env, objects, queued };
 }
 

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Env } from '../types.ts';
-import { writeSavedRenderConfig } from '../domains/render/saved-config.ts';
+import { writeInstanceServeState, writeSavedRenderConfig } from '../domains/render/saved-config.ts';
+import { attachTestInstanceRegistry } from '../domains/render/test-instance-registry.ts';
 import { tryHandleClkLiveStaticRoutes } from './clk-live-routes.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
@@ -72,6 +73,7 @@ function createTestEnv(initialObjects: Record<string, string> = {}) {
       },
     } as unknown as R2Bucket,
   } as Env;
+  attachTestInstanceRegistry(env);
   return { env, objects };
 }
 
@@ -88,16 +90,12 @@ async function seedInstance(args: {
     meta: null,
     config: { question: 'Q1', answer: 'A1' },
   });
-  for (const key of [
-    `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`,
-    `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.config.json`,
-  ]) {
-    const current = await args.env.TOKYO_R2.get(key);
-    const text = await current?.text();
-    const json = JSON.parse(text ?? '{}') as Record<string, unknown>;
-    json.publishStatus = args.publishStatus;
-    await args.env.TOKYO_R2.put(key, JSON.stringify(json), {
-      httpMetadata: { contentType: 'application/json; charset=utf-8' },
+  if (args.publishStatus === 'published') {
+    await writeInstanceServeState({
+      env: args.env,
+      accountId: ACCOUNT_ID,
+      instanceId: INSTANCE_ID,
+      status: 'published',
     });
   }
 }

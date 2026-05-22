@@ -6,6 +6,7 @@ import {
   writeSavedRenderConfig,
   writeTranslatedLocaleValues,
 } from './index.ts';
+import { attachTestInstanceRegistry } from './test-instance-registry.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
 const INSTANCE_ID = 'Z9Y8X7W6V5';
@@ -83,6 +84,7 @@ function createTestEnv(seed: Record<string, string> = {}) {
       },
     } as unknown as R2Bucket,
   } as Env;
+  attachTestInstanceRegistry(env);
   return { env, objects };
 }
 
