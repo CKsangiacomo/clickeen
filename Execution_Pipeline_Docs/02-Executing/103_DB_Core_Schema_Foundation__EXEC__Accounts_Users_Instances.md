@@ -124,7 +124,7 @@ The migration drops old foundations that cannot survive as product truth:
 - `pnpm lint` passed.
 - Dispatched `supabase migrations deploy` for `cloud-dev` after pushing commit `bf39f97e`.
 - GitHub run `26283502362` failed before linking or touching Supabase because required migration secrets were not configured in Actions. The PRD guard passed in the run; failure occurred in the target-selection preflight.
-- Workflow was tightened so cloud-dev can derive the project ref from existing `SUPABASE_URL_CLOUD_DEV`; only `SUPABASE_ACCESS_TOKEN` and a DB password remain required secrets for cloud-dev.
+- Workflow was tightened again to remove invented per-environment secret names. Cloud-dev uses the existing `SUPABASE_URL_CLOUD_DEV` repo variable as workflow `SUPABASE_URL` and derives the project ref from it. The only extra CI-only credentials are the Supabase CLI deployment credentials: `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`.
 
 Not green yet:
 

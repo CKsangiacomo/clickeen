@@ -9,7 +9,6 @@ on:
         type: choice
         options:
           - cloud-dev
-          - production
       confirm:
         description: Type APPLY_MIGRATIONS to deploy reviewed migrations
         required: true
@@ -28,12 +27,8 @@ jobs:
       contents: read
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_URL_CLOUD_DEV: ${{ vars.SUPABASE_URL_CLOUD_DEV }}
-      SUPABASE_PROJECT_REF_CLOUD_DEV: ${{ secrets.SUPABASE_PROJECT_REF_CLOUD_DEV || vars.SUPABASE_PROJECT_REF_CLOUD_DEV }}
-      SUPABASE_PROJECT_REF_PRODUCTION: ${{ secrets.SUPABASE_PROJECT_REF_PRODUCTION }}
+      SUPABASE_URL: ${{ vars.SUPABASE_URL_CLOUD_DEV }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      SUPABASE_DB_PASSWORD_CLOUD_DEV: ${{ secrets.SUPABASE_DB_PASSWORD_CLOUD_DEV }}
-      SUPABASE_DB_PASSWORD_PRODUCTION: ${{ secrets.SUPABASE_DB_PASSWORD_PRODUCTION }}
     steps:
       - uses: actions/checkout@v4
 
@@ -54,15 +49,7 @@ jobs:
         run: |
           case "${{ inputs.target }}" in
             cloud-dev)
-              project_ref="$SUPABASE_PROJECT_REF_CLOUD_DEV"
-              db_password="${SUPABASE_DB_PASSWORD_CLOUD_DEV:-$SUPABASE_DB_PASSWORD}"
-              if [ -z "$project_ref" ] && [ -n "$SUPABASE_URL_CLOUD_DEV" ]; then
-                project_ref=$(node -e 'console.log(new URL(process.env.SUPABASE_URL_CLOUD_DEV).hostname.split(".")[0])')
-              fi
-              ;;
-            production)
-              project_ref="$SUPABASE_PROJECT_REF_PRODUCTION"
-              db_password="${SUPABASE_DB_PASSWORD_PRODUCTION:-$SUPABASE_DB_PASSWORD}"
+              project_ref=$(node -e 'console.log(new URL(process.env.SUPABASE_URL).hostname.split(".")[0])')
               ;;
             *)
               echo "Unknown target: ${{ inputs.target }}" >&2
@@ -70,8 +57,13 @@ jobs:
               ;;
           esac
 
-          if [ -z "$project_ref" ] || [ -z "$db_password" ]; then
-            echo "Missing Supabase project ref or DB password secret for ${{ inputs.target }}" >&2
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "Missing SUPABASE_URL for ${{ inputs.target }}. Configure the existing SUPABASE_URL_CLOUD_DEV repo variable." >&2
+            exit 1
+          fi
+
+          if [ -z "$SUPABASE_DB_PASSWORD" ]; then
+            echo "Missing SUPABASE_DB_PASSWORD secret for Supabase CLI migration deployment." >&2
             exit 1
           fi
 
@@ -81,10 +73,7 @@ jobs:
           fi
 
           echo "project_ref=$project_ref" >> "$GITHUB_OUTPUT"
-          {
-            echo "SUPABASE_PROJECT_REF=$project_ref"
-            echo "SUPABASE_DB_PASSWORD=$db_password"
-          } >> "$GITHUB_ENV"
+          echo "SUPABASE_PROJECT_REF=$project_ref" >> "$GITHUB_ENV"
 
       - name: Link Supabase project
         run: supabase link --project-ref "${{ steps.target.outputs.project_ref }}"
