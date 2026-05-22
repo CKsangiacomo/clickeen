@@ -151,41 +151,27 @@ export async function loadUserContactMethods(
   env: Env,
   userId: string,
 ): Promise<Result<BerlinContactMethodsPayload>> {
-  const [verifiedRows, verificationRows] = await Promise.all([
-    listVerifiedContactMethodRows(env, userId),
-    listPendingVerificationRows(env, userId),
-  ]);
-  if (!verifiedRows.ok) return verifiedRows;
-  if (!verificationRows.ok) return verificationRows;
-
+  const params = new URLSearchParams({
+    select: 'phone,whatsapp',
+    user_id: `eq.${userId}`,
+    limit: '1',
+  });
+  const response = await supabaseAdminFetch(env, `/rest/v1/users?${params.toString()}`, {
+    method: 'GET',
+  });
+  const payload = await readSupabaseAdminJson<Array<{ phone?: unknown; whatsapp?: unknown }> | Record<string, unknown>>(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      response: supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload),
+    };
+  }
+  const row = Array.isArray(payload) ? payload[0] ?? null : null;
   const out = createEmptyContactMethods();
-  for (const row of verifiedRows.value) {
-    const channel = normalizeChannel(String(row.channel || ''));
-    const value = normalizeContactValue(row.value);
-    if (!channel || !value || !normalizeTimestamp(row.verified_at)) continue;
-    out[channel] = {
-      ...out[channel],
-      value,
-      verified: true,
-    };
-  }
-
-  const nowMs = Date.now();
-  for (const row of verificationRows.value) {
-    const channel = normalizeChannel(String(row.channel || ''));
-    if (!channel) continue;
-    if (out[channel].pendingValue) continue;
-    const pendingValue = normalizeContactValue(row.pending_value);
-    const expiresAt = normalizeTimestamp(row.expires_at);
-    const attemptsRemaining = normalizeAttempts(row.attempts_remaining);
-    if (!pendingValue || !expiresAt || attemptsRemaining <= 0) continue;
-    if (Date.parse(expiresAt) <= nowMs) continue;
-    out[channel] = {
-      ...out[channel],
-      pendingValue,
-      challengeExpiresAt: expiresAt,
-    };
-  }
+  const phone = normalizeContactValue(row?.phone);
+  const whatsapp = normalizeContactValue(row?.whatsapp);
+  if (phone) out.phone = { ...out.phone, value: phone, verified: true };
+  if (whatsapp) out.whatsapp = { ...out.whatsapp, value: whatsapp, verified: true };
 
   return { ok: true, value: out };
 }

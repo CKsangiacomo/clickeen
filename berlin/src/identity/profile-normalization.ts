@@ -4,10 +4,13 @@ import { asTrimmedString } from '../utils/primitives';
 
 export type UserProfileRow = {
   user_id?: unknown;
+  account_id?: unknown;
   primary_email?: unknown;
   email_verified?: unknown;
   display_name?: unknown;
+  first_name?: unknown;
   given_name?: unknown;
+  last_name?: unknown;
   family_name?: unknown;
   primary_language?: unknown;
   country?: unknown;
@@ -49,9 +52,9 @@ export function normalizeUserProfilePayload(
   return {
     userId,
     primaryEmail,
-    emailVerified: normalizeBoolean(row?.email_verified),
-    givenName: asTrimmedString(row?.given_name),
-    familyName: asTrimmedString(row?.family_name),
+    emailVerified: normalizeBoolean(row?.email_verified) || true,
+    givenName: asTrimmedString(row?.given_name) ?? asTrimmedString(row?.first_name),
+    familyName: asTrimmedString(row?.family_name) ?? asTrimmedString(row?.last_name),
     primaryLanguage: asTrimmedString(row?.primary_language),
     country: location.country,
     timezone: location.timezone,

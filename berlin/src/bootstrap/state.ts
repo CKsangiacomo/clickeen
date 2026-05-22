@@ -27,6 +27,11 @@ import { asTrimmedString, isUuid } from '../utils/primitives';
 const MEMBERSHIP_PAGE_SIZE = 200;
 const ACCOUNT_MEMBER_PAGE_SIZE = 200;
 const USER_PROFILE_QUERY_CHUNK_SIZE = 100;
+const DEFAULT_ACCOUNT_L10N_POLICY = {
+  v: 1,
+  baseLocale: 'en',
+  ip: { countryToLocale: {} },
+} as const;
 
 type AccountMembershipRow = {
   account_id?: unknown;
@@ -35,20 +40,10 @@ type AccountMembershipRow = {
   created_at?: unknown;
   accounts?: {
     id?: unknown;
-    public_id?: unknown;
     status?: unknown;
-    is_platform?: unknown;
     tier?: unknown;
-    name?: unknown;
-    slug?: unknown;
-    website_url?: unknown;
-    l10n_locales?: unknown;
-    l10n_policy?: unknown;
-    tier_changed_at?: unknown;
-    tier_changed_from?: unknown;
-    tier_changed_to?: unknown;
-    tier_drop_dismissed_at?: unknown;
-    tier_drop_email_sent_at?: unknown;
+    status_changed_at?: unknown;
+    created_at?: unknown;
   } | null;
 };
 
@@ -60,9 +55,9 @@ type AccountMemberRow = {
 };
 
 type LoginIdentityRow = {
-  id?: unknown;
-  provider?: unknown;
-  provider_subject?: unknown;
+  user_id?: unknown;
+  login_provider?: unknown;
+  login_subject?: unknown;
 };
 
 type NormalizedUserProfile = {
@@ -186,11 +181,11 @@ async function loadUserProfileRow(
 ): Promise<Result<BerlinUserProfileRow | null>> {
   const params = new URLSearchParams({
     select:
-      'user_id,primary_email,email_verified,given_name,family_name,primary_language,country,timezone,active_account_id',
+      'user_id,account_id,primary_email,first_name,last_name,primary_language,country,timezone,phone,whatsapp',
     user_id: `eq.${userId}`,
     limit: '1',
   });
-  const response = await supabaseAdminFetch(env, `/rest/v1/user_profiles?${params.toString()}`, {
+  const response = await supabaseAdminFetch(env, `/rest/v1/users?${params.toString()}`, {
     method: 'GET',
   });
   const payload = await readSupabaseAdminJson<BerlinUserProfileRow[] | Record<string, unknown>>(response);
@@ -209,13 +204,13 @@ async function loadAccountMembershipRows(
 ): Promise<Result<AccountMembershipRow[]>> {
   const params = new URLSearchParams({
     select:
-      'account_id,user_id,role,created_at,accounts(id,public_id,status,is_platform,tier,name,slug,website_url,l10n_locales,l10n_policy,tier_changed_at,tier_changed_from,tier_changed_to,tier_drop_dismissed_at,tier_drop_email_sent_at)',
+      'account_id,user_id,role,created_at,accounts(id,status,tier,status_changed_at,created_at)',
     user_id: `eq.${userId}`,
     order: 'created_at.asc,account_id.asc',
   });
   return readSupabaseAdminListAll<AccountMembershipRow>({
     env,
-    pathname: '/rest/v1/account_members',
+    pathname: '/rest/v1/users',
     params,
     pageSize: MEMBERSHIP_PAGE_SIZE,
   });
@@ -238,8 +233,8 @@ function normalizeUserProfile(
     ok: true,
     value: {
       profile,
-      activeAccountId: isUuid(asTrimmedString(row?.active_account_id))
-        ? (asTrimmedString(row?.active_account_id) as string)
+      activeAccountId: isCompactAccountPublicId(asTrimmedString(row?.account_id))
+        ? (asTrimmedString(row?.account_id) as string)
         : null,
     },
   };
@@ -252,37 +247,34 @@ function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountCo
     if (!account) continue;
 
     const accountId = asTrimmedString(row.account_id);
-    const accountPublicId = asTrimmedString(account.public_id);
     const role = normalizeRole(row.role);
     const tier = normalizeTier(account.tier);
-    const name = asTrimmedString(account.name);
-    const slug = asTrimmedString(account.slug);
-    if (!accountId || !isCompactAccountPublicId(accountPublicId) || !role || !tier || !name || !slug) continue;
-    const localeIssues = validateAccountLocaleState(account.l10n_locales, account.l10n_policy, `accounts.${accountId}`);
+    if (!accountId || !isCompactAccountPublicId(accountId) || !role || !tier) continue;
+    const localeIssues = validateAccountLocaleState([], DEFAULT_ACCOUNT_L10N_POLICY, `accounts.${accountId}`);
     if (localeIssues.length) {
       return { ok: false, response: invalidPersistedStateResponse(localeIssues.join('|')) };
     }
 
     out.push({
       accountId,
-      accountPublicId,
+      accountPublicId: accountId,
       role,
-      name,
-      slug,
+      name: accountId === '00000001' ? 'Clickeen Admin' : 'Personal',
+      slug: accountId.toLowerCase(),
       status: asTrimmedString(account.status) ?? 'active',
-      isPlatform: account.is_platform === true,
+      isPlatform: accountId === '00000001',
       tier,
-      websiteUrl: asTrimmedString(account.website_url),
+      websiteUrl: null,
       membershipVersion: asTrimmedString(row.created_at),
       lifecycleNotice: {
-        tierChangedAt: asTrimmedString(account.tier_changed_at),
-        tierChangedFrom: normalizeTier(account.tier_changed_from),
-        tierChangedTo: normalizeTier(account.tier_changed_to),
-        tierDropDismissedAt: asTrimmedString(account.tier_drop_dismissed_at),
-        tierDropEmailSentAt: asTrimmedString(account.tier_drop_email_sent_at),
+        tierChangedAt: asTrimmedString(account.status_changed_at),
+        tierChangedFrom: null,
+        tierChangedTo: null,
+        tierDropDismissedAt: null,
+        tierDropEmailSentAt: null,
       },
-      l10nLocales: account.l10n_locales ?? null,
-      l10nPolicy: account.l10n_policy ?? null,
+      l10nLocales: [],
+      l10nPolicy: DEFAULT_ACCOUNT_L10N_POLICY,
     });
   }
   return { ok: true, value: out };
@@ -354,13 +346,13 @@ export async function loadPrincipalIdentities(args: {
   session: SessionState;
 }): Promise<Result<BerlinIdentityPayload[]>> {
   const params = new URLSearchParams({
-    select: 'id,provider,provider_subject',
+    select: 'user_id,login_provider,login_subject',
     user_id: `eq.${args.session.userId}`,
-    order: 'provider.asc,id.asc',
+    limit: '1',
   });
   const rows = await readSupabaseAdminListAll<LoginIdentityRow>({
     env: args.env,
-    pathname: '/rest/v1/login_identities',
+    pathname: '/rest/v1/users',
     params,
     pageSize: USER_PROFILE_QUERY_CHUNK_SIZE,
   });
@@ -368,13 +360,13 @@ export async function loadPrincipalIdentities(args: {
 
   const identities = rows.value
     .map((row): BerlinIdentityPayload | null => {
-      const identityId = asTrimmedString(row.id);
-      const provider = asTrimmedString(row.provider)?.toLowerCase() || null;
+      const identityId = asTrimmedString(row.user_id);
+      const provider = asTrimmedString(row.login_provider)?.toLowerCase() || null;
       if (!identityId || !provider) return null;
       return {
         identityId,
         provider,
-        providerSubject: asTrimmedString(row.provider_subject),
+        providerSubject: asTrimmedString(row.login_subject),
       };
     })
     .filter((identity): identity is BerlinIdentityPayload => Boolean(identity))
@@ -432,11 +424,11 @@ async function loadUserProfilesByIds(
   for (const chunk of chunkValues(uniqueUserIds, USER_PROFILE_QUERY_CHUNK_SIZE)) {
     const params = new URLSearchParams({
       select:
-        'user_id,primary_email,email_verified,given_name,family_name,primary_language,country,timezone',
+        'user_id,primary_email,first_name,last_name,primary_language,country,timezone',
       user_id: `in.(${encodeInFilter(chunk)})`,
       limit: String(chunk.length),
     });
-    const response = await supabaseAdminFetch(env, `/rest/v1/user_profiles?${params.toString()}`, {
+    const response = await supabaseAdminFetch(env, `/rest/v1/users?${params.toString()}`, {
       method: 'GET',
     });
     const payload = await readSupabaseAdminJson<BerlinUserProfileRow[] | Record<string, unknown>>(response);
@@ -474,7 +466,7 @@ export async function listAccountMembers(
   });
   const rows = await readSupabaseAdminListAll<AccountMemberRow>({
     env,
-    pathname: '/rest/v1/account_members',
+    pathname: '/rest/v1/users',
     params,
     pageSize: ACCOUNT_MEMBER_PAGE_SIZE,
   });
@@ -516,24 +508,8 @@ export async function persistActiveAccountPreference(args: {
   userId: string;
   accountId: string;
 }): Promise<Result<void>> {
-  if (!isUuid(args.accountId)) {
+  if (!isCompactAccountPublicId(args.accountId)) {
     return { ok: false, response: validationError('coreui.errors.accountId.invalid') };
   }
-
-  const response = await supabaseAdminFetch(
-    args.env,
-    `/rest/v1/user_profiles?user_id=eq.${encodeURIComponent(args.userId)}`,
-    {
-      method: 'PATCH',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({ active_account_id: args.accountId }),
-    },
-  );
-  if (response.ok) return { ok: true, value: undefined };
-
-  const payload = await readSupabaseAdminJson<Record<string, unknown>>(response);
-  return {
-    ok: false,
-    response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
-  };
+  return { ok: true, value: undefined };
 }

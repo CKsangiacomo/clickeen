@@ -1,17 +1,10 @@
-import { createCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
+import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import { acceptInvitationForPrincipal } from '../account-management/invitations';
 import { internalError } from '../http';
 import { normalizeProfileLocation } from './profile-normalization';
-import { readSupabaseAdminListAll } from '../supabase-admin';
 import { readSupabaseAdminJson, supabaseAdminFetch, supabaseAdminErrorResponse } from '../supabase-admin';
 import { type Env } from '../types';
 import { asTrimmedString, normalizeUuid } from '../utils/primitives';
-
-type MembershipRow = {
-  account_id?: unknown;
-  role?: unknown;
-  created_at?: unknown;
-};
 
 export type ProviderIdentity = {
   provider: string;
@@ -31,10 +24,6 @@ type ReconcileResult =
   | { ok: true; userId: string; primaryAccountId: string | null; createdAccount: boolean }
   | { ok: false; response: Response };
 
-type OwnedAccountProvisionResult =
-  | { ok: true; accountId: string; created: boolean }
-  | { ok: false; response: Response };
-
 type ResolveLoginIdentityRpcRow = {
   user_id?: unknown;
   login_identity_id?: unknown;
@@ -42,13 +31,6 @@ type ResolveLoginIdentityRpcRow = {
   created_identity?: unknown;
   active_account_id?: unknown;
 };
-
-const DEFAULT_ACCOUNT_L10N_POLICY = {
-  v: 1,
-  baseLocale: 'en',
-  ip: { countryToLocale: {} },
-} as const;
-const USER_MEMBERSHIP_PAGE_SIZE = 200;
 
 function normalizeEmail(value: unknown): string | null {
   const email = asTrimmedString(value);
@@ -69,25 +51,6 @@ function normalizeProviderSubject(value: unknown): string | null {
 function normalizePrimaryLanguage(value: unknown): string | null {
   const locale = asTrimmedString(value);
   return locale ? locale.toLowerCase() : null;
-}
-
-function normalizeRole(value: unknown): 'viewer' | 'editor' | 'admin' | 'owner' | null {
-  const role = asTrimmedString(value)?.toLowerCase();
-  switch (role) {
-    case 'viewer':
-    case 'editor':
-    case 'admin':
-    case 'owner':
-      return role;
-    default:
-      return null;
-  }
-}
-
-function resolveAccountSlug(accountId: string, attempt = 0): string {
-  const suffix = accountId.replace(/-/g, '').slice(0, 24).toLowerCase();
-  const base = suffix ? `acct-${suffix}` : 'account';
-  return attempt > 0 ? `${base}-${attempt + 1}` : base;
 }
 
 async function resolveProductUserForIdentity(
@@ -150,187 +113,9 @@ async function resolveProductUserForIdentity(
     userId,
     createdUser: row?.created_user === true,
     createdIdentity: row?.created_identity === true,
-    activeAccountId: normalizeUuid(row?.active_account_id),
-  };
-}
-
-async function setActiveAccountPreference(
-  env: Env,
-  userId: string,
-  accountId: string,
-): Promise<{ ok: true } | { ok: false; response: Response }> {
-  const response = await supabaseAdminFetch(
-    env,
-    `/rest/v1/user_profiles?user_id=eq.${encodeURIComponent(userId)}`,
-    {
-      method: 'PATCH',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({ active_account_id: accountId }),
-    },
-  );
-  if (response.ok) return { ok: true };
-  const payload = await readSupabaseAdminJson<Record<string, unknown>>(response);
-  return {
-    ok: false,
-    response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
-  };
-}
-
-async function listMembershipsForUser(env: Env, userId: string): Promise<
-  | { ok: true; memberships: MembershipRow[] }
-  | { ok: false; response: Response }
-> {
-  const params = new URLSearchParams({
-    select: 'account_id,role,created_at',
-    user_id: `eq.${userId}`,
-    order: 'created_at.asc,account_id.asc',
-  });
-  const memberships = await readSupabaseAdminListAll<MembershipRow>({
-    env,
-    pathname: '/rest/v1/account_members',
-    params,
-    pageSize: USER_MEMBERSHIP_PAGE_SIZE,
-  });
-  if (!memberships.ok) return memberships;
-  return { ok: true, memberships: memberships.value };
-}
-
-function pickPrimaryAccountId(rows: MembershipRow[], activeAccountId: string | null): string | null {
-  const accountIds: string[] = [];
-  for (const row of rows) {
-    const accountId = asTrimmedString(row.account_id);
-    if (!accountId) continue;
-    accountIds.push(accountId);
-  }
-  if (activeAccountId && accountIds.includes(activeAccountId)) return activeAccountId;
-  return accountIds[0] ?? null;
-}
-
-async function accountRecordExists(env: Env, accountId: string): Promise<boolean> {
-  const params = new URLSearchParams({
-    select: 'id',
-    id: `eq.${accountId}`,
-    limit: '1',
-  });
-  const response = await supabaseAdminFetch(env, `/rest/v1/accounts?${params.toString()}`, { method: 'GET' });
-  if (!response.ok) return false;
-  const payload = await readSupabaseAdminJson<Array<{ id?: unknown }> | Record<string, unknown>>(response);
-  return Array.isArray(payload) && Boolean(payload[0]?.id);
-}
-
-async function createAccountRecord(args: {
-  env: Env;
-  accountId: string;
-  name: string;
-}): Promise<OwnedAccountProvisionResult> {
-  const accountId = args.accountId;
-  let lastPayload: Record<string, unknown> | null = null;
-  let lastStatus = 500;
-
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const response = await supabaseAdminFetch(args.env, '/rest/v1/accounts', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({
-        id: accountId,
-        public_id: createCompactAccountPublicId(),
-        status: 'active',
-        is_platform: false,
-        tier: 'free',
-        name: args.name,
-        slug: resolveAccountSlug(accountId, attempt),
-        website_url: null,
-        l10n_locales: [],
-        l10n_policy: DEFAULT_ACCOUNT_L10N_POLICY,
-      }),
-    });
-
-    if (response.ok) return { ok: true, accountId, created: true };
-    const payload = await readSupabaseAdminJson<Record<string, unknown>>(response);
-    lastPayload = payload;
-    lastStatus = response.status;
-    if (response.status !== 409) break;
-    if (await accountRecordExists(args.env, accountId)) return { ok: true, accountId, created: false };
-  }
-
-  return {
-    ok: false,
-    response: supabaseAdminErrorResponse(
-      'coreui.errors.db.writeFailed',
-      lastStatus,
-      lastPayload || { detail: 'account_slug_collision' },
-    ),
-  };
-}
-
-async function deleteAccountIfCreated(env: Env, accountId: string): Promise<void> {
-  await supabaseAdminFetch(env, `/rest/v1/accounts?id=eq.${encodeURIComponent(accountId)}`, {
-    method: 'DELETE',
-  }).catch(() => undefined);
-}
-
-async function ensureOwnerMembership(
-  env: Env,
-  accountId: string,
-  userId: string,
-): Promise<{ ok: true } | { ok: false; response: Response }> {
-  const response = await supabaseAdminFetch(
-    env,
-    `/rest/v1/account_members?on_conflict=${encodeURIComponent('account_id,user_id')}`,
-    {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify({
-        account_id: accountId,
-        user_id: userId,
-        role: 'owner',
-      }),
-    },
-  );
-  if (response.ok) return { ok: true };
-  const payload = await readSupabaseAdminJson<Record<string, unknown>>(response);
-  return {
-    ok: false,
-    response: supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload),
-  };
-}
-
-export async function provisionOwnedAccount(args: {
-  env: Env;
-  userId: string;
-  accountId: string;
-  name: string;
-  setActive: boolean;
-}): Promise<OwnedAccountProvisionResult> {
-  const accountCreate = await createAccountRecord({
-    env: args.env,
-    accountId: args.accountId,
-    name: args.name,
-  });
-  if (!accountCreate.ok) return accountCreate;
-
-  const ownerMembership = await ensureOwnerMembership(args.env, args.accountId, args.userId);
-  if (!ownerMembership.ok) {
-    if (accountCreate.created) {
-      await deleteAccountIfCreated(args.env, args.accountId);
-    }
-    return ownerMembership;
-  }
-
-  if (args.setActive) {
-    const activePreference = await setActiveAccountPreference(args.env, args.userId, args.accountId);
-    if (!activePreference.ok) {
-      if (accountCreate.created) {
-        await deleteAccountIfCreated(args.env, args.accountId);
-      }
-      return activePreference;
-    }
-  }
-
-  return {
-    ok: true,
-    accountId: args.accountId,
-    created: accountCreate.created,
+    activeAccountId: isCompactAccountPublicId(asTrimmedString(row?.active_account_id))
+      ? (asTrimmedString(row?.active_account_id) as string)
+      : null,
   };
 }
 
@@ -372,36 +157,10 @@ export async function ensureProductAccountStateForIdentity(
     };
   }
 
-  const memberships = await listMembershipsForUser(env, resolvedUser.userId);
-  if (!memberships.ok) return memberships;
-  if (memberships.memberships.length > 0) {
-    const activeAccountId = resolvedUser.activeAccountId;
-    const primaryAccountId = pickPrimaryAccountId(memberships.memberships, activeAccountId);
-    if (primaryAccountId && activeAccountId !== primaryAccountId) {
-      const activePreference = await setActiveAccountPreference(env, resolvedUser.userId, primaryAccountId);
-      if (!activePreference.ok) return activePreference;
-    }
-    return {
-      ok: true,
-      userId: resolvedUser.userId,
-      primaryAccountId,
-      createdAccount: false,
-    };
-  }
-
-  const provisioned = await provisionOwnedAccount({
-    env,
-    userId: resolvedUser.userId,
-    accountId: crypto.randomUUID(),
-    name: 'Personal',
-    setActive: true,
-  });
-  if (!provisioned.ok) return provisioned;
-
   return {
     ok: true,
     userId: resolvedUser.userId,
-    primaryAccountId: provisioned.accountId,
-    createdAccount: provisioned.created,
+    primaryAccountId: resolvedUser.activeAccountId,
+    createdAccount: resolvedUser.createdUser,
   };
 }
