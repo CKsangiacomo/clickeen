@@ -26,6 +26,11 @@ import {
   readAccountInstanceDocument,
 } from './saved-config';
 import {
+  readInstanceRegistryRow,
+  updateInstanceRegistryTranslationStatus,
+  type InstanceRegistryTranslationStatus,
+} from './instance-registry';
+import {
   deriveTranslationGenerationJob,
   readyLocalesForContent,
   readCurrentTranslationGenerationJob,
@@ -284,6 +289,57 @@ function normalizeFailureText(value: unknown, fallback: string): string {
   return normalized || fallback;
 }
 
+function registryStatusForGenerationStatus(
+  status: TranslationGenerationJobSummary['status'],
+): InstanceRegistryTranslationStatus {
+  if (status === 'queued' || status === 'running' || status === 'failed') return status;
+  return 'idle';
+}
+
+function registryStatusForGenerationJob(args: {
+  instanceId: string;
+  baseLocale: string;
+  targetLocales: string[];
+  currentReadyLocales: string[];
+  job: TranslationGenerationJobDocument;
+}): InstanceRegistryTranslationStatus {
+  return registryStatusForGenerationStatus(
+    summarizeTranslationGenerationJob({
+      instanceId: args.instanceId,
+      baseLocale: args.baseLocale,
+      targetLocales: args.targetLocales,
+      currentReadyLocales: args.currentReadyLocales,
+      job: args.job,
+    }).status,
+  );
+}
+
+function applyRegistryStatusToGenerationSummary(args: {
+  summary: TranslationGenerationJobSummary;
+  registryStatus: InstanceRegistryTranslationStatus | null;
+}): TranslationGenerationJobSummary {
+  if (!args.registryStatus) return args.summary;
+  if (args.registryStatus === 'queued' || args.registryStatus === 'running' || args.registryStatus === 'failed') {
+    return { ...args.summary, status: args.registryStatus };
+  }
+  if (args.summary.status === 'completed' || args.summary.status === 'superseded') return args.summary;
+  return { ...args.summary, status: 'idle' };
+}
+
+async function writeRegistryTranslationStatus(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  status: InstanceRegistryTranslationStatus;
+}): Promise<void> {
+  await updateInstanceRegistryTranslationStatus({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    translationStatus: args.status,
+  });
+}
+
 export async function readInstanceTranslationGeneration(args: {
   env: Env;
   accountId: string;
@@ -322,14 +378,22 @@ export async function readInstanceTranslationGeneration(args: {
     };
   }
   const currentReadyLocales = readyLocalesForContent(content.value, targetLocales);
+  const registry = await readInstanceRegistryRow({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+  });
   return {
     ok: true,
-    generation: summarizeTranslationGenerationJob({
-      instanceId: args.instanceId,
-      baseLocale: instance.value.baseLocale,
-      targetLocales,
-      currentReadyLocales,
-      job,
+    generation: applyRegistryStatusToGenerationSummary({
+      registryStatus: registry?.translationStatus ?? null,
+      summary: summarizeTranslationGenerationJob({
+        instanceId: args.instanceId,
+        baseLocale: instance.value.baseLocale,
+        targetLocales,
+        currentReadyLocales,
+        job,
+      }),
     }),
   };
 }
@@ -371,6 +435,12 @@ export async function generateInstanceTranslations(args: {
     .filter((locale) => locale !== baseLocale);
   const uniqueTargetLocales = Array.from(new Set(targetLocales));
   if (!uniqueTargetLocales.length) {
+    await writeRegistryTranslationStatus({
+      env: args.env,
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      status: 'idle',
+    });
     return {
       ok: true,
       accepted: false,
@@ -521,6 +591,12 @@ export async function generateInstanceTranslations(args: {
         job: completedJob,
       });
     }
+    await writeRegistryTranslationStatus({
+      env: args.env,
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      status: 'idle',
+    });
     return {
       ok: true,
       accepted: false,
@@ -548,6 +624,12 @@ export async function generateInstanceTranslations(args: {
       targetLocales: uniqueTargetLocales,
       currentReadyLocales,
       job: existingJob,
+    });
+    await writeRegistryTranslationStatus({
+      env: args.env,
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      status: registryStatusForGenerationStatus(generation.status),
     });
     return {
       ok: true,
@@ -581,10 +663,17 @@ export async function generateInstanceTranslations(args: {
     instanceId: args.instanceId,
     job: generationJob,
   });
+  await writeRegistryTranslationStatus({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    status: 'queued',
+  });
 
   try {
     await Promise.all(jobs.map((job) => queue.send(job)));
   } catch (error) {
+    const failedAt = new Date().toISOString();
     await writeCurrentTranslationGenerationJob({
       env: args.env,
       accountId: args.accountId,
@@ -593,13 +682,13 @@ export async function generateInstanceTranslations(args: {
       job: {
         ...generationJob,
         status: 'failed',
-        updatedAt: new Date().toISOString(),
+        updatedAt: failedAt,
         locales: Object.fromEntries(Object.entries(generationJob.locales).map(([locale, state]) => [
           locale,
           {
             ...state,
             status: 'failed',
-            updatedAt: new Date().toISOString(),
+            updatedAt: failedAt,
             reasonKey: 'instance.translation.queue_send_failed',
             detail: error instanceof Error ? error.message : String(error),
           },
@@ -607,6 +696,12 @@ export async function generateInstanceTranslations(args: {
         reasonKey: 'instance.translation.queue_send_failed',
         detail: error instanceof Error ? error.message : String(error),
       },
+    });
+    await writeRegistryTranslationStatus({
+      env: args.env,
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      status: 'failed',
     });
     return generationFailure({
       baseLocale,
@@ -711,7 +806,7 @@ export async function completeLocaleTranslation(args: {
     currentSavedTextGraph,
     jobChangedFields: job.changedFields,
   })) {
-    await updateCurrentTranslationGenerationJob({
+    const updatedJob = await updateCurrentTranslationGenerationJob({
       env: args.env,
       accountId: args.accountId,
       widgetCode: instance.value.widgetCode,
@@ -734,6 +829,20 @@ export async function completeLocaleTranslation(args: {
         };
       },
     });
+    if (updatedJob?.jobId === job.jobId) {
+      await writeRegistryTranslationStatus({
+        env: args.env,
+        accountId: args.accountId,
+        instanceId: args.instanceId,
+        status: registryStatusForGenerationJob({
+          instanceId: args.instanceId,
+          baseLocale: updatedJob.baseLocale,
+          targetLocales: updatedJob.targetLocales,
+          currentReadyLocales: updatedJob.currentReadyLocales,
+          job: updatedJob,
+        }),
+      });
+    }
     return {
       ok: true,
       applied: false,
@@ -796,7 +905,7 @@ export async function completeLocaleTranslation(args: {
   const readyLocales = content.ok
     ? readyLocalesForContent(content.value, currentJob.targetLocales)
     : currentJob.currentReadyLocales;
-  await updateCurrentTranslationGenerationJob({
+  const updatedJob = await updateCurrentTranslationGenerationJob({
     env: args.env,
     accountId: args.accountId,
     widgetCode: instance.value.widgetCode,
@@ -818,6 +927,20 @@ export async function completeLocaleTranslation(args: {
       };
     },
   });
+  if (updatedJob?.jobId === job.jobId) {
+    await writeRegistryTranslationStatus({
+      env: args.env,
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      status: registryStatusForGenerationJob({
+        instanceId: args.instanceId,
+        baseLocale: updatedJob.baseLocale,
+        targetLocales: updatedJob.targetLocales,
+        currentReadyLocales: readyLocales,
+        job: updatedJob,
+      }),
+    });
+  }
 
   return { ok: true, applied: true, locale };
 }
@@ -894,6 +1017,12 @@ export async function failLocaleTranslation(args: {
       detail: 'This translation job is no longer the current generation job for the instance.',
     };
   }
+  await writeRegistryTranslationStatus({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    status: 'failed',
+  });
 
   return {
     ok: true,

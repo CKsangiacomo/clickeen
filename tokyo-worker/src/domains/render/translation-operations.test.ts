@@ -22,6 +22,7 @@ import {
   readTranslatedLocaleValues,
   writeTranslatedLocaleValues,
 } from './translated-locales.ts';
+import { readInstanceRegistryRow } from './instance-registry.ts';
 import {
   readAccountInstanceContentDocument,
   writeSavedRenderConfig,
@@ -166,6 +167,11 @@ test('Tokyo generate queues locale translation jobs from one product operation',
   assert.deepEqual(generated.ok ? generated.generation?.pendingLocales : [], ['cs', 'it']);
   assert.equal(queued[0]?.kind, 'instance.translation.locale_values');
   assert.equal(queued[0]?.changedFields.length, Object.keys(values).length);
+  assert.equal((await readInstanceRegistryRow({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  }))?.translationStatus, 'queued');
 });
 
 test('Tokyo generate resumes an active matching job without duplicate queue sends', async () => {
@@ -199,6 +205,11 @@ test('Tokyo generate resumes an active matching job without duplicate queue send
   assert.equal(queued.length, 2);
   assert.deepEqual(second.ok ? second.queuedLocales : [], ['cs', 'it']);
   assert.deepEqual(second.ok ? second.jobIds : [], first.ok ? first.jobIds : []);
+  assert.equal((await readInstanceRegistryRow({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  }))?.translationStatus, 'queued');
 });
 
 test('Tokyo generate supersedes active work after newer saved base text', async () => {
@@ -302,6 +313,35 @@ test('Tokyo exposes current translation generation progress', async () => {
   assert.deepEqual(generation.ok ? generation.generation.completedLocales : [], ['it']);
   assert.deepEqual(generation.ok ? generation.generation.pendingLocales : [], ['cs']);
   assert.deepEqual(generation.ok ? generation.generation.currentReadyLocales : [], ['it']);
+  assert.equal((await readInstanceRegistryRow({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  }))?.translationStatus, 'running');
+
+  const czechJob = queued.find((job) => job.targetLocale === 'cs');
+  assert(czechJob);
+  await completeLocaleTranslation({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'cs',
+    job: czechJob,
+    values,
+  });
+
+  generation = await readInstanceTranslationGeneration({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  });
+  assert.equal(generation.ok, true);
+  assert.equal(generation.ok ? generation.generation.status : null, 'completed');
+  assert.equal((await readInstanceRegistryRow({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  }))?.translationStatus, 'idle');
 });
 
 test('Tokyo records terminal locale failures on generation job state', async () => {
@@ -343,6 +383,38 @@ test('Tokyo records terminal locale failures on generation job state', async () 
   assert.equal(generation.ok, true);
   assert.equal(generation.ok ? generation.generation.status : null, 'failed');
   assert.deepEqual(generation.ok ? generation.generation.failedLocales : [], ['it']);
+  assert.equal((await readInstanceRegistryRow({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  }))?.translationStatus, 'failed');
+});
+
+test('Tokyo records failed generation state when queue send fails', async () => {
+  const { env } = createTestEnv();
+  await seedSavedFaqInstance(env);
+  env.INSTANCE_TRANSLATION_JOBS = {
+    async send() {
+      throw new Error('queue unavailable');
+    },
+  } as Env['INSTANCE_TRANSLATION_JOBS'];
+
+  const generated = await generateInstanceTranslations({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    authz: authz(),
+    baseLocale: 'en',
+    targetLocales: ['it'],
+  });
+
+  assert.equal(generated.ok, false);
+  assert.equal(generated.ok ? null : generated.reasonKey, 'instance.translation.queue_send_failed');
+  assert.equal((await readInstanceRegistryRow({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  }))?.translationStatus, 'failed');
 });
 
 test('Tokyo completion writes locale values only while the saved text basis is current', async () => {
