@@ -1,6 +1,6 @@
 # EXEC 103_DB.2 Core Schema Foundation - Accounts, Users, Invitations, Instances
 
-Status: In Progress - Migration Draft Ready For CI Deployment
+Status: Green
 Date Started: 2026-05-22
 Parent PRD: `103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
 Execution slice: `103_DB.2 - Supabase core schema foundation`
@@ -125,10 +125,17 @@ The migration drops old foundations that cannot survive as product truth:
 - Dispatched `supabase migrations deploy` for `cloud-dev` after pushing commit `bf39f97e`.
 - GitHub run `26283502362` failed before linking or touching Supabase because required migration secrets were not configured in Actions. The PRD guard passed in the run; failure occurred in the target-selection preflight.
 - Workflow was tightened again to remove invented per-environment secret names. Cloud-dev uses the existing `SUPABASE_URL_CLOUD_DEV` repo variable as workflow `SUPABASE_URL` and derives the project ref from it. The only extra CI-only credentials are the Supabase CLI deployment credentials: `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`.
+- Copied existing `.env.local` `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD` values into same-name GitHub Actions secrets. No new secret names were introduced.
+- Dispatched `supabase migrations deploy` for `cloud-dev` at commit `53d85b41`.
+- GitHub run `26284503517` passed: guard, target selection, Supabase link, and migration deployment all succeeded.
+- Read-only remote migration proof passed: `npx supabase@2.62.5 migration list --linked` shows local and remote `20260522090000`.
+- Read-only REST shape proof passed: `accounts`, `users`, `account_invitations`, and `instances` respond; deleted tables `widgets`, `account_members`, `user_profiles`, `login_identities`, `user_contact_methods`, and `user_contact_verifications` return 404.
 
-Not green yet:
+## Green Proof
 
-- migration has not been applied through the approved CI/deploy path;
-- no remote schema proof exists yet;
-- GitHub Actions needs Supabase migration secrets before the workflow can deploy;
-- runtime Tokyo/Roma wiring is not started until this slice is green.
+- Migration exists in Git: `supabase/migrations/20260522090000__prd103_db_core_foundation.sql`.
+- Migration deployed to cloud-dev by CI, not by agent/developer terminal.
+- GitHub Actions run: `https://github.com/CKsangiacomo/clickeen/actions/runs/26284503517`.
+- Remote migration history includes `20260522090000`.
+- New V1 tables are reachable; deleted old tables are absent.
+- Runtime Tokyo/Roma/Berlin wiring is intentionally not part of this slice and begins after this green gate.
