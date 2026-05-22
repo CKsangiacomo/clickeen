@@ -238,7 +238,7 @@ Local Supabase is allowed only as local validation. It must never be used as evi
 - Remote inspection, when needed, must be read-only unless the active PRD slice explicitly authorizes a migration deployment.
 - Production migration must have an explicit promotion step from the already-green staging/cloud-dev migration.
 - Supabase migration deployment is manual-dispatch CI only for this pivot. The active workflow is `.github/workflows/supabase-migrations.yml`.
-- The workflow requires an explicit target, `APPLY_MIGRATIONS` confirmation, and environment-scoped secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF_CLOUD_DEV`, `SUPABASE_PROJECT_REF_PRODUCTION`, `SUPABASE_DB_PASSWORD_CLOUD_DEV`, and `SUPABASE_DB_PASSWORD_PRODUCTION`.
+- The workflow requires an explicit target, `APPLY_MIGRATIONS` confirmation, and environment-scoped secrets. Required sensitive values are `SUPABASE_ACCESS_TOKEN` and a target DB password (`SUPABASE_DB_PASSWORD_CLOUD_DEV` / `SUPABASE_DB_PASSWORD_PRODUCTION`, or generic `SUPABASE_DB_PASSWORD` for a single-env setup). Cloud-dev project ref may be derived from the existing `SUPABASE_URL_CLOUD_DEV` repo variable; production must name `SUPABASE_PROJECT_REF_PRODUCTION`.
 - The workflow runs the PRD 103 DB pivot guard before linking or applying migrations.
 - No push-triggered workflow may apply Supabase migrations during this pivot.
 

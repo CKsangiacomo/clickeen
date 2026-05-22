@@ -122,9 +122,13 @@ The migration drops old foundations that cannot survive as product truth:
 - `node --check scripts/verify/prd103-db-pivot-guard.mjs && node scripts/verify/prd103-db-pivot-guard.mjs` passed.
 - `pnpm verify:prd103-db-pivot` passed.
 - `pnpm lint` passed.
+- Dispatched `supabase migrations deploy` for `cloud-dev` after pushing commit `bf39f97e`.
+- GitHub run `26283502362` failed before linking or touching Supabase because required migration secrets were not configured in Actions. The PRD guard passed in the run; failure occurred in the target-selection preflight.
+- Workflow was tightened so cloud-dev can derive the project ref from existing `SUPABASE_URL_CLOUD_DEV`; only `SUPABASE_ACCESS_TOKEN` and a DB password remain required secrets for cloud-dev.
 
 Not green yet:
 
 - migration has not been applied through the approved CI/deploy path;
 - no remote schema proof exists yet;
+- GitHub Actions needs Supabase migration secrets before the workflow can deploy;
 - runtime Tokyo/Roma wiring is not started until this slice is green.
