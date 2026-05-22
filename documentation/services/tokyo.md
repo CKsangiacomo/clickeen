@@ -86,6 +86,14 @@ Public serving uses direct account-scoped static URLs:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
+`clk.live` is the production public-serving host. Cloud-dev uses the same path shape on:
+
+```txt
+https://dev.clk.live/{accountPublicId}/{instanceId}
+```
+
+Cloud-dev must not bind the dev Tokyo-worker to `clk.live`.
+
 That route maps to `accounts/{accountPublicId}/instances/{instanceId}/index.html`. Support files are served only when they are generated browser files on the public allowlist.
 
 ## Forbidden Concepts
@@ -109,7 +117,8 @@ Public static/read paths:
 - `/themes/**`
 - `/fonts/**`
 - `/i18n/**`
-- `https://clk.live/{accountPublicId}/{instanceId}`
+- `https://dev.clk.live/{accountPublicId}/{instanceId}` in cloud-dev
+- `https://clk.live/{accountPublicId}/{instanceId}` in production
 - `/assets/account/**`
 
 Private account-control paths are owned by Tokyo-worker and reached from Roma through Cloudflare service bindings.

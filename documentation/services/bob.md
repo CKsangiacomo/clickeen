@@ -502,7 +502,7 @@ Reference:
 
 ### Optional
 
-- `NEXT_PUBLIC_CLK_LIVE_URL` (defaults to `https://clk.live` for copied public embed snippets)
+- `NEXT_PUBLIC_CLK_LIVE_URL` (configured per environment for copied public embed snippets: cloud-dev `https://dev.clk.live`, production `https://clk.live`)
 
 Important boundary:
 

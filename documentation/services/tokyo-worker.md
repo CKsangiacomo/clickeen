@@ -87,17 +87,25 @@ The static mini-site lives under:
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
-The canonical public serving URL after PRD 100 is:
+The production public serving URL after PRD 100 is:
 
 ```txt
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
+The cloud-dev public serving URL uses the same path shape on the cloud-dev host:
+
+```txt
+https://dev.clk.live/{accountPublicId}/{instanceId}
+```
+
+Cloud-dev must not bind the dev Tokyo-worker to `clk.live`; that hostname is reserved for production public serving.
+
 Serving maps that URL to generated files in the instance folder and reads the requested public artifact directly from R2. It must not check DB publish status on visitor traffic, compute HTML from config, heal, infer, backfill, search account indexes, or fall back to old runtime projections.
 
 Public availability is the materialized public artifact output:
 
-- `https://clk.live/{accountPublicId}/{instanceId}` serves only if the generated `index.html` artifact exists.
+- the environment public-serving URL serves only if the generated `index.html` artifact exists.
 - if a requested generated file is missing, that request returns 404.
 - publish/unpublish and tier-serving operations add or remove materialized public artifacts according to product state and policy.
 - Support files only serve from the same instance folder when their filename is on the generated-browser-file allowlist.

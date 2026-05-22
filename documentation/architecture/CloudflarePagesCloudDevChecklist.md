@@ -46,7 +46,7 @@ Env contract:
 | Variable | Required | Cloud-dev value | Source-of-truth owner |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `bob/wrangler.toml` |
-| `NEXT_PUBLIC_CLK_LIVE_URL` | optional | `https://clk.live` | `bob/wrangler.toml` |
+| `NEXT_PUBLIC_CLK_LIVE_URL` | optional | `https://dev.clk.live` | `bob/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `bob/wrangler.toml` |
 | `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |
 | `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | Cloudflare Pages dashboard + GitHub Actions env |
@@ -95,7 +95,13 @@ Dashboard action:
 
 ## Public Embeds
 
-Public widget serving is not a Pages project. PRD 100F routes public embeds through `clk.live` static serving backed by Tokyo/R2 generated instance files.
+Public widget serving is not a Pages project. Cloud-dev routes public embeds through `dev.clk.live` static serving backed by the cloud-dev Tokyo-worker and cloud-dev Tokyo/R2 generated instance files.
+
+Rules:
+- `dev.clk.live` is the cloud-dev public-serving host.
+- `clk.live` is reserved for production public serving.
+- The path shape is identical across environments: `/{accountPublicId}/{instanceId}`.
+- Do not bind the cloud-dev Tokyo worker to `clk.live`.
 
 ## Prague
 
@@ -119,7 +125,7 @@ Env contract:
 | Variable | Required | Cloud-dev value | Source-of-truth owner |
 | --- | --- | --- | --- |
 | `PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | Cloudflare Pages dashboard |
-| `PUBLIC_CLK_LIVE_URL` | optional | `https://clk.live` | Cloudflare Pages dashboard |
+| `PUBLIC_CLK_LIVE_URL` | optional | `https://dev.clk.live` | Cloudflare Pages dashboard |
 | `PUBLIC_ROMA_URL` | yes | `https://roma.dev.clickeen.com` | Cloudflare Pages dashboard |
 
 Dashboard action:
@@ -183,5 +189,5 @@ Rules:
 - Verified cloud-dev host behavior on 2026-03-10:
   - `https://bob.dev.clickeen.com/bob` returns `200`
   - `https://roma.dev.clickeen.com/home` redirects to login when unauthenticated
-  - `https://clk.live/{accountPublicId}/{instanceId}` returns generated static HTML for a known published instance
+  - `https://dev.clk.live/{accountPublicId}/{instanceId}` returns generated static HTML for a known published cloud-dev instance
   - `https://prague.dev.clickeen.com/us/en/` returns `200`

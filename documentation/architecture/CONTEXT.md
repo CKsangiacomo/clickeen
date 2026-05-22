@@ -442,15 +442,22 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 ### Environments (Canonical)
 
-| Environment                 | Bob                            | Roma                            | Tokyo                            | San Francisco                           | DevStudio                |
-| --------------------------- | ------------------------------ | ------------------------------- | -------------------------------- | --------------------------------------- | ------------------------ |
-| **Local**                   | `http://localhost:3000`        | `https://roma.dev.clickeen.com` | `http://localhost:4000`          | `—`                                     | `http://localhost:5173`  |
-| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://sanfrancisco.dev.clickeen.com` | `— local only`           |
-| **UAT**                     | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
-| **Limited GA**              | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
-| **GA**                      | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
+| Environment                 | Bob                            | Roma                            | Tokyo                            | Public serving              | San Francisco                           | DevStudio                |
+| --------------------------- | ------------------------------ | ------------------------------- | -------------------------------- | --------------------------- | --------------------------------------- | ------------------------ |
+| **Local**                   | `http://localhost:3000`        | `https://roma.dev.clickeen.com` | `http://localhost:4000`          | local Tokyo-worker host     | `—`                                     | `http://localhost:5173`  |
+| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://dev.clk.live`      | `https://sanfrancisco.dev.clickeen.com` | `— local only`           |
+| **UAT**                     | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://clk.live`          | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
+| **Limited GA**              | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://clk.live`          | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
+| **GA**                      | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://clk.live`          | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
 
 UAT / Limited GA / GA are **release stages** (account-level exposure controls), not separate infrastructure.
+
+Public-serving rule:
+
+- Cloud-dev must use `dev.clk.live`; it must not claim the production public-serving domain `clk.live`.
+- Production release stages use `clk.live`.
+- The URL path shape is identical in every environment: `/{accountPublicId}/{instanceId}`.
+- Environment differences are bindings only: hostname, Worker deployment, R2 bucket, secrets, and database target. Product behavior must not fork between cloud-dev and production.
 
 Pages deploy rule:
 

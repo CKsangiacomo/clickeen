@@ -27,7 +27,7 @@ product/
 prague/
 ```
 
-Account-owned runtime bytes live under `accounts/{accountPublicId}/instances/{instanceId}/` and `accounts/{accountPublicId}/assets/`. Widget software lives under `product/widgets/`. Public instance serving uses `https://clk.live/{accountPublicId}/{instanceId}` and maps to generated browser files in the instance folder. Local routes must not rely on root published, root widgets, or account widgets storage.
+Account-owned runtime bytes live under `accounts/{accountPublicId}/instances/{instanceId}/` and `accounts/{accountPublicId}/assets/`. Widget software lives under `product/widgets/`. Public instance serving uses the environment public-serving host plus `/{accountPublicId}/{instanceId}` and maps to generated browser files in the instance folder. Cloud-dev uses `https://dev.clk.live`; production release stages use `https://clk.live`. Local routes must not rely on root published, root widgets, or account widgets storage.
 
 Friendly local asset routes are URL conveniences only: `/widgets/{widgetType}/...` maps to `product/widgets/{widgetType}/...`; `/dieter/...` maps to `dieter/...`; `/fonts/...` maps to `fonts/...`; `/themes/...` maps to the canonical Dieter/theme asset root; Prague-friendly paths map to `prague/...`. Friendly route shape must not create a matching R2 root.
 

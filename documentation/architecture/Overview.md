@@ -123,7 +123,7 @@ Each release proceeds in 3 steps:
 | **Bob**           | `https://bob.dev.clickeen.com`               | `https://app.clickeen.com`          |
 | **Roma**          | `https://roma.dev.clickeen.com`              | `https://app.clickeen.com`          |
 | **Prague**        | `https://prague.dev.clickeen.com` (optional) | `https://clickeen.com`              |
-| **Public embeds** | `https://clk.live`                           | `https://clk.live`                  |
+| **Public embeds** | `https://dev.clk.live`                       | `https://clk.live`                  |
 | **Tokyo**         | `https://tokyo.dev.clickeen.com`             | `https://tokyo.clickeen.com`        |
 | **San Francisco** | `https://sanfrancisco.dev.clickeen.com`      | `https://sanfrancisco.clickeen.com` |
 
@@ -263,7 +263,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 | Surface                     | Variable                    | Dev                                     | Prod                                | Notes                                                                            |
 | --------------------------- | --------------------------- | --------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------- |
 | **Bob (Pages)**             | `NEXT_PUBLIC_TOKYO_URL`     | `https://tokyo.dev.clickeen.com`        | `https://tokyo.clickeen.com`        | Compiler fetches widget specs over HTTP (even locally)                           |
-| **Bob (Pages)**             | `NEXT_PUBLIC_CLK_LIVE_URL`  | `https://clk.live`                      | `https://clk.live`                  | Optional public embed origin override                                            |
+| **Bob (Pages)**             | `NEXT_PUBLIC_CLK_LIVE_URL`  | `https://dev.clk.live`                  | `https://clk.live`                  | Optional public embed origin override                                            |
 | **Bob (Pages)**             | `SANFRANCISCO_BASE_URL`     | `https://sanfrancisco.dev.clickeen.com` | `https://sanfrancisco.clickeen.com` | Explicit base URL for Copilot execution (San Francisco); no fallback probing |
 | **Roma (Pages)**            | `NEXT_PUBLIC_BOB_URL`       | `https://bob.dev.clickeen.com`          | `https://app.clickeen.com`          | Builder iframe origin (no query override; configured per environment)            |
 | **Roma/San Francisco (trusted backends)** | `ENV_STAGE`   | `cloud-dev`                             | `ga`                                | Exposure stage stamped into AI grants on the active product/internal issuer path |
@@ -282,7 +282,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 
 **DNS & custom domains**
 
-- `bob.dev`, `roma.dev`, `tokyo.dev`, `clk.live`, and `sanfrancisco.dev` point at the corresponding Pages/Workers deployments.
+- `bob.dev`, `roma.dev`, `tokyo.dev`, `dev.clk.live`, and `sanfrancisco.dev` point at the corresponding cloud-dev Pages/Workers deployments.
 - Production domains (`app`, `tokyo`, `clk.live`, `sanfrancisco`) are configured similarly.
 
 **Pages build settings**
@@ -593,6 +593,14 @@ Public embeds serve generated static files from:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
+In cloud-dev, the same path is served from:
+
+```txt
+https://dev.clk.live/{accountPublicId}/{instanceId}
+```
+
+`clk.live` is reserved for production public serving.
+
 The serving layer validates the two coordinates, checks a positive browser-file allowlist, rewrites to the matching Tokyo/R2 object under the account instance folder, and returns either the file or 404. It does not compose widgets per request.
 
 ---
@@ -614,7 +622,7 @@ User opens widget → Roma GET /api/builder/:instanceId/open
 ### 2. Embed View Flow
 
 ```
-Visitor loads embed → clk.live/{accountPublicId}/{instanceId}
+Visitor loads embed → {environment public-serving host}/{accountPublicId}/{instanceId}
                     → static serving reads the requested generated artifact
                     → browser loads allowed sibling CSS/JS/assets only
 ```
