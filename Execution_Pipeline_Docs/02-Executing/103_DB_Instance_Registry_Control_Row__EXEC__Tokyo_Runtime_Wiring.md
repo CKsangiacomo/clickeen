@@ -1,6 +1,6 @@
 # EXEC 103_DB.3 Tokyo Instance Registry/Control Row Wiring
 
-Status: In Progress - Cloud Deploy Green, Roma Auth Smoke Pending
+Status: Green
 Date Started: 2026-05-22
 Parent PRD: `103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
 Child PRD: `103_DB_Instances__PRD__Instances_Table.md`
@@ -70,6 +70,7 @@ Cloud verification green:
 - `cloud-dev surface reachability` run `26286422662`: success
 - Tokyo health: `GET https://tokyo.dev.clickeen.com/healthz` returns `200 {"up":true}`
 - Tokyo worker secrets exist for the DB-backed registry path: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `TOKYO_DEV_JWT`
+- Human Roma cloud-dev smoke on 2026-05-22: user confirmed Widgets lists FAQ, Countdown, and Logo Showcase, and each instance opens successfully.
 
 Active product discovery guard:
 
@@ -81,9 +82,6 @@ Deploy mechanics note:
 - Wrangler uploaded Tokyo successfully in run `26286011810`, then failed while rewriting Cloudflare zone routes because the GitHub Actions Cloudflare token does not have route mutation permission.
 - The Tokyo deploy command now uploads the worker without rewriting routes. Existing Cloudflare routes remain the serving boundary; route creation/mutation is not part of this runtime slice.
 
-## Not Green Yet
+## Closure
 
-Do not close this slice until:
-
-- Roma can list/open FAQ, Countdown, and Logo Showcase through Tokyo with DB-backed instance authority;
-- human-auth Roma smoke confirms FAQ, Countdown, and Logo Showcase list/open in cloud-dev.
+This slice is green. Roma/Tokyo create/open/list/rename/publish runtime paths now require the `instances` registry/control row for instance existence and ownership. The old account instance index is no longer an active product authority.

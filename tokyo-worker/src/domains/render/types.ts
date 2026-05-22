@@ -10,10 +10,6 @@ export type LocalePolicy = {
   };
 };
 
-export type PublishedOverlayProjection = {
-  languages: Record<string, string>;
-};
-
 export type AccountInstanceDocument = {
   v: 1;
   id: string;
@@ -187,13 +183,3 @@ export type SavedRenderDocumentReadResult =
   | SavedRenderDocumentReadFailure;
 
 export type InstanceServeState = 'published' | 'unpublished';
-
-export type OverlayObjectDocument = {
-  v: 1;
-  values: Record<string, unknown>;
-};
-
-export type SelectedOverlayPointerDocument = {
-  v: 1;
-  overlayId: string;
-};

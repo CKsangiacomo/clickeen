@@ -2,7 +2,7 @@ import { resolveOverlay } from '@clickeen/ck-contracts';
 import type { Env } from '../../types';
 import { normalizeLocale } from '../../asset-utils';
 import { readAccountInstanceDocument } from './saved-config';
-import { listTranslatedLocales, readTranslatedLocaleValues } from './overlays';
+import { listTranslatedLocales, readTranslatedLocaleValues } from './translated-locales';
 
 type R2TextObject = {
   text(): Promise<string>;

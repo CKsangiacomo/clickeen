@@ -396,7 +396,7 @@ export function TranslationsPanel({
       buildTranslationPanelLocaleState({
         baseLocale,
         activeLocales: translationSetup?.activeLocales ?? [],
-        inventory: translatedLocales,
+        translatedLocales,
         requestedLocale: translationPreviewLocale,
       }),
     [baseLocale, translatedLocales, translationPreviewLocale, translationSetup?.activeLocales],

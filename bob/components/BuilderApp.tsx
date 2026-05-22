@@ -45,7 +45,7 @@ function BuilderShell() {
       previewMode === 'translations',
   );
   const {
-    inventory: translatedLocales,
+    translatedLocales,
     valuesByLocale: translationValuesByLocale,
     loading: translationsLoading,
     error: translationsError,

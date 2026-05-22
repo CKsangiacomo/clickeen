@@ -132,9 +132,9 @@ export function listPreviewableLocales(data: TranslatedLocalesData | null): stri
 
 export function retainTranslatedLocaleValues(
   current: Record<string, Record<string, string>>,
-  inventory: TranslatedLocalesData,
+  translatedLocales: TranslatedLocalesData,
 ): Record<string, Record<string, string>> {
-  const readyLocales = new Set(inventory.translations.map((entry) => entry.locale));
+  const readyLocales = new Set(translatedLocales.translations.map((entry) => entry.locale));
   const next: Record<string, Record<string, string>> = {};
   for (const [locale, values] of Object.entries(current)) {
     if (readyLocales.has(locale)) next[locale] = values;
@@ -145,12 +145,12 @@ export function retainTranslatedLocaleValues(
 export function buildTranslationPanelLocaleState(args: {
   baseLocale: string;
   activeLocales: string[];
-  inventory: TranslatedLocalesData | null;
+  translatedLocales: TranslatedLocalesData | null;
   requestedLocale: string;
 }): TranslationPanelLocaleState {
   const expectedLocales = new Set(args.activeLocales.filter((locale) => locale !== args.baseLocale));
   const readyLocales = new Set(
-    (args.inventory?.translations ?? [])
+    (args.translatedLocales?.translations ?? [])
       .map((entry) => entry.locale)
       .filter((locale) => expectedLocales.has(locale)),
   );
@@ -161,7 +161,7 @@ export function buildTranslationPanelLocaleState(args: {
   const localeValues = args.baseLocale
     ? [
         args.baseLocale,
-        ...(args.inventory?.translations ?? [])
+        ...(args.translatedLocales?.translations ?? [])
           .filter((entry) => expectedLocales.has(entry.locale))
           .map((entry) => entry.locale),
       ]
@@ -172,7 +172,7 @@ export function buildTranslationPanelLocaleState(args: {
       : args.baseLocale || localeValues[0] || '';
   const selectedTranslationEntry =
     localeValue && localeValue !== args.baseLocale
-      ? args.inventory?.translations.find((entry) => entry.locale === localeValue) ?? null
+      ? args.translatedLocales?.translations.find((entry) => entry.locale === localeValue) ?? null
       : null;
 
   return {

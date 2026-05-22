@@ -228,7 +228,7 @@ export function AccountLocaleSettingsCard(args: {
       <h2 className="heading-6">Languages</h2>
       <p className="body-m">These account languages drive automatic translation after Save for every widget in this account.</p>
       <p className="body-s">
-        Base language is the source language for translation overlays. It can be changed only before the first widget save in this account. After authoring
+        Base language is the source language for generated translations. It can be changed only before the first widget save in this account. After authoring
         starts, changing it becomes a support/migration operation.
       </p>
       {!args.canEdit ? <p className="body-s">Read-only mode: language settings are disabled.</p> : null}

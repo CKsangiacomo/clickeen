@@ -46,13 +46,13 @@ export function useTranslationPreviewState(args: {
   refreshVersion: number;
 }) {
   const { listTranslations, readTranslation } = useWidgetSessionTransport();
-  const [inventory, setInventory] = useState<TranslatedLocalesData | null>(null);
+  const [translatedLocales, setTranslatedLocales] = useState<TranslatedLocalesData | null>(null);
   const [valuesByLocale, setValuesByLocale] = useState<Record<string, Record<string, string>>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setInventory(null);
+    setTranslatedLocales(null);
     setValuesByLocale({});
     setLoading(false);
     setError(null);
@@ -60,7 +60,7 @@ export function useTranslationPreviewState(args: {
 
   useEffect(() => {
     if (!args.instanceId || !args.baseLocale) {
-      setInventory(null);
+      setTranslatedLocales(null);
       setValuesByLocale({});
       setLoading(false);
       setError(null);
@@ -91,11 +91,11 @@ export function useTranslationPreviewState(args: {
         if (!payload) throw new Error('coreui.errors.payload.invalid');
         if (payload.baseLocale !== args.baseLocale) throw new Error('coreui.errors.payload.invalid');
         setValuesByLocale((current) => retainTranslatedLocaleValues(current, payload));
-        setInventory(payload);
+        setTranslatedLocales(payload);
       })
       .catch((caught) => {
         if (cancelled) return;
-        setInventory({ v: 1, baseLocale: args.baseLocale, translations: [] });
+        setTranslatedLocales({ v: 1, baseLocale: args.baseLocale, translations: [] });
         const status =
           typeof (caught as { status?: unknown } | null | undefined)?.status === 'number'
             ? (caught as { status: number }).status
@@ -124,10 +124,10 @@ export function useTranslationPreviewState(args: {
   ]);
 
   const selectedTranslation = useMemo(() => {
-    if (!inventory) return null;
-    if (!args.selectedLocale || args.selectedLocale === inventory.baseLocale) return null;
-    return inventory.translations.find((entry) => entry.locale === args.selectedLocale) ?? null;
-  }, [args.selectedLocale, inventory]);
+    if (!translatedLocales) return null;
+    if (!args.selectedLocale || args.selectedLocale === translatedLocales.baseLocale) return null;
+    return translatedLocales.translations.find((entry) => entry.locale === args.selectedLocale) ?? null;
+  }, [args.selectedLocale, translatedLocales]);
 
   const selectedTranslationLocale = selectedTranslation?.locale ?? '';
 
@@ -182,7 +182,7 @@ export function useTranslationPreviewState(args: {
   ]);
 
   return {
-    inventory,
+    translatedLocales,
     valuesByLocale,
     loading,
     error,

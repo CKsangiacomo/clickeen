@@ -1,5 +1,5 @@
 import { asTrimmedString } from '@clickeen/ck-contracts';
-import { isCompactAccountPublicId, isCompactInstanceId, isWidgetOverlayCode, isOverlayId } from '@clickeen/ck-contracts/overlay-identity';
+import { isCompactAccountPublicId, isCompactInstanceId, isWidgetOverlayCode } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeLocale } from '../../asset-utils';
 import type {
   AccountInstanceDocument,
@@ -7,7 +7,6 @@ import type {
   AccountInstanceContentDocument,
   AccountInstanceContentFieldStatus,
   LocalePolicy,
-  PublishedOverlayProjection,
   SavedRenderPointer,
 } from './types';
 import { normalizeLocaleList, normalizeStorageId } from './utils';
@@ -47,18 +46,6 @@ export function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
       ...(alwaysShowLocale ? { alwaysShowLocale } : {}),
     },
   };
-}
-
-function normalizePublishedOverlayProjection(raw: unknown): PublishedOverlayProjection | null {
-  const payload = asRecord(raw);
-  const languagesRaw = asRecord(payload?.languages);
-  if (!payload || !languagesRaw) return null;
-  const languages: Record<string, string> = {};
-  for (const [languageCode, overlayId] of Object.entries(languagesRaw)) {
-    if (!/^[0-9A-Z]{4}$/.test(languageCode) || !isOverlayId(overlayId)) return null;
-    languages[languageCode] = overlayId;
-  }
-  return { languages };
 }
 
 function normalizeEmbedBuildShape(raw: unknown): AccountInstanceDocument['embedBuildShape'] | null {

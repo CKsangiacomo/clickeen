@@ -67,7 +67,7 @@ test('translation panel locale state refreshes dropdown only while translations 
     baseLocale: 'en',
     activeLocales: ['it', 'cs'],
     requestedLocale: '',
-    inventory: {
+    translatedLocales: {
       v: 1,
       baseLocale: 'en',
       translations: [{ locale: 'it' }],
@@ -84,7 +84,7 @@ test('translation panel locale state refreshes dropdown only while translations 
     baseLocale: 'en',
     activeLocales: ['it', 'cs'],
     requestedLocale: 'cs',
-    inventory: {
+    translatedLocales: {
       v: 1,
       baseLocale: 'en',
       translations: [

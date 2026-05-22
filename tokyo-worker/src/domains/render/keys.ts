@@ -22,21 +22,3 @@ export function accountInstanceContentKey(accountId: string, widgetCode: string,
 export function accountInstanceTranslationGenerationJobKey(accountId: string, widgetCode: string, instanceId: string): string {
   return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/translation-generation-job.json`;
 }
-
-export function accountInstanceOverlayObjectKey(
-  accountId: string,
-  widgetCode: string,
-  instanceId: string,
-  overlayId: string,
-): string {
-  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/${overlayId}.json`;
-}
-
-export function accountInstanceOverlayObjectPrefix(
-  accountId: string,
-  widgetCode: string,
-  instanceId: string,
-  overlayIdPrefix = '',
-): string {
-  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/${overlayIdPrefix}`;
-}

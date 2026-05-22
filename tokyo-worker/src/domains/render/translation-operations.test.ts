@@ -21,7 +21,7 @@ import {
   listTranslatedLocales,
   readTranslatedLocaleValues,
   writeTranslatedLocaleValues,
-} from './overlays.ts';
+} from './translated-locales.ts';
 import {
   readAccountInstanceContentDocument,
   writeSavedRenderConfig,

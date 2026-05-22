@@ -2,7 +2,7 @@ export * from './types';
 export * from './keys';
 export * from './utils';
 export * from './normalize';
-export * from './overlays';
+export * from './translated-locales';
 export * from './saved-config';
 export * from './storage';
 export * from './r2-object';
