@@ -45,7 +45,6 @@ export type AccountInstanceConfigDocument = {
   baseLocale: string;
   targetLocales: string[];
   embedBuildShape: AccountInstanceDocument['embedBuildShape'];
-  publishStatus: InstanceServeState;
   createdAt: string;
   updatedAt: string;
 };

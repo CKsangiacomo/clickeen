@@ -304,6 +304,7 @@ export async function materializeInstancePublicArtifacts(args: {
     const stylesheetFile = publicArtifactStylesheetFile(version);
     const files: MaterializedFile[] = [
       { name: stylesheetFile, body: styles, contentType: textContentType(stylesheetFile) },
+      { name: 'styles.css', body: styles, contentType: textContentType('styles.css') },
     ];
     for (const [locale, state] of localizedStates) {
       const baseLocale = locale === instance.value.baseLocale;
@@ -318,6 +319,11 @@ export async function materializeInstancePublicArtifacts(args: {
         state,
       });
       files.push({ name: scriptFile, body: script, contentType: textContentType(scriptFile) });
+      files.push({
+        name: baseLocale ? 'script.js' : publicArtifactLocaleScriptFile(locale),
+        body: script,
+        contentType: textContentType(scriptFile),
+      });
       files.push({
         name: htmlFile,
         body: buildHtml({

@@ -102,13 +102,13 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - One saved configured widget owned by one account.
 - Tokyo owns instance product operations for `accountPublicId + instanceId`: list, open, save, rename, create, duplicate, delete, generate translations, read/write translated locale values, publish, and unpublish.
 - Source is split by product meaning:
-  - `instance.config.json` carries non-text settings, structure, style, behavior, identity/display metadata, widget type/code, base locale, target locales, publish status, and timestamps.
+  - `instance.config.json` carries non-text settings, structure, style, behavior, identity/display metadata, widget type/code, base locale, target locales, and timestamps.
   - `instance.content.json` carries user-visible base text in the same editable paths Bob exposes, current translated locale values, plus `ok` / `changed` status for translation pickup.
-- `instance.json` may exist only as a transitional compatibility mirror. It is not the product source authority and must not receive new product meaning.
+- `instance.json` is not a product source authority and is not written or read by active runtime code.
 - Translated locale values are addressed by `instanceId + locale` at product boundaries. Tokyo may persist exact value maps privately; Bob, Roma, and San Francisco must not use overlay IDs or storage paths as locale identity.
-- Public browser files such as `index.html`, `styles.css`, `script.js`, `{locale}.html`, and `script.{locale}.js` are generated artifacts. They are output of publish/materialization, not authoring truth and not publish state.
-- Publish status is Tokyo-owned product state. Public serving checks publish status and requested artifact availability; `index.html` physical presence does not define whether the instance is published.
-- `accounts/{accountPublicId}/instances/index.json`, if present during transition, is a private cache/read model below `listAccountInstances`. Roma must not call or reason about it.
+- Public browser files such as `index.html`, versioned CSS/JS support files, and `{locale}.html` are generated artifacts. They are output of publish/materialization, not authoring truth and not product publish state.
+- Publish status is Tokyo-owned product state. Public serving reads R2/CDN artifacts only; publish/unpublish and tier-serving operations materialize or remove those artifacts from product state and policy.
+- `accounts/{accountPublicId}/instances/index.json` is not product truth and is not read by active runtime code.
 - Michael does not keep a parallel account widget instance table. Support, billing/account reporting, and audit flows must use account/user relational data plus Tokyo-owned instance product operations.
 - Bob holds the working copy in memory during editing and sends changes back through Roma/Tokyo product routes.
 
@@ -123,16 +123,17 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 accounts/{accountPublicId}/
   assets/
   instances/
-    index.json                  # transitional private cache only
     {instanceId}/
-      instance.config.json       # approved non-text source + identity/display/locale/publish metadata
+      instance.config.json       # approved non-text source + identity/display/locale metadata
       instance.content.json      # approved base user-visible text source + translated values + translation pickup status
-      instance.json              # transitional compatibility mirror only
       index.html                 # generated public artifact
-      styles.css                 # generated public artifact
-      script.js                  # generated public artifact
+      styles.v{n}.css            # generated public artifact
+      styles.css                 # generated public alias
+      script.v{n}.js             # generated public artifact
+      script.js                  # generated public alias
       {locale}.html              # generated public artifact
-      script.{locale}.js         # generated public artifact
+      script.v{n}.{locale}.js    # generated public artifact
+      script.{locale}.js         # generated public alias
       translated-locale-values/  # private implementation shape; not product vocabulary
 ```
 
@@ -194,7 +195,7 @@ Between open and save:
 | `widgetType`   | Human/product widget identifier referencing the definition (e.g., "faq")                                 |
 | `widgetCode`   | 3-character widget code from the shared widget codebook, used as metadata/codebook identity; never an R2 storage locator |
 | `accountPublicId` | 8-character account product/storage identity from Michael/Berlin account truth                       |
-| `config`       | Persisted non-text instance settings, structure, style, behavior, identity/display, locale, and publish metadata |
+| `config`       | Persisted non-text instance settings, structure, style, behavior, identity/display, and locale metadata |
 | `content`      | Persisted base user-visible text values for the instance; translation input and status live here |
 | `instanceData` | Working copy of config/content in Bob during editing                                                     |
 | `spec.json`    | Defaults + structured Builder editor contract (`editor.panels`); compiled by Bob                         |
@@ -257,7 +258,7 @@ Publishing semantics: `published` / `unpublished` is Tokyo-owned instance produc
 
 **Tokyo** — Account storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, account-owned instance source, translated locale value storage, generated account mini-site artifacts, and account-owned uploaded files. Runtime-managed account data lives only under `accounts/{accountPublicId}/`; git-authored product resources live under `product/`, `dieter/`, `fonts/`, and `prague/`.
 
-**Tokyo Worker** — Cloudflare Worker that serves account asset references from `accounts/{accountPublicId}/assets/{assetRef}`, exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, owns account instance config/content persistence, stores translated locale value maps, queues translation jobs, materializes public artifacts, and serves generated public artifacts when publish state allows. Tokyo-worker is a PBX/control-plane switchboard for approved product operations: it must not infer product meaning from private storage object names, preserve storage-object vocabulary at product boundaries, or render public widgets from authoring source at visitor request time.
+**Tokyo Worker** — Cloudflare Worker that serves account asset references from `accounts/{accountPublicId}/assets/{assetRef}`, exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, owns account instance config/content persistence, stores translated locale value maps, queues translation jobs, materializes public artifacts from product state, and serves existing generated public artifacts from R2/CDN. Tokyo-worker is a PBX/control-plane switchboard for approved product operations: it must not infer product meaning from private storage object names, preserve storage-object vocabulary at product boundaries, or render public widgets from authoring source at visitor request time.
 
 **Asset URL contract (pre-GA strict):**
 

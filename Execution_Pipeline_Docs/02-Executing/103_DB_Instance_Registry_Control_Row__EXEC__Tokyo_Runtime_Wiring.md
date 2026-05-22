@@ -32,7 +32,7 @@ Read-only R2 evidence gathered on 2026-05-22:
   - `UZ3JEJSHII` / `faq` / `published`
   - `8FMVZFFPJV` / `logoshowcase` / `published`
 - `accounts/AYAXJRGD/instances/index.json` does not exist.
-- Each listed admin instance has a matching `instance.config.json` with the same `id`, `accountId`, `widgetType`, `publishStatus`, `createdAt`, and `updatedAt`.
+- At migration time, each listed admin instance had a matching `instance.config.json` with the same `id`, `accountId`, `widgetType`, `createdAt`, and `updatedAt`; the DB `instances.publish_status` row became the surviving publish-state authority.
 
 Migration file:
 

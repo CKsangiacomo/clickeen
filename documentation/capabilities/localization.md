@@ -109,12 +109,15 @@ Publish/materialization consumes approved instance config/content plus translate
 accounts/{accountPublicId}/instances/{instanceId}/
   index.html
   {locale}.html
+  styles.v{n}.css
   styles.css
+  script.v{n}.js
   script.js
+  script.v{n}.{locale}.js
   script.{locale}.js
 ```
 
-Generated files are output. Publish status is product state. If the instance is unpublished or a requested generated artifact is missing, the public request returns 404. The serving layer does not compose translations, inspect account policy, or repair stale language output on visitor requests.
+Generated files are output. Publish status is product state. Publish, unpublish, and tier-serving operations materialize or remove those files. Visitor serving reads R2/CDN artifacts only; it does not query Supabase, compose translations, inspect account policy, or repair stale language output on visitor requests.
 
 ## Prague
 

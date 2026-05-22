@@ -43,7 +43,7 @@ Overlay objects live under the owning account instance:
 accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json
 ```
 
-Generated public locale output is browser HTML written by the coding agent from `instance.json` plus overlay inputs:
+Generated public locale output is browser HTML materialized by Tokyo from the approved instance config/content payload plus translated locale values:
 
 ```txt
 accounts/{accountPublicId}/instances/{instanceId}/{locale}.html

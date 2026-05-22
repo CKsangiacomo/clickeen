@@ -2,7 +2,7 @@
 
 STATUS: REFERENCE - MUST MATCH PRD 099 DEPLOY ROOTS AND PRD 098 OVERLAY IDENTITY
 
-PRD 103_02 NOTE: this document still describes the current physical storage tree. It is not current product-boundary authority for account instances, translated locale values, publish state, or public artifact readiness until PRD 103_02 closes. Treat `instance.json`, `instances/index.json`, `overlays/{overlayId}.json`, `index.html`, `styles.css`, and `script.js` below as audit evidence and implementation candidates, not approved Roma/Bob/San Francisco contracts.
+PRD 103 DB PIVOT NOTE: account instance product boundaries are now operation-shaped. `instance.json` and `instances/index.json` are not active product runtime contracts. Public generated artifacts are R2/CDN serving output, not authoring or publish state.
 
 Tokyo is the storage and static-serving plane. It is not an editor, account authority, or Prague-specific runtime.
 
@@ -50,20 +50,21 @@ Deploy tooling must not publish git-authored media to root `widgets/`, root `l10
 
 ## Runtime Account Shape
 
-Real account data lives in R2:
+Account-owned payloads and public artifacts live under the account root:
 
 ```txt
 accounts/{accountPublicId}/
   assets/
     {assetRef}
   instances/
-    index.json
     {instanceId}/
-      instance.json
+      instance.config.json
+      instance.content.json
       index.html
-      styles.css
-      script.js
-      overlays/{overlayId}.json
+      styles.v{n}.css
+      script.v{n}.js
+      {locale}.html
+      script.v{n}.{locale}.js
 ```
 
 Rules:
@@ -72,8 +73,9 @@ Rules:
 - `instanceId` is the stable compact generated instance identity. Public embeds also carry `accountPublicId`.
 - Instance names are labels only and must never be used as storage keys.
 - Widget codes (`FAQ`, `CTD`, `LGS`, etc.) are codebook metadata used by overlay identity and contracts. They are not storage folders and are never required to locate an instance.
-- Instance locale values are overlay objects under `overlays/{overlayId}.json`.
-- `instances/index.json` is a generated account read model. Generated public browser files such as `index.html`, locale HTML files, CSS, and JS are rebuilt by the coding-agent flow and must not be treated as identity, ownership, saved config, or publish truth.
+- Instance locale values are addressed by Tokyo operations using `{instanceId, locale}`. Overlay object IDs and paths are not product identity.
+- Instance listing comes from Tokyo operations backed by the `instances` DB row, not `instances/index.json`.
+- Generated public browser files such as `index.html`, locale HTML files, and versioned CSS/JS are rebuilt by Tokyo materialization and must not be treated as identity, ownership, saved config, or product publish truth.
 - Prague page translations are not account-instance overlays.
 
 ## Public Static Serving

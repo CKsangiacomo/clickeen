@@ -61,11 +61,11 @@ Generated/public artifacts are written only by artifact builders.
 | Concern | Product authority | Storage/artifact implementation rule |
 | --- | --- | --- |
 | Widget definitions | Approved widget source under `tokyo/product/widgets/{widgetType}/` read by widget-definition operations | Generated manifests are not source authority. |
-| Account instance source | Tokyo account instance operations over `instance.config.json` and `instance.content.json` | `instance.json` may exist only as a transitional compatibility mirror. |
+| Account instance source | Tokyo account instance operations over `instance.config.json` and `instance.content.json` | `instance.json` is not written or read by active runtime code. |
 | Account instance listing | `listAccountInstances` | Any account index file is a private cache below the operation, not a Roma API. |
 | Translations | Translated locale value operations by `instanceId + locale` | Overlay IDs or object paths are private storage details if retained. |
 | Publish state | Tokyo publish/unpublish operations and publish status | Generated files are output, not the state machine. |
-| Public serving | `clk.live/{accountPublicId}/{instanceId}` serving generated artifacts for published instances | Missing artifacts fail visibly; visitor requests do not compose widgets from authoring source. |
+| Public serving | `clk.live/{accountPublicId}/{instanceId}` serving materialized generated artifacts from R2/CDN | Missing artifacts fail visibly; visitor requests do not read Supabase or compose widgets from authoring source. |
 
 ### Why this matters
 
@@ -615,7 +615,7 @@ User opens widget → Roma GET /api/builder/:instanceId/open
 
 ```
 Visitor loads embed → clk.live/{accountPublicId}/{instanceId}
-                    → static serving checks publish status and reads the requested generated artifact
+                    → static serving reads the requested generated artifact
                     → browser loads allowed sibling CSS/JS/assets only
 ```
 

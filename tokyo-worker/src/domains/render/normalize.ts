@@ -2,12 +2,10 @@ import { asTrimmedString } from '@clickeen/ck-contracts';
 import { isCompactAccountPublicId, isCompactInstanceId, isWidgetOverlayCode } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeLocale } from '../../asset-utils';
 import type {
-  AccountInstanceDocument,
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,
   AccountInstanceContentFieldStatus,
   LocalePolicy,
-  SavedRenderPointer,
 } from './types';
 import { normalizeLocaleList, normalizeStorageId } from './utils';
 
@@ -48,7 +46,7 @@ export function normalizeLocalePolicy(raw: unknown): LocalePolicy | null {
   };
 }
 
-function normalizeEmbedBuildShape(raw: unknown): AccountInstanceDocument['embedBuildShape'] | null {
+function normalizeEmbedBuildShape(raw: unknown): AccountInstanceConfigDocument['embedBuildShape'] | null {
   const payload = asRecord(raw);
   if (!payload) return null;
   const rendering = payload.rendering === 'html' || payload.rendering === 'iframe' ? payload.rendering : null;
@@ -59,43 +57,6 @@ function normalizeEmbedBuildShape(raw: unknown): AccountInstanceDocument['embedB
   const locales = normalizeLocaleList(payload.locales);
   if (!rendering || !seoMode || !clientSide || locales.length === 0) return null;
   return { rendering, seoMode, locales, clientSide };
-}
-
-export function normalizeAccountInstanceDocument(raw: unknown): AccountInstanceDocument | null {
-  const payload = asRecord(raw);
-  if (!payload || payload.v !== 1) return null;
-  const id = normalizeStorageId(payload.id) ?? '';
-  const accountId = normalizeStorageId(payload.accountId) ?? '';
-  const widgetCode = asTrimmedString(payload.widgetCode) ?? '';
-  const widgetType = asTrimmedString(payload.widgetType) ?? '';
-  const displayName = asTrimmedString(payload.displayName);
-  const accountPublicId = normalizeStorageId(payload.accountPublicId) ?? accountId;
-  const createdAt = asTrimmedString(payload.createdAt) ?? '';
-  const updatedAt = asTrimmedString(payload.updatedAt) ?? '';
-  const config = asRecord(payload.config);
-  const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
-  const targetLocales = normalizeLocaleList(payload.targetLocales);
-  const embedBuildShape = normalizeEmbedBuildShape(payload.embedBuildShape);
-  const publishStatus = payload.publishStatus === 'published' ? 'published' : 'unpublished';
-  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || accountPublicId !== accountId || !isWidgetOverlayCode(widgetCode) || !widgetType || !config || !baseLocale || !embedBuildShape || !createdAt || !updatedAt) return null;
-  const meta = asRecord(payload.meta) ?? (payload.meta === null || payload.meta === undefined ? null : null);
-  return {
-    v: 1,
-    id,
-    accountId,
-    accountPublicId,
-    widgetCode,
-    widgetType,
-    displayName,
-    meta,
-    config,
-    baseLocale,
-    targetLocales,
-    embedBuildShape,
-    publishStatus,
-    createdAt,
-    updatedAt,
-  };
 }
 
 export function normalizeAccountInstanceConfigDocument(raw: unknown): AccountInstanceConfigDocument | null {
@@ -113,7 +74,6 @@ export function normalizeAccountInstanceConfigDocument(raw: unknown): AccountIns
   const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
   const targetLocales = normalizeLocaleList(payload.targetLocales);
   const embedBuildShape = normalizeEmbedBuildShape(payload.embedBuildShape);
-  const publishStatus = payload.publishStatus === 'published' ? 'published' : 'unpublished';
   if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || accountPublicId !== accountId || !isWidgetOverlayCode(widgetCode) || !widgetType || !config || !baseLocale || !embedBuildShape || !createdAt || !updatedAt) return null;
   const meta = asRecord(payload.meta) ?? (payload.meta === null || payload.meta === undefined ? null : null);
   return {
@@ -128,7 +88,6 @@ export function normalizeAccountInstanceConfigDocument(raw: unknown): AccountIns
     baseLocale,
     targetLocales,
     embedBuildShape,
-    publishStatus,
     createdAt,
     updatedAt,
   };
@@ -178,22 +137,6 @@ export function normalizeAccountInstanceContentDocument(raw: unknown): AccountIn
     };
   }
   return { id, accountId, widgetType, fields, updatedAt };
-}
-
-export function normalizeSavedRenderPointer(raw: unknown): SavedRenderPointer | null {
-  const instance = normalizeAccountInstanceDocument(raw);
-  if (!instance) return null;
-  return {
-    v: 1,
-    id: instance.id,
-    accountId: instance.accountId,
-    widgetCode: instance.widgetCode,
-    widgetType: instance.widgetType,
-    displayName: instance.displayName,
-    meta: instance.meta ?? null,
-    publishStatus: instance.publishStatus,
-    updatedAt: instance.updatedAt,
-  };
 }
 
 export function resolveSavedRenderValidationReason(raw: unknown): string {

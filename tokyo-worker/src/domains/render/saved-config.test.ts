@@ -151,24 +151,12 @@ test('saved instance writes split source files under the instance folder', async
   assert.equal(Object.prototype.hasOwnProperty.call(created.pointer, 'generation'), false);
 
   const instanceKey = `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`;
-  assert.equal(objects.has(instanceKey), true);
-  const instance = jsonPayload(objects, instanceKey);
-  assert.equal(instance.accountPublicId, ACCOUNT_ID);
-  assert.equal(Object.prototype.hasOwnProperty.call(instance, 'sourceVersion'), false);
-  assert.equal(Object.prototype.hasOwnProperty.call(instance, 'generation'), false);
-  assert.equal(instance.baseLocale, 'en');
-  assert.deepEqual(instance.targetLocales, []);
-  assert.deepEqual(instance.embedBuildShape, {
-    rendering: 'html',
-    seoMode: 'off',
-    locales: ['en'],
-    clientSide: 'minimal-js',
-  });
+  assert.equal(objects.has(instanceKey), false);
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/config.json`), false);
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.config.json`), true);
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.content.json`), true);
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/publish.json`), false);
-  assert.equal(writes.includes(instanceKey), true);
+  assert.equal(writes.includes(instanceKey), false);
 
   const configSource = jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.config.json`);
   assert.deepEqual(configSource.config, { question: 'Q1', answer: 'A1' });
@@ -279,9 +267,12 @@ test('save updates source and publish materializes public artifacts without publ
   assert.equal(generatedPublicKeys(objects).some((key) => /^styles\.v[1-9][0-9]*\.css$/.test(key)), true);
 
   assert.equal(await readInstanceServeState({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID }), 'published');
-  const instance = jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`);
-  assert.equal(instance.publishStatus, 'unpublished');
-  assert.deepEqual(instance.config, { question: 'Q2', answer: 'A2' });
+  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`), false);
+  const savedAfterPublish = await readSavedRenderConfig({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });
+  assert.equal(savedAfterPublish.ok, true);
+  if (!savedAfterPublish.ok) return;
+  assert.equal(savedAfterPublish.value.pointer.publishStatus, 'published');
+  assert.deepEqual(savedAfterPublish.value.config, { question: 'Q2', answer: 'A2' });
 });
 
 test('product instance list reads registry rows without account index handoff', async () => {
@@ -385,7 +376,7 @@ test('product instance list does not inspect FAQ content fields', async () => {
   ]);
 });
 
-test('product instance list ignores instance.json compatibility files', async () => {
+test('product instance list ignores legacy instance.json files', async () => {
   const { env, objects } = createTestEnv();
   objects.set(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`, {
     kind: 'json',
@@ -428,7 +419,6 @@ test('rename updates display state without rewriting content status', async () =
     config: { question: 'Q1', answer: 'A1' },
   });
 
-  const before = jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`);
   const beforeContent = jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.content.json`);
   const renamed = await renameAccountInstanceDisplay({
     env,
@@ -442,12 +432,11 @@ test('rename updates display state without rewriting content status', async () =
     displayName: 'Renamed FAQ',
     updatedAt: renamed.updatedAt,
   });
-  const after = jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`);
-  assert.equal(after.displayName, 'Renamed FAQ');
-  assert.equal(Object.prototype.hasOwnProperty.call(after, 'sourceVersion'), false);
-  assert.equal(Object.prototype.hasOwnProperty.call(before, 'sourceVersion'), false);
-  assert.equal(Object.prototype.hasOwnProperty.call(after, 'generation'), false);
-  assert.equal(Object.prototype.hasOwnProperty.call(before, 'generation'), false);
+  const configAfterRename = jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.config.json`);
+  assert.equal(configAfterRename.displayName, 'Renamed FAQ');
+  assert.equal(Object.prototype.hasOwnProperty.call(configAfterRename, 'sourceVersion'), false);
+  assert.equal(Object.prototype.hasOwnProperty.call(configAfterRename, 'generation'), false);
+  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`), false);
   assert.deepEqual(
     jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.content.json`),
     beforeContent,

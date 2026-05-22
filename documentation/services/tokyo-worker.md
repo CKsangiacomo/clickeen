@@ -46,15 +46,16 @@ accounts/{accountPublicId}/
   assets/
     {assetRef}
   instances/
-    index.json                  # transitional private cache/read model only
     {instanceId}/
-      instance.config.json       # non-text config, identity/display/locale/publish metadata
+      instance.config.json       # non-text config, identity/display/locale metadata
       instance.content.json      # base user-visible text fields, translated locale values, and per-field translation status
-      instance.json              # transitional compatibility mirror; not a product source authority
       index.html
+      styles.v{n}.css
       styles.css
+      script.v{n}.js
       script.js
       {locale}.html
+      script.v{n}.{locale}.js
       script.{locale}.js
 ```
 
@@ -64,13 +65,13 @@ Rules:
 - Account instances live directly under `instances/{instanceId}/`. There is no account `widgets/` storage lane, no `widgets/{widgetCode}` grouping folder, and no account-level `widget.json` authority.
 - Widget software lives only under `product/widgets/{widgetType}/`. `widgetType` and `widgetCode` may appear as metadata/codebook identity; they are never R2 locators for account instances.
 - `{instanceId}` is a stable generated 10-character uppercase base36 ID. It is not derived from widget type, display name, UUID, timestamp, or any old `ins_*` string.
-- `instance.config.json` carries non-text config plus instance identity/display, widget type/code, base locale, target locales, publish status, and timestamps.
+- `instance.config.json` carries non-text config plus instance identity/display, widget type/code, base locale, target locales, and timestamps.
 - `instance.content.json` carries base user-visible text values in the same editable paths Bob exposes, current translated locale values for those fields, plus `ok`/`changed` translation pickup status. This is the translation input and translation preview source. Every value is a string; rich text is sanitized HTML string content, not an object.
-- `instance.json` remains a transitional compatibility mirror only. Runtime code may read it to migrate old instances, but new product meaning must not be added to it.
+- `instance.json` is not written or read by active product runtime code.
 - Saved source does not carry `sourceVersion` or generic generation lanes. Translation and publish work use product operation state, content field status, and queue/job boundaries.
 - Legacy `overlays/{overlayId}.json` objects may exist until data cleanup, but no translation product operation reads or writes them as current locale value truth.
-- Publish materializes `index.html`, `styles.css`, `script.js`, `{locale}.html`, and `script.{locale}.js` from saved instance source plus translated locale values.
-- `instances/index.json` is a transitional private cache/read model. Product operations must be able to read source documents directly and must not treat the index as source truth.
+- Publish materializes `index.html`, versioned CSS/JS support files, stable support aliases, and `{locale}.html` entry files from saved instance source plus translated locale values.
+- `instances/index.json` is not product truth and is not read by active product runtime code.
 
 ## Public Serving
 
@@ -92,13 +93,13 @@ The canonical public serving URL after PRD 100 is:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-Serving maps that URL to generated files in the instance folder. It checks the Tokyo-owned publish status before serving and then reads the requested public artifact directly. It must not compute HTML from config, heal, infer, backfill, search account indexes, or fall back to old runtime projections.
+Serving maps that URL to generated files in the instance folder and reads the requested public artifact directly from R2. It must not check DB publish status on visitor traffic, compute HTML from config, heal, infer, backfill, search account indexes, or fall back to old runtime projections.
 
-Public availability is product publish state plus artifact presence for the requested file:
+Public availability is the materialized public artifact output:
 
-- publish status is `published`: `https://clk.live/{accountPublicId}/{instanceId}` may serve if `index.html` exists.
-- publish status is not `published`: the public URL and support files return 404 even if objects physically exist.
-- if a requested generated file is missing while published, that request returns 404.
+- `https://clk.live/{accountPublicId}/{instanceId}` serves only if the generated `index.html` artifact exists.
+- if a requested generated file is missing, that request returns 404.
+- publish/unpublish and tier-serving operations add or remove materialized public artifacts according to product state and policy.
 - Support files only serve from the same instance folder when their filename is on the generated-browser-file allowlist.
 - `instance.json`, `config.json`, `publish.json`, `embed.json`, `translations.json`, `overlays/`, `published/`, source maps, hidden files, directories, and unknown files return 404 even if the object physically exists.
 

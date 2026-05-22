@@ -37,7 +37,7 @@ Rules:
 | 103_DB.5 - Translation generation control state | Green | Make Generate acceptance, running/failed state, and changed/missing pickup deterministic through Tokyo operations plus the approved coarse `instances.translation_status` state. No job table, sourceVersion, generation lane, error column, or per-locale DB progress table was added. Current artifact: `103_DB_Translation_Generation_Control_State__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: Tokyo Generate/complete/fail update `instances.translation_status`; repeated Generate does not duplicate active work; stale work cannot overwrite newer saved text; Tokyo tests/typecheck green. |
 | 103_DB.6 - Widget definition operation cleanup | Green | Ensure Roma asks Tokyo for widget definitions and never reads generated R2 catalog/manifest artifacts; decide whether product registry remains repo/static or DB. Current artifact: `103_DB_Widget_Definition_Operation_Cleanup__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: widget definitions remain repo/static Tokyo source exposed through Tokyo operations; Roma calls `/__internal/widgets/definitions`; generated widget manifest/catalog route and DB `widgets` authority are absent from active product paths. |
 | 103_DB.7 - Publish/materialization bridge | Green | Define and implement the product operation that materializes public artifacts from Tokyo-owned state to R2. Remove file-presence status mechanics. Current artifact: `103_DB_Publish_Materialization_Bridge__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: `instances.publish_status` is product publish state; `clk.live` visitor traffic reads materialized R2 artifacts without Supabase; unpublish removes public artifacts; `applyFreeTierServing` and `restorePaidTierServing` materialize policy-specific serving output without rewriting publish intent. |
-| 103_DB.8 - Migration and toxic-path deletion | Pending | Migrate current dev/admin instances and remove old R2 source files/routes/guards/workflows from active product paths. | Current FAQ/Countdown/Logo Showcase instances open; old R2 product-state routes fail or are absent; one-shot migration evidence is attached. |
+| 103_DB.8 - Migration and toxic-path deletion | Green | Migrate current dev/admin instances and remove old R2 source files/routes/guards/workflows from active product paths. Current artifact: `103_DB_Migration_And_Toxic_Path_Deletion__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: current dev/admin instances were seeded in 103_DB.3; active runtime no longer writes/reads `instance.json`; `publishStatus` is removed from `instance.config.json`; old helper names are blocked by guard; Tokyo tests/typecheck and PRD guard pass. |
 | 103_DB.9 - End-to-end verification and PRD 103 resume gate | Pending | Run full targeted verification and human smoke checklist for open/save/generate/preview/publish. | Architecture docs are updated; all listed tests pass; product signs PRD 103 can resume from planning. |
 
 ## Initial Blast-Radius Ledger
@@ -57,10 +57,10 @@ Rules:
 | DB-011 | P0 | Publish state | Public file presence or sidecar field as status | `instances.publish_status` plus named publish/unpublish operation; policy serving changes use materialization operations | 103_DB.7 | Green |
 | DB-012 | P0 | Public artifacts | Authoring/product services read generated public files to infer state | R2 public artifact read only by public serving | 103_DB.7 | Green |
 | DB-013 | P1 | Materialization owner | Implied builder through scripts/routes | Named Tokyo-owned materialization operations to R2: publish/unpublish, `applyFreeTierServing`, and `restorePaidTierServing` | 103_DB.7 | Green |
-| DB-014 | P1 | Migration | Current admin/dev data left in old object state | One-shot DB migration + cleanup proof | 103_DB.8 | Open |
+| DB-014 | P1 | Migration | Current admin/dev data left in old object state | One-shot DB migration + cleanup proof | 103_DB.8 | Green |
 | DB-015 | P1 | Worker DB access | Workers need a concrete Supabase access path without inventing a DB abstraction | Hyperdrive-backed Supabase Postgres access | 103_DB.1B | Green for planning |
-| DB-016 | P1 | D1 drift | Future patches may introduce D1 as another canonical state store | D1 forbidden for account/instance/translation/publish state in this pivot | 103_DB.8 | Open |
-| DB-017 | P1 | Guards | Existing guards block names, not DB/R2/D1 consumer split | Regression guard for operational-state-in-R2 and D1 canonical-state drift | 103_DB.8 | Open |
+| DB-016 | P1 | D1 drift | Future patches may introduce D1 as another canonical state store | D1 forbidden for account/instance/translation/publish state in this pivot | 103_DB.8 | Green |
+| DB-017 | P1 | Guards | Existing guards block names, not DB/R2/D1 consumer split | Regression guard for operational-state-in-R2 and D1 canonical-state drift | 103_DB.8 | Green |
 | DB-018 | P0 | Supabase environment management | Local Docker/dev scripts blur local, cloud-dev, staging, and production authority | Migrations plus CI/CD to named projects; local Docker removed from agent-run product execution | 103_DB.1B | Green for planning; active `dev-up` Supabase lifecycle quarantined |
 | DB-019 | P0 | Remote DB mutation safety | Agent/developer terminal can mutate/reset the wrong target if env switches are trusted | Remote mutation only through reviewed migration deployment path | 103_DB.1B | Green for planning; `DEV_UP_USE_REMOTE_SUPABASE` helper deleted |
 | DB-020 | P0 | User-created dev data safety | Local reset/migration scripts can destroy user-created dev/admin instances while appearing "safe" | No reset/migrate/seed lifecycle command in product dev scripts; fixtures only in isolated CI | 103_DB.1B | Green for planning; active `dev-up` refuses to run Supabase lifecycle |
@@ -163,7 +163,7 @@ Current 103_DB.1B readout:
 - Green: `scripts/dev/local-supabase.mjs` is deleted; the `DEV_UP_USE_REMOTE_SUPABASE` path is gone from active scripts.
 - Green: Accounts, Users, Instances, and Billing Status child PRDs were checked against the evidence lock and do not approve fake compatibility columns/tables.
 
-Current executable slice is `103_DB.8 - Migration and toxic-path deletion`.
+Current executable slice is `103_DB.9 - End-to-end verification and PRD 103 resume gate`.
 
 ## Required Commands For 103_DB.0
 

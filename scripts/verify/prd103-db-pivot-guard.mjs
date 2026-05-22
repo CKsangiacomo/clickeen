@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = process.cwd();
@@ -13,6 +13,22 @@ function read(relativePath) {
 
 function fail(label, detail) {
   failures.push(`${label}: ${detail}`);
+}
+
+function walk(relativeDir) {
+  const absoluteDir = join(ROOT, relativeDir);
+  const entries = [];
+  for (const entry of readdirSync(absoluteDir)) {
+    const absolute = join(absoluteDir, entry);
+    const relative = `${relativeDir}/${entry}`;
+    const stat = statSync(absolute);
+    if (stat.isDirectory()) {
+      entries.push(...walk(relative));
+    } else {
+      entries.push(relative);
+    }
+  }
+  return entries;
 }
 
 const devUpPath = 'scripts/dev-up.sh';
@@ -32,6 +48,20 @@ for (const snippet of [
 
 if (existsSync(join(ROOT, 'scripts/dev/local-supabase.mjs'))) {
   fail('scripts/dev/local-supabase.mjs', 'deleted local/remote Supabase target-switch helper exists');
+}
+
+for (const file of walk('tokyo-worker/src/domains/render')) {
+  if (!/\.(ts|tsx)$/.test(file) || file.endsWith('.test.ts')) continue;
+  const source = read(file);
+  for (const snippet of [
+    'accountInstanceDocumentKey',
+    'normalizeAccountInstanceDocument',
+    'normalizeSavedRenderPointer',
+  ]) {
+    if (source.includes(snippet)) {
+      fail(file, `forbidden legacy instance.json runtime helper "${snippet}"`);
+    }
+  }
 }
 
 const migrationPath = 'supabase/migrations/20260522090000__prd103_db_core_foundation.sql';
