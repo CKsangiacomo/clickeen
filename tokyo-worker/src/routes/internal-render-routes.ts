@@ -6,8 +6,10 @@ import {
 } from '../asset-utils';
 import {
   INTERNAL_SERVICE_HEADER,
+  TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
   TOKYO_INTERNAL_SERVICE_SANFRANCISCO_TRANSLATION,
   assertRomaAccountCapsuleAuth,
+  requireDevAuth,
   TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
 } from '../auth';
 import { json } from '../http';
@@ -26,6 +28,7 @@ import {
   readInstanceTranslationGeneration,
   readTranslatedLocaleValues,
   renameAccountInstanceDisplay,
+  restorePaidTierServing,
   saveAccountInstanceTransition,
   unpublishAccountInstanceTransition,
   writeTranslatedLocaleValues,
@@ -195,6 +198,27 @@ export async function tryHandleInternalRenderRoutes(
   args: TokyoRouteArgs,
 ): Promise<Response | null> {
   const { req, env, pathname, respond } = args;
+
+  const internalAccountRestorePaidServingMatch = pathname.match(/^\/__internal\/accounts\/([^/]+)\/serving\/restore-paid$/);
+  if (internalAccountRestorePaidServingMatch) {
+    const pathAccountId = normalizeAccountPublicId(decodeURIComponent(internalAccountRestorePaidServingMatch[1] || ''));
+    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
+    if (!accountId || !pathAccountId || pathAccountId !== accountId) {
+      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+    }
+    if (req.method !== 'POST') return respondMethodNotAllowed(respond);
+    const authErr = requireDevAuth(req, env, {
+      allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
+    });
+    if (authErr) return respond(authErr);
+
+    try {
+      const restored = await restorePaidTierServing({ env, accountId });
+      return respond(json({ ok: true, ...restored }));
+    } catch (error) {
+      return respond(transitionErrorResponse(error));
+    }
+  }
 
   const internalAccountInstancesListMatch = pathname.match(/^\/__internal\/accounts\/([^/]+)\/instances$/);
   if (internalAccountInstancesListMatch) {

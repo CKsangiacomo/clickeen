@@ -38,7 +38,7 @@ Rules:
 | 103_DB.6 - Widget definition operation cleanup | Green | Ensure Roma asks Tokyo for widget definitions and never reads generated R2 catalog/manifest artifacts; decide whether product registry remains repo/static or DB. Current artifact: `103_DB_Widget_Definition_Operation_Cleanup__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: widget definitions remain repo/static Tokyo source exposed through Tokyo operations; Roma calls `/__internal/widgets/definitions`; generated widget manifest/catalog route and DB `widgets` authority are absent from active product paths. |
 | 103_DB.7 - Publish/materialization bridge | Green | Define and implement the product operation that materializes public artifacts from Tokyo-owned state to R2. Remove file-presence status mechanics. Current artifact: `103_DB_Publish_Materialization_Bridge__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: `instances.publish_status` is product publish state; `clk.live` visitor traffic reads materialized R2 artifacts without Supabase; unpublish removes public artifacts; `applyFreeTierServing` and `restorePaidTierServing` materialize policy-specific serving output without rewriting publish intent. |
 | 103_DB.8 - Migration and toxic-path deletion | Green | Migrate current dev/admin instances and remove old R2 source files/routes/guards/workflows from active product paths. Current artifact: `103_DB_Migration_And_Toxic_Path_Deletion__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: current dev/admin instances were seeded in 103_DB.3; active runtime no longer writes/reads `instance.json`; `publishStatus` is removed from `instance.config.json`; old helper names are blocked by guard; Tokyo tests/typecheck and PRD guard pass. |
-| 103_DB.9 - End-to-end verification and PRD 103 resume gate | Pending | Run full targeted verification and human smoke checklist for open/save/generate/preview/publish. | Architecture docs are updated; all listed tests pass; product signs PRD 103 can resume from planning. |
+| 103_DB.9 - End-to-end verification and PRD 103 resume gate | Blocked | Run full targeted verification and human smoke checklist for open/save/generate/preview/publish. Current artifact: `103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`. | Architecture docs are updated; all listed tests pass; public serving smoke passes on canonical `clk.live`; product signs PRD 103 can resume from planning. |
 
 ## Initial Blast-Radius Ledger
 
@@ -164,6 +164,14 @@ Current 103_DB.1B readout:
 - Green: Accounts, Users, Instances, and Billing Status child PRDs were checked against the evidence lock and do not approve fake compatibility columns/tables.
 
 Current executable slice is `103_DB.9 - End-to-end verification and PRD 103 resume gate`.
+
+Current 103_DB.9 readout:
+
+- Blocked: cloud deploy and targeted code verification are green, but the product-path smoke gate is not green.
+- Blocked: canonical `clk.live` DNS does not currently resolve from the verification environment.
+- Blocked: forcing `clk.live` through a Cloudflare edge IP reaches the Tokyo worker, but the seeded FAQ public artifact returns HTTP 404, which means the published seeded instances have not been materialized under the new public artifact model.
+- Green: private source mirror access remains denied; forced `clk.live` access to `instance.json` returns HTTP 404.
+- Blocked: authenticated Roma human smoke still needs a real browser/session or Roma cookie and must prove open, save, Generate, translated preview, and publish before PRD 103 resumes.
 
 ## Required Commands For 103_DB.0
 
