@@ -15,7 +15,7 @@ This PRD does not move widget content, config payloads, translated values, gener
 - which durable instances exist;
 - which account owns each instance;
 - which widget product each instance uses;
-- whether the instance is currently live;
+- whether the instance is intended to be published by product state;
 - whether translation generation is idle, queued, running, or failed;
 - when the instance was created;
 - when the user last edited the instance.
@@ -28,7 +28,7 @@ Tokyo currently needs to decide whether an account may open, save, translate, pu
 
 Translation generation needs coarse product state for the panel and button. The product should know whether Generate is idle, queued, running, or failed without inferring from browser spinner state, overlay inventory files, or partial object writes.
 
-Publish needs product state. Public `index.html` existence is an artifact, not the truth that an instance is live.
+Publish needs product state. Public `index.html` existence is an artifact, not the truth that an instance is published.
 
 ## Product What
 
@@ -42,7 +42,7 @@ Examples:
 
 An instance is not the widget software itself. Widget software lives in Tokyo product source. The instance row points to the widget product by `widget_type` and tracks the account-owned object.
 
-An instance is not a MiniBob/funnel mirror. Funnel/demo surfaces can become real only when claimed or created into an account through Tokyo.
+An instance is not a MiniBob/funnel mirror. Admin-owned instances can be used as templates. Creating a customer instance from a template means Tokyo duplicates an admin-owned instance into the target account.
 
 ## Product How
 
@@ -65,20 +65,20 @@ One row per durable account-owned instance.
 | `id` | text | Tokyo | Tokyo, Roma through Tokyo | Existing Tokyo `instanceId`. Same value as current route `/builder/{instanceId}` and current instance path segment. Immutable after create. |
 | `account_id` | text | Tokyo | Tokyo, Berlin-derived authorization checks through Tokyo | The same compact account id used by Tokyo folders: `accounts/{accountId}/instances/{instanceId}`. Owns containment. Used for account-scoped listing, open/save/generate/publish/delete authorization, and entitlement counts. Immutable after create. |
 | `widget_type` | text | Tokyo | Tokyo, Roma/Bob through Tokyo | Product widget type such as `faq`, `countdown`, or `logoshowcase`. Used to load the correct widget definition/editor/runtime path. Immutable after create. |
-| `live_status` | `instance_live_status` | Tokyo | Tokyo, Roma/Bob through Tokyo | Current public state: `unpublished` or `published`. Updated only by publish/unpublish product operations. |
+| `publish_status` | `instance_publish_status` | Tokyo | Tokyo, Roma/Bob through Tokyo | Product publish state: `unpublished` or `published`. Updated only by publish/unpublish product operations. This is not current serving eligibility; billing/tier materialization may serve less than paid-tier output without rewriting publish intent. |
 | `translation_status` | `instance_translation_status` | Tokyo | Tokyo, Roma/Bob through Tokyo | Coarse Generate state: `idle`, `queued`, `running`, or `failed`. Used by the translation panel/button. Not readiness, not progress, not history. |
 | `created_at` | timestamptz | Tokyo | Tokyo, Roma/Bob through Tokyo | Creation timestamp. Written once. Used for sorting, audit/debug, and migration verification. |
 | `edited_at` | timestamptz | Tokyo | Tokyo, Roma/Bob through Tokyo | Last user edit timestamp. Updated on rename and user save of content/config/settings. Translation workers and artifact materialization do not update it. |
 
 Approved values:
 
-- `instance_live_status`: `unpublished`, `published`
+- `instance_publish_status`: `unpublished`, `published`
 - `instance_translation_status`: `idle`, `queued`, `running`, `failed`
 
-`live_status` and `translation_status` must not be open text. They are shared Clickeen product vocabularies and must be represented by DB enum types owned by the migration:
+`publish_status` and `translation_status` must not be open text. They are shared Clickeen product vocabularies and must be represented by DB enum types owned by the migration:
 
 ```sql
-create type instance_live_status as enum ('unpublished', 'published');
+create type instance_publish_status as enum ('unpublished', 'published');
 create type instance_translation_status as enum ('idle', 'queued', 'running', 'failed');
 ```
 
@@ -94,14 +94,14 @@ Required V1 indexes:
 primary key (id);
 create index instances_account_edited_idx on instances (account_id, edited_at desc, id);
 create index instances_account_widget_type_idx on instances (account_id, widget_type);
-create index instances_account_live_status_idx on instances (account_id, live_status);
+create index instances_account_published_idx on instances (account_id, id) where publish_status = 'published';
 ```
 
 Why these indexes exist:
 
 - `(account_id, edited_at desc, id)` supports the normal Roma widget list without a global scan.
 - `(account_id, widget_type)` supports account-scoped entitlement/count gates by widget product.
-- `(account_id, live_status)` supports account-scoped live/published limits and publish containment.
+- `instances_account_published_idx` supports account-scoped published limit probes and free-tier serving materialization without indexing every unpublished row.
 
 No global product path may list all instances.
 
@@ -113,13 +113,13 @@ Supported creation paths:
 
 - Roma user clicks Create FAQ/Countdown/Logo Showcase.
 - Roma user duplicates an existing account-owned instance.
-- Acquisition/funnel output is claimed into an account and becomes a real instance.
+- Roma/user flow creates from an admin-owned template instance by calling `duplicateInstanceFromTemplate`.
 - One-shot migration creates rows for existing current instances.
 
 Flow:
 
 1. Berlin gives Roma the active account context.
-2. Roma calls Tokyo create/duplicate/claim operation with account context and requested widget type.
+2. Roma calls Tokyo create, duplicate, or `duplicateInstanceFromTemplate` with account context and requested widget type/template.
 3. Tokyo generates or reuses the correct `instanceId`.
 4. Tokyo writes the `instances` row.
 5. Tokyo initializes the authored payload through its own product operation.
@@ -129,16 +129,18 @@ Flow:
 
 | Operation | Column writes |
 | --- | --- |
-| Create | `id`, `account_id`, `widget_type`, `live_status = unpublished`, `translation_status = idle`, `created_at`, `edited_at` |
-| Duplicate | new `id`, same `account_id`, same `widget_type`, `live_status = unpublished`, `translation_status = idle`, new `created_at`, new `edited_at` |
-| Claim funnel/demo into account | `id`, `account_id`, `widget_type`, `live_status = unpublished`, `translation_status = idle`, `created_at`, `edited_at` |
+| Create | `id`, `account_id`, `widget_type`, `publish_status = unpublished`, `translation_status = idle`, `created_at`, `edited_at` |
+| Duplicate same-account instance | new `id`, same `account_id`, same `widget_type`, `publish_status = unpublished`, `translation_status = idle`, new `created_at`, new `edited_at` |
+| Duplicate admin template into account | new `id`, target `account_id`, template `widget_type`, `publish_status = unpublished`, `translation_status = idle`, new `created_at`, new `edited_at` |
 | Rename/edit instance label | `edited_at`; editable label/name lives in Tokyo-owned instance payload/config, not in this table |
 | User save content/config/settings | `edited_at`; authored payload is updated behind Tokyo operation, not in this table |
-| Generate accepted | `translation_status = queued` or `running` according to Tokyo's queue handoff point |
-| Generate worker starts | `translation_status = running` |
+| Generate accepted | `translation_status = queued` after Tokyo accepts the request and records the private source fingerprint/job handoff |
+| Generate worker starts | `translation_status = running` if Tokyo tracks worker-start state in V1 |
 | Generate completes successfully | `translation_status = idle` |
 | Generate fails | `translation_status = failed` |
-| Publish | `live_status = published` after the publish operation completes according to the publish contract |
+| Publish | `publish_status = published` after the publish operation completes according to the publish contract |
+| Apply free-tier serving | no `publish_status` change; Tokyo rematerializes public artifacts according to free-tier policy |
+| Restore paid-tier serving | no `publish_status` change; Tokyo rematerializes public artifacts according to restored tier policy |
 | Delete | delete the row and owned Tokyo payloads/artifacts/assets according to the delete operation contract |
 
 ## Read Ownership
@@ -169,20 +171,47 @@ This table improves operational efficiency by replacing storage-object coordinat
 
 - account listing becomes a Tokyo query by `account_id`, not R2 listing or generated account index JSON;
 - open/save/generate/publish begin with one deterministic ownership check;
-- live state comes from `live_status`, not public `index.html` presence;
+- product publish state comes from `publish_status`, not public `index.html` presence;
 - coarse Generate state comes from `translation_status`, not browser-local spinner state or overlay inventory inference;
 - entitlement checks count tiny rows, not storage objects or payload files.
 
 This table stays cost-efficient only if it remains a control table. It must not become the home for widget payloads, translated values, generated artifacts, per-locale readiness, or job history.
 
+Translation stale-work protection belongs inside the Tokyo Generate operation, not in extra DB columns:
+
+- Generate snapshots/marks the saved authored text input that Tokyo accepted;
+- workers return results through Tokyo;
+- Tokyo applies results only if the current saved authored text input still matches the accepted work;
+- stale results are discarded without overwriting translated values or resetting a newer Generate state.
+
+No `translation_job_id`, `translation_error_key`, `sourceVersion`, or per-locale progress column is approved in `instances` for V1.
+
 Hot product queries:
 
 ```sql
-select * from instances where account_id = $1 order by edited_at desc limit $2;
-select * from instances where id = $1 and account_id = $2;
-select count(*) from instances where account_id = $1 and widget_type = $2;
-select count(*) from instances where account_id = $1 and live_status = 'published';
+select id, account_id, widget_type, publish_status, translation_status, created_at, edited_at
+from instances
+where account_id = $1
+  and (edited_at, id) < ($2, $3)
+order by edited_at desc, id desc
+limit $4;
+
+select id, account_id, widget_type, publish_status, translation_status, created_at, edited_at
+from instances
+where id = $1 and account_id = $2;
+
+select id
+from instances
+where account_id = $1 and widget_type = $2
+limit $3;
+
+select id
+from instances
+where account_id = $1 and publish_status = 'published'
+limit $2;
 ```
+
+For entitlement gates, prefer limit probes over exact counts unless the UI/product needs an exact number. Example: if policy allows five published instances, query six ids and decide whether the sixth exists. This keeps normal gates cheap at large scale.
 
 The system must not:
 
@@ -205,7 +234,7 @@ Migration source:
 - current Tokyo/R2 instance identity and account path;
 - current widget product type;
 - current user-facing display name/label remains in Tokyo-owned payload/config and is not migrated into the DB row;
-- current public/live state if it exists as product truth;
+- current publish state if it exists as product truth;
 - current coarse translation state only if it is reliable. Otherwise initialize `translation_status = idle`.
 
 Migration must not create legacy compatibility branches in product code.
@@ -245,17 +274,24 @@ Private payload storage behind Tokyo may survive in V1 only if it is not used as
 
 ## Acceptance Criteria
 
-- Tokyo creates `instances` rows for create/duplicate/claim.
+- Tokyo creates `instances` rows for create, same-account duplicate, and `duplicateInstanceFromTemplate`.
 - Existing current instances are migrated into rows.
 - Roma lists account instances through Tokyo backed by `instances`.
 - Opening an instance requires `id` and `account_id` match.
 - Saving an instance updates `edited_at` and does not write content/config into `instances`.
 - Generate updates only `translation_status` for coarse panel/button state.
-- Publish/unpublish updates only `live_status` for public state.
+- Publish/unpublish updates only `publish_status` for product publish state.
+- `applyFreeTierServing` and `restorePaidTierServing` do not rewrite `publish_status`; they rematerialize serving output from account policy.
 - Instance display/name/title remains in Tokyo-owned payload/config and is returned by Tokyo list/open operations when needed.
 - Public artifact presence is not used as product state.
 - No active product path reads generated account index JSON as instance listing truth.
 - No active product path exposes storage paths, overlay IDs, or legacy source filenames to Roma/Bob as product identity.
+
+## Rollback And Recovery
+
+Pre-GA rollback is forward repair, not legacy instance-source fallback.
+
+Before migration, export the current account/instance identity map and the Tokyo-owned payload/artifact keys needed to rebuild `instances` rows. If migration finds an instance without one account owner, unknown widget type, duplicate `id`, or unreliable publish state, abort or initialize only the safe approved default named by the execution slice. If a post-migration defect is found, repair the `instances` rows from the export and Tokyo-owned payloads. Do not restore generated account index JSON, R2 listing, or legacy `instance.json` as product truth.
 
 ## Verification
 
@@ -265,6 +301,7 @@ Required before this child PRD is green:
 - no local Supabase reset/push/seed workflow used;
 - migration proof for current FAQ, Countdown, and Logo Showcase instances;
 - Tokyo unit/integration tests for create/list/open/rename/save/generate/publish gates;
+- Tokyo unit/integration tests for `duplicateInstanceFromTemplate`, `applyFreeTierServing`, `restorePaidTierServing`, and account deletion cleanup participation;
 - Roma test or smoke proof that widget list/open uses Tokyo operation, not generated JSON;
 - grep guard proving `widgetCode`, `widget_key`, `sourceVersion`, and legacy `instance.json` fallback are not introduced in the DB-backed instance path;
 - `git diff --check`;

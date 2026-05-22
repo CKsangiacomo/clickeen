@@ -55,11 +55,13 @@ pnpm --filter @clickeen/devstudio dev
 pnpm --filter @clickeen/devstudio build
 ```
 
-Canonical startup remains:
+Canonical startup:
 
 ```bash
-bash scripts/dev-up.sh
+pnpm --filter @clickeen/devstudio dev
 ```
+
+`scripts/dev-up.sh` is bootstrap-era full-stack local orchestration and is not the canonical way to run DevStudio.
 
 ## Build-time generation
 

@@ -1,6 +1,7 @@
 # Multi-Tenancy — The Figma Model
 
 Canonical account-management architecture now lives in `documentation/architecture/AccountManagement.md`.
+DB Pivot note: older sections in this file that describe account membership tables or customer account switching are historical/target packaging notes, not active DB Pivot truth. Active V1 truth is one user, one account, role on `users`.
 This file focuses on tenancy, collaboration, roles, and packaging semantics.
 
 ## Core Principle
@@ -351,20 +352,17 @@ Planned behavior (not shipped):
 - Explicit seat-remaining UI and editor seat warning states.
 - Invite modal enforcing seat caps at submission time.
 
-### Michael Schema
+### DB Pivot Schema Note
 
-The old comments table was part of the workspace/widget-instance era and is no longer part of the active schema after the PRD 89 hard cut. Current account membership truth stays in `account_members`; account instance truth stays in Tokyo under `accounts/{accountPublicId}/instances/{instanceId}/`.
+The old comments table and old account-membership schema notes are historical. Active DB Pivot truth is:
 
-```sql
-CREATE TABLE account_members (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  account_id UUID NOT NULL REFERENCES public.accounts(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'editor', 'viewer')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (account_id, user_id)
-);
+```text
+accounts own account/billing/status truth
+users own one account association and role
+Tokyo owns account instance operations
 ```
+
+Do not reintroduce `account_members` as core role truth from this historical packaging document.
 
 ---
 

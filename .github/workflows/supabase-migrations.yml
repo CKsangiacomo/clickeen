@@ -1,0 +1,83 @@
+name: supabase migrations deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Target Supabase environment
+        required: true
+        type: choice
+        options:
+          - cloud-dev
+          - production
+      confirm:
+        description: Type APPLY_MIGRATIONS to deploy reviewed migrations
+        required: true
+        type: string
+
+concurrency:
+  group: supabase-migrations-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ inputs.confirm == 'APPLY_MIGRATIONS' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    permissions:
+      contents: read
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF_CLOUD_DEV: ${{ secrets.SUPABASE_PROJECT_REF_CLOUD_DEV }}
+      SUPABASE_PROJECT_REF_PRODUCTION: ${{ secrets.SUPABASE_PROJECT_REF_PRODUCTION }}
+      SUPABASE_DB_PASSWORD_CLOUD_DEV: ${{ secrets.SUPABASE_DB_PASSWORD_CLOUD_DEV }}
+      SUPABASE_DB_PASSWORD_PRODUCTION: ${{ secrets.SUPABASE_DB_PASSWORD_PRODUCTION }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.101.0
+
+      - name: Verify PRD 103 DB pivot guard
+        run: node scripts/verify/prd103-db-pivot-guard.mjs
+
+      - name: Select Supabase target
+        id: target
+        shell: bash
+        run: |
+          case "${{ inputs.target }}" in
+            cloud-dev)
+              project_ref="$SUPABASE_PROJECT_REF_CLOUD_DEV"
+              db_password="$SUPABASE_DB_PASSWORD_CLOUD_DEV"
+              ;;
+            production)
+              project_ref="$SUPABASE_PROJECT_REF_PRODUCTION"
+              db_password="$SUPABASE_DB_PASSWORD_PRODUCTION"
+              ;;
+            *)
+              echo "Unknown target: ${{ inputs.target }}" >&2
+              exit 1
+              ;;
+          esac
+
+          if [ -z "$project_ref" ] || [ -z "$db_password" ]; then
+            echo "Missing Supabase project ref or DB password secret for ${{ inputs.target }}" >&2
+            exit 1
+          fi
+
+          echo "project_ref=$project_ref" >> "$GITHUB_OUTPUT"
+          {
+            echo "SUPABASE_PROJECT_REF=$project_ref"
+            echo "SUPABASE_DB_PASSWORD=$db_password"
+          } >> "$GITHUB_ENV"
+
+      - name: Link Supabase project
+        run: supabase link --project-ref "${{ steps.target.outputs.project_ref }}"
+
+      - name: Deploy reviewed migrations
+        run: supabase db push --linked

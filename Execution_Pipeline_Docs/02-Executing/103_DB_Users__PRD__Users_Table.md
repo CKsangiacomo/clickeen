@@ -63,6 +63,8 @@ One row per human Clickeen user.
 | `account_id` | text | Berlin | Berlin, Roma through Berlin, Tokyo through Berlin-issued context | The one account this user belongs to. Required. No user exists in product without an account. |
 | `role` | `user_role` | Berlin | Berlin, Roma through Berlin, Tokyo through account authz context | User's role in their account: `owner`, `admin`, `editor`, or `viewer`. Since a user belongs to one account, role belongs on `users`. |
 | `primary_email` | citext | Berlin | Berlin, Roma through Berlin | Current user email in Clickeen. Used by the current Berlin login/signup flow, team/user UI, invitation matching, product email, account recovery, and support lookup. Globally unique in V1. |
+| `login_provider` | `login_provider` | Berlin | Berlin | Current V1 sign-in provider for this user. Approved values today: `google` and `email`, because current Berlin evidence contains both login identity forms. This is login only, not connector authorization. |
+| `login_subject` | text | Berlin | Berlin | Stable provider subject id used to resolve a verified provider login to this user. This is login only, not a Google Business Profile, page, connector resource, or widget source. |
 | `first_name` | text nullable | Berlin/User Settings | Berlin, Roma through Berlin | Optional person profile/display field. |
 | `middle_name` | text nullable | Berlin/User Settings | Berlin, Roma through Berlin | Optional person profile/display field. |
 | `last_name` | text nullable | Berlin/User Settings | Berlin, Roma through Berlin | Optional person profile/display field. |
@@ -89,7 +91,18 @@ primary key (user_id)
 unique (primary_email)
 not null (account_id)
 not null (role)
+not null (login_provider)
+not null (login_subject)
+unique (login_provider, login_subject)
 ```
+
+Required V1 indexes:
+
+```sql
+create index users_account_created_idx on users (account_id, created_at, user_id);
+```
+
+`users_account_created_idx` supports account-scoped team/user listing without a global scan. `primary_email` uniqueness supports invite/add-user rejection and login/email lookup.
 
 The account reference must point to the surviving account id from the Accounts child PRD.
 
@@ -97,6 +110,7 @@ The account reference must point to the surviving account id from the Accounts c
 
 ```sql
 create type user_role as enum ('owner', 'admin', 'editor', 'viewer');
+create type login_provider as enum ('google', 'email');
 ```
 
 Profile fields must use shared normalization before write:
@@ -133,6 +147,20 @@ Role change:
 2. The row stays in the same `account_id`.
 3. No membership row is created.
 
+Remove member:
+
+1. Authorized account owner/admin removes a non-owner user from the account.
+2. Because a user cannot exist without one account in V1, Berlin deletes that user row.
+3. The deleted user cannot keep hidden access, account-less state, or a second account attachment.
+4. Owner removal is forbidden; owner transfer uses the dedicated owner-transfer operation.
+
+Owner transfer:
+
+1. The current owner selects another user in the same account.
+2. Berlin updates `users.role` transactionally so the target becomes `owner`.
+3. The previous owner becomes `admin` unless the product later specifies another exact role.
+4. No membership row or account switch state is created.
+
 Delete account:
 
 1. Account deletion deletes the account.
@@ -147,90 +175,23 @@ San Francisco does not touch users.
 
 ## Provider, Login, And Connector Boundary
 
-Do not collapse these concepts:
-
-- `User` = the human and person preferences in `users`.
-- `Login Method` = how the human proves they are this user.
-- `Account Connection` = account-level provider/source authorization that widgets can use.
-- `Capability / scope state` = what that provider relationship is currently allowed to do.
-- `Connection Resource` = selectable external source under an account connection, such as a Google Business Profile location or Instagram page.
-- `Widget Source` = the widget instance's reference to a connection resource.
-
-Example:
-
-```text
-Pietro logs in with Google
-```
-
-That is a `Login Method`.
-
-```text
-Pietro's account connects Google Business Profile to power a Google Reviews widget
-```
-
-That is an `Account Connection`, not a user profile column.
+The DB pivot locks vocabulary only. It does not approve connector tables.
 
 Rules:
 
-- `users` does not store provider ids, provider subjects, OAuth tokens, raw OAuth payloads, Google Business Profile ids, Instagram ids, or connector scopes.
-- Social login may start a durable provider relationship, but the DB pivot must not bless the current Berlin provider tables until the auth/connector audit proves the surviving shape.
-- Widgets must reference account-owned connection resources through the future connector/product boundary, not user login rows.
-- Provider tokens and raw payloads stay behind the owning auth/connector boundary, never inside widget instances or user profile columns.
-
-### First Account Creation With Google Login
-
-Google login may create the first Clickeen account.
-
-Flow:
-
-1. User clicks Continue with Google.
-2. Berlin completes Google OAuth/OIDC login.
-3. Berlin receives the Google subject, email, and available name fields.
-4. Berlin checks `users.primary_email`.
-5. If the email already exists, Berlin logs the user into that user's existing account.
-6. If the email does not exist, Berlin creates:
-   - one account;
-   - one user attached to that account with `role = owner`;
-   - one `Login Method` record in the auth boundary, if that auth boundary survives the audit.
-7. Roma receives one account context.
-
-Google login does not create a Google Business Profile connection, Google Reviews source, Instagram source, or any widget connector.
-
-### Login Can Suggest, Connector Must Authorize
-
-If a user later creates a widget that needs an external provider, the connector flow must ask for explicit connector authorization.
-
-Example for Google Reviews:
-
-```text
-Pietro signed in with Google.
-Pietro creates a Google Reviews widget.
-Clickeen may ask: "Use the Google account you signed in with? pietro@gmail.com"
-Pietro must still authorize Google Business Profile scopes.
-```
-
-The user can choose:
-
-- continue with the same Google account used for login;
-- use a different Google account for the account connection.
-
-Rules:
-
-- Login can suggest.
-- Connector must authorize.
-- Login scopes are not connector scopes.
+- `User` is the human and current person/profile fields in `users`.
+- `Login Method` proves the human can access Clickeen.
+- `Account Connection` authorizes an external provider/source for the Clickeen account.
+- `Connection Resource` is a selectable external resource under an account connection.
+- `Widget Source` is a widget instance's reference to an account-owned connection resource.
+- Login can suggest a provider account during connector setup, but connector scopes must be explicitly authorized.
 - A login method is not automatically an account connection.
 - An account connection is not automatically a login method.
-- The account connection belongs to the Clickeen account, not to the user session that created it.
-- Widgets depend on account-owned connection resources, not on the user who happened to connect or log in.
+- `users` stores only the approved sign-in provider and subject needed to resolve login. It does not store OAuth tokens, raw OAuth payloads, connector scopes, Google Business Profile ids, Instagram ids, page ids, provider resources, or widget source references.
 
-Same pattern for Meta/Facebook/Instagram/X:
+Google login may create the first Clickeen account by creating one account plus one owner user. Email login may exist only as a login method under the same login/provider boundary. Neither login method creates Google Business Profile, Google Reviews, Instagram, Meta, or any other widget connector. Connector implementation belongs in a future connector/auth PRD after the Berlin audit.
 
-```text
-Meta login proves the human.
-Meta/Instagram connector authorization grants the Clickeen account access to external resources.
-Instagram Feed widget references an account-owned resource.
-```
+The DB Pivot does not approve a separate login-method table. The current `login_identities` table is deleted/rebuilt into `users.login_provider` and `users.login_subject` for V1.
 
 ## Berlin Auth And Connector Audit Requirement
 
@@ -244,6 +205,10 @@ Before implementation, the DB pivot must audit and decide what happens to the cu
 - any provider email/name/avatar/profile snapshot columns;
 - any current or planned connector/account connection persistence.
 
+This audit is a named pre-work slice: `103_DB.1A - Berlin auth/connector audit`.
+
+If the current Berlin auth/contact/provider shape is easier to delete and rebuild than to safely migrate, the audit must choose rebuild. The DB pivot must not preserve confusing tables just because they already have callers.
+
 The audit must answer, with code and documentation evidence:
 
 - what maps an external login to `users.user_id`;
@@ -253,7 +218,7 @@ The audit must answer, with code and documentation evidence:
 - what becomes temporary verification flow state;
 - which current tables are deleted, merged, or deferred into a separate auth/connector PRD.
 
-This PRD does not approve extra auth, connector, or verification tables by default.
+This PRD does not approve extra auth, connector, or verification tables by default. The Berlin auth/connector audit closed the V1 login mapping as constrained login fields on `users`, not a separate login table.
 
 ## Operational And Cost Efficiency
 
@@ -279,8 +244,22 @@ Cost wins at scale:
 Hot queries stay narrow:
 
 ```sql
-select * from users where user_id = $1;
-select * from users where account_id = $1 order by created_at asc;
+select user_id, account_id, role, primary_email, first_name, middle_name, last_name,
+       primary_language, country, timezone, phone, whatsapp, created_at
+from users
+where user_id = $1;
+
+select user_id
+from users
+where login_provider = $1 and login_subject = $2;
+
+select user_id, account_id, role, primary_email, first_name, middle_name, last_name,
+       primary_language, country, timezone, phone, whatsapp, created_at
+from users
+where account_id = $1 and (created_at, user_id) > ($2, $3)
+order by created_at asc, user_id asc
+limit $4;
+
 select user_id from users where primary_email = $1;
 ```
 
@@ -291,6 +270,7 @@ The system must not:
 - allow a user row to be associated with more than one account;
 - silently merge or attach an existing email into another account;
 - store connector/provider payloads on `users`;
+- store more than the approved sign-in provider and subject on `users`;
 - add `_verified` duplicates next to accepted phone/email fields.
 
 ## User Profile Fields
@@ -349,6 +329,8 @@ Migration source for the approved `users` table:
 - current account association comes from the current account/member/provisioning truth and becomes `users.account_id`;
 - current role comes from the user's current account role and becomes `users.role`;
 - current `user_profiles.primary_email` becomes `users.primary_email` if it is the real current primary email;
+- current `login_identities.provider` becomes `users.login_provider` for the user's current login method;
+- current `login_identities.provider_subject` becomes `users.login_subject` for the user's current login method;
 - current `given_name` maps to `first_name` only if it is semantically first name;
 - current `family_name` maps to `last_name`;
 - current `primary_language`, `country`, and `timezone` migrate if valid;
@@ -359,7 +341,7 @@ Delete/remodel candidates:
 
 - `account_members` as core account/user role truth;
 - `user_profiles` as separate core profile soup;
-- `login_identities` unless the auth/connector audit proves a surviving linked-identity table is required;
+- `login_identities`;
 - `user_contact_methods`;
 - `user_contact_verifications`;
 - `active_account_id`;
@@ -367,11 +349,14 @@ Delete/remodel candidates:
 
 Migration must fail and require product decision if the current data contains one user attached to multiple accounts. It must not silently pick one.
 
+Migration must fail and require product decision if one user has multiple current login identities. The DB Pivot V1 does not approve multiple login methods.
+
 ## Non-Goals
 
 - No account switching in this PRD.
 - No many-to-many membership table in this PRD.
 - No login identity table approved in this PRD.
+- No multiple login methods approved in this PRD.
 - No connector/account connection table approved in this PRD.
 - No contact verification table approved in this PRD.
 - No `active_account_id`.
@@ -390,25 +375,36 @@ The Users slice is not green if implementation preserves any of these shapes as 
 - role is stored outside the user row for normal customer accounts;
 - contact methods or verification challenges survive without a separate product PRD;
 - provider connector payloads are stored on user rows;
+- a separate login identity table is added without a separate approved multi-login PRD;
 - Berlin writes provider profile metadata on every login just because a provider returned it;
 - Roma or Tokyo writes users directly instead of receiving Berlin-owned user/account context.
 
 ## Acceptance Criteria
 
-- `users` target schema includes `user_id`, `account_id`, `role`, `primary_email`, `first_name`, `middle_name`, `last_name`, `primary_language`, `country`, `timezone`, `phone`, `whatsapp`, and `created_at`.
+- `users` target schema includes `user_id`, `account_id`, `role`, `primary_email`, `login_provider`, `login_subject`, `first_name`, `middle_name`, `last_name`, `primary_language`, `country`, `timezone`, `phone`, `whatsapp`, and `created_at`.
 - `users.primary_email` is globally unique.
 - `users.primary_email` uses `citext`.
 - `users.account_id` is required.
 - `users.role` is required and uses `user_role`.
+- `users.login_provider` is required and constrained to approved providers.
+- `users.login_subject` is required.
+- `(login_provider, login_subject)` is globally unique.
 - `primary_language`, `country`, `timezone`, `phone`, and `whatsapp` are normalized to BCP 47, ISO 3166-1 alpha-2, IANA timezone, and E.164 standards as applicable.
 - Signup creates account plus first user with `role = owner`.
 - Invite/add user rejects an email already present in `users.primary_email` with "This user is already associated with an account."
 - No core `account_members` table survives.
 - No `active_account_id` survives.
 - No `_verified` duplicates exist for email, phone, or WhatsApp.
-- Berlin auth/connector audit explicitly decides the fate of `login_identities`, provider mapping, contact-method tables, connector/account connection state, and profile snapshots before implementation.
+- `login_identities` does not survive.
+- Berlin auth/connector audit explicitly decides the fate of provider mapping, contact-method tables, connector/account connection state, and profile snapshots before implementation.
 - Roma receives user/account context from Berlin and does not write users.
 - Tokyo and San Francisco do not touch users.
+
+## Rollback And Recovery
+
+Pre-GA rollback is forward repair, not a second membership model.
+
+Before migration, export the current user/profile/member/auth rows needed to rebuild the target `users` rows. If migration discovers one human attached to multiple accounts, multiple login identities for one user, invalid role values, duplicate current emails, duplicate login provider/subject pairs, or ambiguous current primary email, abort and require product decision. If a post-migration defect is found, repair with a corrective migration from the export. Do not restore `account_members`, `login_identities`, or `active_account_id` as co-equal truth.
 
 ## Verification
 
@@ -419,7 +415,7 @@ Required before this child PRD is green:
 - Berlin signup tests prove first user is created as account owner;
 - Berlin invite/add tests prove existing email is rejected;
 - Berlin bootstrap tests prove account id and role resolve from `users`;
-- auth/connector audit proves where external login to `users.user_id` mapping lives before any extra auth/connector table is approved;
+- auth/connector audit proves external login to `users.user_id` mapping lives on `users.login_provider` and `users.login_subject`;
 - grep guard proves `account_members`, `active_account_id`, provider connector payloads on users, `_verified` columns, and role-outside-user are not reintroduced in core user model;
 - `git diff --check`;
 - relevant lint/typecheck/test commands recorded in the execution ledger.

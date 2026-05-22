@@ -274,9 +274,9 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 
 - There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies, while account-widget translation generation uses the Tokyo-worker -> San Francisco `SANFRANCISCO_L10N` binding.
 
-**Local auth rule:**
+**DB Pivot Supabase rule:**
 
-- In local development, Supabase JWT issuer must match the Supabase target the active auth/product surfaces are running against (local by default via `dev-up`; remote only when `DEV_UP_USE_REMOTE_SUPABASE=1`).
+- Local scripts must not start, reset, migrate, seed, or switch Supabase targets for active product execution. Supabase schema changes go through reviewed migrations and the approved deploy path.
 
 ### Cloudflare config checklist (what “done” looks like)
 

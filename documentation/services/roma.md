@@ -14,7 +14,7 @@ Roma is the authenticated product shell for account users. It owns:
 - Domain navigation (`/home`, `/profile`, `/widgets`, `/builder`, `/assets`, `/team`, `/billing`, `/usage`, `/ai`, `/settings`)
 - Person-scoped User Settings UI over Berlin-owned profile contracts
 - Active account context resolution
-- Account-scoped Team list and member-detail UI over Berlin-owned membership contracts
+- Account-scoped Team list and member-detail UI over Berlin-owned user/role contracts
 - Lightweight catalog/list APIs for product UX
 - Bob editor orchestration via explicit host-open message
 - Account/system management-plane decisions for account instance lifecycle, including publish, unpublish, delete, downgrade/suspension follow-up, tier/cap enforcement, and published-state correctness
@@ -88,13 +88,13 @@ Non-local auth rule:
 
 Bootstrap payload includes:
 
-- User + account membership graph
-- Active account (`activeAccount`)
-- Compact account product identity (`activeAccount.accountPublicId`)
+- User + current account/role context
+- Active/current account (`activeAccount`)
+- Account identity for the current account
 - Signed account authz capsule (`authz.accountCapsule`, expiry metadata)
 - Account entitlement snapshot (`authz.entitlements`) resolved once at bootstrap (`flags`, `caps`, `budgets{max}`)
 - The signed capsule itself carries only stable authz truth. Mutable locale settings and live `used` counters are not part of the signed capsule.
-- Roma carries both `accountId` and `accountPublicId`. `accountId` remains the private relational UUID for existing Berlin account routes; `accountPublicId` is the compact PRD 099 product/storage identity used for Tokyo account runtime paths. Roma must never derive it from the UUID.
+- Roma carries the account identity Berlin gives it. The old `accountId` plus `accountPublicId` split is runtime residue during DB Pivot and must not be expanded as target architecture.
 
 Client behavior (`use-roma-me.ts`):
 
@@ -112,7 +112,7 @@ Client behavior (`use-roma-me.ts`):
 Current cloud-dev product rule:
 
 - Cloud-dev still effectively behaves as one seeded platform-owned account today.
-- Even if a user has multiple memberships upstream, current Roma still operates as a single-current-account shell and does not expose customer account switching.
+- Target DB Pivot truth is one user, one account. Roma operates as a single-current-account shell and does not expose customer account switching.
 
 ## Upstream route model
 

@@ -64,7 +64,7 @@ DevStudio still hosts the Dieter previews and generated component documentation.
 That remains a valid internal-toolbench use case.
 
 Local lane note:
-- `bash scripts/dev-up.sh` starts the local DevStudio operating lane and verifies the local stack before finishing
+- `pnpm --filter @clickeen/devstudio dev` starts the local DevStudio toolbench
 - DevStudio no longer seeds a fake platform/account lane; product state must come from the real Roma -> Bob -> Tokyo account path
 - DevStudio no longer has a special admin widget lane. Platform examples are normal account-owned instances in account `00000001`, opened and saved through the same Roma -> Bob -> Tokyo path when edited.
 - do not reintroduce cloud-derived or blob-only repair logic into boot

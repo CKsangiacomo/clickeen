@@ -1,391 +1,190 @@
-# Account Management (Canonical)
+# Account Management
 
-STATUS: CANONICAL CURRENT MODEL
+STATUS: ACTIVE DB PIVOT MODEL
 
-This file is the canonical account-management model for Clickeen.
-
-It defines the runtime boundary that Berlin, Roma, DevStudio, Bob, and Michael must converge to. PRD 064/065/066/067/068/072 are historical snapshots only; forward-looking correction and hardening work starts from this canonical model plus the currently executing PRD for the affected surface.
+This file is the canonical account-management model for the active DB Pivot execution. Older PRD 064/065/066/067/068/072 account-management docs are historical snapshots only.
 
 For product/system context, see [CONTEXT.md](./CONTEXT.md) and [Overview.md](./Overview.md).
-Current status:
-- PRD 072 is executed. Roma's customer shell now uses the current-account `/api/account/*` route family for normal product flows.
-- PRD 068 is the latest completed account-management correction snapshot before PRD 072.
-- PRD 076 corrected Berlin's auth boundary: Berlin is the identity-to-session boundary and owns login-time account truth, not the permanent home for every account-management workflow.
 
-Historical snapshots:
-- [PRD 064](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/064__PRD__Berlin_Account_Management_Boundary__Single_Identity_And_Account_API.md)
-- [PRD 065](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/065__PRD__Berlin_Account_Management_Level_Up__Boundary_Closure_and_Commercial_Truth.md)
-- [PRD 066](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/066__PRD__DevStudio_Internal_Control_Plane__Berlin_VS_Separate_Admin_Authority.md)
-- [PRD 067](/Users/piero_macpro/code/VS/clickeen/Execution_Pipeline_Docs/03-Executed/067__PRD__Internal_Control_Plane.md)
-- [PRD 072](/Users/pietro_macpro_home/clickeen/Execution_Pipeline_Docs/03-Executed/072__PRD__Roma_Boring_SaaS_Shell__Current_Account_Truth_And_Direct_Product_Flows.md)
+## Hard Invariant
 
----
+Clickeen V1 uses a deliberately boring account model:
 
-## Hard invariants
+```text
+One user belongs to one account.
+One account has many users.
+The user's role is the user's role in that account.
+```
 
-1. Berlin is the identity-to-session boundary. It owns login-time account truth: provider identity mapping, first-login provisioning, invitation acceptance during login, active account session landing, session issuance, and session-bound authz bootstrap.
-2. Michael stores account data; it is not the product-facing account API.
-3. The canonical model is:
-   - `User Profile` = the person
-   - `Account` = the business/account boundary
-   - `Account Membership` = the person's role inside that account
-4. Every account has exactly one current `owner` at runtime.
-5. A person may belong to many accounts, but only one account context is active at a time.
-6. `owner / admin / editor / viewer` are boring account-role semantics; entitlements constrain them but do not replace them.
-7. Invitation is the canonical grant-access path for a person who is not already attached to the account.
-8. Social login is not only auth; it can begin a durable provider relationship Berlin later reuses or upgrades.
-9. Roma is the account-scoped customer/member shell. DevStudio is the internal toolbench for platform curation, verification, and internal operations.
-10. Bob consumes Berlin account truth; it never owns account management.
+There is no active V1 customer account switching model and no core many-to-many membership table.
 
-Current account-scale DB floor:
-- Active RLS account predicates on `account_id` are already backed by current indexes:
-  - `account_members`: primary key `(account_id, user_id)`
-- Current account-scoped high-volume non-RLS tables also already carry account-first indexes where they matter on the active path:
-  - `account_invitations`: `account_invitations_account_id_idx`
-  - `account_notices`: `(account_id, status, created_at DESC)`
-  - `internal_control_events`: `(account_id, created_at DESC)`
-  - `account_business_profiles`: `account_business_profiles_account_id_idx`
-- Legacy Michael tables from the removed widget-instance, asset, comments, and l10n planes are out of scope for the active product path and are not part of this floor.
+If someone tries to invite or add an email already associated with a user, Berlin rejects the operation:
 
----
+```text
+This user is already associated with an account.
+```
 
-## Canonical model
+That rejection is product behavior. The system must not silently attach the same user to a second account.
 
-### User Profile
+## Core Terms
 
-`User Profile` is the canonical product person.
+| Term | Meaning | Owner |
+| --- | --- | --- |
+| `Account` | The business/customer boundary for billing, tier, product access, instances, and deletion cleanup. | Berlin/account DB model for account truth; Roma/Tokyo consume account context through product operations. |
+| `User` | The human using Clickeen, including the one account they belong to and their role in that account. | Berlin owns user/auth truth. |
+| `Role` | The user's permission level in their one account: `owner`, `admin`, `editor`, or `viewer`. | Stored on `users`, not on a membership row. |
+| `Invite Members` | Account-scoped invitation lifecycle for creating another user in the same account. | Berlin V1 lifecycle table/route surface. |
+| `Login Method` | A way to prove the human can sign into Clickeen, such as Google login. | Berlin login boundary. |
+| `Account Connection` | Account-authorized external provider/source, such as a Google Business Profile connection for a reviews widget. | Future connector PRD, account-owned. |
+| `Connection Resource` | A selectable external business/resource under an account connection. | Future connector PRD. |
+| `Widget Source` | A widget instance reference to an account-owned connection resource. | Future connector/widget PRD. |
 
-Base fields:
-- `userId`
-- `primaryEmail`
-- `emailVerified`
-- `givenName` nullable
-- `familyName` nullable
-- `primaryLanguage` nullable
-- `country` nullable
-- `timezone` nullable
-- `contactMethods.phone` with `value`, `verified`, `pendingValue`, `challengeExpiresAt`
-- `contactMethods.whatsapp` with `value`, `verified`, `pendingValue`, `challengeExpiresAt`
+## Account
 
-Legacy compatibility residue such as `displayName` may remain in persistence during PRD 65 cutover, but it is not a customer-facing source-of-truth input.
+Account truth is intentionally small.
 
-Berlin owns profile truth needed for identity, login, and session bootstrap. General profile mutation routes may exist in Berlin during the current cutover, but they are not a reason to expand Berlin into a permanent account-management backend.
+The account row answers:
 
-### Account
+- what account exists;
+- current status and tier/billing state;
+- when status last changed for grace/deletion workflows;
+- when the account was created.
 
-`Account` is the business/account boundary.
+Account deletion is an operation, not a retained `closed` status. If an account is deleted, account DB rows and account-owned storage are cleaned up.
 
-Account-scoped truth includes:
-- membership set
-- owner
-- tier
-- locale policy
-- entitlements snapshot inputs
-- account traits and connector context that belong to the account, not the person
+Agency later is account-to-account, not user-to-many-accounts:
 
-Account identity has two names with different jobs:
+```text
+agency account manages client account
+agency user belongs to agency account
+client user belongs to client account
+```
 
-- `accountId`: private relational UUID used for Michael joins and existing account-management APIs.
-- `accountPublicId`: 8-character uppercase base36 product/storage identity stored as `accounts.public_id`.
+## User
 
-`accountPublicId` is minted once by Berlin/Michael at account creation, backfilled once for pre-GA accounts, and never derived from `accountId`. Account runtime storage, overlays, published projections, and public references use `accountPublicId`; Roma and Bob must carry it from bootstrap instead of computing it.
+The user row answers:
 
-The Clickeen/admin account reserves `accountPublicId` `00000001`. It is still a normal account: admin examples, curation fixtures, and product references use `accounts/00000001/instances/{instanceId}/` and must not create a separate admin widget lane.
+- who the human is;
+- which one account they belong to;
+- what role they have in that account;
+- the accepted/current person fields shown in User Settings;
+- the minimum login mapping needed by the active sign-in flow.
 
-### Account Membership
+The user row must not contain:
 
-`Account Membership` is the person-in-account relationship.
+- account switching state;
+- connector tokens/scopes/resources;
+- Google Business Profile ids;
+- Instagram/Facebook page ids;
+- widget source references;
+- duplicate `_verified` flags next to accepted/current email/phone values.
 
-Membership carries:
-- `accountId`
-- `userId`
-- `role`
-- lifecycle/joined metadata as needed
-
-Membership is where normal account permissions come from.
-
-### Provider relationship model
-
-Berlin distinguishes three related concepts:
-- `Linked Identity` = user-level fact that this person is linked to a provider account
-- `Workspace Connection` = account-level reusable provider connection
-- `Capability / Scope State` = what the relationship is currently allowed to do
-
-These are required conceptual distinctions.
-They must be implemented using the simplest data shape needed for current runtime, not a speculative connector framework.
-
----
-
-## Roles and entitlements
+## Roles
 
 | Role | Meaning |
-|---|---|
-| `viewer` | can view/comment; no create/edit/team/billing control |
-| `editor` | viewer + create/edit widgets/content |
-| `admin` | editor + manage normal team/account operations |
-| `owner` | admin + final accountable holder of the account |
+| --- | --- |
+| `viewer` | Can view account surfaces allowed to viewers. |
+| `editor` | Viewer + edit/create product content where tier allows. |
+| `admin` | Editor + normal account/team operations where tier allows. |
+| `owner` | Admin + final accountable holder of the account. |
 
-Owner-only powers:
-- transfer ownership
-- delete account
-- final account-holder authority
+Effective capability is:
 
-Rule:
-- effective capability = `membership role x Berlin-resolved entitlements`
+```text
+user role + account tier/status/policy
+```
 
-Entitlements may constrain:
-- seat caps
-- plan/tier limits
-- packaging features
+Roles do not replace billing/tier policy. Billing/tier policy does not redefine role meaning.
 
-Entitlements do not redefine role meaning.
+## Invite Members
 
----
-
-## Product surfaces
-
-### User Settings
-
-Person-scoped surface for the currently signed-in human.
-
-Owns:
-- personal profile fields
-- primary email visibility
-- person-level settings
-
-Linked identities remain a Berlin-internal auth/account model, not a standard customer-facing User Settings surface.
+Invite Members is a real V1 feature.
 
 Rules:
-- canonical person details update through `PUT /v1/me`
-- canonical `User Settings` fields are `givenName`, `familyName`, `primaryLanguage`, `country`, `timezone`, `phone`, and `whatsapp`
-- Berlin persistence now uses the same canonical field names for person truth: `primary_language`, `country`, and `timezone`
-- `timezone` is derived from `country` and is directly selectable only when the selected country has more than one supported timezone
-- invalid persisted profile/account locale state must fail explicitly in canonical product/account flows; it is an operator defect, not something the runtime silently heals
-- `display_name` may still exist as inert storage residue during cutover, but product read/write contracts must not expose or depend on it
-- primary email change is not an active Berlin product route; provider-owned email identity must not be shadow-mutated through generic profile patching
-- contact verification is Berlin-owned and channel-specific:
-  - `POST /v1/me/contact-methods/:channel/start`
-  - `POST /v1/me/contact-methods/:channel/verify`
-- `phone` and `whatsapp` become active only after Berlin verifies the code
-- local uses a delivery-capture adapter for verification preview; `cloud-dev`/prod must fail unavailable until a real delivery dependency exists
-- Berlin must not invent a second shadow email model in product persistence
 
-### Account Settings
+- invitations target one account, one email, and one intended role;
+- invite creation checks whether that email already exists as a user;
+- existing email rejects instead of attaching the user to the account;
+- accepting an invitation creates or activates one user for the inviting account;
+- no `account_members` row is created;
+- removing a non-owner team member removes that user from the account model rather than creating an account-less or multi-account user.
 
-Account-scoped business/account surface.
+Owner transfer survives as a V1 account operation, but it must be rewritten against `users.role`, not membership rows.
 
-Owns:
-- account settings
-- tier/billing-facing settings
-- locale policy
-- account-level controls
-- management-plane decisions for publish/unpublish/delete/downgrade/caps/tiers/correctness once account truth is resolved
+## Login And Connectors
 
-Rules:
-- product shells may surface current plan/tier state
-- customer-facing account settings do not directly mutate commercial plan/tier truth
-- Roma/system account operations own the lifecycle decision for account-owned instances and published projections. Tokyo-worker persists Tokyo objects and projections as directed; Venice serves or misses published projections and does not evaluate policy.
+Login is not connector authorization.
 
-### Team
+Google login answers:
 
-Account-scoped membership-management surface.
+```text
+Which Clickeen user does this verified Google login belong to?
+```
 
-High-level shape:
-- Team root shows current members of the active account
-- pending invitations may appear in the same domain
-- authorized users may drill into a member detail page
+It does not create:
 
-Member detail page separates:
-- membership/account data for this account
-- read-only person context for that person
+- Google Business Profile access;
+- Google Reviews access;
+- Instagram/Meta access;
+- connector scopes;
+- widget sources;
+- reusable provider tokens for widgets.
 
-Rules:
-- owner/admin are the mutation-capable Team roles
-- editor/viewer do not mutate Team
-- Team mutates membership only
-- Team must not create account-local shadow profile data
+When connectors are built, the user must explicitly authorize the account connection. Clickeen may suggest the same Google account used for login, but connector authorization remains a separate account-owned flow.
 
-### Switch Account
+## Product Surfaces
 
-Berlin owns active-account resolution for session landing and bootstrap.
+### Roma
 
-Rules:
-- Berlin persists the active-account preference on the canonical user-profile boundary; it does not live in Roma/Bob cookies or client-side overrides
-- current customer Roma does not expose account switching
-- Bob never owns account-switch logic
-- DevStudio internal switching, if needed for internal operations, is not Roma product behavior
-- future customer-facing multi-account switching belongs only to a separate Roma-for-agency product contract, not today's Roma
+Roma is the authenticated product shell for the current account. It receives Berlin-issued user/account context and uses Tokyo product operations for widget instance work.
 
-### Surface split
+Roma does not own user/account truth and does not read Supabase tables directly for normal account truth.
 
-- `Roma` = account-scoped customer/member shell
-- `DevStudio` = internal toolbench for platform curation, verification, and local utility pages
-- `Bob` = editor kernel and consumer of account truth
-- `Tokyo-worker` = Tokyo storage PBX after the account/product command is authorized
-- `Venice` = public serving PBX for already-published projections
+### Bob
 
-DevStudio may host internal tools, but it must not invent a second account or provider model, it must not teach internal humans to act like privileged customers browsing accounts, and it must not recreate the removed local widget-authoring lane. Admin curation uses account `00000001` as normal account-owned instance data.
+Bob is the editor kernel. Bob consumes Berlin/Roma account context and Tokyo-owned widget instance state. Bob does not own account management.
 
----
+### Berlin
 
-## Core flows
+Berlin owns:
 
-### Signup
+- OAuth login start/callback;
+- sign-in session issuance/refresh/logout;
+- user creation/resolution;
+- first-account provisioning;
+- invitation acceptance;
+- user/account bootstrap context;
+- V1 Invite Members lifecycle until a later PRD moves it.
 
-On first successful sign-in:
-1. create or resolve the `User Profile`
-2. create the first `Account`
-3. create the first `Account Membership` as `owner`
-4. resolve the active account context
+Berlin must not preserve old `user_profiles`, `account_members`, `active_account_id`, or connector-looking `linkedIdentities` output as product truth.
 
-Forbidden half-states:
-- authenticated user with no profile
-- account with no owner
-- authenticated user with no active account context
+### Tokyo
 
-### Invitation
+Tokyo owns widget definitions, instance state operations, translated values, and public artifact materialization operations. Tokyo consumes account/user authz context; it does not decide billing or account identity.
 
-Invitation is the canonical way to grant access to a person who is not yet an attached member.
+### Public Serving
 
-Berlin owns invitation acceptance when it is part of the login/session boundary:
-- detect invitation context during login
-- dedupe against existing user profiles / linked identities
-- convert acceptance into exactly one membership
-- land the session in the accepted account when appropriate
+Public serving reads generated R2/CDN artifacts. It does not read authoring/account DB state.
 
-Current Berlin routes may still host invitation issuance, listing, expiry, revocation, and related team-management workflows. Those post-login account-management surfaces are extraction targets. They must not be expanded in Berlin without a PRD.
+## Deleted Active Concepts
 
-### Multi-account people
+These are not active product truth in the DB Pivot model:
 
-One person may belong to many accounts.
+- `Account Membership` as the core role authority;
+- one user directly belonging to multiple accounts;
+- `active_account_id`;
+- account switching in customer Roma;
+- `login_identities` as connector/provider state;
+- provider profile snapshots as user truth;
+- contact-verification tables as permanent user truth;
+- `accountPublicId` as a second co-equal account identity in the new DB model.
 
-Example:
-- Mark is `editor` in Account A
-- Mark is invited to Account B
-- Berlin creates a second membership for the same person
-- Mark is still one `User Profile`, not two users
+## Execution References
 
-### Person-level account creation
+Active execution references:
 
-Creating a new account is a person capability, not a privilege that depends on being owner of some other account.
-
-Example:
-- Mark is `editor` in Account A
-- Mark creates Account B
-- Mark becomes `owner` in Account B
-- Mark's rights in Account A do not change
-
-### Operational cross-account humans
-
-Normal product access still uses one `User Profile`, many `Account Memberships`, and one active account context at a time.
-
-Internal company-plane authority is a separate concern. It must not be implemented by turning internal humans into normal `owner/admin` members of every customer account and it must not be collapsed into Berlin product roles.
-
----
-
-## Bootstrap and API contract
-
-Canonical bootstrap:
-- `GET /v1/session/bootstrap`
-
-Returns:
-- user
-- user profile
-- accessible accounts summary
-- active account
-- active membership role
-- tier
-- locale policy
-- entitlements snapshot
-- normalized bootstrap connector traits:
-  - `linkedIdentities`
-  - `traits.linkedProviders`
-- signed account capsule
-
-Current residual Berlin account API surface:
-- `GET /v1/me`
-- `PUT /v1/me`
-- `POST /v1/me/contact-methods/:channel/start`
-- `POST /v1/me/contact-methods/:channel/verify`
-- `GET /v1/me/identities`
-- `GET /v1/accounts/:id`
-- `DELETE /v1/accounts/:id`
-- `PUT /v1/accounts/:id/locales`
-- `GET /v1/accounts/:id/members`
-- `GET /v1/accounts/:id/members/:memberId`
-- `PATCH /v1/accounts/:id/members/:memberId`
-- `DELETE /v1/accounts/:id/members/:memberId`
-- `GET /v1/accounts/:id/invitations`
-- `POST /v1/accounts/:id/invitations`
-- `DELETE /v1/accounts/:id/invitations/:invitationId`
-- `POST /v1/invitations/:token/accept`
-- `POST /v1/accounts/:id/owner-transfer`
-- `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
-- `GET /v1/accounts/:id/publish-containment`
-
-Rules:
-- `POST /v1/accounts/:id/invitations` is the canonical unknown-person grant-access path
-- direct member creation is no longer an active Berlin route; invitations are the surviving grant-access path
-- `PATCH /v1/accounts/:id/members/:memberId` mutates membership only
-- `DELETE /v1/accounts/:id/members/:memberId` removes a non-owner member from the account
-- `GET /v1/me/identities` returns Berlin's minimal provider reuse summary; shells must not invent their own provider/account linkage model on top
-- `GET /v1/accounts/:id/publish-containment` is account-level policy only; it does not make Berlin a widget publish/live-state owner
-- Berlin currently hosts this API surface, but the corrected mandate keeps only login-time account truth in Berlin long term. Post-login account-management routes are extraction targets.
-
----
-
-## Ownership split
-
-| Concern | Owner |
-|---|---|
-| Identity/session | Berlin |
-| Login-time provider identity mapping | Berlin |
-| Login-time account provisioning/invitation acceptance | Berlin |
-| Active account session landing/bootstrap | Berlin |
-| User profile needed for login/bootstrap | Berlin current boundary; richer mutation surface is an extraction target |
-| Post-login memberships/invitations/account management | Berlin current residual surface; extraction target |
-| Linked identities/provider reuse | Berlin |
-| Persistence | Michael |
-| Account/member UX | Roma |
-| Internal toolbench (curation/authoring/verification) | DevStudio |
-| Editor account consumption | Bob |
-| Account management runtime | Berlin + Roma |
-| Instance lifecycle management plane after account truth is resolved | Roma/system account operations |
-| Publish/unpublish/delete/downgrade/cap/tier correctness for instances and published projections | Roma/system account operations |
-| Tokyo object writes, reads, storage validation, and published-projection materialization | Tokyo-worker PBX |
-| Public published projection serving/miss behavior | Venice PBX |
-
-Hard rule:
-- no product surface reads account-management truth directly from Michael
-- account-management runtime paths stay behind Berlin/Roma product boundaries
-- Tokyo-worker and Venice are not policy engines. They must not decide billing, tier, compliance, publication eligibility, downgrade state, caps, or whether an account should still have public projections.
-
----
-
-## Provider and connector rules
-
-Social/provider login begins a durable provider relationship Berlin can reuse later.
-
-Examples:
-- Google login can later power Google-backed product capabilities
-- Meta/Facebook login can later power Instagram/Meta-backed capabilities
-
-Rules:
-- reuse the existing Berlin-owned provider relationship first
-- if broader scopes are needed, Berlin upgrades that same relationship
-- widgets and product surfaces do not store provider tokens or raw OAuth payloads
-- raw provider payloads do not become a product data model outside Berlin
-- current runtime exposes the minimal reusable summary only:
-  - `linkedIdentities` = person-level provider facts
-  - `traits.linkedProviders` = cheap shell-friendly provider summary
-
----
-
-## What this doc is not
-
-- This is not the billing architecture doc.
-- This is not the widget save/publish doc.
-- This is not the multitenancy packaging matrix.
-- This is not the execution plan.
-
-Those concerns compose with account management, but this file defines the canonical account-management model itself.
+- `Execution_Pipeline_Docs/02-Executing/103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
+- `Execution_Pipeline_Docs/02-Executing/103_DB_Pivot__EXEC__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
+- `Execution_Pipeline_Docs/02-Executing/103_DB_Accounts__PRD__Accounts_Table.md`
+- `Execution_Pipeline_Docs/02-Executing/103_DB_Users__PRD__Users_Table.md`
+- `Execution_Pipeline_Docs/02-Executing/103_DB_Berlin_Auth_Connector__AUDIT__Users_Login_Connector_Map.md`

@@ -15,11 +15,13 @@ on:
       - "dieter/**"
       - "packages/**"
       - "scripts/**"
+      - "supabase/**"
       - "tooling/**"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - ".github/workflows/pr-architecture-gates.yml"
+      - ".github/workflows/supabase-migrations.yml"
 
 concurrency:
   group: pr-architecture-${{ github.event.pull_request.number || github.run_id }}

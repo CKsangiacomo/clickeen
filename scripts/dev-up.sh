@@ -367,44 +367,25 @@ if [ -z "${TOKYO_DEV_JWT:-}" ]; then
   TOKYO_DEV_JWT="clickeen-local-dev-token"
 fi
 
-echo "[dev-up] Ensuring Supabase local DB is running"
-if ! supabase status >/dev/null 2>&1; then
-  supabase start
-fi
-
-echo "[dev-up] Applying pending Supabase migrations (non-destructive)"
-supabase migration up
-
-echo "[dev-up] Loading local Supabase connection values"
-# shellcheck disable=SC2046
-eval "$(supabase status --output env | grep -E '^[A-Z_]+=' || true)"
-SUPABASE_URL=${API_URL:-${SUPABASE_URL:-}}
-SUPABASE_SERVICE_ROLE_KEY=${SECRET_KEY:-${SUPABASE_SERVICE_ROLE_KEY:-}}
-SUPABASE_ANON_KEY_VALUE="${ANON_KEY:-${SUPABASE_ANON_KEY:-${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}}}"
-
-# Older/newer Supabase CLI builds may emit an https API_URL for the local stack
-# even when Kong is listening in plain http on loopback. Normalize that here so
-# local helper scripts do not fail TLS handshakes against the local gateway.
-if [ -n "${SUPABASE_URL:-}" ]; then
-  case "$SUPABASE_URL" in
-    https://127.0.0.1:*|https://localhost:*)
-      SUPABASE_URL="http://${SUPABASE_URL#https://}"
-      ;;
-  esac
-fi
-echo "[dev-up] Using local Supabase"
+echo "[dev-up] Supabase lifecycle is disabled in dev-up"
+echo "[dev-up] Load SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and SUPABASE_ANON_KEY from .env.local or the shell"
+SUPABASE_URL=${SUPABASE_URL:-${API_URL:-}}
+SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-${SECRET_KEY:-}}
+SUPABASE_ANON_KEY_VALUE="${SUPABASE_ANON_KEY:-${NEXT_PUBLIC_SUPABASE_ANON_KEY:-${ANON_KEY:-}}}"
 
 if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
-  echo "[dev-up] Failed to resolve SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY from Supabase status"
+  echo "[dev-up] Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY"
+  echo "[dev-up] Refusing to start, migrate, reset, or switch Supabase targets from dev-up"
   exit 1
 fi
 
 if [ -z "${SUPABASE_ANON_KEY_VALUE:-}" ]; then
-  echo "[dev-up] Failed to resolve SUPABASE_ANON_KEY from Supabase status / env"
+  echo "[dev-up] Missing SUPABASE_ANON_KEY / NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  echo "[dev-up] Refusing to start, migrate, reset, or switch Supabase targets from dev-up"
   exit 1
 fi
 
-echo "[dev-up] Runtime data target: local Supabase"
+echo "[dev-up] Runtime data target: configured Supabase URL"
 echo "[dev-up] No persona seed: DevStudio is toolbench-only; product auth belongs to Roma/Berlin"
 
 TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
@@ -480,7 +461,7 @@ fi
 echo "[dev-up] Starting Bob (3000)"
 (
   cd "$ROOT_DIR/bob"
-  start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" CK_SUPABASE_TARGET="local" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
+  start_detached "$LOG_DIR/bob.dev.log" env PORT=3000 ENV_STAGE=local BERLIN_BASE_URL="$BERLIN_URL" SUPABASE_URL="$SUPABASE_URL" SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_VALUE" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" NEXT_PUBLIC_TOKYO_URL="$TOKYO_URL" pnpm dev
   BOB_PID="$STARTED_PID"
   echo "[dev-up] Bob PID: $BOB_PID"
   register_pid "bob" "$BOB_PID" "3000" "$LOG_DIR/bob.dev.log"
@@ -505,7 +486,7 @@ echo "  Berlin:    http://localhost:3005/internal/healthz"
 echo "  Bob:       http://localhost:3000"
 echo "  DevStudio: http://localhost:5173"
 echo "  DevStudio tools: http://localhost:5173/#/tools/bob-ui-native and http://localhost:5173/#/tools/entitlements"
-echo "[dev-up] Local boot will seed local platform state before completion."
+echo "[dev-up] Local boot uses the configured Supabase URL; it does not seed, migrate, reset, or switch Supabase targets."
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
 print_stack_port_status
 

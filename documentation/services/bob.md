@@ -30,7 +30,7 @@ Bob intentionally separates:
 - **Saving config** (delegated to Roma same-origin routes, then to Tokyo): appears as a plain **Save** action. Save persists the one widget document currently open in Builder. Builder no longer treats localization as a second save lane and no longer carries a shadow saved-document model just to drive dirty/discard UI.
 - **Copy code in Bob** is only the embed-code affordance for published instances: the **Copy code** button opens a modal containing the snippets needed to place the widget on a website using `https://clk.live/{accountPublicId}/{instanceId}` static public references. Unpublished instances show no live snippets.
 - **Bob has no live/unlive toggle** and does not manage published/unpublished state.
-- Active account routes authorize from the Berlin-issued bootstrap account authz capsule carried by Roma/Bob. They do not re-read account membership on normal editor open/save paths.
+- Active account routes authorize from the Berlin-issued bootstrap account authz capsule carried by Roma/Bob. They do not re-read account membership on normal editor open/save paths; DB Pivot target account role truth lives on `users`.
 
 The Settings panel is widget-defined behavior controls; it must not contain embed code.
 
@@ -538,8 +538,8 @@ It:
 - Builds i18n bundles from `tokyo/roma/i18n/source` into `tokyo/roma/i18n/public`
 - Clears stale Next chunks (`bob/.next`)
 - Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321)
-- Uses **local Supabase by default**; to point the local stack at a remote Supabase project, set `DEV_UP_USE_REMOTE_SUPABASE=1` and provide `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_ANON_KEY` in `.env.local`
-- Passes Bob the resolved Supabase target explicitly, so local Bob reads use the same local-vs-remote Michael target as the rest of the product stack.
+- DB Pivot blocks `dev-up` from managing Supabase lifecycle or switching between local and remote Supabase targets. Supabase schema changes must go through reviewed migrations and the approved deploy path.
+- Local Bob uses Berlin/Roma/Tokyo product boundaries; it must not depend on a script-selected Supabase target.
 - Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).
 - Verifies Roma account capsules against Berlin JWKS; there is no separate account-capsule secret in local dev.
 

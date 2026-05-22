@@ -5,6 +5,8 @@ Runtime code + deploy config are truth. If this doc drifts from `berlin/*`, upda
 
 For the canonical account-management model, see `documentation/architecture/AccountManagement.md`.
 
+DB Pivot note: this doc is being converged to the active one-user-one-account model. Any mention of `user_profiles`, `account_members`, `active_account_id`, `login_identities`, or `accountPublicId` describes current runtime residue only, not the target model.
+
 ## Purpose
 
 Berlin is Clickeen's identity-to-session boundary.
@@ -14,7 +16,7 @@ Given a verified provider identity, Berlin produces a valid, safe, scoped Clicke
 That means Berlin is not a pure token vending machine, and it is not the long-term home for every account-management workflow. Berlin owns login-time account truth: the minimum account read/write authority needed to answer:
 
 - who is this person?
-- which Clickeen user profile does this provider identity map to?
+- which Clickeen user does this provider login map to?
 - which account should this session land in?
 - is this login allowed to create or accept access?
 - what stable authz capsule does Roma/Bob need at session start?
@@ -26,11 +28,11 @@ Berlin must keep that login-time truth boring, explicit, and session-scoped. Ric
 Berlin permanently owns:
 
 - OAuth PKCE start/callback flows for login providers.
-- Provider identity to Clickeen user mapping through `login_identities` and `user_profiles` at Berlin's service-role boundary.
-- First-login account provisioning when no invitation or existing membership applies.
-- Compact account product identity (`accounts.public_id`) minting during account provisioning.
+- Provider login to Clickeen user mapping through the approved `users` login fields at Berlin's service-role boundary.
+- First-login account provisioning when no invitation or existing user/account applies.
+- Account id minting during account provisioning.
 - Invitation acceptance at login time when the login flow carries an invitation context.
-- Active account resolution for session landing.
+- Current account resolution for session landing. In the DB Pivot target there is exactly one account per user.
 - Berlin access-token and refresh-token issuance.
 - Refresh rotation and session revocation.
 - JWKS publication for verifier services.
@@ -45,13 +47,13 @@ The signed account authz capsule carries stable account authz truth only. Mutabl
 
 - Direct provider login is the canonical cloud path: `Roma -> Berlin -> provider -> Berlin -> Roma`.
 - Supabase Auth provider redirects are legacy residue and must not be reintroduced as the browser-visible customer login path.
-- The current linked-identity source is `public.login_identities`; Berlin writes provider/profile state through its service-role boundary and product shells must not consume Supabase Auth identities as provider/account truth.
-- Bootstrap is read-only. It resolves real user/account state and mints session/bootstrap truth; it must not silently repair missing profile, membership, or account state on the hot path.
-- Bootstrap exposes both `accountId` and `accountPublicId`. `accountId` is the private relational UUID; `accountPublicId` is the compact product/storage identity used by PRD 098 overlay IDs and PRD 099 account R2 storage paths.
-- Missing canonical profile, membership, or active account state at bootstrap is a producer bug and must fail explicitly.
-- Active account resolution comes only from persisted active-account preference or deterministic real membership truth. Berlin must never open a privileged fallback account.
+- The current `public.login_identities` table is runtime residue and a DB Pivot deletion target. Berlin's target login mapping is the approved `users` login fields. Product shells must not consume Supabase Auth identities, provider payloads, or connector state as account truth.
+- Bootstrap is read-only. It resolves real user/account state and mints session/bootstrap truth; it must not silently repair missing user, role, login mapping, or account state on the hot path.
+- Bootstrap exposes the one current account id for the user. The old `accountId` plus `accountPublicId` split is not target DB Pivot truth.
+- Missing canonical user, role, login mapping, or account state at bootstrap is a producer bug and must fail explicitly.
+- Current account resolution comes from `users.account_id`. Berlin must never open a privileged fallback account.
 - Invalid persisted profile/account locale-policy truth must fail explicitly in canonical product/account routes. Berlin logs the defect and does not silently default it away.
-- Product shells may consume Berlin's normalized provider summary, but must not invent provider/account linkage outside Berlin.
+- Product shells must not treat login provider summaries as connector/account linkage. Login is not connector authorization.
 - Future providers such as Apple, Microsoft, Meta/Facebook, or others plug into the same provider adapter shape: provider verifies identity; Berlin maps identity to Clickeen account/session truth.
 
 ## Current Extraction Targets
@@ -60,11 +62,11 @@ Berlin still hosts account-management surfaces from the PRD 65 account-boundary 
 
 These surfaces must not be expanded in Berlin without a PRD:
 
-- account members CRUD
+- team/user CRUD currently backed by old account-member residue
 - account locales management
 - contact-method verification and profile mutation endpoints
 - account governance and lifecycle operations
-- post-login invitation listing, issuance, revocation, and member-management workflows
+- post-login invitation listing, issuance, revocation, and team/user-management workflows
 - account deletion outside the login/session boundary
 
 Correct direction:
@@ -132,7 +134,7 @@ Canonical Google login currently works like this:
 6. Berlin consumes the OAuth state ticket once.
 7. Berlin exchanges the Google code directly with Google.
 8. Berlin normalizes the Google userinfo response into a provider identity.
-9. Berlin resolves or creates the Clickeen user/profile/account landing state through `login_identities`, `user_profiles`, and account membership truth.
+9. Berlin resolves or creates the Clickeen user/account landing state through the approved `users` model.
 10. Berlin issues the Clickeen session.
 11. Berlin stores a short-lived one-time finish transaction in `BERLIN_AUTH_TICKETS`.
 12. Berlin redirects the browser to Roma's finish route with only a `finishId`.
@@ -184,12 +186,12 @@ Primary runtime dependencies:
 - `BERLIN_AUTH_TICKETS` Durable Object for OAuth state and finish transactions.
 - `BERLIN_SESSION_KV` for session state and auth/session mutation rate-limit buckets.
 - Google OAuth/OIDC for the enabled cloud-dev login provider.
-- Supabase/Michael persistence through Berlin's service-role boundary for user profile, login identity, account, membership, and invitation state.
+- Supabase persistence through Berlin's service-role boundary for users, accounts, and invitation state.
 
 Registry/account product dependencies:
 
 - Roma no longer receives a Michael/PostgREST token from Berlin.
-- Berlin only answers account governance and account-level publish-containment policy questions for this area.
+- Berlin only answers account/user/session truth and the currently surviving account governance questions for this area.
 - Berlin does not own widget instance inventory, instance IDs, display names, saved config, l10n overlays, or publish state.
 
 ## PRD 098/099 Account Public ID

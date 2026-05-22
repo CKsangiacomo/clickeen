@@ -39,6 +39,7 @@ Required child PRDs:
 
 | Child PRD | Product domain | Owner | Purpose |
 | --- | --- | --- | --- |
+| `103_DB_Current_Supabase_Inventory__PRD__Remote_DB_Audit_Gate.md` | Current remote DB inventory | Product + Architecture + Berlin/Tokyo | Inventory every current remote Supabase object and code caller before any DB Pivot migration. This is the audit gate that prevents partial-schema execution. |
 | `103_DB_Accounts__PRD__Accounts_Table.md` | Accounts | Berlin | Define the one-id account table model, status/tier policy input, invitation boundary, agency roll-up extension point, and cleanup of account-shaped stale tables. |
 | `103_DB_Billing_Status__PRD__Billing_Status_Stub.md` | Billing Status | Berlin + Billing | Define the temporary PLG/billing status contract used by `accounts.status` until real billing is activated, including operation gates and public artifact suspension behavior. |
 | `103_DB_Users__PRD__Users_Table.md` | Users | Berlin | Define the one-user-one-account model, user role/profile fields, hard rejection for already-associated emails, and auth/connector audit boundary. |
@@ -57,6 +58,8 @@ Child PRDs are TPM/Dev Manager level artifacts. Each child must answer:
 
 No child PRD may add a table, column, payload move, or compatibility path just because code currently has a caller. It must name the product operation that needs the state.
 
+No implementation child PRD may execute until `103_DB_Current_Supabase_Inventory__PRD__Remote_DB_Audit_Gate.md` is green. The team must know the full current remote Supabase object map before changing any slice of it.
+
 ## Product Truth
 
 Clickeen has two consumers with different needs.
@@ -66,7 +69,8 @@ The application consumes product operations that need cheap, deterministic answe
 - which account-owned instances exist;
 - who owns each instance;
 - which widget product each instance uses;
-- whether the instance is currently public;
+- whether the instance is intended to be published by product state;
+- when the current account lifecycle status began, so billing grace and deletion operations do not read history artifacts;
 - whether translation generation is idle, queued, running, or failed at the product level;
 - account/user ownership, authorization joins, policy joins, usage, and audit trails.
 
@@ -128,7 +132,7 @@ Supabase is used for bounded authoring/control operations:
 - open one instance with ownership check;
 - save/rename one instance;
 - gate entitlement counts;
-- represent current live state;
+- represent current publish state;
 - represent coarse translation Generate state;
 - coordinate product work across requests without storage-object IPC.
 
@@ -141,6 +145,20 @@ Use Supabase for tiny queryable control facts.
 Use Tokyo product operations for authored/translated payload ownership.
 Use R2/CDN for public artifacts.
 ```
+
+## Canonical Product Operations
+
+These operation names are the approved vocabulary for the DB pivot. They describe Clickeen product behavior, not storage mechanics.
+
+| Operation | Owner | Meaning |
+| --- | --- | --- |
+| `duplicateInstanceFromTemplate` | Tokyo | Creates a new account-owned instance by duplicating an admin-owned template instance into the target account. Admin instances are templates; this is account-to-account instance duplication, not a separate product mode. |
+| `duplicateInstance` | Tokyo | Creates a new instance in the same account by duplicating an existing account-owned instance. |
+| `applyFreeTierServing` | Tokyo | Materializes public serving for an account according to free-tier policy. Used when a free account is created and when a suspended account passes the public-serving grace window. |
+| `restorePaidTierServing` | Tokyo | Rematerializes public serving for an account after billing recovery or tier restoration. |
+| `deleteAccount` | Berlin orchestration, Tokyo cleanup | Comprehensive account cleanup: removes the account row and owned operational rows, Tokyo payloads, generated public artifacts, assets, invitations, users, and cold account-owned history unless a legal/billing retention policy explicitly extracts records elsewhere. |
+
+Do not reintroduce `createInstanceFromDemo`, `claim demo`, `funnel claim`, or similar operation names in the DB pivot. Prague/MiniBob acquisition surfaces may collect or preview, but the product operation that creates a durable account instance is either direct create, same-account duplicate, or template duplication from an admin-owned instance.
 
 ## Store Decision
 
@@ -161,7 +179,7 @@ Cloudflare remains the compute, queue, cache, and public artifact platform:
 - Tokyo-worker and San Francisco run on Cloudflare Workers.
 - Translation and materialization async work uses Cloudflare Queues unless a later PRD names a better workflow primitive.
 - Published visitor artifacts and cacheable assets stay in R2/CDN.
-- Workers connect to Supabase Postgres through **Cloudflare Hyperdrive** unless 103_DB.1 proves Hyperdrive is unsuitable for this repo/runtime. Hyperdrive is the preferred production path because it gives Workers pooled Postgres access without turning D1 into the product database.
+- Workers connect to Supabase Postgres through **Cloudflare Hyperdrive** unless 103_DB.1B proves Hyperdrive is unsuitable for this repo/runtime. Hyperdrive is the preferred production path because it gives Workers pooled Postgres access without turning D1 into the product database.
 
 Implementation rules:
 
@@ -172,9 +190,11 @@ Implementation rules:
 
 ## Supabase Environment Management Doctrine
 
-Clickeen must stop treating the local Supabase/Docker boot flow as an operational database workflow.
+Clickeen must stop treating bootstrap-era local scripts as product database workflow.
 
-Supabase local development uses Docker under the hood. For Clickeen product execution, that path is not a safe default and must not be used by agents as an active development database. It is not the product state authority, not the release path, not the remote migration path, and not a place where an agent "makes the app work" by poking data.
+Supabase local development through the official CLI is legitimate for schema/dev validation. It answers "does this migration/schema/app path work against a local stack?" It does not answer "what does cloud-dev/production currently contain?" and it is not the release path.
+
+The previous `scripts/dev-up.sh` / `DEV_UP_USE_REMOTE_SUPABASE` era is over. Those scripts were created when Clickeen was primarily bootstrapped on a local machine. They now create confusion because they mix local runtime boot, local Supabase lifecycle, remote-target escape hatches, migrations, and useful build chores in one command.
 
 The target operating model follows Supabase's environment-management pattern:
 
@@ -189,11 +209,14 @@ main branch -> production Supabase project through CI/CD
 ### Allowed Supabase Validation Uses
 
 - Read repo migrations and generated schema/types.
+- Inspect the linked remote Supabase project read-only through the VS Code Supabase extension or Supabase Dashboard SQL Editor when the active slice requires current remote evidence.
+- Run `npx supabase@2.62.5 migration list --linked` or equivalent pinned CLI migration-history checks when the current machine cannot run the latest CLI.
 - Run static migration checks that do not connect to a database.
+- Run local Supabase CLI for disposable schema/dev validation.
 - Run CI-owned migration validation against a fresh, isolated database created inside the CI job from synthetic fixtures only.
 - Generate or verify checked-in DB types only through the approved CI/local-read protocol named by the active slice.
 
-An agent must not run local Supabase as the validation authority for a product slice. If a future slice truly requires an interactive local database, it must first add a separate break-glass protocol that proves the database is empty/synthetic, isolated from all Clickeen user-created instances, and impossible to confuse with cloud-dev/staging/production. Until that protocol exists, local Supabase is out of the execution path.
+Local Supabase is allowed only as local validation. It must never be used as evidence of cloud-dev/production data shape, migration safety over existing data, or product-state correctness.
 
 ### Forbidden Local/Remote Supabase Uses
 
@@ -205,6 +228,7 @@ An agent must not run local Supabase as the validation authority for a product s
 - No `DEV_UP_USE_REMOTE_SUPABASE=1` style runtime escape hatch in active product workflows.
 - No dashboard schema edits as the normal path. If an emergency dashboard change occurs, it must be pulled into a migration and reconciled before product work continues.
 - No agent may use local Docker Supabase data as evidence that remote product state is correct.
+- No `supabase db pull` as a casual inspection command. It writes migration files and may convert unknown dashboard drift into source history before the team understands it.
 
 ### Required Remote Discipline
 
@@ -213,8 +237,21 @@ An agent must not run local Supabase as the validation authority for a product s
 - Migration application must be observable in CI logs and linked from the execution slice.
 - Remote inspection, when needed, must be read-only unless the active PRD slice explicitly authorizes a migration deployment.
 - Production migration must have an explicit promotion step from the already-green staging/cloud-dev migration.
+- Supabase migration deployment is manual-dispatch CI only for this pivot. The active workflow is `.github/workflows/supabase-migrations.yml`.
+- The workflow requires an explicit target, `APPLY_MIGRATIONS` confirmation, and environment-scoped secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF_CLOUD_DEV`, `SUPABASE_PROJECT_REF_PRODUCTION`, `SUPABASE_DB_PASSWORD_CLOUD_DEV`, and `SUPABASE_DB_PASSWORD_PRODUCTION`.
+- The workflow runs the PRD 103 DB pivot guard before linking or applying migrations.
+- No push-triggered workflow may apply Supabase migrations during this pivot.
 
 This is a hard correction to the old Clickeen bootstrapping pattern. `scripts/dev-up.sh` and similar local scripts may remain only after they are audited and stripped of database lifecycle authority. They must not start, reset, migrate, switch, seed, or manage Supabase as part of product execution.
+
+Current audit result:
+
+- `scripts/dev-up.sh` no longer starts local Supabase, runs `supabase migration up`, loads env from `supabase status`, seeds Supabase, or switches targets. It reads explicit Supabase env and refuses to manage database lifecycle.
+- `scripts/dev/local-supabase.mjs` was deleted because it existed only to read local Supabase status and support `DEV_UP_USE_REMOTE_SUPABASE` target switching.
+- `scripts/dev-up.sh` still builds Dieter and i18n artifacts as explicit non-DB chores. Do not preserve or re-add DB lifecycle control just to keep Dieter generation convenient.
+- DevStudio is a standalone local Vite toolbench (`pnpm dev:admin` / `pnpm --filter @clickeen/devstudio dev`). It should not require `dev-up`, Supabase lifecycle, or a fake product account stack just to run Dieter previews, component docs, ck-policy matrix tools, or local utility pages.
+- `.github/workflows/supabase-migrations.yml` is the only approved deploy lane for reviewed Supabase migrations in this pivot. It is manual, target-scoped, environment-scoped, and guard-gated.
+- `pnpm lint` runs `scripts/verify/prd103-db-pivot-guard.mjs`, and the PR architecture gate now runs when `supabase/**` changes.
 
 ### Allowed Cloudflare Storage Uses
 
@@ -226,7 +263,7 @@ This is a hard correction to the old Clickeen bootstrapping pattern. `scripts/de
 ### Forbidden Cloudflare Storage Uses
 
 - `instance.json`, `instance.config.json`, or `instance.content.json` as product API contracts, cross-service discovery targets, or account listing truth.
-- `accounts/{account}/instances/index.json` as account listing truth.
+- `accounts/{accountId}/instances/index.json` as account listing truth.
 - overlay inventory JSON.
 - selected/current overlay pointer JSON.
 - workflow/status truth stored as a field inside a blob nobody indexes.
@@ -260,10 +297,11 @@ Rules:
 
 Approved closed vocabularies:
 
-- `account_status`: `active`, `past_due`, `suspended`;
+- `account_status`: `active`, `suspended`;
 - `account_tier`: `free`, `tier1`, `tier2`, `tier3`;
 - `user_role`: `owner`, `admin`, `editor`, `viewer`;
-- `instance_live_status`: `unpublished`, `published`;
+- `invitation_status`: `pending`, `accepted`, `revoked`;
+- `instance_publish_status`: `unpublished`, `published`;
 - `instance_translation_status`: `idle`, `queued`, `running`, `failed`.
 
 Approved normalized standards:
@@ -285,7 +323,7 @@ The target v1 schema should be this small unless 103_DB.1 proves a specific prod
 `accounts`
 
 - one row per Clickeen account/tenant;
-- owns one account identity, status, tier policy input, and creation timestamp;
+- owns one account identity, status, current status lifecycle clock, tier policy input, and creation timestamp;
 - does not own profile/display fields, localization settings, publish booleans, or internal/platform flags in v1;
 - written by Berlin for account lifecycle/settings;
 - read by Berlin for auth/bootstrap/account settings and by Tokyo through product operations when instance work needs account policy/locale context.
@@ -301,9 +339,9 @@ Account tier/status history is not a DB table in V1. Berlin writes cold account-
 `account_invitations`
 
 - one row per pending or historical invitation;
-- owns invited email, target role, status/accepted/revoked timestamps;
+- owns invited email, target role, status, expiry, accepted/revoked timestamps;
 - written/read by Berlin team invitation operations;
-- survives only if invitations are an active product feature. Otherwise it is deferred.
+- approved in V1 because Invite Members is an active product feature.
 - must reject an invite/add request when the invited email already exists in `users.primary_email`.
 
 #### Users
@@ -363,7 +401,7 @@ Why this table exists:
 
 - Roma needs to answer "which instances belong to this account?" without listing Cloudflare objects or reading generated index files.
 - Tokyo needs one cheap ownership/control row before opening, saving, translating, publishing, or deleting an instance.
-- The product needs a deterministic place for live state and coarse Generate state that is not inferred from public files, overlay inventories, or spinner-local state.
+- The product needs a deterministic place for publish state and coarse Generate state that is not inferred from public files, overlay inventories, or spinner-local state.
 - Entitlement gates need account-level counts and ownership joins without walking storage.
 - The row is intentionally small so the database does not become the home for every widget string, translated value, or public artifact.
 
@@ -374,7 +412,7 @@ V1 `instances` columns:
 | `id` | Existing Tokyo `instanceId`. Same value as the current folder segment under `accounts/{accountId}/instances/{instanceId}` and Roma route `/builder/{instanceId}`. No new UUID or surrogate id in v1. |
 | `account_id` | Account that owns the instance. Needed for account listing, opening, authorization containment, and entitlement gates. |
 | `widget_type` | Product widget type such as `faq`, `countdown`, or `logoshowcase`. `widgetCode` and `widget_key` do not survive in the DB model. |
-| `live_status` | Current public state of the instance: `unpublished` or `published`. This is not entitlement, not "can publish", and not artifact readiness. |
+| `publish_status` | Product publish state: `unpublished` or `published`. This is the user's/product's publish intent/state, not entitlement, not current serving eligibility, and not artifact readiness. Billing and tier policy may materialize fewer public artifacts without rewriting user publish intent. |
 | `translation_status` | Coarse Generate state for Roma/Bob: `idle`, `queued`, `running`, or `failed`. It is not locale readiness, not a progress counter, and not translation history. |
 | `created_at` | Creation time. |
 | `edited_at` | Last user edit to instance name/content/config/settings. Queue, translation, and publish worker noise must not update this column. |
@@ -390,9 +428,9 @@ Conditional/non-v1 instance tables:
 ### Tables That Do Not Survive By Default
 
 - `widgets`: deleted. Widget definitions live in Tokyo/repo/static widget source and are exposed through Tokyo widget-definition operations.
-- `account_commercial_overrides`: delete or merge into `accounts` policy/tier columns unless an active product operation proves it is needed.
+- `account_commercial_overrides`: delete/defer unless an active product operation proves it is needed. Do not merge limit overrides into core `accounts`; `ck-policy` remains the entitlement resolver.
 - `internal_control_events`: delete or defer unless an active audit/admin product reads/writes it.
-- `account_publish_containment`: merge into `accounts` if it remains a simple account block flag; keep separate only if containment has independent lifecycle/audit requirements.
+- `account_publish_containment`: delete/defer unless a named billing/status operation proves it is needed. Publish/serving containment should be expressed through account status/tier plus Tokyo materialization operations, not a vague second account flag.
 - `account_members`: deleted as core truth. User account association and role live on `users`.
 - `user_contact_methods` and `user_contact_verifications`: delete unless non-provider contact verification is active product.
 
@@ -404,14 +442,24 @@ The exact migration may adjust column names to the current schema, but it must p
 
 | Concern | Supabase authority | Notes |
 | --- | --- | --- |
-| Account instance registry | `instances` | One row per real account-owned instance. Owns only `id`, `account_id`, `widget_type`, `live_status`, `translation_status`, `created_at`, and `edited_at` in v1. Instance display/name/title remains in Tokyo-owned payload/config. |
+| Account instance registry | `instances` | One row per real account-owned instance. Owns only `id`, `account_id`, `widget_type`, `publish_status`, `translation_status`, `created_at`, and `edited_at` in v1. Instance display/name/title remains in Tokyo-owned payload/config. |
 | Instance authored payload | Tokyo product operation | Payload may remain whole-document storage behind Tokyo in v1. Roma/Bob/San Francisco must not read storage files directly or use storage paths as product identity. |
 | Translated locale values | Tokyo product operation | Payload may remain Tokyo-owned whole-value storage in v1. No overlay ID, selected pointer, or inventory product concept. DB rows are not approved unless 103_DB.1 proves a product/cost need. |
 | Translation generation state | `instances.translation_status` plus Tokyo Generate operation | V1 stores only coarse panel/button state. No progress counters, locale rows, job history, or model audit fields unless 103_DB.1 proves the product needs them. |
-| Publish/live state | `instances.live_status` | Public file existence is not status. Artifact build details stay private to the materialization operation unless a later slice proves a separate state primitive is needed. |
+| Publish state | `instances.publish_status` | Product publish intent/state. Public file existence is not status. Billing/tier serving suppression is materialized by Tokyo without changing publish intent. Artifact build details stay private to the materialization operation unless a later slice proves a separate state primitive is needed. |
 | Widget definitions | product operation owned by Tokyo | Backing may be repo/static source or DB. Roma calls Tokyo for widget definitions; it does not fetch generated R2 catalog JSON. |
 
 This PRD intentionally does not move config, content, translated values, or per-locale readiness payloads into Supabase by default. That was the old "everything in DB" mistake in a new form. Payload movement is allowed only when a slice proves it removes product complexity without creating a DB cost trap at scale.
+
+Generate stale-work guard:
+
+- Tokyo accepts Generate against the current saved authored text input.
+- Tokyo records a private source marker for that accepted work in the queue/private job payload, derived from the saved authored text input it is about to translate.
+- San Francisco results are applied only through Tokyo.
+- Tokyo applies results only if they still match the current saved authored text input.
+- Stale translation results are discarded and must not overwrite newer saved text, reset `translation_status`, or recreate old translated values.
+
+This guard is not a new `sourceVersion` product concept and is not an approved DB column in V1. It is the minimum private operation check needed so queued translation work cannot corrupt newer user edits.
 
 ### Worker-To-Database Access
 
@@ -433,6 +481,14 @@ If 103_DB.1 discovers existing Supabase access in Roma, Berlin, or another servi
 - violation to move behind Tokyo or Berlin.
 
 The target is not "all services can query Supabase." The target is one operational source of truth with named product owners.
+
+Worker DB calls must have boring production guardrails:
+
+- statement timeout and transaction timeout configured for Tokyo/Berlin Worker DB access;
+- retry only idempotent reads and known safe serialization/connection failures;
+- no retry for non-idempotent mutations unless the operation is explicitly idempotent by key;
+- p95 and p99 latency targets recorded for list/open/save/generate/publish control-state queries;
+- mutation gates fail closed if account/user/instance ownership cannot be proven from DB state.
 
 ### R2 Public Artifact Model
 
@@ -456,8 +512,19 @@ Publish/materialization is the bridge:
 1. Tokyo reads account instance registry/control state from Supabase and authored/translated payloads from the Tokyo-owned payload source approved by the active slice.
 2. The materializer builds static visitor artifacts.
 3. The materializer writes artifacts to R2/CDN keys.
-4. The materializer updates `instances.live_status` only through the approved publish/unpublish product operation.
+4. Publish/unpublish updates `instances.publish_status` only through the approved publish/unpublish product operation.
 5. Public serving reads R2/CDN only.
+
+Materialization must be idempotent and failure-safe:
+
+- write new artifacts to inactive/versioned keys first;
+- verify the required artifact set before swapping the public entrypoint;
+- leave the previous public artifacts serving if the new materialization fails;
+- retry only idempotent materialization work;
+- reconcile any partial R2 writes from Tokyo-owned state;
+- never set `instances.publish_status = published` as proof that all R2 writes succeeded unless the publish operation has completed its materialization contract.
+
+`applyFreeTierServing` and `restorePaidTierServing` use the same materialization discipline. They change which published artifacts are publicly served according to account policy; they do not rewrite the user's instance publish intent.
 
 The user-facing product may choose queued materialization only after a later slice names the state primitive. Until then, this PRD does not approve new materialization status columns or tables.
 
@@ -512,7 +579,7 @@ Out of scope:
 - Generate can be clicked repeatedly and deterministically queues/coalesces/rejects stale work through Tokyo-owned semantics while `instances.translation_status` gives Roma/Bob coarse product state.
 - Changed/missing translation work is resolved by Tokyo from the approved authored payload source. Roma/Bob must not derive it from storage siblings or overlay inventories.
 - Translation readiness is returned by Tokyo product operations, not overlay inventory JSON. DB locale rows are not required unless 103_DB.1 proves they are needed.
-- Publish writes public artifacts to R2 from Tokyo-owned state and updates `instances.live_status` through the publish/unpublish product operation.
+- Publish writes public artifacts to R2 from Tokyo-owned state and updates `instances.publish_status` through the publish/unpublish product operation.
 - Public serving reads only public artifacts from R2/CDN.
 - `instance.json`, `instance.config.json`, `instance.content.json`, overlay inventory, selected pointer, and account index JSON are gone from active product contracts, even if private payload storage remains behind Tokyo during v1.
 - D1 is not used as canonical product state.

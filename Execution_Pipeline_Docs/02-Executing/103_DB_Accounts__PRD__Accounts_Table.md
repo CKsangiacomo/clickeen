@@ -73,6 +73,7 @@ One row per Clickeen account.
 | --- | --- | --- | --- | --- |
 | `id` | text | Berlin | Berlin, Roma through Berlin, Tokyo through Berlin-issued context | The one account identity. Same value as Tokyo account folder segment: `accounts/{accountId}/instances/...`. No `public_id` in target model. |
 | `status` | `account_status` | Berlin | Berlin, Roma through Berlin, Tokyo through product context | Account lifecycle/billing state. Gates whether account-owned operations may proceed. |
+| `status_changed_at` | timestamptz | Berlin | Berlin, Roma through Berlin, Tokyo/billing operations through product context | Timestamp when the current `status` value began. Used to run the suspended-account 30-day public-serving grace and 90-day deletion lifecycle. Updated only when `status` changes. |
 | `tier` | `account_tier` | Berlin | Berlin, Roma, Tokyo through `ck-policy` input | Existing policy profile input: `free`, `tier1`, `tier2`, `tier3`. `ck-policy` resolves limits/capabilities from it. |
 | `created_at` | timestamptz | Berlin | Berlin/admin/debug | Account creation timestamp. Written once. |
 
@@ -84,13 +85,25 @@ Approved values:
 `status` and `tier` must not be open text. They are shared Clickeen product vocabularies and must be represented by DB enum types owned by the migration.
 
 ```sql
-create type account_status as enum ('active', 'past_due', 'suspended');
+create type account_status as enum ('active', 'suspended');
 create type account_tier as enum ('free', 'tier1', 'tier2', 'tier3');
 ```
 
 No other `accounts` columns are approved in V1.
 
-There is no `updated_at` in V1. Account change history is written as a cold account-owned history artifact, not a hot DB column, unless a future slice proves runtime cache/sync needs it.
+There is no generic `updated_at` in V1. Account change history is written as a cold account-owned history artifact, not hot DB columns.
+
+`status_changed_at` is the one approved lifecycle clock because current product behavior depends on the age of the current status. It is not account history, and it is not a substitute for account history.
+
+Required V1 account index:
+
+```sql
+create index accounts_suspended_status_changed_idx
+  on accounts (status_changed_at, id)
+  where status = 'suspended';
+```
+
+This supports the billing lifecycle runner that finds suspended accounts needing day-30 `applyFreeTierServing` or day-90 `deleteAccount` without scanning active accounts.
 
 ## Status Semantics
 
@@ -100,17 +113,24 @@ It must decide account operation gates. The Accounts execution slice must define
 
 The temporary V1 status contract lives in `103_DB_Billing_Status__PRD__Billing_Status_Stub.md`. Accounts owns the `status` column; the billing-status PRD owns what each value means for product behavior until real billing is activated.
 
+`status_changed_at` belongs to the same contract. It records when the current status started so billing recovery can answer:
+
+- has this account been suspended long enough to reduce public serving to free-tier allowance;
+- has this account been suspended long enough to delete account-owned data/artifacts;
+- did recovery reset the lifecycle by moving the account back to `active`.
+
+Any status write must update `status_changed_at` in the same Berlin-owned operation.
+
 For PLG, `closed` is not an account status. If an account is deleted/closed, the system deletes the account row and owned data/artifacts according to the deletion policy. Keeping closed free accounts as rows plus storage creates avoidable storage cost and operational clutter.
 
-Candidate V1 status set:
+V1 status set:
 
 ```text
 active
-past_due
 suspended
 ```
 
-Final status names can change only if the billing lifecycle requires it, but every status must alter product behavior.
+Status names are locked for this stub. A future real-billing PRD may change them only by migration and product review.
 
 Required matrix:
 
@@ -119,7 +139,7 @@ Required matrix:
 | Login/session bootstrap | Which statuses can enter Roma. |
 | Instance create/edit/save | Which statuses can mutate account-owned instances. |
 | Translation Generate | Which statuses can spend translation work. |
-| Publish/unpublish | Which statuses can change live/public state. |
+| Publish/unpublish | Which statuses can change product publish state. |
 | Public embed serving | Which statuses keep already-published artifacts live. |
 
 If a proposed status does not change one of those behaviors, it is not a core account status.
@@ -135,7 +155,7 @@ Account deletion must define:
 
 Account history is not hot operational state.
 
-The product does not list, filter, join, or gate current behavior from historical tier/status changes. Current behavior comes from `accounts.status` and `accounts.tier`.
+The product does not list, filter, join, or gate current behavior from historical tier/status changes. Current behavior comes from `accounts.status`, `accounts.status_changed_at`, and `accounts.tier`.
 
 For account history, Berlin appends human-readable JSON lines to an account-owned cold artifact:
 
@@ -148,13 +168,14 @@ Example:
 ```json
 {"at":"2026-05-21T10:00:00Z","event":"tier_changed","from":"free","to":"tier3","actor":"billing"}
 {"at":"2026-07-01T09:00:00Z","event":"tier_changed","from":"tier3","to":"tier1","actor":"billing"}
-{"at":"2026-07-14T08:00:00Z","event":"status_changed","from":"active","to":"past_due","actor":"billing"}
+{"at":"2026-07-14T08:00:00Z","event":"status_changed","from":"active","to":"suspended","actor":"billing"}
 ```
 
 Rules:
 
 - account history is not product truth;
 - account history does not gate access, translation, publish, or billing behavior;
+- current suspended-account grace behavior reads `accounts.status_changed_at`, not account history;
 - Roma/Tokyo must not read it for current account decisions;
 - it is read whole only when support/admin/history inspection needs it;
 - it is deleted with the account unless legal/billing retention policy explicitly extracts a separate record;
@@ -172,7 +193,7 @@ The account row stores only the tier. It does not store limits.
 `ck-policy` owns answers such as:
 
 - max instances;
-- max live instances;
+- max published/served instances;
 - translation allowance;
 - available locales;
 - model profile;
@@ -212,7 +233,27 @@ users.role
 
 One user belongs to one account. A user's role is the user's role in that account.
 
-`account_invitations` references `accounts.id` only if invitations remain an active product feature.
+Invite Members is an active product feature. `account_invitations` is approved as the V1 account-scoped invitation lifecycle table.
+
+`account_invitations` owns only invitation lifecycle state:
+
+| Column | Type | Writer | Reader | Use |
+| --- | --- | --- | --- | --- |
+| `id` | uuid | Berlin | Berlin/Roma through Berlin | Invitation id. |
+| `account_id` | text | Berlin | Berlin | Target account. References `accounts.id`. |
+| `email` | citext | Berlin | Berlin | Invited email. Used for pending invite display and accept/reject matching. |
+| `role` | `user_role` | Berlin | Berlin/Roma through Berlin | Intended role for the user created by accepting the invitation. |
+| `status` | `invitation_status` | Berlin | Berlin/Roma through Berlin | Invitation lifecycle: `pending`, `accepted`, or `revoked`. |
+| `created_at` | timestamptz | Berlin | Berlin/Roma through Berlin | Invitation creation timestamp. |
+| `expires_at` | timestamptz | Berlin | Berlin/Roma through Berlin | Pending invitation expiry timestamp. Pending invites must not live forever. |
+| `accepted_at` | timestamptz nullable | Berlin | Berlin/Roma through Berlin | Set when invitation is accepted. |
+| `revoked_at` | timestamptz nullable | Berlin | Berlin/Roma through Berlin | Set when invitation is revoked. |
+
+`invitation_status` is a closed DB enum:
+
+```sql
+create type invitation_status as enum ('pending', 'accepted', 'revoked');
+```
 
 Invitation/add-user must reject an email that already exists in `users.primary_email`:
 
@@ -222,29 +263,22 @@ This user is already associated with an account.
 
 Invitations must not create many-to-many memberships or account switching.
 
+Invitation indexes:
+
+```sql
+create index account_invitations_account_status_created_idx on account_invitations (account_id, status, created_at, id);
+create index account_invitations_email_status_idx on account_invitations (email, status);
+```
+
+Invitation creation and acceptance must be transactional. The flow must not check `users.primary_email` in one request and write an invitation/user in a later unguarded request. Accepted/revoked invitations are retained only for the support/UI window named by the implementation slice, then deleted or moved into cold account-owned history if the product requires a record.
+
 ## Agency Extension Point
 
 Agency is not a column on `accounts`.
 
-When agency is supported, it is an account roll-up relationship:
+When agency is supported, it must be modeled in a future agency PRD as an account-to-account roll-up relationship. This PRD deliberately does not approve agency tables, DDL, columns, or migrations.
 
-```sql
-account_rollups (
-  parent_account_id,
-  child_account_id,
-  relationship_type,
-  created_at
-)
-```
-
-Example:
-
-```text
-AGENCY123 -> CLIENT01
-AGENCY123 -> CLIENT02
-```
-
-Each child account remains a normal account with its own `id`, `status`, and `tier` unless `ck-policy` explicitly resolves inherited agency behavior.
+The product rule to preserve for that future PRD: each child account remains a normal account with its own `id`, `status`, and `tier` unless `ck-policy` explicitly resolves inherited agency behavior.
 
 Agency users belong to the agency account. Client users belong to their client account. Agency must not be implemented by adding agency users directly to every client account.
 
@@ -284,6 +318,7 @@ If any removed field is still a real product need, it must move to a separate ex
 
 - No account profile table in this PRD.
 - No agency implementation in this PRD.
+- No agency table or agency DDL in this PRD.
 - No locale settings model in this PRD.
 - No policy rewrite in this PRD.
 - No billing provider integration rewrite in this PRD.
@@ -292,21 +327,28 @@ If any removed field is still a real product need, it must move to a separate ex
 
 ## Acceptance Criteria
 
-- `accounts` target schema has only `id`, `status`, `tier`, and `created_at`.
+- `accounts` target schema has only `id`, `status`, `status_changed_at`, `tier`, and `created_at`.
 - `status` excludes `closed`; account deletion is an operation with cleanup, not a retained account state.
 - Account id is the compact id used by Tokyo folders and public paths.
 - `public_id` does not survive as a target column.
 - `is_platform` does not survive as a target column.
 - `users.account_id` and surviving account-owned tables reference `accounts.id`.
 - `account_members` does not survive as core user/account/role truth.
+- `account_invitations` is the approved V1 Invite Members lifecycle table and does not create account membership.
 - Invite/add-user rejects an existing `users.primary_email` instead of attaching that user to a second account.
 - Roma/Tokyo product operations receive one account id shape.
 - `ck-policy` receives `tier` as input and remains the source of entitlement decisions.
 - `ck-policy` is either proven deterministic/typed/tested/consistently consumed or explicitly scheduled for repair before product execution resumes.
 - No limits/counters/localization policies are duplicated into `accounts`.
 - Locale availability comes from `ck-policy`; selected locales, if product-required, are deferred to a separate settings model.
-- Account tier/status history is written to `accounts/{accountId}/account-history.jsonl`, not a DB table or account columns.
-- Agency is documented only as future `account_rollups`, not as core account columns.
+- Account tier/status history is written to `accounts/{accountId}/account-history.jsonl`, not a DB table or history columns; current suspended-account lifecycle reads `status_changed_at`.
+- Agency is documented only as a future account-to-account roll-up concept, not as core account columns, tables, or DDL.
+
+## Rollback And Recovery
+
+Pre-GA rollback is forward repair, not compatibility mode.
+
+Before migration, export the current account/user/account-owned table state needed to rebuild the target rows. If validation finds ambiguous account ids, multi-account users, or missing compact ids, abort before writes. If a post-migration defect is found, repair by replaying the approved migration from the export into the target schema or by applying a corrective migration. Do not reintroduce dual account ids or `public_id` fallback code.
 
 ## Verification
 
