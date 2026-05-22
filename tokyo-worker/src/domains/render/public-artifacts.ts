@@ -41,6 +41,22 @@ const FORBIDDEN_VISITOR_PATTERNS = [
   /href=["'][^"']*widget\.css/i,
 ];
 
+const GENERATED_PUBLIC_ARTIFACT_ALLOWLIST: ReadonlyArray<RegExp> = [
+  /^index\.html$/,
+  /^[a-z0-9][a-z0-9-]{0,19}\.html$/,
+  /^styles\.css$/,
+  /^script\.js$/,
+  /^script\.[a-z0-9][a-z0-9-]{0,19}\.js$/,
+  /^styles\.v[1-9][0-9]*\.css$/,
+  /^script\.v[1-9][0-9]*(?:\.[a-z0-9][a-z0-9-]{0,19})?\.js$/,
+];
+
+export function isGeneratedPublicArtifactFile(file: string): boolean {
+  if (!file || file.startsWith('.') || file.includes('/') || file.includes('\\')) return false;
+  if (file.includes('%') || file.includes('..')) return false;
+  return GENERATED_PUBLIC_ARTIFACT_ALLOWLIST.some((pattern) => pattern.test(file));
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -164,6 +180,7 @@ function escapeHtml(raw: string): string {
 function buildHtml(args: {
   title: string;
   locale: string;
+  stylesheetFile: string;
   body: string;
   scriptFile: string;
 }): string {
@@ -173,7 +190,7 @@ function buildHtml(args: {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(args.title)}</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./${args.stylesheetFile}" />
   </head>
   <body>
 ${args.body.replace('./script.js', `./${args.scriptFile}`)}
@@ -186,12 +203,26 @@ function localeFileStem(locale: string): string {
   return locale.replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') || 'locale';
 }
 
+function publicArtifactVersion(): string {
+  return String(Date.now());
+}
+
+function publicArtifactStylesheetFile(version: string): string {
+  return `styles.v${version}.css`;
+}
+
+function publicArtifactBaseScriptFile(version: string): string {
+  return `script.v${version}.js`;
+}
+
 export function publicArtifactLocaleHtmlFile(locale: string): string {
   return `${localeFileStem(locale)}.html`;
 }
 
-export function publicArtifactLocaleScriptFile(locale: string): string {
-  return `script.${localeFileStem(locale)}.js`;
+export function publicArtifactLocaleScriptFile(locale: string, version?: string): string {
+  return version
+    ? `script.v${version}.${localeFileStem(locale)}.js`
+    : `script.${localeFileStem(locale)}.js`;
 }
 
 function assertVisitorSafe(files: MaterializedFile[]): void {
@@ -269,12 +300,14 @@ export async function materializeInstancePublicArtifacts(args: {
       localizedStates.set(locale, state);
     }
 
+    const version = publicArtifactVersion();
+    const stylesheetFile = publicArtifactStylesheetFile(version);
     const files: MaterializedFile[] = [
-      { name: 'styles.css', body: styles, contentType: textContentType('styles.css') },
+      { name: stylesheetFile, body: styles, contentType: textContentType(stylesheetFile) },
     ];
     for (const [locale, state] of localizedStates) {
       const baseLocale = locale === instance.value.baseLocale;
-      const scriptFile = baseLocale ? 'script.js' : publicArtifactLocaleScriptFile(locale);
+      const scriptFile = baseLocale ? publicArtifactBaseScriptFile(version) : publicArtifactLocaleScriptFile(locale, version);
       const htmlFile = baseLocale ? 'index.html' : publicArtifactLocaleHtmlFile(locale);
       const script = await buildScript({
         env: args.env,
@@ -290,6 +323,7 @@ export async function materializeInstancePublicArtifacts(args: {
         body: buildHtml({
           title: instance.value.displayName || `${instance.value.widgetType} widget`,
           locale,
+          stylesheetFile,
           body,
           scriptFile,
         }),
@@ -300,8 +334,14 @@ export async function materializeInstancePublicArtifacts(args: {
     assertVisitorSafe(files);
 
     const root = instanceRoot(args.accountId, args.instanceId);
-    const supportFiles = files.filter((file) => file.name !== 'index.html');
+    const supportFiles = files.filter((file) => file.name !== 'index.html' && !file.name.endsWith('.html'));
     for (const file of supportFiles) {
+      await args.env.TOKYO_R2.put(`${root}/${file.name}`, file.body, {
+        httpMetadata: { contentType: file.contentType },
+      });
+    }
+    const localeEntryFiles = files.filter((file) => file.name !== 'index.html' && file.name.endsWith('.html'));
+    for (const file of localeEntryFiles) {
       await args.env.TOKYO_R2.put(`${root}/${file.name}`, file.body, {
         httpMetadata: { contentType: file.contentType },
       });
@@ -332,6 +372,50 @@ export async function materializeInstancePublicArtifacts(args: {
     return {
       ok: false,
       reasonKey: detail.startsWith('artifact.') ? detail : 'artifact.materialization_failed',
+      detail,
+    };
+  }
+}
+
+export async function deleteInstancePublicArtifacts(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+}): Promise<{
+  ok: true;
+  accountId: string;
+  instanceId: string;
+  publicFiles: string[];
+} | {
+  ok: false;
+  reasonKey: string;
+  detail: string;
+}> {
+  try {
+    const root = `${instanceRoot(args.accountId, args.instanceId)}/`;
+    const deleted: string[] = [];
+    let cursor: string | undefined;
+    do {
+      const listed = await args.env.TOKYO_R2.list({ prefix: root, cursor } as R2ListOptions);
+      for (const object of listed.objects) {
+        const name = object.key.slice(root.length);
+        if (!isGeneratedPublicArtifactFile(name)) continue;
+        await args.env.TOKYO_R2.delete(object.key);
+        deleted.push(name);
+      }
+      cursor = listed.truncated ? listed.cursor : undefined;
+    } while (cursor);
+    return {
+      ok: true,
+      accountId: args.accountId,
+      instanceId: args.instanceId,
+      publicFiles: deleted,
+    };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return {
+      ok: false,
+      reasonKey: 'artifact.delete_failed',
       detail,
     };
   }

@@ -1,26 +1,10 @@
 import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { guessContentTypeFromExt } from '../asset-utils';
-import { readInstanceServeState } from '../domains/render';
+import { isGeneratedPublicArtifactFile } from '../domains/render';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
-
-const GENERATED_FILE_ALLOWLIST: ReadonlyArray<RegExp> = [
-  /^index\.html$/,
-  /^[a-z0-9][a-z0-9-]{0,19}\.html$/,
-  /^styles\.css$/,
-  /^script\.js$/,
-  /^script\.[a-z0-9][a-z0-9-]{0,19}\.js$/,
-  /^styles\.v[1-9][0-9]*\.css$/,
-  /^script\.v[1-9][0-9]*(?:\.[a-z0-9][a-z0-9-]{0,19})?\.js$/,
-];
 
 function notFound(): Response {
   return new Response('Not found', { status: 404 });
-}
-
-function isAllowedGeneratedBrowserFile(file: string): boolean {
-  if (!file || file.startsWith('.') || file.includes('/') || file.includes('\\')) return false;
-  if (file.includes('%') || file.includes('..')) return false;
-  return GENERATED_FILE_ALLOWLIST.some((pattern) => pattern.test(file));
 }
 
 function parseClkLivePath(pathname: string): {
@@ -41,7 +25,7 @@ function parseClkLivePath(pathname: string): {
   const [accountId, instanceId, requestedFile] = segments;
   if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(instanceId)) return null;
   const file = requestedFile ?? 'index.html';
-  if (!isAllowedGeneratedBrowserFile(file)) return null;
+  if (!isGeneratedPublicArtifactFile(file)) return null;
   return { accountId, instanceId, file };
 }
 
@@ -87,13 +71,6 @@ export async function tryHandleClkLiveStaticRoutes(
   const parsed = parseClkLivePath(pathname);
   if (!parsed) return null;
   if (req.method !== 'GET' && req.method !== 'HEAD') return respondMethodNotAllowed(respond);
-
-  const publishStatus = await readInstanceServeState({
-    env,
-    accountId: parsed.accountId,
-    instanceId: parsed.instanceId,
-  });
-  if (publishStatus !== 'published') return respond(notFound());
 
   const key = instanceObjectKey(parsed.accountId, parsed.instanceId, parsed.file);
   const obj = await env.TOKYO_R2.get(key);

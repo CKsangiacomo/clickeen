@@ -1,13 +1,16 @@
 import { createCompactInstanceId, isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
+import { resolvePolicy } from '@clickeen/ck-policy';
 import type { Env } from '../../types';
 import {
   resolveWidgetDefaults,
 } from '../widget-catalog';
 import {
+  deleteInstancePublicArtifacts,
   materializeInstancePublicArtifacts,
   publicArtifactLocaleHtmlFile,
   publicArtifactLocaleScriptFile,
 } from './public-artifacts';
+import { listInstanceRegistryRows } from './instance-registry';
 import {
   readInstanceServeState,
   readSavedRenderConfig,
@@ -293,16 +296,124 @@ export async function unpublishAccountInstanceTransition(args: {
   const existing = await readSavedRenderConfig({ env: args.env, accountId, instanceId });
   if (!existing.ok) transitionFailureFromSavedRead(existing);
   const liveStatus = await readInstanceServeState({ env: args.env, accountId, instanceId });
-  if (liveStatus === 'unpublished') {
-    return { instanceId, status: 'unpublished', changed: false };
+  const deleted = await deleteInstancePublicArtifacts({ env: args.env, accountId, instanceId });
+  if (!deleted.ok) {
+    throw new AccountInstanceTransitionError({
+      status: 409,
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.errors.instance.embedNotReady',
+      detail: deleted.detail,
+    });
   }
-  await writeInstanceServeState({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetType: existing.value.pointer.widgetType,
-    status: 'unpublished',
-  });
+  if (liveStatus !== 'unpublished') {
+    await writeInstanceServeState({
+      env: args.env,
+      accountId,
+      instanceId,
+      widgetType: existing.value.pointer.widgetType,
+      status: 'unpublished',
+    });
+  }
   await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
-  return { instanceId, status: 'unpublished', changed: true };
+  return { instanceId, status: 'unpublished', changed: liveStatus !== 'unpublished' || deleted.publicFiles.length > 0 };
+}
+
+export type AccountServingPolicyMaterializationResult = {
+  accountId: string;
+  keptInstanceIds: string[];
+  disabledInstanceIds: string[];
+  materializedInstanceIds: string[];
+  failed: Array<{ instanceId: string; reasonKey: string; detail: string }>;
+};
+
+function freePublishedInstanceLimit(): number | null {
+  const policy = resolvePolicy({ profile: 'free', role: 'owner' });
+  return policy.limits['instances.published.max'] ?? null;
+}
+
+function withinLimit(index: number, limit: number | null): boolean {
+  return limit == null || index < limit;
+}
+
+export async function applyFreeTierServing(args: {
+  env: Env;
+  accountId: string;
+}): Promise<AccountServingPolicyMaterializationResult> {
+  const accountId = normalizeStorageId(args.accountId);
+  if (!isCompactAccountPublicId(accountId)) {
+    throw new AccountInstanceTransitionError({
+      status: 422,
+      kind: 'VALIDATION',
+      reasonKey: 'tokyo.errors.render.invalid',
+    });
+  }
+  const publishedRows = (await listInstanceRegistryRows({ env: args.env, accountId }))
+    .filter((row) => row.publishStatus === 'published');
+  const limit = freePublishedInstanceLimit();
+  const keptInstanceIds: string[] = [];
+  const disabledInstanceIds: string[] = [];
+  const materializedInstanceIds: string[] = [];
+  const failed: AccountServingPolicyMaterializationResult['failed'] = [];
+
+  for (const [index, row] of publishedRows.entries()) {
+    if (withinLimit(index, limit)) {
+      keptInstanceIds.push(row.id);
+      const materialized = await materializeInstancePublicArtifacts({
+        env: args.env,
+        accountId,
+        instanceId: row.id,
+      });
+      if (materialized.ok) {
+        materializedInstanceIds.push(row.id);
+        await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId: row.id, locales: materialized.locales });
+      } else {
+        failed.push({ instanceId: row.id, reasonKey: materialized.reasonKey, detail: materialized.detail });
+      }
+      continue;
+    }
+
+    disabledInstanceIds.push(row.id);
+    const deleted = await deleteInstancePublicArtifacts({ env: args.env, accountId, instanceId: row.id });
+    if (!deleted.ok) {
+      failed.push({ instanceId: row.id, reasonKey: deleted.reasonKey, detail: deleted.detail });
+    }
+    await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId: row.id });
+  }
+
+  return { accountId, keptInstanceIds, disabledInstanceIds, materializedInstanceIds, failed };
+}
+
+export async function restorePaidTierServing(args: {
+  env: Env;
+  accountId: string;
+}): Promise<AccountServingPolicyMaterializationResult> {
+  const accountId = normalizeStorageId(args.accountId);
+  if (!isCompactAccountPublicId(accountId)) {
+    throw new AccountInstanceTransitionError({
+      status: 422,
+      kind: 'VALIDATION',
+      reasonKey: 'tokyo.errors.render.invalid',
+    });
+  }
+  const publishedRows = (await listInstanceRegistryRows({ env: args.env, accountId }))
+    .filter((row) => row.publishStatus === 'published');
+  const keptInstanceIds = publishedRows.map((row) => row.id);
+  const materializedInstanceIds: string[] = [];
+  const failed: AccountServingPolicyMaterializationResult['failed'] = [];
+
+  for (const row of publishedRows) {
+    const materialized = await materializeInstancePublicArtifacts({
+      env: args.env,
+      accountId,
+      instanceId: row.id,
+    });
+    if (materialized.ok) {
+      materializedInstanceIds.push(row.id);
+      await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId: row.id, locales: materialized.locales });
+    } else {
+      failed.push({ instanceId: row.id, reasonKey: materialized.reasonKey, detail: materialized.detail });
+    }
+  }
+
+  return { accountId, keptInstanceIds, disabledInstanceIds: [], materializedInstanceIds, failed };
 }

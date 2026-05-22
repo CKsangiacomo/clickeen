@@ -2,11 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Env } from '../../types.ts';
 import {
+  applyFreeTierServing,
   listAccountInstances,
   publishAccountInstanceTransition,
   readInstanceServeState,
   readSavedRenderConfig,
   renameAccountInstanceDisplay,
+  restorePaidTierServing,
   saveAccountInstanceTransition,
   unpublishAccountInstanceTransition,
   writeSavedRenderConfig,
@@ -15,6 +17,7 @@ import { attachTestInstanceRegistry } from './test-instance-registry.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
 const INSTANCE_ID = 'Z9Y8X7W6V5';
+const SECOND_INSTANCE_ID = 'Q1W2E3R4T5';
 
 type StoredObject =
   | { kind: 'json'; payload: unknown }
@@ -114,6 +117,15 @@ function seedProductSources(objects: Map<string, StoredObject>): void {
 </body></html>`, 'text/html; charset=utf-8');
   putText(objects, 'product/widgets/faq/widget.css', '.ck-faq{}', 'text/css; charset=utf-8');
   putText(objects, 'product/widgets/faq/widget.client.js', 'window.__FAQ_STATE__ = window.CK_WIDGET.state;', 'text/javascript; charset=utf-8');
+}
+
+function generatedPublicKeys(objects: Map<string, StoredObject>, instanceId = INSTANCE_ID): string[] {
+  const root = `accounts/${ACCOUNT_ID}/instances/${instanceId}/`;
+  return [...objects.keys()]
+    .filter((key) => key.startsWith(root))
+    .map((key) => key.slice(root.length))
+    .filter((name) => /^(index|[a-z0-9-]+)\.html$/.test(name) || /^styles\.v[1-9][0-9]*\.css$/.test(name) || /^script\.v[1-9][0-9]*(?:\.[a-z0-9-]+)?\.js$/.test(name))
+    .sort();
 }
 
 function jsonPayload(objects: Map<string, StoredObject>, key: string): Record<string, unknown> {
@@ -263,8 +275,8 @@ test('save updates source and publish materializes public artifacts without publ
   assert.equal(published.status, 'published');
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/publish.json`), false);
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`), true);
-  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/script.js`), true);
-  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`), true);
+  assert.equal(generatedPublicKeys(objects).some((key) => /^script\.v[1-9][0-9]*\.js$/.test(key)), true);
+  assert.equal(generatedPublicKeys(objects).some((key) => /^styles\.v[1-9][0-9]*\.css$/.test(key)), true);
 
   assert.equal(await readInstanceServeState({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID }), 'published');
   const instance = jsonPayload(objects, `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`);
@@ -442,7 +454,7 @@ test('rename updates display state without rewriting content status', async () =
   );
 });
 
-test('publish materializes artifacts and unpublish changes state only', async () => {
+test('publish materializes artifacts and unpublish removes public output', async () => {
   const { env, objects } = createTestEnv();
   seedProductSources(objects);
   await writeSavedRenderConfig({
@@ -461,10 +473,54 @@ test('publish materializes artifacts and unpublish changes state only', async ()
 
   const unpublished = await unpublishAccountInstanceTransition({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });
   assert.equal(unpublished.status, 'unpublished');
-  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`), true);
+  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`), false);
+  assert.deepEqual(generatedPublicKeys(objects), []);
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html.off`), false);
 
   const republished = await publishAccountInstanceTransition({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });
   assert.equal(republished.status, 'published');
+  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`), true);
+});
+
+test('free-tier serving materializes only allowed published instances without rewriting publish intent', async () => {
+  const { env, objects, registryRows } = createTestEnv();
+  seedProductSources(objects);
+  for (const instanceId of [INSTANCE_ID, SECOND_INSTANCE_ID]) {
+    await writeSavedRenderConfig({
+      env,
+      accountId: ACCOUNT_ID,
+      instanceId,
+      widgetType: 'faq',
+      displayName: 'FAQ',
+      meta: null,
+      config: { question: `Q-${instanceId}`, answer: `A-${instanceId}` },
+    });
+    await publishAccountInstanceTransition({ env, accountId: ACCOUNT_ID, instanceId });
+  }
+  registryRows.set(`${ACCOUNT_ID}/${INSTANCE_ID}`, {
+    ...registryRows.get(`${ACCOUNT_ID}/${INSTANCE_ID}`)!,
+    edited_at: '2026-01-01T00:00:00.000Z',
+  });
+  registryRows.set(`${ACCOUNT_ID}/${SECOND_INSTANCE_ID}`, {
+    ...registryRows.get(`${ACCOUNT_ID}/${SECOND_INSTANCE_ID}`)!,
+    edited_at: '2026-01-02T00:00:00.000Z',
+  });
+
+  const free = await applyFreeTierServing({ env, accountId: ACCOUNT_ID });
+
+  assert.deepEqual(free.keptInstanceIds, [SECOND_INSTANCE_ID]);
+  assert.deepEqual(free.disabledInstanceIds, [INSTANCE_ID]);
+  assert.deepEqual(free.failed, []);
+  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${SECOND_INSTANCE_ID}/index.html`), true);
+  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`), false);
+  assert.equal(await readInstanceServeState({ env, accountId: ACCOUNT_ID, instanceId: SECOND_INSTANCE_ID }), 'published');
+  assert.equal(await readInstanceServeState({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID }), 'published');
+
+  const restored = await restorePaidTierServing({ env, accountId: ACCOUNT_ID });
+
+  assert.deepEqual(restored.keptInstanceIds, [SECOND_INSTANCE_ID, INSTANCE_ID]);
+  assert.deepEqual(restored.disabledInstanceIds, []);
+  assert.deepEqual(restored.failed, []);
+  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${SECOND_INSTANCE_ID}/index.html`), true);
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`), true);
 });

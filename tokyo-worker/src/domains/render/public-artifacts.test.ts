@@ -158,16 +158,20 @@ test('Tokyo materializes base and translated public artifacts from instance sour
   if (!result.ok) return;
   assert.deepEqual(result.locales, ['en', 'it']);
   const root = `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}`;
+  const baseScript = result.publicFiles.find((file) => /^script\.v[1-9][0-9]*\.js$/.test(file));
+  const localeScript = result.publicFiles.find((file) => /^script\.v[1-9][0-9]*\.it\.js$/.test(file));
+  assert.ok(baseScript);
+  assert.ok(localeScript);
   assert.match(objects.get(`${root}/index.html`)?.text ?? '', /lang="en"/);
   assert.match(objects.get(`${root}/it.html`)?.text ?? '', /lang="it"/);
-  assert.match(objects.get(`${root}/script.js`)?.text ?? '', /Plans start free\./);
-  assert.match(objects.get(`${root}/script.it.js`)?.text ?? '', /I piani partono gratis\./);
+  assert.match(objects.get(`${root}/${baseScript}`)?.text ?? '', /Plans start free\./);
+  assert.match(objects.get(`${root}/${localeScript}`)?.text ?? '', /I piani partono gratis\./);
   assert.doesNotMatch(
     [
       objects.get(`${root}/index.html`)?.text,
       objects.get(`${root}/it.html`)?.text,
-      objects.get(`${root}/script.js`)?.text,
-      objects.get(`${root}/script.it.js`)?.text,
+      objects.get(`${root}/${baseScript}`)?.text,
+      objects.get(`${root}/${localeScript}`)?.text,
     ].join('\n'),
     /\/api\/account\/|\/__internal\/|product\/widgets\//,
   );

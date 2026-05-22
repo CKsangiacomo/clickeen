@@ -13,7 +13,10 @@ type StoredObject = {
   httpMetadata?: { contentType?: string };
 };
 
-function createTestEnv(initialObjects: Record<string, string> = {}) {
+function createTestEnv(
+  initialObjects: Record<string, string> = {},
+  options: { attachRegistry?: boolean } = {},
+) {
   const objects = new Map<string, StoredObject>();
   for (const [key, value] of Object.entries(initialObjects)) {
     const ext = key.split('.').pop();
@@ -73,7 +76,9 @@ function createTestEnv(initialObjects: Record<string, string> = {}) {
       },
     } as unknown as R2Bucket,
   } as Env;
-  attachTestInstanceRegistry(env);
+  if (options.attachRegistry !== false) {
+    attachTestInstanceRegistry(env);
+  }
   return { env, objects };
 }
 
@@ -129,7 +134,7 @@ test('clk.live canonical route serves instance index.html from account storage',
   assert.equal(await response?.text(), '<h1>FAQ</h1>');
 });
 
-test('clk.live serves only allowlisted support files while published and artifact-ready', async () => {
+test('clk.live serves only allowlisted materialized support files', async () => {
   const { env } = createTestEnv({
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>FAQ</h1>',
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`]: '.faq{}',
@@ -166,11 +171,10 @@ test('clk.live rejects invalid coordinates, directories, and traversal', async (
   assert.equal(await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/%2e%2e/instance.json` }), null);
 });
 
-test('clk.live availability requires published state and serves generated files directly', async () => {
+test('clk.live availability is the materialized public artifact output', async () => {
   const { env } = createTestEnv({
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`]: '.faq{}',
-  });
-  await seedInstance({ env, publishStatus: 'published' });
+  }, { attachRegistry: false });
 
   const canonical = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}` });
   assert.equal(canonical?.status, 404);
@@ -178,16 +182,6 @@ test('clk.live availability requires published state and serves generated files 
   const support = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/styles.css` });
   assert.equal(support?.status, 200);
   assert.equal(await support?.text(), '.faq{}');
-
-  const unpublished = createTestEnv({
-    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>FAQ</h1>',
-    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`]: '.faq{}',
-  });
-  await seedInstance({ env: unpublished.env, publishStatus: 'unpublished' });
-  const unpublishedCanonical = await callPublicRoute({ env: unpublished.env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}` });
-  assert.equal(unpublishedCanonical?.status, 404);
-  const unpublishedSupport = await callPublicRoute({ env: unpublished.env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/styles.css` });
-  assert.equal(unpublishedSupport?.status, 404);
 });
 
 test('clk.live supports HEAD for allowed files and redirects canonical http to https', async () => {

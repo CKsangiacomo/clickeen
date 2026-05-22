@@ -280,7 +280,7 @@ Private payload storage behind Tokyo may survive in V1 only if it is not used as
 - Opening an instance requires `id` and `account_id` match.
 - Saving an instance updates `edited_at` and does not write content/config into `instances`.
 - Generate updates only `translation_status` for coarse panel/button state.
-- Publish/unpublish updates only `publish_status` for product publish state.
+- Publish/unpublish updates `publish_status` for product publish state. Unpublish also removes materialized public artifacts so public serving can stay R2/CDN-only.
 - `applyFreeTierServing` and `restorePaidTierServing` do not rewrite `publish_status`; they rematerialize serving output from account policy.
 - Instance display/name/title remains in Tokyo-owned payload/config and is returned by Tokyo list/open operations when needed.
 - Public artifact presence is not used as product state.
