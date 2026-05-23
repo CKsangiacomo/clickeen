@@ -151,7 +151,7 @@ Copy contract:
 
 **Embed mode (accountInstanceRef.embedMode):**
 - default (omitted): iframe embed
-- `indexable`: iframe++ SEO/GEO optimized embed (uses Venice loader + host metadata injection; UI stays iframe)
+- `indexable`: SEO/GEO optimized static artifact shape (host metadata injection; UI stays iframe)
 
 ### 2.3 Big bang
 
@@ -294,7 +294,7 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
   - Prague renders `blocks[]` by `type` and embeds account instances only when a complete `accountInstanceRef` is present.
   - Prague validates `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` during page load; missing account instances fail fast in dev/build.
   - Page JSON is layout + base copy.
-  - Account-widget overlays are not Prague page overlays; they are resolved by Venice from Tokyo published overlay IDs when a Prague page embeds a live instance.
+  - Account-widget translated locale values are not Prague page sidecars; live account widgets are served as generated `clk.live` artifacts.
 - Admin/example references:
   - Admin examples are normal account-owned instances under `accounts/00000001/instances/{instanceId}/`.
   - Prague page JSON must reference them as `{ "accountPublicId": "00000001", "instanceId": "{instanceId}" }`.

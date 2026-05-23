@@ -12,9 +12,9 @@ import {
 import {
   extractTextPrimitiveValuesForEditableFields,
   readWidgetEditableFieldsContract,
-  resolveOverlay,
-  validateOverlayValuesForTextPrimitives,
-} from '../../packages/ck-contracts/src/overlay-primitives.ts';
+  resolveTranslatedValues,
+  validateTranslatedValuesForTextPrimitives,
+} from '../../packages/ck-contracts/src/translated-value-primitives.ts';
 import { buildEditableFieldsTranslationReview } from '../../bob/lib/translations-preview.ts';
 import { normalizeInstanceTranslationAgentRequest } from '../../sanfrancisco/src/l10n-account-routes.ts';
 
@@ -127,7 +127,7 @@ test('PRD 103V: one FAQ edit produces complete current language values visible i
     contract,
     config: afterConfig,
   });
-  assert.deepEqual(validateOverlayValuesForTextPrimitives(textItems, currentLanguageValues), { ok: true });
+  assert.deepEqual(validateTranslatedValuesForTextPrimitives(textItems, currentLanguageValues), { ok: true });
 
   const review = buildEditableFieldsTranslationReview({
     contract,
@@ -140,7 +140,7 @@ test('PRD 103V: one FAQ edit produces complete current language values visible i
   assert.equal(answerItem?.value, 'Los planes empiezan en cero dolares.');
   assert.deepEqual(review.missingPaths, []);
 
-  const previewConfig = resolveOverlay(afterConfig, currentLanguageValues);
+  const previewConfig = resolveTranslatedValues(afterConfig, currentLanguageValues);
   assert.equal(previewConfig.sections[0].faqs[0].answer, 'Los planes empiezan en cero dolares.');
 });
 

@@ -14,7 +14,7 @@ Canonical Clickeen PRD (implementation truth + next iterations): `documentation/
 - **Category:** Content Display / Marketing / Urgency
 - **Competitive Target:** Complete Elfsight Countdown Timer feature set (70%+ coverage)
 - **Performance Target:** <6KB SSR (vs Elfsight 80KB+ client JS)
-- **Renderer:** Countdown widget package is shipped in `tokyo/product/widgets/countdown/`; Venice SSR embed routes are live.
+- **Renderer:** Countdown widget package is shipped in `tokyo/product/widgets/countdown/`; public widget delivery is generated static artifacts served from `clk.live`.
 - **Dieter Components:** Custom timer display (new component needed)
 
 ### 🎯 Feature Coverage Goal: 70%+ of Elfsight

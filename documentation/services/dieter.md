@@ -11,7 +11,7 @@ This document is the canonical reference for Clickeen's design system and its pr
 
 ## 1. Dieter Core
 
-Dieter is Clickeen's shared design system: a token-first library consumed by Bob, Venice, marketing surfaces, and internal tools. It ships CSS plus optional JS hydrators for interactive components (see `componentsWithJs` in the manifest) under the package name `@ck/dieter` with accompanying static media served from `/dieter/**`.
+Dieter is Clickeen's shared design system: a token-first library consumed by Bob, generated public artifacts, marketing surfaces, and internal tools. It ships CSS plus optional JS hydrators for interactive components (see `componentsWithJs` in the manifest) under the package name `@ck/dieter` with accompanying static media served from `/dieter/**`.
 
 Distribution boundary:
 - Dieter source lives in the repo under `dieter/`.
@@ -225,28 +225,18 @@ Every control must consume the shared size ladder. Adjusting token mappings here
   ```
 - Tokens assume font is already loaded globally
 
-**Venice (Embeds):**
-- **User-selected fonts:** Load via Google Fonts `<link>` tag in SSR (from widget instanceData)
-- **CSP must allow:** `fonts.googleapis.com` and `fonts.gstatic.com` for widgets with Typography menu
-- **Default fallback:** If no font selected or CSP blocks, use system fonts
-- **NO @import in CSS:** Conflicts with strict embed CSP
-- Example SSR pattern:
-  ```typescript
-  // Venice renderer
-  const fontUrl = instanceData.typography?.customFontUrl ||
-                  widgetJson.typography?.availableFonts.find(f => f.name === instanceData.typography?.selectedFont)?.googleFontsUrl;
-
-  if (fontUrl) {
-    html = `<link rel="stylesheet" href="${fontUrl}">` + html;
-  }
-  ```
+**Public widget artifacts:**
+- **User-selected fonts:** Publish-time materialization may add Google Fonts `<link>` tags to generated public HTML.
+- **CSP must allow:** `fonts.googleapis.com` and `fonts.gstatic.com` for widgets with Typography menu.
+- **Default fallback:** If no font selected or CSP blocks, use system fonts.
+- **NO @import in CSS:** Conflicts with strict public-widget CSP.
 
 **Prague (Marketing):**
 - Same as Bob/Admin (Google Fonts via `<link>` tag)
 
 **Key Rules:**
 1. **Never use @import for fonts** - Use `<link>` tags only
-2. **SSR font loading** - Venice injects font `<link>` server-side, never client-side
+2. **Publish-time font loading** - public widget artifacts include font `<link>` tags before browser delivery, never client-side probing
 3. **CSP compliance** - All font URLs must be allowed in CSP for that surface
 4. **Fallback fonts** - Always provide system font fallback in `--font-ui`
 
@@ -271,7 +261,7 @@ Every control must consume the shared size ladder. Adjusting token mappings here
 - Consumption rules:
   - Inline SVG markup from the registry (`tokyo/product/dieter/icons/icons.json`).
   - Bob housed icons can use local helpers (e.g., a React wrapper) but must source markup from the registry.
-  - Venice embeds MUST inline SVG during SSR; client-side fetches are forbidden to protect loader budgets.
+  - Public widget artifacts MUST inline SVG during materialization; client-side fetches are forbidden to protect loader budgets.
   - No ad-hoc icon bundles: update source SVGs, rebuild, copy media.
 
 ### 1.7 Component Contracts
@@ -352,7 +342,7 @@ All Dieter components and widgets using Dieter MUST meet these minimum standards
 ### 3.2 Privacy (Embed Requirements)
 
 **No Tracking in Embeds:**
-- No cookies or localStorage used in Venice-rendered widgets
+- No cookies or localStorage used in public widget artifacts
 - No third-party scripts injected
 - Respect Do Not Track (DNT) browser setting
 - Analytics pixel is fire-and-forget, no PII

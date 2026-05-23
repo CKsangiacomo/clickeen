@@ -13,7 +13,6 @@ routes = [
   { pattern = "tokyo.dev.clickeen.com/prague/assets/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/assets/account/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/fonts/*", zone_name = "clickeen.com" },
-  { pattern = "tokyo.dev.clickeen.com/renders/*", zone_name = "clickeen.com" },
 ]
 
 [observability]

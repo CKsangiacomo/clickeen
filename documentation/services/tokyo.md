@@ -1,6 +1,6 @@
 # System: Tokyo - Product Assets And Account Storage
 
-STATUS: REFERENCE - MUST MATCH PRD 099 DEPLOY ROOTS AND PRD 098 OVERLAY IDENTITY
+STATUS: REFERENCE - MUST MATCH PRD 099 DEPLOY ROOTS AND PRD 103 PRODUCT-OPERATION VOCABULARY
 
 PRD 103 DB PIVOT NOTE: account instance product boundaries are now operation-shaped. `instance.json` and `instances/index.json` are not active product runtime contracts. Public generated artifacts are R2/CDN serving output, not authoring or publish state.
 
@@ -12,7 +12,7 @@ Tokyo has three boring jobs:
 
 - Serve git-authored product software/static resources from canonical R2 roots: `dieter/`, `fonts/`, `product/`, and `prague/`.
 - Store account-owned data through Tokyo-worker: assets and widget instances.
-- Serve published widget bytes to Venice through public read paths.
+- Serve generated public widget artifacts through `clk.live` public read paths.
 
 The ownership boundary is always the account. Admin is just the Clickeen account with broader permissions; admin-owned instances are stored exactly like customer-owned instances.
 
@@ -28,7 +28,7 @@ product/    git-authored product software and product media
 prague/     git-authored marketing/site/GTM content
 ```
 
-Only `accounts/` is runtime-managed by product/account operations. Roma, Tokyo-worker, Venice, and account lifecycle flows must not mutate `dieter/`, `fonts/`, `product/`, or `prague/` as customer state.
+Only `accounts/` is runtime-managed by product/account operations. Roma, Tokyo-worker, public serving, and account lifecycle flows must not mutate `dieter/`, `fonts/`, `product/`, or `prague/` as customer state.
 
 Git-authored deploy mapping:
 

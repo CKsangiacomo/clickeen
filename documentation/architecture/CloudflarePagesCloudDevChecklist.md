@@ -6,7 +6,7 @@ Owner: Human architect for dashboard alignment; repo/runtime owners for app-loca
 This checklist is the canonical manual setup contract for Cloudflare Pages `cloud-dev`.
 
 Rules:
-- Cloudflare Pages Git build is the deploy plane for Bob, Roma, Venice, and Prague.
+- Cloudflare Pages Git build is the deploy plane for Bob, Roma, and Prague.
 - Tokyo/R2 git-authored deploy roots are `dieter/`, `fonts/`, `product/`, and `prague/`; only `accounts/` is runtime-managed account storage.
 - Tokyo Pages/static output is a source/deploy and friendly-serving convenience. It must not become a second authority for product widget software, Dieter media, fonts, product media, or Prague content.
 - Widget software is served from canonical R2 `product/widgets/**`. Friendly `/widgets/**` routes must resolve there, not to root `widgets/**` or stale static output.
@@ -16,7 +16,7 @@ Rules:
 - Bob and Roma must use custom `*.dev.clickeen.com` hosts for authenticated Builder flows. `*.pages.dev` is not a valid public runtime host for those apps.
 - Bob and Roma keep host/base-URL runtime vars in app-local `wrangler.toml`. Supabase project values are live environment config, not committed repo literals.
 - Bob and Roma `wrangler.toml` files must stay within the Pages-supported schema. Worker-only blocks such as top-level `observability` or named environments like `local` are not valid Pages config.
-- Venice and Prague keep runtime vars in the Cloudflare Pages dashboard because they do not use app-local Wrangler config today.
+- Prague keeps runtime vars in the Cloudflare Pages dashboard because it does not use app-local Wrangler config today.
 - DevStudio is local-only and is not part of the Cloudflare Pages `cloud-dev` contract.
 - GitHub runtime verification stays unauthenticated until a real provider-based test adapter exists; do not keep public password login for smoke coverage.
 - Authenticated cloud-dev smoke is manual Google login, Roma bootstrap, Builder open/save, Widgets read, locales, assets, and logout.

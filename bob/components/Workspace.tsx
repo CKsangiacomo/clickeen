@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   collectConfigMediaAssetRefs,
   materializeConfigMedia,
-  resolveOverlay,
+  resolveTranslatedValues,
   type ResolvedAccountAsset,
 } from '@clickeen/ck-contracts';
 import { getIcon } from '../lib/icons';
@@ -82,7 +82,7 @@ export function Workspace({
       : null;
   const resolvedPreviewInstanceData = useMemo(() => {
     if (!selectedTranslationValues) return previewInstanceData;
-    return resolveOverlay(previewInstanceData, selectedTranslationValues);
+    return resolveTranslatedValues(previewInstanceData, selectedTranslationValues);
   }, [previewInstanceData, selectedTranslationValues]);
   const latestRef = useRef({
     compiled,

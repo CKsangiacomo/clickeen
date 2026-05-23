@@ -4,7 +4,7 @@
  */
 
 import type { LimitsSpec } from '@clickeen/ck-policy';
-import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/overlay-primitives';
+import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 
 export type PanelId = string;
 

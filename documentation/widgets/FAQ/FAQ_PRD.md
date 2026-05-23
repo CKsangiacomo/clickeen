@@ -215,7 +215,7 @@ Translation fields:
   - `sections[].faqs[].answer`
 - Before producer calls, repeatable declarations are expanded against the saved config into concrete paths such as `sections.0.faqs.0.question`.
 - FAQ must not add `localization.json`, layer sidecars, text packs, or wildcard producer payloads.
-- In Builder preview, selecting a language overlay must change FAQ title, subtitle, CTA text, section titles, every question, and every answer together. A target language without selected overlay values for the current save must not display old FAQ text.
+- In Builder preview, selecting a translated locale must change FAQ title, subtitle, CTA text, section titles, every question, and every answer together. A target language without translated values for the current save must not display old FAQ text.
 
 ### Panel: Layout (`layout`)
 

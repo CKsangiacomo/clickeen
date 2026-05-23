@@ -2,7 +2,7 @@ import {
   readEditableTextPrimitiveValue,
   type WidgetEditableFieldsContract,
   type WidgetEditableField,
-} from '@clickeen/ck-contracts/overlay-primitives';
+} from '@clickeen/ck-contracts/translated-value-primitives';
 
 type JsonRecord = Record<string, unknown>;
 

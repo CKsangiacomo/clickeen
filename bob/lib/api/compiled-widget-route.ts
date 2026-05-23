@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sha256Hex } from '@clickeen/ck-contracts/security';
-import { readWidgetEditableFieldsContract, type WidgetEditableFieldsContract } from '@clickeen/ck-contracts/overlay-primitives';
+import { readWidgetEditableFieldsContract, type WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import { parseLimitsSpec } from '@clickeen/ck-policy';
 import { compileWidgetServer } from '../compiler.server';
 import type { RawWidget } from '../compiler.shared';

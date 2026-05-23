@@ -5,7 +5,7 @@ export { UUID_RE, isUuid } from './ids';
 export * from './instance-translation-jobs';
 export * from './overlay-codebooks';
 export * from './overlay-identity';
-export * from './overlay-primitives';
+export * from './translated-value-primitives';
 
 export const INSTANCE_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$/;
 

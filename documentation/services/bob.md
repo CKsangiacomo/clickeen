@@ -131,7 +131,7 @@ Bob’s active account-mode host surface is Roma.
 - Roma user flows can duplicate, rename, publish, unpublish, and delete account instances through Roma same-origin routes plus canonical account instance routes. Account instance creation is not an active Bob-owned surface; accounts own instances, not widget software.
 - In hosted account mode, Bob does not own account transport. It emits explicit editor read/write intents back to the parent host, and the host executes the named account/tool routes on Bob's behalf.
 - Roma hosts customer account sessions through Roma same-origin current-account routes (`/api/account/...`).
-- Prague demo no longer boots Bob as a second editor. Public demo playback is Venice-owned; Bob no longer exposes MiniBob helper routes or a public editor boot path.
+- Prague demo no longer boots Bob as a second editor. Public playback is served from generated `clk.live` artifacts; Bob no longer exposes MiniBob helper routes or a public editor boot path.
 
 ### Policy in shared Builder core
 
@@ -409,7 +409,7 @@ This is the foundation for both strict manual editing and future Copilot editing
 `bob/components/Workspace.tsx`:
 
 - Loads the widget runtime iframe at `compiled.media.htmlUrl` (canonical preview path).
-- Standard preview is Tokyo-runtime only; SEO/GEO “iframe++” is a **Venice embed optimization** and does not change the Bob preview engine.
+- Standard preview is Tokyo-runtime only; SEO/GEO public output is a static artifact build shape and does not change the Bob preview engine.
 - Waits for iframe `load`.
 - Posts `ck:state-update` with `{ widgetname, state: instanceData, device, theme }`.
 - Supports **preview host modes** (`preview.host`) to resize/reposition the preview viewport: `canvas | column | banner | floating` (UI label “Inline” maps to `canvas`).
@@ -537,7 +537,7 @@ It:
 - Builds Dieter into `tokyo/product/dieter`
 - Builds i18n bundles from `tokyo/roma/i18n/source` into `tokyo/roma/i18n/public`
 - Clears stale Next chunks (`bob/.next`)
-- Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Venice (3003), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321)
+- Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321)
 - DB Pivot blocks `dev-up` from managing Supabase lifecycle or switching between local and remote Supabase targets. Supabase schema changes must go through reviewed migrations and the approved deploy path.
 - Local Bob uses Berlin/Roma/Tokyo product boundaries; it must not depend on a script-selected Supabase target.
 - Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).

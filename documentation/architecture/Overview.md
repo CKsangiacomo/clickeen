@@ -37,7 +37,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **No Fallbacks**               | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Public renders must be revision-coherent (single published revision; missing locale artifacts fail visibly). |
 | **Widget Files = Truth**       | Core runtime files + contract files in `tokyo/product/widgets/{name}/` define widget behavior and validation; their deployed Tokyo R2 home is `product/widgets/{name}/`.                                                                                                                    |
-| **Orchestrators = Dumb Pipes** | Bob/Roma/Tokyo-worker/Venice avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. overlay composition, artifact materialization) but must not “fix” state ad hoc.                    |
+| **Orchestrators = Dumb Pipes** | Bob/Roma/Tokyo-worker avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. translated-value resolution, artifact materialization) but must not “fix” state ad hoc.                    |
 | **Dieter Tokens**              | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB.                                                                                                                   |
 | **Locale Is Not Identity**     | Locale is a runtime parameter. IDs (`instanceId`) must be locale-free; account-widget localization is applied through translated locale values and generated public artifacts, not DB fan-out.                              |
 
@@ -83,7 +83,7 @@ This keeps customer actions close to one cross-service request, removes stale re
 | **Bob**           | `bob/`          | Cloudflare Pages                     | Widget builder, compiler, ToolDrawer, preview                           | ✅ Active   |
 | **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
 | **DevStudio**     | `admin/`        | Local Vite                           | Internal toolbench for platform curation, verification, and local utility pages | ✅ Internal |
-| **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | SSR embed runtime and loader                                            | ✅ Active   |
+| **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | Legacy SSR embed runtime superseded by `clk.live` static artifacts      | Removed from active serving |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
 | **Dieter**        | `dieter/`       | (build artifact)                     | Design system: tokens, 16+ components                                   | ✅ Active   |
@@ -139,7 +139,7 @@ Pages fallback hosts are platform defaults, not canonical product hosts. Bob and
 | Primitive         | Used by                                                   | Why                                                      |
 | ----------------- | --------------------------------------------------------- | -------------------------------------------------------- |
 | **Pages**         | Prague, Bob, Roma                                          | Static + Next.js-style app surfaces; simple deploy model |
-| **Workers**       | Tokyo-worker, Venice, San Francisco         | Edge HTTP services; consistent global runtime            |
+| **Workers**       | Tokyo-worker, San Francisco                 | Edge HTTP services; consistent global runtime            |
 | **R2**            | Tokyo (assets), San Francisco (raw logs)                  | Cheap object storage, zero egress for CDN patterns       |
 | **KV**            | San Francisco (sessions), Atlas (read-only runtime cache) | Hot key/value state, TTLs                                |
 | **D1**            | San Francisco (indexes)                                   | Queryable learning metadata; low-ops SQL                 |
@@ -190,14 +190,14 @@ product/
 prague/
 ```
 
-They may be served by Tokyo-worker through friendly public routes, but Roma, Venice, Tokyo-worker, and account lifecycle operations must not mutate them as account runtime state. Root `widgets/`, `public/`, `published/`, and `l10n/` are not storage authorities.
+They may be served by Tokyo-worker through friendly public routes, but Roma, Tokyo-worker, and account lifecycle operations must not mutate them as account runtime state. Root `widgets/`, `public/`, `published/`, and `l10n/` are not storage authorities.
 
 ### Routes & bindings (high level)
 
 #### Bob (Pages)
 
 - **Bob compiles widget specs** by fetching `spec.json` from Tokyo via `NEXT_PUBLIC_TOKYO_URL` (even locally).
-- Bob is the account editor kernel only. Account-mode bootstrap/authz come from Roma host messaging and same-origin Roma account routes. Public demo playback belongs to Prague + Venice, not to Bob helper routes.
+- Bob is the account editor kernel only. Account-mode bootstrap/authz come from Roma host messaging and same-origin Roma account routes. Public playback belongs to Prague and `clk.live` static artifacts, not to Bob helper routes.
 
 #### Roma (Pages)
 
@@ -308,7 +308,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Ven
 
 - **Cloud-dev** auto-deploys from `main` for fast iteration.
 - **UAT / Limited GA / GA** are release stages of the same release build, separated by **account-level exposure controls** (allowlist/percentage rollout) and an observation window.
-- **Pages apps** (`bob`, `roma`, `venice`, `prague`) deploy through **Cloudflare Pages Git build only**.
+- **Pages apps** (`bob`, `roma`, `prague`) deploy through **Cloudflare Pages Git build only**.
 - GitHub Actions may verify builds/tests, but must not create Pages projects, sync Pages secrets, or deploy Pages artifacts.
 - The manual Pages project contract lives in [CloudflarePagesCloudDevChecklist.md](./CloudflarePagesCloudDevChecklist.md).
 
@@ -672,11 +672,11 @@ Submission proxy path hard-cut in this repo snapshot.
 - Shared runtime modules (CKStagePod, CKTypography)
 - Two-API-Call pattern (base config)
 - Ops validation against controls[] allowlist
-- Public instance payload assembly moved to Tokyo-worker, with Venice as the thin public runtime proxy
+- Public instance artifact assembly and serving moved to Tokyo-worker + `clk.live` static public artifacts
 - Dieter component library (16+ components)
 
 ### What's Planned
 
-- Venice iframe++ SEO/GEO optimized embed (host JSON‑LD + excerpt injection)
+- SEO/GEO static artifact build shape (host JSON-LD + excerpt output without a Venice runtime)
 - Prague long-tail SEO surfaces (hubs/spokes/comparisons)
 - Additional widget types

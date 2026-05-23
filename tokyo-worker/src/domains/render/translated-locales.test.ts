@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  buildOverlayTextValueMap,
+  buildTranslatedTextValueMap,
   extractTextPrimitiveValuesForEditableFields,
-} from '@clickeen/ck-contracts/overlay-primitives';
+} from '@clickeen/ck-contracts/translated-value-primitives';
 import type { Env } from '../../types.ts';
 import {
   getWidgetDefinition,
@@ -89,7 +89,7 @@ async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
     displayName: 'FAQ example',
     meta: null,
   });
-  return buildOverlayTextValueMap(
+  return buildTranslatedTextValueMap(
     extractTextPrimitiveValuesForEditableFields({
       contract: widgetDefinition.editableFields,
       config,

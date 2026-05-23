@@ -144,8 +144,8 @@ product/widgets/{widgetname}/
          │ user edits instanceData
          ▼
 ┌─────────────────┐
-│   Venice        │
-│   (Embed)       │
+│  clk.live       │
+│  (Public files) │
 └─────────────────┘
 ```
 
@@ -153,7 +153,7 @@ product/widgets/{widgetname}/
 
 ## Tenet 2: Orchestrators Are Dumb Pipes
 
-Bob, Roma, Tokyo-worker, and Venice are **orchestrators**. They move data between systems.
+Bob, Roma, and Tokyo-worker are **orchestrators**. They move data between systems.
 
 ### What Orchestrators Do
 
@@ -162,7 +162,7 @@ Bob, Roma, Tokyo-worker, and Venice are **orchestrators**. They move data betwee
 | **Bob** | Loads widget definition from Tokyo, renders ToolDrawer, stores edits in memory |
 | **Roma** | Resolves current account context and forwards product commands to owner-correct services |
 | **Tokyo-worker** | Materializes saved/live/localization/public artifacts from owner truth |
-| **Venice** | Reads published pointers + immutable runtime bytes and returns public embeds |
+| **clk.live** | Serves generated public files; it is not an authoring or orchestration surface |
 | **Michael** | Stores account/registry state; it does not own widget semantics |
 
 ### What Orchestrators Never Do
@@ -181,7 +181,7 @@ Bob, Roma, Tokyo-worker, and Venice are **orchestrators**. They move data betwee
     ┌─────────┼─────────┐
     │         │         │
     ▼         ▼         ▼
-  Bob      Venice     Roma
+  Bob    clk.live     Roma
     │         │         │
     │    (dumb pipes)   │
     │         │         │

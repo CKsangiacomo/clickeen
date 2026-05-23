@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolveOverlay } from '@clickeen/ck-contracts';
-import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/overlay-primitives';
+import { resolveTranslatedValues } from '@clickeen/ck-contracts';
+import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import faqContent from '../../tokyo/product/widgets/faq/editable-fields.json';
 import {
   buildEditableFieldsTranslationReview,
@@ -146,7 +146,7 @@ test('resolves FAQ language values across title CTA section questions and answer
     ],
   };
 
-  const resolved = resolveOverlay(base, {
+  const resolved = resolveTranslatedValues(base, {
     'header.title': 'Domande frequenti',
     'cta.label': 'Prenota ora',
     'sections.0.title': 'Camere',

@@ -30,7 +30,7 @@ export type ExtractedTextPrimitiveValue = WidgetTextPrimitiveDeclaration & {
   value: string;
 };
 
-export type OverlayValueMap = Record<string, string>;
+export type TranslatedValueMap = Record<string, string>;
 
 export type BabelTextProducerItem = {
   path: string;
@@ -50,10 +50,10 @@ export type BabelTextProducerRequest = {
 
 export type BabelTextProducerResponse = {
   v: 1;
-  values: OverlayValueMap;
+  values: TranslatedValueMap;
 };
 
-export type OverlayValueValidationResult =
+export type TranslatedValueValidationResult =
   | { ok: true }
   | {
       ok: false;
@@ -96,7 +96,7 @@ function assertPathSegment(segment: string, path: string): ParsedPathStep {
   const repeat = segment.endsWith('[]');
   const key = repeat ? segment.slice(0, -2) : segment;
   if (!key || PROHIBITED_SEGMENTS.has(key) || key.includes('[') || key.includes(']') || key.includes('*')) {
-    throw new Error(`overlay_primitive_path_invalid:${path}`);
+    throw new Error(`translated_value_declaration_path_invalid:${path}`);
   }
   return { key, repeat };
 }
@@ -107,7 +107,7 @@ function parsePrimitivePath(path: string): ParsedPathStep[] {
     .map((segment) => segment.trim())
     .filter(Boolean)
     .map((segment) => assertPathSegment(segment, path));
-  if (!steps.length) throw new Error(`overlay_primitive_path_invalid:${path}`);
+  if (!steps.length) throw new Error(`translated_value_declaration_path_invalid:${path}`);
   return steps;
 }
 
@@ -117,14 +117,14 @@ function concretePath(parts: string[]): string {
 
 function assertConcretePath(path: string): string[] {
   if (!path || path.includes('*') || path.includes('[') || path.includes(']')) {
-    throw new Error(`overlay_value_path_invalid:${path}`);
+    throw new Error(`translated_value_path_invalid:${path}`);
   }
   const parts = path
     .split('.')
     .map((part) => part.trim())
     .filter(Boolean);
   if (!parts.length || parts.some((part) => PROHIBITED_SEGMENTS.has(part))) {
-    throw new Error(`overlay_value_path_invalid:${path}`);
+    throw new Error(`translated_value_path_invalid:${path}`);
   }
   return parts;
 }
@@ -242,14 +242,14 @@ export function extractTextPrimitiveValuesForEditableFields(args: {
   });
 }
 
-export function buildOverlayTextValueMap(items: ExtractedTextPrimitiveValue[]): OverlayValueMap {
+export function buildTranslatedTextValueMap(items: ExtractedTextPrimitiveValue[]): TranslatedValueMap {
   return Object.fromEntries(items.map((item) => [item.path, item.value]));
 }
 
-export function validateOverlayValuesForTextPrimitives(
+export function validateTranslatedValuesForTextPrimitives(
   requiredItems: ExtractedTextPrimitiveValue[],
   values: unknown,
-): OverlayValueValidationResult {
+): TranslatedValueValidationResult {
   if (!isRecord(values)) {
     return { ok: false, reason: 'invalid_value', path: '<root>' };
   }
@@ -268,10 +268,10 @@ export function validateOverlayValuesForTextPrimitives(
   return { ok: true };
 }
 
-export function validateOverlayValuesForProducerItems(
+export function validateTranslatedValuesForProducerItems(
   requiredItems: BabelTextProducerItem[],
   values: unknown,
-): OverlayValueValidationResult {
+): TranslatedValueValidationResult {
   if (!isRecord(values)) {
     return { ok: false, reason: 'invalid_value', path: '<root>' };
   }
@@ -300,11 +300,11 @@ function setExistingStringAtPath(root: Record<string, unknown>, path: string, va
     const numeric = /^\d+$/.test(part);
 
     if (numeric) {
-      if (!Array.isArray(current)) throw new Error(`overlay_resolve_path_invalid:${path}`);
+      if (!Array.isArray(current)) throw new Error(`translated_value_path_invalid:${path}`);
       const offset = Number(part);
-      if (offset < 0 || offset >= current.length) throw new Error(`overlay_resolve_path_invalid:${path}`);
+      if (offset < 0 || offset >= current.length) throw new Error(`translated_value_path_invalid:${path}`);
       if (last) {
-        if (typeof current[offset] !== 'string') throw new Error(`overlay_resolve_path_invalid:${path}`);
+        if (typeof current[offset] !== 'string') throw new Error(`translated_value_path_invalid:${path}`);
         current[offset] = value;
         return;
       }
@@ -312,12 +312,12 @@ function setExistingStringAtPath(root: Record<string, unknown>, path: string, va
       continue;
     }
 
-    if (!isRecord(current)) throw new Error(`overlay_resolve_path_invalid:${path}`);
+    if (!isRecord(current)) throw new Error(`translated_value_path_invalid:${path}`);
     if (!Object.prototype.hasOwnProperty.call(current, part)) {
-      throw new Error(`overlay_resolve_path_invalid:${path}`);
+      throw new Error(`translated_value_path_invalid:${path}`);
     }
     if (last) {
-      if (typeof current[part] !== 'string') throw new Error(`overlay_resolve_path_invalid:${path}`);
+      if (typeof current[part] !== 'string') throw new Error(`translated_value_path_invalid:${path}`);
       current[part] = value;
       return;
     }
@@ -325,13 +325,13 @@ function setExistingStringAtPath(root: Record<string, unknown>, path: string, va
   }
 }
 
-export function resolveOverlay<T extends Record<string, unknown>>(
+export function resolveTranslatedValues<T extends Record<string, unknown>>(
   baseConfig: T,
-  overlayValues: OverlayValueMap,
+  translatedValues: TranslatedValueMap,
 ): T {
   const next = structuredClone(baseConfig) as T;
-  for (const [path, value] of Object.entries(overlayValues)) {
-    if (typeof value !== 'string') throw new Error(`overlay_resolve_value_invalid:${path}`);
+  for (const [path, value] of Object.entries(translatedValues)) {
+    if (typeof value !== 'string') throw new Error(`translated_value_invalid:${path}`);
     setExistingStringAtPath(next, path, value);
   }
   return next;

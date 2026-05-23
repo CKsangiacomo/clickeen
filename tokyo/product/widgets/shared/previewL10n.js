@@ -33,7 +33,7 @@
     return out;
   }
 
-  function applyOverlayValues(state, values) {
+  function applyTranslatedValues(state, values) {
     if (!state || typeof state !== 'object') return;
     if (!values || typeof values !== 'object' || Array.isArray(values)) return;
     Object.entries(values).forEach(([path, value]) => {
@@ -87,7 +87,7 @@
         typeof structuredClone === 'function'
           ? structuredClone(sourceState)
           : JSON.parse(JSON.stringify(sourceState));
-      applyOverlayValues(localized, inlineValues);
+      applyTranslatedValues(localized, inlineValues);
       return localized;
     }
 

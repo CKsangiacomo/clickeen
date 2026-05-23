@@ -14,7 +14,7 @@ Related:
 ## System invariants
 - Widget software files in `tokyo/product/widgets/{widgetType}/` are the product software source of truth.
 - Account-owned widget instance runtime data lives under `accounts/{accountPublicId}/instances/{instanceId}/`; accounts have instances and assets, not widget folders.
-- `spec.json` owns the widget primitive variable graph. ToolDrawer, Copilot, Babel, Tokyo validation, Bob preview, and Venice runtime must use that same graph.
+- `spec.json` owns the widget primitive variable graph. ToolDrawer, Copilot, Babel, Tokyo validation, Bob preview, and public artifact materialization must use that same graph.
 - Orchestrators avoid widget-specific logic; they may route calls and apply shared translated-value resolution only at the named boundary.
 - Base config/content and translated-value contract violations must fail visibly. Runtime must not substitute another locale value map, repair values, or infer product meaning from private storage bodies.
 
@@ -123,7 +123,7 @@ Widgets must use canonical root-relative paths:
 - `/dieter/*` for design-system media
 - `/widgets/*` for widget package media
 
-Runtime must not depend on `window.CK_ASSET_ORIGIN`; Venice owns proxying these paths on the public embed origin.
+Runtime must not depend on `window.CK_ASSET_ORIGIN`; preview hosts and `clk.live` public serving expose canonical root-relative paths.
 
 ---
 

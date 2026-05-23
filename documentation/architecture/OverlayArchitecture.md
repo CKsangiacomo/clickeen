@@ -1,12 +1,12 @@
 # Overlay Architecture
 
-STATUS: REFERENCE - MUST MATCH PRD 098 IDENTITY + PRD 099 STORAGE
+STATUS: LEGACY EVIDENCE - SUPERSEDED BY PRD 103 TRANSLATED-LOCALE OPERATIONS
 
-PRD 103_02 NOTE: this document is under review for account-instance translation boundaries. `overlayId`, selected overlay pointers, overlay inventories, and physical overlay files must not be exposed as Roma/Bob/San Francisco product contracts after PRD 103_02. Treat the physical overlay model below as current Tokyo implementation evidence only until the translated-locale value operations are approved.
+PRD 103_02 NOTE: this document records the old overlay-object model as implementation evidence only. `overlayId`, selected overlay pointers, overlay inventories, and physical overlay files must not be exposed as Roma/Bob/San Francisco product contracts. The surviving product contract is translated-locale values owned by Tokyo operations.
 
-PRD 098 is the active overlay identity and body truth. PRD 099 is the active physical account runtime storage truth. Older l10n/text-pack/readiness storage and PRD 098-era account-widget folder paths are pre-GA residue and must not be preserved as a compatibility system.
+Older l10n/text-pack/readiness storage and PRD 098-era account-widget folder paths are pre-GA residue and must not be preserved as a compatibility system.
 
-## Core Tenet
+## Deleted Core Tenet
 
 An overlay is a SKU-like product object. The `overlayId` is the only overlay identity.
 
@@ -70,36 +70,35 @@ Every widget declares its primitive variable graph once. ToolDrawer, Copilot, Ba
 
 Locale/Babel v1 writes text primitive values only. Later value overlays for colors, fills, typography, layout, or other Dieter token values must still use the same primitive graph. No producer may invent paths outside the widget declaration.
 
-The declaration lives in `tokyo/product/widgets/{widgetType}/spec.json`:
+The declaration lives in `tokyo/product/widgets/{widgetType}/editable-fields.json`:
 
 ```json
 {
-  "overlays": {
-    "v": 1,
-    "text": [
-      { "path": "header.title", "label": "Title" },
-      { "path": "sections[].faqs[].question", "label": "Question" }
-    ]
-  }
+  "v": 1,
+  "widgetType": "faq",
+  "fields": [
+    { "path": "header.title", "label": "Title", "type": "richtext", "role": "header-title" },
+    { "path": "sections[].faqs[].question", "label": "Question", "type": "string", "role": "faq-question" }
+  ]
 }
 ```
 
 Repeatable declaration paths are extraction instructions only. Producer/runtime payloads use concrete paths such as `sections.0.faqs.0.question`.
 
-## Single Overlay Resolver
+## Single Translated-Value Resolver
 
-PRD 098 resolves one overlay at a time:
+PRD 103 resolves one translated value map at a time:
 
 ```txt
-resolveOverlay(baseConfig, overlayValues)
+resolveTranslatedValues(baseConfig, translatedValues)
 ```
 
-The resolver applies the exact value map to the exact base config. It does not accept overlay arrays, precedence stacks, status, freshness metadata, fallback values, or producer-specific shapes.
+The resolver applies the exact translated value map to the exact base config. It does not accept arrays, precedence stacks, status, freshness metadata, fallback values, or producer-specific shapes.
 
-Missing required paths and extra producer paths are rejected by the producer boundary before an overlay object is stored. Unknown path segments such as `__proto__`, `constructor`, and `prototype` are rejected.
+Missing required paths and extra producer paths are rejected by the producer boundary before translated values are stored. Unknown path segments such as `__proto__`, `constructor`, and `prototype` are rejected.
 
 ## Tokyo PBX Rule
 
-Tokyo-worker is the PBX/control-plane switchboard. It validates IDs, writes exact objects, lists actual overlay files under an instance, and reads exact objects. It does not decide product meaning, run translation orchestration, inspect overlay bodies to understand identity, synthesize desired-locale availability, or repair data it produced.
+Tokyo-worker is the PBX/control-plane switchboard. It validates IDs, writes exact translated values, and reads exact translated values. It does not decide product meaning, inspect storage bodies to understand identity, synthesize desired-locale availability, or repair data it produced.
 
 Roma orchestrates product flows. San Francisco produces text values after Save. Tokyo stores. Public serving reads generated browser files, not overlay source truth.

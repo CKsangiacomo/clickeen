@@ -4,13 +4,13 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
-  buildOverlayTextValueMap,
+  buildTranslatedTextValueMap,
   extractTextPrimitiveValuesForEditableFields,
   readWidgetEditableFieldsContract,
-  resolveOverlay,
-  validateOverlayValuesForTextPrimitives,
+  resolveTranslatedValues,
+  validateTranslatedValuesForTextPrimitives,
   widgetEditableFieldsToTextPrimitives,
-} from './overlay-primitives.ts';
+} from './translated-value-primitives.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -129,7 +129,7 @@ test('FAQ primitive graph materializes editable text fields as strings', () => {
       ],
     },
   });
-  const values = buildOverlayTextValueMap(items);
+  const values = buildTranslatedTextValueMap(items);
 
   assert.equal(values['header.title'], 'FAQs');
   assert.equal(values['header.subtitleHtml'], '');
@@ -139,24 +139,24 @@ test('FAQ primitive graph materializes editable text fields as strings', () => {
   assert.equal(values['sections.0.faqs.0.answer'], '');
 });
 
-test('overlay value validation rejects missing and extra concrete paths', () => {
+test('translated value validation rejects missing and extra concrete paths', () => {
   const spec = readFaqSpec();
   const contract = readFaqEditableFields();
   const items = extractTextPrimitiveValuesForEditableFields({ contract, config: spec.defaults });
-  const values = buildOverlayTextValueMap(items);
+  const values = buildTranslatedTextValueMap(items);
 
-  assert.deepEqual(validateOverlayValuesForTextPrimitives(items, values), { ok: true });
+  assert.deepEqual(validateTranslatedValuesForTextPrimitives(items, values), { ok: true });
 
   const missing = { ...values };
   delete missing['sections.0.faqs.0.answer'];
-  assert.deepEqual(validateOverlayValuesForTextPrimitives(items, missing), {
+  assert.deepEqual(validateTranslatedValuesForTextPrimitives(items, missing), {
     ok: false,
     reason: 'missing_path',
     path: 'sections.0.faqs.0.answer',
   });
 
   assert.deepEqual(
-    validateOverlayValuesForTextPrimitives(items, {
+    validateTranslatedValuesForTextPrimitives(items, {
       ...values,
       'sections.0.faqs.0.internalNote': 'Not declared',
     }),
@@ -168,10 +168,10 @@ test('overlay value validation rejects missing and extra concrete paths', () => 
   );
 });
 
-test('resolveOverlay applies one value map to nested FAQ text without mutating base', () => {
+test('resolveTranslatedValues applies one value map to nested FAQ text without mutating base', () => {
   const spec = readJson('tokyo/product/widgets/faq/spec.json') as { defaults: Record<string, unknown> };
   const base = spec.defaults;
-  const next = resolveOverlay(base, {
+  const next = resolveTranslatedValues(base, {
     'header.title': 'Domande frequenti',
     'sections.0.faqs.0.question': 'Che cos e Clickeen?',
     'sections.0.faqs.0.answer': 'Clickeen ti aiuta a pubblicare widget.',

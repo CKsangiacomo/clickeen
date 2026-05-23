@@ -18,7 +18,7 @@ Active widget instance truth lives in Tokyo:
 - l10n overlays
 - runtime published bytes
 
-The PRD 89 schema hard cut drops the historical `widget_instances` residue. Product code must not recreate a Michael widget-instance table for Builder, Widgets, Venice serving, or Prague embeds.
+The PRD 89 schema hard cut drops the historical `widget_instances` residue. Product code must not recreate a Michael widget-instance table for Builder, Widgets, public serving, or Prague embeds.
 
 ## Account Truth
 

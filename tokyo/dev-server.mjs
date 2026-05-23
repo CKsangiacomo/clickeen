@@ -379,31 +379,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/renders/')) {
-    (async () => {
-      const upstream = await fetch(`${tokyoWorkerBase}${req.url}`, {
-        method: req.method,
-        headers: buildWorkerProxyHeaders(req),
-      });
-      res.statusCode = upstream.status;
-      const contentType = upstream.headers.get('content-type');
-      if (contentType) res.setHeader('Content-Type', contentType);
-      const cacheControl = upstream.headers.get('cache-control');
-      if (cacheControl) res.setHeader('Cache-Control', cacheControl);
-      if (req.method === 'HEAD') {
-        res.end();
-        return;
-      }
-      const bytes = Buffer.from(await upstream.arrayBuffer());
-      res.end(bytes);
-    })().catch((err) => {
-      res.statusCode = 502;
-      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.end(err instanceof Error ? err.message : 'Bad gateway');
-    });
-    return;
-  }
-
   if (shouldProxyMutableToWorker(req, pathname)) {
     proxyMutableToWorker(req, res).catch((err) => {
       res.statusCode = 502;

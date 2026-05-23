@@ -1,5 +1,5 @@
 import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
-import type { WidgetEditableFieldsContract, WidgetEditableField } from '@clickeen/ck-contracts/overlay-primitives';
+import type { WidgetEditableFieldsContract, WidgetEditableField } from '@clickeen/ck-contracts/translated-value-primitives';
 
 export type TranslationSetup = {
   v: 1;

@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
 import {
-  buildOverlayTextValueMap,
+  buildTranslatedTextValueMap,
   extractTextPrimitiveValuesForEditableFields,
-} from '@clickeen/ck-contracts/overlay-primitives';
+} from '@clickeen/ck-contracts/translated-value-primitives';
 import type { InstanceTranslationJob } from '@clickeen/ck-contracts/instance-translation-jobs';
 import type { Env } from '../../types.ts';
 import {
@@ -131,7 +131,7 @@ async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
     displayName: 'FAQ example',
     meta: null,
   });
-  return buildOverlayTextValueMap(
+  return buildTranslatedTextValueMap(
     extractTextPrimitiveValuesForEditableFields({
       contract: widgetDefinition.editableFields,
       config,

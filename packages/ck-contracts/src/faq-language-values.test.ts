@@ -11,7 +11,7 @@ import {
   type FaqLanguageValue,
   type FaqSavedTextField,
 } from './faq-language-values.ts';
-import { readWidgetEditableFieldsContract } from './overlay-primitives.ts';
+import { readWidgetEditableFieldsContract } from './translated-value-primitives.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const contract = readWidgetEditableFieldsContract(

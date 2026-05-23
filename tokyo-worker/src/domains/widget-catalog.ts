@@ -5,10 +5,10 @@ import {
 } from "@clickeen/ck-contracts/overlay-codebooks";
 import type {
   WidgetEditableFieldsContract,
-} from "@clickeen/ck-contracts/overlay-primitives";
+} from "@clickeen/ck-contracts/translated-value-primitives";
 import {
   readWidgetEditableFieldsContract,
-} from "@clickeen/ck-contracts/overlay-primitives";
+} from "@clickeen/ck-contracts/translated-value-primitives";
 import countdownCatalog from "../../../tokyo/product/widgets/countdown/catalog.json";
 import countdownEditableFields from "../../../tokyo/product/widgets/countdown/editable-fields.json";
 import countdownSpec from "../../../tokyo/product/widgets/countdown/spec.json";

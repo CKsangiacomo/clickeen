@@ -27,13 +27,13 @@ OUTPUT
 
 - A clear declaration of scope:
   - Which widgetType(s) are being modified.
-  - Which system(s) need changes: Tokyo only vs Tokyo+Bob/Roma/Tokyo-worker/Venice/Prague.
+  - Which system(s) need changes: Tokyo only vs Tokyo+Bob/Roma/Tokyo-worker/Prague/public serving.
 
 STOP / ASK (do not proceed blindly)
 
 - Change requires a new Dieter primitive/token.
 - Change requires `tokyo/product/widgets/shared/*` edits.
-- Change requires Bob/Roma/Tokyo-worker/Venice/Prague edits and you don’t have an explicit PRD direction.
+- Change requires Bob/Roma/Tokyo-worker/Prague/public-serving edits and you don’t have an explicit PRD direction.
 
 GATE
 
@@ -236,7 +236,7 @@ OUTPUT
 - Admin/example instance refs use `accountPublicId: "00000001"` and resolve to normal instances under `accounts/00000001/instances/{instanceId}/`.
 - `accountInstanceRef.instanceId` uses the current compact instance ID.
 - Prague pages must not use old `wgt_*` / `ins_*` identities, private UUID account folders, root `l10n/`, an admin-specific storage lane, or hidden instance-only lookup.
-- Prague page copy is page JSON truth. Account-widget overlays are not Prague page overlays; they are served by Venice from Tokyo published overlay IDs.
+- Prague page copy is page JSON truth. Account-widget translated locale values are not Prague page sidecars; published account widgets are served as generated static artifacts from `clk.live`.
 
 GATE (local)
 

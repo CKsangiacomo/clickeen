@@ -18,7 +18,7 @@ import {
 } from './normalize';
 import { loadJson, loadJsonObject, putJson, putJsonIfUnchanged } from './storage';
 import { getWidgetDefinition, resolveWidgetCode } from '../widget-catalog';
-import { extractTextPrimitiveValuesForEditableFields } from '@clickeen/ck-contracts/overlay-primitives';
+import { extractTextPrimitiveValuesForEditableFields } from '@clickeen/ck-contracts/translated-value-primitives';
 import type {
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,

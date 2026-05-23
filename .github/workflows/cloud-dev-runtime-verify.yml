@@ -64,17 +64,23 @@ jobs:
           echo "Bob custom domain did not become reachable in time." >&2
           exit 1
 
-      - name: Verify Venice embed loader reachability
+      - name: Verify public serving host boundary
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 12); do
-            if curl -fsS "https://venice.dev.clickeen.com/embed/latest/loader.js" >/tmp/venice-loader.js && grep -q "window.Clickeen" /tmp/venice-loader.js; then
-              exit 0
+          assert_404() {
+            local path="$1"
+            local status
+            status="$(curl -sS -o /tmp/clk-live-body -w '%{http_code}' "https://dev.clk.live${path}")"
+            if [[ "$status" != "404" ]]; then
+              echo "dev.clk.live must not expose ${path}; got HTTP ${status}" >&2
+              cat /tmp/clk-live-body >&2
+              exit 1
             fi
-            sleep 10
-          done
-          echo "Venice embed loader did not become reachable with the expected runtime payload in time." >&2
-          exit 1
+          }
+          assert_404 "/healthz"
+          assert_404 "/__internal/accounts/00000001/serving/restore-paid"
+          assert_404 "/widgets/faq/spec.json"
+          assert_404 "/renders/widgets/catalog.json"
 
       - name: Verify unauthenticated Roma route boundaries
         run: |

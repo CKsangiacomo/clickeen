@@ -94,7 +94,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 - Complete functional software for a widget type (e.g. FAQ)
 - Surviving repo source lives in `tokyo/product/widgets/{widgetType}/`
 - Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, and optional widget-local `widget.*.js` helpers.
-- Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Venice/Prague as appropriate): `catalog.json`, `spec.json`, `editable-fields.json` where present, `limits.json`, and widget-owned runtime assets. `agent.md` is deleted widget source; do not use it as schema, guidance, or publish input.
+- Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Prague as appropriate): `catalog.json`, `spec.json`, `editable-fields.json` where present, `limits.json`, and widget-owned runtime assets. `agent.md` is deleted widget source; do not use it as schema, guidance, or publish input.
 - Platform-controlled; **not stored in Michael**
 
 **Instance** = THE ACCOUNT-OWNED WIDGET SOURCE AND PUBLIC ARTIFACT INPUT
@@ -237,7 +237,7 @@ Publishing semantics: `published` / `unpublished` is Tokyo-owned instance produc
 | **Michael**       | Database                                                                        | Supabase Postgres               | `supabase/`     |
 | **Dieter**        | Design system                                                                   | Build artifacts in Tokyo        | `dieter/`       |
 | **Tokyo**         | Account storage, static mini-site bytes, assets & CDN                           | Cloudflare R2                   | `tokyo/`        |
-| **Tokyo Worker**  | Account-owned asset uploads + instance source/overlay storage                    | Cloudflare Workers + R2         | `tokyo-worker/` |
+| **Tokyo Worker**  | Account-owned asset uploads, instance operations, translated locale values, and public artifact materialization | Cloudflare Workers + R2         | `tokyo-worker/` |
 | **Atlas**         | Edge config cache (read-only)                                                   | Cloudflare KV                   | —               |
 
 ---
@@ -268,7 +268,7 @@ Publishing semantics: `published` / `unpublished` is Tokyo-owned instance produc
 - Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and persisted account-asset URL backed `logoFill` strings) are outside contract and rejected on write.
 - Legacy non-account media paths are outside the runtime contract and are rejected on new writes.
 - `DELETE` on an account asset is synchronous in the delete path with no instance rebuild/healing side effects; subsequent `/assets/account/**` reads return unavailable.
-- Runtime does not rely on `CK_ASSET_ORIGIN`; asset paths remain canonical root-relative and environment portability is provided by Bob/Venice proxy routes.
+- Runtime does not rely on `CK_ASSET_ORIGIN`; asset paths remain canonical root-relative and environment portability is provided by the active preview and public serving hosts.
 - Legacy host-pinned/legacy paths (for example `/curated-assets/**`) are not supported.
 
 **Dieter** — Design system. Tokens (spacing, typography, colors), 16+ components (toggle, textfield, dropdown-fill, object-manager, repeater, dropdown-edit, etc.), icons. Output is CSS + HTML. Each widget only loads what it needs.
@@ -376,7 +376,7 @@ Canonical reference:
 | Bob     | ✅ Active | Compiler, ToolDrawer, Account, Ops engine                                                                     |
 | Roma    | ✅ Active | Domain shell, account bootstrap, widgets/builder orchestration                                                |
 | Tokyo   | ✅ Active | FAQ widget with shared modules                                                                                |
-| Venice  | ✅ Active | SSR embed runtime (published-only), loader, asset proxy (usage/submissions are stubbed in this repo snapshot) |
+| Venice  | Removed from active public widget serving | Legacy SSR embed runtime superseded by `clk.live` static public artifacts |
 | Dieter  | ✅ Active | 16+ components, tokens, typography                                                                            |
 | Michael | ✅ Active | Supabase Postgres with RLS                                                                                    |
 
@@ -461,7 +461,7 @@ Public-serving rule:
 
 Pages deploy rule:
 
-- `bob`, `roma`, `venice`, and `prague` deploy through **Cloudflare Pages Git build only**.
+- `bob`, `roma`, and `prague` deploy through **Cloudflare Pages Git build only**.
 - GitHub Actions may verify Pages build contracts, but are not the Pages deploy plane and must not create Pages projects, sync Pages secrets, or deploy Pages artifacts.
 - The manual Pages project/env/host contract is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
 - Bob and Roma must use custom `*.dev.clickeen.com` hosts in cloud-dev; `*.pages.dev` is not a valid authenticated Builder runtime host.

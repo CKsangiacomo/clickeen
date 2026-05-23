@@ -111,8 +111,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Maximum monthly public embed views.',
     enforcement: {
       status: 'gap',
-      owner: 'Venice/public embed telemetry',
-      note: 'Not surfaced as an active customer-facing limit before GA. Enforcement requires Venice monthly view counters keyed by account/instance plus a public embed deny/upsell response once the counter exceeds policy.',
+      owner: 'clk.live public-serving telemetry',
+      note: 'Not surfaced as an active customer-facing limit before GA. Enforcement requires public-serving monthly view counters keyed by account/instance plus a public artifact deny/upsell response once the counter exceeds policy.',
     },
   },
   'instances.published.max': {

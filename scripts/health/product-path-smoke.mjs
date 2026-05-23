@@ -444,11 +444,21 @@ async function runStaticPublicServing(runner, accountPublicId, instanceId) {
     return;
   }
 
-  await runner.check('Public serving instance read', 'clk.public', async () => {
+  await runner.check('Public serving instance read and boundary', 'clk.public', async () => {
     const embed = await runner.request(runner.args.clkBase, `/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`);
     assert2xx(embed, `GET /${accountPublicId}/${instanceId}`);
     const privateSource = await runner.request(runner.args.clkBase, `/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}/instance.json`);
     assertHttp(privateSource, 404, `GET /${accountPublicId}/${instanceId}/instance.json`);
+    const deniedPaths = [
+      '/healthz',
+      '/__internal/accounts/00000001/serving/restore-paid',
+      '/widgets/faq/spec.json',
+      '/renders/widgets/catalog.json',
+    ];
+    for (const path of deniedPaths) {
+      const denied = await runner.request(runner.args.clkBase, path);
+      assertHttp(denied, 404, `GET ${path}`);
+    }
     return `${accountPublicId}/${instanceId}`;
   });
 }

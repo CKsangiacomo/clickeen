@@ -27,6 +27,14 @@ const ROOT_ALLOWLIST = [
     test: (file) => file === 'tokyo-worker/src/routes/clk-live-routes.test.ts',
     reason: 'deny tests intentionally request private files and folders',
   },
+  {
+    test: (file) => file === '.github/workflows/cloud-dev-runtime-verify.yml',
+    reason: 'cloud runtime verification intentionally asserts removed public paths return 404',
+  },
+  {
+    test: (file) => file === 'scripts/health/product-path-smoke.mjs',
+    reason: 'health smoke intentionally asserts removed public paths return 404',
+  },
 ];
 
 const SKIP_PATH_PARTS = [
@@ -58,6 +66,7 @@ const BANNED_PATTERNS = [
   { label: 'embed.clickeen.com', pattern: /embed\.clickeen\.com/i },
   { label: 'publicEmbedId', pattern: /publicEmbedId/ },
   { label: 'public /widget/ route', pattern: /(^|["'`\s])\/widget\// },
+  { label: 'public /renders/ route', pattern: /(^|["'`\s])\/renders\// },
   { label: 'public /renders/accounts/ route', pattern: /\/renders\/accounts\// },
   { label: 'public /renders/widgets/ route', pattern: /\/renders\/widgets\// },
   { label: 'published/config.json projection', pattern: /published\/config\.json/ },

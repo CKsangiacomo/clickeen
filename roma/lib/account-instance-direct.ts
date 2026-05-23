@@ -1,6 +1,6 @@
 import { asTrimmedString, isRecord, serializeCkLogEvent } from '@clickeen/ck-contracts';
-import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/overlay-primitives';
-import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/overlay-primitives';
+import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
+import type { WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import {
   buildTokyoProductControlHeaders,
   fetchTokyoProductControl,

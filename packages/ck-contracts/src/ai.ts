@@ -4,7 +4,7 @@ export type AiExecutionSurface = 'execute' | 'endpoint';
 export type AiAgentCategory = 'copilot' | 'system_agent';
 export type AiRegistryBoundary =
   | 'editor_ops_only'
-  | 'account_widget_translation_overlay'
+  | 'account_widget_translated_values'
   | 'prague_copy_tooling_output';
 
 export type AiBudget = {
@@ -110,7 +110,7 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     taskClass: 'l10n.instance',
     description: 'Widget Instance Translator.',
     owner: 'tokyo-worker.account-widget-l10n',
-    boundary: 'account_widget_translation_overlay',
+    boundary: 'account_widget_translated_values',
     supportedProviders: ['deepseek', 'openai'],
     defaultProvider: 'deepseek',
     executionSurface: 'endpoint',

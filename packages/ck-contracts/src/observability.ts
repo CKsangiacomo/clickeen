@@ -4,7 +4,6 @@ export type CkObservedService =
   | 'roma'
   | 'berlin'
   | 'tokyo-worker'
-  | 'venice'
   | 'sanfrancisco'
   | 'prague';
 

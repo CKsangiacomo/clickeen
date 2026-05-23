@@ -1,4 +1,4 @@
-import { resolveOverlay } from '@clickeen/ck-contracts';
+import { resolveTranslatedValues } from '@clickeen/ck-contracts';
 import type { Env } from '../../types';
 import { normalizeLocale } from '../../asset-utils';
 import { readAccountInstanceDocument } from './saved-config';
@@ -289,7 +289,7 @@ export async function materializeInstancePublicArtifacts(args: {
           detail: `Translated locale values are missing for ${locale}`,
         };
       }
-      const state = resolveOverlay(instance.value.config, translated.values);
+      const state = resolveTranslatedValues(instance.value.config, translated.values);
       if (!isRecord(state)) {
         return {
           ok: false,

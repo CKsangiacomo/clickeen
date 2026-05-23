@@ -28,7 +28,7 @@ jobs:
     env:
       PUBLIC_BOB_URL: https://bob.dev.clickeen.com
       PUBLIC_TOKYO_URL: https://tokyo.dev.clickeen.com
-      PUBLIC_VENICE_URL: https://venice.dev.clickeen.com
+      PUBLIC_CLK_LIVE_URL: https://dev.clk.live
       PUBLIC_ROMA_URL: https://roma.dev.clickeen.com
     steps:
       - uses: actions/checkout@v4

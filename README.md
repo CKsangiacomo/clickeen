@@ -31,7 +31,7 @@ This repo contains the full Clickeen widget platform:
 ```bash
 pnpm install
 pnpm build:dieter       # builds Dieter into tokyo/product/dieter
-./scripts/dev-up.sh     # starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Venice (3003), Bob (3000), DevStudio (5173), Prague (4321), (+ SF 3002 when enabled)
+./scripts/dev-up.sh     # starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Bob (3000), DevStudio (5173), Prague (4321), (+ SF 3002 when enabled)
 ```
 
 To force a full workspace rebuild before starting dev servers:
@@ -41,7 +41,7 @@ To force a full workspace rebuild before starting dev servers:
 ```
 
 Useful scripts:
-- `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:venice`
+- `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:prague`
 - `pnpm build` (after `pnpm build:dieter`)
 - `pnpm lint`, `pnpm typecheck`, `pnpm test`
 
