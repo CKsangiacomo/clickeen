@@ -1,4 +1,4 @@
-import { CK_REQUEST_ID_HEADER, parseAccountL10nPolicyStrict, parseAccountLocaleListStrict } from '@clickeen/ck-contracts';
+import { CK_REQUEST_ID_HEADER, parseAccountLocaleListStrict, parseAccountLocalePolicyStrict } from '@clickeen/ck-contracts';
 import { resolveBerlinBaseUrl } from './env/berlin';
 
 // Berlin is the account-level locale policy authority. Roma reads it here and
@@ -10,8 +10,8 @@ export async function loadCurrentAccountLocalesState(args: {
 }): Promise<
   | {
       ok: true;
-      locales: string[];
-      policy: ReturnType<typeof parseAccountL10nPolicyStrict>;
+      selectedTargetLocales: string[];
+      localePolicy: ReturnType<typeof parseAccountLocalePolicyStrict>;
     }
   | {
       ok: false;
@@ -36,8 +36,8 @@ export async function loadCurrentAccountLocalesState(args: {
   const payload = (await upstream.json().catch(() => null)) as
     | {
         account?: {
-          l10nLocales?: unknown;
-          l10nPolicy?: unknown;
+          selectedTargetLocales?: unknown;
+          localePolicy?: unknown;
         } | null;
         error?: unknown;
       }
@@ -54,7 +54,7 @@ export async function loadCurrentAccountLocalesState(args: {
 
   return {
     ok: true,
-    locales: parseAccountLocaleListStrict(payload?.account?.l10nLocales),
-    policy: parseAccountL10nPolicyStrict(payload?.account?.l10nPolicy),
+    selectedTargetLocales: parseAccountLocaleListStrict(payload?.account?.selectedTargetLocales),
+    localePolicy: parseAccountLocalePolicyStrict(payload?.account?.localePolicy),
   };
 }

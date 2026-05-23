@@ -26,6 +26,8 @@ The new request requires:
 - `jobId`
 - `currentSavedTextGraph`
 
+`baseLocale` comes from account `localePolicy`. `targetLocale` is one locale from account `selectedTargetLocales`; the worker does not derive translation scope from instance files.
+
 Loose `{ path, value, locale }[]` text-value requests are rejected by the new agent boundary.
 
 The old text-value handler has been removed from the active San Francisco API by 103I.

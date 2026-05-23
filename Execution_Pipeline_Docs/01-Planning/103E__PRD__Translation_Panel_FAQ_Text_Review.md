@@ -56,8 +56,8 @@ Bob does not own translation status.
 X of Y translations ready
 ```
 
-- `Y` comes from Roma settings: enabled target locales excluding the base locale.
-- `X` comes from Tokyo overlays found for those enabled target locales.
+- `Y` comes from Roma account settings: `selectedTargetLocales` excluding the base locale.
+- `X` comes from Tokyo overlays found for those selected target locales.
 - If `X === Y`, all translations are ready and Bob does not refresh the dropdown while the user stays in the panel.
 - If `X !== Y`, Bob shows the count and refreshes Tokyo overlay inventory whenever the user clicks the dropdown.
 - The dropdown contains only the base locale plus translated languages that have Tokyo overlays.

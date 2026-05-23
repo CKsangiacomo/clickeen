@@ -54,8 +54,8 @@ export type BerlinAccountContext = {
   websiteUrl: string | null;
   membershipVersion: string | null;
   lifecycleNotice: LifecycleNotice;
-  l10nLocales: unknown;
-  l10nPolicy: unknown;
+  selectedTargetLocales: unknown;
+  localePolicy: unknown;
 };
 
 export type BerlinAccountMember = {

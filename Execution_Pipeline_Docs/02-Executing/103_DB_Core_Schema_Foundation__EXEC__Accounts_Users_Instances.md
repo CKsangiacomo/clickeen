@@ -73,7 +73,7 @@ Production must not be dispatched until the same migration has been verified on 
 
 | Table | Status | Notes |
 | --- | --- | --- |
-| `accounts` | Created by migration | `id`, `status`, `status_changed_at`, `tier`, `created_at` only. |
+| `accounts` | Created by migration | `id`, `status`, `status_changed_at`, `tier`, `selected_target_locales`, `locale_policy`, `created_at` only. |
 | `users` | Created by migration | One user belongs to one account; role lives on `users`; login method columns are constrained. |
 | `account_invitations` | Created by migration | V1 Invite Members lifecycle table. |
 | `instances` | Created empty by migration | Runtime rows are created/migrated by Tokyo in 103_DB.3 / 103_DB.8. |

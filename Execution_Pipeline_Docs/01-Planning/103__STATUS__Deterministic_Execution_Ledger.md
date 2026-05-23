@@ -39,11 +39,11 @@ Clickeen can generate translations on demand from the saved instance.
 Clickeen publishes generated files.
 ```
 
-Bob does not own translation status. Roma settings define expected target languages. Tokyo translated locale values define which translations are ready. Tokyo translation generation job state defines whether generation is idle, queued, running, completed, failed, or superseded. Internal storage may still use overlay objects, but product payloads speak locale/value-map operations and generation job operations.
+Bob does not own translation status. Roma account settings define `selectedTargetLocales`, the locales the user chose to generate and review. Tokyo translated locale values define which translations are ready. Tokyo translation generation job state defines whether generation is idle, queued, running, completed, failed, or superseded. Internal storage may still use overlay objects, but product payloads speak locale/value-map operations and generation job operations.
 
 ```text
-X = translated locale values found for enabled target locales
-Y = enabled target locales from Roma settings
+X = translated locale values found for account selectedTargetLocales
+Y = account selectedTargetLocales from Roma settings
 ```
 
 Bob may show `X of Y translations ready` while `X !== Y`. The preview dropdown contains only the base locale plus translated languages that have Tokyo translated locale values.

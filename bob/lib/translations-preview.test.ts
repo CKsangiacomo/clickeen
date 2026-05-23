@@ -20,13 +20,13 @@ test('normalizes Roma-owned translation setup separately from translated values'
     v: 1,
     baseLocale: 'en',
     planTranslationsMax: 28,
-    activeLocales: ['en', 'it', 'cs', 'it'],
+    selectedTargetLocales: ['en', 'it', 'cs', 'it'],
   });
 
   assert.ok(data);
   assert.equal(data.baseLocale, 'en');
   assert.equal(data.planTranslationsMax, 28);
-  assert.deepEqual(data.activeLocales, ['it', 'cs']);
+  assert.deepEqual(data.selectedTargetLocales, ['it', 'cs']);
 });
 
 test('normalizes Tokyo-owned translated locale list from current values', () => {
@@ -65,7 +65,7 @@ test('retains loaded translation values across polling refreshes', () => {
 test('translation panel locale state refreshes dropdown only while translations are incomplete', () => {
   const incomplete = buildTranslationPanelLocaleState({
     baseLocale: 'en',
-    activeLocales: ['it', 'cs'],
+    selectedTargetLocales: ['it', 'cs'],
     requestedLocale: '',
     translatedLocales: {
       v: 1,
@@ -82,7 +82,7 @@ test('translation panel locale state refreshes dropdown only while translations 
 
   const complete = buildTranslationPanelLocaleState({
     baseLocale: 'en',
-    activeLocales: ['it', 'cs'],
+    selectedTargetLocales: ['it', 'cs'],
     requestedLocale: 'cs',
     translatedLocales: {
       v: 1,

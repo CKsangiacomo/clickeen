@@ -13,7 +13,7 @@ This slice deletes the remaining active product paths that treated old R2 JSON f
 The approved V1 model after this slice is:
 
 - `instances` owns registry/control state, including publish state and coarse translation state;
-- `instance.config.json` is a private Tokyo payload for non-text settings, identity/display metadata, widget type/code, base locale, target locales, and timestamps;
+- `instance.config.json` is a private Tokyo payload for non-text settings, identity/display metadata, widget type/code, and timestamps; account locale settings own base locale and selected target locales;
 - `instance.content.json` is a private Tokyo payload for base editable text, translated field values, and changed/ok translation pickup status;
 - `instance.json` is not written or read by active runtime code;
 - `instances/index.json` is not product truth and is not read by active runtime code;

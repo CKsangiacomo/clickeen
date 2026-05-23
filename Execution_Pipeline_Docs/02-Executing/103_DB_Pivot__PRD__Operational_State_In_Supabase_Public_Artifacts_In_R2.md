@@ -325,8 +325,8 @@ The target v1 schema should be this small unless 103_DB.1 proves a specific prod
 `accounts`
 
 - one row per Clickeen account/tenant;
-- owns one account identity, status, current status lifecycle clock, tier policy input, and creation timestamp;
-- does not own profile/display fields, localization settings, publish booleans, or internal/platform flags in v1;
+- owns one account identity, status, current status lifecycle clock, tier policy input, selected target locales, locale policy, and creation timestamp;
+- does not own profile/display fields, publish booleans, or internal/platform flags in v1;
 - written by Berlin for account lifecycle/settings;
 - read by Berlin for auth/bootstrap/account settings and by Tokyo through product operations when instance work needs account policy/locale context.
 
@@ -334,7 +334,7 @@ Account deletion is an operation, not a retained `closed` status. Closed/deleted
 
 `ck-policy` remains the entitlement engine. `accounts.tier` is only its input. Limits, model profile, locale allowance, feature gates, and branding entitlements must not be duplicated into account columns.
 
-Locale split: available locale count/allowance comes from `ck-policy`; selected locales, if product-required, belong in a separate account settings model, not in core `accounts`.
+Locale split: available locale count/allowance comes from `ck-policy`; selected target locales and base/source locale behavior are account settings on `accounts`. They are not entitlement columns.
 
 Account tier/status history is not a DB table in V1. Berlin writes cold account-owned history to `accounts/{accountId}/account-history.jsonl`. Current truth remains `accounts.status` and `accounts.tier`; history is not used to gate product behavior and is deleted with the account unless a separate legal/billing retention policy extracts a record.
 
@@ -444,6 +444,7 @@ The exact migration may adjust column names to the current schema, but it must p
 
 | Concern | Supabase authority | Notes |
 | --- | --- | --- |
+| Account locale settings | `accounts.selected_target_locales`, `accounts.locale_policy` | Roma settings writes them through Berlin. `ck-policy` still controls allowance/caps; these columns hold user selection and base/source locale behavior only. |
 | Account instance registry | `instances` | One row per real account-owned instance. Owns only `id`, `account_id`, `widget_type`, `publish_status`, `translation_status`, `created_at`, and `edited_at` in v1. Instance display/name/title remains in Tokyo-owned payload/config. |
 | Instance authored payload | Tokyo product operation | Payload may remain whole-document storage behind Tokyo in v1. Roma/Bob/San Francisco must not read storage files directly or use storage paths as product identity. |
 | Translated locale values | Tokyo product operation | Payload may remain Tokyo-owned whole-value storage in v1. No overlay ID, selected pointer, or inventory product concept. DB rows are not approved unless 103_DB.1 proves a product/cost need. |

@@ -145,6 +145,23 @@ if (!existsSync(join(ROOT, migrationPath))) {
   }
 }
 
+const localeTaxonomyMigrationPath = 'supabase/migrations/20260523150000__prd103_account_locale_settings_taxonomy.sql';
+if (!existsSync(join(ROOT, localeTaxonomyMigrationPath))) {
+  fail(localeTaxonomyMigrationPath, 'missing account locale settings taxonomy migration');
+} else {
+  const migration = read(localeTaxonomyMigrationPath);
+  for (const column of ['selected_target_locales', 'locale_policy']) {
+    if (!new RegExp(`\\b${column}\\b`).test(migration)) {
+      fail(localeTaxonomyMigrationPath, `missing account locale settings column ${column}`);
+    }
+  }
+  for (const column of ['l10n_locales', 'l10n_policy']) {
+    if (!new RegExp(`DROP COLUMN ${column}`).test(migration)) {
+      fail(localeTaxonomyMigrationPath, `does not delete legacy account locale column ${column}`);
+    }
+  }
+}
+
 if (failures.length) {
   console.error('PRD 103 DB pivot guard failed.');
   for (const failure of failures) console.error(`- ${failure}`);

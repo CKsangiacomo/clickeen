@@ -398,7 +398,7 @@ The central product object is the instance translation agent.
 The agent owns this job:
 
 ```text
-Given one saved widget instance, its base locale, enabled target languages, and changed editable text,
+Given one saved widget instance, its base locale, account-selected target languages, and changed editable text,
 produce current language values for that instance.
 ```
 
@@ -1036,8 +1036,8 @@ The Translations panel is not complete if it only changes preview language.
 Acceptance:
 
 - Bob renders actual translated FAQ text grouped by FAQ structure: header, CTA, section title, question, answer.
-- Roma settings define the expected target languages; Tokyo overlays define which translations are ready.
-- The panel may show `X of Y translations ready`, where `X` is ready Tokyo overlays for enabled target locales and `Y` is enabled target locales from Roma settings.
+- Roma account settings define `selectedTargetLocales`; Tokyo overlays define which translations are ready.
+- The panel may show `X of Y translations ready`, where `X` is ready Tokyo overlays for account-selected target locales and `Y` is account `selectedTargetLocales` from Roma settings.
 - Preview language selection only includes translations with existing Tokyo overlays.
 - A product/E2E test saves an FAQ edit, receives language values, opens Bob, and verifies translated text is visible in the panel.
 - The review UI reads from stored current language values, not from preview-only state.
@@ -1230,12 +1230,12 @@ Acceptance:
 - Bob shows translated fields from the editable-fields/current-language-values review projection.
 - FAQ is the first proven contract shape, not a hardcoded Bob review path.
 - Preview still works.
-- Bob shows `X of Y translations ready` only while the number of ready Tokyo overlays is lower than the number of enabled target locales from Roma settings.
+- Bob shows `X of Y translations ready` only while the number of ready Tokyo overlays is lower than the number of account `selectedTargetLocales` from Roma settings.
 - The dropdown lists only translations that have Tokyo overlays, plus the base locale.
 - While translations are incomplete, clicking the dropdown refreshes Tokyo overlay inventory; once all translations are ready, the dropdown does not refresh while the user stays in the panel.
 - The review UI reads stored current language values, not preview-only state.
 - The panel has the only user-facing `Generate translations` button; Save does not enqueue translation.
-- `Generate translations` asks the product backend to run the Instance Translation Agent for the current saved instance and enabled target languages.
+- `Generate translations` asks the product backend to run the Instance Translation Agent for the current saved instance and account `selectedTargetLocales`.
 - `Generate translations` does not send Bob form text or a Bob-computed diff.
 - Helper-only review tests are not enough; the production Translations panel must render the rows.
 
@@ -1335,7 +1335,7 @@ Decided:
 
 - The first Translation panel review UI is read-only; manual overrides are deferred to PRD 103F.
 - Bob does not own translation status. Bob compares Roma settings with Tokyo overlays and may show `X of Y translations ready`.
-- Bob's dropdown lists only the base locale plus translations that have Tokyo overlays for enabled target locales.
+- Bob's dropdown lists only the base locale plus translations that have Tokyo overlays for account `selectedTargetLocales`.
 - While translations are incomplete, clicking the dropdown refreshes Tokyo overlay inventory. Once complete, Bob does not refresh while the user stays in the panel.
 - `Generate translations` is the translation trigger for the saved-instance translation agent path, using the current saved instance, current Tokyo language values, and current account policy.
 - Publish must prove static base and language files without adding a second readiness/status subsystem.

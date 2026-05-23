@@ -47,6 +47,8 @@ policyRuntimeProfile
 jobId
 ```
 
+`baseLocale` comes from account `localePolicy`. `targetLocale` must be one locale from account `selectedTargetLocales`; the translation agent never invents target locale scope from instance files.
+
 `policyRuntimeProfile` means the existing `ck-policy` runtime policy or a reference resolvable through it. It does not mean a new policy object.
 
 The request is rejected if it is only:

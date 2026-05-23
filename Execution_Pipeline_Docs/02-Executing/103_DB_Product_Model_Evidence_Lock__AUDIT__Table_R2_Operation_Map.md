@@ -30,7 +30,7 @@ V1 core tables:
 
 | Table | Purpose | Product owner | Notes |
 | --- | --- | --- | --- |
-| `accounts` | Account existence, status, tier, billing grace clock, creation time. | Berlin/account DB model | No `public_id`, no `is_platform`, no generic `updated_at`, no locale entitlement JSON. |
+| `accounts` | Account existence, status, tier, billing grace clock, selected target locales, locale policy, creation time. | Berlin/account DB model | No `public_id`, no `is_platform`, no generic `updated_at`, no locale entitlement JSON. |
 | `users` | Human, one account association, role, current profile fields, V1 login mapping. | Berlin | Replaces `user_profiles`, `account_members`, and `login_identities` for V1. |
 | `account_invitations` | Invite Members lifecycle. | Berlin | Survives as V1 lifecycle table; never creates account membership rows. |
 | `instances` | Instance registry/control state: existence, account owner, instance id, widget type, coarse translation status, publish status, creation time. | Tokyo/Roma product operations backed by DB | Does not store authored content, translated payloads, display/title text, or generated artifacts. |
@@ -45,7 +45,7 @@ Billing/status stub:
 
 | Current object | Target action | Reason |
 | --- | --- | --- |
-| `accounts` | Rebuild | Product need survives; current row carries duplicate identity, platform flag, locale policy JSON, tier-change noise, and generic update state. |
+| `accounts` | Rebuild | Product need survives; current row carries duplicate identity, platform flag, legacy l10n JSON names, tier-change noise, and generic update state. Target keeps account locale settings under explicit product names. |
 | `account_members` | Delete | V1 role truth moves to `users.role`; multi-account membership is not product truth. |
 | `account_invitations` | Rebuild | Feature survives, current shape points at old membership/profile model. |
 | `login_identities` | Delete/rebuild into `users` | V1 login mapping lives on `users.login_provider` and `users.login_subject`; no extra login table. |
@@ -161,7 +161,7 @@ Local Supabase is not product truth and not remote evidence.
 
 Checked on 2026-05-22:
 
-- Accounts child PRD approves only `id`, `status`, `status_changed_at`, `tier`, and `created_at`; rejects `public_id`, `is_platform`, locale policy JSON, generic `updated_at`, account profile fields, and core `account_members`.
+- Accounts child PRD approves only `id`, `status`, `status_changed_at`, `tier`, `selected_target_locales`, `locale_policy`, and `created_at`; rejects `public_id`, `is_platform`, locale entitlement JSON, generic `updated_at`, account profile fields, and core `account_members`.
 - Users child PRD approves one user/one account, role on `users`, V1 login mapping on `users.login_provider` + `users.login_subject`, and deletes `account_members`, `user_profiles`, `login_identities`, active-account switching, and connector payloads on users.
 - Instances child PRD approves only instance registry/control columns and rejects content/config payloads, display/title/name, locale values, translation job tables, job ids, per-locale progress, `sourceVersion`, generated artifact metadata, and legacy `instance.json` fallback.
 - Billing Status child PRD uses `accounts.status` + `accounts.status_changed_at` for current lifecycle behavior and keeps history cold in account-owned JSONL, not hot DB rows.

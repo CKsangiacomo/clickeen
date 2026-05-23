@@ -71,16 +71,16 @@ function BuilderShell() {
     if (!justFinishedSave) return;
     if (session.error?.source === 'save') return;
     setTranslationsRefreshVersion((prev) => prev + 1);
-    if (previewMode === 'translations' && translationSetup?.activeLocales?.length) {
+    if (previewMode === 'translations' && translationSetup?.selectedTargetLocales?.length) {
       setTranslationPollingUntil(Date.now() + TRANSLATION_SAVE_MAX_POLL_MS);
     }
-  }, [previewMode, session.error?.source, session.isSaving, translationSetup?.activeLocales?.length]);
+  }, [previewMode, session.error?.source, session.isSaving, translationSetup?.selectedTargetLocales?.length]);
   const requestTranslationsRefresh = () => {
     setTranslationsRefreshVersion((prev) => prev + 1);
   };
 
   const expectedTranslationLocales = useMemo(() => {
-    return new Set((translationSetup?.activeLocales ?? []).filter((locale) => locale !== baseLocale));
+    return new Set((translationSetup?.selectedTargetLocales ?? []).filter((locale) => locale !== baseLocale));
   }, [baseLocale, translationSetup]);
   const readyTranslationCount = useMemo(() => {
     return (translatedLocales?.translations ?? []).filter((entry) => expectedTranslationLocales.has(entry.locale)).length;

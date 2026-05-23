@@ -44,7 +44,8 @@ Final decisions:
 
 - `instance.json` is killed as the product model. Current fields must be split into content, config, job/workflow state, generated artifact, or delete.
 - `instance.content.json` contains every user-editable customer-visible string in the same semantic paths/shape the editor exposes for text editing: titles, subtitles, CTA labels, FAQ questions and answers, captions, item labels, and any other widget string. This is the only translation source.
-- `instance.config.json` contains every non-text setting plus identity/display/widget type/code/base locale/target locales/structure/style/behavior/publish state/timestamps. It must not contain editable customer-visible text.
+- `instance.config.json` contains every non-text setting plus identity/display/widget type/code/structure/style/behavior/publish state/timestamps. It must not contain editable customer-visible text.
+- Account `localePolicy` and account `selectedTargetLocales` are account settings, not instance source. Generate may snapshot them into a translation job, but instance config is not their authority.
 - `instance.meta.json` is not added. Metadata survives only if a real product/build/runtime consumer is named; otherwise it is deleted or folded into the approved config/content/job/artifact model.
 - Translated locale values are modeled as `locale -> translated content values`. Bob/Roma/Tokyo product payloads must not expose `overlayId`, selected pointers, version slots, raw storage keys, provenance, review state, source hashes, generation IDs, or manual override status.
 - Tokyo may keep physical overlay files only as private exact current value maps during migration. They are not product identity and not a cross-service contract.
@@ -106,7 +107,7 @@ This slice migrated Generate acceptance and San Francisco completion ownership o
 
 Included:
 
-- Bob sends Generate intent with `instanceId`, `baseLocale`, and active `targetLocales`; Bob does not send overlay IDs or translation storage details.
+- Bob sends Generate intent with `instanceId`, `baseLocale`, and `targetLocales` derived from account `selectedTargetLocales`; Bob does not send overlay IDs or translation storage details.
 - Roma Generate is a thin account boundary. It validates the account request and forwards one product command to Tokyo:
   - `POST /__internal/instances/{instanceId}/translations/generate`.
 - Roma no longer loads widget definitions, loads overlay inventory, reads overlay objects, or builds queue jobs for Generate.
@@ -474,7 +475,7 @@ Read-only code scout findings for 103_02.1:
 
 | Finding | Severity | Evidence | Required decision owner |
 | --- | --- | --- | --- |
-| Mixed instance source | P1 | `AccountInstanceDocument` still combines identity, widget type, config, base/target locales, source version, generation lanes, publish state, and timestamps. `SavedRenderPointer` is returned by `saved.json` and `save.json`; Roma surfaces `sourceVersion` and `generation` from save. | 103_02.2 classified the target model: content, config, job/workflow state, generated artifact, or delete. 103_02.3/103_02.4 implement the migration. |
+| Mixed instance source | P1 | `AccountInstanceDocument` still combines identity, widget type, config, locale state, source version, generation lanes, publish state, and timestamps. `SavedRenderPointer` is returned by `saved.json` and `save.json`; Roma surfaces `sourceVersion` and `generation` from save. | 103_02.2 classified the target model: content, config, job/workflow state, generated artifact, account locale settings, or delete. 103_02.3/103_02.4 implement the migration. |
 | Storage-shaped Roma/Tokyo routes | P1 | Roma calls `saved.json`, `save.json`, `serve-state.json`, `index.json`, and overlay language routes; Tokyo serves those routes. | 103_02.3 must replace product callers with named operations, not route-name wrappers. |
 | Account index is product-visible | P1 | `accounts/{account}/instances/index.json` backs Roma widgets list, create checks, and base-locale lock. | 103_02.2 decided delete as product model. 103_02.3 moves callers to `listAccountInstances`. |
 | Overlay IDs leak through UI | P1 | Bob/Roma session commands and account routes expose `locale-overlay`, `overlayId`, selected overlay, inventory, and overlay object reads. | 103_02.3 must replace with translated-locale list/read/write operations by locale. |

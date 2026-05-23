@@ -27,8 +27,8 @@ export type RomaAccountSummary = {
 export type RomaActiveAccount = RomaAccountSummary & {
   status: string;
   isPlatform: boolean;
-  l10nLocales?: unknown;
-  l10nPolicy?: unknown;
+  selectedTargetLocales?: unknown;
+  localePolicy?: unknown;
 };
 
 export type RomaMeResponse = {
@@ -247,8 +247,8 @@ export function resolveActiveRomaAccount(data: RomaMeResponse | null): RomaActiv
     lifecycleNotice: normalizeLifecycleNotice(activeAccount.lifecycleNotice),
     status,
     isPlatform: activeAccount.isPlatform,
-    l10nLocales: activeAccount.l10nLocales,
-    l10nPolicy: activeAccount.l10nPolicy,
+    selectedTargetLocales: activeAccount.selectedTargetLocales,
+    localePolicy: activeAccount.localePolicy,
   };
 }
 

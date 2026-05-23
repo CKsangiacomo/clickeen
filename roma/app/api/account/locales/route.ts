@@ -3,7 +3,7 @@ import { isRecord } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
-import { materializeAccountAdditionalLocales } from '@roma/lib/account-locales';
+import { resolveSelectedTargetLocales } from '@roma/lib/account-locales';
 import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
@@ -11,8 +11,8 @@ import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-
 export const runtime = 'edge';
 
 type AccountLocalesWritePayload = {
-  locales?: unknown;
-  policy?: unknown;
+  selectedTargetLocales?: unknown;
+  localePolicy?: unknown;
 };
 
 function normalizeWarnings(value: unknown): string[] {
@@ -84,8 +84,8 @@ export async function GET(request: NextRequest) {
       request,
       NextResponse.json({
         accountId: current.value.authzPayload.accountId,
-        locales: accountState.locales,
-        policy: accountState.policy,
+        selectedTargetLocales: accountState.selectedTargetLocales,
+        localePolicy: accountState.localePolicy,
         baseLocaleLocked: baseLocaleLock.locked,
       }),
       current.value.setCookies,
@@ -138,7 +138,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const baseLocale = normalizeLocaleToken((body.policy as Record<string, unknown> | null | undefined)?.baseLocale);
+    const baseLocale = normalizeLocaleToken((body.localePolicy as Record<string, unknown> | null | undefined)?.baseLocale);
     if (!baseLocale) {
       return withSession(
         request,
@@ -198,7 +198,7 @@ export async function PUT(request: NextRequest) {
         current.value.setCookies,
       );
     }
-    if (baseLocaleLock.locked && baseLocale !== accountState.policy.baseLocale) {
+    if (baseLocaleLock.locked && baseLocale !== accountState.localePolicy.baseLocale) {
       return withSession(
         request,
         NextResponse.json(
@@ -216,10 +216,10 @@ export async function PUT(request: NextRequest) {
 
     const nextPayload: AccountLocalesWritePayload = {
       ...body,
-      locales: materializeAccountAdditionalLocales({
+      selectedTargetLocales: resolveSelectedTargetLocales({
         profile: current.value.authzPayload.profile,
         baseLocale,
-        requestedLocales: body.locales,
+        requestedLocales: body.selectedTargetLocales,
       }),
     };
 

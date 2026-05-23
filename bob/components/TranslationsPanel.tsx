@@ -395,11 +395,11 @@ export function TranslationsPanel({
     () =>
       buildTranslationPanelLocaleState({
         baseLocale,
-        activeLocales: translationSetup?.activeLocales ?? [],
+        selectedTargetLocales: translationSetup?.selectedTargetLocales ?? [],
         translatedLocales,
         requestedLocale: translationPreviewLocale,
       }),
-    [baseLocale, translatedLocales, translationPreviewLocale, translationSetup?.activeLocales],
+    [baseLocale, translatedLocales, translationPreviewLocale, translationSetup?.selectedTargetLocales],
   );
   const refreshIfTranslationsMissing = () => {
     if (localeState.shouldRefreshOnDropdownOpen) onRequestTranslationsRefresh();
@@ -461,7 +461,7 @@ export function TranslationsPanel({
       const response = await generateTranslations({
         instanceId,
         baseLocale,
-        targetLocales: translationSetup?.activeLocales ?? [],
+        targetLocales: translationSetup?.selectedTargetLocales ?? [],
       });
       if (!response.ok) {
         throw new Error(resolveGenerateTranslationsError(response.json));

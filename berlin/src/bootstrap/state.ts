@@ -3,7 +3,7 @@ import {
   isCompactAccountPublicId,
   isUserSettingsTimezoneSupported,
   normalizeUserSettingsCountry,
-  parseAccountL10nPolicyStrict,
+  parseAccountLocalePolicyStrict,
   validateAccountLocaleList,
 } from '@clickeen/ck-contracts';
 import type {
@@ -27,7 +27,7 @@ import { asTrimmedString, isUuid } from '../utils/primitives';
 const MEMBERSHIP_PAGE_SIZE = 200;
 const ACCOUNT_MEMBER_PAGE_SIZE = 200;
 const USER_PROFILE_QUERY_CHUNK_SIZE = 100;
-const DEFAULT_ACCOUNT_L10N_POLICY = {
+const DEFAULT_ACCOUNT_LOCALE_POLICY = {
   v: 1,
   baseLocale: 'en',
   ip: { countryToLocale: {} },
@@ -43,6 +43,8 @@ type AccountMembershipRow = {
     status?: unknown;
     tier?: unknown;
     status_changed_at?: unknown;
+    selected_target_locales?: unknown;
+    locale_policy?: unknown;
     created_at?: unknown;
   } | null;
 };
@@ -139,15 +141,15 @@ function validateProfileLocation(rawCountry: unknown, rawTimezone: unknown, path
 }
 
 function validateAccountLocaleState(rawLocales: unknown, rawPolicy: unknown, path: string): string[] {
-  const issues = validateAccountLocaleList(rawLocales, `${path}.l10n_locales`, {
+  const issues = validateAccountLocaleList(rawLocales, `${path}.selectedTargetLocales`, {
     allowNull: true,
   }).map((issue) => `${issue.path}:${issue.message}`);
 
   try {
-    parseAccountL10nPolicyStrict(rawPolicy);
+    parseAccountLocalePolicyStrict(rawPolicy);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    issues.push(`${path}.l10n_policy:${detail}`);
+    issues.push(`${path}.localePolicy:${detail}`);
   }
 
   return issues;
@@ -204,7 +206,7 @@ async function loadAccountMembershipRows(
 ): Promise<Result<AccountMembershipRow[]>> {
   const params = new URLSearchParams({
     select:
-      'account_id,user_id,role,created_at,accounts(id,status,tier,status_changed_at,created_at)',
+      'account_id,user_id,role,created_at,accounts(id,status,tier,status_changed_at,selected_target_locales,locale_policy,created_at)',
     user_id: `eq.${userId}`,
     order: 'created_at.asc,account_id.asc',
   });
@@ -250,7 +252,9 @@ function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountCo
     const role = normalizeRole(row.role);
     const tier = normalizeTier(account.tier);
     if (!accountId || !isCompactAccountPublicId(accountId) || !role || !tier) continue;
-    const localeIssues = validateAccountLocaleState([], DEFAULT_ACCOUNT_L10N_POLICY, `accounts.${accountId}`);
+    const selectedTargetLocales = account.selected_target_locales ?? [];
+    const localePolicy = account.locale_policy ?? DEFAULT_ACCOUNT_LOCALE_POLICY;
+    const localeIssues = validateAccountLocaleState(selectedTargetLocales, localePolicy, `accounts.${accountId}`);
     if (localeIssues.length) {
       return { ok: false, response: invalidPersistedStateResponse(localeIssues.join('|')) };
     }
@@ -273,8 +277,8 @@ function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountCo
         tierDropDismissedAt: null,
         tierDropEmailSentAt: null,
       },
-      l10nLocales: [],
-      l10nPolicy: DEFAULT_ACCOUNT_L10N_POLICY,
+      selectedTargetLocales,
+      localePolicy,
     });
   }
   return { ok: true, value: out };

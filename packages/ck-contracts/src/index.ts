@@ -51,7 +51,7 @@ export type RateLimitRecord = {
   resetAt: number;
 };
 
-export type AccountL10nPolicy = {
+export type AccountLocalePolicy = {
   v: 1;
   baseLocale: string;
   ip: {
@@ -75,7 +75,7 @@ export type WidgetLocaleSwitcherSettings = {
     | 'left-middle';
 };
 
-export type AccountL10nValidationIssue = {
+export type AccountLocaleValidationIssue = {
   path: string;
   message: string;
 };
@@ -109,8 +109,8 @@ const WIDGET_LOCALE_SWITCHER_POSITION = new Set([
   'left-middle',
 ]);
 
-function failAccountL10nContract(reason: string): never {
-  throw new Error(`account_l10n_contract_invalid:${reason}`);
+function failAccountLocaleContract(reason: string): never {
+  throw new Error(`account_locale_contract_invalid:${reason}`);
 }
 
 function normalizeSupportedLocaleToken(raw: unknown): string | null {
@@ -326,32 +326,32 @@ export function toAccountAssetPublicPath(assetKey: unknown): string | null {
 }
 
 export function parseAccountLocaleListStrict(value: unknown): string[] {
-  if (!Array.isArray(value)) failAccountL10nContract('locales_missing');
+  if (!Array.isArray(value)) failAccountLocaleContract('locales_missing');
   return Array.from(
     new Set(
       value.map((entry: unknown, index: number) => {
         const normalized = normalizeSupportedLocaleToken(entry);
-        if (!normalized) failAccountL10nContract(`locales_invalid_${index}`);
+        if (!normalized) failAccountLocaleContract(`locales_invalid_${index}`);
         return normalized;
       }),
     ),
   );
 }
 
-export function parseAccountL10nPolicyStrict(raw: unknown): AccountL10nPolicy {
-  if (!isRecord(raw) || raw.v !== 1) failAccountL10nContract('policy_missing');
+export function parseAccountLocalePolicyStrict(raw: unknown): AccountLocalePolicy {
+  if (!isRecord(raw) || raw.v !== 1) failAccountLocaleContract('policy_missing');
   const baseLocale = normalizeSupportedLocaleToken(raw.baseLocale);
-  if (!baseLocale) failAccountL10nContract('policy_base_locale_invalid');
+  if (!baseLocale) failAccountLocaleContract('policy_base_locale_invalid');
   const ipRaw = isRecord(raw.ip) ? raw.ip : null;
-  if (!ipRaw) failAccountL10nContract('policy_ip_invalid');
-  if (!isRecord(ipRaw.countryToLocale)) failAccountL10nContract('policy_country_map_invalid');
+  if (!ipRaw) failAccountLocaleContract('policy_ip_invalid');
+  if (!isRecord(ipRaw.countryToLocale)) failAccountLocaleContract('policy_country_map_invalid');
 
   const countryToLocale: Record<string, string> = {};
   for (const [countryRaw, localeRaw] of Object.entries(ipRaw.countryToLocale)) {
     const country = typeof countryRaw === 'string' ? countryRaw.trim().toUpperCase() : '';
     const locale = normalizeSupportedLocaleToken(localeRaw);
     if (!/^[A-Z]{2}$/.test(country) || !locale) {
-      failAccountL10nContract(`policy_country_locale_invalid_${countryRaw}`);
+      failAccountLocaleContract(`policy_country_locale_invalid_${countryRaw}`);
     }
     countryToLocale[country] = locale;
   }
@@ -369,14 +369,14 @@ export function validateAccountLocaleList(
   value: unknown,
   path = 'locales',
   options?: { allowNull?: boolean },
-): AccountL10nValidationIssue[] {
+): AccountLocaleValidationIssue[] {
   const allowNull = options && options.allowNull === true;
   if (value == null) return allowNull ? [] : [{ path, message: 'locales must be an array' }];
   if (!Array.isArray(value)) {
     return [{ path, message: 'locales must be an array' }];
   }
 
-  const issues: AccountL10nValidationIssue[] = [];
+  const issues: AccountLocaleValidationIssue[] = [];
   value.forEach((entry, index) => {
     if (!normalizeSupportedLocaleToken(entry)) {
       issues.push({ path: `${path}[${index}]`, message: 'locale must be a supported locale token' });
@@ -385,7 +385,7 @@ export function validateAccountLocaleList(
   return issues;
 }
 
-export function validateAccountL10nPolicy(raw: unknown, path = 'policy'): AccountL10nValidationIssue[] {
+export function validateAccountLocalePolicy(raw: unknown, path = 'policy'): AccountLocaleValidationIssue[] {
   if (!isRecord(raw)) {
     return [{ path, message: 'policy must be an object' }];
   }
@@ -393,7 +393,7 @@ export function validateAccountL10nPolicy(raw: unknown, path = 'policy'): Accoun
     return [{ path: `${path}.v`, message: 'policy.v must be 1' }];
   }
 
-  const issues: AccountL10nValidationIssue[] = [];
+  const issues: AccountLocaleValidationIssue[] = [];
   if (!normalizeSupportedLocaleToken(raw.baseLocale)) {
     issues.push({ path: `${path}.baseLocale`, message: 'baseLocale must be a supported locale token' });
   }
@@ -571,8 +571,8 @@ function containsNonPersistableUrl(value: string): boolean {
   return /(?:^|[\s("'=,])(?:data|blob):/i.test(value);
 }
 
-export function configNonPersistableUrlIssues(config: unknown): AccountL10nValidationIssue[] {
-  const issues: AccountL10nValidationIssue[] = [];
+export function configNonPersistableUrlIssues(config: unknown): AccountLocaleValidationIssue[] {
+  const issues: AccountLocaleValidationIssue[] = [];
 
   const visit = (node: unknown, path: string): void => {
     if (typeof node === 'string') {

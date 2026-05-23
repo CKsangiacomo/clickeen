@@ -5,7 +5,7 @@ import type { PolicyProfile } from '@clickeen/ck-policy';
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson).map((entry) => entry.code);
 const SYSTEM_LOCALE_PRIORITY = Array.from(new Set(['en', ...CANONICAL_LOCALES]));
 
-export function normalizeAdditionalAccountLocales(value: unknown, baseLocale: string): string[] {
+export function normalizeSelectedTargetLocales(value: unknown, baseLocale: string): string[] {
   const normalizedBase = normalizeLocaleToken(baseLocale) ?? 'en';
   if (!Array.isArray(value)) return [];
   return Array.from(
@@ -17,7 +17,7 @@ export function normalizeAdditionalAccountLocales(value: unknown, baseLocale: st
   );
 }
 
-export function resolveSystemChosenAdditionalLocale(args: { baseLocale: string }): string | null {
+export function resolveSystemChosenTargetLocale(args: { baseLocale: string }): string | null {
   const baseLocale = normalizeLocaleToken(args.baseLocale) ?? 'en';
   for (const locale of SYSTEM_LOCALE_PRIORITY) {
     if (locale !== baseLocale) return locale;
@@ -25,26 +25,26 @@ export function resolveSystemChosenAdditionalLocale(args: { baseLocale: string }
   return null;
 }
 
-export function materializeAccountAdditionalLocales(args: {
+export function resolveSelectedTargetLocales(args: {
   profile: PolicyProfile | null | undefined;
   baseLocale: string;
   requestedLocales: unknown;
 }): string[] {
-  const requestedLocales = normalizeAdditionalAccountLocales(args.requestedLocales, args.baseLocale);
+  const requestedLocales = normalizeSelectedTargetLocales(args.requestedLocales, args.baseLocale);
   if (args.profile !== 'free') return requestedLocales;
-  const systemLocale = resolveSystemChosenAdditionalLocale({ baseLocale: args.baseLocale });
+  const systemLocale = resolveSystemChosenTargetLocale({ baseLocale: args.baseLocale });
   return systemLocale ? [systemLocale] : [];
 }
 
-export function usesSystemChosenAdditionalLocale(profile: PolicyProfile | null | undefined): boolean {
+export function usesSystemChosenTargetLocale(profile: PolicyProfile | null | undefined): boolean {
   return profile === 'free';
 }
 
-export function normalizeDesiredAccountLocales(args: {
+export function resolveDesiredServingLocales(args: {
   baseLocale: string;
-  locales: unknown;
+  selectedTargetLocales: unknown;
 }): string[] {
   const baseLocale = normalizeLocaleToken(args.baseLocale) ?? 'en';
-  const desired = normalizeAdditionalAccountLocales(args.locales, baseLocale);
+  const desired = normalizeSelectedTargetLocales(args.selectedTargetLocales, baseLocale);
   return [baseLocale, ...desired];
 }

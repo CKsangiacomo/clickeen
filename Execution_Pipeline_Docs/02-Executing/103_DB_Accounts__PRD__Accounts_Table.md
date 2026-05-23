@@ -35,7 +35,7 @@ That split already causes code to call different values `accountId`. It makes se
 
 The product does not need two live account identities. It needs one account id that is safe to use across product operations and public paths.
 
-The account table must also stay small. It should not become a profile table, settings table, locale policy table, agency model, internal-platform flag, or duplicate policy engine.
+The account table must also stay small. It should not become a profile table, agency model, internal-platform flag, or duplicate policy engine.
 
 ## Product What
 
@@ -216,9 +216,10 @@ If current `ck-policy` fails that bar, the DB pivot must fix or rewrite it. The 
 Locale split:
 
 - number of locales available comes from `tier` through `ck-policy`;
-- which locales the account chooses to use is a Roma account setting, not a core `accounts` column.
+- which locales the account chooses to use is `accounts.selected_target_locales`, written by Roma settings through Berlin;
+- the source/base locale and IP locale map are `accounts.locale_policy`, written by Roma settings through Berlin.
 
-If selected locale settings are required, they need a separate explicit settings PRD/table with reader, writer, lifecycle, and cost behavior. They must not be placed in core `accounts`.
+These columns are account settings, not entitlement truth. They must not duplicate `ck-policy` limits, model profiles, feature gates, branding entitlements, or available-locale allowance.
 
 ## User And Invitation Boundary
 
@@ -319,7 +320,6 @@ If any removed field is still a real product need, it must move to a separate ex
 - No account profile table in this PRD.
 - No agency implementation in this PRD.
 - No agency table or agency DDL in this PRD.
-- No locale settings model in this PRD.
 - No policy rewrite in this PRD.
 - No billing provider integration rewrite in this PRD.
 - No public/private dual id model.
@@ -327,7 +327,7 @@ If any removed field is still a real product need, it must move to a separate ex
 
 ## Acceptance Criteria
 
-- `accounts` target schema has only `id`, `status`, `status_changed_at`, `tier`, and `created_at`.
+- `accounts` target schema has only `id`, `status`, `status_changed_at`, `tier`, `selected_target_locales`, `locale_policy`, and `created_at`.
 - `status` excludes `closed`; account deletion is an operation with cleanup, not a retained account state.
 - Account id is the compact id used by Tokyo folders and public paths.
 - `public_id` does not survive as a target column.
@@ -339,8 +339,8 @@ If any removed field is still a real product need, it must move to a separate ex
 - Roma/Tokyo product operations receive one account id shape.
 - `ck-policy` receives `tier` as input and remains the source of entitlement decisions.
 - `ck-policy` is either proven deterministic/typed/tested/consistently consumed or explicitly scheduled for repair before product execution resumes.
-- No limits/counters/localization policies are duplicated into `accounts`.
-- Locale availability comes from `ck-policy`; selected locales, if product-required, are deferred to a separate settings model.
+- No limits/counters/entitlement policies are duplicated into `accounts`.
+- Locale availability comes from `ck-policy`; selected target locales and source-locale behavior are account settings on `accounts`.
 - Account tier/status history is written to `accounts/{accountId}/account-history.jsonl`, not a DB table or history columns; current suspended-account lifecycle reads `status_changed_at`.
 - Agency is documented only as a future account-to-account roll-up concept, not as core account columns, tables, or DDL.
 

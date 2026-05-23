@@ -7,8 +7,6 @@ export type BuilderOpenEnvelope = {
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
-  baseLocale?: string;
-  targetLocales?: string[];
   publishStatus?: 'published' | 'unpublished';
   meta?: Record<string, unknown> | null;
 };
@@ -56,8 +54,6 @@ export async function loadBuilderOpenEnvelope(args: {
       displayName: instance.value.row.displayName || 'Untitled widget',
       widgetType: instance.value.row.widgetType,
       config: instance.value.config,
-      baseLocale: instance.value.row.baseLocale,
-      targetLocales: instance.value.row.targetLocales ?? [],
       publishStatus: instance.value.row.publishStatus,
       meta: instance.value.row.meta,
     },

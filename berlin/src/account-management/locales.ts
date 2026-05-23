@@ -1,8 +1,8 @@
 import {
-  parseAccountL10nPolicyStrict,
+  parseAccountLocalePolicyStrict,
   parseAccountLocaleListStrict,
-  type AccountL10nPolicy,
-  validateAccountL10nPolicy,
+  type AccountLocalePolicy,
+  validateAccountLocalePolicy,
   validateAccountLocaleList,
 } from '@clickeen/ck-contracts';
 import { resolvePolicy, type Policy } from '@clickeen/ck-policy';
@@ -15,7 +15,7 @@ type LocaleMutationResult =
   | { ok: true; warnings: string[] }
   | { ok: false; response: Response };
 
-const DEFAULT_ACCOUNT_L10N_POLICY: AccountL10nPolicy = {
+const DEFAULT_ACCOUNT_LOCALE_POLICY: AccountLocalePolicy = {
   v: 1,
   baseLocale: 'en',
   ip: { countryToLocale: {} },
@@ -39,11 +39,11 @@ function resolveLocaleList(
   return { ok: true, locales: parseAccountLocaleListStrict(value) };
 }
 
-function resolveAccountL10nPolicy(raw: unknown): AccountL10nPolicy {
+function resolveAccountLocalePolicy(raw: unknown): AccountLocalePolicy {
   try {
-    return parseAccountL10nPolicyStrict(raw);
+    return parseAccountLocalePolicyStrict(raw);
   } catch {
-    return DEFAULT_ACCOUNT_L10N_POLICY;
+    return DEFAULT_ACCOUNT_LOCALE_POLICY;
   }
 }
 
@@ -52,7 +52,7 @@ function resolveTranslatedLocaleEntitlementMax(policy: Policy): number | null {
   return raw == null ? null : Math.max(0, Math.floor(raw));
 }
 
-function enforceL10nSelection(policy: Policy, locales: string[]): Response | null {
+function enforceLocaleSelection(policy: Policy, locales: string[]): Response | null {
   const maxTranslatedLocales = resolveTranslatedLocaleEntitlementMax(policy);
   if (maxTranslatedLocales != null && locales.length > maxTranslatedLocales) {
     return json(
@@ -74,16 +74,16 @@ function enforceL10nSelection(policy: Policy, locales: string[]): Response | nul
 async function patchAccountLocales(args: {
   env: Env;
   accountId: string;
-  locales: string[];
-  nextPolicy: AccountL10nPolicy | null;
+  selectedTargetLocales: string[];
+  nextPolicy: AccountLocalePolicy | null;
 }): Promise<LocaleMutationResult> {
   const params = new URLSearchParams({ id: `eq.${args.accountId}` });
   const response = await supabaseAdminFetch(args.env, `/rest/v1/accounts?${params.toString()}`, {
     method: 'PATCH',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify({
-      l10n_locales: args.locales,
-      l10n_policy: args.nextPolicy,
+      selected_target_locales: args.selectedTargetLocales,
+      locale_policy: args.nextPolicy,
     }),
   });
   const payload = await readSupabaseAdminJson<Array<{ id?: unknown }> | Record<string, unknown>>(response);
@@ -122,28 +122,28 @@ export async function handleAccountLocalesUpdate(args: {
     return validationError('coreui.errors.payload.invalid');
   }
 
-  const localesResult = resolveLocaleList((payload as { locales?: unknown }).locales, 'locales');
+  const localesResult = resolveLocaleList((payload as { selectedTargetLocales?: unknown }).selectedTargetLocales, 'selectedTargetLocales');
   if (!localesResult.ok) {
     return json(localesResult.issues, { status: 422 });
   }
 
   const policy = resolvePolicy({ profile: args.account.tier, role: args.account.role });
-  const entitlementGate = enforceL10nSelection(policy, localesResult.locales);
+  const entitlementGate = enforceLocaleSelection(policy, localesResult.locales);
   if (entitlementGate) return entitlementGate;
 
-  let nextPolicyPersisted: unknown = args.account.l10nPolicy;
-  if (Object.prototype.hasOwnProperty.call(payload, 'policy')) {
-    const policyRaw = (payload as { policy?: unknown }).policy;
+  let nextPolicyPersisted: unknown = args.account.localePolicy;
+  if (Object.prototype.hasOwnProperty.call(payload, 'localePolicy')) {
+    const policyRaw = (payload as { localePolicy?: unknown }).localePolicy;
     if (policyRaw != null) {
-      const issues = validateAccountL10nPolicy(policyRaw, 'policy');
+      const issues = validateAccountLocalePolicy(policyRaw, 'localePolicy');
       if (issues.length) return json(issues, { status: 422 });
-      nextPolicyPersisted = parseAccountL10nPolicyStrict(policyRaw);
+      nextPolicyPersisted = parseAccountLocalePolicyStrict(policyRaw);
     } else {
       nextPolicyPersisted = null;
     }
   }
 
-  const previousLocales = resolveLocaleList(args.account.l10nLocales, 'l10n_locales');
+  const previousLocales = resolveLocaleList(args.account.selectedTargetLocales, 'selectedTargetLocales');
   if (!previousLocales.ok) {
     return json(
       {
@@ -157,12 +157,12 @@ export async function handleAccountLocalesUpdate(args: {
     );
   }
 
-  const nextPolicy = resolveAccountL10nPolicy(nextPolicyPersisted);
+  const nextPolicy = resolveAccountLocalePolicy(nextPolicyPersisted);
   const patched = await patchAccountLocales({
     env: args.env,
     accountId: args.account.accountId,
-    locales: localesResult.locales,
-    nextPolicy: nextPolicyPersisted as AccountL10nPolicy | null,
+    selectedTargetLocales: localesResult.locales,
+    nextPolicy: nextPolicyPersisted as AccountLocalePolicy | null,
   });
   if (!patched.ok) return patched.response;
 
@@ -170,8 +170,8 @@ export async function handleAccountLocalesUpdate(args: {
 
   return json({
     accountId: args.account.accountId,
-    locales: localesResult.locales,
-    policy: nextPolicy,
+    selectedTargetLocales: localesResult.locales,
+    localePolicy: nextPolicy,
     warnings: warnings.length ? warnings : undefined,
   });
 }

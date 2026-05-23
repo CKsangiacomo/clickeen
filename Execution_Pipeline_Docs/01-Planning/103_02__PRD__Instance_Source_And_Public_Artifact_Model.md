@@ -28,14 +28,16 @@ The instance must split user-visible base content from non-content config:
 
 ```text
 instance.content.json = every user-editable string in the widget, in the same paths/shape the editor exposes for content text
-instance.config.json = every non-text setting plus instance identity, locale setup, structure, style, behavior, and publish state
+instance.config.json = every non-text setting plus instance identity, structure, style, behavior, and publish state
 ```
 
 `instance.content.json` includes all customer-visible copy that a user can edit in ToolDrawer, content panels, or widget-specific text controls: titles, subtitles, CTA labels, FAQ questions and answers, captions, item labels, and any other widget string. This is the translation input.
 
 Every editable content field is stored as a string. `richtext` means sanitized HTML string, not an object. Tokyo's save/source split is the single write boundary that materializes the widget editable-field contract so downstream translation, review, publish, and runtime paths do not re-interpret content shapes service by service.
 
-`instance.config.json` includes everything else: `instanceId`, widget type/code, display name, base locale, target locales, styles, layout, structure, behavior, non-text settings, publish state, and any other non-content control state.
+`instance.config.json` includes everything else that belongs to the instance itself: `instanceId`, widget type/code, display name, styles, layout, structure, behavior, non-text settings, publish state, and any other non-content control state.
+
+Account locale setup is not instance source. `localePolicy` belongs to account policy/settings and defines the base/source locale and allowance. `selectedTargetLocales` belongs to Roma account settings and defines the locales the user has chosen to generate/review.
 
 Translated locale values apply to `instance.content.json`, not to mixed config. The product model is `locale -> translated content values`; Roma and Bob must not see `overlayId` as translation identity.
 
@@ -223,7 +225,7 @@ Route names may follow the operation map, but naming alone is not enough:
 ## Cutover And Deletion Sequence
 
 1. Freeze new product callers of storage-shaped routes and overlay/pointer/generation-lane types.
-2. Approve the final instance source model: `instance.config.json`, `instance.content.json`, identity/display fields, base locale, target locales, publish state, timestamps, freshness/revision contract if explicitly needed by an operation, and metadata keep/delete decisions.
+2. Approve the final instance source model: `instance.config.json`, `instance.content.json`, identity/display fields, publish state, timestamps, freshness/revision contract if explicitly needed by an operation, and metadata keep/delete decisions. Approve account locale policy and selected target locale ownership separately so locale state does not leak back into instance source.
 3. Add product operation routes and clients for open/save/list/create/rename/publish/unpublish and translations list/read/write/generate/complete.
 4. Move Roma direct clients and account routes from storage-shaped Tokyo routes to product operation clients.
 5. Move Bob/Roma session commands from locale-overlay vocabulary to translation/preview-locale vocabulary.
@@ -388,7 +390,8 @@ Still pending after 103_02.5:
 - Final instance folder file list is documented.
 - Current `instance.json` fields are mapped to split into config, split into content, move to job/workflow state, generated artifact, or delete.
 - `instance.config.json` and `instance.content.json` shapes are approved.
-- A decision exists for identity, display name, widget type/code, base locale, target locales, freshness/revision contract if explicitly needed, generation/workflow state, publish state, timestamps, and any current metadata.
+- A decision exists for identity, display name, widget type/code, freshness/revision contract if explicitly needed, generation/workflow state, publish state, timestamps, and any current metadata.
+- A separate decision exists for account `localePolicy` and account `selectedTargetLocales`; instance source is not their authority.
 - Public generated files are classified as canonical generated artifact, compatibility artifact, cache-busting artifact, or delete.
 - `accounts/{accountPublicId}/instances/index.json` is deleted as product model. Roma-facing instance list/create paths no longer depend on `index.json` as a product API.
 - Any future account-instance read model requires a separate approval and remains private below `listAccountInstances`.

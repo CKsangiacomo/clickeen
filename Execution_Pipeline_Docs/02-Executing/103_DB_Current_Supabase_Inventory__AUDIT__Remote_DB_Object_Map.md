@@ -201,7 +201,7 @@ Every row below has a product domain and a current decision. `blocked` means imp
 
 | Object | Object type | Domain | Classification | Current callers | Decision / notes | Owning future slice |
 | --- | --- | --- | --- | --- | --- | --- |
-| `accounts` | table | Accounts | rebuild | Berlin active | Product need survives, but current row is bloated: UUID plus `public_id`, `is_platform`, `name`, `slug`, `website_url`, l10n JSON, tier history columns, and generic `updated_at`. Target account table must be minimal and tied to billing/status/tier contracts. | `103_DB_Accounts` + `103_DB_Billing_Status` |
+| `accounts` | table | Accounts | rebuild | Berlin active | Product need survives, but current row is bloated: UUID plus `public_id`, `is_platform`, `name`, `slug`, `website_url`, legacy l10n JSON names, tier history columns, and generic `updated_at`. Target account table must be minimal and tied to billing/status/tier contracts, with locale settings named as account `selected_target_locales` and `locale_policy`. | `103_DB_Accounts` + `103_DB_Billing_Status` |
 | `account_members` | table | Users | delete | Berlin active | Current table enables multi-account membership, which is explicitly rejected for V1. Rewrite callers so `users.account_id` and `users.role` carry the approved one-user-one-account model. | `103_DB_Users` |
 | `account_invitations` | table | Invite Members | rebuild | Berlin active | Invite Members is a real feature and needs a V1 lifecycle table, but current shape points at `user_profiles` and old membership semantics. | `103_DB_Users` |
 | `login_identities` | table | Berlin auth login method | rebuild | Berlin active | Product need survives: login method is separate from user. Current row duplicates profile/provider fields and points at `user_profiles`. Must rebuild as login methods, not connectors. | `103_DB_Users` + Berlin auth/connector audit |
@@ -272,7 +272,7 @@ The current database is mostly Berlin/auth bootstrap and legacy widget/catalog r
 ## Required PRD Updates After Audit
 
 - Parent DB Pivot PRD must state that current Supabase is a rebuild surface, not a foundation to preserve.
-- Accounts PRD must explicitly delete `public_id`, `is_platform`, account display/name fields, l10n JSON, and generic tier history columns unless a later approved slice restores them.
+- Accounts PRD must explicitly delete `public_id`, `is_platform`, account display/name fields, legacy l10n JSON names, and generic tier history columns unless a later approved slice restores them.
 - Users PRD must explicitly replace `user_profiles` and `account_members` with the approved one-user-one-account model.
 - Users PRD must separate login methods from future connector/account connections.
 - Invite Members V1 table must be specified as its own lifecycle table or explicitly deferred.

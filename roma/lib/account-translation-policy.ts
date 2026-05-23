@@ -1,4 +1,4 @@
-import { normalizeDesiredAccountLocales } from './account-locales';
+import { resolveDesiredServingLocales } from './account-locales';
 import { loadCurrentAccountLocalesState } from './account-locales-state';
 
 export type AccountTranslationLanguagePolicy = {
@@ -50,12 +50,12 @@ export async function loadAccountTranslationLanguagePolicy(args: {
   return {
     ok: true,
     value: {
-      baseLocale: state.policy.baseLocale,
-      desiredLocales: normalizeDesiredAccountLocales({
-        baseLocale: state.policy.baseLocale,
-        locales: state.locales,
+      baseLocale: state.localePolicy.baseLocale,
+      desiredLocales: resolveDesiredServingLocales({
+        baseLocale: state.localePolicy.baseLocale,
+        selectedTargetLocales: state.selectedTargetLocales,
       }),
-      countryToLocale: state.policy.ip.countryToLocale,
+      countryToLocale: state.localePolicy.ip.countryToLocale,
     },
   };
 }

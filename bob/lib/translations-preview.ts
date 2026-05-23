@@ -5,7 +5,7 @@ export type TranslationSetup = {
   v: 1;
   baseLocale: string;
   planTranslationsMax: number | null;
-  activeLocales: string[];
+  selectedTargetLocales: string[];
 };
 
 export type TranslatedLocaleEntry = {
@@ -91,7 +91,7 @@ export function normalizeTranslationSetup(payload: unknown): TranslationSetup | 
     v: 1,
     baseLocale,
     planTranslationsMax,
-    activeLocales: normalizeLocaleList(payload.activeLocales).filter((locale) => locale !== baseLocale),
+    selectedTargetLocales: normalizeLocaleList(payload.selectedTargetLocales).filter((locale) => locale !== baseLocale),
   };
 }
 
@@ -144,11 +144,11 @@ export function retainTranslatedLocaleValues(
 
 export function buildTranslationPanelLocaleState(args: {
   baseLocale: string;
-  activeLocales: string[];
+  selectedTargetLocales: string[];
   translatedLocales: TranslatedLocalesData | null;
   requestedLocale: string;
 }): TranslationPanelLocaleState {
-  const expectedLocales = new Set(args.activeLocales.filter((locale) => locale !== args.baseLocale));
+  const expectedLocales = new Set(args.selectedTargetLocales.filter((locale) => locale !== args.baseLocale));
   const readyLocales = new Set(
     (args.translatedLocales?.translations ?? [])
       .map((entry) => entry.locale)

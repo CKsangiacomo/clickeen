@@ -32,7 +32,7 @@ The product must behave like one system:
 1. Bob sends the user's Generate intent to Roma.
 2. Roma authenticates the account/user and forwards one product command.
 3. Tokyo owns the generation job.
-4. Tokyo computes the delta from `instance.content.json`, the widget `editable-fields.json` contract, current translated locale values, and account target locales.
+4. Tokyo computes the delta from `instance.content.json`, the widget `editable-fields.json` contract, current translated locale values, and account `selectedTargetLocales` from Roma settings.
 5. Tokyo queues per-locale work for San Francisco.
 6. San Francisco translates concrete text fields and reports every terminal outcome back to Tokyo.
 7. Tokyo updates translated locale values and job state.
@@ -106,6 +106,8 @@ currentReadyLocales
 message/reason for terminal failure when applicable
 ```
 
+`baseLocale` is the source locale from account `localePolicy`. `targetLocales` is the per-job snapshot of account `selectedTargetLocales`, excluding `baseLocale`; Tokyo stores it on the job so workers complete against one deterministic target set.
+
 Implementation primitive locked in slice `103_03.1`:
 
 ```text
@@ -127,7 +129,7 @@ Tokyo computes delta only from product truth:
 
 - current saved `instance.content.json`;
 - widget `editable-fields.json`;
-- account target locales;
+- account `selectedTargetLocales`;
 - current translated locale values by locale;
 - content field `ok` / `changed` pickup status.
 
@@ -145,7 +147,7 @@ This is not `sourceVersion`. It is direct comparison of the concrete text values
 
 Generate must be deterministic:
 
-- If there is no active job, Tokyo creates a job from the current saved content and target locales.
+- If there is no active job, Tokyo creates a job from the current saved content and account `selectedTargetLocales`.
 - If the same current delta already has an active job, Tokyo returns the existing job summary and does not enqueue duplicate locale jobs.
 - If base content changed or missing locales changed while an older job is active, Tokyo supersedes the older job and creates a new job from the latest saved content.
 - Old queued/worker completions may still arrive. Tokyo rejects them as superseded/stale and records the terminal outcome on the old job.
