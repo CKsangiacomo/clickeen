@@ -76,7 +76,7 @@ Direct DNS check:
 dig +short dev.clk.live
 ```
 
-Current result before the cloud-dev custom-domain deploy: not green.
+Current result after cloud-dev route/DNS setup: Cloudflare edge IPs are returned.
 
 Nameserver check:
 
@@ -102,7 +102,7 @@ Current result after the operator updated the Cloudflare token: the token can re
 Operator confirmation:
 
 - `clk.live` exists as an active Cloudflare zone and is reserved for production public serving.
-- Cloud-dev must use the `dev.clk.live` custom domain on the `tokyo-assets-dev` worker.
+- Cloud-dev must use the `dev.clk.live/*` Cloudflare route on the `tokyo-assets-dev` worker.
 
 Direct A/CNAME checks:
 
@@ -111,7 +111,7 @@ dig +short A dev.clk.live
 dig +short CNAME dev.clk.live
 ```
 
-Current result before the cloud-dev custom-domain deploy: not green.
+Current result after cloud-dev route/DNS setup: `A dev.clk.live` returns Cloudflare edge IPs.
 
 Forced Cloudflare edge check:
 
@@ -119,7 +119,7 @@ Forced Cloudflare edge check:
 curl -I https://dev.clk.live/00000001/UZ3JEJSHII
 ```
 
-Current target: HTTP 200 after the custom domain is deployed and the seeded public artifact is materialized.
+Current result after cloud-dev route/DNS setup: HTTP 404 with Tokyo-worker headers. The route works; the seeded FAQ public artifact is still missing.
 
 Private source mirror check:
 
@@ -127,14 +127,14 @@ Private source mirror check:
 curl -I https://dev.clk.live/00000001/UZ3JEJSHII/instance.json
 ```
 
-Required result: HTTP 404.
+Current result after cloud-dev route/DNS setup: HTTP 404 with Tokyo-worker headers.
 
 ## Deterministic Readout
 
-The gate is blocked for two separate reasons:
+The gate is blocked for two remaining reasons:
 
-1. Cloud-dev public serving has not yet been proven on `dev.clk.live`.
-2. The seeded FAQ instance still needs a materialized `index.html` public artifact at `accounts/00000001/instances/UZ3JEJSHII/index.html`, or a fresh Roma publish operation must prove that the artifact exists.
+1. The seeded FAQ instance still needs a materialized `index.html` public artifact at `accounts/00000001/instances/UZ3JEJSHII/index.html`, or a fresh Roma publish operation must prove that the artifact exists.
+2. Authenticated Roma human smoke still needs to prove open, save, Generate, translated preview, and publish.
 
 The private `instance.json` 404 is good. It proves the old source mirror is not accidentally exposed as a public artifact.
 
@@ -193,7 +193,7 @@ Cloud invocation status:
 The gate can go green only after all of these are true:
 
 - the repair route is deployed and run for the seeded cloud-dev account, or the same result is produced by a real Roma publish operation;
-- `dev.clk.live` resolves normally for cloud-dev public serving.
+- `dev.clk.live` resolves normally for cloud-dev public serving. Green as of 2026-05-23.
 - FAQ, Countdown, and Logo Showcase seeded instances have materialized public artifacts under the new public artifact model.
 - Public smoke succeeds without `--resolve`.
 - Authenticated Roma smoke proves FAQ open, save, Generate, translated preview, and publish.

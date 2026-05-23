@@ -102,7 +102,8 @@ Rules:
 - `clk.live` is reserved for production public serving.
 - The path shape is identical across environments: `/{accountPublicId}/{instanceId}`.
 - Do not bind the cloud-dev Tokyo worker to `clk.live`.
-- Tokyo-worker owns the cloud-dev binding in `tokyo-worker/wrangler.toml`: custom domain `dev.clk.live` and `PUBLIC_SERVING_BASE_URL=https://dev.clk.live`.
+- Tokyo-worker owns the cloud-dev public route in Cloudflare zone infra: `dev.clk.live/*` routes to `tokyo-assets-dev`, with `PUBLIC_SERVING_BASE_URL=https://dev.clk.live`.
+- The cloud-dev worker deploy script uploads worker code with `wrangler deploy --routes ""`; route/DNS mutation is zone infrastructure and must not be retried blindly from the worker deploy token.
 
 ## Prague
 

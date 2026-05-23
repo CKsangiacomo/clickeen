@@ -169,8 +169,8 @@ Current 103_DB.9 readout:
 
 - Blocked: cloud deploy and targeted code verification were green at the previous runtime head, but the product-path smoke gate is not green yet.
 - Green: architecture docs now split public serving by environment. Cloud-dev uses `dev.clk.live`; production release stages use `clk.live`.
-- In progress: Tokyo-worker cloud-dev config is being cut over to the `dev.clk.live` custom domain, with `PUBLIC_SERVING_BASE_URL=https://dev.clk.live`.
-- Blocked until deploy/proof: `dev.clk.live/{accountPublicId}/{instanceId}` must resolve normally and serve a materialized generated public artifact.
+- Green: `dev.clk.live/*` routes to `tokyo-assets-dev`, with `PUBLIC_SERVING_BASE_URL=https://dev.clk.live`.
+- Blocked until artifact proof: `dev.clk.live/{accountPublicId}/{instanceId}` resolves to Tokyo-worker, but the seeded FAQ public URL currently returns 404 because the generated public artifact is missing.
 - Blocked until proof: seeded FAQ, Countdown, and Logo Showcase public artifacts must exist under the new public artifact model.
 - Green invariant to preserve: private source mirror access such as `/instance.json` must still return 404 on the public-serving host.
 - Blocked: authenticated Roma human smoke still needs a real browser/session or Roma cookie and must prove open, save, Generate, translated preview, and publish before PRD 103 resumes.

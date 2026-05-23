@@ -4,7 +4,7 @@ compatibility_date = "2025-12-28"
 compatibility_flags = ["global_fetch_strictly_public"]
 workers_dev = false
 routes = [
-  { pattern = "dev.clk.live", custom_domain = true },
+  { pattern = "dev.clk.live/*", zone_name = "clk.live" },
   { pattern = "tokyo.dev.clickeen.com/healthz", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/widgets/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/dieter/*", zone_name = "clickeen.com" },
