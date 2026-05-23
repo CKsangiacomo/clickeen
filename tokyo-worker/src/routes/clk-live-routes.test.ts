@@ -3,6 +3,7 @@ import test from 'node:test';
 import type { Env } from '../types.ts';
 import { writeInstanceServeState, writeSavedRenderConfig } from '../domains/render/saved-config.ts';
 import { attachTestInstanceRegistry } from '../domains/render/test-instance-registry.ts';
+import { dispatchTokyoRoute } from '../route-dispatch.ts';
 import { tryHandleClkLiveStaticRoutes } from './clk-live-routes.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
@@ -209,4 +210,19 @@ test('clk.live supports HEAD for allowed files and redirects canonical http to h
   });
   assert.equal(devRedirect?.status, 301);
   assert.equal(devRedirect?.headers.get('location'), `https://dev.clk.live/${ACCOUNT_ID}/${INSTANCE_ID}`);
+});
+
+test('public serving hosts do not expose Tokyo operational routes', async () => {
+  const { env } = createTestEnv();
+  for (const pathname of ['/healthz', '/__internal/accounts/A1B2C3D4/serving/restore-paid', '/widgets/faq/spec.json']) {
+    const url = new URL(`https://dev.clk.live${pathname}`);
+    const response = await dispatchTokyoRoute({
+      req: new Request(url),
+      env,
+      pathname: url.pathname.replace(/\/+$/, '') || '/',
+      url,
+      respond: (nextResponse) => nextResponse,
+    });
+    assert.equal(response.status, 404, pathname);
+  }
 });
