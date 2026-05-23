@@ -29,6 +29,7 @@ Cloud deployment is green for the current code head:
 
 Documentation head:
 
+- `caf522f9` aligns account locale taxonomy across Berlin, Roma, Bob, Tokyo, contracts, and PRD docs. It introduces migration `20260523150000__prd103_account_locale_settings_taxonomy.sql`.
 - `d44b3417` updates San Francisco to use the renamed translated-value contracts after public-serving cleanup.
 - `6627dc1f` removes legacy public-serving paths, deletes the live `/renders/*` route from cloud-dev, and keeps only regression checks for forbidden public paths.
 - `74bc5f87` updates this gate readout. It does not change runtime behavior.
@@ -151,9 +152,14 @@ Current result after cloud-dev route/DNS setup: HTTP 404 with Tokyo-worker heade
 
 ## Deterministic Readout
 
-The gate is blocked for one remaining reason:
+The gate is blocked for two remaining reasons:
 
-1. Authenticated Roma human smoke still needs to prove open, save, Generate, translated preview, and publish.
+1. Supabase migration `20260523150000__prd103_account_locale_settings_taxonomy.sql` must be deployed to cloud-dev through the reviewed `supabase migrations deploy` workflow before cloud-dev Roma/Berlin smoke is valid.
+2. Authenticated Roma human smoke still needs to prove open, save, Generate, translated preview, and publish after that migration is live.
+
+The taxonomy migration creates account `selected_target_locales` and `locale_policy`, migrates/drops legacy `l10n_locales` and `l10n_policy`, and seeds the tier3 admin account selected target locales. Running the new app code before this migration is live can make Berlin fail when it selects the new columns.
+
+Current agent limitation: the shell does not have `gh`, no GitHub token is available, and the available GitHub connector does not expose workflow dispatch. Therefore the migration workflow cannot be dispatched from this session.
 
 The private `instance.json` 404 is good. It proves the old source mirror is not accidentally exposed as a public artifact.
 
@@ -212,6 +218,7 @@ Cloud invocation status:
 
 The gate can go green only after all of these are true:
 
+- Blocked: run GitHub Actions workflow `supabase migrations deploy` with `target=cloud-dev` and `confirm=APPLY_MIGRATIONS` for commit `caf522f9` or later.
 - Green: `dev.clk.live` resolves normally for cloud-dev public serving.
 - Green: FAQ, Countdown, and Logo Showcase seeded instances have materialized public artifacts under the new public artifact model.
 - Green: public smoke succeeds without `--resolve`.
