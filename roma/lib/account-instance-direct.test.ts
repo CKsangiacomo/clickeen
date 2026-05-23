@@ -73,6 +73,8 @@ test('account instance helpers use product operations for lifecycle calls', asyn
               instanceId: INSTANCE_ID,
               widgetType: 'faq',
               displayName: 'FAQ',
+              baseLocale: 'en',
+              targetLocales: ['it', 'cs'],
               publishStatus: 'unpublished',
               updatedAt: '2026-05-19T00:00:00.000Z',
               meta: null,
@@ -147,12 +149,17 @@ test('account instance helpers use product operations for lifecycle calls', asyn
       requestId: 'req_create',
     })).ok, true);
 
-    assert.equal((await loadTokyoAccountInstanceDocument({
+    const opened = await loadTokyoAccountInstanceDocument({
       accountId: ACCOUNT_PUBLIC_ID,
       instanceId: INSTANCE_ID,
       accountCapsule: 'capsule',
       requestId: 'req_open',
-    })).ok, true);
+    });
+    assert.equal(opened.ok, true);
+    if (opened.ok) {
+      assert.equal(opened.value.row.baseLocale, 'en');
+      assert.deepEqual(opened.value.row.targetLocales, ['it', 'cs']);
+    }
 
     const saved = await saveAccountInstanceInTokyo({
       accountId: ACCOUNT_PUBLIC_ID,

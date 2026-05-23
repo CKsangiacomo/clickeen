@@ -30,6 +30,8 @@ export type AccountInstanceCoreRow = {
   widgetId?: string;
   accountId: string;
   widgetType: string;
+  baseLocale?: string;
+  targetLocales?: string[];
   publishStatus?: AccountInstanceLiveStatus;
   meta?: Record<string, unknown> | null;
 };
@@ -272,6 +274,17 @@ function normalizeTokyoWidgetDefinitions(raw: unknown): TokyoWidgetDefinition[] 
   return entries as TokyoWidgetDefinition[];
 }
 
+function normalizeStringList(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return Array.from(
+    new Set(
+      raw
+        .map((entry) => asTrimmedString(entry))
+        .filter((entry): entry is string => Boolean(entry)),
+    ),
+  );
+}
+
 function normalizeAccountInstancePayload(payload: unknown):
   | { row: AccountInstanceCoreRow; config: Record<string, unknown> }
   | null {
@@ -290,6 +303,8 @@ function normalizeAccountInstancePayload(payload: unknown):
       updatedAt: asTrimmedString(payload.updatedAt),
       accountId,
       widgetType,
+      baseLocale: asTrimmedString(payload.baseLocale) ?? undefined,
+      targetLocales: normalizeStringList(payload.targetLocales),
       publishStatus: payload.publishStatus === 'published' ? 'published' : payload.publishStatus === 'unpublished' ? 'unpublished' : undefined,
       meta: isRecord(payload.meta) ? payload.meta : null,
     },

@@ -438,6 +438,8 @@ export async function tryHandleInternalRenderRoutes(
           widgetCode: instance.value.widgetCode,
           widgetType: instance.value.widgetType,
           displayName: instance.value.displayName,
+          baseLocale: instance.value.baseLocale,
+          targetLocales: instance.value.targetLocales,
           publishStatus: instance.value.publishStatus,
           updatedAt: instance.value.updatedAt,
           meta: instance.value.meta ?? null,

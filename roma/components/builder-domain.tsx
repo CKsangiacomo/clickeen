@@ -96,6 +96,8 @@ type BuilderOpenResponse = {
   displayName: string;
   widgetType: string;
   config: Record<string, unknown>;
+  baseLocale?: string;
+  targetLocales?: string[];
   publishStatus?: 'published' | 'unpublished';
   meta?: Record<string, unknown> | null;
   copilot?: unknown;
@@ -229,9 +231,12 @@ function buildTranslationSetup(args: {
   baseLocale: string;
   activeAccount: ReturnType<typeof useRomaAccountContext>['activeAccount'];
   accountPolicy: ReturnType<typeof useRomaAccountContext>['accountPolicy'];
+  instanceTargetLocales?: unknown;
 }): BobOpenEditorPayload['translationSetup'] {
   const accountLocales = parseAccountLocaleListStrict(args.activeAccount.l10nLocales);
-  const activeLocales = accountLocales.filter((locale) => locale !== args.baseLocale);
+  const instanceLocales = parseAccountLocaleListStrict(args.instanceTargetLocales);
+  const sourceLocales = accountLocales.length > 0 ? accountLocales : instanceLocales;
+  const activeLocales = sourceLocales.filter((locale) => locale !== args.baseLocale);
   const planTranslationsMax = args.accountPolicy.limits['l10n.locales.max'];
   return {
     v: 1,
@@ -486,11 +491,13 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       const resolvedInstanceId = builderOpen.instanceId;
       const label = typeof builderOpen?.displayName === 'string' && builderOpen.displayName.trim() ? builderOpen.displayName.trim() : resolvedInstanceId;
       const config = builderOpen.config as Record<string, unknown>;
-      const baseLocale = parseAccountL10nPolicyStrict(activeAccount.l10nPolicy).baseLocale;
+      const instanceBaseLocale = typeof builderOpen.baseLocale === 'string' && builderOpen.baseLocale.trim() ? builderOpen.baseLocale.trim() : '';
+      const baseLocale = instanceBaseLocale || parseAccountL10nPolicyStrict(activeAccount.l10nPolicy).baseLocale;
       const translationSetup = buildTranslationSetup({
         baseLocale,
         activeAccount,
         accountPolicy,
+        instanceTargetLocales: builderOpen.targetLocales,
       });
       const message: BobOpenEditorPayload = {
         type: 'ck:open-editor',
