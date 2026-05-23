@@ -6,7 +6,7 @@ import {
 import {
   type FaqSavedTextField,
 } from '@clickeen/ck-contracts/faq-language-values';
-import { validateOverlayValuesForProducerItems } from '@clickeen/ck-contracts/overlay-primitives';
+import { validateTranslatedValuesForProducerItems } from '@clickeen/ck-contracts/translated-value-primitives';
 import { HttpError } from './http';
 import {
   produceCurrentLanguageValues,
@@ -88,7 +88,7 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
       });
     }
   }
-  const changedValidation = validateOverlayValuesForProducerItems(
+  const changedValidation = validateTranslatedValuesForProducerItems(
     job.changedFields.map(fieldToTranslationItem),
     produced.values,
   );

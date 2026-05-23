@@ -1,8 +1,8 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import {
-  validateOverlayValuesForProducerItems as validateOverlayValuesForSavedTextItems,
-  type OverlayValueMap,
-} from '@clickeen/ck-contracts/overlay-primitives';
+  validateTranslatedValuesForProducerItems as validateTranslatedValuesForSavedTextItems,
+  type TranslatedValueMap,
+} from '@clickeen/ck-contracts/translated-value-primitives';
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { assertCap, verifyGrant } from './grants';
 import { resolveModelSelection } from './ai/modelRouter';
@@ -43,7 +43,7 @@ export type SavedTextGraphTranslationRequest = {
 
 export type CurrentLanguageValuesResult = {
   v: 1;
-  values: OverlayValueMap;
+  values: TranslatedValueMap;
   usage?: Usage;
 };
 
@@ -265,7 +265,7 @@ export async function produceCurrentLanguageValues(args: {
     });
   }
 
-  const values: OverlayValueMap = Object.fromEntries(directValues);
+  const values: TranslatedValueMap = Object.fromEntries(directValues);
   let usage: Usage | undefined;
 
   if (modelEntries.length > 0) {
@@ -304,7 +304,7 @@ export async function produceCurrentLanguageValues(args: {
     }
   }
 
-  const exact = validateOverlayValuesForSavedTextItems(args.request.items, values);
+  const exact = validateTranslatedValuesForSavedTextItems(args.request.items, values);
   if (!exact.ok) {
     throw new HttpError(502, {
       code: 'PROVIDER_ERROR',

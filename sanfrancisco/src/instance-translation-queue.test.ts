@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/overlay-primitives';
+import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import type { InstanceTranslationJob } from '@clickeen/ck-contracts/instance-translation-jobs';
 import {
   buildFaqSavedTextGraph,
