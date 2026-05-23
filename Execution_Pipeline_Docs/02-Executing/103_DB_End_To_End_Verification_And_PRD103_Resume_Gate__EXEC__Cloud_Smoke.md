@@ -138,6 +138,8 @@ The gate is blocked for two remaining reasons:
 
 The private `instance.json` 404 is good. It proves the old source mirror is not accidentally exposed as a public artifact.
 
+The public-host operational route 404s are also required. `dev.clk.live` must not expose Tokyo `/healthz`, `/__internal/*`, `/widgets/*`, or other operational routes. It is a public artifact host only.
+
 The current GitHub surface-reachability workflow does not check `dev.clk.live`; it checks Berlin, Tokyo, San Francisco, Roma, Bob, Venice, and unauthenticated Roma route boundaries. That workflow being green is necessary but not sufficient for the public serving gate.
 
 ## Product Interpretation

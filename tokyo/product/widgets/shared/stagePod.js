@@ -441,7 +441,7 @@
     // Bob uses this to avoid rendering "default" HTML before the real config is applied.
     postReady(stageEl, scopeEl);
 
-    // Notify parent (Bob/Prague/Venice embeds) of height changes when the stage can be content-driven.
+    // Notify parent hosts of height changes when the stage can be content-driven.
     // `viewport` must report as well; otherwise iframe hosts can get stuck at a tiny initial height.
     const shouldReport =
       typeof window !== 'undefined' &&
