@@ -201,4 +201,12 @@ test('clk.live supports HEAD for allowed files and redirects canonical http to h
   });
   assert.equal(redirect?.status, 301);
   assert.equal(redirect?.headers.get('location'), `https://clk.live/${ACCOUNT_ID}/${INSTANCE_ID}`);
+
+  const devRedirect = await callPublicRoute({
+    env,
+    pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}`,
+    origin: 'http://dev.clk.live',
+  });
+  assert.equal(devRedirect?.status, 301);
+  assert.equal(devRedirect?.headers.get('location'), `https://dev.clk.live/${ACCOUNT_ID}/${INSTANCE_ID}`);
 });

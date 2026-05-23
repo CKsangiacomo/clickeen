@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const DEFAULT_ROMA_BASE = 'https://roma.dev.clickeen.com';
-const DEFAULT_CLK_LIVE_BASE = 'https://clk.live';
+const DEFAULT_CLK_LIVE_BASE = 'https://dev.clk.live';
 const DEFAULT_TIMEOUT_MS = 20_000;
 const DEFAULT_CONCURRENCY = 6;
 
@@ -15,14 +15,14 @@ const ONE_BY_ONE_GIF = new Uint8Array([
 function printUsage() {
   console.log(`Usage: pnpm health:product-path [options]
 
-Runs product-path smoke checks against Roma and clk.live static serving.
+Runs product-path smoke checks against Roma and the environment public-serving host.
 
 Required for authenticated checks:
   --cookie <cookie>            Roma browser cookie header. Also reads CK_ROMA_COOKIE or ROMA_COOKIE.
 
 Options:
   --roma-base <url>            Roma base URL (default: ${DEFAULT_ROMA_BASE})
-  --clk-base <url>             clk.live base URL (default: ${DEFAULT_CLK_LIVE_BASE})
+  --clk-base <url>             Public-serving base URL (default: ${DEFAULT_CLK_LIVE_BASE})
   --account-public-id <id>     Account public ID for static public read checks
   --instance-id <id>           Published instanceId for static public read checks
   --source-instance-id <id>    Account instanceId to duplicate during --write checks
@@ -440,11 +440,11 @@ async function runDuplicateWrite(runner, sourceInstance) {
 
 async function runStaticPublicServing(runner, accountPublicId, instanceId) {
   if (!accountPublicId || !instanceId) {
-    runner.skip('clk.live public instance read', 'clk.public', 'no accountPublicId or published instanceId supplied or discovered');
+    runner.skip('Public serving instance read', 'clk.public', 'no accountPublicId or published instanceId supplied or discovered');
     return;
   }
 
-  await runner.check('clk.live public instance read', 'clk.public', async () => {
+  await runner.check('Public serving instance read', 'clk.public', async () => {
     const embed = await runner.request(runner.args.clkBase, `/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`);
     assert2xx(embed, `GET /${accountPublicId}/${instanceId}`);
     const privateSource = await runner.request(runner.args.clkBase, `/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}/instance.json`);

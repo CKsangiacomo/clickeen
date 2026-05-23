@@ -4,6 +4,7 @@ export type Env = {
   ENV_STAGE?: string;
   TOKYO_DEV_JWT: string;
   TOKYO_PUBLIC_BASE_URL?: string;
+  PUBLIC_SERVING_BASE_URL?: string;
   TOKYO_R2: R2Bucket;
   USAGE_KV?: KVNamespace;
   INSTANCE_TRANSLATION_JOBS?: Queue<InstanceTranslationJob>;

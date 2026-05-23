@@ -38,7 +38,7 @@ Rules:
 | 103_DB.6 - Widget definition operation cleanup | Green | Ensure Roma asks Tokyo for widget definitions and never reads generated R2 catalog/manifest artifacts; decide whether product registry remains repo/static or DB. Current artifact: `103_DB_Widget_Definition_Operation_Cleanup__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: widget definitions remain repo/static Tokyo source exposed through Tokyo operations; Roma calls `/__internal/widgets/definitions`; generated widget manifest/catalog route and DB `widgets` authority are absent from active product paths. |
 | 103_DB.7 - Publish/materialization bridge | Green | Define and implement the product operation that materializes public artifacts from Tokyo-owned state to R2. Remove file-presence status mechanics. Current artifact: `103_DB_Publish_Materialization_Bridge__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: `instances.publish_status` is product publish state; `clk.live` visitor traffic reads materialized R2 artifacts without Supabase; unpublish removes public artifacts; `applyFreeTierServing` and `restorePaidTierServing` materialize policy-specific serving output without rewriting publish intent. |
 | 103_DB.8 - Migration and toxic-path deletion | Green | Migrate current dev/admin instances and remove old R2 source files/routes/guards/workflows from active product paths. Current artifact: `103_DB_Migration_And_Toxic_Path_Deletion__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: current dev/admin instances were seeded in 103_DB.3; active runtime no longer writes/reads `instance.json`; `publishStatus` is removed from `instance.config.json`; old helper names are blocked by guard; Tokyo tests/typecheck and PRD guard pass. |
-| 103_DB.9 - End-to-end verification and PRD 103 resume gate | Blocked | Run full targeted verification and human smoke checklist for open/save/generate/preview/publish. Current artifact: `103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`. | Architecture docs are updated; all listed tests pass; public serving smoke passes on canonical `clk.live`; product signs PRD 103 can resume from planning. |
+| 103_DB.9 - End-to-end verification and PRD 103 resume gate | Blocked | Run full targeted verification and human smoke checklist for open/save/generate/preview/publish. Current artifact: `103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`. | Architecture docs are updated; all listed tests pass; cloud-dev public serving smoke passes on canonical `dev.clk.live`; product signs PRD 103 can resume from planning. |
 
 ## Initial Blast-Radius Ledger
 
@@ -167,12 +167,12 @@ Current executable slice is `103_DB.9 - End-to-end verification and PRD 103 resu
 
 Current 103_DB.9 readout:
 
-- Blocked: cloud deploy and targeted code verification are green, but the product-path smoke gate is not green.
-- Green: commit `52b990ff` deployed after rerunning a transient Cloudflare R2 bulk-sync HTTP 502 failure, and cloud-dev surface reachability is green for that commit.
-- Blocked: canonical `clk.live` is not provisioned as a usable Cloudflare public domain for this deploy account yet. The domain has been purchased, but zone/DNS/route setup is still pending.
-- Blocked: forcing `clk.live` through a Cloudflare edge IP reaches Tokyo-worker as an artificial probe, but the seeded FAQ public artifact returns HTTP 404, which means the published seeded instances have not been materialized under the new public artifact model.
-- Blocked: the new Tokyo repair operation is internal and tested, but `tokyo.dev.clickeen.com/__internal/*` is not publicly routed to Tokyo. It cannot be run from shell through the public custom domain. The allowed cloud path is a real Roma publish operation or a narrow Roma-owned internal repair caller.
-- Green: private source mirror access remains denied; forced `clk.live` access to `instance.json` returns HTTP 404.
+- Blocked: cloud deploy and targeted code verification were green at the previous runtime head, but the product-path smoke gate is not green yet.
+- Green: architecture docs now split public serving by environment. Cloud-dev uses `dev.clk.live`; production release stages use `clk.live`.
+- In progress: Tokyo-worker cloud-dev config is being cut over to the `dev.clk.live` custom domain, with `PUBLIC_SERVING_BASE_URL=https://dev.clk.live`.
+- Blocked until deploy/proof: `dev.clk.live/{accountPublicId}/{instanceId}` must resolve normally and serve a materialized generated public artifact.
+- Blocked until proof: seeded FAQ, Countdown, and Logo Showcase public artifacts must exist under the new public artifact model.
+- Green invariant to preserve: private source mirror access such as `/instance.json` must still return 404 on the public-serving host.
 - Blocked: authenticated Roma human smoke still needs a real browser/session or Roma cookie and must prove open, save, Generate, translated preview, and publish before PRD 103 resumes.
 
 ## Required Commands For 103_DB.0

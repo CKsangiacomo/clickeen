@@ -141,4 +141,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('[prd100-static-public-guard] active public serving paths are static clk.live only.');
+console.log('[prd100-static-public-guard] active public serving paths are static public-serving hosts only.');

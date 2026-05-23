@@ -102,6 +102,7 @@ Rules:
 - `clk.live` is reserved for production public serving.
 - The path shape is identical across environments: `/{accountPublicId}/{instanceId}`.
 - Do not bind the cloud-dev Tokyo worker to `clk.live`.
+- Tokyo-worker owns the cloud-dev binding in `tokyo-worker/wrangler.toml`: custom domain `dev.clk.live` and `PUBLIC_SERVING_BASE_URL=https://dev.clk.live`.
 
 ## Prague
 

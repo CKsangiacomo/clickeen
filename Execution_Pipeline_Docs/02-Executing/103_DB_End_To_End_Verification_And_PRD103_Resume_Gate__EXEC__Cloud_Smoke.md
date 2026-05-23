@@ -30,6 +30,7 @@ Cloud deployment is green for the current code head:
 Documentation head:
 
 - `74bc5f87` updates this gate readout. It does not change runtime behavior.
+- `f479d605` locks the public-serving environment split in architecture docs: cloud-dev uses `dev.clk.live`; production release stages use `clk.live`.
 
 Local targeted verification was already green before this gate:
 
@@ -45,6 +46,8 @@ Current public smoke command:
 pnpm health:product-path --public-only --account-public-id 00000001 --instance-id UZ3JEJSHII --json
 ```
 
+Cloud-dev public smoke now targets `https://dev.clk.live` by default. Use `--clk-base https://clk.live` only for production/UAT checks.
+
 Current result:
 
 ```json
@@ -58,7 +61,7 @@ Current result:
       "detail": "HTTP 401"
     },
     {
-      "name": "clk.live public instance read",
+      "name": "Public serving instance read",
       "boundary": "clk.public",
       "ok": false,
       "detail": "fetch failed"
@@ -70,10 +73,10 @@ Current result:
 Direct DNS check:
 
 ```bash
-dig +short clk.live
+dig +short dev.clk.live
 ```
 
-Current result: no records returned from the verification environment.
+Current result before the cloud-dev custom-domain deploy: not green.
 
 Nameserver check:
 
@@ -94,48 +97,48 @@ Cloudflare zone lookup with the configured local Cloudflare API token:
 GET /client/v4/zones?name=clk.live
 ```
 
-Current result: success with an empty result set. The token/project visible from this repo can read `clickeen.com`, but it does not see a `clk.live` zone.
+Current result after the operator updated the Cloudflare token: the token can read both `clickeen.com` and `clk.live`, and has DNS/Workers Routes permissions for both zones.
 
 Operator confirmation:
 
-- `clk.live` has been purchased, but it has not been provisioned as a usable Cloudflare zone/DNS surface for this deployment account yet.
-- Therefore canonical `https://clk.live/...` smoke cannot pass until the domain is set up in Cloudflare and DNS resolves.
+- `clk.live` exists as an active Cloudflare zone and is reserved for production public serving.
+- Cloud-dev must use the `dev.clk.live` custom domain on the `tokyo-assets-dev` worker.
 
 Direct A/CNAME checks:
 
 ```bash
-dig +short A clk.live
-dig +short CNAME clk.live
+dig +short A dev.clk.live
+dig +short CNAME dev.clk.live
 ```
 
-Current result: no records returned.
+Current result before the cloud-dev custom-domain deploy: not green.
 
 Forced Cloudflare edge check:
 
 ```bash
-curl -I --resolve clk.live:443:188.114.96.7 https://clk.live/00000001/UZ3JEJSHII
+curl -I https://dev.clk.live/00000001/UZ3JEJSHII
 ```
 
-Current result: HTTP 404 with Tokyo-worker headers when an arbitrary Cloudflare edge IP is forced.
+Current target: HTTP 200 after the custom domain is deployed and the seeded public artifact is materialized.
 
 Private source mirror check:
 
 ```bash
-curl -I --resolve clk.live:443:188.114.96.7 https://clk.live/00000001/UZ3JEJSHII/instance.json
+curl -I https://dev.clk.live/00000001/UZ3JEJSHII/instance.json
 ```
 
-Current result: HTTP 404 with Tokyo-worker headers when an arbitrary Cloudflare edge IP is forced.
+Required result: HTTP 404.
 
 ## Deterministic Readout
 
 The gate is blocked for two separate reasons:
 
-1. `clk.live` is not provisioned as a usable Cloudflare public domain for this deploy account yet. The public canonical visitor URL cannot pass until the zone/DNS/route setup exists and DNS resolves.
-2. The forced Cloudflare-edge check is useful only as an artificial worker-routing probe. It is not a substitute for canonical DNS. Under that artificial probe, the seeded FAQ instance returns HTTP 404, which means the seeded published instance still needs a materialized `index.html` public artifact at `accounts/00000001/instances/UZ3JEJSHII/index.html`.
+1. Cloud-dev public serving has not yet been proven on `dev.clk.live`.
+2. The seeded FAQ instance still needs a materialized `index.html` public artifact at `accounts/00000001/instances/UZ3JEJSHII/index.html`, or a fresh Roma publish operation must prove that the artifact exists.
 
 The private `instance.json` 404 is good. It proves the old source mirror is not accidentally exposed as a public artifact.
 
-The current GitHub surface-reachability workflow does not check `clk.live`; it checks Berlin, Tokyo, San Francisco, Roma, Bob, Venice, and unauthenticated Roma route boundaries. That workflow being green is necessary but not sufficient for the public serving gate.
+The current GitHub surface-reachability workflow does not check `dev.clk.live`; it checks Berlin, Tokyo, San Francisco, Roma, Bob, Venice, and unauthenticated Roma route boundaries. That workflow being green is necessary but not sufficient for the public serving gate.
 
 ## Product Interpretation
 
@@ -148,7 +151,7 @@ Latest deploy status:
 - Commit `52b990ff` deployed after a retry of the Cloudflare workers deploy workflow.
 - The rerun failure was an R2 bulk-sync Cloudflare HTTP 502, not a code failure.
 - The cloud-dev surface-reachability workflow for `52b990ff` is green.
-- That workflow still does not prove `clk.live`, because it does not include the canonical public serving domain.
+- That workflow still does not prove `dev.clk.live`, because it does not include the canonical cloud-dev public serving domain.
 
 ## Repair Operation Added In This Slice
 
@@ -190,7 +193,7 @@ Cloud invocation status:
 The gate can go green only after all of these are true:
 
 - the repair route is deployed and run for the seeded cloud-dev account, or the same result is produced by a real Roma publish operation;
-- `clk.live` resolves normally.
+- `dev.clk.live` resolves normally for cloud-dev public serving.
 - FAQ, Countdown, and Logo Showcase seeded instances have materialized public artifacts under the new public artifact model.
 - Public smoke succeeds without `--resolve`.
 - Authenticated Roma smoke proves FAQ open, save, Generate, translated preview, and publish.

@@ -83,7 +83,9 @@ async function purgeClkLiveEntryCache(args: {
   const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
   const token = String(args.env.CLOUDFLARE_API_TOKEN || '').trim();
   if (!zoneId || !token) return;
-  const base = `https://clk.live/${args.accountId}/${args.instanceId}`;
+  const publicServingBase =
+    String(args.env.PUBLIC_SERVING_BASE_URL || '').trim().replace(/\/+$/, '') || 'https://clk.live';
+  const base = `${publicServingBase}/${args.accountId}/${args.instanceId}`;
   const files = new Set([base, `${base}/`, `${base}/index.html`, `${base}/styles.css`, `${base}/script.js`]);
   for (const locale of args.locales ?? []) {
     files.add(`${base}/${publicArtifactLocaleHtmlFile(locale)}`);

@@ -63,7 +63,7 @@ export async function tryHandleClkLiveStaticRoutes(
 ): Promise<Response | null> {
   const { req, env, pathname, url, respond } = args;
 
-  if (url.protocol === 'http:' && url.hostname === 'clk.live') {
+  if (url.protocol === 'http:' && (url.hostname === 'clk.live' || url.hostname === 'dev.clk.live')) {
     url.protocol = 'https:';
     return respond(new Response(null, { status: 301, headers: { location: url.toString() } }));
   }
