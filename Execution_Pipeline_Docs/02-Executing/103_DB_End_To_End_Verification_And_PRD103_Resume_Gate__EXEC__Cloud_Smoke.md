@@ -24,21 +24,25 @@ The gate is not a code-build gate only. It must prove the product path works end
 
 Cloud deployment is green for the current code head:
 
-- `cloud-dev workers deploy`: success for head `52b990ff4516924317cffc9b418122487d389e65` after rerunning a transient R2 bulk-sync HTTP 502 failure.
-- `cloud-dev surface reachability`: success for head `52b990ff4516924317cffc9b418122487d389e65`.
+- `cloud-dev workers deploy`: success for head `d44b3417ffcc67a01dbe7e476fc2583c6519bdbe`.
+- `cloud-dev surface reachability`: success for head `d44b3417ffcc67a01dbe7e476fc2583c6519bdbe`.
 
 Documentation head:
 
+- `d44b3417` updates San Francisco to use the renamed translated-value contracts after public-serving cleanup.
+- `6627dc1f` removes legacy public-serving paths, deletes the live `/renders/*` route from cloud-dev, and keeps only regression checks for forbidden public paths.
 - `74bc5f87` updates this gate readout. It does not change runtime behavior.
 - `f479d605` locks the public-serving environment split in architecture docs: cloud-dev uses `dev.clk.live`; production release stages use `clk.live`.
 
-Local targeted verification was already green before this gate:
+Local targeted verification is green:
 
+- `pnpm --filter @clickeen/sanfrancisco test`
+- `pnpm --filter @clickeen/sanfrancisco typecheck`
 - `pnpm --filter @clickeen/tokyo-worker test`
 - `pnpm --filter @clickeen/tokyo-worker typecheck`
 - `pnpm verify:prd103-db-pivot`
 - `pnpm lint`
-- `pnpm typecheck`
+- `TURBO_FORCE=true pnpm typecheck`
 
 Current public smoke command:
 
@@ -52,7 +56,7 @@ Current result:
 
 ```json
 {
-  "ok": false,
+  "ok": true,
   "results": [
     {
       "name": "Roma unauthenticated account API rejects",
@@ -61,10 +65,10 @@ Current result:
       "detail": "HTTP 401"
     },
     {
-      "name": "Public serving instance read",
+      "name": "Public serving instance read and boundary",
       "boundary": "clk.public",
-      "ok": false,
-      "detail": "fetch failed"
+      "ok": true,
+      "detail": "00000001/UZ3JEJSHII"
     }
   ]
 }
@@ -116,10 +120,26 @@ Current result after cloud-dev route/DNS setup: `A dev.clk.live` returns Cloudfl
 Forced Cloudflare edge check:
 
 ```bash
-curl -I https://dev.clk.live/00000001/UZ3JEJSHII
+curl -sS -o /dev/null -w '%{http_code}\n' https://dev.clk.live/00000001/UZ3JEJSHII/
 ```
 
-Current result after cloud-dev route/DNS setup: HTTP 404 with Tokyo-worker headers. The route works; the seeded FAQ public artifact is still missing.
+Current result after cloud-dev route/DNS setup and materialization repair: HTTP 200.
+
+Seeded instance artifact checks:
+
+```bash
+for id in UZ3JEJSHII 8FMVZFFPJV H7IF9M2K9B; do
+  curl -sS -o /dev/null -w "$id %{http_code}\n" "https://dev.clk.live/00000001/$id/"
+done
+```
+
+Current result:
+
+```text
+UZ3JEJSHII 200
+8FMVZFFPJV 200
+H7IF9M2K9B 200
+```
 
 Private source mirror check:
 
@@ -131,10 +151,9 @@ Current result after cloud-dev route/DNS setup: HTTP 404 with Tokyo-worker heade
 
 ## Deterministic Readout
 
-The gate is blocked for two remaining reasons:
+The gate is blocked for one remaining reason:
 
-1. The seeded FAQ instance still needs a materialized `index.html` public artifact at `accounts/00000001/instances/UZ3JEJSHII/index.html`, or a fresh Roma publish operation must prove that the artifact exists.
-2. Authenticated Roma human smoke still needs to prove open, save, Generate, translated preview, and publish.
+1. Authenticated Roma human smoke still needs to prove open, save, Generate, translated preview, and publish.
 
 The private `instance.json` 404 is good. It proves the old source mirror is not accidentally exposed as a public artifact.
 
@@ -146,14 +165,13 @@ The current GitHub surface-reachability workflow does not check `dev.clk.live`; 
 
 Deploy success does not mean PRD 103 can resume.
 
-At this stage the DB pivot code is deployed, but the serving bridge still needs a real materialization proof for existing seeded instances. The publish/materialization operation exists in Tokyo, but the seeded public artifacts must be created through an approved product/system operation before the smoke gate can pass.
+At this stage the DB pivot code is deployed and the public serving bridge has live materialization proof for the seeded cloud-dev instances. PRD 103 still cannot resume until the authenticated Roma product path is smoke-tested end to end.
 
 Latest deploy status:
 
-- Commit `52b990ff` deployed after a retry of the Cloudflare workers deploy workflow.
-- The rerun failure was an R2 bulk-sync Cloudflare HTTP 502, not a code failure.
-- The cloud-dev surface-reachability workflow for `52b990ff` is green.
-- That workflow still does not prove `dev.clk.live`, because it does not include the canonical cloud-dev public serving domain.
+- Commit `d44b3417` deployed successfully.
+- The cloud-dev surface-reachability workflow for `d44b3417` is green.
+- `dev.clk.live` was verified separately because the standard surface-reachability workflow does not cover the canonical cloud-dev public serving domain.
 
 ## Repair Operation Added In This Slice
 
@@ -194,12 +212,11 @@ Cloud invocation status:
 
 The gate can go green only after all of these are true:
 
-- the repair route is deployed and run for the seeded cloud-dev account, or the same result is produced by a real Roma publish operation;
-- `dev.clk.live` resolves normally for cloud-dev public serving. Green as of 2026-05-23.
-- FAQ, Countdown, and Logo Showcase seeded instances have materialized public artifacts under the new public artifact model.
-- Public smoke succeeds without `--resolve`.
-- Authenticated Roma smoke proves FAQ open, save, Generate, translated preview, and publish.
-- A private source mirror request such as `/instance.json` still returns 404.
+- Green: `dev.clk.live` resolves normally for cloud-dev public serving.
+- Green: FAQ, Countdown, and Logo Showcase seeded instances have materialized public artifacts under the new public artifact model.
+- Green: public smoke succeeds without `--resolve`.
+- Green: private source mirror and forbidden operational public paths return 404.
+- Blocked: authenticated Roma smoke proves FAQ open, save, Generate, translated preview, and publish.
 
 ## Allowed Resolution Paths
 
