@@ -167,13 +167,13 @@ Current executable slice is `103_DB.9 - End-to-end verification and PRD 103 resu
 
 Current 103_DB.9 readout:
 
-- Blocked: account locale taxonomy fix `caf522f9` is pushed, but Supabase migration `20260523150000__prd103_account_locale_settings_taxonomy.sql` must be deployed through the reviewed migration workflow before cloud-dev Roma/Berlin smoke is valid.
-- Blocked: cloud deploy and targeted code verification were green at the previous runtime head, but the product-path smoke gate is not green yet at `caf522f9`.
+- Green: account locale taxonomy fix `caf522f9` is pushed and Supabase migration `20260523150000__prd103_account_locale_settings_taxonomy.sql` was deployed through reviewed workflow run `26367289969` on head `e4c0a56e`.
+- Blocked: cloud deploy and targeted code verification were green at the previous runtime head, but the authenticated product-path smoke gate is not green yet at `e4c0a56e`.
 - Green: architecture docs now split public serving by environment. Cloud-dev uses `dev.clk.live`; production release stages use `clk.live`.
 - Green: `dev.clk.live/*` routes to `tokyo-assets-dev`, with `PUBLIC_SERVING_BASE_URL=https://dev.clk.live`.
 - Green from prior smoke: `dev.clk.live/{accountPublicId}/{instanceId}` resolves to Tokyo-worker and the seeded FAQ, Countdown, and Logo Showcase public artifacts returned 200 after materialization repair.
 - Green invariant to preserve: private source mirror access such as `/instance.json` must still return 404 on the public-serving host.
-- Blocked: authenticated Roma human smoke still needs a real browser/session or Roma cookie and must prove open, save, Generate, translated preview, and publish after the taxonomy migration is live before PRD 103 resumes.
+- Blocked: authenticated Roma human smoke still needs a real browser/session or Roma cookie and must prove open, save, Generate, translated preview, and publish before PRD 103 resumes.
 
 ## Required Commands For 103_DB.0
 
