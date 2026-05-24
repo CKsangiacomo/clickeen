@@ -85,11 +85,11 @@ jobs:
             berlin=true
           fi
 
-          if path_changed '^(sanfrancisco/|scripts/infra/)'; then
+          if path_changed '^(sanfrancisco/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n)/)'; then
             sanfrancisco=true
           fi
 
-          if path_changed '^(tokyo-worker/|scripts/infra/)'; then
+          if path_changed '^(tokyo-worker/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n)/)'; then
             tokyo=true
           fi
 

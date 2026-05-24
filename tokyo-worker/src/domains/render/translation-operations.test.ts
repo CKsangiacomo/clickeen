@@ -22,7 +22,10 @@ import {
   readTranslatedLocaleValues,
   writeTranslatedLocaleValues,
 } from './translated-locales.ts';
-import { readInstanceRegistryRow } from './instance-registry.ts';
+import {
+  readInstanceRegistryRow,
+  updateInstanceRegistryTranslationStatus,
+} from './instance-registry.ts';
 import {
   readAccountInstanceContentDocument,
   writeSavedRenderConfig,
@@ -358,6 +361,20 @@ test('Tokyo exposes current translation generation progress', async () => {
     accountId: ACCOUNT_PUBLIC_ID,
     instanceId: INSTANCE_ID,
   }))?.translationStatus, 'idle');
+
+  await updateInstanceRegistryTranslationStatus({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    translationStatus: 'queued',
+  });
+  generation = await readInstanceTranslationGeneration({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  });
+  assert.equal(generation.ok, true);
+  assert.equal(generation.ok ? generation.generation.status : null, 'completed');
 });
 
 test('Tokyo records terminal locale failures on generation job state', async () => {
@@ -399,6 +416,58 @@ test('Tokyo records terminal locale failures on generation job state', async () 
   assert.equal(generation.ok, true);
   assert.equal(generation.ok ? generation.generation.status : null, 'failed');
   assert.deepEqual(generation.ok ? generation.generation.failedLocales : [], ['it']);
+  assert.equal((await readInstanceRegistryRow({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  }))?.translationStatus, 'failed');
+});
+
+test('Tokyo fails stale active generation jobs instead of polling forever', async () => {
+  const { env, objects } = createTestEnv();
+  await seedSavedFaqInstance(env);
+
+  await generateInstanceTranslations({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    authz: authz(),
+    baseLocale: 'en',
+    targetLocales: ['it'],
+  });
+
+  const generationEntry = [...objects.entries()]
+    .find(([key]) => key.endsWith('/translation-generation-job.json'));
+  assert(generationEntry);
+  const staleAt = new Date(Date.now() - 11 * 60 * 1000).toISOString();
+  const [generationKey, generationObject] = generationEntry;
+  objects.set(generationKey, {
+    ...generationObject,
+    body: {
+      ...(generationObject.body as Record<string, unknown>),
+      requestedAt: staleAt,
+      updatedAt: staleAt,
+      locales: Object.fromEntries(Object.entries(
+        (generationObject.body as { locales: Record<string, Record<string, unknown>> }).locales,
+      ).map(([locale, state]) => [
+        locale,
+        {
+          ...state,
+          updatedAt: staleAt,
+        },
+      ])),
+    },
+  });
+
+  const generation = await readInstanceTranslationGeneration({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  });
+  assert.equal(generation.ok, true);
+  assert.equal(generation.ok ? generation.generation.status : null, 'failed');
+  assert.deepEqual(generation.ok ? generation.generation.failedLocales : [], ['it']);
+  assert.equal(generation.ok ? generation.generation.reasonKey : null, 'instance.translation.timed_out');
   assert.equal((await readInstanceRegistryRow({
     env,
     accountId: ACCOUNT_PUBLIC_ID,

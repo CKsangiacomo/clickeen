@@ -22,7 +22,8 @@ The missing DB pivot work is that `instances.translation_status` exists but is n
 - Tokyo writes `instances.translation_status = queued` when a Generate request creates current work.
 - Tokyo writes `instances.translation_status = idle` when Generate has nothing to queue or when the accepted target locales are ready.
 - Tokyo writes `instances.translation_status = failed` when queue send or terminal locale failure makes the current generation failed.
-- Tokyo reads `instances.translation_status` when returning the generation summary so Roma/Bob receive DB-backed coarse state.
+- Tokyo reads detailed current generation state as the authoritative job truth; `instances.translation_status` remains a coarse product control projection and must not turn terminal or idle generation state back into active polling.
+- Tokyo fails stale active generations that do not receive San Francisco completion/failure callbacks before the backend timeout.
 - Tokyo keeps private job basis comparison only as an implementation guard for dedupe and stale completion rejection. This is not a public product state object.
 
 ## Implementation Completed
@@ -32,17 +33,23 @@ The missing DB pivot work is that `instances.translation_status` exists but is n
 - Tokyo Generate writes `instances.translation_status = idle` when there is no target work to queue.
 - Tokyo writes `instances.translation_status = running` after a partial locale completion and `idle` after accepted target locales complete.
 - Tokyo writes `instances.translation_status = failed` when queue send fails or the current generation records a terminal locale failure.
-- Tokyo generation reads merge the DB-backed coarse status into the generation summary returned to Roma/Bob.
+- Tokyo generation reads preserve detailed generation truth over stale DB projection. A stale `instances.translation_status = queued` cannot make a completed, failed, superseded, or idle generation appear active again.
+- Tokyo generation reads fail stale active generations after the backend liveness cutoff, so Bob cannot poll a lost queue/callback forever.
 - Private generation basis remains a Tokyo implementation guard for duplicate suppression and stale completion rejection. It is not exposed as a product API, and no job table/sourceVersion/generation lane was added.
+- Cloud-dev worker deploy detection now redeploys both Tokyo and San Francisco when shared translation/runtime packages change (`ck-contracts`, `ck-policy`, `l10n`) so producer and consumer contracts do not drift.
 
 ## Verification
 
-- `pnpm --filter @clickeen/tokyo-worker test` - green, 38 tests.
-- `pnpm --filter @clickeen/tokyo-worker typecheck` - green.
+- `pnpm -C tokyo-worker test` - green, 42 tests.
+- `pnpm -C tokyo-worker typecheck` - green.
+- `pnpm -C sanfrancisco test` - green, 12 tests.
+- `pnpm -C sanfrancisco typecheck` - green.
 
 ## Green Readout
 
 Generate now has one coarse product-visible control state in Supabase: `instances.translation_status`.
+
+Detailed generation state remains Tokyo-owned. The registry projection helps the product list/control state, but cannot override terminal generation truth. Lost queue work, missing consumers, or failed callbacks must become explicit generation failure instead of an endless Roma/Bob spinner.
 
 The product path still uses Tokyo operations for the real work:
 

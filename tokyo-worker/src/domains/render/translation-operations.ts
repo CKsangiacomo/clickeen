@@ -48,6 +48,8 @@ type TranslationQueue = {
   send(message: InstanceTranslationJob): Promise<void>;
 };
 
+const TRANSLATION_GENERATION_ACTIVE_TIMEOUT_MS = 10 * 60 * 1000;
+
 export type InstanceTranslationGenerationResult =
   | {
       ok: true;
@@ -302,11 +304,86 @@ function applyRegistryStatusToGenerationSummary(args: {
   registryStatus: InstanceRegistryTranslationStatus | null;
 }): TranslationGenerationJobSummary {
   if (!args.registryStatus) return args.summary;
+  if (
+    args.summary.status === 'idle' ||
+    args.summary.status === 'completed' ||
+    args.summary.status === 'failed' ||
+    args.summary.status === 'superseded'
+  ) {
+    return args.summary;
+  }
   if (args.registryStatus === 'queued' || args.registryStatus === 'running' || args.registryStatus === 'failed') {
     return { ...args.summary, status: args.registryStatus };
   }
-  if (args.summary.status === 'completed' || args.summary.status === 'superseded') return args.summary;
   return { ...args.summary, status: 'idle' };
+}
+
+function isActiveGenerationSummary(summary: TranslationGenerationJobSummary): boolean {
+  return summary.status === 'queued' || summary.status === 'running';
+}
+
+function shouldTimeoutGeneration(summary: TranslationGenerationJobSummary): boolean {
+  if (!isActiveGenerationSummary(summary) || !summary.requestedAt) return false;
+  const requestedAtMs = Date.parse(summary.requestedAt);
+  return Number.isFinite(requestedAtMs) && Date.now() - requestedAtMs >= TRANSLATION_GENERATION_ACTIVE_TIMEOUT_MS;
+}
+
+async function timeoutStalledGeneration(args: {
+  env: Env;
+  accountId: string;
+  instanceId: string;
+  widgetCode: string;
+  baseLocale: string;
+  targetLocales: string[];
+  currentReadyLocales: string[];
+  job: TranslationGenerationJobDocument | null;
+  summary: TranslationGenerationJobSummary;
+}): Promise<TranslationGenerationJobSummary> {
+  if (!args.job || !shouldTimeoutGeneration(args.summary)) return args.summary;
+  const now = new Date().toISOString();
+  const timedOutJob = deriveTranslationGenerationJob({
+    job: {
+      ...args.job,
+      status: 'failed',
+      updatedAt: now,
+      reasonKey: 'instance.translation.timed_out',
+      detail: 'Translation generation timed out before all locale jobs reported completion or failure.',
+      locales: Object.fromEntries(Object.entries(args.job.locales).map(([locale, state]) => [
+        locale,
+        state.status === 'queued'
+          ? {
+              ...state,
+              status: 'failed' as const,
+              updatedAt: now,
+              reasonKey: 'instance.translation.timed_out',
+              detail: 'Translation job did not report completion or failure before the generation timeout.',
+            }
+          : state,
+      ])),
+    },
+    currentReadyLocales: args.currentReadyLocales,
+    updatedAt: now,
+  });
+  await writeCurrentTranslationGenerationJob({
+    env: args.env,
+    accountId: args.accountId,
+    widgetCode: args.widgetCode,
+    instanceId: args.instanceId,
+    job: timedOutJob,
+  });
+  await writeRegistryTranslationStatus({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    status: 'failed',
+  });
+  return summarizeTranslationGenerationJob({
+    instanceId: args.instanceId,
+    baseLocale: args.baseLocale,
+    targetLocales: args.targetLocales,
+    currentReadyLocales: args.currentReadyLocales,
+    job: timedOutJob,
+  });
 }
 
 async function writeRegistryTranslationStatus(args: {
@@ -366,17 +443,28 @@ export async function readInstanceTranslationGeneration(args: {
     accountId: args.accountId,
     instanceId: args.instanceId,
   });
+  const summary = await timeoutStalledGeneration({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    widgetCode: instance.value.widgetCode,
+    baseLocale: instance.value.baseLocale,
+    targetLocales,
+    currentReadyLocales,
+    job,
+    summary: summarizeTranslationGenerationJob({
+      instanceId: args.instanceId,
+      baseLocale: instance.value.baseLocale,
+      targetLocales,
+      currentReadyLocales,
+      job,
+    }),
+  });
   return {
     ok: true,
     generation: applyRegistryStatusToGenerationSummary({
       registryStatus: registry?.translationStatus ?? null,
-      summary: summarizeTranslationGenerationJob({
-        instanceId: args.instanceId,
-        baseLocale: instance.value.baseLocale,
-        targetLocales,
-        currentReadyLocales,
-        job,
-      }),
+      summary,
     }),
   };
 }
