@@ -187,23 +187,6 @@ function buildJobBasis(jobs: InstanceTranslationJob[]): TranslationGenerationJob
     .sort((left, right) => left.locale.localeCompare(right.locale));
 }
 
-function sameBasisFields(
-  left: Array<{ path: string; baseText: string }> | undefined,
-  right: Array<{ path: string; baseText: string }>,
-): boolean {
-  if (!left || left.length !== right.length) return false;
-  return right.every((rightField, index) => {
-    const leftField = left[index];
-    return leftField?.path === rightField.path && leftField.baseText === rightField.baseText;
-  });
-}
-
-function activeJobCoversBasis(job: TranslationGenerationJobDocument, basis: TranslationGenerationJobBasis): boolean {
-  if (job.status !== 'queued' && job.status !== 'running') return false;
-  const existing = new Map(job.basis.map((entry) => [entry.locale, entry.fields]));
-  return basis.every((entry) => sameBasisFields(existing.get(entry.locale), entry.fields));
-}
-
 function createGenerationJobDocument(args: {
   jobId: string;
   accountId: string;
@@ -613,34 +596,6 @@ export async function generateInstanceTranslations(args: {
         job: completedJob,
       }),
       results: [],
-    };
-  }
-
-  const basis = buildJobBasis(jobs);
-  if (existingJob && activeJobCoversBasis(existingJob, basis)) {
-    const generation = summarizeTranslationGenerationJob({
-      instanceId: args.instanceId,
-      baseLocale,
-      targetLocales: uniqueTargetLocales,
-      currentReadyLocales,
-      job: existingJob,
-    });
-    await writeRegistryTranslationStatus({
-      env: args.env,
-      accountId: args.accountId,
-      instanceId: args.instanceId,
-      status: registryStatusForGenerationStatus(generation.status),
-    });
-    return {
-      ok: true,
-      accepted: true,
-      baseLocale,
-      targetLocales: uniqueTargetLocales,
-      queuedLocales: generation.pendingLocales,
-      skippedLocales,
-      jobIds: generation.jobId ? [generation.jobId] : [],
-      generation,
-      results: generation.pendingLocales.map((locale) => ({ locale, ok: true, jobId: generation.jobId ?? existingJob.jobId })),
     };
   }
 

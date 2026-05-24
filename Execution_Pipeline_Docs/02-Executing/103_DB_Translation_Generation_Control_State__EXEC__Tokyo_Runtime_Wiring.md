@@ -19,7 +19,7 @@ The missing DB pivot work is that `instances.translation_status` exists but is n
 
 ## Implementation Direction
 
-- Tokyo writes `instances.translation_status = queued` when a Generate request creates or returns active work.
+- Tokyo writes `instances.translation_status = queued` when a Generate request creates current work.
 - Tokyo writes `instances.translation_status = idle` when Generate has nothing to queue or when the accepted target locales are ready.
 - Tokyo writes `instances.translation_status = failed` when queue send or terminal locale failure makes the current generation failed.
 - Tokyo reads `instances.translation_status` when returning the generation summary so Roma/Bob receive DB-backed coarse state.
@@ -28,7 +28,7 @@ The missing DB pivot work is that `instances.translation_status` exists but is n
 ## Implementation Completed
 
 - Tokyo Generate writes `instances.translation_status = queued` when it creates a current generation.
-- Tokyo Generate returns an active matching generation without duplicate queue sends and keeps the registry row `queued`.
+- Tokyo Generate treats an explicit user click as fresh intent: it creates a new current generation, enqueues the missing/changed target locales again, and supersedes the prior active generation. Late completions from the prior generation are ignored by the existing job-id guard.
 - Tokyo Generate writes `instances.translation_status = idle` when there is no target work to queue.
 - Tokyo writes `instances.translation_status = running` after a partial locale completion and `idle` after accepted target locales complete.
 - Tokyo writes `instances.translation_status = failed` when queue send fails or the current generation records a terminal locale failure.

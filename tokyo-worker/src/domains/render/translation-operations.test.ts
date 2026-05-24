@@ -174,9 +174,9 @@ test('Tokyo generate queues locale translation jobs from one product operation',
   }))?.translationStatus, 'queued');
 });
 
-test('Tokyo generate resumes an active matching job without duplicate queue sends', async () => {
+test('Tokyo generate supersedes active matching work on an explicit Generate click', async () => {
   const { env, queued } = createTestEnv();
-  await seedSavedFaqInstance(env);
+  const values = await seedSavedFaqInstance(env);
 
   const first = await generateInstanceTranslations({
     env,
@@ -189,6 +189,8 @@ test('Tokyo generate resumes an active matching job without duplicate queue send
   });
   assert.equal(first.ok, true);
   assert.equal(queued.length, 2);
+  const originalItalianJob = queued.find((job) => job.targetLocale === 'it');
+  assert(originalItalianJob);
 
   const second = await generateInstanceTranslations({
     env,
@@ -202,14 +204,28 @@ test('Tokyo generate resumes an active matching job without duplicate queue send
 
   assert.equal(second.ok, true);
   assert.equal(second.ok ? second.accepted : false, true);
-  assert.equal(queued.length, 2);
-  assert.deepEqual(second.ok ? second.queuedLocales : [], ['cs', 'it']);
-  assert.deepEqual(second.ok ? second.jobIds : [], first.ok ? first.jobIds : []);
+  assert.equal(queued.length, 4);
+  assert.deepEqual(second.ok ? [...second.queuedLocales].sort() : [], ['cs', 'it']);
+  assert.notDeepEqual(second.ok ? second.jobIds : [], first.ok ? first.jobIds : []);
   assert.equal((await readInstanceRegistryRow({
     env,
     accountId: ACCOUNT_PUBLIC_ID,
     instanceId: INSTANCE_ID,
   }))?.translationStatus, 'queued');
+  assert.deepEqual(await completeLocaleTranslation({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+    job: originalItalianJob,
+    values,
+  }), {
+    ok: true,
+    applied: false,
+    locale: 'it',
+    reasonKey: 'instance.translation.job_superseded',
+    detail: 'This translation job is no longer the current generation job for the instance.',
+  });
 });
 
 test('Tokyo generate supersedes active work after newer saved base text', async () => {
@@ -752,9 +768,9 @@ test('content status clears changed fields only after every generated target loc
     baseLocale: 'en',
     targetLocales: ['it', 'cs'],
   });
-  assert.equal(queued.length, 4);
+  assert.equal(queued.length, 5);
 
-  const czechJob = queued.find((job) => job.targetLocale === 'cs' && job.changedFields.length === 1);
+  const czechJob = [...queued].reverse().find((job) => job.targetLocale === 'cs' && job.changedFields.length === 1);
   assert(czechJob);
   await completeLocaleTranslation({
     env,
