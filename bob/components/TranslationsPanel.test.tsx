@@ -154,12 +154,11 @@ test('generate translations accepts background generation response', () => {
     requestedAt: '2026-05-20T00:00:00.000Z',
     updatedAt: '2026-05-20T00:00:00.000Z',
     totalLocales: 2,
-    completedLocales: [],
-    failedLocales: [],
-    supersededLocales: [],
-    pendingLocales: ['it', 'cs'],
-    currentReadyLocales: [],
-    jobId: 'job-1',
+    active: true,
+    locales: [
+      { locale: 'it', state: 'generating', reviewable: false },
+      { locale: 'cs', state: 'generating', reviewable: false },
+    ],
   };
   const payload = {
     ok: true,
@@ -196,12 +195,11 @@ test('translation generation status messages come from Tokyo job state', () => {
     requestedAt: '2026-05-20T00:00:00.000Z',
     updatedAt: '2026-05-20T00:00:03.000Z',
     totalLocales: 2,
-    completedLocales: ['it'],
-    failedLocales: [],
-    supersededLocales: [],
-    pendingLocales: ['cs'],
-    currentReadyLocales: ['it'],
-    jobId: 'job-1',
+    active: true,
+    locales: [
+      { locale: 'it', state: 'inSync', reviewable: true },
+      { locale: 'cs', state: 'generating', reviewable: false },
+    ],
   });
 
   assert(generation);
@@ -220,12 +218,11 @@ test('panel entry adopts an already active Tokyo generation state', () => {
       requestedAt: '2026-05-20T00:00:00.000Z',
       updatedAt: '2026-05-20T00:00:03.000Z',
       totalLocales: 2,
-      completedLocales: ['it'],
-      failedLocales: [],
-      supersededLocales: [],
-      pendingLocales: ['cs'],
-      currentReadyLocales: ['it'],
-      jobId: 'job-1',
+      active: true,
+      locales: [
+        { locale: 'it', state: 'inSync', reviewable: true },
+        { locale: 'cs', state: 'generating', reviewable: false },
+      ],
     },
   });
 
@@ -245,12 +242,8 @@ test('translation generation message shows base content out of sync', () => {
     requestedAt: null,
     updatedAt: null,
     totalLocales: 1,
-    completedLocales: [],
-    failedLocales: [],
-    supersededLocales: [],
-    pendingLocales: [],
-    currentReadyLocales: [],
-    outOfSyncLocales: ['it'],
+    active: false,
+    locales: [{ locale: 'it', state: 'outOfSync', reviewable: false }],
     isCurrentBaseContent: true,
   });
 

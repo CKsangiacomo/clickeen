@@ -68,17 +68,10 @@ export type InstanceTranslationGenerationSummary = {
   requestedAt: string | null;
   updatedAt: string | null;
   totalLocales: number;
-  completedLocales: string[];
-  failedLocales: string[];
-  supersededLocales: string[];
-  pendingLocales: string[];
-  currentReadyLocales: string[];
-  outOfSyncLocales: string[];
   isCurrentBaseContent: boolean;
   baseContentMarker?: string;
   generationRequestMarker?: string;
   locales: InstanceTranslationProductLocaleState[];
-  jobId?: string;
   reasonKey?: string;
   detail?: string;
 };
@@ -196,12 +189,6 @@ function normalizeGenerationSummary(raw: unknown): InstanceTranslationGeneration
   const baseLocale = asTrimmedString(raw.baseLocale);
   const targetLocales = normalizeStringArray(raw.targetLocales);
   const status = normalizeGenerationStatus(raw.status);
-  const completedLocales = normalizeStringArray(raw.completedLocales) ?? [];
-  const failedLocales = normalizeStringArray(raw.failedLocales) ?? [];
-  const supersededLocales = normalizeStringArray(raw.supersededLocales) ?? [];
-  const pendingLocales = normalizeStringArray(raw.pendingLocales) ?? [];
-  const currentReadyLocales = normalizeStringArray(raw.currentReadyLocales) ?? [];
-  const outOfSyncLocales = normalizeStringArray(raw.outOfSyncLocales) ?? [];
   const locales = normalizeProductLocaleStates(raw.locales);
   const totalLocales = typeof raw.totalLocales === 'number' && Number.isFinite(raw.totalLocales)
     ? Math.max(0, Math.floor(raw.totalLocales))
@@ -228,17 +215,10 @@ function normalizeGenerationSummary(raw: unknown): InstanceTranslationGeneration
     requestedAt,
     updatedAt,
     totalLocales,
-    completedLocales,
-    failedLocales,
-    supersededLocales,
-    pendingLocales,
-    currentReadyLocales,
-    outOfSyncLocales,
     isCurrentBaseContent: raw.isCurrentBaseContent !== false,
     ...(asTrimmedString(raw.baseContentMarker) ? { baseContentMarker: asTrimmedString(raw.baseContentMarker) as string } : {}),
     ...(asTrimmedString(raw.generationRequestMarker) ? { generationRequestMarker: asTrimmedString(raw.generationRequestMarker) as string } : {}),
     locales,
-    ...(asTrimmedString(raw.jobId) ? { jobId: asTrimmedString(raw.jobId) as string } : {}),
     ...(asTrimmedString(raw.reasonKey) ? { reasonKey: asTrimmedString(raw.reasonKey) as string } : {}),
     ...(asTrimmedString(raw.detail) ? { detail: asTrimmedString(raw.detail) as string } : {}),
   };

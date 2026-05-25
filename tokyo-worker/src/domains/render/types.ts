@@ -169,21 +169,21 @@ export type TranslationGenerationJobSummary = {
   requestedAt: string | null;
   updatedAt: string | null;
   totalLocales: number;
-  completedLocales: string[];
-  failedLocales: string[];
-  supersededLocales: string[];
-  pendingLocales: string[];
-  currentReadyLocales: string[];
-  outOfSyncLocales?: string[];
   baseContentMarker?: string;
   generationRequestMarker?: string;
   isCurrentBaseContent?: boolean;
-  jobId?: string;
   reasonKey?: string;
   detail?: string;
   locales?: TranslationProductLocaleState[];
   diagnostics?: {
     locales?: Record<string, TranslationGenerationLocaleState>;
+    completedLocales?: string[];
+    failedLocales?: string[];
+    supersededLocales?: string[];
+    pendingLocales?: string[];
+    currentReadyLocales?: string[];
+    outOfSyncLocales?: string[];
+    jobId?: string;
   };
 };
 

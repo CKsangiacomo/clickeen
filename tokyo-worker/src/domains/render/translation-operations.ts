@@ -466,6 +466,17 @@ async function timeoutStalledGeneration(args: {
     instanceId: args.instanceId,
     status: 'failed',
   });
+  const productLocales = args.productLocales?.map((locale) => {
+    const failedLocale = timedOutJob.locales[locale.locale];
+    if (failedLocale?.status !== 'failed') return locale;
+    return {
+      ...locale,
+      state: 'failed' as const,
+      reviewable: false,
+      ...(failedLocale.reasonKey ? { reasonKey: failedLocale.reasonKey } : {}),
+      ...(failedLocale.detail ? { detail: failedLocale.detail } : {}),
+    };
+  });
   return summarizeTranslationGenerationJob({
     instanceId: args.instanceId,
     baseLocale: args.baseLocale,
@@ -474,7 +485,7 @@ async function timeoutStalledGeneration(args: {
     outOfSyncLocales: args.outOfSyncLocales,
     currentBaseContentMarker: args.currentBaseContentMarker,
     currentGenerationRequestMarker: args.currentGenerationRequestMarker,
-    productLocales: args.productLocales,
+    productLocales,
     job: timedOutJob,
   });
 }
@@ -761,7 +772,7 @@ export async function generateInstanceTranslations(args: {
         accepted: true,
         baseLocale,
         targetLocales: existingTargetLocales,
-        queuedLocales: existingSummary.pendingLocales,
+        queuedLocales: existingJob.pendingLocales,
         skippedLocales: [],
         jobIds: existingJob.jobId ? [existingJob.jobId] : [],
         generation: existingSummary,

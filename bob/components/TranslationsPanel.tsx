@@ -39,17 +39,10 @@ type TranslationGenerationSummary = {
   requestedAt: string | null;
   updatedAt: string | null;
   totalLocales: number;
-  completedLocales: string[];
-  failedLocales: string[];
-  supersededLocales: string[];
-  pendingLocales: string[];
-  currentReadyLocales: string[];
-  outOfSyncLocales: string[];
   isCurrentBaseContent: boolean;
   baseContentMarker?: string;
   generationRequestMarker?: string;
   locales: TranslationProductLocaleState[];
-  jobId?: string;
   reasonKey?: string;
   detail?: string;
 };
@@ -239,12 +232,6 @@ export function normalizeTranslationGenerationSummary(raw: unknown): Translation
   const baseLocale = typeof payload.baseLocale === 'string' ? payload.baseLocale.trim() : '';
   const targetLocales = normalizeStringArray(payload.targetLocales);
   const status = normalizeGenerationStatus(payload.status);
-  const completedLocales = normalizeStringArray(payload.completedLocales) ?? [];
-  const failedLocales = normalizeStringArray(payload.failedLocales) ?? [];
-  const supersededLocales = normalizeStringArray(payload.supersededLocales) ?? [];
-  const pendingLocales = normalizeStringArray(payload.pendingLocales) ?? [];
-  const currentReadyLocales = normalizeStringArray(payload.currentReadyLocales) ?? [];
-  const outOfSyncLocales = normalizeStringArray(payload.outOfSyncLocales) ?? [];
   const locales = normalizeProductLocaleStates(payload.locales);
   const totalLocales = typeof payload.totalLocales === 'number' && Number.isFinite(payload.totalLocales)
     ? Math.max(0, Math.floor(payload.totalLocales))
@@ -269,17 +256,10 @@ export function normalizeTranslationGenerationSummary(raw: unknown): Translation
     requestedAt: normalizeNullableString(payload.requestedAt),
     updatedAt: normalizeNullableString(payload.updatedAt),
     totalLocales,
-    completedLocales,
-    failedLocales,
-    supersededLocales,
-    pendingLocales,
-    currentReadyLocales,
-    outOfSyncLocales,
     isCurrentBaseContent: payload.isCurrentBaseContent !== false,
     ...(typeof payload.baseContentMarker === 'string' && payload.baseContentMarker.trim() ? { baseContentMarker: payload.baseContentMarker.trim() } : {}),
     ...(typeof payload.generationRequestMarker === 'string' && payload.generationRequestMarker.trim() ? { generationRequestMarker: payload.generationRequestMarker.trim() } : {}),
     locales,
-    ...(typeof payload.jobId === 'string' && payload.jobId.trim() ? { jobId: payload.jobId.trim() } : {}),
     ...(typeof payload.reasonKey === 'string' && payload.reasonKey.trim() ? { reasonKey: payload.reasonKey.trim() } : {}),
     ...(typeof payload.detail === 'string' && payload.detail.trim() ? { detail: payload.detail.trim() } : {}),
   };
@@ -367,8 +347,7 @@ export function resolveTranslationPanelProductState(args: {
   }
 
   const localeStates = generation?.locales ?? [];
-  const outOfSync = localeStates.some((locale) => locale.state === 'outOfSync') ||
-    Boolean(generation?.outOfSyncLocales.length);
+  const outOfSync = localeStates.some((locale) => locale.state === 'outOfSync');
   if (outOfSync) {
     return {
       primaryState: 'baseChanged',
@@ -426,11 +405,11 @@ export function resolveTranslationGenerationStatusMessage(generation: Translatio
     return 'The base content has changed. Regenerate translations when generation finishes.';
   }
   if (isActiveTranslationGeneration(generation)) return 'Generating translations.';
-  if (generation.locales.some((locale) => locale.state === 'outOfSync') || generation.outOfSyncLocales.length > 0) {
+  if (generation.locales.some((locale) => locale.state === 'outOfSync')) {
     return 'The base content has changed. Regenerate translations.';
   }
   if (generation.status === 'failed') {
-    const failed = generation.locales.filter((locale) => locale.state === 'failed').length || generation.failedLocales.length;
+    const failed = generation.locales.filter((locale) => locale.state === 'failed').length;
     const detail = generation.detail || generation.reasonKey || '';
     return `${failed || 'Some'} translations failed.${detail ? ` ${detail}` : ''}`;
   }
@@ -489,7 +468,6 @@ export function buildTranslationGenerationPanelState(payload: unknown): {
       isGenerating ||
       generation.status === 'completed' ||
       panelState.reviewableLocales.length > 0 ||
-      generation.outOfSyncLocales.length > 0 ||
       generation.locales.some((locale) => locale.state === 'outOfSync'),
   };
 }

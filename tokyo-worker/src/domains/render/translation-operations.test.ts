@@ -194,7 +194,7 @@ test('Tokyo generate queues locale translation jobs from one product operation',
   assert.equal(generated.ok ? generated.accepted : false, true);
   assert.deepEqual(queued.map((job) => job.targetLocale).sort(), ['cs', 'it']);
   assert.equal(new Set(queued.map((job) => job.jobId)).size, 1);
-  assert.deepEqual(generated.ok ? generated.generation?.pendingLocales : [], ['cs', 'it']);
+  assert.deepEqual(generated.ok ? generated.queuedLocales : [], ['it', 'cs']);
   assert.equal(queued[0]?.kind, 'instance.translation.locale_values');
   assert.equal(queued[0]?.changedFields.length, Object.keys(values).length);
   assert.equal((await readInstanceRegistryRow({
@@ -399,7 +399,6 @@ test('Tokyo generate does not create competing work while older base translation
   assert.equal(generation.ok, true);
   assert.equal(generation.ok ? generation.generation.isCurrentBaseContent : null, false);
   assert.equal(generation.ok ? generation.generation.active : null, true);
-  assert.deepEqual(generation.ok ? generation.generation.outOfSyncLocales : [], []);
   assert.deepEqual(generation.ok ? generation.generation.locales : [], [
     { locale: 'it', state: 'missing', reviewable: false },
   ]);
@@ -444,7 +443,6 @@ test('Tokyo exposes current translation generation progress', async () => {
   assert.equal(generation.ok ? generation.generation.active : null, true);
   assert.equal(typeof (generation.ok ? generation.generation.baseContentMarker : null), 'string');
   assert.equal(typeof (generation.ok ? generation.generation.generationRequestMarker : null), 'string');
-  assert.deepEqual(generation.ok ? generation.generation.pendingLocales : [], ['cs', 'it']);
   assert.deepEqual(generation.ok ? generation.generation.locales : [], [
     { locale: 'cs', state: 'generating', reviewable: false },
     { locale: 'it', state: 'generating', reviewable: false },
@@ -468,9 +466,6 @@ test('Tokyo exposes current translation generation progress', async () => {
   });
   assert.equal(generation.ok, true);
   assert.equal(generation.ok ? generation.generation.status : null, 'running');
-  assert.deepEqual(generation.ok ? generation.generation.completedLocales : [], ['it']);
-  assert.deepEqual(generation.ok ? generation.generation.pendingLocales : [], ['cs']);
-  assert.deepEqual(generation.ok ? generation.generation.currentReadyLocales : [], ['it']);
   assert.deepEqual(generation.ok ? generation.generation.locales : [], [
     { locale: 'cs', state: 'generating', reviewable: false },
     { locale: 'it', state: 'inSync', reviewable: true },
@@ -635,7 +630,6 @@ test('Tokyo marks completed locales out of sync when saved base content changes'
   });
   assert.equal(stale.ok, true);
   assert.notEqual(stale.ok ? stale.generation.baseContentMarker : null, oldBaseMarker);
-  assert.deepEqual(stale.ok ? stale.generation.outOfSyncLocales : [], ['it']);
   assert.deepEqual(stale.ok ? stale.generation.locales : [], [
     { locale: 'it', state: 'outOfSync', reviewable: false },
   ]);
@@ -679,7 +673,15 @@ test('Tokyo records terminal locale failures on generation job state', async () 
   });
   assert.equal(generation.ok, true);
   assert.equal(generation.ok ? generation.generation.status : null, 'failed');
-  assert.deepEqual(generation.ok ? generation.generation.failedLocales : [], ['it']);
+  assert.deepEqual(generation.ok ? generation.generation.locales : [], [
+    {
+      locale: 'it',
+      state: 'failed',
+      reviewable: false,
+      reasonKey: 'instance.translation.provider_failed',
+      detail: 'provider failed',
+    },
+  ]);
   assert.equal((await readInstanceRegistryRow({
     env,
     accountId: ACCOUNT_PUBLIC_ID,
@@ -730,7 +732,15 @@ test('Tokyo fails stale active generation jobs instead of polling forever', asyn
   });
   assert.equal(generation.ok, true);
   assert.equal(generation.ok ? generation.generation.status : null, 'failed');
-  assert.deepEqual(generation.ok ? generation.generation.failedLocales : [], ['it']);
+  assert.deepEqual(generation.ok ? generation.generation.locales : [], [
+    {
+      locale: 'it',
+      state: 'failed',
+      reviewable: false,
+      reasonKey: 'instance.translation.timed_out',
+      detail: 'Translation job did not report completion or failure before the generation timeout.',
+    },
+  ]);
   assert.equal(generation.ok ? generation.generation.reasonKey : null, 'instance.translation.timed_out');
   assert.equal((await readInstanceRegistryRow({
     env,
