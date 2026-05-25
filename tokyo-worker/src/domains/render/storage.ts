@@ -16,10 +16,15 @@ export async function putJsonIfUnchanged(
 ): Promise<boolean> {
   const bytes = encodeStableJson(payload);
   const result = await env.TOKYO_R2.put(key, bytes, {
-    onlyIf: { etagMatches: httpEtag },
+    onlyIf: { etagMatches: normalizeConditionalEtag(httpEtag) },
     httpMetadata: { contentType: 'application/json; charset=utf-8' },
   });
   return result != null;
+}
+
+function normalizeConditionalEtag(httpEtag: string): string {
+  const trimmed = httpEtag.trim();
+  return trimmed.startsWith('"') && trimmed.endsWith('"') ? trimmed.slice(1, -1) : trimmed;
 }
 
 export async function loadJson<T>(env: Env, key: string): Promise<T | null> {

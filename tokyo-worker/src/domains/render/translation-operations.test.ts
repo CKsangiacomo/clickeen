@@ -56,7 +56,9 @@ function createTestEnv(): { env: Env; objects: Map<string, StoredObject>; queued
         await Promise.resolve();
         const current = objects.get(key);
         const expectedEtag = options?.onlyIf?.etagMatches;
-        if (expectedEtag && current?.httpEtag !== expectedEtag) return null;
+        const currentEtag = current?.httpEtag.replace(/^"|"$/g, '');
+        if (expectedEtag?.startsWith('"')) throw new Error(`Conditional ETag should not be wrapped in quotes (${expectedEtag}).`);
+        if (expectedEtag && currentEtag !== expectedEtag) return null;
         const body =
           value instanceof Uint8Array
             ? JSON.parse(new TextDecoder().decode(value))
