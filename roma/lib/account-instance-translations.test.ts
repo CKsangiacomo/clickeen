@@ -89,10 +89,12 @@ test('generates translations through one Tokyo product operation', async () => {
                 skippedLocales: ['cs'],
                 jobIds: ['job-it'],
                 generation: {
+                  v: 2,
                   instanceId: INSTANCE_ID,
                   baseLocale: 'en',
                   targetLocales: ['it', 'cs'],
                   status: 'queued',
+                  active: true,
                   requestedAt: '2026-05-20T00:00:00.000Z',
                   updatedAt: '2026-05-20T00:00:00.000Z',
                   totalLocales: 2,
@@ -103,7 +105,13 @@ test('generates translations through one Tokyo product operation', async () => {
                   currentReadyLocales: ['cs'],
                   outOfSyncLocales: [],
                   isCurrentBaseContent: true,
+                  baseContentMarker: 'base-1',
+                  generationRequestMarker: 'request-1',
                   jobId: 'job-it',
+                  locales: [
+                    { locale: 'cs', state: 'inSync', reviewable: true },
+                    { locale: 'it', state: 'generating', reviewable: false },
+                  ],
                 },
                 results: [{ locale: 'it', ok: true, jobId: 'job-it' }],
               },
@@ -139,10 +147,12 @@ test('generates translations through one Tokyo product operation', async () => {
           skippedLocales: ['cs'],
           jobIds: ['job-it'],
           generation: {
+            v: 2,
             instanceId: INSTANCE_ID,
             baseLocale: 'en',
             targetLocales: ['it', 'cs'],
             status: 'queued',
+            active: true,
             requestedAt: '2026-05-20T00:00:00.000Z',
             updatedAt: '2026-05-20T00:00:00.000Z',
             totalLocales: 2,
@@ -153,7 +163,13 @@ test('generates translations through one Tokyo product operation', async () => {
             currentReadyLocales: ['cs'],
             outOfSyncLocales: [],
             isCurrentBaseContent: true,
+            baseContentMarker: 'base-1',
+            generationRequestMarker: 'request-1',
             jobId: 'job-it',
+            locales: [
+              { locale: 'cs', state: 'inSync', reviewable: true },
+              { locale: 'it', state: 'generating', reviewable: false },
+            ],
           },
           results: [{ locale: 'it', ok: true, jobId: 'job-it' }],
         },
@@ -185,10 +201,12 @@ test('reads translation generation state through one Tokyo product operation', a
             return jsonResponse({
               ok: true,
               generation: {
+                v: 2,
                 instanceId: INSTANCE_ID,
                 baseLocale: 'en',
                 targetLocales: ['it', 'cs'],
                 status: 'running',
+                active: true,
                 requestedAt: '2026-05-20T00:00:00.000Z',
                 updatedAt: '2026-05-20T00:00:03.000Z',
                 totalLocales: 2,
@@ -199,7 +217,13 @@ test('reads translation generation state through one Tokyo product operation', a
                 currentReadyLocales: ['it'],
                 outOfSyncLocales: [],
                 isCurrentBaseContent: true,
+                baseContentMarker: 'base-1',
+                generationRequestMarker: 'request-1',
                 jobId: 'job-it',
+                locales: [
+                  { locale: 'cs', state: 'generating', reviewable: false },
+                  { locale: 'it', state: 'inSync', reviewable: true },
+                ],
               },
             });
           }
@@ -222,10 +246,12 @@ test('reads translation generation state through one Tokyo product operation', a
       value: {
         ok: true,
         generation: {
+          v: 2,
           instanceId: INSTANCE_ID,
           baseLocale: 'en',
           targetLocales: ['it', 'cs'],
           status: 'running',
+          active: true,
           requestedAt: '2026-05-20T00:00:00.000Z',
           updatedAt: '2026-05-20T00:00:03.000Z',
           totalLocales: 2,
@@ -236,11 +262,96 @@ test('reads translation generation state through one Tokyo product operation', a
           currentReadyLocales: ['it'],
           outOfSyncLocales: [],
           isCurrentBaseContent: true,
+          baseContentMarker: 'base-1',
+          generationRequestMarker: 'request-1',
           jobId: 'job-it',
+          locales: [
+            { locale: 'cs', state: 'generating', reviewable: false },
+            { locale: 'it', state: 'inSync', reviewable: true },
+          ],
         },
       },
     });
     assert.deepEqual(tokyoReads, [`/__internal/instances/${INSTANCE_ID}/translations/generation`]);
+  } finally {
+    if (originalContext === undefined) delete (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
+    else (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = originalContext;
+  }
+});
+
+test('reads v2 translation generation product state without legacy queue arrays', async () => {
+  const originalContext = (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
+
+  (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = {
+    env: {
+      TOKYO_PRODUCT_CONTROL: {
+        async fetch(input: RequestInfo | URL) {
+          const url = new URL(String(input));
+          if (url.pathname === `/__internal/instances/${INSTANCE_ID}/translations/generation`) {
+            return jsonResponse({
+              ok: true,
+              generation: {
+                v: 2,
+                instanceId: INSTANCE_ID,
+                baseLocale: 'en',
+                targetLocales: ['it'],
+                status: 'completed',
+                active: false,
+                requestedAt: '2026-05-20T00:00:00.000Z',
+                updatedAt: '2026-05-20T00:00:03.000Z',
+                totalLocales: 1,
+                isCurrentBaseContent: true,
+                baseContentMarker: 'base-1',
+                generationRequestMarker: 'request-1',
+                locales: [
+                  { locale: 'it', state: 'inSync', reviewable: true },
+                ],
+              },
+            });
+          }
+          return jsonResponse({ error: { reasonKey: 'unexpected_tokyo_path', detail: url.pathname } }, 500);
+        },
+      },
+    },
+  };
+
+  try {
+    const result = await readAccountInstanceTranslationGeneration({
+      accountId: ACCOUNT_PUBLIC_ID,
+      instanceId: INSTANCE_ID,
+      accountCapsule: 'capsule',
+      requestId: 'req_translation_generation_v2_read',
+    });
+
+    assert.deepEqual(result, {
+      ok: true,
+      value: {
+        ok: true,
+        generation: {
+          v: 2,
+          instanceId: INSTANCE_ID,
+          baseLocale: 'en',
+          targetLocales: ['it'],
+          status: 'completed',
+          active: false,
+          requestedAt: '2026-05-20T00:00:00.000Z',
+          updatedAt: '2026-05-20T00:00:03.000Z',
+          totalLocales: 1,
+          completedLocales: [],
+          failedLocales: [],
+          supersededLocales: [],
+          pendingLocales: [],
+          currentReadyLocales: [],
+          outOfSyncLocales: [],
+          isCurrentBaseContent: true,
+          baseContentMarker: 'base-1',
+          generationRequestMarker: 'request-1',
+          locales: [
+            { locale: 'it', state: 'inSync', reviewable: true },
+          ],
+        },
+      },
+    });
   } finally {
     if (originalContext === undefined) delete (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
     else (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL] = originalContext;

@@ -50,11 +50,21 @@ export type InstanceTranslationGenerationStatus =
   | 'failed'
   | 'superseded';
 
+export type InstanceTranslationProductLocaleState = {
+  locale: string;
+  state: 'missing' | 'generating' | 'inSync' | 'outOfSync' | 'failed';
+  reviewable: boolean;
+  reasonKey?: string;
+  detail?: string;
+};
+
 export type InstanceTranslationGenerationSummary = {
+  v?: 2;
   instanceId: string;
   baseLocale: string;
   targetLocales: string[];
   status: InstanceTranslationGenerationStatus;
+  active: boolean;
   requestedAt: string | null;
   updatedAt: string | null;
   totalLocales: number;
@@ -66,6 +76,8 @@ export type InstanceTranslationGenerationSummary = {
   outOfSyncLocales: string[];
   isCurrentBaseContent: boolean;
   baseContentMarker?: string;
+  generationRequestMarker?: string;
+  locales: InstanceTranslationProductLocaleState[];
   jobId?: string;
   reasonKey?: string;
   detail?: string;
@@ -144,6 +156,35 @@ function normalizeGenerationStatus(raw: unknown): InstanceTranslationGenerationS
     : null;
 }
 
+function normalizeProductLocaleState(raw: unknown): InstanceTranslationProductLocaleState | null {
+  if (!isRecord(raw)) return null;
+  const locale = asTrimmedString(raw.locale);
+  const state = raw.state === 'missing' ||
+    raw.state === 'generating' ||
+    raw.state === 'inSync' ||
+    raw.state === 'outOfSync' ||
+    raw.state === 'failed'
+    ? raw.state
+    : null;
+  if (!locale || !state || typeof raw.reviewable !== 'boolean') return null;
+  return {
+    locale,
+    state,
+    reviewable: raw.reviewable,
+    ...(asTrimmedString(raw.reasonKey) ? { reasonKey: asTrimmedString(raw.reasonKey) as string } : {}),
+    ...(asTrimmedString(raw.detail) ? { detail: asTrimmedString(raw.detail) as string } : {}),
+  };
+}
+
+function normalizeProductLocaleStates(raw: unknown): InstanceTranslationProductLocaleState[] | null {
+  if (raw == null) return [];
+  if (!Array.isArray(raw)) return null;
+  const locales = raw
+    .map((entry) => normalizeProductLocaleState(entry))
+    .filter((entry): entry is InstanceTranslationProductLocaleState => Boolean(entry));
+  return locales.length === raw.length ? locales : null;
+}
+
 function normalizeNullableString(raw: unknown): string | null {
   if (raw == null) return null;
   return asTrimmedString(raw);
@@ -155,12 +196,13 @@ function normalizeGenerationSummary(raw: unknown): InstanceTranslationGeneration
   const baseLocale = asTrimmedString(raw.baseLocale);
   const targetLocales = normalizeStringArray(raw.targetLocales);
   const status = normalizeGenerationStatus(raw.status);
-  const completedLocales = normalizeStringArray(raw.completedLocales);
-  const failedLocales = normalizeStringArray(raw.failedLocales);
-  const supersededLocales = normalizeStringArray(raw.supersededLocales);
-  const pendingLocales = normalizeStringArray(raw.pendingLocales);
-  const currentReadyLocales = normalizeStringArray(raw.currentReadyLocales);
+  const completedLocales = normalizeStringArray(raw.completedLocales) ?? [];
+  const failedLocales = normalizeStringArray(raw.failedLocales) ?? [];
+  const supersededLocales = normalizeStringArray(raw.supersededLocales) ?? [];
+  const pendingLocales = normalizeStringArray(raw.pendingLocales) ?? [];
+  const currentReadyLocales = normalizeStringArray(raw.currentReadyLocales) ?? [];
   const outOfSyncLocales = normalizeStringArray(raw.outOfSyncLocales) ?? [];
+  const locales = normalizeProductLocaleStates(raw.locales);
   const totalLocales = typeof raw.totalLocales === 'number' && Number.isFinite(raw.totalLocales)
     ? Math.max(0, Math.floor(raw.totalLocales))
     : null;
@@ -172,19 +214,17 @@ function normalizeGenerationSummary(raw: unknown): InstanceTranslationGeneration
     !targetLocales ||
     !status ||
     totalLocales == null ||
-    !completedLocales ||
-    !failedLocales ||
-    !supersededLocales ||
-    !pendingLocales ||
-    !currentReadyLocales
+    !locales
   ) {
     return null;
   }
   return {
+    ...(raw.v === 2 ? { v: 2 } : {}),
     instanceId,
     baseLocale,
     targetLocales,
     status,
+    active: typeof raw.active === 'boolean' ? raw.active : status === 'queued' || status === 'running',
     requestedAt,
     updatedAt,
     totalLocales,
@@ -196,6 +236,8 @@ function normalizeGenerationSummary(raw: unknown): InstanceTranslationGeneration
     outOfSyncLocales,
     isCurrentBaseContent: raw.isCurrentBaseContent !== false,
     ...(asTrimmedString(raw.baseContentMarker) ? { baseContentMarker: asTrimmedString(raw.baseContentMarker) as string } : {}),
+    ...(asTrimmedString(raw.generationRequestMarker) ? { generationRequestMarker: asTrimmedString(raw.generationRequestMarker) as string } : {}),
+    locales,
     ...(asTrimmedString(raw.jobId) ? { jobId: asTrimmedString(raw.jobId) as string } : {}),
     ...(asTrimmedString(raw.reasonKey) ? { reasonKey: asTrimmedString(raw.reasonKey) as string } : {}),
     ...(asTrimmedString(raw.detail) ? { detail: asTrimmedString(raw.detail) as string } : {}),
