@@ -10,7 +10,13 @@ import type { InstanceTranslationJob } from '@clickeen/ck-contracts/instance-tra
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { resolveAiRuntimeBudget, resolveAiRuntimePolicy } from '@clickeen/ck-policy';
 import editableFieldsJson from '../../tokyo/product/widgets/faq/editable-fields.json';
-import { handleInstanceTranslationQueueMessage, isInstanceTranslationQueueMessage, isNonRetryable } from './instance-translation-queue';
+import {
+  handleInstanceTranslationQueueMessage,
+  isInstanceTranslationQueueMessage,
+  isInstanceTranslationShapedQueueMessage,
+  isNonRetryable,
+  summarizeInstanceTranslationQueuePayload,
+} from './instance-translation-queue';
 import { HttpError } from './http';
 import type { Env } from './types';
 
@@ -247,6 +253,17 @@ test('San Francisco rejects markerless instance translation queue messages', () 
   const job = translationJob() as unknown as Record<string, unknown>;
   delete job.baseContentMarker;
   assert.equal(isInstanceTranslationQueueMessage(job), false);
+  assert.equal(isInstanceTranslationShapedQueueMessage(job), true);
+  assert.deepEqual(summarizeInstanceTranslationQueuePayload(job), {
+    v: 2,
+    kind: 'instance.translation.locale_values',
+    jobId: 'job-queue-it',
+    accountPublicId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    targetLocale: 'it',
+    hasBaseContentMarker: false,
+    hasGenerationRequestMarker: true,
+  });
 });
 
 test('San Francisco reports retry-exhausted terminal failures to Tokyo', async () => {

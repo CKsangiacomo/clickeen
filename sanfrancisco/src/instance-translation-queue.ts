@@ -1,5 +1,6 @@
 import {
   normalizeInstanceTranslationJob,
+  INSTANCE_TRANSLATION_JOB_KIND,
   INSTANCE_TRANSLATION_AGENT_ID,
   type InstanceTranslationJob,
 } from '@clickeen/ck-contracts/instance-translation-jobs';
@@ -245,6 +246,36 @@ async function reportTerminalFailureToTokyo(args: {
 
 export function isInstanceTranslationQueueMessage(value: unknown): value is InstanceTranslationJob {
   return normalizeInstanceTranslationJob(value) != null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+export function isInstanceTranslationShapedQueueMessage(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return (
+    value.kind === INSTANCE_TRANSLATION_JOB_KIND ||
+    (value.v === 2 &&
+      typeof value.jobId === 'string' &&
+      typeof value.instanceId === 'string' &&
+      typeof value.targetLocale === 'string')
+  );
+}
+
+export function summarizeInstanceTranslationQueuePayload(value: unknown): Record<string, unknown> {
+  if (!isRecord(value)) return { type: typeof value };
+  return {
+    v: value.v,
+    kind: value.kind,
+    jobId: value.jobId,
+    accountPublicId: value.accountPublicId,
+    instanceId: value.instanceId,
+    targetLocale: value.targetLocale,
+    hasBaseContentMarker: typeof value.baseContentMarker === 'string' && value.baseContentMarker.trim().length > 0,
+    hasGenerationRequestMarker:
+      typeof value.generationRequestMarker === 'string' && value.generationRequestMarker.trim().length > 0,
+  };
 }
 
 export async function handleInstanceTranslationQueueMessage(env: Env, msg: QueueMessage): Promise<boolean> {
