@@ -118,6 +118,7 @@ export type TranslationGenerationLocaleState = {
 
 export type TranslationGenerationJobDocument = {
   jobId: string;
+  baseContentMarker?: string;
   accountId: string;
   instanceId: string;
   widgetType: string;
@@ -134,8 +135,6 @@ export type TranslationGenerationJobDocument = {
   currentReadyLocales: string[];
   locales: Record<string, TranslationGenerationLocaleState>;
   basis: TranslationGenerationJobBasis;
-  previousJobId?: string;
-  supersededJobIds?: string[];
   reasonKey?: string;
   detail?: string;
 };
@@ -153,6 +152,9 @@ export type TranslationGenerationJobSummary = {
   supersededLocales: string[];
   pendingLocales: string[];
   currentReadyLocales: string[];
+  outOfSyncLocales?: string[];
+  baseContentMarker?: string;
+  isCurrentBaseContent?: boolean;
   jobId?: string;
   reasonKey?: string;
   detail?: string;

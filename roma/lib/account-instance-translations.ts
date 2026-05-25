@@ -63,6 +63,9 @@ export type InstanceTranslationGenerationSummary = {
   supersededLocales: string[];
   pendingLocales: string[];
   currentReadyLocales: string[];
+  outOfSyncLocales: string[];
+  isCurrentBaseContent: boolean;
+  baseContentMarker?: string;
   jobId?: string;
   reasonKey?: string;
   detail?: string;
@@ -157,6 +160,7 @@ function normalizeGenerationSummary(raw: unknown): InstanceTranslationGeneration
   const supersededLocales = normalizeStringArray(raw.supersededLocales);
   const pendingLocales = normalizeStringArray(raw.pendingLocales);
   const currentReadyLocales = normalizeStringArray(raw.currentReadyLocales);
+  const outOfSyncLocales = normalizeStringArray(raw.outOfSyncLocales) ?? [];
   const totalLocales = typeof raw.totalLocales === 'number' && Number.isFinite(raw.totalLocales)
     ? Math.max(0, Math.floor(raw.totalLocales))
     : null;
@@ -189,6 +193,9 @@ function normalizeGenerationSummary(raw: unknown): InstanceTranslationGeneration
     supersededLocales,
     pendingLocales,
     currentReadyLocales,
+    outOfSyncLocales,
+    isCurrentBaseContent: raw.isCurrentBaseContent !== false,
+    ...(asTrimmedString(raw.baseContentMarker) ? { baseContentMarker: asTrimmedString(raw.baseContentMarker) as string } : {}),
     ...(asTrimmedString(raw.jobId) ? { jobId: asTrimmedString(raw.jobId) as string } : {}),
     ...(asTrimmedString(raw.reasonKey) ? { reasonKey: asTrimmedString(raw.reasonKey) as string } : {}),
     ...(asTrimmedString(raw.detail) ? { detail: asTrimmedString(raw.detail) as string } : {}),

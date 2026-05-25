@@ -3,7 +3,7 @@
 Status: Draft
 Owner: Product + Architecture
 Date: 2026-05-17
-Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
+Parent: `103__PRD__Saved_Instance_Localization_Runtime.md`
 
 ## Purpose
 
@@ -32,10 +32,11 @@ Every PRD 103 sub-PRD must prove:
    - Each relevant slice traces the user path:
 
 ```text
-Bob edits FAQ
-Save persists FAQ
-Clickeen translates changed text
-Bob shows current language values
+Bob edits one account widget
+Roma saves base content to Tokyo
+Translations panel shows whether locales match current saved base content
+Generate translates the current saved base content
+Bob shows translated locale values
 Publish serves generated language files
 ```
 
@@ -44,13 +45,14 @@ Publish serves generated language files
 
 ```text
 saved instance
-authored content JSON and widget package projections
+editable fields and widget package projections
 Bob Copilot Agent
 Instance Translation Agent
-translate saved instance
-current language values
+generate translations
+translated locale values
 publish language files
 manual translation override
+saved base content marker
 ```
 
    - Banned as product-boundary language:

@@ -60,7 +60,7 @@ Health contract:
 - Triggered only by explicit Generate from Bob's Translations panel through Roma to Tokyo. Base Save does not enqueue translation.
 - Roma owns account-command acceptance. Tokyo owns queue production, generation state, and saved locale value storage. San Francisco owns AI value production and terminal complete/fail reporting back to Tokyo.
 - Queue binding: `INSTANCE_TRANSLATION_JOBS`.
-- Current runtime still carries FAQ-shaped job payloads, but this is superseded by PRD 103J. The target payload is widget-generic saved text fields from `editable-fields.json`, including stable identity keys, current paths, labels, roles, base text, and source basis.
+- Runtime target payloads are widget-generic saved text fields from `editable-fields.json`, including stable identity keys, current paths, labels, roles, base text, source basis, and the PRD 103K saved base content marker.
 - San Francisco translates only changed generic primitive fields, validates the exact returned changed path set, and reports one terminal completion or failure to Tokyo using `x-ck-internal-service: sanfrancisco.translation`.
 - Tokyo validates and writes the complete current-language value object under the owning instance. Overlay IDs are not product vocabulary.
 - The HTTP `translate-saved-instance` endpoint remains for direct diagnostics and tests; it is not the active save/generate product orchestration boundary.

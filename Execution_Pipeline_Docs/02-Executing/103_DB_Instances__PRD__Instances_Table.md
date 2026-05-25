@@ -16,7 +16,7 @@ This PRD does not move widget content, config payloads, translated values, gener
 - which account owns each instance;
 - which widget product each instance uses;
 - whether the instance is intended to be published by product state;
-- whether translation generation is idle, queued, running, or failed;
+- whether translation generation is idle, queued, running, or failed for button/liveness control;
 - when the instance was created;
 - when the user last edited the instance.
 
@@ -26,7 +26,7 @@ Roma currently needs to show "which instances belong to this account" and open a
 
 Tokyo currently needs to decide whether an account may open, save, translate, publish, unpublish, rename, duplicate, or delete an instance. That needs one account-scoped control row, not scattered storage-object state.
 
-Translation generation needs coarse product state for the panel and button. The product should know whether Generate is idle, queued, running, or failed without inferring from browser spinner state, overlay inventory files, or partial object writes.
+Translation generation needs coarse product state for the panel and button. The product should know whether Generate is idle, queued, running, or failed without inferring from browser spinner state, overlay inventory files, or partial object writes. Translation sync itself is not this column. Sync is derived by Tokyo from whether translated locale values match the current saved base content marker defined by PRD 103K.
 
 Publish needs product state. Public `index.html` existence is an artifact, not the truth that an instance is published.
 
@@ -66,7 +66,7 @@ One row per durable account-owned instance.
 | `account_id` | text | Tokyo | Tokyo, Berlin-derived authorization checks through Tokyo | The same compact account id used by Tokyo folders: `accounts/{accountId}/instances/{instanceId}`. Owns containment. Used for account-scoped listing, open/save/generate/publish/delete authorization, and entitlement counts. Immutable after create. |
 | `widget_type` | text | Tokyo | Tokyo, Roma/Bob through Tokyo | Product widget type such as `faq`, `countdown`, or `logoshowcase`. Used to load the correct widget definition/editor/runtime path. Immutable after create. |
 | `publish_status` | `instance_publish_status` | Tokyo | Tokyo, Roma/Bob through Tokyo | Product publish state: `unpublished` or `published`. Updated only by publish/unpublish product operations. This is not current serving eligibility; billing/tier materialization may serve less than paid-tier output without rewriting publish intent. |
-| `translation_status` | `instance_translation_status` | Tokyo | Tokyo, Roma/Bob through Tokyo | Coarse Generate state: `idle`, `queued`, `running`, or `failed`. Used by the translation panel/button. Not readiness, not progress, not history. |
+| `translation_status` | `instance_translation_status` | Tokyo | Tokyo, Roma/Bob through Tokyo | Coarse Generate button/liveness state: `idle`, `queued`, `running`, or `failed`. Not readiness, not sync truth, not progress, not history. |
 | `created_at` | timestamptz | Tokyo | Tokyo, Roma/Bob through Tokyo | Creation timestamp. Written once. Used for sorting, audit/debug, and migration verification. |
 | `edited_at` | timestamptz | Tokyo | Tokyo, Roma/Bob through Tokyo | Last user edit timestamp. Updated on rename and user save of content/config/settings. Translation workers and artifact materialization do not update it. |
 
@@ -134,7 +134,7 @@ Flow:
 | Duplicate admin template into account | new `id`, target `account_id`, template `widget_type`, `publish_status = unpublished`, `translation_status = idle`, new `created_at`, new `edited_at` |
 | Rename/edit instance label | `edited_at`; editable label/name lives in Tokyo-owned instance payload/config, not in this table |
 | User save content/config/settings | `edited_at`; authored payload is updated behind Tokyo operation, not in this table |
-| Generate accepted | `translation_status = queued` after Tokyo accepts the request and records the private source fingerprint/job handoff |
+| Generate accepted | `translation_status = queued` after Tokyo accepts work for the current saved base content marker |
 | Generate worker starts | `translation_status = running` if Tokyo tracks worker-start state in V1 |
 | Generate completes successfully | `translation_status = idle` |
 | Generate fails | `translation_status = failed` |
@@ -177,14 +177,16 @@ This table improves operational efficiency by replacing storage-object coordinat
 
 This table stays cost-efficient only if it remains a control table. It must not become the home for widget payloads, translated values, generated artifacts, per-locale readiness, or job history.
 
-Translation stale-work protection belongs inside the Tokyo Generate operation, not in extra DB columns:
+Translation sync and stale-work protection belong inside Tokyo operations, not in extra DB columns:
 
-- Generate snapshots/marks the saved authored text input that Tokyo accepted;
+- Generate derives the saved base content marker that Tokyo accepted;
+- repeated Generate for the same active marker returns the active generation and does not replace it;
+- Generate while another generation is active for the same instance is rejected or returns active state; it does not create competing generations;
 - workers return results through Tokyo;
-- Tokyo applies results only if the current saved authored text input still matches the accepted work;
-- stale results are discarded without overwriting translated values or resetting a newer Generate state.
+- Tokyo applies results only if the current saved base content marker still matches the marker translated by the worker;
+- marker mismatch becomes explicit out-of-sync/base-changed product state.
 
-No `translation_job_id`, `translation_error_key`, `sourceVersion`, or per-locale progress column is approved in `instances` for V1.
+No `translation_job_id`, `translation_error_key`, `sourceVersion`, base marker, or per-locale progress column is approved in `instances` for V1.
 
 Hot product queries:
 

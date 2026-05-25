@@ -299,7 +299,7 @@ test('Tokyo generate completes Logo Showcase nested repeated fields through the 
   });
 });
 
-test('Tokyo generate supersedes active matching work on an explicit Generate click', async () => {
+test('Tokyo generate returns active matching work on a duplicate Generate click', async () => {
   const { env, queued } = createTestEnv();
   const values = await seedSavedFaqInstance(env);
 
@@ -329,9 +329,9 @@ test('Tokyo generate supersedes active matching work on an explicit Generate cli
 
   assert.equal(second.ok, true);
   assert.equal(second.ok ? second.accepted : false, true);
-  assert.equal(queued.length, 4);
+  assert.equal(queued.length, 2);
   assert.deepEqual(second.ok ? [...second.queuedLocales].sort() : [], ['cs', 'it']);
-  assert.notDeepEqual(second.ok ? second.jobIds : [], first.ok ? first.jobIds : []);
+  assert.deepEqual(second.ok ? second.jobIds : [], first.ok ? first.jobIds : []);
   assert.equal((await readInstanceRegistryRow({
     env,
     accountId: ACCOUNT_PUBLIC_ID,
@@ -346,14 +346,12 @@ test('Tokyo generate supersedes active matching work on an explicit Generate cli
     values,
   }), {
     ok: true,
-    applied: false,
+    applied: true,
     locale: 'it',
-    reasonKey: 'instance.translation.job_superseded',
-    detail: 'This translation job is no longer the current generation job for the instance.',
   });
 });
 
-test('Tokyo generate supersedes active work after newer saved base text', async () => {
+test('Tokyo generate does not create competing work while older base translation is active', async () => {
   const { env, queued } = createTestEnv();
   const values = await seedSavedFaqInstance(env);
 
@@ -391,9 +389,16 @@ test('Tokyo generate supersedes active work after newer saved base text', async 
     targetLocales: ['it'],
   });
   assert.equal(restarted.ok, true);
-  assert.equal(queued.length, 2);
-  assert.notEqual(queued[1]?.jobId, originalJob.jobId);
-  assert(queued[1]?.changedFields.some((field) => field.path === 'sections.0.faqs.0.answer'));
+  assert.equal(queued.length, 1);
+  assert.deepEqual(restarted.ok ? restarted.jobIds : [], [originalJob.jobId]);
+  const generation = await readInstanceTranslationGeneration({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  });
+  assert.equal(generation.ok, true);
+  assert.equal(generation.ok ? generation.generation.isCurrentBaseContent : null, false);
+  assert.deepEqual(generation.ok ? generation.generation.outOfSyncLocales : [], ['it']);
 
   assert.deepEqual(await completeLocaleTranslation({
     env,
@@ -406,8 +411,8 @@ test('Tokyo generate supersedes active work after newer saved base text', async 
     ok: true,
     applied: false,
     locale: 'it',
-    reasonKey: 'instance.translation.job_superseded',
-    detail: 'This translation job is no longer the current generation job for the instance.',
+    reasonKey: 'instance.translation.stale_source_text',
+    detail: 'Current saved text for the translated fields no longer matches the translation job basis.',
   });
 });
 
@@ -959,7 +964,7 @@ test('content status clears changed fields only after every generated target loc
     baseLocale: 'en',
     targetLocales: ['it', 'cs'],
   });
-  assert.equal(queued.length, 5);
+  assert.equal(queued.length, 4);
 
   const czechJob = [...queued].reverse().find((job) => job.targetLocale === 'cs' && job.changedFields.length === 1);
   assert(czechJob);

@@ -83,7 +83,7 @@ This keeps customer actions close to one cross-service request, removes stale re
 | **Bob**           | `bob/`          | Cloudflare Pages                     | Widget builder, compiler, ToolDrawer, preview                           | ✅ Active   |
 | **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
 | **DevStudio**     | `admin/`        | Local Vite                           | Internal toolbench for platform curation, verification, and local utility pages | ✅ Internal |
-| **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | Legacy SSR embed runtime superseded by `clk.live` static artifacts      | Removed from active serving |
+| **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | Legacy SSR embed runtime replaced by `clk.live` static artifacts        | Removed from active serving |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
 | **Dieter**        | `dieter/`       | (build artifact)                     | Design system: tokens, 16+ components                                   | ✅ Active   |

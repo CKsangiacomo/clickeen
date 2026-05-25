@@ -7,7 +7,7 @@
 **Date:** 2026-01-31  
 **Executed:** 2026-02-03  
 
-PRD 103_00 NOTE: this PRD is historical for public static-serving economics only. Its `index.json`, mutable pointer, published snapshot, and Tokyo/R2 path vocabulary is superseded as product architecture by PRD 100 static serving plus `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+PRD 103 NOTE: this PRD is historical for public static-serving economics only. Its `index.json`, mutable pointer, published snapshot, and Tokyo/R2 path vocabulary is not current product architecture. Current authority is PRD 100 static serving plus `Execution_Pipeline_Docs/01-Planning/103__PRD__Saved_Instance_Localization_Runtime.md` and the DB Pivot PRD.
 
 ## Goal (v1)
 Eliminate per-view dynamic work against **Paris/Michael** for **published widget instances** by serving Venice’s embed endpoints from **immutable artifacts** in Tokyo (R2).

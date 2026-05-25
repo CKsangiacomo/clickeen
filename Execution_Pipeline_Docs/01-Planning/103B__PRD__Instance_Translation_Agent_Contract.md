@@ -1,94 +1,83 @@
 # PRD 103B - Instance Translation Agent Contract
 
-Status: Complete
+Status: Active agent boundary; sync behavior owned by PRD 103K
 Owner: Product + Architecture
 Date: 2026-05-17
-Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
-Depends on: PRD 103C.1, PRD 103C, PRD 103D.0
-
-## 103J Supersession Note
-
-This PRD remains useful for the job-shaped agent boundary and for rejecting loose text-value requests. Any FAQ-specific request/result wording is superseded by `103J__PRD__Generic_Widget_Translation_System.md`. Future execution must use a widget-generic saved text field contract, not FAQ saved text graphs.
+Current dependencies: `103J__PRD__Generic_Widget_Translation_System.md`, `103K__PRD__Saved_Base_Content_Translation_Sync.md`
 
 ## Purpose
 
-Replace loose text production with a real product agent contract:
+Define the San Francisco system agent that translates saved account-widget text.
+
+The agent exists to perform one operation:
 
 ```text
-translate saved instance
+translate saved instance fields for one target locale
 ```
 
-The agent returns current language values for one saved widget instance and target locale.
+It does not own authoring truth, sync state, locale readiness, queue UX, or translated value storage. Tokyo owns those product operations.
 
-This sub-PRD must not create a new job framework unless the thin FAQ vertical slice cannot run without it. Existing San Francisco translation primitives should be wrapped below the agent boundary when that is sufficient.
+## Agent Identity
 
-## Execution Contract
+Canonical agent id:
 
-- Executable without drift: the request is instance/job-shaped, not endpoint-shaped text values.
-- New systems are allowed only if they collapse the current endpoint/follow-up/producer split into the product agent boundary.
-- End-to-end accuracy must include saved instance identity, whole changed fields, existing language values, merge, Bob review, and Publish.
-- All systems must say `Instance Translation Agent`, `translate saved instance`, and `current language values`.
-- Blast radius includes the Translations panel Generate trigger, San Francisco execution, grants/policy, Tokyo-worker storage, Bob review, publish generation, logs, and tests.
+```text
+widget.instance.translator
+```
+
+The agent is a system agent for `account_widget_translated_values`.
 
 ## Request Contract
 
-The request includes:
+The request/job must include:
 
-```text
-accountId
-instanceId
-widgetType
-saveVersion or baseRevision
-baseLocale
-targetLocale
-widgetContractVersion
-currentSavedTextGraph
-previousSavedTextGraph
-changedFields
-deletedFields
-existingLanguageValues
-policyRuntimeProfile
-jobId
-```
+- account id and account public id;
+- user id for policy/audit;
+- instance id;
+- widget type;
+- base locale;
+- target locale;
+- target locale set;
+- widget editable-fields contract hash;
+- saved base content marker from PRD 103K;
+- identity-bearing saved text fields from PRD 103J;
+- current base text for each changed field identity;
+- AI runtime policy and budget;
+- request id for traceability.
 
-`baseLocale` comes from account `localePolicy`. `targetLocale` must be one locale from account `selectedTargetLocales`; the translation agent never invents target locale scope from instance files.
-
-`policyRuntimeProfile` means the existing `ck-policy` runtime policy or a reference resolvable through it. It does not mean a new policy object.
-
-The request is rejected if it is only:
-
-```text
-{ path, value, locale }[]
-```
+The request must not be a loose list of `{ path, value, locale }` without instance identity, field identity, widget contract, and saved base content marker.
 
 ## Result Contract
 
-The result is:
+The agent returns translated current language values for the requested target locale:
 
 ```text
-current language values for accountId + instanceId + targetLocale
+target locale -> concrete current path/value map
 ```
 
-not:
+The result must carry the same saved base content marker it translated. Tokyo uses that marker to decide whether the result still applies to current saved base content.
 
-```text
-translated text payload
-```
+The result is not valid just because a random `jobId` matches or does not match. `jobId` may remain trace/debug metadata, but content-marker compatibility is the product validity check.
+
+## Failure Contract
+
+Deterministic failures are terminal and must be reported to Tokyo:
+
+- unsupported provider/runtime;
+- missing required provider secret;
+- invalid model output;
+- unknown returned path;
+- missing returned path;
+- widget contract mismatch;
+- marker mismatch detected before completion.
+
+Retryable upstream provider failures may retry within the worker policy. They must eventually become visible Tokyo failure state instead of leaving Bob in an endless active state.
 
 ## Acceptance
 
-- The operation is named `translate saved instance` or equivalent product language.
-- The agent receives field identity, field intent, rich/plain text type, and surrounding FAQ context where needed.
-- The agent can receive existing language values for unchanged paths.
-- The agent output can be passed to the generic Tokyo translated-value completion path.
-- Product logs/errors include agent ID, job ID, account ID, instance ID, target locale, policy version, provider, and model.
-- Old text-value route behavior is deleted from the active API.
-- No new queue, scheduler, or orchestration framework is introduced unless required to execute the single-language FAQ vertical slice correctly.
-
-## Verification
-
-- Fixture rejects loose text-values request.
-- Fixture translates changed FAQ question while carrying unchanged answer.
-- Failure fixture rejects missing changed field and unknown returned field.
-- TPM signoff: this is Clickeen translating one saved FAQ instance.
-- Dev Manager signoff: the agent boundary is job-shaped.
+- The operation name remains `translate_saved_instance`.
+- The agent receives field identity, field role, rich/plain text type, concrete path, and base text.
+- The agent receives and returns the saved base content marker.
+- The agent output can be passed to Tokyo completion for marker-based apply/reject.
+- Product logs/errors include agent id, account id, instance id, target locale, marker, policy version, provider, and model.
+- Old loose text-value route behavior is not an active product API.

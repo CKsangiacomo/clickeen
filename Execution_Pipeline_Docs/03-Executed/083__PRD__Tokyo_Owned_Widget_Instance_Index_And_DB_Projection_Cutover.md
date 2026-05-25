@@ -4,7 +4,7 @@ Status: 03-Executed
 Date: 2026-05-05
 Owner: Clickeen product architecture
 
-PRD 103_00 NOTE: the product-boundary language in this historical PRD around `instances/index.json`, listed indexes, saved/live pointers, projections, and scripts writing indexes is superseded by `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`. Any surviving index/pointer mechanism must be private implementation behind product operations or deleted.
+PRD 103 NOTE: the product-boundary language in this historical PRD around `instances/index.json`, listed indexes, saved/live pointers, projections, and scripts writing indexes is not current authority. Current authority is `Execution_Pipeline_Docs/01-Planning/103__PRD__Saved_Instance_Localization_Runtime.md` plus the DB Pivot PRD. Any surviving index/pointer mechanism must be private implementation behind product operations or deleted.
 
 ## Product Decision
 

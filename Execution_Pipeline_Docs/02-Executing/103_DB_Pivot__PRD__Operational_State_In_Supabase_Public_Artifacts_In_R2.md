@@ -3,7 +3,7 @@
 Status: Executing
 Owner: Product + Architecture
 Date: 2026-05-21
-Blocks: PRD 103, 103_00-103_03, 103A-103Z product execution
+Blocks: PRD 103 product execution until DB pivot and PRD 103K translation sync are green
 
 ## Purpose
 
@@ -448,21 +448,23 @@ The exact migration may adjust column names to the current schema, but it must p
 | Account instance registry | `instances` | One row per real account-owned instance. Owns only `id`, `account_id`, `widget_type`, `publish_status`, `translation_status`, `created_at`, and `edited_at` in v1. Instance display/name/title remains in Tokyo-owned payload/config. |
 | Instance authored payload | Tokyo product operation | Payload may remain whole-document storage behind Tokyo in v1. Roma/Bob/San Francisco must not read storage files directly or use storage paths as product identity. |
 | Translated locale values | Tokyo product operation | Payload may remain Tokyo-owned whole-value storage in v1. No overlay ID, selected pointer, or inventory product concept. DB rows are not approved unless 103_DB.1 proves a product/cost need. |
-| Translation generation state | `instances.translation_status` plus Tokyo Generate operation | V1 stores only coarse panel/button state. No progress counters, locale rows, job history, or model audit fields unless 103_DB.1 proves the product needs them. |
+| Translation generation state | `instances.translation_status` plus Tokyo Generate operation | V1 stores only coarse panel/button liveness state. Sync truth is Tokyo-owned saved-base-content marker comparison per PRD 103K. No progress counters, locale rows, job history, or model audit fields unless a later slice proves the product needs them. |
 | Publish state | `instances.publish_status` | Product publish intent/state. Public file existence is not status. Billing/tier serving suppression is materialized by Tokyo without changing publish intent. Artifact build details stay private to the materialization operation unless a later slice proves a separate state primitive is needed. |
 | Widget definitions | product operation owned by Tokyo | Backing may be repo/static source or DB. Roma calls Tokyo for widget definitions; it does not fetch generated R2 catalog JSON. |
 
 This PRD intentionally does not move config, content, translated values, or per-locale readiness payloads into Supabase by default. That was the old "everything in DB" mistake in a new form. Payload movement is allowed only when a slice proves it removes product complexity without creating a DB cost trap at scale.
 
-Generate stale-work guard:
+Generate sync/stale-work guard:
 
-- Tokyo accepts Generate against the current saved authored text input.
-- Tokyo records a private source marker for that accepted work in the queue/private job payload, derived from the saved authored text input it is about to translate.
+- Tokyo accepts Generate against the current saved base content marker.
+- Tokyo records the private marker for that accepted work in the queue/private payload, derived from the saved authored text input it is about to translate.
+- Repeated Generate for the same active marker returns the active generation and does not replace it.
+- Generate while another generation is active for the same instance is rejected or returns active state; it does not create competing generations.
 - San Francisco results are applied only through Tokyo.
-- Tokyo applies results only if they still match the current saved authored text input.
-- Stale translation results are discarded and must not overwrite newer saved text, reset `translation_status`, or recreate old translated values.
+- Tokyo applies results only if they still match the current saved base content marker.
+- Marker mismatch is reported as base content changed / translations out of sync and must not overwrite newer saved text, reset `translation_status`, or recreate old translated values.
 
-This guard is not a new `sourceVersion` product concept and is not an approved DB column in V1. It is the minimum private operation check needed so queued translation work cannot corrupt newer user edits.
+This guard is not an approved DB column in V1. It is the minimum private Tokyo operation check needed so async translation work cannot corrupt newer user edits and cannot discard valid same-marker translations.
 
 ### Worker-To-Database Access
 
@@ -553,7 +555,7 @@ Out of scope:
 - adding marketplace/starter-instance product features beyond the migration needed to keep current widgets usable;
 - preserving legacy R2 account source files as a supported product mode;
 - preserving local Supabase/Docker scripts as database lifecycle or remote database management paths;
-- new translation UX beyond restoring a deterministic Tokyo-backed Generate/readiness model with DB-backed coarse state.
+- new translation UX beyond the PRD 103K saved-base-content sync banner/button model and deterministic Tokyo-backed Generate/readiness model with DB-backed coarse state.
 
 ## Non-Negotiables
 
@@ -579,7 +581,7 @@ Out of scope:
 - Tokyo owns DB transactions for instance registry/control state. Tokyo owns authored payloads, translated locale values, translation generation semantics, and materialization behind product operations.
 - Tokyo-worker connects to Supabase Postgres through the approved access path, preferably Hyperdrive, with config documented.
 - San Francisco translation workers receive jobs from the named queue/job source and report outcomes through Tokyo product operations. San Francisco does not write instance DB state directly in v1.
-- Generate can be clicked repeatedly and deterministically queues/coalesces/rejects stale work through Tokyo-owned semantics while `instances.translation_status` gives Roma/Bob coarse product state.
+- Generate is deterministic: repeated Generate for the same active saved base content marker returns active state instead of replacing work; Generate is disabled while active in Bob; `instances.translation_status` gives Roma/Bob coarse button/liveness state.
 - Changed/missing translation work is resolved by Tokyo from the approved authored payload source. Roma/Bob must not derive it from storage siblings or overlay inventories.
 - Translation readiness is returned by Tokyo product operations, not overlay inventory JSON. DB locale rows are not required unless 103_DB.1 proves they are needed.
 - Publish writes public artifacts to R2 from Tokyo-owned state and updates `instances.publish_status` through the publish/unpublish product operation.

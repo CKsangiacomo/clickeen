@@ -171,7 +171,7 @@ test('generate translations accepts background generation response', () => {
   assert.equal(isTranslationGenerationAccepted(payload), true);
   assert.equal(
     resolveGenerateTranslationsMessage(payload),
-    'Preparing translations.',
+    'Generating translations.',
   );
 });
 
@@ -205,7 +205,7 @@ test('translation generation status messages come from Tokyo job state', () => {
 
   assert(generation);
   assert.equal(isActiveTranslationGeneration(generation), true);
-  assert.equal(resolveTranslationGenerationStatusMessage(generation), 'Generating translations. 1 of 2 languages ready.');
+  assert.equal(resolveTranslationGenerationStatusMessage(generation), 'Generating translations.');
 });
 
 test('panel entry adopts an already active Tokyo generation state', () => {
@@ -230,7 +230,32 @@ test('panel entry adopts an already active Tokyo generation state', () => {
 
   assert.deepEqual(panelState, {
     isGenerating: true,
-    message: 'Generating translations. 1 of 2 languages ready.',
+    message: 'Generating translations.',
     shouldRefreshTranslations: true,
   });
+});
+
+test('translation generation message shows base content out of sync', () => {
+  const generation = normalizeTranslationGenerationSummary({
+    instanceId: 'I1B2C3D4E5',
+    baseLocale: 'en',
+    targetLocales: ['it'],
+    status: 'idle',
+    requestedAt: null,
+    updatedAt: null,
+    totalLocales: 1,
+    completedLocales: [],
+    failedLocales: [],
+    supersededLocales: [],
+    pendingLocales: [],
+    currentReadyLocales: [],
+    outOfSyncLocales: ['it'],
+    isCurrentBaseContent: true,
+  });
+
+  assert(generation);
+  assert.equal(
+    resolveTranslationGenerationStatusMessage(generation),
+    'The base content has changed. Regenerate translations.',
+  );
 });

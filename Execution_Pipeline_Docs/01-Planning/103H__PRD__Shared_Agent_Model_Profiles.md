@@ -3,8 +3,8 @@
 Status: Complete / Shared policy proof green
 Owner: Product + Architecture
 Date: 2026-05-17
-Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
-Depends on: PRD 103A, PRD 103C.1, PRD 103C, PRD 103D.0, PRD 103B, PRD 103D, PRD 103E, PRD 103G
+Parent: `103__PRD__Saved_Instance_Localization_Runtime.md`
+Depends on: PRD 103B, PRD 103C, PRD 103G, PRD 103J, PRD 103K
 
 ## Purpose
 
@@ -12,7 +12,7 @@ Make Copilot and the Instance Translation Agent use the existing `ck-policy` mod
 
 This is not a new policy system. It is a cutover to the system already managed through DevStudio.
 
-This sub-PRD hardens policy after the thin vertical slice. It must not block PRD 103V from using the existing policy path.
+This sub-PRD hardens policy for the Instance Translation Agent and Copilot. It must not define translation sync, widget text extraction, or panel state.
 
 This PRD is not allowed to invent a policy layer. DevStudio-managed policy/caps/budgets remain the authority.
 

@@ -1,14 +1,14 @@
 # EXEC 103G - Save/Publish Generated Language Files
 
-Status: Complete / Green after 103V reproof
+Status: Active publish evidence / translation sync owned by PRD 103K
 Date: 2026-05-20
 PRD: `103G__PRD__Save_Publish_Generated_Language_Files.md`
 
 ## Result
 
-103G is green against the current source model. Publish materializes public base and translated FAQ artifacts from Tokyo-owned saved instance source plus current translated locale values, then `clk.live` serves those generated files statically.
+103G is green as publish evidence only. Publish materializes public base and translated widget artifacts from Tokyo-owned saved instance source plus current translated locale values, then `clk.live` serves those generated files statically.
 
-The proof starts from a saved FAQ instance and Tokyo translated-locale values. It does not handcraft final public files, call Bob, call Roma editor state, or call San Francisco LLMs during public serving.
+The proof must start from a saved account widget instance and Tokyo translated-locale values. It must not handcraft final public files, call Bob, call Roma editor state, or call San Francisco LLMs during public serving.
 
 ## Scope Executed
 

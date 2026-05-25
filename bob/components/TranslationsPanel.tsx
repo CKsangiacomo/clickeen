@@ -42,6 +42,9 @@ type TranslationGenerationSummary = {
   supersededLocales: string[];
   pendingLocales: string[];
   currentReadyLocales: string[];
+  outOfSyncLocales: string[];
+  isCurrentBaseContent: boolean;
+  baseContentMarker?: string;
   jobId?: string;
   reasonKey?: string;
   detail?: string;
@@ -182,6 +185,7 @@ export function normalizeTranslationGenerationSummary(raw: unknown): Translation
   const supersededLocales = normalizeStringArray(payload.supersededLocales);
   const pendingLocales = normalizeStringArray(payload.pendingLocales);
   const currentReadyLocales = normalizeStringArray(payload.currentReadyLocales);
+  const outOfSyncLocales = normalizeStringArray(payload.outOfSyncLocales) ?? [];
   const totalLocales = typeof payload.totalLocales === 'number' && Number.isFinite(payload.totalLocales)
     ? Math.max(0, Math.floor(payload.totalLocales))
     : null;
@@ -212,6 +216,9 @@ export function normalizeTranslationGenerationSummary(raw: unknown): Translation
     supersededLocales,
     pendingLocales,
     currentReadyLocales,
+    outOfSyncLocales,
+    isCurrentBaseContent: payload.isCurrentBaseContent !== false,
+    ...(typeof payload.baseContentMarker === 'string' && payload.baseContentMarker.trim() ? { baseContentMarker: payload.baseContentMarker.trim() } : {}),
     ...(typeof payload.jobId === 'string' && payload.jobId.trim() ? { jobId: payload.jobId.trim() } : {}),
     ...(typeof payload.reasonKey === 'string' && payload.reasonKey.trim() ? { reasonKey: payload.reasonKey.trim() } : {}),
     ...(typeof payload.detail === 'string' && payload.detail.trim() ? { detail: payload.detail.trim() } : {}),
@@ -247,21 +254,17 @@ export function isTranslationGenerationAccepted(payload: unknown): boolean {
 }
 
 export function resolveTranslationGenerationStatusMessage(generation: TranslationGenerationSummary): string {
-  const readyCount = generation.currentReadyLocales.length;
-  const targetCount = generation.targetLocales.length || generation.totalLocales;
-  if (generation.status === 'queued') return 'Preparing translations.';
-  if (generation.status === 'running') {
-    return readyCount > 0
-      ? `Generating translations. ${readyCount} of ${targetCount} languages ready.`
-      : 'Generating translations.';
+  if ((!isActiveTranslationGeneration(generation) || !generation.isCurrentBaseContent) && generation.outOfSyncLocales.length > 0) {
+    return 'The base content has changed. Regenerate translations.';
   }
+  if (generation.status === 'queued' || generation.status === 'running') return 'Generating translations.';
   if (generation.status === 'completed') return 'Translations ready.';
   if (generation.status === 'failed') {
     const failed = generation.failedLocales.length;
     const detail = generation.detail || generation.reasonKey || '';
     return `${failed || 'Some'} translations failed.${detail ? ` ${detail}` : ''}`;
   }
-  if (generation.status === 'superseded') return 'Translation generation restarted.';
+  if (generation.status === 'superseded') return 'The base content has changed. Regenerate translations.';
   return 'No translations to generate.';
 }
 
@@ -300,11 +303,19 @@ export function buildTranslationGenerationPanelState(payload: unknown): {
   const generation = normalizeTranslationGenerationFromPayload(payload);
   if (!generation) return null;
   const isGenerating = isActiveTranslationGeneration(generation);
-  const shouldShowMessage = isGenerating || generation.status === 'failed' || generation.status === 'superseded';
+  const shouldShowMessage =
+    isGenerating ||
+    generation.status === 'failed' ||
+    generation.status === 'superseded' ||
+    generation.outOfSyncLocales.length > 0;
   return {
     isGenerating,
     message: shouldShowMessage ? resolveTranslationGenerationStatusMessage(generation) : null,
-    shouldRefreshTranslations: isGenerating || generation.status === 'completed' || generation.currentReadyLocales.length > 0,
+    shouldRefreshTranslations:
+      isGenerating ||
+      generation.status === 'completed' ||
+      generation.completedLocales.length > 0 ||
+      generation.outOfSyncLocales.length > 0,
   };
 }
 

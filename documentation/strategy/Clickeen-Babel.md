@@ -3,12 +3,12 @@
 **Vision Document**
 **Version:** 4.0 (The Personalization Revelation)
 **Date:** January 20, 2026
-**Status:** Strategic Vision - Implementation details are superseded by PRD 098 where they conflict.
+**Status:** Strategic Vision - PRD 098, PRD 103J, and PRD 103K are the implementation authorities where this vision document conflicts with runtime architecture.
 
 **PRD 098 implementation truth (May 2026):**
 - Account-widget Babel v1 uses SKU-like `overlayId` objects, not content hashes.
 - Overlay object bodies contain only `{ "v": 1, "values": {} }`.
-- PRD 103J is the current translation-system authority: Bob starts Generate from the Builder translations panel, Roma forwards to Tokyo, Tokyo owns generation state and widget-generic queue jobs, and San Francisco returns translated saved text fields.
+- PRD 103J is the generic widget text contract authority. PRD 103K is the translation sync authority: Bob starts Generate from the Builder translations panel, Roma forwards to Tokyo, Tokyo validates translated values against the current saved base content marker, and San Francisco returns translated saved text fields for that marker.
 - Old implementation sketches in this strategy doc that mention ops, text packs, fingerprints, generated readiness state, or Tokyo-worker orchestration are historical and not active architecture.
 - Older implementation sketches that make translation a Roma save follow-up, or make FAQ the only translation product, are historical and not active architecture.
 

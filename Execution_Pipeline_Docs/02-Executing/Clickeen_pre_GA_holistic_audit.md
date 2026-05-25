@@ -302,7 +302,7 @@ PRD 092 and PRD 093 both shipped as one commit each. PRD 094 also (per `a954fd7c
 **The risk is not the documentation existing — it's:**
 - Stale docs gaslighting new contributors (PRD 092 still says "Draft" in `02-Executing/`).
 - Multiple files claiming to be the source of truth (Tenets vs CONTEXT vs Overview vs RuntimeProfiles).
-- Backlog PRDs that may have been silently superseded by other PRDs.
+- Backlog PRDs that may have been silently replaced by other PRDs.
 
 **Fix:** one "what's true today" doc (CONTEXT.md), every other doc references it. Quarterly cull of executed PRDs into a single rollup. Archive backlog PRDs that haven't been touched in 60 days.
 

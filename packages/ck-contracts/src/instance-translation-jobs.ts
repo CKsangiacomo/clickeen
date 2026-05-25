@@ -11,6 +11,7 @@ export type InstanceTranslationJob = {
   v: 2;
   kind: typeof INSTANCE_TRANSLATION_JOB_KIND;
   jobId: string;
+  baseContentMarker?: string;
   accountId: string;
   accountPublicId: string;
   userId: string;
@@ -118,6 +119,7 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
   if (!isRecord(raw) || raw.v !== 2 || raw.kind !== INSTANCE_TRANSLATION_JOB_KIND) return null;
   const jobId = asTrimmedString(raw.jobId);
   const accountId = asTrimmedString(raw.accountId);
+  const baseContentMarker = asTrimmedString(raw.baseContentMarker);
   const accountPublicId = asTrimmedString(raw.accountPublicId);
   const userId = asTrimmedString(raw.userId);
   const instanceId = asTrimmedString(raw.instanceId);
@@ -165,6 +167,7 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     v: 2,
     kind: INSTANCE_TRANSLATION_JOB_KIND,
     jobId,
+    ...(baseContentMarker ? { baseContentMarker } : {}),
     accountId,
     accountPublicId,
     userId,

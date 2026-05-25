@@ -4,7 +4,7 @@ Status: Executed
 Owner: Product + Architecture  
 Date: 2026-05-14
 
-PRD 103_00 NOTE: this PRD remains historical context for why overlays existed, but its UI/Roma selected-overlay, overlay object path, overlay ID as product contract, and published-projection language is superseded for PRD 103 by translated-locale product operations in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+PRD 103 NOTE: this PRD remains historical context for why overlays existed, but its UI/Roma selected-overlay, overlay object path, overlay ID as product contract, and published-projection language is not current PRD 103 authority. Current authority is translated-locale product operations in `Execution_Pipeline_Docs/01-Planning/103__PRD__Saved_Instance_Localization_Runtime.md`, `103J`, and `103K`.
 
 ## Purpose
 

@@ -1,18 +1,18 @@
 # PRD 103F - Translation Override UX
 
-Status: Complete for manual translated-locale write / superseded where it depends on old readiness inventory
+Status: Active for manual translated-locale writes / sync behavior owned by PRD 103K
 Owner: Product + Architecture
 Date: 2026-05-20
-Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
-Depends on: PRD 103D.0, PRD 103D, PRD 103E, PRD 103G, PRD 103H, PRD 103I
+Parent: `103__PRD__Saved_Instance_Localization_Runtime.md`
+Depends on: PRD 103J, PRD 103K, PRD 103G, PRD 103H, PRD 103I
 
 ## Purpose
 
 Let a Bob user edit a translated value in the existing Translations panel and save it back to the same Tokyo translated-locale values Bob already reviews and Publish already consumes.
 
-## 103J Course-Correction Note
+## Current Authority Note
 
-The manual write primitive remains useful only if Bob's review rows come from PRD 103J generic editable-fields contracts and Tokyo translated-locale readiness. Any wording below about translated-locale inventory refresh is historical implementation vocabulary, not the generic generation/readiness authority.
+The manual write primitive remains useful only if Bob's review rows come from PRD 103J generic editable-fields contracts and PRD 103K saved-base-content sync state. Any wording below about translated-locale inventory refresh means "refresh current Tokyo translated values for the selected locale"; it is not generation progress authority.
 
 This slice is intentionally small. It does not add provenance, review states, audit systems, or a translator workspace.
 
@@ -23,7 +23,7 @@ This slice is intentionally small. It does not add provenance, review states, au
 - Roma resolves the active account instance and locale, then calls Tokyo's translated-locale value product operation.
 - Tokyo validates the full value map against the saved instance editable-fields contract before accepting it.
 - Publish consumes the current translated-locale values through the existing publish path.
-- Translation remains separate and uses `editable-fields.json` plus saved `instance.content.json` to generate current language values.
+- Translation remains separate and uses `editable-fields.json` plus the current saved base content to generate translated locale values.
 - A manual edit is temporary by design: it only overwrites the current translated-locale values object.
 - The system does not remember that the value was manually edited, does not store override status, and does not run protection checks for that value.
 - If that field is regenerated later, the new AI translation overwrites the manual edit.
