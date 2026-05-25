@@ -7,6 +7,7 @@ import type {
   TranslationGenerationJobSummary,
   TranslationGenerationJobStatus,
   TranslationGenerationLocaleState,
+  TranslationProductLocaleState,
 } from './types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -95,6 +96,7 @@ function normalizeJobDocument(value: unknown): TranslationGenerationJobDocument 
   return {
     jobId,
     ...(typeof value.baseContentMarker === 'string' && value.baseContentMarker ? { baseContentMarker: value.baseContentMarker } : {}),
+    ...(typeof value.generationRequestMarker === 'string' && value.generationRequestMarker ? { generationRequestMarker: value.generationRequestMarker } : {}),
     accountId,
     instanceId,
     widgetType,
@@ -148,11 +150,77 @@ export function readyLocalesForContent(
 export function outOfSyncLocalesForContent(
   content: AccountInstanceContentDocument,
   targetLocales: string[],
+  currentBaseContentMarker?: string,
 ): string[] {
-  const readyLocales = new Set(readyLocalesForContent(content, targetLocales));
+  if (!currentBaseContentMarker) return [];
   return targetLocales
-    .filter((locale) => !readyLocales.has(locale))
+    .filter((locale) => {
+      const sync = content.localeSync?.[locale];
+      return Boolean(sync && sync.baseContentMarker !== currentBaseContentMarker);
+    })
     .sort((left, right) => left.localeCompare(right));
+}
+
+function hasCompleteTranslatedValues(content: AccountInstanceContentDocument, locale: string): boolean {
+  const fields = Object.values(content.fields);
+  return fields.length > 0 && fields.every((field) => (
+    field.localeStatus?.[locale] === 'ok' &&
+    typeof field.translatedValues?.[locale] === 'string'
+  ));
+}
+
+export function productLocaleStatesForContent(args: {
+  content: AccountInstanceContentDocument;
+  targetLocales: string[];
+  currentBaseContentMarker?: string;
+  job: TranslationGenerationJobDocument | null;
+}): TranslationProductLocaleState[] {
+  const jobMatchesCurrentBase =
+    Boolean(args.job?.baseContentMarker && args.currentBaseContentMarker) &&
+    args.job?.baseContentMarker === args.currentBaseContentMarker;
+
+  return args.targetLocales
+    .map((locale) => {
+      const jobLocale = args.job?.locales[locale];
+      if (jobLocale && jobMatchesCurrentBase) {
+        if (jobLocale.status === 'queued') {
+          return { locale, state: 'generating' as const, reviewable: false };
+        }
+        if (jobLocale.status === 'failed') {
+          return {
+            locale,
+            state: 'failed' as const,
+            reviewable: false,
+            ...(jobLocale.reasonKey ? { reasonKey: jobLocale.reasonKey } : {}),
+            ...(jobLocale.detail ? { detail: jobLocale.detail } : {}),
+          };
+        }
+      }
+
+      const sync = args.content.localeSync?.[locale];
+      if (sync && args.currentBaseContentMarker && sync.baseContentMarker !== args.currentBaseContentMarker) {
+        return { locale, state: 'outOfSync' as const, reviewable: false };
+      }
+      if (sync?.status === 'failed' && (!args.currentBaseContentMarker || sync.baseContentMarker === args.currentBaseContentMarker)) {
+        return {
+          locale,
+          state: 'failed' as const,
+          reviewable: false,
+          ...(sync.reasonKey ? { reasonKey: sync.reasonKey } : {}),
+          ...(sync.detail ? { detail: sync.detail } : {}),
+        };
+      }
+      if (
+        sync?.status === 'inSync' &&
+        args.currentBaseContentMarker &&
+        sync.baseContentMarker === args.currentBaseContentMarker &&
+        hasCompleteTranslatedValues(args.content, locale)
+      ) {
+        return { locale, state: 'inSync' as const, reviewable: true };
+      }
+      return { locale, state: 'missing' as const, reviewable: false };
+    })
+    .sort((left, right) => left.locale.localeCompare(right.locale));
 }
 
 export function deriveTranslationGenerationJob(args: {
@@ -201,6 +269,8 @@ export function summarizeTranslationGenerationJob(args: {
   currentReadyLocales: string[];
   outOfSyncLocales?: string[];
   currentBaseContentMarker?: string;
+  currentGenerationRequestMarker?: string;
+  productLocales?: TranslationProductLocaleState[];
   job: TranslationGenerationJobDocument | null;
 }): TranslationGenerationJobSummary {
   const isCurrentBaseContent =
@@ -209,10 +279,12 @@ export function summarizeTranslationGenerationJob(args: {
     args.job.baseContentMarker === args.currentBaseContentMarker;
   if (!args.job) {
     return {
+      v: 2,
       instanceId: args.instanceId,
       baseLocale: args.baseLocale,
       targetLocales: args.targetLocales,
       status: 'idle',
+      active: false,
       requestedAt: null,
       updatedAt: null,
       totalLocales: args.targetLocales.length,
@@ -223,18 +295,26 @@ export function summarizeTranslationGenerationJob(args: {
       currentReadyLocales: args.currentReadyLocales,
       outOfSyncLocales: args.outOfSyncLocales ?? [],
       ...(args.currentBaseContentMarker ? { baseContentMarker: args.currentBaseContentMarker } : {}),
+      ...(args.currentGenerationRequestMarker ? { generationRequestMarker: args.currentGenerationRequestMarker } : {}),
       isCurrentBaseContent: true,
+      locales: args.productLocales ?? [],
     };
   }
   const job = deriveTranslationGenerationJob({
     job: args.job,
     currentReadyLocales: args.currentReadyLocales,
   });
+  const publicStatus = job.status === 'superseded' ? 'idle' : job.status;
+  const active = publicStatus === 'queued' || publicStatus === 'running';
+  const baseContentMarker = args.currentBaseContentMarker ?? job.baseContentMarker;
+  const generationRequestMarker = args.currentGenerationRequestMarker ?? job.generationRequestMarker;
   return {
+    v: 2,
     instanceId: args.instanceId,
     baseLocale: args.baseLocale,
     targetLocales: args.targetLocales,
-    status: job.status,
+    status: publicStatus,
+    active,
     requestedAt: job.requestedAt,
     updatedAt: job.updatedAt,
     totalLocales: job.totalLocales,
@@ -244,10 +324,12 @@ export function summarizeTranslationGenerationJob(args: {
     pendingLocales: job.pendingLocales,
     currentReadyLocales: job.currentReadyLocales,
     outOfSyncLocales: args.outOfSyncLocales ?? [],
-    ...(job.baseContentMarker ? { baseContentMarker: job.baseContentMarker } : {}),
+    ...(baseContentMarker ? { baseContentMarker } : {}),
+    ...(generationRequestMarker ? { generationRequestMarker } : {}),
     isCurrentBaseContent,
     jobId: job.jobId,
-    locales: job.locales,
+    locales: args.productLocales ?? [],
+    diagnostics: { locales: job.locales },
     ...(job.reasonKey ? { reasonKey: job.reasonKey } : {}),
     ...(job.detail ? { detail: job.detail } : {}),
   };

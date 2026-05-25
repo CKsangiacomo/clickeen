@@ -61,6 +61,16 @@ export type AccountInstanceSummary = {
 
 export type AccountInstanceContentFieldStatus = 'ok' | 'changed';
 
+export type TranslationLocaleSyncRecord = {
+  locale: string;
+  baseContentMarker: string;
+  widgetContractHash: string;
+  generatedAt: string;
+  status: 'inSync' | 'failed';
+  reasonKey?: string;
+  detail?: string;
+};
+
 export type AccountInstanceContentDocument = {
   id: string;
   accountId: string;
@@ -73,6 +83,7 @@ export type AccountInstanceContentDocument = {
     localeStatus?: Record<string, AccountInstanceContentFieldStatus>;
     translatedValues?: Record<string, string>;
   }>;
+  localeSync?: Record<string, TranslationLocaleSyncRecord>;
   updatedAt: string;
 };
 
@@ -119,6 +130,7 @@ export type TranslationGenerationLocaleState = {
 export type TranslationGenerationJobDocument = {
   jobId: string;
   baseContentMarker?: string;
+  generationRequestMarker?: string;
   accountId: string;
   instanceId: string;
   widgetType: string;
@@ -139,11 +151,21 @@ export type TranslationGenerationJobDocument = {
   detail?: string;
 };
 
+export type TranslationProductLocaleState = {
+  locale: string;
+  state: 'missing' | 'generating' | 'inSync' | 'outOfSync' | 'failed';
+  reviewable: boolean;
+  reasonKey?: string;
+  detail?: string;
+};
+
 export type TranslationGenerationJobSummary = {
+  v?: 2;
   instanceId: string;
   baseLocale: string;
   targetLocales: string[];
   status: TranslationGenerationSummaryStatus;
+  active?: boolean;
   requestedAt: string | null;
   updatedAt: string | null;
   totalLocales: number;
@@ -154,11 +176,15 @@ export type TranslationGenerationJobSummary = {
   currentReadyLocales: string[];
   outOfSyncLocales?: string[];
   baseContentMarker?: string;
+  generationRequestMarker?: string;
   isCurrentBaseContent?: boolean;
   jobId?: string;
   reasonKey?: string;
   detail?: string;
-  locales?: Record<string, TranslationGenerationLocaleState>;
+  locales?: TranslationProductLocaleState[];
+  diagnostics?: {
+    locales?: Record<string, TranslationGenerationLocaleState>;
+  };
 };
 
 export type SavedRenderPointer = {

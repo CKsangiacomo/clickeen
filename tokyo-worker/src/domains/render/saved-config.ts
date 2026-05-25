@@ -318,6 +318,7 @@ function contentDocumentFromConfig(args: {
       previous: args.previous,
       initialStatus: args.initialStatus,
     }),
+    ...(args.previous?.localeSync ? { localeSync: { ...args.previous.localeSync } } : {}),
     updatedAt: args.updatedAt,
   };
 }
@@ -736,6 +737,8 @@ export async function completeAccountInstanceTranslatedLocaleValues(args: {
   targetLocales: string[];
   paths: string[];
   values: unknown;
+  baseContentMarker?: string;
+  widgetContractHash?: string;
 }): Promise<{ locale: string; values: Record<string, string> }> {
   const instanceId = normalizeStorageId(args.instanceId);
   const accountId = normalizeStorageId(args.accountId);
@@ -763,6 +766,7 @@ export async function completeAccountInstanceTranslatedLocaleValues(args: {
       const next: AccountInstanceContentDocument = {
         ...content,
         fields: { ...content.fields },
+        localeSync: { ...(content.localeSync ?? {}) },
         updatedAt: nowIso(),
       };
       for (const [path, field] of Object.entries(content.fields)) {
@@ -785,6 +789,18 @@ export async function completeAccountInstanceTranslatedLocaleValues(args: {
           localeStatus,
           translatedValues,
           status: changedPaths.has(path) && allTargetsOk ? 'ok' : field.status,
+        };
+      }
+      if (args.baseContentMarker && args.widgetContractHash) {
+        next.localeSync = {
+          ...(next.localeSync ?? {}),
+          [locale]: {
+            locale,
+            baseContentMarker: args.baseContentMarker,
+            widgetContractHash: args.widgetContractHash,
+            generatedAt: next.updatedAt,
+            status: 'inSync',
+          },
         };
       }
       return next;

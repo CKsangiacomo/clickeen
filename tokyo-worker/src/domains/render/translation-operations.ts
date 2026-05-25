@@ -32,7 +32,7 @@ import {
 } from './instance-registry';
 import {
   deriveTranslationGenerationJob,
-  outOfSyncLocalesForContent,
+  productLocaleStatesForContent,
   readyLocalesForContent,
   readCurrentTranslationGenerationJob,
   summarizeTranslationGenerationJob,
@@ -91,6 +91,17 @@ function buildBaseContentMarker(args: {
         baseText: field.baseText,
       }))
       .sort((left, right) => left.identityKey.localeCompare(right.identityKey)),
+  }));
+}
+
+function buildGenerationRequestMarker(args: {
+  baseContentMarker: string;
+  targetLocales: string[];
+}): string {
+  return stableFnv1a(stableJson({
+    v: 1,
+    baseContentMarker: args.baseContentMarker,
+    targetLocales: [...args.targetLocales].sort((left, right) => left.localeCompare(right)),
   }));
 }
 
@@ -257,6 +268,7 @@ function buildJobBasis(jobs: InstanceTranslationJob[]): TranslationGenerationJob
 function createGenerationJobDocument(args: {
   jobId: string;
   baseContentMarker: string;
+  generationRequestMarker: string;
   accountId: string;
   instanceId: string;
   widgetType: string;
@@ -279,6 +291,7 @@ function createGenerationJobDocument(args: {
     job: {
       jobId: args.jobId,
       baseContentMarker: args.baseContentMarker,
+      generationRequestMarker: args.generationRequestMarker,
       accountId: args.accountId,
       instanceId: args.instanceId,
       widgetType: args.widgetType,
@@ -350,6 +363,10 @@ function registryStatusForGenerationJob(args: {
   baseLocale: string;
   targetLocales: string[];
   currentReadyLocales: string[];
+  currentBaseContentMarker?: string;
+  currentGenerationRequestMarker?: string;
+  outOfSyncLocales?: string[];
+  productLocales?: TranslationGenerationJobSummary['locales'];
   job: TranslationGenerationJobDocument;
 }): InstanceRegistryTranslationStatus {
   return registryStatusForGenerationStatus(
@@ -358,6 +375,10 @@ function registryStatusForGenerationJob(args: {
       baseLocale: args.baseLocale,
       targetLocales: args.targetLocales,
       currentReadyLocales: args.currentReadyLocales,
+      currentBaseContentMarker: args.currentBaseContentMarker,
+      currentGenerationRequestMarker: args.currentGenerationRequestMarker,
+      outOfSyncLocales: args.outOfSyncLocales,
+      productLocales: args.productLocales,
       job: args.job,
     }).status,
   );
@@ -402,6 +423,8 @@ async function timeoutStalledGeneration(args: {
   currentReadyLocales: string[];
   outOfSyncLocales?: string[];
   currentBaseContentMarker?: string;
+  currentGenerationRequestMarker?: string;
+  productLocales?: TranslationGenerationJobSummary['locales'];
   job: TranslationGenerationJobDocument | null;
   summary: TranslationGenerationJobSummary;
 }): Promise<TranslationGenerationJobSummary> {
@@ -450,6 +473,8 @@ async function timeoutStalledGeneration(args: {
     currentReadyLocales: args.currentReadyLocales,
     outOfSyncLocales: args.outOfSyncLocales,
     currentBaseContentMarker: args.currentBaseContentMarker,
+    currentGenerationRequestMarker: args.currentGenerationRequestMarker,
+    productLocales: args.productLocales,
     job: timedOutJob,
   });
 }
@@ -506,9 +531,9 @@ export async function readInstanceTranslationGeneration(args: {
     };
   }
   const currentReadyLocales = readyLocalesForContent(content.value, targetLocales);
-  const outOfSyncLocales = outOfSyncLocalesForContent(content.value, targetLocales);
   const widgetDefinition = getWidgetDefinition(instance.value.widgetType);
   let currentBaseContentMarker: string | undefined;
+  let currentGenerationRequestMarker: string | undefined;
   if (widgetDefinition?.editableFields) {
     try {
       const fields = extractSavedTextFieldsForEditableFields({
@@ -521,10 +546,24 @@ export async function readInstanceTranslationGeneration(args: {
         widgetContractHash: widgetEditableFieldsContractHash(widgetDefinition.editableFields),
         fields,
       });
+      currentGenerationRequestMarker = buildGenerationRequestMarker({
+        baseContentMarker: currentBaseContentMarker,
+        targetLocales,
+      });
     } catch {
       currentBaseContentMarker = undefined;
+      currentGenerationRequestMarker = undefined;
     }
   }
+  const productLocales = productLocaleStatesForContent({
+    content: content.value,
+    targetLocales,
+    currentBaseContentMarker,
+    job,
+  });
+  const outOfSyncLocales = productLocales
+    .filter((entry) => entry.state === 'outOfSync')
+    .map((entry) => entry.locale);
   const registry = await readInstanceRegistryRow({
     env: args.env,
     accountId: args.accountId,
@@ -540,6 +579,8 @@ export async function readInstanceTranslationGeneration(args: {
     currentReadyLocales,
     outOfSyncLocales,
     currentBaseContentMarker,
+    currentGenerationRequestMarker,
+    productLocales,
     job,
     summary: summarizeTranslationGenerationJob({
       instanceId: args.instanceId,
@@ -548,6 +589,8 @@ export async function readInstanceTranslationGeneration(args: {
       currentReadyLocales,
       outOfSyncLocales,
       currentBaseContentMarker,
+      currentGenerationRequestMarker,
+      productLocales,
       job,
     }),
   });
@@ -676,6 +719,10 @@ export async function generateInstanceTranslations(args: {
     widgetContractHash: widgetContract.hash,
     fields: currentSavedTextFields,
   });
+  const generationRequestMarker = buildGenerationRequestMarker({
+    baseContentMarker,
+    targetLocales: uniqueTargetLocales,
+  });
   const existingJob = await readCurrentTranslationGenerationJob({
     env: args.env,
     accountId: args.accountId,
@@ -684,13 +731,28 @@ export async function generateInstanceTranslations(args: {
   });
   if (existingJob) {
     const existingTargetLocales = existingJob.targetLocales.length ? existingJob.targetLocales : uniqueTargetLocales;
+    const existingGenerationRequestMarker = buildGenerationRequestMarker({
+      baseContentMarker,
+      targetLocales: existingTargetLocales,
+    });
+    const existingProductLocales = productLocaleStatesForContent({
+      content: content.value,
+      targetLocales: existingTargetLocales,
+      currentBaseContentMarker: baseContentMarker,
+      job: existingJob,
+    });
+    const existingOutOfSyncLocales = existingProductLocales
+      .filter((entry) => entry.state === 'outOfSync')
+      .map((entry) => entry.locale);
     const existingSummary = summarizeTranslationGenerationJob({
       instanceId: args.instanceId,
       baseLocale,
       targetLocales: existingTargetLocales,
       currentReadyLocales: readyLocalesForContent(content.value, existingTargetLocales),
-      outOfSyncLocales: outOfSyncLocalesForContent(content.value, existingTargetLocales),
+      outOfSyncLocales: existingOutOfSyncLocales,
       currentBaseContentMarker: baseContentMarker,
+      currentGenerationRequestMarker: existingGenerationRequestMarker,
+      productLocales: existingProductLocales,
       job: existingJob,
     });
     if (isActiveGenerationSummary(existingSummary)) {
@@ -717,6 +779,13 @@ export async function generateInstanceTranslations(args: {
       }))
       .sort((left, right) => left.identityKey.localeCompare(right.identityKey)),
   };
+  const productLocalesBeforeGeneration = productLocaleStatesForContent({
+    content: content.value,
+    targetLocales: uniqueTargetLocales,
+    currentBaseContentMarker: baseContentMarker,
+    job: null,
+  });
+  const productLocaleByLocale = new Map(productLocalesBeforeGeneration.map((entry) => [entry.locale, entry]));
 
   for (const locale of uniqueTargetLocales) {
     if (!resolveLanguageOverlayCode(locale)) {
@@ -729,13 +798,23 @@ export async function generateInstanceTranslations(args: {
     }
 
     const previousSavedTextFields = currentSavedTextFields;
-    const changedFields = currentSavedTextFields.filter((field) => {
+    const missingTranslatedFields = currentSavedTextFields.filter((field) => {
       const contentField = content.value.fields[field.path];
       return (
         contentField?.localeStatus?.[locale] !== 'ok' ||
         typeof contentField?.translatedValues?.[locale] !== 'string'
       );
     });
+    const sync = content.value.localeSync?.[locale];
+    const productLocale = productLocaleByLocale.get(locale);
+    let changedFields = currentSavedTextFields;
+    if (productLocale?.state === 'inSync') {
+      changedFields = [];
+    } else if (sync?.baseContentMarker === baseContentMarker && sync.status === 'inSync') {
+      changedFields = missingTranslatedFields;
+    } else if (sync && sync.baseContentMarker !== baseContentMarker) {
+      changedFields = missingTranslatedFields.length ? missingTranslatedFields : currentSavedTextFields;
+    }
     if (!changedFields.length) {
       skippedLocales.push(locale);
       continue;
@@ -814,8 +893,12 @@ export async function generateInstanceTranslations(args: {
         baseLocale,
         targetLocales: uniqueTargetLocales,
         currentReadyLocales,
-        outOfSyncLocales: outOfSyncLocalesForContent(content.value, uniqueTargetLocales),
+        outOfSyncLocales: productLocalesBeforeGeneration
+          .filter((entry) => entry.state === 'outOfSync')
+          .map((entry) => entry.locale),
         currentBaseContentMarker: baseContentMarker,
+        currentGenerationRequestMarker: generationRequestMarker,
+        productLocales: productLocalesBeforeGeneration,
         job: completedJob,
       }),
       results: [],
@@ -825,6 +908,7 @@ export async function generateInstanceTranslations(args: {
   const generationJob = createGenerationJobDocument({
     jobId: generationJobId,
     baseContentMarker,
+    generationRequestMarker,
     accountId: args.accountId,
     instanceId: args.instanceId,
     widgetType: instance.value.widgetType,
@@ -901,8 +985,17 @@ export async function generateInstanceTranslations(args: {
       baseLocale,
       targetLocales: uniqueTargetLocales,
       currentReadyLocales,
-      outOfSyncLocales: outOfSyncLocalesForContent(content.value, uniqueTargetLocales),
+      outOfSyncLocales: productLocalesBeforeGeneration
+        .filter((entry) => entry.state === 'outOfSync')
+        .map((entry) => entry.locale),
       currentBaseContentMarker: baseContentMarker,
+      currentGenerationRequestMarker: generationRequestMarker,
+      productLocales: productLocaleStatesForContent({
+        content: content.value,
+        targetLocales: uniqueTargetLocales,
+        currentBaseContentMarker: baseContentMarker,
+        job: generationJob,
+      }),
       job: generationJob,
     }),
     results: resultsForJobs(jobs),
@@ -1123,6 +1216,8 @@ export async function completeLocaleTranslation(args: {
       targetLocales: job.targetLocales,
       paths: job.changedFields.map((field) => field.path),
       values: nextValues,
+      baseContentMarker: jobBaseContentMarker,
+      widgetContractHash: job.widgetContract.hash,
     });
   } catch (error) {
     return {

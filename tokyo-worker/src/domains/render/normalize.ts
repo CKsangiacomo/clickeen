@@ -6,6 +6,7 @@ import type {
   AccountInstanceContentDocument,
   AccountInstanceContentFieldStatus,
   LocalePolicy,
+  TranslationLocaleSyncRecord,
 } from './types';
 import { normalizeLocaleList, normalizeStorageId } from './utils';
 
@@ -97,6 +98,26 @@ function normalizeContentFieldStatus(value: unknown): AccountInstanceContentFiel
   return value === 'ok' || value === 'changed' ? value : null;
 }
 
+function normalizeLocaleSyncRecord(raw: unknown): TranslationLocaleSyncRecord | null {
+  const payload = asRecord(raw);
+  if (!payload) return null;
+  const locale = normalizeLocale(payload.locale);
+  const baseContentMarker = asTrimmedString(payload.baseContentMarker);
+  const widgetContractHash = asTrimmedString(payload.widgetContractHash);
+  const generatedAt = asTrimmedString(payload.generatedAt);
+  const status = payload.status === 'inSync' || payload.status === 'failed' ? payload.status : null;
+  if (!locale || !baseContentMarker || !widgetContractHash || !generatedAt || !status) return null;
+  return {
+    locale,
+    baseContentMarker,
+    widgetContractHash,
+    generatedAt,
+    status,
+    ...(asTrimmedString(payload.reasonKey) ? { reasonKey: asTrimmedString(payload.reasonKey) as string } : {}),
+    ...(asTrimmedString(payload.detail) ? { detail: asTrimmedString(payload.detail) as string } : {}),
+  };
+}
+
 export function normalizeAccountInstanceContentDocument(raw: unknown): AccountInstanceContentDocument | null {
   const payload = asRecord(raw);
   if (!payload) return null;
@@ -139,7 +160,23 @@ export function normalizeAccountInstanceContentDocument(raw: unknown): AccountIn
       ...(Object.keys(translatedValues).length ? { translatedValues } : {}),
     };
   }
-  return { id, accountId, widgetType, fields, updatedAt };
+  const rawLocaleSync = asRecord(payload.localeSync);
+  const localeSync: Record<string, TranslationLocaleSyncRecord> = {};
+  if (rawLocaleSync) {
+    for (const [localeKey, rawRecord] of Object.entries(rawLocaleSync)) {
+      const record = normalizeLocaleSyncRecord(rawRecord);
+      if (!record || record.locale !== localeKey) return null;
+      localeSync[localeKey] = record;
+    }
+  }
+  return {
+    id,
+    accountId,
+    widgetType,
+    fields,
+    ...(Object.keys(localeSync).length ? { localeSync } : {}),
+    updatedAt,
+  };
 }
 
 export function resolveSavedRenderValidationReason(raw: unknown): string {

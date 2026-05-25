@@ -398,7 +398,11 @@ test('Tokyo generate does not create competing work while older base translation
   });
   assert.equal(generation.ok, true);
   assert.equal(generation.ok ? generation.generation.isCurrentBaseContent : null, false);
-  assert.deepEqual(generation.ok ? generation.generation.outOfSyncLocales : [], ['it']);
+  assert.equal(generation.ok ? generation.generation.active : null, true);
+  assert.deepEqual(generation.ok ? generation.generation.outOfSyncLocales : [], []);
+  assert.deepEqual(generation.ok ? generation.generation.locales : [], [
+    { locale: 'it', state: 'missing', reviewable: false },
+  ]);
 
   assert.deepEqual(await completeLocaleTranslation({
     env,
@@ -436,7 +440,15 @@ test('Tokyo exposes current translation generation progress', async () => {
   });
   assert.equal(generation.ok, true);
   assert.equal(generation.ok ? generation.generation.status : null, 'queued');
+  assert.equal(generation.ok ? generation.generation.v : null, 2);
+  assert.equal(generation.ok ? generation.generation.active : null, true);
+  assert.equal(typeof (generation.ok ? generation.generation.baseContentMarker : null), 'string');
+  assert.equal(typeof (generation.ok ? generation.generation.generationRequestMarker : null), 'string');
   assert.deepEqual(generation.ok ? generation.generation.pendingLocales : [], ['cs', 'it']);
+  assert.deepEqual(generation.ok ? generation.generation.locales : [], [
+    { locale: 'cs', state: 'generating', reviewable: false },
+    { locale: 'it', state: 'generating', reviewable: false },
+  ]);
 
   const italianJob = queued.find((job) => job.targetLocale === 'it');
   assert(italianJob);
@@ -459,6 +471,10 @@ test('Tokyo exposes current translation generation progress', async () => {
   assert.deepEqual(generation.ok ? generation.generation.completedLocales : [], ['it']);
   assert.deepEqual(generation.ok ? generation.generation.pendingLocales : [], ['cs']);
   assert.deepEqual(generation.ok ? generation.generation.currentReadyLocales : [], ['it']);
+  assert.deepEqual(generation.ok ? generation.generation.locales : [], [
+    { locale: 'cs', state: 'generating', reviewable: false },
+    { locale: 'it', state: 'inSync', reviewable: true },
+  ]);
   assert.equal((await readInstanceRegistryRow({
     env,
     accountId: ACCOUNT_PUBLIC_ID,
@@ -483,6 +499,11 @@ test('Tokyo exposes current translation generation progress', async () => {
   });
   assert.equal(generation.ok, true);
   assert.equal(generation.ok ? generation.generation.status : null, 'completed');
+  assert.equal(generation.ok ? generation.generation.active : null, false);
+  assert.deepEqual(generation.ok ? generation.generation.locales : [], [
+    { locale: 'cs', state: 'inSync', reviewable: true },
+    { locale: 'it', state: 'inSync', reviewable: true },
+  ]);
   assert.equal((await readInstanceRegistryRow({
     env,
     accountId: ACCOUNT_PUBLIC_ID,
@@ -502,6 +523,122 @@ test('Tokyo exposes current translation generation progress', async () => {
   });
   assert.equal(generation.ok, true);
   assert.equal(generation.ok ? generation.generation.status : null, 'completed');
+});
+
+test('Tokyo markers separate base content sync from requested locale scope', async () => {
+  const { env, queued } = createTestEnv();
+  const values = await seedSavedFaqInstance(env);
+
+  const first = await generateInstanceTranslations({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    authz: authz(),
+    baseLocale: 'en',
+    targetLocales: ['it'],
+  });
+  assert.equal(first.ok, true);
+  assert.equal(queued.length, 1);
+  const firstJob = queued[0];
+  assert(firstJob);
+  await completeLocaleTranslation({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+    job: firstJob,
+    values,
+  });
+
+  const afterItalian = await readInstanceTranslationGeneration({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  });
+  assert.equal(afterItalian.ok, true);
+  const baseMarker = afterItalian.ok ? afterItalian.generation.baseContentMarker : null;
+  const italianRequestMarker = afterItalian.ok ? afterItalian.generation.generationRequestMarker : null;
+  assert.equal(typeof baseMarker, 'string');
+  assert.equal(typeof italianRequestMarker, 'string');
+  assert.deepEqual(afterItalian.ok ? afterItalian.generation.locales : [], [
+    { locale: 'it', state: 'inSync', reviewable: true },
+  ]);
+
+  const expanded = await generateInstanceTranslations({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    authz: authz(),
+    baseLocale: 'en',
+    targetLocales: ['it', 'cs'],
+  });
+  assert.equal(expanded.ok, true);
+  assert.equal(queued.length, 2);
+  assert.equal(queued[1]?.targetLocale, 'cs');
+  assert.equal(expanded.ok ? expanded.generation?.baseContentMarker : null, baseMarker);
+  assert.notEqual(expanded.ok ? expanded.generation?.generationRequestMarker : null, italianRequestMarker);
+  assert.deepEqual(expanded.ok ? expanded.generation?.locales : [], [
+    { locale: 'cs', state: 'generating', reviewable: false },
+    { locale: 'it', state: 'inSync', reviewable: true },
+  ]);
+});
+
+test('Tokyo marks completed locales out of sync when saved base content changes', async () => {
+  const { env, queued } = createTestEnv();
+  const values = await seedSavedFaqInstance(env);
+
+  await generateInstanceTranslations({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    authz: authz(),
+    baseLocale: 'en',
+    targetLocales: ['it'],
+  });
+  assert.equal(queued.length, 1);
+  assert(queued[0]);
+  await completeLocaleTranslation({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+    job: queued[0],
+    values,
+  });
+
+  const synced = await readInstanceTranslationGeneration({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  });
+  assert.equal(synced.ok, true);
+  const oldBaseMarker = synced.ok ? synced.generation.baseContentMarker : null;
+  assert.equal(typeof oldBaseMarker, 'string');
+
+  const nextConfig = resolveWidgetDefaults('faq');
+  assert(nextConfig);
+  setFirstFaqAnswer(nextConfig, 'Plans start at zero dollars.');
+  await writeSavedRenderConfig({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'faq',
+    config: nextConfig,
+    displayName: 'FAQ example',
+    meta: null,
+  });
+
+  const stale = await readInstanceTranslationGeneration({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+  });
+  assert.equal(stale.ok, true);
+  assert.notEqual(stale.ok ? stale.generation.baseContentMarker : null, oldBaseMarker);
+  assert.deepEqual(stale.ok ? stale.generation.outOfSyncLocales : [], ['it']);
+  assert.deepEqual(stale.ok ? stale.generation.locales : [], [
+    { locale: 'it', state: 'outOfSync', reviewable: false },
+  ]);
 });
 
 test('Tokyo records terminal locale failures on generation job state', async () => {
