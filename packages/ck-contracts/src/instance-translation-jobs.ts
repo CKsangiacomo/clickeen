@@ -11,7 +11,8 @@ export type InstanceTranslationJob = {
   v: 2;
   kind: typeof INSTANCE_TRANSLATION_JOB_KIND;
   jobId: string;
-  baseContentMarker?: string;
+  baseContentMarker: string;
+  generationRequestMarker: string;
   accountId: string;
   accountPublicId: string;
   userId: string;
@@ -120,6 +121,7 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
   const jobId = asTrimmedString(raw.jobId);
   const accountId = asTrimmedString(raw.accountId);
   const baseContentMarker = asTrimmedString(raw.baseContentMarker);
+  const generationRequestMarker = asTrimmedString(raw.generationRequestMarker);
   const accountPublicId = asTrimmedString(raw.accountPublicId);
   const userId = asTrimmedString(raw.userId);
   const instanceId = asTrimmedString(raw.instanceId);
@@ -143,6 +145,8 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
   if (
     !jobId ||
     !accountId ||
+    !baseContentMarker ||
+    !generationRequestMarker ||
     !accountPublicId ||
     !userId ||
     !instanceId ||
@@ -167,7 +171,8 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     v: 2,
     kind: INSTANCE_TRANSLATION_JOB_KIND,
     jobId,
-    ...(baseContentMarker ? { baseContentMarker } : {}),
+    baseContentMarker,
+    generationRequestMarker,
     accountId,
     accountPublicId,
     userId,

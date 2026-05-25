@@ -10,7 +10,7 @@ import type { InstanceTranslationJob } from '@clickeen/ck-contracts/instance-tra
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { resolveAiRuntimeBudget, resolveAiRuntimePolicy } from '@clickeen/ck-policy';
 import editableFieldsJson from '../../tokyo/product/widgets/faq/editable-fields.json';
-import { handleInstanceTranslationQueueMessage, isNonRetryable } from './instance-translation-queue';
+import { handleInstanceTranslationQueueMessage, isInstanceTranslationQueueMessage, isNonRetryable } from './instance-translation-queue';
 import { HttpError } from './http';
 import type { Env } from './types';
 
@@ -70,6 +70,8 @@ function translationJob(): InstanceTranslationJob {
     v: 2,
     kind: 'instance.translation.locale_values',
     jobId: 'job-queue-it',
+    baseContentMarker: 'base-marker-1',
+    generationRequestMarker: 'generation-marker-1',
     accountId: 'acct_test',
     accountPublicId: ACCOUNT_PUBLIC_ID,
     userId: 'usr_test',
@@ -128,6 +130,49 @@ test('San Francisco queue job completes one translated locale with changed value
   assert.equal(writes[0]?.job.jobId, 'job-queue-it');
   assert.equal(writes[0]?.values['sections.0.faqs.0.answer'], 'https://example.com/new-room-list');
   assert.equal(Object.prototype.hasOwnProperty.call(writes[0]?.values ?? {}, 'header.title'), false);
+});
+
+test('San Francisco treats Tokyo applied false as terminal stale completion', async () => {
+  let acked = false;
+  let retried = false;
+  const env = {
+    AI_GRANT_HMAC_SECRET: 'test-secret',
+    TOKYO_PRODUCT_CONTROL: {
+      async fetch(input: RequestInfo | URL) {
+        const url = new URL(String(input));
+        if (url.pathname === `/__internal/instances/${INSTANCE_ID}/translations/it/complete`) {
+          return new Response(JSON.stringify({
+            ok: true,
+            completion: {
+              ok: true,
+              applied: false,
+              locale: 'it',
+              reasonKey: 'instance.translation.stale_generation',
+              detail: 'stale completion',
+            },
+          }), {
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({ error: { detail: url.pathname } }), { status: 500 });
+      },
+    },
+  } as Env;
+
+  const handled = await handleInstanceTranslationQueueMessage(env, {
+    body: translationJob(),
+    attempts: 1,
+    ack() {
+      acked = true;
+    },
+    retry() {
+      retried = true;
+    },
+  } as unknown as Message<unknown>);
+
+  assert.equal(handled, true);
+  assert.equal(acked, true);
+  assert.equal(retried, false);
 });
 
 test('San Francisco reports non-retryable provider failures to Tokyo before ack', async () => {
@@ -196,6 +241,12 @@ test('San Francisco treats deterministic translation validation failures as term
     provider: 'sanfrancisco',
     message: 'Instance Translation Agent returned unknown path: header.internal',
   })), true);
+});
+
+test('San Francisco rejects markerless instance translation queue messages', () => {
+  const job = translationJob() as unknown as Record<string, unknown>;
+  delete job.baseContentMarker;
+  assert.equal(isInstanceTranslationQueueMessage(job), false);
 });
 
 test('San Francisco reports retry-exhausted terminal failures to Tokyo', async () => {

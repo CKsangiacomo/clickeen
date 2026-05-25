@@ -825,6 +825,7 @@ export async function generateInstanceTranslations(args: {
       kind: INSTANCE_TRANSLATION_JOB_KIND,
       jobId: generationJobId,
       baseContentMarker,
+      generationRequestMarker,
       accountId: args.authz.accountId,
       accountPublicId: args.accountId,
       userId: args.authz.userId,
