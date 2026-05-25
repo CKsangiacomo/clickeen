@@ -5,24 +5,28 @@ Executed: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 Depends on: PRD 103B, PRD 103D.0
 
+## 103J Course-Correction Note
+
+This execution remains useful for whole-field delta semantics, last-good-value preservation, and conflict-safe locale completion. It is not a complete product architecture because it is FAQ-shaped and save-follow-up-oriented. Current execution must apply these mechanics through `103J__PRD__Generic_Widget_Translation_System.md`: generic saved text fields, stable identity keys, panel-owned Generate, Tokyo-owned generation state, and at least one non-FAQ widget proof.
+
 ## What Changed
 
 103D was simplified from "changed text" to "changed field" translation.
 
 Clickeen does not do word-level diffing. If one word changes inside an FAQ answer, the whole answer field is translated. If a question changes, the whole question field is translated. If a title changes, the whole title field is translated.
 
-The production FAQ save follow-up now:
+The historical production FAQ save follow-up at execution time:
 
 1. receives the previous saved config from Tokyo as part of save
 2. extracts previous and current FAQ field graphs from the canonical FAQ contract
 3. reads existing current language values for the target locale
 4. sends only whole new/changed/missing fields to the Instance Translation Agent
-5. merges the result with existing values through `buildCurrentLanguageValues()`
+5. merged the result with existing values through the now-deleted FAQ-only merge helper
 6. writes a complete current language value map to Tokyo
 
 The FAQ changed-field path no longer clears existing language overlays before translation. If the locale job fails, the last good current language values remain untouched.
 
-Non-FAQ widgets still use the old full-graph compatibility path until they receive their own contract migration.
+At execution time, non-FAQ widgets still used the old full-graph compatibility path until they received their own contract migration. That is not accepted as the future product architecture; 103J requires one generic path.
 
 ## Course Correction
 
@@ -41,8 +45,8 @@ Human smoke exposed that concurrent locale completions could overwrite each othe
 - `roma/app/api/account/instances/[instanceId]/route.ts`
 - `roma/lib/account-instance-direct.ts`
 - `roma/lib/account-babel-save-followup.ts`
-- `packages/ck-contracts/src/faq-language-values.ts`
-- `packages/ck-contracts/src/faq-language-values.test.ts`
+- Deleted legacy FAQ-only proof: `packages/ck-contracts/src/faq-language-values.ts`
+- Deleted legacy FAQ-only proof: `packages/ck-contracts/src/faq-language-values.test.ts`
 - historical `scripts/build-widget-catalog.mjs` path, deleted in 103_01.3b
 - historical `tokyo/product/widgets/manifest.json` path, deleted in 103_01.3b
 

@@ -1,6 +1,6 @@
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import type { AiGrantPolicy } from './ai';
-import type { FaqLanguageValue, FaqSavedTextField } from './faq-language-values';
+import type { SavedTextField } from './translated-value-primitives';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -8,15 +8,18 @@ export const INSTANCE_TRANSLATION_JOB_KIND = 'instance.translation.locale_values
 export const INSTANCE_TRANSLATION_AGENT_ID = 'widget.instance.translator';
 
 export type InstanceTranslationJob = {
-  v: 1;
+  v: 2;
   kind: typeof INSTANCE_TRANSLATION_JOB_KIND;
   jobId: string;
   accountId: string;
   accountPublicId: string;
   userId: string;
   instanceId: string;
-  widgetType: 'faq';
-  widgetContractVersion: number;
+  widgetType: string;
+  widgetContract: {
+    schemaVersion: 1;
+    hash: string;
+  };
   baseLocale: string;
   targetLocale: string;
   targetLocales: string[];
@@ -27,11 +30,16 @@ export type InstanceTranslationJob = {
     maxTokens: number;
     timeoutMs?: number;
   };
-  previousSavedTextGraph: FaqSavedTextField[];
-  currentSavedTextGraph: FaqSavedTextField[];
-  previousLanguageValues: FaqLanguageValue[];
-  changedFields: FaqSavedTextField[];
-  deletedFieldKeys: string[];
+  changedFields: SavedTextField[];
+  deletedIdentityKeys: string[];
+  basis: {
+    fields: Array<{
+      identityKey: string;
+      fieldPattern: string;
+      path: string;
+      baseText: string;
+    }>;
+  };
 };
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -54,60 +62,46 @@ function normalizeStringArray(value: unknown): string[] | null {
   return out as string[];
 }
 
-function normalizeFaqIdentity(raw: unknown): FaqSavedTextField['identity'] | null {
+function normalizeSavedTextField(raw: unknown): SavedTextField | null {
   if (!isRecord(raw)) return null;
-  const instanceId = asTrimmedString(raw.instanceId);
+  const identityKey = asTrimmedString(raw.identityKey);
+  const fieldPattern = asTrimmedString(raw.fieldPattern);
   const path = asTrimmedString(raw.path);
   const role = asTrimmedString(raw.role);
-  if (!instanceId || raw.widgetType !== 'faq' || !path || !role) return null;
-  return {
-    instanceId,
-    widgetType: 'faq',
-    path,
-    role,
-    ...(asTrimmedString(raw.sectionId) ? { sectionId: asTrimmedString(raw.sectionId) as string } : {}),
-    ...(asTrimmedString(raw.faqId) ? { faqId: asTrimmedString(raw.faqId) as string } : {}),
-  };
-}
-
-function normalizeFaqSavedTextField(raw: unknown): FaqSavedTextField | null {
-  if (!isRecord(raw)) return null;
-  const identity = normalizeFaqIdentity(raw.identity);
   const label = asTrimmedString(raw.label);
   const baseText = typeof raw.baseText === 'string' ? raw.baseText : null;
   const type = raw.type === 'richtext' ? 'richtext' : raw.type === 'string' ? 'string' : null;
-  if (!identity || !label || !type || baseText == null) return null;
-  return { identity, label, type, baseText };
+  if (!identityKey || !fieldPattern || !path || !role || !label || !type || baseText == null) return null;
+  return { identityKey, fieldPattern, path, role, label, type, baseText };
 }
 
-function normalizeFaqSavedTextFields(raw: unknown): FaqSavedTextField[] | null {
+function normalizeSavedTextFields(raw: unknown): SavedTextField[] | null {
   if (!Array.isArray(raw)) return null;
-  const fields = raw.map((entry) => normalizeFaqSavedTextField(entry));
+  const fields = raw.map((entry) => normalizeSavedTextField(entry));
   if (fields.some((entry) => !entry)) return null;
-  return fields as FaqSavedTextField[];
+  return fields as SavedTextField[];
 }
 
-function normalizeFaqLanguageValue(raw: unknown): FaqLanguageValue | null {
+function normalizeWidgetContract(raw: unknown): InstanceTranslationJob['widgetContract'] | null {
   if (!isRecord(raw)) return null;
-  const identity = normalizeFaqIdentity(raw.identity);
-  const locale = normalizeLocaleToken(raw.locale);
-  const value = typeof raw.value === 'string' ? raw.value : null;
-  const updatedAt = asTrimmedString(raw.updatedAt);
-  if (!identity || !locale || value == null || !updatedAt) return null;
-  return {
-    identity,
-    locale,
-    value,
-    updatedAt,
-    ...(asTrimmedString(raw.jobId) ? { jobId: asTrimmedString(raw.jobId) as string } : {}),
-  };
+  const hash = asTrimmedString(raw.hash);
+  return raw.schemaVersion === 1 && hash ? { schemaVersion: 1, hash } : null;
 }
 
-function normalizeFaqLanguageValues(raw: unknown): FaqLanguageValue[] | null {
-  if (!Array.isArray(raw)) return null;
-  const values = raw.map((entry) => normalizeFaqLanguageValue(entry));
-  if (values.some((entry) => !entry)) return null;
-  return values as FaqLanguageValue[];
+function normalizeBasis(raw: unknown): InstanceTranslationJob['basis'] | null {
+  if (!isRecord(raw) || !Array.isArray(raw.fields)) return null;
+  const fields = raw.fields.map((entry) => {
+    if (!isRecord(entry)) return null;
+    const identityKey = asTrimmedString(entry.identityKey);
+    const fieldPattern = asTrimmedString(entry.fieldPattern);
+    const path = asTrimmedString(entry.path);
+    const baseText = typeof entry.baseText === 'string' ? entry.baseText : null;
+    return identityKey && fieldPattern && path && baseText != null
+      ? { identityKey, fieldPattern, path, baseText }
+      : null;
+  });
+  if (fields.some((entry) => !entry)) return null;
+  return { fields: fields as InstanceTranslationJob['basis']['fields'] };
 }
 
 function normalizeAiGrantPolicy(raw: unknown): AiGrantPolicy | null {
@@ -121,13 +115,14 @@ function normalizeAiGrantPolicy(raw: unknown): AiGrantPolicy | null {
 }
 
 export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslationJob | null {
-  if (!isRecord(raw) || raw.v !== 1 || raw.kind !== INSTANCE_TRANSLATION_JOB_KIND) return null;
+  if (!isRecord(raw) || raw.v !== 2 || raw.kind !== INSTANCE_TRANSLATION_JOB_KIND) return null;
   const jobId = asTrimmedString(raw.jobId);
   const accountId = asTrimmedString(raw.accountId);
   const accountPublicId = asTrimmedString(raw.accountPublicId);
   const userId = asTrimmedString(raw.userId);
   const instanceId = asTrimmedString(raw.instanceId);
-  const widgetContractVersion = normalizePositiveInteger(raw.widgetContractVersion);
+  const widgetType = asTrimmedString(raw.widgetType);
+  const widgetContract = normalizeWidgetContract(raw.widgetContract);
   const baseLocale = normalizeLocaleToken(raw.baseLocale);
   const targetLocale = normalizeLocaleToken(raw.targetLocale);
   const targetLocales = normalizeStringArray(raw.targetLocales);
@@ -139,11 +134,9 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     typeof budgets?.timeoutMs === 'number' && Number.isInteger(budgets.timeoutMs) && budgets.timeoutMs > 0
       ? budgets.timeoutMs
       : null;
-  const previousSavedTextGraph = normalizeFaqSavedTextFields(raw.previousSavedTextGraph);
-  const currentSavedTextGraph = normalizeFaqSavedTextFields(raw.currentSavedTextGraph);
-  const previousLanguageValues = normalizeFaqLanguageValues(raw.previousLanguageValues);
-  const changedFields = normalizeFaqSavedTextFields(raw.changedFields);
-  const deletedFieldKeys = normalizeStringArray(raw.deletedFieldKeys);
+  const changedFields = normalizeSavedTextFields(raw.changedFields);
+  const deletedIdentityKeys = normalizeStringArray(raw.deletedIdentityKeys);
+  const basis = normalizeBasis(raw.basis);
 
   if (
     !jobId ||
@@ -151,8 +144,8 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     !accountPublicId ||
     !userId ||
     !instanceId ||
-    raw.widgetType !== 'faq' ||
-    widgetContractVersion == null ||
+    !widgetType ||
+    !widgetContract ||
     !baseLocale ||
     !targetLocale ||
     baseLocale === targetLocale ||
@@ -161,25 +154,23 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     !ai ||
     !budgets ||
     maxTokens == null ||
-    !previousSavedTextGraph ||
-    !currentSavedTextGraph ||
-    !previousLanguageValues ||
     !changedFields ||
-    !deletedFieldKeys
+    !deletedIdentityKeys ||
+    !basis
   ) {
     return null;
   }
 
   return {
-    v: 1,
+    v: 2,
     kind: INSTANCE_TRANSLATION_JOB_KIND,
     jobId,
     accountId,
     accountPublicId,
     userId,
     instanceId,
-    widgetType: 'faq',
-    widgetContractVersion,
+    widgetType,
+    widgetContract,
     baseLocale,
     targetLocale,
     targetLocales,
@@ -190,11 +181,9 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
       maxTokens,
       ...(timeoutMs != null ? { timeoutMs } : {}),
     },
-    previousSavedTextGraph,
-    currentSavedTextGraph,
-    previousLanguageValues,
     changedFields,
-    deletedFieldKeys,
+    deletedIdentityKeys,
+    basis,
   };
 }
 

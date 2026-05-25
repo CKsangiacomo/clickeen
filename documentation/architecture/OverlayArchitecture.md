@@ -1,8 +1,8 @@
 # Overlay Architecture
 
-STATUS: LEGACY EVIDENCE - SUPERSEDED BY PRD 103 TRANSLATED-LOCALE OPERATIONS
+STATUS: LEGACY EVIDENCE - SUPERSEDED BY PRD 103 TRANSLATED-LOCALE OPERATIONS AND PRD 103J GENERIC WIDGET TRANSLATION
 
-PRD 103_02 NOTE: this document records the old overlay-object model as implementation evidence only. `overlayId`, selected overlay pointers, overlay inventories, and physical overlay files must not be exposed as Roma/Bob/San Francisco product contracts. The surviving product contract is translated-locale values owned by Tokyo operations.
+PRD 103_02 / 103J NOTE: this document records the old overlay-object model as implementation evidence only. `overlayId`, selected overlay pointers, overlay inventories, physical overlay files, Roma save-follow-up translation, and FAQ-only translation must not be exposed as Roma/Bob/San Francisco product contracts. The surviving product contract is translated-locale values owned by Tokyo operations, generated from widget-generic editable-field contracts.
 
 Older l10n/text-pack/readiness storage and PRD 098-era account-widget folder paths are pre-GA residue and must not be preserved as a compatibility system.
 
@@ -101,4 +101,4 @@ Missing required paths and extra producer paths are rejected by the producer bou
 
 Tokyo-worker is the PBX/control-plane switchboard. It validates IDs, writes exact translated values, and reads exact translated values. It does not decide product meaning, inspect storage bodies to understand identity, synthesize desired-locale availability, or repair data it produced.
 
-Roma orchestrates product flows. San Francisco produces text values after Save. Tokyo stores. Public serving reads generated browser files, not overlay source truth.
+Historical PRD 098 flow: Roma orchestrated product flows, San Francisco produced text values after Save, Tokyo stored them, and public serving read generated browser files. Current PRD 103J translation flow starts from Bob's Translations panel Generate action, routes through Roma to Tokyo, and uses widget-generic saved text fields.

@@ -6,10 +6,10 @@ import {
 } from '@clickeen/ck-contracts/instance-translation-jobs';
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import {
-  buildFaqSavedTextGraph,
-  faqFieldIdentityKey,
-  type FaqSavedTextField,
-} from '@clickeen/ck-contracts/faq-language-values';
+  extractSavedTextFieldsForEditableFields,
+  widgetEditableFieldsContractHash,
+  type SavedTextField,
+} from '@clickeen/ck-contracts/translated-value-primitives';
 import { resolveLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import {
   resolveAiRuntimeBudget,
@@ -141,50 +141,54 @@ function resolveTranslationRuntime(args: {
   };
 }
 
-function deletedFieldKeys(args: {
-  previousSavedTextGraph: FaqSavedTextField[];
-  currentSavedTextGraph: FaqSavedTextField[];
+function deletedIdentityKeys(args: {
+  previousSavedTextFields: SavedTextField[];
+  currentSavedTextFields: SavedTextField[];
 }): string[] {
-  const current = new Set(args.currentSavedTextGraph.map((field) => faqFieldIdentityKey(field.identity)));
-  return args.previousSavedTextGraph
-    .map((field) => faqFieldIdentityKey(field.identity))
+  const current = new Set(args.currentSavedTextFields.map((field) => field.identityKey));
+  return args.previousSavedTextFields
+    .map((field) => field.identityKey)
     .filter((key) => !current.has(key));
 }
 
-function fieldComparable(field: FaqSavedTextField): string {
+function fieldComparable(field: SavedTextField): string {
   return JSON.stringify({
-    key: faqFieldIdentityKey(field.identity),
-    path: field.identity.path,
-    role: field.identity.role,
-    sectionId: field.identity.sectionId ?? '',
-    faqId: field.identity.faqId ?? '',
+    identityKey: field.identityKey,
+    fieldPattern: field.fieldPattern,
+    path: field.path,
+    role: field.role,
     type: field.type,
     label: field.label,
     baseText: field.baseText,
   });
 }
 
-function sameChangedFieldBasis(args: {
-  currentSavedTextGraph: FaqSavedTextField[];
-  jobChangedFields: FaqSavedTextField[];
+function sameJobBasis(args: {
+  currentSavedTextFields: SavedTextField[];
+  job: InstanceTranslationJob;
+  widgetContractHash: string;
 }): boolean {
-  const current = new Map(args.currentSavedTextGraph.map((field) => [faqFieldIdentityKey(field.identity), field]));
-  return args.jobChangedFields.every((field) => {
-    const latest = current.get(faqFieldIdentityKey(field.identity));
-    return Boolean(latest) && fieldComparable(latest!) === fieldComparable(field);
-  });
+  if (args.job.widgetContract.hash !== args.widgetContractHash) return false;
+  const currentBasis = args.currentSavedTextFields
+    .map((field) => ({
+      identityKey: field.identityKey,
+      fieldPattern: field.fieldPattern,
+      path: field.path,
+      baseText: field.baseText,
+    }))
+    .sort((left, right) => left.identityKey.localeCompare(right.identityKey));
+  const jobBasis = [...args.job.basis.fields].sort((left, right) => left.identityKey.localeCompare(right.identityKey));
+  return JSON.stringify(currentBasis) === JSON.stringify(jobBasis);
 }
 
 function buildJobBasis(jobs: InstanceTranslationJob[]): TranslationGenerationJobBasis {
   return jobs
     .map((job) => ({
       locale: job.targetLocale,
-      fields: job.changedFields
-        .map((field) => ({
-          path: field.identity.path,
-          baseText: field.baseText,
-        }))
-        .sort((left, right) => left.path.localeCompare(right.path)),
+      widgetContract: job.widgetContract,
+      fields: job.basis.fields
+        .map((field) => ({ ...field }))
+        .sort((left, right) => left.identityKey.localeCompare(right.identityKey)),
     }))
     .sort((left, right) => left.locale.localeCompare(right.locale));
 }
@@ -206,7 +210,7 @@ function createGenerationJobDocument(args: {
     locales[job.targetLocale] = {
       locale: job.targetLocale,
       status: 'queued',
-      paths: job.changedFields.map((field) => field.identity.path).sort((left, right) => left.localeCompare(right)),
+      paths: job.changedFields.map((field) => field.path).sort((left, right) => left.localeCompare(right)),
       updatedAt: args.requestedAt,
     };
   }
@@ -244,26 +248,26 @@ function resultsForJobs(jobs: InstanceTranslationJob[]): Array<{ locale: string;
 }
 
 function composeTranslatedValues(args: {
-  fields: FaqSavedTextField[];
-  changedFields: FaqSavedTextField[];
+  fields: SavedTextField[];
+  changedFields: SavedTextField[];
   existingValues: Record<string, string>;
   completedValues: Record<string, string>;
 }): Record<string, string> {
-  const changedKeys = new Set(args.changedFields.map((field) => faqFieldIdentityKey(field.identity)));
+  const changedKeys = new Set(args.changedFields.map((field) => field.identityKey));
   const values: Record<string, string> = {};
   for (const field of args.fields) {
-    const key = faqFieldIdentityKey(field.identity);
+    const key = field.identityKey;
     if (changedKeys.has(key)) {
-      const translated = args.completedValues[field.identity.path];
+      const translated = args.completedValues[field.path];
       if (typeof translated !== 'string') {
-        throw new Error(`instance.translation.missing_completed_value:${field.identity.path}`);
+        throw new Error(`instance.translation.missing_completed_value:${field.path}`);
       }
-      values[field.identity.path] = translated;
+      values[field.path] = translated;
       continue;
     }
-    const existing = args.existingValues[field.identity.path];
+    const existing = args.existingValues[field.path];
     if (typeof existing === 'string') {
-      values[field.identity.path] = existing;
+      values[field.path] = existing;
     }
   }
   return values;
@@ -535,20 +539,19 @@ export async function generateInstanceTranslations(args: {
   }
 
   const widgetDefinition = getWidgetDefinition(instance.value.widgetType);
-  if (instance.value.widgetType !== 'faq' || !widgetDefinition?.editableFields || widgetDefinition.editableFields.widgetType !== 'faq') {
+  if (!widgetDefinition?.editableFields || widgetDefinition.editableFields.widgetType !== instance.value.widgetType) {
     return generationFailure({
       baseLocale,
       reasonKey: 'instance.translation.widget_unsupported',
-      detail: `Translation jobs require a FAQ editable-fields contract for ${instance.value.widgetType}.`,
+      detail: `Translation jobs require an editable-fields contract for ${instance.value.widgetType}.`,
     });
   }
 
-  let currentSavedTextGraph: FaqSavedTextField[];
+  let currentSavedTextFields: SavedTextField[];
   try {
-    currentSavedTextGraph = buildFaqSavedTextGraph({
+    currentSavedTextFields = extractSavedTextFieldsForEditableFields({
       contract: widgetDefinition.editableFields,
       config: instance.value.config,
-      instanceId: args.instanceId,
     });
   } catch (error) {
     return generationFailure({
@@ -576,6 +579,20 @@ export async function generateInstanceTranslations(args: {
   const requestedAt = new Date().toISOString();
   const generationJobId = crypto.randomUUID();
   const currentReadyLocales = readyLocalesForContent(content.value, uniqueTargetLocales);
+  const widgetContract = {
+    schemaVersion: 1 as const,
+    hash: widgetEditableFieldsContractHash(widgetDefinition.editableFields),
+  };
+  const basis = {
+    fields: currentSavedTextFields
+      .map((field) => ({
+        identityKey: field.identityKey,
+        fieldPattern: field.fieldPattern,
+        path: field.path,
+        baseText: field.baseText,
+      }))
+      .sort((left, right) => left.identityKey.localeCompare(right.identityKey)),
+  };
 
   for (const locale of uniqueTargetLocales) {
     if (!resolveLanguageOverlayCode(locale)) {
@@ -587,9 +604,9 @@ export async function generateInstanceTranslations(args: {
       });
     }
 
-    const previousSavedTextGraph = currentSavedTextGraph;
-    const changedFields = currentSavedTextGraph.filter((field) => {
-      const contentField = content.value.fields[field.identity.path];
+    const previousSavedTextFields = currentSavedTextFields;
+    const changedFields = currentSavedTextFields.filter((field) => {
+      const contentField = content.value.fields[field.path];
       return (
         contentField?.localeStatus?.[locale] !== 'ok' ||
         typeof contentField?.translatedValues?.[locale] !== 'string'
@@ -601,15 +618,15 @@ export async function generateInstanceTranslations(args: {
     }
 
     jobs.push({
-      v: 1,
+      v: 2,
       kind: INSTANCE_TRANSLATION_JOB_KIND,
       jobId: generationJobId,
       accountId: args.authz.accountId,
       accountPublicId: args.accountId,
       userId: args.authz.userId,
       instanceId: args.instanceId,
-      widgetType: 'faq',
-      widgetContractVersion: widgetDefinition.editableFields.v,
+      widgetType: instance.value.widgetType,
+      widgetContract,
       baseLocale,
       targetLocale: locale,
       targetLocales: uniqueTargetLocales,
@@ -617,11 +634,9 @@ export async function generateInstanceTranslations(args: {
       ...(args.requestId ? { requestId: args.requestId } : {}),
       ai: runtime.ai,
       budgets: runtime.budgets,
-      previousSavedTextGraph,
-      currentSavedTextGraph,
-      previousLanguageValues: [],
       changedFields,
-      deletedFieldKeys: deletedFieldKeys({ previousSavedTextGraph, currentSavedTextGraph }),
+      deletedIdentityKeys: deletedIdentityKeys({ previousSavedTextFields, currentSavedTextFields }),
+      basis,
     });
   }
 
@@ -805,12 +820,12 @@ export async function completeLocaleTranslation(args: {
     };
   }
   const widgetDefinition = getWidgetDefinition(instance.value.widgetType);
-  if (instance.value.widgetType !== 'faq' || !widgetDefinition?.editableFields || widgetDefinition.editableFields.widgetType !== 'faq') {
+  if (!widgetDefinition?.editableFields || widgetDefinition.editableFields.widgetType !== instance.value.widgetType) {
     return {
       ok: false,
       locale,
       reasonKey: 'instance.translation.widget_unsupported',
-      detail: `Translation jobs require a FAQ editable-fields contract for ${instance.value.widgetType}.`,
+      detail: `Translation jobs require an editable-fields contract for ${instance.value.widgetType}.`,
     };
   }
 
@@ -830,12 +845,11 @@ export async function completeLocaleTranslation(args: {
     };
   }
 
-  let currentSavedTextGraph: FaqSavedTextField[];
+  let currentSavedTextFields: SavedTextField[];
   try {
-    currentSavedTextGraph = buildFaqSavedTextGraph({
+    currentSavedTextFields = extractSavedTextFieldsForEditableFields({
       contract: widgetDefinition.editableFields,
       config: instance.value.config,
-      instanceId: args.instanceId,
     });
   } catch (error) {
     return {
@@ -845,9 +859,10 @@ export async function completeLocaleTranslation(args: {
       detail: error instanceof Error ? error.message : String(error),
     };
   }
-  if (!sameChangedFieldBasis({
-    currentSavedTextGraph,
-    jobChangedFields: job.changedFields,
+  if (!sameJobBasis({
+    currentSavedTextFields,
+    job,
+    widgetContractHash: widgetEditableFieldsContractHash(widgetDefinition.editableFields),
   })) {
     const updatedJob = await updateCurrentTranslationGenerationJob({
       env: args.env,
@@ -905,7 +920,7 @@ export async function completeLocaleTranslation(args: {
   let nextValues: Record<string, string>;
   try {
     nextValues = composeTranslatedValues({
-      fields: currentSavedTextGraph,
+      fields: currentSavedTextFields,
       changedFields: job.changedFields,
       existingValues: existing.ok ? existing.value.values : {},
       completedValues: args.values,
@@ -927,7 +942,7 @@ export async function completeLocaleTranslation(args: {
       widgetType: instance.value.widgetType,
       locale,
       targetLocales: job.targetLocales,
-      paths: job.changedFields.map((field) => field.identity.path),
+      paths: job.changedFields.map((field) => field.path),
       values: nextValues,
     });
   } catch (error) {

@@ -60,3 +60,24 @@ The product path still uses Tokyo operations for the real work:
 - Tokyo updates translated values and the registry control row.
 
 No new product table, status object, sourceVersion check, or browser-owned inference was introduced in this slice.
+
+## Errata - Generic Translation Closure On 2026-05-25
+
+This slice remains the DB Pivot control-state slice. It proves the coarse `instances.translation_status` projection and Tokyo-owned generation state mechanics; it does not by itself close the end-to-end product smoke gate.
+
+The earlier FAQ-specific runtime gap has now been corrected by PRD 103J local implementation:
+
+- Tokyo generation and completion use generic `editable-fields.json` contracts instead of a FAQ-only gate.
+- San Francisco consumes generic saved text fields instead of FAQ saved-text graph fields.
+- The queue job contract is `InstanceTranslationJob` v2 with `widgetType`, `widgetContract`, `changedFields`, `deletedIdentityKeys`, and identity-bearing job basis.
+- Bob no longer exposes queue/readiness internals such as `Queued 0 of N`, and disables Generate for widgets without translation fields.
+- Widget registration now uses a generated Tokyo-worker source index guarded by `pnpm validate:widgets`; adding a widget no longer requires hand-editing the translation runtime.
+
+Additional local proof added after this errata:
+
+- `pnpm -C tokyo-worker test` proves FAQ, Countdown, and Logo Showcase use the same generic Generate/complete path where applicable, including Logo Showcase nested repeated fields.
+- `pnpm verify:prd103-publish-language-files` proves FAQ, Countdown, and Logo Showcase translated public artifacts are materialized from Tokyo source and current translated values under the DB-backed instance registry.
+- `pnpm -C bob test` proves Generate is disabled for widgets without translatable fields and generation copy comes from Tokyo job state.
+- `node scripts/verify/prd103j-generic-translation-guard.mjs` blocks FAQ graph imports/gates from returning to Tokyo/San Francisco product translation modules.
+
+The remaining DB.9 blocker is authenticated cloud-dev product smoke, not FAQ-only runtime architecture.

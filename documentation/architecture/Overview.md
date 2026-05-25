@@ -2,7 +2,7 @@
 
 This document describes system boundaries, data flows, and how the platform fits together.
 
-PRD 103_00 NOTE: this doc has been narrowed to the product-operation model needed before PRD 103 resumes. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+PRD 103_00 NOTE: this doc has been narrowed to the product-operation model needed before PRD 103 resumes. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`.
 
 **For definitions and glossary:** See `CONTEXT.md`
 **For canonical asset behavior:** See [AssetManagement.md](./AssetManagement.md)

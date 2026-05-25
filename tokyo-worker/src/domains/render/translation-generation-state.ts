@@ -61,17 +61,27 @@ function normalizeJobDocument(value: unknown): TranslationGenerationJobDocument 
     ? value.basis
         .map((entry) => {
           if (!isRecord(entry) || typeof entry.locale !== 'string' || !Array.isArray(entry.fields)) return null;
+          const widgetContract = isRecord(entry.widgetContract) &&
+            entry.widgetContract.schemaVersion === 1 &&
+            typeof entry.widgetContract.hash === 'string'
+            ? { schemaVersion: 1 as const, hash: entry.widgetContract.hash }
+            : undefined;
           const fields = entry.fields
             .map((field) => (
               isRecord(field) && typeof field.path === 'string' && typeof field.baseText === 'string'
-                ? { path: field.path, baseText: field.baseText }
+                ? {
+                    ...(typeof field.identityKey === 'string' ? { identityKey: field.identityKey } : {}),
+                    ...(typeof field.fieldPattern === 'string' ? { fieldPattern: field.fieldPattern } : {}),
+                    path: field.path,
+                    baseText: field.baseText,
+                  }
                 : null
             ))
-            .filter((field): field is { path: string; baseText: string } => Boolean(field))
-            .sort((left, right) => left.path.localeCompare(right.path));
-          return { locale: entry.locale, fields };
+            .filter((field): field is { identityKey?: string; fieldPattern?: string; path: string; baseText: string } => Boolean(field))
+            .sort((left, right) => (left.identityKey ?? left.path).localeCompare(right.identityKey ?? right.path));
+          return { locale: entry.locale, ...(widgetContract ? { widgetContract } : {}), fields };
         })
-        .filter((entry): entry is { locale: string; fields: Array<{ path: string; baseText: string }> } => Boolean(entry))
+        .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
         .sort((left, right) => left.locale.localeCompare(right.locale))
     : [];
   const jobId = typeof value.jobId === 'string' ? value.jobId : '';

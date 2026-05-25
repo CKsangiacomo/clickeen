@@ -18,7 +18,10 @@ import {
 } from './normalize';
 import { loadJson, loadJsonObject, putJson, putJsonIfUnchanged } from './storage';
 import { getWidgetDefinition, resolveWidgetCode } from '../widget-catalog';
-import { extractTextPrimitiveValuesForEditableFields } from '@clickeen/ck-contracts/translated-value-primitives';
+import {
+  extractSavedTextFieldsForEditableFields,
+  extractTextPrimitiveValuesForEditableFields,
+} from '@clickeen/ck-contracts/translated-value-primitives';
 import type {
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,
@@ -173,12 +176,17 @@ function extractContentFields(args: {
   const widgetDefinition = getWidgetDefinition(args.widgetType);
   if (!widgetDefinition?.editableFields) return {};
   const fields: AccountInstanceContentDocument['fields'] = {};
-  for (const item of extractTextPrimitiveValuesForEditableFields({
+  const previousByIdentity = new Map(
+    Object.values(args.previous?.fields ?? {})
+      .filter((field) => typeof field.identityKey === 'string' && field.identityKey)
+      .map((field) => [field.identityKey as string, field]),
+  );
+  for (const item of extractSavedTextFieldsForEditableFields({
     contract: widgetDefinition.editableFields,
     config: args.config,
   })) {
-    const previous = args.previous?.fields[item.path];
-    const sameValue = previous && previous.value === item.value;
+    const previous = previousByIdentity.get(item.identityKey) ?? args.previous?.fields[item.path];
+    const sameValue = previous && previous.value === item.baseText;
     const status =
       sameValue
         ? previous.status
@@ -186,7 +194,9 @@ function extractContentFields(args: {
           ? 'changed'
           : args.initialStatus;
     fields[item.path] = {
-      value: item.value,
+      identityKey: item.identityKey,
+      fieldPattern: item.fieldPattern,
+      value: item.baseText,
       status,
       ...(sameValue && previous?.localeStatus ? { localeStatus: { ...previous.localeStatus } } : {}),
       ...(sameValue && previous?.translatedValues ? { translatedValues: { ...previous.translatedValues } } : {}),

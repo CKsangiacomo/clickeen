@@ -12,8 +12,8 @@ PRD 103 is no longer blocked only by translation job-state smoke. The larger arc
 
 The active execution gate is:
 
-- `Execution_Pipeline_Docs/01-Planning/103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
-- `Execution_Pipeline_Docs/01-Planning/103_DB_Pivot__EXEC__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
+- `Execution_Pipeline_Docs/02-Executing/103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
+- `Execution_Pipeline_Docs/02-Executing/103_DB_Pivot__EXEC__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
 
 PRD 103 may not resume until the DB pivot is green.
 
@@ -28,10 +28,10 @@ Publish/materialization is the bridge.
 ## Product Truth
 
 ```text
-One FAQ instance.
+One account-owned widget instance at a time.
 One save action.
-Clickeen knows all editable text.
-Clickeen derives translation text from the approved editable-fields contract and saved instance content.
+Clickeen knows all editable customer-visible text declared by that widget.
+Clickeen derives translation text from the approved generic editable-fields contract and saved instance content.
 Clickeen gives Copilot the whole widget package.
 Clickeen translates missing/new/changed whole fields only when the user triggers Generate in the Translations panel.
 Clickeen shows translated locale values stored by Tokyo.
@@ -144,7 +144,7 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 | 103_01 - Widget Source And Bootstrap Script Audit | Complete / Green | `103_01__PRD__...`, `103_01__EXEC__...` | Consumer inventory, file-role decisions, FAQ editable-fields migration, widget-definition operation migration, `agent.md` deletion, SEO/GEO source deletion, non-FAQ editable-fields migration, limits mapping, stale Prague sync deletion, and closure/handoff are green. |
 | 103_01.1 - Widget source consumer inventory | Green / Docs only | `103_01__EXEC__...`, code/docs subagent scans, local repo search | Records all active consumers of widget source files, generated manifest/catalog output, and bootstrap scripts. Does not change runtime behavior. |
 | 103_01.2 - Widget source file-role decisions | Green / Docs only | `103_01__EXEC__...`, architecture/docs verification subagents | Locks target roles for spec, editable fields, runtime assets, shared assets, media, limits, catalog metadata, agent.md, SEO/GEO, generated manifest, catalog route, and bootstrap scripts. Does not change runtime behavior. |
-| 103_01.3a - FAQ editable-fields migration | Green / Code and docs | `tokyo/product/widgets/faq/editable-fields.json`, Bob/Roma/San Francisco/Tokyo-worker/ck-contracts tests, `validate:widgets`, `verify:prd103-faq-vertical`, typechecks/lints | FAQ field contract is no longer named `content.json`. Current product/test/verifier callers use editable-fields vocabulary. Later 103_01 slices closed the remaining widget-source cleanup. |
+| 103_01.3a - FAQ editable-fields migration | Superseded by 103J / Historical | `tokyo/product/widgets/faq/editable-fields.json`, generic translated-value primitives, Bob/Roma/San Francisco/Tokyo-worker/ck-contracts tests, `validate:widgets`, `verify:prd103-publish-language-files`, typechecks/lints | FAQ proved the original nested-field lesson, but the FAQ-only verifier and `faq-language-values` contract are deleted. Current product/test/verifier callers use generic editable-fields vocabulary for every widget. |
 | 103_01.3b - Widget catalog operation migration | Green / Code and docs | `listWidgetDefinitions`, `getWidgetDefinition`, `GET /__internal/widgets/definitions`, `scripts/validate-widget-source.mjs`, targeted tests/typechecks/verifiers | Generated widget manifest, generated SEO/GEO registry, broad build-widget catalog script, and storage-shaped widget catalog route are deleted from product paths. Later 103_01 slices deleted `agent.md`, widget `seo-geo.ts`, `spec.overlays.text`, catalog capabilities, and detached limits/bootstrap drift. |
 | 103_01.3c.1 - Widget `agent.md` deletion | Green / Code and docs | San Francisco embed writer, publish verifier, widget source validation, active docs | Widget `agent.md` files are deleted. Runtime no longer checks them, fixtures no longer seed them, and validation fails if they return. |
 | 103_01.3c.2 - Widget SEO/GEO source deletion | Green / Code and docs | Widget catalog files, Tokyo-worker/Roma/Prague catalog types, widget source validation, active docs | Widget `seo-geo.ts` files and catalog SEO/GEO capability flags are deleted. Instance `seoGeo.*` config is not product source generator authority. |
@@ -159,25 +159,26 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 | 103C.0 - Widget Source Split And Content JSON | Historical proof only / Superseded by 103_01.3a, 103_01.3b, and 103_01.4 | Historical `tokyo/product/widgets/faq/content.json`, `spec.json`, `manifest.json`, `ck-contracts` tests, `tokyo-worker` tests, historical `build:widgets:check` | The `content.json` name is superseded by `editable-fields.json`; generated manifest/catalog authority is deleted. Current widget-source authority is 103_01, not 103C.0. |
 | 103C.1 - FAQ Gold Standard Contract | Complete / Product path green | `103C1__PRD__...`, `103C1__EXEC__...`, content tests, 103I.2 Copilot package proof, 103F override proof | FAQ translation authority exists. Bob review, Tokyo-worker translated-locale tests, Copilot package view, manual translated-locale edit, and publish proof are green. |
 | 103C - Agent Source Projections | Superseded / Closed by 103I.2 | `103C__EXEC__...`, `103I__PRD__...`, San Francisco Copilot payload test | Translation uses content projection in lower-level paths. Copilot now receives widget package context rather than only compiled editor controls. |
-| 103D.0 - FAQ Identity/Diff/Merge Contract | Complete / Product proof green | `faq-language-values` tests, Bob review tests, publish verifier | Stable identity, changed-field selection, complete current language merge, fail-closed missing translations, Bob review, manual translated-locale edits, and publish use of edited values are proven. |
-| 103D - Changed Field Translation | Reopened / Delta authority green below 103_02 gate | Tokyo `generateTranslations`, San Francisco `instance-translation-queue`, `faq-language-values`, `instance.content.json` status | Save no longer enqueues translation. Panel Generate is Tokyo-owned and queues missing fields plus fields marked `changed` in `instance.content.json`. Completion writes only changed fields, preserves unrelated current values, and clears field status only after all Generate target locales complete. |
+| 103D.0 - FAQ Identity/Diff/Merge Contract | Superseded by 103J / Deleted legacy contract | Generic translated-value primitive tests, Bob review tests, publish verifier | Stable identity, changed-field selection, complete current language merge, fail-closed missing translations, Bob review, manual translated-locale edits, and publish use of edited values are now proven by the generic widget translation path, not a FAQ-only contract. |
+| 103D - Changed Field Translation | Reopened / Delta authority green below 103_02 gate | Tokyo `generateTranslations`, San Francisco `instance-translation-queue`, generic translated-value primitives, `instance.content.json` status | Save no longer enqueues translation. Panel Generate is Tokyo-owned and queues missing fields plus fields marked `changed` in `instance.content.json`. Completion writes only changed fields, preserves unrelated current values, and clears field status only after all Generate target locales complete. |
 | 103E - Bob Translation Panel Review | Product path green inside 103V / human smoke deferred | `TranslationsPanel.tsx`, `TranslationsPanel.test.tsx`, Bob tests/typecheck, Roma Generate route, Tokyo Generate operation, 103V proof | Production `TranslationsPanel` renders editable-fields-based current language values and owns the Generate trigger. Human smoke remains a completion/release gate after 103G. |
-| 103V - Single-Language Vertical Slice | Complete / Green after panel-owned Generate reproof | `pnpm verify:prd103-faq-vertical`, Bob tests/typecheck, Roma tests/typecheck, Tokyo-worker tests/typecheck, San Francisco tests/typecheck, ck-contracts tests/typecheck, `validate:widgets`, primitive drift guard | Save persists base content only. Panel Generate queues the edited FAQ answer from `instance.content.json`, San Francisco executes the Instance Translation Agent job, Tokyo writes current translated locale values, and Bob review renders the translated FAQ answer. |
+| 103V - Single-Language Vertical Slice | Superseded by 103J / Generic local proof green | `pnpm verify:prd103-publish-language-files`, Bob tests/typecheck, Roma tests/typecheck, Tokyo-worker tests/typecheck, San Francisco tests/typecheck, ck-contracts tests/typecheck, `validate:widgets`, primitive drift guard, PRD103J guard | Save persists base content only. Panel Generate is Tokyo-owned. The current proof covers FAQ plus non-FAQ widgets through one generic editable-fields translation path. |
 | 103G - Save/Publish Generated Language Files | Complete / Green after 103V reproof | `103G__PRD__...`, `103G__EXEC__...`, `pnpm verify:prd103-publish-language-files`, Tokyo-worker tests, Roma tests | Publish verifier proves Tokyo-owned materialization and public base/translated output through `clk.live`, without San Francisco artifact writer, sourceVersion, generation lanes, overlay path setup, runtime assembly, or versioned support filename assertions. |
 | 103H - Shared Agent Model Profiles | Complete / Shared policy proof green | `ck-policy` tests, San Francisco tests | Free and Tier 3 resolve different model profiles for both Instance Translation and Copilot through the shared matrix/catalog path. Copilot model picker policy is covered. Translation audit emits account subject, agent ID, policy profile, policy version, provider, model, token usage, and result status. |
 | 103I - San Francisco Agent Runtime Cleanup | Complete / Copilot package context green | `103I__PRD__...`, San Francisco tests/typecheck, Bob typecheck, Roma typecheck | Old text-value route removed. Active account-widget translation code is named around Instance Translation, saved text graph, and current language values. Bob now sends Copilot `widgetPackage`; Roma forwards it; San Francisco includes content, spec, markup, styles, and client behavior context in the Copilot prompt. No new runtime framework added. |
 | 103F - Translation Override UX | Complete / Green after translated-locale reproof | `103F__PRD__...`, `103F__EXEC__...`, Bob tests/typecheck, Roma tests/typecheck, Tokyo-worker tests/typecheck, publish verifier | Manual edit behavior is proven as a temporary full translated-locale value-map overwrite. Product payloads expose locale/value-map operations; partial maps are rejected; later regeneration may overwrite the manual edit. |
+| 103J - Generic Widget Translation System | Implemented locally / Cloud smoke pending | `103J__PRD__Generic_Widget_Translation_System.md`, DB.5 errata, DB.9 blocker | Generic translation now uses identity-bearing saved text extraction, generic v2 queue jobs, generic Tokyo completion, generic San Francisco primitive fields, Bob product-state UX, generated widget source-index registration, and multi-widget publish proof for FAQ, Countdown, and Logo Showcase. PRD 103 remains blocked on authenticated cloud-dev smoke with FAQ plus at least one non-FAQ widget. |
 
 ## Current Authorities
 
-- Widget translation authority: current widget field contracts are `tokyo/product/widgets/{widgetType}/editable-fields.json`; PRD 103 automated runtime proofs are green after 103V, 103G, and 103F.
+- Widget translation authority: current widget field contracts are `tokyo/product/widgets/{widgetType}/editable-fields.json`; 103J is the current generic widget translation authority. Earlier FAQ green proofs remain fixture/mechanics evidence, while the current working tree now moves FAQ, Countdown, and Logo Showcase onto the generic path locally.
 - Instance source authority decision: `instance.content.json` is all editable customer-visible strings; `instance.config.json` is all non-text instance state plus identity/display/widget type/code/locale setup/publish state/timestamps.
 - Translated locale value decision: `locale -> translated content values`; overlay IDs, selected pointers, version slots, provenance, source hashes, generation IDs, and manual override status are not product payloads.
 - Current translated-locale product surface: Bob/Roma list/read/save translations by locale and value map only. Roma account `locale-overlays/*` routes are deleted.
 - Async workflow decision: generation state is removed from authoring source; translation generation job status comes from Tokyo-owned job operations implemented by 103_03. Generic `sourceVersion` and generation lanes are no longer written by Tokyo saved instance source.
 - Publish decision: publish state lives in approved config/state; public files are generated artifacts and not publish truth. Roma publish/unpublish now call Tokyo product operations; publish materializes artifacts in Tokyo before setting `published`; public serving checks `publishStatus` before generated artifacts.
-- FAQ translation field parser and overlay derivation: `packages/ck-contracts/src/overlay-primitives.ts`.
-- FAQ identity/diff/merge authority: `packages/ck-contracts/src/faq-language-values.ts`.
+- Generic translation field parser target: `packages/ck-contracts/src/translated-value-primitives.ts` owns identity-bearing extraction for every widget. FAQ-specific product helpers and the FAQ-only verifier are deleted; FAQ remains only as one widget fixture inside generic proof.
+- FAQ identity/diff/merge evidence was retired as a standalone contract. The surviving authority is `packages/ck-contracts/src/translated-value-primitives.ts`, proven across FAQ, Countdown, and Logo Showcase.
 - Current widget definition composition: Tokyo-worker reads approved widget source through `listWidgetDefinitions` and `getWidgetDefinition`; no generated widget manifest remains.
 - Final widget catalog decision from 103_01.2: replace generated manifest authority with `listWidgetDefinitions` and `getWidgetDefinition`; keep `catalog.json` only as small listing metadata; delete broad manifest/catalog product assembly.
 - Current-language storage primitive: Tokyo overlay object `{ v: 1, values }` under the owning instance.
@@ -209,7 +210,7 @@ Important: historical green for `103_00.1` meant only blocker/status wiring. PRD
 - `pnpm --filter @clickeen/ck-policy typecheck`
 - `pnpm --filter @clickeen/tokyo-worker test`
 - `pnpm --filter @clickeen/tokyo-worker typecheck`
-- `pnpm verify:prd103-faq-vertical`
+- `pnpm verify:prd103-publish-language-files`
 - `pnpm verify:prd103-publish-language-files`
 - Repo search for removed legacy translation field names and per-field Copilot allowlists is clean outside this status note.
 

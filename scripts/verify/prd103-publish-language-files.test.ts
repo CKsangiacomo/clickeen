@@ -1,16 +1,24 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  buildTranslatedTextValueMap,
+  extractTextPrimitiveValuesForEditableFields,
+  type WidgetEditableFieldsContract,
+} from '@clickeen/ck-contracts/translated-value-primitives';
+import {
+  getWidgetDefinition,
+  resolveWidgetDefaults,
+} from '../../tokyo-worker/src/domains/widget-catalog.ts';
+import {
   publishAccountInstanceTransition,
   writeSavedRenderConfig,
   writeTranslatedLocaleValues,
 } from '../../tokyo-worker/src/domains/render/index.ts';
 import { tryHandleClkLiveStaticRoutes } from '../../tokyo-worker/src/routes/clk-live-routes.ts';
 import type { Env } from '../../tokyo-worker/src/types.ts';
+import { attachTestInstanceRegistry } from '../../tokyo-worker/src/domains/render/test-instance-registry.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
-const INSTANCE_ID = 'Z9Y8X7W6V5';
-
 type StoredObject = {
   text: string;
   contentType?: string;
@@ -84,44 +92,39 @@ function createTestEnv(seed: Record<string, string>) {
       },
     } as unknown as R2Bucket,
   } as Env;
+  attachTestInstanceRegistry(env);
   return { env, objects };
 }
 
-function productSources() {
+function widgetProductSources(widgetType: string) {
   return {
-    'product/widgets/faq/widget.html': `<!doctype html>
+    [`product/widgets/${widgetType}/widget.html`]: `<!doctype html>
 <html><head>
 <link rel="stylesheet" href="./widget.css" />
 </head><body>
-<div data-ck-widget="faq" data-role="root">
-  <section data-role="faq"></section>
+<div data-ck-widget="${widgetType}" data-role="root">
+  <section data-role="${widgetType}"></section>
   <script src="./widget.client.js" defer></script>
 </div>
 </body></html>`,
-    'product/widgets/faq/widget.css': '.ck-faq{}',
-    'product/widgets/faq/widget.client.js': 'window.__FAQ_STATE__ = window.CK_WIDGET.state;',
+    [`product/widgets/${widgetType}/widget.css`]: `.ck-${widgetType}{}`,
+    [`product/widgets/${widgetType}/widget.client.js`]: `window.__${widgetType.toUpperCase()}_STATE__ = window.CK_WIDGET.state;`,
   };
 }
 
-function faqConfig() {
-  return {
-    header: { title: 'Questions', subtitleHtml: 'Fast answers' },
-    cta: { label: 'Contact us' },
-    sections: [
-      {
-        id: 'general',
-        title: 'Basics',
-        faqs: [
-          {
-            id: 'pricing',
-            question: 'What does it cost?',
-            answer: 'Plans start free.',
-            defaultOpen: false,
-          },
-        ],
-      },
-    ],
-  };
+function translatedValuesForWidget(args: {
+  widgetType: string;
+  contract: WidgetEditableFieldsContract;
+  config: Record<string, unknown>;
+}): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(buildTranslatedTextValueMap(
+      extractTextPrimitiveValuesForEditableFields({
+        contract: args.contract,
+        config: args.config,
+      }),
+    )).map(([path, value]) => [path, `it:${value}`]),
+  );
 }
 
 async function publicText(env: Env, pathname: string): Promise<string> {
@@ -137,43 +140,82 @@ async function publicText(env: Env, pathname: string): Promise<string> {
   return response ? response.text() : '';
 }
 
-test('PRD 103G publishes base and translated FAQ files from Tokyo source and current translated values', async () => {
-  const { env } = createTestEnv(productSources());
-  await writeSavedRenderConfig({
-    env,
-    accountId: ACCOUNT_ID,
-    instanceId: INSTANCE_ID,
+const widgetCases = [
+  {
     widgetType: 'faq',
-    displayName: 'FAQ',
-    meta: { baseLocale: 'en', targetLocales: ['it'] },
-    config: faqConfig(),
-  });
-  await writeTranslatedLocaleValues({
-    env,
-    accountId: ACCOUNT_ID,
-    instanceId: INSTANCE_ID,
-    locale: 'it',
-    values: {
-      'header.title': 'Domande',
-      'header.subtitleHtml': 'Risposte rapide',
-      'cta.label': 'Contattaci',
-      'sections.0.title': 'Nozioni di base',
-      'sections.0.faqs.0.question': 'Quanto costa?',
-      'sections.0.faqs.0.answer': 'I piani partono gratis, con modifica manuale.',
+    instanceId: 'Z9Y8X7W6V5',
+    expectedTranslatedScriptText: 'it:Plans start free.',
+    mutate(config: Record<string, unknown>) {
+      const header = config.header as Record<string, unknown>;
+      const cta = config.cta as Record<string, unknown>;
+      const sections = config.sections as Array<Record<string, unknown>>;
+      const section = sections[0] as Record<string, unknown>;
+      const faqs = section.faqs as Array<Record<string, unknown>>;
+      header.title = 'Questions';
+      header.subtitleHtml = 'Fast answers';
+      cta.label = 'Contact us';
+      section.title = 'Basics';
+      faqs[0] = {
+        ...(faqs[0] ?? {}),
+        question: 'What does it cost?',
+        answer: 'Plans start free.',
+      };
     },
+  },
+  {
+    widgetType: 'countdown',
+    instanceId: 'Q1W2E3R4T5',
+    expectedTranslatedScriptText: 'it:Days',
+  },
+  {
+    widgetType: 'logoshowcase',
+    instanceId: 'L1O2G3O4S5',
+    expectedTranslatedScriptText: 'it:Audi',
+  },
+] as const;
+
+for (const widgetCase of widgetCases) {
+  test(`PRD 103G publishes base and translated ${widgetCase.widgetType} files from Tokyo source and current translated values`, async () => {
+    const widgetDefinition = getWidgetDefinition(widgetCase.widgetType);
+    const config = resolveWidgetDefaults(widgetCase.widgetType);
+    assert(widgetDefinition);
+    assert(config);
+    widgetCase.mutate?.(config);
+    const { env } = createTestEnv(widgetProductSources(widgetCase.widgetType));
+    const translatedValues = translatedValuesForWidget({
+      widgetType: widgetCase.widgetType,
+      contract: widgetDefinition.editableFields,
+      config,
+    });
+    await writeSavedRenderConfig({
+      env,
+      accountId: ACCOUNT_ID,
+      instanceId: widgetCase.instanceId,
+      widgetType: widgetCase.widgetType,
+      displayName: widgetDefinition.label,
+      meta: { baseLocale: 'en', targetLocales: ['it'] },
+      config,
+    });
+    await writeTranslatedLocaleValues({
+      env,
+      accountId: ACCOUNT_ID,
+      instanceId: widgetCase.instanceId,
+      locale: 'it',
+      values: translatedValues,
+    });
+
+    const result = await publishAccountInstanceTransition({ env, accountId: ACCOUNT_ID, instanceId: widgetCase.instanceId });
+    assert.equal(result.status, 'published');
+
+    const baseHtml = await publicText(env, `/${ACCOUNT_ID}/${widgetCase.instanceId}`);
+    const translatedHtml = await publicText(env, `/${ACCOUNT_ID}/${widgetCase.instanceId}/it.html`);
+    const baseScript = await publicText(env, `/${ACCOUNT_ID}/${widgetCase.instanceId}/script.js`);
+    const translatedScript = await publicText(env, `/${ACCOUNT_ID}/${widgetCase.instanceId}/script.it.js`);
+
+    assert.match(baseHtml, /lang="en"/);
+    assert.match(translatedHtml, /lang="it"/);
+    assert.match(baseScript, /CK_WIDGET/);
+    assert.match(translatedScript, new RegExp(widgetCase.expectedTranslatedScriptText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.doesNotMatch(baseHtml + translatedHtml + baseScript + translatedScript, /\/api\/account\/|\/__internal\/|product\/widgets\//);
   });
-
-  const result = await publishAccountInstanceTransition({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });
-  assert.equal(result.status, 'published');
-
-  const baseHtml = await publicText(env, `/${ACCOUNT_ID}/${INSTANCE_ID}`);
-  const translatedHtml = await publicText(env, `/${ACCOUNT_ID}/${INSTANCE_ID}/it.html`);
-  const baseScript = await publicText(env, `/${ACCOUNT_ID}/${INSTANCE_ID}/script.js`);
-  const translatedScript = await publicText(env, `/${ACCOUNT_ID}/${INSTANCE_ID}/script.it.js`);
-
-  assert.match(baseHtml, /lang="en"/);
-  assert.match(translatedHtml, /lang="it"/);
-  assert.match(baseScript, /Plans start free\./);
-  assert.match(translatedScript, /I piani partono gratis, con modifica manuale\./);
-  assert.doesNotMatch(baseHtml + translatedHtml + baseScript + translatedScript, /\/api\/account\/|\/__internal\/|product\/widgets\//);
-});
+}

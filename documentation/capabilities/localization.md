@@ -1,6 +1,6 @@
 # Localization Capability
 
-Status: PRD 103_00 product-operation model. Final PRD 103 resume still requires the manual smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+Status: PRD 103_00 product-operation model. Final PRD 103 resume still requires the manual smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`.
 
 Localization translates account-instance content values into translated locale values. It is not a storage-object protocol, a runtime fallback system, or a second widget source model.
 

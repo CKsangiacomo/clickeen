@@ -1,6 +1,6 @@
 # PRD 103C.1 - FAQ Widget Gold Standard Contract
 
-Status: Restart / Partial / Not product-green
+Status: Superseded by PRD 103J / FAQ fixture evidence
 Owner: Product + Architecture
 Date: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
@@ -8,6 +8,10 @@ Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 ## Purpose
 
 Make FAQ the corrected widget authored source shape that all later widgets copy.
+
+## 103J Supersession Note
+
+This PRD is not executable as the product translation architecture. FAQ remains fixture evidence for nested/repeated content and stable identity, but PRD 103J governs the generic widget translation system. Future widgets must declare authored customer-visible text through `editable-fields.json`; FAQ `content.json` language below is historical source-split work, not the cross-widget translation boundary.
 
 This must complete before Copilot, Translation, merge, Bob review, or San Francisco execution work can be considered complete.
 
@@ -43,7 +47,7 @@ Text kind and other rendering details can exist when the widget needs them, but 
 
 ## Execution Contract
 
-- Executable without drift: Translation, language values, Bob review, and generated overlay values must consume FAQ `content.json`.
+- Historical 103C.1 contract: Translation, language values, Bob review, and generated overlay values consumed FAQ `content.json`. After 103J, translation consumes generic saved text fields derived from `editable-fields.json` plus saved instance content.
 - Copilot must consume the whole FAQ widget package, not `content.json` alone.
 - New systems are allowed only when they replace duplicate declarations or derive old declarations from authored source.
 - End-to-end accuracy must prove one FAQ edit is visible to Bob manual editing, Copilot, Translation, Bob review, and Publish.

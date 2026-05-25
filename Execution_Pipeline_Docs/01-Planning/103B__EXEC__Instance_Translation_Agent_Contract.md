@@ -5,6 +5,10 @@ Executed: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 Depends on: PRD 103C.1, PRD 103C, PRD 103D.0
 
+## 103J Course-Correction Note
+
+This execution remains evidence for a job-shaped San Francisco boundary, but its Roma save-follow-up and FAQ saved-text graph wording is historical. Current product translation authority is `103J__PRD__Generic_Widget_Translation_System.md`: Bob initiates Generate from the Builder translations panel, Roma forwards to Tokyo, Tokyo owns generation state and queue production, and San Francisco receives widget-generic saved text fields.
+
 ## What Changed
 
 Added a job-shaped San Francisco Instance Translation Agent route:
@@ -13,7 +17,7 @@ Added a job-shaped San Francisco Instance Translation Agent route:
 POST /v1/agents/instance-translation/translate-saved-instance
 ```
 
-Roma now calls this route from the save follow-up as the product boundary.
+At this historical execution point, Roma called this route from the save follow-up as the translation boundary. 103J supersedes that active path with panel-owned Generate and Tokyo-owned generation state.
 
 The new request requires:
 

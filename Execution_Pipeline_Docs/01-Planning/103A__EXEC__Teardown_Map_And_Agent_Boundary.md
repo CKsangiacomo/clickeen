@@ -4,6 +4,10 @@ Status: Green
 Executed: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 
+## 103J Course-Correction Note
+
+This execution is historical teardown evidence, not the current translation product path. Current authority is `103J__PRD__Generic_Widget_Translation_System.md`: Generate starts in Bob's Translations panel, Roma forwards the account request to Tokyo, Tokyo owns generation state and generic queue jobs, and FAQ-specific save-triggered translation is not the platform boundary.
+
 ## Product Boundary
 
 The only surviving product operation is:
@@ -14,7 +18,7 @@ translate saved instance
 
 Everything else in the current path is either a transport detail, storage primitive, UI consumer, or legacy name. No later slice may make old text-value routes, old Babel follow-up names, `overlays.text[]`, `agent.md`, selected overlay pointers, or Bob preview inventory the product boundary.
 
-## Current Active Path
+## Historical Active Path At Execution Time
 
 One FAQ save now flows through:
 
@@ -31,7 +35,7 @@ One FAQ save now flows through:
 | Area | Current item | Classification | Surviving authority / decision |
 | --- | --- | --- | --- |
 | Product operation | Save-triggered translation for a saved account widget instance | keep | `translate saved instance` is the only product operation. |
-| Roma save boundary | `roma/app/api/account/instances/[instanceId]/route.ts` | keep | Real account save boundary. It may trigger translation after save, but the route itself is not the translation product boundary. |
+| Roma save boundary | `roma/app/api/account/instances/[instanceId]/route.ts` | keep | Real account save boundary. At this historical execution point it could trigger translation after save, but the route itself was not the translation product boundary. 103J supersedes save-triggered translation as the future path. |
 | Roma translation job acceptance | `acceptInstanceTranslationJobs` | keep | Durable Instance Translation job acceptance entrypoint. |
 | Roma producer client | `roma/lib/instance-translation-agent-client.ts` | keep | Client for `translate saved instance`; grant minting/policy resolution remains an implementation detail. |
 | San Francisco route | Instance Translation Agent route | diagnostic | Direct endpoint remains for diagnostics/tests; active product execution is queue consumption. |

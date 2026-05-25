@@ -1,10 +1,14 @@
 # PRD 103C - Agent Source Projections
 
-Status: Restart / Not done
+Status: Superseded by PRD 103J / historical planning evidence
 Owner: Product + Architecture
 Date: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 Depends on: PRD 103C.0, PRD 103C.1
+
+## 103J Supersession Note
+
+This PRD is not executable as written. It remains useful only for the principle that Copilot and Translation consume approved widget-source projections rather than ad hoc path heuristics. Product translation field declaration is now governed by `103J__PRD__Generic_Widget_Translation_System.md`: `editable-fields.json` declares authored customer-visible text, and Tokyo extracts generic saved text fields from the saved instance. Any wording below that makes FAQ `content.json`, FAQ fixtures, or FAQ-only projection the product boundary is historical and superseded.
 
 ## Purpose
 
@@ -14,7 +18,7 @@ Translation localizes saved customer-visible text after Save. Copilot is a widge
 
 ## Execution Contract
 
-- Executable without drift: Translation may only use authored `content.json`; Copilot may use the whole widget package.
+- Historical 103C contract, not executable after 103J: Translation may only use authored `content.json`; Copilot may use the whole widget package.
 - New systems are allowed only if they expose the authored widget source cleanly or remove duplicate discovery code.
 - End-to-end accuracy must prove Translation uses the content JSON projection and Copilot receives enough widget-package context to make valid edits.
 - Translation systems must use content field identity, role, type, and label.
@@ -23,8 +27,8 @@ Translation localizes saved customer-visible text after Save. Copilot is a widge
 ## Target Flow
 
 ```text
-FAQ content.json
-  -> saved text graph
+Widget editable-fields.json + saved instance content
+  -> generic saved text fields
   -> Instance Translation Agent
   -> current language values
 
@@ -37,11 +41,11 @@ Compiled controls can render and apply edits. They cannot decide translation tex
 
 ## Current State
 
-Translation has started moving to authored `content.json`. Copilot is not product-green while it receives only compiled controls and prompt heuristics instead of the whole widget package.
+Historical state at 103C: Translation had started moving to authored `content.json`. After 103J, translation must move to widget-generic `editable-fields.json` extraction. Copilot is not product-green while it receives only compiled controls and prompt heuristics instead of the whole widget package.
 
 ## Acceptance
 
-- Translation receives declared text paths, labels, roles, types, and current saved values from `content.json`.
+- Superseded translation acceptance: Translation receives declared text paths, labels, roles, types, and current saved values from `content.json`.
 - Copilot receives a widget package view, not only a content fields list.
 - Copilot no longer decides FAQ content fields with regexes over path/label/group label.
 - Copilot can reason about content, behavior, appearance, limits, and runtime behavior from the widget package.
@@ -51,7 +55,7 @@ Translation has started moving to authored `content.json`. Copilot is not produc
 
 ## Verification
 
-- Fixture: Translation receives only FAQ `content.json` fields.
+- Historical fixture only: Translation receives only FAQ `content.json` fields.
 - Fixture: a non-text styling or behavior control can be visible to Copilot but is not sent to Translation.
 - TPM signoff: Translation and Copilot feel like two Clickeen agents working from the same widget folder with different jobs.
 - Dev Manager signoff: there is no second authored translation-text authority.

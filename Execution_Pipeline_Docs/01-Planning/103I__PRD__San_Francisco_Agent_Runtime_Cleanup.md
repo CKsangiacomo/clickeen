@@ -6,6 +6,10 @@ Date: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 Depends on: PRD 103H
 
+## 103J Course-Correction Note
+
+103I remains valid as San Francisco cleanup history, but its active translation boundary is superseded where it says Roma save follow-up calls the agent directly. Current authority is `103J__PRD__Generic_Widget_Translation_System.md`: Bob explicitly starts Generate, Roma forwards the account request to Tokyo, Tokyo creates generic widget translation jobs, and San Francisco translates those jobs without FAQ-specific contracts.
+
 ## Purpose
 
 Restart San Francisco cleanup as a teardown, not a new framework.
@@ -14,7 +18,7 @@ The product boundary is the Instance Translation Agent. The old text-value route
 
 ## Slice 103I.1 Contract
 
-- Roma save follow-up calls only `/v1/agents/instance-translation/translate-saved-instance`.
+- Historical 103I path: Roma save follow-up calls only `/v1/agents/instance-translation/translate-saved-instance`.
 - San Francisco exposes only the Instance Translation Agent route for account-widget translation.
 - The old text-value route is removed.
 - Local San Francisco account-widget translation code says `saved text graph` and `current language values`, not `Babel text producer` as the active concept.
@@ -28,7 +32,7 @@ The product boundary is the Instance Translation Agent. The old text-value route
 - San Francisco no longer imports, routes, or exposes `handleBabelTextValues`.
 - The old text-value path is absent from active San Francisco source.
 - The Instance Translation Agent still validates the saved-instance request and returns exact current-language values.
-- Roma save follow-up still proves one changed FAQ field translates through the Instance Translation Agent and writes a complete Tokyo overlay.
+- Historical 103I path: Roma save follow-up still proves one changed FAQ field translates through the Instance Translation Agent and writes a complete Tokyo overlay.
 
 ## Slice 103I.1 Verification
 

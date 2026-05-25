@@ -61,7 +61,7 @@ Locked decisions:
 The FAQ editable-field contract migration is green.
 
 - `tokyo/product/widgets/faq/content.json` moved to `tokyo/product/widgets/faq/editable-fields.json`.
-- Bob, Roma, San Francisco, Tokyo-worker, ck-contracts tests, and the PRD 103 FAQ vertical verifier now use editable-field vocabulary for the FAQ field contract.
+- Bob, Roma, San Francisco, Tokyo-worker, ck-contracts tests, and the PRD 103J generic verifier now use editable-field vocabulary for all widget text fields. The old FAQ-only vertical verifier has been deleted.
 - Later 103_01 slices removed generated widget manifest authority and closed remaining widget-source cleanup.
 - 103_00.2 closed in 103_01.4. The next open pre-103 slice is 103_02.
 

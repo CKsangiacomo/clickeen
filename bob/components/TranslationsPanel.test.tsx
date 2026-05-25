@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildGenerateTranslationsButtonState,
+  buildTranslationGenerationPanelState,
   buildTranslationValuesAfterEdit,
   isActiveTranslationGeneration,
   isTranslationGenerationAccepted,
@@ -91,6 +92,7 @@ test('generate translations button is enabled for a saved instance with active t
     buildGenerateTranslationsButtonState({
       instanceId: 'I1B2C3D4E5',
       expectedTranslationsCount: 28,
+      hasTranslatableFields: true,
       isDirty: false,
       isSaving: false,
       isStarting: false,
@@ -109,6 +111,7 @@ test('generate translations button does not translate unsaved Bob edits', () => 
     buildGenerateTranslationsButtonState({
       instanceId: 'I1B2C3D4E5',
       expectedTranslationsCount: 28,
+      hasTranslatableFields: true,
       isDirty: true,
       isSaving: false,
       isStarting: false,
@@ -118,6 +121,25 @@ test('generate translations button does not translate unsaved Bob edits', () => 
       disabled: true,
       label: 'Generate translations',
       message: 'Save changes before generating translations.',
+    },
+  );
+});
+
+test('generate translations button is disabled for widgets without translatable fields', () => {
+  assert.deepEqual(
+    buildGenerateTranslationsButtonState({
+      instanceId: 'I1B2C3D4E5',
+      expectedTranslationsCount: 28,
+      hasTranslatableFields: false,
+      isDirty: false,
+      isSaving: false,
+      isStarting: false,
+      isGenerating: false,
+    }),
+    {
+      disabled: true,
+      label: 'Generate translations',
+      message: 'This widget has no translation fields.',
     },
   );
 });
@@ -149,7 +171,7 @@ test('generate translations accepts background generation response', () => {
   assert.equal(isTranslationGenerationAccepted(payload), true);
   assert.equal(
     resolveGenerateTranslationsMessage(payload),
-    'Queued 0 of 2 translations.',
+    'Preparing translations.',
   );
 });
 
@@ -183,5 +205,32 @@ test('translation generation status messages come from Tokyo job state', () => {
 
   assert(generation);
   assert.equal(isActiveTranslationGeneration(generation), true);
-  assert.equal(resolveTranslationGenerationStatusMessage(generation), 'Generating 1 of 2 translations.');
+  assert.equal(resolveTranslationGenerationStatusMessage(generation), 'Generating translations. 1 of 2 languages ready.');
+});
+
+test('panel entry adopts an already active Tokyo generation state', () => {
+  const panelState = buildTranslationGenerationPanelState({
+    ok: true,
+    generation: {
+      instanceId: 'I1B2C3D4E5',
+      baseLocale: 'en',
+      targetLocales: ['it', 'cs'],
+      status: 'running',
+      requestedAt: '2026-05-20T00:00:00.000Z',
+      updatedAt: '2026-05-20T00:00:03.000Z',
+      totalLocales: 2,
+      completedLocales: ['it'],
+      failedLocales: [],
+      supersededLocales: [],
+      pendingLocales: ['cs'],
+      currentReadyLocales: ['it'],
+      jobId: 'job-1',
+    },
+  });
+
+  assert.deepEqual(panelState, {
+    isGenerating: true,
+    message: 'Generating translations. 1 of 2 languages ready.',
+    shouldRefreshTranslations: true,
+  });
 });

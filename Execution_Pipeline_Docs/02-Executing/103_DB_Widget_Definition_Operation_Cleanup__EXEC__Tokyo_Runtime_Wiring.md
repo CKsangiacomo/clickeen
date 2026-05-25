@@ -20,10 +20,10 @@ The approved V1 model is:
 
 ## Current Product Path
 
-- Tokyo-worker imports widget source directly in `tokyo-worker/src/domains/widget-catalog.ts`.
+- Tokyo-worker imports widget source through the generated source index `tokyo-worker/src/generated/widget-definition-sources.ts`.
 - Tokyo-worker validates and exposes public widget definition entries through `listWidgetDefinitions()`.
 - Roma loads definitions through `roma/lib/account-instance-direct.ts` using `GET /__internal/widgets/definitions`.
-- Widget source validation is non-mutating through `scripts/validate-widget-source.mjs`.
+- Widget source validation is non-mutating through `scripts/validate-widget-source.mjs`, and `scripts/generate-widget-definition-sources.mjs --check` fails if a widget folder exists without the checked-in source index being regenerated.
 
 ## Cleanup Proof
 
@@ -35,6 +35,7 @@ The approved V1 model is:
 - `tokyo/product/widgets/*/content.json` is absent.
 - `tokyo/product/widgets/*/seo-geo.ts` is absent.
 - `catalog.json` survives only as small repo/static display metadata behind Tokyo widget-definition operations.
+- `tokyo-worker/src/generated/widget-definition-sources.ts` survives only as a build-time import index for bundled worker source. It is not a product catalog, storage artifact, DB authority, or runtime state.
 
 ## Decision
 
@@ -44,6 +45,7 @@ That is the boring, correct split:
 
 - the app asks Tokyo for widget definitions;
 - Tokyo owns the product operation;
+- Tokyo's source imports are generated from widget folders instead of hand-registered per widget;
 - R2 does not carry widget catalog authority;
 - Supabase does not carry static widget software/catalog rows.
 
@@ -51,6 +53,7 @@ That is the boring, correct split:
 
 - `rg -n "__internal/(renders/widgets|widgets/definitions)|listWidgetDefinitions|getWidgetDefinition|resolveWidgetDefaults|widgets/manifest|build-widget-catalog|product/widgets/manifest|catalog\\.json" roma bob tokyo-worker packages scripts documentation/architecture documentation/widgets -g '*.{ts,tsx,mjs,md,json}'`
 - `find tokyo/product/widgets -maxdepth 2 -type f \\( -name 'manifest.json' -o -name 'agent.md' -o -name 'content.json' -o -name 'seo-geo.ts' \\) -print`
+- `node scripts/generate-widget-definition-sources.mjs --check`
 - `pnpm validate:widgets`
 - `pnpm verify:prd103-db-pivot`
 - `pnpm lint`
@@ -66,4 +69,5 @@ The widget definition path is now operation-shaped:
 - Roma does not read a generated catalog artifact.
 - Roma does not read Supabase `widgets`.
 - Tokyo does not build or consume a generated widget manifest as product truth.
+- Tokyo no longer needs runtime edits when a new widget source folder is added; the source index is regenerated and guarded.
 - Widget catalog metadata stays small and static under widget source, with guardrails preventing deleted capability/catalog soup from returning.

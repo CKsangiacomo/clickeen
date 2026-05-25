@@ -1,16 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readWidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
-import type { InstanceTranslationJob } from '@clickeen/ck-contracts/instance-translation-jobs';
 import {
-  buildFaqSavedTextGraph,
-  selectFaqFieldsNeedingTranslation,
-  type FaqLanguageValue,
-} from '@clickeen/ck-contracts/faq-language-values';
+  extractSavedTextFieldsForEditableFields,
+  readWidgetEditableFieldsContract,
+  widgetEditableFieldsContractHash,
+  type SavedTextField,
+} from '@clickeen/ck-contracts/translated-value-primitives';
+import type { InstanceTranslationJob } from '@clickeen/ck-contracts/instance-translation-jobs';
 import { resolveAiAgent } from '@clickeen/ck-contracts/ai';
 import { resolveAiRuntimeBudget, resolveAiRuntimePolicy } from '@clickeen/ck-policy';
 import editableFieldsJson from '../../tokyo/product/widgets/faq/editable-fields.json';
-import { handleInstanceTranslationQueueMessage } from './instance-translation-queue';
+import { handleInstanceTranslationQueueMessage, isNonRetryable } from './instance-translation-queue';
+import { HttpError } from './http';
 import type { Env } from './types';
 
 const ACCOUNT_PUBLIC_ID = 'A1B2C3D4';
@@ -37,42 +38,36 @@ function previousConfig() {
   };
 }
 
-function previousLanguageValues(fields: ReturnType<typeof buildFaqSavedTextGraph>): FaqLanguageValue[] {
-  return fields.map((field) => ({
-    identity: field.identity,
-    locale: 'it',
-    value: `it-old:${field.baseText}`,
-    updatedAt: '2026-05-17T00:00:00.000Z',
-    jobId: 'job-old',
-  }));
-}
-
 function translationJob(): InstanceTranslationJob {
   const before = previousConfig();
   const after = previousConfig();
   after.sections[0].faqs[0].answer = 'https://example.com/new-room-list';
-  const previousSavedTextGraph = buildFaqSavedTextGraph({
+  const previousSavedTextFields = extractSavedTextFieldsForEditableFields({
     contract,
     config: before,
-    instanceId: INSTANCE_ID,
   });
-  const currentSavedTextGraph = buildFaqSavedTextGraph({
+  const currentSavedTextFields = extractSavedTextFieldsForEditableFields({
     contract,
     config: after,
-    instanceId: INSTANCE_ID,
   });
-  const values = previousLanguageValues(previousSavedTextGraph);
-  const changedFields = selectFaqFieldsNeedingTranslation({
-    previousSavedTextGraph,
-    currentSavedTextGraph,
-    previousLanguageValues: values,
-  });
+  const previousByIdentity = new Map(previousSavedTextFields.map((field) => [field.identityKey, field]));
+  const changedFields = currentSavedTextFields.filter((field) => previousByIdentity.get(field.identityKey)?.baseText !== field.baseText);
   const agent = resolveAiAgent('widget.instance.translator');
   assert(agent);
   const ai = resolveAiRuntimePolicy({ entry: agent.entry, policyProfile: 'free' });
   const budget = resolveAiRuntimeBudget(ai);
+  const basis = {
+    fields: currentSavedTextFields
+      .map((field: SavedTextField) => ({
+        identityKey: field.identityKey,
+        fieldPattern: field.fieldPattern,
+        path: field.path,
+        baseText: field.baseText,
+      }))
+      .sort((left, right) => left.identityKey.localeCompare(right.identityKey)),
+  };
   return {
-    v: 1,
+    v: 2,
     kind: 'instance.translation.locale_values',
     jobId: 'job-queue-it',
     accountId: 'acct_test',
@@ -80,7 +75,10 @@ function translationJob(): InstanceTranslationJob {
     userId: 'usr_test',
     instanceId: INSTANCE_ID,
     widgetType: 'faq',
-    widgetContractVersion: 1,
+    widgetContract: {
+      schemaVersion: 1,
+      hash: widgetEditableFieldsContractHash(contract),
+    },
     baseLocale: 'en',
     targetLocale: 'it',
     targetLocales: ['it'],
@@ -88,11 +86,9 @@ function translationJob(): InstanceTranslationJob {
     requestId: 'req_queue_worker',
     ai,
     budgets: { maxTokens: budget.maxTokens, timeoutMs: budget.timeoutMs },
-    previousSavedTextGraph,
-    currentSavedTextGraph,
-    previousLanguageValues: values,
     changedFields,
-    deletedFieldKeys: [],
+    deletedIdentityKeys: [],
+    basis,
   };
 }
 
@@ -187,6 +183,19 @@ test('San Francisco reports non-retryable provider failures to Tokyo before ack'
   assert.equal(failures[0]?.job.jobId, 'job-queue-it');
   assert.equal(failures[0]?.reasonKey, 'instance.translation.provider_unavailable');
   assert.match(String(failures[0]?.detail), /Missing .*API_KEY/);
+});
+
+test('San Francisco treats deterministic translation validation failures as terminal immediately', () => {
+  assert.equal(isNonRetryable(new HttpError(502, {
+    code: 'PROVIDER_ERROR',
+    provider: 'sanfrancisco',
+    message: 'changed translation values missing_path: header.title',
+  })), true);
+  assert.equal(isNonRetryable(new HttpError(502, {
+    code: 'PROVIDER_ERROR',
+    provider: 'sanfrancisco',
+    message: 'Instance Translation Agent returned unknown path: header.internal',
+  })), true);
 });
 
 test('San Francisco reports retry-exhausted terminal failures to Tokyo', async () => {

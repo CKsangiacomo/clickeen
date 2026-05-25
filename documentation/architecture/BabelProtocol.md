@@ -1,6 +1,6 @@
 # Clickeen Babel Protocol
 
-Status: PRD 103_00 product-operation model. Final PRD 103 resume still requires the manual smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+Status: PRD 103_00 product-operation model, superseded for generic translation execution by `Execution_Pipeline_Docs/01-Planning/103J__PRD__Generic_Widget_Translation_System.md`. Final PRD 103 resume still requires the manual smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`.
 
 Babel is Clickeen's translated-locale value protocol for account widgets. It is not a separate translation schema, a runtime fallback system, a selected-pointer system, or a storage locator layer.
 
@@ -8,7 +8,7 @@ Babel is Clickeen's translated-locale value protocol for account widgets. It is 
 
 Builder edits one account-owned widget instance in the account base locale.
 
-After save, translation generation is explicit work from the Translations panel. Roma calls Tokyo once. Tokyo resolves the current instance content, widget editable-field contract, target locales, existing translated values, and delta. San Francisco receives concrete text primitive values and returns concrete translated text primitive values. Tokyo stores translated locale values and materializes public visitor artifacts when publish runs.
+After save, translation generation is explicit work from the Translations panel. Roma calls Tokyo once. Tokyo resolves the current instance content, widget editable-field contract, target locales, existing translated values, stable field identities, and delta. San Francisco receives widget-generic saved text fields and returns translated text primitive values. Tokyo stores translated locale values and materializes public visitor artifacts when publish runs.
 
 ## Source Of Text Truth
 

@@ -1,25 +1,25 @@
 # PRD 103D.0 Execution - FAQ Identity, Diff, And Merge Contract
 
-Status: Complete / Production proof green
+Status: Superseded by 103J / Legacy implementation deleted
 Executed: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 Depends on: PRD 103C.1, PRD 103C
 
 ## What Changed
 
-Added the FAQ language value identity and merge contract in `@clickeen/ck-contracts`.
+This document records the historical FAQ-only proof that taught the system stable repeated-field identity and fail-closed merge semantics. It is no longer an active implementation contract.
 
-The new `buildFaqSavedTextGraph()` extracts FAQ text using stable section/FAQ IDs from the canonical FAQ content contract.
+The former `buildFaqSavedTextGraph()` helper has been deleted. Generic identity-bearing extraction now lives in `packages/ck-contracts/src/translated-value-primitives.ts` and applies to every widget with authored text in `editable-fields.json`.
 
 After PRD 103_01.3a, extraction was rebased to authored FAQ `editable-fields.json`.
 
-The new `buildCurrentLanguageValues()` is the single merge authority for current language values. It carries unchanged translations forward, translates changed/new fields, removes deleted fields, and fails closed on partial missing translation.
+The former FAQ-only `buildCurrentLanguageValues()` helper has been deleted. Tokyo now preserves, removes, and completes translated locale values through the generic saved text identity path.
 
 The first verification run failed because the identity key still included array indexes. That was fixed by normalizing indexed paths back to the canonical contract path in `faqFieldIdentityKey()`. Reorder is now identity-stable.
 
 ## Field Identity
 
-FAQ repeated fields are keyed by:
+The historical FAQ proof keyed repeated fields by:
 
 - `instanceId`
 - `widgetType`
@@ -31,7 +31,7 @@ Concrete array index is display order only. Carried language values adopt the cu
 
 ## Language Values
 
-Language values carry:
+Historical language values carried:
 
 - `locale`
 - `value`
@@ -54,6 +54,6 @@ Fixtures cover:
 - partial missing translation failing closed with previous values untouched
 - duplicate/missing FAQ IDs failing before translation
 
-TPM signoff: Green. A user must not see translations jump to the wrong FAQ when content is reordered.
+TPM signoff: Superseded by 103J. A user must not see translations jump to the wrong repeated item when content is reordered, regardless of widget type.
 
-Dev Manager signoff: Green. Merge semantics have one named authority, sourced from authored `editable-fields.json`.
+Dev Manager signoff: Superseded by 103J. Merge semantics have one named generic authority, sourced from authored `editable-fields.json`.

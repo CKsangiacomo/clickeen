@@ -10,10 +10,14 @@ import {
   renameAccountInstanceDisplay,
   restorePaidTierServing,
   saveAccountInstanceTransition,
+  readAccountInstanceContentDocument,
+  readAccountInstanceCurrentTranslatedLocaleValues,
   unpublishAccountInstanceTransition,
+  writeAccountInstanceTranslatedLocaleValues,
   writeSavedRenderConfig,
 } from './index.ts';
 import { attachTestInstanceRegistry } from './test-instance-registry.ts';
+import { resolveWidgetDefaults } from '../widget-catalog.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
 const INSTANCE_ID = 'Z9Y8X7W6V5';
@@ -25,6 +29,7 @@ type StoredObject =
 
 function createJsonObject(payload: unknown) {
   return {
+    httpEtag: '"test"',
     async json() {
       return payload;
     },
@@ -64,20 +69,21 @@ function createTestEnv() {
         if (options?.httpMetadata?.contentType && !options.httpMetadata.contentType.includes('json')) {
           if (typeof value === 'string') {
             objects.set(key, { kind: 'bytes', body: new TextEncoder().encode(value), httpMetadata: options.httpMetadata, customMetadata: options.customMetadata });
-            return;
+            return { key };
           }
           if (value instanceof Uint8Array) {
             objects.set(key, { kind: 'bytes', body: value, httpMetadata: options.httpMetadata, customMetadata: options.customMetadata });
-            return;
+            return { key };
           }
           if (value instanceof ReadableStream) {
             const response = new Response(value);
             objects.set(key, { kind: 'bytes', body: new Uint8Array(await response.arrayBuffer()), httpMetadata: options.httpMetadata, customMetadata: options.customMetadata });
-            return;
+            return { key };
           }
         }
         const body = typeof value === 'string' ? value : value instanceof Uint8Array ? new TextDecoder().decode(value) : await new Response(value).text();
         objects.set(key, { kind: 'json', payload: JSON.parse(body) });
+        return { key };
       },
       async list({ prefix }: { prefix?: string }) {
         const normalizedPrefix = prefix ?? '';
@@ -228,6 +234,124 @@ test('saved instance source writes FAQ editable text fields as string content', 
   assert.equal(savedSections[0]?.title, '');
   assert.equal(savedFaqs[0]?.question, 'What does it cost?');
   assert.equal(savedFaqs[0]?.answer, '');
+});
+
+test('saved instance source preserves nested repeated translations by identity across reorder', async () => {
+  const { env } = createTestEnv();
+  const config = resolveWidgetDefaults('logoshowcase');
+  assert(config);
+  await writeSavedRenderConfig({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'logoshowcase',
+    config,
+    displayName: 'Logo Showcase',
+    meta: null,
+  });
+  const initialContent = await readAccountInstanceContentDocument({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'logoshowcase',
+  });
+  assert.equal(initialContent.ok, true);
+  await writeAccountInstanceTranslatedLocaleValues({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'logoshowcase',
+    locale: 'it',
+    values: Object.fromEntries(
+      Object.entries(initialContent.ok ? initialContent.value.fields : {}).map(([fieldPath, field]) => [
+        fieldPath,
+        `${field.value} IT`,
+      ]),
+    ),
+  });
+
+  const reordered = structuredClone(config);
+  const strip = (reordered.strips as Array<{ logos: unknown[] }>)[0];
+  strip.logos = [strip.logos[1], strip.logos[0], ...strip.logos.slice(2)];
+  await writeSavedRenderConfig({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'logoshowcase',
+    config: reordered,
+    displayName: 'Logo Showcase',
+    meta: null,
+  });
+
+  const values = await readAccountInstanceCurrentTranslatedLocaleValues({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'logoshowcase',
+    locale: 'it',
+  });
+  assert.equal(values.ok, true);
+  assert.equal(values.ok ? values.value.values['strips.0.logos.0.name'] : '', 'BMW IT');
+  assert.equal(values.ok ? values.value.values['strips.0.logos.1.name'] : '', 'Audi IT');
+});
+
+test('saved instance source removes deleted repeated translations by identity', async () => {
+  const { env } = createTestEnv();
+  const config = resolveWidgetDefaults('logoshowcase');
+  assert(config);
+  await writeSavedRenderConfig({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'logoshowcase',
+    config,
+    displayName: 'Logo Showcase',
+    meta: null,
+  });
+  const initialContent = await readAccountInstanceContentDocument({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'logoshowcase',
+  });
+  assert.equal(initialContent.ok, true);
+  await writeAccountInstanceTranslatedLocaleValues({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'logoshowcase',
+    locale: 'it',
+    values: Object.fromEntries(
+      Object.entries(initialContent.ok ? initialContent.value.fields : {}).map(([fieldPath, field]) => [
+        fieldPath,
+        `${field.value} IT`,
+      ]),
+    ),
+  });
+
+  const deleted = structuredClone(config);
+  const strip = (deleted.strips as Array<{ logos: unknown[] }>)[0];
+  strip.logos = strip.logos.slice(1);
+  await writeSavedRenderConfig({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'logoshowcase',
+    config: deleted,
+    displayName: 'Logo Showcase',
+    meta: null,
+  });
+
+  const values = await readAccountInstanceCurrentTranslatedLocaleValues({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'logoshowcase',
+    locale: 'it',
+  });
+  assert.equal(values.ok, true);
+  assert.equal(values.ok ? values.value.values['strips.0.logos.0.name'] : '', 'BMW IT');
+  assert.equal(Object.values(values.ok ? values.value.values : {}).includes('Audi IT'), false);
 });
 
 test('save updates source and publish materializes public artifacts without publish.json', async () => {

@@ -86,7 +86,7 @@ They are not part of `103_01.1`.
 | `sanfrancisco/src/agents/csPromptPayload.ts` | Historically read `content.json` from Bob widget package and summarized it for Copilot | Copilot context used old file name vocabulary. | GREEN in 103_01.3a: San Francisco receives editable-field contract context. |
 | `sanfrancisco/src/embed-file-writer.ts` | Historically read `product/widgets/${widgetType}/agent.md` as required text but discarded content. | This proved only an existence check, not a product need. | GREEN in 103_01.3c.1: existence check removed. |
 | `packages/ck-contracts/src/*` widget tests | Historically read `manifest.json`, FAQ `content.json`, and generated overlay-shaped widget contracts | 103_01.3a/3b/3c.3 rewrote active contract tests to approved widget source and editable-field behavior. | Keep green; do not restore generated manifest/content/spec overlay contract tests as authority. |
-| `scripts/verify/prd103-faq-vertical-slice.test.ts` | Historically read FAQ `content.json` | 103_01.3a rewrote the verifier to `editable-fields.json`. | Keep green. |
+| Generic PRD103J verifier | Historically this was a FAQ-only verifier | 103J deleted the FAQ-only verifier and replaced it with generic FAQ plus non-FAQ proof from `editable-fields.json`. | Keep generic proof green. |
 | `scripts/verify/prd103-publish-language-files.test.ts` | Historically seeded `agent.md` as widget product source fixture. | Verifier preserved `agent.md` existence as product behavior. | GREEN in 103_01.3c.1: fixture removed and verifier passes. |
 | `scripts/verify/primitive-drift.mjs` | Guard for post-103_01 vocabulary. | 103_01.3c.4 extended it to reject deleted generated widget manifest/catalog route, stale Prague l10n root, deleted widget source files, `spec.overlays.text`, and catalog capabilities. | Keep as non-mutating guard. |
 | Widget/service docs | `documentation/widgets/**`, `documentation/services/**`, `documentation/ai/BUILD_Widget.md`, PRD 103 family docs | FAQ field-contract, generated-manifest, `agent.md`, `seo-geo.ts`, `catalog.json`, and `limits.json` docs were updated through 103_01.3a-103_01.3c.4. | GREEN for widget-source docs. Broader account-instance/public-artifact docs remain owned by 103_02 and 103_00.4. |
@@ -199,7 +199,7 @@ Required before marking this slice green:
 - `pnpm --filter @clickeen/sanfrancisco typecheck` passes;
 - `pnpm --filter @clickeen/tokyo-worker test` passes;
 - `pnpm --filter @clickeen/tokyo-worker typecheck` passes;
-- `pnpm verify:prd103-faq-vertical` passes;
+- `pnpm verify:prd103-publish-language-files` passes;
 - `git diff --check` passes.
 
 Observed green on 2026-05-19:
@@ -334,7 +334,7 @@ Observed green on 2026-05-19:
 - `pnpm --filter @clickeen/sanfrancisco typecheck` passed;
 - `pnpm --filter @clickeen/ck-contracts test` passed;
 - `pnpm --filter @clickeen/ck-contracts typecheck` passed;
-- `pnpm verify:prd103-faq-vertical` passed;
+- `pnpm verify:prd103-publish-language-files` passed;
 - `pnpm verify:prd103-publish-language-files` passed;
 - `pnpm typecheck` passed;
 - `node --check tokyo/dev-server.mjs` passed after removing the old local Prague l10n static route;
@@ -356,7 +356,7 @@ Observed green on 2026-05-19:
 - `pnpm --filter @clickeen/ck-contracts typecheck` passed;
 - `pnpm --filter @clickeen/ck-contracts test` passed;
 - `pnpm --filter @clickeen/sanfrancisco test` passed;
-- `pnpm verify:prd103-faq-vertical` passed;
+- `pnpm verify:prd103-publish-language-files` passed;
 - active code/docs search has no current product authority for `content.json`, `spec.overlays.text`, or generated overlay-shaped widget field contracts outside blocked historical notes and fail-fast guards;
 - `git diff --check` passed.
 
@@ -400,7 +400,7 @@ Required before marking this slice green:
 - `pnpm --filter @clickeen/prague typecheck` passes;
 - `pnpm --filter @clickeen/ck-contracts test` passes;
 - `pnpm --filter @clickeen/ck-contracts typecheck` passes;
-- `pnpm verify:prd103-faq-vertical` passes;
+- `pnpm verify:prd103-publish-language-files` passes;
 - `pnpm verify:prd103-publish-language-files` passes;
 - `pnpm tokyo:r2:sync:check` passes;
 - root `pnpm typecheck` passes after package-script cutover;

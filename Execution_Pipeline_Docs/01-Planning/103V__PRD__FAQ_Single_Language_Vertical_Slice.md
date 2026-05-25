@@ -57,7 +57,7 @@ Out of scope:
 - User clicks Generate in the Translations panel.
 - Clickeen detects only the changed field.
 - Instance Translation Agent translates that field for one target locale.
-- `buildCurrentLanguageValues()` writes a complete current language value set for that locale.
+- Generic Tokyo translated-value completion writes a complete current language value set for that locale.
 - Bob Translations panel shows the translated FAQ text through the editable-fields/current-language-values review path.
 - Preview can use the same current language values.
 - No `spec.json` translation field list, `overlays.text[]`, compiled-control regex, or preview-only state is used as authored text authority.
@@ -65,8 +65,8 @@ Out of scope:
 
 ## Verification
 
-- `pnpm verify:prd103-faq-vertical` must cover one changed FAQ answer from the FAQ `editable-fields.json` contract and saved content values, one Spanish target locale, job-shaped Instance Translation Agent request normalization, complete current language value merge, editable-fields Bob review rendering, preview value resolution, and the missing-translation failure fixture.
-- Because `pnpm verify:prd103-faq-vertical` is a helper/product-contract proof, it is accompanied by product integration tests for panel-owned Generate, Tokyo translated-locale value write/read, San Francisco queue execution, and Bob panel rendering.
+- This FAQ-only proof is superseded by `pnpm verify:prd103-publish-language-files`, which covers FAQ plus non-FAQ widgets through the generic `editable-fields.json` translation path.
+- The generic proof is accompanied by product integration tests for panel-owned Generate, Tokyo translated-locale value write/read, San Francisco queue execution, and Bob panel rendering.
 - `pnpm --filter @clickeen/tokyo-worker test` is green.
 - `pnpm --filter @clickeen/ck-contracts test` is green.
 - `pnpm --filter @clickeen/ck-contracts typecheck` is green.
@@ -74,11 +74,11 @@ Out of scope:
 - `pnpm --filter @clickeen/bob typecheck` is green.
 - `pnpm --filter @clickeen/sanfrancisco typecheck` is green.
 - TPM signoff: the one FAQ edit / one language user story is represented by the vertical verifier.
-- Dev Manager signoff: the thin path uses `editable-fields.json`, `instance.content.json`, `selectFaqFieldsNeedingTranslation()`, Instance Translation Agent job shape, `buildCurrentLanguageValues()`, and Bob current-language review, not a `spec.json` translation field list, `overlays.text[]`, or preview-only state.
+- Dev Manager signoff: this FAQ-only thin path is superseded by the generic 103J path using `editable-fields.json`, `instance.content.json`, generic saved text fields, Instance Translation Agent job shape, Tokyo translated-value completion, and Bob current-language review, not a `spec.json` translation field list, `overlays.text[]`, or preview-only state.
 
 ## Green Evidence
 
-- `pnpm verify:prd103-faq-vertical` - green
+- `pnpm verify:prd103-publish-language-files` - green
 - `pnpm --filter @clickeen/tokyo-worker test` - green; Tokyo Generate queues only the edited FAQ answer for an existing translated locale.
 - `pnpm --filter @clickeen/ck-contracts test` - green
 - `pnpm --filter @clickeen/ck-contracts typecheck` - green

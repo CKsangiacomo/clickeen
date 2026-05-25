@@ -202,7 +202,7 @@ These are the concrete places implementation must audit before moving PRD 103 fo
 | `bob/lib/api/compiled-widget-route.ts` and `bob/lib/types.ts` | Bob exposed `content.json` in compiled widget files before 103_01.3a. | GREEN for FAQ in 103_01.3a: compiled payload now exposes `editable-fields.json`/editable fields vocabulary. Keep payload narrow in later catalog-operation migration. |
 | `bob/lib/i18n/loader.ts` and `bob/lib/compiler/media.ts` | Uses `manifest` for locale and Dieter registries. | Rename only if product-facing vocabulary leaks; deploy artifact registries may stay as implementation details. |
 | `packages/ck-contracts/src/*` widget tests | Tests read widget source folders and `editable-fields.json`, not generated manifest/content files. | GREEN in 103_01.3b for generated manifest removal and GREEN in 103_01.3c.3 for current widget editable-field source validation. |
-| `scripts/verify/prd103-faq-vertical-slice.test.ts` and `scripts/verify/primitive-drift.mjs` | The FAQ vertical verifier now references `editable-fields.json` directly; primitive drift blocks deleted source/path vocabulary. | GREEN through 103_01.3c.4 for editable-field proof and post-source-gate drift guards. |
+| Generic PRD103J verifier and `scripts/verify/primitive-drift.mjs` | The old FAQ-only verifier was deleted. Generic translation proof now references `editable-fields.json` directly across FAQ and non-FAQ widgets; primitive drift blocks deleted source/path vocabulary. | GREEN for editable-field proof and post-source-gate drift guards. |
 | Widget docs under `documentation/widgets/**` and service docs | 103_01.3a/3b/3c updated field-contract, generated-manifest, `agent.md`, SEO/GEO, catalog, and limits docs. | GREEN in 103_01.3c.4 for widget-source documentation; instance/public artifact docs remain under 103_02. |
 
 ## Cutover And Deletion Sequence
@@ -236,7 +236,7 @@ These are the concrete places implementation must audit before moving PRD 103 fo
 | `bob/lib/compiler/media.ts` `DieterManifest` | Naming drift | Uses `manifest` to mean Dieter component/dependency registry. | Rename toward `DieterComponentRegistry`; document deploy artifact status. |
 | Multiple `manifest` meanings across Bob, Dieter, Tokyo widgets, Prague, and asset hashing | Naming drift | Five different catalogs use the same storage-file word, making "manifest" meaningless as architecture vocabulary. | Each surviving catalog must be named by product meaning: locale catalog, Dieter component registry, widget catalog, asset version registry. |
 | `packages/ck-contracts/src/overlay-codebooks.test.ts` | Test drift fixed | Required overlay codebook to match generated manifest. | GREEN in 103_01.3b: asserts coverage against widget source folders. |
-| `packages/ck-contracts/src/faq-language-values.test.ts` | Test drift | Previously read FAQ `content.json` as language-value authority. | GREEN for FAQ in 103_01.3a: reads `editable-fields.json`; continue to assert field contract, not starter/base content. |
+| Generic translated-value primitive tests | Test drift | The deleted FAQ-only test previously read FAQ `content.json` as language-value authority. | GREEN under 103J: tests read `editable-fields.json` and assert the generic field contract, not starter/base content. |
 | `roma/lib/account-instance-translation-jobs.test.ts` | Test drift fixed | Imported generated widget manifest and mocked `/__internal/renders/widgets/catalog.json`. | GREEN in 103_01.3b: mocks `GET /__internal/widgets/definitions`. |
 | `tokyo/product/widgets/{widget}/content.json` | Deleted product authority | The old name implied widget-owned customer content. | GREEN for current widgets: all current editable/translatable field contracts are named `editable-fields.json`. |
 | `tokyo/product/widgets/{widget}/agent.md` | Deleted | Guidance file with no named schema authority. | GREEN in 103_01.3c.1: runtime/docs/verifier dependency removed and validation blocks return. |
@@ -280,11 +280,11 @@ These are the concrete places implementation must audit before moving PRD 103 fo
 | Test/verifier | Required rewrite |
 | --- | --- |
 | `packages/ck-contracts/src/overlay-codebooks.test.ts` | GREEN in 103_01.3b: asserts supported widget source/codebook coverage without reading generated widget manifest as authority. |
-| `packages/ck-contracts/src/faq-language-values.test.ts` | GREEN in 103_01.3a: reads the final editable-fields contract and asserts field paths/roles, not widget-owned content. |
+| Generic translated-value primitive tests | GREEN under 103J: read final editable-fields contracts and assert field paths/roles, not widget-owned content. |
 | `packages/ck-contracts/src/overlay-primitives.test.ts` | GREEN in 103_01.3a: primitive/path assertions align with final editable-field source. |
 | `roma/lib/account-instance-translation-jobs.test.ts` | GREEN in 103_01.3b: mocks widget-definition and translation operations; does not import manifest or catalog JSON route. |
 | `bob/lib/translations-preview.test.ts` | GREEN in 103_01.3a: FAQ field contract import uses `editable-fields.json`. |
-| `scripts/verify/prd103-faq-vertical-slice.test.ts` | GREEN in 103_01.3a for editable-field contract naming; product translation operation naming remains under later 103_02/103V work. |
+| Generic PRD103J verifier | GREEN for editable-field contract naming across FAQ and non-FAQ widgets. |
 | `scripts/verify/primitive-drift.mjs` | GREEN in 103_01.3c.4: guards deleted generated widget manifest/catalog route, stale Prague l10n root, deleted widget source files, `spec.overlays.text`, and catalog capabilities. |
 | Root `pnpm validate:widgets` path | GREEN in 103_01.3b: validates approved source without generated output. |
 

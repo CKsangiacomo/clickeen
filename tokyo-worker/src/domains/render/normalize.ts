@@ -109,10 +109,11 @@ export function normalizeAccountInstanceContentDocument(raw: unknown): AccountIn
   const fields: AccountInstanceContentDocument['fields'] = {};
   for (const [path, rawField] of Object.entries(rawFields)) {
     const field = asRecord(rawField);
-    const value = typeof field?.value === 'string' ? field.value : null;
-    const status = normalizeContentFieldStatus(field?.status);
+    if (!field) return null;
+    const value = typeof field.value === 'string' ? field.value : null;
+    const status = normalizeContentFieldStatus(field.status);
     if (value == null || !status) return null;
-    const rawLocaleStatus = asRecord(field?.localeStatus);
+    const rawLocaleStatus = asRecord(field.localeStatus);
     const localeStatus: Record<string, AccountInstanceContentFieldStatus> = {};
     if (rawLocaleStatus) {
       for (const [locale, rawStatus] of Object.entries(rawLocaleStatus)) {
@@ -121,7 +122,7 @@ export function normalizeAccountInstanceContentDocument(raw: unknown): AccountIn
         localeStatus[locale] = normalized;
       }
     }
-    const rawTranslatedValues = asRecord(field?.translatedValues);
+    const rawTranslatedValues = asRecord(field.translatedValues);
     const translatedValues: Record<string, string> = {};
     if (rawTranslatedValues) {
       for (const [locale, translatedValue] of Object.entries(rawTranslatedValues)) {
@@ -130,6 +131,8 @@ export function normalizeAccountInstanceContentDocument(raw: unknown): AccountIn
       }
     }
     fields[path] = {
+      ...(typeof field.identityKey === 'string' && field.identityKey ? { identityKey: field.identityKey } : {}),
+      ...(typeof field.fieldPattern === 'string' && field.fieldPattern ? { fieldPattern: field.fieldPattern } : {}),
       value,
       status,
       ...(Object.keys(localeStatus).length ? { localeStatus } : {}),

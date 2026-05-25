@@ -19,12 +19,12 @@ Bob renders the translated FAQ value through the production Translations panel r
 
 ## Scope Executed
 
-- Added `selectFaqFieldsNeedingTranslation()` to `ck-contracts` so changed-field selection is a shared FAQ language contract, not private Roma logic.
+- Historically added FAQ-only changed-field selection. That helper has been deleted and superseded by generic saved text extraction.
 - Removed Save-owned translation generation from the accepted product path; panel-owned Generate is the trigger.
 - Added a PRD 103 vertical verifier that proves:
   - one saved FAQ answer change is selected as one whole changed field;
   - the Instance Translation Agent accepts the job-shaped saved-instance request for that field;
-  - `buildCurrentLanguageValues()` writes a complete current value set;
+  - the former FAQ-only merge helper wrote a complete current value set;
   - Bob review shows the translated answer from stored current language values;
   - preview can resolve from the same current language values;
   - missing changed translation fails closed without creating partial current language values.
@@ -39,7 +39,7 @@ Bob renders the translated FAQ value through the production Translations panel r
 
 ## Verification
 
-- `pnpm verify:prd103-faq-vertical` - green
+- Superseded by `pnpm verify:prd103-publish-language-files` - green for FAQ plus non-FAQ generic translation proof
 - `pnpm --filter @clickeen/tokyo-worker test` - green
 - `pnpm --filter @clickeen/ck-contracts test` - green
 - `pnpm --filter @clickeen/ck-contracts typecheck` - green

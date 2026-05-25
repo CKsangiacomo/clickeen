@@ -1,14 +1,18 @@
 # PRD 103D - Changed Field Translation
 
-Status: Reopened / Panel Generate delta proof in progress
+Status: Superseded by PRD 103J / historical delta evidence
 Owner: Product + Architecture
 Date: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 Depends on: PRD 103B, PRD 103D.0
 
+## 103J Supersession Note
+
+This PRD is not executable as written. It remains useful only for whole-field delta semantics, complete locale value maps, stable identity, and panel-owned Generate. Its FAQ-only scope is superseded by `103J__PRD__Generic_Widget_Translation_System.md`. Future execution must apply changed/missing pickup to generic saved text fields for every widget with authored visible text, not only FAQ fields.
+
 ## Purpose
 
-Translate only the FAQ fields that are missing, new, or changed when the user triggers Generate from the Translations panel, then build complete current language values for each enabled language.
+Historical 103D target: translate only the FAQ fields that are missing, new, or changed when the user triggers Generate from the Translations panel, then build complete current language values for each enabled language. PRD 103J replaces this with widget-generic saved text fields for every supported widget.
 
 This is not word-level diffing. If a user changes one word in an answer, Clickeen sends the whole answer field to the Instance Translation Agent. If a user changes a question, Clickeen sends the whole question field. If a user changes a title, Clickeen sends the whole title field.
 
@@ -16,7 +20,7 @@ Initial implementation should prove one target locale first through PRD 103V. Mu
 
 ## Execution Contract
 
-- Executable without drift: changed-field translation must use authored FAQ `content.json` and `buildCurrentLanguageValues()`.
+- Superseded execution contract: changed-field translation used the former FAQ-only helper. Current execution must use generic `editable-fields.json` extraction and Tokyo translated-value merge.
 - New systems are allowed only when they replace full-graph retranslating or duplicate merge behavior.
 - End-to-end accuracy must prove Save base -> Generate -> changed/missing fields -> agent -> complete language values -> Bob review.
 - All systems must say `changed fields`, `deleted fields`, `current language values`, and `locale job`.
@@ -36,14 +40,14 @@ No word-level text diffing, sentence patching, token patching, or partial transl
 ## Flow
 
 ```text
-Save FAQ
+Save widget source instance
   -> persist base locale only
 Generate translations
-  -> extract current saved field graph from content.json
+  -> extract current generic saved text fields from editable-fields.json + saved instance content
   -> compare against the PRD-approved previous/current field authority by stable field identity
   -> identify new/changed/deleted/unchanged fields
   -> run Instance Translation Agent for whole new/changed fields
-  -> buildCurrentLanguageValues()
+  -> build complete current language values
   -> store current language values
 ```
 
@@ -60,16 +64,16 @@ The production path is being cut over from save follow-up to panel-owned Generat
 - Deleted fields are removed from current language values.
 - Reordered unchanged FAQ fields are not translated again.
 - Reordered unchanged FAQ fields keep the correct language value by stable ID.
-- Stored language values are complete for the current FAQ, not partial agent output.
+- Stored language values are complete for the current widget, not partial agent output.
 - Unknown returned fields are rejected.
 - Missing changed fields fail the locale job.
 - Partial agent failure does not overwrite the last good current language set.
-- The first passing proof may be one FAQ field and one target locale, as long as the code path is the real production path.
+- The first passing proof may not stop at FAQ after 103J; generic execution must prove FAQ plus at least one non-FAQ widget on the same code path.
 
 ## Verification
 
 - Fixtures cover new, changed, missing, deleted, unchanged, reordered, and partial failure.
-- A production Generate test covers one FAQ answer edit through the named delta authority and job enqueue.
+- A production Generate test covers whole-field delta through the generic saved text authority and job enqueue, with FAQ plus at least one non-FAQ widget proof.
 - Usage/audit records show only whole changed/new fields were sent to the model.
 - Failed translation attempts must not write partial overlays; Bob only displays overlays Tokyo returns.
 - TPM signoff: user sees dependable translation after Save.

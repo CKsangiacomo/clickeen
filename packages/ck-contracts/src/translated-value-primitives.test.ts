@@ -5,6 +5,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
   buildTranslatedTextValueMap,
+  extractSavedTextFieldsForEditableFields,
   extractTextPrimitiveValuesForEditableFields,
   readWidgetEditableFieldsContract,
   resolveTranslatedValues,
@@ -24,6 +25,14 @@ function readText(relativePath: string): string {
 
 function readFaqEditableFields() {
   return readWidgetEditableFieldsContract(readJson('tokyo/product/widgets/faq/editable-fields.json'));
+}
+
+function readEditableFields(widgetType: string) {
+  return readWidgetEditableFieldsContract(readJson(`tokyo/product/widgets/${widgetType}/editable-fields.json`));
+}
+
+function readSpec(widgetType: string): { defaults: Record<string, unknown> } {
+  return readJson(`tokyo/product/widgets/${widgetType}/spec.json`) as { defaults: Record<string, unknown> };
 }
 
 function readFaqSpec(): { defaults: Record<string, unknown> } {
@@ -111,6 +120,58 @@ test('FAQ primitive graph extracts concrete text paths for every question and an
   assert(paths.includes('sections.0.faqs.3.question'));
   assert(paths.includes('sections.0.faqs.3.answer'));
   assert(!paths.some((itemPath) => itemPath.includes('[]') || itemPath.includes('*')));
+});
+
+test('generic saved text extraction covers FAQ, Countdown, and Logo Showcase contracts', () => {
+  const cases = [
+    { widgetType: 'faq', expected: ['header.title', 'cta.label', 'sections.0.faqs.0.question'] },
+    { widgetType: 'countdown', expected: ['header.title', 'timer.labels.days', 'actions.after.text'] },
+    { widgetType: 'logoshowcase', expected: ['header.title', 'cta.label', 'strips.0.logos.0.name'] },
+  ];
+
+  for (const entry of cases) {
+    const contract = readEditableFields(entry.widgetType);
+    const spec = readSpec(entry.widgetType);
+    const fields = extractSavedTextFieldsForEditableFields({ contract, config: spec.defaults });
+    const paths = new Set(fields.map((field) => field.path));
+    for (const expectedPath of entry.expected) {
+      assert(paths.has(expectedPath), `${entry.widgetType} missing ${expectedPath}`);
+    }
+    assert(fields.every((field) => field.identityKey && field.fieldPattern && field.role));
+  }
+});
+
+test('Logo Showcase generic identity survives nested repeated reorder', () => {
+  const contract = readEditableFields('logoshowcase');
+  const spec = readSpec('logoshowcase');
+  const before = structuredClone(spec.defaults);
+  const after = structuredClone(spec.defaults);
+  const strip = (after.strips as Array<{ logos: unknown[] }>)[0];
+  strip.logos = [strip.logos[1], strip.logos[0], ...strip.logos.slice(2)];
+
+  const beforeFields = extractSavedTextFieldsForEditableFields({ contract, config: before });
+  const afterFields = extractSavedTextFieldsForEditableFields({ contract, config: after });
+  const beforeAudiName = beforeFields.find((field) => field.path === 'strips.0.logos.0.name');
+  const afterAudiName = afterFields.find((field) => field.path === 'strips.0.logos.1.name');
+
+  assert(beforeAudiName);
+  assert(afterAudiName);
+  assert.equal(beforeAudiName.baseText, 'Audi');
+  assert.equal(afterAudiName.baseText, 'Audi');
+  assert.equal(beforeAudiName.identityKey, afterAudiName.identityKey);
+});
+
+test('generic identity fails closed on duplicate nested IDs', () => {
+  const contract = readEditableFields('logoshowcase');
+  const spec = readSpec('logoshowcase');
+  const config = structuredClone(spec.defaults);
+  const logos = (config.strips as Array<{ logos: Array<{ id: string }> }>)[0].logos;
+  logos[1].id = logos[0].id;
+
+  assert.throws(
+    () => extractSavedTextFieldsForEditableFields({ contract, config }),
+    /saved_text_field_identity_duplicate/,
+  );
 });
 
 test('FAQ primitive graph materializes editable text fields as strings', () => {

@@ -1,6 +1,6 @@
 # PRD 103D.0 - FAQ Identity, Diff, And Merge Contract
 
-Status: Complete / Production proof green
+Status: Superseded by PRD 103J / historical proof
 Owner: Product + Architecture
 Date: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
@@ -8,7 +8,7 @@ Depends on: PRD 103C.1, PRD 103C
 
 ## Purpose
 
-Define the data contract that prevents language values from drifting when FAQ content is inserted, deleted, reordered, or translated.
+Define the historical data contract that prevented language values from drifting when FAQ content was inserted, deleted, reordered, or translated. The active implementation is now the generic identity-bearing extraction in `packages/ck-contracts/src/translated-value-primitives.ts`.
 
 Contract helper tests are useful, but this PRD is product-green only because Bob review and Publish now prove they read the same current language values.
 
@@ -37,7 +37,7 @@ Array index is display order only.
 
 ## Merge Authority
 
-Introduce `buildCurrentLanguageValues()` as the only merge authority.
+Historical implementation introduced a FAQ-only merge helper. That helper is deleted; Tokyo's generic translated-value path is now the active merge authority.
 
 Input:
 
@@ -74,7 +74,7 @@ Manual edits are not a second merge/provenance system. Bob edits the selected cu
 - Deleting an FAQ removes only that FAQ's language values.
 - Inserting a FAQ translates only new FAQ fields.
 - Duplicate or missing section/FAQ IDs fail before translation.
-- `buildCurrentLanguageValues()` is idempotent.
+- Generic translated-value merge behavior is idempotent for stable field identities.
 - Publish consumes the same current language values Bob reviews.
 - Manual overlay edit and publish behavior is covered by 103F.
 

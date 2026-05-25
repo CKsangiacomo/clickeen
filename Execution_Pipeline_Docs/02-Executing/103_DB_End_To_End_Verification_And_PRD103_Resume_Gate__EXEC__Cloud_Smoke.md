@@ -152,9 +152,11 @@ Current result after cloud-dev route/DNS setup: HTTP 404 with Tokyo-worker heade
 
 ## Deterministic Readout
 
-The gate is blocked for one remaining reason:
+The gate remains blocked for one product reason:
 
-1. Authenticated Roma human smoke still needs to prove open, save, Generate, translated preview, and publish after the account locale taxonomy migration.
+1. Authenticated Roma human smoke still needs to prove open, save, Generate, translated preview, and publish after the account locale taxonomy migration and PRD 103J generic translation implementation.
+
+The prior architecture blocker - FAQ-specific translation runtime - has been corrected locally. The current implementation uses generic `editable-fields.json` contracts, generic v2 translation jobs, generic San Francisco primitive-field execution, identity-aware translated value preservation, and a generated widget source index. A smoke that proves only FAQ mechanics is still not enough: DB.9 must prove FAQ plus at least one non-FAQ widget on the authenticated Roma/Bob/Tokyo/San Francisco product path.
 
 Green on 2026-05-24: GitHub Actions workflow `supabase migrations deploy` run `26367289969` completed successfully on head `e4c0a56e`. Remote Supabase REST proof returned `accounts.selected_target_locales` and `accounts.locale_policy`; admin account `00000001` has 28 selected target locales.
 
@@ -168,7 +170,24 @@ The current GitHub surface-reachability workflow does not check `dev.clk.live`; 
 
 Deploy success does not mean PRD 103 can resume.
 
-At this stage the DB pivot code is deployed and the public serving bridge has live materialization proof for the seeded cloud-dev instances. PRD 103 still cannot resume until the authenticated Roma product path is smoke-tested end to end.
+At this stage the DB pivot code is deployed and the public serving bridge has live materialization proof for the seeded cloud-dev instances. PRD 103 still cannot resume until the authenticated Roma product path is smoke-tested end to end on FAQ plus at least one non-FAQ widget.
+
+PRD 103J is now implemented locally as the surviving translation boundary:
+
+- every widget declares all authored customer-visible text in `editable-fields.json`, including Content panel text, CTA labels, headers, captions, alt text, timer labels, questions, answers, and any other user-visible authored string or rich text;
+- Tokyo extracts generic saved text fields from the current widget contract and saved instance content;
+- San Francisco translates generic primitive fields, not FAQ graphs;
+- Tokyo writes translated values back by exact path and stable field identity;
+- Bob previews and reviews translated values from the same generic contract;
+- FAQ helpers are internal fixtures/adapters only and must not define the product operation.
+
+Local proof currently includes:
+
+- `pnpm validate:widgets`
+- `pnpm -C tokyo-worker test`
+- `pnpm -C bob test`
+- `pnpm verify:prd103-publish-language-files`
+- `node scripts/verify/prd103j-generic-translation-guard.mjs`
 
 Latest deploy status:
 
@@ -220,7 +239,8 @@ The gate can go green only after all of these are true:
 - Green: FAQ, Countdown, and Logo Showcase seeded instances have materialized public artifacts under the new public artifact model.
 - Green: public smoke succeeds without `--resolve`.
 - Green: private source mirror and forbidden operational public paths return 404.
-- Blocked: authenticated Roma smoke proves FAQ open, save, Generate, translated preview, and publish.
+- Blocked: authenticated Roma smoke proves open, save, Generate, translated preview, and publish on the generic widget translation path, with FAQ plus at least one non-FAQ widget.
+- Green locally: generic widget translation PRD 103J implementation is in the working tree and covered by local tests/guards. It still needs final Product + Architecture acceptance and cloud-dev smoke evidence before DB.9 can close.
 
 ## Allowed Resolution Paths
 

@@ -142,6 +142,33 @@ async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
   );
 }
 
+async function seedSavedWidgetInstance(args: {
+  env: Env;
+  widgetType: string;
+  instanceId?: string;
+  displayName?: string;
+}): Promise<Record<string, string>> {
+  const config = resolveWidgetDefaults(args.widgetType);
+  const widgetDefinition = getWidgetDefinition(args.widgetType);
+  assert(config, `${args.widgetType} defaults missing from widget catalog`);
+  assert(widgetDefinition, `${args.widgetType} widget definition missing`);
+  await writeSavedRenderConfig({
+    env: args.env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: args.instanceId ?? INSTANCE_ID,
+    widgetType: args.widgetType,
+    config,
+    displayName: args.displayName ?? `${args.widgetType} example`,
+    meta: null,
+  });
+  return buildTranslatedTextValueMap(
+    extractTextPrimitiveValuesForEditableFields({
+      contract: widgetDefinition.editableFields,
+      config,
+    }),
+  );
+}
+
 function setFirstFaqAnswer(config: Record<string, unknown>, answer: string): void {
   const sections = config.sections as Array<{ faqs?: Array<Record<string, unknown>> }> | undefined;
   const firstFaq = sections?.[0]?.faqs?.[0];
@@ -175,6 +202,101 @@ test('Tokyo generate queues locale translation jobs from one product operation',
     accountId: ACCOUNT_PUBLIC_ID,
     instanceId: INSTANCE_ID,
   }))?.translationStatus, 'queued');
+});
+
+test('Tokyo generate queues non-FAQ widget translation jobs through the same generic path', async () => {
+  const { env, queued } = createTestEnv();
+  const values = await seedSavedWidgetInstance({ env, widgetType: 'countdown' });
+
+  const generated = await generateInstanceTranslations({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    authz: authz(),
+    baseLocale: 'en',
+    targetLocales: ['it'],
+    requestId: 'req_countdown_generate',
+  });
+
+  assert.equal(generated.ok, true);
+  assert.equal(generated.ok ? generated.accepted : false, true);
+  assert.equal(queued.length, 1);
+  assert.equal(queued[0]?.widgetType, 'countdown');
+  assert.equal(queued[0]?.changedFields.length, Object.keys(values).length);
+  assert(queued[0]?.changedFields.some((field) => field.path === 'timer.labels.days'));
+  assert(queued[0]?.changedFields.every((field) => field.identityKey && field.fieldPattern));
+
+  const job = queued[0];
+  assert(job);
+  const translated = Object.fromEntries(job.changedFields.map((field) => [field.path, `it:${field.baseText}`]));
+  assert.deepEqual(await completeLocaleTranslation({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+    job,
+    values: translated,
+  }), {
+    ok: true,
+    applied: true,
+    locale: 'it',
+  });
+  assert.deepEqual(await readTranslatedLocaleValues({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+  }), {
+    locale: 'it',
+    values: translated,
+  });
+});
+
+test('Tokyo generate completes Logo Showcase nested repeated fields through the same generic path', async () => {
+  const { env, queued } = createTestEnv();
+  await seedSavedWidgetInstance({ env, widgetType: 'logoshowcase' });
+
+  const generated = await generateInstanceTranslations({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    authz: authz(),
+    baseLocale: 'en',
+    targetLocales: ['it'],
+    requestId: 'req_logoshowcase_generate',
+  });
+
+  assert.equal(generated.ok, true);
+  assert.equal(generated.ok ? generated.accepted : false, true);
+  assert.equal(queued.length, 1);
+  const job = queued[0];
+  assert(job);
+  assert.equal(job.widgetType, 'logoshowcase');
+  assert(job.changedFields.some((field) => field.path === 'strips.0.logos.0.name'));
+  assert(job.changedFields.every((field) => field.identityKey && field.fieldPattern));
+
+  const translated = Object.fromEntries(job.changedFields.map((field) => [field.path, `it:${field.baseText}`]));
+  assert.deepEqual(await completeLocaleTranslation({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+    job,
+    values: translated,
+  }), {
+    ok: true,
+    applied: true,
+    locale: 'it',
+  });
+  assert.deepEqual(await readTranslatedLocaleValues({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+  }), {
+    locale: 'it',
+    values: translated,
+  });
 });
 
 test('Tokyo generate supersedes active matching work on an explicit Generate click', async () => {
@@ -271,7 +393,7 @@ test('Tokyo generate supersedes active work after newer saved base text', async 
   assert.equal(restarted.ok, true);
   assert.equal(queued.length, 2);
   assert.notEqual(queued[1]?.jobId, originalJob.jobId);
-  assert(queued[1]?.changedFields.some((field) => field.identity.path === 'sections.0.faqs.0.answer'));
+  assert(queued[1]?.changedFields.some((field) => field.path === 'sections.0.faqs.0.answer'));
 
   assert.deepEqual(await completeLocaleTranslation({
     env,
@@ -667,7 +789,7 @@ test('Tokyo generate queues only changed fields for an existing translated local
   });
   assert.equal(generated.ok, true);
   assert.equal(queued.length, 2);
-  assert.deepEqual(queued[1]?.changedFields.map((field) => field.identity.path), ['sections.0.faqs.0.answer']);
+  assert.deepEqual(queued[1]?.changedFields.map((field) => field.path), ['sections.0.faqs.0.answer']);
 
   await completeLocaleTranslation({
     env,
@@ -743,7 +865,7 @@ test('Tokyo generate treats status-ok without a translated value as missing', as
   });
 
   assert.equal(queued.length, 2);
-  assert.deepEqual(queued[1]?.changedFields.map((field) => field.identity.path), ['sections.0.faqs.0.question']);
+  assert.deepEqual(queued[1]?.changedFields.map((field) => field.path), ['sections.0.faqs.0.question']);
   assert.deepEqual(await listTranslatedLocales({
     env,
     accountId: ACCOUNT_PUBLIC_ID,

@@ -114,7 +114,7 @@ Included:
 - Tokyo owns Generate assembly:
   - reads the current account instance;
   - reads the widget `editable-fields.json` contract through `getWidgetDefinition`;
-  - builds the saved FAQ text graph;
+  - current historical runtime builds the saved FAQ text graph, which PRD 103J supersedes with widget-generic saved text extraction from `editable-fields.json`;
   - reads current translated locale values;
   - resolves the Instance Translation Agent policy/model/budget through `ck-policy`;
   - enqueues `instance.translation.locale_values` jobs on `INSTANCE_TRANSLATION_JOBS`.
@@ -149,7 +149,7 @@ Verification:
 - `pnpm --filter @clickeen/roma typecheck`
 - `pnpm --filter @clickeen/bob test`
 - `pnpm --filter @clickeen/bob typecheck`
-- `pnpm verify:prd103-faq-vertical`
+- `pnpm verify:prd103-publish-language-files`
 - `pnpm --filter @clickeen/sanfrancisco test`
 - `pnpm --filter @clickeen/sanfrancisco typecheck`
 - `node scripts/verify/primitive-drift.mjs`
@@ -254,13 +254,13 @@ Verification:
 - `pnpm --filter @clickeen/sanfrancisco test`
 - `pnpm --filter @clickeen/sanfrancisco typecheck`
 - `pnpm --filter @clickeen/roma lint`
-- `pnpm verify:prd103-faq-vertical`
+- `pnpm verify:prd103-publish-language-files`
 - `pnpm verify:prd103-publish-language-files`
 - `node scripts/verify/primitive-drift.mjs`
 - `git diff --check`
 - `pnpm --filter @clickeen/bob test`
 - `pnpm --filter @clickeen/bob typecheck`
-- `pnpm verify:prd103-faq-vertical`
+- `pnpm verify:prd103-publish-language-files`
 
 ## Slice 103_02.4a - Product Publish Routes And Publish-State Serving
 
@@ -293,7 +293,7 @@ Verification:
 - `pnpm --filter @clickeen/roma typecheck`
 - `pnpm --filter @clickeen/bob test`
 - `pnpm --filter @clickeen/bob typecheck`
-- `pnpm verify:prd103-faq-vertical`
+- `pnpm verify:prd103-publish-language-files`
 - `pnpm verify:prd103-publish-language-files`
 
 ## Slice 103_02.4b - Tokyo-Owned Public Artifact Materialization
@@ -340,7 +340,7 @@ Verification:
 - `pnpm --filter @clickeen/roma typecheck`
 - `pnpm --filter @clickeen/bob test`
 - `pnpm --filter @clickeen/bob typecheck`
-- `pnpm verify:prd103-faq-vertical`
+- `pnpm verify:prd103-publish-language-files`
 - `pnpm verify:prd103-publish-language-files`
 
 ## Slice 103_02.5 - Cleanup And 103_00.4 Handoff

@@ -66,6 +66,8 @@ export type AccountInstanceContentDocument = {
   accountId: string;
   widgetType: string;
   fields: Record<string, {
+    identityKey?: string;
+    fieldPattern?: string;
     value: string;
     status: AccountInstanceContentFieldStatus;
     localeStatus?: Record<string, AccountInstanceContentFieldStatus>;
@@ -93,7 +95,13 @@ export type TranslationGenerationLocaleStatus =
 
 export type TranslationGenerationJobBasis = Array<{
   locale: string;
+  widgetContract?: {
+    schemaVersion: 1;
+    hash: string;
+  };
   fields: Array<{
+    identityKey?: string;
+    fieldPattern?: string;
     path: string;
     baseText: string;
   }>;

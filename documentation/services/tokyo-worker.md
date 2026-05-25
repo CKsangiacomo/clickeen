@@ -2,7 +2,7 @@
 
 STATUS: REFERENCE - MUST MATCH RUNTIME DURING PRD 103 PRE-GATE
 
-PRD 103_00 NOTE: this doc now uses the product-operation vocabulary required before PRD 103 resumes. Tokyo-worker may keep storage objects only as private implementation behind approved product operations. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+PRD 103_00 NOTE: this doc now uses the product-operation vocabulary required before PRD 103 resumes. Tokyo-worker may keep storage objects only as private implementation behind approved product operations. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`.
 
 Tokyo-worker is the Tokyo object PBX for account-owned assets, account widget instances, translated locale value storage, public artifact bytes, and friendly asset serving.
 

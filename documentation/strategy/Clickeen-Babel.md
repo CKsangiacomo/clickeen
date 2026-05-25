@@ -8,8 +8,9 @@
 **PRD 098 implementation truth (May 2026):**
 - Account-widget Babel v1 uses SKU-like `overlayId` objects, not content hashes.
 - Overlay object bodies contain only `{ "v": 1, "values": {} }`.
-- Roma orchestrates save follow-up; San Francisco produces exact text values; Tokyo-worker stores and projects overlay IDs.
+- PRD 103J is the current translation-system authority: Bob starts Generate from the Builder translations panel, Roma forwards to Tokyo, Tokyo owns generation state and widget-generic queue jobs, and San Francisco returns translated saved text fields.
 - Old implementation sketches in this strategy doc that mention ops, text packs, fingerprints, generated readiness state, or Tokyo-worker orchestration are historical and not active architecture.
+- Older implementation sketches that make translation a Roma save follow-up, or make FAQ the only translation product, are historical and not active architecture.
 
 **Key Revisions:**
 - **v1.0:** Initial conservative projections ($40M in 5 years, localization only)
@@ -483,7 +484,7 @@ tokyo/
 
 **Why this matters:**
 - The browser reads generated HTML/CSS/JS from Tokyo/static serving.
-- Bob edits source instance data; agents update derived files asynchronously after save.
+- Bob edits source instance data; product operations update derived files asynchronously from the saved source instance.
 - Account asset replacement is in-place and must not require instance rebuilds.
 - Rollback is trivial (revert to previous hash)
 - Distributed teams can work without conflicts

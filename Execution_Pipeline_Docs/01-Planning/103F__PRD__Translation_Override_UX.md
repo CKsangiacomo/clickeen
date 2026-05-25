@@ -1,6 +1,6 @@
 # PRD 103F - Translation Override UX
 
-Status: Complete / Green after translated-locale reproof
+Status: Complete for manual translated-locale write / superseded where it depends on old readiness inventory
 Owner: Product + Architecture
 Date: 2026-05-20
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
@@ -9,6 +9,10 @@ Depends on: PRD 103D.0, PRD 103D, PRD 103E, PRD 103G, PRD 103H, PRD 103I
 ## Purpose
 
 Let a Bob user edit a translated value in the existing Translations panel and save it back to the same Tokyo translated-locale values Bob already reviews and Publish already consumes.
+
+## 103J Course-Correction Note
+
+The manual write primitive remains useful only if Bob's review rows come from PRD 103J generic editable-fields contracts and Tokyo translated-locale readiness. Any wording below about translated-locale inventory refresh is historical implementation vocabulary, not the generic generation/readiness authority.
 
 This slice is intentionally small. It does not add provenance, review states, audit systems, or a translator workspace.
 
@@ -33,7 +37,7 @@ This slice is intentionally small. It does not add provenance, review states, au
 
 - User can edit a translated value in Bob's Translations panel.
 - Saving writes the edited value into the current translated-locale values for that instance and locale.
-- Bob refreshes translated locale inventory/values after save and keeps showing the edited value.
+- Bob refreshes translated-locale readiness/values after save and keeps showing the edited value.
 - Publish uses the edited translated-locale value.
 - Override save does not read or write Bob draft/base config.
 - Override save cannot create partial translated-locale value maps.

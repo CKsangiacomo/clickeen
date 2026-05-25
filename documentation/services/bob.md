@@ -1,6 +1,6 @@
 # Bob — Editor (Widget Builder)
 
-PRD 103_00 NOTE: this doc now uses the product-operation vocabulary required before PRD 103 resumes. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_00__EXEC__Pre_103_Architecture_Gate.md`.
+PRD 103_00 NOTE: this doc now uses the product-operation vocabulary required before PRD 103 resumes. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`.
 
 Bob is Clickeen’s **editor**: it loads a widget definition (“Widget JSON”) and an instance (“state tree”), renders spec-driven controls, applies strict edits in memory, and streams state updates to a sandboxed preview.
 
@@ -145,7 +145,7 @@ Core base-config lifecycle per open session:
 2. In-memory edits only (no base-config API writes).
 3. One save action on explicit Save, delegated back to the host. In Roma-hosted flows, Roma executes `PUT /api/account/instances/:instanceId` for the one widget document Bob is editing. Builder localization is read-only preview; translation is async follow-up work, not a second save lane inside Bob.
    Bob sends the current document metadata back with the save (`widgetType`, `displayName`, `source`, `meta`, `config`) so Roma/Tokyo do not reconstruct sibling identity from the previously saved row.
-   Base save success clears the base dirty state and keeps the same in-memory widget truth; Bob does not swap in a server-returned replacement copy of the widget. If Tokyo reports translation follow-up acceptance failure, Bob keeps the base save as saved but surfaces a visible translation warning.
+   Base save success clears the base dirty state and keeps the same in-memory widget truth; Bob does not swap in a server-returned replacement copy of the widget. Save does not enqueue translation. Translation generation is explicit user intent from the Translations panel through Roma/Tokyo.
 4. Bob opens the saved document it was given. It does not merge missing widget defaults into account-hosted config on load. If Roma/Tokyo surface malformed saved widget payload, Builder fails open at that boundary instead of healing or masking the bad row.
 5. Bob carries Tokyo-owned `publishStatus` in session metadata only to gate public embed copy. Unpublished instances do not expose live snippets; publish/unpublish remains a Widgets-domain action. Published snippets must carry `accountPublicId + instanceId`.
 6. Bob does not own instance rename. Widgets-domain rename mutates the Tokyo saved document separately, and Bob save does not re-author identity through a second authority.

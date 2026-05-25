@@ -38,7 +38,7 @@ Rules:
 | 103_DB.6 - Widget definition operation cleanup | Green | Ensure Roma asks Tokyo for widget definitions and never reads generated R2 catalog/manifest artifacts; decide whether product registry remains repo/static or DB. Current artifact: `103_DB_Widget_Definition_Operation_Cleanup__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: widget definitions remain repo/static Tokyo source exposed through Tokyo operations; Roma calls `/__internal/widgets/definitions`; generated widget manifest/catalog route and DB `widgets` authority are absent from active product paths. |
 | 103_DB.7 - Publish/materialization bridge | Green | Define and implement the product operation that materializes public artifacts from Tokyo-owned state to R2. Remove file-presence status mechanics. Current artifact: `103_DB_Publish_Materialization_Bridge__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: `instances.publish_status` is product publish state; `clk.live` visitor traffic reads materialized R2 artifacts without Supabase; unpublish removes public artifacts; `applyFreeTierServing` and `restorePaidTierServing` materialize policy-specific serving output without rewriting publish intent. |
 | 103_DB.8 - Migration and toxic-path deletion | Green | Migrate current dev/admin instances and remove old R2 source files/routes/guards/workflows from active product paths. Current artifact: `103_DB_Migration_And_Toxic_Path_Deletion__EXEC__Tokyo_Runtime_Wiring.md`. | Green proof: current dev/admin instances were seeded in 103_DB.3; active runtime no longer writes/reads `instance.json`; `publishStatus` is removed from `instance.config.json`; old helper names are blocked by guard; Tokyo tests/typecheck and PRD guard pass. |
-| 103_DB.9 - End-to-end verification and PRD 103 resume gate | Blocked | Run full targeted verification and human smoke checklist for open/save/generate/preview/publish. Current artifact: `103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`. | Architecture docs are updated; all listed tests pass; cloud-dev public serving smoke passes on canonical `dev.clk.live`; product signs PRD 103 can resume from planning. |
+| 103_DB.9 - End-to-end verification and PRD 103 resume gate | Blocked | Run full targeted verification and human smoke checklist for open/save/generate/preview/publish. Current artifact: `103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`. | Architecture docs are updated; all listed tests pass; cloud-dev public serving smoke passes on canonical `dev.clk.live`; authenticated Roma smoke proves FAQ plus at least one non-FAQ widget; product signs PRD 103 can resume from planning. |
 
 ## Initial Blast-Radius Ledger
 
@@ -64,19 +64,19 @@ Rules:
 | DB-018 | P0 | Supabase environment management | Local Docker/dev scripts blur local, cloud-dev, staging, and production authority | Migrations plus CI/CD to named projects; local Docker removed from agent-run product execution | 103_DB.1B | Green for planning; active `dev-up` Supabase lifecycle quarantined |
 | DB-019 | P0 | Remote DB mutation safety | Agent/developer terminal can mutate/reset the wrong target if env switches are trusted | Remote mutation only through reviewed migration deployment path | 103_DB.1B | Green for planning; `DEV_UP_USE_REMOTE_SUPABASE` helper deleted |
 | DB-020 | P0 | User-created dev data safety | Local reset/migration scripts can destroy user-created dev/admin instances while appearing "safe" | No reset/migrate/seed lifecycle command in product dev scripts; fixtures only in isolated CI | 103_DB.1B | Green for planning; active `dev-up` refuses to run Supabase lifecycle |
-| DB-021 | P0 | Database product model | Current schema is accumulated mechanisms rather than Accounts/Users/Instance State | Complete remote object inventory first; approved simple table/column model before migrations | 103_DB.1 / 103_DB.1B | Open |
-| DB-022 | P0 | Supabase stale tables | `widgets` and other stale/bootstrap tables survive as security and confusion risk | Full remote object map; explicit keep/merge/delete table map; `widgets` deleted unless impossible evidence appears | 103_DB.1 / 103_DB.1B | Open |
-| DB-023 | P0 | Account identity | UUID `accounts.id` and compact `accounts.public_id` both survive as product identities | One compact `accounts.id` used by Berlin/Roma/Tokyo/R2/public paths | 103_DB.1B | Open |
-| DB-024 | P1 | Platform/internal account flag | `is_platform` can become admin/billing/policy bypass soup | Delete from core `accounts`; model explicit capability/config only if proven | 103_DB.1B | Open |
-| DB-025 | P0 | Account deletion | `closed` account status could retain free-account rows and owned storage forever | Account deletion is an operation with cleanup, not a retained status | 103_DB.1B | Open |
-| DB-026 | P0 | Entitlement policy | Tier limits duplicated into account columns or route code | `ck-policy` is proven/fixed as the single entitlement resolver | 103_DB.1B | Open |
+| DB-021 | P0 | Database product model | Current schema is accumulated mechanisms rather than Accounts/Users/Instance State | Complete remote object inventory first; approved simple table/column model before migrations | 103_DB.1 / 103_DB.1B | Green for planning |
+| DB-022 | P0 | Supabase stale tables | `widgets` and other stale/bootstrap tables survive as security and confusion risk | Full remote object map; explicit keep/merge/delete table map; `widgets` deleted unless impossible evidence appears | 103_DB.1 / 103_DB.1B | Green |
+| DB-023 | P0 | Account identity | UUID `accounts.id` and compact `accounts.public_id` both survive as product identities | One compact `accounts.id` used by Berlin/Roma/Tokyo/R2/public paths | 103_DB.1B | Green |
+| DB-024 | P1 | Platform/internal account flag | `is_platform` can become admin/billing/policy bypass soup | Delete from core `accounts`; model explicit capability/config only if proven | 103_DB.1B | Green |
+| DB-025 | P0 | Account deletion | `closed` account status could retain free-account rows and owned storage forever | Account deletion is an operation with cleanup, not a retained status | 103_DB.1B | Green for planning |
+| DB-026 | P0 | Entitlement policy | Tier limits duplicated into account columns or route code | `ck-policy` is proven/fixed as the single entitlement resolver | 103_DB.1B | Green |
 | DB-027 | P1 | Instance display label | Instance display/name/title duplicated into registry DB row | Label remains in Tokyo-owned payload/config; registry row stays control-only | 103_DB.3 | Green |
-| DB-028 | P1 | Account history | Tier/status history as DB table or account columns | Cold account-owned `account-history.jsonl`; current DB row stays tiny | 103_DB.1B | Open |
-| DB-029 | P0 | User core model | `user_profiles` mixes login, profile, preference, provider, and account state | `users` row owns one account association, role, accepted/current profile fields, and creation timestamp | 103_DB.1A / 103_DB.1B | Open |
-| DB-030 | P0 | Multi-account user bomb | `account_members`/membership model can allow one user to belong to multiple accounts | Delete core `account_members`; one user belongs to one account; existing-email invite/add rejects | 103_DB.1A / 103_DB.1B | Open |
-| DB-031 | P1 | Contact verification scaffolding | Contact methods/verifications survive as permanent user truth | Delete/defer unless a separate product PRD proves the flow | 103_DB.1A / 103_DB.1B | Open |
-| DB-032 | P0 | Provider vocabulary bomb | Login method, connector, integration, provider account, and widget source can collapse into one ambiguous blob | Lock vocabulary: Login Method, Account Connection, Connection Resource, Widget Source. Login can suggest; connector must explicitly authorize. | 103_DB.1A / 103_DB.1B | Open |
-| DB-033 | P0 | Invite Members lifecycle | Invitations left conditional or folded into membership can recreate account switching/membership ambiguity | `account_invitations` is V1 Berlin-owned invitation lifecycle; accepting never attaches an existing user to a second account | 103_DB.1A | Open |
+| DB-028 | P1 | Account history | Tier/status history as DB table or account columns | Cold account-owned `account-history.jsonl`; current DB row stays tiny | 103_DB.1B | Green for planning |
+| DB-029 | P0 | User core model | `user_profiles` mixes login, profile, preference, provider, and account state | `users` row owns one account association, role, accepted/current profile fields, and creation timestamp | 103_DB.1A / 103_DB.1B | Green |
+| DB-030 | P0 | Multi-account user bomb | `account_members`/membership model can allow one user to belong to multiple accounts | Delete core `account_members`; one user belongs to one account; existing-email invite/add rejects | 103_DB.1A / 103_DB.1B | Green |
+| DB-031 | P1 | Contact verification scaffolding | Contact methods/verifications survive as permanent user truth | Delete/defer unless a separate product PRD proves the flow | 103_DB.1A / 103_DB.1B | Green for planning |
+| DB-032 | P0 | Provider vocabulary bomb | Login method, connector, integration, provider account, and widget source can collapse into one ambiguous blob | Lock vocabulary: Login Method, Account Connection, Connection Resource, Widget Source. Login can suggest; connector must explicitly authorize. | 103_DB.1A / 103_DB.1B | Green |
+| DB-033 | P0 | Invite Members lifecycle | Invitations left conditional or folded into membership can recreate account switching/membership ambiguity | `account_invitations` is V1 Berlin-owned invitation lifecycle; accepting never attaches an existing user to a second account | 103_DB.1A | Green |
 
 ## Slice 103_DB.0 Tasks
 
@@ -165,6 +165,12 @@ Current 103_DB.1B readout:
 
 Current executable slice is `103_DB.9 - End-to-end verification and PRD 103 resume gate`.
 
+Current 103J readout:
+
+- Green locally: generic saved-text extraction, generic v2 queue jobs, generic Tokyo Generate/complete, generic San Francisco queue execution, Bob no-text Generate boundary, and generated widget source-index registration are implemented in the working tree.
+- Green locally: FAQ, Countdown, and Logo Showcase publish verification now runs through the DB-backed instance registry and current translated value maps.
+- Blocked: authenticated Roma cloud-dev smoke still has to prove open, save, Generate, translated preview, and publish with FAQ plus at least one non-FAQ widget before DB.9 can close.
+
 Current 103_DB.9 readout:
 
 - Green: account locale taxonomy fix `caf522f9` is pushed and Supabase migration `20260523150000__prd103_account_locale_settings_taxonomy.sql` was deployed through reviewed workflow run `26367289969` on head `e4c0a56e`.
@@ -193,4 +199,5 @@ PRD 103 may move back to execution only when:
 - public embeds still serve from R2/CDN;
 - Supabase schema changes are managed by migrations plus CI/CD to named projects, with local Docker Supabase removed from agent-run product execution;
 - Roma/Bob/Tokyo/San Francisco product paths speak product operations backed by DB state;
-- human smoke proves open, save, Generate, translation preview, and publish on a real FAQ instance.
+- generic widget translation PRD 103J is approved, implemented, and verified locally;
+- human smoke proves open, save, Generate, translation preview, and publish on the generic widget translation path, with FAQ plus at least one non-FAQ widget. FAQ-only smoke cannot resume PRD 103 for a multi-widget Builder product.

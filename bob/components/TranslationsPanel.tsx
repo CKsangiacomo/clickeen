@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   normalizeCanonicalLocalesFile,
   normalizeLocaleToken,
@@ -110,6 +110,7 @@ export function buildTranslationValuesAfterEdit(args: {
 export function buildGenerateTranslationsButtonState(args: {
   instanceId: string;
   expectedTranslationsCount: number;
+  hasTranslatableFields: boolean;
   isDirty: boolean;
   isSaving: boolean;
   isStarting: boolean;
@@ -136,6 +137,13 @@ export function buildGenerateTranslationsButtonState(args: {
   }
   if (args.expectedTranslationsCount <= 0) {
     return { disabled: true, label: 'Generate translations', message: null };
+  }
+  if (!args.hasTranslatableFields) {
+    return {
+      disabled: true,
+      label: 'Generate translations',
+      message: 'This widget has no translation fields.',
+    };
   }
   return { disabled: false, label: 'Generate translations', message: null };
 }
@@ -241,8 +249,12 @@ export function isTranslationGenerationAccepted(payload: unknown): boolean {
 export function resolveTranslationGenerationStatusMessage(generation: TranslationGenerationSummary): string {
   const readyCount = generation.currentReadyLocales.length;
   const targetCount = generation.targetLocales.length || generation.totalLocales;
-  if (generation.status === 'queued') return `Queued ${readyCount} of ${targetCount} translations.`;
-  if (generation.status === 'running') return `Generating ${readyCount} of ${targetCount} translations.`;
+  if (generation.status === 'queued') return 'Preparing translations.';
+  if (generation.status === 'running') {
+    return readyCount > 0
+      ? `Generating translations. ${readyCount} of ${targetCount} languages ready.`
+      : 'Generating translations.';
+  }
   if (generation.status === 'completed') return 'Translations ready.';
   if (generation.status === 'failed') {
     const failed = generation.failedLocales.length;
@@ -278,6 +290,22 @@ export function resolveGenerateTranslationsMessage(payload: unknown): string {
   }
   if (generated <= 0) return 'No translations to generate.';
   return `Generated ${generated} translations.`;
+}
+
+export function buildTranslationGenerationPanelState(payload: unknown): {
+  isGenerating: boolean;
+  message: string | null;
+  shouldRefreshTranslations: boolean;
+} | null {
+  const generation = normalizeTranslationGenerationFromPayload(payload);
+  if (!generation) return null;
+  const isGenerating = isActiveTranslationGeneration(generation);
+  const shouldShowMessage = isGenerating || generation.status === 'failed' || generation.status === 'superseded';
+  return {
+    isGenerating,
+    message: shouldShowMessage ? resolveTranslationGenerationStatusMessage(generation) : null,
+    shouldRefreshTranslations: isGenerating || generation.status === 'completed' || generation.currentReadyLocales.length > 0,
+  };
 }
 
 function resolveGenerateTranslationsError(payload: unknown): string {
@@ -390,6 +418,15 @@ export function TranslationsPanel({
   const [isStartingTranslations, setIsStartingTranslations] = useState(false);
   const [isGeneratingTranslations, setIsGeneratingTranslations] = useState(false);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
+  const initialGenerationReadInstanceId = useRef('');
+  const readTranslationGenerationRef = useRef(readTranslationGeneration);
+  const onRequestTranslationsRefreshRef = useRef(onRequestTranslationsRefresh);
+  useEffect(() => {
+    readTranslationGenerationRef.current = readTranslationGeneration;
+  }, [readTranslationGeneration]);
+  useEffect(() => {
+    onRequestTranslationsRefreshRef.current = onRequestTranslationsRefresh;
+  }, [onRequestTranslationsRefresh]);
   const baseLocale = translationSetup?.baseLocale || translatedLocales?.baseLocale || '';
   const localeState = useMemo(
     () =>
@@ -447,6 +484,7 @@ export function TranslationsPanel({
   const generateButton = buildGenerateTranslationsButtonState({
     instanceId,
     expectedTranslationsCount: localeState.expectedTranslationsCount,
+    hasTranslatableFields: Boolean(session.compiled?.editableFields?.fields?.length),
     isDirty: session.isDirty,
     isSaving: session.isSaving,
     isStarting: isStartingTranslations,
@@ -476,6 +514,33 @@ export function TranslationsPanel({
       setIsStartingTranslations(false);
     }
   };
+  useEffect(() => {
+    if (!instanceId || initialGenerationReadInstanceId.current === instanceId) return;
+    let cancelled = false;
+    initialGenerationReadInstanceId.current = instanceId;
+    readTranslationGenerationRef.current({ instanceId })
+      .then((response) => {
+        if (cancelled) return;
+        if (!response.ok) {
+          throw new Error(resolveGenerateTranslationsError(response.json));
+        }
+        const panelState = buildTranslationGenerationPanelState(response.json);
+        if (!panelState) return;
+        setGenerateMessage(panelState.message);
+        setIsGeneratingTranslations(panelState.isGenerating);
+        if (panelState.shouldRefreshTranslations) {
+          onRequestTranslationsRefreshRef.current();
+        }
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setGenerateMessage(error instanceof Error ? error.message : 'Translation generation state could not be read.');
+        setIsGeneratingTranslations(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [instanceId]);
   useEffect(() => {
     if (!isGeneratingTranslations || !instanceId) return;
 

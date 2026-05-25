@@ -3,9 +3,7 @@ import {
   INSTANCE_TRANSLATION_AGENT_ID,
   type InstanceTranslationJob,
 } from '@clickeen/ck-contracts/instance-translation-jobs';
-import {
-  type FaqSavedTextField,
-} from '@clickeen/ck-contracts/faq-language-values';
+import type { SavedTextField } from '@clickeen/ck-contracts/translated-value-primitives';
 import { validateTranslatedValuesForProducerItems } from '@clickeen/ck-contracts/translated-value-primitives';
 import { HttpError } from './http';
 import {
@@ -20,12 +18,12 @@ import type { AIGrant, Env, Usage } from './types';
 type QueueMessage = Message<unknown>;
 const INSTANCE_TRANSLATION_CONCURRENCY = 4;
 
-function fieldToTranslationItem(field: FaqSavedTextField) {
+function fieldToTranslationItem(field: SavedTextField) {
   return {
-    path: field.identity.path,
+    path: field.path,
     type: field.type,
     label: field.label,
-    role: field.identity.role,
+    role: field.role,
     value: field.baseText,
   };
 }
@@ -78,7 +76,7 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
         })
       : { v: 1 as const, values: {} };
 
-  const changedByPath = new Map(job.changedFields.map((field) => [field.identity.path, field]));
+  const changedByPath = new Map(job.changedFields.map((field) => [field.path, field]));
   for (const path of Object.keys(produced.values)) {
     if (!changedByPath.has(path)) {
       throw new HttpError(502, {
@@ -126,10 +124,8 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
       },
       input: {
         ...job,
-        previousSavedTextGraph: `[${job.previousSavedTextGraph.length} fields]`,
-        currentSavedTextGraph: `[${job.currentSavedTextGraph.length} fields]`,
-        previousLanguageValues: `[${job.previousLanguageValues.length} values]`,
         changedFields: `[${job.changedFields.length} fields]`,
+        basis: `[${job.basis.fields.length} fields]`,
       },
       result: {
         operation: 'translate_saved_instance',
@@ -160,13 +156,18 @@ function modelLabel(job: InstanceTranslationJob): string {
   return `${job.ai.policyProfile}:${model.provider}:${model.model}`;
 }
 
-function isNonRetryable(error: unknown): boolean {
+export function isNonRetryable(error: unknown): boolean {
   if (!(error instanceof HttpError)) return false;
   if (error.status === 400 || error.status === 403 || error.status === 404 || error.status === 422) {
     return true;
   }
   const message = String(error.error?.message || '').toLowerCase();
   return (
+    message.includes('unknown path') ||
+    message.includes('translation values') ||
+    message.includes('missing_path') ||
+    message.includes('extra_path') ||
+    message.includes('invalid_value') ||
     message.includes('missing deepseek_api_key') ||
     message.includes('missing openai_api_key')
   );
@@ -227,10 +228,8 @@ async function reportTerminalFailureToTokyo(args: {
       },
       input: {
         ...args.job,
-        previousSavedTextGraph: `[${args.job.previousSavedTextGraph.length} fields]`,
-        currentSavedTextGraph: `[${args.job.currentSavedTextGraph.length} fields]`,
-        previousLanguageValues: `[${args.job.previousLanguageValues.length} values]`,
         changedFields: `[${args.job.changedFields.length} fields]`,
+        basis: `[${args.job.basis.fields.length} fields]`,
       },
       result: {
         operation: 'translate_saved_instance',

@@ -5,6 +5,10 @@ Executed: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 Depends on: PRD 103C.1
 
+## 103J Course-Correction Note
+
+This execution is not the current translation product boundary. Its useful surviving principle is that agents must consume declared widget product text instead of ad hoc path heuristics. Current translation authority is `103J__PRD__Generic_Widget_Translation_System.md`: every widget declares authored customer-visible text in `editable-fields.json`, Tokyo extracts generic saved text fields from saved instance content, and FAQ-specific fields are fixture evidence only.
+
 ## What Changed
 
 Copilot and translation were made to consume the same FAQ content fields contract. That is now superseded by the corrected model: Translation consumes the FAQ `editable-fields.json` contract plus saved instance content; Copilot consumes the whole widget package.
@@ -31,7 +35,7 @@ This is used by:
 - Bob manual edit coverage checks
 - San Francisco FAQ copilot prompt context
 - Bob compiled widget payload and Copilot request payload
-- Roma save follow-up translation item creation
+- historical Roma save follow-up translation item creation
 - San Francisco translation prompt payload
 - Tokyo/Roma overlay validation through the derived primitive graph
 

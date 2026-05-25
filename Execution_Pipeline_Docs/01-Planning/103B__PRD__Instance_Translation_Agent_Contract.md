@@ -6,6 +6,10 @@ Date: 2026-05-17
 Parent: PRD 103 - Instance Translation Agent Teardown And Rebuild
 Depends on: PRD 103C.1, PRD 103C, PRD 103D.0
 
+## 103J Supersession Note
+
+This PRD remains useful for the job-shaped agent boundary and for rejecting loose text-value requests. Any FAQ-specific request/result wording is superseded by `103J__PRD__Generic_Widget_Translation_System.md`. Future execution must use a widget-generic saved text field contract, not FAQ saved text graphs.
+
 ## Purpose
 
 Replace loose text production with a real product agent contract:
@@ -76,7 +80,7 @@ translated text payload
 - The operation is named `translate saved instance` or equivalent product language.
 - The agent receives field identity, field intent, rich/plain text type, and surrounding FAQ context where needed.
 - The agent can receive existing language values for unchanged paths.
-- The agent output can be passed to `buildCurrentLanguageValues()`.
+- The agent output can be passed to the generic Tokyo translated-value completion path.
 - Product logs/errors include agent ID, job ID, account ID, instance ID, target locale, policy version, provider, and model.
 - Old text-value route behavior is deleted from the active API.
 - No new queue, scheduler, or orchestration framework is introduced unless required to execute the single-language FAQ vertical slice correctly.

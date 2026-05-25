@@ -9,15 +9,10 @@ import type {
 import {
   readWidgetEditableFieldsContract,
 } from "@clickeen/ck-contracts/translated-value-primitives";
-import countdownCatalog from "../../../tokyo/product/widgets/countdown/catalog.json";
-import countdownEditableFields from "../../../tokyo/product/widgets/countdown/editable-fields.json";
-import countdownSpec from "../../../tokyo/product/widgets/countdown/spec.json";
-import faqCatalog from "../../../tokyo/product/widgets/faq/catalog.json";
-import faqEditableFields from "../../../tokyo/product/widgets/faq/editable-fields.json";
-import faqSpec from "../../../tokyo/product/widgets/faq/spec.json";
-import logoshowcaseCatalog from "../../../tokyo/product/widgets/logoshowcase/catalog.json";
-import logoshowcaseEditableFields from "../../../tokyo/product/widgets/logoshowcase/editable-fields.json";
-import logoshowcaseSpec from "../../../tokyo/product/widgets/logoshowcase/spec.json";
+import {
+  WIDGET_DEFINITION_SOURCES,
+  type WidgetDefinitionSource,
+} from "../generated/widget-definition-sources";
 
 export type WidgetDefinition = {
   widgetType: string;
@@ -26,13 +21,6 @@ export type WidgetDefinition = {
   description: string;
   category: string;
   editableFields: WidgetEditableFieldsContract;
-};
-
-type WidgetDefinitionSource = {
-  widgetType: string;
-  spec: unknown;
-  catalog: unknown;
-  editableFields: unknown;
 };
 
 type WidgetDefinitionInternal = WidgetDefinition & {
@@ -46,27 +34,6 @@ function cloneRecord(value: Record<string, unknown>): Record<string, unknown> {
     ? (structuredClone(value) as Record<string, unknown>)
     : (JSON.parse(JSON.stringify(value)) as Record<string, unknown>);
 }
-
-const WIDGET_DEFINITION_SOURCES: WidgetDefinitionSource[] = [
-  {
-    widgetType: "faq",
-    spec: faqSpec,
-    catalog: faqCatalog,
-    editableFields: faqEditableFields,
-  },
-  {
-    widgetType: "countdown",
-    spec: countdownSpec,
-    catalog: countdownCatalog,
-    editableFields: countdownEditableFields,
-  },
-  {
-    widgetType: "logoshowcase",
-    spec: logoshowcaseSpec,
-    catalog: logoshowcaseCatalog,
-    editableFields: logoshowcaseEditableFields,
-  },
-];
 
 function asNonEmptyString(value: unknown): string | null {
   const normalized = typeof value === "string" ? value.trim() : "";
