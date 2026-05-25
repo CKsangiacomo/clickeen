@@ -30,10 +30,12 @@ type TranslationGenerationStatus =
   | 'superseded';
 
 type TranslationGenerationSummary = {
+  v?: 2;
   instanceId: string;
   baseLocale: string;
   targetLocales: string[];
   status: TranslationGenerationStatus;
+  active: boolean;
   requestedAt: string | null;
   updatedAt: string | null;
   totalLocales: number;
@@ -45,9 +47,36 @@ type TranslationGenerationSummary = {
   outOfSyncLocales: string[];
   isCurrentBaseContent: boolean;
   baseContentMarker?: string;
+  generationRequestMarker?: string;
+  locales: TranslationProductLocaleState[];
   jobId?: string;
   reasonKey?: string;
   detail?: string;
+};
+
+type TranslationProductLocaleState = {
+  locale: string;
+  state: 'missing' | 'generating' | 'inSync' | 'outOfSync' | 'failed';
+  reviewable: boolean;
+  reasonKey?: string;
+  detail?: string;
+};
+
+type TranslationPanelProductState = {
+  primaryState:
+    | 'loading'
+    | 'unsaved'
+    | 'unavailable'
+    | 'ready'
+    | 'generating'
+    | 'baseChangedWhileGenerating'
+    | 'baseChanged'
+    | 'partialFailure'
+    | 'failed'
+    | 'available';
+  primaryMessage: string | null;
+  canGenerate: boolean;
+  reviewableLocales: string[];
 };
 
 function resolveLocaleLabel(locale: string): string {
@@ -168,6 +197,36 @@ function normalizeGenerationStatus(value: unknown): TranslationGenerationStatus 
     : null;
 }
 
+function normalizeProductLocaleState(value: unknown): TranslationProductLocaleState | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const payload = value as Record<string, unknown>;
+  const locale = typeof payload.locale === 'string' ? payload.locale.trim() : '';
+  const state = payload.state === 'missing' ||
+    payload.state === 'generating' ||
+    payload.state === 'inSync' ||
+    payload.state === 'outOfSync' ||
+    payload.state === 'failed'
+    ? payload.state
+    : null;
+  if (!locale || !state || typeof payload.reviewable !== 'boolean') return null;
+  return {
+    locale,
+    state,
+    reviewable: payload.reviewable,
+    ...(typeof payload.reasonKey === 'string' && payload.reasonKey.trim() ? { reasonKey: payload.reasonKey.trim() } : {}),
+    ...(typeof payload.detail === 'string' && payload.detail.trim() ? { detail: payload.detail.trim() } : {}),
+  };
+}
+
+function normalizeProductLocaleStates(value: unknown): TranslationProductLocaleState[] | null {
+  if (value == null) return [];
+  if (!Array.isArray(value)) return null;
+  const locales = value
+    .map((entry) => normalizeProductLocaleState(entry))
+    .filter((entry): entry is TranslationProductLocaleState => Boolean(entry));
+  return locales.length === value.length ? locales : null;
+}
+
 function normalizeNullableString(value: unknown): string | null {
   if (value == null) return null;
   return typeof value === 'string' && value.trim() ? value.trim() : null;
@@ -180,12 +239,13 @@ export function normalizeTranslationGenerationSummary(raw: unknown): Translation
   const baseLocale = typeof payload.baseLocale === 'string' ? payload.baseLocale.trim() : '';
   const targetLocales = normalizeStringArray(payload.targetLocales);
   const status = normalizeGenerationStatus(payload.status);
-  const completedLocales = normalizeStringArray(payload.completedLocales);
-  const failedLocales = normalizeStringArray(payload.failedLocales);
-  const supersededLocales = normalizeStringArray(payload.supersededLocales);
-  const pendingLocales = normalizeStringArray(payload.pendingLocales);
-  const currentReadyLocales = normalizeStringArray(payload.currentReadyLocales);
+  const completedLocales = normalizeStringArray(payload.completedLocales) ?? [];
+  const failedLocales = normalizeStringArray(payload.failedLocales) ?? [];
+  const supersededLocales = normalizeStringArray(payload.supersededLocales) ?? [];
+  const pendingLocales = normalizeStringArray(payload.pendingLocales) ?? [];
+  const currentReadyLocales = normalizeStringArray(payload.currentReadyLocales) ?? [];
   const outOfSyncLocales = normalizeStringArray(payload.outOfSyncLocales) ?? [];
+  const locales = normalizeProductLocaleStates(payload.locales);
   const totalLocales = typeof payload.totalLocales === 'number' && Number.isFinite(payload.totalLocales)
     ? Math.max(0, Math.floor(payload.totalLocales))
     : null;
@@ -195,19 +255,17 @@ export function normalizeTranslationGenerationSummary(raw: unknown): Translation
     !targetLocales ||
     !status ||
     totalLocales == null ||
-    !completedLocales ||
-    !failedLocales ||
-    !supersededLocales ||
-    !pendingLocales ||
-    !currentReadyLocales
+    !locales
   ) {
     return null;
   }
   return {
+    ...(payload.v === 2 ? { v: 2 } : {}),
     instanceId,
     baseLocale,
     targetLocales,
     status,
+    active: typeof payload.active === 'boolean' ? payload.active : status === 'queued' || status === 'running',
     requestedAt: normalizeNullableString(payload.requestedAt),
     updatedAt: normalizeNullableString(payload.updatedAt),
     totalLocales,
@@ -219,6 +277,8 @@ export function normalizeTranslationGenerationSummary(raw: unknown): Translation
     outOfSyncLocales,
     isCurrentBaseContent: payload.isCurrentBaseContent !== false,
     ...(typeof payload.baseContentMarker === 'string' && payload.baseContentMarker.trim() ? { baseContentMarker: payload.baseContentMarker.trim() } : {}),
+    ...(typeof payload.generationRequestMarker === 'string' && payload.generationRequestMarker.trim() ? { generationRequestMarker: payload.generationRequestMarker.trim() } : {}),
+    locales,
     ...(typeof payload.jobId === 'string' && payload.jobId.trim() ? { jobId: payload.jobId.trim() } : {}),
     ...(typeof payload.reasonKey === 'string' && payload.reasonKey.trim() ? { reasonKey: payload.reasonKey.trim() } : {}),
     ...(typeof payload.detail === 'string' && payload.detail.trim() ? { detail: payload.detail.trim() } : {}),
@@ -237,7 +297,115 @@ function normalizeTranslationGenerationFromPayload(payload: unknown): Translatio
 }
 
 export function isActiveTranslationGeneration(generation: TranslationGenerationSummary | null): boolean {
-  return generation?.status === 'queued' || generation?.status === 'running';
+  return Boolean(generation?.active || generation?.status === 'queued' || generation?.status === 'running');
+}
+
+function reviewableLocalesForGeneration(generation: TranslationGenerationSummary | null): string[] {
+  return (generation?.locales ?? [])
+    .filter((locale) => locale.reviewable && locale.state === 'inSync')
+    .map((locale) => locale.locale)
+    .sort((left, right) => left.localeCompare(right));
+}
+
+export function resolveTranslationPanelProductState(args: {
+  instanceId: string;
+  expectedTranslationsCount: number;
+  hasTranslatableFields: boolean;
+  isDirty: boolean;
+  isSaving: boolean;
+  generationLoaded: boolean;
+  generation: TranslationGenerationSummary | null;
+  operationError?: string | null;
+}): TranslationPanelProductState {
+  const reviewableLocales = reviewableLocalesForGeneration(args.generation);
+  if (args.isDirty || args.isSaving) {
+    return {
+      primaryState: 'unsaved',
+      primaryMessage: 'Save changes before generating translations.',
+      canGenerate: false,
+      reviewableLocales,
+    };
+  }
+  if (!args.instanceId) {
+    return { primaryState: 'unavailable', primaryMessage: null, canGenerate: false, reviewableLocales: [] };
+  }
+  if (args.expectedTranslationsCount <= 0) {
+    return { primaryState: 'unavailable', primaryMessage: null, canGenerate: false, reviewableLocales: [] };
+  }
+  if (!args.hasTranslatableFields) {
+    return {
+      primaryState: 'unavailable',
+      primaryMessage: 'This widget has no translation fields.',
+      canGenerate: false,
+      reviewableLocales: [],
+    };
+  }
+  if (!args.generationLoaded) {
+    return { primaryState: 'loading', primaryMessage: null, canGenerate: false, reviewableLocales: [] };
+  }
+  if (args.operationError) {
+    return { primaryState: 'failed', primaryMessage: args.operationError, canGenerate: true, reviewableLocales };
+  }
+
+  const generation = args.generation;
+  const active = isActiveTranslationGeneration(generation);
+  if (active && generation?.isCurrentBaseContent === false) {
+    return {
+      primaryState: 'baseChangedWhileGenerating',
+      primaryMessage: 'The base content has changed. Regenerate translations when generation finishes.',
+      canGenerate: false,
+      reviewableLocales,
+    };
+  }
+  if (active) {
+    return {
+      primaryState: 'generating',
+      primaryMessage: 'Generating translations.',
+      canGenerate: false,
+      reviewableLocales,
+    };
+  }
+
+  const localeStates = generation?.locales ?? [];
+  const outOfSync = localeStates.some((locale) => locale.state === 'outOfSync') ||
+    Boolean(generation?.outOfSyncLocales.length);
+  if (outOfSync) {
+    return {
+      primaryState: 'baseChanged',
+      primaryMessage: 'The base content has changed. Regenerate translations.',
+      canGenerate: true,
+      reviewableLocales,
+    };
+  }
+
+  const failedLocales = localeStates.filter((locale) => locale.state === 'failed');
+  if (failedLocales.length > 0 && reviewableLocales.length > 0) {
+    const detail = failedLocales[0]?.detail || failedLocales[0]?.reasonKey || generation?.detail || generation?.reasonKey || '';
+    return {
+      primaryState: 'partialFailure',
+      primaryMessage: `Some translations failed.${detail ? ` ${detail}` : ''}`,
+      canGenerate: true,
+      reviewableLocales,
+    };
+  }
+  if (failedLocales.length > 0 || generation?.status === 'failed') {
+    const detail = failedLocales[0]?.detail || failedLocales[0]?.reasonKey || generation?.detail || generation?.reasonKey || '';
+    return {
+      primaryState: 'failed',
+      primaryMessage: `Translations failed.${detail ? ` ${detail}` : ''}`,
+      canGenerate: true,
+      reviewableLocales,
+    };
+  }
+  if (reviewableLocales.length > 0) {
+    return { primaryState: 'available', primaryMessage: null, canGenerate: true, reviewableLocales };
+  }
+  return {
+    primaryState: 'ready',
+    primaryMessage: 'No translations generated yet.',
+    canGenerate: true,
+    reviewableLocales,
+  };
 }
 
 export function isTranslationGenerationAccepted(payload: unknown): boolean {
@@ -254,17 +422,19 @@ export function isTranslationGenerationAccepted(payload: unknown): boolean {
 }
 
 export function resolveTranslationGenerationStatusMessage(generation: TranslationGenerationSummary): string {
-  if ((!isActiveTranslationGeneration(generation) || !generation.isCurrentBaseContent) && generation.outOfSyncLocales.length > 0) {
+  if (isActiveTranslationGeneration(generation) && generation.isCurrentBaseContent === false) {
+    return 'The base content has changed. Regenerate translations when generation finishes.';
+  }
+  if (isActiveTranslationGeneration(generation)) return 'Generating translations.';
+  if (generation.locales.some((locale) => locale.state === 'outOfSync') || generation.outOfSyncLocales.length > 0) {
     return 'The base content has changed. Regenerate translations.';
   }
-  if (generation.status === 'queued' || generation.status === 'running') return 'Generating translations.';
-  if (generation.status === 'completed') return 'Translations ready.';
   if (generation.status === 'failed') {
-    const failed = generation.failedLocales.length;
+    const failed = generation.locales.filter((locale) => locale.state === 'failed').length || generation.failedLocales.length;
     const detail = generation.detail || generation.reasonKey || '';
     return `${failed || 'Some'} translations failed.${detail ? ` ${detail}` : ''}`;
   }
-  if (generation.status === 'superseded') return 'The base content has changed. Regenerate translations.';
+  if (generation.locales.some((locale) => locale.state === 'failed')) return 'Some translations failed.';
   return 'No translations to generate.';
 }
 
@@ -303,19 +473,24 @@ export function buildTranslationGenerationPanelState(payload: unknown): {
   const generation = normalizeTranslationGenerationFromPayload(payload);
   if (!generation) return null;
   const isGenerating = isActiveTranslationGeneration(generation);
-  const shouldShowMessage =
-    isGenerating ||
-    generation.status === 'failed' ||
-    generation.status === 'superseded' ||
-    generation.outOfSyncLocales.length > 0;
+  const panelState = resolveTranslationPanelProductState({
+    instanceId: generation.instanceId,
+    expectedTranslationsCount: generation.targetLocales.length,
+    hasTranslatableFields: true,
+    isDirty: false,
+    isSaving: false,
+    generationLoaded: true,
+    generation,
+  });
   return {
     isGenerating,
-    message: shouldShowMessage ? resolveTranslationGenerationStatusMessage(generation) : null,
+    message: panelState.primaryMessage,
     shouldRefreshTranslations:
       isGenerating ||
       generation.status === 'completed' ||
-      generation.completedLocales.length > 0 ||
-      generation.outOfSyncLocales.length > 0,
+      panelState.reviewableLocales.length > 0 ||
+      generation.outOfSyncLocales.length > 0 ||
+      generation.locales.some((locale) => locale.state === 'outOfSync'),
   };
 }
 
@@ -429,6 +604,8 @@ export function TranslationsPanel({
   const [isStartingTranslations, setIsStartingTranslations] = useState(false);
   const [isGeneratingTranslations, setIsGeneratingTranslations] = useState(false);
   const [generateMessage, setGenerateMessage] = useState<string | null>(null);
+  const [translationGeneration, setTranslationGeneration] = useState<TranslationGenerationSummary | null>(null);
+  const [translationGenerationLoaded, setTranslationGenerationLoaded] = useState(false);
   const initialGenerationReadInstanceId = useRef('');
   const readTranslationGenerationRef = useRef(readTranslationGeneration);
   const onRequestTranslationsRefreshRef = useRef(onRequestTranslationsRefresh);
@@ -438,6 +615,7 @@ export function TranslationsPanel({
   useEffect(() => {
     onRequestTranslationsRefreshRef.current = onRequestTranslationsRefresh;
   }, [onRequestTranslationsRefresh]);
+  const instanceId = chrome.meta?.instanceId ?? '';
   const baseLocale = translationSetup?.baseLocale || translatedLocales?.baseLocale || '';
   const localeState = useMemo(
     () =>
@@ -449,18 +627,44 @@ export function TranslationsPanel({
       }),
     [baseLocale, translatedLocales, translationPreviewLocale, translationSetup?.selectedTargetLocales],
   );
+  const planTranslationsCopy =
+    translationSetup?.planTranslationsMax == null
+      ? 'unlimited'
+      : String(translationSetup.planTranslationsMax);
+  const translationError = session.error?.source === 'translation' ? session.error : null;
+  const panelProductState = resolveTranslationPanelProductState({
+    instanceId,
+    expectedTranslationsCount: localeState.expectedTranslationsCount,
+    hasTranslatableFields: Boolean(session.compiled?.editableFields?.fields?.length),
+    isDirty: session.isDirty,
+    isSaving: session.isSaving,
+    generationLoaded: translationGenerationLoaded,
+    generation: translationGeneration,
+    operationError: generateMessage,
+  });
   const refreshIfTranslationsMissing = () => {
-    if (localeState.shouldRefreshOnDropdownOpen) onRequestTranslationsRefresh();
+    if (localeState.shouldRefreshOnDropdownOpen || panelProductState.reviewableLocales.length === 0) {
+      onRequestTranslationsRefresh();
+    }
   };
-
+  const localeValues = useMemo(
+    () => (
+      baseLocale
+        ? [baseLocale, ...panelProductState.reviewableLocales.filter((locale) => locale !== baseLocale)]
+        : []
+    ),
+    [baseLocale, panelProductState.reviewableLocales],
+  );
   const localeOptions = useMemo(() => {
-    return localeState.localeValues.map((locale) => ({
+    return localeValues.map((locale) => ({
       value: locale,
       label: locale === baseLocale ? `${resolveLocaleLabel(locale)} (base)` : resolveLocaleLabel(locale),
     }));
-  }, [baseLocale, localeState.localeValues]);
-  const localeValue = localeState.localeValue;
-
+  }, [baseLocale, localeValues]);
+  const localeValue =
+    translationPreviewLocale && localeValues.includes(translationPreviewLocale)
+      ? translationPreviewLocale
+      : baseLocale || localeValues[0] || '';
   const selectOptions =
     localeOptions.length > 0
       ? localeOptions
@@ -470,13 +674,11 @@ export function TranslationsPanel({
             label: 'Base locale only',
           },
         ];
-  const planTranslationsCopy =
-    translationSetup?.planTranslationsMax == null
-      ? 'unlimited'
-      : String(translationSetup.planTranslationsMax);
-  const selectedTranslationEntry = localeState.selectedTranslationEntry;
+  const isSelectedReviewable =
+    Boolean(localeValue && localeValue !== baseLocale && panelProductState.reviewableLocales.includes(localeValue));
+  const selectedTranslationEntry = isSelectedReviewable ? { locale: localeValue } : null;
   const selectedValues =
-    localeValue && localeValue !== baseLocale ? translationValuesByLocale[localeValue] ?? null : null;
+    isSelectedReviewable ? translationValuesByLocale[localeValue] ?? null : null;
   useEffect(() => {
     setDraftValues(selectedValues ?? {});
     setSavingPath(null);
@@ -490,17 +692,11 @@ export function TranslationsPanel({
       values: selectedValues,
     });
   }, [selectedValues, session.compiled?.editableFields, session.instanceData]);
-  const translationError = session.error?.source === 'translation' ? session.error : null;
-  const instanceId = chrome.meta?.instanceId ?? '';
-  const generateButton = buildGenerateTranslationsButtonState({
-    instanceId,
-    expectedTranslationsCount: localeState.expectedTranslationsCount,
-    hasTranslatableFields: Boolean(session.compiled?.editableFields?.fields?.length),
-    isDirty: session.isDirty,
-    isSaving: session.isSaving,
-    isStarting: isStartingTranslations,
-    isGenerating: isGeneratingTranslations,
-  });
+  const generateButton = {
+    disabled: isStartingTranslations || !panelProductState.canGenerate,
+    label: isGeneratingTranslations ? 'Generating translations...' : 'Generate translations',
+    message: panelProductState.primaryMessage,
+  };
   const runGenerateTranslations = async () => {
     if (generateButton.disabled || !instanceId) return;
     setGenerateMessage(null);
@@ -515,7 +711,9 @@ export function TranslationsPanel({
       if (!response.ok) {
         throw new Error(resolveGenerateTranslationsError(response.json));
       }
-      setGenerateMessage(resolveGenerateTranslationsMessage(response.json));
+      const generation = normalizeTranslationGenerationFromPayload(response.json);
+      setTranslationGeneration(generation);
+      setTranslationGenerationLoaded(true);
       onRequestTranslationsRefresh();
       setIsGeneratingTranslations(isTranslationGenerationAccepted(response.json));
     } catch (error) {
@@ -526,6 +724,13 @@ export function TranslationsPanel({
     }
   };
   useEffect(() => {
+    setTranslationGeneration(null);
+    setTranslationGenerationLoaded(false);
+    setGenerateMessage(null);
+    setIsGeneratingTranslations(false);
+    initialGenerationReadInstanceId.current = '';
+  }, [instanceId]);
+  useEffect(() => {
     if (!instanceId || initialGenerationReadInstanceId.current === instanceId) return;
     let cancelled = false;
     initialGenerationReadInstanceId.current = instanceId;
@@ -535,9 +740,12 @@ export function TranslationsPanel({
         if (!response.ok) {
           throw new Error(resolveGenerateTranslationsError(response.json));
         }
+        const generation = normalizeTranslationGenerationFromPayload(response.json);
+        setTranslationGeneration(generation);
+        setTranslationGenerationLoaded(true);
         const panelState = buildTranslationGenerationPanelState(response.json);
         if (!panelState) return;
-        setGenerateMessage(panelState.message);
+        setGenerateMessage(null);
         setIsGeneratingTranslations(panelState.isGenerating);
         if (panelState.shouldRefreshTranslations) {
           onRequestTranslationsRefreshRef.current();
@@ -547,6 +755,7 @@ export function TranslationsPanel({
         if (cancelled) return;
         setGenerateMessage(error instanceof Error ? error.message : 'Translation generation state could not be read.');
         setIsGeneratingTranslations(false);
+        setTranslationGenerationLoaded(true);
       });
     return () => {
       cancelled = true;
@@ -563,7 +772,9 @@ export function TranslationsPanel({
           }
           const generation = normalizeTranslationGenerationFromPayload(response.json);
           if (!generation) throw new Error('Translation generation state could not be read.');
-          setGenerateMessage(resolveTranslationGenerationStatusMessage(generation));
+          setTranslationGeneration(generation);
+          setTranslationGenerationLoaded(true);
+          setGenerateMessage(null);
           setIsGeneratingTranslations(isActiveTranslationGeneration(generation));
           onRequestTranslationsRefresh();
         })
@@ -657,11 +868,6 @@ export function TranslationsPanel({
           options={selectOptions}
           disabled={!selectOptions[0]?.value}
         />
-        {localeState.expectedTranslationsCount > 0 && !localeState.allExpectedTranslationsReady ? (
-          <div className="label-s label-muted">
-            {localeState.readyTranslationsCount} of {localeState.expectedTranslationsCount} translations ready
-          </div>
-        ) : null}
         {translationsError ? (
           <div className="label-s label-muted">{translationsError}</div>
         ) : null}
@@ -669,9 +875,6 @@ export function TranslationsPanel({
           <div className="label-s label-muted">
             {translationError.detail || translationError.message || 'Translation failed.'}
           </div>
-        ) : null}
-        {localeValue === baseLocale ? (
-          <div className="label-s label-muted">Select a translated language to review it.</div>
         ) : null}
         {!translationsError && localeValue !== baseLocale && !selectedTranslationEntry && !translationsLoading ? (
           <div className="label-s label-muted">Translation not ready yet.</div>

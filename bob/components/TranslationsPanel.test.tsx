@@ -8,6 +8,7 @@ import {
   isTranslationGenerationAccepted,
   normalizeTranslationGenerationSummary,
   resolveGenerateTranslationsMessage,
+  resolveTranslationPanelProductState,
   resolveTranslationGenerationStatusMessage,
   TranslationReviewRows,
 } from './TranslationsPanel';
@@ -258,4 +259,110 @@ test('translation generation message shows base content out of sync', () => {
     resolveTranslationGenerationStatusMessage(generation),
     'The base content has changed. Regenerate translations.',
   );
+});
+
+test('translation panel product state disables generate while current work is active', () => {
+  const generation = normalizeTranslationGenerationSummary({
+    v: 2,
+    instanceId: 'I1B2C3D4E5',
+    baseLocale: 'en',
+    targetLocales: ['it'],
+    status: 'running',
+    active: true,
+    requestedAt: '2026-05-20T00:00:00.000Z',
+    updatedAt: '2026-05-20T00:00:03.000Z',
+    totalLocales: 1,
+    isCurrentBaseContent: true,
+    baseContentMarker: 'base-1',
+    generationRequestMarker: 'request-1',
+    locales: [{ locale: 'it', state: 'generating', reviewable: false }],
+  });
+  assert(generation);
+
+  assert.deepEqual(resolveTranslationPanelProductState({
+    instanceId: 'I1B2C3D4E5',
+    expectedTranslationsCount: 1,
+    hasTranslatableFields: true,
+    isDirty: false,
+    isSaving: false,
+    generationLoaded: true,
+    generation,
+  }), {
+    primaryState: 'generating',
+    primaryMessage: 'Generating translations.',
+    canGenerate: false,
+    reviewableLocales: [],
+  });
+});
+
+test('translation panel product state reports base changes without queue progress copy', () => {
+  const generation = normalizeTranslationGenerationSummary({
+    v: 2,
+    instanceId: 'I1B2C3D4E5',
+    baseLocale: 'en',
+    targetLocales: ['it'],
+    status: 'completed',
+    active: false,
+    requestedAt: '2026-05-20T00:00:00.000Z',
+    updatedAt: '2026-05-20T00:00:03.000Z',
+    totalLocales: 1,
+    isCurrentBaseContent: true,
+    baseContentMarker: 'base-2',
+    generationRequestMarker: 'request-2',
+    locales: [{ locale: 'it', state: 'outOfSync', reviewable: false }],
+  });
+  assert(generation);
+
+  const panelState = resolveTranslationPanelProductState({
+    instanceId: 'I1B2C3D4E5',
+    expectedTranslationsCount: 1,
+    hasTranslatableFields: true,
+    isDirty: false,
+    isSaving: false,
+    generationLoaded: true,
+    generation,
+  });
+
+  assert.equal(panelState.primaryState, 'baseChanged');
+  assert.equal(panelState.primaryMessage, 'The base content has changed. Regenerate translations.');
+  assert.doesNotMatch(panelState.primaryMessage ?? '', /\d+ of \d+ translations ready/);
+  assert.equal(panelState.canGenerate, true);
+  assert.deepEqual(panelState.reviewableLocales, []);
+});
+
+test('translation panel product state exposes only Tokyo-reviewable locales', () => {
+  const generation = normalizeTranslationGenerationSummary({
+    v: 2,
+    instanceId: 'I1B2C3D4E5',
+    baseLocale: 'en',
+    targetLocales: ['it', 'cs'],
+    status: 'completed',
+    active: false,
+    requestedAt: '2026-05-20T00:00:00.000Z',
+    updatedAt: '2026-05-20T00:00:03.000Z',
+    totalLocales: 2,
+    isCurrentBaseContent: true,
+    baseContentMarker: 'base-1',
+    generationRequestMarker: 'request-1',
+    locales: [
+      { locale: 'cs', state: 'missing', reviewable: false },
+      { locale: 'it', state: 'inSync', reviewable: true },
+    ],
+  });
+  assert(generation);
+
+  assert.deepEqual(resolveTranslationPanelProductState({
+    instanceId: 'I1B2C3D4E5',
+    expectedTranslationsCount: 2,
+    hasTranslatableFields: true,
+    isDirty: false,
+    isSaving: false,
+    generationLoaded: true,
+    generation,
+  }), {
+    primaryState: 'available',
+    primaryMessage: null,
+    canGenerate: true,
+    reviewableLocales: ['it'],
+  });
 });
