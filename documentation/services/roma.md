@@ -111,7 +111,7 @@ Client behavior (`use-roma-me.ts`):
 
 Current cloud-dev product rule:
 
-- Cloud-dev still effectively behaves as one seeded platform-owned account today.
+- Cloud-dev still effectively behaves as one seeded Clickeen/admin account today.
 - Target DB Pivot truth is one user, one account. Roma operates as a single-current-account shell and does not expose customer account switching.
 
 ## Upstream route model
@@ -227,7 +227,7 @@ Assets domain behavior:
 - Uses cloud-dev Berlin/Tokyo/Bob/San Francisco URLs from env/config.
 - Cloud product auth presents Berlin provider auth only in customer UI, with Google as the enabled cloud-dev provider. Roma no longer carries a hidden email/password session route for CI smoke.
 - Cloud-dev currently runs as one effective product account: admin. Roma does not expose customer account switching there or in the normal Roma product shell.
-- The admin account is the normal account with `accountPublicId` `00000001`; admin-owned examples and product references must use the same `accounts/00000001/instances/{instanceId}/` model as every other account, with no admin storage lane.
+- The admin account is the normal account with `accountPublicId` `CLICKEEN`; admin-owned examples and product references must use the same `accounts/CLICKEEN/instances/{instanceId}/` model as every other account, with no admin storage lane.
 
 ## Operational notes
 

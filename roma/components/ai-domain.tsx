@@ -15,8 +15,7 @@ export function AiDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountContext.accountName}</p>
-        <p className="body-s">Slug: {accountContext.accountSlug}</p>
+        <p className="body-m">Account: {accountContext.accountLabel}</p>
         <p className="body-m">This page shows account AI entitlement context. Copilot execution happens inside Builder.</p>
       </section>
 

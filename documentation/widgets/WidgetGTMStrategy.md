@@ -274,7 +274,7 @@ Use mix:
 
 Must include:
 - one immediate proof block (`minibob` and/or curated embed)
-- one localization proof block (`locale-showcase`)
+- one localization proof claim grounded in published locale artifacts, without private translation-state discovery in Prague
 
 ### Templates (`/widgets/{widget}/templates`)
 Question answered: "Will this match my brand?"

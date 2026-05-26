@@ -106,7 +106,7 @@ That route maps to `accounts/{accountPublicId}/instances/{instanceId}/index.html
 - No root `widgets/` tree for widget software; widget software is served from `product/widgets/`.
 - No root `l10n/` tree for Prague localization; Prague page translations stay beside page JSON under `prague/pages/{widget}/{page}.translations/{locale}.json`.
 
-Platform-owned references, when needed, live outside instance data. Example: Prague page JSON may point at a normal account-owned instance through `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId`.
+Clickeen-owned references, when needed, live outside instance data. Example: Prague page JSON may point at a normal account-owned instance through `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId`.
 
 ## Interfaces
 

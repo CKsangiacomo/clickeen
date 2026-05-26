@@ -37,14 +37,6 @@
       "type": "string"
     },
     {
-      "path": "strings.localeShowcase.title",
-      "type": "string"
-    },
-    {
-      "path": "strings.localeShowcase.subtitle",
-      "type": "string"
-    },
-    {
       "path": "strings.share.share",
       "type": "string"
     },
@@ -161,5 +153,6 @@
       "type": "string"
     }
   ],
-  "v": 1
+  "v": 1,
+  "fields": []
 }

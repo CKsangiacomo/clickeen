@@ -233,8 +233,9 @@ OUTPUT
 
 - `tokyo/prague/pages/{widgetType}/*.json` exist and contain valid `blocks[]`; repo-authored Prague page JSON syncs to R2 under `prague/pages/{widgetType}/*.json`.
 - `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId` are present only when a Prague page intentionally points at a real account widget instance.
-- Admin/example instance refs use `accountPublicId: "00000001"` and resolve to normal instances under `accounts/00000001/instances/{instanceId}/`.
+- Admin/example instance refs use `accountPublicId: "CLICKEEN"` and resolve to normal instances under `accounts/CLICKEEN/instances/{instanceId}/`.
 - `accountInstanceRef.instanceId` uses the current compact instance ID.
+- `accountInstanceRef.locale`, when present, selects a concrete published public artifact. Prague must not infer account-widget locale availability from market config, route locale, or private translation state.
 - Prague pages must not use old `wgt_*` / `ins_*` identities, private UUID account folders, root `l10n/`, an admin-specific storage lane, or hidden instance-only lookup.
 - Prague page copy is page JSON truth. Account-widget translated locale values are not Prague page sidecars; published account widgets are served as generated static artifacts from `clk.live`.
 
@@ -271,4 +272,4 @@ Manual smoke (fast)
 
 - Bob preview: each panel control updates the preview deterministically.
 - Static embed: `clk.live/{accountPublicId}/{instanceId}` loads without console errors.
-- Localization: switching locale uses only current ready overlays for the active base fingerprint; missing current overlays fail visibly instead of silently falling back.
+- Localization: Prague locale routes localize Prague page copy through page sidecars; account-widget locales are served only as generated public artifacts. Missing required Prague page sidecars fail visibly instead of silently falling back.

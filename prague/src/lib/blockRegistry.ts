@@ -5,7 +5,6 @@ import Hero from '../blocks/hero/hero.astro';
 import ControlMoat from '../blocks/control-moat/control-moat.astro';
 import GlobalMoat from '../blocks/global-moat/global-moat.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
-import LocaleShowcase from '../blocks/locale-showcase/locale-showcase.astro';
 import PlatformStrip from '../blocks/platform-strip/platform-strip.astro';
 import Split from '../blocks/split/split.astro';
 import Steps from '../blocks/steps/steps.astro';
@@ -14,6 +13,7 @@ import SplitCarousel from '../blocks/split-carousel/SplitCarousel.astro';
 
 type StringType = 'string' | 'array';
 type RequiredString = { key: string; type: StringType };
+const ACCOUNT_INSTANCE_REF_KEYS = new Set(['accountPublicId', 'instanceId', 'locale']);
 
 export type BlockType =
   | 'big-bang'
@@ -27,7 +27,6 @@ export type BlockType =
   | 'platform-strip'
   | 'cta-bottom-block'
   | 'minibob'
-  | 'locale-showcase'
   | 'embed-carousel'
   | 'mobile-showcase'
   | 'feature-explorer'
@@ -141,15 +140,6 @@ const BLOCK_REGISTRY: Record<BlockType, BlockContract> = {
     ],
     meta: ['copy', 'mode', 'accountInstanceRef'],
   },
-  'locale-showcase': {
-    type: 'locale-showcase',
-    component: LocaleShowcase,
-    required: [
-      { key: 'title', type: 'string' },
-      { key: 'subtitle', type: 'string' },
-    ],
-    meta: ['accountInstanceRef'],
-  },
   'embed-carousel': {
     type: 'embed-carousel',
     component: null, // Lazy loaded
@@ -198,6 +188,89 @@ export function getBlockContract(type: string): BlockContract {
   return contract;
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function validateAccountInstanceRefShape(args: {
+  value: unknown;
+  pagePath: string;
+  blockType: string;
+  path: string;
+}) {
+  const { value, pagePath, blockType, path } = args;
+  if (!isPlainObject(value)) {
+    throw new Error(`[prague] ${pagePath}: block "${blockType}" ${path} must be an object`);
+  }
+  for (const key of Object.keys(value)) {
+    if (!ACCOUNT_INSTANCE_REF_KEYS.has(key)) {
+      throw new Error(`[prague] ${pagePath}: block "${blockType}" ${path}.${key} is not supported`);
+    }
+  }
+  const accountPublicId = value.accountPublicId;
+  if (typeof accountPublicId !== 'string' || !accountPublicId.trim()) {
+    throw new Error(`[prague] ${pagePath}: block "${blockType}" ${path}.accountPublicId is required`);
+  }
+  const instanceId = value.instanceId;
+  if (typeof instanceId !== 'string' || !instanceId.trim()) {
+    throw new Error(`[prague] ${pagePath}: block "${blockType}" ${path}.instanceId is required`);
+  }
+  const locale = value.locale;
+  if (locale != null && (typeof locale !== 'string' || !locale.trim())) {
+    throw new Error(`[prague] ${pagePath}: block "${blockType}" ${path}.locale must be a string`);
+  }
+}
+
+function validateNestedAccountInstanceRefs(args: {
+  value: unknown;
+  pagePath: string;
+  blockType: string;
+  path: string;
+}) {
+  const { value, pagePath, blockType, path } = args;
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) =>
+      validateNestedAccountInstanceRefs({
+        value: entry,
+        pagePath,
+        blockType,
+        path: `${path}[${index}]`,
+      }),
+    );
+    return;
+  }
+  if (!isPlainObject(value)) return;
+  for (const [key, entry] of Object.entries(value)) {
+    const entryPath = `${path}.${key}`;
+    if (key === 'accountInstanceRef') {
+      validateAccountInstanceRefShape({ value: entry, pagePath, blockType, path: entryPath });
+      continue;
+    }
+    validateNestedAccountInstanceRefs({ value: entry, pagePath, blockType, path: entryPath });
+  }
+}
+
+function validateWidgetItemRefs(args: { block: Record<string, unknown>; pagePath: string; blockType: string }) {
+  const { block, pagePath, blockType } = args;
+  if (blockType !== 'hero' && blockType !== 'split-carousel' && blockType !== 'embed-carousel' && blockType !== 'mobile-showcase') {
+    return;
+  }
+  const items = block.items;
+  if (items == null) return;
+  if (!Array.isArray(items)) {
+    throw new Error(`[prague] ${pagePath}: block "${blockType}" items must be an array`);
+  }
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (!isPlainObject(item)) {
+      throw new Error(`[prague] ${pagePath}: block "${blockType}" items[${i}] must be an object`);
+    }
+    if (!Object.prototype.hasOwnProperty.call(item, 'accountInstanceRef')) {
+      throw new Error(`[prague] ${pagePath}: block "${blockType}" items[${i}].accountInstanceRef is required`);
+    }
+  }
+}
+
 export function validateBlockMeta(args: { block: Record<string, unknown>; pagePath: string }) {
   const { block, pagePath } = args;
   const type = typeof block.type === 'string' ? block.type : '';
@@ -214,19 +287,8 @@ export function validateBlockMeta(args: { block: Record<string, unknown>; pagePa
       throw new Error(`[prague] ${pagePath}: block "${type}" visual must be boolean or object`);
     }
   }
-  if (contract.meta.includes('accountInstanceRef') && block.accountInstanceRef != null) {
-    if (typeof block.accountInstanceRef !== 'object' || Array.isArray(block.accountInstanceRef)) {
-      throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef must be an object`);
-    }
-    const accountPublicId = (block.accountInstanceRef as { accountPublicId?: unknown }).accountPublicId;
-    if (accountPublicId != null && typeof accountPublicId !== 'string') {
-      throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef.accountPublicId must be a string`);
-    }
-    const instanceId = (block.accountInstanceRef as { instanceId?: unknown }).instanceId;
-    if (instanceId != null && typeof instanceId !== 'string') {
-      throw new Error(`[prague] ${pagePath}: block "${type}" accountInstanceRef.instanceId must be a string`);
-    }
-  }
+  validateNestedAccountInstanceRefs({ value: block, pagePath, blockType: type, path: 'block' });
+  validateWidgetItemRefs({ block, pagePath, blockType: type });
   if (contract.meta.includes('layout') && (block as any).layout != null) {
     assertSplitLayout((block as any).layout, `${pagePath}:${type}.layout`);
   }

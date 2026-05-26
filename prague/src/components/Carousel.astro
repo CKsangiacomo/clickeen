@@ -5,9 +5,7 @@ type CarouselItem = {
   accountInstanceRef: {
     accountPublicId: string;
     instanceId: string;
-    locale: string;
-    title?: string;
-    embedMode?: 'iframe' | 'indexable';
+    locale?: string;
   };
 };
 
@@ -18,47 +16,38 @@ type Props = {
 };
 
 const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}`, widgetType } = Astro.props;
+if (!Array.isArray(items) || items.length === 0) {
+  throw new Error('[prague] Carousel requires at least one accountInstanceRef item');
+}
 ---
 
 <div class="ck-carousel">
-  {items && items.length > 0 ? (
-    <>
-      <div class="ck-carousel__viewport">
-        <div class="ck-carousel__track" id={id}>
-          {items.concat(items[0]).map((item, index) => (
-            <div class="ck-carousel__item" data-index={index}>
-              {item.accountInstanceRef ? (
-                <InstanceEmbed
-                  instanceId={item.accountInstanceRef.instanceId}
-                  accountPublicId={item.accountInstanceRef.accountPublicId}
-                  locale={item.accountInstanceRef.locale}
-                  title={item.accountInstanceRef.title ?? `Widget preview ${index + 1}`}
-                  embedMode={item.accountInstanceRef.embedMode}
-                  loading="eager"
-                  widgetType={widgetType}
-                />
-              ) : (
-                <div class="ck-media ck-carousel__fallback">Widget preview unavailable</div>
-              )}
-            </div>
-          ))}
-        </div>
-
-      </div>
-
-      <div class="ck-carousel__dots">
-        {items.map((_, index) => (
-          <button
-            class={`ck-carousel__dot ${index === 0 ? 'ck-carousel__dot--active' : ''}`}
-            aria-label={`Go to slide ${index + 1}`}
-            data-target={index}
+  <div class="ck-carousel__viewport">
+    <div class="ck-carousel__track" id={id}>
+      {items.concat(items[0]).map((item, index) => (
+        <div class="ck-carousel__item" data-index={index}>
+          <InstanceEmbed
+            instanceId={item.accountInstanceRef.instanceId}
+            accountPublicId={item.accountInstanceRef.accountPublicId}
+            locale={item.accountInstanceRef.locale}
+            title={`${widgetType || 'Widget'} preview ${index + 1}`}
+            loading="eager"
+            widgetType={widgetType}
           />
-        ))}
-      </div>
-    </>
-  ) : (
-    <div class="ck-media ck-carousel__fallback">Widget preview unavailable</div>
-  )}
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="ck-carousel__dots">
+    {items.map((_, index) => (
+      <button
+        class={`ck-carousel__dot ${index === 0 ? 'ck-carousel__dot--active' : ''}`}
+        aria-label={`Go to slide ${index + 1}`}
+        data-target={index}
+      />
+    ))}
+  </div>
 </div>
 
 <script>
@@ -276,18 +265,6 @@ const { items, id = `carousel-${Math.random().toString(36).substr(2, 9)}`, widge
     min-width: 0;
     scroll-margin: 0 var(--space-4);
     pointer-events: none;
-  }
-
-
-  .ck-carousel__fallback {
-    width: 100%;
-    min-height: 280px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: color-mix(in oklab, var(--color-system-black), transparent 56%);
-    background: var(--color-system-cloud);
-    border-radius: var(--radius-lg);
   }
 
   /* ── Dots ── */

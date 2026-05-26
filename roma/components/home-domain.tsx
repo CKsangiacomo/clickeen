@@ -10,7 +10,7 @@ export function HomeDomain() {
     <>
       <section className="rd-canvas-module">
         <p className="body-m">
-          Account: {accountContext.accountName} ({accountContext.accountSlug})
+          Account: {accountContext.accountLabel}
         </p>
       </section>
 

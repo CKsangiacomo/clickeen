@@ -19,9 +19,7 @@ type Props = {
   accountInstanceRef?: {
     accountPublicId: string;
     instanceId: string;
-    locale: string;
-    title?: string;
-    embedMode?: 'iframe' | 'indexable';
+    locale?: string;
   };
   layout: string;
 };
@@ -30,6 +28,7 @@ const { headline, subheadline, primaryCta, secondaryCta, actionGroup, widgetType
 const resolvedLayout = assertSplitLayout(layout, 'split.layout');
 const isStacked = resolvedLayout === 'stacked';
 const isReverse = resolvedLayout === 'visual-left';
+const hasWidgetVisual = Boolean(accountInstanceRef);
 
 const resolvedActionGroup =
   actionGroup ??
@@ -78,24 +77,21 @@ const headerPrimitives = assertPrimitives(
           ) : null}
         </div>
 
-        <div class="ck-splitCreative__visual" aria-hidden="true">
-          {accountInstanceRef ? (
+        {hasWidgetVisual ? (
+          <div class="ck-splitCreative__visual" aria-hidden="true">
             <InstanceEmbed
-              instanceId={accountInstanceRef.instanceId}
-              accountPublicId={accountInstanceRef.accountPublicId}
-              locale={accountInstanceRef.locale}
-              title={accountInstanceRef.title ?? 'Widget preview'}
-              embedMode={accountInstanceRef.embedMode}
+              instanceId={accountInstanceRef!.instanceId}
+              accountPublicId={accountInstanceRef!.accountPublicId}
+              locale={accountInstanceRef!.locale}
+              title={`${widgetType || 'Widget'} preview`}
               widgetType={widgetType}
             />
-          ) : (
-            <div class="ck-media ck-splitCreative__fallback">Widget preview unavailable</div>
-          )}
-        </div>
+          </div>
+        ) : null}
       </div>
     ) : (
       <div
-        class={`ck-split ck-split--center ck-split--hero ck-splitCreative__split${isReverse ? ' ck-splitCreative__split--reverse' : ''}`}
+        class={`ck-split ck-split--center ck-split--hero ck-splitCreative__split${isReverse ? ' ck-splitCreative__split--reverse' : ''}${hasWidgetVisual ? '' : ' ck-splitCreative__split--copyOnly'}`}
       >
         <div class="ck-split__a">
           <div class="ck-splitCreative__content ck-stack ck-gap-loose">
@@ -110,20 +106,17 @@ const headerPrimitives = assertPrimitives(
           </div>
         </div>
 
-        <div class="ck-split__b ck-splitCreative__visual" aria-hidden="true">
-          {accountInstanceRef ? (
+        {hasWidgetVisual ? (
+          <div class="ck-split__b ck-splitCreative__visual" aria-hidden="true">
             <InstanceEmbed
-              instanceId={accountInstanceRef.instanceId}
-              accountPublicId={accountInstanceRef.accountPublicId}
-              locale={accountInstanceRef.locale}
-              title={accountInstanceRef.title ?? 'Widget preview'}
-              embedMode={accountInstanceRef.embedMode}
+              instanceId={accountInstanceRef!.instanceId}
+              accountPublicId={accountInstanceRef!.accountPublicId}
+              locale={accountInstanceRef!.locale}
+              title={`${widgetType || 'Widget'} preview`}
               widgetType={widgetType}
             />
-          ) : (
-            <div class="ck-media ck-splitCreative__fallback">Widget preview unavailable</div>
-          )}
-        </div>
+          </div>
+        ) : null}
       </div>
     )}
   </div>
@@ -158,15 +151,6 @@ const headerPrimitives = assertPrimitives(
 
   .ck-splitCreative__ctaRow {
     gap: var(--space-3);
-  }
-
-  .ck-splitCreative__fallback {
-    width: 100%;
-    min-height: 280px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: color-mix(in oklab, var(--color-system-black), transparent 56%);
   }
 
   @media (max-width: 900px) {

@@ -30,7 +30,7 @@ Optional:
 
 - `PUBLIC_ROMA_URL` (used by `/{market}/{locale}/create` redirect bridge to Roma `/home`)
 
-Prague widget pages embed explicit Clickeen-owned account instances by `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId`.
+Prague widget pages embed explicit Clickeen-owned account instances by `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId`. Locale-specific embeds select generated public artifacts with `accountInstanceRef.locale`; Prague does not discover widget locale availability or read translation internals.
 
 Local defaults (when running `scripts/dev-up.sh`):
 

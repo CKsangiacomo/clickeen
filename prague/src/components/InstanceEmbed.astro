@@ -3,23 +3,26 @@ import Icon from './Icon.astro';
 import { resolvePragueWidgetLabel } from '../lib/widgetCatalog';
 
 type Props = {
-  accountPublicId?: string;
-  instanceId?: string;
-  locale: string;
-  localeOverride?: string;
+  accountPublicId: string;
+  instanceId: string;
+  locale?: string;
   title?: string;
   loading?: 'lazy' | 'eager';
-  embedMode?: 'iframe' | 'indexable';
   showShareChrome?: boolean;
   widgetType?: string;
 };
 
-const { locale, localeOverride, title = 'Widget preview', loading = 'lazy' } =
-  Astro.props;
+const { locale, title = 'Widget preview', loading = 'lazy' } = Astro.props;
 
 const props = Astro.props as Props;
 const accountPublicId = String(props.accountPublicId || '').trim();
 const instanceId = String(props.instanceId || '').trim();
+if (!accountPublicId) {
+  throw new Error('[prague] InstanceEmbed requires accountPublicId');
+}
+if (!instanceId) {
+  throw new Error('[prague] InstanceEmbed requires instanceId');
+}
 const showShareChrome = props.showShareChrome !== false;
 const PRAGUE_EMBED_MIN_HEIGHT = 420;
 const PRAGUE_EMBED_MAX_HEIGHT = 800;
@@ -35,11 +38,9 @@ if (showShareChrome && !widgetLabel) {
 // Local-dev cache-bust only: production embeds should be CDN/snapshot cache-friendly by default.
 const tsToken = import.meta.env.DEV ? String(Date.now()) : '';
 const ts = tsToken ? `?ts=${encodeURIComponent(tsToken)}` : '';
-const resolvedLocale = String(localeOverride || locale || 'en').trim();
+const resolvedLocale = String(locale || 'en').trim();
 const localePath = resolvedLocale && resolvedLocale !== 'en' ? `/${encodeURIComponent(resolvedLocale)}.html` : '';
-const iframeSrc = CLK_LIVE_URL && accountPublicId && instanceId
-  ? `${CLK_LIVE_URL}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}${localePath}${ts}`
-  : null;
+const iframeSrc = `${CLK_LIVE_URL}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}${localePath}${ts}`;
 
 const anchorId = `ck-instance-${instanceId.replace(/[^a-z0-9_-]+/gi, '-')}`;
 
@@ -67,24 +68,22 @@ const brandSvgs = {
   data-ck-min-height={String(PRAGUE_EMBED_MIN_HEIGHT)}
   data-ck-max-height={String(PRAGUE_EMBED_MAX_HEIGHT)}
 >
-  {iframeSrc ? (
+  <iframe
+    class="ck-instanceEmbed__iframe"
+    title={title}
+    src={iframeSrc}
+    loading={loading}
+    referrerpolicy="no-referrer"
+    sandbox="allow-scripts allow-same-origin allow-forms"
+  />
+
+  {showShareChrome ? (
     <>
-      <iframe
-        class="ck-instanceEmbed__iframe"
-        title={title}
-        src={iframeSrc}
-        loading={loading}
-        referrerpolicy="no-referrer"
-        sandbox="allow-scripts allow-same-origin allow-forms"
-      />
+      {/* Toast is anchored to the creative (not the fading topbar). */}
+      <div class="ck-share__toast" role="status" aria-live="polite"></div>
 
-      {showShareChrome ? (
-        <>
-          {/* Toast is anchored to the creative (not the fading topbar). */}
-          <div class="ck-share__toast" role="status" aria-live="polite"></div>
-
-          {/* Global creative chrome (outside iframe): share bar (hover/focus reveal). */}
-          <div class="ck-instanceEmbed__topbar">
+      {/* Global creative chrome (outside iframe): share bar (hover/focus reveal). */}
+      <div class="ck-instanceEmbed__topbar">
             <details class="ck-share">
               <summary class="ck-btn ck-btn--md label-s ck-share__btn">
                 <span class="diet-btn-is__icon" aria-hidden="true">
@@ -181,15 +180,9 @@ const brandSvgs = {
                 </div>
               </div>
             </details>
-          </div>
-        </>
-      ) : null}
+      </div>
     </>
-  ) : (
-    <div class="ck-media ck-instanceEmbed__fallback">
-      Widget preview is unavailable right now.
-    </div>
-  )}
+  ) : null}
 </div>
 
 <style>
@@ -435,16 +428,6 @@ const brandSvgs = {
     min-height: 420px;
     max-height: 800px;
     height: 420px;
-  }
-
-  .ck-instanceEmbed__fallback {
-    min-height: 240px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: color-mix(in oklab, var(--color-system-black), transparent 56%);
-    padding: var(--space-6);
-    text-align: center;
   }
 </style>
 

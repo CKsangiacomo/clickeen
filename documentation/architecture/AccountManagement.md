@@ -50,6 +50,8 @@ The account row answers:
 - when status last changed for grace/deletion workflows;
 - when the account was created.
 
+Account context must not derive product capabilities, display names, or slugs from the compact account id. If account display metadata is needed, it must be real account data with a named product owner.
+
 Account deletion is an operation, not a retained `closed` status. If an account is deleted, account DB rows and account-owned storage are cleaned up.
 
 Agency later is account-to-account, not user-to-many-accounts:

@@ -17,9 +17,6 @@ export type RomaAccountAuthzCapsulePayload = {
   accountId: string;
   accountPublicId: string;
   accountStatus: string;
-  accountIsPlatform: boolean;
-  accountName: string;
-  accountSlug: string;
   accountWebsiteUrl: string | null;
   entitlements?: PolicyEntitlementsSnapshot | null;
   profile: PolicyProfile;
@@ -137,9 +134,6 @@ function normalizeAccountPayload(
   const accountId = typeof record.accountId === 'string' ? record.accountId.trim() : '';
   const accountPublicId = typeof record.accountPublicId === 'string' ? record.accountPublicId.trim() : '';
   const accountStatus = typeof record.accountStatus === 'string' ? record.accountStatus.trim() : '';
-  const accountIsPlatform = typeof record.accountIsPlatform === 'boolean' ? record.accountIsPlatform : false;
-  const accountName = typeof record.accountName === 'string' ? record.accountName.trim() : '';
-  const accountSlug = typeof record.accountSlug === 'string' ? record.accountSlug.trim() : '';
   const accountWebsiteUrlRaw = typeof record.accountWebsiteUrl === 'string' ? record.accountWebsiteUrl.trim() : '';
   let entitlements: PolicyEntitlementsSnapshot | null | undefined;
   try {
@@ -157,7 +151,7 @@ function normalizeAccountPayload(
   const exp = typeof record.exp === 'number' && Number.isFinite(record.exp) ? Math.trunc(record.exp) : Number.NaN;
 
   if (!userId || !sub || sub !== userId) return null;
-  if (!accountId || !isCompactAccountPublicId(accountPublicId) || !accountStatus || !accountName || !accountSlug || !authzVersion) return null;
+  if (!accountId || !isCompactAccountPublicId(accountPublicId) || !accountStatus || !authzVersion) return null;
   if (!role || !profile) return null;
   if (typeof entitlements === 'undefined') return null;
   if (!Number.isFinite(iat) || !Number.isFinite(exp)) return null;
@@ -174,9 +168,6 @@ function normalizeAccountPayload(
     accountId,
     accountPublicId,
     accountStatus,
-    accountIsPlatform,
-    accountName,
-    accountSlug,
     accountWebsiteUrl: accountWebsiteUrlRaw || null,
     ...(typeof entitlements === 'undefined' ? {} : { entitlements }),
     profile,

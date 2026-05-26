@@ -169,8 +169,7 @@ export function TeamDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountContext.accountName}</p>
-        <p className="body-s">Slug: {accountContext.accountSlug}</p>
+        <p className="body-m">Account: {accountContext.accountLabel}</p>
 
         {error ? (
           <div className="roma-inline-stack">

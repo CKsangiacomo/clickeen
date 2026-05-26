@@ -1,18 +1,35 @@
 ---
+import InstanceEmbed from '../../components/InstanceEmbed.astro';
+
 type Props = {
-  items?: { instanceId?: string; accountInstanceRef?: { instanceId: string } }[];
+  items?: {
+    accountInstanceRef: {
+      accountPublicId: string;
+      instanceId: string;
+      locale?: string;
+    };
+  }[];
   options?: any;
+  widgetType?: string;
 };
 
-const { items = [], options = {} } = Astro.props;
+const { items = [], widgetType } = Astro.props;
+if (!items.length) {
+  throw new Error('[prague] embed-carousel requires at least one accountInstanceRef item');
+}
 ---
 
 <div class="embed-carousel" data-block="embed-carousel">
   <div class="carousel-track">
-    {items.map((item) => (
+    {items.map((item, index) => (
       <div class="carousel-item">
-        {/* Placeholder for now */}
-        <pre>{JSON.stringify(item, null, 2)}</pre>
+        <InstanceEmbed
+          accountPublicId={item.accountInstanceRef.accountPublicId}
+          instanceId={item.accountInstanceRef.instanceId}
+          locale={item.accountInstanceRef.locale}
+          title={`${widgetType || 'Widget'} preview ${index + 1}`}
+          widgetType={widgetType}
+        />
       </div>
     ))}
   </div>

@@ -44,7 +44,7 @@ Non-visual blocks:
 - They are present in `blocks[]` but are not rendered by the block renderer.
 
 Supported block types (registered):
-`big-bang`, `hero`, `split`, `split-carousel`, `steps`, `subpage-cards`, `control-moat`, `global-moat`, `platform-strip`, `cta-bottom-block`, `minibob`, `locale-showcase`, `embed-carousel`, `mobile-showcase`, `feature-explorer`, `navmeta`, `page-meta`.
+`big-bang`, `hero`, `split`, `split-carousel`, `steps`, `subpage-cards`, `control-moat`, `global-moat`, `platform-strip`, `cta-bottom-block`, `minibob`, `embed-carousel`, `mobile-showcase`, `feature-explorer`, `navmeta`, `page-meta`.
 
 ### Block registry + validation (executed)
 
@@ -66,7 +66,6 @@ Required copy keys (enforced today):
 - `control-moat`: `title`, `items[]` (meta: `visual`)
 - `global-moat`: `title`, `items[]` (meta: `visual`)
 - `platform-strip`: `title`, `items[]` (meta: `visual`)
-- `locale-showcase`: `title`, `subtitle` (meta: `accountInstanceRef`)
 - `cta-bottom-block`: `headline`, `subheadline`
 - `minibob`: `heading`, `subhead`
 - `feature-explorer`: `categories[]`
@@ -131,7 +130,7 @@ Non-visual block contracts (required):
 ### 2.2 Hero
 
 `blocks/hero/hero`
-- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup, accountInstanceRef?: { accountPublicId: string, instanceId: string, locale: string, embedMode?: 'iframe' | 'indexable', height?: string, title?: string } }`
+- Props: `{ headline: string, subheadline?: string, primaryCta: { label: string, href: string }, secondaryCta?: { label: string, href: string }, actionGroup?: ActionGroup, accountInstanceRef?: { accountPublicId: string, instanceId: string, locale?: string } }`
 - Owns: H1 + subhead + primary/secondary CTA + account instance embed (optional)
 
 Copy contract:
@@ -141,17 +140,16 @@ Copy contract:
 **Contract (non-negotiable):**
 - The hero visual is rendered only when an account instance is explicitly provided via `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`.
 - Pages opt in by adding the complete `accountInstanceRef` to the hero block in the canonical page spec.
+- Prague embeds the base public widget artifact when `accountInstanceRef.locale` is omitted. Authored refs may set `accountInstanceRef.locale` only to select an already published public locale artifact.
 - `visual: true` is legacy metadata only; it does not embed anything by itself.
 
 **Embed rule (strict):**
 - Prague embeds the canonical static account-scoped route: `https://clk.live/{accountPublicId}/{instanceId}`.
 - Locale variants are generated static browser files; locale is never encoded into `instanceId`.
+- Locale variants are selected through the static artifact path: `https://clk.live/{accountPublicId}/{instanceId}/{locale}.html` for non-base locales.
+- `accountInstanceRef` may contain only `accountPublicId`, `instanceId`, and optional `locale`. `locale` selects a public artifact only. It must not be treated as locale availability, translation state, or a private account-widget contract.
 - Prague must not depend on a hidden instance-only lookup, root published registry, or instance-only public route.
 - `wgt_*`, `ins_*`, and `ins_*.<locale>` are invalid current product identities and must fail at the boundary (no legacy support).
-
-**Embed mode (accountInstanceRef.embedMode):**
-- default (omitted): iframe embed
-- `indexable`: SEO/GEO optimized static artifact shape (host metadata injection; UI stays iframe)
 
 ### 2.3 Big bang
 
@@ -242,21 +240,11 @@ Copy contract:
 - Shape: `{ layout: 'row' | 'column' | 'grid', columns?: number, actions: [{ type: 'link' | 'button' | 'modal', variant: 'primary' | 'secondary' | 'ghost', label: string, href?: string, onClick?: string }] }`
 - Legacy CTA props (`primaryCta`, `secondaryCta`) are still supported and map to an `ActionGroup` internally.
 
-### 2.12 Locale showcase (Global proof)
+### 2.12 Locale showcase
 
-`blocks/locale-showcase/locale-showcase`
-- Purpose: show the **same instance** in a few real locales (default tiles: `en`, `es`, `ja`) to prove global-by-default and layout adaptivity.
-- Props: `{ title: string, subtitle: string, accountInstanceRef?: { accountPublicId: string, instanceId: string } }`
-- Placement:
-  - Preferred: include a `locale-showcase` block explicitly in page JSON (deterministic placement).
-  - Convenience: if a widget page includes `minibob` but no explicit `locale-showcase`, Prague injects a default locale showcase immediately after `minibob` (see `prague/src/components/WidgetBlocks.astro`).
-- Instance selection:
-  - If the explicit `locale-showcase` block provides `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`, use that.
-  - Else use the first complete account instance ref found in the page blocks.
-  - Else do not embed an account instance. Prague must not infer an instance from widget type, `wgt_main_{widget}`, or any hidden instance-only lookup.
+Removed from launch scope by PRD 104D.
 
-Copy contract:
-- `title`, `subtitle`
+Prague must not infer widget locale availability from market locale lists, route locale, or a private translation helper. A future localization proof block must use explicit account-widget artifact references and fail fast when an expected artifact is not published.
 
 ### 2.13 Minibob block
 
@@ -270,7 +258,7 @@ Copy contract:
   - It must not introduce global CSS (only block-scoped styles).
   - It must not access host cookies/storage.
   - It must not boot Bob or start a draft handoff flow.
-  - It must not derive storage identity from widget type. If it embeds a real example widget, that reference must be a normal account instance ref carrying `accountPublicId` + `instanceId` (`00000001` for admin examples).
+  - It must not derive storage identity from widget type. If it embeds a real example widget, that reference must be a normal account instance ref carrying `accountPublicId` + `instanceId` (`CLICKEEN` for admin examples).
 
 ## 3) Page Composition
 
@@ -282,7 +270,6 @@ Pages are lists of blocks in a fixed order. Example (widget landing):
 - split / split-carousel (optional; page-specific)
 - steps / control-moat / global-moat / platform-strip (page-specific)
 - cta-bottom-block
-- locale-showcase (explicit) or injected after minibob (default)
 
 ## 4) Content mapping (Tokyo → Prague)
 
@@ -293,11 +280,12 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
   - Deployed R2 home: `prague/pages/{widget}/{overview|examples|features|pricing}.json`.
   - Prague renders `blocks[]` by `type` and embeds account instances only when a complete `accountInstanceRef` is present.
   - Prague validates `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` during page load; missing account instances fail fast in dev/build.
+  - Prague may pass only an explicit authored `accountInstanceRef.locale` to public `clk.live` artifact paths. Prague must not infer widget locale from the route locale, account-widget translation internals, or market config.
   - Page JSON is layout + base copy.
   - Account-widget translated locale values are not Prague page sidecars; live account widgets are served as generated `clk.live` artifacts.
 - Admin/example references:
-  - Admin examples are normal account-owned instances under `accounts/00000001/instances/{instanceId}/`.
-  - Prague page JSON must reference them as `{ "accountPublicId": "00000001", "instanceId": "{instanceId}" }`.
+  - Admin examples are normal account-owned instances under `accounts/CLICKEEN/instances/{instanceId}/`.
+  - Prague page JSON must reference them as `{ "accountPublicId": "CLICKEEN", "instanceId": "{instanceId}" }`.
   - Prague must not store or resolve examples as old `wgt_*` / `ins_*` identities, account UUID folders, or an admin-specific storage lane.
 - Canonical overview is fail-fast for required meta blocks (`navmeta`, `page-meta`) and for per-block validation in the registry. See `prague/src/pages/[market]/[locale]/widgets/[widget]/index.astro`.
 
@@ -311,14 +299,14 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 ### 2.14 Embed Carousel (Premium)
 
 `blocks/embed-carousel/embed-carousel`
-- Props: `{ items: { accountInstanceRef: { accountPublicId: string, instanceId: string } }[], options: Object }`
+- Props: `{ items: { accountInstanceRef: { accountPublicId: string, instanceId: string, locale?: string } }[], options: Object }`
 - Behavior: Horizontal scroll snap carousel of lazy−loaded Clickeen widgets.
 - Used for: "Made with Clickeen" galleries.
 
 ### 2.15 Mobile Showcase (Premium)
 
 `blocks/mobile-showcase/mobile-showcase`
-- Props: `{ items: any[], options: { device: 'iphone'|'android' } }`
+- Props: `{ items: { accountInstanceRef: { accountPublicId: string, instanceId: string, locale?: string } }[], options: { device: 'iphone'|'android' } }`
 - Behavior: Horizontal scroll of mobile device frames showing widget content.
 
 ### 2.16 Feature Explorer (Premium)

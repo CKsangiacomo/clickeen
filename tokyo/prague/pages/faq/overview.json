@@ -17,7 +17,7 @@
         "subheadline": "Design it your way, publish once, and every live FAQ on your site updates with the latest answers."
       },
       "accountInstanceRef": {
-        "accountPublicId": "00000001",
+        "accountPublicId": "CLICKEEN",
         "instanceId": "UZ3JEJSHII"
       }
     },
@@ -33,7 +33,7 @@
       "id": "minibob",
       "type": "minibob",
       "accountInstanceRef": {
-        "accountPublicId": "00000001",
+        "accountPublicId": "CLICKEEN",
         "instanceId": "UZ3JEJSHII"
       },
       "copy": {
@@ -80,18 +80,6 @@
       ]
     },
     {
-      "id": "locale-showcase",
-      "type": "locale-showcase",
-      "copy": {
-        "title": "The world is your oyster",
-        "subtitle": "Welcome every website visitor like a local. Instant, natural translations for a global audience."
-      },
-      "accountInstanceRef": {
-        "accountPublicId": "00000001",
-        "instanceId": "UZ3JEJSHII"
-      }
-    },
-    {
       "id": "steps",
       "type": "steps",
       "copy": {
@@ -122,7 +110,7 @@
         "subheadline": "Radius. Shadows. Borders. Spacing. Tune every property in our visual editor without writing a single line of CSS."
       },
       "accountInstanceRef": {
-        "accountPublicId": "00000001",
+        "accountPublicId": "CLICKEEN",
         "instanceId": "UZ3JEJSHII"
       }
     },

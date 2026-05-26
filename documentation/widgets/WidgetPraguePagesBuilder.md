@@ -58,7 +58,6 @@ Supported block types for widget pages include:
 - `hero`
 - `minibob`
 - `subpage-cards`
-- `locale-showcase`
 - `split`
 - `split-carousel`
 - `steps`
@@ -78,7 +77,6 @@ Key required fields by block type:
 - `control-moat/global-moat/platform-strip.copy`: `title`, `items[]`
 - `big-bang.copy`: `headline`, `body`
 - `cta-bottom-block.copy`: `headline`, `subheadline`
-- `locale-showcase.copy`: `title`, `subtitle`
 - `page-meta.copy`: `title`, `description`
 - `navmeta.copy`: `title`, `description`
 
@@ -108,7 +106,7 @@ Create a compact internal object before page writing:
   "platformClaims": [
     "design.start_fast_edit_deep",
     "infra.edge_delivery_default",
-    "l10n.runtime_locale_selection"
+    "l10n.published_locale_artifacts"
   ],
   "selectedIcps": [
     {
@@ -120,13 +118,15 @@ Create a compact internal object before page writing:
       "rationale": "Mobile-first questions on menu, allergens, and opening hours."
     }
   ],
-  "accountInstanceRefs": [{ "accountPublicId": "00000001", "instanceId": "UZ3JEJSHII" }]
+  "accountInstanceRefs": [{ "accountPublicId": "CLICKEEN", "instanceId": "UZ3JEJSHII" }]
 }
 ```
 
 This avoids narrative drift while drafting multiple pages.
 
-Account instance refs are account-scoped product refs, not aliases. Admin examples use the normal admin account `00000001`, so a Prague page points at `accounts/00000001/instances/{instanceId}/` by carrying both fields in JSON. Do not use old `wgt_*` / `ins_*` names, private UUID account folders, or a hidden instance-only lookup.
+Account instance refs are account-scoped product refs, not aliases. Admin examples use the normal admin account `CLICKEEN`, so a Prague page points at `accounts/CLICKEEN/instances/{instanceId}/` by carrying both fields in JSON. Do not use old `wgt_*` / `ins_*` names, private UUID account folders, or a hidden instance-only lookup.
+
+Do not author locale-specific widget IDs, infer widget locale availability from Prague market config, or add a locale proof block that depends on private translation state. `accountInstanceRef.locale` is only a selector for an already published public artifact at `clk.live/{accountPublicId}/{instanceId}/{locale}.html`.
 
 ### Step 2 - Build each page from its job
 
@@ -159,13 +159,12 @@ Recommended order:
 3. `navmeta`
 4. `minibob`
 5. `subpage-cards`
-6. `locale-showcase`
-7. `steps`
-8. `split` (design/control angle)
-9. `big-bang`
-10. `global-moat`
-11. `platform-strip`
-12. `cta-bottom-block`
+6. `steps`
+7. `split` (design/control angle)
+8. `big-bang`
+9. `global-moat`
+10. `platform-strip`
+11. `cta-bottom-block`
 
 What this page must prove:
 - What widget is

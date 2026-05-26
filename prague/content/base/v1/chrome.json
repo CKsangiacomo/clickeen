@@ -9,10 +9,6 @@
     "cta": {
       "createFree": "Create free"
     },
-    "localeShowcase": {
-      "subtitle": "Same account instance. Three locales. One codepath.",
-      "title": "Designed to speak every language"
-    },
     "footer": {
       "brand": "Clickeen",
       "pricing": "Pricing",

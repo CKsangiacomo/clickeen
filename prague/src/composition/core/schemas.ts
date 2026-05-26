@@ -28,7 +28,11 @@ export type MediaPrimitive = PrimitiveBase & {
   variant: 'image' | 'video' | 'widget';
   src?: string;
   alt?: string;
-  accountInstanceRef?: string;
+  accountInstanceRef?: {
+    accountPublicId: string;
+    instanceId: string;
+    locale?: string;
+  };
 };
 
 export type StackPrimitive = PrimitiveBase & {

@@ -1,11 +1,19 @@
 ---
 import type { Primitive } from '../../core/schemas';
 
-type RenderWidget = (args: { accountInstanceRef: string; className?: string; locale?: string }) => any;
-const { primitives, locale, renderWidget } = Astro.props as {
+type RenderAccountInstance = (args: {
+  accountInstanceRef: {
+    accountPublicId: string;
+    instanceId: string;
+    locale?: string;
+  };
+  className?: string;
+  locale?: string;
+}) => any;
+const { primitives, locale, renderAccountInstance } = Astro.props as {
   primitives: Primitive[];
   locale?: string;
-  renderWidget?: RenderWidget;
+  renderAccountInstance?: RenderAccountInstance;
 };
 
 const headingClassForLevel = (level: number) => {
@@ -92,10 +100,14 @@ const sanitizeAttrs = (attrs?: Record<string, string>) => {
           const attrs = sanitizeAttrs(primitive.attrs);
           return <video class={className} src={primitive.src} controls playsinline {...attrs} />;
         }
-        if (renderWidget) {
-          return renderWidget({ accountInstanceRef: primitive.accountInstanceRef || '', className: primitive.className, locale });
+        if (renderAccountInstance) {
+          const { accountInstanceRef } = primitive;
+          if (!accountInstanceRef) {
+            throw new Error('[prague] Media widget primitive requires accountInstanceRef');
+          }
+          return renderAccountInstance({ accountInstanceRef, className: primitive.className, locale });
         }
-        return <div class={className}>Missing widget renderer</div>;
+        throw new Error('[prague] Media widget primitive requires an account instance renderer');
       }
       case 'stack': {
         const baseClass = primitive.direction === 'horizontal' ? 'ck-row' : 'ck-stack';

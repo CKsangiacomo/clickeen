@@ -17,8 +17,6 @@ export type PragueI18nKey =
   | 'prague.hero.overview.subheadTwo'
   | 'prague.hero.overview.subheadMany'
   | 'prague.cta.createFree'
-  | 'prague.localeShowcase.title'
-  | 'prague.localeShowcase.subtitle'
   | 'prague.common.comingSoon'
   | 'prague.creative.useThisWidgetOnYourWebsite'
   | 'prague.share.share'

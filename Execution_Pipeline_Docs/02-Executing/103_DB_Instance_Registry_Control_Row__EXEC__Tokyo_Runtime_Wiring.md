@@ -21,13 +21,14 @@ The authored payload remains Tokyo-owned payload behind product operations. The 
 - Removed the active `instance-index` module and its generated account index tests.
 - Updated Tokyo tests so the test harness uses an in-memory Supabase/PostgREST registry instead of R2 account-index discovery.
 
-## Current Instance Migration Evidence
+## Pre-104A Historical Instance Migration Evidence
 
-Before deploying DB-backed runtime code, current cloud-dev instances must exist in `instances`.
+Before deploying DB-backed runtime code, current-era cloud-dev instances had to exist in `instances`.
+This section is pre-104A historical evidence. After PRD 104A, the active Clickeen account coordinate is `CLICKEEN`; the numeric coordinate below records the old seed state only.
 
 Read-only R2 evidence gathered on 2026-05-22:
 
-- `accounts/00000001/instances/index.json` exists and lists exactly:
+- Pre-104A historical source: `accounts/00000001/instances/index.json` existed and listed exactly:
   - `H7IF9M2K9B` / `countdown` / `published`
   - `UZ3JEJSHII` / `faq` / `published`
   - `8FMVZFFPJV` / `logoshowcase` / `published`
@@ -46,7 +47,7 @@ Migration deploy proof:
 
 Read-only Supabase proof after deploy:
 
-- `instances` contains exactly the three current admin rows for account `00000001`:
+- Pre-104A historical source: `instances` contained exactly the three admin rows for account `00000001`:
   - `H7IF9M2K9B` / `countdown` / `published` / `idle`
   - `UZ3JEJSHII` / `faq` / `published` / `idle`
   - `8FMVZFFPJV` / `logoshowcase` / `published` / `idle`

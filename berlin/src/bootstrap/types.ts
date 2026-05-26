@@ -46,10 +46,7 @@ export type BerlinAccountContext = {
   accountId: string;
   accountPublicId: string;
   role: MemberRole;
-  name: string;
-  slug: string;
   status: string;
-  isPlatform: boolean;
   tier: AccountTier;
   websiteUrl: string | null;
   membershipVersion: string | null;

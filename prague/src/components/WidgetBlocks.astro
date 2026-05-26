@@ -4,7 +4,6 @@ import BigBang from '../blocks/big-bang/big-bang.astro';
 import ControlMoat from '../blocks/control-moat/control-moat.astro';
 import GlobalMoat from '../blocks/global-moat/global-moat.astro';
 import Hero from '../blocks/hero/hero.astro';
-import LocaleShowcase from '../blocks/locale-showcase/locale-showcase.astro';
 import Minibob from '../blocks/minibob/minibob.astro';
 import PlatformStrip from '../blocks/platform-strip/platform-strip.astro';
 import Split from '../blocks/split/split.astro';
@@ -16,14 +15,7 @@ import FeatureExplorer from '../blocks/feature-explorer/feature-explorer.astro';
 import MobileShowcase from '../blocks/mobile-showcase/mobile-showcase.astro';
 import WidgetSubnav from '../blocks/site/nav/WidgetSubnav.astro';
 import { pragueT } from '../lib/i18n';
-import { getPragueMarket } from '../lib/markets';
-import { normalizeLocaleToken } from '@clickeen/l10n';
-import {
-  chooseShowcaseTiles,
-  localeLabel,
-  resolveTokyoInstanceLocales,
-  sortLocaleOptions,
-} from '../lib/instanceL10n';
+import { localeLabel } from '../lib/localeLabels';
 
 type Block = {
   id: string;
@@ -32,7 +24,17 @@ type Block = {
   visual?: { image?: string };
   links?: any;
   align?: string;
-  accountInstanceRef?: { accountPublicId?: string; instanceId?: string; embedMode?: string };
+  accountInstanceRef?: {
+    accountPublicId?: string;
+    instanceId?: string;
+    locale?: string;
+  };
+};
+
+type AccountInstanceRef = {
+  accountPublicId: string;
+  instanceId: string;
+  locale?: string;
 };
 
 type FeatureItem = {
@@ -60,64 +62,17 @@ type Props = {
 };
 
 const { blocks, widget, market, locale, activeSubpage = 'overview', primaryCta } = Astro.props;
-const hasExplicitLocaleShowcase = blocks.some((b) => b && b.type === 'locale-showcase');
-const explicitShowcaseInstanceId =
-  blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.accountInstanceRef?.instanceId === 'string')?.accountInstanceRef?.instanceId ??
-  null;
-const explicitShowcaseAccountPublicId =
-  blocks.find((b) => b && b.type === 'locale-showcase' && typeof b.accountInstanceRef?.accountPublicId === 'string')?.accountInstanceRef?.accountPublicId ??
-  null;
-const showcaseInstanceId =
-  explicitShowcaseInstanceId ??
-  blocks.find((b) => b && b.accountInstanceRef && typeof b.accountInstanceRef.instanceId === 'string')?.accountInstanceRef?.instanceId ??
-  null;
-const showcaseAccountPublicId =
-  explicitShowcaseAccountPublicId ??
-  blocks.find((b) => b && b.accountInstanceRef && typeof b.accountInstanceRef.accountPublicId === 'string')?.accountInstanceRef?.accountPublicId ??
-  null;
-const defaultShowcaseTitle = await pragueT(locale, 'prague.localeShowcase.title');
-const defaultShowcaseSubtitle = await pragueT(locale, 'prague.localeShowcase.subtitle');
-const marketConfig = getPragueMarket(market);
-
-const instanceLocalesRaw =
-  showcaseAccountPublicId && showcaseInstanceId
-    ? await resolveTokyoInstanceLocales(showcaseAccountPublicId, showcaseInstanceId).catch(() => null)
-    : null;
-const fallbackInstanceLocales = marketConfig?.locales?.length ? marketConfig.locales : ['en', 'es', 'zh-hans', 'ja'];
-const instanceLocales = instanceLocalesRaw ? sortLocaleOptions(instanceLocalesRaw) : sortLocaleOptions(fallbackInstanceLocales);
-const showcaseTiles = chooseShowcaseTiles(instanceLocales);
-const showcaseTileEntries = showcaseTiles.map((code) => ({ code, label: localeLabel(code, locale) }));
-const showcaseOptionEntries = instanceLocales.map((code) => ({ code, label: localeLabel(code, locale) }));
-const overviewHeroSubheadOne = await pragueT(locale, 'prague.hero.overview.subheadOne');
-const overviewHeroSubheadTwo = await pragueT(locale, 'prague.hero.overview.subheadTwo');
-const overviewHeroSubheadMany = await pragueT(locale, 'prague.hero.overview.subheadMany');
-const heroPrimaryCta = primaryCta;
-const OVERVIEW_HERO_TOTAL_LOCALES = 29;
-
-function formatLocaleNameList(labels: string[]): string {
-  if (!labels.length) return '';
-  if (labels.length === 1) return labels[0] || '';
-  return labels.join(', ');
+const routeLocale = String(locale || '').trim();
+if (!routeLocale) {
+  throw new Error(`[prague] ${widget}/${activeSubpage}: route locale is required`);
 }
+const routeLocaleHeroSubhead = await pragueT(locale, 'prague.hero.overview.subheadOne');
+const heroPrimaryCta = primaryCta;
 
-function renderOverviewHeroSubheadline(args: { selectedLocales: string[] }): string | null {
-  const selected = args.selectedLocales;
-  if (selected.length === 0) return null;
-  const labels = selected.map((code) => localeLabel(code, locale));
-  const lang1 = labels[0] || '';
-  const lang2 = labels[1] || '';
-  if (selected.length === 1 || !lang2) {
-    return overviewHeroSubheadOne.replace('{lang1}', lang1);
-  }
-  if (selected.length === 2) {
-    return overviewHeroSubheadTwo.replace('{lang1}', lang1).replace('{lang2}', lang2);
-  }
-  const more = Math.max(0, OVERVIEW_HERO_TOTAL_LOCALES - selected.length);
-  const trailingLanguages = formatLocaleNameList(labels.slice(1));
-  return overviewHeroSubheadMany
-    .replace('{lang1}', lang1)
-    .replace('{lang2}', trailingLanguages)
-    .replace('{more}', String(more));
+function renderOverviewHeroSubheadline(args: { selectedLocale: string }): string | null {
+  const selectedLocale = String(args.selectedLocale || '').trim();
+  if (!selectedLocale) return null;
+  return routeLocaleHeroSubhead.replace('{lang1}', localeLabel(selectedLocale, locale));
 }
 
 function requireInstanceId(context: string, value?: string | null): string {
@@ -134,6 +89,16 @@ function requireAccountPublicId(context: string, value?: string | null): string 
     throw new Error(`[prague] ${widget}/${activeSubpage}: ${context} requires explicit accountInstanceRef.accountPublicId`);
   }
   return accountPublicId;
+}
+
+function resolveAccountInstanceRef(context: string, ref?: Block['accountInstanceRef']): AccountInstanceRef | undefined {
+  if (!ref) return undefined;
+  const resolved: AccountInstanceRef = {
+    accountPublicId: requireAccountPublicId(context, ref.accountPublicId),
+    instanceId: requireInstanceId(context, ref.instanceId),
+  };
+  const authoredLocale = String(ref.locale || '').trim();
+  return authoredLocale ? { ...resolved, locale: authoredLocale } : resolved;
 }
 ---
 
@@ -155,39 +120,18 @@ function requireAccountPublicId(context: string, value?: string | null): string 
     }
     case 'hero': {
       const copy = block.copy ?? {};
-      const accountPublicId = block.accountInstanceRef?.accountPublicId;
-      const accountInstanceId = block.accountInstanceRef?.instanceId;
-      const accountInstanceEmbedModeRaw =
-        block.accountInstanceRef && typeof block.accountInstanceRef.embedMode === 'string' ? String(block.accountInstanceRef.embedMode) : '';
-      const accountInstanceEmbedMode = accountInstanceEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
+      const blockAccountInstanceRef = resolveAccountInstanceRef('hero', block.accountInstanceRef);
       const explicitHeroItems = Array.isArray((block as any).items) ? ((block as any).items as any[]) : [];
       const mappedHeroItems = explicitHeroItems.map((item: any) => {
-        const itemLocale = typeof item?.accountInstanceRef?.locale === 'string' ? item.accountInstanceRef.locale.trim() : '';
         return {
           ...item,
-          accountInstanceRef: item.accountInstanceRef ? { ...item.accountInstanceRef, locale: itemLocale || locale } : item.accountInstanceRef,
+          accountInstanceRef: resolveAccountInstanceRef('hero item', item.accountInstanceRef),
         };
       });
-      const heroPreviewAccountPublicId = accountPublicId || showcaseAccountPublicId;
-      const heroPreviewInstanceId = accountInstanceId || showcaseInstanceId;
-      const overviewHeroLocales = [normalizeLocaleToken(locale) ?? 'en'];
-      const autoOverviewHeroItems =
-        activeSubpage === 'overview' && mappedHeroItems.length === 0 && heroPreviewAccountPublicId && heroPreviewInstanceId
-          ? overviewHeroLocales.map((code) => ({
-              accountInstanceRef: {
-                accountPublicId: heroPreviewAccountPublicId,
-                instanceId: heroPreviewInstanceId,
-                locale: code,
-                title: `${widget} overview ${code}`,
-                embedMode: accountInstanceEmbedMode,
-              },
-            }))
-          : [];
-      const resolvedHeroItems = mappedHeroItems.length > 0 ? mappedHeroItems : autoOverviewHeroItems;
       const dynamicOverviewSubheadline =
         activeSubpage === 'overview' && mappedHeroItems.length === 0
           ? renderOverviewHeroSubheadline({
-              selectedLocales: overviewHeroLocales,
+              selectedLocale: routeLocale,
             })
           : null;
       rendered = (
@@ -197,12 +141,8 @@ function requireAccountPublicId(context: string, value?: string | null): string 
           primaryCta={heroPrimaryCta}
           secondaryCta={undefined}
           widgetType={widget}
-          accountInstanceRef={
-            accountPublicId && accountInstanceId
-              ? { accountPublicId, instanceId: accountInstanceId, locale, title: `${widget} ${activeSubpage} hero`, embedMode: accountInstanceEmbedMode }
-              : undefined
-          }
-          items={resolvedHeroItems}
+          accountInstanceRef={blockAccountInstanceRef}
+          items={mappedHeroItems}
         >
           <WidgetSubnav slot="subnav" market={market} locale={locale} widget={widget} active={activeSubpage} variant="inline" />
         </Hero>
@@ -211,11 +151,7 @@ function requireAccountPublicId(context: string, value?: string | null): string 
     }
     case 'split': {
       const copy = block.copy ?? {};
-      const accountPublicId = block.accountInstanceRef?.accountPublicId;
-      const accountInstanceId = block.accountInstanceRef?.instanceId;
-      const accountInstanceEmbedModeRaw =
-        block.accountInstanceRef && typeof block.accountInstanceRef.embedMode === 'string' ? String(block.accountInstanceRef.embedMode) : '';
-      const accountInstanceEmbedMode = accountInstanceEmbedModeRaw.trim() === 'indexable' ? 'indexable' : undefined;
+      const blockAccountInstanceRef = resolveAccountInstanceRef('split', block.accountInstanceRef);
       const layout = typeof (block as any).layout === 'string' ? (block as any).layout : '';
       rendered = (
         <Split
@@ -225,11 +161,7 @@ function requireAccountPublicId(context: string, value?: string | null): string 
           secondaryCta={undefined}
           widgetType={widget}
           layout={layout}
-          accountInstanceRef={
-            accountPublicId && accountInstanceId
-              ? { accountPublicId, instanceId: accountInstanceId, locale, title: `${widget} ${activeSubpage} split`, embedMode: accountInstanceEmbedMode }
-              : undefined
-          }
+          accountInstanceRef={blockAccountInstanceRef}
         />
       );
       break;
@@ -246,10 +178,9 @@ function requireAccountPublicId(context: string, value?: string | null): string 
           widgetType={widget}
           layout={layout}
           items={((block as any).items ?? []).map((item: any) => {
-            const itemLocale = typeof item?.accountInstanceRef?.locale === 'string' ? item.accountInstanceRef.locale.trim() : '';
             return {
               ...item,
-              accountInstanceRef: item.accountInstanceRef ? { ...item.accountInstanceRef, locale: itemLocale || locale } : item.accountInstanceRef,
+              accountInstanceRef: resolveAccountInstanceRef('split-carousel item', item.accountInstanceRef),
             };
           })}
         />
@@ -343,47 +274,20 @@ function requireAccountPublicId(context: string, value?: string | null): string 
       const copy = block.copy ?? {};
       const minibobAccountPublicId = requireAccountPublicId('minibob', block.accountInstanceRef?.accountPublicId);
       const minibobInstanceId = requireInstanceId('minibob', block.accountInstanceRef?.instanceId);
+      const minibobLocale = String(block.accountInstanceRef?.locale || '').trim() || undefined;
       rendered = (
         <>
           <Minibob
             widget={widget}
-            locale={locale}
+            routeLocale={routeLocale}
+            embedLocale={minibobLocale}
             page={activeSubpage}
             heading={String(copy.heading ?? '')}
             subhead={String(copy.subhead ?? '')}
             accountPublicId={minibobAccountPublicId}
             instanceId={minibobInstanceId}
           />
-          {!hasExplicitLocaleShowcase ? (
-            <LocaleShowcase
-              accountPublicId={minibobAccountPublicId}
-              instanceId={minibobInstanceId}
-              title={defaultShowcaseTitle}
-              subtitle={defaultShowcaseSubtitle}
-              tiles={showcaseTileEntries}
-              options={showcaseOptionEntries}
-            />
-          ) : null}
         </>
-      );
-      break;
-    }
-    case 'locale-showcase': {
-      const copy = block.copy ?? {};
-      const localeShowcaseAccountPublicId = requireAccountPublicId('locale-showcase', block.accountInstanceRef?.accountPublicId ?? showcaseAccountPublicId);
-      const localeShowcaseInstanceId = requireInstanceId('locale-showcase', block.accountInstanceRef?.instanceId ?? showcaseInstanceId);
-      const title = typeof copy.title === 'string' && copy.title.trim() ? String(copy.title) : defaultShowcaseTitle;
-      const subtitle =
-        typeof copy.subtitle === 'string' && copy.subtitle.trim() ? String(copy.subtitle) : defaultShowcaseSubtitle;
-      rendered = (
-        <LocaleShowcase
-          accountPublicId={localeShowcaseAccountPublicId}
-          instanceId={localeShowcaseInstanceId}
-          title={title}
-          subtitle={subtitle}
-          tiles={showcaseTileEntries}
-          options={showcaseOptionEntries}
-        />
       );
       break;
     }
@@ -393,6 +297,7 @@ function requireAccountPublicId(context: string, value?: string | null): string 
         <EmbedCarousel
           items={(block as any).items ?? []}
           options={(block as any).options ?? {}}
+          widgetType={widget}
         />
       );
       break;
@@ -403,6 +308,7 @@ function requireAccountPublicId(context: string, value?: string | null): string 
         <MobileShowcase
           items={(block as any).items ?? []}
           options={(block as any).options ?? {}}
+          widgetType={widget}
         />
       );
       break;

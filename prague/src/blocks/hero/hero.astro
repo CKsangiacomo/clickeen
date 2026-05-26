@@ -13,9 +13,7 @@ type CarouselItem = {
   accountInstanceRef: {
     accountPublicId: string;
     instanceId: string;
-    locale: string;
-    title?: string;
-    embedMode?: 'iframe' | 'indexable';
+    locale?: string;
   };
 };
 
@@ -29,14 +27,13 @@ type Props = {
   accountInstanceRef?: {
     instanceId: string;
     accountPublicId: string;
-    locale: string;
-    title?: string;
-    embedMode?: 'iframe' | 'indexable';
+    locale?: string;
   };
   items?: CarouselItem[];
 };
 
 const { headline, subheadline, primaryCta, secondaryCta, actionGroup, widgetType, accountInstanceRef, items } = Astro.props;
+const hasWidgetVisual = Boolean((items && items.length > 0) || accountInstanceRef);
 
 const resolvedActionGroup =
   actionGroup ??
@@ -75,7 +72,7 @@ const headerPrimitives = assertPrimitives(
     <div class="ck-hero__subnav">
       <slot name="subnav" />
     </div>
-    <div class="ck-split ck-split--center ck-split--hero">
+    <div class={`ck-split ck-split--center ck-split--hero${hasWidgetVisual ? '' : ' ck-split--copyOnly'}`}>
       <div class="ck-split__a">
         <div class="ck-hero__content ck-stack ck-gap-loose">
           <div class="ck-hero__copy ck-stack ck-gap-tight">
@@ -88,23 +85,22 @@ const headerPrimitives = assertPrimitives(
           ) : null}
         </div>
       </div>
-      <div class="ck-split__b" aria-hidden="true">
-        {items && items.length > 0 ? (
-          <Carousel items={items} widgetType={widgetType} id={`hero-carousel-${headline.replace(/\s+/g, '-').toLowerCase()}`} />
-        ) : accountInstanceRef ? (
-          <InstanceEmbed
-            instanceId={accountInstanceRef.instanceId}
-            accountPublicId={accountInstanceRef.accountPublicId}
-            locale={accountInstanceRef.locale}
-            title={accountInstanceRef.title ?? 'Widget preview'}
-            embedMode={accountInstanceRef.embedMode}
-            loading="eager"
-            widgetType={widgetType}
-          />
-        ) : (
-          <div class="ck-media ck-heroPreview">Widget preview unavailable</div>
-        )}
-      </div>
+      {hasWidgetVisual ? (
+        <div class="ck-split__b" aria-hidden="true">
+          {items && items.length > 0 ? (
+            <Carousel items={items} widgetType={widgetType} id={`hero-carousel-${headline.replace(/\s+/g, '-').toLowerCase()}`} />
+          ) : accountInstanceRef ? (
+            <InstanceEmbed
+              instanceId={accountInstanceRef.instanceId}
+              accountPublicId={accountInstanceRef.accountPublicId}
+              locale={accountInstanceRef.locale}
+              title={`${widgetType || 'Widget'} preview`}
+              loading="eager"
+              widgetType={widgetType}
+            />
+          ) : null}
+        </div>
+      ) : null}
     </div>
   </div>
 </section>
@@ -125,17 +121,4 @@ const headerPrimitives = assertPrimitives(
 
   .ck-hero__title { margin: 0 !important; }
   .ck-hero__subheadline { margin: 0 !important; }
-
-  .ck-heroPreview {
-    width: 100%;
-    min-height: 280px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: color-mix(in oklab, var(--color-system-black), transparent 56%);
-  }
-
-  @media (max-width: 900px) {
-    .ck-heroPreview { min-height: 220px; }
-  }
 </style>

@@ -4,6 +4,7 @@ const ACTION_VARIANTS = new Set(['primary', 'secondary', 'ghost']);
 const TEXT_VARIANTS = new Set(['body', 'caption', 'label']);
 const STACK_DIRECTIONS = new Set(['vertical', 'horizontal']);
 const MEDIA_VARIANTS = new Set(['image', 'video', 'widget']);
+const ACCOUNT_INSTANCE_REF_KEYS = new Set(['accountPublicId', 'instanceId', 'locale']);
 
 export function assertSplitLayout(value: unknown, ctx = 'layout'): SplitLayout {
   if (typeof value !== 'string' || !SPLIT_LAYOUTS.includes(value as SplitLayout)) {
@@ -28,6 +29,27 @@ function assertAttrs(value: unknown, ctx: string): void {
     if (typeof val !== 'string') {
       throw new Error(`[composition] Invalid ${ctx}.attrs.${key} (expected string)`);
     }
+  }
+}
+
+function assertAccountInstanceRef(value: unknown, ctx: string): void {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`[composition] ${ctx}.accountInstanceRef must be an object`);
+  }
+  for (const key of Object.keys(value as Record<string, unknown>)) {
+    if (!ACCOUNT_INSTANCE_REF_KEYS.has(key)) {
+      throw new Error(`[composition] ${ctx}.accountInstanceRef.${key} is not supported`);
+    }
+  }
+  const ref = value as { accountPublicId?: unknown; instanceId?: unknown; locale?: unknown };
+  if (typeof ref.accountPublicId !== 'string' || !ref.accountPublicId.trim()) {
+    throw new Error(`[composition] ${ctx}.accountInstanceRef.accountPublicId is required for widget`);
+  }
+  if (typeof ref.instanceId !== 'string' || !ref.instanceId.trim()) {
+    throw new Error(`[composition] ${ctx}.accountInstanceRef.instanceId is required for widget`);
+  }
+  if (ref.locale != null && (typeof ref.locale !== 'string' || !ref.locale.trim())) {
+    throw new Error(`[composition] ${ctx}.accountInstanceRef.locale must be text`);
   }
 }
 
@@ -109,9 +131,7 @@ export function assertPrimitive(value: unknown, ctx = 'primitive'): Primitive {
         }
       }
       if (variant === 'widget') {
-        if (typeof accountInstanceRef !== 'string' || !accountInstanceRef.trim()) {
-          throw new Error(`[composition] ${ctx}.accountInstanceRef is required for widget`);
-        }
+        assertAccountInstanceRef(accountInstanceRef, ctx);
       }
       return primitive;
     }

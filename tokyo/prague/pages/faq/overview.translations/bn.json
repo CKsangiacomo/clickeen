@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "08da11d9a3121229c9a968a1d0b9958f6dfe5fce6d6366a1418c25945a27ffdd",
+  "baseFingerprint": "2305d4ce1a0e97a712865b2953290acd1b02296020b215efcbea8bcde639fc66",
   "baseUpdatedAt": null,
   "ops": [
     {
@@ -81,16 +81,6 @@
       "op": "set",
       "path": "blocks.subpage-cards.copy.items.2.body",
       "value": "অতিরিক্ত ইঞ্জিনিয়ারিং ছাড়াই স্কেল করতে ব্যবহার করুন Ombra AI, বিল্ট-ইন লোকালাইজেশন, এবং SEO-রেডি আউটপুট।"
-    },
-    {
-      "op": "set",
-      "path": "blocks.locale-showcase.copy.title",
-      "value": "পুরো দুনিয়াই আপনার মঞ্চ"
-    },
-    {
-      "op": "set",
-      "path": "blocks.locale-showcase.copy.subtitle",
-      "value": "প্রতিটি ওয়েবসাইট ভিজিটরকে স্থানীয়ের মতো স্বাগত জানান। বিশ্বব্যাপী দর্শকের জন্য তাৎক্ষণিক, স্বাভাবিক অনুবাদ।"
     },
     {
       "op": "set",

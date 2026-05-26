@@ -35,6 +35,11 @@ Documentation head:
 - `74bc5f87` updates this gate readout. It does not change runtime behavior.
 - `f479d605` locks the public-serving environment split in architecture docs: cloud-dev uses `dev.clk.live`; production release stages use `clk.live`.
 
+PRD 104A coordinate note:
+
+- After PRD 104A is deployed and the R2/Supabase migration has run, Clickeen-owned public serving smokes must use account coordinate `CLICKEEN`.
+- Earlier PRD 103 readouts used the retired numeric bootstrap coordinate and are pre-104A historical proof, not current product truth.
+
 Local targeted verification is green:
 
 - `pnpm --filter @clickeen/sanfrancisco test`
@@ -45,35 +50,17 @@ Local targeted verification is green:
 - `pnpm lint`
 - `TURBO_FORCE=true pnpm typecheck`
 
-Current public smoke command:
+Post-104A public smoke command:
 
 ```bash
-pnpm health:product-path --public-only --account-public-id 00000001 --instance-id UZ3JEJSHII --json
+pnpm health:product-path --public-only --account-public-id CLICKEEN --instance-id UZ3JEJSHII --json
 ```
 
 Cloud-dev public smoke now targets `https://dev.clk.live` by default. Use `--clk-base https://clk.live` only for production/UAT checks.
 
-Current result:
+Post-104A runtime result:
 
-```json
-{
-  "ok": true,
-  "results": [
-    {
-      "name": "Roma unauthenticated account API rejects",
-      "boundary": "roma.auth",
-      "ok": true,
-      "detail": "HTTP 401"
-    },
-    {
-      "name": "Public serving instance read and boundary",
-      "boundary": "clk.public",
-      "ok": true,
-      "detail": "00000001/UZ3JEJSHII"
-    }
-  ]
-}
-```
+Complete as of 2026-05-26. PRD 104A copied admin R2 source/artifacts from `accounts/00000001/` to `accounts/CLICKEEN/`, migrated Supabase account/dependent rows to `CLICKEEN`, rematerialized the three published admin instances, deleted migrated old R2 source/public keys, and verified old public paths return 404 with no redirect.
 
 Direct DNS check:
 
@@ -121,20 +108,20 @@ Current result after cloud-dev route/DNS setup: `A dev.clk.live` returns Cloudfl
 Forced Cloudflare edge check:
 
 ```bash
-curl -sS -o /dev/null -w '%{http_code}\n' https://dev.clk.live/00000001/UZ3JEJSHII/
+curl -sS -o /dev/null -w '%{http_code}\n' https://dev.clk.live/CLICKEEN/UZ3JEJSHII/
 ```
 
-Current result after cloud-dev route/DNS setup and materialization repair: HTTP 200.
+Post-104A expected result: HTTP 200 after live R2 copy, Supabase migration, and republish/rematerialization.
 
 Seeded instance artifact checks:
 
 ```bash
 for id in UZ3JEJSHII 8FMVZFFPJV H7IF9M2K9B; do
-  curl -sS -o /dev/null -w "$id %{http_code}\n" "https://dev.clk.live/00000001/$id/"
+  curl -sS -o /dev/null -w "$id %{http_code}\n" "https://dev.clk.live/CLICKEEN/$id/"
 done
 ```
 
-Current result:
+Post-104A expected result:
 
 ```text
 UZ3JEJSHII 200
@@ -145,10 +132,10 @@ H7IF9M2K9B 200
 Private source mirror check:
 
 ```bash
-curl -I https://dev.clk.live/00000001/UZ3JEJSHII/instance.json
+curl -I https://dev.clk.live/CLICKEEN/UZ3JEJSHII/instance.json
 ```
 
-Current result after cloud-dev route/DNS setup: HTTP 404 with Tokyo-worker headers.
+Post-104A expected result: HTTP 404 with Tokyo-worker headers.
 
 ## Deterministic Readout
 
@@ -158,7 +145,7 @@ The gate remains blocked for one product reason:
 
 The prior architecture blocker - FAQ-specific translation runtime - has been corrected locally. The current implementation uses generic `editable-fields.json` contracts, generic v2 translation jobs, generic San Francisco primitive-field execution, identity-aware translated value preservation, and a generated widget source index. A smoke that proves only FAQ mechanics is still not enough: DB.9 must prove FAQ plus at least one non-FAQ widget on the authenticated Roma/Bob/Tokyo/San Francisco product path.
 
-Green on 2026-05-24: GitHub Actions workflow `supabase migrations deploy` run `26367289969` completed successfully on head `e4c0a56e`. Remote Supabase REST proof returned `accounts.selected_target_locales` and `accounts.locale_policy`; admin account `00000001` has 28 selected target locales.
+Pre-104A historical proof from 2026-05-24: GitHub Actions workflow `supabase migrations deploy` run `26367289969` completed successfully on head `e4c0a56e`. Remote Supabase REST proof returned `accounts.selected_target_locales` and `accounts.locale_policy` for the retired numeric bootstrap account. PRD 104A has now produced fresh proof for `CLICKEEN`: the active admin account is `CLICKEEN`, old active Supabase refs are zero, and `dev.clk.live/CLICKEEN/{UZ3JEJSHII,8FMVZFFPJV,H7IF9M2K9B}` returns 200 while old `00000001` public paths return 404.
 
 The private `instance.json` 404 is good. It proves the old source mirror is not accidentally exposed as a public artifact.
 
@@ -170,7 +157,7 @@ The current GitHub surface-reachability workflow does not check `dev.clk.live`; 
 
 Deploy success does not mean PRD 103 can resume.
 
-At this stage the DB pivot code is deployed and the public serving bridge has live materialization proof for the seeded cloud-dev instances. PRD 103 still cannot resume until the authenticated Roma product path is smoke-tested end to end on FAQ plus at least one non-FAQ widget.
+At this stage the DB pivot code is deployed and PRD 104A has produced current `CLICKEEN` public-serving proof for the seeded cloud-dev instances. PRD 103 still cannot resume until the authenticated Roma product path is smoke-tested end to end on FAQ plus at least one non-FAQ widget.
 
 PRD 103J is now implemented locally as the surviving translation boundary:
 
@@ -222,13 +209,13 @@ Test proof:
 - authenticated repair materializes `index.html` for a published row;
 - repair does not create or expose `instance.json`.
 
-Cloud invocation status:
+Cloud invocation status after PRD 104A:
 
 - `https://tokyo.dev.clickeen.com/healthz` reaches the Tokyo worker and returns HTTP 200 with a worker `x-request-id`.
-- `https://tokyo.dev.clickeen.com/__internal/accounts/00000001/serving/restore-paid` returns HTTP 404 without a worker `x-request-id`.
-- This is because `tokyo.dev.clickeen.com/__internal/*` is not a public Cloudflare route for the Tokyo worker. Roma uses service binding for internal Tokyo calls.
-- Therefore the repair route exists and is tested, but it has not been run against cloud-dev seeded data from the shell.
-- Do not expose broad Tokyo `__internal/*` just to make this callable. If a manual cloud repair is needed, use a narrow Roma-owned account operation or the existing authenticated Roma publish path.
+- `tokyo.dev.clickeen.com/__internal/*` is not part of the normal public Tokyo route list. Roma uses service binding for internal Tokyo calls.
+- For the one-time 104A migration gate, an exact temporary Cloudflare route for `tokyo.dev.clickeen.com/__internal/accounts/CLICKEEN/serving/restore-paid` was added, called once with `TOKYO_DEV_JWT` and `x-ck-internal-service: devstudio.local`, and removed immediately afterward.
+- The repair operation returned `materializedInstanceIds: ["UZ3JEJSHII","8FMVZFFPJV","H7IF9M2K9B"]` and `failed: []`.
+- Do not expose broad Tokyo `__internal/*`. Future manual cloud repair should use a narrow Roma-owned account operation or the authenticated Roma publish path.
 
 ## Required Fix Before Green
 

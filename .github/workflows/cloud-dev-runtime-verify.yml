@@ -77,8 +77,9 @@ jobs:
               exit 1
             fi
           }
+          active_account_public_id="${CK_ACTIVE_ACCOUNT_PUBLIC_ID:-CLICKEEN}"
           assert_404 "/healthz"
-          assert_404 "/__internal/accounts/00000001/serving/restore-paid"
+          assert_404 "/__internal/accounts/${active_account_public_id}/serving/restore-paid"
           assert_404 "/widgets/faq/spec.json"
           assert_404 "/renders/widgets/catalog.json"
 

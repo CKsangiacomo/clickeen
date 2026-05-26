@@ -8,8 +8,7 @@ export function BillingDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountContext.accountName}</p>
-        <p className="body-s">Slug: {accountContext.accountSlug}</p>
+        <p className="body-m">Account: {accountContext.accountLabel}</p>
         <p className="body-m">Billing provider integration is not connected in this environment. Roma shows the current plan only.</p>
       </section>
 

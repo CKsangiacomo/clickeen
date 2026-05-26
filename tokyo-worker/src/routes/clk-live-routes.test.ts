@@ -8,6 +8,8 @@ import { tryHandleClkLiveStaticRoutes } from './clk-live-routes.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
 const INSTANCE_ID = 'Z9Y8X7W6V5';
+const ADMIN_ACCOUNT_ID = 'CLICKEEN';
+const OLD_ADMIN_ACCOUNT_ID = '00000001';
 
 type StoredObject = {
   body: Uint8Array;
@@ -133,6 +135,35 @@ test('clk.live canonical route serves instance index.html from account storage',
   assert.equal(response?.status, 200);
   assert.equal(response?.headers.get('content-type'), 'text/html; charset=utf-8');
   assert.equal(await response?.text(), '<h1>FAQ</h1>');
+});
+
+test('clk.live serves the CLICKEEN account coordinate without aliasing old admin paths', async () => {
+  const { env } = createTestEnv({
+    [`accounts/${ADMIN_ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>Clickeen FAQ</h1>',
+  });
+  await writeSavedRenderConfig({
+    env,
+    accountId: ADMIN_ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'faq',
+    displayName: 'FAQ',
+    meta: null,
+    config: { question: 'Q1', answer: 'A1' },
+  });
+  await writeInstanceServeState({
+    env,
+    accountId: ADMIN_ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    status: 'published',
+  });
+
+  const current = await callPublicRoute({ env, pathname: `/${ADMIN_ACCOUNT_ID}/${INSTANCE_ID}` });
+  assert.equal(current?.status, 200);
+  assert.equal(await current?.text(), '<h1>Clickeen FAQ</h1>');
+
+  const old = await callPublicRoute({ env, pathname: `/${OLD_ADMIN_ACCOUNT_ID}/${INSTANCE_ID}` });
+  assert.equal(old?.status, 404);
+  assert.notEqual(old?.headers.get('location'), `https://clk.live/${ADMIN_ACCOUNT_ID}/${INSTANCE_ID}`);
 });
 
 test('clk.live serves only allowlisted materialized support files', async () => {

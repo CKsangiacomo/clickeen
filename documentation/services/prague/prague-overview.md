@@ -2,7 +2,7 @@
 
 STATUS: Runtime reality (this repo)
 Created: 2024-12-27
-Last updated: 2026-05-15
+Last updated: 2026-05-26
 
 ---
 
@@ -26,7 +26,7 @@ Tokyo/R2 content contract:
 - Prague localization must not publish to root `l10n/**`.
 - Tokyo Pages/static output may serve friendly URLs, but it is a deploy/source convenience and not a second Prague content authority.
 
-In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy). Prague page translations are page-owned sidecars beside those JSON files. Prague does not own account-widget locale overlays.
+In this repo snapshot, Prague’s widget marketing content is sourced from **checked-in JSON** under `tokyo/prague/pages/*/*.json` (single source of layout + base copy). Prague page translations are page-owned sidecars beside those JSON files. Prague does not own account-widget translated value maps or locale availability.
 
 At build time, Prague:
 - enumerates widgets by scanning `tokyo/product/widgets/*` (excluding `_*/` and `shared/`)
@@ -56,7 +56,7 @@ Root `/` is a non-canonical entry surface:
 
 ### 1.1 Widget directory
 
-- `/{market}/{locale}/` — Widget directory page (lists widgets by reading `overview.json` hero copy, merged from deterministic overlays)
+- `/{market}/{locale}/` — Widget directory page (lists widgets by reading `overview.json` hero copy plus page-owned translation sidecars)
 
 There is currently no dedicated `/{market}/{locale}/widgets/` index route in this repo snapshot; keep any “view all widgets” links aligned with the actual directory page.
 
@@ -68,12 +68,10 @@ There is currently no dedicated `/{market}/{locale}/widgets/` index route in thi
 This route is strict: it throws at build time if `overview.json` is missing required blocks/copy fields.
 
 Overview hero runtime behavior:
-- For `hero` blocks on the overview route, Prague can auto-build a locale carousel from a single instance ID (one slide per locale).
-- Locale priority is market-configured in `prague/src/markets/markets.json` via `markets[].overviewHero`:
-  - `strategy: "tier1"` + `tier1Locales[]` for multilingual markets
-  - `strategy: "native-first"` + `nativeLocale` for single-primary-language markets
-  - optional `regionalFallbackLocales[]` for adjacent-market fallback order
-- Selection is deterministic: intersect with instance-available locales, preserve configured order, de-duplicate, cap to 3.
+- For `hero` blocks on the overview route, Prague may render the explicitly referenced published account-widget artifact. If the ref omits `locale`, Prague embeds the base artifact.
+- Prague does not discover account-widget locale availability, intersect market locales with widget locales, or auto-build multi-locale widget showcases.
+- `accountInstanceRef.locale` is an artifact selector for `clk.live/{accountPublicId}/{instanceId}/{locale}.html`; it is not translation state, locale availability, or a private account-widget contract.
+- If a non-base Prague page translation sidecar is missing, Prague fails fast instead of silently falling back to base copy.
 
 ### 1.3 Widget subpages
 
@@ -96,11 +94,16 @@ Current repo behavior:
 
 ## 1.5 Authoring Prague blocks (AI checklist)
 
-Prague widget pages are rendered from **block JSON** in Tokyo. They are marketing pages, not the account-widget overlay runtime. When you add or edit blocks, keep these filesystems in lockstep:
+Prague widget pages are rendered from **block JSON** in Tokyo. They are marketing pages, not the account-widget authoring or translation runtime. When you add or edit blocks, keep these filesystems in lockstep:
 
 1) **Renderer** (Astro): `prague/src/blocks/**` + `prague/src/lib/blockRegistry.ts`
 2) **Base copy** (source): `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`
 3) **Embeds** (optional): `accountInstanceRef.instanceId` must use PRD 098 compact instance IDs.
+
+Account-widget embeds are public artifact references only:
+- Required identity: `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`
+- Locale identity: explicit `accountInstanceRef.locale` only. Omitted locale means the base public artifact.
+- Forbidden: widget-locale discovery modules, market-locale fallback lists, query-param locale switching, private translation state, and `wgt_*` / `ins_*` aliases
 
 ### Add a new block type
 
@@ -146,11 +149,11 @@ Required non-visual blocks:
 
 Notes:
 - Page JSON is the **single source of truth** for layout + base copy on Prague.
-- Visual embeds are explicit: use `accountInstanceRef.accountPublicId` plus `accountInstanceRef.instanceId` on blocks that should embed an account instance. Admin/example embeds use `accountPublicId: "00000001"`.
+- Visual embeds are explicit: use `accountInstanceRef.accountPublicId` plus `accountInstanceRef.instanceId` on blocks that should embed an account instance. Admin/example embeds use `accountPublicId: "CLICKEEN"`.
 - Prague page JSON and page-owned translation sidecars deploy under R2 `prague/pages/**`.
 - Root `l10n/**` is not a Prague storage or deploy target.
 
-Prague merges page-owned translation sidecars for localized marketing pages. Account-instance locale overlays are build inputs for generated static instance files served from `clk.live`.
+Prague merges page-owned translation sidecars for localized marketing pages. Account-widget translated values are consumed only by Tokyo publish/materialization to produce generated static instance files served from `clk.live`.
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.
@@ -189,8 +192,8 @@ Demo locale visibility contract:
 
 - Widget marketing pages are JSON-only in this repo snapshot: no markdown crawling, no build-time parsing heuristics.
 - Builds fail fast when the per-widget page contract is broken (missing required JSON/copy).
-- Account instance embeds (visual widget instances inside Prague blocks) remain locale-free; locale is passed as a query param and served by generated locale artifacts when available.
-- For canonical `/{market}/{locale}/...` URLs, Prague must not vary indexable content by request IP/cookies/experiment keys; market-bound geo overlays are derived from `prague/src/markets/markets.json`.
+- Account instance embeds (visual widget instances inside Prague blocks) use explicit account and instance identity; locale, when present, selects a generated public artifact path such as `/{locale}.html`.
+- For canonical `/{market}/{locale}/...` URLs, Prague must not vary indexable content by request IP/cookies/experiment keys; market-bound routing and locale availability are derived from `prague/src/markets/markets.json`.
 
 ---
 

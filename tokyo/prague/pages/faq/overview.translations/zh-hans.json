@@ -1,5 +1,5 @@
 {
-  "baseFingerprint": "08da11d9a3121229c9a968a1d0b9958f6dfe5fce6d6366a1418c25945a27ffdd",
+  "baseFingerprint": "2305d4ce1a0e97a712865b2953290acd1b02296020b215efcbea8bcde639fc66",
   "baseUpdatedAt": null,
   "ops": [
     {
@@ -81,16 +81,6 @@
       "op": "set",
       "path": "blocks.subpage-cards.copy.items.2.body",
       "value": "借助 Ombra AI、内置本地化与 SEO 就绪的输出，无需额外工程投入即可规模化。"
-    },
-    {
-      "op": "set",
-      "path": "blocks.locale-showcase.copy.title",
-      "value": "世界尽在掌握"
-    },
-    {
-      "op": "set",
-      "path": "blocks.locale-showcase.copy.subtitle",
-      "value": "像本地人一样欢迎每位访客。面向全球受众的即时、自然翻译。"
     },
     {
       "op": "set",

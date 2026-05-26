@@ -130,7 +130,16 @@ Generated files are output. Publish status is product state. Publish, unpublish,
 
 ## Prague
 
-Prague website copy is not account-widget authoring truth. Prague page translations are page-owned content beside page JSON. Prague must not preserve or reintroduce account-widget localization storage vocabulary.
+Prague website copy is not account-widget authoring truth. Prague page translations are page-owned content beside page JSON. Missing non-base Prague page sidecars are build/request failures, not silent fallback to base copy.
+
+Prague embeds account widgets only through public published artifacts:
+
+```txt
+https://clk.live/{accountPublicId}/{instanceId}
+https://clk.live/{accountPublicId}/{instanceId}/{locale}.html
+```
+
+`accountInstanceRef.locale` is a public artifact selector. It is not widget locale availability, private translation state, a generation marker, or an overlay/layer identity. Prague must not preserve or reintroduce account-widget localization storage vocabulary.
 
 ## Deleted Pre-GA Concepts
 

@@ -297,7 +297,7 @@ export function AssetsDomain() {
   return (
     <>
       <section className="rd-canvas-module">
-        <p className="body-m">Account: {accountContext.accountName}</p>
+        <p className="body-m">Account: {accountContext.accountLabel}</p>
 
         {error ? (
           <div className="roma-inline-stack">

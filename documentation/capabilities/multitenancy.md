@@ -16,7 +16,7 @@ This doc mixes shipped behavior with target packaging. Shipped enforcement today
 - Global entitlements matrix: `packages/ck-policy/entitlements.matrix.json`
 - Per-widget limits mapping: `tokyo/product/widgets/{widget}/limits.json` for editor/runtime capability context; account-level publish, upload/storage, tier, and downgrade enforcement belongs to Roma/system account operations
 - Comments collaboration is target packaging only right now (comment APIs/UI are not shipped in this repo snapshot).
-- Cloud-dev is intentionally collapsed to the seeded platform-owned account after PRD 60. The schema remains account-scoped, but Roma does not expose cross-account switching there.
+- Cloud-dev is intentionally collapsed to the seeded Clickeen/admin account after PRD 60. The schema remains account-scoped, but Roma does not expose cross-account switching there.
 
 Anything else in this doc (seats, instance counts, widget type counts) is directional until implemented.
 
@@ -175,7 +175,7 @@ Key boundary rules:
 - Instances, assets, locales, and membership are all account-scoped.
 - Roma asset reads are account-canonical (`/api/account/assets`).
 - Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped product-control calls.
-- Curated platform content uses the normal Clickeen/admin account `00000001`; references carry `accountPublicId + instanceId` and do not get a special admin storage lane.
+- Curated platform content uses the normal Clickeen/admin account `CLICKEEN`; references carry `accountPublicId + instanceId` and do not get a special admin storage lane.
 - Tokyo-worker and Venice are PBX layers, not policy engines. They do not decide billing tier, cap eligibility, downgrade correctness, or whether an account may keep a published projection.
 
 ---

@@ -1501,7 +1501,7 @@ LOOP REPEATS (exponential growth)
 
 ```json
 {
-  "accountPublicId": "00000001",
+  "accountPublicId": "CLICKEEN",
   "instanceId": "UZ3JEJSHII",
   "widgetType": "faq",
   "status": "published",

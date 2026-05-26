@@ -1,18 +1,35 @@
 ---
+import InstanceEmbed from '../../components/InstanceEmbed.astro';
+
 type Props = {
-  items?: any[];
+  items?: {
+    accountInstanceRef: {
+      accountPublicId: string;
+      instanceId: string;
+      locale?: string;
+    };
+  }[];
   options?: any;
+  widgetType?: string;
 };
 
-const { items = [], options = {} } = Astro.props;
+const { items = [], widgetType } = Astro.props;
+if (!items.length) {
+  throw new Error('[prague] mobile-showcase requires at least one accountInstanceRef item');
+}
 ---
 
 <div class="mobile-showcase" data-block="mobile-showcase">
   <div class="showcase-scroller">
-    {items.map((item) => (
+    {items.map((item, index) => (
       <div class="mobile-frame">
-        {/* Placeholder */}
-        <pre>{JSON.stringify(item, null, 2)}</pre>
+        <InstanceEmbed
+          accountPublicId={item.accountInstanceRef.accountPublicId}
+          instanceId={item.accountInstanceRef.instanceId}
+          locale={item.accountInstanceRef.locale}
+          title={`${widgetType || 'Widget'} preview ${index + 1}`}
+          widgetType={widgetType}
+        />
       </div>
     ))}
   </div>

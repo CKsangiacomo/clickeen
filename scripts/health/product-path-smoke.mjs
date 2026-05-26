@@ -451,7 +451,7 @@ async function runStaticPublicServing(runner, accountPublicId, instanceId) {
     assertHttp(privateSource, 404, `GET /${accountPublicId}/${instanceId}/instance.json`);
     const deniedPaths = [
       '/healthz',
-      '/__internal/accounts/00000001/serving/restore-paid',
+      `/__internal/accounts/${encodeURIComponent(accountPublicId)}/serving/restore-paid`,
       '/widgets/faq/spec.json',
       '/renders/widgets/catalog.json',
     ];

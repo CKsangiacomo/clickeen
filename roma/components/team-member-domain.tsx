@@ -184,7 +184,7 @@ export function TeamMemberDomain({ memberId }: TeamMemberDomainProps) {
     <>
       <section className="rd-canvas-module roma-inline-stack" style={{ justifyContent: 'space-between', gap: '12px' }}>
         <div>
-          <p className="body-m">Account: {accountContext.accountName}</p>
+          <p className="body-m">Account: {accountContext.accountLabel}</p>
           <p className="body-s">Team manages memberships. Personal details stay with the member in User Settings.</p>
         </div>
         <Link className="diet-btn-txt" data-size="md" data-variant="line2" href="/team">

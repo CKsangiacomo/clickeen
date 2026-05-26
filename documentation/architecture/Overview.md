@@ -204,7 +204,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 - Roma is the domain shell (`/home`, `/profile`, `/widgets`, `/builder`, `/assets`, `/team`, `/billing`, `/usage`, `/ai`, `/settings`).
 - Roma resolves identity/account/authz context through `/api/bootstrap` (proxy to Berlin `GET /v1/session/bootstrap`), including an account authz capsule and an account entitlement snapshot.
 - Roma exposes person-scoped User Settings through `/profile`, using Berlin-owned `/api/me` same-origin routes.
-- Current Roma resolves one effective active account context per session and does not expose customer account switching. Cloud-dev still usually collapses to the seeded platform-owned account, while any internal account switching belongs to DevStudio and future customer multi-account switching belongs to a separate Roma-for-agency product.
+- Current Roma resolves one effective active account context per session and does not expose customer account switching. Cloud-dev still usually collapses to the seeded Clickeen/admin account, while any internal account switching belongs to DevStudio and future customer multi-account switching belongs to a separate Roma-for-agency product.
 - Roma uses named same-origin account routes and injects short-lived authz headers:
   - `x-ck-authz-capsule` for account-scoped calls
 - Roma serves Berlin-backed account member reads on same-origin routes (`GET /api/account/team` and `GET /api/account/team/members/:memberId`).

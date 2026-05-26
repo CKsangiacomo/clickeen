@@ -16,8 +16,6 @@ export type RomaAccountSummary = {
   accountId: string;
   accountPublicId: string;
   role: string;
-  name: string;
-  slug: string;
   tier: string;
   websiteUrl: string | null;
   membershipVersion: string | null;
@@ -26,7 +24,6 @@ export type RomaAccountSummary = {
 
 export type RomaActiveAccount = RomaAccountSummary & {
   status: string;
-  isPlatform: boolean;
   selectedTargetLocales?: unknown;
   localePolicy?: unknown;
 };
@@ -81,8 +78,7 @@ export type RomaMeResponse = {
 export type ResolvedRomaContext = {
   accountId: string | null;
   accountPublicId: string | null;
-  accountName: string | null;
-  accountSlug: string | null;
+  accountLabel: string | null;
 };
 
 export type RomaAuthzPolicy = {
@@ -182,9 +178,7 @@ function assertRomaMeActiveAccountPayload(data: RomaMeResponse | null): void {
   const role = normalizeRole(activeAccount.role);
   const profile = normalizeProfile(activeAccount.tier);
   const status = normalizeOptionalString(activeAccount.status);
-  const name = normalizeOptionalString(activeAccount.name);
-  const slug = normalizeOptionalString(activeAccount.slug);
-  if (!accountId || !accountPublicId || !role || !profile || !status || !name || !slug || typeof activeAccount.isPlatform !== 'boolean') {
+  if (!accountId || !accountPublicId || !role || !profile || !status) {
     throw new Error('coreui.errors.auth.contextUnavailable');
   }
 }
@@ -228,25 +222,20 @@ export function resolveActiveRomaAccount(data: RomaMeResponse | null): RomaActiv
   const accountId = normalizeAccountId(activeAccount.accountId);
   const accountPublicId = normalizeAccountPublicId(activeAccount.accountPublicId);
   const role = normalizeOptionalString(activeAccount.role);
-  const name = normalizeOptionalString(activeAccount.name);
-  const slug = normalizeOptionalString(activeAccount.slug);
   const tier = normalizeOptionalString(activeAccount.tier);
   const status = normalizeOptionalString(activeAccount.status);
-  if (!accountId || !accountPublicId || !role || !name || !slug || !tier || !status || typeof activeAccount.isPlatform !== 'boolean') {
+  if (!accountId || !accountPublicId || !role || !tier || !status) {
     return null;
   }
   return {
     accountId,
     accountPublicId,
     role,
-    name,
-    slug,
     tier,
     websiteUrl: normalizeOptionalString(activeAccount.websiteUrl),
     membershipVersion: normalizeOptionalString(activeAccount.membershipVersion),
     lifecycleNotice: normalizeLifecycleNotice(activeAccount.lifecycleNotice),
     status,
-    isPlatform: activeAccount.isPlatform,
     selectedTargetLocales: activeAccount.selectedTargetLocales,
     localePolicy: activeAccount.localePolicy,
   };
@@ -257,8 +246,7 @@ export function resolveActiveRomaContext(data: RomaMeResponse | null): ResolvedR
   return {
     accountId: activeAccount?.accountId ?? null,
     accountPublicId: activeAccount?.accountPublicId ?? null,
-    accountName: activeAccount?.name ?? null,
-    accountSlug: activeAccount?.slug ?? null,
+    accountLabel: activeAccount?.accountPublicId ?? null,
   };
 }
 

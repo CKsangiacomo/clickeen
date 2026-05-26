@@ -14,7 +14,7 @@ Stop and ask if:
 - The widget type or target page is not explicitly provided.
 - You need a new block type or a new block layout (requires PRD + block registry update).
 - The request requires runtime changes in Prague, Bob, Roma, Tokyo-worker, Venice, or Dieter.
-- You need to modify compiled outputs or overlays directly.
+- You need to modify compiled outputs or generated translation sidecars directly.
 
 ---
 
@@ -51,8 +51,9 @@ Do **not** edit:
 - Do not add new block types or change the block registry.
 - Do not add new runtime logic in Prague.
 - Do not create locale-specific IDs or file paths.
+- Do not infer account-widget locale availability from Prague market config or route locale.
 - Do not write copy that is not in the PRD.
-- Do not manually edit compiled or overlay files.
+- Do not manually edit compiled files or generated translation sidecars.
 
 ---
 
@@ -77,11 +78,12 @@ File:
 
 Rules:
 - Layout + copy: `blocks[]` contains `id`, `type`, `copy`, and allowed meta fields (e.g. `visual`).
-- Page JSON is the **single source of truth** for base copy; overlays overwrite `blocks[].copy` at runtime.
+- Page JSON is the **single source of truth** for base copy; page-owned translation sidecars apply localized Prague copy at runtime.
 - `id` is unique and stable per page.
 - `type` must match a registered block type.
 - `visual` is only allowed for block types that support it (see registry). For embeds, use `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` only when the page intentionally points at a real account widget instance.
-- Admin examples are normal account-owned instances under account `00000001`; there is no admin-specific lane and no hidden instance-only lookup.
+- Admin examples are normal account-owned instances under account `CLICKEEN`; there is no admin-specific lane and no hidden instance-only lookup.
+- `accountInstanceRef.locale` is allowed only as an explicit public artifact selector for authored carousel items. It is not translation state, locale availability, or an instruction to discover widget locales.
 - Do not use old `wgt_*` / `ins_*` names or private UUID account folders as current product identity.
 
 Example shape:
@@ -91,7 +93,7 @@ Example shape:
   "blocks": [
     { "id": "page-meta", "type": "page-meta", "copy": { "title": "...", "description": "..." } },
     { "id": "navmeta", "type": "navmeta", "copy": { "title": "...", "description": "..." } },
-    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true, "accountInstanceRef": { "accountPublicId": "00000001", "instanceId": "UZ3JEJSHII" } },
+    { "id": "hero", "type": "hero", "copy": { "headline": "...", "subheadline": "..." }, "visual": true, "accountInstanceRef": { "accountPublicId": "CLICKEEN", "instanceId": "UZ3JEJSHII" } },
     { "id": "minibob", "type": "minibob", "copy": { "heading": "...", "subhead": "..." } }
   ]
 }
@@ -138,7 +140,7 @@ Before you finish:
 - All block IDs are unique and stable.
 - Every page JSON includes base copy for all block IDs.
 - Base copy includes required keys for the block type.
-- No compiled/overlay files were edited.
+- No compiled files or generated translation sidecars were edited.
 
 If any requirement is unmet, stop and ask.
 

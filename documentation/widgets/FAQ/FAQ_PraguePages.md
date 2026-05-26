@@ -7,7 +7,7 @@
 
 ## Instance Reference Contract
 
-FAQ Prague visuals that embed real widgets must reference normal account-owned instances with `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`. Admin/example FAQ instances use `accountPublicId: "00000001"` and live under `accounts/00000001/instances/{instanceId}/`; this PRD must not introduce `wgt_*`, `ins_*`, private UUID account folders, or a hidden instance-only lookup.
+FAQ Prague visuals that embed real widgets must reference normal account-owned instances with `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`. Admin/example FAQ instances use `accountPublicId: "CLICKEEN"` and live under `accounts/CLICKEEN/instances/{instanceId}/`; this PRD must not introduce `wgt_*`, `ins_*`, private UUID account folders, or a hidden instance-only lookup.
 
 ## 1. Overview Page (`/widgets/faq`)
 
@@ -38,12 +38,7 @@ FAQ Prague visuals that embed real widgets must reference normal account-owned i
     *   **Examples Subhead Seed:** "See how **Hotels and Restaurants** use FAQs to **reduce inquiries**. Explore real-world configurations that prove it works for any business."
     *   **Features Subhead Seed:** "Go beyond the basics with enterprise-grade power. Deep dive into **Ombra AI editing**, **instant localization**, and our SEO-native architecture."
 
-*   **Block 4: `locale-showcase`**
-    *   **Strategic Goal:** "Global by Default" Proof.
-    *   **Headline Seed:** "Preview it in real languages."
-    *   **Subhead Seed:** "See how your content adapts instantly to any market."
-
-*   **Block 5: `steps` (Value)**
+*   **Block 4: `steps` (Value)**
     *   **Strategic Goal:** Core Benefit Logic.
     *   **Headline Seed:** "Why add an FAQ?"
     *   **Subhead Seed:** "Three ways it transforms your customer experience."
@@ -51,44 +46,44 @@ FAQ Prague visuals that embed real widgets must reference normal account-owned i
     *   **Step 2:** "Get your time back." (Context: Support volume reduction).
     *   **Step 3:** "Close deals while you sleep." (Context: 24/7 availability).
 
-*   **Block 6: `split` (Visual Right)**
+*   **Block 5: `split` (Visual Right)**
     *   **Strategic Goal:** "Design Supremacy" Differentiator.
     *   **Headline Seed:** "Looks like it shipped with your product."
     *   **Subhead Seed:** "Native aesthetic that blends perfectly with your brand."
 
-*   **Block 7: `control-moat`**
+*   **Block 6: `control-moat`**
     *   **Strategic Goal:** "Design Supremacy" Deep Dive.
     *   **Headline Seed:** "Design control, down to the pixel."
     *   **Subhead Seed:** "The most powerful editor in the industry."
     *   **Items:** Layouts, Appearance, Typography.
 
-*   **Block 8: `split` (Visual Left)**
+*   **Block 7: `split` (Visual Left)**
     *   **Strategic Goal:** "Modern Infra" Differentiator.
     *   **Headline Seed:** "SEO/GEO-ready."
     *   **Subhead Seed:** "Structured data and performance built in."
 
-*   **Block 9: `big-bang`**
+*   **Block 8: `big-bang`**
     *   **Strategic Goal:** Emotional Close.
     *   **Headline Seed:** "Watch questions answer themselves in real-time."
     *   **Subhead Seed:** "A living knowledge base that grows with you."
 
-*   **Block 10: `split` (Stacked)**
+*   **Block 9: `split` (Stacked)**
     *   **Strategic Goal:** Layout Flexibility.
     *   **Headline Seed:** "Any layout—accordion, list, or cards."
     *   **Subhead Seed:** "Choose the perfect structure for your content depth."
 
-*   **Block 11: `global-moat`**
+*   **Block 10: `global-moat`**
     *   **Strategic Goal:** "Modern Infra" Deep Dive.
     *   **Headline Seed:** "Global by default."
     *   **Subhead Seed:** "Instant localization without the headache."
     *   **Items:** Instant localization, RTL ready, SEO foundations.
 
-*   **Block 12: `platform-strip`**
+*   **Block 11: `platform-strip`**
     *   **Headline Seed:** "Enterprise-grade foundation."
     *   **Subhead Seed:** "Built for scale, speed, and reliability."
     *   **Items:** Fast, Reliable, Accessible.
 
-*   **Block 13: `cta-bottom-block`**
+*   **Block 12: `cta-bottom-block`**
     *   **Headline Seed:** "Connect with every customer, everywhere."
     *   **Subhead Seed:** "Start building your free FAQ today."
 

@@ -8,6 +8,13 @@ const ACCOUNT_INSTANCE_VALIDATE_STRICT =
   process.env.PRAGUE_VALIDATE_ACCOUNT_INSTANCE_STRICT === '1' ||
   (process.env.NODE_ENV === 'production' && process.env.PRAGUE_VALIDATE_ACCOUNT_INSTANCE === '1');
 const ACCOUNT_INSTANCE_VALIDATION_CACHE = new Map<string, Promise<void>>();
+const ACCOUNT_INSTANCE_REF_KEYS = new Set(['accountPublicId', 'instanceId', 'locale']);
+
+type AccountInstanceRef = {
+  accountPublicId: string;
+  instanceId: string;
+  locale?: string;
+};
 
 function resolveClkLiveBaseUrl(): string {
   const raw = String(process.env.PUBLIC_CLK_LIVE_URL || '').trim();
@@ -15,12 +22,13 @@ function resolveClkLiveBaseUrl(): string {
   return 'https://clk.live';
 }
 
-async function assertAccountInstanceExists(args: { accountPublicId: string; instanceId: string; pagePath: string }): Promise<void> {
+async function assertAccountInstanceExists(args: AccountInstanceRef & { pagePath: string }): Promise<void> {
   if (!ACCOUNT_INSTANCE_VALIDATE) return;
   const baseUrl = resolveClkLiveBaseUrl();
 
   const accountPublicId = String(args.accountPublicId || '').trim();
   const instanceId = String(args.instanceId || '').trim();
+  const locale = String(args.locale || '').trim().toLowerCase();
   if (!isCompactAccountPublicId(accountPublicId)) {
     throw new Error(
       `[prague] ${args.pagePath}: accountInstanceRef.accountPublicId must be a PRD 099 account public id, got "${args.accountPublicId}"`,
@@ -31,20 +39,24 @@ async function assertAccountInstanceExists(args: { accountPublicId: string; inst
       `[prague] ${args.pagePath}: accountInstanceRef.instanceId must be a PRD 098 compact instance id, got "${args.instanceId}"`,
     );
   }
+  if (args.locale != null && !locale) {
+    throw new Error(`[prague] ${args.pagePath}: accountInstanceRef.locale must be text`);
+  }
 
-  const cacheKey = `${accountPublicId}/${instanceId}`;
+  const cacheKey = `${accountPublicId}/${instanceId}/${locale || 'en'}`;
   const cached = ACCOUNT_INSTANCE_VALIDATION_CACHE.get(cacheKey);
   if (cached) return cached;
 
   const task = (async () => {
-    const url = `${baseUrl}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}`;
+    const localePath = locale && locale !== 'en' ? `/${encodeURIComponent(locale)}.html` : '';
+    const url = `${baseUrl}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}${localePath}`;
     let res: Response | null = null;
     try {
       res = await fetch(url, { method: 'GET' });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       const detail = message ? ` (${message})` : '';
-      const warning = `[prague] ${args.pagePath}: account instance validation skipped (clk.live unreachable) for ${instanceId}${detail}`;
+      const warning = `[prague] ${args.pagePath}: account instance validation skipped (clk.live unreachable) for ${instanceId}${localePath}${detail}`;
       if (ACCOUNT_INSTANCE_VALIDATE_STRICT) throw new Error(warning);
       console.warn(warning);
       return;
@@ -54,7 +66,7 @@ async function assertAccountInstanceExists(args: { accountPublicId: string; inst
       throw new Error(`[prague] Account instance validation failed for ${instanceId} (${res.status})`);
     }
 
-    const message = `[prague] ${args.pagePath}: instance ${instanceId} is not available on clk.live.`;
+    const message = `[prague] ${args.pagePath}: instance ${instanceId}${localePath} is not available on clk.live.`;
     if (ACCOUNT_INSTANCE_VALIDATE_STRICT) throw new Error(message);
     console.warn(message);
   })();
@@ -63,18 +75,73 @@ async function assertAccountInstanceExists(args: { accountPublicId: string; inst
   return task;
 }
 
+function isAccountRefContainer(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readAccountInstanceRef(args: { value: unknown; pagePath: string; path: string }): AccountInstanceRef {
+  const { value, pagePath, path } = args;
+  if (!isAccountRefContainer(value)) {
+    throw new Error(`[prague] ${pagePath}: ${path} must be an object`);
+  }
+  for (const key of Object.keys(value)) {
+    if (!ACCOUNT_INSTANCE_REF_KEYS.has(key)) {
+      throw new Error(`[prague] ${pagePath}: ${path}.${key} is not supported`);
+    }
+  }
+  const accountPublicId = String(value.accountPublicId || '').trim();
+  const instanceId = String(value.instanceId || '').trim();
+  if (!accountPublicId) {
+    throw new Error(`[prague] ${pagePath}: ${path}.accountPublicId is required`);
+  }
+  if (!instanceId) {
+    throw new Error(`[prague] ${pagePath}: ${path}.instanceId is required`);
+  }
+  const locale = value.locale == null ? '' : String(value.locale || '').trim().toLowerCase();
+  if (value.locale != null && !locale) {
+    throw new Error(`[prague] ${pagePath}: ${path}.locale must be a string`);
+  }
+  return locale ? { accountPublicId, instanceId, locale } : { accountPublicId, instanceId };
+}
+
+function collectAccountInstanceRefs(args: {
+  value: unknown;
+  pagePath: string;
+  path: string;
+  refs: AccountInstanceRef[];
+}): void {
+  const { value, pagePath, path, refs } = args;
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) =>
+      collectAccountInstanceRefs({
+        value: entry,
+        pagePath,
+        path: `${path}[${index}]`,
+        refs,
+      }),
+    );
+    return;
+  }
+  if (!isAccountRefContainer(value)) return;
+  for (const [key, entry] of Object.entries(value)) {
+    const entryPath = `${path}.${key}`;
+    if (key === 'accountInstanceRef') {
+      refs.push(readAccountInstanceRef({ value: entry, pagePath, path: entryPath }));
+      continue;
+    }
+    collectAccountInstanceRefs({ value: entry, pagePath, path: entryPath, refs });
+  }
+}
+
 async function validateAccountInstanceRefs(args: { pagePath: string; blocks: unknown[] }): Promise<void> {
   if (!ACCOUNT_INSTANCE_VALIDATE) return;
-  const accountInstanceRefs = args.blocks
-    .map((block) => {
-      if (!block || typeof block !== 'object' || Array.isArray(block)) return null;
-      const accountInstanceRef = (block as any).accountInstanceRef;
-      if (!accountInstanceRef || typeof accountInstanceRef !== 'object' || Array.isArray(accountInstanceRef)) return null;
-      const accountPublicId = String((accountInstanceRef as any).accountPublicId || '').trim();
-      const instanceId = String((accountInstanceRef as any).instanceId || '').trim();
-      return accountPublicId || instanceId ? { accountPublicId, instanceId } : null;
-    })
-    .filter((value): value is { accountPublicId: string; instanceId: string } => Boolean(value));
+  const accountInstanceRefs: AccountInstanceRef[] = [];
+  collectAccountInstanceRefs({
+    value: args.blocks,
+    pagePath: args.pagePath,
+    path: 'blocks',
+    refs: accountInstanceRefs,
+  });
   if (accountInstanceRefs.length === 0) return;
   await Promise.all(accountInstanceRefs.map((ref) => assertAccountInstanceExists({ ...ref, pagePath: args.pagePath })));
 }
@@ -192,7 +259,9 @@ async function loadPageTranslation(opts: { widget: string; page: string; locale:
   const locale = String(opts.locale || '').trim().toLowerCase();
   if (!locale || locale === 'en') return null;
   const loader = WIDGET_PAGE_TRANSLATION_LOADERS.get(`${opts.widget}/${opts.page}/${locale}`);
-  if (!loader) return null;
+  if (!loader) {
+    throw new Error(`[prague] Missing Prague page translation: tokyo/prague/pages/${opts.widget}/${opts.page}.translations/${locale}.json`);
+  }
   return loader();
 }
 

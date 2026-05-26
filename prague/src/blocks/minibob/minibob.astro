@@ -5,7 +5,8 @@ import InstanceEmbed from '../../components/InstanceEmbed.astro';
 
 type Props = {
   widget: string;
-  locale: string;
+  routeLocale: string;
+  embedLocale?: string;
   page: string;
   heading: string;
   subhead: string;
@@ -13,7 +14,7 @@ type Props = {
   instanceId: string;
 };
 
-const { widget, locale, heading, subhead, accountPublicId, instanceId } = Astro.props;
+const { widget, routeLocale, embedLocale, heading, subhead, accountPublicId, instanceId } = Astro.props;
 
 if (!String(accountPublicId || '').trim()) {
   throw new Error('[prague] minibob requires an explicit accountInstanceRef.accountPublicId');
@@ -44,10 +45,10 @@ const createHref = (() => {
   try {
     const parts = Astro.url.pathname.split('/').filter(Boolean);
     const marketKey = parts[0] || 'us';
-    const localeKey = parts[1] || locale || 'en';
+    const localeKey = parts[1] || routeLocale || 'en';
     return `/${marketKey}/${localeKey}/create`;
   } catch {
-    return `/${locale || 'en'}/create`;
+    return `/${routeLocale || 'en'}/create`;
   }
 })();
 ---
@@ -67,7 +68,7 @@ const createHref = (() => {
       <InstanceEmbed
         accountPublicId={accountPublicId}
         instanceId={instanceId}
-        locale={locale}
+        locale={embedLocale}
         widgetType={widget}
         title="Demo widget preview"
         loading="eager"

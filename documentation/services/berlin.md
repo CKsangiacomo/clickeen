@@ -41,7 +41,7 @@ Berlin permanently owns:
 - The signed account authz capsule needed by Roma/Bob for the active account context.
 - Request IDs, structured request-completion logs, and the first auth/session mutation rate-limit floor.
 
-The signed account authz capsule carries stable account authz truth only. Mutable locale settings and live `used` counters stay out of the signed capsule. The capsule includes `accountPublicId`; Roma must carry that compact identity, not compute it.
+The signed account authz capsule carries stable account authz truth only. Mutable locale settings and live `used` counters stay out of the signed capsule. The capsule includes `accountPublicId`; Roma must carry that compact identity, not compute it. The capsule does not carry platform flags, fake account slugs, or account names derived from compact ids.
 
 ## Boundary Rules
 
@@ -194,16 +194,18 @@ Registry/account product dependencies:
 - Berlin only answers account/user/session truth and the currently surviving account governance questions for this area.
 - Berlin does not own widget instance inventory, instance IDs, display names, saved config, l10n overlays, or publish state.
 
-## PRD 098/099 Account Public ID
+## Account Public Coordinate
 
-Berlin writes `accounts.public_id` when it creates a new account:
+Berlin creates accounts with a compact `accounts.id` product coordinate:
 
 - 8 uppercase base36 characters
 - generated with the shared `@clickeen/ck-contracts` platform ID generator
-- protected by Michael's unique index
+- protected by Michael's primary key constraint
 - retried on collision
 
-Existing pre-GA account rows are backfilled by the Supabase migration. Berlin does not derive, repair, or recompute `accountPublicId` during bootstrap.
+`accountPublicId` remains the API/embed field name for this same compact `accounts.id` value. Berlin does not maintain a separate `accounts.public_id`, slug, alias, or vanity account coordinate.
+
+Existing pre-GA account rows are corrected by append-only Supabase migrations. Berlin does not derive, repair, or recompute `accountPublicId` during bootstrap.
 
 PRD 099 cleanup must not introduce UUID account folders in Tokyo. Any CI guard or migration dry-run that finds `accounts/{uuid}/assets/**`, `accounts/{uuid}/widgets/**`, or `accounts/{uuid}/instances/wgt_*` treats those keys as stale migration material requiring a restore manifest and rollback rehearsal before deletion.
 

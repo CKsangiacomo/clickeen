@@ -147,13 +147,13 @@ export function SettingsDomain() {
   const canManageAccount = activeAccount.role === 'owner';
   const canEditLocales = activeAccount.role === 'owner' || activeAccount.role === 'admin';
   const ownerCandidates = members?.members.filter((member) => member.userId !== data.user.id && member.role !== 'owner') ?? [];
-  const deleteGuardMatches = deleteConfirm.trim() === activeAccount.slug;
+  const deleteGuardMatches = deleteConfirm.trim() === accountContext.accountPublicId;
 
   return (
     <>
       <section className="rd-canvas-module">
         <p className="body-m">
-          Account: {activeAccount.name} ({activeAccount.slug})
+          Account: {accountContext.accountLabel}
         </p>
         <p className="body-s">
           Plan: {activeAccount.tier} | Your role: {activeAccount.role}
@@ -220,7 +220,7 @@ export function SettingsDomain() {
         <p className="body-m">This removes the account and all account-scoped data. It is owner-only final account control.</p>
         {!canManageAccount ? <p className="body-s">Only the current owner can delete the account.</p> : null}
         <label className="roma-field">
-          <span className="label-s">Type account slug to confirm</span>
+          <span className="label-s">Type account ID to confirm</span>
           <input
             className="roma-input body-m"
             value={deleteConfirm}

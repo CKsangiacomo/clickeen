@@ -25,7 +25,7 @@ The PRD 89 schema hard cut drops the historical `widget_instances` residue. Prod
 Michael remains appropriate for:
 
 - account/user identity rows
-- compact account product IDs (`accounts.public_id`)
+- compact account product IDs (`accounts.id`)
 - membership and governance records
 - usage/billing records
 - audit/support/reporting queries
@@ -42,18 +42,19 @@ Tokyo remains appropriate for:
 
 Do not add new widget-instance product behavior to Michael. The surviving product path is Roma -> Bob -> Tokyo.
 
-## PRD 098 Account Identity
+## Account Identity
 
-`accounts.id` remains the private relational UUID. `accounts.public_id` is the first-class account product/storage identity:
+After the DB Pivot, `accounts.id` is the first-class compact account product/storage coordinate:
 
 - format: exactly 8 uppercase base36 characters (`^[0-9A-Z]{8}$`)
-- unique and not nullable
+- primary key, unique, and not nullable
 - minted with secure random bytes by Berlin on new account creation
-- backfilled once for existing pre-GA accounts
-- never derived from `accounts.id`
+- migrated once for existing pre-GA accounts
 
 Overlay IDs use `accountPublicId`, not the relational UUID.
 
-PRD 099 extends that same boundary to account runtime storage: Tokyo/R2 account folders, account asset manifests, account asset URLs, account instance paths, and published projection paths must use `accountPublicId`, never `accounts.id`. Michael may keep private UUIDs for relational joins, RLS, billing/support records, audit, and account governance, but it must not become a second account-asset or widget-instance storage authority.
+`accountPublicId` is the API/embed field name for the same compact `accounts.id` coordinate. It is not a second identity column or slug.
+
+PRD 099 extends that same boundary to account runtime storage: Tokyo/R2 account folders, account asset manifests, account asset URLs, account instance paths, and published projection paths must use the compact account coordinate. Michael may keep separate private IDs only for future relational implementation details that do not leave the database boundary, but it must not become a second account-asset or widget-instance storage authority.
 
 Migration and cleanup reports may mention historical UUID R2 keys only as stale source material. Deleting those keys requires a dry-run report, an object-level restore manifest, and a rollback rehearsal on local/dev R2 before remote deletion.
