@@ -12,7 +12,7 @@ test('copied embed snippets use clk.live static public URLs only', () => {
 
   assert.equal(snippets.publicUrl, 'https://clk.live/A1B2C3D4/Z9Y8X7W6V5');
   assert.match(snippets.iframeSnippet, /src="https:\/\/clk\.live\/A1B2C3D4\/Z9Y8X7W6V5"/);
-  assert.match(snippets.scriptSnippet, /src="https:\/\/clk\.live\/A1B2C3D4\/Z9Y8X7W6V5\/script\.js"/);
+  assert.match(snippets.scriptSnippet, /src="https:\/\/clk\.live\/A1B2C3D4\/Z9Y8X7W6V5\/runtime\.js"/);
   assert.doesNotMatch(`${snippets.iframeSnippet}\n${snippets.scriptSnippet}`, /venice|\/widget\/|\/renders\/|embed\.clickeen\.com|publicEmbedId/i);
 });
 

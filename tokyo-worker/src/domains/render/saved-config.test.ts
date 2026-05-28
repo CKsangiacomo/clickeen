@@ -130,7 +130,7 @@ function generatedPublicKeys(objects: Map<string, StoredObject>, instanceId = IN
   return [...objects.keys()]
     .filter((key) => key.startsWith(root))
     .map((key) => key.slice(root.length))
-    .filter((name) => /^(index|[a-z0-9-]+)\.html$/.test(name) || /^styles\.v[1-9][0-9]*\.css$/.test(name) || /^script\.v[1-9][0-9]*(?:\.[a-z0-9-]+)?\.js$/.test(name))
+    .filter((name) => /^(index|[a-z0-9-]+)\.html$/.test(name) || /^styles(?:\.v[1-9][0-9]*)?\.css$/.test(name) || /^script(?:\.[a-z0-9-]+|\.v[1-9][0-9]*(?:\.[a-z0-9-]+)?)?\.js$/.test(name) || name === 'runtime.js')
     .sort();
 }
 
@@ -387,8 +387,10 @@ test('save updates source and publish materializes public artifacts without publ
   assert.equal(published.status, 'published');
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/publish.json`), false);
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`), true);
-  assert.equal(generatedPublicKeys(objects).some((key) => /^script\.v[1-9][0-9]*\.js$/.test(key)), true);
-  assert.equal(generatedPublicKeys(objects).some((key) => /^styles\.v[1-9][0-9]*\.css$/.test(key)), true);
+  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/runtime.js`), true);
+  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`), true);
+  assert.equal(generatedPublicKeys(objects).some((key) => /^script\.v[1-9][0-9]*\.js$/.test(key)), false);
+  assert.equal(generatedPublicKeys(objects).some((key) => /^styles\.v[1-9][0-9]*\.css$/.test(key)), false);
 
   assert.equal(await readInstanceServeState({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID }), 'published');
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`), false);
@@ -583,6 +585,10 @@ test('publish materializes artifacts and unpublish removes public output', async
   const published = await publishAccountInstanceTransition({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });
   assert.equal(published.status, 'published');
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`), true);
+  const root = `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}`;
+  for (const stale of ['script.js', 'script.it.js', 'script.v123.js', 'script.v123.it.js', 'styles.v123.css', 'it.html']) {
+    putText(objects, `${root}/${stale}`, 'stale', stale.endsWith('.css') ? 'text/css; charset=utf-8' : stale.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8');
+  }
 
   const unpublished = await unpublishAccountInstanceTransition({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });
   assert.equal(unpublished.status, 'unpublished');

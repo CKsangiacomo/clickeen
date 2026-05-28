@@ -160,20 +160,23 @@ test('Tokyo materializes base and translated public artifacts from instance sour
   if (!result.ok) return;
   assert.deepEqual(result.locales, ['en', 'it']);
   const root = `accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}`;
-  const baseScript = result.publicFiles.find((file) => /^script\.v[1-9][0-9]*\.js$/.test(file));
-  const localeScript = result.publicFiles.find((file) => /^script\.v[1-9][0-9]*\.it\.js$/.test(file));
-  assert.ok(baseScript);
-  assert.ok(localeScript);
+  assert.deepEqual(result.publicFiles.sort(), ['index.html', 'runtime.js', 'styles.css']);
   assert.match(objects.get(`${root}/index.html`)?.text ?? '', /lang="en"/);
-  assert.match(objects.get(`${root}/it.html`)?.text ?? '', /lang="it"/);
-  assert.match(objects.get(`${root}/${baseScript}`)?.text ?? '', /Plans start free\./);
-  assert.match(objects.get(`${root}/${localeScript}`)?.text ?? '', /I piani partono gratis\./);
+  assert.match(objects.get(`${root}/index.html`)?.text ?? '', /runtime\.js/);
+  assert.equal(objects.has(`${root}/it.html`), false);
+  assert.equal(objects.has(`${root}/script.js`), false);
+  assert.equal([...objects.keys()].some((key) => /\/script\.v[1-9][0-9]*(?:\.it)?\.js$/.test(key)), false);
+  assert.equal([...objects.keys()].some((key) => /\/styles\.v[1-9][0-9]*\.css$/.test(key)), false);
+  assert.match(objects.get(`${root}/runtime.js`)?.text ?? '', /Plans start free\./);
+  assert.match(objects.get(`${root}/runtime.js`)?.text ?? '', /I piani partono gratis\./);
+  assert.match(objects.get(`${root}/runtime.js`)?.text ?? '', /CK_LOCALE_POLICY/);
+  assert.match(objects.get(`${root}/runtime.js`)?.text ?? '', /URLSearchParams/);
+  assert.match(objects.get(`${root}/runtime.js`)?.text ?? '', /requestedLocale/);
   assert.doesNotMatch(
     [
       objects.get(`${root}/index.html`)?.text,
-      objects.get(`${root}/it.html`)?.text,
-      objects.get(`${root}/${baseScript}`)?.text,
-      objects.get(`${root}/${localeScript}`)?.text,
+      objects.get(`${root}/runtime.js`)?.text,
+      objects.get(`${root}/styles.css`)?.text,
     ].join('\n'),
     /\/api\/account\/|\/__internal\/|product\/widgets\//,
   );

@@ -170,7 +170,11 @@ test('clk.live serves only allowlisted materialized support files', async () => 
   const { env } = createTestEnv({
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>FAQ</h1>',
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`]: '.faq{}',
+    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/runtime.js`]: 'console.log("runtime")',
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/script.it.js`]: 'console.log("it")',
+    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/script.v123.js`]: 'console.log("versioned")',
+    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.v123.css`]: '.old{}',
+    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/it.html`]: '<h1>IT</h1>',
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/private.txt`]: 'secret',
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/instance.json`]: '{}',
   });
@@ -180,9 +184,21 @@ test('clk.live serves only allowlisted materialized support files', async () => 
   assert.equal(css?.status, 200);
   assert.equal(await css?.text(), '.faq{}');
 
+  const runtime = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/runtime.js` });
+  assert.equal(runtime?.status, 200);
+  assert.equal(await runtime?.text(), 'console.log("runtime")');
+
   const localeScript = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/script.it.js` });
-  assert.equal(localeScript?.status, 200);
-  assert.equal(await localeScript?.text(), 'console.log("it")');
+  assert.equal(localeScript, null);
+
+  const localeHtml = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/it.html` });
+  assert.equal(localeHtml, null);
+
+  const versionedScript = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/script.v123.js` });
+  assert.equal(versionedScript, null);
+
+  const versionedStyles = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/styles.v123.css` });
+  assert.equal(versionedStyles, null);
 
   const privateJson = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/instance.json` });
   assert.equal(privateJson, null);

@@ -49,7 +49,7 @@ export function buildEmbedSnippets(args: EmbedSnippetInput): EmbedSnippets {
 ></iframe>`
       : '',
     scriptSnippet: canRender
-      ? `<script src="${publicUrl}/script.js" async></script>`
+      ? `<script src="${publicUrl}/runtime.js" async></script>`
       : '',
   };
 }

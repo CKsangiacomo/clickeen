@@ -1,8 +1,17 @@
 import { resolveTranslatedValues } from '@clickeen/ck-contracts';
 import type { Env } from '../../types';
 import { normalizeLocale } from '../../asset-utils';
+import {
+  isGeneratedOrObsoletePublicArtifactFile,
+  isGeneratedPublicArtifactFile,
+  PUBLIC_INDEX_FILE,
+  PUBLIC_RUNTIME_FILE,
+  PUBLIC_STYLES_FILE,
+} from './materialization-files';
 import { readAccountInstanceDocument } from './saved-config';
 import { listTranslatedLocales, readTranslatedLocaleValues } from './translated-locales';
+
+export { isGeneratedPublicArtifactFile } from './materialization-files';
 
 type R2TextObject = {
   text(): Promise<string>;
@@ -40,22 +49,6 @@ const FORBIDDEN_VISITOR_PATTERNS = [
   /src=["'][^"']*widget\.client\.js/i,
   /href=["'][^"']*widget\.css/i,
 ];
-
-const GENERATED_PUBLIC_ARTIFACT_ALLOWLIST: ReadonlyArray<RegExp> = [
-  /^index\.html$/,
-  /^[a-z0-9][a-z0-9-]{0,19}\.html$/,
-  /^styles\.css$/,
-  /^script\.js$/,
-  /^script\.[a-z0-9][a-z0-9-]{0,19}\.js$/,
-  /^styles\.v[1-9][0-9]*\.css$/,
-  /^script\.v[1-9][0-9]*(?:\.[a-z0-9][a-z0-9-]{0,19})?\.js$/,
-];
-
-export function isGeneratedPublicArtifactFile(file: string): boolean {
-  if (!file || file.startsWith('.') || file.includes('/') || file.includes('\\')) return false;
-  if (file.includes('%') || file.includes('..')) return false;
-  return GENERATED_PUBLIC_ARTIFACT_ALLOWLIST.some((pattern) => pattern.test(file));
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -101,10 +94,10 @@ function replaceWidgetScripts(body: string): { body: string; scriptSources: stri
     scriptSources.push(String(src));
     if (inserted) return '';
     inserted = true;
-    return '<script src="./script.js" defer></script>';
+    return `<script src="./${PUBLIC_RUNTIME_FILE}" defer></script>`;
   });
   return {
-    body: inserted ? nextBody : `${nextBody}\n<script src="./script.js" defer></script>`,
+    body: inserted ? nextBody : `${nextBody}\n<script src="./${PUBLIC_RUNTIME_FILE}" defer></script>`,
     scriptSources,
   };
 }
@@ -135,22 +128,39 @@ async function buildStyles(env: Env, widgetType: string, widgetHtml: string): Pr
   return `${chunks.join('\n\n')}\n`;
 }
 
-async function buildScript(args: {
+async function buildRuntime(args: {
   env: Env;
   widgetType: string;
   scriptSources: string[];
   instanceId: string;
-  locale: string;
-  state: Record<string, unknown>;
+  baseLocale: string;
+  localizedStates: Map<string, Record<string, unknown>>;
 }): Promise<string> {
-  const payload = {
-    instanceId: args.instanceId,
-    locale: args.locale,
-    state: args.state,
+  const locales = Object.fromEntries(args.localizedStates.entries());
+  const localePolicy = {
+    baseLocale: args.baseLocale,
+    languages: [...args.localizedStates.keys()],
   };
+  const runtime = `(function () {
+  var payload = ${JSON.stringify({ instanceId: args.instanceId, baseLocale: args.baseLocale, locales })};
+  var params = new URLSearchParams(window.location.search || '');
+  var requestedLocale = String(params.get('locale') || '').toLowerCase();
+  var selectedLocale = Object.prototype.hasOwnProperty.call(payload.locales, requestedLocale)
+    ? requestedLocale
+    : payload.baseLocale;
+  var selectedState = payload.locales[selectedLocale] || {};
+  window.CK_LOCALE_POLICY = Object.assign({}, window.CK_LOCALE_POLICY || {}, ${JSON.stringify(localePolicy)});
+  window.CK_WIDGET = {
+    instanceId: payload.instanceId,
+    locale: selectedLocale,
+    baseLocale: payload.baseLocale,
+    state: selectedState,
+    locales: payload.locales
+  };
+  window.CK_WIDGETS = Object.assign({}, window.CK_WIDGETS || {}, { [payload.instanceId]: window.CK_WIDGET });
+})();`;
   const chunks = [
-    `window.CK_WIDGET = ${JSON.stringify(payload)};`,
-    `window.CK_WIDGETS = Object.assign({}, window.CK_WIDGETS || {}, { ${JSON.stringify(args.instanceId)}: window.CK_WIDGET });`,
+    runtime,
   ];
   for (const src of args.scriptSources) {
     const key = resolveProductPath(args.widgetType, src);
@@ -180,9 +190,7 @@ function escapeHtml(raw: string): string {
 function buildHtml(args: {
   title: string;
   locale: string;
-  stylesheetFile: string;
   body: string;
-  scriptFile: string;
 }): string {
   return `<!doctype html>
 <html lang="${args.locale}">
@@ -190,39 +198,13 @@ function buildHtml(args: {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(args.title)}</title>
-    <link rel="stylesheet" href="./${args.stylesheetFile}" />
+    <link rel="stylesheet" href="./${PUBLIC_STYLES_FILE}" />
   </head>
   <body>
-${args.body.replace('./script.js', `./${args.scriptFile}`)}
+${args.body}
   </body>
 </html>
 `;
-}
-
-function localeFileStem(locale: string): string {
-  return locale.replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') || 'locale';
-}
-
-function publicArtifactVersion(): string {
-  return String(Date.now());
-}
-
-function publicArtifactStylesheetFile(version: string): string {
-  return `styles.v${version}.css`;
-}
-
-function publicArtifactBaseScriptFile(version: string): string {
-  return `script.v${version}.js`;
-}
-
-export function publicArtifactLocaleHtmlFile(locale: string): string {
-  return `${localeFileStem(locale)}.html`;
-}
-
-export function publicArtifactLocaleScriptFile(locale: string, version?: string): string {
-  return version
-    ? `script.v${version}.${localeFileStem(locale)}.js`
-    : `script.${localeFileStem(locale)}.js`;
 }
 
 function assertVisitorSafe(files: MaterializedFile[]): void {
@@ -300,59 +282,34 @@ export async function materializeInstancePublicArtifacts(args: {
       localizedStates.set(locale, state);
     }
 
-    const version = publicArtifactVersion();
-    const stylesheetFile = publicArtifactStylesheetFile(version);
+    const runtime = await buildRuntime({
+      env: args.env,
+      widgetType: instance.value.widgetType,
+      scriptSources,
+      instanceId: instance.value.id,
+      baseLocale: instance.value.baseLocale,
+      localizedStates,
+    });
+    const html = buildHtml({
+      title: instance.value.displayName || `${instance.value.widgetType} widget`,
+      locale: instance.value.baseLocale,
+      body,
+    });
     const files: MaterializedFile[] = [
-      { name: stylesheetFile, body: styles, contentType: textContentType(stylesheetFile) },
-      { name: 'styles.css', body: styles, contentType: textContentType('styles.css') },
+      { name: PUBLIC_STYLES_FILE, body: styles, contentType: textContentType(PUBLIC_STYLES_FILE) },
+      { name: PUBLIC_RUNTIME_FILE, body: runtime, contentType: textContentType(PUBLIC_RUNTIME_FILE) },
+      { name: PUBLIC_INDEX_FILE, body: html, contentType: textContentType(PUBLIC_INDEX_FILE) },
     ];
-    for (const [locale, state] of localizedStates) {
-      const baseLocale = locale === instance.value.baseLocale;
-      const scriptFile = baseLocale ? publicArtifactBaseScriptFile(version) : publicArtifactLocaleScriptFile(locale, version);
-      const htmlFile = baseLocale ? 'index.html' : publicArtifactLocaleHtmlFile(locale);
-      const script = await buildScript({
-        env: args.env,
-        widgetType: instance.value.widgetType,
-        scriptSources,
-        instanceId: instance.value.id,
-        locale,
-        state,
-      });
-      files.push({ name: scriptFile, body: script, contentType: textContentType(scriptFile) });
-      files.push({
-        name: baseLocale ? 'script.js' : publicArtifactLocaleScriptFile(locale),
-        body: script,
-        contentType: textContentType(scriptFile),
-      });
-      files.push({
-        name: htmlFile,
-        body: buildHtml({
-          title: instance.value.displayName || `${instance.value.widgetType} widget`,
-          locale,
-          stylesheetFile,
-          body,
-          scriptFile,
-        }),
-        contentType: textContentType(htmlFile),
-      });
-    }
 
     assertVisitorSafe(files);
 
     const root = instanceRoot(args.accountId, args.instanceId);
-    const supportFiles = files.filter((file) => file.name !== 'index.html' && !file.name.endsWith('.html'));
-    for (const file of supportFiles) {
+    for (const file of files.filter((file) => file.name !== PUBLIC_INDEX_FILE)) {
       await args.env.TOKYO_R2.put(`${root}/${file.name}`, file.body, {
         httpMetadata: { contentType: file.contentType },
       });
     }
-    const localeEntryFiles = files.filter((file) => file.name !== 'index.html' && file.name.endsWith('.html'));
-    for (const file of localeEntryFiles) {
-      await args.env.TOKYO_R2.put(`${root}/${file.name}`, file.body, {
-        httpMetadata: { contentType: file.contentType },
-      });
-    }
-    const index = files.find((file) => file.name === 'index.html');
+    const index = files.find((file) => file.name === PUBLIC_INDEX_FILE);
     if (!index) {
       return {
         ok: false,
@@ -405,7 +362,7 @@ export async function deleteInstancePublicArtifacts(args: {
       const listed = await args.env.TOKYO_R2.list({ prefix: root, cursor } as R2ListOptions);
       for (const object of listed.objects) {
         const name = object.key.slice(root.length);
-        if (!isGeneratedPublicArtifactFile(name)) continue;
+        if (!isGeneratedOrObsoletePublicArtifactFile(name)) continue;
         await args.env.TOKYO_R2.delete(object.key);
         deleted.push(name);
       }

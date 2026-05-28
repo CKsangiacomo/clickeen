@@ -48,15 +48,18 @@ async function assertAccountInstanceExists(args: AccountInstanceRef & { pagePath
   if (cached) return cached;
 
   const task = (async () => {
-    const localePath = locale && locale !== 'en' ? `/${encodeURIComponent(locale)}.html` : '';
-    const url = `${baseUrl}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}${localePath}`;
+    const query = new URLSearchParams();
+    if (locale && locale !== 'en') query.set('locale', locale);
+    const queryString = query.toString();
+    const publicPath = `/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}${queryString ? `?${queryString}` : ''}`;
+    const url = `${baseUrl}${publicPath}`;
     let res: Response | null = null;
     try {
       res = await fetch(url, { method: 'GET' });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       const detail = message ? ` (${message})` : '';
-      const warning = `[prague] ${args.pagePath}: account instance validation skipped (clk.live unreachable) for ${instanceId}${localePath}${detail}`;
+      const warning = `[prague] ${args.pagePath}: account instance validation skipped (clk.live unreachable) for ${instanceId}${queryString ? `?${queryString}` : ''}${detail}`;
       if (ACCOUNT_INSTANCE_VALIDATE_STRICT) throw new Error(warning);
       console.warn(warning);
       return;
@@ -66,7 +69,7 @@ async function assertAccountInstanceExists(args: AccountInstanceRef & { pagePath
       throw new Error(`[prague] Account instance validation failed for ${instanceId} (${res.status})`);
     }
 
-    const message = `[prague] ${args.pagePath}: instance ${instanceId}${localePath} is not available on clk.live.`;
+    const message = `[prague] ${args.pagePath}: instance ${instanceId}${queryString ? `?${queryString}` : ''} is not available on clk.live.`;
     if (ACCOUNT_INSTANCE_VALIDATE_STRICT) throw new Error(message);
     console.warn(message);
   })();

@@ -7,9 +7,8 @@ import {
 import {
   deleteInstancePublicArtifacts,
   materializeInstancePublicArtifacts,
-  publicArtifactLocaleHtmlFile,
-  publicArtifactLocaleScriptFile,
 } from './public-artifacts';
+import { PUBLIC_INDEX_FILE, PUBLIC_RUNTIME_FILE, PUBLIC_STYLES_FILE } from './materialization-files';
 import { listInstanceRegistryRows } from './instance-registry';
 import {
   readInstanceServeState,
@@ -80,17 +79,20 @@ async function purgeClkLiveEntryCache(args: {
   instanceId: string;
   locales?: string[];
 }): Promise<void> {
+  void args.locales;
   const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
   const token = String(args.env.CLOUDFLARE_API_TOKEN || '').trim();
   if (!zoneId || !token) return;
   const publicServingBase =
     String(args.env.PUBLIC_SERVING_BASE_URL || '').trim().replace(/\/+$/, '') || 'https://clk.live';
   const base = `${publicServingBase}/${args.accountId}/${args.instanceId}`;
-  const files = new Set([base, `${base}/`, `${base}/index.html`, `${base}/styles.css`, `${base}/script.js`]);
-  for (const locale of args.locales ?? []) {
-    files.add(`${base}/${publicArtifactLocaleHtmlFile(locale)}`);
-    files.add(`${base}/${publicArtifactLocaleScriptFile(locale)}`);
-  }
+  const files = new Set([
+    base,
+    `${base}/`,
+    `${base}/${PUBLIC_INDEX_FILE}`,
+    `${base}/${PUBLIC_STYLES_FILE}`,
+    `${base}/${PUBLIC_RUNTIME_FILE}`,
+  ]);
   await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
     method: 'POST',
     headers: {

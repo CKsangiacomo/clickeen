@@ -1,6 +1,11 @@
 import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { guessContentTypeFromExt } from '../asset-utils';
-import { isGeneratedPublicArtifactFile } from '../domains/render';
+import {
+  isGeneratedPublicArtifactFile,
+  PUBLIC_INDEX_FILE,
+  PUBLIC_RUNTIME_FILE,
+  PUBLIC_STYLES_FILE,
+} from '../domains/render/materialization-files';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
 
 function notFound(): Response {
@@ -24,7 +29,7 @@ function parseClkLivePath(pathname: string): {
   if (segments.length !== 2 && segments.length !== 3) return null;
   const [accountId, instanceId, requestedFile] = segments;
   if (!isCompactAccountPublicId(accountId) || !isCompactInstanceId(instanceId)) return null;
-  const file = requestedFile ?? 'index.html';
+  const file = requestedFile ?? PUBLIC_INDEX_FILE;
   if (!isGeneratedPublicArtifactFile(file)) return null;
   return { accountId, instanceId, file };
 }
@@ -34,7 +39,7 @@ function instanceObjectKey(accountId: string, instanceId: string, file: string):
 }
 
 function cacheControlForGeneratedFile(file: string): string {
-  if (file === 'index.html' || file.endsWith('.html') || file === 'styles.css' || file === 'script.js') {
+  if (file === PUBLIC_INDEX_FILE || file === PUBLIC_STYLES_FILE || file === PUBLIC_RUNTIME_FILE) {
     return 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400';
   }
   return 'public, max-age=31536000, immutable';

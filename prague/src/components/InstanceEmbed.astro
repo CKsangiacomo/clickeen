@@ -37,10 +37,12 @@ if (showShareChrome && !widgetLabel) {
 
 // Local-dev cache-bust only: production embeds should be CDN/snapshot cache-friendly by default.
 const tsToken = import.meta.env.DEV ? String(Date.now()) : '';
-const ts = tsToken ? `?ts=${encodeURIComponent(tsToken)}` : '';
 const resolvedLocale = String(locale || 'en').trim();
-const localePath = resolvedLocale && resolvedLocale !== 'en' ? `/${encodeURIComponent(resolvedLocale)}.html` : '';
-const iframeSrc = `${CLK_LIVE_URL}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}${localePath}${ts}`;
+const query = new URLSearchParams();
+if (resolvedLocale && resolvedLocale !== 'en') query.set('locale', resolvedLocale);
+if (tsToken) query.set('ts', tsToken);
+const queryString = query.toString();
+const iframeSrc = `${CLK_LIVE_URL}/${encodeURIComponent(accountPublicId)}/${encodeURIComponent(instanceId)}${queryString ? `?${queryString}` : ''}`;
 
 const anchorId = `ck-instance-${instanceId.replace(/[^a-z0-9_-]+/gi, '-')}`;
 
