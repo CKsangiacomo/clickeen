@@ -830,6 +830,50 @@ and that old public artifact paths return 404/null-equivalent:
 
 Do not start Slice 2 until this cloud-dev smoke is green after deployment.
 
+#### Cloud-Dev Deployment Attempt
+
+Commit deployed:
+
+```text
+2c97db54 feat(tokyo-worker): canonicalize public runtime artifacts
+```
+
+GitHub cloud-dev workflows completed successfully:
+
+```text
+cloud-dev workers deploy: success
+cloud-dev roma app verify: success
+cloud-dev prague app verify: success
+cloud-dev surface reachability: success
+```
+
+Public-host smoke after deployment:
+
+```text
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII                  200
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/runtime.js       404
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/styles.css       200
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/script.js        404
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/script.it.js     404
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/it.html          404
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/styles.v123.css  404
+```
+
+All three currently published CLICKEEN instances still have old materialized `index.html` output and no `runtime.js`:
+
+```text
+UZ3JEJSHII index 200 runtime 404 oldScriptInIndex true runtimeInIndex false
+8FMVZFFPJV index 200 runtime 404 oldScriptInIndex true runtimeInIndex false
+H7IF9M2K9B index 200 runtime 404 oldScriptInIndex true runtimeInIndex false
+```
+
+Interpretation:
+
+- The deployed public route is enforcing the new allowlist; obsolete generated paths now return 404.
+- Existing published account runtime files were not automatically rematerialized by deployment.
+- Slice 1 cloud-dev smoke is not green until one published instance is rematerialized through the real publish/restore product operation and then proves `runtime.js` exists.
+- Do not manually write R2 objects to satisfy this gate. Rematerialization must happen through Tokyo's product materializer via an authenticated product operation.
+
 ## Final State
 
 Tokyo-worker remains important, but smaller in meaning:
