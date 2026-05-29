@@ -118,7 +118,7 @@ function faqConfig() {
           {
             id: 'pricing',
             question: 'What does it cost?',
-            answer: 'Plans start free.',
+            answer: 'Plans start free in Venice.',
             defaultOpen: false,
           },
         ],
@@ -167,7 +167,7 @@ test('Tokyo materializes base and translated public artifacts from instance sour
   assert.equal(objects.has(`${root}/script.js`), false);
   assert.equal([...objects.keys()].some((key) => /\/script\.v[1-9][0-9]*(?:\.it)?\.js$/.test(key)), false);
   assert.equal([...objects.keys()].some((key) => /\/styles\.v[1-9][0-9]*\.css$/.test(key)), false);
-  assert.match(objects.get(`${root}/runtime.js`)?.text ?? '', /Plans start free\./);
+  assert.match(objects.get(`${root}/runtime.js`)?.text ?? '', /Plans start free in Venice\./);
   assert.match(objects.get(`${root}/runtime.js`)?.text ?? '', /I piani partono gratis\./);
   assert.match(objects.get(`${root}/runtime.js`)?.text ?? '', /CK_LOCALE_POLICY/);
   assert.match(objects.get(`${root}/runtime.js`)?.text ?? '', /URLSearchParams/);

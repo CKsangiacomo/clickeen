@@ -40,7 +40,6 @@ export type MaterializeInstancePublicArtifactsResult =
     };
 
 const FORBIDDEN_VISITOR_PATTERNS = [
-  /venice/i,
   /\/api\/account\//i,
   /\/__internal\//i,
   /fetch\([^)]*instance\.json/i,
