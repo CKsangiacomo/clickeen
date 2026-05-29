@@ -874,6 +874,22 @@ Interpretation:
 - Slice 1 cloud-dev smoke is not green until one published instance is rematerialized through the real publish/restore product operation and then proves `runtime.js` exists.
 - Do not manually write R2 objects to satisfy this gate. Rematerialization must happen through Tokyo's product materializer via an authenticated product operation.
 
+Blocked follow-up evidence:
+
+- `tokyo.dev.clickeen.com` does not mount private product-control instance routes; it only mounts health and product asset routes. `POST https://tokyo.dev.clickeen.com/__internal/accounts/CLICKEEN/serving/restore-paid` returned `405`.
+- `dev.clk.live` correctly blocks private product-control routes. `POST https://dev.clk.live/__internal/accounts/CLICKEEN/serving/restore-paid` returned `404`.
+- Wrangler remote dev is not usable for this gate with the current worker config because `TOKYO_R2` has no `preview_bucket_name`; Wrangler refuses to bind the production R2 bucket in dev mode.
+- No Roma browser session cookie is available in the execution environment, and the in-app browser automation tool required by the Browser skill is not exposed in this session.
+
+Therefore the remaining green gate is intentionally blocked on one of the approved product paths:
+
+```text
+1. Use an authenticated Roma/Bob session to publish or republish one CLICKEEN instance.
+2. Or run an approved service-binding operation that calls Tokyo's restore/publish product operation.
+```
+
+Do not unblock this by uploading `runtime.js` or editing R2 objects directly.
+
 ## Final State
 
 Tokyo-worker remains important, but smaller in meaning:
