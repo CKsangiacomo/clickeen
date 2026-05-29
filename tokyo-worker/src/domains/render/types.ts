@@ -88,7 +88,7 @@ export type AccountInstanceContentDocument = {
   updatedAt: string;
 };
 
-export type TranslationGenerationJobStatus =
+export type TranslationGenerationOperationStatus =
   | 'queued'
   | 'running'
   | 'completed'
@@ -97,7 +97,7 @@ export type TranslationGenerationJobStatus =
 
 export type TranslationGenerationSummaryStatus =
   | 'idle'
-  | TranslationGenerationJobStatus;
+  | TranslationGenerationOperationStatus;
 
 export type TranslationGenerationLocaleStatus =
   | 'queued'
@@ -105,7 +105,7 @@ export type TranslationGenerationLocaleStatus =
   | 'failed'
   | 'superseded';
 
-export type TranslationGenerationJobBasis = Array<{
+export type TranslationGenerationOperationBasis = Array<{
   locale: string;
   widgetContract?: {
     schemaVersion: 1;
@@ -119,7 +119,7 @@ export type TranslationGenerationJobBasis = Array<{
   }>;
 }>;
 
-export type TranslationGenerationLocaleState = {
+export type TranslationGenerationOperationLocaleState = {
   locale: string;
   status: TranslationGenerationLocaleStatus;
   paths: string[];
@@ -128,7 +128,7 @@ export type TranslationGenerationLocaleState = {
   detail?: string;
 };
 
-export type TranslationGenerationJobDocument = {
+export type TranslationGenerationOperationDocument = {
   jobId: string;
   baseContentMarker?: string;
   generationRequestMarker?: string;
@@ -137,7 +137,7 @@ export type TranslationGenerationJobDocument = {
   widgetType: string;
   baseLocale: string;
   targetLocales: string[];
-  status: TranslationGenerationJobStatus;
+  status: TranslationGenerationOperationStatus;
   requestedAt: string;
   updatedAt: string;
   totalLocales: number;
@@ -146,8 +146,8 @@ export type TranslationGenerationJobDocument = {
   supersededLocales: string[];
   pendingLocales: string[];
   currentReadyLocales: string[];
-  locales: Record<string, TranslationGenerationLocaleState>;
-  basis: TranslationGenerationJobBasis;
+  locales: Record<string, TranslationGenerationOperationLocaleState>;
+  basis: TranslationGenerationOperationBasis;
   reasonKey?: string;
   detail?: string;
 };
@@ -160,7 +160,7 @@ export type TranslationProductLocaleState = {
   detail?: string;
 };
 
-export type TranslationGenerationJobSummary = {
+export type TranslationGenerationOperationSummary = {
   v?: 2;
   instanceId: string;
   baseLocale: string;
@@ -177,7 +177,7 @@ export type TranslationGenerationJobSummary = {
   detail?: string;
   locales?: TranslationProductLocaleState[];
   diagnostics?: {
-    locales?: Record<string, TranslationGenerationLocaleState>;
+    locales?: Record<string, TranslationGenerationOperationLocaleState>;
     completedLocales?: string[];
     failedLocales?: string[];
     supersededLocales?: string[];

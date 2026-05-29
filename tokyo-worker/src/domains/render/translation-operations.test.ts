@@ -635,7 +635,7 @@ test('Tokyo marks completed locales out of sync when saved base content changes'
   ]);
 });
 
-test('Tokyo records terminal locale failures on generation job state', async () => {
+test('Tokyo records terminal locale failures on generation operation state', async () => {
   const { env, queued } = createTestEnv();
   await seedSavedFaqInstance(env);
 
@@ -689,8 +689,8 @@ test('Tokyo records terminal locale failures on generation job state', async () 
   }))?.translationStatus, 'failed');
 });
 
-test('Tokyo fails stale active generation jobs instead of polling forever', async () => {
-  const { env, objects } = createTestEnv();
+test('Tokyo fails stale active generation operations instead of polling forever', async () => {
+  const { env, queued } = createTestEnv();
   await seedSavedFaqInstance(env);
 
   await generateInstanceTranslations({
@@ -701,28 +701,22 @@ test('Tokyo fails stale active generation jobs instead of polling forever', asyn
     baseLocale: 'en',
     targetLocales: ['it'],
   });
+  assert.equal(queued.length, 1);
+  const job = queued[0];
+  assert(job);
 
-  const generationEntry = [...objects.entries()]
-    .find(([key]) => key.endsWith('/translation-generation-job.json'));
-  assert(generationEntry);
   const staleAt = new Date(Date.now() - 11 * 60 * 1000).toISOString();
-  const [generationKey, generationObject] = generationEntry;
-  objects.set(generationKey, {
-    ...generationObject,
-    body: {
-      ...(generationObject.body as Record<string, unknown>),
-      requestedAt: staleAt,
-      updatedAt: staleAt,
-      locales: Object.fromEntries(Object.entries(
-        (generationObject.body as { locales: Record<string, Record<string, unknown>> }).locales,
-      ).map(([locale, state]) => [
-        locale,
-        {
-          ...state,
-          updatedAt: staleAt,
-        },
-      ])),
-    },
+  await fetch(`${env.SUPABASE_URL}/rest/v1/translation_generation_operations?id=eq.${job.jobId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      requested_at: staleAt,
+      updated_at: staleAt,
+      expires_at: staleAt,
+    }),
+  });
+  await fetch(`${env.SUPABASE_URL}/rest/v1/translation_generation_operation_locales?operation_id=eq.${job.jobId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ updated_at: staleAt }),
   });
 
   const generation = await readInstanceTranslationGeneration({

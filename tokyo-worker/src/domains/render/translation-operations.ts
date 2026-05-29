@@ -31,14 +31,21 @@ import {
   type InstanceRegistryTranslationStatus,
 } from './instance-registry';
 import {
-  deriveTranslationGenerationJob,
+  deriveTranslationGenerationOperation,
   productLocaleStatesForOverlays,
   readyLocalesForOverlays,
-  readCurrentTranslationGenerationJob,
-  summarizeTranslationGenerationJob,
-  updateCurrentTranslationGenerationJob,
-  writeCurrentTranslationGenerationJob,
+  summarizeTranslationGenerationOperation,
 } from './translation-generation-state';
+import {
+  completeTranslationGenerationLocale,
+  createTranslationGenerationOperation,
+  failTranslationGenerationLocale,
+  failTranslationGenerationOperation,
+  markTranslationGenerationEnqueued,
+  markTranslationGenerationLocaleStale,
+  readLatestTranslationGenerationOperation,
+  updateOperationStatusFromLocales,
+} from './translation-operation-ledger';
 import {
   baseContentMarkerForTranslationJob,
   buildBaseContentMarker,
@@ -46,9 +53,9 @@ import {
   buildWidgetContractMarker,
 } from './translation-markers';
 import type {
-  TranslationGenerationJobBasis,
-  TranslationGenerationJobDocument,
-  TranslationGenerationJobSummary,
+  TranslationGenerationOperationBasis,
+  TranslationGenerationOperationDocument,
+  TranslationGenerationOperationSummary,
 } from './types';
 
 type TranslationQueue = {
@@ -66,7 +73,7 @@ export type InstanceTranslationGenerationResult =
       queuedLocales: string[];
       skippedLocales: string[];
       jobIds: string[];
-      generation: TranslationGenerationJobSummary | null;
+      generation: TranslationGenerationOperationSummary | null;
       results: Array<{ locale: string; ok: true; jobId: string }>;
     }
   | {
@@ -89,7 +96,7 @@ export type LocaleTranslationFailureResult =
   | { ok: false; locale: string; reasonKey: string; detail: string };
 
 export type InstanceTranslationGenerationReadResult =
-  | { ok: true; generation: TranslationGenerationJobSummary }
+  | { ok: true; generation: TranslationGenerationOperationSummary }
   | { ok: false; reasonKey: string; detail: string };
 
 function generationFailure(args: {
@@ -198,13 +205,11 @@ async function baseContentMarkerForJob(job: InstanceTranslationJob): Promise<str
   });
 }
 
-function currentJobMatchesCompletionJob(current: TranslationGenerationJobDocument, job: InstanceTranslationJob, jobBaseContentMarker: string): boolean {
-  return current.baseContentMarker
-    ? current.baseContentMarker === jobBaseContentMarker
-    : current.jobId === job.jobId;
+function currentOperationMatchesCompletionJob(current: TranslationGenerationOperationDocument, job: InstanceTranslationJob, jobBaseContentMarker: string): boolean {
+  return current.jobId === job.jobId && current.baseContentMarker === jobBaseContentMarker;
 }
 
-function buildJobBasis(jobs: InstanceTranslationJob[]): TranslationGenerationJobBasis {
+function buildJobBasis(jobs: InstanceTranslationJob[]): TranslationGenerationOperationBasis {
   return jobs
     .map((job) => ({
       locale: job.targetLocale,
@@ -216,7 +221,7 @@ function buildJobBasis(jobs: InstanceTranslationJob[]): TranslationGenerationJob
     .sort((left, right) => left.locale.localeCompare(right.locale));
 }
 
-function createGenerationJobDocument(args: {
+function createTranslationGenerationOperationDocument(args: {
   jobId: string;
   baseContentMarker: string;
   generationRequestMarker: string;
@@ -228,8 +233,8 @@ function createGenerationJobDocument(args: {
   requestedAt: string;
   currentReadyLocales: string[];
   jobs: InstanceTranslationJob[];
-}): TranslationGenerationJobDocument {
-  const locales: TranslationGenerationJobDocument['locales'] = {};
+}): TranslationGenerationOperationDocument {
+  const locales: TranslationGenerationOperationDocument['locales'] = {};
   for (const job of args.jobs) {
     locales[job.targetLocale] = {
       locale: job.targetLocale,
@@ -238,7 +243,7 @@ function createGenerationJobDocument(args: {
       updatedAt: args.requestedAt,
     };
   }
-  return deriveTranslationGenerationJob({
+  return deriveTranslationGenerationOperation({
     job: {
       jobId: args.jobId,
       baseContentMarker: args.baseContentMarker,
@@ -303,13 +308,13 @@ function normalizeFailureText(value: unknown, fallback: string): string {
 }
 
 function registryStatusForGenerationStatus(
-  status: TranslationGenerationJobSummary['status'],
+  status: TranslationGenerationOperationSummary['status'],
 ): InstanceRegistryTranslationStatus {
   if (status === 'queued' || status === 'running' || status === 'failed') return status;
   return 'idle';
 }
 
-function registryStatusForGenerationJob(args: {
+function registryStatusForGenerationOperation(args: {
   instanceId: string;
   baseLocale: string;
   targetLocales: string[];
@@ -317,11 +322,11 @@ function registryStatusForGenerationJob(args: {
   currentBaseContentMarker?: string;
   currentGenerationRequestMarker?: string;
   outOfSyncLocales?: string[];
-  productLocales?: TranslationGenerationJobSummary['locales'];
-  job: TranslationGenerationJobDocument;
+  productLocales?: TranslationGenerationOperationSummary['locales'];
+  job: TranslationGenerationOperationDocument;
 }): InstanceRegistryTranslationStatus {
   return registryStatusForGenerationStatus(
-    summarizeTranslationGenerationJob({
+    summarizeTranslationGenerationOperation({
       instanceId: args.instanceId,
       baseLocale: args.baseLocale,
       targetLocales: args.targetLocales,
@@ -336,9 +341,9 @@ function registryStatusForGenerationJob(args: {
 }
 
 function applyRegistryStatusToGenerationSummary(args: {
-  summary: TranslationGenerationJobSummary;
+  summary: TranslationGenerationOperationSummary;
   registryStatus: InstanceRegistryTranslationStatus | null;
-}): TranslationGenerationJobSummary {
+}): TranslationGenerationOperationSummary {
   if (!args.registryStatus) return args.summary;
   if (
     args.summary.status === 'idle' ||
@@ -354,11 +359,11 @@ function applyRegistryStatusToGenerationSummary(args: {
   return { ...args.summary, status: 'idle' };
 }
 
-function isActiveGenerationSummary(summary: TranslationGenerationJobSummary): boolean {
+function isActiveGenerationSummary(summary: TranslationGenerationOperationSummary): boolean {
   return summary.status === 'queued' || summary.status === 'running';
 }
 
-function shouldTimeoutGeneration(summary: TranslationGenerationJobSummary): boolean {
+function shouldTimeoutGeneration(summary: TranslationGenerationOperationSummary): boolean {
   if (!isActiveGenerationSummary(summary) || !summary.requestedAt) return false;
   const requestedAtMs = Date.parse(summary.requestedAt);
   return Number.isFinite(requestedAtMs) && Date.now() - requestedAtMs >= TRANSLATION_GENERATION_ACTIVE_TIMEOUT_MS;
@@ -368,48 +373,26 @@ async function timeoutStalledGeneration(args: {
   env: Env;
   accountId: string;
   instanceId: string;
-  widgetCode: string;
   baseLocale: string;
   targetLocales: string[];
   currentReadyLocales: string[];
   outOfSyncLocales?: string[];
   currentBaseContentMarker?: string;
   currentGenerationRequestMarker?: string;
-  productLocales?: TranslationGenerationJobSummary['locales'];
-  job: TranslationGenerationJobDocument | null;
-  summary: TranslationGenerationJobSummary;
-}): Promise<TranslationGenerationJobSummary> {
+  productLocales?: TranslationGenerationOperationSummary['locales'];
+  job: TranslationGenerationOperationDocument | null;
+  summary: TranslationGenerationOperationSummary;
+}): Promise<TranslationGenerationOperationSummary> {
   if (!args.job || !shouldTimeoutGeneration(args.summary)) return args.summary;
   const now = new Date().toISOString();
-  const timedOutJob = deriveTranslationGenerationJob({
-    job: {
-      ...args.job,
-      status: 'failed',
-      updatedAt: now,
-      reasonKey: 'instance.translation.timed_out',
-      detail: 'Translation generation timed out before all locale jobs reported completion or failure.',
-      locales: Object.fromEntries(Object.entries(args.job.locales).map(([locale, state]) => [
-        locale,
-        state.status === 'queued'
-          ? {
-              ...state,
-              status: 'failed' as const,
-              updatedAt: now,
-              reasonKey: 'instance.translation.timed_out',
-              detail: 'Translation job did not report completion or failure before the generation timeout.',
-            }
-          : state,
-      ])),
-    },
-    currentReadyLocales: args.currentReadyLocales,
-    updatedAt: now,
-  });
-  await writeCurrentTranslationGenerationJob({
+  await failTranslationGenerationOperation({
     env: args.env,
-    accountId: args.accountId,
-    widgetCode: args.widgetCode,
-    instanceId: args.instanceId,
-    job: timedOutJob,
+    operationId: args.job.jobId,
+    now,
+    status: 'timed_out',
+    reasonKey: 'instance.translation.timed_out',
+    detail: 'Translation generation timed out before all locale jobs reported completion or failure.',
+    localeDetail: 'Translation job did not report completion or failure before the generation timeout.',
   });
   await writeRegistryTranslationStatus({
     env: args.env,
@@ -417,6 +400,13 @@ async function timeoutStalledGeneration(args: {
     instanceId: args.instanceId,
     status: 'failed',
   });
+  const timedOutJob = await readLatestTranslationGenerationOperation({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    widgetType: args.job.widgetType,
+    currentReadyLocales: args.currentReadyLocales,
+  }) ?? args.job;
   const productLocales = args.productLocales?.map((locale) => {
     const failedLocale = timedOutJob.locales[locale.locale];
     if (failedLocale?.status !== 'failed') return locale;
@@ -428,7 +418,7 @@ async function timeoutStalledGeneration(args: {
       ...(failedLocale.detail ? { detail: failedLocale.detail } : {}),
     };
   });
-  return summarizeTranslationGenerationJob({
+  return summarizeTranslationGenerationOperation({
     instanceId: args.instanceId,
     baseLocale: args.baseLocale,
     targetLocales: args.targetLocales,
@@ -472,13 +462,7 @@ export async function readInstanceTranslationGeneration(args: {
       detail: instance.reasonKey,
     };
   }
-  const job = await readCurrentTranslationGenerationJob({
-    env: args.env,
-    accountId: args.accountId,
-    widgetCode: instance.value.widgetCode,
-    instanceId: args.instanceId,
-  });
-  const targetLocales = job?.targetLocales.length ? job.targetLocales : instance.value.targetLocales;
+  const targetLocales = instance.value.targetLocales;
   const content = await readAccountInstanceContentDocument({
     env: args.env,
     accountId: args.accountId,
@@ -523,9 +507,23 @@ export async function readInstanceTranslationGeneration(args: {
     }
   }
   const currentReadyLocales = readyLocalesForOverlays(content.value, targetLocales, overlays, currentBaseContentMarker);
+  const job = await readLatestTranslationGenerationOperation({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    widgetType: instance.value.widgetType,
+    currentReadyLocales,
+  });
+  const summaryTargetLocales = job?.targetLocales.length ? job.targetLocales : targetLocales;
+  if (currentBaseContentMarker) {
+    currentGenerationRequestMarker = await buildGenerationRequestMarker({
+      baseContentMarker: currentBaseContentMarker,
+      targetLocales: summaryTargetLocales,
+    });
+  }
   const productLocales = productLocaleStatesForOverlays({
     content: content.value,
-    targetLocales,
+    targetLocales: summaryTargetLocales,
     overlays,
     currentBaseContentMarker,
     job,
@@ -542,19 +540,18 @@ export async function readInstanceTranslationGeneration(args: {
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
-    widgetCode: instance.value.widgetCode,
     baseLocale: instance.value.baseLocale,
-    targetLocales,
+    targetLocales: summaryTargetLocales,
     currentReadyLocales,
     outOfSyncLocales,
     currentBaseContentMarker,
     currentGenerationRequestMarker,
     productLocales,
     job,
-    summary: summarizeTranslationGenerationJob({
+    summary: summarizeTranslationGenerationOperation({
       instanceId: args.instanceId,
       baseLocale: instance.value.baseLocale,
-      targetLocales,
+      targetLocales: summaryTargetLocales,
       currentReadyLocales,
       outOfSyncLocales,
       currentBaseContentMarker,
@@ -676,7 +673,7 @@ export async function generateInstanceTranslations(args: {
   const jobs: InstanceTranslationJob[] = [];
   const skippedLocales: string[] = [];
   const requestedAt = new Date().toISOString();
-  const generationJobId = crypto.randomUUID();
+  const generationOperationId = crypto.randomUUID();
   const widgetContract = {
     schemaVersion: 1 as const,
     hash: await buildWidgetContractMarker(widgetDefinition.editableFields),
@@ -698,11 +695,12 @@ export async function generateInstanceTranslations(args: {
     instanceId: args.instanceId,
   }));
   const currentReadyLocales = readyLocalesForOverlays(content.value, uniqueTargetLocales, overlays, baseContentMarker);
-  const existingJob = await readCurrentTranslationGenerationJob({
+  const existingJob = await readLatestTranslationGenerationOperation({
     env: args.env,
     accountId: args.accountId,
-    widgetCode: instance.value.widgetCode,
     instanceId: args.instanceId,
+    widgetType: instance.value.widgetType,
+    currentReadyLocales,
   });
   if (existingJob) {
     const existingTargetLocales = existingJob.targetLocales.length ? existingJob.targetLocales : uniqueTargetLocales;
@@ -720,7 +718,7 @@ export async function generateInstanceTranslations(args: {
     const existingOutOfSyncLocales = existingProductLocales
       .filter((entry) => entry.state === 'outOfSync')
       .map((entry) => entry.locale);
-    const existingSummary = summarizeTranslationGenerationJob({
+    const existingSummary = summarizeTranslationGenerationOperation({
       instanceId: args.instanceId,
       baseLocale,
       targetLocales: existingTargetLocales,
@@ -794,7 +792,7 @@ export async function generateInstanceTranslations(args: {
     jobs.push({
       v: 2,
       kind: INSTANCE_TRANSLATION_JOB_KIND,
-      jobId: generationJobId,
+      jobId: generationOperationId,
       baseContentMarker,
       generationRequestMarker,
       accountId: args.authz.accountId,
@@ -817,35 +815,6 @@ export async function generateInstanceTranslations(args: {
   }
 
   if (!jobs.length) {
-    const completedAt = new Date().toISOString();
-    const completedJob = existingJob
-      ? deriveTranslationGenerationJob({
-          job: {
-            ...existingJob,
-            status: 'completed',
-            updatedAt: completedAt,
-            currentReadyLocales,
-            locales: Object.fromEntries(Object.entries(existingJob.locales).map(([localeKey, state]) => [
-              localeKey,
-              {
-                ...state,
-                status: 'completed',
-                updatedAt: completedAt,
-              },
-            ])),
-          },
-          currentReadyLocales,
-        })
-      : null;
-    if (completedJob) {
-      await writeCurrentTranslationGenerationJob({
-        env: args.env,
-        accountId: args.accountId,
-        widgetCode: instance.value.widgetCode,
-        instanceId: args.instanceId,
-        job: completedJob,
-      });
-    }
     await writeRegistryTranslationStatus({
       env: args.env,
       accountId: args.accountId,
@@ -859,8 +828,8 @@ export async function generateInstanceTranslations(args: {
       targetLocales: uniqueTargetLocales,
       queuedLocales: [],
       skippedLocales,
-      jobIds: completedJob ? [completedJob.jobId] : [],
-      generation: summarizeTranslationGenerationJob({
+      jobIds: [],
+      generation: summarizeTranslationGenerationOperation({
         instanceId: args.instanceId,
         baseLocale,
         targetLocales: uniqueTargetLocales,
@@ -871,14 +840,14 @@ export async function generateInstanceTranslations(args: {
         currentBaseContentMarker: baseContentMarker,
         currentGenerationRequestMarker: generationRequestMarker,
         productLocales: productLocalesBeforeGeneration,
-        job: completedJob,
+        job: null,
       }),
       results: [],
     };
   }
 
-  const generationJob = createGenerationJobDocument({
-    jobId: generationJobId,
+  const generationOperation = createTranslationGenerationOperationDocument({
+    jobId: generationOperationId,
     baseContentMarker,
     generationRequestMarker,
     accountId: args.accountId,
@@ -890,13 +859,43 @@ export async function generateInstanceTranslations(args: {
     currentReadyLocales,
     jobs,
   });
-  await writeCurrentTranslationGenerationJob({
+  const createdGenerationOperation = await createTranslationGenerationOperation({
     env: args.env,
-    accountId: args.accountId,
-    widgetCode: instance.value.widgetCode,
-    instanceId: args.instanceId,
-    job: generationJob,
+    operation: generationOperation,
+    expiresAt: new Date(Date.parse(requestedAt) + TRANSLATION_GENERATION_ACTIVE_TIMEOUT_MS).toISOString(),
   });
+  if (createdGenerationOperation.jobId !== generationOperation.jobId) {
+    const activeProductLocales = productLocaleStatesForOverlays({
+      content: content.value,
+      targetLocales: createdGenerationOperation.targetLocales,
+      overlays,
+      currentBaseContentMarker: baseContentMarker,
+      job: createdGenerationOperation,
+    });
+    return {
+      ok: true,
+      accepted: true,
+      baseLocale,
+      targetLocales: createdGenerationOperation.targetLocales,
+      queuedLocales: createdGenerationOperation.pendingLocales,
+      skippedLocales: [],
+      jobIds: [createdGenerationOperation.jobId],
+      generation: summarizeTranslationGenerationOperation({
+        instanceId: args.instanceId,
+        baseLocale,
+        targetLocales: createdGenerationOperation.targetLocales,
+        currentReadyLocales: readyLocalesForOverlays(content.value, createdGenerationOperation.targetLocales, overlays, baseContentMarker),
+        outOfSyncLocales: activeProductLocales
+          .filter((entry) => entry.state === 'outOfSync')
+          .map((entry) => entry.locale),
+        currentBaseContentMarker: baseContentMarker,
+        currentGenerationRequestMarker: createdGenerationOperation.generationRequestMarker,
+        productLocales: activeProductLocales,
+        job: createdGenerationOperation,
+      }),
+      results: [],
+    };
+  }
   await writeRegistryTranslationStatus({
     env: args.env,
     accountId: args.accountId,
@@ -906,30 +905,19 @@ export async function generateInstanceTranslations(args: {
 
   try {
     await Promise.all(jobs.map((job) => queue.send(job)));
+    await markTranslationGenerationEnqueued({
+      env: args.env,
+      operationId: generationOperation.jobId,
+      now: new Date().toISOString(),
+    });
   } catch (error) {
     const failedAt = new Date().toISOString();
-    await writeCurrentTranslationGenerationJob({
+    await failTranslationGenerationOperation({
       env: args.env,
-      accountId: args.accountId,
-      widgetCode: instance.value.widgetCode,
-      instanceId: args.instanceId,
-      job: {
-        ...generationJob,
-        status: 'failed',
-        updatedAt: failedAt,
-        locales: Object.fromEntries(Object.entries(generationJob.locales).map(([locale, state]) => [
-          locale,
-          {
-            ...state,
-            status: 'failed',
-            updatedAt: failedAt,
-            reasonKey: 'instance.translation.queue_send_failed',
-            detail: error instanceof Error ? error.message : String(error),
-          },
-        ])),
-        reasonKey: 'instance.translation.queue_send_failed',
-        detail: error instanceof Error ? error.message : String(error),
-      },
+      operationId: generationOperation.jobId,
+      now: failedAt,
+      reasonKey: 'instance.translation.queue_send_failed',
+      detail: error instanceof Error ? error.message : String(error),
     });
     await writeRegistryTranslationStatus({
       env: args.env,
@@ -952,7 +940,7 @@ export async function generateInstanceTranslations(args: {
     queuedLocales: jobs.map((job) => job.targetLocale),
     skippedLocales,
     jobIds: uniqueJobIds(jobs),
-    generation: summarizeTranslationGenerationJob({
+    generation: summarizeTranslationGenerationOperation({
       instanceId: args.instanceId,
       baseLocale,
       targetLocales: uniqueTargetLocales,
@@ -967,9 +955,9 @@ export async function generateInstanceTranslations(args: {
         targetLocales: uniqueTargetLocales,
         overlays,
         currentBaseContentMarker: baseContentMarker,
-        job: generationJob,
+        job: generationOperation,
       }),
-      job: generationJob,
+      job: generationOperation,
     }),
     results: resultsForJobs(jobs),
   };
@@ -1017,11 +1005,11 @@ export async function completeLocaleTranslation(args: {
     };
   }
 
-  const currentJob = await readCurrentTranslationGenerationJob({
+  const currentJob = await readLatestTranslationGenerationOperation({
     env: args.env,
     accountId: args.accountId,
-    widgetCode: instance.value.widgetCode,
     instanceId: args.instanceId,
+    widgetType: instance.value.widgetType,
   });
 
   let currentSavedTextFields: SavedTextField[];
@@ -1048,7 +1036,7 @@ export async function completeLocaleTranslation(args: {
   if (
     !currentJob ||
     !currentJob.locales[locale] ||
-    !currentJobMatchesCompletionJob(currentJob, job, jobBaseContentMarker)
+    !currentOperationMatchesCompletionJob(currentJob, job, jobBaseContentMarker)
   ) {
     return {
       ok: true,
@@ -1059,43 +1047,36 @@ export async function completeLocaleTranslation(args: {
     };
   }
   if (jobBaseContentMarker !== currentBaseContentMarker) {
-    const updatedJob = await updateCurrentTranslationGenerationJob({
+    const now = new Date().toISOString();
+    await markTranslationGenerationLocaleStale({
+      env: args.env,
+      operationId: currentJob.jobId,
+      locale,
+      now,
+      reasonKey: 'instance.translation.stale_source_text',
+      detail: 'Current saved text for the translated fields no longer matches the translation job basis.',
+    });
+    const updatedJob = await updateOperationStatusFromLocales({
+      env: args.env,
+      operationId: currentJob.jobId,
+      widgetType: instance.value.widgetType,
+      currentReadyLocales: currentJob.currentReadyLocales,
+      now,
+    });
+    await writeRegistryTranslationStatus({
       env: args.env,
       accountId: args.accountId,
-      widgetCode: instance.value.widgetCode,
       instanceId: args.instanceId,
-      update(current) {
-        if (!current || !currentJobMatchesCompletionJob(current, job, jobBaseContentMarker) || !current.locales[locale]) return current;
-        return {
-          ...current,
-          updatedAt: new Date().toISOString(),
-          locales: {
-            ...current.locales,
-            [locale]: {
-              ...current.locales[locale],
-              status: 'superseded',
-              updatedAt: new Date().toISOString(),
-              reasonKey: 'instance.translation.stale_source_text',
-              detail: 'Current saved text for the translated fields no longer matches the translation job basis.',
-            },
-          },
-        };
-      },
+      status: updatedJob
+        ? registryStatusForGenerationOperation({
+            instanceId: args.instanceId,
+            baseLocale: updatedJob.baseLocale,
+            targetLocales: updatedJob.targetLocales,
+            currentReadyLocales: updatedJob.currentReadyLocales,
+            job: updatedJob,
+          })
+        : 'idle',
     });
-    if (updatedJob && currentJobMatchesCompletionJob(updatedJob, job, jobBaseContentMarker)) {
-      await writeRegistryTranslationStatus({
-        env: args.env,
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-        status: registryStatusForGenerationJob({
-          instanceId: args.instanceId,
-          baseLocale: updatedJob.baseLocale,
-          targetLocales: updatedJob.targetLocales,
-          currentReadyLocales: updatedJob.currentReadyLocales,
-          job: updatedJob,
-        }),
-      });
-    }
     return {
       ok: true,
       applied: false,
@@ -1109,43 +1090,36 @@ export async function completeLocaleTranslation(args: {
     job,
     widgetContractHash: await buildWidgetContractMarker(widgetDefinition.editableFields),
   })) {
-    const updatedJob = await updateCurrentTranslationGenerationJob({
+    const now = new Date().toISOString();
+    await markTranslationGenerationLocaleStale({
+      env: args.env,
+      operationId: currentJob.jobId,
+      locale,
+      now,
+      reasonKey: 'instance.translation.stale_source_text',
+      detail: 'Current saved text for the translated fields no longer matches the translation job basis.',
+    });
+    const updatedJob = await updateOperationStatusFromLocales({
+      env: args.env,
+      operationId: currentJob.jobId,
+      widgetType: instance.value.widgetType,
+      currentReadyLocales: currentJob.currentReadyLocales,
+      now,
+    });
+    await writeRegistryTranslationStatus({
       env: args.env,
       accountId: args.accountId,
-      widgetCode: instance.value.widgetCode,
       instanceId: args.instanceId,
-      update(current) {
-        if (!current || !currentJobMatchesCompletionJob(current, job, jobBaseContentMarker) || !current.locales[locale]) return current;
-        return {
-          ...current,
-          updatedAt: new Date().toISOString(),
-          locales: {
-            ...current.locales,
-            [locale]: {
-              ...current.locales[locale],
-              status: 'superseded',
-              updatedAt: new Date().toISOString(),
-              reasonKey: 'instance.translation.stale_source_text',
-              detail: 'Current saved text for the translated fields no longer matches the translation job basis.',
-            },
-          },
-        };
-      },
+      status: updatedJob
+        ? registryStatusForGenerationOperation({
+            instanceId: args.instanceId,
+            baseLocale: updatedJob.baseLocale,
+            targetLocales: updatedJob.targetLocales,
+            currentReadyLocales: updatedJob.currentReadyLocales,
+            job: updatedJob,
+          })
+        : 'idle',
     });
-    if (updatedJob && currentJobMatchesCompletionJob(updatedJob, job, jobBaseContentMarker)) {
-      await writeRegistryTranslationStatus({
-        env: args.env,
-        accountId: args.accountId,
-        instanceId: args.instanceId,
-        status: registryStatusForGenerationJob({
-          instanceId: args.instanceId,
-          baseLocale: updatedJob.baseLocale,
-          targetLocales: updatedJob.targetLocales,
-          currentReadyLocales: updatedJob.currentReadyLocales,
-          job: updatedJob,
-        }),
-      });
-    }
     return {
       ok: true,
       applied: false,
@@ -1216,34 +1190,20 @@ export async function completeLocaleTranslation(args: {
   const readyLocales = content.ok
     ? readyLocalesForOverlays(content.value, currentJob.targetLocales, overlays, jobBaseContentMarker)
     : currentJob.currentReadyLocales;
-  const updatedJob = await updateCurrentTranslationGenerationJob({
+  const updatedJob = await completeTranslationGenerationLocale({
     env: args.env,
-    accountId: args.accountId,
-    widgetCode: instance.value.widgetCode,
-    instanceId: args.instanceId,
-    update(current) {
-      if (!current || !currentJobMatchesCompletionJob(current, job, jobBaseContentMarker) || !current.locales[locale]) return current;
-      return {
-        ...current,
-        updatedAt: new Date().toISOString(),
-        currentReadyLocales: readyLocales,
-        locales: {
-          ...current.locales,
-          [locale]: {
-            ...current.locales[locale],
-            status: 'completed',
-            updatedAt: new Date().toISOString(),
-          },
-        },
-      };
-    },
+    operationId: currentJob.jobId,
+    locale,
+    now: new Date().toISOString(),
+    widgetType: instance.value.widgetType,
+    currentReadyLocales: readyLocales,
   });
-  if (updatedJob && currentJobMatchesCompletionJob(updatedJob, job, jobBaseContentMarker)) {
+  if (updatedJob && currentOperationMatchesCompletionJob(updatedJob, job, jobBaseContentMarker)) {
     await writeRegistryTranslationStatus({
       env: args.env,
       accountId: args.accountId,
       instanceId: args.instanceId,
-      status: registryStatusForGenerationJob({
+      status: registryStatusForGenerationOperation({
         instanceId: args.instanceId,
         baseLocale: updatedJob.baseLocale,
         targetLocales: updatedJob.targetLocales,
@@ -1293,34 +1253,14 @@ export async function failLocaleTranslation(args: {
   }
   const jobBaseContentMarker = await baseContentMarkerForJob(job);
 
-  const recorded = await updateCurrentTranslationGenerationJob({
+  const currentJob = await readLatestTranslationGenerationOperation({
     env: args.env,
     accountId: args.accountId,
-    widgetCode: instance.value.widgetCode,
     instanceId: args.instanceId,
-    update(current) {
-      if (!current || !currentJobMatchesCompletionJob(current, job, jobBaseContentMarker) || !current.locales[locale]) return current;
-      const now = new Date().toISOString();
-      return {
-        ...current,
-        updatedAt: now,
-        reasonKey,
-        detail,
-        locales: {
-          ...current.locales,
-          [locale]: {
-            ...current.locales[locale],
-            status: 'failed',
-            updatedAt: now,
-            reasonKey,
-            detail,
-          },
-        },
-      };
-    },
+    widgetType: instance.value.widgetType,
   });
 
-  if (!recorded || !currentJobMatchesCompletionJob(recorded, job, jobBaseContentMarker) || !recorded.locales[locale] || recorded.locales[locale]?.status !== 'failed') {
+  if (!currentJob || !currentOperationMatchesCompletionJob(currentJob, job, jobBaseContentMarker) || !currentJob.locales[locale]) {
     return {
       ok: true,
       recorded: false,
@@ -1329,11 +1269,30 @@ export async function failLocaleTranslation(args: {
       detail: 'This translation job does not match the active translation operation for the instance.',
     };
   }
+  const now = new Date().toISOString();
+  const recorded = await failTranslationGenerationLocale({
+    env: args.env,
+    operationId: currentJob.jobId,
+    locale,
+    now,
+    reasonKey,
+    detail,
+    widgetType: instance.value.widgetType,
+    currentReadyLocales: currentJob.currentReadyLocales,
+  });
   await writeRegistryTranslationStatus({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
-    status: 'failed',
+    status: recorded
+      ? registryStatusForGenerationOperation({
+          instanceId: args.instanceId,
+          baseLocale: recorded.baseLocale,
+          targetLocales: recorded.targetLocales,
+          currentReadyLocales: recorded.currentReadyLocales,
+          job: recorded,
+        })
+      : 'failed',
   });
 
   return {

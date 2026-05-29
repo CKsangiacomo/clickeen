@@ -1332,6 +1332,112 @@ CLICKEEN / H7IF9M2K9B / countdown
   runtime markers: CK_WIDGET, CK_LOCALE_POLICY
 ```
 
+### 2026-05-29 - Slice 4 Translation Operation State Out Of R2
+
+Status: Local verification green. Cloud-dev deploy/smoke pending, so do not move to Slice 5 yet.
+
+Slice 4 removed `translation-generation-job.json` as active operation storage. Translation generation now uses the PRD 105D Supabase operation ledger:
+
+```text
+translation_generation_operations
+translation_generation_operation_locales
+```
+
+`instances.translation_status` remains coarse liveness only. Locale translated values remain in:
+
+```text
+accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
+```
+
+#### What Changed
+
+Tokyo added a small DB-backed ledger module:
+
+```text
+tokyo-worker/src/domains/render/translation-operation-ledger.ts
+```
+
+The module owns the narrow Supabase operations required by 105D:
+
+- read latest operation for an instance;
+- create one accepted operation row and one locale row per queued locale;
+- mark queued locale rows as sent after queue enqueue succeeds;
+- mark completion/failure/stale locale outcomes;
+- roll locale terminal outcomes up to operation status;
+- timeout active operations through DB state.
+
+Tokyo no longer has an R2 key or R2 read/write/update path for:
+
+```text
+accounts/{accountPublicId}/instances/{instanceId}/translation-generation-job.json
+```
+
+Deleted from active source:
+
+```text
+accountInstanceTranslationGenerationJobKey()
+readCurrentTranslationGenerationJob()
+writeCurrentTranslationGenerationJob()
+updateCurrentTranslationGenerationJob()
+```
+
+Completion apply/reject now matches the active operation id carried in the San Francisco job payload and the saved-base marker. Stale callbacks are recorded as terminal locale `stale` outcomes in DB, return `applied: false`, and do not write locale overlays.
+
+Timeout proof moved from mutating an R2 object to updating the Supabase operation ledger in tests.
+
+Changed files:
+
+```text
+tokyo-worker/src/domains/render/keys.ts
+tokyo-worker/src/domains/render/types.ts
+tokyo-worker/src/domains/render/translation-generation-state.ts
+tokyo-worker/src/domains/render/translation-operation-ledger.ts
+tokyo-worker/src/domains/render/translation-operations.ts
+tokyo-worker/src/domains/render/test-instance-registry.ts
+tokyo-worker/src/domains/render/translation-operations.test.ts
+```
+
+#### Local Verification Run
+
+```text
+pnpm --filter @clickeen/tokyo-worker typecheck
+pnpm --filter @clickeen/tokyo-worker test
+pnpm verify:prd103-publish-language-files
+pnpm validate:widgets
+pnpm typecheck
+rg -n "translation-generation-job\\.json|accountInstanceTranslationGenerationJobKey|readCurrentTranslationGenerationJob|writeCurrentTranslationGenerationJob|updateCurrentTranslationGenerationJob" tokyo-worker/src scripts packages bob roma sanfrancisco venice prague admin --glob '!**/node_modules/**'
+rg -n "TranslationGenerationJobDocument|TranslationGenerationJobBasis|generation job state" tokyo-worker/src --glob '!**/node_modules/**'
+```
+
+Result:
+
+- Tokyo-worker typecheck passed.
+- Tokyo-worker tests passed: 52/52.
+- PRD publish/materialization verifier passed: 3/3.
+- Widget validation passed: 3 widget sources valid.
+- Whole-workspace typecheck passed.
+- Active source/tests contain no `translation-generation-job.json` key/path references.
+- Active source contains no R2 operation-controller reader/writer/update function names.
+- Active source no longer has `TranslationGenerationJobDocument` / R2 job-document vocabulary.
+- Tests still prove duplicate Generate returns active work without creating competing operations.
+- Tests still prove base changes while active do not create competing work.
+- Tests still prove completion applies only when the saved-base marker remains current.
+- Tests still prove stale completion is terminal/non-applied.
+- Tests still prove locale failure and operation timeout produce failed product state and coarse registry status.
+
+#### Peer Verification
+
+Three Slice 4 sidecar verifiers reviewed the work before implementation and identified the required contract:
+
+- Supabase operation row is the mutex and lifecycle authority.
+- Per-locale rows are callback/outbox authority.
+- Locale `stale` is terminal and does not become a public operation status.
+- `instances.translation_status` mirrors only coarse liveness.
+- The timeout test must stop mutating `translation-generation-job.json`.
+- Product tests must keep proving states, not storage mechanics.
+
+Implementation followed that scope. No compatibility reader, R2 ops shim, queue dashboard, or broad workflow platform was added.
+
 ## Final State
 
 Tokyo-worker remains important, but smaller in meaning:
