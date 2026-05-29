@@ -334,7 +334,33 @@ Green gate:
 - tests prove `clk.live/{account}/{instance}` serves `index.html`;
 - tests prove `clk.live/{account}/{instance}/runtime.js` is allowed;
 - tests prove old generated locale/script files are not allowed.
-- cloud-dev smoke proves a published widget loads with `runtime.js` before Slice 2 begins.
+- cloud-dev smoke proves all three published CLICKEEN Pre-GA instances load with `runtime.js` before Slice 2 begins.
+
+Pre-GA canonical instance scope:
+
+```text
+CLICKEEN / UZ3JEJSHII / faq
+CLICKEEN / 8FMVZFFPJV / logoshowcase
+CLICKEEN / H7IF9M2K9B / countdown
+```
+
+These are not compatibility fixtures. They are the current dogfood/product proof instances. Slice 1 is not green until all three have been rematerialized through Tokyo's product materializer and all three public folders expose the canonical generated shape:
+
+```text
+index.html
+styles.css
+runtime.js
+```
+
+None of the three may depend on old public generated artifacts:
+
+```text
+script.js
+script.{locale}.js
+script.v*.js
+styles.v*.css
+{locale}.html
+```
 
 ### Slice 2 - Locale Overlay Storage
 
@@ -871,7 +897,7 @@ Interpretation:
 
 - The deployed public route is enforcing the new allowlist; obsolete generated paths now return 404.
 - Existing published account runtime files were not automatically rematerialized by deployment.
-- Slice 1 cloud-dev smoke is not green until one published instance is rematerialized through the real publish/restore product operation and then proves `runtime.js` exists.
+- Slice 1 cloud-dev smoke is not green until all three published CLICKEEN instances are rematerialized through the real publish/restore product operation and then prove `runtime.js` exists.
 - Do not manually write R2 objects to satisfy this gate. Rematerialization must happen through Tokyo's product materializer via an authenticated product operation.
 
 Blocked follow-up evidence:
@@ -884,7 +910,7 @@ Blocked follow-up evidence:
 Therefore the remaining green gate is intentionally blocked on one of the approved product paths:
 
 ```text
-1. Use an authenticated Roma/Bob session to publish or republish one CLICKEEN instance.
+1. Use an authenticated Roma/Bob session to publish or republish all three CLICKEEN instances.
 2. Or run an approved service-binding operation that calls Tokyo's restore/publish product operation.
 ```
 
