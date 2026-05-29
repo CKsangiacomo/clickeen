@@ -36,9 +36,7 @@ export type InstanceTranslationsGeneratePayload = {
     targetLocales: string[];
     queuedLocales: string[];
     skippedLocales: string[];
-    jobIds: string[];
     generation: InstanceTranslationGenerationSummary | null;
-    results: Array<{ locale: string; ok: true; jobId: string }>;
   };
 };
 
@@ -231,19 +229,10 @@ function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGenerat
   const targetLocales = normalizeStringArray(translation.targetLocales);
   const queuedLocales = normalizeStringArray(translation.queuedLocales);
   const skippedLocales = normalizeStringArray(translation.skippedLocales);
-  const jobIds = normalizeStringArray(translation.jobIds);
   const generation =
     translation.generation == null
       ? null
       : normalizeGenerationSummary(translation.generation);
-  const results = Array.isArray(translation.results)
-    ? translation.results.map((entry) => {
-        if (!isRecord(entry) || entry.ok !== true) return null;
-        const locale = asTrimmedString(entry.locale);
-        const jobId = asTrimmedString(entry.jobId);
-        return locale && jobId ? { locale, ok: true as const, jobId } : null;
-      })
-    : null;
   if (
     translation.ok !== true ||
     typeof translation.accepted !== 'boolean' ||
@@ -251,10 +240,7 @@ function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGenerat
     !targetLocales ||
     !queuedLocales ||
     !skippedLocales ||
-    !jobIds ||
-    (generation === null && translation.generation != null) ||
-    !results ||
-    results.some((entry) => !entry)
+    (generation === null && translation.generation != null)
   ) {
     return null;
   }
@@ -267,9 +253,7 @@ function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGenerat
       targetLocales,
       queuedLocales,
       skippedLocales,
-      jobIds,
       generation,
-      results: results as Array<{ locale: string; ok: true; jobId: string }>,
     },
   };
 }

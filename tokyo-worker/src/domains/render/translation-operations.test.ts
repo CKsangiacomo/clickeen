@@ -331,7 +331,10 @@ test('Tokyo generate returns active matching work on a duplicate Generate click'
   assert.equal(second.ok ? second.accepted : false, true);
   assert.equal(queued.length, 2);
   assert.deepEqual(second.ok ? [...second.queuedLocales].sort() : [], ['cs', 'it']);
-  assert.deepEqual(second.ok ? second.jobIds : [], first.ok ? first.jobIds : []);
+  assert.equal(
+    second.ok ? second.generation?.generationRequestMarker : null,
+    first.ok ? first.generation?.generationRequestMarker : null,
+  );
   assert.equal((await readInstanceRegistryRow({
     env,
     accountId: ACCOUNT_PUBLIC_ID,
@@ -390,7 +393,7 @@ test('Tokyo generate does not create competing work while older base translation
   });
   assert.equal(restarted.ok, true);
   assert.equal(queued.length, 1);
-  assert.deepEqual(restarted.ok ? restarted.jobIds : [], [originalJob.jobId]);
+  assert.equal(restarted.ok ? restarted.generation?.active : null, true);
   const generation = await readInstanceTranslationGeneration({
     env,
     accountId: ACCOUNT_PUBLIC_ID,

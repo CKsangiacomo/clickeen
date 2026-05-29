@@ -1490,6 +1490,15 @@ Three Slice 4 sidecar verifiers reviewed the work before implementation and iden
 
 Implementation followed that scope. No compatibility reader, R2 ops shim, queue dashboard, or broad workflow platform was added.
 
+Post-verification cleanup also removed leftover job-operation vocabulary from the account-facing Generate response:
+
+- Tokyo no longer returns `jobIds` or success `results[].jobId` to Roma/Bob.
+- Roma no longer normalizes or exposes `jobIds` / success `jobId` fields.
+- Tokyo generation summaries no longer expose internal `diagnostics` arrays.
+- The San Francisco queue payload still carries `jobId` as the internal operation/correlation id required for worker callbacks; that value no longer crosses the account product API boundary.
+
+The active 105A authority doc was updated so it no longer claims `translation-generation-job.json` remains in current Tokyo-worker code.
+
 ## Final State
 
 Tokyo-worker remains important, but smaller in meaning:

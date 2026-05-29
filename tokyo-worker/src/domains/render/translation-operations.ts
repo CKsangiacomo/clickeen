@@ -72,9 +72,7 @@ export type InstanceTranslationGenerationResult =
       targetLocales: string[];
       queuedLocales: string[];
       skippedLocales: string[];
-      jobIds: string[];
       generation: TranslationGenerationOperationSummary | null;
-      results: Array<{ locale: string; ok: true; jobId: string }>;
     }
   | {
       ok: false;
@@ -266,14 +264,6 @@ function createTranslationGenerationOperationDocument(args: {
       basis: buildJobBasis(args.jobs),
     },
   });
-}
-
-function uniqueJobIds(jobs: InstanceTranslationJob[]): string[] {
-  return Array.from(new Set(jobs.map((job) => job.jobId)));
-}
-
-function resultsForJobs(jobs: InstanceTranslationJob[]): Array<{ locale: string; ok: true; jobId: string }> {
-  return jobs.map((job) => ({ locale: job.targetLocale, ok: true, jobId: job.jobId }));
 }
 
 function composeTranslatedValues(args: {
@@ -619,9 +609,7 @@ export async function generateInstanceTranslations(args: {
       targetLocales: [],
       queuedLocales: [],
       skippedLocales: [],
-      jobIds: [],
       generation: null,
-      results: [],
     };
   }
 
@@ -737,9 +725,7 @@ export async function generateInstanceTranslations(args: {
         targetLocales: existingTargetLocales,
         queuedLocales: existingJob.pendingLocales,
         skippedLocales: [],
-        jobIds: existingJob.jobId ? [existingJob.jobId] : [],
         generation: existingSummary,
-        results: [],
       };
     }
   }
@@ -828,7 +814,6 @@ export async function generateInstanceTranslations(args: {
       targetLocales: uniqueTargetLocales,
       queuedLocales: [],
       skippedLocales,
-      jobIds: [],
       generation: summarizeTranslationGenerationOperation({
         instanceId: args.instanceId,
         baseLocale,
@@ -842,7 +827,6 @@ export async function generateInstanceTranslations(args: {
         productLocales: productLocalesBeforeGeneration,
         job: null,
       }),
-      results: [],
     };
   }
 
@@ -879,7 +863,6 @@ export async function generateInstanceTranslations(args: {
       targetLocales: createdGenerationOperation.targetLocales,
       queuedLocales: createdGenerationOperation.pendingLocales,
       skippedLocales: [],
-      jobIds: [createdGenerationOperation.jobId],
       generation: summarizeTranslationGenerationOperation({
         instanceId: args.instanceId,
         baseLocale,
@@ -893,7 +876,6 @@ export async function generateInstanceTranslations(args: {
         productLocales: activeProductLocales,
         job: createdGenerationOperation,
       }),
-      results: [],
     };
   }
   await writeRegistryTranslationStatus({
@@ -939,7 +921,6 @@ export async function generateInstanceTranslations(args: {
     targetLocales: uniqueTargetLocales,
     queuedLocales: jobs.map((job) => job.targetLocale),
     skippedLocales,
-    jobIds: uniqueJobIds(jobs),
     generation: summarizeTranslationGenerationOperation({
       instanceId: args.instanceId,
       baseLocale,
@@ -959,7 +940,6 @@ export async function generateInstanceTranslations(args: {
       }),
       job: generationOperation,
     }),
-    results: resultsForJobs(jobs),
   };
 }
 

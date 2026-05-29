@@ -225,13 +225,11 @@ pnpm --filter @clickeen/berlin typecheck
 rg -n "translation-generation-job\\.json|accountInstanceTranslationGenerationJobKey|translatedValues|localeStatus" tokyo-worker/src/domains/render -S --glob '!**/node_modules/**'
 ```
 
-Remaining blockers:
+Resolved blockers:
 
-- Tokyo-worker still has active R2 operation-controller JSON through `accountInstanceTranslationGenerationJobKey(...)`, `readCurrentTranslationGenerationJob(...)`, and `writeCurrentTranslationGenerationJob(...)`.
 - RESOLVED BY `105M` Slice 2: Tokyo-worker translated-locale value truth and readiness now use `overlays/locales/{locale}.json`; `instance.content.json` no longer stores new field-level `localeStatus` or `translatedValues` maps.
+- RESOLVED BY `105M` Slice 4: Tokyo-worker no longer has active R2 operation-controller JSON through `accountInstanceTranslationGenerationJobKey(...)`, `readCurrentTranslationGenerationJob(...)`, or `writeCurrentTranslationGenerationJob(...)`. Translation generation operation state now lives in Supabase `translation_generation_operations` and `translation_generation_operation_locales`.
 
 Decision:
 
-Do not move to `105B` while this PRD is red. The remaining blockers are the `105M` Tokyo-worker runtime refactor blast radius, not a local `105A` patch. Either the execution spine must pull the relevant `105M` slices forward, or `105A` must remain red as a blocking gate.
-
-Those require later focused PRD 105 sub-PRDs if verification shows work remains.
+This PRD's authority split is now satisfied by the 105M execution spine. Keep this file as the DB/R2 operation-authority contract; do not use it as evidence that `translation-generation-job.json` still exists.

@@ -188,10 +188,6 @@ export function summarizeTranslationGenerationOperation(args: {
       ...(args.currentGenerationRequestMarker ? { generationRequestMarker: args.currentGenerationRequestMarker } : {}),
       isCurrentBaseContent: true,
       locales: args.productLocales ?? [],
-      diagnostics: {
-        currentReadyLocales: args.currentReadyLocales,
-        outOfSyncLocales: args.outOfSyncLocales ?? [],
-      },
     };
   }
   const job = deriveTranslationGenerationOperation({
@@ -216,16 +212,6 @@ export function summarizeTranslationGenerationOperation(args: {
     ...(generationRequestMarker ? { generationRequestMarker } : {}),
     isCurrentBaseContent,
     locales: args.productLocales ?? [],
-    diagnostics: {
-      locales: job.locales,
-      completedLocales: job.completedLocales,
-      failedLocales: job.failedLocales,
-      supersededLocales: job.supersededLocales,
-      pendingLocales: job.pendingLocales,
-      currentReadyLocales: job.currentReadyLocales,
-      outOfSyncLocales: args.outOfSyncLocales ?? [],
-      jobId: job.jobId,
-    },
     ...(job.reasonKey ? { reasonKey: job.reasonKey } : {}),
     ...(job.detail ? { detail: job.detail } : {}),
   };

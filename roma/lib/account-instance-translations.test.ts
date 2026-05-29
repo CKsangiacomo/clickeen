@@ -87,7 +87,6 @@ test('generates translations through one Tokyo product operation', async () => {
                 targetLocales: ['it', 'cs'],
                 queuedLocales: ['it'],
                 skippedLocales: ['cs'],
-                jobIds: ['job-it'],
                 generation: {
                   v: 2,
                   instanceId: INSTANCE_ID,
@@ -106,7 +105,6 @@ test('generates translations through one Tokyo product operation', async () => {
                     { locale: 'it', state: 'generating', reviewable: false },
                   ],
                 },
-                results: [{ locale: 'it', ok: true, jobId: 'job-it' }],
               },
             }, 202);
           }
@@ -138,7 +136,6 @@ test('generates translations through one Tokyo product operation', async () => {
           targetLocales: ['it', 'cs'],
           queuedLocales: ['it'],
           skippedLocales: ['cs'],
-          jobIds: ['job-it'],
           generation: {
             v: 2,
             instanceId: INSTANCE_ID,
@@ -157,7 +154,6 @@ test('generates translations through one Tokyo product operation', async () => {
               { locale: 'it', state: 'generating', reviewable: false },
             ],
           },
-          results: [{ locale: 'it', ok: true, jobId: 'job-it' }],
         },
       },
     });

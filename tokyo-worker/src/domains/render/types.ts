@@ -176,16 +176,6 @@ export type TranslationGenerationOperationSummary = {
   reasonKey?: string;
   detail?: string;
   locales?: TranslationProductLocaleState[];
-  diagnostics?: {
-    locales?: Record<string, TranslationGenerationOperationLocaleState>;
-    completedLocales?: string[];
-    failedLocales?: string[];
-    supersededLocales?: string[];
-    pendingLocales?: string[];
-    currentReadyLocales?: string[];
-    outOfSyncLocales?: string[];
-    jobId?: string;
-  };
 };
 
 export type SavedRenderPointer = {
