@@ -1510,7 +1510,7 @@ The active 105A authority doc was updated so it no longer claims `translation-ge
 
 ### 2026-05-29 - Slice 5 Route Split After Behavior Is Green
 
-Status: Local verification green. Cloud-dev deployment pending commit/push.
+Status: Green in local and cloud-dev. Slice 5 is closed.
 
 Slice 5 split Tokyo's internal render route adapter by product family without changing route behavior:
 
@@ -1542,6 +1542,32 @@ Result:
 - PRD publish/materialization verifier passed: 3/3.
 - Widget validation passed: 3 widget sources valid.
 - Whole-workspace typecheck passed.
+
+#### Cloud Verification Run
+
+Commit deployed:
+
+```text
+a256fdf5 refactor(tokyo-worker): split internal render routes
+```
+
+GitHub/Cloudflare automation:
+
+```text
+cloud-dev workers deploy: success
+cloud-dev surface reachability: success
+```
+
+Direct public runtime smoke:
+
+```text
+https://tokyo.dev.clickeen.com/healthz -> {"up":true}
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/ -> 200
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/runtime.js -> 200
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/styles.css -> 200
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/script.js -> 404
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/translation-generation-job.json -> 404
+```
 
 #### Route Split Evidence
 
@@ -1587,6 +1613,14 @@ internal-widget-definition-routes.ts
 - `internal-translation-routes.test.ts` proves San Francisco-only completion and generation-vs-locale route precedence.
 - `internal-widget-definition-routes.test.ts` proves widget definitions stay read-only/account-scoped.
 - `internal-render-routes.test.ts` now only proves aggregator delegation and unknown-route null behavior.
+
+#### Peer Verification
+
+Three sidecar verifiers re-checked Slice 5 after implementation:
+
+- Product verifier: GREEN. Route paths, methods, auth, status behavior, and account-facing Generate boundary did not drift.
+- Legacy/no-LOC verifier: GREEN. The old route blob is gone, `route-dispatch.ts` is unchanged, shared helpers exist once, and each route family has test coverage.
+- Architecture/cohesion verifier: GREEN. No new router framework was introduced, the aggregator stays thin, route family names match product language, and no route cycles were found.
 
 ## Final State
 
