@@ -1508,6 +1508,86 @@ Post-verification cleanup also removed leftover job-operation vocabulary from th
 
 The active 105A authority doc was updated so it no longer claims `translation-generation-job.json` remains in current Tokyo-worker code.
 
+### 2026-05-29 - Slice 5 Route Split After Behavior Is Green
+
+Status: Local verification green. Cloud-dev deployment pending commit/push.
+
+Slice 5 split Tokyo's internal render route adapter by product family without changing route behavior:
+
+```text
+internal-render-routes.ts                small aggregator only
+internal-publish-routes.ts               publish, unpublish, restore-paid serving
+internal-instance-routes.ts              account instance list/create/read/save/delete/rename/duplicate
+internal-translation-routes.ts           generation, generation summary, translations, locale values, complete, fail
+internal-widget-definition-routes.ts     widget definition read route
+internal-render-route-utils.ts           shared route-local normalization/auth/error helpers
+```
+
+`route-dispatch.ts` was not changed. It still talks to one internal render route group. Product operation logic remains in the render domain.
+
+#### Local Verification Run
+
+```text
+pnpm --filter @clickeen/tokyo-worker typecheck
+pnpm --filter @clickeen/tokyo-worker test
+pnpm verify:prd103-publish-language-files
+pnpm validate:widgets
+pnpm typecheck
+```
+
+Result:
+
+- Tokyo-worker typecheck passed.
+- Tokyo-worker tests passed: 59/59.
+- PRD publish/materialization verifier passed: 3/3.
+- Widget validation passed: 3 widget sources valid.
+- Whole-workspace typecheck passed.
+
+#### Route Split Evidence
+
+```text
+wc -l tokyo-worker/src/routes/internal-render-routes.ts
+```
+
+Result:
+
+```text
+23 tokyo-worker/src/routes/internal-render-routes.ts
+```
+
+The aggregator has no direct domain operation imports:
+
+```text
+rg -n "publishAccountInstanceTransition|generateInstanceTranslations|listWidgetDefinitions|completeLocaleTranslation|restorePaidTierServing" tokyo-worker/src/routes/internal-render-routes.ts
+```
+
+Result: no matches.
+
+Shared helpers exist once in `internal-render-route-utils.ts`:
+
+```text
+normalizeAccountPublicId
+transitionErrorResponse
+readInternalRenderJsonBody
+```
+
+Route regex ownership is now separated by product language:
+
+```text
+internal-publish-routes.ts
+internal-instance-routes.ts
+internal-translation-routes.ts
+internal-widget-definition-routes.ts
+```
+
+#### Test Coverage Added
+
+- `internal-publish-routes.test.ts` proves restore-paid auth/materialization behavior.
+- `internal-instance-routes.test.ts` proves account instance list auth/shape and account mismatch rejection.
+- `internal-translation-routes.test.ts` proves San Francisco-only completion and generation-vs-locale route precedence.
+- `internal-widget-definition-routes.test.ts` proves widget definitions stay read-only/account-scoped.
+- `internal-render-routes.test.ts` now only proves aggregator delegation and unknown-route null behavior.
+
 ## Final State
 
 Tokyo-worker remains important, but smaller in meaning:
