@@ -916,6 +916,83 @@ Therefore the remaining green gate is intentionally blocked on one of the approv
 
 Do not unblock this by uploading `runtime.js` or editing R2 objects directly.
 
+#### Cloud-Dev Rematerialization Closure
+
+The blocker above was resolved without direct R2 object writes.
+
+Correction commits:
+
+```text
+bf49995a fix(tokyo-worker): keep github deploy route-neutral
+b799f6b9 fix(tokyo-worker): allow visitor content to mention Venice
+```
+
+Why the second correction was required:
+
+```text
+FAQ customer content legitimately contains "Venice".
+The old generated-artifact guard blocked the word /venice/i anywhere in visitor output.
+That was not product truth; it prevented customer-visible content from materializing.
+The guard was removed and the Tokyo materialization test now proves visitor content may mention Venice.
+```
+
+Route/product-operation evidence:
+
+```text
+Cloudflare route applied through local authenticated Wrangler deploy.
+Current Version ID: 815b6091-5d34-4899-9a00-1667e59250e1
+
+POST https://tokyo.dev.clickeen.com/__internal/accounts/CLICKEEN/serving/restore-paid
+200 {"ok":true,"accountId":"CLICKEEN","keptInstanceIds":["UZ3JEJSHII","8FMVZFFPJV","H7IF9M2K9B"],"disabledInstanceIds":[],"materializedInstanceIds":["UZ3JEJSHII","8FMVZFFPJV","H7IF9M2K9B"],"failed":[]}
+```
+
+This used Tokyo's own restore/materialization product operation. No `runtime.js`, `index.html`, or `styles.css` objects were manually uploaded.
+
+Cloud-dev public smoke after rematerialization:
+
+```text
+faq UZ3JEJSHII
+  index 200
+  runtime.js 200
+  styles.css 200
+  index references runtime.js: true
+  index references old script artifacts: false
+  runtime contains CK_WIDGET: true
+  runtime contains CK_LOCALE_POLICY: true
+  script.js 404
+  script.it.js 404
+  it.html 404
+  styles.v123.css 404
+
+logoshowcase 8FMVZFFPJV
+  index 200
+  runtime.js 200
+  styles.css 200
+  index references runtime.js: true
+  index references old script artifacts: false
+  runtime contains CK_WIDGET: true
+  runtime contains CK_LOCALE_POLICY: true
+  script.js 404
+  script.it.js 404
+  it.html 404
+  styles.v123.css 404
+
+countdown H7IF9M2K9B
+  index 200
+  runtime.js 200
+  styles.css 200
+  index references runtime.js: true
+  index references old script artifacts: false
+  runtime contains CK_WIDGET: true
+  runtime contains CK_LOCALE_POLICY: true
+  script.js 404
+  script.it.js 404
+  it.html 404
+  styles.v123.css 404
+```
+
+Slice 1 cloud-dev gate is now green for all three Pre-GA CLICKEEN dogfood instances.
+
 ## Final State
 
 Tokyo-worker remains important, but smaller in meaning:
