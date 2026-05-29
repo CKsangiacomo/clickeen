@@ -22,6 +22,14 @@ import {
   extractSavedTextFieldsForEditableFields,
   extractTextPrimitiveValuesForEditableFields,
 } from '@clickeen/ck-contracts/translated-value-primitives';
+import {
+  assertLocaleOverlayValuesMatchContent,
+  listLocaleOverlays,
+  localeOverlayHasCompleteValues,
+  readLocaleOverlay,
+  writeLocaleOverlay,
+} from './locale-overlays';
+import { buildBaseContentMarkerForContent, buildWidgetContractMarker } from './translation-markers';
 import type {
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,
@@ -58,23 +66,6 @@ function normalizeTranslatedValueMap(value: unknown): Record<string, string> | n
   return values;
 }
 
-function assertTranslatedValuesMatchContent(args: {
-  content: AccountInstanceContentDocument;
-  values: Record<string, string>;
-}): void {
-  const contentPaths = new Set(Object.keys(args.content.fields));
-  for (const path of contentPaths) {
-    if (typeof args.values[path] !== 'string') {
-      throw new Error(`tokyo.translation.value_missing:${path}`);
-    }
-  }
-  for (const path of Object.keys(args.values)) {
-    if (!contentPaths.has(path)) {
-      throw new Error(`tokyo.translation.value_unexpected:${path}`);
-    }
-  }
-}
-
 function displayNameFromConfigDocument(configDoc: AccountInstanceConfigDocument): string {
   const displayName = normalizeDisplayName(configDoc.displayName);
   if (displayName) return displayName;
@@ -85,6 +76,33 @@ function displayNameFromConfigDocument(configDoc: AccountInstanceConfigDocument)
     normalizeDisplayName(meta?.title) ??
     configDoc.id
   );
+}
+
+async function resolveWidgetContractHash(widgetType: string): Promise<string> {
+  const widgetDefinition = getWidgetDefinition(widgetType);
+  if (!widgetDefinition?.editableFields || widgetDefinition.editableFields.widgetType !== widgetType) {
+    throw new Error(`tokyo.translation.widget_unsupported:${widgetType}`);
+  }
+  return buildWidgetContractMarker(widgetDefinition.editableFields);
+}
+
+async function buildCurrentLocaleOverlayMetadata(args: {
+  configDoc: AccountInstanceConfigDocument;
+  content: AccountInstanceContentDocument;
+}): Promise<{
+  baseContentMarker: string;
+  widgetContractHash: string;
+}> {
+  const widgetContractHash = await resolveWidgetContractHash(args.configDoc.widgetType);
+  return {
+    baseContentMarker: await buildBaseContentMarkerForContent({
+      baseLocale: args.configDoc.baseLocale,
+      widgetType: args.configDoc.widgetType,
+      widgetContractHash,
+      content: args.content,
+    }),
+    widgetContractHash,
+  };
 }
 
 function summaryFromConfigDocument(args: {
@@ -198,8 +216,6 @@ function extractContentFields(args: {
       fieldPattern: item.fieldPattern,
       value: item.baseText,
       status,
-      ...(sameValue && previous?.localeStatus ? { localeStatus: { ...previous.localeStatus } } : {}),
-      ...(sameValue && previous?.translatedValues ? { translatedValues: { ...previous.translatedValues } } : {}),
     };
   }
   return fields;
@@ -318,9 +334,59 @@ function contentDocumentFromConfig(args: {
       previous: args.previous,
       initialStatus: args.initialStatus,
     }),
-    ...(args.previous?.localeSync ? { localeSync: { ...args.previous.localeSync } } : {}),
     updatedAt: args.updatedAt,
   };
+}
+
+async function remapLocaleOverlaysForSavedContent(args: {
+  env: Env;
+  accountId: string;
+  widgetCode: string;
+  instanceId: string;
+  configDoc: AccountInstanceConfigDocument;
+  previous: AccountInstanceContentDocument | null;
+  next: AccountInstanceContentDocument;
+}): Promise<void> {
+  if (!args.previous) return;
+  const previousByIdentity = new Map(
+    Object.entries(args.previous.fields)
+      .filter(([, field]) => typeof field.identityKey === 'string' && field.identityKey)
+      .map(([path, field]) => [field.identityKey as string, { path, field }]),
+  );
+  const previousByPath = new Map(Object.entries(args.previous.fields).map(([path, field]) => [path, { path, field }]));
+  const metadata = await buildCurrentLocaleOverlayMetadata({ configDoc: args.configDoc, content: args.next });
+  for (const overlay of await listLocaleOverlays({
+    env: args.env,
+    accountId: args.accountId,
+    widgetCode: args.widgetCode,
+    instanceId: args.instanceId,
+  })) {
+    const values: Record<string, string> = {};
+    for (const [path, field] of Object.entries(args.next.fields)) {
+      const previous =
+        field.identityKey
+          ? previousByIdentity.get(field.identityKey)
+          : previousByPath.get(path);
+      if (!previous || previous.field.value !== field.value) continue;
+      const translated = overlay.values[previous.path];
+      if (typeof translated === 'string') values[path] = translated;
+    }
+    const complete = Object.keys(args.next.fields).every((path) => typeof values[path] === 'string');
+    await writeLocaleOverlay({
+      env: args.env,
+      accountId: args.accountId,
+      widgetCode: args.widgetCode,
+      instanceId: args.instanceId,
+      overlay: {
+        ...overlay,
+        baseContentMarker: metadata.baseContentMarker,
+        widgetContractHash: metadata.widgetContractHash,
+        status: complete && overlay.status !== 'failed' ? 'inSync' : 'outOfSync',
+        values,
+        updatedAt: args.configDoc.updatedAt,
+      },
+    });
+  }
 }
 
 async function readConfigDocumentByLocation(args: {
@@ -334,6 +400,114 @@ async function readConfigDocumentByLocation(args: {
   );
 }
 
+function hasLegacyEmbeddedTranslationStorage(raw: unknown): boolean {
+  const payload = isRecord(raw) ? raw : null;
+  const fields = isRecord(payload?.fields) ? payload.fields : null;
+  if (isRecord(payload?.localeSync)) return true;
+  if (!fields) return false;
+  return Object.values(fields).some((field) => (
+    isRecord(field) &&
+    (isRecord(field.localeStatus) || isRecord(field.translatedValues))
+  ));
+}
+
+function extractLegacyEmbeddedTranslatedValues(args: {
+  raw: unknown;
+  content: AccountInstanceContentDocument;
+  configDoc: AccountInstanceConfigDocument;
+  baseContentMarker: string;
+  widgetContractHash: string;
+}): Array<{ locale: string; values: Record<string, string> }> {
+  const payload = isRecord(args.raw) ? args.raw : null;
+  const rawFields = isRecord(payload?.fields) ? payload.fields : null;
+  if (!rawFields) return [];
+  const rawLocaleSync = isRecord(payload?.localeSync) ? payload.localeSync : null;
+  const targetLocales = Array.from(new Set(args.configDoc.targetLocales
+    .map((entry) => normalizeLocale(entry))
+    .filter((entry): entry is string => Boolean(entry))));
+  const migrated: Array<{ locale: string; values: Record<string, string> }> = [];
+  for (const locale of targetLocales) {
+    const sync = isRecord(rawLocaleSync?.[locale]) ? rawLocaleSync[locale] : null;
+    if (
+      sync &&
+      (
+        sync.status !== 'inSync' ||
+        sync.baseContentMarker !== args.baseContentMarker ||
+        sync.widgetContractHash !== args.widgetContractHash
+      )
+    ) {
+      continue;
+    }
+    const values: Record<string, string> = {};
+    let complete = true;
+    for (const path of Object.keys(args.content.fields)) {
+      const rawField = isRecord(rawFields[path]) ? rawFields[path] : null;
+      const translatedValues = isRecord(rawField?.translatedValues) ? rawField.translatedValues : null;
+      const localeStatus = isRecord(rawField?.localeStatus) ? rawField.localeStatus : null;
+      const translated = translatedValues?.[locale];
+      const status = localeStatus?.[locale];
+      if (typeof translated !== 'string' || (typeof status === 'string' && status !== 'ok')) {
+        complete = false;
+        break;
+      }
+      values[path] = translated;
+    }
+    if (complete && Object.keys(values).length === Object.keys(args.content.fields).length) {
+      migrated.push({ locale, values });
+    }
+  }
+  return migrated;
+}
+
+async function migrateLegacyEmbeddedTranslationsToOverlays(args: {
+  env: Env;
+  accountId: string;
+  widgetCode: string;
+  instanceId: string;
+  configDoc: AccountInstanceConfigDocument;
+}): Promise<AccountInstanceContentDocument | null> {
+  const key = accountInstanceContentKey(args.accountId, args.widgetCode, args.instanceId);
+  const loaded = await loadJsonObject<unknown>(args.env, key);
+  const content = loaded ? normalizeAccountInstanceContentDocument(loaded.value) : null;
+  if (!loaded || !content) return content;
+  if (!hasLegacyEmbeddedTranslationStorage(loaded.value)) return content;
+  const metadata = await buildCurrentLocaleOverlayMetadata({ configDoc: args.configDoc, content });
+  const legacyLocales = extractLegacyEmbeddedTranslatedValues({
+    raw: loaded.value,
+    content,
+    configDoc: args.configDoc,
+    baseContentMarker: metadata.baseContentMarker,
+    widgetContractHash: metadata.widgetContractHash,
+  });
+  for (const legacyLocale of legacyLocales) {
+    const existing = await readLocaleOverlay({
+      env: args.env,
+      accountId: args.accountId,
+      widgetCode: args.widgetCode,
+      instanceId: args.instanceId,
+      locale: legacyLocale.locale,
+    });
+    if (existing) continue;
+    await writeLocaleOverlay({
+      env: args.env,
+      accountId: args.accountId,
+      widgetCode: args.widgetCode,
+      instanceId: args.instanceId,
+      overlay: {
+        v: 1,
+        locale: legacyLocale.locale,
+        baseContentMarker: metadata.baseContentMarker,
+        widgetContractHash: metadata.widgetContractHash,
+        status: 'inSync',
+        values: legacyLocale.values,
+        updatedAt: content.updatedAt,
+      },
+    });
+  }
+  await putJsonIfUnchanged(args.env, key, content, loaded.httpEtag);
+  return content;
+}
+
 async function readContentDocumentByLocation(args: {
   env: Env;
   accountId: string;
@@ -341,11 +515,21 @@ async function readContentDocumentByLocation(args: {
   instanceId: string;
   configDoc?: AccountInstanceConfigDocument | null;
 }): Promise<AccountInstanceContentDocument | null> {
+  const configDoc = args.configDoc ?? null;
+  if (configDoc) {
+    const migrated = await migrateLegacyEmbeddedTranslationsToOverlays({
+      env: args.env,
+      accountId: args.accountId,
+      widgetCode: args.widgetCode,
+      instanceId: args.instanceId,
+      configDoc,
+    });
+    if (migrated) return migrated;
+  }
   const contentDoc = normalizeAccountInstanceContentDocument(
     await loadJson(args.env, accountInstanceContentKey(args.accountId, args.widgetCode, args.instanceId)),
   );
   if (contentDoc) return contentDoc;
-  const configDoc = args.configDoc ?? null;
   if (!configDoc) return null;
   return {
     id: configDoc.id,
@@ -479,6 +663,15 @@ export async function writeSavedRenderConfig(args: {
   };
   await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), configDoc);
   await putJson(args.env, accountInstanceContentKey(accountId, widgetCode, instanceId), content);
+  await remapLocaleOverlaysForSavedContent({
+    env: args.env,
+    accountId,
+    widgetCode,
+    instanceId,
+    configDoc,
+    previous: previousContent,
+    next: content,
+  });
   const registry = await readInstanceRegistryRow({ env: args.env, accountId, instanceId });
   if (registry) {
     await updateInstanceRegistryEditedAt({
@@ -638,18 +831,49 @@ export async function readAccountInstanceTranslatedLocaleValues(args: {
   if (!locale) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.translation.locale.invalid' };
   }
-  const content = await readAccountInstanceContentDocument(args);
-  if (!content.ok) return content;
+  const location = await resolveAccountInstanceLocation({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    widgetType: args.widgetType,
+  });
+  if (!location) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' };
+  const configDoc = await readConfigDocumentByLocation({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+  });
+  const content = configDoc
+    ? await readContentDocumentByLocation({
+        env: args.env,
+        accountId: location.accountId,
+        widgetCode: location.widgetCode,
+        instanceId: location.instanceId,
+        configDoc,
+      })
+    : null;
+  if (!configDoc || !content) return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.content.invalid' };
+  const overlay = await readLocaleOverlay({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+    locale,
+  });
+  const current = await buildCurrentLocaleOverlayMetadata({ configDoc, content });
+  if (
+    !overlay ||
+    overlay.status !== 'inSync' ||
+    overlay.baseContentMarker !== current.baseContentMarker ||
+    overlay.widgetContractHash !== current.widgetContractHash ||
+    !localeOverlayHasCompleteValues({ content, overlay })
+  ) {
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' };
+  }
   const values: Record<string, string> = {};
-  for (const [path, field] of Object.entries(content.value.fields)) {
-    if (field.localeStatus?.[locale] !== 'ok') {
-      return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' };
-    }
-    const translated = field.translatedValues?.[locale];
-    if (typeof translated !== 'string') {
-      return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' };
-    }
-    values[path] = translated;
+  for (const path of Object.keys(content.fields)) {
+    values[path] = overlay.values[path]!;
   }
   return { ok: true, value: { locale, values } };
 }
@@ -665,11 +889,39 @@ export async function readAccountInstanceCurrentTranslatedLocaleValues(args: {
   if (!locale) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'tokyo.translation.locale.invalid' };
   }
-  const content = await readAccountInstanceContentDocument(args);
-  if (!content.ok) return content;
+  const location = await resolveAccountInstanceLocation({
+    env: args.env,
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    widgetType: args.widgetType,
+  });
+  if (!location) return { ok: false, kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.render.notFound' };
+  const configDoc = await readConfigDocumentByLocation({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+  });
+  const content = configDoc
+    ? await readContentDocumentByLocation({
+        env: args.env,
+        accountId: location.accountId,
+        widgetCode: location.widgetCode,
+        instanceId: location.instanceId,
+        configDoc,
+      })
+    : null;
+  if (!configDoc || !content) return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.content.invalid' };
+  const overlay = await readLocaleOverlay({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+    locale,
+  });
   const values: Record<string, string> = {};
-  for (const [path, field] of Object.entries(content.value.fields)) {
-    const translated = field.translatedValues?.[locale];
+  for (const path of Object.keys(content.fields)) {
+    const translated = overlay?.values[path];
     if (typeof translated === 'string') values[path] = translated;
   }
   return { ok: true, value: { locale, values } };
@@ -697,32 +949,37 @@ export async function writeAccountInstanceTranslatedLocaleValues(args: {
     widgetType: args.widgetType,
   });
   if (!location) throw new Error('tokyo.errors.render.notFound');
-  await updateContentDocumentByLocation({
+  const configDoc = await readConfigDocumentByLocation({
     env: args.env,
     accountId: location.accountId,
     widgetCode: location.widgetCode,
     instanceId: location.instanceId,
-    update(content) {
-      assertTranslatedValuesMatchContent({ content, values });
-      const next: AccountInstanceContentDocument = {
-        ...content,
-        fields: { ...content.fields },
-        updatedAt: nowIso(),
-      };
-      for (const [path, field] of Object.entries(content.fields)) {
-        next.fields[path] = {
-          ...field,
-          localeStatus: {
-            ...(field.localeStatus ?? {}),
-            [locale]: 'ok',
-          },
-          translatedValues: {
-            ...(field.translatedValues ?? {}),
-            [locale]: values[path]!,
-          },
-        };
-      }
-      return next;
+  });
+  const content = configDoc
+    ? await readContentDocumentByLocation({
+        env: args.env,
+        accountId: location.accountId,
+        widgetCode: location.widgetCode,
+        instanceId: location.instanceId,
+        configDoc,
+      })
+    : null;
+  if (!configDoc || !content) throw new Error('coreui.errors.instance.content.invalid');
+  assertLocaleOverlayValuesMatchContent({ content, values });
+  const metadata = await buildCurrentLocaleOverlayMetadata({ configDoc, content });
+  await writeLocaleOverlay({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+    overlay: {
+      v: 1,
+      locale,
+      baseContentMarker: metadata.baseContentMarker,
+      widgetContractHash: metadata.widgetContractHash,
+      status: 'inSync',
+      values,
+      updatedAt: nowIso(),
     },
   });
   return { locale, values };
@@ -756,57 +1013,123 @@ export async function completeAccountInstanceTranslatedLocaleValues(args: {
   if (!location) throw new Error('tokyo.errors.render.notFound');
   const targetLocales = Array.from(new Set(args.targetLocales.map((entry) => normalizeLocale(entry)).filter((entry): entry is string => Boolean(entry))));
   const changedPaths = new Set(args.paths);
+  const configDoc = await readConfigDocumentByLocation({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+  });
+  const content = configDoc
+    ? await readContentDocumentByLocation({
+        env: args.env,
+        accountId: location.accountId,
+        widgetCode: location.widgetCode,
+        instanceId: location.instanceId,
+        configDoc,
+      })
+    : null;
+  if (!configDoc || !content) throw new Error('coreui.errors.instance.content.invalid');
+  assertLocaleOverlayValuesMatchContent({ content, values });
+  const currentMetadata = await buildCurrentLocaleOverlayMetadata({ configDoc, content });
+  const updatedAt = nowIso();
+  await writeLocaleOverlay({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+    overlay: {
+      v: 1,
+      locale,
+      baseContentMarker: args.baseContentMarker ?? currentMetadata.baseContentMarker,
+      widgetContractHash: args.widgetContractHash ?? currentMetadata.widgetContractHash,
+      status: 'inSync',
+      values,
+      updatedAt,
+    },
+  });
+  const targetOverlayByLocale = new Map((await listLocaleOverlays({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+  })).map((overlay) => [overlay.locale, overlay]));
   await updateContentDocumentByLocation({
     env: args.env,
     accountId: location.accountId,
     widgetCode: location.widgetCode,
     instanceId: location.instanceId,
-    update(content) {
-      assertTranslatedValuesMatchContent({ content, values });
+    update(currentContent) {
       const next: AccountInstanceContentDocument = {
-        ...content,
-        fields: { ...content.fields },
-        localeSync: { ...(content.localeSync ?? {}) },
-        updatedAt: nowIso(),
+        ...currentContent,
+        fields: { ...currentContent.fields },
+        updatedAt,
       };
-      for (const [path, field] of Object.entries(content.fields)) {
-        const localeStatus = {
-          ...(field.localeStatus ?? {}),
-          [locale]: 'ok' as const,
-        };
-        const translatedValues = {
-          ...(field.translatedValues ?? {}),
-          [locale]: values[path]!,
-        };
+      for (const [path, field] of Object.entries(currentContent.fields)) {
         const allTargetsOk =
           targetLocales.length === 0 ||
           targetLocales.every((targetLocale) => (
-            localeStatus[targetLocale] === 'ok' &&
-            typeof translatedValues[targetLocale] === 'string'
+            targetOverlayByLocale.get(targetLocale)?.status === 'inSync' &&
+            targetOverlayByLocale.get(targetLocale)?.baseContentMarker === currentMetadata.baseContentMarker &&
+            targetOverlayByLocale.get(targetLocale)?.widgetContractHash === currentMetadata.widgetContractHash &&
+            typeof targetOverlayByLocale.get(targetLocale)?.values[path] === 'string'
           ));
         next.fields[path] = {
           ...field,
-          localeStatus,
-          translatedValues,
           status: changedPaths.has(path) && allTargetsOk ? 'ok' : field.status,
-        };
-      }
-      if (args.baseContentMarker && args.widgetContractHash) {
-        next.localeSync = {
-          ...(next.localeSync ?? {}),
-          [locale]: {
-            locale,
-            baseContentMarker: args.baseContentMarker,
-            widgetContractHash: args.widgetContractHash,
-            generatedAt: next.updatedAt,
-            status: 'inSync',
-          },
         };
       }
       return next;
     },
   });
   return { locale, values };
+}
+
+export async function listAccountInstanceTranslatedLocaleValues(args: {
+  env: Env;
+  instanceId: string;
+  accountId: string;
+  widgetType?: string | null;
+}): Promise<Array<{ locale: string }>> {
+  const instanceId = normalizeStorageId(args.instanceId);
+  const accountId = normalizeStorageId(args.accountId);
+  if (!instanceId || !accountId) return [];
+  const location = await resolveAccountInstanceLocation({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetType: args.widgetType,
+  });
+  if (!location) return [];
+  const configDoc = await readConfigDocumentByLocation({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+  });
+  const content = configDoc
+    ? await readContentDocumentByLocation({
+        env: args.env,
+        accountId: location.accountId,
+        widgetCode: location.widgetCode,
+        instanceId: location.instanceId,
+        configDoc,
+      })
+    : null;
+  if (!configDoc || !content) return [];
+  const current = await buildCurrentLocaleOverlayMetadata({ configDoc, content });
+  return (await listLocaleOverlays({
+    env: args.env,
+    accountId: location.accountId,
+    widgetCode: location.widgetCode,
+    instanceId: location.instanceId,
+  }))
+    .filter((overlay) => (
+      overlay.status === 'inSync' &&
+      overlay.baseContentMarker === current.baseContentMarker &&
+      overlay.widgetContractHash === current.widgetContractHash &&
+      localeOverlayHasCompleteValues({ content, overlay })
+    ))
+    .map((overlay) => ({ locale: overlay.locale }));
 }
 
 export async function listAccountInstances(args: {

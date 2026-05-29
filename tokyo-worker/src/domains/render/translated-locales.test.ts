@@ -14,6 +14,11 @@ import {
   readTranslatedLocaleValues,
   writeTranslatedLocaleValues,
 } from './translated-locales.ts';
+import {
+  accountInstanceConfigKey,
+  accountInstanceContentKey,
+  accountInstanceLocaleOverlayKey,
+} from './keys.ts';
 import { writeSavedRenderConfig } from './saved-config.ts';
 import { attachTestInstanceRegistry } from './test-instance-registry.ts';
 
@@ -22,7 +27,7 @@ type StoredObject = {
   httpEtag: string;
 };
 
-function createTestEnv(): Env {
+function createTestEnv(): { env: Env; objects: Map<string, StoredObject> } {
   const objects = new Map<string, StoredObject>();
   let objectVersion = 0;
   const env = {
@@ -71,7 +76,7 @@ function createTestEnv(): Env {
     } as unknown as R2Bucket,
   } as Env;
   attachTestInstanceRegistry(env);
-  return env;
+  return { env, objects };
 }
 
 const ACCOUNT_ID = 'A1B2C3D4';
@@ -100,7 +105,7 @@ async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
 }
 
 test('translated locale value read/write is direct by locale', async () => {
-  const env = createTestEnv();
+  const { env, objects } = createTestEnv();
   const fullValues = await seedSavedFaqInstance(env);
 
   assert.deepEqual(await writeTranslatedLocaleValues({
@@ -130,6 +135,31 @@ test('translated locale value read/write is direct by locale', async () => {
     values: fullValues,
   });
 
+  const overlayKey = accountInstanceLocaleOverlayKey(ACCOUNT_ID, 'faq', INSTANCE_ID, 'it');
+  const overlay = objects.get(overlayKey)?.body;
+  assert(overlay && typeof overlay === 'object' && !Array.isArray(overlay));
+  assert.deepEqual(overlay, {
+    v: 1,
+    locale: 'it',
+    baseContentMarker: (overlay as { baseContentMarker: string }).baseContentMarker,
+    widgetContractHash: (overlay as { widgetContractHash: string }).widgetContractHash,
+    status: 'inSync',
+    values: fullValues,
+    updatedAt: (overlay as { updatedAt: string }).updatedAt,
+  });
+  assert.equal(typeof (overlay as { baseContentMarker: unknown }).baseContentMarker, 'string');
+  assert.equal(typeof (overlay as { widgetContractHash: unknown }).widgetContractHash, 'string');
+  assert.match(String((overlay as { baseContentMarker: unknown }).baseContentMarker), /^sha256:v1:[0-9a-f]{64}$/);
+  assert.match(String((overlay as { widgetContractHash: unknown }).widgetContractHash), /^sha256:v1:[0-9a-f]{64}$/);
+  assert.equal(typeof (overlay as { updatedAt: unknown }).updatedAt, 'string');
+
+  const content = objects.get(accountInstanceContentKey(ACCOUNT_ID, 'faq', INSTANCE_ID))?.body as { fields?: Record<string, unknown> } | undefined;
+  assert(content?.fields);
+  for (const field of Object.values(content.fields)) {
+    assert.equal(Object.prototype.hasOwnProperty.call(field as Record<string, unknown>, 'translatedValues'), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(field as Record<string, unknown>, 'localeStatus'), false);
+  }
+
   await assert.rejects(
     () => writeTranslatedLocaleValues({
       env,
@@ -140,4 +170,52 @@ test('translated locale value read/write is direct by locale', async () => {
     }),
     /tokyo\.translation\.value_missing:/,
   );
+});
+
+test('legacy embedded translated values migrate to locale overlays and clean content source', async () => {
+  const { env, objects } = createTestEnv();
+  const fullValues = await seedSavedFaqInstance(env);
+  const config = objects.get(accountInstanceConfigKey(ACCOUNT_ID, 'faq', INSTANCE_ID))?.body as { targetLocales?: string[] } | undefined;
+  assert(config);
+  config.targetLocales = ['it'];
+  const contentKey = accountInstanceContentKey(ACCOUNT_ID, 'faq', INSTANCE_ID);
+  const legacyContent = objects.get(contentKey)?.body as {
+    fields?: Record<string, {
+      localeStatus?: Record<string, string>;
+      translatedValues?: Record<string, string>;
+    }>;
+  } | undefined;
+  assert(legacyContent?.fields);
+  for (const [path, field] of Object.entries(legacyContent.fields)) {
+    field.localeStatus = { it: 'ok' };
+    field.translatedValues = { it: fullValues[path]! };
+  }
+
+  assert.deepEqual(await listTranslatedLocales({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+  }), [{ locale: 'it' }]);
+
+  assert.deepEqual(await readTranslatedLocaleValues({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+  }), {
+    locale: 'it',
+    values: fullValues,
+  });
+
+  const overlay = objects.get(accountInstanceLocaleOverlayKey(ACCOUNT_ID, 'faq', INSTANCE_ID, 'it'))?.body;
+  assert(overlay && typeof overlay === 'object' && !Array.isArray(overlay));
+  assert.equal((overlay as { status?: unknown }).status, 'inSync');
+  assert.deepEqual((overlay as { values?: unknown }).values, fullValues);
+
+  const cleaned = objects.get(contentKey)?.body as { fields?: Record<string, unknown> } | undefined;
+  assert(cleaned?.fields);
+  for (const field of Object.values(cleaned.fields)) {
+    assert.equal(Object.prototype.hasOwnProperty.call(field as Record<string, unknown>, 'translatedValues'), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(field as Record<string, unknown>, 'localeStatus'), false);
+  }
 });

@@ -1,0 +1,90 @@
+# EXEC 103_DB.3 Tokyo Instance Registry/Control Row Wiring
+
+Status: Executed historical evidence / green runtime slice; surviving doctrine extracted to PRD 105C; superseded by PRD 105, 105A, 105B, and 105C where conflicting
+Date Started: 2026-05-22
+Parent PRD: `103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
+Child PRD: `103_DB_Instances__PRD__Instances_Table.md`
+Execution slice: `103_DB.3 - Tokyo instance registry/control row wiring`
+
+Archive note: this document is no longer active execution authority. It is retained as evidence for DB-backed instance registry/runtime wiring.
+
+## Slice Intent
+
+Tokyo must use the Supabase `instances` row as the authority for instance existence, account ownership, widget type, publish state, coarse translation state, creation time, and last user edit time.
+
+The authored payload remains Tokyo-owned payload behind product operations. The DB row does not store display name, title, content, config, translated values, source versions, job IDs, overlay IDs, or storage paths.
+
+## Implemented Locally
+
+- Added Tokyo `instance-registry` operations backed by Supabase/PostgREST service-role calls.
+- Changed account instance list to query `instances` first, then read private Tokyo config payload only for display label/config summary.
+- Changed open/save/rename/delete/publish/unpublish resolution to require the `instances` row.
+- Changed publish state reads/writes to use `instances.publish_status`, not payload JSON or public artifact presence.
+- Removed the active `instance-index` module and its generated account index tests.
+- Updated Tokyo tests so the test harness uses an in-memory Supabase/PostgREST registry instead of R2 account-index discovery.
+
+## Pre-104A Historical Instance Migration Evidence
+
+Before deploying DB-backed runtime code, current-era cloud-dev instances had to exist in `instances`.
+This section is pre-104A historical evidence. After PRD 104A, the active Clickeen account coordinate is `CLICKEEN`; the numeric coordinate below records the old seed state only.
+
+Read-only R2 evidence gathered on 2026-05-22:
+
+- Pre-104A historical source: `accounts/00000001/instances/index.json` existed and listed exactly:
+  - `H7IF9M2K9B` / `countdown` / `published`
+  - `UZ3JEJSHII` / `faq` / `published`
+  - `8FMVZFFPJV` / `logoshowcase` / `published`
+- `accounts/AYAXJRGD/instances/index.json` does not exist.
+- At migration time, each listed admin instance had a matching `instance.config.json` with the same `id`, `accountId`, `widgetType`, `createdAt`, and `updatedAt`; the DB `instances.publish_status` row became the surviving publish-state authority.
+
+Migration file:
+
+- `supabase/migrations/20260522114000__prd103_current_instance_registry_seed.sql`
+
+Migration deploy proof:
+
+- Git commit: `daad4571 feat(db): seed PRD103 current instance registry`
+- GitHub Actions run: `26285753466`
+- Result: success
+
+Read-only Supabase proof after deploy:
+
+- Pre-104A historical source: `instances` contained exactly the three admin rows for account `00000001`:
+  - `H7IF9M2K9B` / `countdown` / `published` / `idle`
+  - `UZ3JEJSHII` / `faq` / `published` / `idle`
+  - `8FMVZFFPJV` / `logoshowcase` / `published` / `idle`
+
+## Verification Run
+
+Local verification currently green:
+
+- `pnpm --filter @clickeen/tokyo-worker typecheck`
+- `pnpm --filter @clickeen/tokyo-worker test`
+- `pnpm verify:prd103-db-pivot`
+- `pnpm typecheck`
+- `pnpm lint`
+- `git diff --check`
+
+Cloud verification green:
+
+- Runtime cutover commit: `6136887f feat(tokyo): use DB instance registry for lifecycle`
+- Deploy command fix commit: `b97ffb42 fix(tokyo): deploy worker without rewriting routes`
+- `cloud-dev workers deploy` run `26286347982`: success
+- `cloud-dev surface reachability` run `26286422662`: success
+- Tokyo health: `GET https://tokyo.dev.clickeen.com/healthz` returns `200 {"up":true}`
+- Tokyo worker secrets exist for the DB-backed registry path: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `TOKYO_DEV_JWT`
+- Human Roma cloud-dev smoke on 2026-05-22: user confirmed Widgets lists FAQ, Countdown, and Logo Showcase, and each instance opens successfully.
+
+Active product discovery guard:
+
+- No active code hits for `accountInstanceIndex`, `instance-index`, `AccountInstanceIndex`, `normalizeIndex`, or `listAccountInstancesBySource`.
+- No active code hits for `accounts/*/instances/index.json` or `instances/index.json`; the only remaining mentions are migration evidence in this EXEC doc.
+
+Deploy mechanics note:
+
+- Wrangler uploaded Tokyo successfully in run `26286011810`, then failed while rewriting Cloudflare zone routes because the GitHub Actions Cloudflare token does not have route mutation permission.
+- The Tokyo deploy command now uploads the worker without rewriting routes. Existing Cloudflare routes remain the serving boundary; route creation/mutation is not part of this runtime slice.
+
+## Closure
+
+This slice is green. Roma/Tokyo create/open/list/rename/publish runtime paths now require the `instances` registry/control row for instance existence and ownership. The old account instance index is no longer an active product authority.

@@ -140,14 +140,13 @@ Copy contract:
 **Contract (non-negotiable):**
 - The hero visual is rendered only when an account instance is explicitly provided via `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`.
 - Pages opt in by adding the complete `accountInstanceRef` to the hero block in the canonical page spec.
-- Prague embeds the base public widget artifact when `accountInstanceRef.locale` is omitted. Authored refs may set `accountInstanceRef.locale` only to select an already published public locale artifact.
+- Prague embeds the base public widget artifact. Locale-specific public widget selection is not part of the current default artifact model and must not be implied by private translation state.
 - `visual: true` is legacy metadata only; it does not embed anything by itself.
 
 **Embed rule (strict):**
 - Prague embeds the canonical static account-scoped route: `https://clk.live/{accountPublicId}/{instanceId}`.
-- Locale variants are generated static browser files; locale is never encoded into `instanceId`.
-- Locale variants are selected through the static artifact path: `https://clk.live/{accountPublicId}/{instanceId}/{locale}.html` for non-base locales.
-- `accountInstanceRef` may contain only `accountPublicId`, `instanceId`, and optional `locale`. `locale` selects a public artifact only. It must not be treated as locale availability, translation state, or a private account-widget contract.
+- Locale is never encoded into `instanceId`.
+- `accountInstanceRef` may contain only `accountPublicId`, `instanceId`, and optional `locale`. `locale` has no current default public artifact meaning. If a future public runtime contract gives it meaning, it must select public runtime behavior only and must not be treated as locale availability, translation state, or a private account-widget contract.
 - Prague must not depend on a hidden instance-only lookup, root published registry, or instance-only public route.
 - `wgt_*`, `ins_*`, and `ins_*.<locale>` are invalid current product identities and must fail at the boundary (no legacy support).
 

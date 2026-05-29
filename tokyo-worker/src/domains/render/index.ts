@@ -5,6 +5,8 @@ export * from './normalize';
 export * from './translated-locales';
 export * from './saved-config';
 export * from './storage';
+export * from './locale-overlays';
+export * from './translation-markers';
 export * from './r2-object';
 export * from './instance-delete';
 export * from './instance-registry';

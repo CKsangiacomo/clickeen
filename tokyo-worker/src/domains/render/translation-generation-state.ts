@@ -3,6 +3,7 @@ import { accountInstanceTranslationGenerationJobKey } from './keys';
 import { loadJsonObject, putJson, putJsonIfUnchanged } from './storage';
 import type {
   AccountInstanceContentDocument,
+  LocaleOverlayDocument,
   TranslationGenerationJobDocument,
   TranslationGenerationJobSummary,
   TranslationGenerationJobStatus,
@@ -133,45 +134,48 @@ function deriveJobStatus(args: {
   return 'queued';
 }
 
-export function readyLocalesForContent(
+function hasCompleteTranslatedValues(content: AccountInstanceContentDocument, overlay: LocaleOverlayDocument | null): boolean {
+  const fields = Object.keys(content.fields);
+  return Boolean(overlay) && fields.length > 0 && fields.every((path) => typeof overlay?.values[path] === 'string');
+}
+
+export function readyLocalesForOverlays(
   content: AccountInstanceContentDocument,
   targetLocales: string[],
+  overlays: Map<string, LocaleOverlayDocument>,
+  currentBaseContentMarker?: string,
 ): string[] {
-  const fields = Object.values(content.fields);
-  if (!fields.length) return [];
   return targetLocales
-    .filter((locale) => fields.every((field) => (
-      field.localeStatus?.[locale] === 'ok' &&
-      typeof field.translatedValues?.[locale] === 'string'
-    )))
+    .filter((locale) => {
+      const overlay = overlays.get(locale) ?? null;
+      return Boolean(
+        overlay &&
+        overlay.status === 'inSync' &&
+        (!currentBaseContentMarker || overlay.baseContentMarker === currentBaseContentMarker) &&
+        hasCompleteTranslatedValues(content, overlay),
+      );
+    })
     .sort((left, right) => left.localeCompare(right));
 }
 
-export function outOfSyncLocalesForContent(
-  content: AccountInstanceContentDocument,
+export function outOfSyncLocalesForOverlays(
   targetLocales: string[],
+  overlays: Map<string, LocaleOverlayDocument>,
   currentBaseContentMarker?: string,
 ): string[] {
   if (!currentBaseContentMarker) return [];
   return targetLocales
     .filter((locale) => {
-      const sync = content.localeSync?.[locale];
-      return Boolean(sync && sync.baseContentMarker !== currentBaseContentMarker);
+      const overlay = overlays.get(locale);
+      return Boolean(overlay && overlay.baseContentMarker !== currentBaseContentMarker);
     })
     .sort((left, right) => left.localeCompare(right));
 }
 
-function hasCompleteTranslatedValues(content: AccountInstanceContentDocument, locale: string): boolean {
-  const fields = Object.values(content.fields);
-  return fields.length > 0 && fields.every((field) => (
-    field.localeStatus?.[locale] === 'ok' &&
-    typeof field.translatedValues?.[locale] === 'string'
-  ));
-}
-
-export function productLocaleStatesForContent(args: {
+export function productLocaleStatesForOverlays(args: {
   content: AccountInstanceContentDocument;
   targetLocales: string[];
+  overlays: Map<string, LocaleOverlayDocument>;
   currentBaseContentMarker?: string;
   job: TranslationGenerationJobDocument | null;
 }): TranslationProductLocaleState[] {
@@ -197,24 +201,27 @@ export function productLocaleStatesForContent(args: {
         }
       }
 
-      const sync = args.content.localeSync?.[locale];
-      if (sync && args.currentBaseContentMarker && sync.baseContentMarker !== args.currentBaseContentMarker) {
+      const overlay = args.overlays.get(locale);
+      if (overlay && args.currentBaseContentMarker && overlay.baseContentMarker !== args.currentBaseContentMarker) {
         return { locale, state: 'outOfSync' as const, reviewable: false };
       }
-      if (sync?.status === 'failed' && (!args.currentBaseContentMarker || sync.baseContentMarker === args.currentBaseContentMarker)) {
+      if (overlay?.status === 'outOfSync') {
+        return { locale, state: 'outOfSync' as const, reviewable: false };
+      }
+      if (overlay?.status === 'failed' && (!args.currentBaseContentMarker || overlay.baseContentMarker === args.currentBaseContentMarker)) {
         return {
           locale,
           state: 'failed' as const,
           reviewable: false,
-          ...(sync.reasonKey ? { reasonKey: sync.reasonKey } : {}),
-          ...(sync.detail ? { detail: sync.detail } : {}),
+          ...(overlay.reasonKey ? { reasonKey: overlay.reasonKey } : {}),
+          ...(overlay.detail ? { detail: overlay.detail } : {}),
         };
       }
       if (
-        sync?.status === 'inSync' &&
+        overlay?.status === 'inSync' &&
         args.currentBaseContentMarker &&
-        sync.baseContentMarker === args.currentBaseContentMarker &&
-        hasCompleteTranslatedValues(args.content, locale)
+        overlay.baseContentMarker === args.currentBaseContentMarker &&
+        hasCompleteTranslatedValues(args.content, overlay)
       ) {
         return { locale, state: 'inSync' as const, reviewable: true };
       }

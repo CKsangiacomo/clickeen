@@ -1,8 +1,10 @@
 # System: Tokyo - Product Assets And Account Storage
 
-STATUS: REFERENCE - MUST MATCH PRD 099 DEPLOY ROOTS AND PRD 103 PRODUCT-OPERATION VOCABULARY
+STATUS: REFERENCE - MUST MATCH PRD 099 DEPLOY ROOTS, PRD 103 PRODUCT-OPERATION VOCABULARY, AND PRD 105 INSTANCE FOLDER TENETS
 
 PRD 103 DB PIVOT NOTE: account instance product boundaries are now operation-shaped. `instance.json` and `instances/index.json` are not active product runtime contracts. Public generated artifacts are R2/CDN serving output, not authoring or publish state.
+
+PRD 105 NOTE: active account instance runtime shape is `instance.config.json`, `instance.content.json`, `overlays/locales/{locale}.json`, `index.html`, `styles.css`, and `runtime.js`. Per-locale HTML/JS files and versioned script/style artifacts are not current default architecture.
 
 Tokyo is the storage and static-serving plane. It is not an editor, account authority, or Prague-specific runtime.
 
@@ -60,11 +62,12 @@ accounts/{accountPublicId}/
     {instanceId}/
       instance.config.json
       instance.content.json
+      overlays/
+        locales/
+          {locale}.json
       index.html
-      styles.v{n}.css
-      script.v{n}.js
-      {locale}.html
-      script.v{n}.{locale}.js
+      styles.css
+      runtime.js
 ```
 
 Rules:
@@ -73,9 +76,9 @@ Rules:
 - `instanceId` is the stable compact generated instance identity. Public embeds also carry `accountPublicId`.
 - Instance names are labels only and must never be used as storage keys.
 - Widget codes (`FAQ`, `CTD`, `LGS`, etc.) are codebook metadata used by overlay identity and contracts. They are not storage folders and are never required to locate an instance.
-- Instance locale values are addressed by Tokyo operations using `{instanceId, locale}`. Overlay object IDs and paths are not product identity.
+- Instance locale values are addressed by Tokyo operations using `{instanceId, locale}` and persist under `overlays/locales/{locale}.json`. Overlay paths are not product identity.
 - Instance listing comes from Tokyo operations backed by the `instances` DB row, not `instances/index.json`.
-- Generated public browser files such as `index.html`, locale HTML files, and versioned CSS/JS are rebuilt by Tokyo materialization and must not be treated as identity, ownership, saved config, or product publish truth.
+- Generated public browser files `index.html`, `styles.css`, and `runtime.js` are rebuilt by Tokyo materialization and must not be treated as identity, ownership, saved config, or product publish truth.
 - Prague page translations are not account-instance overlays.
 
 ## Public Static Serving

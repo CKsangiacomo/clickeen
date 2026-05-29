@@ -6,7 +6,6 @@ import type {
   AccountInstanceContentDocument,
   AccountInstanceContentFieldStatus,
   LocalePolicy,
-  TranslationLocaleSyncRecord,
 } from './types';
 import { normalizeLocaleList, normalizeStorageId } from './utils';
 
@@ -98,26 +97,6 @@ function normalizeContentFieldStatus(value: unknown): AccountInstanceContentFiel
   return value === 'ok' || value === 'changed' ? value : null;
 }
 
-function normalizeLocaleSyncRecord(raw: unknown): TranslationLocaleSyncRecord | null {
-  const payload = asRecord(raw);
-  if (!payload) return null;
-  const locale = normalizeLocale(payload.locale);
-  const baseContentMarker = asTrimmedString(payload.baseContentMarker);
-  const widgetContractHash = asTrimmedString(payload.widgetContractHash);
-  const generatedAt = asTrimmedString(payload.generatedAt);
-  const status = payload.status === 'inSync' || payload.status === 'failed' ? payload.status : null;
-  if (!locale || !baseContentMarker || !widgetContractHash || !generatedAt || !status) return null;
-  return {
-    locale,
-    baseContentMarker,
-    widgetContractHash,
-    generatedAt,
-    status,
-    ...(asTrimmedString(payload.reasonKey) ? { reasonKey: asTrimmedString(payload.reasonKey) as string } : {}),
-    ...(asTrimmedString(payload.detail) ? { detail: asTrimmedString(payload.detail) as string } : {}),
-  };
-}
-
 export function normalizeAccountInstanceContentDocument(raw: unknown): AccountInstanceContentDocument | null {
   const payload = asRecord(raw);
   if (!payload) return null;
@@ -134,47 +113,18 @@ export function normalizeAccountInstanceContentDocument(raw: unknown): AccountIn
     const value = typeof field.value === 'string' ? field.value : null;
     const status = normalizeContentFieldStatus(field.status);
     if (value == null || !status) return null;
-    const rawLocaleStatus = asRecord(field.localeStatus);
-    const localeStatus: Record<string, AccountInstanceContentFieldStatus> = {};
-    if (rawLocaleStatus) {
-      for (const [locale, rawStatus] of Object.entries(rawLocaleStatus)) {
-        const normalized = normalizeContentFieldStatus(rawStatus);
-        if (!normalized) return null;
-        localeStatus[locale] = normalized;
-      }
-    }
-    const rawTranslatedValues = asRecord(field.translatedValues);
-    const translatedValues: Record<string, string> = {};
-    if (rawTranslatedValues) {
-      for (const [locale, translatedValue] of Object.entries(rawTranslatedValues)) {
-        if (typeof translatedValue !== 'string') return null;
-        translatedValues[locale] = translatedValue;
-      }
-    }
     fields[path] = {
       ...(typeof field.identityKey === 'string' && field.identityKey ? { identityKey: field.identityKey } : {}),
       ...(typeof field.fieldPattern === 'string' && field.fieldPattern ? { fieldPattern: field.fieldPattern } : {}),
       value,
       status,
-      ...(Object.keys(localeStatus).length ? { localeStatus } : {}),
-      ...(Object.keys(translatedValues).length ? { translatedValues } : {}),
     };
-  }
-  const rawLocaleSync = asRecord(payload.localeSync);
-  const localeSync: Record<string, TranslationLocaleSyncRecord> = {};
-  if (rawLocaleSync) {
-    for (const [localeKey, rawRecord] of Object.entries(rawLocaleSync)) {
-      const record = normalizeLocaleSyncRecord(rawRecord);
-      if (!record || record.locale !== localeKey) return null;
-      localeSync[localeKey] = record;
-    }
   }
   return {
     id,
     accountId,
     widgetType,
     fields,
-    ...(Object.keys(localeSync).length ? { localeSync } : {}),
     updatedAt,
   };
 }

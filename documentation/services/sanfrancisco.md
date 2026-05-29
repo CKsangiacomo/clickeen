@@ -62,7 +62,7 @@ Health contract:
 - Queue binding: `INSTANCE_TRANSLATION_JOBS`.
 - Runtime target payloads are widget-generic saved text fields from `editable-fields.json`, including stable identity keys, current paths, labels, roles, base text, source basis, and the PRD 103K saved base content marker.
 - San Francisco translates only changed generic primitive fields, validates the exact returned changed path set, and reports one terminal completion or failure to Tokyo using `x-ck-internal-service: sanfrancisco.translation`.
-- Tokyo validates and writes the complete current-language value object under the owning instance. Overlay IDs are not product vocabulary.
+- Tokyo validates and writes the complete current-language value object to the owning instance locale overlay. Overlay paths are not product identity.
 - The HTTP `translate-saved-instance` endpoint remains for direct diagnostics and tests; it is not the active save/generate product orchestration boundary.
 - Localization prompts preserve source acronym style and must not add parenthetical acronym expansions that were not present in source text (especially headings/titles).
 - Richtext translation uses one structured path: San Francisco extracts visible text segments, translates those strings only, rebuilds the original HTML, then validates placeholder parity, HTML tag parity, and anchor integrity.
@@ -70,12 +70,12 @@ Health contract:
 
 ## Prague posture
 - Prague does not own the account-widget locale runtime.
-- Public widget locale pages are materialized by Tokyo-worker from saved instance source plus translated locale values during publish. San Francisco produces translated values only; it does not write public widget files.
+- Public widget artifacts are materialized by Tokyo-worker from saved instance source plus translated locale overlays during publish. San Francisco produces translated values only; it does not write public widget files.
 - San Francisco must not write Prague overlay files or resurrect a Prague-specific widget localization path.
 
 ## Rules
 - Active account-widget instance translation writes exact current-language value maps to Tokyo from San Francisco queue jobs after Tokyo generation acceptance.
-- Agent writes must not invent paths, patch formats, readiness state, or layer authoring surfaces. The active instance-locale path stores concrete primitive values only; Roma forwards account intent, Tokyo owns generation state and queue production, San Francisco executes, and Tokyo-worker stores.
+- Agent writes must not invent paths, patch formats, readiness state, or layer authoring surfaces. The active locale overlay stores concrete primitive values only; Roma forwards account intent, Tokyo owns generation state and queue production, San Francisco executes, and Tokyo-worker stores.
 
 ## Links
 - AI overview: `documentation/ai/overview.md`

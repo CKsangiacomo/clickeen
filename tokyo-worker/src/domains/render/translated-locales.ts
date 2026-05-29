@@ -1,6 +1,6 @@
 import type { Env } from '../../types';
 import {
-  readAccountInstanceContentDocument,
+  listAccountInstanceTranslatedLocaleValues,
   readAccountInstanceTranslatedLocaleValues,
   writeAccountInstanceTranslatedLocaleValues,
 } from './saved-config';
@@ -19,30 +19,11 @@ export async function listTranslatedLocales(args: {
   accountId: string;
   instanceId: string;
 }): Promise<TranslatedLocaleSummary[]> {
-  const content = await readAccountInstanceContentDocument({
+  return listAccountInstanceTranslatedLocaleValues({
     env: args.env,
     accountId: args.accountId,
     instanceId: args.instanceId,
   });
-  if (!content.ok) return [];
-
-  const fields = Object.values(content.value.fields);
-  if (!fields.length) return [];
-
-  const candidates = new Set<string>();
-  for (const field of fields) {
-    for (const [locale, status] of Object.entries(field.localeStatus ?? {})) {
-      if (status === 'ok' && typeof field.translatedValues?.[locale] === 'string') candidates.add(locale);
-    }
-  }
-
-  return Array.from(candidates)
-    .filter((locale) => fields.every((field) => (
-      field.localeStatus?.[locale] === 'ok' &&
-      typeof field.translatedValues?.[locale] === 'string'
-    )))
-    .sort((left, right) => left.localeCompare(right))
-    .map((locale) => ({ locale }));
 }
 
 export async function readTranslatedLocaleValues(args: {

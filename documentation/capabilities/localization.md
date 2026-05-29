@@ -117,13 +117,9 @@ Publish/materialization consumes approved instance config/content plus translate
 ```txt
 accounts/{accountPublicId}/instances/{instanceId}/
   index.html
-  {locale}.html
-  styles.v{n}.css
   styles.css
-  script.v{n}.js
-  script.js
-  script.v{n}.{locale}.js
-  script.{locale}.js
+  runtime.js
+  overlays/locales/{locale}.json
 ```
 
 Generated files are output. Publish status is product state. Publish, unpublish, and tier-serving operations materialize or remove those files. Visitor serving reads R2/CDN artifacts only; it does not query Supabase, compose translations, inspect account policy, or repair stale language output on visitor requests.
@@ -136,10 +132,9 @@ Prague embeds account widgets only through public published artifacts:
 
 ```txt
 https://clk.live/{accountPublicId}/{instanceId}
-https://clk.live/{accountPublicId}/{instanceId}/{locale}.html
 ```
 
-`accountInstanceRef.locale` is a public artifact selector. It is not widget locale availability, private translation state, a generation marker, or an overlay/layer identity. Prague must not preserve or reintroduce account-widget localization storage vocabulary.
+`accountInstanceRef.locale`, if reintroduced by a future public runtime contract, is only a public locale selector. It is not widget locale availability, private translation state, a generation marker, or an overlay/layer identity. Prague must not preserve or reintroduce account-widget localization storage vocabulary.
 
 ## Deleted Pre-GA Concepts
 

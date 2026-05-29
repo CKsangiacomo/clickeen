@@ -30,6 +30,7 @@ import {
   readAccountInstanceContentDocument,
   writeSavedRenderConfig,
 } from './saved-config.ts';
+import { accountInstanceLocaleOverlayKey } from './keys.ts';
 import { attachTestInstanceRegistry } from './test-instance-registry.ts';
 
 type StoredObject = {
@@ -977,7 +978,7 @@ test('Tokyo generate queues only changed fields for an existing translated local
   assert.equal(queued.length, 2);
 });
 
-test('Tokyo generate treats status-ok without a translated value as missing', async () => {
+test('Tokyo generate treats an incomplete locale overlay as missing', async () => {
   const { env, objects, queued } = createTestEnv();
   const values = await seedSavedFaqInstance(env);
 
@@ -999,12 +1000,11 @@ test('Tokyo generate treats status-ok without a translated value as missing', as
     values,
   });
 
-  const contentKey = [...objects.keys()].find((key) => key.endsWith('/instance.content.json'));
-  assert(contentKey);
-  const stored = objects.get(contentKey);
+  const overlayKey = accountInstanceLocaleOverlayKey(ACCOUNT_PUBLIC_ID, 'faq', INSTANCE_ID, 'it');
+  const stored = objects.get(overlayKey);
   assert(stored && stored.body && typeof stored.body === 'object' && !Array.isArray(stored.body));
-  const content = stored.body as { fields: Record<string, { translatedValues?: Record<string, string> }> };
-  delete content.fields['sections.0.faqs.0.question']?.translatedValues?.it;
+  const overlay = stored.body as { values: Record<string, string> };
+  delete overlay.values['sections.0.faqs.0.question'];
 
   await generateInstanceTranslations({
     env,
@@ -1031,7 +1031,7 @@ test('Tokyo generate treats status-ok without a translated value as missing', as
 });
 
 test('content status clears changed fields only after every generated target locale completes', async () => {
-  const { env, queued } = createTestEnv();
+  const { env, objects, queued } = createTestEnv();
   const values = await seedSavedFaqInstance(env);
 
   await generateInstanceTranslations({
@@ -1091,6 +1091,17 @@ test('content status clears changed fields only after every generated target loc
       'sections.0.faqs.0.answer': 'I piani partono da zero euro.',
     },
   });
+  const czechOverlayKey = accountInstanceLocaleOverlayKey(ACCOUNT_PUBLIC_ID, 'faq', INSTANCE_ID, 'cs');
+  const staleCzechOverlay = objects.get(czechOverlayKey)?.body as {
+    baseContentMarker?: string;
+    widgetContractHash?: string;
+    status?: string;
+    values?: Record<string, string>;
+  } | undefined;
+  assert(staleCzechOverlay?.values);
+  staleCzechOverlay.baseContentMarker = `sha256:v1:${'0'.repeat(64)}`;
+  staleCzechOverlay.status = 'inSync';
+  staleCzechOverlay.values['sections.0.faqs.0.answer'] = 'Stale but complete.';
 
   let content = await readAccountInstanceContentDocument({
     env,
@@ -1100,7 +1111,12 @@ test('content status clears changed fields only after every generated target loc
   });
   assert.equal(content.ok, true);
   assert.equal(content.ok ? content.value.fields['sections.0.faqs.0.answer']?.status : null, 'changed');
-  assert.equal(content.ok ? content.value.fields['sections.0.faqs.0.answer']?.localeStatus?.it : null, 'ok');
+  assert.equal((await readTranslatedLocaleValues({
+    env,
+    accountId: ACCOUNT_PUBLIC_ID,
+    instanceId: INSTANCE_ID,
+    locale: 'it',
+  }))?.values['sections.0.faqs.0.answer'], 'I piani partono da zero euro.');
 
   await generateInstanceTranslations({
     env,
@@ -1171,12 +1187,19 @@ test('concurrent locale completions preserve every locale value on instance cont
   const expectedLocales = ['cs', 'de', 'fr', 'it'];
   for (const field of Object.values(content.ok ? content.value.fields : {})) {
     assert.equal(field.status, 'ok');
-    assert.deepEqual(Object.keys(field.localeStatus ?? {}).sort(), expectedLocales);
-    assert.deepEqual(Object.keys(field.translatedValues ?? {}).sort(), expectedLocales);
   }
   assert.deepEqual(
     (await listTranslatedLocales({ env, accountId: ACCOUNT_PUBLIC_ID, instanceId: INSTANCE_ID }))
       .map((entry) => entry.locale),
     expectedLocales,
   );
+  for (const locale of expectedLocales) {
+    const translated = await readTranslatedLocaleValues({
+      env,
+      accountId: ACCOUNT_PUBLIC_ID,
+      instanceId: INSTANCE_ID,
+      locale,
+    });
+    assert.equal(translated?.values['header.title'], `${locale}:${values['header.title']}`);
+  }
 });

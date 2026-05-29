@@ -1,8 +1,10 @@
 # System: Tokyo-worker - PBX Routes And Instance Storage
 
-STATUS: REFERENCE - MUST MATCH RUNTIME DURING PRD 103 PRE-GATE
+STATUS: REFERENCE - MUST MATCH PRD 105 INSTANCE FOLDER TENETS AND RUNTIME
 
 PRD 103_00 NOTE: this doc now uses the product-operation vocabulary required before PRD 103 resumes. Tokyo-worker may keep storage objects only as private implementation behind approved product operations. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`.
+
+PRD 105 NOTE: active account instance shape is `instance.config.json`, `instance.content.json`, `overlays/locales/{locale}.json`, `index.html`, `styles.css`, and `runtime.js`. Tokyo-worker must not preserve operation-controller JSON in instance folders, per-locale HTML/JS files, versioned script/style artifacts, or translated-locale inventory folders as current architecture.
 
 Tokyo-worker is the Tokyo object PBX for account-owned assets, account widget instances, translated locale value storage, public artifact bytes, and friendly asset serving.
 
@@ -35,8 +37,8 @@ Tokyo-worker resolves widget definitions through the `listWidgetDefinitions` and
 
 1. Account assets: route and mutate account-owned asset objects under `accounts/{accountPublicId}/assets/`.
 2. Account instances: route product open, save, list, create, rename, delete, publish, and unpublish operations for `accountPublicId + instanceId`.
-3. Account-instance translated locale values: store/read exact locale values on the owning instance content fields by `instanceId + locale`.
-4. Public artifact materialization: publish renders static browser files under the owning instance folder before the instance becomes public.
+3. Account-instance translated locale values: store/read exact locale overlay value maps by `instanceId + locale`.
+4. Public artifact materialization: publish renders `index.html`, `styles.css`, and `runtime.js` under the owning instance folder before the instance becomes public.
 5. Friendly asset routes: serve public asset URLs from canonical R2 roots without creating route-shaped storage roots.
 
 ## Account Storage
@@ -48,15 +50,13 @@ accounts/{accountPublicId}/
   instances/
     {instanceId}/
       instance.config.json       # non-text config, identity/display/locale metadata
-      instance.content.json      # base user-visible text fields, translated locale values, and per-field translation status
+      instance.content.json      # base user-visible text fields
+      overlays/
+        locales/
+          {locale}.json          # durable translated value map for one target locale
       index.html
-      styles.v{n}.css
       styles.css
-      script.v{n}.js
-      script.js
-      {locale}.html
-      script.v{n}.{locale}.js
-      script.{locale}.js
+      runtime.js
 ```
 
 Rules:
@@ -66,11 +66,11 @@ Rules:
 - Widget software lives only under `product/widgets/{widgetType}/`. `widgetType` and `widgetCode` may appear as metadata/codebook identity; they are never R2 locators for account instances.
 - `{instanceId}` is a stable generated 10-character uppercase base36 ID. It is not derived from widget type, display name, UUID, timestamp, or any old `ins_*` string.
 - `instance.config.json` carries non-text config plus instance identity/display, widget type/code, base locale, target locales, and timestamps.
-- `instance.content.json` carries base user-visible text values in the same editable paths Bob exposes, current translated locale values for those fields, plus `ok`/`changed` translation pickup status. This is the translation input and translation preview source. Every value is a string; rich text is sanitized HTML string content, not an object.
+- `instance.content.json` carries base user-visible text values in the same editable paths Bob exposes. It is the translation input source. Durable translated values live in `overlays/locales/{locale}.json`. Every value is a string; rich text is sanitized HTML string content, not an object.
 - `instance.json` is not written or read by active product runtime code.
-- Saved source does not carry `sourceVersion` or generic generation lanes. Translation and publish work use product operation state, content field status, and queue/job boundaries.
-- Legacy `overlays/{overlayId}.json` objects may exist until data cleanup, but no translation product operation reads or writes them as current locale value truth.
-- Publish materializes `index.html`, versioned CSS/JS support files, stable support aliases, and `{locale}.html` entry files from saved instance source plus translated locale values.
+- Saved source does not carry `sourceVersion` or generic generation lanes. Translation and publish work use product operation state, base content markers, locale overlays, and queue/job boundaries.
+- `overlays/locales/{locale}.json` is the only approved instance-folder translated value file shape. Legacy `overlays/{overlayId}.json` objects may exist until data cleanup, but no translation product operation reads or writes them as current locale value truth.
+- Publish materializes `index.html`, `styles.css`, and `runtime.js` from saved instance source plus translated locale overlays.
 - `instances/index.json` is not product truth and is not read by active product runtime code.
 
 ## Public Serving
@@ -108,8 +108,8 @@ Public availability is the materialized public artifact output:
 - the environment public-serving URL serves only if the generated `index.html` artifact exists.
 - if a requested generated file is missing, that request returns 404.
 - publish/unpublish and tier-serving operations add or remove materialized public artifacts according to product state and policy.
-- Support files only serve from the same instance folder when their filename is on the generated-browser-file allowlist.
-- `instance.json`, `config.json`, `publish.json`, `embed.json`, `translations.json`, `overlays/`, `published/`, source maps, hidden files, directories, and unknown files return 404 even if the object physically exists.
+- Support files only serve from the same instance folder when their filename is on the generated-browser-file allowlist: `styles.css` and `runtime.js`.
+- Private source and state files are not public artifacts. `instance.config.json`, `instance.content.json`, `instance.json`, `config.json`, `publish.json`, `embed.json`, `translations.json`, `overlays/`, `published/`, source maps, hidden files, directories, and unknown files return 404 even if the object physically exists.
 
 The following are not surviving public product contracts:
 
@@ -158,7 +158,7 @@ Friendly routes must not create root `widgets/`, `themes/`, `public/`, `publishe
 
 Tokyo-worker does not consume the old render snapshot/mirror queue.
 
-The only queue binding Tokyo-worker currently owns in this area is the `INSTANCE_TRANSLATION_JOBS` producer. Generate translations resolves account instance content, editable field contracts, field-level locale status, and policy, then sends locale translation jobs for San Francisco to consume. Each explicit Generate click creates a fresh current generation and supersedes any prior active generation; late San Francisco completions are ignored unless their job id still matches Tokyo's current generation. Tokyo reads the current generation document as detailed job truth; the Supabase registry status is only the coarse product control projection and must not promote terminal or idle generation state back into an active poll. Active generations that do not receive San Francisco completion/failure callbacks expire to failed instead of leaving Bob in an endless polling loop. It does not scan overlay files before queueing. Tokyo-worker does not use a queue to delete account instances or to mirror public artifacts.
+The only queue binding Tokyo-worker currently owns in this area is the `INSTANCE_TRANSLATION_JOBS` producer. Generate translations resolves account instance content, editable field contracts, locale overlays, current base markers, and policy, then sends locale translation jobs for San Francisco to consume. Tokyo owns idempotency, marker checks, timeout/liveness, and terminal locale state through Supabase-backed operation state. No generation job document belongs in the instance folder. San Francisco completions are applied only when markers still match, then durable translated values are written to `overlays/locales/{locale}.json`. Active generations that do not receive San Francisco completion/failure callbacks expire to failed instead of leaving Bob in an endless polling loop. Tokyo-worker does not use a queue to delete account instances or to mirror public artifacts.
 
 ## Delete, Publish, And Unpublish
 

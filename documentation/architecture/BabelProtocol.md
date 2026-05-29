@@ -61,9 +61,9 @@ The translated value body is an exact value map:
 }
 ```
 
-The body does not carry product identity, readiness, job state, source version, hash identity, or storage path. Product operations carry identity and state.
+The API body does not carry product identity, readiness, job state, source version, hash identity, or storage path. Product operations carry identity and state.
 
-Tokyo may store the value map in any approved private storage shape. Bob, Roma, San Francisco, and product docs must not use private storage object IDs as locale identity.
+Under PRD 105, Tokyo stores the durable translated-locale product result as `overlays/locales/{locale}.json`. That private overlay document wraps the API value map with marker/status metadata used by Tokyo. Bob, Roma, San Francisco, and public widget consumers still speak the API value-map contract, not private storage object identity.
 
 ## Runtime Resolution
 

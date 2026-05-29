@@ -70,7 +70,7 @@ This route is strict: it throws at build time if `overview.json` is missing requ
 Overview hero runtime behavior:
 - For `hero` blocks on the overview route, Prague may render the explicitly referenced published account-widget artifact. If the ref omits `locale`, Prague embeds the base artifact.
 - Prague does not discover account-widget locale availability, intersect market locales with widget locales, or auto-build multi-locale widget showcases.
-- `accountInstanceRef.locale` is an artifact selector for `clk.live/{accountPublicId}/{instanceId}/{locale}.html`; it is not translation state, locale availability, or a private account-widget contract.
+- `accountInstanceRef.locale` is not part of the current default public artifact model. If a future public runtime contract reintroduces a locale selector, it must select only public widget runtime behavior; it is never translation state, locale availability, or a private account-widget contract.
 - If a non-base Prague page translation sidecar is missing, Prague fails fast instead of silently falling back to base copy.
 
 ### 1.3 Widget subpages
@@ -192,7 +192,7 @@ Demo locale visibility contract:
 
 - Widget marketing pages are JSON-only in this repo snapshot: no markdown crawling, no build-time parsing heuristics.
 - Builds fail fast when the per-widget page contract is broken (missing required JSON/copy).
-- Account instance embeds (visual widget instances inside Prague blocks) use explicit account and instance identity; locale, when present, selects a generated public artifact path such as `/{locale}.html`.
+- Account instance embeds (visual widget instances inside Prague blocks) use explicit account and instance identity. Prague must not infer account-widget locale availability or assume generated per-locale HTML files.
 - For canonical `/{market}/{locale}/...` URLs, Prague must not vary indexable content by request IP/cookies/experiment keys; market-bound routing and locale availability are derived from `prague/src/markets/markets.json`.
 
 ---

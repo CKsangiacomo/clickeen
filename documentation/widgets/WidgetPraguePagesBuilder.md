@@ -126,7 +126,7 @@ This avoids narrative drift while drafting multiple pages.
 
 Account instance refs are account-scoped product refs, not aliases. Admin examples use the normal admin account `CLICKEEN`, so a Prague page points at `accounts/CLICKEEN/instances/{instanceId}/` by carrying both fields in JSON. Do not use old `wgt_*` / `ins_*` names, private UUID account folders, or a hidden instance-only lookup.
 
-Do not author locale-specific widget IDs, infer widget locale availability from Prague market config, or add a locale proof block that depends on private translation state. `accountInstanceRef.locale` is only a selector for an already published public artifact at `clk.live/{accountPublicId}/{instanceId}/{locale}.html`.
+Do not author locale-specific widget IDs, infer widget locale availability from Prague market config, or add a locale proof block that depends on private translation state. `accountInstanceRef.locale` has no current default public artifact meaning; if a future public runtime contract gives it meaning, it must select public runtime behavior only.
 
 ### Step 2 - Build each page from its job
 

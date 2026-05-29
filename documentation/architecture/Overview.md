@@ -63,7 +63,7 @@ Generated/public artifacts are written only by artifact builders.
 | Widget definitions | Approved widget source under `tokyo/product/widgets/{widgetType}/` read by widget-definition operations | Generated manifests are not source authority. |
 | Account instance source | Tokyo account instance operations over `instance.config.json` and `instance.content.json` | `instance.json` is not written or read by active runtime code. |
 | Account instance listing | `listAccountInstances` | Any account index file is a private cache below the operation, not a Roma API. |
-| Translations | Translated locale value operations by `instanceId + locale` | Overlay IDs or object paths are private storage details if retained. |
+| Translations | Translated locale value operations by `instanceId + locale` | Locale values live under `overlays/locales/{locale}.json`; operation liveness belongs to Tokyo/Supabase operation state. |
 | Publish state | Tokyo publish/unpublish operations and publish status | Generated files are output, not the state machine. |
 | Public serving | `clk.live/{accountPublicId}/{instanceId}` serving materialized generated artifacts from R2/CDN | Missing artifacts fail visibly; visitor requests do not read Supabase or compose widgets from authoring source. |
 
@@ -241,7 +241,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 - Serves account asset reads on routes carrying `accountPublicId`; legacy non-account asset paths are hard-failed.
 - In-place account asset byte replacement keeps the same account asset reference and must not require instance rebuilds.
 - Asset delete is synchronous and explicit, with no silent runtime healing.
-- Writes account-instance config/content, translated locale values, and generated public artifacts under `accounts/{accountPublicId}/instances/{instanceId}/` from explicit Roma/system operations. Tokyo-worker does not read Michael/Supabase to discover translation state.
+- Writes account-instance config/content, locale overlays, and generated public artifacts under `accounts/{accountPublicId}/instances/{instanceId}/` from explicit Roma/system operations. Tokyo-worker uses Supabase-backed product/operation facts for instance registry, publish state, and translation liveness; public visitor serving reads generated R2/CDN artifacts and does not hit Supabase.
 - Publishes by materializing generated public artifacts and setting Tokyo-owned publish status.
 
 #### Asset ownership model (canonical)

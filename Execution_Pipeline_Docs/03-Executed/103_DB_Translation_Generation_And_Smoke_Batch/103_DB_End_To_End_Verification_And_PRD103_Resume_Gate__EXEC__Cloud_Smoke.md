@@ -1,0 +1,245 @@
+# EXEC 103_DB.9 End-To-End Verification And PRD 103 Resume Gate
+
+Status: Historical blocked evidence / smoke doctrine extracted to PRD 105D; superseded by PRD 105, 105A, 105B, 105C, and 105D where conflicting
+Date Started: 2026-05-22
+Parent PRD: `103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
+Execution slice: `103_DB.9 - End-to-end verification and PRD 103 resume gate`
+
+Archive note: this document is no longer active execution authority. It is retained as evidence of the blocked DB pivot smoke gate. Current smoke/translation repair authority is `../02-Executing/105D__PRD__Translation_Operation_State_And_Smoke_Verification.md`.
+
+## Slice Intent
+
+This slice is the final gate before product PRD 103 can resume.
+
+The gate is not a code-build gate only. It must prove the product path works end to end:
+
+- Roma opens the account widget list from Tokyo-backed product operations.
+- Roma/Bob opens a real FAQ instance.
+- Save persists authored state.
+- Generate accepts work without hanging.
+- Translation progress and translated preview render from Tokyo product operations.
+- Publish materializes public serving artifacts.
+- Public visitors read only generated R2/CDN artifacts.
+- Private source payloads and old source mirrors are not public serving surfaces.
+
+## Current Verification
+
+Cloud deployment is green for the current code head:
+
+- `cloud-dev workers deploy`: success for head `d44b3417ffcc67a01dbe7e476fc2583c6519bdbe`.
+- `cloud-dev surface reachability`: success for head `d44b3417ffcc67a01dbe7e476fc2583c6519bdbe`.
+
+Documentation head:
+
+- `caf522f9` aligns account locale taxonomy across Berlin, Roma, Bob, Tokyo, contracts, and PRD docs. It introduces migration `20260523150000__prd103_account_locale_settings_taxonomy.sql`.
+- `d44b3417` updates San Francisco to use the renamed translated-value contracts after public-serving cleanup.
+- `6627dc1f` removes legacy public-serving paths, deletes the live `/renders/*` route from cloud-dev, and keeps only regression checks for forbidden public paths.
+- `74bc5f87` updates this gate readout. It does not change runtime behavior.
+- `f479d605` locks the public-serving environment split in architecture docs: cloud-dev uses `dev.clk.live`; production release stages use `clk.live`.
+
+PRD 104A coordinate note:
+
+- After PRD 104A is deployed and the R2/Supabase migration has run, Clickeen-owned public serving smokes must use account coordinate `CLICKEEN`.
+- Earlier PRD 103 readouts used the retired numeric bootstrap coordinate and are pre-104A historical proof, not current product truth.
+
+Local targeted verification is green:
+
+- `pnpm --filter @clickeen/sanfrancisco test`
+- `pnpm --filter @clickeen/sanfrancisco typecheck`
+- `pnpm --filter @clickeen/tokyo-worker test`
+- `pnpm --filter @clickeen/tokyo-worker typecheck`
+- `pnpm verify:prd103-db-pivot`
+- `pnpm lint`
+- `TURBO_FORCE=true pnpm typecheck`
+
+Post-104A public smoke command:
+
+```bash
+pnpm health:product-path --public-only --account-public-id CLICKEEN --instance-id UZ3JEJSHII --json
+```
+
+Cloud-dev public smoke now targets `https://dev.clk.live` by default. Use `--clk-base https://clk.live` only for production/UAT checks.
+
+Post-104A runtime result:
+
+Complete as of 2026-05-26. PRD 104A copied admin R2 source/artifacts from `accounts/00000001/` to `accounts/CLICKEEN/`, migrated Supabase account/dependent rows to `CLICKEEN`, rematerialized the three published admin instances, deleted migrated old R2 source/public keys, and verified old public paths return 404 with no redirect.
+
+Direct DNS check:
+
+```bash
+dig +short dev.clk.live
+```
+
+Current result after cloud-dev route/DNS setup: Cloudflare edge IPs are returned.
+
+Nameserver check:
+
+```bash
+dig +short NS clk.live
+```
+
+Current result:
+
+```text
+maya.ns.cloudflare.com.
+salvador.ns.cloudflare.com.
+```
+
+Cloudflare zone lookup with the configured local Cloudflare API token:
+
+```bash
+GET /client/v4/zones?name=clk.live
+```
+
+Current result after the operator updated the Cloudflare token: the token can read both `clickeen.com` and `clk.live`, and has DNS/Workers Routes permissions for both zones.
+
+Operator confirmation:
+
+- `clk.live` exists as an active Cloudflare zone and is reserved for production public serving.
+- Cloud-dev must use the `dev.clk.live/*` Cloudflare route on the `tokyo-assets-dev` worker.
+
+Direct A/CNAME checks:
+
+```bash
+dig +short A dev.clk.live
+dig +short CNAME dev.clk.live
+```
+
+Current result after cloud-dev route/DNS setup: `A dev.clk.live` returns Cloudflare edge IPs.
+
+Forced Cloudflare edge check:
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' https://dev.clk.live/CLICKEEN/UZ3JEJSHII/
+```
+
+Post-104A expected result: HTTP 200 after live R2 copy, Supabase migration, and republish/rematerialization.
+
+Seeded instance artifact checks:
+
+```bash
+for id in UZ3JEJSHII 8FMVZFFPJV H7IF9M2K9B; do
+  curl -sS -o /dev/null -w "$id %{http_code}\n" "https://dev.clk.live/CLICKEEN/$id/"
+done
+```
+
+Post-104A expected result:
+
+```text
+UZ3JEJSHII 200
+8FMVZFFPJV 200
+H7IF9M2K9B 200
+```
+
+Private source mirror check:
+
+```bash
+curl -I https://dev.clk.live/CLICKEEN/UZ3JEJSHII/instance.json
+```
+
+Post-104A expected result: HTTP 404 with Tokyo-worker headers.
+
+## Deterministic Readout
+
+The gate remains blocked for one product reason:
+
+1. Authenticated Roma human smoke still needs to prove open, save, Generate, translated preview, and publish after the account locale taxonomy migration and PRD 103J generic translation implementation.
+
+The prior architecture blocker - FAQ-specific translation runtime - has been corrected locally. The current implementation uses generic `editable-fields.json` contracts, generic v2 translation jobs, generic San Francisco primitive-field execution, identity-aware translated value preservation, and a generated widget source index. A smoke that proves only FAQ mechanics is still not enough: DB.9 must prove FAQ plus at least one non-FAQ widget on the authenticated Roma/Bob/Tokyo/San Francisco product path.
+
+Pre-104A historical proof from 2026-05-24: GitHub Actions workflow `supabase migrations deploy` run `26367289969` completed successfully on head `e4c0a56e`. Remote Supabase REST proof returned `accounts.selected_target_locales` and `accounts.locale_policy` for the retired numeric bootstrap account. PRD 104A has now produced fresh proof for `CLICKEEN`: the active admin account is `CLICKEEN`, old active Supabase refs are zero, and `dev.clk.live/CLICKEEN/{UZ3JEJSHII,8FMVZFFPJV,H7IF9M2K9B}` returns 200 while old `00000001` public paths return 404.
+
+The private `instance.json` 404 is good. It proves the old source mirror is not accidentally exposed as a public artifact.
+
+The public-host operational route 404s are also required. `dev.clk.live` must not expose Tokyo `/healthz`, `/__internal/*`, `/widgets/*`, or other operational routes. It is a public artifact host only.
+
+The current GitHub surface-reachability workflow does not check `dev.clk.live`; it checks Berlin, Tokyo, San Francisco, Roma, Bob, Venice, and unauthenticated Roma route boundaries. That workflow being green is necessary but not sufficient for the public serving gate.
+
+## Product Interpretation
+
+Deploy success does not mean PRD 103 can resume.
+
+At this stage the DB pivot code is deployed and PRD 104A has produced current `CLICKEEN` public-serving proof for the seeded cloud-dev instances. PRD 103 still cannot resume until the authenticated Roma product path is smoke-tested end to end on FAQ plus at least one non-FAQ widget.
+
+PRD 103J is now implemented locally as the surviving translation boundary:
+
+- every widget declares all authored customer-visible text in `editable-fields.json`, including Content panel text, CTA labels, headers, captions, alt text, timer labels, questions, answers, and any other user-visible authored string or rich text;
+- Tokyo extracts generic saved text fields from the current widget contract and saved instance content;
+- San Francisco translates generic primitive fields, not FAQ graphs;
+- Tokyo writes translated values back by exact path and stable field identity;
+- Bob previews and reviews translated values from the same generic contract;
+- FAQ helpers are internal fixtures/adapters only and must not define the product operation.
+
+Local proof currently includes:
+
+- `pnpm validate:widgets`
+- `pnpm -C tokyo-worker test`
+- `pnpm -C bob test`
+- `pnpm verify:prd103-publish-language-files`
+- `node scripts/verify/prd103j-generic-translation-guard.mjs`
+
+Latest deploy status:
+
+- Commit `d44b3417` deployed successfully.
+- The cloud-dev surface-reachability workflow for `d44b3417` is green.
+- `dev.clk.live` was verified separately because the standard surface-reachability workflow does not cover the canonical cloud-dev public serving domain.
+
+## Repair Operation Added In This Slice
+
+This slice adds a narrow Tokyo system repair route:
+
+```text
+POST /__internal/accounts/{accountId}/serving/restore-paid
+```
+
+Purpose:
+
+- run the existing `restorePaidTierServing` operation for an account;
+- materialize every DB row whose `instances.publish_status` is `published`;
+- leave publish intent unchanged;
+- avoid any `instance.json`, overlay inventory, pointer, or old source-object fallback.
+
+Authorization:
+
+- requires `Authorization: Bearer {TOKYO_DEV_JWT}`;
+- requires `x-ck-internal-service: devstudio.local`;
+- requires `x-account-id` to match the account in the path.
+
+Test proof:
+
+- unauthenticated repair requests are rejected;
+- authenticated repair materializes `index.html` for a published row;
+- repair does not create or expose `instance.json`.
+
+Cloud invocation status after PRD 104A:
+
+- `https://tokyo.dev.clickeen.com/healthz` reaches the Tokyo worker and returns HTTP 200 with a worker `x-request-id`.
+- `tokyo.dev.clickeen.com/__internal/*` is not part of the normal public Tokyo route list. Roma uses service binding for internal Tokyo calls.
+- For the one-time 104A migration gate, an exact temporary Cloudflare route for `tokyo.dev.clickeen.com/__internal/accounts/CLICKEEN/serving/restore-paid` was added, called once with `TOKYO_DEV_JWT` and `x-ck-internal-service: devstudio.local`, and removed immediately afterward.
+- The repair operation returned `materializedInstanceIds: ["UZ3JEJSHII","8FMVZFFPJV","H7IF9M2K9B"]` and `failed: []`.
+- Do not expose broad Tokyo `__internal/*`. Future manual cloud repair should use a narrow Roma-owned account operation or the authenticated Roma publish path.
+
+## Required Fix Before Green
+
+The gate can go green only after all of these are true:
+
+- Green: GitHub Actions workflow `supabase migrations deploy` ran with `target=cloud-dev` and `confirm=APPLY_MIGRATIONS` for commit `e4c0a56e`; run `26367289969` succeeded.
+- Green: `dev.clk.live` resolves normally for cloud-dev public serving.
+- Green: FAQ, Countdown, and Logo Showcase seeded instances have materialized public artifacts under the new public artifact model.
+- Green: public smoke succeeds without `--resolve`.
+- Green: private source mirror and forbidden operational public paths return 404.
+- Blocked: authenticated Roma smoke proves open, save, Generate, translated preview, and publish on the generic widget translation path, with FAQ plus at least one non-FAQ widget.
+- Green locally: generic widget translation PRD 103J implementation is in the working tree and covered by local tests/guards. It still needs final Product + Architecture acceptance and cloud-dev smoke evidence before DB.9 can close.
+
+## Allowed Resolution Paths
+
+Allowed paths:
+
+- A human product-path publish from Roma for seeded instances, proving the real publish operation materializes artifacts.
+- A documented, protected system repair operation that materializes all currently published rows. This must be scoped as a DB pivot repair path, not a new public product mode. If invoked from cloud-dev, it must be reached through an already-authorized internal service path, not by opening Tokyo internals broadly on the public custom domain.
+
+Not allowed:
+
+- Reintroducing `instance.json` or source payload public serving as a fallback.
+- Marking PRD 103 resumable based only on deploy success.
+- Adding compatibility code that reads old object state to make this smoke pass.

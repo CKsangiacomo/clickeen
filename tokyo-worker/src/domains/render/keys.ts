@@ -15,6 +15,14 @@ export function accountInstanceContentKey(accountId: string, widgetCode: string,
   return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/instance.content.json`;
 }
 
+export function accountInstanceLocaleOverlayKey(accountId: string, widgetCode: string, instanceId: string, locale: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/locales/${locale}.json`;
+}
+
+export function accountInstanceLocaleOverlaysPrefix(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/locales/`;
+}
+
 export function accountInstanceTranslationGenerationJobKey(accountId: string, widgetCode: string, instanceId: string): string {
   return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/translation-generation-job.json`;
 }

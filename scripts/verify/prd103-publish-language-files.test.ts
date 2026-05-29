@@ -175,7 +175,7 @@ const widgetCases = [
 ] as const;
 
 for (const widgetCase of widgetCases) {
-  test(`PRD 103G publishes base and translated ${widgetCase.widgetType} files from Tokyo source and current translated values`, async () => {
+  test(`PRD 105 publishes canonical ${widgetCase.widgetType} runtime from Tokyo source and current locale overlay`, async () => {
     const widgetDefinition = getWidgetDefinition(widgetCase.widgetType);
     const config = resolveWidgetDefaults(widgetCase.widgetType);
     assert(widgetDefinition);
@@ -208,14 +208,13 @@ for (const widgetCase of widgetCases) {
     assert.equal(result.status, 'published');
 
     const baseHtml = await publicText(env, `/${ACCOUNT_ID}/${widgetCase.instanceId}`);
-    const translatedHtml = await publicText(env, `/${ACCOUNT_ID}/${widgetCase.instanceId}/it.html`);
-    const baseScript = await publicText(env, `/${ACCOUNT_ID}/${widgetCase.instanceId}/script.js`);
-    const translatedScript = await publicText(env, `/${ACCOUNT_ID}/${widgetCase.instanceId}/script.it.js`);
+    const runtime = await publicText(env, `/${ACCOUNT_ID}/${widgetCase.instanceId}/runtime.js`);
 
     assert.match(baseHtml, /lang="en"/);
-    assert.match(translatedHtml, /lang="it"/);
-    assert.match(baseScript, /CK_WIDGET/);
-    assert.match(translatedScript, new RegExp(widgetCase.expectedTranslatedScriptText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-    assert.doesNotMatch(baseHtml + translatedHtml + baseScript + translatedScript, /\/api\/account\/|\/__internal\/|product\/widgets\//);
+    assert.match(baseHtml, /runtime\.js/);
+    assert.match(runtime, /CK_WIDGET/);
+    assert.match(runtime, /CK_LOCALE_POLICY/);
+    assert.match(runtime, new RegExp(widgetCase.expectedTranslatedScriptText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.doesNotMatch(baseHtml + runtime, /\/api\/account\/|\/__internal\/|product\/widgets\//);
   });
 }

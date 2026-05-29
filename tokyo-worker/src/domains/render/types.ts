@@ -61,12 +61,16 @@ export type AccountInstanceSummary = {
 
 export type AccountInstanceContentFieldStatus = 'ok' | 'changed';
 
-export type TranslationLocaleSyncRecord = {
+export type LocaleOverlayStatus = 'inSync' | 'outOfSync' | 'failed';
+
+export type LocaleOverlayDocument = {
+  v: 1;
   locale: string;
   baseContentMarker: string;
   widgetContractHash: string;
-  generatedAt: string;
-  status: 'inSync' | 'failed';
+  status: LocaleOverlayStatus;
+  values: Record<string, string>;
+  updatedAt: string;
   reasonKey?: string;
   detail?: string;
 };
@@ -80,10 +84,7 @@ export type AccountInstanceContentDocument = {
     fieldPattern?: string;
     value: string;
     status: AccountInstanceContentFieldStatus;
-    localeStatus?: Record<string, AccountInstanceContentFieldStatus>;
-    translatedValues?: Record<string, string>;
   }>;
-  localeSync?: Record<string, TranslationLocaleSyncRecord>;
   updatedAt: string;
 };
 
