@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --local --port 4001",
-    "deploy": "node ../scripts/infra/ensure-queues.mjs --write --queues instance-translation-jobs-dev && wrangler deploy --routes \"\"",
+    "deploy": "node ../scripts/infra/ensure-queues.mjs --write --queues instance-translation-jobs-dev && wrangler deploy",
     "test": "rm -rf /tmp/clickeen-tokyo-worker-tests && esbuild src/route-helpers.test.ts src/account-assets-contract.test.ts src/routes/asset-routes.test.ts src/routes/clk-live-routes.test.ts src/routes/internal-render-routes.test.ts src/domains/assets-handlers.test.ts src/domains/render/translated-locales.test.ts src/domains/render/translation-operations.test.ts src/domains/render/saved-config.test.ts src/domains/render/public-artifacts.test.ts --bundle --platform=node --format=esm --outdir=/tmp/clickeen-tokyo-worker-tests && node --test /tmp/clickeen-tokyo-worker-tests/route-helpers.test.js /tmp/clickeen-tokyo-worker-tests/account-assets-contract.test.js /tmp/clickeen-tokyo-worker-tests/routes/asset-routes.test.js /tmp/clickeen-tokyo-worker-tests/routes/clk-live-routes.test.js /tmp/clickeen-tokyo-worker-tests/routes/internal-render-routes.test.js /tmp/clickeen-tokyo-worker-tests/domains/assets-handlers.test.js /tmp/clickeen-tokyo-worker-tests/domains/render/translated-locales.test.js /tmp/clickeen-tokyo-worker-tests/domains/render/translation-operations.test.js /tmp/clickeen-tokyo-worker-tests/domains/render/saved-config.test.js /tmp/clickeen-tokyo-worker-tests/domains/render/public-artifacts.test.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
