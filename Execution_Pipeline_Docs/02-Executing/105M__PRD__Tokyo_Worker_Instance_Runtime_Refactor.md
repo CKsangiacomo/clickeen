@@ -995,7 +995,7 @@ Slice 1 cloud-dev gate is now green for all three Pre-GA CLICKEEN dogfood instan
 
 ### 2026-05-29 - Slice 2 Locale Overlay Storage
 
-Status: Local verification green. Cloud-dev deployment and rematerialization smoke still required before Slice 3 begins.
+Status: Green. Local verification, GitHub deploy checks, cloud-dev rematerialization, public artifact smoke, and R2 source-shape verification passed. Slice 3 may begin.
 
 Slice 2 changed translated-locale storage only. It did not remove `translation-generation-job.json`; Slice 4 owns operation state.
 
@@ -1103,25 +1103,105 @@ Result:
 - Tests reference the old embedded fields only as negative/migration fixtures proving they are removed from clean `instance.content.json`.
 - Tests prove overlay markers use `sha256:v1:{digest}` and that stale overlays cannot clear changed base-field status.
 
-#### Still Required Before Slice 3
+#### Cloud-Dev Verification Run
 
-After deployment, cloud-dev must prove the product path can rematerialize the three pre-GA CLICKEEN instances from locale overlays:
+Commit deployed:
+
+```text
+abc1eb75 feat(tokyo-worker): store translations in locale overlays
+```
+
+GitHub cloud-dev workflows completed successfully for `abc1eb75`:
+
+```text
+cloud-dev workers deploy: success
+cloud-dev roma app verify: success
+cloud-dev surface reachability: success
+```
+
+The real Tokyo product restore/rematerialization operation was run against cloud-dev:
+
+```text
+POST https://tokyo.dev.clickeen.com/__internal/accounts/CLICKEEN/serving/restore-paid
+```
+
+Result:
+
+```json
+{
+  "ok": true,
+  "accountId": "CLICKEEN",
+  "keptInstanceIds": [
+    "UZ3JEJSHII",
+    "8FMVZFFPJV",
+    "H7IF9M2K9B"
+  ],
+  "disabledInstanceIds": [],
+  "materializedInstanceIds": [
+    "UZ3JEJSHII",
+    "8FMVZFFPJV",
+    "H7IF9M2K9B"
+  ],
+  "failed": []
+}
+```
+
+Cloud-dev public artifact smoke passed for all three pre-GA CLICKEEN instances:
 
 ```text
 CLICKEEN / UZ3JEJSHII / faq
+  /runtime.js: 200
+  /styles.css: 200
+  /script.js: 404
+  /script.it.js: 404
+  /it.html: 404
+  /styles.v123.css: 404
+
 CLICKEEN / 8FMVZFFPJV / logoshowcase
+  /runtime.js: 200
+  /styles.css: 200
+  /script.js: 404
+  /script.it.js: 404
+  /it.html: 404
+  /styles.v123.css: 404
+
 CLICKEEN / H7IF9M2K9B / countdown
+  /runtime.js: 200
+  /styles.css: 200
+  /script.js: 404
+  /script.it.js: 404
+  /it.html: 404
+  /styles.v123.css: 404
 ```
 
-Required cloud evidence:
+Each deployed `runtime.js` contains both required runtime markers:
 
-- restore/publish product operation returns `materializedInstanceIds` for all three;
-- each public instance serves `index.html`, `styles.css`, and `runtime.js`;
-- `runtime.js` still contains `CK_WIDGET` and `CK_LOCALE_POLICY`;
-- old public artifact paths remain 404;
-- if old embedded translated values existed, the instance folder now contains locale overlays and clean content source after the product operation touches it.
+```text
+CK_WIDGET
+CK_LOCALE_POLICY
+```
 
-Do not move to Slice 3 until this cloud-dev smoke is green.
+Read-only R2 object verification passed for the canonical instance source/artifact files:
+
+```text
+accounts/CLICKEEN/instances/{instanceId}/instance.config.json
+accounts/CLICKEEN/instances/{instanceId}/instance.content.json
+accounts/CLICKEEN/instances/{instanceId}/index.html
+accounts/CLICKEEN/instances/{instanceId}/styles.css
+accounts/CLICKEEN/instances/{instanceId}/runtime.js
+```
+
+Downloaded cloud-dev `instance.content.json` files for all three instances contain no embedded translated-locale fields:
+
+```text
+translatedValues
+localeStatus
+localeSync
+```
+
+Tokyo currently reports no translated locale inventory for the three live pre-GA CLICKEEN instances, so there were no existing locale overlay objects to prove in cloud. The deployed code path and local migration tests prove old embedded complete translations migrate into `overlays/locales/{locale}.json` when present.
+
+Existing stale `script.js` R2 objects are still present under account instance folders but are not publicly served. This is expected before `105L` Phase B. `105M` stops relying on and recreating legacy artifact names; `105L` Phase B owns deleting stale account runtime objects after `105M` is green.
 
 ## Final State
 

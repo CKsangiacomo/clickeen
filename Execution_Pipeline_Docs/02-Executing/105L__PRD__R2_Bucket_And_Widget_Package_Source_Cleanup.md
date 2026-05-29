@@ -343,7 +343,7 @@ accounts/{accountPublicId}/instances/{instanceId}/
   runtime.js
 ```
 
-Current code still emits old public artifact names in `tokyo-worker/src/domains/render/public-artifacts.ts`, including:
+Pre-105M code emitted old public artifact names in `tokyo-worker/src/domains/render/public-artifacts.ts`, including:
 
 ```text
 script.js
@@ -354,7 +354,7 @@ script.v{version}.{locale}.js
 styles.v{version}.css
 ```
 
-Do not delete these from R2 before materialization is fixed, or the runtime may recreate them.
+Slice 1 of `105M__PRD__Tokyo_Worker_Instance_Runtime_Refactor.md` stopped materialization from recreating these names. Stale account runtime objects may still exist in R2 until Phase B deletes them after the 105M runtime refactor is green.
 
 Execution order:
 
