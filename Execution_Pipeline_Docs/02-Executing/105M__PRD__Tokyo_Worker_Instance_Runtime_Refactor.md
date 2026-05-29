@@ -1205,7 +1205,7 @@ Existing stale `script.js` R2 objects are still present under account instance f
 
 ### 2026-05-29 - Slice 3 Materialization Rewrite
 
-Status: Local verification green. Cloud-dev deployment and rematerialization smoke still required before Slice 4 begins.
+Status: Green. Local verification, peer verification, GitHub deploy checks, cloud-dev rematerialization, and public artifact smoke passed. Slice 4 may begin.
 
 Slice 3 had already inherited most of its public artifact shape from Slice 1 and its translated-value source from Slice 2. The remaining blocker found by peer verification was Bob/public parity for account-owned media: Bob preview resolved `assetRef` values into browser-safe media URLs, but Tokyo public materialization baked raw `assetRef` values into `runtime.js`.
 
@@ -1259,17 +1259,78 @@ Result:
 - Tests continue to prove public output is only `index.html`, `styles.css`, and `runtime.js`.
 - Peer verifiers marked Slice 3 green after the account asset fix.
 
-#### Still Required Before Slice 4
+#### Cloud-Dev Verification Run
 
-After deployment, cloud-dev must run the same product restore/rematerialization operation used for Slice 2 and prove all three pre-GA CLICKEEN instances still serve:
+Commit deployed:
 
 ```text
-index.html
-styles.css
-runtime.js
+b525e0a6 feat(tokyo-worker): materialize account asset media in runtime
 ```
 
-with old public artifact paths returning 404. Do not move to Slice 4 until that cloud-dev smoke is green.
+GitHub cloud-dev workflows completed successfully for `b525e0a6`:
+
+```text
+cloud-dev workers deploy: success
+cloud-dev surface reachability: success
+```
+
+The real Tokyo product restore/rematerialization operation was run against cloud-dev:
+
+```text
+POST https://tokyo.dev.clickeen.com/__internal/accounts/CLICKEEN/serving/restore-paid
+```
+
+Result:
+
+```json
+{
+  "ok": true,
+  "accountId": "CLICKEEN",
+  "keptInstanceIds": [
+    "UZ3JEJSHII",
+    "8FMVZFFPJV",
+    "H7IF9M2K9B"
+  ],
+  "disabledInstanceIds": [],
+  "materializedInstanceIds": [
+    "UZ3JEJSHII",
+    "8FMVZFFPJV",
+    "H7IF9M2K9B"
+  ],
+  "failed": []
+}
+```
+
+Cloud-dev public artifact smoke passed for all three pre-GA CLICKEEN instances:
+
+```text
+CLICKEEN / UZ3JEJSHII / faq
+  /runtime.js: 200
+  /styles.css: 200
+  /script.js: 404
+  /script.it.js: 404
+  /it.html: 404
+  /styles.v123.css: 404
+  runtime markers: CK_WIDGET, CK_LOCALE_POLICY
+
+CLICKEEN / 8FMVZFFPJV / logoshowcase
+  /runtime.js: 200
+  /styles.css: 200
+  /script.js: 404
+  /script.it.js: 404
+  /it.html: 404
+  /styles.v123.css: 404
+  runtime markers: CK_WIDGET, CK_LOCALE_POLICY
+
+CLICKEEN / H7IF9M2K9B / countdown
+  /runtime.js: 200
+  /styles.css: 200
+  /script.js: 404
+  /script.it.js: 404
+  /it.html: 404
+  /styles.v123.css: 404
+  runtime markers: CK_WIDGET, CK_LOCALE_POLICY
+```
 
 ## Final State
 
