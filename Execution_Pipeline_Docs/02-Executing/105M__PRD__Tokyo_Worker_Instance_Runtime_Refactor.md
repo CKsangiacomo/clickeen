@@ -1334,7 +1334,7 @@ CLICKEEN / H7IF9M2K9B / countdown
 
 ### 2026-05-29 - Slice 4 Translation Operation State Out Of R2
 
-Status: Green in local and cloud-dev. Slice 4 is closed; Slice 5 may start only after this commit is deployed and verified.
+Status: Green in local and cloud-dev. Slice 4 is closed; Slice 5 may start only after the Slice 4 evidence commits are deployed and verified.
 
 Slice 4 removed `translation-generation-job.json` as active operation storage. Translation generation now uses the PRD 105D Supabase operation ledger:
 
@@ -1439,11 +1439,18 @@ Migration/documentation commit pushed:
 68c1a645 chore(supabase): finalize translation ledger migration
 ```
 
+Post-verifier cleanup commit deployed:
+
+```text
+e0224b25 fix(translations): keep operation ids out of account API
+```
+
 GitHub/Cloudflare automation:
 
 ```text
-cloud-dev workers deploy: success
-cloud-dev surface reachability: success
+cloud-dev roma app verify: success for e0224b25
+cloud-dev workers deploy: success for e0224b25 on rerun attempt 2
+cloud-dev surface reachability: success for e0224b25
 ```
 
 Cloud-dev Supabase operation ledger:
@@ -1473,8 +1480,9 @@ Direct public runtime smoke:
 https://tokyo.dev.clickeen.com/healthz -> {"up":true}
 https://dev.clk.live/CLICKEEN/UZ3JEJSHII/ -> 200
 https://dev.clk.live/CLICKEEN/UZ3JEJSHII/runtime.js -> 200
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/styles.css -> 200
 https://dev.clk.live/CLICKEEN/UZ3JEJSHII/script.js -> 404
-runtime marker present: CK_WIDGET / CK_LOCALE_POLICY
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/translation-generation-job.json -> 404
 ```
 
 #### Peer Verification
@@ -1496,6 +1504,7 @@ Post-verification cleanup also removed leftover job-operation vocabulary from th
 - Roma no longer normalizes or exposes `jobIds` / success `jobId` fields.
 - Tokyo generation summaries no longer expose internal `diagnostics` arrays.
 - The San Francisco queue payload still carries `jobId` as the internal operation/correlation id required for worker callbacks; that value no longer crosses the account product API boundary.
+- A legacy/no-LOC-left-behind verifier re-checked HEAD `e0224b25` and marked its prior blockers green.
 
 The active 105A authority doc was updated so it no longer claims `translation-generation-job.json` remains in current Tokyo-worker code.
 
