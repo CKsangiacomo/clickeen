@@ -485,6 +485,109 @@ Phase A is green when the product deploy/widget package checks pass and account/
 
 Phase B is green only after `105M` is green and stale account/runtime objects are deleted with dry-run, delete, and post-delete evidence.
 
+## Phase B Execution Evidence
+
+Executed after `105M__PRD__Tokyo_Worker_Instance_Runtime_Refactor.md` closed and cloud-dev proved PRD 105 runtime names:
+
+```text
+dev.clk.live/CLICKEEN/{instanceId}/            -> 200
+dev.clk.live/CLICKEEN/{instanceId}/runtime.js -> 200
+dev.clk.live/CLICKEEN/{instanceId}/styles.css -> 200
+dev.clk.live/CLICKEEN/{instanceId}/script.js  -> 404
+dev.clk.live/CLICKEEN/{instanceId}/translation-generation-job.json -> 404
+dev.clk.live/00000001/{instanceId}/           -> 404
+```
+
+Admin account proof before delete:
+
+```text
+Supabase accounts matching CLICKEEN or 00000001: CLICKEEN only
+Supabase instances matching CLICKEEN or 00000001:
+- 8FMVZFFPJV -> CLICKEEN
+- H7IF9M2K9B -> CLICKEEN
+- UZ3JEJSHII -> CLICKEEN
+```
+
+Dry-run manifest:
+
+```text
+/tmp/clickeen-105l/prd105l-dry-run.json
+expected deploy keys: 703
+remote product keys: 89
+remote account keys: 277
+product stale keys: 26
+account stale keys: 261
+total delete candidates: 287
+canonical active instance keys preserved: 15
+index.html delete candidates: 0
+```
+
+Deleted key classes:
+
+```text
+product/assets/brand/**
+product/widgets/*/agent.md
+product/widgets/*/content.json
+product/widgets/*/seo-geo.ts
+product/widgets/manifest.json
+product/widgets/logoshowcase/base-assets/**
+accounts/00000001/**
+accounts/CLICKEEN/instances/*/script.js
+accounts/CLICKEEN/instances/*/script.v*.js
+accounts/CLICKEEN/instances/*/styles.v*.css
+accounts/CLICKEEN/instances/*/translation-generation-job.json
+```
+
+Delete manifest:
+
+```text
+/tmp/clickeen-105l/prd105l-delete-manifest.json
+product deleted keys: 26
+account deleted keys: 261
+total deleted keys: 287
+```
+
+The Cloudflare R2 API delete process deleted all but one stale key before hanging on the final active-account operation object. The final remaining key, `accounts/CLICKEEN/instances/UZ3JEJSHII/translation-generation-job.json`, was deleted with:
+
+```sh
+pnpm --filter @clickeen/tokyo-worker exec wrangler r2 object delete tokyo-assets-dev/accounts/CLICKEEN/instances/UZ3JEJSHII/translation-generation-job.json --remote
+```
+
+Post-delete manifest:
+
+```text
+/tmp/clickeen-105l/prd105l-post-delete-manifest.json
+remote product keys: 63
+remote account keys: 16
+product stale keys: 0
+account stale keys: 0
+total delete candidates: 0
+canonical active instance keys preserved: 15
+```
+
+Post-delete public smoke:
+
+```text
+UZ3JEJSHII root=200 runtime=200 styles=200 script=404 job=404 old=404
+8FMVZFFPJV root=200 runtime=200 styles=200 script=404 job=404 old=404
+H7IF9M2K9B root=200 runtime=200 styles=200 script=404 job=404 old=404
+```
+
+Peer verification:
+
+```text
+Product lens: GREEN
+Legacy/no-LOC-left-behind lens: GREEN
+Architecture/systems lens: GREEN
+```
+
+Local verification:
+
+```sh
+node --check scripts/ops/prd105l-r2-cleanup.mjs
+pnpm validate:widgets
+```
+
 ## Required Static Tripwires
 
 Execution must add or run checks equivalent to:
