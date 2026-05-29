@@ -1,6 +1,12 @@
-import { resolveTranslatedValues } from '@clickeen/ck-contracts';
+import {
+  collectConfigMediaAssetRefs,
+  materializeConfigMedia,
+  resolveTranslatedValues,
+  type ResolvedAccountAsset,
+} from '@clickeen/ck-contracts';
 import type { Env } from '../../types';
-import { normalizeLocale } from '../../asset-utils';
+import { buildAccountAssetPublicPath, normalizeLocale } from '../../asset-utils';
+import { loadAccountAssetByRef } from '../assets';
 import {
   isGeneratedOrObsoletePublicArtifactFile,
   isGeneratedPublicArtifactFile,
@@ -55,6 +61,64 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function instanceRoot(accountId: string, instanceId: string): string {
   return `accounts/${accountId}/instances/${instanceId}`;
+}
+
+function resolveTokyoPublicBaseUrl(env: Env): string {
+  const configured =
+    typeof env.TOKYO_PUBLIC_BASE_URL === 'string' ? env.TOKYO_PUBLIC_BASE_URL.trim() : '';
+  return (configured || 'https://tokyo.dev.clickeen.com').replace(/\/+$/, '');
+}
+
+async function resolveAccountAssetMaterialization(args: {
+  env: Env;
+  accountId: string;
+  config: unknown;
+}): Promise<
+  | { ok: true; config: Record<string, unknown> }
+  | { ok: false; reasonKey: string; detail: string }
+> {
+  const assetRefs = collectConfigMediaAssetRefs(args.config);
+  if (!assetRefs.length) {
+    return isRecord(args.config)
+      ? { ok: true, config: args.config }
+      : {
+          ok: false,
+          reasonKey: 'artifact.config_invalid',
+          detail: 'Instance config must be an object.',
+        };
+  }
+
+  const baseUrl = resolveTokyoPublicBaseUrl(args.env);
+  const resolvedAssets = new Map<string, ResolvedAccountAsset>();
+  const missingAssetRefs: string[] = [];
+  for (const assetRef of assetRefs) {
+    const asset = await loadAccountAssetByRef(args.env, args.accountId, assetRef);
+    if (!asset) {
+      missingAssetRefs.push(assetRef);
+      continue;
+    }
+    resolvedAssets.set(assetRef, {
+      assetRef,
+      url: `${baseUrl}${buildAccountAssetPublicPath(asset.key)}`,
+    });
+  }
+
+  if (missingAssetRefs.length) {
+    return {
+      ok: false,
+      reasonKey: 'artifact.account_asset_missing',
+      detail: `Missing account asset refs: ${missingAssetRefs.join(', ')}`,
+    };
+  }
+
+  const materialized = materializeConfigMedia(args.config, resolvedAssets);
+  return isRecord(materialized)
+    ? { ok: true, config: materialized }
+    : {
+        ok: false,
+        reasonKey: 'artifact.config_invalid',
+        detail: 'Materialized instance config must be an object.',
+      };
 }
 
 function resolveProductPath(widgetType: string, src: string): string | null {
@@ -245,6 +309,12 @@ export async function materializeInstancePublicArtifacts(args: {
     const bodyShell = addInstanceIdToRoot(extractBody(widgetHtml), instance.value.widgetType, instance.value.id);
     const { body, scriptSources } = replaceWidgetScripts(bodyShell);
     const styles = await buildStyles(args.env, instance.value.widgetType, widgetHtml);
+    const materializedBase = await resolveAccountAssetMaterialization({
+      env: args.env,
+      accountId: args.accountId,
+      config: instance.value.config,
+    });
+    if (!materializedBase.ok) return materializedBase;
     const targetLocales = new Set(instance.value.targetLocales.map((locale) => normalizeLocale(locale)).filter((locale): locale is string => Boolean(locale)));
     const translatedLocales = await listTranslatedLocales({
       env: args.env,
@@ -253,7 +323,7 @@ export async function materializeInstancePublicArtifacts(args: {
     });
 
     const localizedStates = new Map<string, Record<string, unknown>>();
-    localizedStates.set(instance.value.baseLocale, instance.value.config);
+    localizedStates.set(instance.value.baseLocale, materializedBase.config);
     for (const summary of translatedLocales) {
       const locale = normalizeLocale(summary.locale);
       if (!locale || !targetLocales.has(locale)) continue;
@@ -270,7 +340,7 @@ export async function materializeInstancePublicArtifacts(args: {
           detail: `Translated locale values are missing for ${locale}`,
         };
       }
-      const state = resolveTranslatedValues(instance.value.config, translated.values);
+      const state = resolveTranslatedValues(materializedBase.config, translated.values);
       if (!isRecord(state)) {
         return {
           ok: false,

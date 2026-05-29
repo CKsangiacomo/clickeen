@@ -1203,6 +1203,74 @@ Tokyo currently reports no translated locale inventory for the three live pre-GA
 
 Existing stale `script.js` R2 objects are still present under account instance folders but are not publicly served. This is expected before `105L` Phase B. `105M` stops relying on and recreating legacy artifact names; `105L` Phase B owns deleting stale account runtime objects after `105M` is green.
 
+### 2026-05-29 - Slice 3 Materialization Rewrite
+
+Status: Local verification green. Cloud-dev deployment and rematerialization smoke still required before Slice 4 begins.
+
+Slice 3 had already inherited most of its public artifact shape from Slice 1 and its translated-value source from Slice 2. The remaining blocker found by peer verification was Bob/public parity for account-owned media: Bob preview resolved `assetRef` values into browser-safe media URLs, but Tokyo public materialization baked raw `assetRef` values into `runtime.js`.
+
+#### What Changed
+
+Tokyo public materialization now resolves account-owned media before writing `runtime.js`:
+
+```text
+collectConfigMediaAssetRefs(instance.value.config)
+loadAccountAssetByRef(accounts/{accountPublicId}/assets/{assetRef})
+materializeConfigMedia(...)
+runtime.js
+```
+
+If a saved widget config references a missing account asset, materialization fails with:
+
+```text
+artifact.account_asset_missing
+```
+
+That is intentional. Public embed cannot depend on Bob to resolve missing media later. Invalid public state must fail at the materialization boundary instead of publishing a weaker runtime than Bob preview.
+
+The translated locale runtime state is resolved over the same materialized base state. Locale overlays remain private source/product data; translated states are baked into `runtime.js` as visitor-safe runtime payload, not fetched from `/overlays/`.
+
+Changed files:
+
+```text
+tokyo-worker/src/domains/render/public-artifacts.ts
+tokyo-worker/src/domains/render/public-artifacts.test.ts
+```
+
+#### Local Verification Run
+
+```text
+pnpm --filter @clickeen/tokyo-worker test
+pnpm --filter @clickeen/tokyo-worker typecheck
+pnpm verify:prd103-publish-language-files
+pnpm validate:widgets
+pnpm typecheck
+```
+
+Result:
+
+- Tokyo-worker tests passed: 52/52.
+- Tokyo-worker typecheck passed.
+- PRD publish/materialization verifier passed: 3/3.
+- Widget validation passed: 3 widget sources valid.
+- Whole-workspace typecheck passed.
+- Tests now prove account asset refs materialize into public runtime media URLs.
+- Tests now prove missing account assets fail materialization with `artifact.account_asset_missing`.
+- Tests continue to prove public output is only `index.html`, `styles.css`, and `runtime.js`.
+- Peer verifiers marked Slice 3 green after the account asset fix.
+
+#### Still Required Before Slice 4
+
+After deployment, cloud-dev must run the same product restore/rematerialization operation used for Slice 2 and prove all three pre-GA CLICKEEN instances still serve:
+
+```text
+index.html
+styles.css
+runtime.js
+```
+
+with old public artifact paths returning 404. Do not move to Slice 4 until that cloud-dev smoke is green.
+
 ## Final State
 
 Tokyo-worker remains important, but smaller in meaning:

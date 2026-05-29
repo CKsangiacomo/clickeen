@@ -22,6 +22,7 @@ function contentTypeForKey(key: string): string | undefined {
   if (key.endsWith('.css')) return 'text/css; charset=utf-8';
   if (key.endsWith('.js')) return 'text/javascript; charset=utf-8';
   if (key.endsWith('.json')) return 'application/json; charset=utf-8';
+  if (key.endsWith('.png')) return 'image/png';
   return undefined;
 }
 
@@ -32,6 +33,7 @@ function createTestEnv(seed: Record<string, string> = {}) {
   );
   const env = {
     TOKYO_DEV_JWT: 'test',
+    TOKYO_PUBLIC_BASE_URL: 'https://tokyo.test',
     TOKYO_R2: {
       async get(key: string) {
         const stored = objects.get(key);
@@ -51,6 +53,16 @@ function createTestEnv(seed: Record<string, string> = {}) {
           async text() {
             return stored.text;
           },
+        };
+      },
+      async head(key: string) {
+        const stored = objects.get(key);
+        if (!stored) return null;
+        return {
+          size: new TextEncoder().encode(stored.text).byteLength,
+          uploaded: new Date('2026-05-29T00:00:00.000Z'),
+          httpMetadata: stored.contentType ? { contentType: stored.contentType } : undefined,
+          customMetadata: null,
         };
       },
       async put(
@@ -180,4 +192,65 @@ test('Tokyo materializes base and translated public artifacts from instance sour
     ].join('\n'),
     /\/api\/account\/|\/__internal\/|product\/widgets\//,
   );
+});
+
+test('Tokyo materialization resolves account asset refs into public runtime media URLs', async () => {
+  const { env, objects } = createTestEnv({
+    ...productSources(),
+    [`accounts/${ACCOUNT_ID}/assets/hero.png`]: 'png-bytes',
+    [`accounts/${ACCOUNT_ID}/assets/logo.png`]: 'png-bytes',
+  });
+  await writeSavedRenderConfig({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'faq',
+    displayName: 'FAQ',
+    meta: { baseLocale: 'en', targetLocales: [] },
+    config: {
+      ...faqConfig(),
+      heroFill: {
+        type: 'image',
+        image: { assetRef: 'hero.png' },
+      },
+      partnerLogo: {
+        logoFill: '',
+        asset: { assetRef: 'logo.png' },
+      },
+    },
+  });
+
+  const result = await materializeInstancePublicArtifacts({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });
+
+  assert.equal(result.ok, true);
+  const runtime = objects.get(`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/runtime.js`)?.text ?? '';
+  assert.match(runtime, /https:\/\/tokyo\.test\/assets\/account\/A1B2C3D4\/hero\.png/);
+  assert.match(runtime, /url\(\\"https:\/\/tokyo\.test\/assets\/account\/A1B2C3D4\/logo\.png/);
+  assert.match(runtime, /"src":"https:\/\/tokyo\.test\/assets\/account\/A1B2C3D4\/hero\.png"/);
+});
+
+test('Tokyo materialization fails when saved config references a missing account asset', async () => {
+  const { env } = createTestEnv(productSources());
+  await writeSavedRenderConfig({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    widgetType: 'faq',
+    displayName: 'FAQ',
+    meta: { baseLocale: 'en', targetLocales: [] },
+    config: {
+      ...faqConfig(),
+      heroFill: {
+        type: 'image',
+        image: { assetRef: 'missing.png' },
+      },
+    },
+  });
+
+  const result = await materializeInstancePublicArtifacts({ env, accountId: ACCOUNT_ID, instanceId: INSTANCE_ID });
+
+  assert.equal(result.ok, false);
+  if (result.ok) return;
+  assert.equal(result.reasonKey, 'artifact.account_asset_missing');
+  assert.match(result.detail, /missing\.png/);
 });
