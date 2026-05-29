@@ -1427,10 +1427,16 @@ Result:
 
 #### Cloud Verification Run
 
-Commit deployed:
+Worker commit deployed:
 
 ```text
 b729bf9e feat(tokyo-worker): move translation operations to db ledger
+```
+
+Migration/documentation commit pushed:
+
+```text
+68c1a645 chore(supabase): finalize translation ledger migration
 ```
 
 GitHub/Cloudflare automation:
@@ -1447,7 +1453,7 @@ translation_generation_operations: DB table present, REST 200
 translation_generation_operation_locales: DB table present, REST 200
 ```
 
-The reviewed migration was applied to cloud-dev and recorded in `supabase_migrations.schema_migrations` as:
+The reviewed migration, including the PostgREST schema reload now present in `68c1a645`, was applied to cloud-dev and recorded in `supabase_migrations.schema_migrations` as:
 
 ```text
 20260528120000 _prd105_translation_generation_operations
