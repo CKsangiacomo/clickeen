@@ -1334,7 +1334,7 @@ CLICKEEN / H7IF9M2K9B / countdown
 
 ### 2026-05-29 - Slice 4 Translation Operation State Out Of R2
 
-Status: Local verification green. Cloud-dev deploy/smoke pending, so do not move to Slice 5 yet.
+Status: Green in local and cloud-dev. Slice 4 is closed; Slice 5 may start only after this commit is deployed and verified.
 
 Slice 4 removed `translation-generation-job.json` as active operation storage. Translation generation now uses the PRD 105D Supabase operation ledger:
 
@@ -1424,6 +1424,52 @@ Result:
 - Tests still prove completion applies only when the saved-base marker remains current.
 - Tests still prove stale completion is terminal/non-applied.
 - Tests still prove locale failure and operation timeout produce failed product state and coarse registry status.
+
+#### Cloud Verification Run
+
+Commit deployed:
+
+```text
+b729bf9e feat(tokyo-worker): move translation operations to db ledger
+```
+
+GitHub/Cloudflare automation:
+
+```text
+cloud-dev workers deploy: success
+cloud-dev surface reachability: success
+```
+
+Cloud-dev Supabase operation ledger:
+
+```text
+translation_generation_operations: DB table present, REST 200
+translation_generation_operation_locales: DB table present, REST 200
+```
+
+The reviewed migration was applied to cloud-dev and recorded in `supabase_migrations.schema_migrations` as:
+
+```text
+20260528120000 _prd105_translation_generation_operations
+```
+
+The migration now sends:
+
+```sql
+NOTIFY pgrst, 'reload schema';
+```
+
+so the new ledger tables are visible to Tokyo-worker through Supabase REST immediately after migration deployment.
+
+Direct public runtime smoke:
+
+```text
+https://tokyo.dev.clickeen.com/healthz -> {"up":true}
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/ -> 200
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/runtime.js -> 200
+https://dev.clk.live/CLICKEEN/UZ3JEJSHII/script.js -> 404
+runtime marker present: CK_WIDGET / CK_LOCALE_POLICY
+```
 
 #### Peer Verification
 

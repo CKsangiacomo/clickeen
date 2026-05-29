@@ -106,4 +106,6 @@ REVOKE ALL ON public.translation_generation_operation_locales FROM anon, authent
 GRANT ALL ON public.translation_generation_operations TO service_role;
 GRANT ALL ON public.translation_generation_operation_locales TO service_role;
 
+NOTIFY pgrst, 'reload schema';
+
 COMMIT;
