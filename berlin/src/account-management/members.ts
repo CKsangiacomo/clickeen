@@ -73,7 +73,7 @@ async function patchMemberRole(args: {
     account_id: `eq.${args.accountId}`,
     user_id: `eq.${args.memberId}`,
   });
-  const response = await supabaseAdminFetch(args.env, `/rest/v1/account_members?${params.toString()}`, {
+  const response = await supabaseAdminFetch(args.env, `/rest/v1/users?${params.toString()}`, {
     method: 'PATCH',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify({ role: args.role }),
@@ -150,7 +150,7 @@ async function deleteAccountMember(args: {
     account_id: `eq.${args.accountId}`,
     user_id: `eq.${args.memberId}`,
   });
-  const response = await supabaseAdminFetch(args.env, `/rest/v1/account_members?${params.toString()}`, {
+  const response = await supabaseAdminFetch(args.env, `/rest/v1/users?${params.toString()}`, {
     method: 'DELETE',
     headers: { Prefer: 'return=representation' },
   });

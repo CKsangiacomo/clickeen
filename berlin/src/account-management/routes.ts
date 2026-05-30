@@ -20,20 +20,11 @@ import {
   findAccountContext,
   findAccountMember,
   listAccountMembers,
-  loadPrincipalIdentities,
-  summarizeConnectorState,
 } from '../bootstrap/state';
-import { denyResponse, normalizeUuid, resolvePrincipalState } from '../bootstrap/route-context';
-import { startUserContactVerification, verifyUserContactMethod, type UserContactChannel } from '../identity/contact-methods';
+import { denyResponse, normalizeAccountPublicId, normalizeUuid, resolvePrincipalState } from '../bootstrap/route-context';
 import { type Env } from '../types';
-import { parseUserProfilePatchPayload, patchUserProfile } from '../identity/user-profiles';
+import { parseUserSettingsPatchPayload, patchUserSettings } from '../identity/user-settings';
 import { readJsonPayload } from '../utils/primitives';
-
-function normalizeContactChannel(value: string): UserContactChannel | null {
-  const normalized = String(value || '').trim().toLowerCase();
-  if (normalized === 'phone' || normalized === 'whatsapp') return normalized;
-  return null;
-}
 
 function canDismissTierDropNotice(role: string): boolean {
   return role === 'owner' || role === 'admin';
@@ -55,10 +46,10 @@ async function handleMeUpdate(request: Request, env: Env): Promise<Response> {
 
   const payload = await readJsonPayload(request);
 
-  const parsed = parseUserProfilePatchPayload(payload);
+  const parsed = parseUserSettingsPatchPayload(payload);
   if (!parsed.ok) return parsed.response;
 
-  const patched = await patchUserProfile({
+  const patched = await patchUserSettings({
     env,
     userId: resolved.principal.userId,
     patch: parsed.patch,
@@ -67,77 +58,7 @@ async function handleMeUpdate(request: Request, env: Env): Promise<Response> {
 
   return json({
     user: resolved.state.user,
-    profile: {
-      ...patched.profile,
-      contactMethods: resolved.state.profile.contactMethods,
-    },
-  });
-}
-
-async function handleMeContactMethodStart(
-  request: Request,
-  env: Env,
-  channelRaw: string,
-): Promise<Response> {
-  const resolved = await resolvePrincipalState(request, env);
-  if (!resolved.ok) return resolved.response;
-
-  const channel = normalizeContactChannel(channelRaw);
-  if (!channel) return validationError('coreui.errors.payload.invalid', 'unsupported contact channel');
-
-  const payload = await readJsonPayload(request);
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return validationError('coreui.errors.payload.invalid');
-  }
-
-  return startUserContactVerification({
-    env,
-    userId: resolved.principal.userId,
-    channel,
-    value: (payload as { value?: unknown }).value,
-  });
-}
-
-async function handleMeContactMethodVerify(
-  request: Request,
-  env: Env,
-  channelRaw: string,
-): Promise<Response> {
-  const resolved = await resolvePrincipalState(request, env);
-  if (!resolved.ok) return resolved.response;
-
-  const channel = normalizeContactChannel(channelRaw);
-  if (!channel) return validationError('coreui.errors.payload.invalid', 'unsupported contact channel');
-
-  const payload = await readJsonPayload(request);
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return validationError('coreui.errors.payload.invalid');
-  }
-
-  return verifyUserContactMethod({
-    env,
-    userId: resolved.principal.userId,
-    channel,
-    code: (payload as { code?: unknown }).code,
-  });
-}
-
-async function handleMeIdentities(request: Request, env: Env): Promise<Response> {
-  const resolved = await resolvePrincipalState(request, env);
-  if (!resolved.ok) return resolved.response;
-
-  const identities = await loadPrincipalIdentities({
-    env,
-    session: resolved.principal.session,
-  });
-  if (!identities.ok) return identities.response;
-
-  return json({
-    userId: resolved.principal.userId,
-    identities: identities.value,
-    connectors: summarizeConnectorState({
-      identities: identities.value,
-    }),
+    profile: patched.profile,
   });
 }
 
@@ -146,7 +67,7 @@ async function handleAccountById(
   env: Env,
   accountIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const resolved = await resolvePrincipalState(request, env);
@@ -166,7 +87,7 @@ async function handleAccountDelete(
   env: Env,
   accountIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const resolved = await resolvePrincipalState(request, env);
@@ -187,7 +108,7 @@ async function handleAccountMembers(
   env: Env,
   accountIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const resolved = await resolvePrincipalState(request, env);
@@ -211,7 +132,7 @@ async function handleAccountInvitations(
   env: Env,
   accountIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const resolved = await resolvePrincipalState(request, env);
@@ -244,7 +165,7 @@ async function handleAccountLocales(
   env: Env,
   accountIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const resolved = await resolvePrincipalState(request, env);
@@ -266,7 +187,7 @@ async function handleAccountMemberById(
   accountIdRaw: string,
   memberIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const memberId = normalizeUuid(memberIdRaw);
@@ -297,7 +218,7 @@ async function handleAccountInvitationDelete(
   accountIdRaw: string,
   invitationIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const invitationId = normalizeUuid(invitationIdRaw);
@@ -324,7 +245,7 @@ async function handleAccountMemberPatch(
   accountIdRaw: string,
   memberIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const memberId = normalizeUuid(memberIdRaw);
@@ -351,7 +272,7 @@ async function handleAccountMemberDeleteRoute(
   accountIdRaw: string,
   memberIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const memberId = normalizeUuid(memberIdRaw);
@@ -376,7 +297,7 @@ async function handleAccountLifecycleTierDropDismiss(
   env: Env,
   accountIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const resolved = await resolvePrincipalState(request, env);
@@ -397,7 +318,7 @@ async function handleAccountOwnerTransfer(
   env: Env,
   accountIdRaw: string,
 ): Promise<Response> {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return validationError('coreui.errors.accountId.invalid');
 
   const resolved = await resolvePrincipalState(request, env);
@@ -439,21 +360,6 @@ export const ACCOUNT_MANAGEMENT_ROUTES: BerlinRoute[] = [
   exact('/v1/me', {
     GET: ({ request, env }) => handleMe(request, env),
     PUT: ({ request, env }) => handleMeUpdate(request, env),
-  }),
-  {
-    pattern: /^\/v1\/me\/contact-methods\/([^/]+)\/start$/,
-    methods: {
-      POST: ({ request, env, match }) => handleMeContactMethodStart(request, env, capture(match, 1)),
-    },
-  },
-  {
-    pattern: /^\/v1\/me\/contact-methods\/([^/]+)\/verify$/,
-    methods: {
-      POST: ({ request, env, match }) => handleMeContactMethodVerify(request, env, capture(match, 1)),
-    },
-  },
-  exact('/v1/me/identities', {
-    GET: ({ request, env }) => handleMeIdentities(request, env),
   }),
   {
     pattern: /^\/v1\/invitations\/([^/]+)\/accept$/,

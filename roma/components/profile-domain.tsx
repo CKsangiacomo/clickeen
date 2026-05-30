@@ -7,19 +7,8 @@ import {
   resolveUserSettingsTimezone,
   userSettingsCountryRequiresTimezoneChoice,
 } from '@clickeen/ck-contracts';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRomaAccountContext } from './roma-account-context';
-
-type UserContactChannel = 'phone' | 'whatsapp';
-
-type UserContactMethodState = {
-  value: string | null;
-  verified: boolean;
-  pendingValue: string | null;
-  challengeExpiresAt: string | null;
-};
-
-type ContactDrafts = Record<UserContactChannel, string>;
 
 type ProfileDraft = {
   firstName: string;
@@ -37,28 +26,6 @@ type UserSettingsProfile = {
   timezone: string | null;
   primaryEmail: string;
   emailVerified: boolean;
-  contactMethods?: {
-    phone: UserContactMethodState;
-    whatsapp: UserContactMethodState;
-  };
-};
-
-type VerificationModalState = {
-  channel: UserContactChannel;
-  previewCode: string | null;
-  pendingValue: string;
-};
-
-const EMPTY_CONTACT_METHOD: UserContactMethodState = {
-  value: null,
-  verified: false,
-  pendingValue: null,
-  challengeExpiresAt: null,
-};
-
-const CONTACT_LABELS: Record<UserContactChannel, string> = {
-  phone: 'Phone',
-  whatsapp: 'WhatsApp',
 };
 
 const USER_SETTINGS_REASON_COPY: Record<string, string> = {
@@ -68,11 +35,6 @@ const USER_SETTINGS_REASON_COPY: Record<string, string> = {
   'coreui.errors.db.writeFailed': 'Saving your settings failed. Please try again.',
   'coreui.errors.network.timeout': 'The request timed out. Please try again.',
   'coreui.errors.payload.invalid': 'The settings request was invalid. Please try again.',
-  'coreui.errors.user.contact.invalid': 'Enter a valid contact number including country code.',
-  'coreui.errors.user.contact.unavailable': 'Verification is unavailable right now.',
-  'coreui.errors.user.contact.challengeMissing': 'Request a new verification code to continue.',
-  'coreui.errors.user.contact.codeInvalid': 'Enter the 6-digit verification code exactly as delivered.',
-  'coreui.errors.user.contact.codeExpired': 'That verification code expired. Request a new one.',
 };
 
 function resolveUserSettingsErrorCopy(reason: string, fallback: string): string {
@@ -107,17 +69,6 @@ function formatTimezoneLabel(timezone: string): string {
     .join(' / ');
 }
 
-function resolveContactMethodState(profile: UserSettingsProfile | null | undefined, channel: UserContactChannel): UserContactMethodState {
-  return profile?.contactMethods?.[channel] ?? EMPTY_CONTACT_METHOD;
-}
-
-function toContactDrafts(profile: UserSettingsProfile | null | undefined): ContactDrafts {
-  return {
-    phone: resolveContactMethodState(profile, 'phone').pendingValue || resolveContactMethodState(profile, 'phone').value || '',
-    whatsapp: resolveContactMethodState(profile, 'whatsapp').pendingValue || resolveContactMethodState(profile, 'whatsapp').value || '',
-  };
-}
-
 function toDraft(profile: UserSettingsProfile | null | undefined): ProfileDraft {
   const country = typeof profile?.country === 'string' ? profile.country.trim() : '';
   const rawTimezone = typeof profile?.timezone === 'string' ? profile.timezone.trim() : '';
@@ -136,16 +87,6 @@ function toDraft(profile: UserSettingsProfile | null | undefined): ProfileDraft 
   };
 }
 
-function formatChallengeExpiry(value: string | null): string | null {
-  if (!value) return null;
-  const parsed = Date.parse(value);
-  if (!Number.isFinite(parsed)) return null;
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(parsed));
-}
-
 const USER_SETTINGS_COUNTRY_OPTIONS = listUserSettingsCountries()
   .map((country) => ({ value: country, label: resolveCountryLabel(country) }))
   .sort((left, right) => left.label.localeCompare(right.label));
@@ -155,16 +96,9 @@ export function ProfileDomain() {
   const profile = (data.profile ?? null) as UserSettingsProfile | null;
 
   const [draft, setDraft] = useState<ProfileDraft>(toDraft(profile));
-  const [contactDrafts, setContactDrafts] = useState<ContactDrafts>(toContactDrafts(profile));
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
-  const [contactSavingChannel, setContactSavingChannel] = useState<UserContactChannel | null>(null);
-  const [contactError, setContactError] = useState<string | null>(null);
-  const [contactNotice, setContactNotice] = useState<string | null>(null);
-  const [verificationModal, setVerificationModal] = useState<VerificationModalState | null>(null);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [verificationSaving, setVerificationSaving] = useState(false);
 
   const timezoneOptions = listUserSettingsTimezones(draft.country);
   const requiresTimezoneChoice = userSettingsCountryRequiresTimezoneChoice(draft.country);
@@ -172,16 +106,7 @@ export function ProfileDomain() {
 
   useEffect(() => {
     setDraft(toDraft(profile));
-    setContactDrafts(toContactDrafts(profile));
   }, [profile]);
-
-  const contactStates = useMemo(
-    () => ({
-      phone: resolveContactMethodState(profile, 'phone'),
-      whatsapp: resolveContactMethodState(profile, 'whatsapp'),
-    }),
-    [profile],
-  );
 
   const saveProfile = useCallback(async () => {
     if (!profile) return;
@@ -221,86 +146,6 @@ export function ProfileDomain() {
     }
   }, [draft, profile, reload]);
 
-  const startContactVerification = useCallback(
-    async (channel: UserContactChannel) => {
-      const draftValue = contactDrafts[channel].trim();
-      if (!draftValue) {
-        setContactError(resolveUserSettingsErrorCopy('coreui.errors.user.contact.invalid', 'Enter a valid contact number.'));
-        setContactNotice(null);
-        return;
-      }
-
-      setContactSavingChannel(channel);
-      setContactError(null);
-      setContactNotice(null);
-      try {
-        const response = await fetch(`/api/me/contact-methods/${channel}/start`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ value: draftValue }),
-        });
-        const payload = (await response.json().catch(() => null)) as {
-          contactMethods?: UserSettingsProfile['contactMethods'];
-          delivery?: {
-            mode?: string;
-            previewCode?: string | null;
-          } | null;
-          error?: unknown;
-        } | null;
-        if (!response.ok) {
-          throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
-        }
-
-        const previewCode = typeof payload?.delivery?.previewCode === 'string' ? payload.delivery.previewCode.trim() : '';
-        setVerificationCode('');
-        setVerificationModal({
-          channel,
-          previewCode: previewCode || null,
-          pendingValue: draftValue,
-        });
-        setContactNotice(`${CONTACT_LABELS[channel]} verification code sent.`);
-        await reload();
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        setContactError(resolveUserSettingsErrorCopy(reason, 'Verification is unavailable right now.'));
-      } finally {
-        setContactSavingChannel(null);
-      }
-    },
-    [contactDrafts, reload],
-  );
-
-  const verifyContactMethod = useCallback(async () => {
-    if (!verificationModal) return;
-
-    setVerificationSaving(true);
-    setContactError(null);
-    setContactNotice(null);
-    try {
-      const response = await fetch(`/api/me/contact-methods/${verificationModal.channel}/verify`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ code: verificationCode }),
-      });
-      const payload = (await response.json().catch(() => null)) as {
-        contactMethods?: UserSettingsProfile['contactMethods'];
-        error?: unknown;
-      } | null;
-      if (!response.ok) {
-        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
-      }
-
-      setVerificationModal(null);
-      setVerificationCode('');
-      setContactNotice(`${CONTACT_LABELS[verificationModal.channel]} verified.`);
-      await reload();
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      setContactError(resolveUserSettingsErrorCopy(reason, 'Verification failed. Please try again.'));
-    } finally {
-      setVerificationSaving(false);
-    }
-  }, [reload, verificationCode, verificationModal]);
 
   if (!profile) {
     return <section className="rd-canvas-module body-m">User settings are unavailable right now.</section>;
@@ -429,86 +274,6 @@ export function ProfileDomain() {
         <p className="body-s">Email verified: {profile.emailVerified ? 'yes' : 'no'}</p>
       </section>
 
-      <section className="rd-canvas-module">
-        <h2 className="heading-6">Contact methods</h2>
-        <div
-          className="roma-grid"
-          style={{
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          }}
-        >
-          {(['phone', 'whatsapp'] as UserContactChannel[]).map((channel) => {
-            const state = contactStates[channel];
-            const pendingExpiry = formatChallengeExpiry(state.challengeExpiresAt);
-            const hasVerifiedValue = Boolean(state.value && state.verified);
-            return (
-              <article className="roma-card" key={channel}>
-                <h2 className="heading-6">{CONTACT_LABELS[channel]}</h2>
-                <p className="body-s">{hasVerifiedValue ? `Verified: ${state.value}` : 'No verified contact method yet.'}</p>
-                {state.pendingValue ? <p className="body-s">Pending verification: {state.pendingValue}</p> : null}
-                {pendingExpiry ? <p className="body-s">Current code expires: {pendingExpiry}</p> : null}
-                <label className="roma-field" style={{ marginTop: '12px' }}>
-                  <span className="label-s">{hasVerifiedValue ? `Change ${CONTACT_LABELS[channel]}` : CONTACT_LABELS[channel]}</span>
-                  <input
-                    className="roma-input body-m"
-                    value={contactDrafts[channel]}
-                    onChange={(event) =>
-                      setContactDrafts((current) => ({
-                        ...current,
-                        [channel]: event.target.value,
-                      }))
-                    }
-                    disabled={contactSavingChannel === channel}
-                    placeholder="+1234567890"
-                  />
-                </label>
-                <div
-                  className="roma-inline-stack"
-                  style={{
-                    justifyContent: 'flex-end',
-                    gap: '12px',
-                    marginTop: '12px',
-                  }}
-                >
-                  {state.pendingValue ? (
-                    <button
-                      className="diet-btn-txt"
-                      data-size="md"
-                      data-variant="line2"
-                      type="button"
-                      onClick={() =>
-                        setVerificationModal({
-                          channel,
-                          previewCode: null,
-                          pendingValue: state.pendingValue || contactDrafts[channel],
-                        })
-                      }
-                    >
-                      <span className="diet-btn-txt__label body-m">Enter code</span>
-                    </button>
-                  ) : null}
-                  <button
-                    className="diet-btn-txt"
-                    data-size="md"
-                    data-variant="solid"
-                    type="button"
-                    onClick={() => void startContactVerification(channel)}
-                    disabled={contactSavingChannel === channel || !contactDrafts[channel].trim()}
-                  >
-                    <span className="diet-btn-txt__label body-m">
-                      {contactSavingChannel === channel ? 'Sending...' : state.pendingValue ? 'Resend code' : hasVerifiedValue ? 'Change' : 'Add'}
-                    </span>
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-        <p className="body-s" style={{ marginTop: '12px' }}>
-          Phone and WhatsApp become active only after Berlin verifies the code you enter here.
-        </p>
-      </section>
-
       {saveError ? (
         <section className="rd-canvas-module">
           <p className="body-m">{saveError}</p>
@@ -521,64 +286,6 @@ export function ProfileDomain() {
         </section>
       ) : null}
 
-      {contactError ? (
-        <section className="rd-canvas-module">
-          <p className="body-m">{contactError}</p>
-        </section>
-      ) : null}
-
-      {contactNotice ? (
-        <section className="rd-canvas-module">
-          <p className="body-m">{contactNotice}</p>
-        </section>
-      ) : null}
-
-      {verificationModal ? (
-        <div className="roma-modal-backdrop" role="presentation">
-          <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-contact-verification-title">
-            <h2 id="roma-contact-verification-title">Verify {CONTACT_LABELS[verificationModal.channel]}</h2>
-            <p className="body-m">Enter the 6-digit verification code for {verificationModal.pendingValue}.</p>
-            {verificationModal.previewCode ? <p className="body-s">Local preview code: {verificationModal.previewCode}</p> : null}
-            <label className="roma-field" style={{ marginTop: '12px' }}>
-              <span className="label-s">Verification code</span>
-              <input
-                className="roma-input body-m"
-                inputMode="numeric"
-                maxLength={6}
-                value={verificationCode}
-                onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                disabled={verificationSaving}
-              />
-            </label>
-            <div className="roma-modal__actions">
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="line2"
-                type="button"
-                onClick={() => {
-                  if (verificationSaving) return;
-                  setVerificationModal(null);
-                  setVerificationCode('');
-                }}
-                disabled={verificationSaving}
-              >
-                <span className="diet-btn-txt__label body-m">Cancel</span>
-              </button>
-              <button
-                className="diet-btn-txt"
-                data-size="md"
-                data-variant="solid"
-                type="button"
-                onClick={() => void verifyContactMethod()}
-                disabled={verificationSaving || verificationCode.trim().length !== 6}
-              >
-                <span className="diet-btn-txt__label body-m">{verificationSaving ? 'Verifying...' : 'Verify'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </>
   );
 }

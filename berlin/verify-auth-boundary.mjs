@@ -16,7 +16,10 @@ const forbidden = [
   { name: 'PostgREST product token path', pattern: /postgrest/i },
   { name: 'fallback account behavior', pattern: /fallback account|privileged fallback/i },
   { name: 'legacy user id bridge', pattern: /legacyUserId|p_legacy_user_id/i },
-  { name: 'Berlin widget ownership', pattern: /widget_instances|publicId|publish state|serve state|l10n overlay|instance inventory/i },
+  {
+    name: 'Berlin widget ownership',
+    pattern: /widget_instances|widgetPublicId|instancePublicId|publish state|serve state|l10n overlay|instance inventory/i,
+  },
 ];
 
 const extensions = new Set(['.js', '.jsx', '.mjs', '.ts', '.tsx']);

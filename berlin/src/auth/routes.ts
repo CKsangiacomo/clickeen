@@ -25,7 +25,7 @@ import {
 import { issueSession } from '../session/auth-session';
 import { OAUTH_FINISH_TTL_SECONDS, OAUTH_STATE_TTL_SECONDS, type Env, type OAuthFinishTransaction, type OAuthTransaction } from '../types';
 import { loadSessionState } from '../session/kv';
-import { ensureProductAccountStateForIdentity, type ProviderIdentity } from '../identity/reconcile';
+import { ensureProductAccountStateForIdentity, type ProviderIdentity } from '../identity/resolve-login-account';
 import { buildGoogleAuthorizeUrl, exchangeGoogleCallback } from './providers/google';
 
 type AuthLogLevel = 'info' | 'warn' | 'error';
@@ -73,17 +73,17 @@ async function issueProductSessionFromProviderIdentity(
   options: { invitationId?: string | null } = {},
 ): Promise<{ ok: true; session: Awaited<ReturnType<typeof issueSession>>; userId: string } | { ok: false; response: Response }> {
   try {
-    const reconciled = await ensureProductAccountStateForIdentity(env, identity, options);
-    if (!reconciled.ok) {
-      return { ok: false, response: reconciled.response };
+    const resolved = await ensureProductAccountStateForIdentity(env, identity, options);
+    if (!resolved.ok) {
+      return { ok: false, response: resolved.response };
     }
 
     const session = await issueSession(env, {
-      userId: reconciled.userId,
+      userId: resolved.userId,
       authMode: 'direct_provider',
     });
 
-    return { ok: true, session, userId: reconciled.userId };
+    return { ok: true, session, userId: resolved.userId };
   } catch (error) {
     console.error(
       JSON.stringify({
@@ -94,7 +94,7 @@ async function issueProductSessionFromProviderIdentity(
         errorDetail: error instanceof Error ? error.message : String(error),
       }),
     );
-    return { ok: false, response: authError(failureReasonKey, 500, 'account_reconcile_failed') };
+    return { ok: false, response: authError(failureReasonKey, 500, 'account_resolution_failed') };
   }
 }
 
@@ -374,7 +374,7 @@ async function handleProviderLoginCallback(
     logAuthFlow(request, 'error', 'auth.provider.callback.failed', {
       provider: transaction.provider,
       reasonKey: 'coreui.errors.auth.provider.exchangeFailed',
-      detailCode: 'session_or_account_reconcile_failed',
+      detailCode: 'session_or_account_resolution_failed',
     });
     return issued.response;
   }

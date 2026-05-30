@@ -4,11 +4,7 @@ import { enc, toBase64Url } from '../crypto/encoding';
 import { internalError } from '../http';
 import { resolveSigningContext } from '../crypto/jwt';
 import { type Env, type SessionState } from '../types';
-import {
-  loadPrincipalIdentities,
-  summarizeConnectorState,
-  type PrincipalAccountState,
-} from './state';
+import { type PrincipalAccountState } from './state';
 
 const ROMA_AUTHZ_CAPSULE_TTL_SEC = 15 * 60;
 
@@ -66,10 +62,6 @@ export async function buildBootstrapPayload(args: {
   }
 
   try {
-    const identitiesPromise = loadPrincipalIdentities({
-      env: args.env,
-      session: args.session,
-    });
     const signingContextPromise = resolveSigningContext(args.env);
 
     const policy = resolvePolicy({ profile: activeAccount.tier, role: activeAccount.role });
@@ -80,8 +72,7 @@ export async function buildBootstrapPayload(args: {
 
     const nowSec = Math.floor(Date.now() / 1000);
     const expiresSec = nowSec + ROMA_AUTHZ_CAPSULE_TTL_SEC;
-    const [identities, signingContext] = await Promise.all([identitiesPromise, signingContextPromise]);
-    if (!identities.ok) return { ok: false, response: identities.response };
+    const signingContext = await signingContextPromise;
     const authzVersion = await resolveAuthzVersion({
       state: args.state,
       activeAccount,
@@ -117,9 +108,6 @@ export async function buildBootstrapPayload(args: {
         profile: args.state.profile,
         activeAccount,
         accounts: args.state.accounts,
-        connectors: summarizeConnectorState({
-          identities: identities.value,
-        }),
         authz: {
           accountCapsule: capsule.token,
           accountId: activeAccount.accountId,

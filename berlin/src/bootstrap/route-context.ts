@@ -1,3 +1,4 @@
+import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import { claimAsString } from '../utils/claims';
 import { normalizeUuid } from '../utils/primitives';
 import { json, validationError } from '../http';
@@ -6,6 +7,11 @@ import { resolvePrincipalSession } from '../session/auth-session';
 import { type Env } from '../types';
 
 export { normalizeUuid };
+
+export function normalizeAccountPublicId(value: unknown): string | null {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  return isCompactAccountPublicId(normalized) ? normalized : null;
+}
 
 export function denyResponse(): Response {
   return json(
@@ -34,7 +40,7 @@ export async function resolvePrincipalState(request: Request, env: Env) {
 }
 
 export async function resolveAccountRouteContext(request: Request, env: Env, accountIdRaw: string) {
-  const accountId = normalizeUuid(accountIdRaw);
+  const accountId = normalizeAccountPublicId(accountIdRaw);
   if (!accountId) return { ok: false as const, response: validationError('coreui.errors.accountId.invalid') };
 
   const resolved = await resolvePrincipalState(request, env);

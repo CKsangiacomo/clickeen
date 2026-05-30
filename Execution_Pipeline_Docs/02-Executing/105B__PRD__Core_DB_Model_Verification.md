@@ -1,6 +1,6 @@
 # PRD 105B - Core DB Model Verification
 
-Status: Active contract / verification gate
+Status: Green / contract verified
 Owner: Product + Architecture
 Date: 2026-05-27
 Parent: `105__PRD__Instance_Folder_Tenets.md`
@@ -140,6 +140,69 @@ Required checks:
 - active runtime does not use R2 account indexes or source files for account instance listing;
 - active runtime does not use `translation_status` as translation sync truth;
 - active docs do not present the old many-account membership model, `public_id`, `is_platform`, DB widget catalog, or DB payload storage as current truth.
+
+## Final Verification - 2026-05-30
+
+PRD 105B is green.
+
+Executed changes:
+
+- Berlin account routes now validate compact account ids with the same account-public-id contract as the DB and public product.
+- Berlin membership/member-role operations read and write `users.account_id` and `users.role`; `account_members` is not active runtime truth.
+- Berlin user settings read and write the `users` row; `user_profiles` is not active runtime truth.
+- Berlin invite acceptance attaches a user to the invited account by updating `users.account_id` and `users.role`.
+- The fake active-account-preference shim was deleted. There is no V1 `active_account_id` persistence or preference concept.
+- The `/v1/me/identities` / Roma `/api/me/identities` connector surface was deleted. Login method is not Account Connection in V1.
+- Contact-method verification routes and tables were removed from active runtime. Phone/WhatsApp verification requires a later focused PRD if it returns.
+- Latest Supabase migration `20260530100000__prd105b_resolve_login_identity_account_id.sql` replaces the RPC output with `account_id` and recreates `transfer_account_owner` against the current `users` model.
+
+Static verification passed:
+
+```text
+pnpm --filter @clickeen/berlin typecheck
+pnpm --filter @clickeen/roma typecheck
+pnpm --filter @clickeen/berlin verify:auth-boundary
+pnpm verify:prd103-db-pivot
+pnpm validate:widgets
+pnpm typecheck
+```
+
+Live Supabase read verification:
+
+```text
+200 /rest/v1/accounts keys=id,status,tier
+200 /rest/v1/users keys=user_id,account_id,role,primary_email,login_provider,login_subject
+200 /rest/v1/account_invitations keys=id,account_id,email,role,status
+200 /rest/v1/instances keys=id,account_id,widget_type,publish_status,translation_status
+404 /rest/v1/account_members
+404 /rest/v1/user_profiles
+404 /rest/v1/login_identities
+404 /rest/v1/widgets
+```
+
+Legacy scan:
+
+```text
+rg "user_profiles|account_members|login_identities|active_account_id|is_platform|isPlatform|reconcile|user-profiles|profile-normalization|contact-methods|user_contact_methods|user_contact_verifications|login_identity_id|created_identity"
+```
+
+Allowed matches only remain in `scripts/verify/prd103-db-pivot-guard.mjs`, where those names are forbidden-schema checks.
+
+Subagent verification:
+
+- Product/architecture lens: Green.
+- Legacy/no-LOC-left-behind lens: Green.
+- Runtime/migration/deploy-risk lens: Green.
+
+Deployment order caveat:
+
+```text
+1. Apply Supabase migration 20260530100000__prd105b_resolve_login_identity_account_id.sql.
+2. Verify resolve_login_identity returns account_id.
+3. Deploy Berlin.
+```
+
+Berlin must not deploy before the migration because the runtime now expects the RPC to return `account_id`.
 
 ## Archive Decision For Source Batch
 

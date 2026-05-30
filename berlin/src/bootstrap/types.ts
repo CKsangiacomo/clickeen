@@ -1,5 +1,4 @@
 import type { MemberRole, PolicyProfile } from '@clickeen/ck-policy';
-import type { BerlinContactMethodsPayload } from '../identity/contact-methods';
 
 type AccountTier = PolicyProfile;
 
@@ -26,20 +25,6 @@ export type BerlinUserProfilePayload = {
   primaryLanguage: string | null;
   country: string | null;
   timezone: string | null;
-  contactMethods?: BerlinContactMethodsPayload;
-};
-
-export type BerlinIdentityPayload = {
-  identityId: string;
-  provider: string;
-  providerSubject: string | null;
-};
-
-export type BerlinConnectorSummaryPayload = {
-  linkedIdentities: BerlinIdentityPayload[];
-  traits: {
-    linkedProviders: string[];
-  };
 };
 
 export type BerlinAccountContext = {
@@ -67,7 +52,6 @@ export type BerlinBootstrapPayload = {
   profile: BerlinUserProfilePayload;
   activeAccount: BerlinAccountContext;
   accounts: BerlinAccountContext[];
-  connectors: BerlinConnectorSummaryPayload;
   authz: null | {
     accountCapsule: string;
     accountId: string;

@@ -2,20 +2,17 @@ import { isUserSettingsTimezoneSupported, normalizeUserSettingsCountry } from '@
 import type { BerlinUserProfilePayload } from '../bootstrap/types';
 import { asTrimmedString } from '../utils/primitives';
 
-export type UserProfileRow = {
+export type UserRow = {
   user_id?: unknown;
   account_id?: unknown;
   primary_email?: unknown;
   email_verified?: unknown;
   display_name?: unknown;
   first_name?: unknown;
-  given_name?: unknown;
   last_name?: unknown;
-  family_name?: unknown;
   primary_language?: unknown;
   country?: unknown;
   timezone?: unknown;
-  active_account_id?: unknown;
 };
 
 function normalizeBoolean(value: unknown): boolean {
@@ -28,7 +25,7 @@ function normalizeBoolean(value: unknown): boolean {
   return false;
 }
 
-export function normalizeProfileLocation(rawCountry: unknown, rawTimezone: unknown): {
+export function normalizeUserLocation(rawCountry: unknown, rawTimezone: unknown): {
   country: string | null;
   timezone: string | null;
 } {
@@ -42,19 +39,19 @@ export function normalizeProfileLocation(rawCountry: unknown, rawTimezone: unkno
   };
 }
 
-export function normalizeUserProfilePayload(
+export function normalizeUserSettingsPayload(
   userId: string,
-  row: UserProfileRow | null,
+  row: UserRow | null,
 ): BerlinUserProfilePayload | null {
   const primaryEmail = asTrimmedString(row?.primary_email);
   if (!primaryEmail) return null;
-  const location = normalizeProfileLocation(row?.country, row?.timezone);
+  const location = normalizeUserLocation(row?.country, row?.timezone);
   return {
     userId,
     primaryEmail,
     emailVerified: normalizeBoolean(row?.email_verified) || true,
-    givenName: asTrimmedString(row?.given_name) ?? asTrimmedString(row?.first_name),
-    familyName: asTrimmedString(row?.family_name) ?? asTrimmedString(row?.last_name),
+    givenName: asTrimmedString(row?.first_name),
+    familyName: asTrimmedString(row?.last_name),
     primaryLanguage: asTrimmedString(row?.primary_language),
     country: location.country,
     timezone: location.timezone,

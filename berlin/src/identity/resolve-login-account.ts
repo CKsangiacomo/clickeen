@@ -1,7 +1,7 @@
 import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import { acceptInvitationForPrincipal } from '../account-management/invitations';
 import { internalError } from '../http';
-import { normalizeProfileLocation } from './profile-normalization';
+import { normalizeUserLocation } from './user-row-normalization';
 import { readSupabaseAdminJson, supabaseAdminFetch, supabaseAdminErrorResponse } from '../supabase-admin';
 import { type Env } from '../types';
 import { asTrimmedString, normalizeUuid } from '../utils/primitives';
@@ -20,16 +20,14 @@ export type ProviderIdentity = {
   timezone?: string | null;
 };
 
-type ReconcileResult =
+type ResolveLoginAccountResult =
   | { ok: true; userId: string; primaryAccountId: string | null; createdAccount: boolean }
   | { ok: false; response: Response };
 
 type ResolveLoginIdentityRpcRow = {
   user_id?: unknown;
-  login_identity_id?: unknown;
   created_user?: unknown;
-  created_identity?: unknown;
-  active_account_id?: unknown;
+  account_id?: unknown;
 };
 
 function normalizeEmail(value: unknown): string | null {
@@ -61,8 +59,7 @@ async function resolveProductUserForIdentity(
       ok: true;
       userId: string;
       createdUser: boolean;
-      createdIdentity: boolean;
-      activeAccountId: string | null;
+      accountId: string | null;
     }
   | { ok: false; response: Response }
 > {
@@ -73,7 +70,7 @@ async function resolveProductUserForIdentity(
       response: internalError('coreui.errors.auth.login_failed', 'missing_provider_profile_seed'),
     };
   }
-  const location = normalizeProfileLocation(identity.country, identity.timezone);
+  const location = normalizeUserLocation(identity.country, identity.timezone);
   const response = await supabaseAdminFetch(env, '/rest/v1/rpc/resolve_login_identity', {
     method: 'POST',
     body: JSON.stringify({
@@ -112,9 +109,8 @@ async function resolveProductUserForIdentity(
     ok: true,
     userId,
     createdUser: row?.created_user === true,
-    createdIdentity: row?.created_identity === true,
-    activeAccountId: isCompactAccountPublicId(asTrimmedString(row?.active_account_id))
-      ? (asTrimmedString(row?.active_account_id) as string)
+    accountId: isCompactAccountPublicId(asTrimmedString(row?.account_id))
+      ? (asTrimmedString(row?.account_id) as string)
       : null,
   };
 }
@@ -123,7 +119,7 @@ export async function ensureProductAccountStateForIdentity(
   env: Env,
   identity: ProviderIdentity,
   options: { invitationId?: string | null } = {},
-): Promise<ReconcileResult> {
+): Promise<ResolveLoginAccountResult> {
   const normalizedIdentity: ProviderIdentity = {
     ...identity,
     provider: normalizeLoginProvider(identity.provider) || '',
@@ -160,7 +156,7 @@ export async function ensureProductAccountStateForIdentity(
   return {
     ok: true,
     userId: resolvedUser.userId,
-    primaryAccountId: resolvedUser.activeAccountId,
+    primaryAccountId: resolvedUser.accountId,
     createdAccount: resolvedUser.createdUser,
   };
 }

@@ -9,24 +9,21 @@ import {
 import type {
   BerlinAccountContext,
   BerlinAccountMember,
-  BerlinConnectorSummaryPayload,
-  BerlinIdentityPayload,
   BerlinUserPayload,
   BerlinUserProfilePayload,
   AccountTier,
 } from './types';
-import { loadUserContactMethods } from '../identity/contact-methods';
 import { internalError, validationError } from '../http';
-import { normalizeUserProfilePayload } from '../identity/profile-normalization';
-import type { UserProfileRow as BerlinUserProfileRow } from '../identity/profile-normalization';
+import { normalizeUserSettingsPayload } from '../identity/user-row-normalization';
+import type { UserRow as BerlinUserRow } from '../identity/user-row-normalization';
 import { readSupabaseAdminListAll } from '../supabase-admin';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
-import { type Env, type SessionState } from '../types';
+import { type Env } from '../types';
 import { asTrimmedString, isUuid } from '../utils/primitives';
 
 const MEMBERSHIP_PAGE_SIZE = 200;
 const ACCOUNT_MEMBER_PAGE_SIZE = 200;
-const USER_PROFILE_QUERY_CHUNK_SIZE = 100;
+const USER_QUERY_CHUNK_SIZE = 100;
 const DEFAULT_ACCOUNT_LOCALE_POLICY = {
   v: 1,
   baseLocale: 'en',
@@ -56,15 +53,9 @@ type AccountMemberRow = {
   created_at?: unknown;
 };
 
-type LoginIdentityRow = {
-  user_id?: unknown;
-  login_provider?: unknown;
-  login_subject?: unknown;
-};
-
-type NormalizedUserProfile = {
+type NormalizedUserSettings = {
   profile: BerlinUserProfilePayload;
-  activeAccountId: string | null;
+  accountId: string | null;
 };
 
 export type PrincipalAccountState = {
@@ -72,7 +63,6 @@ export type PrincipalAccountState = {
   profile: BerlinUserProfilePayload;
   accounts: BerlinAccountContext[];
   defaultAccount: BerlinAccountContext | null;
-  activeAccountId: string | null;
 };
 
 type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
@@ -164,23 +154,23 @@ function resolveStage(env: Env): string {
 
 function selectDefaultAccount(
   accounts: BerlinAccountContext[],
-  activeAccountId: string | null,
+  accountId: string | null,
 ): BerlinAccountContext | null {
   if (accounts.length === 0) return null;
 
-  const preferred = activeAccountId ? accounts.find((entry) => entry.accountId === activeAccountId) ?? null : null;
+  const preferred = accountId ? accounts.find((entry) => entry.accountId === accountId) ?? null : null;
   if (preferred) return preferred;
 
-  // Membership rows are loaded in deterministic join order. If no persisted
-  // active account exists, bootstrap may only choose from the user's real
-  // memberships and must never guess a privileged account.
+  // User rows are loaded in deterministic order. Bootstrap may only choose
+  // from the account attached to the current user and must never guess a
+  // privileged account.
   return accounts[0] ?? null;
 }
 
-async function loadUserProfileRow(
+async function loadUserRow(
   env: Env,
   userId: string,
-): Promise<Result<BerlinUserProfileRow | null>> {
+): Promise<Result<BerlinUserRow | null>> {
   const params = new URLSearchParams({
     select:
       'user_id,account_id,primary_email,first_name,last_name,primary_language,country,timezone,phone,whatsapp',
@@ -190,7 +180,7 @@ async function loadUserProfileRow(
   const response = await supabaseAdminFetch(env, `/rest/v1/users?${params.toString()}`, {
     method: 'GET',
   });
-  const payload = await readSupabaseAdminJson<BerlinUserProfileRow[] | Record<string, unknown>>(response);
+  const payload = await readSupabaseAdminJson<BerlinUserRow[] | Record<string, unknown>>(response);
   if (!response.ok) {
     return {
       ok: false,
@@ -218,24 +208,24 @@ async function loadAccountMembershipRows(
   });
 }
 
-function normalizeUserProfile(
+function normalizeUserSettings(
   userId: string,
-  row: BerlinUserProfileRow | null,
-): Result<NormalizedUserProfile | null> {
+  row: BerlinUserRow | null,
+): Result<NormalizedUserSettings | null> {
   const primaryEmail = asTrimmedString(row?.primary_email);
   if (!primaryEmail) return { ok: true, value: null };
-  const issues = validateProfileLocation(row?.country, row?.timezone, `user_profiles.${userId}`);
+  const issues = validateProfileLocation(row?.country, row?.timezone, `users.${userId}`);
   if (issues.length) {
     return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
   }
-  const profile = normalizeUserProfilePayload(userId, row);
+  const profile = normalizeUserSettingsPayload(userId, row);
   if (!profile) return { ok: true, value: null };
 
   return {
     ok: true,
     value: {
       profile,
-      activeAccountId: isCompactAccountPublicId(asTrimmedString(row?.account_id))
+      accountId: isCompactAccountPublicId(asTrimmedString(row?.account_id))
         ? (asTrimmedString(row?.account_id) as string)
         : null,
     },
@@ -286,16 +276,14 @@ export async function loadPrincipalAccountState(args: {
   userId: string;
   sessionRole: string | null;
 }): Promise<Result<PrincipalAccountState>> {
-  const [profileResult, accountsResult, contactMethods] = await Promise.all([
-    loadUserProfileRow(args.env, args.userId),
+  const [profileResult, accountsResult] = await Promise.all([
+    loadUserRow(args.env, args.userId),
     loadAccountMembershipRows(args.env, args.userId),
-    loadUserContactMethods(args.env, args.userId),
   ]);
   if (!profileResult.ok) return profileResult;
   if (!accountsResult.ok) return accountsResult;
-  if (!contactMethods.ok) return contactMethods;
 
-  const normalizedProfileResult = normalizeUserProfile(args.userId, profileResult.value);
+  const normalizedProfileResult = normalizeUserSettings(args.userId, profileResult.value);
   if (!normalizedProfileResult.ok) return normalizedProfileResult;
   const normalizedProfile = normalizedProfileResult.value;
   const normalizedAccountsResult = normalizeAccounts(accountsResult.value);
@@ -309,8 +297,6 @@ export async function loadPrincipalAccountState(args: {
     };
   }
 
-  normalizedProfile.profile.contactMethods = contactMethods.value;
-
   if (accounts.length === 0) {
     return {
       ok: false,
@@ -318,7 +304,7 @@ export async function loadPrincipalAccountState(args: {
     };
   }
 
-  const defaultAccount = selectDefaultAccount(accounts, normalizedProfile.activeAccountId);
+  const defaultAccount = selectDefaultAccount(accounts, normalizedProfile.accountId);
   if (!defaultAccount) {
     return {
       ok: false,
@@ -337,71 +323,6 @@ export async function loadPrincipalAccountState(args: {
       profile: normalizedProfile.profile,
       accounts,
       defaultAccount,
-      activeAccountId: normalizedProfile.activeAccountId,
-    },
-  };
-}
-
-export async function loadPrincipalIdentities(args: {
-  env: Env;
-  session: SessionState;
-}): Promise<Result<BerlinIdentityPayload[]>> {
-  const params = new URLSearchParams({
-    select: 'user_id,login_provider,login_subject',
-    user_id: `eq.${args.session.userId}`,
-    limit: '1',
-  });
-  const rows = await readSupabaseAdminListAll<LoginIdentityRow>({
-    env: args.env,
-    pathname: '/rest/v1/users',
-    params,
-    pageSize: USER_PROFILE_QUERY_CHUNK_SIZE,
-  });
-  if (!rows.ok) return rows;
-
-  const identities = rows.value
-    .map((row): BerlinIdentityPayload | null => {
-      const identityId = asTrimmedString(row.user_id);
-      const provider = asTrimmedString(row.login_provider)?.toLowerCase() || null;
-      if (!identityId || !provider) return null;
-      return {
-        identityId,
-        provider,
-        providerSubject: asTrimmedString(row.login_subject),
-      };
-    })
-    .filter((identity): identity is BerlinIdentityPayload => Boolean(identity))
-    .sort((left, right) => {
-      const providerCompare = left.provider.localeCompare(right.provider);
-      if (providerCompare !== 0) return providerCompare;
-      return left.identityId.localeCompare(right.identityId);
-    });
-
-  if (identities.length === 0) {
-    return {
-      ok: false,
-      response: internalError(
-        'coreui.errors.auth.contextUnavailable',
-        'login_identity_missing_for_principal',
-      ),
-    };
-  }
-
-  return { ok: true, value: identities };
-}
-
-export function summarizeConnectorState(args: {
-  identities: BerlinIdentityPayload[];
-}): BerlinConnectorSummaryPayload {
-  const linkedIdentities = [...args.identities];
-  const linkedProviders = Array.from(new Set(linkedIdentities.map((entry) => entry.provider))).sort((a, b) =>
-    a.localeCompare(b),
-  );
-
-  return {
-    linkedIdentities,
-    traits: {
-      linkedProviders,
     },
   };
 }
@@ -413,7 +334,7 @@ export function findAccountContext(
   return state.accounts.find((entry) => entry.accountId === accountId) ?? null;
 }
 
-async function loadUserProfilesByIds(
+async function loadUsersByIds(
   env: Env,
   userIds: string[],
 ): Promise<Result<Map<string, BerlinUserProfilePayload>>> {
@@ -422,7 +343,7 @@ async function loadUserProfilesByIds(
 
   const map = new Map<string, BerlinUserProfilePayload>();
 
-  for (const chunk of chunkValues(uniqueUserIds, USER_PROFILE_QUERY_CHUNK_SIZE)) {
+  for (const chunk of chunkValues(uniqueUserIds, USER_QUERY_CHUNK_SIZE)) {
     const params = new URLSearchParams({
       select:
         'user_id,primary_email,first_name,last_name,primary_language,country,timezone',
@@ -432,7 +353,7 @@ async function loadUserProfilesByIds(
     const response = await supabaseAdminFetch(env, `/rest/v1/users?${params.toString()}`, {
       method: 'GET',
     });
-    const payload = await readSupabaseAdminJson<BerlinUserProfileRow[] | Record<string, unknown>>(response);
+    const payload = await readSupabaseAdminJson<BerlinUserRow[] | Record<string, unknown>>(response);
     if (!response.ok) {
       return {
         ok: false,
@@ -443,11 +364,11 @@ async function loadUserProfilesByIds(
     for (const row of Array.isArray(payload) ? payload : []) {
       const userId = asTrimmedString(row.user_id);
       if (!userId) continue;
-      const issues = validateProfileLocation(row.country, row.timezone, `user_profiles.${userId}`);
+      const issues = validateProfileLocation(row.country, row.timezone, `users.${userId}`);
       if (issues.length) {
         return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
       }
-      const profile = normalizeUserProfilePayload(userId, row);
+      const profile = normalizeUserSettingsPayload(userId, row);
       if (!profile) continue;
       map.set(userId, profile);
     }
@@ -476,7 +397,7 @@ export async function listAccountMembers(
   const userIds = rows.value
     .map((row) => asTrimmedString(row.user_id))
     .filter((userId): userId is string => isUuid(userId ?? null));
-  const profiles = await loadUserProfilesByIds(env, userIds);
+  const profiles = await loadUsersByIds(env, userIds);
   if (!profiles.ok) return profiles;
 
   return {
@@ -502,15 +423,4 @@ export function findAccountMember(
   userId: string,
 ): BerlinAccountMember | null {
   return members.find((entry) => entry.userId === userId) ?? null;
-}
-
-export async function persistActiveAccountPreference(args: {
-  env: Env;
-  userId: string;
-  accountId: string;
-}): Promise<Result<void>> {
-  if (!isCompactAccountPublicId(args.accountId)) {
-    return { ok: false, response: validationError('coreui.errors.accountId.invalid') };
-  }
-  return { ok: true, value: undefined };
 }

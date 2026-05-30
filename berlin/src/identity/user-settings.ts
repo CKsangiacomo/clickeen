@@ -5,24 +5,24 @@ import {
 } from '@clickeen/ck-contracts';
 import type { BerlinUserProfilePayload } from '../bootstrap/types';
 import { json, validationError } from '../http';
-import { normalizeUserProfilePayload } from './profile-normalization';
-import type { UserProfileRow as BerlinUserProfileRow } from './profile-normalization';
+import { normalizeUserSettingsPayload } from './user-row-normalization';
+import type { UserRow as BerlinUserRow } from './user-row-normalization';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
 import { type Env } from '../types';
 
-export type UserProfilePatch = {
-  given_name?: string | null;
-  family_name?: string | null;
+export type UserSettingsPatch = {
+  first_name?: string | null;
+  last_name?: string | null;
   primary_language?: string | null;
   country?: string | null;
   timezone?: string | null;
 };
 
-type ParseUserProfilePatchResult =
-  | { ok: true; patch: UserProfilePatch }
+type ParseUserSettingsPatchResult =
+  | { ok: true; patch: UserSettingsPatch }
   | { ok: false; response: Response };
 
-type PatchUserProfileResult =
+type PatchUserSettingsResult =
   | { ok: true; profile: BerlinUserProfilePayload }
   | { ok: false; response: Response };
 
@@ -50,7 +50,7 @@ function normalizeCountry(value: unknown): string | null | undefined {
   return normalized ?? undefined;
 }
 
-export function parseUserProfilePatchPayload(value: unknown): ParseUserProfilePatchResult {
+export function parseUserSettingsPatchPayload(value: unknown): ParseUserSettingsPatchResult {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return { ok: false, response: validationError('coreui.errors.payload.invalid') };
   }
@@ -66,7 +66,7 @@ export function parseUserProfilePatchPayload(value: unknown): ParseUserProfilePa
   if ([givenName, familyName, primaryLanguage, country, timezone].every((entry) => entry === undefined)) {
     return {
       ok: false,
-      response: validationError('coreui.errors.payload.invalid', 'at least one profile field must be provided'),
+      response: validationError('coreui.errors.payload.invalid', 'at least one user settings field must be provided'),
     };
   }
 
@@ -79,15 +79,15 @@ export function parseUserProfilePatchPayload(value: unknown): ParseUserProfilePa
   ) {
     return {
       ok: false,
-      response: validationError('coreui.errors.payload.invalid', 'one or more profile fields are invalid'),
+      response: validationError('coreui.errors.payload.invalid', 'one or more user settings fields are invalid'),
     };
   }
 
   return {
     ok: true,
     patch: {
-      ...(givenName !== undefined ? { given_name: givenName } : {}),
-      ...(familyName !== undefined ? { family_name: familyName } : {}),
+      ...(givenName !== undefined ? { first_name: givenName } : {}),
+      ...(familyName !== undefined ? { last_name: familyName } : {}),
       ...(primaryLanguage !== undefined ? { primary_language: primaryLanguage } : {}),
       ...(country !== undefined ? { country } : {}),
       ...(timezone !== undefined ? { timezone } : {}),
@@ -95,7 +95,7 @@ export function parseUserProfilePatchPayload(value: unknown): ParseUserProfilePa
   };
 }
 
-async function loadCurrentUserProfileRow(args: {
+async function loadCurrentUserSettingsRow(args: {
   env: Env;
   userId: string;
 }): Promise<
@@ -116,7 +116,7 @@ async function loadCurrentUserProfileRow(args: {
     user_id: `eq.${args.userId}`,
     limit: '1',
   });
-  const response = await supabaseAdminFetch(args.env, `/rest/v1/user_profiles?${params.toString()}`, {
+  const response = await supabaseAdminFetch(args.env, `/rest/v1/users?${params.toString()}`, {
     method: 'GET',
   });
   const payload = await readSupabaseAdminJson<
@@ -134,15 +134,15 @@ async function loadCurrentUserProfileRow(args: {
   return { ok: true, row: Array.isArray(payload) ? payload[0] || null : null };
 }
 
-export async function patchUserProfile(args: {
+export async function patchUserSettings(args: {
   env: Env;
   userId: string;
-  patch: UserProfilePatch;
-}): Promise<PatchUserProfileResult> {
-  const nextPatch: UserProfilePatch = { ...args.patch };
+  patch: UserSettingsPatch;
+}): Promise<PatchUserSettingsResult> {
+  const nextPatch: UserSettingsPatch = { ...args.patch };
 
   if (args.patch.country !== undefined || args.patch.timezone !== undefined) {
-    const current = await loadCurrentUserProfileRow(args);
+    const current = await loadCurrentUserSettingsRow(args);
     if (!current.ok) return { ok: false, response: current.response };
 
     const currentCountry = normalizeUserSettingsCountry(current.row?.country);
@@ -178,12 +178,12 @@ export async function patchUserProfile(args: {
   const params = new URLSearchParams({
     user_id: `eq.${args.userId}`,
   });
-  const response = await supabaseAdminFetch(args.env, `/rest/v1/user_profiles?${params.toString()}`, {
+  const response = await supabaseAdminFetch(args.env, `/rest/v1/users?${params.toString()}`, {
     method: 'PATCH',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify(nextPatch),
   });
-  const payload = await readSupabaseAdminJson<BerlinUserProfileRow[] | Record<string, unknown>>(response);
+  const payload = await readSupabaseAdminJson<BerlinUserRow[] | Record<string, unknown>>(response);
   if (!response.ok) {
     return {
       ok: false,
@@ -191,7 +191,7 @@ export async function patchUserProfile(args: {
     };
   }
   const rows = Array.isArray(payload) ? payload : [];
-  const profile = normalizeUserProfilePayload(args.userId, rows[0] ?? null);
+  const profile = normalizeUserSettingsPayload(args.userId, rows[0] ?? null);
   if (!profile) {
     return {
       ok: false,
@@ -200,7 +200,7 @@ export async function patchUserProfile(args: {
           error: {
             kind: 'INTERNAL',
             reasonKey: 'coreui.errors.auth.contextUnavailable',
-            detail: 'user profile missing',
+            detail: 'user row missing',
           },
         },
         { status: 500 },

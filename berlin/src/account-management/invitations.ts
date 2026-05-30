@@ -1,5 +1,5 @@
 import type { BerlinAccountContext } from '../bootstrap/types';
-import { listAccountMembers, persistActiveAccountPreference } from '../bootstrap/state';
+import { listAccountMembers } from '../bootstrap/state';
 import { json, validationError } from '../http';
 import { readSupabaseAdminListAll } from '../supabase-admin';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
@@ -13,13 +13,11 @@ type InvitationRow = {
   account_id?: unknown;
   email?: unknown;
   role?: unknown;
-  created_by_user_id?: unknown;
-  accepted_by_user_id?: unknown;
+  status?: unknown;
   expires_at?: unknown;
   accepted_at?: unknown;
   revoked_at?: unknown;
   created_at?: unknown;
-  updated_at?: unknown;
 };
 
 export type BerlinAccountInvitation = {
@@ -27,13 +25,11 @@ export type BerlinAccountInvitation = {
   accountId: string;
   email: string;
   role: AccountInvitationRole;
-  createdByUserId: string;
-  acceptedByUserId: string | null;
+  status: 'pending' | 'accepted' | 'revoked';
   expiresAt: string;
   acceptedAt: string | null;
   revokedAt: string | null;
   createdAt: string;
-  updatedAt: string;
 };
 
 type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
@@ -54,6 +50,17 @@ function normalizeInvitationRole(value: unknown): AccountInvitationRole | null {
     case 'editor':
     case 'admin':
       return asTrimmedString(value)?.toLowerCase() as AccountInvitationRole;
+    default:
+      return null;
+  }
+}
+
+function normalizeInvitationStatus(value: unknown): BerlinAccountInvitation['status'] | null {
+  switch (asTrimmedString(value)?.toLowerCase()) {
+    case 'pending':
+    case 'accepted':
+    case 'revoked':
+      return asTrimmedString(value)?.toLowerCase() as BerlinAccountInvitation['status'];
     default:
       return null;
   }
@@ -99,11 +106,10 @@ function normalizeInvitationRow(row: InvitationRow): BerlinAccountInvitation | n
   const accountId = asTrimmedString(row.account_id);
   const email = normalizeEmail(row.email);
   const role = normalizeInvitationRole(row.role);
-  const createdByUserId = asTrimmedString(row.created_by_user_id);
+  const status = normalizeInvitationStatus(row.status);
   const expiresAt = asTrimmedString(row.expires_at);
   const createdAt = asTrimmedString(row.created_at);
-  const updatedAt = asTrimmedString(row.updated_at);
-  if (!invitationId || !accountId || !email || !role || !createdByUserId || !expiresAt || !createdAt || !updatedAt) {
+  if (!invitationId || !accountId || !email || !role || !status || !expiresAt || !createdAt) {
     return null;
   }
 
@@ -112,13 +118,11 @@ function normalizeInvitationRow(row: InvitationRow): BerlinAccountInvitation | n
     accountId,
     email,
     role,
-    createdByUserId,
-    acceptedByUserId: asTrimmedString(row.accepted_by_user_id),
+    status,
     expiresAt,
     acceptedAt: asTrimmedString(row.accepted_at),
     revokedAt: asTrimmedString(row.revoked_at),
     createdAt,
-    updatedAt,
   };
 }
 
@@ -129,8 +133,7 @@ function isInvitationExpired(invitation: BerlinAccountInvitation, now = Date.now
 
 async function loadInvitationById(env: Env, invitationId: string): Promise<Result<BerlinAccountInvitation | null>> {
   const params = new URLSearchParams({
-    select:
-      'id,account_id,email,role,created_by_user_id,accepted_by_user_id,expires_at,accepted_at,revoked_at,created_at,updated_at',
+    select: 'id,account_id,email,role,status,expires_at,accepted_at,revoked_at,created_at',
     id: `eq.${invitationId}`,
     limit: '1',
   });
@@ -154,12 +157,10 @@ async function loadPendingInvitationByEmail(
   email: string,
 ): Promise<Result<BerlinAccountInvitation | null>> {
   const params = new URLSearchParams({
-    select:
-      'id,account_id,email,role,created_by_user_id,accepted_by_user_id,expires_at,accepted_at,revoked_at,created_at,updated_at',
+    select: 'id,account_id,email,role,status,expires_at,accepted_at,revoked_at,created_at',
     account_id: `eq.${accountId}`,
     email: `eq.${email}`,
-    accepted_at: 'is.null',
-    revoked_at: 'is.null',
+    status: 'eq.pending',
     order: 'created_at.desc',
     limit: '1',
   });
@@ -179,11 +180,9 @@ async function loadPendingInvitationByEmail(
 
 async function listAccountInvitations(env: Env, accountId: string): Promise<Result<BerlinAccountInvitation[]>> {
   const params = new URLSearchParams({
-    select:
-      'id,account_id,email,role,created_by_user_id,accepted_by_user_id,expires_at,accepted_at,revoked_at,created_at,updated_at',
+    select: 'id,account_id,email,role,status,expires_at,accepted_at,revoked_at,created_at',
     account_id: `eq.${accountId}`,
-    accepted_at: 'is.null',
-    revoked_at: 'is.null',
+    status: 'eq.pending',
     order: 'created_at.desc,id.desc',
   });
   const rows = await readSupabaseAdminListAll<InvitationRow>({
@@ -238,7 +237,8 @@ async function createInvitation(args: {
       account_id: args.accountId,
       email: args.email,
       role: args.role,
-      created_by_user_id: args.createdByUserId,
+      status: 'pending',
+      created_at: new Date().toISOString(),
       expires_at: expiresAt,
     }),
   });
@@ -370,11 +370,10 @@ export async function handleAccountInvitationsPost(args: {
         invitationId: existing.value.invitationId,
         patch: {
           role: parsed.role,
+          status: 'pending',
           expires_at: expiresAt,
           revoked_at: null,
           accepted_at: null,
-          accepted_by_user_id: null,
-          created_by_user_id: args.createdByUserId,
         },
       })
     : await createInvitation({
@@ -409,7 +408,7 @@ export async function handleAccountInvitationDelete(args: {
     return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.invitationNotFound' } }, { status: 404 });
   }
 
-  if (invitation.value.acceptedAt || invitation.value.revokedAt || isInvitationExpired(invitation.value)) {
+  if (invitation.value.status !== 'pending' || isInvitationExpired(invitation.value)) {
     return json({
       accountId: args.account.accountId,
       revoked: false,
@@ -421,6 +420,7 @@ export async function handleAccountInvitationDelete(args: {
     env: args.env,
     invitationId: args.invitationId,
     patch: {
+      status: 'revoked',
       revoked_at: new Date().toISOString(),
     },
   });
@@ -433,41 +433,36 @@ export async function handleAccountInvitationDelete(args: {
   });
 }
 
-async function ensureMembershipForAcceptedInvitation(args: {
+async function attachUserToAcceptedInvitationAccount(args: {
   env: Env;
   invitation: BerlinAccountInvitation;
   userId: string;
 }): Promise<Response | null> {
   const params = new URLSearchParams({
     select: 'account_id,user_id',
-    account_id: `eq.${args.invitation.accountId}`,
     user_id: `eq.${args.userId}`,
     limit: '1',
   });
-  const existingResponse = await supabaseAdminFetch(args.env, `/rest/v1/account_members?${params.toString()}`, {
-    method: 'GET',
-  });
-  const existingPayload = await readSupabaseAdminJson<Array<{ account_id?: unknown }> | Record<string, unknown>>(
-    existingResponse,
-  );
-  if (!existingResponse.ok) {
-    return supabaseAdminErrorResponse('coreui.errors.db.readFailed', existingResponse.status, existingPayload);
-  }
-  if (Array.isArray(existingPayload) && existingPayload[0]?.account_id) return null;
-
-  const createResponse = await supabaseAdminFetch(args.env, '/rest/v1/account_members', {
-    method: 'POST',
-    headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+  const response = await supabaseAdminFetch(args.env, `/rest/v1/users?${params.toString()}`, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=representation' },
     body: JSON.stringify({
       account_id: args.invitation.accountId,
-      user_id: args.userId,
       role: args.invitation.role,
     }),
   });
-  if (createResponse.ok) return null;
+  const payload = await readSupabaseAdminJson<Array<{ account_id?: unknown; user_id?: unknown }> | Record<string, unknown>>(
+    response,
+  );
+  if (!response.ok) {
+    return supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload);
+  }
 
-  const createPayload = await readSupabaseAdminJson<Record<string, unknown>>(createResponse);
-  return supabaseAdminErrorResponse('coreui.errors.db.writeFailed', createResponse.status, createPayload);
+  const rows = Array.isArray(payload) ? payload : [];
+  if (!rows[0]?.user_id) {
+    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.memberNotFound' } }, { status: 404 });
+  }
+  return null;
 }
 
 export async function acceptInvitationForPrincipal(args: {
@@ -489,7 +484,7 @@ export async function acceptInvitationForPrincipal(args: {
       ),
     };
   }
-  if (invitation.revokedAt || invitation.acceptedAt || isInvitationExpired(invitation)) {
+  if (invitation.status !== 'pending' || isInvitationExpired(invitation)) {
     return {
       ok: false,
       response: json(
@@ -507,7 +502,7 @@ export async function acceptInvitationForPrincipal(args: {
     return { ok: false, response: denyResponse() };
   }
 
-  const membershipError = await ensureMembershipForAcceptedInvitation({
+  const membershipError = await attachUserToAcceptedInvitationAccount({
     env: args.env,
     invitation,
     userId: args.principalUserId,
@@ -518,18 +513,11 @@ export async function acceptInvitationForPrincipal(args: {
     env: args.env,
     invitationId: args.invitationId,
     patch: {
+      status: 'accepted',
       accepted_at: new Date().toISOString(),
-      accepted_by_user_id: args.principalUserId,
     },
   });
   if (!accepted.ok) return accepted;
-
-  const persisted = await persistActiveAccountPreference({
-    env: args.env,
-    userId: args.principalUserId,
-    accountId: invitation.accountId,
-  });
-  if (!persisted.ok) return persisted;
 
   return {
     ok: true,

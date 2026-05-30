@@ -1,5 +1,5 @@
 import { resolveIssuer } from '../config';
-import { type ProviderIdentity } from '../../identity/reconcile';
+import { type ProviderIdentity } from '../../identity/resolve-login-account';
 import { claimAsString } from '../../utils/claims';
 import { type Env } from '../../types';
 

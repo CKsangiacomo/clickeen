@@ -43,20 +43,6 @@ export type RomaMeResponse = {
     primaryLanguage: string | null;
     country: string | null;
     timezone: string | null;
-    contactMethods?: {
-      phone: {
-        value: string | null;
-        verified: boolean;
-        pendingValue: string | null;
-        challengeExpiresAt: string | null;
-      };
-      whatsapp: {
-        value: string | null;
-        verified: boolean;
-        pendingValue: string | null;
-        challengeExpiresAt: string | null;
-      };
-    };
   } | null;
   activeAccount?: RomaActiveAccount | null;
   accounts: RomaAccountSummary[];
