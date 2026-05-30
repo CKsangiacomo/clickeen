@@ -1,6 +1,6 @@
 # PRD 105A - DB/R2 Operation Authority
 
-Status: Active contract / verification gate
+Status: Green / contract verified
 Owner: Product + Architecture
 Date: 2026-05-27
 Parent: `105__PRD__Instance_Folder_Tenets.md`
@@ -206,7 +206,7 @@ This PRD does not:
 
 ## Execution Verification - 2026-05-28
 
-Status: Red / blocked before moving to `105B`.
+Status: Superseded by final verification below.
 
 Green evidence:
 
@@ -233,3 +233,67 @@ Resolved blockers:
 Decision:
 
 This PRD's authority split is now satisfied by the 105M execution spine. Keep this file as the DB/R2 operation-authority contract; do not use it as evidence that `translation-generation-job.json` still exists.
+
+## Final Verification - 2026-05-30
+
+Status: Green. `105A` is closed as the DB/R2 operation-authority contract.
+
+The earlier red blockers are resolved by executed code, cloud cleanup, and tests:
+
+- `105M` Slice 2 moved durable translated locale values and sync metadata to `overlays/locales/{locale}.json`.
+- `105M` Slice 4 moved translation generation operation state to Supabase `translation_generation_operations` and `translation_generation_operation_locales`.
+- `105L` Phase B deleted stale remote `translation-generation-job.json` objects from active CLICKEEN instance folders and deleted the old `accounts/00000001/**` prefix.
+- The active public instance shape is `index.html`, `styles.css`, `runtime.js`, `instance.config.json`, `instance.content.json`, and optional `overlays/locales/{locale}.json`.
+
+Important compatibility note:
+
+`tokyo-worker/src/domains/render/saved-config.ts` still contains a legacy embedded-translation migration reader for old `field.translatedValues`, `field.localeStatus`, and `localeSync` payloads. That reader is not product truth. It exists only to migrate old embedded values into locale overlays and then clean the source document. The test `legacy embedded translated values migrate to locale overlays and clean content source` proves that behavior.
+
+Verification commands:
+
+```sh
+pnpm --filter @clickeen/tokyo-worker typecheck
+pnpm --filter @clickeen/tokyo-worker test
+pnpm verify:prd103-db-pivot
+pnpm validate:widgets
+rg -n "accountInstanceTranslationGenerationJobKey|readCurrentTranslationGenerationJob|writeCurrentTranslationGenerationJob|updateCurrentTranslationGenerationJob|TranslationGenerationJobDocument|TranslationGenerationJobBasis" tokyo-worker/src scripts packages bob roma sanfrancisco venice prague admin -S --glob '!**/node_modules/**'
+```
+
+Results:
+
+```text
+Tokyo-worker typecheck: passed
+Tokyo-worker tests: passed, 59/59
+PRD 103 DB pivot guard: passed
+Widget validation: passed, 3 widget sources valid
+R2 operation-controller symbol scan: no matches
+```
+
+Remote R2 evidence from `105L` Phase B:
+
+```text
+product stale keys: 0
+account stale keys: 0
+total delete candidates: 0
+canonical active instance keys preserved: 15
+```
+
+Public smoke:
+
+```text
+UZ3JEJSHII root=200 runtime=200 styles=200 script=404 job=404 old=404
+8FMVZFFPJV root=200 runtime=200 styles=200 script=404 job=404 old=404
+H7IF9M2K9B root=200 runtime=200 styles=200 script=404 job=404 old=404
+```
+
+Archive status:
+
+The 103_DB foundation batch named in this PRD is archived under:
+
+```text
+Execution_Pipeline_Docs/03-Executed/103_DB_Foundation_Batch/
+```
+
+Final decision:
+
+`105A` is green. Supabase owns operational/control facts, Tokyo owns product operations, and R2 owns source/overlay/generated artifacts. No R2 JSON object is accepted as application database, job ledger, pointer, inventory, or workflow controller.
