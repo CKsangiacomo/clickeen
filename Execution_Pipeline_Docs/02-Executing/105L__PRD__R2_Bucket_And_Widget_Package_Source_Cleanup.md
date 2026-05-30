@@ -1,6 +1,6 @@
 # PRD 105L - R2 Bucket And Widget Package Source Cleanup
 
-Status: Active execution sub-PRD / two-phase cleanup
+Status: Green / Phase A and Phase B executed
 Owner: Product + Architecture
 Date: 2026-05-28
 Parent: `105__PRD__Instance_Folder_Tenets.md`

@@ -108,6 +108,21 @@ Required minimal implementation direction:
 
 R2 instance JSON cannot be that store.
 
+## Coarse Status Mapping Invariant
+
+Tokyo must keep the operation ledger and the instance registry aligned through this small mapping:
+
+| Operation ledger state | `instances.translation_status` | Meaning |
+| --- | --- | --- |
+| no active operation | `idle` | Generate is available unless content/account policy blocks it |
+| `queued` | `queued` | Tokyo accepted generation and is enqueueing or waiting for first locale result |
+| `running` | `running` | At least one locale has reported while at least one locale is still pending |
+| `completed` | `idle` | All requested locales reached terminal success/stale handling; Generate can run again |
+| `failed` | `failed` | The current operation reached terminal failure |
+| `timed_out` | `failed` | Tokyo timed out the operation; no polling loop may keep it active |
+
+This column is not readiness, progress, sync truth, locale inventory, or history. Bob/Roma may use it only as coarse button liveness and must read the Tokyo product summary for reviewable locale state.
+
 The first implementation must be the smallest store that replaces `translation-generation-job.json`. It must not become a broad workflow platform, analytics history table, or queue dashboard.
 
 ## Required Operation Ledger / Outbox Contract
