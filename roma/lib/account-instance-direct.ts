@@ -286,7 +286,7 @@ function normalizePlacedPageIds(raw: unknown): string[] | null {
   return pageIds.length === raw.length ? pageIds : null;
 }
 
-async function listPageIdsPlacingInstanceInTokyo(args: {
+export async function listPageIdsPlacingInstanceInTokyo(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;

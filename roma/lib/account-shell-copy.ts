@@ -9,6 +9,7 @@ const ACCOUNT_SHELL_REASON_COPY: Record<string, string> = {
   'coreui.errors.account.memberNotFound': 'That team member could not be found.',
   'coreui.errors.account.invitationNotFound': 'That invitation could not be found.',
   'coreui.errors.account.publishingPaused': 'Publishing is paused for this account right now.',
+  'coreui.errors.instance.placedOnPage': 'Remove this widget from every page before deleting it.',
 };
 
 export function resolveAccountShellReason(payload: unknown, fallback: string): string {

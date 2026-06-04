@@ -301,29 +301,6 @@ export async function saveAccountPageSource(args: {
   return { source, summary };
 }
 
-export async function validateAccountPageSourceCandidate(args: {
-  accountId: string;
-  pageId: string;
-  source: unknown;
-}): Promise<AccountPageSource> {
-  const accountId = assertAccountId(args.accountId);
-  const pageId = normalizePageId(args.pageId);
-  if (!pageId) {
-    throw new PageOperationError({
-      kind: 'VALIDATION',
-      reasonKey: 'tokyo.errors.page.invalidPageId',
-    });
-  }
-  const source = normalizePageSource(args.source, pageId);
-  if (!source) {
-    throw new PageOperationError({
-      kind: 'VALIDATION',
-      reasonKey: 'tokyo.errors.page.sourceInvalid',
-    });
-  }
-  return source;
-}
-
 export async function createAccountPageSource(args: {
   env: Env;
   accountId: string;

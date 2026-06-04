@@ -3,7 +3,7 @@
 Status: Executed / verified
 Owner: Product + Architecture
 Date: 2026-06-03
-Parent: `../01-Planning/106__PRD__Page_Composer_Widget_Instance_Materializer_Foundation.md`
+Parent: `106__Umbrella__Composition_Vision.md`
 
 ## Execution Progress
 

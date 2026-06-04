@@ -3,7 +3,7 @@
 Status: Executed / verified
 Owner: Product + Architecture
 Date: 2026-06-03
-Parent: `../01-Planning/106__PRD__Page_Composer_Widget_Instance_Materializer_Foundation.md`
+Parent: `106__Umbrella__Composition_Vision.md`
 Related: `106B__PRD__Widget_Package_Composition_Contract.md`, `106F__PRD__Page_Materializer_And_Recomposition.md`, `106G__PRD__Page_Publish_Edge_Serve_And_SEO_GEO_Baseline.md`
 
 ## 2026-06-04 System Tenets Correction
@@ -293,10 +293,10 @@ What landed:
 - Reverse placement lookup is maintained as an explicit projection by `instanceId`, not an R2 folder scan.
 - Current Tokyo code validates page ids, head metadata shape, placement id shape, and storage payload shape. Instance existence and same-account placement validity are Roma product/save concerns, proven by Roma fetching placed widget packages before submitting page bytes.
 - The same widget instance may appear in multiple placements on the same page. Placement identity is array position; widget instance identity remains widget-owned.
-- Widget instance deletion is blocked when the reverse placement index shows that the instance is placed on one or more pages.
+- Roma blocks widget instance deletion when Tokyo's reverse placement index shows that the instance is placed on one or more pages.
 - Roma has a server-side page direct helper that composes page package bytes before submitting page source/package files to Tokyo.
 - Roma has account API facades for page list/create/open/save/delete.
-- No page materializer, public page serving, slug manager, page override model, block object, section object, or Bob page mode was added.
+- No page package composition, public page serving, slug manager, page override model, block object, section object, or Bob page mode was added.
 
 Tokyo files:
 
@@ -426,7 +426,7 @@ roma/app/(authed)/pages/page.tsx
 
 What did not land:
 
-- no page materializer;
+- no page package composition;
 - no public page serving;
 - no slug manager;
 - no page override model;
@@ -626,17 +626,17 @@ This avoids a second editor, second translation system, second widget source mod
 - widget instance saved/materialized means all pages from reverse placement lookup need recomposition;
 - placement added, removed, or reordered means that page needs recomposition;
 - page deleted means composed page output and delivery state must be cleaned by later publish/materialization scope;
-- widget delete while placed is blocked in V1 or handled by a named page-aware delete operation.
+- Roma blocks widget delete while placed in V1.
 
-106E does not run the materializer.
+106E does not build page packages.
 
 It creates the durable source and indexes that make 106F cheap and deterministic.
 
 Failure boundaries:
 
 - invalid page source fails in Tokyo page API;
-- missing or cross-account `instanceId` fails in Tokyo;
-- invalid placement shape or cross-account `instanceId` fails in Tokyo;
+- missing or cross-account `instanceId` fails in Roma before page source/package bytes are submitted;
+- invalid placement shape fails at the named save boundary;
 - index update failure fails the page operation or returns an explicit non-green state;
 - Roma displays the failure and does not invent repaired source;
 - if instance creation succeeds but placement save fails, the widget remains a normal widget and the page is unchanged;
@@ -661,7 +661,7 @@ Do not build:
 - transaction framework;
 - hidden compensation cleanup;
 - request-time page assembly;
-- page materializer in this PRD.
+- page package composition in this PRD.
 
 ## Non-Scope
 

@@ -3,7 +3,7 @@
 Status: Executed / verified
 Owner: Product + Architecture
 Date: 2026-06-03
-Parent: `../01-Planning/106__PRD__Page_Composer_Widget_Instance_Materializer_Foundation.md`
+Parent: `106__Umbrella__Composition_Vision.md`
 Depends on: `106A__PRD__Widget_File_Structure_V2.md`
 
 ## Execution Progress
@@ -58,7 +58,7 @@ Depends on: `106A__PRD__Widget_File_Structure_V2.md`
 2026-06-04 repair pass verified:
 
 - Added a fixture proving a parent package can contain a nested child widget root without becoming multiple page placements.
-- The page materializer still rejects multiple top-level roots, but it allows child roots inside the single parent package root.
+- Page Composer still rejects multiple top-level roots, but it allows child roots inside the single parent package root.
 - This supports page-shaped widgets with an embedded-widget content field while keeping page composition to ordered top-level placements.
 - Verified with `pnpm --filter @clickeen/tokyo-worker test`, `pnpm --filter @clickeen/tokyo-worker typecheck`, and `git diff --check`.
 
@@ -197,7 +197,7 @@ Generated parent package behavior:
 - embedded child CSS/runtime is included or deduped in the parent package safely;
 - the parent package contains no page placement wrapper for the child.
 
-The page materializer consumes the parent package as one placement. It does not need a special nested-widget branch.
+Page Composer consumes the parent package as one placement. It does not need a special nested-widget branch.
 
 ### CSS Contribution
 
@@ -341,7 +341,7 @@ Do not add a fourth manifest file, dependency graph, `GeneratedWidgetPackage` sc
 
 106B is the gate for the whole 106 series.
 
-No downstream page-source, page-materializer, page-delivery, or Prague conversion work is green until the widget package contract is proven with fixtures.
+No downstream page-source, page-package-composition, page-delivery, or Prague conversion work is green until the widget package contract is proven with fixtures.
 
 Required fixture set:
 

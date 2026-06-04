@@ -86,8 +86,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Allow generating and serving SEO/GEO optimized embed artifacts (Iframe++).',
     enforcement: {
       status: 'enforced',
-      owner: 'Bob embed UI and Tokyo-worker public artifact operation',
-      note: 'Bob gates the embed option; Tokyo-worker materializes SEO/GEO public artifacts only when the flag is true.',
+      owner: 'Bob embed UI and Roma product save/publish flow',
+      note: 'Bob gates the embed option. Product policy belongs to Roma/account flow; Tokyo stores and serves submitted artifact files.',
     },
   },
   'widget.socialShare.enabled': {
@@ -95,7 +95,7 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Allow generated widget packages to include the paid social share overlay.',
     enforcement: {
       status: 'enforced',
-      owner: 'Bob widget editor ops and Tokyo-worker public artifact materialization',
+      owner: 'Bob widget editor ops and Roma save policy',
       note: 'Widget limits map behavior.socialShare.enabled to this policy key. Bob rejects non-entitled edits, and Roma rejects non-entitled saves before submitted package bytes reach Tokyo-worker.',
     },
   },

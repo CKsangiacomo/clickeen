@@ -10,7 +10,6 @@ import {
   readAccountPageServeState,
   readAccountPageSource,
   saveAccountPageSource,
-  validateAccountPageSourceCandidate,
   verifyAccountPagePublicPackageReady,
   writeAccountPagePublicPackage,
   writeAccountPageServeState,
@@ -246,16 +245,11 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
         return respondValidation(respond, 'tokyo.errors.page.packageInvalid', 409);
       }
       try {
-        const candidate = await validateAccountPageSourceCandidate({
-          accountId,
-          pageId,
-          source: body.source,
-        });
         const saved = await saveAccountPageSource({
           env,
           accountId,
           pageId,
-          source: candidate,
+          source: body.source,
         });
         const packaged = await writeAccountPagePublicPackage({
           env,

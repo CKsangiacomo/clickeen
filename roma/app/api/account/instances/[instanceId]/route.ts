@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
+  listPageIdsPlacingInstanceInTokyo,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
@@ -171,6 +172,37 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return withSession(
       request,
       NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
+      current.value.setCookies,
+    );
+  }
+
+  const placedPages = await listPageIdsPlacingInstanceInTokyo({
+    accountId,
+    instanceId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!placedPages.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: placedPages.error }, { status: placedPages.status }),
+      current.value.setCookies,
+    );
+  }
+  if (placedPages.value.length) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.instance.placedOnPage',
+            detail: 'Remove this widget from every page before deleting it.',
+            pageIds: placedPages.value,
+          },
+        },
+        { status: 422 },
+      ),
       current.value.setCookies,
     );
   }

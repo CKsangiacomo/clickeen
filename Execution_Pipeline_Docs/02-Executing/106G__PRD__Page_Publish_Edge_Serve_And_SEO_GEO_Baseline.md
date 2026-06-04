@@ -3,9 +3,9 @@
 Status: Executed / verified
 Owner: Product + Architecture
 Date: 2026-06-03
-Parent: `../01-Planning/106__PRD__Page_Composer_Widget_Instance_Materializer_Foundation.md`
+Parent: `106__Umbrella__Composition_Vision.md`
 Depends on: `106F__PRD__Page_Materializer_And_Recomposition.md`
-Enables: PRD 107 hosted page SEO/GEO strategy
+Enables: future hosted page SEO/GEO strategy after PRD 106 tenets are preserved
 
 ## 2026-06-04 System Tenets Correction
 

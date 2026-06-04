@@ -390,22 +390,6 @@ export async function tryHandleInternalInstanceRoutes(
     if (req.method === 'DELETE') {
       const auth = await authorizeRomaEditorTransition({ req, env, accountId });
       if (!auth.ok) return respond(auth.response);
-      const placedPageIds = await listPagesPlacingInstance({ env, accountId, instanceId });
-      if (placedPageIds.length) {
-        return respond(
-          json(
-            {
-              error: {
-                kind: 'VALIDATION',
-                reasonKey: 'tokyo.errors.page.instancePlaced',
-                detail: 'instance is placed on one or more pages',
-                pageIds: placedPageIds,
-              },
-            },
-            { status: 422 },
-          ),
-        );
-      }
       const deleted = await deleteAccountInstanceSubtree(env, instanceId, accountId);
       return respond(json({ ok: true, deleted: deleted.existed, existed: deleted.existed }));
     }

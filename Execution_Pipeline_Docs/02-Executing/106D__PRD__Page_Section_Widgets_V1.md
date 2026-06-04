@@ -3,7 +3,7 @@
 Status: Executed / verified
 Owner: Product + Architecture
 Date: 2026-06-03
-Parent: `../01-Planning/106__PRD__Page_Composer_Widget_Instance_Materializer_Foundation.md`
+Parent: `106__Umbrella__Composition_Vision.md`
 Depends on: `106A__PRD__Widget_File_Structure_V2.md`, `106B__PRD__Widget_Package_Composition_Contract.md`
 
 ## Purpose

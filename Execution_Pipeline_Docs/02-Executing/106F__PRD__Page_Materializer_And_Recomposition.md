@@ -1,9 +1,9 @@
-# PRD 106F - Page Materializer And Recomposition
+# PRD 106F - Page Package Composition And Recomposition
 
 Status: Executed / verified
 Owner: Product + Architecture
 Date: 2026-06-03
-Parent: `../01-Planning/106__PRD__Page_Composer_Widget_Instance_Materializer_Foundation.md`
+Parent: `106__Umbrella__Composition_Vision.md`
 Depends on: `106B__PRD__Widget_Package_Composition_Contract.md`, `106E__PRD__Page_Source_And_Roma_Composer.md`
 
 ## 2026-06-04 System Tenets Correction
@@ -292,7 +292,7 @@ Future placement embed:
   deferred until product needs a deliberate placement-selection contract
 ```
 
-The materializer does not implement those delivery surfaces. It only preserves the structure that makes them possible.
+Page Composer does not implement those delivery surfaces. It only preserves the structure that makes them possible.
 
 ## Recomposition
 
@@ -353,14 +353,14 @@ Delivery stays in 106G. 106F must not expand public routing.
 P0 engineering gates:
 
 - 106B is green first: widget packages expose exactly one top-level package root with `data-ck-widget` and `data-ck-instance-id`;
-- materializer fails if a widget `index.html` has zero or multiple widget roots;
-- materializer extracts the root fragment, not the whole document;
+- Page Composer fails if a widget `index.html` has zero or multiple widget roots;
+- Page Composer extracts the root fragment, not the whole document;
 - page output contains one `html`, one `head`, one `body`, one `main`, one `styles.css`, and one `runtime.js`;
 - every placement gets one plain wrapper in source order;
 - widget root attributes are preserved unchanged;
 - page runtime uses `window.CK_WIDGETS[instanceId]`;
 - page runtime contains no `window.CK_WIDGET`;
-- materializer fails if any source package runtime still writes or reads `window.CK_WIDGET`;
+- Page Composer fails if any source package runtime still writes or reads `window.CK_WIDGET`;
 - same widget type placed twice on one page initializes both instances without shared-state collision;
 - missing `index.html`, `styles.css`, or `runtime.js` fails visibly;
 - no partial page publish is allowed;
@@ -505,7 +505,7 @@ Do not:
 This PRD is green when:
 
 - a page with multiple placed instances emits one `index.html`, one `styles.css`, and one `runtime.js`;
-- the materializer reads placed widget generated package files as input;
+- Page Composer reads placed widget generated package files as input;
 - output is addressed by `pageId`, not slug;
 - every placement is wrapped once in source order, without inventing placement ids;
 - the output page does not render as multiple iframes;
