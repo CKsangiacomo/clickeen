@@ -3,7 +3,6 @@ import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   listAccountInstancesInTokyo,
   listTokyoWidgetDefinitions,
-  type TokyoWidgetDefinition,
 } from '@roma/lib/account-instance-direct';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
@@ -24,7 +23,9 @@ type WidgetInstance = {
   };
 };
 
-type WidgetCatalogOption = Pick<TokyoWidgetDefinition, 'widgetType' | 'widgetCode' | 'label' | 'description' | 'category'> & {
+type WidgetCatalogOption = {
+  widgetType: string;
+  widgetCode: string;
   canCreate: boolean;
   disabledReasonKey: string | null;
 };
@@ -101,9 +102,6 @@ export async function GET(request: NextRequest) {
     return {
       widgetType: entry.widgetType,
       widgetCode: entry.widgetCode,
-      label: entry.label,
-      description: entry.description,
-      category: entry.category,
       canCreate: canMutate && withinTypeLimit,
       disabledReasonKey: canMutate
         ? withinTypeLimit

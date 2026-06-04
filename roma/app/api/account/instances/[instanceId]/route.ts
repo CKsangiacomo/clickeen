@@ -3,6 +3,7 @@ import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
+import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -30,6 +31,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     | {
         widgetType?: string;
         config?: Record<string, unknown>;
+        publicPackage?: {
+          v?: unknown;
+          indexHtml?: unknown;
+          stylesCss?: unknown;
+          runtimeJs?: unknown;
+        };
         displayName?: string | null;
         meta?: Record<string, unknown> | null;
       }
@@ -46,6 +53,19 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
   const config = body?.config;
+  const publicPackage =
+    body?.publicPackage &&
+    body.publicPackage.v === 1 &&
+    typeof body.publicPackage.indexHtml === 'string' &&
+    typeof body.publicPackage.stylesCss === 'string' &&
+    typeof body.publicPackage.runtimeJs === 'string'
+      ? {
+          v: 1 as const,
+          indexHtml: body.publicPackage.indexHtml,
+          stylesCss: body.publicPackage.stylesCss,
+          runtimeJs: body.publicPackage.runtimeJs,
+        }
+      : null;
   const displayName =
     body && Object.prototype.hasOwnProperty.call(body, 'displayName')
       ? typeof body.displayName === 'string'
@@ -62,7 +82,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           ? null
           : undefined
       : undefined;
-  if (!widgetType || !config || typeof config !== 'object' || Array.isArray(config)) {
+  if (!widgetType || !config || typeof config !== 'object' || Array.isArray(config) || !publicPackage) {
     return withSession(
       request,
       NextResponse.json(
@@ -101,11 +121,24 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
+  const policyGate = validateAccountInstanceSavePolicy({
+    config,
+    authz: current.value.authzPayload,
+  });
+  if (!policyGate.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: policyGate.error }, { status: policyGate.status }),
+      current.value.setCookies,
+    );
+  }
+
   const result = await saveAccountInstanceInTokyo({
     accountId,
     instanceId,
     widgetType,
     config,
+    publicPackage,
     ...(displayName !== undefined ? { displayName } : {}),
     ...(meta !== undefined ? { meta } : {}),
     accountCapsule: current.value.authzToken,

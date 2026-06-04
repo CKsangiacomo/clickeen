@@ -39,6 +39,48 @@ function readFaqSpec(): { defaults: Record<string, unknown> } {
   return readJson('tokyo/product/widgets/faq/spec.json') as { defaults: Record<string, unknown> };
 }
 
+function faqConfigWithContent(): Record<string, unknown> {
+  const config = structuredClone(readFaqSpec().defaults);
+  config.header = {
+    ...(config.header as Record<string, unknown>),
+    title: 'FAQs',
+    subtitleHtml: 'Straight answers for launch teams.',
+  };
+  config.cta = {
+    ...(config.cta as Record<string, unknown>),
+    label: 'Start now',
+  };
+  config.sections = [
+    {
+      id: 'general',
+      title: 'General',
+      faqs: [
+        {
+          id: 'what-is',
+          question: 'What is Clickeen?',
+          answer: 'Clickeen helps teams publish widgets.',
+        },
+        {
+          id: 'who-for',
+          question: 'Who is it for?',
+          answer: 'Teams that need fast product surfaces.',
+        },
+        {
+          id: 'how-publish',
+          question: 'How do I publish?',
+          answer: 'Save the widget, then publish from Roma.',
+        },
+        {
+          id: 'translations',
+          question: 'Can I translate it?',
+          answer: 'Yes, translations run after save.',
+        },
+      ],
+    },
+  ];
+  return config;
+}
+
 test('FAQ editable-fields JSON is the translation field authority', () => {
   const spec = readJson('tokyo/product/widgets/faq/spec.json') as Record<string, unknown>;
   const contract = readFaqEditableFields();
@@ -73,13 +115,21 @@ test('FAQ manual editor and runtime paths are covered by editable-fields JSON', 
   const paths = new Set(contract.fields.map((field) => field.path));
   const faqSpecText = readText('tokyo/product/widgets/faq/spec.json');
   const headerModule = readText('bob/lib/compiler/modules/header.ts');
+  const template = readText('tokyo/product/widgets/faq/widget.html');
   const runtime = readText('tokyo/product/widgets/faq/widget.client.js');
+  const headerRuntime = readText('tokyo/product/widgets/shared/header.js');
 
-  for (const path of ['header.title', 'header.subtitleHtml', 'cta.label']) {
+  for (const [path, role, runtimePath] of [
+    ['header.title', 'header-title', 'state.header.title'],
+    ['header.subtitleHtml', 'header-subtitle', 'state.header.subtitleHtml'],
+    ['cta.label', 'header-cta', 'state.cta.label'],
+  ]) {
     assert(paths.has(path));
     assert(headerModule.includes(`path='${path}'`), `${path} missing from Bob shared header controls`);
-    assert(runtime.includes(path), `${path} missing from FAQ runtime`);
+    assert(template.includes(`data-role="${role}"`), `${path} missing from FAQ template`);
+    assert(headerRuntime.includes(runtimePath), `${path} missing from shared header runtime`);
   }
+  assert(runtime.includes('CKHeader.applyHeader'), 'FAQ runtime missing shared header delegation');
 
   assert(paths.has('sections[].title'));
   assert(
@@ -99,15 +149,15 @@ test('FAQ manual editor and runtime paths are covered by editable-fields JSON', 
   assert(!paths.has('sections[].id'));
   assert(!paths.has('sections[].faqs[].id'));
   assert(!paths.has('sections[].faqs[].defaultOpen'));
-  assert(runtime.includes('section.id'), 'section identity missing from FAQ runtime');
-  assert(runtime.includes('faq.id'), 'FAQ identity missing from FAQ runtime');
+  assert(runtime.includes('data-role="faq-section"'), 'section identity boundary missing from FAQ runtime');
+  assert(runtime.includes('data-role="faq-item"'), 'FAQ identity boundary missing from FAQ runtime');
+  assert(runtime.includes('item.id'), 'FAQ item identity missing from FAQ runtime');
   assert(runtime.includes('faq.defaultOpen'), 'defaultOpen missing from FAQ runtime');
 });
 
-test('FAQ primitive graph extracts concrete text paths for every question and answer', () => {
-  const spec = readFaqSpec();
+test('FAQ primitive graph extracts concrete text paths from saved content', () => {
   const contract = readFaqEditableFields();
-  const items = extractTextPrimitiveValuesForEditableFields({ contract, config: spec.defaults });
+  const items = extractTextPrimitiveValuesForEditableFields({ contract, config: faqConfigWithContent() });
   const paths = items.map((item) => item.path);
 
   assert.equal(paths.length, 12);
@@ -124,7 +174,7 @@ test('FAQ primitive graph extracts concrete text paths for every question and an
 
 test('generic saved text extraction covers FAQ, Countdown, and Logo Showcase contracts', () => {
   const cases = [
-    { widgetType: 'faq', expected: ['header.title', 'cta.label', 'sections.0.faqs.0.question'] },
+    { widgetType: 'faq', config: faqConfigWithContent(), expected: ['header.title', 'cta.label', 'sections.0.faqs.0.question'] },
     { widgetType: 'countdown', expected: ['header.title', 'timer.labels.days', 'actions.after.text'] },
     { widgetType: 'logoshowcase', expected: ['header.title', 'cta.label', 'strips.0.logos.0.name'] },
   ];
@@ -132,7 +182,7 @@ test('generic saved text extraction covers FAQ, Countdown, and Logo Showcase con
   for (const entry of cases) {
     const contract = readEditableFields(entry.widgetType);
     const spec = readSpec(entry.widgetType);
-    const fields = extractSavedTextFieldsForEditableFields({ contract, config: spec.defaults });
+    const fields = extractSavedTextFieldsForEditableFields({ contract, config: entry.config ?? spec.defaults });
     const paths = new Set(fields.map((field) => field.path));
     for (const expectedPath of entry.expected) {
       assert(paths.has(expectedPath), `${entry.widgetType} missing ${expectedPath}`);
@@ -201,9 +251,8 @@ test('FAQ primitive graph materializes editable text fields as strings', () => {
 });
 
 test('translated value validation rejects missing and extra concrete paths', () => {
-  const spec = readFaqSpec();
   const contract = readFaqEditableFields();
-  const items = extractTextPrimitiveValuesForEditableFields({ contract, config: spec.defaults });
+  const items = extractTextPrimitiveValuesForEditableFields({ contract, config: faqConfigWithContent() });
   const values = buildTranslatedTextValueMap(items);
 
   assert.deepEqual(validateTranslatedValuesForTextPrimitives(items, values), { ok: true });
@@ -230,8 +279,7 @@ test('translated value validation rejects missing and extra concrete paths', () 
 });
 
 test('resolveTranslatedValues applies one value map to nested FAQ text without mutating base', () => {
-  const spec = readJson('tokyo/product/widgets/faq/spec.json') as { defaults: Record<string, unknown> };
-  const base = spec.defaults;
+  const base = faqConfigWithContent();
   const next = resolveTranslatedValues(base, {
     'header.title': 'Domande frequenti',
     'sections.0.faqs.0.question': 'Che cos e Clickeen?',

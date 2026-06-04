@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/dieter/components/button/button.css" />
     <link rel="stylesheet" href="../shared/header.css" />
     <link rel="stylesheet" href="../shared/localeSwitcher.css" />
+    <link rel="stylesheet" href="../shared/stagePod.css" />
     <link rel="stylesheet" href="./widget.css" />
   </head>
   <body>
@@ -18,32 +19,29 @@
             class="ck-faq ck-headerLayout"
             data-role="faq"
             data-layout="accordion"
-            data-state="ready"
+            data-state="empty"
           >
             <header class="ck-faq__header ck-header">
               <div class="ck-header__text">
-                <h2 class="ck-faq__title ck-header__title heading-4" data-role="header-title">
-                  Frequently Asked Questions
-                </h2>
+                <h2 class="ck-faq__title ck-header__title heading-4" data-role="header-title"></h2>
                 <div class="ck-header__subtitle" data-role="header-subtitle" hidden></div>
               </div>
               <a
                 class="ck-header__cta"
                 data-role="header-cta"
-                href="https://example.com"
                 hidden
-              >
-                Contact us
-              </a>
+              ></a>
             </header>
             <div class="ck-faq__body ck-headerLayout__body">
-              <div class="ck-faq__empty body-s" data-role="faq-empty" hidden>
+              <div class="ck-faq__empty body-s" data-role="faq-empty">
                 No questions yet. Add your first FAQ.
               </div>
               <ul class="ck-faq__sections" data-role="faq-list"></ul>
             </div>
           </section>
           <script src="../shared/fill.js?v=20260228-1" defer></script>
+          <script src="../shared/appearance.js" defer></script>
+          <script src="../shared/runtime.js" defer></script>
           <script src="../shared/header.js" defer></script>
           <script src="../shared/localeSwitcher.js" defer></script>
           <script src="../shared/surface.js" defer></script>

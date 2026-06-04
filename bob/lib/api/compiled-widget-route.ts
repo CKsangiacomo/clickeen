@@ -42,9 +42,74 @@ function buildWidgetSourceUrl(args: { tokyoRoot: string; widgetname: string; fil
   return `${args.tokyoRoot}/widgets/${encodeURIComponent(args.widgetname)}/${args.fileName}`;
 }
 
+function buildWidgetProductSourceUrl(args: { tokyoRoot: string; productPath: string }): string {
+  const relative = args.productPath.replace(/^product\/widgets\//, '');
+  return `${args.tokyoRoot}/widgets/${relative.split('/').map(encodeURIComponent).join('/')}`;
+}
+
 async function readRequiredWidgetSource(res: Response): Promise<string> {
   if (res.ok) return res.text();
   return '';
+}
+
+function extractStylesheetSources(html: string): string[] {
+  return [...html.matchAll(/<link\b[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi)]
+    .map((match) => String(match[1] || '').trim())
+    .filter(Boolean);
+}
+
+function extractScriptSources(html: string): string[] {
+  return [...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi)]
+    .map((match) => String(match[1] || '').trim())
+    .filter(Boolean);
+}
+
+function resolveProductPath(widgetType: string, src: string): string | null {
+  const withoutQuery = src.split('?')[0] || '';
+  if (!withoutQuery || withoutQuery.startsWith('/') || /^https?:\/\//i.test(withoutQuery)) return null;
+  const base = `product/widgets/${widgetType}/`;
+  const stack = base.split('/').filter(Boolean);
+  for (const part of withoutQuery.split('/')) {
+    if (!part || part === '.') continue;
+    if (part === '..') {
+      stack.pop();
+      continue;
+    }
+    stack.push(part);
+  }
+  const normalized = stack.join('/');
+  return normalized.startsWith('product/widgets/') ? normalized : null;
+}
+
+async function fetchWidgetPackageSupportFiles(args: {
+  tokyoRoot: string;
+  widgetname: string;
+  htmlText: string;
+  knownFiles: Map<string, WidgetPackageFileContext>;
+}): Promise<Map<string, WidgetPackageFileContext>> {
+  const next = new Map(args.knownFiles);
+  const productPaths = new Set<string>();
+  for (const src of [...extractStylesheetSources(args.htmlText), ...extractScriptSources(args.htmlText)]) {
+    const key = resolveProductPath(args.widgetname, src);
+    if (key) productPaths.add(key);
+  }
+  productPaths.add('product/widgets/shared/socialShare.css');
+  productPaths.add('product/widgets/shared/socialShare.js');
+
+  await Promise.all(
+    [...productPaths]
+      .filter((key) => !next.has(key))
+      .map(async (key) => {
+        const response = await fetch(buildWidgetProductSourceUrl({ tokyoRoot: args.tokyoRoot, productPath: key }));
+        if (!response.ok) return;
+        const source = await response.text();
+        next.set(key, {
+          mediaType: key.endsWith('.css') ? 'text/css' : 'text/javascript',
+          source,
+        });
+      }),
+  );
+  return next;
 }
 
 function buildWidgetPackage(args: {
@@ -54,6 +119,7 @@ function buildWidgetPackage(args: {
   htmlText: string;
   cssText: string;
   jsText: string;
+  supportFiles: Map<string, WidgetPackageFileContext>;
 }): WidgetPackageContext {
   const files: WidgetPackageContext['files'] = {
     'spec.json': {
@@ -73,6 +139,9 @@ function buildWidgetPackage(args: {
       source: args.jsText,
     },
   };
+  args.supportFiles.forEach((file, key) => {
+    files[key] = file;
+  });
   if (args.editableFieldsSource.trim()) {
     files['editable-fields.json'] = {
       mediaType: 'application/json',
@@ -250,6 +319,16 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       const jsHash = await sha256Hex(jsText);
       freshnessKey = `${freshnessKey}|jsHash=${jsHash}`;
     }
+    const initialPackageFiles = new Map<string, WidgetPackageFileContext>([
+      ['product/widgets/' + widgetname + '/widget.css', { mediaType: 'text/css', source: cssText }],
+      ['product/widgets/' + widgetname + '/widget.client.js', { mediaType: 'text/javascript', source: jsText }],
+    ]);
+    const supportFiles = await fetchWidgetPackageSupportFiles({
+      tokyoRoot,
+      widgetname,
+      htmlText,
+      knownFiles: initialPackageFiles,
+    });
 
     if (!cacheBust) {
       const cached = compiledWidgetCache.get(widgetname);
@@ -283,6 +362,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       htmlText,
       cssText,
       jsText,
+      supportFiles,
     });
     const payload: CompiledWidgetPayload = { ...compiled, limits, widgetPackage, ...(editableFields ? { editableFields } : {}) };
     if (!cacheBust) {

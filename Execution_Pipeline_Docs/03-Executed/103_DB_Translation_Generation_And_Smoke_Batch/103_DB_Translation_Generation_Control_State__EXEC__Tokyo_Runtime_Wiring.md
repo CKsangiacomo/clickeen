@@ -6,7 +6,7 @@ Parent PRD: `103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_I
 Corrective authority: `../01-Planning/103K__PRD__Saved_Base_Content_Translation_Sync.md`
 Execution repair: `../01-Planning/103K__EXEC__Saved_Base_Content_Translation_Sync_Runtime_Wiring.md`
 
-Archive note: this document is no longer active execution authority. It is retained as evidence of the red translation-generation finding. Current repair authority is `../02-Executing/105D__PRD__Translation_Operation_State_And_Smoke_Verification.md`.
+Archive note: this document is no longer active execution authority. It is retained as evidence of the red translation-generation finding. Current repair authority is `../105_Instance_Runtime_And_Verification_Batch/105D__PRD__Translation_Operation_State_And_Smoke_Verification.md`.
 
 ## Finding
 

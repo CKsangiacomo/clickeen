@@ -10,7 +10,7 @@ This batch is not active execution authority.
 Surviving workflow-state doctrine was extracted to:
 
 ```text
-Execution_Pipeline_Docs/02-Executing/105G__PRD__Translation_Workflow_State_And_Sync_Verification.md
+Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105G__PRD__Translation_Workflow_State_And_Sync_Verification.md
 ```
 
 Where these files conflict with the PRD 105 reset, the active authority is:

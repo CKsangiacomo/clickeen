@@ -10,7 +10,7 @@ This batch is not active execution authority.
 Surviving pre-GA cleanup doctrine was extracted to:
 
 ```text
-Execution_Pipeline_Docs/02-Executing/105K__PRD__Pre_GA_Codebase_And_Documentation_Cleanup_Verification.md
+Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105K__PRD__Pre_GA_Codebase_And_Documentation_Cleanup_Verification.md
 ```
 
 Surviving paid SEO/GEO doctrine was extracted to:

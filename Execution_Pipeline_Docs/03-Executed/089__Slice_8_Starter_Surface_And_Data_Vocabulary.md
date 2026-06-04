@@ -1,4 +1,4 @@
-# PRD 089 Slice 8 - Starter Surface And Data Vocabulary Decision
+# PRD 089 Slice 8 - Default Surface And Data Vocabulary Decision
 
 Status: Executed
 

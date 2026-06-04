@@ -1,5 +1,5 @@
 import type { Env } from '../types.ts';
-import { attachTestInstanceRegistry } from '../domains/render/test-instance-registry.ts';
+import { attachTestInstanceRegistry } from '../test-utils/instance-registry.ts';
 
 export type StoredObject =
   | { kind: 'json'; payload: unknown }
@@ -66,8 +66,10 @@ export function createInternalRouteTestEnv() {
           truncated: false,
         };
       },
-      async delete(key: string) {
-        objects.delete(key);
+      async delete(key: string | string[]) {
+        for (const entry of Array.isArray(key) ? key : [key]) {
+          objects.delete(entry);
+        }
       },
     } as unknown as R2Bucket,
   } as Env;
@@ -94,5 +96,12 @@ export function seedFaqProductSources(objects: Map<string, StoredObject>): void 
 </div>
 </body></html>`, 'text/html; charset=utf-8');
   putText(objects, 'product/widgets/faq/widget.css', '.ck-faq{}', 'text/css; charset=utf-8');
-  putText(objects, 'product/widgets/faq/widget.client.js', 'window.__FAQ_STATE__ = window.CK_WIDGET.state;', 'text/javascript; charset=utf-8');
+  putText(
+    objects,
+    'product/widgets/faq/widget.client.js',
+    `const root = document.querySelector('[data-ck-widget="faq"]');
+const instanceId = root && root.getAttribute('data-ck-instance-id');
+window.__FAQ_STATE__ = instanceId && window.CK_WIDGETS && window.CK_WIDGETS[instanceId] ? window.CK_WIDGETS[instanceId].state : null;`,
+    'text/javascript; charset=utf-8',
+  );
 }

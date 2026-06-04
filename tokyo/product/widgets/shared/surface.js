@@ -21,9 +21,16 @@
     if (typeof value !== 'string') throw new Error('[CKSurface] ' + name + ' must be a string');
   }
 
-  function tokenizeRadius(value) {
-    var normalized = String(value || '').trim();
-    return normalized === 'none' ? '0' : 'var(--control-radius-' + normalized + ')';
+  function resolveAppearance() {
+    if (
+      !window.CKAppearance ||
+      typeof window.CKAppearance.forceInset !== 'function' ||
+      typeof window.CKAppearance.resolveCornerRadii !== 'function' ||
+      typeof window.CKAppearance.shadowToBoxShadow !== 'function'
+    ) {
+      throw new Error('[CKSurface] Missing CKAppearance helpers');
+    }
+    return window.CKAppearance;
   }
 
   function resolveRadius(card) {
@@ -34,20 +41,8 @@
     assertString(card.radiusBR, 'card.radiusBR');
     assertString(card.radiusBL, 'card.radiusBL');
 
-    if (card.radiusLinked === false) {
-      return (
-        tokenizeRadius(card.radiusTL) +
-        ' ' +
-        tokenizeRadius(card.radiusTR) +
-        ' ' +
-        tokenizeRadius(card.radiusBR) +
-        ' ' +
-        tokenizeRadius(card.radiusBL)
-      );
-    }
-
-    var all = tokenizeRadius(card.radius);
-    return all + ' ' + all + ' ' + all + ' ' + all;
+    var radius = resolveAppearance().resolveCornerRadii(card);
+    return radius.tl + ' ' + radius.tr + ' ' + radius.br + ' ' + radius.bl;
   }
 
   function resolveBorder(border) {
@@ -63,7 +58,7 @@
     };
   }
 
-  function computeShadowBoxShadow(shadow) {
+  function assertShadow(shadow) {
     assertRecord(shadow, 'shadow');
     assertBoolean(shadow.enabled, 'shadow.enabled');
     assertBoolean(shadow.inset, 'shadow.inset');
@@ -74,27 +69,6 @@
     assertString(shadow.color, 'shadow.color');
     assertNumber(shadow.alpha, 'shadow.alpha');
     if (shadow.alpha < 0 || shadow.alpha > 100) throw new Error('[CKSurface] shadow.alpha must be 0..100');
-
-    if (shadow.enabled !== true || shadow.alpha <= 0) return 'none';
-    var alphaMix = 100 - shadow.alpha;
-    var color = 'color-mix(in oklab, ' + shadow.color + ', transparent ' + alphaMix + '%)';
-    return (
-      (shadow.inset === true ? 'inset ' : '') +
-      shadow.x +
-      'px ' +
-      shadow.y +
-      'px ' +
-      shadow.blur +
-      'px ' +
-      shadow.spread +
-      'px ' +
-      color
-    );
-  }
-
-  function forceInset(shadow, inset) {
-    if (!isRecord(shadow)) return shadow;
-    return Object.assign({}, shadow, { inset: inset });
   }
 
   function applyCard(card, scopeEl, namespace) {
@@ -104,9 +78,11 @@
     var key = typeof namespace === 'string' && namespace.trim() ? namespace.trim() : 'card';
     var baseVar = '--ck-' + key;
 
+    var appearance = resolveAppearance();
     var border = resolveBorder(card.border);
     var radius = resolveRadius(card);
-    var outsideShadow = computeShadowBoxShadow(forceInset(card.shadow, false));
+    assertShadow(card.shadow);
+    var outsideShadow = appearance.shadowToBoxShadow(appearance.forceInset(card.shadow, false));
 
     scopeEl.style.setProperty(baseVar + '-border-width', border.width);
     scopeEl.style.setProperty(baseVar + '-border-color', border.color);

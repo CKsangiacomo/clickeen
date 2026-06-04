@@ -3,7 +3,7 @@
 import { parseAccountLocaleListStrict, parseAccountLocalePolicyStrict } from '@clickeen/ck-contracts';
 import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRomaAccountApi } from './account-api';
 import { getCompiledWidget } from './compiled-widget-cache';
@@ -257,11 +257,20 @@ function decodeBuilderPathInstanceId(pathname: string): string {
   }
 }
 
+function normalizeReturnTo(value: string | null): string {
+  const normalized = String(value || '').trim();
+  if (!normalized || !normalized.startsWith('/') || normalized.startsWith('//') || normalized.includes('\\')) {
+    return '';
+  }
+  return normalized;
+}
+
 export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const { activeAccount, accountPolicy } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const bobReadyRef = useRef(false);
   const openDispatchSeqRef = useRef(0);
@@ -275,6 +284,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const bobBaseUrl = useMemo(() => resolveBobBaseUrl(), []);
   const currentUrl = pathname;
   const pathInstanceId = useMemo(() => decodeBuilderPathInstanceId(pathname), [pathname]);
+  const returnTo = useMemo(() => normalizeReturnTo(searchParams.get('returnTo')), [searchParams]);
 
   // Active account authoring truth: Roma hosts one current-account Builder session and opens Bob with one explicit payload.
   const bobSrc = useMemo(() => {
@@ -600,6 +610,17 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
   return (
     <>
+      {returnTo ? (
+        <div className="rd-canvas-module">
+          <div className="rd-canvas-module__actions">
+            <Link className="diet-btn-txt" data-size="md" data-variant="line2" href={returnTo}>
+              <span className="diet-btn-txt__label body-m">
+                {returnTo.startsWith('/pages') ? 'Return to page' : 'Return'}
+              </span>
+            </Link>
+          </div>
+        </div>
+      ) : null}
       {openError ? (
         <div className="rd-canvas-module">
           <p className="body-m">{builderOpenErrorCopy}</p>

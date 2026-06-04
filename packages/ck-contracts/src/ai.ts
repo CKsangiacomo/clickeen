@@ -1,5 +1,5 @@
 export type AiProvider = 'deepseek' | 'openai';
-export type AiPolicyProfile = 'free' | 'tier1' | 'tier2' | 'tier3';
+export type AiPolicyProfile = 'free' | 'tier1' | 'tier2' | 'tier3' | 'tier4';
 export type AiExecutionSurface = 'execute' | 'endpoint';
 export type AiAgentCategory = 'copilot' | 'system_agent';
 export type AiRegistryBoundary =

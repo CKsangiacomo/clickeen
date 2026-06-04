@@ -1,0 +1,212 @@
+.ck-socialShare {
+  box-sizing: border-box;
+}
+
+[data-ck-widget][data-role="root"] {
+  position: relative;
+}
+
+.ck-socialShare {
+  position: absolute;
+  top: var(--space-4, 16px);
+  right: var(--space-4, 16px);
+  z-index: 80;
+  color: var(--color-system-black, #111);
+  font-family: var(--font-ui, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+}
+
+[data-ck-widget][data-role="root"]:hover > .ck-socialShare .ck-socialShare__topbar,
+[data-ck-widget][data-role="root"]:focus-within > .ck-socialShare .ck-socialShare__topbar,
+.ck-socialShare:focus-within .ck-socialShare__topbar {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .ck-socialShare__topbar {
+    opacity: 1;
+  }
+}
+
+.ck-socialShare__topbar {
+  display: flex;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity var(--duration-base, 160ms);
+}
+
+.ck-socialShare__details {
+  position: relative;
+}
+
+.ck-socialShare__button {
+  list-style: none;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--control-inline-gap-sm, 8px);
+  padding: 0 15px;
+  border-radius: var(--control-radius-lg, 12px);
+  border: 1px solid color-mix(in oklab, var(--color-system-white, #fff), transparent 84%);
+  background: color-mix(in oklab, var(--color-system-black, #000) 80%, transparent);
+  color: var(--color-system-white, #fff);
+  font: 600 var(--fs-13, 13px)/1.1 var(--font-ui, system-ui);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.ck-socialShare__button::-webkit-details-marker {
+  display: none;
+}
+
+.ck-socialShare__button::marker {
+  content: "";
+}
+
+.ck-socialShare__button:hover {
+  background: color-mix(in oklab, var(--color-system-black, #000) 86%, transparent);
+}
+
+.ck-socialShare__button:focus-visible,
+.ck-socialShare__card:focus-visible {
+  outline: var(--focus-ring-width, 2px) solid var(--color-system-blue, #1c7cff);
+  outline-offset: 2px;
+}
+
+.ck-socialShare__icon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+.ck-socialShare__icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  color: currentColor;
+}
+
+.ck-socialShare__icon svg [stroke] {
+  stroke: currentColor;
+}
+
+.ck-socialShare__icon svg [fill] {
+  fill: currentColor;
+}
+
+.ck-socialShare__menu {
+  position: absolute;
+  top: calc(100% + var(--space-3, 12px));
+  right: 0;
+  width: min(760px, calc(100vw - 32px));
+  max-height: min(520px, calc(100vh - 120px));
+  overflow: auto;
+  display: none;
+  padding: 16px;
+  border-radius: var(--control-radius-2xl, 20px);
+  border: 1px solid color-mix(in oklab, var(--color-system-black, #000), transparent 90%);
+  background: color-mix(in oklab, var(--color-system-white, #fff), transparent 8%);
+  box-shadow: 0 28px 90px color-mix(in oklab, var(--color-system-black, #000), transparent 86%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.ck-socialShare__details[open] .ck-socialShare__menu {
+  display: block;
+}
+
+.ck-socialShare__sectionTitle {
+  margin: 10px 6px var(--space-3, 12px);
+  color: var(--color-system-black, #111);
+  font: 700 var(--fs-13, 13px)/1.1 var(--font-ui, system-ui);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ck-socialShare__grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-5, 20px);
+}
+
+.ck-socialShare__grid:last-of-type {
+  margin-bottom: 0;
+}
+
+.ck-socialShare__card {
+  min-height: 88px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 10px;
+  border: 0;
+  border-radius: var(--control-radius-xl, 16px);
+  background: var(--color-system-gray-5-step4, color-mix(in oklab, var(--color-system-black, #000) 6%, transparent));
+  color: var(--color-system-black, #111);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background-color var(--duration-base, 160ms),
+    color var(--duration-base, 160ms),
+    transform var(--duration-base, 160ms);
+}
+
+.ck-socialShare__card:hover {
+  color: var(--color-system-blue, #1c7cff);
+  background: color-mix(
+    in oklab,
+    var(--color-system-gray-5-step4, color-mix(in oklab, var(--color-system-black, #000) 6%, transparent)),
+    var(--color-system-black, #000) 8%
+  );
+}
+
+.ck-socialShare__card:active {
+  transform: translateY(1px);
+}
+
+.ck-socialShare__cardLabel {
+  display: block;
+  color: inherit;
+  font: 500 var(--fs-13, 13px)/1.05 var(--font-ui, system-ui);
+  text-wrap: balance;
+}
+
+.ck-socialShare__toast {
+  position: absolute;
+  top: calc(42px + var(--space-3, 12px));
+  right: 0;
+  z-index: 70;
+  display: none;
+  padding: 9px 12px;
+  border-radius: var(--control-radius-lg, 12px);
+  background: color-mix(in oklab, var(--color-system-white, #fff), transparent 25%);
+  color: color-mix(in oklab, var(--color-system-black, #000), transparent 25%);
+  font: 500 var(--fs-13, 13px)/1.2 var(--font-ui, system-ui);
+  pointer-events: none;
+  box-shadow: 0 20px 60px color-mix(in oklab, var(--color-system-black, #000), transparent 92%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+@media (max-width: 720px) {
+  .ck-socialShare {
+    top: var(--space-3, 12px);
+    right: var(--space-3, 12px);
+  }
+
+  .ck-socialShare__menu {
+    width: min(360px, calc(100vw - 24px));
+    max-height: min(520px, calc(100vh - 96px));
+  }
+
+  .ck-socialShare__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

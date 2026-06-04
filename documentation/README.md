@@ -2,7 +2,7 @@
 
 This folder is the primary knowledge base for working in the Clickeen repo (especially for AI coding agents). It is a **living reference**: it must be updated alongside code changes.
 
-PRD 103_00 NOTE: the core docs have been narrowed to the product-operation vocabulary required before PRD 103 resumes. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`.
+PRD 105 NOTE: the core docs use the current product-operation vocabulary and instance-folder/runtime authority from `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105__PRD__Instance_Folder_Tenets.md`.
 
 Docs are not a "single source of truth". When docs and code disagree, debug using runtime code + DB schema + deployed Cloudflare config, then update the docs to match reality.
 
@@ -147,9 +147,10 @@ Result: the supported local topology is one boring stack: local DevStudio + loca
 
 ### A.1) Local auth issuer alignment (critical)
 
-Local app servers use the Supabase target chosen by `bash scripts/dev-up.sh`:
+Local app servers use the explicitly configured Supabase target loaded by `bash scripts/dev-up.sh` from `.env.local` or the shell:
 
-- Default: local Supabase (`http://127.0.0.1:54321`)
+- Required: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_ANON_KEY`
+- `dev-up` does not start, migrate, reset, seed, or switch Supabase targets. Local Supabase is disposable validation only, not product-state evidence.
 
 Invariant:
 
@@ -162,7 +163,7 @@ Instances are account-owned data, not code. Tokyo/R2 stores them under `accounts
 
 1. **Roma + Bob handle account widget instance flows**:
    - Roma Widgets lists, duplicates, renames, publishes, unpublishes, and deletes real account-owned instances through current-account same-origin routes.
-   - Starter/gallery creation is not an active product surface.
+   - Default/gallery creation is not an active product surface.
    - Bob save writes base config via account `PUT`.
 2. **DevStudio Local does not host widget authoring**.
    - Curated/main verification remains an internal toolbench concern only.

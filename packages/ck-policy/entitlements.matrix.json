@@ -4,7 +4,8 @@
     "free",
     "tier1",
     "tier2",
-    "tier3"
+    "tier3",
+    "tier4"
   ],
   "entitlements": {
     "l10n.locales.max": {
@@ -13,7 +14,8 @@
         "free": 0,
         "tier1": 3,
         "tier2": 28,
-        "tier3": 28
+        "tier3": 28,
+        "tier4": 28
       }
     },
     "l10n.versions.max": {
@@ -22,7 +24,8 @@
         "free": 1,
         "tier1": 3,
         "tier2": 5,
-        "tier3": 10
+        "tier3": 10,
+        "tier4": 10
       }
     },
     "branding.remove": {
@@ -31,7 +34,8 @@
         "free": false,
         "tier1": true,
         "tier2": true,
-        "tier3": true
+        "tier3": true,
+        "tier4": true
       }
     },
     "embed.seoGeo.enabled": {
@@ -40,7 +44,18 @@
         "free": false,
         "tier1": false,
         "tier2": true,
-        "tier3": true
+        "tier3": true,
+        "tier4": true
+      }
+    },
+    "widget.socialShare.enabled": {
+      "kind": "flag",
+      "values": {
+        "free": false,
+        "tier1": true,
+        "tier2": true,
+        "tier3": true,
+        "tier4": true
       }
     },
     "copilot.turns.monthly.max": {
@@ -49,7 +64,8 @@
         "free": 20,
         "tier1": 50,
         "tier2": 300,
-        "tier3": null
+        "tier3": null,
+        "tier4": null
       }
     },
     "storage.bytes.max": {
@@ -58,7 +74,8 @@
         "free": 31457280,
         "tier1": 314572800,
         "tier2": 4194304000,
-        "tier3": null
+        "tier3": null,
+        "tier4": null
       }
     },
     "views.monthly.max": {
@@ -67,7 +84,8 @@
         "free": 10000,
         "tier1": 100000,
         "tier2": null,
-        "tier3": null
+        "tier3": null,
+        "tier4": null
       }
     },
     "instances.published.max": {
@@ -76,7 +94,8 @@
         "free": 1,
         "tier1": 1,
         "tier2": 5,
-        "tier3": null
+        "tier3": null,
+        "tier4": null
       }
     },
     "widgets.types.max": {
@@ -85,7 +104,8 @@
         "free": 1,
         "tier1": 1,
         "tier2": 3,
-        "tier3": null
+        "tier3": null,
+        "tier4": null
       }
     },
     "uploads.size.max": {
@@ -94,7 +114,8 @@
         "free": 10485760,
         "tier1": 15728640,
         "tier2": 20971520,
-        "tier3": null
+        "tier3": null,
+        "tier4": null
       }
     },
     "items.group.small.max": {
@@ -103,7 +124,8 @@
         "free": 5,
         "tier1": 10,
         "tier2": 25,
-        "tier3": null
+        "tier3": null,
+        "tier4": null
       }
     },
     "items.group.medium.max": {
@@ -112,7 +134,8 @@
         "free": 10,
         "tier1": 25,
         "tier2": 50,
-        "tier3": null
+        "tier3": null,
+        "tier4": null
       }
     },
     "items.group.large.max": {
@@ -121,7 +144,8 @@
         "free": 25,
         "tier1": 50,
         "tier2": 100,
-        "tier3": null
+        "tier3": null,
+        "tier4": null
       }
     }
   }

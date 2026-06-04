@@ -8,6 +8,7 @@ export const ENTITLEMENT_KEYS = [
   'l10n.versions.max',
   'branding.remove',
   'embed.seoGeo.enabled',
+  'widget.socialShare.enabled',
   'copilot.turns.monthly.max',
   'storage.bytes.max',
   'views.monthly.max',
@@ -23,6 +24,7 @@ export type EntitlementKey = (typeof ENTITLEMENT_KEYS)[number];
 export const FLAG_KEYS = [
   'branding.remove',
   'embed.seoGeo.enabled',
+  'widget.socialShare.enabled',
 ] as const satisfies readonly EntitlementKey[];
 export type FlagKey = (typeof FLAG_KEYS)[number];
 
@@ -86,6 +88,15 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
       status: 'enforced',
       owner: 'Bob embed UI and Tokyo-worker public artifact operation',
       note: 'Bob gates the embed option; Tokyo-worker materializes SEO/GEO public artifacts only when the flag is true.',
+    },
+  },
+  'widget.socialShare.enabled': {
+    label: 'Widget social share',
+    description: 'Allow generated widget packages to include the paid social share overlay.',
+    enforcement: {
+      status: 'enforced',
+      owner: 'Bob widget editor ops and Tokyo-worker public artifact materialization',
+      note: 'Widget limits map behavior.socialShare.enabled to this policy key. Bob rejects non-entitled edits, and Roma rejects non-entitled saves before submitted package bytes reach Tokyo-worker.',
     },
   },
   'copilot.turns.monthly.max': {

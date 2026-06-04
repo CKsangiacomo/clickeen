@@ -22,7 +22,7 @@ There is no "keep for now" bucket.
 - Instance = one saved configured widget owned by one account.
 - Account = the ownership boundary for instances, assets, usage, billing, export, deletion, and permissions.
 - Admin = a normal account with broader permissions.
-- Starter/example/gallery content = listed/duplicable account-owned instances.
+- Default/example/gallery content = listed/duplicable account-owned instances.
 - Public paths = serving projections only, never account truth.
 
 Forbidden architecture/storage concepts:

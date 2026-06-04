@@ -7,7 +7,7 @@ const ROOT = process.cwd();
 
 const SCANNED_FILES = [
   'packages/ck-contracts/src/instance-translation-jobs.ts',
-  'tokyo-worker/src/domains/render/translation-operations.ts',
+  'tokyo-worker/src/domains/account-translations/operations.ts',
   'sanfrancisco/src/instance-translation-queue.ts',
 ];
 

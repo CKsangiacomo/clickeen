@@ -195,11 +195,11 @@ Those matchers must either be updated to the new paths or removed if unused.
 
 No active code should preserve `curated` as an account widget instance/product source concept. If the source field is unused, delete it. If it is useful, rename it to a surviving authority such as `platform` or `admin`.
 
-### 3.10 Roma Duplicable Starter Surface Is Undecided
+### 3.10 Roma Duplicable Default Surface Is Undecided
 
 PRD 088 described admin-owned instances as normal account instances and allowed a platform-owned catalog only if Roma still needed starter examples.
 
-No `product/catalog/roma-duplicable-instances.json`, Roma starter endpoint, or starter gallery exists. PRD 089 must force this product decision:
+No `product/catalog/roma-duplicable-instances.json`, Roma default endpoint, or default gallery exists. PRD 089 must force this product decision:
 
 1. Build the platform catalog and Roma surface using admin-owned `ins_*` account instances, or
 2. Explicitly declare starter browsing out of scope and remove active docs/UX expectations that imply it exists.
@@ -496,9 +496,9 @@ rg -n "/l10n/instances|/renders/instances|/e/|/r/" venice
 
 must return no active-code matches.
 
-### Slice 8 - Starter Surface And Data Vocabulary Decision
+### Slice 8 - Default Surface And Data Vocabulary Decision
 
-Resolve the last non-code product vocabulary gaps without inventing a fake starter mode.
+Resolve the last non-code product vocabulary gaps without inventing a fake default mode.
 
 Required changes:
 

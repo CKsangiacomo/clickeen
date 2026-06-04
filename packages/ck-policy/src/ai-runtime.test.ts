@@ -75,3 +75,14 @@ test('Copilot model picker is policy-approved: Tier 3 may select an allowed mode
     /Selected AI model is not allowed by account policy/,
   );
 });
+
+test('Tier 4 resolves through the AI runtime matrix', () => {
+  const tier4 = runtimePolicy('cs.widget.copilot.v1', 'tier4', {
+    provider: 'openai',
+    model: 'gpt-5',
+  });
+
+  assert.equal(tier4.policyProfile, 'tier4');
+  assert.equal(tier4.allowModelPicker, true);
+  assert.deepEqual(tier4.selectedModel, { provider: 'openai', model: 'gpt-5' });
+});

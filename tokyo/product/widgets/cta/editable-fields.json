@@ -1,0 +1,38 @@
+{
+  "v": 1,
+  "widgetType": "cta",
+  "fields": [
+    {
+      "path": "title",
+      "label": "Title",
+      "type": "richtext",
+      "role": "title",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "body",
+      "label": "Body",
+      "type": "richtext",
+      "role": "body",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "primaryCta.label",
+      "label": "Primary CTA label",
+      "type": "string",
+      "role": "cta-label",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "secondaryCta.label",
+      "label": "Secondary CTA label",
+      "type": "string",
+      "role": "cta-label-secondary",
+      "arrayItemIdentity": [],
+      "limits": []
+    }
+  ]
+}

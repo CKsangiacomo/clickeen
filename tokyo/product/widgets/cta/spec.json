@@ -1,0 +1,353 @@
+{
+  "v": 1,
+  "widgetname": "cta",
+  "itemKey": "cta.item",
+  "normalization": {
+    "coerceRules": [
+      {
+        "path": "behavior.showBacklink",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.enabled",
+        "type": "boolean",
+        "default": false
+      }
+    ]
+  },
+  "defaults": {
+    "title": "",
+    "body": "",
+    "primaryCta": {
+      "enabled": false,
+      "label": "",
+      "href": "",
+      "openMode": "same-tab"
+    },
+    "secondaryCta": {
+      "enabled": false,
+      "label": "",
+      "href": "",
+      "openMode": "same-tab"
+    },
+    "layout": {
+      "maxWidth": 980,
+      "bodyWidth": 880,
+      "gap": 32
+    },
+    "behavior": {
+      "showBacklink": true,
+      "socialShare": {
+        "enabled": false
+      }
+    },
+    "stage": {
+      "alignment": "center",
+      "background": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
+      "shadow": {
+        "x": 0,
+        "y": 0,
+        "blur": 0,
+        "alpha": 0,
+        "color": "#000000",
+        "inset": false,
+        "spread": 0,
+        "enabled": false
+      },
+      "insideShadow": {
+        "linked": true,
+        "layer": "below-content",
+        "all": {
+          "x": 0,
+          "y": 0,
+          "blur": 0,
+          "alpha": 0,
+          "color": "#000000",
+          "inset": true,
+          "spread": 0,
+          "enabled": false
+        }
+      },
+      "canvas": {
+        "mode": "wrap",
+        "width": 0,
+        "height": 0
+      },
+      "padding": {
+        "mobile": {
+          "all": 48,
+          "top": 48,
+          "right": 48,
+          "bottom": 48,
+          "left": 48,
+          "linked": true
+        },
+        "desktop": {
+          "all": 80,
+          "top": 80,
+          "right": 80,
+          "bottom": 80,
+          "left": 80,
+          "linked": true
+        }
+      }
+    },
+    "pod": {
+      "widthMode": "full",
+      "contentWidth": 1200,
+      "radiusLinked": true,
+      "radius": "none",
+      "radiusTL": "none",
+      "radiusTR": "none",
+      "radiusBR": "none",
+      "radiusBL": "none",
+      "background": {
+        "type": "color",
+        "color": "transparent"
+      },
+      "shadow": {
+        "x": 0,
+        "y": 0,
+        "blur": 0,
+        "alpha": 0,
+        "color": "#000000",
+        "inset": false,
+        "spread": 0,
+        "enabled": false
+      },
+      "insideShadow": {
+        "linked": true,
+        "layer": "below-content",
+        "all": {
+          "x": 0,
+          "y": 0,
+          "blur": 0,
+          "alpha": 0,
+          "color": "#000000",
+          "inset": true,
+          "spread": 0,
+          "enabled": false
+        }
+      },
+      "padding": {
+        "mobile": {
+          "all": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0,
+          "linked": true
+        },
+        "desktop": {
+          "all": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0,
+          "linked": true
+        }
+      }
+    },
+    "appearance": {},
+    "typography": {
+      "roles": {
+        "title": {
+          "color": {
+            "type": "color",
+            "color": "var(--color-system-black)"
+          },
+          "family": "Inter",
+          "weight": "700",
+          "fontStyle": "normal",
+          "sizeCustom": 56,
+          "sizePreset": "custom"
+        },
+        "body": {
+          "color": {
+            "type": "color",
+            "color": "var(--color-system-gray)"
+          },
+          "family": "Inter",
+          "weight": "400",
+          "fontStyle": "normal",
+          "sizeCustom": 20,
+          "sizePreset": "custom"
+        },
+        "button": {
+          "color": {
+            "type": "color",
+            "color": "var(--color-system-white)"
+          },
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": 16,
+          "sizePreset": "custom"
+        }
+      },
+      "globalFamily": "Inter"
+    }
+  },
+  "editor": {
+    "panels": [
+      {
+        "id": "content",
+        "clusters": [
+          {
+            "label": "Copy",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "richtext",
+                "path": "title",
+                "label": "Title",
+                "attrs": {
+                  "size": "lg"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "richtext",
+                "path": "body",
+                "label": "Body",
+                "attrs": {
+                  "size": "md"
+                }
+              }
+            ]
+          },
+          {
+            "label": "Primary CTA",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "primaryCta.enabled",
+                "label": "Show primary CTA",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "text",
+                "path": "primaryCta.label",
+                "label": "Label"
+              },
+              {
+                "kind": "field",
+                "type": "text",
+                "path": "primaryCta.href",
+                "label": "URL"
+              }
+            ]
+          },
+          {
+            "label": "Secondary CTA",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "secondaryCta.enabled",
+                "label": "Show secondary CTA",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "text",
+                "path": "secondaryCta.label",
+                "label": "Label"
+              },
+              {
+                "kind": "field",
+                "type": "text",
+                "path": "secondaryCta.href",
+                "label": "URL"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "layout",
+        "clusters": [
+          {
+            "label": "CTA layout",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "layout.maxWidth",
+                "label": "Max width"
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "layout.bodyWidth",
+                "label": "Body max width"
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "layout.gap",
+                "label": "Gap"
+              }
+            ]
+          },
+          {
+            "kind": "shared",
+            "id": "stagepod-layout"
+          }
+        ]
+      },
+      {
+        "id": "appearance",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "stagepod-appearance"
+          },
+          {
+            "label": "Behavior",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-behavior",
+                "path": "behavior.showBacklink",
+                "label": "Show Made with Clickeen",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-behavior",
+                "path": "behavior.socialShare.enabled",
+                "label": "Enable social share",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "typography",
+        "shared": {
+          "id": "typography"
+        }
+      }
+    ]
+  }
+}

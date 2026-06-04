@@ -469,37 +469,16 @@
     ensureGoogleFontLoaded(family, spec);
   }
 
-  function normalizeInstanceId(value) {
-    if (typeof value !== 'string') return '';
-    return value.trim();
-  }
-
-  function resolveInstanceId(root, runtimeContext) {
-    const fromContext = normalizeInstanceId(runtimeContext && runtimeContext.instanceId);
-    if (fromContext) return fromContext;
-
-    const own = normalizeInstanceId(root.getAttribute('data-ck-instance-id'));
-    if (own) return own;
-
-    const rootNode = root.getRootNode();
-    if (rootNode instanceof ShadowRoot && rootNode.host instanceof HTMLElement) {
-      const fromHost = normalizeInstanceId(rootNode.host.getAttribute('data-ck-instance-id'));
-      if (fromHost) return fromHost;
+  function resolveRuntime() {
+    const runtime = window.CKWidgetRuntime;
+    if (
+      !runtime ||
+      typeof runtime.resolveInstanceId !== 'function' ||
+      typeof runtime.readPayload !== 'function'
+    ) {
+      throw new Error('[CKTypography] Missing CKWidgetRuntime payload helpers');
     }
-
-    const ancestor = root.closest('[data-ck-instance-id]');
-    if (ancestor instanceof HTMLElement) {
-      const fromAncestor = normalizeInstanceId(ancestor.getAttribute('data-ck-instance-id'));
-      if (fromAncestor) return fromAncestor;
-    }
-
-    const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
-    if (global) {
-      const fromGlobal = normalizeInstanceId(global.instanceId);
-      if (fromGlobal) return fromGlobal;
-    }
-
-    return '';
+    return runtime;
   }
 
   function readLocaleFromElement(el) {
@@ -518,17 +497,24 @@
     }
   }
 
-  function resolveLocaleFromPayload(instanceId) {
-    if (instanceId && window.CK_WIDGETS && typeof window.CK_WIDGETS === 'object') {
-      const keyed = window.CK_WIDGETS[instanceId];
-      if (keyed && typeof keyed === 'object') {
-        const fromKeyed = normalizeLocaleTag(keyed.locale);
-        if (fromKeyed) return fromKeyed;
-      }
+  function resolveLocaleFromPayload(root, runtimeContext) {
+    const contextPayload =
+      runtimeContext && runtimeContext.payload && typeof runtimeContext.payload === 'object'
+        ? runtimeContext.payload
+        : null;
+    const fromContextPayload = normalizeLocaleTag(contextPayload && contextPayload.locale);
+    if (fromContextPayload) return fromContextPayload;
+
+    const runtime = resolveRuntime();
+    const fromContextId =
+      runtimeContext && typeof runtimeContext.instanceId === 'string' ? runtimeContext.instanceId.trim() : '';
+    const payload = runtime.readPayload(fromContextId || runtime.resolveInstanceId(root));
+    if (payload && typeof payload === 'object') {
+      const fromPayload = normalizeLocaleTag(payload.locale);
+      if (fromPayload) return fromPayload;
     }
 
-    const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
-    return normalizeLocaleTag(global && global.locale);
+    return '';
   }
 
   function resolveRuntimeLocale(root, runtimeContext) {
@@ -550,7 +536,7 @@
       if (fromDocAttr) return fromDocAttr;
     }
 
-    const fromPayload = resolveLocaleFromPayload(resolveInstanceId(root, runtimeContext));
+    const fromPayload = resolveLocaleFromPayload(root, runtimeContext);
     if (fromPayload) return fromPayload;
 
     const fromQuery = resolveLocaleFromQuery();
@@ -697,7 +683,9 @@
       const fontStyle = role.fontStyle;
       const rawColor = role.color;
       const color =
-        window.CKFill && typeof window.CKFill.toCssColor === 'function' ? window.CKFill.toCssColor(rawColor) : rawColor;
+        window.CKAppearance && typeof window.CKAppearance.toCssColor === 'function'
+          ? window.CKAppearance.toCssColor(rawColor)
+          : rawColor;
 
       if (typeof family !== 'string' || !family.trim()) {
         throw new Error(`[CKTypography] Role "${roleKey}" is missing family`);

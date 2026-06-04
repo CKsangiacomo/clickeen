@@ -95,45 +95,13 @@
     return { align, anchor };
   }
 
-  function resolveContext() {
-    const scriptEl = document.currentScript || window.CK_CURRENT_SCRIPT;
-    if (scriptEl instanceof HTMLElement) {
-      const widgetRoot = scriptEl.closest('[data-ck-widget]');
-      const rootNode = scriptEl.getRootNode();
-      return { widgetRoot: widgetRoot instanceof HTMLElement ? widgetRoot : null, rootNode };
+  function resolveRuntimeContext(widgetRoot) {
+    const runtime = window.CKWidgetRuntime;
+    if (!runtime || typeof runtime.contextFor !== 'function') {
+      throw new Error('[CKBranding] Missing CKWidgetRuntime.contextFor');
     }
-    return { widgetRoot: null, rootNode: document };
-  }
-
-  function resolveInstanceId(widgetRoot) {
-    const direct = widgetRoot.getAttribute('data-ck-instance-id');
-    if (typeof direct === 'string' && direct.trim()) return direct.trim();
-
-    const rootNode = widgetRoot.getRootNode();
-    if (rootNode instanceof ShadowRoot) {
-      const host = rootNode.host;
-      const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-instance-id') : '';
-      if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
-    }
-
-    const ancestor = widgetRoot.closest('[data-ck-instance-id]');
-    const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-instance-id') : '';
-    if (typeof fromAncestor === 'string' && fromAncestor.trim()) return fromAncestor.trim();
-
-    return '';
-  }
-
-  function resolveInitialState(instanceId) {
-    if (
-      instanceId &&
-      window.CK_WIDGETS &&
-      typeof window.CK_WIDGETS === 'object' &&
-      window.CK_WIDGETS[instanceId] &&
-      typeof window.CK_WIDGETS[instanceId] === 'object'
-    ) {
-      return window.CK_WIDGETS[instanceId].state;
-    }
-    return window.CK_WIDGET && window.CK_WIDGET.state;
+    const widgetType = widgetRoot.getAttribute('data-ck-widget') || '';
+    return runtime.contextFor(widgetRoot, widgetType);
   }
 
   function ensureBranding(widgetRoot) {
@@ -178,42 +146,22 @@
   }
 
   function applyInitial() {
-    const { widgetRoot, rootNode } = resolveContext();
-    ensureStyle(rootNode);
-
-    if (widgetRoot) {
-      ensureBranding(widgetRoot);
-      const instanceId = resolveInstanceId(widgetRoot);
-      const initialState = resolveInitialState(instanceId);
-      if (initialState) applyVisibility(widgetRoot, initialState);
-      return;
-    }
-
-    // Fallback for legacy/light-DOM documents.
+    ensureStyle(document);
     const roots = Array.from(document.querySelectorAll('[data-ck-widget]'));
     roots.forEach((root) => ensureBranding(root));
     roots.forEach((root) => {
-      const instanceId = resolveInstanceId(root);
-      const initialState = resolveInitialState(instanceId);
-      if (initialState) applyVisibility(root, initialState);
+      const context = resolveRuntimeContext(root);
+      if (context.state) applyVisibility(root, context.state);
     });
   }
 
   window.addEventListener('message', (event) => {
     const data = event.data;
     if (!data || data.type !== 'ck:state-update') return;
-    const { widgetRoot, rootNode } = resolveContext();
-    ensureStyle(rootNode);
+    ensureStyle(document);
 
     const widgetname = data.widgetname;
     const state = data.state;
-
-    if (widgetRoot) {
-      if (!widgetname || widgetRoot.dataset.ckWidget === widgetname) {
-        applyVisibility(widgetRoot, state);
-      }
-      return;
-    }
 
     const roots = widgetname
       ? Array.from(document.querySelectorAll(`[data-ck-widget="${widgetname}"]`))

@@ -32,14 +32,19 @@
         "path": "behavior.showBacklink",
         "type": "boolean",
         "default": true
+      },
+      {
+        "path": "behavior.socialShare.enabled",
+        "type": "boolean",
+        "default": false
       }
     ]
   },
   "defaults": {
     "cta": {
-      "href": "https://example.com",
-      "label": "Contact us",
-      "enabled": true,
+      "href": "",
+      "label": "",
+      "enabled": false,
       "iconName": "arrowshape.turn.up.right",
       "openMode": "same-tab",
       "iconEnabled": true,
@@ -251,18 +256,17 @@
         "linked": true
       }
     },
-    "title": "Frequently Asked Questions",
     "header": {
       "gap": 28,
-      "title": "FAQs",
-      "enabled": true,
+      "title": "",
+      "enabled": false,
       "textGap": 4,
       "innerGap": 16,
       "alignment": "left",
       "placement": "top",
       "ctaPlacement": "right",
       "showSubtitle": false,
-      "subtitleHtml": "Modern website widgets—fast to launch, easy to customize, and built to help you convert."
+      "subtitleHtml": ""
     },
     "layout": {
       "gap": 16,
@@ -291,40 +295,12 @@
       "expandAll": false,
       "multiOpen": false,
       "expandFirst": true,
-      "showBacklink": true
-    },
-    "sections": [
-      {
-        "id": "s1",
-        "faqs": [
-          {
-            "id": "q1",
-            "answer": "Clickeen is a widget SaaS platform that lets you add polished, high-performing widgets to your website in minutes—no heavy dev work required.",
-            "question": "What is Clickeen?",
-            "defaultOpen": false
-          },
-          {
-            "id": "q2",
-            "answer": "Yes. The Free plan includes 1 active widget with essential features so you can try Clickeen on a live site.",
-            "question": "Do you offer a free plan?",
-            "defaultOpen": false
-          },
-          {
-            "id": "q3",
-            "answer": "Create your widget, copy the embed code, and paste it right before the closing </body> tag on your website. Changes you make in Clickeen update instantly.",
-            "question": "How do I install a widget on my site?",
-            "defaultOpen": false
-          },
-          {
-            "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
-            "answer": "Launch faster with flexible design controls, simple updates, and reliable performance—so your team can ship improvements without maintaining custom code.",
-            "question": "Why use Clickeen instead of building widgets from scratch?",
-            "defaultOpen": false
-          }
-        ],
-        "title": "Getting started"
+      "showBacklink": true,
+      "socialShare": {
+        "enabled": false
       }
-    ],
+    },
+    "sections": [],
     "appearance": {
       "theme": "custom",
       "ctaBorder": {
@@ -544,54 +520,12 @@
         }
       },
       "roleScales": {
-        "body": {
-          "l": "22px",
-          "m": "18px",
-          "s": "16px",
-          "xl": "24px",
-          "xs": "14px"
-        },
-        "title": {
-          "l": "44px",
-          "m": "36px",
-          "s": "28px",
-          "xl": "60px",
-          "xs": "20px"
-        },
-        "answer": {
-          "l": "22px",
-          "m": "18px",
-          "s": "16px",
-          "xl": "24px",
-          "xs": "14px"
-        },
-        "button": {
-          "l": "20px",
-          "m": "18px",
-          "s": "15px",
-          "xl": "24px",
-          "xs": "13px"
-        },
         "localeSwitcher": {
           "l": "20px",
           "m": "18px",
           "s": "15px",
           "xl": "24px",
           "xs": "13px"
-        },
-        "section": {
-          "l": "16px",
-          "m": "14px",
-          "s": "13px",
-          "xl": "18px",
-          "xs": "12px"
-        },
-        "question": {
-          "l": "22px",
-          "m": "18px",
-          "s": "16px",
-          "xl": "24px",
-          "xs": "14px"
         }
       },
       "globalFamily": "Inter"
@@ -1664,8 +1598,8 @@
                       "labelPlaceholder": "All Questions",
                       "labelSize": "lg",
                       "default-item": {
-                        "question": "New question",
-                        "answer": "New answer",
+                        "question": "",
+                        "answer": "",
                         "defaultOpen": false
                       }
                     }
@@ -1680,14 +1614,8 @@
                   "label-path": "title",
                   "index-token": "__SECTION__",
                   "default-item": {
-                    "title": "All Questions",
-                    "faqs": [
-                      {
-                        "question": "New question",
-                        "answer": "New answer",
-                        "defaultOpen": false
-                      }
-                    ]
+                    "title": "",
+                    "faqs": []
                   }
                 }
               }
@@ -2671,318 +2599,8 @@
             "label": "Q&A card"
           },
           {
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "dropdown-fill",
-                "groupId": "podstageappearance",
-                "path": "stage.background",
-                "label": "Stage background",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "fill-modes": "color,gradient,image,video",
-                  "value": "{{stage.background}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.shadow",
-                "label": "Stage outside shadow",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{stage.shadow}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.linked",
-                "label": "Link stage inside shadows",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.linked}}",
-                  "default": true
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-actions",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.layer",
-                "label": "Inside shadow layer",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.layer}}",
-                  "options": [
-                    {
-                      "label": "Show below content",
-                      "value": "below-content"
-                    },
-                    {
-                      "label": "Show above content",
-                      "value": "above-content"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.all",
-                "label": "Stage inside shadow",
-                "showIf": {
-                  "path": "stage.insideShadow.linked",
-                  "op": "isTrue"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.all}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.top",
-                "label": "Stage inside shadow (top)",
-                "showIf": {
-                  "path": "stage.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "y",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.top}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.right",
-                "label": "Stage inside shadow (right)",
-                "showIf": {
-                  "path": "stage.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "x",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.right}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.bottom",
-                "label": "Stage inside shadow (bottom)",
-                "showIf": {
-                  "path": "stage.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "y",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.bottom}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.left",
-                "label": "Stage inside shadow (left)",
-                "showIf": {
-                  "path": "stage.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "x",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.left}}"
-                }
-              }
-            ],
-            "label": "Stage appearance"
-          },
-          {
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "dropdown-fill",
-                "groupId": "podstageappearance",
-                "path": "pod.background",
-                "label": "Pod background",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "fill-modes": "color,gradient,image,video",
-                  "value": "{{pod.background}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-border",
-                "groupId": "podstageappearance",
-                "path": "appearance.podBorder",
-                "label": "Pod border",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{appearance.podBorder}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.shadow",
-                "label": "Pod outside shadow",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{pod.shadow}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.linked",
-                "label": "Link pod inside shadows",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.linked}}",
-                  "default": true
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-actions",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.layer",
-                "label": "Inside shadow layer",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.layer}}",
-                  "options": [
-                    {
-                      "label": "Show below content",
-                      "value": "below-content"
-                    },
-                    {
-                      "label": "Show above content",
-                      "value": "above-content"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.all",
-                "label": "Pod inside shadow",
-                "showIf": {
-                  "path": "pod.insideShadow.linked",
-                  "op": "isTrue"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.all}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.top",
-                "label": "Pod inside shadow (top)",
-                "showIf": {
-                  "path": "pod.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "y",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.top}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.right",
-                "label": "Pod inside shadow (right)",
-                "showIf": {
-                  "path": "pod.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "x",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.right}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.bottom",
-                "label": "Pod inside shadow (bottom)",
-                "showIf": {
-                  "path": "pod.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "y",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.bottom}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.left",
-                "label": "Pod inside shadow (left)",
-                "showIf": {
-                  "path": "pod.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "x",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.left}}"
-                }
-              },
-              {
-                "kind": "shared",
-                "id": "stagepod-corners"
-              }
-            ],
-            "label": "Pod appearance"
+            "kind": "shared",
+            "id": "stagepod-appearance"
           }
         ]
       },
@@ -3059,6 +2677,17 @@
                 "groupId": "settings-behavior",
                 "path": "behavior.showBacklink",
                 "label": "Show Made with Clickeen",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-behavior",
+                "path": "behavior.socialShare.enabled",
+                "label": "Enable social share",
                 "attrs": {
                   "group-label": "",
                   "size": "md"

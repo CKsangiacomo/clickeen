@@ -162,7 +162,7 @@ Berlin must not preserve old `user_profiles`, `account_members`, `active_account
 
 ### Tokyo
 
-Tokyo owns widget definitions, instance state operations, translated values, and public artifact materialization operations. Tokyo consumes account/user authz context; it does not decide billing or account identity.
+Tokyo owns widget definitions, instance state operations, translated values, submitted public package storage/readiness, and page package composition. Tokyo consumes account/user authz context; it does not decide billing or account identity and does not render widget package bytes from saved source.
 
 ### Public Serving
 
@@ -183,10 +183,16 @@ These are not active product truth in the DB Pivot model:
 
 ## Execution References
 
-Active execution references:
+Historical execution references:
 
 - `Execution_Pipeline_Docs/02-Executing/103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
 - `Execution_Pipeline_Docs/02-Executing/103_DB_Pivot__EXEC__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
 - `Execution_Pipeline_Docs/02-Executing/103_DB_Accounts__PRD__Accounts_Table.md`
 - `Execution_Pipeline_Docs/02-Executing/103_DB_Users__PRD__Users_Table.md`
 - `Execution_Pipeline_Docs/02-Executing/103_DB_Berlin_Auth_Connector__AUDIT__Users_Login_Connector_Map.md`
+
+Current instance-folder and runtime authority:
+
+- `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105__PRD__Instance_Folder_Tenets.md`
+- `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105A__PRD__DB_R2_Operation_Authority.md`
+- `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105B__PRD__Core_DB_Model_Verification.md`

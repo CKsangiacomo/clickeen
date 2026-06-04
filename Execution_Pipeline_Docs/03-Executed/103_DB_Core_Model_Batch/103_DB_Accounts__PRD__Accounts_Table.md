@@ -6,7 +6,7 @@ Date: 2026-05-21
 Parent: `103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
 Blocks: DB pivot execution that depends on account identity, account status, account tier, user account association, invitations, and account-scoped instance ownership
 
-Archive note: this document is no longer active execution authority. It is retained as evidence for the core DB model. Current authority is `../02-Executing/105__PRD__Instance_Folder_Tenets.md`, `../02-Executing/105A__PRD__DB_R2_Operation_Authority.md`, and `../02-Executing/105B__PRD__Core_DB_Model_Verification.md`.
+Archive note: this document is no longer active execution authority. It is retained as evidence for the core DB model. Current authority is `../105_Instance_Runtime_And_Verification_Batch/105__PRD__Instance_Folder_Tenets.md`, `../105_Instance_Runtime_And_Verification_Batch/105A__PRD__DB_R2_Operation_Authority.md`, and `../105_Instance_Runtime_And_Verification_Batch/105B__PRD__Core_DB_Model_Verification.md`.
 
 ## Purpose
 

@@ -6,10 +6,16 @@
 
   const countdownDom = window.CK_COUNTDOWN_DOM;
   if (!countdownDom || typeof countdownDom.resolve !== 'function') throw new Error('[Countdown] Missing DOM resolver');
-  const dom = countdownDom.resolve();
+  const runtime = window.CKWidgetRuntime;
+  if (!runtime || typeof runtime.register !== 'function') {
+    throw new Error('[Countdown] Missing CKWidgetRuntime.register');
+  }
+
+  function initCountdown(widgetRoot, runtimeContext) {
+  const dom = countdownDom.resolve(widgetRoot, runtimeContext);
   if (!dom) return;
   const {
-    widgetRoot,
+    widgetRoot: resolvedWidgetRoot,
     countdownRoot,
     timerEl,
     numberDisplayEl,
@@ -22,6 +28,7 @@
     podEl,
     resolvedInstanceId,
   } = dom;
+  widgetRoot = resolvedWidgetRoot;
 
   const THEME_KEYS = new Set([
     'custom',
@@ -470,6 +477,7 @@
       throw new Error('[Countdown] Missing CKLocaleSwitcher.applyLocaleSwitcher');
     }
     window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
+      composedPage: runtimeContext && runtimeContext.composedPage === true,
       locale: runtimeContext && runtimeContext.locale,
       previewMode: runtimeContext && runtimeContext.previewMode,
       typographyScope: countdownRoot,
@@ -493,23 +501,21 @@
     }
   }
 
-  function resolveFillBackground(value) {
-    if (!window.CKFill || typeof window.CKFill.toCssBackground !== 'function') {
-      throw new Error('[Countdown] Missing CKFill.toCssBackground');
+  function resolveAppearanceHelpers() {
+    if (
+      !window.CKAppearance ||
+      typeof window.CKAppearance.toCssBackground !== 'function' ||
+      typeof window.CKAppearance.toCssColor !== 'function'
+    ) {
+      throw new Error('[Countdown] Missing CKAppearance fill helpers');
     }
-    return window.CKFill.toCssBackground(value);
-  }
-
-  function resolveFillColor(value) {
-    if (!window.CKFill || typeof window.CKFill.toCssColor !== 'function') {
-      throw new Error('[Countdown] Missing CKFill.toCssColor');
-    }
-    return window.CKFill.toCssColor(value);
+    return window.CKAppearance;
   }
 
   function applyAppearanceVars(state) {
-    const textColor = resolveFillColor(state.appearance.textColor);
-    const itemBackground = resolveFillBackground(state.appearance.itemBackground);
+    const helpers = resolveAppearanceHelpers();
+    const textColor = helpers.toCssColor(state.appearance.textColor);
+    const itemBackground = helpers.toCssBackground(state.appearance.itemBackground);
 
     countdownRoot.setAttribute('data-timer-style', state.appearance.timerStyle);
     countdownRoot.setAttribute('data-show-labels', state.appearance.showLabels ? 'true' : 'false');
@@ -821,11 +827,7 @@
     syncTimerScheduler(localizedState);
   }
 
-  window.addEventListener('message', (event) => {
-    const data = event.data;
-    if (!data || typeof data !== 'object') return;
-    if (data.type !== 'ck:state-update') return;
-    if (data.widgetname !== 'countdown') return;
+  runtime.bindStateUpdates('countdown', resolvedInstanceId, (data) => {
     void applyPreviewState(
       data.state,
       data.locale,
@@ -833,22 +835,15 @@
       data.previewMode,
       data.baseLocale,
     );
-  });
+  }, { requireWidgetName: true });
 
-  const keyedPayload =
-    resolvedInstanceId &&
-      window.CK_WIDGETS &&
-      typeof window.CK_WIDGETS === 'object' &&
-      window.CK_WIDGETS[resolvedInstanceId] &&
-      typeof window.CK_WIDGETS[resolvedInstanceId] === 'object'
-      ? window.CK_WIDGETS[resolvedInstanceId]
-      : null;
-  const initialLocale =
-    (keyedPayload && typeof keyedPayload.locale === 'string' && keyedPayload.locale) ||
-    (window.CK_WIDGET && typeof window.CK_WIDGET.locale === 'string' ? window.CK_WIDGET.locale : '');
-  const initialState = (keyedPayload && keyedPayload.state) || (window.CK_WIDGET && window.CK_WIDGET.state);
+  const initialLocale = runtimeContext.locale || '';
+  const initialState = runtimeContext.state;
   if (initialState) {
     applyState(initialState, { locale: initialLocale });
     syncTimerScheduler(initialState);
   }
+  }
+
+  runtime.register('countdown', initCountdown);
 })();

@@ -6,7 +6,7 @@ Date: 2026-05-20
 Parent: `103__PRD__Saved_Instance_Localization_Runtime.md`
 Depends on: PRD 103J, PRD 103K, PRD 103G, PRD 103H, PRD 103I
 
-Archive note: this document is no longer active execution authority. Current manual translated-locale edit and materialization authority is `../02-Executing/105F__PRD__Manual_Translation_Edit_And_Public_Materialization_Verification.md`.
+Archive note: this document is no longer active execution authority. Current manual translated-locale edit and materialization authority is `../105_Instance_Runtime_And_Verification_Batch/105F__PRD__Manual_Translation_Edit_And_Public_Materialization_Verification.md`.
 
 ## Purpose
 

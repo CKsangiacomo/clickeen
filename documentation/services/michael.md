@@ -35,7 +35,7 @@ Tokyo remains appropriate for:
 
 - account assets under `accounts/{accountPublicId}/assets/`
 - account instance documents under `accounts/{accountPublicId}/instances/`
-- account-scoped published projection bytes under `accounts/{accountPublicId}/instances/{instanceId}/published/`
+- account-scoped generated public artifacts under `accounts/{accountPublicId}/instances/{instanceId}/index.html`, `styles.css`, and `runtime.js`
 - account-instance l10n overlays
 
 ## Pre-GA Rule

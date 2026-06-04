@@ -6,7 +6,7 @@ Date: 2026-05-22
 Parent: `103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
 Blocks: All DB Pivot implementation slices and all PRD 103 product execution
 
-Archive note: this audit gate is no longer active execution authority. Its useful doctrine is extracted to `../02-Executing/105A__PRD__DB_R2_Operation_Authority.md`; PRD 105/105A supersede this document where storage or artifact language conflicts.
+Archive note: this audit gate is no longer active execution authority. Its useful doctrine is extracted to `../105_Instance_Runtime_And_Verification_Batch/105A__PRD__DB_R2_Operation_Authority.md`; PRD 105/105A supersede this document where storage or artifact language conflicts.
 
 ## Purpose
 

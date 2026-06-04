@@ -460,7 +460,10 @@
     },
     "behavior": {
       "randomOrder": false,
-      "showBacklink": true
+      "showBacklink": true,
+      "socialShare": {
+        "enabled": false
+      }
     },
     "appearance": {
       "cardwrapper": {
@@ -565,26 +568,12 @@
         }
       },
       "roleScales": {
-        "body": {
-          "l": "22px",
-          "m": "18px",
-          "s": "16px",
-          "xl": "24px",
-          "xs": "14px"
-        },
         "title": {
           "l": "38px",
           "m": "28px",
           "s": "24px",
           "xl": "48px",
           "xs": "20px"
-        },
-        "button": {
-          "l": "20px",
-          "m": "18px",
-          "s": "15px",
-          "xl": "24px",
-          "xs": "13px"
         },
         "localeSwitcher": {
           "l": "20px",
@@ -1575,306 +1564,8 @@
             "label": "Logo tile"
           },
           {
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "dropdown-fill",
-                "groupId": "podstageappearance",
-                "path": "stage.background",
-                "label": "Stage background",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "fill-modes": "color,gradient,image,video",
-                  "value": "{{stage.background}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.shadow",
-                "label": "Stage outside shadow",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{stage.shadow}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.linked",
-                "label": "Link stage inside shadows",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.linked}}",
-                  "default": true
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-actions",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.layer",
-                "label": "Inside shadow layer",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.layer}}",
-                  "options": [
-                    {
-                      "label": "Show below content",
-                      "value": "below-content"
-                    },
-                    {
-                      "label": "Show above content",
-                      "value": "above-content"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.all",
-                "label": "Stage inside shadow",
-                "showIf": {
-                  "path": "stage.insideShadow.linked",
-                  "op": "isTrue"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.all}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.top",
-                "label": "Stage inside shadow (top)",
-                "showIf": {
-                  "path": "stage.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "y",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.top}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.right",
-                "label": "Stage inside shadow (right)",
-                "showIf": {
-                  "path": "stage.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "x",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.right}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.bottom",
-                "label": "Stage inside shadow (bottom)",
-                "showIf": {
-                  "path": "stage.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "y",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.bottom}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "stage.insideShadow.left",
-                "label": "Stage inside shadow (left)",
-                "showIf": {
-                  "path": "stage.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "x",
-                  "size": "md",
-                  "value": "{{stage.insideShadow.left}}"
-                }
-              }
-            ],
-            "label": "Stage appearance"
-          },
-          {
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "dropdown-fill",
-                "groupId": "podstageappearance",
-                "path": "pod.background",
-                "label": "Pod background",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "fill-modes": "color,gradient,image,video",
-                  "value": "{{pod.background}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.shadow",
-                "label": "Pod outside shadow",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{pod.shadow}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.linked",
-                "label": "Link pod inside shadows",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.linked}}",
-                  "default": true
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-actions",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.layer",
-                "label": "Inside shadow layer",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.layer}}",
-                  "options": [
-                    {
-                      "label": "Show below content",
-                      "value": "below-content"
-                    },
-                    {
-                      "label": "Show above content",
-                      "value": "above-content"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.all",
-                "label": "Pod inside shadow",
-                "showIf": {
-                  "path": "pod.insideShadow.linked",
-                  "op": "isTrue"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.all}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.top",
-                "label": "Pod inside shadow (top)",
-                "showIf": {
-                  "path": "pod.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "y",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.top}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.right",
-                "label": "Pod inside shadow (right)",
-                "showIf": {
-                  "path": "pod.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "x",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.right}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.bottom",
-                "label": "Pod inside shadow (bottom)",
-                "showIf": {
-                  "path": "pod.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "y",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.bottom}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-shadow",
-                "groupId": "podstageappearance",
-                "path": "pod.insideShadow.left",
-                "label": "Pod inside shadow (left)",
-                "showIf": {
-                  "path": "pod.insideShadow.linked",
-                  "op": "isFalse"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "axis": "x",
-                  "size": "md",
-                  "value": "{{pod.insideShadow.left}}"
-                }
-              },
-              {
-                "kind": "shared",
-                "id": "stagepod-corners"
-              }
-            ],
-            "label": "Pod appearance"
+            "kind": "shared",
+            "id": "stagepod-appearance"
           }
         ]
       },
@@ -1909,6 +1600,17 @@
                   "group-label": "",
                   "size": "md"
                 }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "settings-behavior",
+                "path": "behavior.socialShare.enabled",
+                "label": "Enable social share",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md"
+                }
               }
             ],
             "label": "Clickeen Branding"
@@ -1923,6 +1625,11 @@
         "path": "behavior.showBacklink",
         "type": "boolean",
         "default": true
+      },
+      {
+        "path": "behavior.socialShare.enabled",
+        "type": "boolean",
+        "default": false
       }
     ]
   }

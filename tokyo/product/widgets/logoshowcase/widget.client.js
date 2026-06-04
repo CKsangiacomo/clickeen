@@ -4,14 +4,12 @@
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  const scriptEl = document.currentScript;
-  if (!(scriptEl instanceof HTMLElement)) return;
-
-  const widgetRoot = scriptEl.closest('[data-ck-widget="logoshowcase"]');
-  if (!(widgetRoot instanceof HTMLElement)) {
-    throw new Error('[LogoShowcase] widget.client.js must be rendered inside [data-ck-widget="logoshowcase"]');
+  const runtime = window.CKWidgetRuntime;
+  if (!runtime || typeof runtime.register !== 'function') {
+    throw new Error('[LogoShowcase] Missing CKWidgetRuntime.register');
   }
 
+  function initLogoShowcase(widgetRoot, runtimeContext) {
   const lsRoot = widgetRoot.querySelector('[data-role="logoshowcase"]');
   if (!(lsRoot instanceof HTMLElement)) {
     throw new Error('[LogoShowcase] Missing [data-role="logoshowcase"] root');
@@ -25,26 +23,7 @@
   widgetRoot.style.setProperty('--ls-icon-prev', 'url("/dieter/icons/svg/chevron.left.svg")');
   widgetRoot.style.setProperty('--ls-icon-next', 'url("/dieter/icons/svg/chevron.right.svg")');
 
-  const resolvedInstanceId = (() => {
-    const direct = widgetRoot.getAttribute('data-ck-instance-id');
-    if (typeof direct === 'string' && direct.trim()) return direct.trim();
-
-    const rootNode = widgetRoot.getRootNode();
-    if (rootNode instanceof ShadowRoot) {
-      const host = rootNode.host;
-      const fromHost = host instanceof HTMLElement ? host.getAttribute('data-ck-instance-id') : '';
-      if (typeof fromHost === 'string' && fromHost.trim()) return fromHost.trim();
-    }
-
-    const ancestor = widgetRoot.closest('[data-ck-instance-id]');
-    const fromAncestor = ancestor instanceof HTMLElement ? ancestor.getAttribute('data-ck-instance-id') : '';
-    if (typeof fromAncestor === 'string' && fromAncestor.trim()) return fromAncestor.trim();
-
-    const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
-    const candidate = global && typeof global.instanceId === 'string' ? global.instanceId.trim() : '';
-    return candidate || '';
-  })();
-  if (resolvedInstanceId) widgetRoot.setAttribute('data-ck-instance-id', resolvedInstanceId);
+  const resolvedInstanceId = runtimeContext.instanceId;
   function assertBoolean(value, path) {
     if (typeof value !== 'boolean') throw new Error(`[LogoShowcase] ${path} must be a boolean`);
   }
@@ -289,11 +268,11 @@
     return out;
   }
 
-  function resolveFillBackground(value) {
-    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
-      return window.CKFill.toCssBackground(value);
+  function resolveAppearanceHelpers() {
+    if (!window.CKAppearance || typeof window.CKAppearance.toCssBackground !== 'function') {
+      throw new Error('[LogoShowcase] Missing CKAppearance fill helpers');
     }
-    return String(value ?? '');
+    return window.CKAppearance;
   }
 
   function applyLayoutVars(state) {
@@ -310,7 +289,7 @@
     lsRoot.style.setProperty('--ls-logo-opacity', String(state.appearance.logoOpacity));
     lsRoot.style.setProperty('--ls-logo-filter', state.appearance.logoLook === 'grayscale' ? 'grayscale(1)' : 'none');
 
-    lsRoot.style.setProperty('--ls-item-bg', resolveFillBackground(state.appearance.itemBackground));
+    lsRoot.style.setProperty('--ls-item-bg', resolveAppearanceHelpers().toCssBackground(state.appearance.itemBackground));
     if (!window.CKSurface?.applyCardWrapper) {
       throw new Error('[LogoShowcase] Missing CKSurface.applyCardWrapper');
     }
@@ -769,6 +748,7 @@
       throw new Error('[LogoShowcase] Missing CKLocaleSwitcher.applyLocaleSwitcher');
     }
     window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
+      composedPage: runtimeContext && runtimeContext.composedPage === true,
       locale: runtimeContext && runtimeContext.locale,
       previewMode: runtimeContext && runtimeContext.previewMode,
       typographyScope: lsRoot,
@@ -819,11 +799,7 @@
     applyState(localizedState, { locale, previewMode });
   }
 
-  window.addEventListener('message', (event) => {
-    const msg = event.data;
-    if (!msg || msg.type !== 'ck:state-update') return;
-    if (msg.widgetname && msg.widgetname !== 'logoshowcase') return;
-    if (resolvedInstanceId && msg.instanceId && msg.instanceId !== resolvedInstanceId) return;
+  runtime.bindStateUpdates('logoshowcase', resolvedInstanceId, (msg) => {
     void applyPreviewState(
       msg.state,
       msg.locale,
@@ -833,17 +809,10 @@
     );
   });
 
-  const keyedPayload =
-    resolvedInstanceId &&
-    window.CK_WIDGETS &&
-    typeof window.CK_WIDGETS === 'object' &&
-    window.CK_WIDGETS[resolvedInstanceId] &&
-    typeof window.CK_WIDGETS[resolvedInstanceId] === 'object'
-      ? window.CK_WIDGETS[resolvedInstanceId]
-      : null;
-  const initialLocale =
-    (keyedPayload && typeof keyedPayload.locale === 'string' && keyedPayload.locale) ||
-    (window.CK_WIDGET && typeof window.CK_WIDGET.locale === 'string' ? window.CK_WIDGET.locale : '');
-  const initialState = (keyedPayload && keyedPayload.state) || (window.CK_WIDGET && window.CK_WIDGET.state);
+  const initialLocale = runtimeContext.locale || '';
+  const initialState = runtimeContext.state;
   if (initialState) applyState(initialState, { locale: initialLocale });
+  }
+
+  runtime.register('logoshowcase', initLogoShowcase);
 })();

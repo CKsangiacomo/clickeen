@@ -8,6 +8,12 @@ import {
 } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import {
+  isActiveTranslationGeneration,
+  normalizeTranslationGenerationFromPayload,
+  normalizeTranslationGenerationSummary,
+  type TranslationGenerationSummary,
+} from '@clickeen/ck-contracts/translation-product-state';
+import {
   useWidgetSession,
   useWidgetSessionChrome,
   useWidgetSessionTransport,
@@ -20,40 +26,6 @@ import type { TranslationReview } from '../lib/translations-preview';
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
 const BUILDER_UI_LOCALE = 'en';
 const TRANSLATION_GENERATION_POLL_MS = 3_000;
-
-type TranslationGenerationStatus =
-  | 'idle'
-  | 'queued'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'superseded';
-
-type TranslationGenerationSummary = {
-  v?: 2;
-  instanceId: string;
-  baseLocale: string;
-  targetLocales: string[];
-  status: TranslationGenerationStatus;
-  active: boolean;
-  requestedAt: string | null;
-  updatedAt: string | null;
-  totalLocales: number;
-  isCurrentBaseContent: boolean;
-  baseContentMarker?: string;
-  generationRequestMarker?: string;
-  locales: TranslationProductLocaleState[];
-  reasonKey?: string;
-  detail?: string;
-};
-
-type TranslationProductLocaleState = {
-  locale: string;
-  state: 'missing' | 'generating' | 'inSync' | 'outOfSync' | 'failed';
-  reviewable: boolean;
-  reasonKey?: string;
-  detail?: string;
-};
 
 type TranslationPanelProductState = {
   primaryState:
@@ -173,112 +145,7 @@ export function buildGenerateTranslationsButtonState(args: {
   return { disabled: false, label: 'Generate translations', message: null };
 }
 
-function normalizeStringArray(value: unknown): string[] | null {
-  if (!Array.isArray(value)) return null;
-  const next = value.map((entry) => (typeof entry === 'string' ? entry.trim() : ''));
-  return next.some((entry) => !entry) ? null : next;
-}
-
-function normalizeGenerationStatus(value: unknown): TranslationGenerationStatus | null {
-  return value === 'idle' ||
-    value === 'queued' ||
-    value === 'running' ||
-    value === 'completed' ||
-    value === 'failed' ||
-    value === 'superseded'
-    ? value
-    : null;
-}
-
-function normalizeProductLocaleState(value: unknown): TranslationProductLocaleState | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  const payload = value as Record<string, unknown>;
-  const locale = typeof payload.locale === 'string' ? payload.locale.trim() : '';
-  const state = payload.state === 'missing' ||
-    payload.state === 'generating' ||
-    payload.state === 'inSync' ||
-    payload.state === 'outOfSync' ||
-    payload.state === 'failed'
-    ? payload.state
-    : null;
-  if (!locale || !state || typeof payload.reviewable !== 'boolean') return null;
-  return {
-    locale,
-    state,
-    reviewable: payload.reviewable,
-    ...(typeof payload.reasonKey === 'string' && payload.reasonKey.trim() ? { reasonKey: payload.reasonKey.trim() } : {}),
-    ...(typeof payload.detail === 'string' && payload.detail.trim() ? { detail: payload.detail.trim() } : {}),
-  };
-}
-
-function normalizeProductLocaleStates(value: unknown): TranslationProductLocaleState[] | null {
-  if (value == null) return [];
-  if (!Array.isArray(value)) return null;
-  const locales = value
-    .map((entry) => normalizeProductLocaleState(entry))
-    .filter((entry): entry is TranslationProductLocaleState => Boolean(entry));
-  return locales.length === value.length ? locales : null;
-}
-
-function normalizeNullableString(value: unknown): string | null {
-  if (value == null) return null;
-  return typeof value === 'string' && value.trim() ? value.trim() : null;
-}
-
-export function normalizeTranslationGenerationSummary(raw: unknown): TranslationGenerationSummary | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const payload = raw as Record<string, unknown>;
-  const instanceId = typeof payload.instanceId === 'string' ? payload.instanceId.trim() : '';
-  const baseLocale = typeof payload.baseLocale === 'string' ? payload.baseLocale.trim() : '';
-  const targetLocales = normalizeStringArray(payload.targetLocales);
-  const status = normalizeGenerationStatus(payload.status);
-  const locales = normalizeProductLocaleStates(payload.locales);
-  const totalLocales = typeof payload.totalLocales === 'number' && Number.isFinite(payload.totalLocales)
-    ? Math.max(0, Math.floor(payload.totalLocales))
-    : null;
-  if (
-    !instanceId ||
-    !baseLocale ||
-    !targetLocales ||
-    !status ||
-    totalLocales == null ||
-    !locales
-  ) {
-    return null;
-  }
-  return {
-    ...(payload.v === 2 ? { v: 2 } : {}),
-    instanceId,
-    baseLocale,
-    targetLocales,
-    status,
-    active: typeof payload.active === 'boolean' ? payload.active : status === 'queued' || status === 'running',
-    requestedAt: normalizeNullableString(payload.requestedAt),
-    updatedAt: normalizeNullableString(payload.updatedAt),
-    totalLocales,
-    isCurrentBaseContent: payload.isCurrentBaseContent !== false,
-    ...(typeof payload.baseContentMarker === 'string' && payload.baseContentMarker.trim() ? { baseContentMarker: payload.baseContentMarker.trim() } : {}),
-    ...(typeof payload.generationRequestMarker === 'string' && payload.generationRequestMarker.trim() ? { generationRequestMarker: payload.generationRequestMarker.trim() } : {}),
-    locales,
-    ...(typeof payload.reasonKey === 'string' && payload.reasonKey.trim() ? { reasonKey: payload.reasonKey.trim() } : {}),
-    ...(typeof payload.detail === 'string' && payload.detail.trim() ? { detail: payload.detail.trim() } : {}),
-  };
-}
-
-function normalizeTranslationGenerationFromPayload(payload: unknown): TranslationGenerationSummary | null {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-  const generation = (payload as Record<string, unknown>).generation;
-  if (generation) return normalizeTranslationGenerationSummary(generation);
-  const translation = (payload as Record<string, unknown>).translation;
-  if (translation && typeof translation === 'object' && !Array.isArray(translation)) {
-    return normalizeTranslationGenerationSummary((translation as Record<string, unknown>).generation);
-  }
-  return null;
-}
-
-export function isActiveTranslationGeneration(generation: TranslationGenerationSummary | null): boolean {
-  return Boolean(generation?.active || generation?.status === 'queued' || generation?.status === 'running');
-}
+export { isActiveTranslationGeneration, normalizeTranslationGenerationSummary };
 
 function reviewableLocalesForGeneration(generation: TranslationGenerationSummary | null): string[] {
   return (generation?.locales ?? [])

@@ -107,8 +107,7 @@ tokyo/product/widgets/{widgetname}/
 ├── widget.css             ← All styling
 ├── widget.client.js       ← Runtime behavior
 ├── editable-fields.json   ← Editable/translatable text contract when needed
-├── limits.json            ← Widget path/op mapping to ck-policy entitlement keys
-└── catalog.json           ← Small catalog listing metadata only
+└── limits.json            ← Widget path/op mapping to ck-policy entitlement keys
 ```
 
 Their deployed R2 home is:

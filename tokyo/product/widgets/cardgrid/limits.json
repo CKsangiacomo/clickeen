@@ -1,0 +1,27 @@
+{
+  "v": 1,
+  "limits": [
+    {
+      "key": "branding.remove",
+      "kind": "flag",
+      "paths": ["behavior.showBacklink"],
+      "mode": "boolean",
+      "deny": true,
+      "enforce": {
+        "load": "sanitize",
+        "publish": "sanitize"
+      }
+    },
+    {
+      "key": "widget.socialShare.enabled",
+      "kind": "flag",
+      "paths": ["behavior.socialShare.enabled"],
+      "mode": "boolean",
+      "deny": false,
+      "enforce": {
+        "load": "sanitize",
+        "publish": "sanitize"
+      }
+    }
+  ]
+}

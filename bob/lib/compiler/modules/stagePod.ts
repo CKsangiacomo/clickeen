@@ -35,6 +35,16 @@ type StagePodLayoutPanelOptions = {
   includeFloating?: boolean;
 };
 
+type StagePodAppearancePanelOptions = {
+  includePodBorder?: boolean;
+};
+
+const insideShadowLayerOptions =
+  '[{\"label\":\"Show below content\",\"value\":\"below-content\"},{\"label\":\"Show above content\",\"value\":\"above-content\"}]'.replace(
+    /"/g,
+    '&quot;',
+  );
+
 export function buildStagePodLayoutPanelFields(options: StagePodLayoutPanelOptions = {}): string[] {
   const includeFloating = options.includeFloating === true;
   const floatingFields = includeFloating
@@ -92,5 +102,42 @@ export function buildStagePodCornerAppearanceFields(): string[] {
     `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusTR' label='Pod top-right radius' placeholder='Choose radius' value='{{pod.radiusTR}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
     `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusBR' label='Pod bottom-right radius' placeholder='Choose radius' value='{{pod.radiusBR}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
     `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusBL' label='Pod bottom-left radius' placeholder='Choose radius' value='{{pod.radiusBL}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
+  ];
+}
+
+function buildInsideShadowFields(args: { owner: 'stage' | 'pod'; label: 'Stage' | 'Pod' }): string[] {
+  const owner = args.owner;
+  const label = args.label;
+  return [
+    `    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='${owner}.insideShadow.linked' label='Link ${owner} inside shadows' value='{{${owner}.insideShadow.linked}}' default='true' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${owner}.insideShadow.layer' label='Inside shadow layer' value='{{${owner}.insideShadow.layer}}' options='${insideShadowLayerOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='${owner}.insideShadow.all' label='${label} inside shadow' show-if=\"${owner}.insideShadow.linked == true\" value='{{${owner}.insideShadow.all}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='y' path='${owner}.insideShadow.top' label='${label} inside shadow (top)' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.top}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='x' path='${owner}.insideShadow.right' label='${label} inside shadow (right)' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.right}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='y' path='${owner}.insideShadow.bottom' label='${label} inside shadow (bottom)' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.bottom}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' axis='x' path='${owner}.insideShadow.left' label='${label} inside shadow (left)' show-if=\"${owner}.insideShadow.linked == false\" value='{{${owner}.insideShadow.left}}' />`,
+  ];
+}
+
+export function buildStagePodAppearancePanelFields(options: StagePodAppearancePanelOptions = {}): string[] {
+  const podBorderFields = options.includePodBorder
+    ? [
+        "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='appearance.podBorder' label='Pod border' value='{{appearance.podBorder}}' />",
+      ]
+    : [];
+
+  return [
+    "  <tooldrawer-cluster label='Stage appearance'>",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='stage.background' label='Stage background' value='{{stage.background}}' />",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='stage.shadow' label='Stage outside shadow' value='{{stage.shadow}}' />",
+    ...buildInsideShadowFields({ owner: 'stage', label: 'Stage' }),
+    "  </tooldrawer-cluster>",
+    "  <tooldrawer-cluster label='Pod appearance'>",
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-fill' size='md' fill-modes='color,gradient,image,video' path='pod.background' label='Pod background' value='{{pod.background}}' />",
+    ...podBorderFields,
+    "    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='pod.shadow' label='Pod outside shadow' value='{{pod.shadow}}' />",
+    ...buildInsideShadowFields({ owner: 'pod', label: 'Pod' }),
+    ...buildStagePodCornerAppearanceFields(),
+    "  </tooldrawer-cluster>",
   ];
 }

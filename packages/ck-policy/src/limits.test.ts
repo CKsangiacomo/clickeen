@@ -22,7 +22,7 @@ test('widget limits map to ck-policy keys and do not define tier truth', () => {
     .filter((name) => name !== 'shared')
     .sort((a, b) => a.localeCompare(b));
 
-  assert.deepEqual(widgetNames, ['countdown', 'faq', 'logoshowcase']);
+  assert.deepEqual(widgetNames, ['cardgrid', 'countdown', 'cta', 'faq', 'hero', 'logoshowcase', 'split', 'steps']);
 
   for (const widgetName of widgetNames) {
     const limitsPath = path.join(widgetsRoot, widgetName, 'limits.json');

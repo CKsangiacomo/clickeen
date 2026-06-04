@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.workspaces (
 
 DO $$ BEGIN
   ALTER TABLE public.workspaces
-    ADD CONSTRAINT workspaces_tier_allowed CHECK (tier IN ('free', 'tier1', 'tier2', 'tier3'));
+    ADD CONSTRAINT workspaces_tier_allowed CHECK (tier IN ('free', 'tier1', 'tier2', 'tier3', 'tier4'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

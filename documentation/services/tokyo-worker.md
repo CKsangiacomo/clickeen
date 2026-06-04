@@ -6,7 +6,7 @@ PRD 103_00 NOTE: this doc now uses the product-operation vocabulary required bef
 
 PRD 105 NOTE: active account instance shape is `instance.config.json`, `instance.content.json`, `overlays/locales/{locale}.json`, `index.html`, `styles.css`, and `runtime.js`. Tokyo-worker must not preserve operation-controller JSON in instance folders, per-locale HTML/JS files, versioned script/style artifacts, or translated-locale inventory folders as current architecture.
 
-Tokyo-worker is the Tokyo object PBX for account-owned assets, account widget instances, translated locale value storage, public artifact bytes, and friendly asset serving.
+Tokyo-worker is the Tokyo object PBX for account-owned assets, account widget instances, translated locale value storage, public package bytes, page composition bytes, and friendly asset serving.
 
 It is not an account authority, product-policy owner, or orchestrator. Roma and system account operations decide account/product policy, publication eligibility, cap enforcement, downgrade consequences, and correctness of published state. Roma carries verified account context to Tokyo-worker through private service bindings. Tokyo-worker validates the named boundary, routes the operation to the exact storage object, and returns the result.
 
@@ -16,20 +16,19 @@ Allowed Tokyo-worker PBX validations are narrow:
 - account capsule to path coordinate match
 - HTTP method, route, and ID shape
 - widget codebook and widget type existence
-- object schema and generated embed file contract shape
+- object schema and submitted public package contract shape
 - R2 object existence or absence at the requested canonical key
 - bounded technical request limits needed to protect the worker/R2 interface
 
 Tokyo-worker must not own billing, tier, publication, l10n version, upload-size, storage-cap, compliance, or account lifecycle policy. If those checks are product policy, they belong to Roma/system account operations before Tokyo-worker is asked to write or remove bytes. Tokyo-worker may enforce technical request bounds only when they are transport safety limits, not product entitlements.
 
-## Widget Catalog And Contracts
+## Widget Definitions And Contracts
 
-Active widget catalog truth is widget-owned under `tokyo/product/widgets/{widgetType}/` in git and deployed to R2 under `product/widgets/{widgetType}/`:
+Active widget definition truth is widget-owned under `tokyo/product/widgets/{widgetType}/` in git and deployed to R2 under `product/widgets/{widgetType}/`:
 
-- `catalog.json` carries catalog label, description, category, and display order.
 - `spec.json` carries defaults and editor contract truth.
 - `editable-fields.json` carries the editable/translatable field contract where the widget has one.
-- Widget `seo-geo.ts` files and catalog SEO/GEO capability flags were deleted in PRD 103_01.3c.2. SEO/GEO can return only through a later named static publish/SEO operation.
+- Widget `catalog.json` and `seo-geo.ts` files are deleted source. SEO/GEO can return only through a later named static publish/SEO operation.
 
 Tokyo-worker resolves widget definitions through the `listWidgetDefinitions` and `getWidgetDefinition` domain operations. Those operations read approved widget source files directly. There is no generated widget manifest or generated SEO/GEO registry in the product path. `scripts/validate-widget-source.mjs` is a non-mutating source guard.
 
@@ -38,7 +37,7 @@ Tokyo-worker resolves widget definitions through the `listWidgetDefinitions` and
 1. Account assets: route and mutate account-owned asset objects under `accounts/{accountPublicId}/assets/`.
 2. Account instances: route product open, save, list, create, rename, delete, publish, and unpublish operations for `accountPublicId + instanceId`.
 3. Account-instance translated locale values: store/read exact locale overlay value maps by `instanceId + locale`.
-4. Public artifact materialization: publish renders `index.html`, `styles.css`, and `runtime.js` under the owning instance folder before the instance becomes public.
+4. Public package storage: save stores the submitted `index.html`, `styles.css`, and `runtime.js` widget package under the owning instance folder; publish verifies those files before the instance becomes public.
 5. Friendly asset routes: serve public asset URLs from canonical R2 roots without creating route-shaped storage roots.
 
 ## Account Storage
@@ -70,7 +69,7 @@ Rules:
 - `instance.json` is not written or read by active product runtime code.
 - Saved source does not carry `sourceVersion` or generic generation lanes. Translation and publish work use product operation state, base content markers, locale overlays, and queue/job boundaries.
 - `overlays/locales/{locale}.json` is the only approved instance-folder translated value file shape. Legacy `overlays/{overlayId}.json` objects may exist until data cleanup, but no translation product operation reads or writes them as current locale value truth.
-- Publish materializes `index.html`, `styles.css`, and `runtime.js` from saved instance source plus translated locale overlays.
+- Save stores the submitted `index.html`, `styles.css`, and `runtime.js` public package. Tokyo-worker stamps/verifies package coherence; it does not rebuild those files from saved source, translated overlays, or widget source files.
 - `instances/index.json` is not product truth and is not read by active product runtime code.
 
 ## Public Serving
@@ -91,24 +90,30 @@ The production public serving URL after PRD 100 is:
 
 ```txt
 https://clk.live/{accountPublicId}/{instanceId}
+https://clk.live/{accountPublicId}/pages/{pageId}
 ```
 
 The cloud-dev public serving URL uses the same path shape on the cloud-dev host:
 
 ```txt
 https://dev.clk.live/{accountPublicId}/{instanceId}
+https://dev.clk.live/{accountPublicId}/pages/{pageId}
 ```
 
 Cloud-dev must not bind the dev Tokyo-worker to `clk.live`; that hostname is reserved for production public serving.
 
-Serving maps that URL to generated files in the instance folder and reads the requested public artifact directly from R2. It must not check DB publish status on visitor traffic, compute HTML from config, heal, infer, backfill, search account indexes, or fall back to old runtime projections.
+Serving maps those URLs to generated files and reads the requested public artifact directly from R2 only after Tokyo serve state says the instance or page is published. It must not compute HTML from config, heal, infer, backfill, search account indexes, or fall back to old runtime projections.
 
-Public availability is the materialized public artifact output:
+Generated package files and public availability are separate:
 
-- the environment public-serving URL serves only if the generated `index.html` artifact exists.
+- the environment public-serving URL serves only if Tokyo serve state is `published`, the generated artifact exists, and account serving policy allows standalone delivery.
+- generated `index.html`, `styles.css`, and `runtime.js` can exist for composition while the standalone widget URL remains unpublished.
+- lower-tier serving caps write `accounts/{accountPublicId}/website/serving-policy.json`; they do not delete generated package files because pages may still compose from those files.
+- generated page packages live under `accounts/{accountPublicId}/website/publishes/{pageId}/` and use page serve state under `website/pages/{pageId}/serve-state.json`.
+- page `embed.js` is route-generated delivery script output for published pages. It is not stored as a fourth page package file.
 - if a requested generated file is missing, that request returns 404.
-- publish/unpublish and tier-serving operations add or remove materialized public artifacts according to product state and policy.
-- Support files only serve from the same instance folder when their filename is on the generated-browser-file allowlist: `styles.css` and `runtime.js`.
+- save writes the package files that serving and page composition both consume. Publish/unpublish changes serve state, verifies package readiness before public delivery, and purges cache.
+- Support files only serve from the generated-browser-file allowlist: `styles.css` and `runtime.js`; page coordinates also allow route-generated `embed.js`.
 - Private source and state files are not public artifacts. `instance.config.json`, `instance.content.json`, `instance.json`, `config.json`, `publish.json`, `embed.json`, `translations.json`, `overlays/`, `published/`, source maps, hidden files, directories, and unknown files return 404 even if the object physically exists.
 
 The following are not surviving public product contracts:
@@ -162,8 +167,9 @@ The only queue binding Tokyo-worker currently owns in this area is the `INSTANCE
 
 ## Delete, Publish, And Unpublish
 
-- Publish/republish materializes public artifacts from the approved saved instance source and translated locale values, then sets the instance publish status to `published`.
+- Publish/republish verifies the stored public package files, then sets the instance publish status to `published`.
 - Unpublish sets the instance publish status to `unpublished` and leaves account-owned saved source plus generated files intact. Public serving rejects them while unpublished.
-- If artifact materialization fails, publish fails clearly and does not mark the instance as published.
+- Tier-cap serving policy may also reject standalone public serving while leaving generated files intact for page composition.
+- If package readiness fails, publish fails clearly and does not mark the instance as published.
 - Delete removes the account-owned instance subtree.
 - Neither operation writes or deletes root `published/widgets` because that registry does not exist in the PRD 099 product model.

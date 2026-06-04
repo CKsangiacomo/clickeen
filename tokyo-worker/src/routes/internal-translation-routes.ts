@@ -4,12 +4,14 @@ import {
   completeLocaleTranslation,
   failLocaleTranslation,
   generateInstanceTranslations,
-  listTranslatedLocales,
-  readAccountInstanceDocument,
   readInstanceTranslationGeneration,
+} from '../domains/account-translations/operations';
+import {
+  listTranslatedLocales,
   readTranslatedLocaleValues,
   writeTranslatedLocaleValues,
-} from '../domains/render';
+} from '../domains/account-translations/values';
+import { readAccountInstanceDocument } from '../domains/account-instances/source';
 import { json } from '../http';
 import {
   authorizeAccountInstanceControlRequest,
@@ -25,8 +27,8 @@ import {
   normalizeAccountPublicId,
   normalizeReasonText,
   normalizeTranslatedValues,
-  readInternalRenderJsonBody,
-} from './internal-render-route-utils';
+  readInternalProductJsonBody,
+} from './internal-product-route-utils';
 
 export async function tryHandleInternalTranslationRoutes(
   args: TokyoRouteArgs,
@@ -38,13 +40,13 @@ export async function tryHandleInternalTranslationRoutes(
     const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationsGenerateMatch[1] || ''));
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
     }
     if (req.method !== 'POST') return respondMethodNotAllowed(respond);
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
 
-    const body = (await readInternalRenderJsonBody({
+    const body = (await readInternalProductJsonBody({
       req,
       env,
       boundary: 'internal.instance.translationGenerate.body',
@@ -84,7 +86,7 @@ export async function tryHandleInternalTranslationRoutes(
     const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationsGenerationMatch[1] || ''));
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
     }
     if (req.method !== 'GET') return respondMethodNotAllowed(respond);
     const authErr = await authorizeAccountInstanceControlRequest({
@@ -120,7 +122,7 @@ export async function tryHandleInternalTranslationRoutes(
     const instanceId = normalizeStorageId(decodeURIComponent(internalTranslationsListMatch[1] || ''));
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
     }
     if (req.method !== 'GET') return respondMethodNotAllowed(respond);
     const authErr = await authorizeAccountInstanceControlRequest({
@@ -155,13 +157,13 @@ export async function tryHandleInternalTranslationRoutes(
     const locale = String(decodeURIComponent(internalTranslationCompletionMatch[2] || '')).trim();
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !locale || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
     }
     if (req.method !== 'PUT') return respondMethodNotAllowed(respond);
     const authErr = authorizeTranslationCompletionTransition(req);
     if (authErr) return respond(authErr);
 
-    const body = (await readInternalRenderJsonBody({
+    const body = (await readInternalProductJsonBody({
       req,
       env,
       boundary: 'internal.instance.translationComplete.body',
@@ -169,7 +171,7 @@ export async function tryHandleInternalTranslationRoutes(
       instanceId,
     })) as Record<string, unknown> | null;
     const values = normalizeTranslatedValues(body?.values);
-    if (!values) return respondValidation(respond, 'tokyo.errors.render.invalid');
+    if (!values) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
 
     const completion = await completeLocaleTranslation({
       env,
@@ -204,13 +206,13 @@ export async function tryHandleInternalTranslationRoutes(
     const locale = String(decodeURIComponent(internalTranslationFailureMatch[2] || '')).trim();
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !locale || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
     }
     if (req.method !== 'PUT') return respondMethodNotAllowed(respond);
     const authErr = authorizeTranslationCompletionTransition(req);
     if (authErr) return respond(authErr);
 
-    const body = (await readInternalRenderJsonBody({
+    const body = (await readInternalProductJsonBody({
       req,
       env,
       boundary: 'internal.instance.translationFail.body',
@@ -251,7 +253,7 @@ export async function tryHandleInternalTranslationRoutes(
     const locale = String(decodeURIComponent(internalTranslationValuesMatch[2] || '')).trim();
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId || !instanceId || !locale || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid', accountId ? 403 : 422);
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
     }
 
     if (req.method === 'GET') {
@@ -274,14 +276,14 @@ export async function tryHandleInternalTranslationRoutes(
       const auth = await authorizeTranslatedLocaleWriteTransition({ req, env, accountId });
       if (!auth.ok) return respond(auth.response);
 
-      const body = (await readInternalRenderJsonBody({
+      const body = (await readInternalProductJsonBody({
         req,
         env,
         boundary: 'internal.instance.translationValues.body',
         accountId,
       })) as Record<string, unknown> | null;
       const values = normalizeTranslatedValues(body?.values);
-      if (!values) return respondValidation(respond, 'tokyo.errors.render.invalid');
+      if (!values) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
 
       try {
         const translation = await writeTranslatedLocaleValues({ env, accountId, instanceId, locale, values });

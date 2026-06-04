@@ -14,7 +14,7 @@ Tokyo has three boring jobs:
 
 - Serve git-authored product software/static resources from canonical R2 roots: `dieter/`, `fonts/`, `product/`, and `prague/`.
 - Store account-owned data through Tokyo-worker: assets and widget instances.
-- Serve generated public widget artifacts through `clk.live` public read paths.
+- Serve stored public widget and page package artifacts through `clk.live` public read paths.
 
 The ownership boundary is always the account. Admin is just the Clickeen account with broader permissions; admin-owned instances are stored exactly like customer-owned instances.
 
@@ -78,7 +78,11 @@ Rules:
 - Widget codes (`FAQ`, `CTD`, `LGS`, etc.) are codebook metadata used by overlay identity and contracts. They are not storage folders and are never required to locate an instance.
 - Instance locale values are addressed by Tokyo operations using `{instanceId, locale}` and persist under `overlays/locales/{locale}.json`. Overlay paths are not product identity.
 - Instance listing comes from Tokyo operations backed by the `instances` DB row, not `instances/index.json`.
-- Generated public browser files `index.html`, `styles.css`, and `runtime.js` are rebuilt by Tokyo materialization and must not be treated as identity, ownership, saved config, or product publish truth.
+- Browser package files `index.html`, `styles.css`, and `runtime.js` are submitted by the Builder save path and stored by Tokyo-worker. They must not be treated as identity, ownership, saved config, or product publish truth.
+- Those files can exist for composition before public standalone serving. `clk.live` serving still requires Tokyo serve state to be `published` and account serving policy to allow the instance.
+- `accounts/{accountPublicId}/website/serving-policy.json` is the named account-level standalone serving gate for lower-tier caps. It disables public delivery without deleting generated package files.
+- Generated page packages live under `accounts/{accountPublicId}/website/publishes/{pageId}/` and use page serve state under `website/pages/{pageId}/serve-state.json`.
+- Page `embed.js` is route-generated delivery script output for published pages, not a fourth generated page package file.
 - Prague page translations are not account-instance overlays.
 
 ## Public Static Serving
@@ -87,17 +91,19 @@ Public serving uses direct account-scoped static URLs:
 
 ```txt
 https://clk.live/{accountPublicId}/{instanceId}
+https://clk.live/{accountPublicId}/pages/{pageId}
 ```
 
 `clk.live` is the production public-serving host. Cloud-dev uses the same path shape on:
 
 ```txt
 https://dev.clk.live/{accountPublicId}/{instanceId}
+https://dev.clk.live/{accountPublicId}/pages/{pageId}
 ```
 
 Cloud-dev must not bind the dev Tokyo-worker to `clk.live`.
 
-That route maps to `accounts/{accountPublicId}/instances/{instanceId}/index.html`. Support files are served only when they are generated browser files on the public allowlist.
+Those routes map to generated `index.html`, `styles.css`, and `runtime.js` packages only after Tokyo serve state allows public delivery. Support files are served only when they are generated browser files on the public allowlist; page coordinates also allow route-generated `embed.js`.
 
 ## Forbidden Concepts
 

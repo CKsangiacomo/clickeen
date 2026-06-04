@@ -79,7 +79,8 @@ export type WidgetPackageFileName =
   | 'spec.json'
   | 'widget.html'
   | 'widget.css'
-  | 'widget.client.js';
+  | 'widget.client.js'
+  | string;
 
 export interface WidgetPackageFileContext {
   mediaType: 'application/json' | 'text/html' | 'text/css' | 'text/javascript';

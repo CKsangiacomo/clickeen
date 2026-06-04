@@ -104,24 +104,16 @@
     }
   }
 
-  function resolveFillBackground(value) {
-    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
-      return window.CKFill.toCssBackground(value);
+  function resolveAppearance() {
+    if (
+      !window.CKAppearance ||
+      typeof window.CKAppearance.toCssBackground !== 'function' ||
+      typeof window.CKAppearance.toCssColor !== 'function' ||
+      typeof window.CKAppearance.tokenizeRadius !== 'function'
+    ) {
+      throw new Error('[CKHeader] Missing CKAppearance helpers');
     }
-    return String(value ?? '');
-  }
-
-  function resolveFillColor(value) {
-    if (window.CKFill && typeof window.CKFill.toCssColor === 'function') {
-      return window.CKFill.toCssColor(value);
-    }
-    return String(value ?? '');
-  }
-
-  function tokenizeRadius(value) {
-    var normalized = String(value || '').trim();
-    if (!normalized || normalized === 'none') return '0';
-    return 'var(--control-radius-' + normalized + ')';
+    return window.CKAppearance;
   }
 
   function normalizeIconName(raw) {
@@ -315,9 +307,10 @@
       layoutEl.style.setProperty('--ck-header-cta-icon', 'none');
     }
 
-    layoutEl.style.setProperty('--ck-header-cta-bg', resolveFillBackground(state.appearance.ctaBackground));
-    layoutEl.style.setProperty('--ck-header-cta-fg', resolveFillColor(state.appearance.ctaTextColor));
-    layoutEl.style.setProperty('--ck-header-cta-radius', tokenizeRadius(state.appearance.ctaRadius));
+    var appearance = resolveAppearance();
+    layoutEl.style.setProperty('--ck-header-cta-bg', appearance.toCssBackground(state.appearance.ctaBackground));
+    layoutEl.style.setProperty('--ck-header-cta-fg', appearance.toCssColor(state.appearance.ctaTextColor));
+    layoutEl.style.setProperty('--ck-header-cta-radius', appearance.tokenizeRadius(state.appearance.ctaRadius));
     assertObject(state.appearance.ctaBorder, 'state.appearance.ctaBorder');
     assertBoolean(state.appearance.ctaBorder.enabled, 'state.appearance.ctaBorder.enabled');
     assertNumber(state.appearance.ctaBorder.width, 'state.appearance.ctaBorder.width');

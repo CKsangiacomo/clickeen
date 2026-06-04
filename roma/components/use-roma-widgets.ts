@@ -19,7 +19,6 @@ export type WidgetCatalogOption = {
   widgetType: string;
   label: string;
   description: string;
-  category: string;
   canCreate: boolean;
   disabledReasonKey: string | null;
 };
@@ -43,7 +42,6 @@ type RawWidgetCatalogOption = {
   widgetType?: string | null;
   label?: string | null;
   description?: string | null;
-  category?: string | null;
   canCreate?: boolean | null;
   disabledReasonKey?: string | null;
 };
@@ -104,7 +102,6 @@ export function normalizeWidgetCatalogOption(raw: RawWidgetCatalogOption): Widge
   if (widgetType === 'unknown') return null;
   const label = String(raw.label || '').trim() || widgetType;
   const description = String(raw.description || '').trim();
-  const category = String(raw.category || '').trim() || 'Widgets';
   const disabledReasonKey = typeof raw.disabledReasonKey === 'string' && raw.disabledReasonKey.trim()
     ? raw.disabledReasonKey.trim()
     : null;
@@ -112,7 +109,6 @@ export function normalizeWidgetCatalogOption(raw: RawWidgetCatalogOption): Widge
     widgetType,
     label,
     description,
-    category,
     canCreate: raw.canCreate === true,
     disabledReasonKey,
   };

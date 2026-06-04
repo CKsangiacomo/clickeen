@@ -1,4 +1,4 @@
-export type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3';
+export type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3' | 'tier4';
 export type PolicyProfile = AccountTier;
 export type MemberRole = 'viewer' | 'editor' | 'admin' | 'owner';
 

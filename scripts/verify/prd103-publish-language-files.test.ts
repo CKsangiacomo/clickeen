@@ -11,12 +11,13 @@ import {
 } from '../../tokyo-worker/src/domains/widget-catalog.ts';
 import {
   publishAccountInstanceTransition,
-  writeSavedRenderConfig,
-  writeTranslatedLocaleValues,
-} from '../../tokyo-worker/src/domains/render/index.ts';
+  saveAccountInstanceTransition,
+} from '../../tokyo-worker/src/domains/account-instances/operations.ts';
+import { writeAccountInstanceSource } from '../../tokyo-worker/src/domains/account-instances/source.ts';
+import { writeTranslatedLocaleValues } from '../../tokyo-worker/src/domains/account-translations/values.ts';
 import { tryHandleClkLiveStaticRoutes } from '../../tokyo-worker/src/routes/clk-live-routes.ts';
 import type { Env } from '../../tokyo-worker/src/types.ts';
-import { attachTestInstanceRegistry } from '../../tokyo-worker/src/domains/render/test-instance-registry.ts';
+import { attachTestInstanceRegistry } from '../../tokyo-worker/src/test-utils/instance-registry.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
 type StoredObject = {
@@ -96,19 +97,34 @@ function createTestEnv(seed: Record<string, string>) {
   return { env, objects };
 }
 
-function widgetProductSources(widgetType: string) {
+function publicPackageForWidget(args: {
+  accountId: string;
+  instanceId: string;
+  widgetType: string;
+  translatedValues: Record<string, string>;
+}) {
   return {
-    [`product/widgets/${widgetType}/widget.html`]: `<!doctype html>
-<html><head>
-<link rel="stylesheet" href="./widget.css" />
-</head><body>
-<div data-ck-widget="${widgetType}" data-role="root">
-  <section data-role="${widgetType}"></section>
-  <script src="./widget.client.js" defer></script>
-</div>
-</body></html>`,
-    [`product/widgets/${widgetType}/widget.css`]: `.ck-${widgetType}{}`,
-    [`product/widgets/${widgetType}/widget.client.js`]: `window.__${widgetType.toUpperCase()}_STATE__ = window.CK_WIDGET.state;`,
+    v: 1 as const,
+    indexHtml: `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main data-ck-account-id="${args.accountId}" data-ck-instance-id="${args.instanceId}" data-ck-widget-type="${args.widgetType}">
+      <section class="ck-widget-shell">${args.widgetType}</section>
+    </main>
+    <script src="./runtime.js" defer></script>
+  </body>
+</html>`,
+    stylesCss: `.ck-widget-shell{display:block}`,
+    runtimeJs: `window.CK_WIDGET = window.CK_WIDGET || {};
+window.CK_LOCALE_POLICY = { baseLocale: "en", targetLocales: ["it"] };
+window.CK_WIDGET.state = ${JSON.stringify({
+      widgetType: args.widgetType,
+      translatedValues: args.translatedValues,
+    })};`,
   };
 }
 
@@ -148,18 +164,23 @@ const widgetCases = [
     mutate(config: Record<string, unknown>) {
       const header = config.header as Record<string, unknown>;
       const cta = config.cta as Record<string, unknown>;
-      const sections = config.sections as Array<Record<string, unknown>>;
-      const section = sections[0] as Record<string, unknown>;
-      const faqs = section.faqs as Array<Record<string, unknown>>;
       header.title = 'Questions';
       header.subtitleHtml = 'Fast answers';
       cta.label = 'Contact us';
-      section.title = 'Basics';
-      faqs[0] = {
-        ...(faqs[0] ?? {}),
-        question: 'What does it cost?',
-        answer: 'Plans start free.',
-      };
+      config.sections = [
+        {
+          id: 'basics',
+          title: 'Basics',
+          faqs: [
+            {
+              id: 'cost',
+              question: 'What does it cost?',
+              answer: 'Plans start free.',
+              defaultOpen: false,
+            },
+          ],
+        },
+      ];
     },
   },
   {
@@ -175,19 +196,19 @@ const widgetCases = [
 ] as const;
 
 for (const widgetCase of widgetCases) {
-  test(`PRD 105 publishes canonical ${widgetCase.widgetType} runtime from Tokyo source and current locale overlay`, async () => {
+  test(`PRD 105 serves submitted ${widgetCase.widgetType} package with current locale values`, async () => {
     const widgetDefinition = getWidgetDefinition(widgetCase.widgetType);
     const config = resolveWidgetDefaults(widgetCase.widgetType);
     assert(widgetDefinition);
     assert(config);
     widgetCase.mutate?.(config);
-    const { env } = createTestEnv(widgetProductSources(widgetCase.widgetType));
+    const { env } = createTestEnv({});
     const translatedValues = translatedValuesForWidget({
       widgetType: widgetCase.widgetType,
       contract: widgetDefinition.editableFields,
       config,
     });
-    await writeSavedRenderConfig({
+    await writeAccountInstanceSource({
       env,
       accountId: ACCOUNT_ID,
       instanceId: widgetCase.instanceId,
@@ -202,6 +223,23 @@ for (const widgetCase of widgetCases) {
       instanceId: widgetCase.instanceId,
       locale: 'it',
       values: translatedValues,
+    });
+    await saveAccountInstanceTransition({
+      env,
+      accountId: ACCOUNT_ID,
+      instanceId: widgetCase.instanceId,
+      submittedWidgetType: widgetCase.widgetType,
+      config,
+      displayName: widgetDefinition.label,
+      hasDisplayName: true,
+      meta: { baseLocale: 'en', targetLocales: ['it'] },
+      hasMeta: true,
+      publicPackage: publicPackageForWidget({
+        accountId: ACCOUNT_ID,
+        instanceId: widgetCase.instanceId,
+        widgetType: widgetCase.widgetType,
+        translatedValues,
+      }),
     });
 
     const result = await publishAccountInstanceTransition({ env, accountId: ACCOUNT_ID, instanceId: widgetCase.instanceId });

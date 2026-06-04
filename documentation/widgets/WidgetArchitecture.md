@@ -2,7 +2,7 @@
 
 STATUS: REFERENCE (AI-executable)
 
-PRD 103_00 NOTE: this doc now uses the product-operation vocabulary required before PRD 103 resumes. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`.
+PRD 105 NOTE: this doc uses the current product-operation vocabulary and instance-folder/runtime authority from `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105__PRD__Instance_Folder_Tenets.md`.
 
 Purpose: system-level reference for widget runtime and data flow.
 Related:
@@ -14,7 +14,7 @@ Related:
 ## System invariants
 - Widget software files in `tokyo/product/widgets/{widgetType}/` are the product software source of truth.
 - Account-owned widget instance runtime data lives under `accounts/{accountPublicId}/instances/{instanceId}/`; accounts have instances and assets, not widget folders.
-- `spec.json` owns the widget primitive variable graph. ToolDrawer, Copilot, Babel, Tokyo validation, Bob preview, and public artifact materialization must use that same graph.
+- `spec.json` owns the widget primitive variable graph. ToolDrawer, Copilot, Babel, Tokyo validation, Bob preview, and Builder/Roma public package output must use that same graph.
 - Orchestrators avoid widget-specific logic; they may route calls and apply shared translated-value resolution only at the named boundary.
 - Base config/content and translated-value contract violations must fail visibly. Runtime must not substitute another locale value map, repair values, or infer product meaning from private storage bodies.
 
@@ -134,5 +134,5 @@ Runtime must not depend on `window.CK_ASSET_ORIGIN`; preview hosts and `clk.live
 | Tokyo | Store widget software under `product/widgets/` and account runtime objects under `accounts/{accountPublicId}/instances/` | Treat account instances as widget software or use `widgetCode` as a storage locator |
 | Bob | Compile spec, render ToolDrawer, hold working state | Apply widget-specific defaults at runtime |
 | Roma | Open/save account editor state through same-origin routes backed by Tokyo | Transform widget state |
-| `clk.live` public serving | Serve generated public visitor artifacts for published account instances | Modify widget state, expose authoring config/content, expose translated-locale storage objects, or fetch product databases at request time |
+| `clk.live` public serving | Serve stored public visitor package files for published account instances | Modify widget state, expose authoring config/content, expose translated-locale storage objects, or fetch product databases at request time |
 | Michael | Persist account/registry metadata and relational state | Per-widget validation or public embed assembly |

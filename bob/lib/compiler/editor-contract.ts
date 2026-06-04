@@ -4,7 +4,11 @@ import {
   buildHeaderContentPanelFields,
   buildHeaderLayoutPanelFields,
 } from './modules/header';
-import { buildStagePodCornerAppearanceFields, buildStagePodLayoutPanelFields } from './modules/stagePod';
+import {
+  buildStagePodAppearancePanelFields,
+  buildStagePodCornerAppearanceFields,
+  buildStagePodLayoutPanelFields,
+} from './modules/stagePod';
 import { buildTypographyPanel } from './modules/typography';
 
 type JsonObject = Record<string, unknown>;
@@ -48,6 +52,7 @@ export type EditorSharedNode = {
     | 'header-layout-no-cta'
     | 'header-appearance'
     | 'header-appearance-no-cta'
+    | 'stagepod-appearance'
     | 'stagepod-layout'
     | 'stagepod-corners';
 };
@@ -222,6 +227,12 @@ function renderSharedNode(node: EditorSharedNode, defaults: JsonObject): string[
       return buildHeaderAppearancePanelFields({ includeCta: false });
     case 'stagepod-layout':
       return buildStagePodLayoutPanelFields({ includeFloating: isPlainObject(defaults.stage) && isPlainObject(defaults.stage.floating) });
+    case 'stagepod-appearance': {
+      const appearance = isPlainObject(defaults.appearance) ? defaults.appearance : null;
+      return buildStagePodAppearancePanelFields({
+        includePodBorder: isPlainObject(appearance?.podBorder),
+      });
+    }
     case 'stagepod-corners':
       return buildStagePodCornerAppearanceFields();
     default: {

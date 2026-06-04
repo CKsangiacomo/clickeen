@@ -5,7 +5,7 @@ Owner: Product + Architecture
 Date: 2026-05-17
 Current dependencies: `103J__PRD__Generic_Widget_Translation_System.md`, `103K__PRD__Saved_Base_Content_Translation_Sync.md`
 
-Archive note: this document is no longer active execution authority. Current translation field/agent authority is `../02-Executing/105E__PRD__Generic_Translation_Field_And_Agent_Contract_Verification.md`.
+Archive note: this document is no longer active execution authority. Current translation field/agent authority is `../105_Instance_Runtime_And_Verification_Batch/105E__PRD__Generic_Translation_Field_And_Agent_Contract_Verification.md`.
 
 ## Purpose
 

@@ -35,7 +35,7 @@ We enable businesses to create content once and render infinite personalized var
 - Industry personalization
 - Geo targeting
 
-### For Enterprise ($5,988-11,988/year)
+### For Large Accounts ($5,988-11,988/year)
 - Above +
 - ABM (account-specific overlays)
 - Unlimited experiments
@@ -55,7 +55,7 @@ We enable businesses to create content once and render infinite personalized var
 |---------|-------|------|---------------|
 | **SMB** | 2M | $480 | $960M |
 | **Mid-Market** | 500K | $2,388 | $1.19B |
-| **Enterprise** | 100K | $11,988 | $1.2B |
+| **Large accounts** | 100K | $11,988 | $1.2B |
 
 **Realistic 3-year target:** 2.5M users, $350 blended ARPU = **$875M ARR**
 
@@ -66,19 +66,22 @@ We enable businesses to create content once and render infinite personalized var
 **Primary message:**
 "Create once, personalize infinitely. Clickeen renders your content in 14 languages + regional variants + A/B tests from a single source."
 
-**Secondary messages by tier:**
+**Secondary messages by tier id:**
 
-**Starter ($10/mo):**
-"Multi-language widgets that speak your visitors' language automatically"
+**free:**
+"Create and publish one widget with Clickeen branding."
 
-**Pro ($40/mo):**
-"Multi-language marketing (widgets, emails, ads) with built-in A/B testing"
+**tier1:**
+"Widget-only account with higher limits and branding removal."
 
-**Business ($99/mo):**
-"Industry-personalized landing pages + geo-targeting + unlimited experiments"
+**tier2:**
+"Widget-only account with SEO/GEO, more widget types, more published instances, and auto-translate."
 
-**Enterprise ($499-999/mo):**
-"ABM platform that auto-generates account-specific pages in 100+ languages"
+**tier3:**
+"Widget-only account with unlimited widget scale and Supernova effects."
+
+**tier4:**
+"Blocks and pages: build landing pages from reusable blocks, with widgets embedded as public `clk.live` lines."
 
 ---
 
@@ -106,7 +109,7 @@ We enable businesses to create content once and render infinite personalized var
 
 ### What we DON'T compete with (yet)
 - ❌ Full experimentation platforms (Optimizely, VWO) - we have basic A/B testing only
-- ❌ Enterprise personalization (Dynamic Yield) - we have industry/ABM overlays, not full decisioning
+- ❌ Large-account personalization suites (Dynamic Yield) - we have industry/ABM overlays, not full decisioning
 - ❌ CDPs (Segment, mParticle) - we assume identity is resolved upstream
 
 ---
@@ -125,12 +128,11 @@ We enable businesses to create content once and render infinite personalized var
 - Month 36: $875M ARR (with personalization features)
 
 **Revenue by tier (Month 36):**
-- Free: 85% of users, $0 revenue
-- Starter: 8% of paid users, $120/year
-- Pro: 4% of paid users, $480/year
-- Business: 2% of paid users, $1,188/year
-- Growth: 0.8% of paid users, $2,388/year
-- Enterprise: 0.2% of paid users, $11,988/year (avg)
+- free: 85% of users, $0 revenue
+- tier1: widget-only paid entry
+- tier2: widget-only SEO/GEO and translation tier
+- tier3: widget-only premium effects tier
+- tier4: blocks/pages tier
 - **Blended ARPU: $350/year**
 
 ---
@@ -179,7 +181,7 @@ We enable businesses to create content once and render infinite personalized var
 **For Mid-Market:**
 "You're managing 5 separate tools and still only reaching English speakers. Clickeen gives you widgets, emails, landing pages, and social in 14 languages, with A/B testing built in, for $1,188/year."
 
-**For Enterprise:**
+**For Large Accounts:**
 "You're spending $200K-500K/year on personalization vendors (Optimizely, Dynamic Yield, Mutiny, Phrase). Clickeen replaces the creative variant management layer for $11,988/year. That's a 95% cost reduction for the same output - personalized, localized content across all your surfaces."
 
 ---
@@ -192,11 +194,11 @@ We enable businesses to create content once and render infinite personalized var
 
 **Engagement:**
 - Dimensions used per user (locale only? locale + geo? locale + industry + ABM?)
-- Overlay generation requests (are Enterprise customers using ABM?)
+- Overlay generation requests (are large accounts using ABM?)
 
 **Revenue:**
-- ARPU by tier (is Enterprise ARPU climbing to $20K-50K?)
-- Tier upgrade rates (Starter → Pro → Business → Enterprise)
+- ARPU by tier (is top-tier ARPU climbing to $20K-50K?)
+- Tier upgrade rates (`free` → `tier1` → `tier2` → `tier3` → `tier4`)
 - Feature adoption (% using geo, % using experiments, % using ABM)
 
 **Viral:**

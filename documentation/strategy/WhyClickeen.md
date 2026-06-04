@@ -234,9 +234,10 @@ Clickeen is multi-tenant with no artificial caps on collaboration. This is the F
 **The Model:**
 - **Unlimited viewers at every tier** (including Free) — viewers can comment, not edit
 - **Free = 1 editor / 1 widget type / 1 instance / limited content / limited features**
-- **Tier 1+ unlocks:** more editors, all widget types, more instances, SEO/GEO
-- **Tier 2+ unlocks:** unlimited editors, unlimited instances, auto-translate
+- **Tier 1+ unlocks:** more editors and higher limits
+- **Tier 2+ unlocks:** SEO/GEO, more widget types, more published instances, auto-translate
 - **Tier 3 unlocks:** Supernova effects
+- **Tier 4 unlocks:** customer-owned blocks and pages
 - **Widgets belong to workspaces, not individuals** — team-owned, portable
 
 **Switching Costs Compound:**
@@ -460,7 +461,7 @@ Every system we build is a **multiplier across all dimensions**:
 |--------|---------------------|
 | Widget spec | All outputs (embed, email, LP, ad, social) |
 | i18n key | All widgets, all pages |
-| Starter design | All use cases |
+| Base design | All use cases |
 | AI agent prompt | All locales, all widgets |
 | Prague template | All pages, all locales, all use cases |
 

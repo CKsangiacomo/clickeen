@@ -17,15 +17,11 @@ import {
 export type WidgetDefinition = {
   widgetType: string;
   widgetCode: string;
-  label: string;
-  description: string;
-  category: string;
   editableFields: WidgetEditableFieldsContract;
 };
 
 type WidgetDefinitionInternal = WidgetDefinition & {
   itemKey?: string | null;
-  order?: number | null;
   defaults?: unknown;
 };
 
@@ -40,14 +36,9 @@ function asNonEmptyString(value: unknown): string | null {
   return normalized || null;
 }
 
-function asOptionalNumber(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
 function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefinitionInternal {
   const spec = isRecord(source.spec) ? source.spec : null;
-  const catalog = isRecord(source.catalog) ? source.catalog : null;
-  if (!spec || !catalog) {
+  if (!spec) {
     throw new Error(`widget_definition_source_invalid:${source.widgetType}`);
   }
   const widgetType = asNonEmptyString(spec.widgetname);
@@ -66,20 +57,10 @@ function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefin
   if (editableFields.widgetType !== widgetType) {
     throw new Error(`widget_definition_editable_fields_mismatch:${widgetType}`);
   }
-  const label = asNonEmptyString(catalog.label);
-  const description = asNonEmptyString(catalog.description);
-  const category = asNonEmptyString(catalog.category);
-  if (!label || !description || !category) {
-    throw new Error(`widget_definition_catalog_invalid:${widgetType}`);
-  }
 
   return {
     widgetType,
     widgetCode,
-    order: asOptionalNumber(catalog.order),
-    label,
-    description,
-    category,
     itemKey: asNonEmptyString(spec.itemKey),
     editableFields,
     defaults: spec.defaults,
@@ -88,19 +69,12 @@ function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefin
 
 const WIDGET_DEFINITIONS: WidgetDefinitionInternal[] = WIDGET_DEFINITION_SOURCES.map(
   readWidgetDefinitionSource,
-).sort((a, b) => {
-  const orderA = a.order ?? Number.POSITIVE_INFINITY;
-  const orderB = b.order ?? Number.POSITIVE_INFINITY;
-  return orderA - orderB || a.widgetType.localeCompare(b.widgetType);
-});
+).sort((a, b) => a.widgetType.localeCompare(b.widgetType));
 
 function publicEntry(entry: WidgetDefinitionInternal): WidgetDefinition {
   return {
     widgetType: entry.widgetType,
     widgetCode: entry.widgetCode,
-    label: entry.label,
-    description: entry.description,
-    category: entry.category,
     editableFields: entry.editableFields,
   };
 }

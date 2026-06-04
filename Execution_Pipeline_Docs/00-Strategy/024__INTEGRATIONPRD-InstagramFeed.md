@@ -96,9 +96,9 @@ You can tune these values after observing real-world load.
 | Plan | Profile | Hashtag | OAuth | TTL (min) | Force/day | Force/hour |
 |---|---|---|---|---:|---:|---:|
 | Free | Yes | No | No | 1440 (24h) | 1 | 0 |
-| Starter | Yes | Optional | Optional | 360 (6h) | 6 | 1 |
-| Pro | Yes | Yes | Yes | 60 (1h) | 24 | 4 |
-| Business | Yes | Yes | Yes | 15 | 96 | 12 |
+| tier1 | Yes | Optional | Optional | 360 (6h) | 6 | 1 |
+| tier2 | Yes | Yes | Yes | 60 (1h) | 24 | 4 |
+| tier3 | Yes | Yes | Yes | 15 | 96 | 12 |
 
 **Notes**
 - TTL is the minimum time between **background refreshes** for a given source+instance.

@@ -1,4 +1,11 @@
-import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
+import {
+  asTrimmedString,
+  isRecord,
+} from '@clickeen/ck-contracts';
+import {
+  normalizeTranslationGenerationSummary,
+  type TranslationGenerationSummary as InstanceTranslationGenerationSummary,
+} from '@clickeen/ck-contracts/translation-product-state';
 import { callTokyo } from './tokyo-client';
 
 type RouteFailure = {
@@ -34,44 +41,9 @@ export type InstanceTranslationsGeneratePayload = {
     accepted: boolean;
     baseLocale: string;
     targetLocales: string[];
-    queuedLocales: string[];
     skippedLocales: string[];
     generation: InstanceTranslationGenerationSummary | null;
   };
-};
-
-export type InstanceTranslationGenerationStatus =
-  | 'idle'
-  | 'queued'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'superseded';
-
-export type InstanceTranslationProductLocaleState = {
-  locale: string;
-  state: 'missing' | 'generating' | 'inSync' | 'outOfSync' | 'failed';
-  reviewable: boolean;
-  reasonKey?: string;
-  detail?: string;
-};
-
-export type InstanceTranslationGenerationSummary = {
-  v?: 2;
-  instanceId: string;
-  baseLocale: string;
-  targetLocales: string[];
-  status: InstanceTranslationGenerationStatus;
-  active: boolean;
-  requestedAt: string | null;
-  updatedAt: string | null;
-  totalLocales: number;
-  isCurrentBaseContent: boolean;
-  baseContentMarker?: string;
-  generationRequestMarker?: string;
-  locales: InstanceTranslationProductLocaleState[];
-  reasonKey?: string;
-  detail?: string;
 };
 
 export type InstanceTranslationGenerationPayload = {
@@ -136,109 +108,21 @@ function normalizeStringArray(raw: unknown): string[] | null {
   return values as string[];
 }
 
-function normalizeGenerationStatus(raw: unknown): InstanceTranslationGenerationStatus | null {
-  return raw === 'idle' ||
-    raw === 'queued' ||
-    raw === 'running' ||
-    raw === 'completed' ||
-    raw === 'failed' ||
-    raw === 'superseded'
-    ? raw
-    : null;
-}
-
-function normalizeProductLocaleState(raw: unknown): InstanceTranslationProductLocaleState | null {
-  if (!isRecord(raw)) return null;
-  const locale = asTrimmedString(raw.locale);
-  const state = raw.state === 'missing' ||
-    raw.state === 'generating' ||
-    raw.state === 'inSync' ||
-    raw.state === 'outOfSync' ||
-    raw.state === 'failed'
-    ? raw.state
-    : null;
-  if (!locale || !state || typeof raw.reviewable !== 'boolean') return null;
-  return {
-    locale,
-    state,
-    reviewable: raw.reviewable,
-    ...(asTrimmedString(raw.reasonKey) ? { reasonKey: asTrimmedString(raw.reasonKey) as string } : {}),
-    ...(asTrimmedString(raw.detail) ? { detail: asTrimmedString(raw.detail) as string } : {}),
-  };
-}
-
-function normalizeProductLocaleStates(raw: unknown): InstanceTranslationProductLocaleState[] | null {
-  if (raw == null) return [];
-  if (!Array.isArray(raw)) return null;
-  const locales = raw
-    .map((entry) => normalizeProductLocaleState(entry))
-    .filter((entry): entry is InstanceTranslationProductLocaleState => Boolean(entry));
-  return locales.length === raw.length ? locales : null;
-}
-
-function normalizeNullableString(raw: unknown): string | null {
-  if (raw == null) return null;
-  return asTrimmedString(raw);
-}
-
-function normalizeGenerationSummary(raw: unknown): InstanceTranslationGenerationSummary | null {
-  if (!isRecord(raw)) return null;
-  const instanceId = asTrimmedString(raw.instanceId);
-  const baseLocale = asTrimmedString(raw.baseLocale);
-  const targetLocales = normalizeStringArray(raw.targetLocales);
-  const status = normalizeGenerationStatus(raw.status);
-  const locales = normalizeProductLocaleStates(raw.locales);
-  const totalLocales = typeof raw.totalLocales === 'number' && Number.isFinite(raw.totalLocales)
-    ? Math.max(0, Math.floor(raw.totalLocales))
-    : null;
-  const requestedAt = normalizeNullableString(raw.requestedAt);
-  const updatedAt = normalizeNullableString(raw.updatedAt);
-  if (
-    !instanceId ||
-    !baseLocale ||
-    !targetLocales ||
-    !status ||
-    totalLocales == null ||
-    !locales
-  ) {
-    return null;
-  }
-  return {
-    ...(raw.v === 2 ? { v: 2 } : {}),
-    instanceId,
-    baseLocale,
-    targetLocales,
-    status,
-    active: typeof raw.active === 'boolean' ? raw.active : status === 'queued' || status === 'running',
-    requestedAt,
-    updatedAt,
-    totalLocales,
-    isCurrentBaseContent: raw.isCurrentBaseContent !== false,
-    ...(asTrimmedString(raw.baseContentMarker) ? { baseContentMarker: asTrimmedString(raw.baseContentMarker) as string } : {}),
-    ...(asTrimmedString(raw.generationRequestMarker) ? { generationRequestMarker: asTrimmedString(raw.generationRequestMarker) as string } : {}),
-    locales,
-    ...(asTrimmedString(raw.reasonKey) ? { reasonKey: asTrimmedString(raw.reasonKey) as string } : {}),
-    ...(asTrimmedString(raw.detail) ? { detail: asTrimmedString(raw.detail) as string } : {}),
-  };
-}
-
 function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGeneratePayload | null {
   if (!isRecord(payload) || payload.ok !== true || !isRecord(payload.translation)) return null;
   const translation = payload.translation;
   const baseLocale = asTrimmedString(translation.baseLocale);
   const targetLocales = normalizeStringArray(translation.targetLocales);
-  const queuedLocales = normalizeStringArray(translation.queuedLocales);
   const skippedLocales = normalizeStringArray(translation.skippedLocales);
   const generation =
     translation.generation == null
       ? null
-      : normalizeGenerationSummary(translation.generation);
+      : normalizeTranslationGenerationSummary(translation.generation);
   if (
     translation.ok !== true ||
     typeof translation.accepted !== 'boolean' ||
     !baseLocale ||
     !targetLocales ||
-    !queuedLocales ||
     !skippedLocales ||
     (generation === null && translation.generation != null)
   ) {
@@ -251,7 +135,6 @@ function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGenerat
       accepted: translation.accepted,
       baseLocale,
       targetLocales,
-      queuedLocales,
       skippedLocales,
       generation,
     },
@@ -260,7 +143,7 @@ function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGenerat
 
 function normalizeGenerationPayload(payload: unknown): InstanceTranslationGenerationPayload | null {
   if (!isRecord(payload) || payload.ok !== true) return null;
-  const generation = normalizeGenerationSummary(payload.generation);
+  const generation = normalizeTranslationGenerationSummary(payload.generation);
   return generation ? { ok: true, generation } : null;
 }
 

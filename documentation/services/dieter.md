@@ -226,7 +226,7 @@ Every control must consume the shared size ladder. Adjusting token mappings here
 - Tokens assume font is already loaded globally
 
 **Public widget artifacts:**
-- **User-selected fonts:** Publish-time materialization may add Google Fonts `<link>` tags to generated public HTML.
+- **User-selected fonts:** Public package output may add Google Fonts `<link>` tags to generated public HTML.
 - **CSP must allow:** `fonts.googleapis.com` and `fonts.gstatic.com` for widgets with Typography menu.
 - **Default fallback:** If no font selected or CSP blocks, use system fonts.
 - **NO @import in CSS:** Conflicts with strict public-widget CSP.
@@ -236,7 +236,7 @@ Every control must consume the shared size ladder. Adjusting token mappings here
 
 **Key Rules:**
 1. **Never use @import for fonts** - Use `<link>` tags only
-2. **Publish-time font loading** - public widget artifacts include font `<link>` tags before browser delivery, never client-side probing
+2. **Package font loading** - public widget artifacts include font `<link>` tags before browser delivery, never client-side probing
 3. **CSP compliance** - All font URLs must be allowed in CSP for that surface
 4. **Fallback fonts** - Always provide system font fallback in `--font-ui`
 
@@ -261,7 +261,7 @@ Every control must consume the shared size ladder. Adjusting token mappings here
 - Consumption rules:
   - Inline SVG markup from the registry (`tokyo/product/dieter/icons/icons.json`).
   - Bob housed icons can use local helpers (e.g., a React wrapper) but must source markup from the registry.
-  - Public widget artifacts MUST inline SVG during materialization; client-side fetches are forbidden to protect loader budgets.
+  - Public widget artifacts MUST inline SVG in package output; client-side fetches are forbidden to protect loader budgets.
   - No ad-hoc icon bundles: update source SVGs, rebuild, copy media.
 
 ### 1.7 Component Contracts

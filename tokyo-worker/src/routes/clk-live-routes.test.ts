@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Env } from '../types.ts';
-import { writeInstanceServeState, writeSavedRenderConfig } from '../domains/render/saved-config.ts';
-import { attachTestInstanceRegistry } from '../domains/render/test-instance-registry.ts';
+import { writeAccountInstanceSource } from '../domains/account-instances/source.ts';
+import { writeInstanceServeState } from '../domains/account-instances/serve-state.ts';
+import { writeAccountPageServeState } from '../domains/pages/serve-state.ts';
+import { attachTestInstanceRegistry } from '../test-utils/instance-registry.ts';
 import { dispatchTokyoRoute } from '../route-dispatch.ts';
 import { tryHandleClkLiveStaticRoutes } from './clk-live-routes.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
 const INSTANCE_ID = 'Z9Y8X7W6V5';
+const PAGE_ID = 'P1B2C3D4E5';
 const ADMIN_ACCOUNT_ID = 'CLICKEEN';
 const OLD_ADMIN_ACCOUNT_ID = '00000001';
 
@@ -89,7 +92,7 @@ async function seedInstance(args: {
   env: Env;
   publishStatus: 'published' | 'unpublished';
 }): Promise<void> {
-  await writeSavedRenderConfig({
+  await writeAccountInstanceSource({
     env: args.env,
     accountId: ACCOUNT_ID,
     instanceId: INSTANCE_ID,
@@ -106,6 +109,23 @@ async function seedInstance(args: {
       status: 'published',
     });
   }
+}
+
+async function seedPageSource(env: Env): Promise<void> {
+  await env.TOKYO_R2.put(
+    `accounts/${ACCOUNT_ID}/website/pages/${PAGE_ID}/source.json`,
+    JSON.stringify({
+      v: 1,
+      id: PAGE_ID,
+      head: {
+        title: 'Home',
+        description: 'Home page',
+        robots: 'index,follow',
+      },
+      placements: [],
+    }),
+    { httpMetadata: { contentType: 'application/json; charset=utf-8' } },
+  );
 }
 
 async function callPublicRoute(args: {
@@ -141,7 +161,7 @@ test('clk.live serves the CLICKEEN account coordinate without aliasing old admin
   const { env } = createTestEnv({
     [`accounts/${ADMIN_ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>Clickeen FAQ</h1>',
   });
-  await writeSavedRenderConfig({
+  await writeAccountInstanceSource({
     env,
     accountId: ADMIN_ACCOUNT_ID,
     instanceId: INSTANCE_ID,
@@ -219,17 +239,95 @@ test('clk.live rejects invalid coordinates, directories, and traversal', async (
   assert.equal(await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/%2e%2e/instance.json` }), null);
 });
 
-test('clk.live availability is the materialized public artifact output', async () => {
+test('clk.live availability requires published serve state and materialized package files', async () => {
   const { env } = createTestEnv({
+    [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/index.html`]: '<h1>FAQ</h1>',
     [`accounts/${ACCOUNT_ID}/instances/${INSTANCE_ID}/styles.css`]: '.faq{}',
-  }, { attachRegistry: false });
+  });
+  await seedInstance({ env, publishStatus: 'unpublished' });
 
   const canonical = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}` });
   assert.equal(canonical?.status, 404);
 
   const support = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}/styles.css` });
-  assert.equal(support?.status, 200);
-  assert.equal(await support?.text(), '.faq{}');
+  assert.equal(support?.status, 404);
+
+  await writeInstanceServeState({
+    env,
+    accountId: ACCOUNT_ID,
+    instanceId: INSTANCE_ID,
+    status: 'published',
+  });
+
+  const published = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/${INSTANCE_ID}` });
+  assert.equal(published?.status, 200);
+  assert.equal(await published?.text(), '<h1>FAQ</h1>');
+});
+
+test('clk.live page route requires published page serve state and materialized page package files', async () => {
+  const { env } = createTestEnv({
+    [`accounts/${ACCOUNT_ID}/website/publishes/${PAGE_ID}/index.html`]: '<main>Home</main>',
+    [`accounts/${ACCOUNT_ID}/website/publishes/${PAGE_ID}/styles.css`]: 'main{}',
+    [`accounts/${ACCOUNT_ID}/website/publishes/${PAGE_ID}/runtime.js`]: 'console.log("page")',
+  });
+  await seedPageSource(env);
+
+  const unpublished = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/${PAGE_ID}` });
+  assert.equal(unpublished?.status, 404);
+
+  const unpublishedEmbed = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/${PAGE_ID}/embed.js` });
+  assert.equal(unpublishedEmbed?.status, 404);
+
+  await writeAccountPageServeState({
+    env,
+    accountId: ACCOUNT_ID,
+    pageId: PAGE_ID,
+    status: 'published',
+  });
+
+  const page = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/${PAGE_ID}` });
+  assert.equal(page?.status, 200);
+  assert.equal(page?.headers.get('content-type'), 'text/html; charset=utf-8');
+  assert.equal(await page?.text(), '<main>Home</main>');
+
+  const styles = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/${PAGE_ID}/styles.css` });
+  assert.equal(styles?.status, 200);
+  assert.equal(await styles?.text(), 'main{}');
+
+  const runtime = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/${PAGE_ID}/runtime.js` });
+  assert.equal(runtime?.status, 200);
+  assert.equal(await runtime?.text(), 'console.log("page")');
+
+  const embed = await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/${PAGE_ID}/embed.js` });
+  assert.equal(embed?.status, 200);
+  assert.equal(embed?.headers.get('content-type'), 'text/javascript; charset=utf-8');
+  const embedJs = await embed?.text();
+  assert.match(embedJs ?? '', new RegExp(`https://clk\\.live/${ACCOUNT_ID}/pages/${PAGE_ID}`));
+  assert.match(embedJs ?? '', /data-ck-page-embed/);
+  assert.match(embedJs ?? '', /styles\.css/);
+  assert.match(embedJs ?? '', /runtime\.js/);
+  assert.doesNotMatch(embedJs ?? '', /iframe/i);
+});
+
+test('clk.live page route rejects invalid page coordinates and private page files', async () => {
+  const { env } = createTestEnv({
+    [`accounts/${ACCOUNT_ID}/website/publishes/${PAGE_ID}/index.html`]: '<main>Home</main>',
+    [`accounts/${ACCOUNT_ID}/website/pages/${PAGE_ID}/source.json`]: '{}',
+    [`accounts/${ACCOUNT_ID}/website/pages/${PAGE_ID}/serve-state.json`]: '{}',
+  });
+  await seedPageSource(env);
+  await writeAccountPageServeState({
+    env,
+    accountId: ACCOUNT_ID,
+    pageId: PAGE_ID,
+    status: 'published',
+  });
+
+  assert.equal(await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/short` }), null);
+  assert.equal(await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/${PAGE_ID}/source.json` }), null);
+  assert.equal(await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/${PAGE_ID}/serve-state.json` }), null);
+  assert.equal(await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/${PAGE_ID}/%2e%2e/source.json` }), null);
+  assert.equal(await callPublicRoute({ env, pathname: `/${ACCOUNT_ID}/pages/${PAGE_ID}/styles.v123.css` }), null);
 });
 
 test('clk.live supports HEAD for allowed files and redirects canonical http to https', async () => {
@@ -261,7 +359,7 @@ test('clk.live supports HEAD for allowed files and redirects canonical http to h
 
 test('public serving hosts do not expose Tokyo operational routes', async () => {
   const { env } = createTestEnv();
-  for (const pathname of ['/healthz', '/__internal/accounts/A1B2C3D4/serving/restore-paid', '/widgets/faq/spec.json']) {
+  for (const pathname of ['/healthz', `/__internal/instances/${INSTANCE_ID}/publish`, '/widgets/faq/spec.json']) {
     const url = new URL(`https://dev.clk.live${pathname}`);
     const response = await dispatchTokyoRoute({
       req: new Request(url),

@@ -216,6 +216,76 @@ function readWidgetOverlayCodes() {
   return codes;
 }
 
+function assertFaqGoldStandardDefaults(spec) {
+  const defaults = spec.defaults;
+  if (!isRecord(defaults)) return;
+
+  if ("title" in defaults) {
+    fail("faq/spec.json defaults.title is legacy display copy and must not exist");
+  }
+
+  const header = defaults.header;
+  if (!isRecord(header)) {
+    fail("faq/spec.json defaults.header must be an object");
+  }
+  if (header.enabled !== false) {
+    fail("faq/spec.json defaults.header.enabled must default to false");
+  }
+  if (header.title !== "" || header.subtitleHtml !== "") {
+    fail("faq/spec.json header title/subtitle defaults must be blank author-owned content");
+  }
+
+  const cta = defaults.cta;
+  if (!isRecord(cta)) {
+    fail("faq/spec.json defaults.cta must be an object");
+  }
+  if (cta.enabled !== false || cta.label !== "" || cta.href !== "") {
+    fail("faq/spec.json CTA defaults must be disabled and blank");
+  }
+
+  if (!Array.isArray(defaults.sections) || defaults.sections.length !== 0) {
+    fail("faq/spec.json defaults.sections must start empty; authoring add-item templates create FAQ rows");
+  }
+
+  const editorSource = JSON.stringify(spec.editor ?? {});
+  for (const forbidden of [
+    "What is Clickeen?",
+    "Do you offer a free plan?",
+    "How do I install a widget on my site?",
+    "Why use Clickeen instead of building widgets from scratch?",
+    "New question",
+    "New answer",
+  ]) {
+    if (editorSource.includes(forbidden)) {
+      fail(`faq/spec.json editor must not seed saved FAQ copy (${forbidden})`);
+    }
+  }
+}
+
+function assertFaqRuntimeDoesNotValidateSavedState(widgetDir) {
+  const clientPath = path.join(widgetDir, "widget.client.js");
+  const source = fs.readFileSync(clientPath, "utf8");
+  for (const forbidden of [
+    "function assertFaqState",
+    "assertFaqState(",
+    "state.header.enabled must",
+    "state.sections[${idx}]",
+  ]) {
+    if (source.includes(forbidden)) {
+      fail("faq/widget.client.js must render saved state, not re-validate the full FAQ state contract in public runtime");
+    }
+  }
+}
+
+function assertPageShapedRuntimeDoesNotValidateSavedState(widgetDir, widgetName) {
+  const clientPath = path.join(widgetDir, "widget.client.js");
+  const source = fs.readFileSync(clientPath, "utf8");
+  const stateValidatorPattern = new RegExp(`function\\s+assert[A-Za-z0-9_]*State\\s*\\(`);
+  if (stateValidatorPattern.test(source)) {
+    fail(`${widgetName}/widget.client.js must render accepted saved state, not re-validate the full widget state contract in public runtime`);
+  }
+}
+
 for (const generatedPath of forbiddenGeneratedPaths) {
   if (fs.existsSync(generatedPath)) {
     fail(`${path.relative(repoRoot, generatedPath)} is deleted product authority and must not exist`);
@@ -243,13 +313,12 @@ for (const widgetName of widgetNames) {
   const widgetDir = path.join(widgetsRoot, widgetName);
   const specPath = path.join(widgetDir, "spec.json");
   const editableFieldsPath = path.join(widgetDir, "editable-fields.json");
-  const catalogPath = path.join(widgetDir, "catalog.json");
   const limitsPath = path.join(widgetDir, "limits.json");
   const seoGeoPath = path.join(widgetDir, "seo-geo.ts");
   const agentPath = path.join(widgetDir, "agent.md");
 
-  if (!fs.existsSync(catalogPath)) {
-    fail(`${widgetName} is missing catalog.json`);
+  if (fs.existsSync(path.join(widgetDir, "catalog.json"))) {
+    fail(`${widgetName}/catalog.json is deleted widget source and must not exist`);
   }
   if (fs.existsSync(agentPath)) {
     fail(`${widgetName}/agent.md is deleted widget source and must not exist`);
@@ -259,7 +328,6 @@ for (const widgetName of widgetNames) {
   }
 
   const spec = readJson(specPath);
-  const catalog = readJson(catalogPath);
   const widgetType = assertString(
     spec.widgetname,
     `${widgetName}/spec.json widgetname`,
@@ -274,6 +342,13 @@ for (const widgetName of widgetNames) {
   if (!isRecord(spec.defaults)) {
     fail(`${widgetName}/spec.json defaults must be an object`);
   }
+  if (widgetName === "faq") {
+    assertFaqGoldStandardDefaults(spec);
+    assertFaqRuntimeDoesNotValidateSavedState(widgetDir);
+  }
+  if (["cardgrid", "cta", "hero", "split", "steps"].includes(widgetName)) {
+    assertPageShapedRuntimeDoesNotValidateSavedState(widgetDir, widgetName);
+  }
   if (!fs.existsSync(editableFieldsPath)) {
     fail(`${widgetName} is missing editable-fields.json`);
   }
@@ -285,15 +360,6 @@ for (const widgetName of widgetNames) {
   if (isRecord(spec.overlays) && Array.isArray(spec.overlays.text)) {
     fail(`${widgetName}/spec.json overlays.text is deleted translation field authority`);
   }
-
-  if ("capabilities" in catalog) {
-    fail(`${widgetName}/catalog.json capabilities are deleted widget catalog source`);
-  }
-
-  optionalNumber(catalog.order, `${widgetName}/catalog.json order`);
-  assertString(catalog.label, `${widgetName}/catalog.json label`);
-  assertString(catalog.description, `${widgetName}/catalog.json description`);
-  assertString(catalog.category, `${widgetName}/catalog.json category`);
 }
 
 for (const widgetType of widgetOverlayCodes.keys()) {

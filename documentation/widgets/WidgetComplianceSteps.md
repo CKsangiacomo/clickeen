@@ -102,6 +102,7 @@ OUTPUT
   - Themes (`appearance.theme` defaults to `custom`)
   - Branding (`behavior.showBacklink`)
 - `itemKey` declared in `spec.json` (`{widgetType}.item`) with pluralization support.
+- Defaults are structural state, not demo/customer content. Do not seed saved account content with product marketing copy, fake Q&A rows, `https://example.com` links, or "New item" text. Repeated content starts empty; add-item templates may create blank valid rows using existing object-manager/repeater `default-item`.
 
 GATE
 
@@ -154,7 +155,8 @@ OUTPUT
 - postMessage support:
   - Accept `ck:state-update` payloads `{ type, widgetname, state }`.
 - Initial state:
-  - Read from `window.CK_WIDGET` / `window.CK_WIDGETS[instanceId]` (embed + Bob preview).
+  - Register with `window.CKWidgetRuntime.register(widgetType, init)` and read state from the root-scoped runtime context backed by `window.CK_WIDGETS[instanceId]`.
+  - Do not read or write `window.CK_WIDGET`.
 - Richtext safety:
   - If inline HTML is supported, sanitize deterministically and strip unsafe tags/attrs.
 
@@ -180,7 +182,8 @@ OUTPUT
 
 Compiler notes (current codebase behavior)
 
-- Bob renders shared Stage/Pod fields only when `spec.json.editor` declares the matching shared node.
+- Bob renders shared Stage/Pod layout and appearance fields only when `spec.json.editor` declares the matching shared nodes.
+- Every widget has Stage/Pod as its universal wrapper. Do not inline expanded Stage/Pod control blobs in widget specs; use Bob's shared editor nodes.
 - Bob renders shared Header fields only when `spec.json.editor` declares the matching shared node.
 - Bob renders a standardized Typography panel only when `spec.json.editor` declares the `typography` shared panel and `defaults.typography.roles` exists.
 - Bob compiles theme controls from local `tokyo/product/themes/themes.json`; missing or malformed theme truth is a compiler error.
@@ -213,7 +216,6 @@ GATE
 
 OUTPUT
 
-- `catalog.json` with label, description, category, and display order.
 - `limits.json` (unless PRD opts out).
 - `editable-fields.json` with all editable/translatable primitive text paths when the widget has customer-visible content. `spec.json.overlays.text[]` is deleted translation-field authority and must not be reintroduced.
 - `pages/*.json` (Prague widget pages: overview/features/examples/templates/pricing).

@@ -2,7 +2,7 @@
 
 This document describes system boundaries, data flows, and how the platform fits together.
 
-PRD 103_00 NOTE: this doc has been narrowed to the product-operation model needed before PRD 103 resumes. Final resume still requires the manual product smoke and Product + Architecture signoff recorded in `Execution_Pipeline_Docs/02-Executing/103_DB_End_To_End_Verification_And_PRD103_Resume_Gate__EXEC__Cloud_Smoke.md`.
+PRD 105 NOTE: this doc uses the current product-operation model and instance-folder/runtime authority from `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105__PRD__Instance_Folder_Tenets.md`.
 
 **For definitions and glossary:** See `CONTEXT.md`
 **For canonical asset behavior:** See [AssetManagement.md](./AssetManagement.md)
@@ -37,7 +37,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **No Fallbacks**               | Orchestrators never invent/heal instance config. If base data is missing/invalid, the system fails visibly. Public renders must be revision-coherent (single published revision; missing locale artifacts fail visibly). |
 | **Widget Files = Truth**       | Core runtime files + contract files in `tokyo/product/widgets/{name}/` define widget behavior and validation; their deployed Tokyo R2 home is `product/widgets/{name}/`.                                                                                                                    |
-| **Orchestrators = Dumb Pipes** | Bob/Roma/Tokyo-worker avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. translated-value resolution, artifact materialization) but must not “fix” state ad hoc.                    |
+| **Orchestrators = Dumb Pipes** | Bob/Roma/Tokyo-worker avoid widget-specific logic. They may apply generic, contract-driven transforms (e.g. translated-value resolution, package validation, page composition) but must not “fix” state ad hoc.                    |
 | **Dieter Tokens**              | All colors/typography in widget configs use Dieter tokens by default. Users can override with HEX/RGB.                                                                                                                   |
 | **Locale Is Not Identity**     | Locale is a runtime parameter. IDs (`instanceId`) must be locale-free; account-widget localization is applied through translated locale values and generated public artifacts, not DB fan-out.                              |
 
@@ -65,7 +65,7 @@ Generated/public artifacts are written only by artifact builders.
 | Account instance listing | `listAccountInstances` | Any account index file is a private cache below the operation, not a Roma API. |
 | Translations | Translated locale value operations by `instanceId + locale` | Locale values live under `overlays/locales/{locale}.json`; operation liveness belongs to Tokyo/Supabase operation state. |
 | Publish state | Tokyo publish/unpublish operations and publish status | Generated files are output, not the state machine. |
-| Public serving | `clk.live/{accountPublicId}/{instanceId}` serving materialized generated artifacts from R2/CDN | Missing artifacts fail visibly; visitor requests do not read Supabase or compose widgets from authoring source. |
+| Public serving | `clk.live/{accountPublicId}/{instanceId}` serving stored package artifacts from R2/CDN | Missing artifacts fail visibly; visitor requests do not read Supabase or compose widgets from authoring source. |
 
 ### Why this matters
 
@@ -241,8 +241,8 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 - Serves account asset reads on routes carrying `accountPublicId`; legacy non-account asset paths are hard-failed.
 - In-place account asset byte replacement keeps the same account asset reference and must not require instance rebuilds.
 - Asset delete is synchronous and explicit, with no silent runtime healing.
-- Writes account-instance config/content, locale overlays, and generated public artifacts under `accounts/{accountPublicId}/instances/{instanceId}/` from explicit Roma/system operations. Tokyo-worker uses Supabase-backed product/operation facts for instance registry, publish state, and translation liveness; public visitor serving reads generated R2/CDN artifacts and does not hit Supabase.
-- Publishes by materializing generated public artifacts and setting Tokyo-owned publish status.
+- Writes account-instance config/content, locale overlays, and submitted public package artifacts under `accounts/{accountPublicId}/instances/{instanceId}/` from explicit Roma/system operations. Tokyo-worker uses Supabase-backed product/operation facts for instance registry, publish state, and translation liveness; public visitor serving reads stored R2/CDN artifacts and does not hit Supabase.
+- Publishes by verifying stored public package artifacts and setting Tokyo-owned publish status.
 
 #### Asset ownership model (canonical)
 

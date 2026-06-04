@@ -1174,9 +1174,14 @@ var Dieter = (() => {
 
   // ../packages/ck-contracts/src/overlay-codebooks.ts
   var WIDGET_OVERLAY_CODES = Object.freeze({
+    cardgrid: "CGR",
     faq: "FAQ",
     countdown: "CTD",
-    logoshowcase: "LGS"
+    cta: "CTA",
+    hero: "HRO",
+    logoshowcase: "LGS",
+    split: "SPL",
+    steps: "STP"
   });
   var LANGUAGE_OVERLAY_CODES = Object.freeze({
     en: "EN00",
@@ -1583,10 +1588,6 @@ var Dieter = (() => {
     "tokyo.errors.internalOnly",
     "tokyo.errors.l10n.invalid",
     "tokyo.errors.misconfigured",
-    "tokyo.errors.render.invalid",
-    "tokyo.errors.render.invalidInstanceId",
-    "tokyo.errors.render.notFound",
-    "tokyo.errors.render.staleBaseFingerprint",
     "tokyo.errors.source.invalid",
     "tokyo.errors.widget.unsupported",
     "tokyo_translation_enqueue_failed",

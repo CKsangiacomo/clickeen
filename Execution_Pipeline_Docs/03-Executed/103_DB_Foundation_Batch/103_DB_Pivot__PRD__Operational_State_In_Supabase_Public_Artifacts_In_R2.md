@@ -5,7 +5,7 @@ Owner: Product + Architecture
 Date: 2026-05-21
 Blocks: PRD 103 product execution until DB pivot and PRD 103K translation sync are green
 
-Archive note: this document is no longer active execution authority. It is retained as DB Pivot evidence. Current instance-folder and DB/R2 operation authority lives in `../02-Executing/105__PRD__Instance_Folder_Tenets.md` and `../02-Executing/105A__PRD__DB_R2_Operation_Authority.md`.
+Archive note: this document is no longer active execution authority. It is retained as DB Pivot evidence. Current instance-folder and DB/R2 operation authority lives in `../105_Instance_Runtime_And_Verification_Batch/105__PRD__Instance_Folder_Tenets.md` and `../105_Instance_Runtime_And_Verification_Batch/105A__PRD__DB_R2_Operation_Authority.md`.
 
 ## Purpose
 

@@ -5,7 +5,7 @@ Date Started: 2026-05-22
 Parent PRD: `103_DB_Pivot__PRD__Operational_State_In_Supabase_Public_Artifacts_In_R2.md`
 Execution slice: `103_DB.9 - End-to-end verification and PRD 103 resume gate`
 
-Archive note: this document is no longer active execution authority. It is retained as evidence of the blocked DB pivot smoke gate. Current smoke/translation repair authority is `../02-Executing/105D__PRD__Translation_Operation_State_And_Smoke_Verification.md`.
+Archive note: this document is no longer active execution authority. It is retained as evidence of the blocked DB pivot smoke gate. Current smoke/translation repair authority is `../105_Instance_Runtime_And_Verification_Batch/105D__PRD__Translation_Operation_State_And_Smoke_Verification.md`.
 
 ## Slice Intent
 

@@ -318,7 +318,11 @@ export function WidgetsDomain() {
                     key={option.widgetType}
                     onClick={() => void handleCreateInstance(option.widgetType)}
                     disabled={Boolean(activeActionKey) || !option.canCreate}
-                    title={option.disabledReasonKey ? resolveAccountShellErrorCopy(option.disabledReasonKey, 'This widget is not available on the current account plan.') : option.description}
+                    title={
+                      option.disabledReasonKey
+                        ? resolveAccountShellErrorCopy(option.disabledReasonKey, 'This widget is not available on the current account plan.')
+                        : option.description || undefined
+                    }
                   >
                     <span className="diet-btn-txt__label body-m">
                       {activeActionKey === actionKey ? 'Creating...' : `Create ${option.label}`}

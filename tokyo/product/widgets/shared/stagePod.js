@@ -74,43 +74,22 @@
     throw new Error('[CKStagePod] stage/pod.padding must define desktop + mobile padding objects');
   }
 
-  function resolveRadius(cfg) {
-    const tokenize = (value) => (value === 'none' ? '0' : `var(--control-radius-${value})`);
-    if (cfg.radiusLinked === false) {
-      return {
-        tl: tokenize(cfg.radiusTL),
-        tr: tokenize(cfg.radiusTR),
-        br: tokenize(cfg.radiusBR),
-        bl: tokenize(cfg.radiusBL),
-      };
+  function resolveAppearance() {
+    const appearance = window.CKAppearance;
+    if (
+      !appearance ||
+      typeof appearance.forceInset !== 'function' ||
+      typeof appearance.resolveCornerRadii !== 'function' ||
+      typeof appearance.shadowToBoxShadow !== 'function'
+    ) {
+      throw new Error('[CKStagePod] Missing CKAppearance helpers');
     }
-    const all = tokenize(cfg.radius);
-    return { tl: all, tr: all, br: all, bl: all };
+    return appearance;
   }
 
   function clampNumber(value, min, max) {
     const n = typeof value === 'number' && Number.isFinite(value) ? value : min;
     return Math.min(max, Math.max(min, n));
-  }
-
-  function forceInset(shadow, inset) {
-    if (!shadow || typeof shadow !== 'object' || Array.isArray(shadow)) return shadow;
-    return { ...shadow, inset };
-  }
-
-  function computeShadowBoxShadow(shadow) {
-    if (!shadow || typeof shadow !== 'object') return 'none';
-    if (shadow.enabled !== true) return 'none';
-    const alpha = clampNumber(shadow.alpha, 0, 100);
-    if (alpha <= 0) return 'none';
-    const x = clampNumber(shadow.x, -200, 200);
-    const y = clampNumber(shadow.y, -200, 200);
-    const blur = clampNumber(shadow.blur, 0, 400);
-    const spread = clampNumber(shadow.spread, -200, 200);
-    const color = typeof shadow.color === 'string' && shadow.color.trim() ? shadow.color.trim() : '#000000';
-    const alphaMix = 100 - alpha;
-    const mix = `color-mix(in oklab, ${color}, transparent ${alphaMix}%)`;
-    return `${shadow.inset === true ? 'inset ' : ''}${x}px ${y}px ${blur}px ${spread}px ${mix}`;
   }
 
   function computeInsideFadeSizePx(side, shadow) {
@@ -210,8 +189,8 @@
   }
 
   function resolveBackgroundFill(raw) {
-    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
-      return window.CKFill.toCssBackground(raw);
+    if (window.CKAppearance && typeof window.CKAppearance.toCssBackground === 'function') {
+      return window.CKAppearance.toCssBackground(raw);
     }
     const v = typeof raw === 'string' ? raw.trim() : '';
     if (!v) return 'transparent';
@@ -227,10 +206,6 @@
 
   function isEditorPreview() {
     if (window.parent === window) return false;
-
-    const payload = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
-    if (payload && payload.state && typeof payload.state === 'object') return false;
-
     try {
       return window.parent.location.origin === window.location.origin;
     } catch {
@@ -385,8 +360,9 @@
     if (window.CKFill && typeof window.CKFill.applyMediaLayer === 'function') {
       window.CKFill.applyMediaLayer(stageEl, stageCfg.background, { contentEl: podEl });
     }
+    const appearance = resolveAppearance();
     stageEl.style.setProperty('--stage-bg', resolveBackgroundFill(stageCfg.background));
-    stageEl.style.setProperty('--stage-shadow', computeShadowBoxShadow(forceInset(stageCfg.shadow, false)));
+    stageEl.style.setProperty('--stage-shadow', appearance.shadowToBoxShadow(appearance.forceInset(stageCfg.shadow, false)));
     applyInsideShadowLayer(stageEl, computeInsideFadeBackground(stageCfg.insideShadow), {
       contentEl: podEl,
       layer: stageCfg && stageCfg.insideShadow ? stageCfg.insideShadow.layer : null,
@@ -426,9 +402,9 @@
     applyPaddingVars(podEl, 'pod-pad-desktop', podPads.desktop);
     applyPaddingVars(podEl, 'pod-pad-mobile', podPads.mobile);
 
-    const radii = resolveRadius(podCfg);
+    const radii = appearance.resolveCornerRadii(podCfg);
     podEl.style.setProperty('--pod-radius', `${radii.tl} ${radii.tr} ${radii.br} ${radii.bl}`);
-    podEl.style.setProperty('--pod-shadow', computeShadowBoxShadow(forceInset(podCfg.shadow, false)));
+    podEl.style.setProperty('--pod-shadow', appearance.shadowToBoxShadow(appearance.forceInset(podCfg.shadow, false)));
     applyInsideShadowLayer(podEl, computeInsideFadeBackground(podCfg.insideShadow), {
       contentEl: scopeEl,
       layer: podCfg && podCfg.insideShadow ? podCfg.insideShadow.layer : null,

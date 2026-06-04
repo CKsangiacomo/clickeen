@@ -413,7 +413,7 @@ crons = ["0 2 * * 0"]  # Every Sunday at 2am UTC
    - Fit (does our widget solve their problem?)
 3. Generate use case objects with:
    - Headline, description, pain points
-   - Starter prompts for future guided demo surfaces
+   - Default prompts for future guided demo surfaces
    - Keywords
 
 ### 4.3 GENERATE

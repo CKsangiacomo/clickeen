@@ -8,6 +8,7 @@ import {
   type SessionUpsell,
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
+import { buildSavedWidgetPublicPackage } from './publicPackage';
 
 function normalizeTranslationFollowup(payload: unknown):
   | { ok: true }
@@ -85,12 +86,20 @@ export function useSessionSaving(args: {
 
     try {
       const config = snapshot.instanceData;
+      const publicPackage = buildSavedWidgetPublicPackage({
+        compiled: snapshot.compiled,
+        instanceId,
+        baseLocale: meta?.baseLocale || 'en',
+        displayName: meta?.label ?? null,
+        state: config,
+      });
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
         instanceId,
         body: {
           widgetType,
           config,
+          publicPackage,
           displayName: meta?.label ?? null,
           meta: meta?.meta ?? null,
         },

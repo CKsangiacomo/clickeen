@@ -40,16 +40,18 @@ Only `@clickeen/ck-contracts` parses, builds, and validates this ID.
 Overlay objects live under the owning account instance:
 
 ```txt
-accounts/{accountPublicId}/instances/{instanceId}/overlays/{overlayId}.json
+accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
 ```
 
-Generated public locale output is browser HTML materialized by Tokyo from the approved instance config/content payload plus translated locale values:
+Public visitor package files are stored separately as the three-file widget package:
 
 ```txt
-accounts/{accountPublicId}/instances/{instanceId}/{locale}.html
+accounts/{accountPublicId}/instances/{instanceId}/index.html
+accounts/{accountPublicId}/instances/{instanceId}/styles.css
+accounts/{accountPublicId}/instances/{instanceId}/runtime.js
 ```
 
-`widgetCode` is encoded in `overlayId` because it is part of the shared overlay codebook. It is never required to locate instance storage and must not reintroduce `accounts/{accountPublicId}/widgets/{widgetCode}/...`.
+`widgetCode` is never required to locate instance storage and must not reintroduce `accounts/{accountPublicId}/widgets/{widgetCode}/...`. Locale is a product parameter on translated value operations, not a storage identity exposed to callers.
 
 ## Object Body
 

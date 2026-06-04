@@ -10,13 +10,13 @@ This batch is not active execution authority.
 Surviving admin account coordinate and account-context doctrine was extracted to:
 
 ```text
-Execution_Pipeline_Docs/02-Executing/105I__PRD__Admin_Account_Coordinate_And_Context_Verification.md
+Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105I__PRD__Admin_Account_Coordinate_And_Context_Verification.md
 ```
 
 Surviving Prague public dogfood boundary doctrine was extracted to:
 
 ```text
-Execution_Pipeline_Docs/02-Executing/105J__PRD__Prague_Public_Dogfood_Boundary_Verification.md
+Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105J__PRD__Prague_Public_Dogfood_Boundary_Verification.md
 ```
 
 Where these files conflict with the PRD 105 reset, the active authority is:

@@ -443,7 +443,7 @@ All Supernova effects automatically disable when user prefers reduced motion. Th
 ### Acceptance Criteria
 
 1. **Toggle works**: `supernova.enabled` toggles effects on/off
-2. **Plan gating**: Free users see "Upgrade to Pro" message
+2. **Plan gating**: free users see an upgrade message for the account tier that unlocks Supernova
 3. **Lazy loading**: Effects don't block initial render (LCP unchanged)
 4. **Reduced motion**: Effects disabled when `prefers-reduced-motion: reduce`
 5. **Mobile variant**: Lighter bundle served to mobile devices

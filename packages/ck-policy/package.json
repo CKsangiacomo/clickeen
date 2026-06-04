@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "tsc -p tsconfig.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "rm -rf /tmp/clickeen-ck-policy-tests && esbuild src/ai-runtime.test.ts src/limits.test.ts --bundle --platform=node --format=esm --outdir=/tmp/clickeen-ck-policy-tests && node --test /tmp/clickeen-ck-policy-tests/*.test.js"
+    "test": "rm -rf /tmp/clickeen-ck-policy-tests && esbuild src/ai-runtime.test.ts src/limits.test.ts src/policy.test.ts --bundle --platform=node --format=esm --outdir=/tmp/clickeen-ck-policy-tests && node --test /tmp/clickeen-ck-policy-tests/*.test.js"
   },
   "exports": {
     ".": "./src/index.ts"

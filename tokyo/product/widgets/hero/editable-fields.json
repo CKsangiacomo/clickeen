@@ -1,0 +1,46 @@
+{
+  "v": 1,
+  "widgetType": "hero",
+  "fields": [
+    {
+      "path": "eyebrow",
+      "label": "Eyebrow",
+      "role": "eyebrow",
+      "type": "string",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "headline",
+      "label": "Headline",
+      "role": "title",
+      "type": "richtext",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "subheadline",
+      "label": "Subheadline",
+      "role": "body",
+      "type": "richtext",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "primaryCta.label",
+      "label": "Primary CTA Label",
+      "role": "button",
+      "type": "string",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "secondaryCta.label",
+      "label": "Secondary CTA Label",
+      "role": "button",
+      "type": "string",
+      "arrayItemIdentity": [],
+      "limits": []
+    }
+  ]
+}

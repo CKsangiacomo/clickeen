@@ -20,6 +20,8 @@ This doc mixes shipped behavior with target packaging. Shipped enforcement today
 
 Anything else in this doc (seats, instance counts, widget type counts) is directional until implemented.
 
+Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tier4`. There are no commercial tier names in the product contract. `free`, `tier1`, `tier2`, and `tier3` are widget-only tiers. `tier4` is the first tier that includes customer-owned blocks and pages.
+
 ---
 
 ## The Model (target packaging)
@@ -27,9 +29,10 @@ Anything else in this doc (seats, instance counts, widget type counts) is direct
 | Tier | Viewers | Editors | Widget Types | Instances | Content | Features |
 |------|---------|---------|--------------|-----------|---------|----------|
 | **Free** | ∞ | 1 | 1 | 1 | Limited | Limited |
-| **Tier 1** | ∞ | 3-5 | All | 5-10 | higher limits | + SEO/GEO |
-| **Tier 2** | ∞ | ∞ | All | ∞ | ∞ | + Auto-translate |
+| **Tier 1** | ∞ | 3-5 | 1 | 1 | higher limits | branding removed |
+| **Tier 2** | ∞ | ∞ | 3 | 5 | higher limits | + SEO/GEO, auto-translate |
 | **Tier 3** | ∞ | ∞ | All | ∞ | ∞ | + Supernova |
+| **Tier 4** | ∞ | ∞ | All | ∞ | ∞ | + blocks and pages |
 
 ### Tier Details
 
@@ -45,33 +48,40 @@ Anything else in this doc (seats, instance counts, widget type counts) is direct
 
 **Tier 1:**
 - 3-5 editors
-- All widget types
-- 5-10 instances
+- 1 widget type
+- 1 published instance
 - Higher content caps (e.g., 10 FAQs per section)
-- SEO/GEO enabled
 - Website URL for AI (Copilot context) enabled
-- No auto-translate, no Supernova
+- No SEO/GEO, no auto-translate, no Supernova
 - Branding optional
 
 **Tier 2:**
 - Unlimited editors
-- All widget types
-- Unlimited instances
-- Unlimited content
-- All features including auto-translate (up to 3 locales)
+- Up to 3 widget types
+- Up to 5 published instances
+- Higher content limits
+- SEO/GEO enabled
+- Auto-translate enabled
 - No Supernova
 - No branding
 
 **Tier 3:**
 - Everything in Tier 2
-- Unlimited auto-translate locales
+- Unlimited widget types and published instances
+- Unlimited auto-translate locales within the supported locale set
 - Supernova effects enabled
 - Priority support
+
+**Tier 4:**
+- Everything in Tier 3
+- Customer-owned blocks and pages
+- Intended commercial home for the PRD 106 page/block product
+- Availability is controlled by account policy/profile, not by a separate product mode
 
 **Key rules:**
 - **Viewers are always unlimited** at every tier (including Free)
 - **Viewers can comment** (feedback loop, collaboration without editing)
-- **Upgrade drivers:** instances → Tier 1, team size → Tier 2, effects → Tier 3
+- **Upgrade drivers:** SEO/GEO and translation → Tier 2, effects → Tier 3, pages/sites → Tier 4
 - **No limits on collaboration** once you hit Tier 2
 
 ---
@@ -217,27 +227,29 @@ type Comment = {
 
 ## Tier Gating (target packaging)
 
-| Product area | Free | Tier 1 | Tier 2 | Tier 3 |
-|------------|------|--------|--------|--------|
-| **Viewers** | ∞ | ∞ | ∞ | ∞ |
-| **Editors** | 1 | 3-5 | ∞ | ∞ |
-| **Widget types** | 1 | All | All | All |
-| **Instances** | 1 | 5-10 | ∞ | ∞ |
-| **Content** | Limited | Higher | ∞ | ∞ |
-| **SEO/GEO** | ❌ | ✅ | ✅ | ✅ |
-| **Website URL (AI context)** | ✅ | ✅ | ✅ | ✅ |
-| **AI Model Quality** | Basic (Fast) | Standard (Selectable) | Premium | Premium (SOTA) |
-| **Auto-translate** | ❌ | ❌ | ✅ (3 locales) | ✅ (∞) |
-| **Supernova** | ❌ | ❌ | ❌ | ✅ |
-| **Branding** | Required | Optional | None | None |
+| Product area | Free | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
+|------------|------|--------|--------|--------|--------|
+| **Viewers** | ∞ | ∞ | ∞ | ∞ | ∞ |
+| **Editors** | 1 | 3-5 | ∞ | ∞ | ∞ |
+| **Widget types** | 1 | 1 | 3 | ∞ | ∞ |
+| **Published instances** | 1 | 1 | 5 | ∞ | ∞ |
+| **Content** | Limited | Higher | Higher | ∞ | ∞ |
+| **SEO/GEO** | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Website URL (AI context)** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **AI Model Quality** | Basic (Fast) | Standard | Premium | Premium (SOTA) | Premium (SOTA) |
+| **Auto-translate** | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Supernova** | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Blocks / pages** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Branding** | Required | Optional | None | None | None |
 
 **Upgrade triggers:**
-- "I need another widget type" → Tier 1
-- "I need more instances" → Tier 1
-- "I want SEO/GEO" → Tier 1
+- "I need more widget types" → Tier 2
+- "I need more published instances" → Tier 2
+- "I want SEO/GEO" → Tier 2
 - "Add another editor" blocked at seat limit → Tier 2
 - "I want auto-translate" → Tier 2
 - "I want Supernova effects" → Tier 3
+- "I want landing pages or reusable blocks" → Tier 4
 - Viewers are never blocked
 
 ---
@@ -256,7 +268,7 @@ type Comment = {
 
 ## Why Multi-Tenant from Day 1
 
-### 1) Enterprise-Ready Without "Contact Sales"
+### 1) Large-Account Ready Without "Contact Sales"
 
 Agencies, marketing teams, and enterprises can self-serve. No sales call required for collaboration.
 

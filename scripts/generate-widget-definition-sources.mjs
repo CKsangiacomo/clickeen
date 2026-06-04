@@ -31,7 +31,6 @@ function buildSource(widgetTypes) {
   const imports = widgetTypes.flatMap((widgetType) => {
     const prefix = `../../../tokyo/product/widgets/${widgetType}`;
     return [
-      `import ${variableName(widgetType, "Catalog")} from "${prefix}/catalog.json";`,
       `import ${variableName(widgetType, "EditableFields")} from "${prefix}/editable-fields.json";`,
       `import ${variableName(widgetType, "Spec")} from "${prefix}/spec.json";`,
     ];
@@ -42,7 +41,6 @@ function buildSource(widgetTypes) {
       (widgetType) => `  {
     widgetType: "${widgetType}",
     spec: ${variableName(widgetType, "Spec")},
-    catalog: ${variableName(widgetType, "Catalog")},
     editableFields: ${variableName(widgetType, "EditableFields")},
   },`,
     )
@@ -56,7 +54,6 @@ ${imports.join("\n")}
 export type WidgetDefinitionSource = {
   widgetType: string;
   spec: unknown;
-  catalog: unknown;
   editableFields: unknown;
 };
 

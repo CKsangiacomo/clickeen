@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
 
-type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3';
+type AccountTier = 'free' | 'tier1' | 'tier2' | 'tier3' | 'tier4';
 
 function normalizeTier(value: unknown): AccountTier | null {
   switch (value) {
@@ -13,6 +13,7 @@ function normalizeTier(value: unknown): AccountTier | null {
     case 'tier1':
     case 'tier2':
     case 'tier3':
+    case 'tier4':
       return value;
     default:
       return null;
@@ -21,6 +22,8 @@ function normalizeTier(value: unknown): AccountTier | null {
 
 function tierRank(tier: AccountTier): number {
   switch (tier) {
+    case 'tier4':
+      return 5;
     case 'tier3':
       return 4;
     case 'tier2':

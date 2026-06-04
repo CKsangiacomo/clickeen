@@ -70,7 +70,7 @@ Health contract:
 
 ## Prague posture
 - Prague does not own the account-widget locale runtime.
-- Public widget artifacts are materialized by Tokyo-worker from saved instance source plus translated locale overlays during publish. San Francisco produces translated values only; it does not write public widget files.
+- Public widget package files are submitted by the Builder save path and stored by Tokyo-worker. San Francisco produces translated values only; it does not write public widget files.
 - San Francisco must not write Prague overlay files or resurrect a Prague-specific widget localization path.
 
 ## Rules

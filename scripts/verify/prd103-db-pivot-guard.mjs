@@ -50,13 +50,14 @@ if (existsSync(join(ROOT, 'scripts/dev/local-supabase.mjs'))) {
   fail('scripts/dev/local-supabase.mjs', 'deleted local/remote Supabase target-switch helper exists');
 }
 
-for (const file of walk('tokyo-worker/src/domains/render')) {
+for (const file of walk('tokyo-worker/src/domains/account-instances')) {
   if (!/\.(ts|tsx)$/.test(file) || file.endsWith('.test.ts')) continue;
   const source = read(file);
   for (const snippet of [
     'accountInstanceDocumentKey',
     'normalizeAccountInstanceDocument',
     'normalizeSavedRenderPointer',
+    'SavedRender',
   ]) {
     if (source.includes(snippet)) {
       fail(file, `forbidden legacy instance.json runtime helper "${snippet}"`);

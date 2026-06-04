@@ -266,6 +266,7 @@ MUST NOT
         <div class="ck-widget" data-ck-widget="WIDGETTYPE" data-role="root">
           <div data-role="title"></div>
 
+          <script src="../shared/runtime.js" defer></script>
           <script src="../shared/typography.js" defer></script>
           <script src="../shared/stagePod.js" defer></script>
           <script src="../shared/branding.js" defer></script>
@@ -282,16 +283,16 @@ MUST NOT
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  const scriptEl = document.currentScript;
-  if (!(scriptEl instanceof HTMLElement)) return;
-
-  const root = scriptEl.closest('[data-role="root"]');
-  if (!(root instanceof HTMLElement)) {
-    throw new Error('[widget] widget.client.js must execute inside [data-role="root"]');
+  const runtime = window.CKWidgetRuntime;
+  if (!runtime || typeof runtime.register !== 'function') {
+    throw new Error('[widget] Missing CKWidgetRuntime.register');
   }
 
-  function applyState(state, runtimeContext) {
-    if (!state || typeof state !== 'object') return;
+  function initWidget(root, runtimeContext) {
+    const state = runtimeContext && runtimeContext.state;
+    if (!state || typeof state !== 'object') {
+      throw new Error('[widget] Missing saved widget state');
+    }
 
     if (window.CKStagePod) window.CKStagePod.applyStagePod(state.stage, state.pod, root);
     if (window.CKTypography) {
@@ -312,15 +313,7 @@ MUST NOT
     }
   }
 
-  window.addEventListener('message', (event) => {
-    const msg = event.data;
-    if (!msg || msg.type !== 'ck:state-update') return;
-    applyState(msg.state, { locale: msg.locale });
-  });
-
-  if (window.CK_WIDGET && window.CK_WIDGET.state) {
-    applyState(window.CK_WIDGET.state, { locale: window.CK_WIDGET.locale });
-  }
+  runtime.register('WIDGETTYPE', initWidget);
 })();
 ```
 

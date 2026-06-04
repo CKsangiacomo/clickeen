@@ -128,7 +128,7 @@ These are current code truths. They are not planned work for `075E`.
 - `roma/lib/michael-catalog.ts`
   - Widgets-domain status and account-locales fanout now derive `published` / `unpublished` from Tokyo serve-state instead of Michael row status.
 - `roma/app/api/account/widgets/route.ts`
-  - Starter/listed instance discovery now lives with the widget list and does not treat `published` as a starter-availability gate.
+  - Default/listed instance discovery now lives with the widget list and does not treat `published` as a default-availability gate.
 - `bob/lib/session/WidgetDocumentSession.tsx`
   - `loadTranslations` already lives in transport context, not `WidgetDocumentSessionValue`.
 - `bob/lib/session/useWidgetSession.tsx`

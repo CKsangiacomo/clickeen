@@ -102,8 +102,8 @@ Prague widget pages are rendered from **block JSON** in Tokyo. They are marketin
 
 Account-widget embeds are public artifact references only:
 - Required identity: `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId`
-- Locale identity: explicit `accountInstanceRef.locale` only. Omitted locale means the base public artifact.
-- Forbidden: widget-locale discovery modules, market-locale fallback lists, query-param locale switching, private translation state, and `wgt_*` / `ins_*` aliases
+- Locale selector: optional `accountInstanceRef.locale` only when the public runtime supports a locale selection. Omitted locale means the base public artifact.
+- Forbidden: widget-locale discovery modules, market-locale fallback lists, private translation state, and `wgt_*` / `ins_*` aliases
 
 ### Add a new block type
 
@@ -153,7 +153,7 @@ Notes:
 - Prague page JSON and page-owned translation sidecars deploy under R2 `prague/pages/**`.
 - Root `l10n/**` is not a Prague storage or deploy target.
 
-Prague merges page-owned translation sidecars for localized marketing pages. Account-widget translated values are consumed only by Tokyo publish/materialization to produce generated static instance files served from `clk.live`.
+Prague merges page-owned translation sidecars for localized marketing pages. Account-widget translated values stay on the Tokyo account-widget path; public widget package files served from `clk.live` are stored by Tokyo-worker from the Builder/Roma save path.
 
 Validation:
 - Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.

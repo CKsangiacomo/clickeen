@@ -2,7 +2,7 @@ import { isRecord } from '@clickeen/ck-contracts';
 import rawMatrix from '../entitlements.matrix.json';
 import type { EntitlementKind, EntitlementsMatrix, PolicyProfile } from './types';
 
-const REQUIRED_TIERS: PolicyProfile[] = ['free', 'tier1', 'tier2', 'tier3'];
+const REQUIRED_TIERS: PolicyProfile[] = ['free', 'tier1', 'tier2', 'tier3', 'tier4'];
 const VALID_KINDS: EntitlementKind[] = ['flag', 'limit'];
 
 let cachedMatrix: EntitlementsMatrix | null = null;

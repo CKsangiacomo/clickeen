@@ -1,6 +1,6 @@
 import { tryHandleAssetRoutes } from './routes/asset-routes';
 import { tryHandleClkLiveStaticRoutes } from './routes/clk-live-routes';
-import { tryHandleInternalRenderRoutes } from './routes/internal-render-routes';
+import { tryHandleInternalProductRoutes } from './routes/internal-product-routes';
 import { json } from './http';
 import type { TokyoRouteArgs } from './route-helpers';
 
@@ -19,7 +19,7 @@ export async function dispatchTokyoRoute(args: TokyoRouteArgs): Promise<Response
   }
 
   const routeGroups = [
-    tryHandleInternalRenderRoutes,
+    tryHandleInternalProductRoutes,
     tryHandleAssetRoutes,
     tryHandleClkLiveStaticRoutes,
   ];

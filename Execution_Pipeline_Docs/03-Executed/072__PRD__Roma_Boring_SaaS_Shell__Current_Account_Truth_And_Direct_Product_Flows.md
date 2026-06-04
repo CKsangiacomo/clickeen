@@ -98,7 +98,7 @@ The following are not part of the current Roma product contract:
 - browser-supplied raw `accountId` for normal product requests
 - empty-string current-account sentinels as product state
 
-Templates were intentionally superseded by listed/duplicable account-owned instances. Starters are normal instances, usually authored by the admin account and marked as listed/duplicable metadata. Widgets is the surface that lists and duplicates them.
+Templates were intentionally superseded by listed/duplicable account-owned instances. Default examples are normal instances, usually authored by the admin account and marked as listed/duplicable metadata. Widgets is the surface that lists and duplicates them.
 
 ---
 

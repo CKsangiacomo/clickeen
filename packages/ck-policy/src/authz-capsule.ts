@@ -105,6 +105,7 @@ function normalizePolicyProfile(value: unknown): PolicyProfile | null {
     case 'tier1':
     case 'tier2':
     case 'tier3':
+    case 'tier4':
       return value;
     default:
       return null;

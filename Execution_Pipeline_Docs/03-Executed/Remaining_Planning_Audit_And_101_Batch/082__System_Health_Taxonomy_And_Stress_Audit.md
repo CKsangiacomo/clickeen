@@ -533,19 +533,19 @@ Execution result:
 - Updated active architecture/service docs so the product path is Roma/Bob/Tokyo/Tokyo-worker/Venice/San Francisco/Michael with no Paris runtime.
 - Verified no active code/config/docs references remain for `@clickeen/paris`, `dev:paris`, `PARIS_DEV_JWT`, `paris-sf-commands`, `paris/`, or `paris.dev.clickeen.com` outside excluded historical execution docs.
 
-### PRD 082E — Starter/Curated Convergence
+### PRD 082E — Default/Curated Convergence
 
 Scope:
 
-- Replace active `curated_widget_instances` reads with normal account-owned listed starter instances.
+- Replace active `curated_widget_instances` reads with normal account-owned listed default instances.
 - Remove `source: 'curated'` from active product code.
 - Keep migrations as history.
 
 Exit gates:
 
-- Starter listing works.
-- Starter duplicate works.
-- Builder open/save works for duplicated starter.
+- Default listing works.
+- Default duplicate works.
+- Builder open/save works for duplicated default.
 - `rg "curated_widget_instances|source: 'curated'|source === 'curated'"` is limited to migrations/executed docs.
 
 ### PRD 082F — Stress Harness

@@ -44,7 +44,7 @@ BEGIN
   IF EXISTS (
     SELECT 1
     FROM prd103_accounts_source
-    WHERE tier NOT IN ('free', 'tier1', 'tier2', 'tier3')
+    WHERE tier NOT IN ('free', 'tier1', 'tier2', 'tier3', 'tier4')
   ) THEN
     RAISE EXCEPTION 'prd103 invalid account tier in accounts source';
   END IF;
@@ -248,7 +248,7 @@ DROP TYPE IF EXISTS public.instance_publish_status CASCADE;
 DROP TYPE IF EXISTS public.instance_translation_status CASCADE;
 
 CREATE TYPE public.account_status AS ENUM ('active', 'suspended');
-CREATE TYPE public.account_tier AS ENUM ('free', 'tier1', 'tier2', 'tier3');
+CREATE TYPE public.account_tier AS ENUM ('free', 'tier1', 'tier2', 'tier3', 'tier4');
 CREATE TYPE public.user_role AS ENUM ('owner', 'admin', 'editor', 'viewer');
 CREATE TYPE public.login_provider AS ENUM ('google', 'email');
 CREATE TYPE public.invitation_status AS ENUM ('pending', 'accepted', 'revoked');

@@ -1,6 +1,6 @@
 # Localization Capability
 
-Status: PRD 103K saved-base-content sync model. Final PRD 103 resume still requires implementation and smoke of `Execution_Pipeline_Docs/01-Planning/103K__EXEC__Saved_Base_Content_Translation_Sync_Runtime_Wiring.md`.
+Status: PRD 105 instance-folder/runtime model. Saved-base-content translation sync is current marker-based behavior, not job-lineage truth.
 
 Localization translates account-instance content values into translated locale values. It is not a storage-object protocol, a runtime fallback system, or a second widget source model.
 
@@ -112,17 +112,16 @@ The public static route is:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-Publish/materialization consumes approved instance config/content plus translated locale values and writes generated visitor files under the instance folder:
+Builder save writes the current public widget package under the instance folder:
 
 ```txt
 accounts/{accountPublicId}/instances/{instanceId}/
   index.html
   styles.css
   runtime.js
-  overlays/locales/{locale}.json
 ```
 
-Generated files are output. Publish status is product state. Publish, unpublish, and tier-serving operations materialize or remove those files. Visitor serving reads R2/CDN artifacts only; it does not query Supabase, compose translations, inspect account policy, or repair stale language output on visitor requests.
+Durable translated locale values live privately under `overlays/locales/{locale}.json`; they are translated value source, not visitor files. Public package files are output submitted on save. Publish status is product state. Publish, unpublish, and tier-serving operations gate serving of those files; they do not rebuild widget package bytes. Visitor serving reads R2/CDN artifacts only; it does not query Supabase, compose translations, inspect account policy, or repair stale language output on visitor requests.
 
 ## Prague
 

@@ -85,7 +85,6 @@ test('generates translations through one Tokyo product operation', async () => {
                 accepted: true,
                 baseLocale: 'en',
                 targetLocales: ['it', 'cs'],
-                queuedLocales: ['it'],
                 skippedLocales: ['cs'],
                 generation: {
                   v: 2,
@@ -134,7 +133,6 @@ test('generates translations through one Tokyo product operation', async () => {
           accepted: true,
           baseLocale: 'en',
           targetLocales: ['it', 'cs'],
-          queuedLocales: ['it'],
           skippedLocales: ['cs'],
           generation: {
             v: 2,

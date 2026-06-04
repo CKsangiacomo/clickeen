@@ -19,7 +19,7 @@ ALTER TABLE public.accounts
 
 DO $$ BEGIN
   ALTER TABLE public.accounts
-    ADD CONSTRAINT accounts_tier_allowed CHECK (tier IN ('free', 'tier1', 'tier2', 'tier3'));
+    ADD CONSTRAINT accounts_tier_allowed CHECK (tier IN ('free', 'tier1', 'tier2', 'tier3', 'tier4'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

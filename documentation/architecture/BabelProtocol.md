@@ -8,7 +8,7 @@ Babel is Clickeen's translated-locale value protocol for account widgets. It is 
 
 Builder edits one account-owned widget instance in the account base locale.
 
-After save, translation generation is explicit work from the Translations panel. Roma calls Tokyo once. Tokyo resolves the current saved instance content, widget editable-field contract, target locales, existing translated values, stable field identities, delta, and saved base content marker. San Francisco receives widget-generic saved text fields and returns translated text primitive values with that marker. Tokyo stores translated locale values only when the marker still matches current saved base content, and materializes public visitor artifacts when publish runs.
+After save, translation generation is explicit work from the Translations panel. Roma calls Tokyo once. Tokyo resolves the current saved instance content, widget editable-field contract, target locales, existing translated values, stable field identities, delta, and saved base content marker. San Francisco receives widget-generic saved text fields and returns translated text primitive values with that marker. Tokyo stores translated locale values only when the marker still matches current saved base content. Public widget package bytes are produced by the Builder/Roma save path and stored by Tokyo-worker, not rebuilt from overlays during visitor serving or publish.
 
 ## Source Of Text Truth
 

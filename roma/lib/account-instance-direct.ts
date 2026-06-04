@@ -6,6 +6,11 @@ import {
   fetchTokyoProductControl,
 } from './tokyo-product-control';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
+import {
+  loadAccountPageFromTokyo,
+  saveAccountPageInTokyo,
+  type DirectPageRouteError,
+} from './account-page-direct';
 
 // Roma's direct instance path is the server boundary for one boring product flow:
 // call Tokyo's named account-instance verbs and surface their result.
@@ -55,9 +60,6 @@ export type TokyoAccountInstanceList = {
 export type TokyoWidgetDefinition = {
   widgetType: string;
   widgetCode: string;
-  label: string;
-  description: string;
-  category: string;
   editableFields: WidgetEditableFieldsContract;
 };
 
@@ -204,6 +206,18 @@ function invalidTokyoPayload(detail: string): RouteFailure {
   };
 }
 
+function pageRouteFailureToInstanceFailure(result: {
+  ok: false;
+  status: number;
+  error: DirectPageRouteError;
+}): RouteFailure {
+  return {
+    ok: false,
+    status: result.status,
+    error: result.error,
+  };
+}
+
 function resolveSavedInstanceDisplayName(args: {
   displayName: unknown;
   meta: unknown;
@@ -245,22 +259,16 @@ function normalizeTokyoWidgetDefinition(raw: unknown): TokyoWidgetDefinition | n
   if (!isRecord(raw)) return null;
   const widgetType = asTrimmedString(raw.widgetType);
   const widgetCode = asTrimmedString(raw.widgetCode);
-  const label = asTrimmedString(raw.label);
-  const description = asTrimmedString(raw.description);
-  const category = asTrimmedString(raw.category);
   let editableFields: WidgetEditableFieldsContract | null = null;
   try {
     editableFields = readWidgetEditableFieldsContract(raw.editableFields);
   } catch {
     editableFields = null;
   }
-  if (!widgetType || !widgetCode || !label || !description || !category || !editableFields) return null;
+  if (!widgetType || !widgetCode || !editableFields) return null;
   return {
     widgetType,
     widgetCode,
-    label,
-    description,
-    category,
     editableFields,
   };
 }
@@ -270,6 +278,75 @@ function normalizeTokyoWidgetDefinitions(raw: unknown): TokyoWidgetDefinition[] 
   const entries = raw.map((entry) => normalizeTokyoWidgetDefinition(entry));
   if (entries.some((entry) => !entry)) return null;
   return entries as TokyoWidgetDefinition[];
+}
+
+function normalizePlacedPageIds(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  const pageIds = raw.map((entry) => asTrimmedString(entry)).filter((entry): entry is string => Boolean(entry));
+  return pageIds.length === raw.length ? pageIds : null;
+}
+
+async function listPageIdsPlacingInstanceInTokyo(args: {
+  accountId: string;
+  instanceId: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true; value: string[] } | RouteFailure> {
+  const result = await callTokyo(tokyoCallContext(args), {
+    path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/pages`,
+    method: 'GET',
+    decode: (payload) => payload,
+    errorDetail: 'tokyo_instance_pages_http_error',
+    errorKey: 'coreui.errors.db.readFailed',
+  });
+  if (!result.ok) return result;
+  const payload = isRecord(result.value) ? result.value : null;
+  const pageIds = normalizePlacedPageIds(payload?.pageIds);
+  if (!pageIds) return invalidTokyoPayload('invalid Tokyo instance pages payload');
+  return { ok: true, value: pageIds };
+}
+
+async function refreshPagesPlacingInstanceInTokyo(args: {
+  accountId: string;
+  instanceId: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true } | RouteFailure> {
+  const placedPages = await listPageIdsPlacingInstanceInTokyo(args);
+  if (!placedPages.ok) return placedPages;
+  for (const pageId of placedPages.value) {
+    const opened = await loadAccountPageFromTokyo({
+      accountId: args.accountId,
+      pageId,
+      accountCapsule: args.accountCapsule,
+      internalServiceName: args.internalServiceName,
+      requestId: args.requestId,
+    });
+    if (!opened.ok) return pageRouteFailureToInstanceFailure(opened);
+    if (!opened.value) {
+      return {
+        ok: false,
+        status: 404,
+        error: {
+          kind: 'NOT_FOUND',
+          reasonKey: 'coreui.errors.page.notFound',
+          detail: `placed page not found: ${pageId}`,
+        },
+      };
+    }
+    const saved = await saveAccountPageInTokyo({
+      accountId: args.accountId,
+      pageId,
+      source: opened.value.source,
+      accountCapsule: args.accountCapsule,
+      internalServiceName: args.internalServiceName,
+      requestId: args.requestId,
+    });
+    if (!saved.ok) return pageRouteFailureToInstanceFailure(saved);
+  }
+  return { ok: true };
 }
 
 function normalizeAccountInstancePayload(payload: unknown):
@@ -377,6 +454,12 @@ export async function saveAccountInstanceInTokyo(args: {
   accountCapsule?: string | null;
   widgetType: string;
   config: Record<string, unknown>;
+  publicPackage: {
+    v: 1;
+    indexHtml: string;
+    stylesCss: string;
+    runtimeJs: string;
+  };
   displayName?: string | null;
   meta?: Record<string, unknown> | null;
   internalServiceName?: string | null;
@@ -396,6 +479,7 @@ export async function saveAccountInstanceInTokyo(args: {
     body: {
       widgetType: args.widgetType,
       config: args.config,
+      publicPackage: args.publicPackage,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.meta !== undefined ? { meta: args.meta } : {}),
     },
@@ -404,6 +488,14 @@ export async function saveAccountInstanceInTokyo(args: {
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
+  const pages = await refreshPagesPlacingInstanceInTokyo({
+    accountId: args.accountId,
+    instanceId: args.instanceId,
+    accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
+    requestId: args.requestId,
+  });
+  if (!pages.ok) return pages;
   const payload = isRecord(result.value) ? result.value : {};
   return {
     ok: true,

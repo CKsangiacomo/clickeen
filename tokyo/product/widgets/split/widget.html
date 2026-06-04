@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Split Widget</title>
+    <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
+    <link rel="stylesheet" href="/dieter/components/button/button.css" />
+    <link rel="stylesheet" href="../shared/stagePod.css" />
+    <link rel="stylesheet" href="./widget.css" />
+  </head>
+  <body>
+    <div class="stage" data-role="stage">
+      <div class="pod" data-role="pod">
+        <div class="ck-widget ck-split-widget" data-ck-widget="split" data-role="root">
+          <section class="ck-splitWidget" data-role="split" data-layout="visual-right" data-visual="false">
+            <div class="ck-splitWidget__grid" data-role="split-grid">
+              <div class="ck-splitWidget__content" data-role="split-content">
+                <h2 class="ck-splitWidget__headline display-3" data-role="split-headline"></h2>
+                <div class="ck-splitWidget__subheadline body-website" data-role="split-subheadline"></div>
+                <div class="ck-splitWidget__actions" data-role="split-actions">
+                  <a class="ck-btn ck-btn--lg label-l ck-splitWidget__button" data-role="split-primary" hidden></a>
+                  <a class="ck-btn ck-btn--secondaryCta ck-btn--lg label-l ck-splitWidget__button" data-role="split-secondary" hidden></a>
+                </div>
+              </div>
+              <div class="ck-splitWidget__visual" data-role="split-visual" hidden>
+                <div class="ck-splitWidget__media" data-role="split-media"></div>
+              </div>
+            </div>
+          </section>
+          <script src="../shared/fill.js?v=20260228-1" defer></script>
+          <script src="../shared/appearance.js" defer></script>
+          <script src="../shared/runtime.js" defer></script>
+          <script src="../shared/typography-data.js" defer></script>
+          <script src="../shared/typography.js" defer></script>
+          <script src="../shared/stagePod.js" defer></script>
+          <script src="../shared/branding.js" defer></script>
+          <script src="../shared/previewL10n.js" defer></script>
+          <script src="./widget.client.js" defer></script>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -8,7 +8,7 @@ import {
 } from '../route-helpers';
 import {
   normalizeAccountPublicId,
-} from './internal-render-route-utils';
+} from './internal-product-route-utils';
 
 export async function tryHandleInternalWidgetDefinitionRoutes(
   args: TokyoRouteArgs,
@@ -18,7 +18,7 @@ export async function tryHandleInternalWidgetDefinitionRoutes(
   if (pathname === '/__internal/widgets/definitions') {
     const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
     if (!accountId) {
-      return respondValidation(respond, 'tokyo.errors.render.invalid');
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     }
     if (req.method !== 'GET') {
       return respondMethodNotAllowed(respond);

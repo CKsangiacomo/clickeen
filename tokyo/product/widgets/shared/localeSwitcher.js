@@ -28,48 +28,32 @@
     return host;
   }
 
-  function tokenizeRadius(value) {
-    const normalized = String(value || '').trim();
-    if (!normalized || normalized === 'none') return '0';
-    return 'var(--control-radius-' + normalized + ')';
+  function resolveAppearanceHelpers() {
+    const appearance = window.CKAppearance;
+    if (
+      !appearance ||
+      typeof appearance.toCssBackground !== 'function' ||
+      typeof appearance.toCssColor !== 'function' ||
+      typeof appearance.tokenizeRadius !== 'function'
+    ) {
+      throw new Error('[CKLocaleSwitcher] Missing CKAppearance helpers');
+    }
+    return appearance;
   }
 
-  function resolveFillBackground(value) {
-    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
-      return window.CKFill.toCssBackground(value);
+  function resolveRuntime() {
+    const runtime = window.CKWidgetRuntime;
+    if (!runtime || typeof runtime.resolveInstanceId !== 'function') {
+      throw new Error('[CKLocaleSwitcher] Missing CKWidgetRuntime.resolveInstanceId');
     }
-    return String(value ?? '');
-  }
-
-  function resolveFillColor(value) {
-    if (window.CKFill && typeof window.CKFill.toCssColor === 'function') {
-      return window.CKFill.toCssColor(value);
-    }
-    return String(value ?? '');
-  }
-
-  function resolveInstanceId(widgetRoot) {
-    const direct = widgetRoot.getAttribute('data-ck-instance-id');
-    if (typeof direct === 'string' && direct.trim()) return direct.trim();
-    const rootNode = widgetRoot.getRootNode();
-    if (rootNode instanceof ShadowRoot && rootNode.host instanceof HTMLElement) {
-      const fromHost = rootNode.host.getAttribute('data-ck-instance-id') || '';
-      if (fromHost.trim()) return fromHost.trim();
-    }
-    const ancestor = widgetRoot.closest('[data-ck-instance-id]');
-    if (ancestor instanceof HTMLElement) {
-      const fromAncestor = ancestor.getAttribute('data-ck-instance-id') || '';
-      if (fromAncestor.trim()) return fromAncestor.trim();
-    }
-    const global = window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET : null;
-    return global && typeof global.instanceId === 'string' ? global.instanceId.trim() : '';
+    return runtime;
   }
 
   function resolveInstanceKey(widgetRoot) {
     const existing = ROOT_SWITCHER_IDS.get(widgetRoot);
     if (existing) return existing;
     switcherSequence += 1;
-    const instanceId = resolveInstanceId(widgetRoot);
+    const instanceId = resolveRuntime().resolveInstanceId(widgetRoot);
     const widgetName = widgetRoot.getAttribute('data-ck-widget') || 'widget';
     const instanceKey = (instanceId || widgetName) + '__' + String(switcherSequence);
     ROOT_SWITCHER_IDS.set(widgetRoot, instanceKey);
@@ -89,6 +73,7 @@
 
   function resolveAppearance(raw) {
     const appearance = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    const helpers = resolveAppearanceHelpers();
     const border =
       appearance.localeSwitcherBorder &&
       typeof appearance.localeSwitcherBorder === 'object' &&
@@ -97,9 +82,9 @@
         : null;
 
     return {
-      background: resolveFillBackground(appearance.localeSwitcherBackground || 'var(--color-system-white)'),
-      color: resolveFillColor(appearance.localeSwitcherTextColor || 'var(--color-system-black)'),
-      radius: tokenizeRadius(appearance.localeSwitcherRadius || 'md'),
+      background: helpers.toCssBackground(appearance.localeSwitcherBackground || 'var(--color-system-white)'),
+      color: helpers.toCssColor(appearance.localeSwitcherTextColor || 'var(--color-system-black)'),
+      radius: helpers.tokenizeRadius(appearance.localeSwitcherRadius || 'md'),
       borderWidth:
         border && border.enabled === true && typeof border.width === 'number' && Number.isFinite(border.width)
           ? border.width
@@ -201,6 +186,11 @@
       throw new Error('[CKLocaleSwitcher] widgetRoot must be an HTMLElement');
     }
 
+    if (runtimeContext && runtimeContext.composedPage === true) {
+      removeExisting(widgetRoot);
+      return;
+    }
+
     const config = resolveSwitcherConfig(state && state.localeSwitcher);
     const policy =
       window.CK_LOCALE_POLICY && typeof window.CK_LOCALE_POLICY === 'object' ? window.CK_LOCALE_POLICY : {};
@@ -217,8 +207,7 @@
     }
 
     const currentLocale =
-      normalizeLocale(runtimeContext && runtimeContext.locale) ||
-      normalizeLocale(window.CK_WIDGET && typeof window.CK_WIDGET === 'object' ? window.CK_WIDGET.locale : '');
+      normalizeLocale(runtimeContext && runtimeContext.locale);
     const previewMode =
       runtimeContext && typeof runtimeContext.previewMode === 'string'
         ? runtimeContext.previewMode.trim()

@@ -97,6 +97,31 @@
         "learningCapture": {
           "rawSamplePercent": 20
         }
+      },
+      "tier4": {
+        "defaultModel": {
+          "provider": "openai",
+          "model": "gpt-5.2"
+        },
+        "modelsByProvider": {
+          "openai": {
+            "defaultModel": "gpt-5.2",
+            "allowed": [
+              "gpt-5-mini",
+              "gpt-5",
+              "gpt-5.2"
+            ]
+          }
+        },
+        "allowModelPicker": true,
+        "budget": {
+          "maxTokens": 1600,
+          "timeoutMs": 60000
+        },
+        "maxTurnsPerThread": 50,
+        "learningCapture": {
+          "rawSamplePercent": 20
+        }
       }
     },
     "widget.instance.translator": {
@@ -203,6 +228,35 @@
         "learningCapture": {
           "rawSamplePercent": 0
         }
+      },
+      "tier4": {
+        "defaultModel": {
+          "provider": "openai",
+          "model": "gpt-5-mini"
+        },
+        "modelsByProvider": {
+          "deepseek": {
+            "defaultModel": "deepseek-chat",
+            "allowed": [
+              "deepseek-chat"
+            ]
+          },
+          "openai": {
+            "defaultModel": "gpt-5-mini",
+            "allowed": [
+              "gpt-5-mini"
+            ]
+          }
+        },
+        "allowModelPicker": false,
+        "budget": {
+          "maxTokens": 2200,
+          "timeoutMs": 60000
+        },
+        "maxTurnsPerThread": 1,
+        "learningCapture": {
+          "rawSamplePercent": 0
+        }
       }
     },
     "website.prague.copy.translator": {
@@ -282,6 +336,31 @@
         }
       },
       "tier3": {
+        "defaultModel": {
+          "provider": "openai",
+          "model": "gpt-5.2"
+        },
+        "modelsByProvider": {
+          "openai": {
+            "defaultModel": "gpt-5.2",
+            "allowed": [
+              "gpt-5-mini",
+              "gpt-5",
+              "gpt-5.2"
+            ]
+          }
+        },
+        "allowModelPicker": false,
+        "budget": {
+          "maxTokens": 2200,
+          "timeoutMs": 60000
+        },
+        "maxTurnsPerThread": 1,
+        "learningCapture": {
+          "rawSamplePercent": 0
+        }
+      },
+      "tier4": {
         "defaultModel": {
           "provider": "openai",
           "model": "gpt-5.2"
