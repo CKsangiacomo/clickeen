@@ -1,8 +1,3 @@
-import { isRecord } from '@clickeen/ck-contracts';
-import countdownCatalog from '../../../tokyo/product/widgets/countdown/catalog.json';
-import faqCatalog from '../../../tokyo/product/widgets/faq/catalog.json';
-import logoshowcaseCatalog from '../../../tokyo/product/widgets/logoshowcase/catalog.json';
-
 export type PragueWidgetCatalogEntry = {
   widgetType: string;
   label: string;
@@ -10,31 +5,25 @@ export type PragueWidgetCatalogEntry = {
   category: string;
 };
 
-function parseWidgetCatalogEntry(widgetType: string, value: unknown, index: number): PragueWidgetCatalogEntry {
-  if (!isRecord(value)) {
-    throw new Error(`prague.widgetCatalog.invalidEntry:${index}`);
-  }
-
-  if (
-    typeof value.label !== 'string' ||
-    typeof value.description !== 'string' ||
-    typeof value.category !== 'string'
-  ) {
-    throw new Error(`prague.widgetCatalog.invalidEntry:${index}`);
-  }
-
-  return {
-    widgetType,
-    label: value.label,
-    description: value.description,
-    category: value.category,
-  };
-}
-
-const WIDGET_CATALOG = [
-  parseWidgetCatalogEntry('faq', faqCatalog, 0),
-  parseWidgetCatalogEntry('countdown', countdownCatalog, 1),
-  parseWidgetCatalogEntry('logoshowcase', logoshowcaseCatalog, 2),
+const WIDGET_CATALOG: PragueWidgetCatalogEntry[] = [
+  {
+    widgetType: 'faq',
+    label: 'FAQ',
+    description: 'Answer common questions with grouped, editable content.',
+    category: 'Support',
+  },
+  {
+    widgetType: 'countdown',
+    label: 'Countdown',
+    description: 'Show launch, offer, or event timing in one active widget.',
+    category: 'Conversion',
+  },
+  {
+    widgetType: 'logoshowcase',
+    label: 'Logo showcase',
+    description: 'Display brand, customer, or partner logos from one saved config.',
+    category: 'Social proof',
+  },
 ];
 
 export function resolvePragueWidgetCatalogEntry(widgetType: string): PragueWidgetCatalogEntry {
