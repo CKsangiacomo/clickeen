@@ -247,7 +247,6 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
       }
       try {
         const candidate = await validateAccountPageSourceCandidate({
-          env,
           accountId,
           pageId,
           source: body.source,

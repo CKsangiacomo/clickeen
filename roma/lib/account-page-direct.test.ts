@@ -71,7 +71,7 @@ function jsonResponse(payload: unknown, status = 200): Response {
   });
 }
 
-test('account page helpers call Tokyo page product operations', async () => {
+test('account page helpers compose packages in Roma before storing page bytes in Tokyo', async () => {
   const originalContext = (globalThis as Record<PropertyKey, unknown>)[CLOUDFLARE_REQUEST_CONTEXT_SYMBOL];
   const calls: Array<{ method: string; path: string; body: unknown }> = [];
 

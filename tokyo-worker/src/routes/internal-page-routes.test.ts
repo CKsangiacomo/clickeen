@@ -181,8 +181,8 @@ test('page routes allow the same widget instance in multiple placements', async 
   );
 });
 
-test('page routes reject placements that are not account instances', async () => {
-  const { env } = createInternalRouteTestEnv();
+test('page routes store syntactically valid placements without product existence checks', async () => {
+  const { env, objects } = createInternalRouteTestEnv();
 
   const response = await callPageRoute({
     env,
@@ -191,10 +191,17 @@ test('page routes reject placements that are not account instances', async () =>
     body: saveBody(pageSource()),
   });
 
-  assert.equal(response?.status, 422);
-  const payload = await response?.json() as { error?: { reasonKey?: string; paths?: string[] } };
-  assert.equal(payload.error?.reasonKey, 'tokyo.errors.page.placementInstanceInvalid');
-  assert.deepEqual(payload.error?.paths, ['placements.0.instanceId']);
+  assert.equal(response?.status, 200);
+  const payload = await response?.json() as Record<string, unknown>;
+  assert.equal(payload.ok, true);
+  assert.deepEqual(
+    jsonPayload(objects, `accounts/${ACCOUNT_ID}/website/pages/${PAGE_ID}/source.json`),
+    pageSource(),
+  );
+  assert.deepEqual(
+    (jsonPayload(objects, `accounts/${ACCOUNT_ID}/website/indexes/placements/${INSTANCE_ID}.json`) as { pageIds: string[] }).pageIds,
+    [PAGE_ID],
+  );
 });
 
 test('page routes update reverse placement indexes without scanning page folders', async () => {

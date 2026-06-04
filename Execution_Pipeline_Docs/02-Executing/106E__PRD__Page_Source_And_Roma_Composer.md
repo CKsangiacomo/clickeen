@@ -291,10 +291,10 @@ What landed:
 - Page source is stored at `accounts/{accountPublicId}/website/pages/{pageId}/source.json`.
 - Page list is maintained as an explicit projection, not an R2 folder scan.
 - Reverse placement lookup is maintained as an explicit projection by `instanceId`, not an R2 folder scan.
-- Current Tokyo code validates page id, head metadata, instance existence, and same-account ownership; under the 106 tenets this must become Roma-owned product/save validation with Tokyo keeping only storage-boundary checks.
+- Current Tokyo code validates page ids, head metadata shape, placement id shape, and storage payload shape. Instance existence and same-account placement validity are Roma product/save concerns, proven by Roma fetching placed widget packages before submitting page bytes.
 - The same widget instance may appear in multiple placements on the same page. Placement identity is array position; widget instance identity remains widget-owned.
 - Widget instance deletion is blocked when the reverse placement index shows that the instance is placed on one or more pages.
-- Roma has a server-side page direct helper that calls Tokyo page product operations.
+- Roma has a server-side page direct helper that composes page package bytes before submitting page source/package files to Tokyo.
 - Roma has account API facades for page list/create/open/save/delete.
 - No page materializer, public page serving, slug manager, page override model, block object, section object, or Bob page mode was added.
 
@@ -335,7 +335,7 @@ git diff --check
 
 Slice 1 conclusion:
 
-The system now has one real page noun: a Tokyo-owned page source with ordered widget instance placements. Roma can call page operations through its account API boundary, but the product UI is still 106E2.
+The system now has one real page noun: an account page source with ordered widget instance placements. Roma owns the product workflow and composition step; Tokyo stores the submitted source, indexes, and package bytes.
 
 ## 106E2 - Roma Page Composer
 

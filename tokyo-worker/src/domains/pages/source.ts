@@ -6,7 +6,6 @@ import {
   isCompactPageId,
 } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
-import { resolveAccountInstanceLocation } from '../account-instances/registry';
 import { deletePrefix, loadJson, putJson } from '../storage';
 import {
   accountPageRoot,
@@ -67,31 +66,6 @@ function normalizePlacements(value: unknown): PagePlacement[] | null {
   const placements = value.map(normalizePlacement);
   if (placements.some((placement) => !placement)) return null;
   return placements as PagePlacement[];
-}
-
-async function validatePlacementInstances(args: {
-  env: Env;
-  accountId: string;
-  placements: PagePlacement[];
-}): Promise<void> {
-  const missing: string[] = [];
-  await Promise.all(
-    args.placements.map(async (placement, index) => {
-      const location = await resolveAccountInstanceLocation({
-        env: args.env,
-        accountId: args.accountId,
-        instanceId: placement.instanceId,
-      });
-      if (!location) missing.push(`placements.${index}.instanceId`);
-    }),
-  );
-  if (missing.length) {
-    throw new PageOperationError({
-      kind: 'VALIDATION',
-      reasonKey: 'tokyo.errors.page.placementInstanceInvalid',
-      paths: missing,
-    });
-  }
 }
 
 export async function readAccountPageSource(args: {
@@ -312,7 +286,6 @@ export async function saveAccountPageSource(args: {
       reasonKey: 'tokyo.errors.page.sourceInvalid',
     });
   }
-  await validatePlacementInstances({ env: args.env, accountId, placements: source.placements });
   const previous = await readAccountPageSource({ env: args.env, accountId, pageId });
   const now = args.now ?? new Date().toISOString();
   await putJson(args.env, accountPageSourceKey(accountId, pageId), source);
@@ -329,7 +302,6 @@ export async function saveAccountPageSource(args: {
 }
 
 export async function validateAccountPageSourceCandidate(args: {
-  env: Env;
   accountId: string;
   pageId: string;
   source: unknown;
@@ -349,7 +321,6 @@ export async function validateAccountPageSourceCandidate(args: {
       reasonKey: 'tokyo.errors.page.sourceInvalid',
     });
   }
-  await validatePlacementInstances({ env: args.env, accountId, placements: source.placements });
   return source;
 }
 
