@@ -23,7 +23,7 @@ const SCANNED_PATHS = [
   'roma/lib/auth/session.ts',
   'tokyo-worker/src/domains/account-instances/registry.ts',
   'tokyo-worker/src/domains/account-instances/normalize.ts',
-  'tokyo-worker/src/domains/widget-catalog.ts',
+  'tokyo-worker/src/domains/widget-definitions.ts',
   ...APPROVED_CANONICAL_FILES,
 ];
 
@@ -159,7 +159,7 @@ const FORBIDDEN_PRODUCT_AUTHORITY_SNIPPETS = [
     label: 'mirror/snapshot queue provisioning',
   },
   {
-    relativePath: 'tokyo-worker/src/domains/widget-catalog.ts',
+    relativePath: 'tokyo-worker/src/domains/widget-definitions.ts',
     snippet: 'WidgetOverlayContract',
     label: 'generated overlay-shaped widget field contract',
   },

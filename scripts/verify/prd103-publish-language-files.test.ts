@@ -8,7 +8,7 @@ import {
 import {
   getWidgetDefinition,
   resolveWidgetDefaults,
-} from '../../tokyo-worker/src/domains/widget-catalog.ts';
+} from '../../tokyo-worker/src/domains/widget-definitions.ts';
 import {
   publishAccountInstanceTransition,
   saveAccountInstanceTransition,
