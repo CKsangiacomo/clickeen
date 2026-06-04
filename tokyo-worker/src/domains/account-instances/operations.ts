@@ -2,7 +2,7 @@ import { createCompactInstanceId, isCompactAccountPublicId, isCompactInstanceId 
 import type { Env } from '../../types';
 import {
   resolveWidgetDefaults,
-} from '../widget-catalog';
+} from '../widget-definitions';
 import {
   type SubmittedInstancePublicPackage,
   verifyInstancePublicPackageReady,

@@ -20,7 +20,7 @@ import {
 } from '../account-translations/values.ts';
 import { readInstanceServeState } from './serve-state.ts';
 import { attachTestInstanceRegistry } from '../../test-utils/instance-registry.ts';
-import { resolveWidgetDefaults } from '../widget-catalog.ts';
+import { resolveWidgetDefaults } from '../widget-definitions.ts';
 
 const ACCOUNT_ID = 'A1B2C3D4';
 const INSTANCE_ID = 'Z9Y8X7W6V5';

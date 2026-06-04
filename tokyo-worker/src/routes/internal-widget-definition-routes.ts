@@ -1,4 +1,4 @@
-import { listWidgetDefinitions } from '../domains/widget-catalog';
+import { listWidgetDefinitions } from '../domains/widget-definitions';
 import { json } from '../http';
 import {
   authorizeRomaAccountScopedRequest,

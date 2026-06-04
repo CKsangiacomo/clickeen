@@ -12,7 +12,7 @@ import {
   loadRomaWidgetsForAccount,
   readRomaWidgetsCache,
   type RomaWidgetsResponse,
-  type WidgetCatalogOption,
+  type SystemWidgetOption,
   type WidgetInstance,
 } from './use-roma-widgets';
 import {
@@ -73,7 +73,7 @@ export function PagesDomain() {
   const [pageSource, setPageSource] = useState<AccountPageSource | null>(null);
   const [pagePublishStatus, setPagePublishStatus] = useState<PagePublishStatus>('unpublished');
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
-  const [widgetCatalog, setWidgetCatalog] = useState<WidgetCatalogOption[]>(() => cachedWidgets?.data.catalog ?? []);
+  const [systemWidgets, setSystemWidgets] = useState<SystemWidgetOption[]>(() => cachedWidgets?.data.systemWidgets ?? []);
   const [selectedExistingInstanceId, setSelectedExistingInstanceId] = useState('');
   const [selectedCreateWidgetType, setSelectedCreateWidgetType] = useState('');
   const [domainLoading, setDomainLoading] = useState(() => !cachedPages);
@@ -93,9 +93,9 @@ export function PagesDomain() {
 
   const applyWidgets = useCallback((widgets: RomaWidgetsResponse) => {
     setWidgetInstances(widgets.instances);
-    setWidgetCatalog(widgets.catalog);
+    setSystemWidgets(widgets.systemWidgets);
     if (!selectedCreateWidgetType) {
-      setSelectedCreateWidgetType(widgets.catalog.find((option) => option.canCreate)?.widgetType ?? '');
+      setSelectedCreateWidgetType(widgets.systemWidgets.find((option) => option.canCreate)?.widgetType ?? '');
     }
   }, [selectedCreateWidgetType]);
 
@@ -573,7 +573,7 @@ export function PagesDomain() {
                 onChange={(event) => setSelectedCreateWidgetType(event.target.value)}
               >
                 <option value="">Select type</option>
-                {widgetCatalog.map((option) => (
+                {systemWidgets.map((option) => (
                   <option key={option.widgetType} value={option.widgetType} disabled={!option.canCreate}>
                     {option.label}
                   </option>

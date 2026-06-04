@@ -23,7 +23,7 @@ type WidgetInstance = {
   };
 };
 
-type WidgetCatalogOption = {
+type SystemWidgetOption = {
   widgetType: string;
   widgetCode: string;
   canCreate: boolean;
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
       ? Math.max(0, Math.floor(widgetsTypesLimitRaw))
       : null;
   const usedWidgetTypes = new Set(widgetInstances.value.accountInstances.map((instance) => instance.widgetType));
-  const catalog: WidgetCatalogOption[] = widgetDefinitions.value.widgetDefinitions.map((entry) => {
+  const systemWidgets: SystemWidgetOption[] = widgetDefinitions.value.widgetDefinitions.map((entry) => {
     const existingType = usedWidgetTypes.has(entry.widgetType);
     const withinTypeLimit = widgetTypesLimit == null || existingType || usedWidgetTypes.size < widgetTypesLimit;
     return {
@@ -129,11 +129,11 @@ export async function GET(request: NextRequest) {
     request,
     NextResponse.json({
       account: {
-      accountId,
-    },
-    catalog,
-    instances: accountInstances,
-  }),
+        accountId,
+      },
+      systemWidgets,
+      instances: accountInstances,
+    }),
     current.value.setCookies,
   );
 }

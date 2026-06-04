@@ -17,7 +17,7 @@ import {
   normalizeAccountInstanceContentDocument,
 } from './normalize';
 import { loadJson, loadJsonObject, putJson, putJsonIfUnchanged } from '../storage';
-import { getWidgetDefinition, resolveWidgetCode } from '../widget-catalog';
+import { getWidgetDefinition, resolveWidgetCode } from '../widget-definitions';
 import {
   extractSavedTextFieldsForEditableFields,
   extractTextPrimitiveValuesForEditableFields,

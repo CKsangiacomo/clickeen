@@ -15,9 +15,13 @@ import {
   readRomaWidgetsCache,
   updateRomaWidgetsCache,
   type RomaWidgetsResponse,
-  type WidgetCatalogOption,
+  type SystemWidgetOption,
   type WidgetInstance,
 } from './use-roma-widgets';
+
+type WidgetInstanceGroup = SystemWidgetOption & {
+  instances: WidgetInstance[];
+};
 
 export function WidgetsDomain() {
   const searchParams = useSearchParams();
@@ -30,7 +34,7 @@ export function WidgetsDomain() {
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
-  const [widgetCatalog, setWidgetCatalog] = useState<WidgetCatalogOption[]>(() => cachedWidgets?.data.catalog ?? []);
+  const [systemWidgets, setSystemWidgets] = useState<SystemWidgetOption[]>(() => cachedWidgets?.data.systemWidgets ?? []);
   const [domainLoading, setDomainLoading] = useState(() => !cachedWidgets);
   const [domainRefreshing, setDomainRefreshing] = useState(false);
   const [dataError, setDataError] = useState<string | null>(null);
@@ -42,7 +46,7 @@ export function WidgetsDomain() {
 
   const applyWidgets = useCallback((widgets: RomaWidgetsResponse) => {
     setWidgetInstances(widgets.instances);
-    setWidgetCatalog(widgets.catalog);
+    setSystemWidgets(widgets.systemWidgets);
   }, []);
 
   const refreshWidgets = useCallback(async (args?: { force?: boolean }) => {
@@ -86,7 +90,7 @@ export function WidgetsDomain() {
       setDomainLoading(false);
     } else {
       setWidgetInstances([]);
-      setWidgetCatalog([]);
+      setSystemWidgets([]);
       setDomainLoading(true);
     }
     void refreshWidgets();
@@ -97,26 +101,40 @@ export function WidgetsDomain() {
     [widgetInstances],
   );
 
-  const groupedInstances = useMemo(() => {
-    const groups = new Map<string, WidgetInstance[]>();
+  const groupedInstances = useMemo<WidgetInstanceGroup[]>(() => {
+    const groups = new Map<string, WidgetInstanceGroup>();
+
+    systemWidgets.forEach((option) => {
+      groups.set(option.widgetType, {
+        ...option,
+        instances: [],
+      });
+    });
 
     widgetInstances.forEach((instance) => {
       const widgetType = instance.widgetType;
-      if (!groups.has(widgetType)) groups.set(widgetType, []);
-      groups.get(widgetType)?.push(instance);
+      const group = groups.get(widgetType);
+      if (group) {
+        group.instances.push(instance);
+        return;
+      }
+      groups.set(widgetType, {
+        widgetType,
+        label: widgetType,
+        description: '',
+        canCreate: false,
+        disabledReasonKey: null,
+        instances: [instance],
+      });
     });
 
-    return Array.from(groups.entries())
-      .map(([widgetType, instances]) => ({
-        widgetType,
-        instances: instances.slice().sort((a, b) => a.instanceId.localeCompare(b.instanceId)),
+    return Array.from(groups.values())
+      .map((group) => ({
+        ...group,
+        instances: group.instances.slice().sort((a, b) => a.instanceId.localeCompare(b.instanceId)),
       }))
-      .sort((a, b) => {
-        const labelA = widgetCatalog.find((entry) => entry.widgetType === a.widgetType)?.label ?? a.widgetType;
-        const labelB = widgetCatalog.find((entry) => entry.widgetType === b.widgetType)?.label ?? b.widgetType;
-        return labelA.localeCompare(labelB);
-      });
-  }, [widgetCatalog, widgetInstances]);
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [systemWidgets, widgetInstances]);
 
   useEffect(() => {
     const candidates = instanceWidgetTypes.slice(0, 8);
@@ -289,7 +307,7 @@ export function WidgetsDomain() {
 
   return (
     <>
-      {dataError || mutationError || groupedInstances.length === 0 ? (
+      {dataError || mutationError || renameError || (domainLoading && groupedInstances.length === 0) ? (
         <section className="rd-canvas-module">
           {dataError ? (
             <div className="roma-inline-stack">
@@ -303,43 +321,24 @@ export function WidgetsDomain() {
           {renameError ? <p className="body-m">{renameError}</p> : null}
 
           {domainLoading && groupedInstances.length === 0 && !dataError ? <p className="body-m">Loading widgets...</p> : null}
+        </section>
+      ) : null}
 
-          {!domainLoading && groupedInstances.length === 0 ? (
-            <div className="rd-canvas-module__actions">
-              <p className="body-m">No editable instances yet.</p>
-              {widgetCatalog.map((option, optionIndex) => {
-                const actionKey = `create:${option.widgetType}`;
-                return (
-                  <button
-                    className="diet-btn-txt"
-                    data-size="md"
-                    data-variant={optionIndex === 0 ? 'primary' : 'line2'}
-                    type="button"
-                    key={option.widgetType}
-                    onClick={() => void handleCreateInstance(option.widgetType)}
-                    disabled={Boolean(activeActionKey) || !option.canCreate}
-                    title={
-                      option.disabledReasonKey
-                        ? resolveAccountShellErrorCopy(option.disabledReasonKey, 'This widget is not available on the current account plan.')
-                        : option.description || undefined
-                    }
-                  >
-                    <span className="diet-btn-txt__label body-m">
-                      {activeActionKey === actionKey ? 'Creating...' : `Create ${option.label}`}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
+      {!domainLoading && !dataError && groupedInstances.length === 0 ? (
+        <section className="rd-canvas-module">
+          <p className="body-m">No widget types available.</p>
         </section>
       ) : null}
 
       {groupedInstances.map((group) => {
+        const createActionKey = `create:${group.widgetType}`;
+        const createTitle = group.disabledReasonKey
+          ? resolveAccountShellErrorCopy(group.disabledReasonKey, 'This widget is not available on the current account plan.')
+          : group.description || undefined;
         return (
           <section className="rd-canvas-module" key={group.widgetType}>
             <div className="roma-toolbar">
-              <h2 className="heading-4">{widgetCatalog.find((entry) => entry.widgetType === group.widgetType)?.label ?? group.widgetType}</h2>
+              <h2 className="heading-4">{group.label}</h2>
               <p className="body-m roma-toolbar-count">
                 {group.instances.length} {group.instances.length === 1 ? 'instance' : 'instances'}
               </p>
@@ -505,7 +504,20 @@ export function WidgetsDomain() {
                 {group.instances.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="body-s">
-                      No instances yet.
+                      <div className="roma-cell-actions">
+                        <span>No instances yet.</span>
+                        <button
+                          className="diet-btn-txt"
+                          data-size="md"
+                          data-variant="line2"
+                          type="button"
+                          onClick={() => void handleCreateInstance(group.widgetType)}
+                          disabled={Boolean(activeActionKey) || !group.canCreate}
+                          title={createTitle}
+                        >
+                          <span className="diet-btn-txt__label body-m">{activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ) : null}

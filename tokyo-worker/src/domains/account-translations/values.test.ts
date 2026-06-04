@@ -8,7 +8,7 @@ import type { Env } from '../../types.ts';
 import {
   getWidgetDefinition,
   resolveWidgetDefaults,
-} from '../widget-catalog.ts';
+} from '../widget-definitions.ts';
 import {
   listTranslatedLocales,
   readTranslatedLocaleValues,
@@ -102,7 +102,7 @@ function addFaqFixtureContent(config: Record<string, unknown>): void {
 async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
   const config = resolveWidgetDefaults('faq');
   const widgetDefinition = getWidgetDefinition('faq');
-  assert(config, 'FAQ defaults missing from widget catalog');
+  assert(config, 'FAQ defaults missing from widget definitions');
   assert(widgetDefinition, 'FAQ widget definition missing');
   addFaqFixtureContent(config);
   await writeAccountInstanceSource({

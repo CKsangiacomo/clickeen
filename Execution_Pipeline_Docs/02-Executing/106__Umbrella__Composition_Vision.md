@@ -1,33 +1,33 @@
 # Clickeen Composition Vision — Umbrella for PRD 106 (Pages)
 
 Status: Umbrella / vision lens (not a spec)
-Scope: Read this before PRD 106 and its child PRDs (106A–106G).
+Scope: PRD 106 page composition authority.
 Relationship: Sits under `strategy/ClickeenVision.md` and the PRD 105 tenets; it
 explains the *intent* and *mental model* behind page composition and delivery so
-the PRDs read correctly.
+implementation work stays grounded.
 
 ## What this doc is for
 
-PRD 106 is precise but narrow: it says *how* to build composed pages and page
-delivery. This doc says *why the shape is what it is*, so you don't reinvent it,
-over-build it, or misread its restraint as missing scope. If a PRD decision seems
+PRD 106 is precise but narrow: add pages as account-owned stacks of saved widget
+instances. This doc says *why the shape is what it is*, so you don't reinvent it,
+over-build it, or misread its restraint as missing scope. If a decision seems
 oddly minimal, this doc is where the reason lives.
 
 ## Non-Negotiable Product System Tenets
 
-This section is the execution gate for the 106 series. Any code, PRD language,
-or plan that contradicts it is drift and must be fixed before the series
-continues.
+This section is the execution gate for PRD 106. Any code, PRD language, or plan
+that contradicts it is drift and must be fixed before work continues.
 
 ```text
 Widgets are software types that live in the Clickeen system.
-Instances are account-owned widgets users create/edit/save through Roma/Bob.
-Pages are account-owned stacks of instances.
+Instances are account-owned widgets users create/edit in Roma/Bob and save to
+their account in Tokyo.
+Pages are account-owned stacks of instances stored in Tokyo.
 Bob is only the browser editor: open, edit in browser memory, save.
 Roma is the app: route the user to the account, apply tier/account authority,
 and save what the user does.
-Tokyo is the R2/storage and edge-file boundary. Nothing more.
-Clickeen/admin is just an account using Clickeen's own widgets.
+Tokyo is responsible for R2 storage. Nothing more.
+Clickeen uses Clickeen: admin is just an account using Clickeen's own widgets.
 ```
 
 The boundary is deliberately boring:
@@ -38,10 +38,11 @@ The boundary is deliberately boring:
 - Roma owns product orchestration: account context, tier permission, page
   composer UX, save acceptance, publish/unpublish intent, and account-facing
   errors.
-- Tokyo stores and serves files from R2. Tokyo may enforce storage safety
+- Tokyo accepts submitted files, validates only R2/file-storage safety
   boundaries such as account coordinate, path, content type, file allowlist, and
-  object existence. Tokyo must not become a product brain, tier brain, widget
-  renderer, page composer, sanitizer, or policy subsystem.
+  object existence, stores them in R2, and serves already-stored public files.
+  Tokyo must not become a product brain, tier brain, widget renderer, page
+  composer, sanitizer, or policy subsystem.
 - Pages can live physically in Tokyo/R2 because account files live there. That
   does not make Tokyo the page product authority. Roma decides what is being
   saved; Tokyo stores the submitted source/package files.
@@ -52,7 +53,7 @@ The boundary is deliberately boring:
 Allowed under these tenets:
 
 ```text
-Bob/Roma builds or submits widget package files -> Tokyo stores them.
+Bob edits one widget in browser memory; Roma submits widget package files -> Tokyo stores them.
 Roma saves page source as an ordered instance stack -> Tokyo stores it.
 Roma/Page Composer builds page index.html/styles.css/runtime.js -> Tokyo stores them.
 clk.live serves already-stored files when the stored delivery state allows it.
@@ -136,7 +137,7 @@ That combination is why there is no prior art to copy — and why this is defens
 ## The moat property to never invert: propagation is the product
 
 Edit one widget instance → every page that places it recomposes and reflects the
-change, for free, at resolution time. This is the **asset**, not a cost. It is the
+change after the saved input changes. This is the **asset**, not a cost. It is the
 same mechanic that lets a republished widget update every external site that
 embeds it. Any design that re-introduces a per-consumer rebuild cost, or treats
 "this change fans out to N pages" as a problem to ration, has inverted the moat
@@ -157,9 +158,8 @@ Everything below `instance` is Dieter and shared controls. Everything above
 `page` (site, nav, domains) is a *later* composition of the same kind, not a new
 substrate.
 
-> Historical note for anyone reading the PRDs: an earlier draft introduced a
-> separate "block" object. It was **removed**. Hero, Split, CTA, image/title,
-> and similar page-shaped surfaces are widgets. There is no block.
+> Historical note: an earlier draft introduced a separate "block" object. It was
+> **removed**. Hero, Split, CTA, image/title, and similar page-shaped surfaces are widgets. There is no block.
 > Do not reintroduce one. The urge to formalize every atomic layer as its own
 > object is the over-architecture trap; resist it.
 
@@ -184,14 +184,14 @@ and serving for free. This is the multiplicative ("100⁵"), not additive, model
 
 ## What PRD 106 is, in this frame
 
-PRD 106 adds the **page** noun and the engine that composes it.
+PRD 106 adds the **page** noun and the Roma-owned workflow that composes it.
 
 - A page is an ordered stack of widget instances + page head metadata.
 - V1 pages are object-addressed by `pageId`, not slug-addressed by route.
 - Hero, Split, CTA, image/title, and similar page-shaped surfaces are not blocks.
   They are widgets — hypersimple, self-contained, full-width. No containers, no
   nesting in V1.
-- The **Page Composer** produces a page package from the already-saved widget
+- Roma's **Page Composer** produces a page package from the already-saved widget
   packages (each instance's `index.html`/`styles.css`/`runtime.js`) into **one**
   page document — not 20 iframes. It extracts fragments, preserves order, dedupes
   shared Dieter/runtime, and submits the resulting three page files to Tokyo.

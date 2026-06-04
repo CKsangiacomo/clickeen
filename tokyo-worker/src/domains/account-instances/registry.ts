@@ -1,7 +1,7 @@
 import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import { supabaseFetch } from '../../supabase';
-import { resolveWidgetCode } from '../widget-catalog';
+import { resolveWidgetCode } from '../widget-definitions';
 import type { InstanceServeState } from './types';
 import { normalizeStorageId } from './utils';
 

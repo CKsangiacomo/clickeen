@@ -10,7 +10,7 @@ import type { Env } from '../../types.ts';
 import {
   getWidgetDefinition,
   resolveWidgetDefaults,
-} from '../widget-catalog.ts';
+} from '../widget-definitions.ts';
 import {
   completeLocaleTranslation,
   failLocaleTranslation,
@@ -123,7 +123,7 @@ function authz(): RomaAccountAuthzCapsulePayload {
 async function seedSavedFaqInstance(env: Env): Promise<Record<string, string>> {
   const config = resolveWidgetDefaults('faq');
   const widgetDefinition = getWidgetDefinition('faq');
-  assert(config, 'FAQ defaults missing from widget catalog');
+  assert(config, 'FAQ defaults missing from widget definitions');
   assert(widgetDefinition, 'FAQ widget definition missing');
   setFirstFaqAnswer(config, 'Plans start with a free option.');
   await writeAccountInstanceSource({
@@ -151,7 +151,7 @@ async function seedSavedWidgetInstance(args: {
 }): Promise<Record<string, string>> {
   const config = resolveWidgetDefaults(args.widgetType);
   const widgetDefinition = getWidgetDefinition(args.widgetType);
-  assert(config, `${args.widgetType} defaults missing from widget catalog`);
+  assert(config, `${args.widgetType} defaults missing from widget definitions`);
   assert(widgetDefinition, `${args.widgetType} widget definition missing`);
   await writeAccountInstanceSource({
     env: args.env,

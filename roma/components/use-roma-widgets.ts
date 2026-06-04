@@ -15,7 +15,7 @@ export type WidgetInstance = {
   };
 };
 
-export type WidgetCatalogOption = {
+export type SystemWidgetOption = {
   widgetType: string;
   label: string;
   description: string;
@@ -38,7 +38,7 @@ type RawWidgetInstance = {
   } | null;
 };
 
-type RawWidgetCatalogOption = {
+type RawSystemWidgetOption = {
   widgetType?: string | null;
   label?: string | null;
   description?: string | null;
@@ -48,7 +48,7 @@ type RawWidgetCatalogOption = {
 
 export type RomaWidgetsResponse = {
   accountId: string;
-  catalog: WidgetCatalogOption[];
+  systemWidgets: SystemWidgetOption[];
   instances: WidgetInstance[];
 };
 
@@ -97,7 +97,7 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
   };
 }
 
-export function normalizeWidgetCatalogOption(raw: RawWidgetCatalogOption): WidgetCatalogOption | null {
+export function normalizeSystemWidgetOption(raw: RawSystemWidgetOption): SystemWidgetOption | null {
   const widgetType = normalizeWidgetType(raw.widgetType);
   if (widgetType === 'unknown') return null;
   const label = String(raw.label || '').trim() || widgetType;
@@ -131,15 +131,15 @@ export function normalizeRomaWidgetsResponse(raw: unknown): RomaWidgetsResponse 
         .map((item) => normalizeWidgetInstance((item || {}) as RawWidgetInstance))
         .filter((item): item is WidgetInstance => Boolean(item))
     : [];
-  const catalog = Array.isArray(record.catalog)
-    ? record.catalog
-        .map((item) => normalizeWidgetCatalogOption((item || {}) as RawWidgetCatalogOption))
-        .filter((item): item is WidgetCatalogOption => Boolean(item))
+  const systemWidgets = Array.isArray(record.systemWidgets)
+    ? record.systemWidgets
+        .map((item) => normalizeSystemWidgetOption((item || {}) as RawSystemWidgetOption))
+        .filter((item): item is SystemWidgetOption => Boolean(item))
     : [];
 
   return {
     accountId,
-    catalog,
+    systemWidgets,
     instances,
   };
 }

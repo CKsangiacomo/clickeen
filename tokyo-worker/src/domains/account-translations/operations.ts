@@ -17,7 +17,7 @@ import {
 } from '@clickeen/ck-policy';
 import { normalizeLocale } from '../../asset-utils';
 import type { Env } from '../../types';
-import { getWidgetDefinition } from '../widget-catalog';
+import { getWidgetDefinition } from '../widget-definitions';
 import { listLocaleOverlays, localeOverlayByLocale } from './overlays';
 import {
   readAccountInstanceContentDocument,
