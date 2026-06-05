@@ -6,6 +6,8 @@
     <title>CTA Widget</title>
     <link rel="stylesheet" href="/dieter/tokens/tokens.css" />
     <link rel="stylesheet" href="/dieter/components/button/button.css" />
+    <link rel="stylesheet" href="../shared/header.css" />
+    <link rel="stylesheet" href="../shared/localeSwitcher.css" />
     <link rel="stylesheet" href="../shared/stagePod.css" />
     <link rel="stylesheet" href="./widget.css" />
   </head>
@@ -13,19 +15,21 @@
     <div class="stage" data-role="stage">
       <div class="pod" data-role="pod">
         <div class="ck-widget ck-cta-widget" data-ck-widget="cta" data-role="root">
-          <section class="ck-cta" data-role="cta">
-            <div class="ck-cta__content" data-role="cta-content">
-              <h2 class="ck-cta__title display-2" data-role="cta-title"></h2>
-              <div class="ck-cta__body body-website" data-role="cta-body"></div>
-              <div class="ck-cta__actions" data-role="cta-actions">
-                <a class="ck-btn ck-btn--lg label-l ck-cta__button" data-role="cta-primary" hidden></a>
-                <a class="ck-btn ck-btn--secondaryCta ck-btn--lg label-l ck-cta__button" data-role="cta-secondary" hidden></a>
+          <section class="ck-cta ck-headerLayout" data-role="cta">
+            <header class="ck-cta__header ck-header">
+              <div class="ck-header__text">
+                <h2 class="ck-cta__title ck-header__title heading-2" data-role="header-title"></h2>
+                <div class="ck-header__subtitle" data-role="header-subtitle" hidden></div>
               </div>
-            </div>
+              <a class="ck-header__cta" data-role="header-cta" hidden></a>
+            </header>
+            <div class="ck-cta__core ck-headerLayout__body" data-role="cta-core" aria-hidden="true"></div>
           </section>
           <script src="../shared/fill.js?v=20260228-1" defer></script>
           <script src="../shared/appearance.js" defer></script>
           <script src="../shared/runtime.js" defer></script>
+          <script src="../shared/header.js" defer></script>
+          <script src="../shared/localeSwitcher.js" defer></script>
           <script src="../shared/typography-data.js" defer></script>
           <script src="../shared/typography.js" defer></script>
           <script src="../shared/stagePod.js" defer></script>

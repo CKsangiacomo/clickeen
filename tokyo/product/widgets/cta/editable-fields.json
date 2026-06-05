@@ -3,34 +3,26 @@
   "widgetType": "cta",
   "fields": [
     {
-      "path": "title",
-      "label": "Title",
+      "path": "header.title",
+      "label": "Header title",
       "type": "richtext",
-      "role": "title",
+      "role": "header-title",
       "arrayItemIdentity": [],
       "limits": []
     },
     {
-      "path": "body",
-      "label": "Body",
+      "path": "header.subtitleHtml",
+      "label": "Header subtitle",
       "type": "richtext",
-      "role": "body",
+      "role": "header-subtitle",
       "arrayItemIdentity": [],
       "limits": []
     },
     {
-      "path": "primaryCta.label",
-      "label": "Primary CTA label",
+      "path": "cta.label",
+      "label": "CTA label",
       "type": "string",
       "role": "cta-label",
-      "arrayItemIdentity": [],
-      "limits": []
-    },
-    {
-      "path": "secondaryCta.label",
-      "label": "Secondary CTA label",
-      "type": "string",
-      "role": "cta-label-secondary",
       "arrayItemIdentity": [],
       "limits": []
     }

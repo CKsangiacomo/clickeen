@@ -63,24 +63,24 @@ If a product decision is missing, add it under
 Current executable step:
 
 ```text
-Step 4: Prove Core extension with CTA.
+Step 5: Prove Core extension with one non-trivial widget.
 ```
 
 Required evidence before marking green:
 
-- CTA diff showing it imports/uses Shell contract behavior.
-- CTA compile/render evidence.
-- CTA package output evidence.
-- Explicit proof that CTA is Shell plus empty Core and does not define duplicate
-  Header/CTA/Stage/Pod paths.
+- Split or Cards diff showing Shell plus Core contribution.
+- Compile/render evidence for the chosen non-trivial widget.
+- Package output evidence for the chosen non-trivial widget.
+- Explicit proof that Core contributes only Core state/controls/runtime and does
+  not redefine Header/CTA/Stage/Pod.
 
 Stop conditions:
 
-- CTA defines duplicate Shell paths.
-- CTA creates a private Header, Stage, Pod, typography, locale selector,
-  branding, or translation system.
-- CTA cannot compile as Shell plus empty Core.
-- CTA changes FAQ behavior.
+- The chosen widget defines duplicate Shell paths.
+- The chosen widget creates a private Header, Stage, Pod, typography, locale
+  selector, branding, or translation system.
+- The chosen widget cannot compile as Shell plus Core.
+- The chosen widget changes FAQ or CTA behavior.
 
 ## Execution Steps
 
@@ -471,6 +471,92 @@ FAQ remains the gold-standard widget. Step 3 did not move `sections[]`, FAQ
 item controls, FAQ runtime, FAQ CSS, or FAQ DOM into the Shell package. It only
 rebased shared compiler/materialization contract constants onto
 `@clickeen/widget-shell`.
+
+## Step 4 Evidence: CTA Empty-Core Shell Proof
+
+Status: Step 4 green evidence.
+
+Changed CTA from duplicate private widget state to Shell plus empty Core:
+
+- Deleted root `title`, root `body`, `primaryCta`, `secondaryCta`, and private
+  `layout.*` state from `tokyo/product/widgets/cta/spec.json`.
+- Replaced CTA Content/Layout/Appearance panels with shared Shell controls.
+- Replaced CTA editable fields with only `header.title`,
+  `header.subtitleHtml`, and `cta.label`.
+- Replaced private CTA DOM with `ck-headerLayout`, `.ck-header`, and an empty
+  `.ck-headerLayout__body` Core div.
+- Replaced private CTA runtime/link logic with shared Shell helper calls:
+  `CKStagePod`, `CKTypography`, `CKHeader`, `CKLocaleSwitcher`, and
+  `CKBranding`.
+
+Old-path guard:
+
+```text
+rg "primaryCta|secondaryCta|layout\.maxWidth|layout\.bodyWidth|layout\.gap|ck-cta__body|ck-cta__actions|cta-primary|cta-secondary|data-role=\"cta-body\"|data-role=\"cta-actions\"" tokyo/product/widgets/cta
+```
+
+Result:
+
+```text
+no output
+```
+
+Verification:
+
+```text
+pnpm --filter @clickeen/bob typecheck
+pnpm --filter @clickeen/roma typecheck
+pnpm validate:widgets
+```
+
+Result:
+
+```text
+all passed
+```
+
+CTA compile/materialization smoke:
+
+```text
+compileWidgetServer(cta spec) with local Tokyo product fetch stub
+buildSavedWidgetPublicPackage(cta package)
+```
+
+Assertions proved:
+
+- `compiled.widgetname == "cta"`.
+- Bob panel order is `content`, `typography`, `layout`, `appearance`,
+  `settings`.
+- CTA compiled control count is `125`.
+- Shell control paths `header.title` and `cta.label` are present.
+- No compiled controls include `primaryCta`, `secondaryCta`,
+  `layout.maxWidth`, `layout.bodyWidth`, or `layout.gap`.
+- Saved package HTML contains `data-ck-widget="cta"`,
+  `class="ck-cta ck-headerLayout"`, and
+  `class="ck-cta__core ck-headerLayout__body"`.
+- Saved package HTML does not contain `.ck-cta__body` or `.ck-cta__actions`.
+- Saved package CSS/runtime contain current shared markers
+  `shared-header.css`, `cta-widget-css`, `shared-header.js`, and
+  `cta-widget-client.js`.
+
+Smoke output:
+
+```json
+{
+  "widget": "cta",
+  "panels": ["content", "typography", "layout", "appearance", "settings"],
+  "controls": 125,
+  "shellControls": ["header.title", "cta.label"],
+  "stylesBytes": 13520,
+  "runtimeBytes": 110815
+}
+```
+
+Behavior statement:
+
+CTA is now the Header-only Shell case. It keeps the `cta` widget name and
+existing limits file, but it does not keep the old CTA product model or bridge
+old invalid state.
 
 ## Shell DOM Contract
 

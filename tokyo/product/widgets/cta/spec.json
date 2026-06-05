@@ -17,24 +17,47 @@
     ]
   },
   "defaults": {
-    "title": "",
-    "body": "",
-    "primaryCta": {
-      "enabled": false,
-      "label": "",
-      "href": "",
-      "openMode": "same-tab"
+    "header": {
+      "enabled": true,
+      "title": "Build your next section in minutes",
+      "showSubtitle": true,
+      "subtitleHtml": "Start with a polished Clickeen widget, customize it in Builder, and publish it anywhere your site needs it.",
+      "placement": "top",
+      "alignment": "center",
+      "gap": 28,
+      "textGap": 8,
+      "ctaPlacement": "below",
+      "innerGap": 18
     },
-    "secondaryCta": {
-      "enabled": false,
-      "label": "",
-      "href": "",
-      "openMode": "same-tab"
+    "cta": {
+      "enabled": true,
+      "label": "Get started",
+      "href": "#",
+      "openMode": "same-tab",
+      "iconEnabled": true,
+      "iconName": "arrowshape.turn.up.right",
+      "iconPlacement": "right"
     },
-    "layout": {
-      "maxWidth": 980,
-      "bodyWidth": 880,
-      "gap": 32
+    "uiLabels": {
+      "core": {
+        "singular": "CTA",
+        "plural": "CTAs",
+        "sizeCluster": "CTA size"
+      }
+    },
+    "coreSize": {
+      "mode": "auto",
+      "fixedHeight": 0,
+      "minHeight": 0,
+      "preferredVw": 0,
+      "maxHeight": 0
+    },
+    "localeSwitcher": {
+      "enabled": false,
+      "byIp": false,
+      "alwaysShowLocale": "",
+      "attachTo": "stage",
+      "position": "top-right"
     },
     "behavior": {
       "showBacklink": true,
@@ -232,44 +255,95 @@
         }
       }
     },
-    "appearance": {},
+    "appearance": {
+      "ctaSizePreset": "m",
+      "ctaPaddingLinked": false,
+      "ctaPaddingInline": 18,
+      "ctaPaddingBlock": 12,
+      "ctaBackground": "var(--color-system-blue)",
+      "ctaTextColor": "var(--color-system-white)",
+      "ctaBorder": {
+        "enabled": false,
+        "width": 1,
+        "color": "transparent"
+      },
+      "ctaRadius": "lg",
+      "ctaIconSizePreset": "m",
+      "ctaIconSize": 16,
+      "localeSwitcherBackground": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
+      "localeSwitcherTextColor": {
+        "type": "color",
+        "color": "var(--color-system-black)"
+      },
+      "localeSwitcherBorder": {
+        "enabled": true,
+        "width": 1,
+        "color": "var(--color-system-gray-5)"
+      },
+      "localeSwitcherRadius": "md",
+      "localeSwitcherPaddingInline": 12,
+      "localeSwitcherPaddingBlock": 8,
+      "podBorder": {
+        "enabled": false,
+        "width": 1,
+        "color": "var(--color-system-gray-5)"
+      }
+    },
     "typography": {
+      "globalFamily": "Inter",
       "roles": {
         "title": {
-          "color": {
-            "type": "color",
-            "color": "var(--color-system-black)"
-          },
+          "color": "var(--color-system-black)",
           "family": "Inter",
           "weight": "700",
           "fontStyle": "normal",
           "sizeCustom": 56,
-          "sizePreset": "custom"
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1,
+          "lineHeightPreset": "custom"
         },
         "body": {
-          "color": {
-            "type": "color",
-            "color": "var(--color-system-gray)"
-          },
+          "color": "var(--color-system-gray)",
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
           "sizeCustom": 20,
-          "sizePreset": "custom"
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.45,
+          "lineHeightPreset": "custom"
         },
         "button": {
-          "color": {
-            "type": "color",
-            "color": "var(--color-system-white)"
-          },
+          "color": "var(--color-system-white)",
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
           "sizeCustom": 16,
-          "sizePreset": "custom"
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.2,
+          "lineHeightPreset": "custom"
+        },
+        "localeSwitcher": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "500",
+          "fontStyle": "normal",
+          "sizeCustom": 14,
+          "sizePreset": "s",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.2,
+          "lineHeightPreset": "normal"
         }
-      },
-      "globalFamily": "Inter"
+      }
     }
   },
   "editor": {
@@ -278,107 +352,23 @@
         "id": "content",
         "clusters": [
           {
-            "label": "Copy",
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "textedit",
-                "path": "title",
-                "label": "Title",
-                "attrs": {
-                  "size": "lg"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "textedit",
-                "path": "body",
-                "label": "Body",
-                "attrs": {
-                  "size": "md"
-                }
-              }
-            ]
-          },
-          {
-            "label": "Primary CTA",
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "toggle",
-                "path": "primaryCta.enabled",
-                "label": "Show primary CTA",
-                "attrs": {
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "textfield",
-                "path": "primaryCta.label",
-                "label": "Label"
-              },
-              {
-                "kind": "field",
-                "type": "textfield",
-                "path": "primaryCta.href",
-                "label": "URL"
-              }
-            ]
-          },
-          {
-            "label": "Secondary CTA",
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "toggle",
-                "path": "secondaryCta.enabled",
-                "label": "Show secondary CTA",
-                "attrs": {
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "textfield",
-                "path": "secondaryCta.label",
-                "label": "Label"
-              },
-              {
-                "kind": "field",
-                "type": "textfield",
-                "path": "secondaryCta.href",
-                "label": "URL"
-              }
-            ]
+            "kind": "shared",
+            "id": "header-content"
           }
         ]
+      },
+      {
+        "id": "typography",
+        "shared": {
+          "id": "typography"
+        }
       },
       {
         "id": "layout",
         "clusters": [
           {
-            "label": "CTA layout",
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "valuefield",
-                "path": "layout.maxWidth",
-                "label": "Max width"
-              },
-              {
-                "kind": "field",
-                "type": "valuefield",
-                "path": "layout.bodyWidth",
-                "label": "Body max width"
-              },
-              {
-                "kind": "field",
-                "type": "valuefield",
-                "path": "layout.gap",
-                "label": "Gap"
-              }
-            ]
+            "kind": "shared",
+            "id": "header-layout"
           },
           {
             "kind": "shared",
@@ -391,10 +381,19 @@
         "clusters": [
           {
             "kind": "shared",
-            "id": "stagepod-appearance"
+            "id": "header-appearance"
           },
           {
-            "label": "Behavior",
+            "kind": "shared",
+            "id": "stagepod-appearance"
+          }
+        ]
+      },
+      {
+        "id": "settings",
+        "clusters": [
+          {
+            "label": "Clickeen Branding",
             "nodes": [
               {
                 "kind": "field",
@@ -421,12 +420,6 @@
             ]
           }
         ]
-      },
-      {
-        "id": "typography",
-        "shared": {
-          "id": "typography"
-        }
       }
     ]
   }

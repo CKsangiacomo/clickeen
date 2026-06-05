@@ -1,6 +1,6 @@
 # PRD106C6_CTA_Widget
 
-Status: Draft execution PRD
+Status: Implemented through PRD106A2 Step 4; keep as CTA acceptance spec
 Owner: Widget system + Bob
 Date: 2026-06-05
 Parent: `PRD106C_Prague astro blocks migration to widget instances.md`
@@ -49,18 +49,23 @@ is evidence to stop, not evidence to proceed.
 Current executable step:
 
 ```text
-Step 1: Confirm CTA empty-Core contract.
+No current executable step. CTA was implemented as the PRD106A2 Step 4
+empty-Core proof.
 ```
 
-Required evidence before marking green:
+Green evidence:
 
 - CTA adds no widget-specific state.
 - Header/CTA/Stage/Pod are all Shell-owned.
 - CTA-specific controls are none; imported controls are exactly the A2 Shell
   contract.
 - Existing CTA root `title`, `body`, `primaryCta`, `secondaryCta`, and
-  private `layout.*` paths are listed as delete/rebase targets.
-- "Bottom" is confirmed as page placement, not widget identity.
+  private `layout.*` paths were deleted/rebased.
+- "Bottom" remains page placement, not widget identity.
+- Bob/Roma typechecks passed.
+- `pnpm validate:widgets` passed.
+- CTA compile/materialization smoke passed with Shell-only controls and empty
+  Core DOM.
 
 Stop conditions:
 
@@ -78,6 +83,57 @@ Stop conditions:
 | 3 | Build/verify empty Core package. | Preview/package evidence. | CTA renders as Header-only Shell with empty `.ck-headerLayout__body`. | Widget bypasses Shell or retains private CTA DOM/runtime. |
 | 4 | Validate editable fields. | Editable-fields diff/tests. | Only Shell Header/CTA fields exist. | Extra CTA Core fields or old `primaryCta`/`secondaryCta` fields appear. |
 | 5 | Verify product discovery and Bob/Roma materialization. | Regenerated widget source evidence, compile/save/package evidence. | CTA remains reachable through existing `CTA` widget code and package is Shell plus empty Core. | Missing source regeneration, duplicate Shell code, or stale old CTA path still compiles. |
+
+## Implementation Evidence
+
+Implemented by commit scope under PRD106A2 Step 4.
+
+Changed files:
+
+- `tokyo/product/widgets/cta/spec.json`
+- `tokyo/product/widgets/cta/editable-fields.json`
+- `tokyo/product/widgets/cta/widget.html`
+- `tokyo/product/widgets/cta/widget.css`
+- `tokyo/product/widgets/cta/widget.client.js`
+
+Old-path guard:
+
+```text
+rg "primaryCta|secondaryCta|layout\.maxWidth|layout\.bodyWidth|layout\.gap|ck-cta__body|ck-cta__actions|cta-primary|cta-secondary|data-role=\"cta-body\"|data-role=\"cta-actions\"" tokyo/product/widgets/cta
+```
+
+Result:
+
+```text
+no output
+```
+
+Verification:
+
+```text
+pnpm --filter @clickeen/bob typecheck
+pnpm --filter @clickeen/roma typecheck
+pnpm validate:widgets
+```
+
+Result:
+
+```text
+all passed
+```
+
+Compile/materialization smoke output:
+
+```json
+{
+  "widget": "cta",
+  "panels": ["content", "typography", "layout", "appearance", "settings"],
+  "controls": 125,
+  "shellControls": ["header.title", "cta.label"],
+  "stylesBytes": 13520,
+  "runtimeBytes": 110815
+}
+```
 
 ## Purpose
 
