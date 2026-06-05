@@ -63,24 +63,24 @@ If a product decision is missing, add it under
 Current executable step:
 
 ```text
-Step 1: Extract and prove the FAQ Shell inventory.
+Step 3: Rebase FAQ onto shared Shell with no behavior change.
 ```
 
 Required evidence before marking green:
 
-- `file:line` inventory of FAQ Shell source files.
-- Explicit list of Shell-owned paths.
-- Explicit list of FAQ Core paths excluded from Shell.
-- Explicit list of product-approved Shell additions that are not FAQ-proven
-  inventory. `coreSize.*` must be listed here if FAQ does not already prove the
-  behavior.
+- Diff rebasing FAQ imports/assembly onto `@clickeen/widget-shell`.
+- FAQ compile evidence from Bob route/compiler.
+- FAQ preview evidence showing no visible behavior regression.
+- FAQ save/materialization evidence showing output package compatibility.
+- Explicit diff review proving FAQ Core remains `sections[]` and FAQ-specific
+  layout/appearance behavior.
 
 Stop conditions:
 
-- A shared control cannot be traced to FAQ's working implementation.
-- A path is ambiguous between Shell and Core ownership.
-- A new Shell capability is treated as FAQ-proven extraction without evidence or
-  explicit product approval.
+- FAQ behavior changes outside intentional package import/assembly.
+- FAQ Core paths are moved into Shell.
+- Package output shape changes without named compatibility evidence.
+- Any failure appears in the previously working FAQ Builder path.
 
 ## Execution Steps
 
@@ -342,6 +342,50 @@ provide these named responsibilities:
 Do not create empty academic files just to match the sketch above. The
 responsibilities are required; the file split is allowed to stay boring and
 local-convention-shaped.
+
+## Step 2 Evidence: Widget Shell Package Contract Surface
+
+Status: Step 2 green evidence, captured before any FAQ rebase.
+
+Created the package coordinate:
+
+```text
+packages/widget-shell/
+```
+
+Workspace registration:
+
+```text
+pnpm-workspace.yaml
+```
+
+Package responsibility map:
+
+| File | Responsibility |
+| --- | --- |
+| `packages/widget-shell/src/contract.ts` | Shell version, Shell-owned path families, DOM role/class contract, editor cluster ids, forbidden duplicate aliases, Core extension contract. |
+| `packages/widget-shell/src/defaults.ts` | Non-disruptive Shell defaults, including product-approved Core div sizing and UI Core label defaults. |
+| `packages/widget-shell/src/controls.ts` | Shell control path inventory and Shell editor cluster/control metadata. |
+| `packages/widget-shell/src/editable-fields.ts` | Shared editable-field definitions for Header title, Header subtitle, and CTA label plus composition helper for Core editable fields. |
+| `packages/widget-shell/src/modules.ts` | Shell CSS/runtime module keys and package contribution helper for materialization/dedupe. |
+| `packages/widget-shell/src/render.ts` | Shell DOM wrapper renderer for Stage, Pod, widget root, Header layout, Header slot, and Core slot. |
+| `packages/widget-shell/src/validators.ts` | Shell/Core boundary validators: Core labels, Core sizing, extension contract, and stable Shell DOM checks. |
+| `packages/widget-shell/src/index.ts` | Public package exports. |
+
+The package intentionally does not own FAQ Core behavior. Widget Cores still
+own their own Core schema/defaults/controls/editable fields/DOM/CSS/runtime.
+
+Verification:
+
+```text
+pnpm --filter @clickeen/widget-shell typecheck
+```
+
+Result:
+
+```text
+@clickeen/widget-shell typecheck passed with tsc -p tsconfig.json --noEmit
+```
 
 ## Shell DOM Contract
 

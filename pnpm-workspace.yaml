@@ -10,6 +10,7 @@ packages:
   - packages/ck-policy
   - packages/ck-contracts
   - packages/l10n
+  - packages/widget-shell
   - tooling/sf-symbols
 
 onlyBuiltDependencies:
