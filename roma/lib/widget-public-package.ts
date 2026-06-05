@@ -1,3 +1,12 @@
+import {
+  WIDGET_SHELL_RUNTIME_MODULE_END,
+  WIDGET_SHELL_RUNTIME_PAYLOAD_END,
+  WIDGET_SHELL_RUNTIME_PAYLOAD_START,
+  WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY,
+  WIDGET_SHELL_SOCIAL_SHARE_RUNTIME_MODULE_KEY,
+  WIDGET_SHELL_STYLE_CHUNK_END,
+} from '@clickeen/widget-shell';
+
 export type SavedWidgetPublicPackage = {
   v: 1;
   indexHtml: string;
@@ -26,10 +35,10 @@ type PackageBuildArgs = {
   state: Record<string, unknown>;
 };
 
-const STYLE_CHUNK_END = '/* ck-style-module:end */';
-const RUNTIME_PAYLOAD_START = '/* ck-runtime-payload:start */';
-const RUNTIME_PAYLOAD_END = '/* ck-runtime-payload:end */';
-const RUNTIME_MODULE_END = '/* ck-runtime-module:end */';
+const STYLE_CHUNK_END = WIDGET_SHELL_STYLE_CHUNK_END;
+const RUNTIME_PAYLOAD_START = WIDGET_SHELL_RUNTIME_PAYLOAD_START;
+const RUNTIME_PAYLOAD_END = WIDGET_SHELL_RUNTIME_PAYLOAD_END;
+const RUNTIME_MODULE_END = WIDGET_SHELL_RUNTIME_MODULE_END;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -282,7 +291,7 @@ function buildStyles(args: PackageBuildArgs, widgetHtml: string, includeSocialSh
     if (source) chunks.push(styleChunk(key, source));
   }
   if (includeSocialShare) {
-    const source = packageSource({ compiled: args.compiled, key: 'product/widgets/shared/socialShare.css' });
+    const source = packageSource({ compiled: args.compiled, key: WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY });
     if (source) chunks.push(styleChunk('shared/socialShare.css', source));
   }
   return `${chunks.join('\n\n')}\n`;
@@ -330,7 +339,7 @@ ${RUNTIME_PAYLOAD_END}`;
     if (source) chunks.push(runtimeModuleChunk(key, source));
   }
   if (includeSocialShare) {
-    const source = packageSource({ compiled: args.compiled, key: 'product/widgets/shared/socialShare.js' });
+    const source = packageSource({ compiled: args.compiled, key: WIDGET_SHELL_SOCIAL_SHARE_RUNTIME_MODULE_KEY });
     if (source) chunks.push(runtimeModuleChunk('shared/socialShare.js', source));
   }
   return `${chunks.join('\n\n')}\n`;

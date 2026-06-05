@@ -63,24 +63,24 @@ If a product decision is missing, add it under
 Current executable step:
 
 ```text
-Step 3: Rebase FAQ onto shared Shell with no behavior change.
+Step 4: Prove Core extension with CTA.
 ```
 
 Required evidence before marking green:
 
-- Diff rebasing FAQ imports/assembly onto `@clickeen/widget-shell`.
-- FAQ compile evidence from Bob route/compiler.
-- FAQ preview evidence showing no visible behavior regression.
-- FAQ save/materialization evidence showing output package compatibility.
-- Explicit diff review proving FAQ Core remains `sections[]` and FAQ-specific
-  layout/appearance behavior.
+- CTA diff showing it imports/uses Shell contract behavior.
+- CTA compile/render evidence.
+- CTA package output evidence.
+- Explicit proof that CTA is Shell plus empty Core and does not define duplicate
+  Header/CTA/Stage/Pod paths.
 
 Stop conditions:
 
-- FAQ behavior changes outside intentional package import/assembly.
-- FAQ Core paths are moved into Shell.
-- Package output shape changes without named compatibility evidence.
-- Any failure appears in the previously working FAQ Builder path.
+- CTA defines duplicate Shell paths.
+- CTA creates a private Header, Stage, Pod, typography, locale selector,
+  branding, or translation system.
+- CTA cannot compile as Shell plus empty Core.
+- CTA changes FAQ behavior.
 
 ## Execution Steps
 
@@ -386,6 +386,91 @@ Result:
 ```text
 @clickeen/widget-shell typecheck passed with tsc -p tsconfig.json --noEmit
 ```
+
+## Step 3 Evidence: FAQ Rebased Onto Shared Shell Contract
+
+Status: Step 3 green evidence.
+
+Changed assembly ownership without changing FAQ product source:
+
+- Bob imports `@clickeen/widget-shell` for the shared editor node id type.
+- Bob fetches optional Shell support files from the Shell package constant
+  instead of hard-coded local strings.
+- Roma widget package materialization imports Shell chunk marker constants and
+  Shell social-share module keys.
+- Roma Page Composer imports the same Shell chunk marker constants when parsing
+  widget package contributions.
+- FAQ source files were not edited.
+
+Source diff guard:
+
+```text
+git diff --name-only -- tokyo/product/widgets/faq tokyo/product/widgets/shared
+```
+
+Result:
+
+```text
+no output
+```
+
+Typecheck evidence:
+
+```text
+pnpm --filter @clickeen/widget-shell typecheck
+pnpm --filter @clickeen/bob typecheck
+pnpm --filter @clickeen/roma typecheck
+```
+
+Result:
+
+```text
+all passed
+```
+
+FAQ compile/materialization smoke:
+
+```text
+compileWidgetServer(faq spec) with local Tokyo product fetch stub
+buildSavedWidgetPublicPackage(faq package)
+```
+
+Assertions proved:
+
+- `compiled.widgetname == "faq"`.
+- Bob panel order stayed `content`, `typography`, `layout`, `appearance`,
+  `settings`.
+- FAQ compiled control count is `203`.
+- Shell control path `header.title` is still present.
+- FAQ Core paths `sections.__SECTION__.title` and
+  `sections.__SECTION__.faqs.__INDEX__.question` are still present.
+- Saved package HTML still contains `data-ck-widget="faq"`,
+  `data-role="root"`, and `data-ck-instance-id`.
+- Saved package CSS still contains current style module markers including
+  `shared-header.css` and `faq-widget-css`.
+- Saved package runtime still contains the runtime payload marker,
+  `window.CK_WIDGETS[payload.instanceId]`, `shared-header.js`, and
+  `faq-widget-client.js`.
+
+Smoke output:
+
+```json
+{
+  "widget": "faq",
+  "panels": ["content", "typography", "layout", "appearance", "settings"],
+  "controls": 203,
+  "indexHasRoot": true,
+  "stylesBytes": 20787,
+  "runtimeBytes": 140186
+}
+```
+
+Behavior statement:
+
+FAQ remains the gold-standard widget. Step 3 did not move `sections[]`, FAQ
+item controls, FAQ runtime, FAQ CSS, or FAQ DOM into the Shell package. It only
+rebased shared compiler/materialization contract constants onto
+`@clickeen/widget-shell`.
 
 ## Shell DOM Contract
 

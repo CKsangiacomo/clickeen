@@ -1,4 +1,5 @@
 import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
+import type { ShellEditorSharedNodeId } from '@clickeen/widget-shell';
 import {
   buildHeaderAppearancePanelFields,
   buildHeaderContentPanelFields,
@@ -45,16 +46,7 @@ export type EditorFieldNode = {
 
 export type EditorSharedNode = {
   kind: 'shared';
-  id:
-    | 'header-content'
-    | 'header-content-no-cta'
-    | 'header-layout'
-    | 'header-layout-no-cta'
-    | 'header-appearance'
-    | 'header-appearance-no-cta'
-    | 'stagepod-appearance'
-    | 'stagepod-layout'
-    | 'stagepod-corners';
+  id: ShellEditorSharedNodeId;
 };
 
 export type EditorTemplateNode = EditorTextNode | EditorElementNode | EditorFieldNode;

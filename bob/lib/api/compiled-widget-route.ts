@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sha256Hex } from '@clickeen/ck-contracts/security';
 import { readWidgetEditableFieldsContract, type WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import { parseLimitsSpec } from '@clickeen/ck-policy';
+import { WIDGET_SHELL_OPTIONAL_SUPPORT_FILE_KEYS } from '@clickeen/widget-shell';
 import { compileWidgetServer } from '../compiler.server';
 import type { RawWidget } from '../compiler.shared';
 import { requireTokyoUrl } from '../compiler/media';
@@ -93,8 +94,7 @@ async function fetchWidgetPackageSupportFiles(args: {
     const key = resolveProductPath(args.widgetname, src);
     if (key) productPaths.add(key);
   }
-  productPaths.add('product/widgets/shared/socialShare.css');
-  productPaths.add('product/widgets/shared/socialShare.js');
+  WIDGET_SHELL_OPTIONAL_SUPPORT_FILE_KEYS.forEach((key) => productPaths.add(key));
 
   await Promise.all(
     [...productPaths]

@@ -32,6 +32,20 @@ export const SHELL_EDITOR_CLUSTER_IDS = [
   'settings',
 ] as const;
 
+export const SHELL_EDITOR_SHARED_NODE_IDS = [
+  'header-content',
+  'header-content-no-cta',
+  'header-layout',
+  'header-layout-no-cta',
+  'header-appearance',
+  'header-appearance-no-cta',
+  'stagepod-appearance',
+  'stagepod-layout',
+  'stagepod-corners',
+] as const;
+
+export type ShellEditorSharedNodeId = (typeof SHELL_EDITOR_SHARED_NODE_IDS)[number];
+
 export const SHELL_FORBIDDEN_ALIAS_PATHS = [
   'headline',
   'subheadline',

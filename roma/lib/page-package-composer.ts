@@ -1,3 +1,10 @@
+import {
+  WIDGET_SHELL_RUNTIME_MODULE_END,
+  WIDGET_SHELL_RUNTIME_PAYLOAD_END,
+  WIDGET_SHELL_RUNTIME_PAYLOAD_START,
+  WIDGET_SHELL_STYLE_CHUNK_END,
+} from '@clickeen/widget-shell';
+
 export type PagePackageSource = {
   v: 1;
   id: string;
@@ -33,10 +40,16 @@ type WidgetContribution = {
 };
 
 const FORBIDDEN_SINGLETON_RUNTIME_RE = /\bwindow\.CK_WIDGET\b/;
-const STYLE_MODULE_RE = /\/\*\s*ck-style-module:[^*]*\*\/\n([\s\S]*?)\n\/\*\s*ck-style-module:end\s*\*\//g;
-const RUNTIME_PAYLOAD_START = '/* ck-runtime-payload:start */';
-const RUNTIME_PAYLOAD_END = '/* ck-runtime-payload:end */';
-const RUNTIME_MODULE_RE = /\/\*\s*ck-runtime-module:[^*]*\*\/\n([\s\S]*?)\n\/\*\s*ck-runtime-module:end\s*\*\//g;
+const STYLE_MODULE_RE = new RegExp(
+  `/\\*\\s*ck-style-module:[^*]*\\*/\\n([\\s\\S]*?)\\n${WIDGET_SHELL_STYLE_CHUNK_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
+  'g',
+);
+const RUNTIME_PAYLOAD_START = WIDGET_SHELL_RUNTIME_PAYLOAD_START;
+const RUNTIME_PAYLOAD_END = WIDGET_SHELL_RUNTIME_PAYLOAD_END;
+const RUNTIME_MODULE_RE = new RegExp(
+  `/\\*\\s*ck-runtime-module:[^*]*\\*/\\n([\\s\\S]*?)\\n${WIDGET_SHELL_RUNTIME_MODULE_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
+  'g',
+);
 
 function escapeHtml(value: string): string {
   return value

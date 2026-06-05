@@ -134,6 +134,9 @@ importers:
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../packages/l10n
+      '@clickeen/widget-shell':
+        specifier: workspace:*
+        version: link:../packages/widget-shell
       gsap:
         specifier: ^3.13.0
         version: 3.13.0
@@ -195,6 +198,8 @@ importers:
 
   packages/l10n: {}
 
+  packages/widget-shell: {}
+
   prague:
     dependencies:
       '@astrojs/cloudflare':
@@ -231,6 +236,9 @@ importers:
       '@clickeen/l10n':
         specifier: workspace:*
         version: link:../packages/l10n
+      '@clickeen/widget-shell':
+        specifier: workspace:*
+        version: link:../packages/widget-shell
       next:
         specifier: 15.5.2
         version: 15.5.2(@playwright/test@1.60.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
