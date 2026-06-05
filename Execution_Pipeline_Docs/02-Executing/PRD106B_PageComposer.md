@@ -59,12 +59,17 @@ Required evidence before marking green:
 
 - Page source schema is named.
 - Page output/serve-state coordinates are named.
+- Storage identity uses `accountPublicId`, not private account UUID or generic
+  `{account}`.
+- `documentation/architecture/CONTEXT.md` and service docs either match the
+  accepted page coordinates or carry an explicit temporary fence/delete gate.
 - Tokyo payload contract is storage-only.
 
 Stop conditions:
 
 - Tokyo must interpret page source or compose page output.
 - Page source needs page-specific instance edits or snapshots.
+- Both `website/pages` and `pages/{pageId}` are described as current product truth.
 
 ## Execution Steps
 
@@ -85,11 +90,11 @@ Build the Page Composer workflow as the Roma-owned materializer that turns X
 saved widget instances into one browser-readable page package:
 
 ```text
-accounts/{account}/pages/{page}/source.json
-accounts/{account}/pages/{page}/index.html
-accounts/{account}/pages/{page}/styles.css
-accounts/{account}/pages/{page}/runtime.js
-accounts/{account}/pages/{page}/serve-state.json
+accounts/{accountPublicId}/pages/{pageId}/source.json
+accounts/{accountPublicId}/pages/{pageId}/index.html
+accounts/{accountPublicId}/pages/{pageId}/styles.css
+accounts/{accountPublicId}/pages/{pageId}/runtime.js
+accounts/{accountPublicId}/pages/{pageId}/serve-state.json
 ```
 
 The product noun is page. Page Composer is the Roma workflow that owns page
@@ -149,7 +154,8 @@ editable copy of that instance.
 - Roma owns account product workflows, including Widgets, Builder host, Pages,
   Page Composer, page source, page dependency knowledge, and recomposition.
 - Tokyo stores and serves exact bytes submitted by Roma.
-- Venice/`clk.live` serves public files; it does not derive page product truth.
+- The active `clk.live` public serving boundary serves stored public files; it
+  does not derive page product truth.
 - Prague is not account authoring truth and does not own pages.
 
 ### Allowed Page Source
@@ -181,17 +187,22 @@ The canonical page storage shape for PRD106B mirrors widget instances: account
 source and generated output live together under the page folder.
 
 ```text
-accounts/{account}/pages/{page}/source.json
-accounts/{account}/pages/{page}/index.html
-accounts/{account}/pages/{page}/styles.css
-accounts/{account}/pages/{page}/runtime.js
-accounts/{account}/pages/{page}/serve-state.json
+accounts/{accountPublicId}/pages/{pageId}/source.json
+accounts/{accountPublicId}/pages/{pageId}/index.html
+accounts/{accountPublicId}/pages/{pageId}/styles.css
+accounts/{accountPublicId}/pages/{pageId}/runtime.js
+accounts/{accountPublicId}/pages/{pageId}/serve-state.json
 ```
 
 Current code and CONTEXT may still describe `website/pages/{page}` and
 `website/publishes/{page}`. PRD106B must not paper over that conflict. Execution
 must migrate away from those old coordinates or temporarily fence them with
 tests and a delete gate while callers move.
+
+Step 1 is not green while architecture/service docs teach the old
+`accounts/{accountPublicId}/website/pages/**`,
+`accounts/{accountPublicId}/website/publishes/**`, or placement-index paths as
+current product truth.
 
 Roma may use Tokyo to store dumb page-related objects only when Tokyo treats
 them as opaque bytes. Tokyo may store page source and serve-state files, but it
@@ -218,6 +229,107 @@ page readiness, dedupe files, generate SEO/GEO output, generate a page
 `embed.js`, choose copy/embed artifacts, interpret recomposition state, or
 compose page packages.
 
+### Exact Page JSON Contracts
+
+Step 1 must define these contracts before implementation. Field names may be
+adjusted only to match existing repo conventions, not to add new product nouns.
+
+`source.json`:
+
+```json
+{
+  "schemaVersion": 1,
+  "pageId": "PAGEID",
+  "accountPublicId": "ACCOUNTID",
+  "displayName": "Landing page",
+  "metadata": {
+    "title": "Page title",
+    "description": "Page description",
+    "robots": "index,follow",
+    "canonicalUrl": "https://example.com/page"
+  },
+  "localization": {
+    "defaultLocale": "en",
+    "ipLocalizationEnabled": false,
+    "countryLocaleRules": [],
+    "languageSwitcherEnabled": false,
+    "missingLocaleBehavior": "block_publish"
+  },
+  "placements": [
+    {
+      "placementId": "P1",
+      "instanceId": "INSTANCEID"
+    }
+  ],
+  "version": 1,
+  "updatedAt": "ISO-8601"
+}
+```
+
+`serve-state.json`:
+
+```json
+{
+  "schemaVersion": 1,
+  "pageId": "PAGEID",
+  "accountPublicId": "ACCOUNTID",
+  "state": "unpublished",
+  "publishedAt": null,
+  "updatedAt": "ISO-8601"
+}
+```
+
+Roma-owned page status, stored either inside Roma-managed account page metadata
+or as opaque Roma-managed page state, may use only:
+
+```text
+draft | published | recomposing | stale | failed
+```
+
+Derived dependency metadata is not Tokyo truth. If persisted for fast lookup, it
+is Roma-owned and rebuildable from page `source.json` plus materialized package
+dependency declarations:
+
+Widget materialized packages may declare embedded widget-instance dependencies
+using this Roma-owned package metadata shape. The field belongs to the
+materialized package contract consumed by Roma/Page Composer; Tokyo stores it
+only as opaque bytes when it appears in package metadata.
+
+```json
+{
+  "schemaVersion": 1,
+  "accountPublicId": "ACCOUNTID",
+  "instanceId": "PARENT_INSTANCEID",
+  "dependencies": {
+    "instances": [
+      {
+        "instanceId": "CHILD_INSTANCEID",
+        "path": "core.items[0].instance.instanceId"
+      }
+    ]
+  },
+  "updatedAt": "ISO-8601"
+}
+```
+
+The `path` is for diagnostics and repair only. It must not become a product
+graph, page-owned override, readiness reason store, or Tokyo-interpreted
+contract.
+
+```json
+{
+  "schemaVersion": 1,
+  "accountPublicId": "ACCOUNTID",
+  "instanceId": "INSTANCEID",
+  "pageIds": ["PAGEID"],
+  "updatedAt": "ISO-8601"
+}
+```
+
+Do not add page route maps, site settings, block trees, page-owned instance
+config/content, readiness reasons, or dependency graph objects to these
+contracts.
+
 ## Roma Owns
 
 - Page create/list/rename/delete/publish/unpublish UI.
@@ -229,7 +341,7 @@ compose page packages.
 - Deduping shared Dieter/runtime/CSS contributions.
 - Keeping per-instance runtime state isolated.
 - SEO/GEO output: real initial HTML, ordered semantic sections, title,
-  description, canonical, robots, and structured data where valid.
+  description, canonical, and robots.
 - Page-level localization settings: IP/country locale routing, default locale,
   missing-locale behavior, and optional Clickeen-owned language switcher.
 - Visible failure when a selected instance is missing, unowned, invalid, stale,
@@ -286,6 +398,28 @@ Locale resolution for a public page is:
 2. IP/country locale rule, when IP localization is enabled and a rule matches.
 3. Page default locale.
 4. Account default locale only when the page default is missing or invalid.
+
+Localized public output must not require Tokyo to understand page source. Roma
+owns locale resolution settings and materializes any locale-specific page
+artifacts needed for crawlable output. The minimal PRD106B artifact strategy is:
+
+```text
+accounts/{accountPublicId}/pages/{pageId}/index.html              # default locale
+accounts/{accountPublicId}/pages/{pageId}/styles.css
+accounts/{accountPublicId}/pages/{pageId}/runtime.js
+accounts/{accountPublicId}/pages/{pageId}/locales/{locale}/index.html
+```
+
+`styles.css` and `runtime.js` remain shared for the page unless Roma proves a
+locale needs different bytes. The optional top language switcher links to the
+materialized locale URL or toggles among Roma-authored locale artifacts. IP to
+country routing may be implemented only in the public serving boundary as a
+storage selection from already-materialized locale files using Roma-authored
+opaque config; it must not parse page `source.json`, validate selected
+instances, generate localized output, or decide product readiness at request
+time. If that serving-boundary selection cannot be implemented without product
+logic, IP localization is fenced and Step 7 ships default-locale plus optional
+top language switcher only.
 
 If the resolved page locale is unavailable for an included instance, Page
 Composer must not silently produce a mixed-language page as if it were correct.
@@ -454,9 +588,9 @@ A page can include only an account-owned widget instance that has a valid
 materialized package available to Roma:
 
 ```text
-accounts/{account}/instances/{instance}/index.html
-accounts/{account}/instances/{instance}/styles.css
-accounts/{account}/instances/{instance}/runtime.js
+accounts/{accountPublicId}/instances/{instanceId}/index.html
+accounts/{accountPublicId}/instances/{instanceId}/styles.css
+accounts/{accountPublicId}/instances/{instanceId}/runtime.js
 ```
 
 Creating a new instance and immediately placing it on a page is allowed only if
@@ -544,14 +678,14 @@ PRD106B must define and test exact page metadata fields before implementation:
 - Description.
 - Robots.
 - Canonical URL.
-- Structured data when the source and merge rules are valid.
 
 The initial HTML must include meaningful ordered content from the included
 instances. A page package that depends on client-side rendering to reveal all
 primary content fails this PRD.
 
-If structured data is supported, Roma must own validation and merge rules. Tokyo
-must not generate or repair structured data.
+Structured data merging is not part of the PRD106B core proof. If supported
+later, Roma must own validation and merge rules and a separate PRD must approve
+the exact fields. Tokyo must not generate or repair structured data.
 
 ## Dependency And Propagation Contract
 
@@ -593,6 +727,21 @@ When F is saved, Roma must re-materialize S before recomposing P, or mark the
 affected dependency path stale/failed visibly. Missing P from F's affected page
 set fails the WordPress propagation promise.
 
+For PRD106B, embedded dependency support is a contract and projection rule, not
+a broad graph engine. Full child-parent re-materialization becomes executable
+only when the first Widget Core that embeds another widget instance is green.
+Until then, PRD106B must preserve the package-declared dependency field shape
+and fail visibly if runtime data requires unsupported nesting.
+
+Depth and cycle rules:
+
+- Direct page placements are depth 0.
+- One embedded widget-instance level is depth 1 and is the PRD106B supported
+  target once an embedding widget exists.
+- Deeper nesting is blocked unless a later PRD explicitly approves it.
+- Cycles fail materialization/publish visibly. Roma must not try to resolve,
+  heal, or partially render cyclic dependencies.
+
 This is the WordPress propagation promise: a user can paste one page embed into
 WordPress, edit an included instance in Clickeen, save it, and the old WordPress
 embed shows the recomposed page with that updated instance. Missing one affected
@@ -618,6 +767,18 @@ When a widget instance save completes:
 5. Roma recomposes each affected page package.
 6. Roma stores the new generated page files.
 7. Roma updates page status to current, stale, or failed.
+
+Recomposition budget:
+
+- Widget save must commit first.
+- Roma then recomposes affected pages within a bounded request budget.
+- If affected pages exceed that budget, Roma marks remaining affected pages
+  `stale` with visible retry/recompose action instead of blocking the widget
+  save or inventing a queue platform.
+- If any recomposition fails, the last good public package may keep serving only
+  when Roma shows the page as `stale` or `failed`.
+- The derived index plus scan/backstop must be able to identify all affected
+  pages before claiming the update is complete.
 
 Partial failure is a first-class state, not an exception hidden from users.
 
@@ -658,7 +819,8 @@ The peer review's Page Composer feedback is accepted as execution law:
 
 The accepted implementation shape remains boring:
 
-1. Store page source at `accounts/{account}/pages/{page}/source.json`.
+1. Store page source at
+   `accounts/{accountPublicId}/pages/{pageId}/source.json`.
 2. Store generated page output beside it.
 3. Store page serve-state beside it.
 4. Store or derive the Roma-owned `instanceId -> pageIds` dependency index from
@@ -679,8 +841,8 @@ The accepted implementation shape remains boring:
 4. Define the Roma-owned page source schema.
 5. Define the widget package contribution contract with Bob/Roma tests.
 6. Add Page Composer coverage for packages generated as shared Widget Shell plus
-   different Widget Cores, including FAQ, Countdown, Logo Showcase, and one new
-   Prague migration widget.
+   existing Shell-based Widget Cores or a contract fixture. New Prague migration
+   widgets are owned by PRD106C3-PRD106C6 and must not be pre-worked here.
 7. Move dependency indexing to Roma-owned truth or opaque Roma-managed storage.
 8. Replace Tokyo page product routes with storage-only routes or fence them out
    of product paths.
@@ -688,7 +850,9 @@ The accepted implementation shape remains boring:
 10. Implement affected-page recomposition after instance save for every page that
    includes the instance. Unpublished pages may update draft package/status
    without enabling public serving.
-11. Implement public serving from generated files only.
+11. Implement public serving from generated files only, including locale-file
+    selection only if it can remain storage selection rather than product
+    interpretation.
 12. Delete old generated page `embed.js` behavior. A temporary fence is allowed
     only if it has an owner, tests proving it is not product authority, and a
     delete gate.
@@ -753,11 +917,18 @@ widget instance package contract that Page Composer consumes.
 - Saving an included widget instance through the normal Builder path recomposes
   every page that includes it, or marks each failed page stale/failed with retry.
 - Saving an embedded widget instance, such as an instance embedded inside a
-  Split instance, re-materializes affected parent instances and recomposes every
-  affected page, or marks the affected dependency path stale/failed visibly.
+  Split instance, uses the package-declared dependency contract. Full
+  child-parent re-materialization is required only after the first
+  embedded-instance Widget Core is green; before then unsupported nesting fails
+  visibly.
 - The flattened `instanceId -> pageIds` index includes package-declared
   embedded dependencies; embedded dependencies do not create a separate graph
   service.
+- Embedded dependencies support at most one nested level for PRD106B; cycles and
+  deeper nesting fail visibly unless a later PRD approves them.
+- Roma recomposes affected pages within a bounded request budget; any remaining
+  affected pages are marked stale with visible retry instead of blocking widget
+  save or inventing a queue platform.
 - Initial page HTML includes ordered semantic instance content and approved
   SEO/GEO metadata.
 - Page Composer exposes localization controls in a page settings panel/tab:
@@ -765,7 +936,10 @@ widget instance package contract that Page Composer consumes.
   switcher on/off, fixed top placement for the switcher, and missing-locale
   publish blocking.
 - IP localization resolves visitor country to one page locale context and every
-  included instance renders in that locale when available.
+  included instance renders in that locale when available only if public serving
+  can select among Roma-materialized locale artifacts without interpreting page
+  product state. Otherwise IP localization is fenced and default-locale plus
+  optional top language switcher ships first.
 - The optional language switcher appears at the top of the composed page and
   switches the whole page locale, not individual instances.
 - Publishing is blocked for any configured page locale that an included instance
@@ -797,8 +971,9 @@ widget instance package contract that Page Composer consumes.
 - Roma dependency tests proving `instanceId -> pageIds` cannot miss affected
   pages after page save, page delete, page reorder, and instance delete.
 - Roma dependency tests proving package-declared embedded instance dependencies
-  flatten into `instanceId -> pageIds`; updating an embedded child instance
-  re-materializes the parent instance and recomposes the affected page.
+  flatten into `instanceId -> pageIds`; unsupported nesting and cycles fail
+  visibly. Full child-parent re-materialization tests become required when the
+  first embedded-instance Widget Core is green.
 - Roma policy tests proving page limits by tier and instance-per-page limits by
   tier.
 - Publish tests proving draft pages may include unpublished materialized
@@ -808,8 +983,8 @@ widget instance package contract that Page Composer consumes.
 - Tokyo negative tests proving product-shaped page source/index/readiness routes
   are not the authority.
 - SEO/GEO tests inspecting generated initial HTML for title, description,
-  robots, canonical, ordered semantic content, and valid structured data when
-  supported.
+  robots, canonical, and ordered semantic content. Structured-data merging is
+  not part of PRD106B core proof.
 - Roma page settings tests proving default locale, IP localization, country ->
   locale rules, and language switcher settings are saved in page source and are
   not interpreted by Tokyo.
@@ -817,17 +992,23 @@ widget instance package contract that Page Composer consumes.
   locale is missing from any included instance.
 - Public serving tests proving the same page resolves one locale context from
   visitor-selected switcher locale, IP/country rule, or page default, and all
-  included instances follow that context.
+  included instances follow that context when locale artifact selection is
+  implemented without Tokyo product interpretation.
 - UI tests proving the language switcher, when enabled, appears once at the top
   of the composed page and controls the whole page rather than rendering
   repeated per-instance selectors.
 
 ## Product Owner Decisions Applied
 
-- Page composition source lives at `accounts/{account}/pages/{page}/source.json`.
-- Page generated output lives at `accounts/{account}/pages/{page}/index.html`,
-  `styles.css`, and `runtime.js`.
-- Page serve-state lives at `accounts/{account}/pages/{page}/serve-state.json`
+- Page composition source lives at
+  `accounts/{accountPublicId}/pages/{pageId}/source.json`.
+- Page generated output lives at
+  `accounts/{accountPublicId}/pages/{pageId}/index.html`, `styles.css`, and
+  `runtime.js`.
+- Locale-specific crawlable HTML, when enabled, lives under
+  `accounts/{accountPublicId}/pages/{pageId}/locales/{locale}/index.html`.
+- Page serve-state lives at
+  `accounts/{accountPublicId}/pages/{pageId}/serve-state.json`
   and uses the same `published` / `unpublished` concept as widgets.
 - Roma Pages service owns page dependency knowledge. It may maintain a derived
   `instanceId -> pageIds` index and repair it by scanning saved page

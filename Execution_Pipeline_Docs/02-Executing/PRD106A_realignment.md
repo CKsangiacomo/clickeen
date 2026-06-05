@@ -14,6 +14,12 @@ This PRD is not a new product idea. It is a cleanup contract for removing code,
 docs, tests, names, and workflows that contradict PRD 106's surviving product
 truth.
 
+This PRD is green for realignment intent only. It is not green for broad
+implementation until each drift item has an owner PRD, replacement boundary,
+delete/fence decision, and blast-radius gate. PRD106A may audit, order, fence,
+and delete drift. It must not implement Page Composer, Widget Shell extraction,
+Prague route cutover, or PRD105 instance/translation replacement work.
+
 If this file conflicts with `106__Umbrella__Composition_Vision.md`, the umbrella
 wins.
 
@@ -58,19 +64,23 @@ Sibling PRDs:
 Current executable step:
 
 ```text
-Step 1: Audit Freeze
+Step 2: Dependency And Cutover Plan
 ```
 
 Required evidence before marking green:
 
-- `rg`/file evidence for each active drift category.
-- Surviving authority named for every drift item.
-- No product code edits in this step.
+- Every audited drift item has a surviving authority.
+- Every audited drift item has an owner PRD or explicit follow-up approval
+  requirement.
+- Every audited drift item has a delete/fence/block decision.
+- Cross-service blast radius is listed before implementation edits.
 
 Stop conditions:
 
 - A drift item has no surviving authority.
 - A product decision is missing.
+- A drift item would require Page Composer, Widget Shell, Prague migration, or
+  PRD105 replacement implementation inside PRD106A.
 
 ## Step-Gated Execution
 
@@ -169,9 +179,10 @@ Stop if:
 
 - A required runtime path still depends on Tokyo product composition.
 
-### Step 5 - Remove Duplicate Durable Truth
+### Step 5 - Fence Duplicate Durable Truth
 
-Scope: eliminate duplicate source/publish/dependency truth.
+Scope: eliminate PRD106 page duplicate source/publish/dependency truth and
+fence broader PRD103/105 duplicate truth for explicit follow-up.
 
 Allowed:
 
@@ -186,6 +197,8 @@ Green:
 
 - One authority remains for widget source, page source, publish state,
   dependency knowledge, and Shell architecture.
+- `public.instances`, Tokyo instance registry, and translation liveness are
+  marked follow-up-only unless a separate approved PRD owns replacement.
 
 Stop if:
 
@@ -294,12 +307,20 @@ Before each edit:
 5. Do not add tests that preserve hallucinated internals.
 6. Add or update tests only when they protect a surviving product boundary.
 7. Keep documentation truth aligned in the same change.
+8. Do not execute narrative audit sections as implementation permission. Every
+   implementation-shaped finding must route to the owner PRD named in the
+   dependency/cutover plan.
 
 ## Pre-Execution Scope Gate
 
 PRD106A is a realignment PRD, not permission to rewrite every current
 PRD103/105 mechanism in one pass. Its primary target is drift that blocks the
 PRD106 page/product boundary.
+
+PRD106A's "Tokyo stores files only" rule applies to PRD106 page composition and
+page delivery. Current Tokyo instance operations and translation machinery that
+exist under PRD105 are explicitly out of scope for PRD106A implementation unless
+a separate approved PRD takes them on.
 
 Allowed immediately under PRD106A:
 
@@ -363,10 +384,10 @@ single widget: https://clk.live/{accountPublicId}/{instanceId}
 composed page: https://clk.live/{accountPublicId}/pages/{pageId}
 
 page files:
-accounts/{account}/pages/{page}/source.json
-accounts/{account}/pages/{page}/index.html
-accounts/{account}/pages/{page}/styles.css
-accounts/{account}/pages/{page}/runtime.js
+accounts/{accountPublicId}/pages/{pageId}/source.json
+accounts/{accountPublicId}/pages/{pageId}/index.html
+accounts/{accountPublicId}/pages/{pageId}/styles.css
+accounts/{accountPublicId}/pages/{pageId}/runtime.js
 ```
 
 Page publish state works like widget publish state: `published` or
@@ -380,11 +401,17 @@ source lives beside widget output. `source.json` stores page identity, allowed
 metadata, and ordered instance references. `index.html`, `styles.css`, and
 `runtime.js` are generated browser-readable output.
 
+Tokyo may store `source.json` only as an opaque allowlisted file submitted by
+Roma. Tokyo must not parse, normalize, summarize, index, validate, or derive
+placement/dependency/product state from that file. Roma owns the meaning of page
+source and any derived affected-page lookup.
+
 Roma widget materialization must use the same system widget software inputs as
 Bob preview: the shared Widget Shell package, the Widget Core definition, and
-shared Dieter/runtime contracts. Before removing Bob-built `publicPackage`, add
-parity coverage that Bob preview, Roma materialization, and Page Composer input
-are generated from the same saved widget state and widget definition contract.
+shared Dieter/runtime contracts. Before removing the old Bob `publicPackage`
+surface, add parity coverage that Bob preview, Roma materialization, and Page
+Composer input are generated from the same saved widget state and widget
+definition contract.
 
 Widget Shell authority:
 
@@ -521,9 +548,9 @@ Surviving authority:
 - A widget instance is the atomic editable unit. Pages can use instances, but
   cannot edit, override, fork, or snapshot them.
 - The public page output is ordinary browser-readable code:
-  `accounts/{account}/pages/{page}/index.html`,
-  `accounts/{account}/pages/{page}/styles.css`, and
-  `accounts/{account}/pages/{page}/runtime.js`.
+  `accounts/{accountPublicId}/pages/{pageId}/index.html`,
+  `accounts/{accountPublicId}/pages/{pageId}/styles.css`, and
+  `accounts/{accountPublicId}/pages/{pageId}/runtime.js`.
 - Any saved list/order needed to recompose a page is page input owned by Roma's
   product boundary. It must not become a separate product architecture called
   page source, website workspace, publish folder, block tree, or route map.
@@ -716,12 +743,15 @@ Violated tenets:
 
 Evidence:
 
-- `bob/lib/session/useSessionSaving.ts` imports and calls
-  `buildSavedWidgetPublicPackage`, then sends `publicPackage` to Roma.
-- `bob/lib/session/publicPackage.ts` owns widget browser-file generation and public
-  runtime payload shape.
-- `roma/app/api/account/instances/[instanceId]/route.ts` accepts Bob-built
-  browser-file bytes and forwards them to Tokyo.
+- Current `bob/lib/session/useSessionSaving.ts` submits widget state/save intent,
+  not a `publicPackage`. Keep that as the target behavior.
+- `bob/lib/session/publicPackage.ts` and any remaining imports are legacy package
+  materialization surface and must be deleted/fenced once Roma materialization
+  parity is green.
+- `roma/app/api/account/instances/[instanceId]/route.ts` currently owns widget
+  package materialization on save. That is closer to the intended architecture,
+  but it must prove parity with Bob preview and Page Composer input before old
+  Bob package/server paths are deleted.
 - `bob/app/api/widgets/[widgetname]/compiled/route.ts` and
   `bob/lib/api/compiled-widget-route.ts` expose a Bob server API that reads
   widget source/browser-file inputs.
@@ -740,9 +770,10 @@ Evidence:
 
 Required action:
 
-- Move widget browser-file materialization from Bob to Roma.
-- Remove `publicPackage` from Bob save payload. Bob submits edited widget state
+- Preserve the current Bob save payload shape: Bob submits edited widget state
   and explicit save intent only.
+- Delete/fence the old Bob `publicPackage` and compiled-widget server surfaces
+  only after Roma materialization parity is green.
 - Remove policy/upsell authority from Bob. Bob may display host-provided
   messages, but cannot decide account/tier capability.
 - Delete or fence Bob server/proxy routes as non-product local development
@@ -794,7 +825,7 @@ Evidence:
 Required action:
 
 - Collapse Tokyo page routes toward storage commands: write/read/delete page
-  browser files under `accounts/{account}/pages/{page}/`.
+  browser files under `accounts/{accountPublicId}/pages/{pageId}/`.
 - Delete the `website/pages` and `website/publishes` storage shape.
 - Move page input acceptance and product validation into Roma.
 - Move page dependency tracking, affected-page lookup, recomposition triggers,
@@ -1101,8 +1132,9 @@ Targets:
   readiness semantics.
 - Define exact Roma-to-Tokyo storage contracts before implementation. Tokyo
   accepts allowlisted file writes/reads/deletes and explicit serve-state writes
-  only. It must not receive `placements`, page source, dependency indexes,
-  readiness, SEO intent, or recomposition reason.
+  only. It may receive `source.json` only as an opaque allowlisted file. It must
+  not receive typed `placements`, dependency indexes, readiness, SEO intent, or
+  recomposition reason, and must not parse page source to derive them.
 
 Acceptance:
 
@@ -1116,7 +1148,7 @@ Acceptance:
   coverage across all active widgets before Bob browser-file generation is
   removed from the save path.
 
-### Phase 3 - Remove Duplicate Instance Truth
+### Phase 3 - Fence Duplicate Instance Truth For Follow-Up
 
 Targets:
 
@@ -1128,12 +1160,13 @@ Targets:
 
 Acceptance:
 
-- Account instance existence is not dependent on a Michael/Supabase row.
-- Publish state is not a Michael-owned instance truth.
-- Translation jobs can validate an account instance without making Michael the
-  instance owner.
-- Listing uses either account-owned R2 data or an explicitly derived,
-  non-authoritative projection.
+- PRD106A does not delete or replace these live PRD103/105 paths.
+- Each target is marked with surviving intended authority, blast radius, and
+  named follow-up PRD/approval requirement.
+- Any local edit that touches these paths stops unless it is required to fence
+  them from PRD106 page execution.
+- Account instance existence, publish state, translation validation, and
+  listing replacement are not claimed green under PRD106A.
 
 ### Phase 4 - Align Roma Product UI
 
@@ -1173,9 +1206,10 @@ Acceptance:
 
 ## Product Owner Decisions Applied
 
-- Page source lives at `accounts/{account}/pages/{page}/source.json`, beside the
-  generated page files. Roma owns its meaning; Tokyo stores it.
-- Page public output lives at `accounts/{account}/pages/{page}/index.html`,
+- Page source lives at `accounts/{accountPublicId}/pages/{pageId}/source.json`, beside the
+  generated page files. Roma owns its meaning; Tokyo stores it only as an opaque
+  allowlisted file.
+- Page public output lives at `accounts/{accountPublicId}/pages/{pageId}/index.html`,
   `styles.css`, and `runtime.js`.
 - Page serve-state works like widget serve-state: `published` or `unpublished`.
   Public `clk.live` serving is enabled only when the page is published and files

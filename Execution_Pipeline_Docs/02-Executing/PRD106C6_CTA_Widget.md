@@ -56,22 +56,28 @@ Required evidence before marking green:
 
 - CTA adds no widget-specific state.
 - Header/CTA/Stage/Pod are all Shell-owned.
+- CTA-specific controls are none; imported controls are exactly the A2 Shell
+  contract.
+- Existing CTA root `title`, `body`, `primaryCta`, `secondaryCta`, and
+  private `layout.*` paths are listed as delete/rebase targets.
 - "Bottom" is confirmed as page placement, not widget identity.
 
 Stop conditions:
 
 - CTA introduces root CTA/copy paths.
 - CTA adds page-placement logic to widget state.
+- CTA keeps a compatibility mapper, legacy state normalizer, local Shell copy,
+  second CTA support, or CTA-specific placement/variant model.
 
 ## Execution Steps
 
 | Step | Action | Required evidence | Green criteria | Stop condition |
 | ---: | --- | --- | --- | --- |
-| 1 | Confirm CTA empty-Core contract. | State/control table. | No Core state beyond Shell. | Root CTA/copy path appears. |
-| 2 | Build CTA defaults. | Spec/Core diff. | Non-empty Header/CTA defaults compile. | Blank scaffold or duplicate Shell paths. |
-| 3 | Build/verify empty Core package. | Preview/package evidence. | CTA renders as Header-only Shell. | Widget bypasses Shell. |
-| 4 | Validate editable fields. | Editable-fields diff/tests. | Only Shell Header/CTA fields exist. | Extra CTA Core fields appear. |
-| 5 | Verify Bob/Roma materialization. | Compile/save/package evidence. | CTA package is Shell plus empty Core. | Duplicate Shell code appears. |
+| 1 | Confirm CTA empty-Core contract. | State/control table and old-state deletion list. | No Core state beyond Shell; old CTA paths are deleted/rebased, not bridged. | Root CTA/copy path, compatibility mapper, or legacy state normalizer appears. |
+| 2 | Build CTA defaults. | Spec/Core diff with Shell defaults, `uiLabels.core.*`, and `coreSize.*`. | Non-empty Header/CTA defaults compile; empty Core sizing is Shell-owned auto/no-op. | Blank scaffold, duplicate Shell paths, or fake CTA body sizing. |
+| 3 | Build/verify empty Core package. | Preview/package evidence. | CTA renders as Header-only Shell with empty `.ck-headerLayout__body`. | Widget bypasses Shell or retains private CTA DOM/runtime. |
+| 4 | Validate editable fields. | Editable-fields diff/tests. | Only Shell Header/CTA fields exist. | Extra CTA Core fields or old `primaryCta`/`secondaryCta` fields appear. |
+| 5 | Verify product discovery and Bob/Roma materialization. | Regenerated widget source evidence, compile/save/package evidence. | CTA remains reachable through existing `CTA` widget code and package is Shell plus empty Core. | Missing source regeneration, duplicate Shell code, or stale old CTA path still compiles. |
 
 ## Purpose
 
@@ -90,6 +96,11 @@ empty.
 
 "Bottom" is page placement, not widget identity. Page Composer decides where a
 CTA instance sits.
+
+CTA is not a compatibility bridge for the current old CTA source. Existing
+`title`, `body`, `primaryCta`, `secondaryCta`, private `layout.*`, private CTA
+DOM, and private CTA runtime are drift to delete/rebase, not a state model to
+preserve.
 
 ## Prague Evidence
 
@@ -111,6 +122,14 @@ Surviving widget source:
 - `tokyo/product/widgets/cta/widget.css`
 - `tokyo/product/widgets/cta/widget.client.js`
 
+Also regenerate existing widget discovery source after the CTA rebase:
+
+- `tokyo-worker/src/generated/widget-definition-sources.ts`
+
+CTA already owns the product-approved `CTA` overlay code in
+`packages/ck-contracts/src/overlay-codebooks.ts`; keep that code. Do not create
+a new widget code or rename the widget to `bottom-cta`.
+
 ## Instance Shape
 
 CTA adds no widget-specific state. It uses the shared Widget Shell state:
@@ -126,6 +145,26 @@ CTA adds no widget-specific state. It uses the shared Widget Shell state:
 - `behavior.showBacklink`
 - `behavior.socialShare.enabled`
 
+CTA-specific controls:
+
+```text
+none
+```
+
+Imported controls are exactly the PRD106A2 Widget Shell controls. Do not add
+`copy`, `button`, `ctaText`, `primaryCta`, `secondaryCta`, `layout.maxWidth`,
+`layout.bodyWidth`, or `layout.gap`.
+
+CTA still renders a Shell Core div because every Shell widget has one, but the
+Core is empty. CTA inherits Shell `coreSize.*` defaults with `coreSize.mode =
+auto`; any Core-size UI for CTA must be hidden or clearly Shell-owned/no-op. It
+must not become fake CTA body sizing.
+
+Existing account/dev CTA instances that still use old `title`, `body`,
+`primaryCta`, `secondaryCta`, or private `layout.*` state are invalid after this
+rebase. Regenerate or reset current dev/starter data through the real product
+path. Do not silently heal those old paths into the new CTA shape.
+
 ## Defaults
 
 Required defaults:
@@ -140,6 +179,14 @@ Required defaults:
 - `cta.enabled`: `true`
 - `cta.label`: "Get started"
 - `cta.href`: "#"
+- `uiLabels.core.singular`: "CTA"
+- `uiLabels.core.plural`: "CTAs"
+- `uiLabels.core.sizeCluster`: "CTA size"
+- `coreSize.mode`: `auto`
+- `coreSize.minHeight`: `0`
+- `coreSize.preferredVw`: `0`
+- `coreSize.maxHeight`: `0`
+- `coreSize.fixedHeight`: `0`
 
 No default visible string may be empty.
 
@@ -199,6 +246,19 @@ Required typography roles:
 - Prague `cta-bottom-block` can be represented by CTA.
 - The widget name and controls do not include page-placement language such as "bottom".
 - CTA does not define duplicate Header/CTA/Stage/Pod shell state.
+- Existing old CTA root paths `title`, `body`, `primaryCta`, `secondaryCta`,
+  and private `layout.*` do not compile as product-valid CTA state after the
+  rebase.
+- CTA does not include a compatibility mapper, legacy normalizer, page
+  placement enum, CTA variant model, action group model, second CTA support, or
+  Prague block adapter.
+- CTA DOM uses shared `.ck-headerLayout`, direct `.ck-header`, and an empty
+  direct `.ck-headerLayout__body`; retained private CTA DOM such as
+  `.ck-cta__title`, `.ck-cta__body`, `.ck-cta__actions`, or CTA-specific
+  max/body width CSS fails this PRD.
+- CTA keeps existing product discovery via the `CTA` widget code and regenerated
+  widget definition source evidence.
 - Bob exposes the controls above with correct paths and show/hide behavior.
 - CTA materializes to `index.html`, `styles.css`, and `runtime.js`.
-- Two CTA instances on one composed page do not collide in CSS/runtime.
+- Two CTA instances on one composed page do not collide in CSS/runtime; this is
+  required instance-scope evidence, not visual QA.

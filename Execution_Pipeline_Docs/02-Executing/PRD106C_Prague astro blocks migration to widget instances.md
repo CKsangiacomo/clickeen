@@ -1,7 +1,7 @@
 # PRD106C_Prague Astro Blocks Migration To Widget Instances
 
 Status: Draft execution umbrella
-Owner: Widget system + Bob + Roma
+Owner: Widget Core source + Bob controls + Roma save/materialization
 Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
 Audit: `PRD106C2_Prague astro blocks audit.md`
@@ -57,12 +57,21 @@ Required evidence before marking green:
 
 - Target set is exactly Split, Cards, Big Bang, CTA.
 - Out-of-scope Prague blocks are named and fenced/dropped.
+- Existing drift widget folders are named with keep/delete/fence decisions:
+  `tokyo/product/widgets/hero`, `tokyo/product/widgets/steps`, and
+  `tokyo/product/widgets/cardgrid`.
 - No child PRD is asked to own Shell or Page Composer behavior.
+- Split embedded-instance support is either explicitly owned by PRD106C3 as
+  visible Core behavior with approved paths, or fenced out of this migration.
 
 Stop conditions:
 
 - A Prague block needs a fifth widget target.
 - A child PRD needs Shell behavior not accepted by PRD106A2.
+- `hero`, `steps`, or `cardgrid` remains exposed as a customer widget target
+  without a deletion/fence/rename decision.
+- Split embedded-instance support is treated as hidden nested behavior or as
+  Prague `accountInstanceRef` compatibility.
 
 ## Execution Steps
 
@@ -109,15 +118,25 @@ These are not widgets:
 | --- | --- |
 | `page-meta` | Dies as a Prague block. Page SEO/GEO belongs to Page Composer and a dedicated SEO/GEO PRD for instances and pages. |
 | `navmeta` | Stays Prague navigation metadata. |
-| `minibob` | Stays Prague/admin-only demo behavior. |
+| `minibob` | Excluded from customer widget migration. May remain only as Prague admin/site-owned demo/funnel behavior, not save-capable product mode. |
+
+Existing drift widget folders must not remain customer widget targets:
+
+| Current folder | PRD106C decision |
+| --- | --- |
+| `tokyo/product/widgets/hero` | Delete or fence from customer widgets. `hero` is absorbed by `split`. |
+| `tokyo/product/widgets/steps` | Delete or fence from customer widgets. `steps` is a `cards` treatment. |
+| `tokyo/product/widgets/cardgrid` | Rename/migrate into surviving `cards`, or fence/delete after `cards` exists. Do not keep `cardgrid` as a second product widget. |
 
 Current Prague `accountInstanceRef` dies. It must not be copied into migrated
 widget state.
 
-Split may support embedding another saved account-owned widget instance as its
-Core. That is still not Prague `accountInstanceRef`. The surviving model is a
-normal account instance reference under the Split Core contract, with normal
-dependency, publish-readiness, and recomposition rules.
+Split embedded-instance support is not granted by this umbrella. If it survives,
+PRD106C3 must define it as explicit, visible Split Core behavior with a new
+approved Core path, no Prague iframe assumptions, no locale override, no
+page-owned override semantics, and no `accountInstanceRef` compatibility. If
+PRD106C3 does not make that behavior explicit, Split absorbs `hero` and `split`
+as media/content Core only.
 
 ## How Bob Widget Controls Work
 
@@ -198,7 +217,7 @@ widget-specific `headline`, `subheadline`, `primaryCta`, `secondaryCta`,
 For PRD106C, child PRDs define only the Widget Core:
 
 ```text
-Split   -> Core div with image/video/embedded-instance item software; optional carousel
+Split   -> Core div with image/video item software; optional carousel; embedded instance only if PRD106C3 explicitly approves it
 Cards   -> cards/items content
 BigBang -> large typography/content treatment
 CTA     -> empty Core; Shell Header/CTA only
@@ -248,10 +267,12 @@ No migrated customer product path may depend on:
 `page-meta` dies as a Prague block because SEO/GEO metadata is not visual
 content and is not a widget.
 
-Instances may expose structured content that helps SEO/GEO. A composed page
-needs one final page-level SEO/GEO result: title, description, structured
-summary, canonical intent, schema, and page-level generated metadata. Page
-Composer owns that final page output because Page Composer owns the composition.
+Child widget PRDs may preserve semantic HTML and real customer-visible content.
+They must not invent instance SEO fields, page SEO fields, structured-data
+source models, schema merging, or site-level SEO objects from PRD106C.
+
+A composed page needs one final page-level SEO/GEO result. Page Composer and a
+later SEO/GEO PRD own that final output because Page Composer owns composition.
 
 A later SEO/GEO PRD must define:
 
@@ -267,20 +288,24 @@ PRD106C only prevents Prague `page-meta` from becoming a fake widget.
 
 `navmeta` remains Prague route/navigation metadata.
 
-`minibob` remains Prague-specific demo/funnel behavior. If Prague needs to
+`minibob` may remain only as Prague-specific admin/site-owned demo/funnel
+behavior. It is not a customer widget, account authoring surface, editor mode,
+policy profile, save-capable path, or Page Composer input. If Prague needs to
 inject special Clickeen-owned demo sections into marketing pages, that must be
 admin/site-owned behavior, not a normal customer widget.
 
 ## Execution Sequence
 
 1. Keep `PRD106C2` accurate as the factual block audit.
-2. Execute `PRD106C3_Split_Widget.md`.
-3. Execute `PRD106C4_Cards_Widget.md`.
-4. Execute `PRD106C5_BigBang_Widget.md`.
-5. Execute `PRD106C6_CTA_Widget.md`.
-6. Delete or stop exposing obsolete partial widget targets that conflict with
-   the four-widget decision.
-7. Update PRD106D only after the four widgets are normal saved/materialized
+2. Fence obsolete customer widget targets before child widget execution:
+   `hero`, `steps`, and unresolved `cardgrid`.
+3. Execute `PRD106C3_Split_Widget.md`.
+4. Execute `PRD106C4_Cards_Widget.md`.
+5. Execute `PRD106C5_BigBang_Widget.md`.
+6. Execute `PRD106C6_CTA_Widget.md`.
+7. Delete or stop exposing any remaining obsolete partial widget targets that
+   conflict with the four-widget decision.
+8. Update PRD106D only after the four widgets are normal saved/materialized
    instances.
 
 ## Non-Goals
@@ -303,8 +328,12 @@ PRD106C is complete when:
   Widget Core content/control deltas;
 - `split`, `cards`, `big-bang`, and `cta` are the only Prague-derived customer
   widget targets;
+- `hero` and `steps` are not exposed as customer widget targets;
+- `cardgrid` is resolved into surviving `cards` or fenced/deleted;
 - `page-meta`, `navmeta`, and `minibob` are explicitly excluded from customer
   widget migration;
 - `accountInstanceRef` is excluded from all migrated widget state;
+- any Split embedded-instance support is explicit PRD106C3 Core behavior or
+  fenced out;
 - each child PRD defines useful defaults, editable fields, control paths, and
   materialized output acceptance.

@@ -9,6 +9,10 @@ Unlocks: `PRD106C_Prague astro blocks migration to widget instances.md`
 Authority owned by this PRD: factual Prague block inventory and block-to-target classification.
 Authority explicitly not owned by this PRD: widget implementation, Page Composer, Widget Shell extraction, Prague route cutover.
 
+This audit does not unlock PRD106C after Step 1 alone. PRD106C may treat C2 as
+green only after inventory, classification, target mapping, field hints, and
+audit guards all have fresh evidence output.
+
 ## PRD Tenets
 
 - Execute one step at a time.
@@ -51,14 +55,16 @@ Step 1: Refresh Prague block inventory.
 
 Required evidence before marking green:
 
-- Current block registry evidence.
-- Current renderer switch evidence.
-- Current page JSON type counts.
+- Current block registry command output.
+- Current renderer switch command output.
+- Current page JSON type-count command output.
 
 Stop conditions:
 
 - Prague source cannot be read.
 - A block target is ambiguous without product-owner decision.
+- Tables below are being treated as fresh evidence without rerunning the
+  commands named in Verification Commands.
 
 ## Execution Steps
 
@@ -145,9 +151,9 @@ assigns them to a product widget decision.
 | `cta-bottom-block` | Migrate as CTA | `PRD106C6_CTA_Widget.md` |
 | `page-meta` | Dies as Prague block | Page Composer SEO/GEO PRD |
 | `navmeta` | Stays Prague navigation metadata | Prague route/nav system |
-| `minibob` | Stays Prague/admin-only demo behavior | Prague/admin-only mechanism |
-| `split-carousel` | Source evidence for Split carousel behavior, not separate widget | `PRD106C3_Split_Widget.md` |
-| `embed-carousel` | Source evidence for Split carousel behavior, not separate widget | `PRD106C3_Split_Widget.md` |
+| `minibob` | Prague site-owned demo/funnel behavior only; not customer widget, account authoring lane, policy mode, save-capable path, or Page Composer input | Prague site-owned demo/funnel mechanism |
+| `split-carousel` | Optional source evidence for Split carousel behavior, not separate widget and not a product requirement | `PRD106C3_Split_Widget.md` |
+| `embed-carousel` | Optional source evidence for Split carousel behavior, not separate widget and not a product requirement | `PRD106C3_Split_Widget.md` |
 | `mobile-showcase` | Not in current migration | Separate product decision required |
 | `feature-explorer` | Not in current migration | Separate product decision required |
 
@@ -235,11 +241,11 @@ Current layout: split copy/CTA plus media or embedded-widget area.
 
 Decision: migrate into Split.
 
-The Split Core div supports image, video, or embedded widget instance items.
-Carousel is optional Split software inside that Core div when
-`core.carousel.enabled` is true. This does not preserve Prague
-`accountInstanceRef`; it maps the useful behavior into the normal account-owned
-instance reference model.
+Prague source shows image/video and embedded-widget-like areas. This audit does
+not approve Split Core implementation paths. PRD106C3 owns whether Split ships
+image, video, carousel, or embedded-instance Core behavior. Any embedded
+instance behavior must be explicit visible Core behavior in PRD106C3 and must
+not preserve Prague `accountInstanceRef`.
 
 ### `big-bang`
 
@@ -264,19 +270,23 @@ Decision: migrate into CTA.
 
 The word "bottom" is page placement, not widget identity.
 
-## Bob Mapping
+## Bob Mapping Hints
 
-| Prague value | Widget destination |
+These are source-to-widget hints only. They are not executable Bob paths and do
+not define final Widget Core schema. Child PRDs own exact `core.*` paths,
+controls, defaults, validation, and editable fields.
+
+| Prague value | Likely destination area |
 | --- | --- |
-| `headline`, `title`, `heading` | `header.title` for Widget Shell Header copy; Prague Big Bang statement maps to `bigBang.statement`. |
-| `subheadline`, `subhead`, `body` | `header.subtitleHtml` for Widget Shell Header copy; `bigBang.supportingCopy` for Big Bang content; `items[].body` for card supporting copy. |
-| `items[].title` | Repeated item content with stable item identity. |
+| `headline`, `title`, `heading` | Widget Shell Header copy, or child-owned Core statement content where the child PRD explicitly says so. |
+| `subheadline`, `subhead`, `body` | Widget Shell Header subtitle, or child-owned Core supporting copy where the child PRD explicitly says so. |
+| `items[].title` | Repeated item title content with stable item identity. |
 | `items[].body` | Repeated item supporting copy with stable item identity. |
-| `items[].iconName` | Repeated item config |
-| `items[].imagePath`, `visual.image` | Widget/account media config after asset promotion |
-| `items[].imageAlt` | Content if authored alt text is exposed |
+| `items[].iconName` | Repeated item icon config. |
+| `items[].imagePath`, `visual.image` | Widget/account media config after asset promotion. |
+| `items[].imageAlt` | Content if authored alt text is exposed. |
 | `primaryCta.label`, `secondaryCta.label` | `cta.label` through the shared Header CTA. |
-| `primaryCta.href`, `secondaryCta.href`, card links | `cta.href` or card `items[].href` config. |
+| `primaryCta.href`, `secondaryCta.href`, card links | Shared CTA href or child-owned repeated item link config where the child PRD explicitly says so. |
 | `layout` | Product-labeled config, not raw Prague enum if unclear |
 | `market`, `locale`, `resolvePragueHref` | Prague route context; not widget truth |
 | `page-meta.copy.*` | Page Composer SEO/GEO concern |
@@ -296,6 +306,8 @@ The word "bottom" is page placement, not widget identity.
 
 ## Acceptance
 
+- Steps 1-5 have fresh command output or explicit evidence recorded; reference
+  tables alone do not mark C2 green.
 - Every used Prague block is listed.
 - The four widget targets are clear: Split, Cards, Big Bang, CTA.
 - `steps` is Cards treatment, not a standalone widget.
@@ -303,5 +315,7 @@ The word "bottom" is page placement, not widget identity.
   not widgets.
 - `page-meta` dies into Page Composer SEO/GEO work.
 - `navmeta` remains Prague navigation metadata.
-- `minibob` remains Prague/admin-only demo behavior.
+- `minibob` is Prague site-owned demo/funnel behavior only, not a customer
+  widget, account authoring lane, policy mode, save-capable path, or Page
+  Composer input.
 - Prague `accountInstanceRef` is not migrated.

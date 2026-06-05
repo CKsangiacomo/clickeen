@@ -56,7 +56,7 @@ If a product decision is missing, add it under
 | Dependency | Required green evidence | Status |
 | --- | --- | --- |
 | Umbrella | Product tenets and authority table are current. | REQUIRED |
-| PRD106A | Drift affecting Shell extraction is audited or fenced. | REQUIRED |
+| PRD106A | Step 2 Dependency And Cutover Plan is green: Shell-affecting drift has surviving authority, owner PRD, delete/fence/block decision, and blast-radius gate. | REQUIRED |
 
 ## Current Step Gate
 
@@ -71,11 +71,16 @@ Required evidence before marking green:
 - `file:line` inventory of FAQ Shell source files.
 - Explicit list of Shell-owned paths.
 - Explicit list of FAQ Core paths excluded from Shell.
+- Explicit list of product-approved Shell additions that are not FAQ-proven
+  inventory. `coreSize.*` must be listed here if FAQ does not already prove the
+  behavior.
 
 Stop conditions:
 
 - A shared control cannot be traced to FAQ's working implementation.
 - A path is ambiguous between Shell and Core ownership.
+- A new Shell capability is treated as FAQ-proven extraction without evidence or
+  explicit product approval.
 
 ## Execution Steps
 
@@ -86,7 +91,7 @@ Stop conditions:
 | 3 | Rebase FAQ onto shared Shell with no behavior change. | Diff plus FAQ compile/render/save evidence. | FAQ output remains gold standard. | FAQ behavior changes outside intentional package import. |
 | 4 | Prove Core extension with CTA. | CTA diff plus compile/render evidence. | CTA is Shell plus empty Core. | CTA defines duplicate Shell paths. |
 | 5 | Prove Core extension with one non-trivial widget. | Split or Cards diff plus compile/render evidence. | Core contributes only Core state/controls/runtime. | Core redefines Header/CTA/Stage/Pod. |
-| 6 | Add validation/search guards. | Tests or `rg` guard output. | Forbidden duplicate paths fail. | Guards allow copied Shell logic. |
+| 6 | Add validation/search guards. | Targeted verification or `rg` guard output. | Forbidden duplicate paths fail without adding repo-wide PRD scripts or preserving copied Shell logic. | Guards allow copied Shell logic or recreate deleted PRD-script behavior. |
 
 ## Purpose
 
@@ -189,6 +194,10 @@ provide these named responsibilities:
 - Shell CSS/runtime module keys.
 - Shell package contribution validator.
 - Core extension validator.
+
+Do not create empty academic files just to match the sketch above. The
+responsibilities are required; the file split is allowed to stay boring and
+local-convention-shaped.
 
 ## Shell DOM Contract
 
@@ -361,6 +370,13 @@ Header layout controls:
 
 Every normal widget has one Core div. Shell owns generic Core div sizing because
 the Shell owns the Header/Core layout boundary.
+
+`coreSize.*` is an explicit product-approved Shell addition if Step 1 cannot
+trace equivalent behavior to FAQ's current implementation. It exists because
+all normal widgets need one consistent way to size the Core slot inside the
+Header/Stage/Pod Shell. Implement it with default `auto` and no visible FAQ
+regression. Do not fake FAQ evidence to justify it, and do not let individual
+Widget Cores create private height/visual-size paths instead.
 
 Bob UI must not say "Core". Each widget must define user-facing labels:
 
@@ -669,23 +685,27 @@ Add validation that fails at build/materialization time when a widget Core:
 Invalid state must fail at the named boundary. Do not heal Core mistakes into
 new Shell behavior.
 
-## Execution Sequence
+## Non-Executable Sequence Reference
 
-1. Create `packages/widget-shell/`.
-2. Move or wrap existing shared Bob compiler modules for Header, Stage/Pod, and
-   Typography under the package boundary.
-3. Move or wrap shared runtime/CSS helpers under the package boundary while
-   preserving package output bytes for FAQ.
-4. Define Shell defaults and validation from FAQ's working shared state.
-5. Rebase FAQ onto `packages/widget-shell/` with no user-visible behavior
-   change.
-6. Add parity tests proving FAQ preview/materialization output still compiles,
-   renders, saves, and publishes.
-7. Convert one simple Core widget, CTA, to prove empty-Core reuse.
-8. Convert one non-trivial Core widget, Split or Cards, to prove Core
-   extension.
-9. Mark Countdown and Logo Showcase gold-standard repair as Shell rebase tasks.
-10. Block new widget execution that does not consume `packages/widget-shell/`.
+This section is planning context only. It does not override the Current Step
+Gate or the numbered Execution Steps table.
+
+1. Step 1 inventories FAQ Shell/Core ownership and separately marks any
+   product-approved Shell additions such as `coreSize.*`.
+2. Step 2 creates `packages/widget-shell/` and moves/wraps shared compiler,
+   runtime, CSS, defaults, editable-field, and validation responsibilities under
+   that package boundary.
+3. Step 3 rebases FAQ onto `packages/widget-shell/` with no user-visible
+   behavior change and proves compile, preview, save/materialization, and
+   package output evidence.
+4. Step 4 converts CTA to prove Shell plus empty Core reuse.
+5. Step 5 converts Split as the preferred non-trivial Core proof. Use Cards only
+   if the owning Cards PRD first resolves the `cards`/`cardgrid` naming
+   authority without aliases or compatibility shims.
+6. Step 6 adds product-shaped validation/search guards that reject copied Shell
+   logic and duplicate Shell-owned paths without adding root PRD scripts.
+7. Countdown and Logo Showcase gold-standard repair remain downstream Shell
+   rebase tasks after FAQ, CTA, and one non-trivial Core are green.
 
 ## Blast Radius
 
@@ -697,13 +717,17 @@ Expected touched areas:
 - `bob/lib/compiler/modules/typography.ts`
 - `bob/lib/compiler/editor-contract.ts`
 - `bob/lib/compiler.server.ts`
-- `bob/lib/session/publicPackage.ts`
+- `bob/lib/api/compiled-widget-route.ts`
+- `roma/lib/widget-public-package.ts`
+- `roma/lib/page-package-composer.ts` only for package contribution
+  compatibility/handoff evidence; PRD106B owns Page Composer behavior.
 - `tokyo/product/widgets/shared/**`
 - `tokyo/product/widgets/faq/**`
 - `tokyo/product/widgets/cta/**`
-- `tokyo/product/widgets/split/**` or `tokyo/product/widgets/cards/**`
-- Page Composer package contribution tests
-- Widget validation scripts
+- `tokyo/product/widgets/split/**` for preferred non-trivial Core proof, or
+  `tokyo/product/widgets/cards/**` only after the owning Cards PRD resolves
+  `cards` versus `cardgrid`.
+- Widget validation/search guards scoped to Shell/Core boundaries.
 
 Do not move account-owned instance source or generated account artifacts in this
 PRD. Tokyo/R2 paths remain unchanged.
@@ -715,8 +739,10 @@ PRD. Tokyo/R2 paths remain unchanged.
 - FAQ consumes the shared Shell and has no user-visible regression.
 - CTA consumes the shared Shell with an empty Core.
 - One non-trivial Core widget consumes the shared Shell.
-- Bob preview, Roma materialization, and Page Composer package input use the
-  same Shell + Core contract.
+- Bob preview and Roma materialization use the same Shell + Core contract.
+- A2 emits stable package contribution metadata/module keys sufficient for
+  PRD106B Page Composer consumption; PRD106B proves actual Page Composer
+  behavior.
 - Shell Layout includes the shared `core-size` cluster between Header and
   widget-specific layout controls.
 - Bob renders Core div sizing with `uiLabels.core.sizeCluster`; the word
@@ -724,8 +750,9 @@ PRD. Tokyo/R2 paths remain unchanged.
 - Widget specs provide `uiLabels.core.*` and `coreSize.*` defaults.
 - Widget Core validation rejects duplicate Header/CTA/Stage/Pod/layout
   taxonomies and duplicate Core div sizing paths.
-- Page Composer can identify stable root, Shell CSS/runtime modules, Core
-  CSS/runtime modules, instance identity, and per-instance runtime payload.
+- Shell output marks stable root, Shell CSS/runtime modules, Core CSS/runtime
+  modules, instance identity, and per-instance runtime payload without requiring
+  Page Composer implementation inside A2.
 - Countdown and Logo Showcase PRDs can be written as Core rebase work instead
   of full widget architecture rewrites.
 - Active docs no longer tell agents to copy FAQ architecture into each widget.
