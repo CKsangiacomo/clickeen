@@ -1,4 +1,4 @@
-# PRD106_realignment
+# PRD106A_realignment
 
 Status: Active realignment PRD
 Owner: Codex execution agent
@@ -11,6 +11,18 @@ truth.
 
 If this file conflicts with `106__Umbrella__Composition_Vision.md`, the umbrella
 wins.
+
+Sibling PRDs:
+
+- `PRD106B_PageComposer.md` owns the Page Composer implementation boundary.
+- `PRD106C_Prague astro blocks migration to widget instances.md` owns the
+  Prague block-to-widget migration.
+- `PRD106D_Prague migration from astro blocks to Page composer.md` owns the
+  Prague site migration from Astro block assembly to composed page output after
+  Page Composer and migrated widget instances exist.
+- `PRD106E_Toxic_Flow_Deletion.md` owns the executable deletion/fencing ledger
+  for toxic active flows, functions, files, routes, tests, and LOCs found during
+  this realignment.
 
 ## Problem
 
@@ -79,7 +91,7 @@ or lets the page keep a stale copy of the edited instance, violates PRD 106.
 - Do not redesign the page product.
 - Do not add execution sub-PRDs unless a deletion pass proves a real split is
   needed.
-- Do not add compatibility shims for fake modes.
+- Do not add shims for fake modes.
 - Do not preserve old terms just because code calls them.
 - Do not make Prague blocks a product concept by renaming them only in docs.
 - Do not move product authority from one wrong service to another wrong service.
@@ -90,11 +102,156 @@ Before each edit:
 
 1. Name the surviving authority for the concern.
 2. Identify the fake noun or duplicate authority being removed.
-3. Prefer deletion over adapters, flags, compatibility modes, or renamed layers.
+3. Prefer deletion over adapters, flags, temporary bridges, or renamed layers.
 4. Keep write scopes small and verifiable.
 5. Do not add tests that preserve hallucinated internals.
 6. Add or update tests only when they protect a surviving product boundary.
 7. Keep documentation truth aligned in the same change.
+
+## Pre-Execution Scope Gate
+
+PRD106A is a realignment PRD, not permission to rewrite every current
+PRD103/105 mechanism in one pass. Its primary target is drift that blocks the
+PRD106 page/product boundary.
+
+Allowed immediately under PRD106A:
+
+- delete, move, or fence PRD106 page-composition drift;
+- remove page-owned instance edits, page overrides, page snapshots, blocks,
+  route maps, website workspaces, publish folders, and Tokyo page composition;
+- make Roma the explicit owner of page input acceptance, page recomposition
+  intent, and page-facing errors;
+- make Tokyo store/serve only the exact page files Roma submits.
+
+Requires a named follow-up PRD or explicit human approval before implementation:
+
+- replacing `public.instances` as current instance listing/open/publish truth;
+- moving all Tokyo instance create/duplicate/default semantics;
+- moving translation liveness/generation authority out of Tokyo;
+- moving durable asset upload out of Bob;
+- changing Supabase migration history or seed strategy.
+
+Those areas are listed because they are architectural drift against the
+umbrella, but they are also live PRD103/105 machinery. Agents must not delete
+them opportunistically while "cleaning pages." For any dependent edit, stop and
+name the follow-up PRD or get explicit confirmation.
+
+## Intended Product Architecture
+
+The surviving architecture users should experience is:
+
+```text
+Roma Widgets -> create/open account widget instances.
+Bob Builder  -> edit one instance in browser memory.
+Roma Save    -> accept save, enforce account/tier policy, materialize widget files.
+Tokyo        -> store and serve exact submitted files.
+Roma Pages   -> select/order existing instances and compose page files.
+clk.live     -> serve stored instance/page files behind stable public URLs.
+```
+
+Allowed minimal page input:
+
+- page identity owned by the account;
+- ordered references to account-owned widget instances;
+- page-level metadata needed for composed output, such as title, description,
+  robots, canonical, and structured data, only if PRD106B approves the exact
+  fields;
+- explicit publish/unpublish intent.
+
+Forbidden page input:
+
+- widget instance config/content;
+- inline Builder edits;
+- page-specific instance overrides;
+- instance forks, snapshots, or frozen HTML copies;
+- blocks, sections, slots, columns, containers, route maps, slugs, nav, or site
+  settings;
+- dependency indexes, recomposition reasons, SEO intent, or readiness semantics
+  sent to Tokyo.
+
+Approved PRD 106 delivery:
+
+```text
+single widget: https://clk.live/{accountPublicId}/{instanceId}
+composed page: https://clk.live/{accountPublicId}/pages/{pageId}
+
+page files:
+accounts/{account}/pages/{page}/source.json
+accounts/{account}/pages/{page}/index.html
+accounts/{account}/pages/{page}/styles.css
+accounts/{account}/pages/{page}/runtime.js
+```
+
+Page publish state works like widget publish state: `published` or
+`unpublished`. Roma owns publish/unpublish intent; Tokyo stores the submitted
+page source, output files, and serve-state bytes as account R2 files. Tokyo must
+not derive that state from page source, page input, dependency indexes, or file
+contents.
+
+Page composition source lives beside page output, the same way widget instance
+source lives beside widget output. `source.json` stores page identity, allowed
+metadata, and ordered instance references. `index.html`, `styles.css`, and
+`runtime.js` are generated browser-readable output.
+
+Roma widget materialization must use the same system widget software inputs as
+Bob preview: `tokyo/product/widgets/{widget}` plus shared Dieter/runtime
+contracts. Before removing Bob-built `publicPackage`, add parity coverage that
+Bob preview, Roma materialization, and Page Composer input are generated from
+the same saved widget state and widget definition contract.
+
+## Intended Product UX
+
+The cleanup must preserve and clarify these workflows:
+
+- Widgets tab: the user sees available widget definitions with a Create action.
+  These are not templates, presets, examples, or catalogs. Existing rows are
+  account-owned widget instances with edit/rename/duplicate/delete/publish
+  actions according to Roma account policy.
+- Builder: the user edits one widget instance, sees the preview for that same
+  instance, and saves through Roma. Bob can show host-provided policy messages,
+  but cannot calculate policy or upsell authority.
+- Pages tab: the user creates a page, bulk-selects existing saved instances from
+  a large Add Instances surface, reorders/removes references in the page stack,
+  saves/publishes the page, and copies one stable page embed/public URL.
+- Propagation: when the user edits an included widget instance and saves it,
+  Roma recomposes every affected page. The old page embed line keeps working and
+  the page reflects the updated instance.
+- Prague funnel: visitors may preview public artifacts and use signup CTAs, but
+  Prague cannot create durable account truth. Durable widgets/pages start only
+  in authenticated Roma account flows.
+
+Visible failure states must be Roma-owned:
+
+- instance missing, unowned, deleted, invalid, unpublished when publish requires
+  published inputs, or lacking materialized files;
+- page with zero instances if empty draft pages are allowed but publish is not;
+- account/tier denial for create, save, publish, or cap overflow;
+- public page request after unpublish/delete/missing stored files;
+- widget save accepted but affected page recomposition failed or is stale.
+
+The last case is resolved product behavior: the widget save remains committed,
+and Roma exposes affected pages, stale/failed recomposition status, and a
+retry/recompose path.
+
+## Evidence Refresh Required
+
+The consolidated ledger below is a directionally useful audit, but it is not a
+license for blind deletion. Before code execution on any ledger item, refresh the
+evidence with current `file:line` references and record:
+
+```text
+Finding:
+  file:line
+  surviving authority:
+  violated tenet:
+  why it violates:
+  recommended action: delete | move | rename | keep with explicit boundary
+  dependent product decision:
+  rollback risk:
+```
+
+If the evidence points at live PRD103/105 machinery rather than PRD106 page
+drift, stop and route that item to a named follow-up PRD or human confirmation.
 
 ## Tenet Audit Matrix
 
@@ -239,7 +396,7 @@ Surviving authority:
 Pollution to remove:
 
 - Roma delegating product decisions to Bob, Prague, or Tokyo.
-- Roma hiding duplicate widget/page truths behind caches or fallback groups.
+- Roma hiding duplicate widget/page truths behind caches or duplicate grouping.
 - Roma preserving fake modes instead of account/tier authority.
 - Roma page UI/API that edits instance config/content or creates page-owned
   instance overrides.
@@ -262,11 +419,19 @@ Pollution to remove:
 - Prague references that bypass normal account-owned instance/page artifacts.
 - Special product branches for Clickeen-authored content.
 
-## Consolidated Violation Ledger
+## Authority Drift Audit Summary
 
-This ledger is the result of the seven tenet audits. It is intentionally blunt:
-each item names a live surface that must be deleted, moved, or explicitly fenced
-before PRD 106 can be called realigned.
+This section is an audit summary, not the executable deletion ledger.
+
+PRD106A names authority drift and surviving ownership. PRD106E is the only
+execution deletion ledger. Before any implementation edit, each item below must
+be refreshed with current file:line evidence and entered into PRD106E's deletion
+or temporary cutover fence ledger with caller migration, tests, search guard,
+data impact, and delete gate.
+
+This summary is intentionally blunt: each item names a live surface that must be
+deleted, moved, renamed to its true boundary, fenced with a delete gate, or
+blocked pending Pietro decision before PRD 106 can be called realigned.
 
 ### A. Prague still teaches fake product nouns
 
@@ -294,8 +459,13 @@ Evidence:
 
 Required action:
 
-- Delete or rename/fence Prague block vocabulary as marketing-only implementation
-  that cannot be confused with PRD 106 pages.
+- Fence Prague block vocabulary as marketing-only implementation that cannot be
+  confused with PRD 106 pages.
+- Keep the current Prague-derived Tokyo widgets as partial migration artifacts
+  while PRD106C maps them properly. They are approximately 50% complete: they
+  compile/open in Bob and have initial widget shells, but they do not yet prove
+  faithful Prague block migration, real defaults, complete layout controls, or
+  production-ready instance behavior.
 - Delete `minibob` as a product/demo mode. If Prague needs a marketing embed,
   make it an explicit public artifact embed plus signup CTA, not a Builder mode
   or product noun.
@@ -406,8 +576,8 @@ Required action:
   page source normalization from Tokyo.
 - Move product create/duplicate/default-source semantics out of Tokyo or mark
   them as a deliberate pre-existing exception with a separate corrective PRD.
-- Delete generated `embed.js` from Tokyo or make it a submitted stored browser
-  file if the product keeps it.
+- Delete generated `embed.js` from Tokyo. Page copy/embed behavior must use the
+  existing widget embed/public-serving model adapted by PRD106B.
 - Decide whether translation liveness in Tokyo is outside PRD 106 scope or must
   be realigned too.
 
@@ -492,6 +662,13 @@ Evidence:
 Required action:
 
 - Add Roma-owned page create/save/publish policy gates.
+- Enforce page tier policy:
+  - Free: 0 pages.
+  - Tier 1: 1 page; instances/widgets allowed by that tier.
+  - Tier 2: 3 pages; instances/widgets allowed by that tier.
+  - Tier 3: 6 pages; instances/widgets allowed by that tier.
+  - Tier 4: unlimited pages and unlimited instances/widgets.
+  - Views are unlimited for all pages across all tiers.
 - Replace page source validation with Roma-owned page input validation: which
   widget instances are selected, in what order, and whether the account is
   allowed to compose/publish the resulting page files.
@@ -502,15 +679,16 @@ Required action:
   saving an instance must identify affected pages and recompose their page files.
 - Add composer output validation for deduped shared CSS/runtime, isolated
   per-instance runtime state, and crawlable SEO/GEO page HTML.
-- Decide whether empty draft pages are allowed. If allowed, publish denial is
-  Roma-owned and explicit.
-- Decide whether instance save should succeed even when page recomposition fails,
-  with a visible page-file stale/failure state.
+- Empty draft pages are allowed; publish is blocked until the page has at least
+  one valid selected instance.
+- Widget save succeeds when the instance save succeeds. Affected page
+  recomposition failures are surfaced on the page as stale/failed with retry;
+  they do not silently roll back the saved instance.
 
 Risk:
 
-- There is no named page entitlement/cap yet. The policy matrix must either add
-  one or deliberately define Tier 4 page availability another way.
+- Page policy must be enforced in Roma before page create/publish, not in Bob or
+  Tokyo.
 
 ### F. Duplicate widget metadata/reference data still exists
 
@@ -576,21 +754,7 @@ Required action:
 - AI build guides must not instruct agents to build PRD 106 with blocks,
   catalogs, templates, or minibob.
 
-## Subagent Audit Assignments
-
-Subagents must audit; they must not edit files.
-
-| Tenet | Agent | Status |
-| --- | --- | --- |
-| Widgets are system software | Kuhn | Complete |
-| Instances are created/saved through Roma/Bob/Tokyo account path | James | Complete |
-| Pages are composed browser files from widget instances | Leibniz | Complete |
-| Bob is browser-memory editor only | Halley | Complete |
-| Tokyo is R2 only | Copernicus | Complete |
-| Roma is the app/account authority | Popper | Complete |
-| Clickeen uses Clickeen | Mill | Complete |
-
-## Required Output From Each Audit
+## Required Audit Evidence
 
 For each finding:
 
@@ -604,6 +768,39 @@ Finding:
   risk:
 ```
 
+Do not encode agent names, codenames, or audit staffing into the PRD. The
+product-relevant artifact is refreshed evidence plus surviving authority.
+
+## Adopted Peer Review Gates
+
+The peer review correctly identified that PRD106A can become an audit book if
+findings do not force execution. Every PRD106A finding must end in exactly one
+of these outcomes:
+
+1. `DELETE_NOW`: the path has no legitimate surviving role.
+2. `FENCE_NOW_WITH_DELETE_GATE`: the path is temporarily needed, but tests,
+   naming, and a removal gate prove it is not product authority.
+3. `BLOCK_PRD106B`: Page Composer cannot proceed until the finding is resolved.
+4. `BLOCKED_PENDING_PIETRO_DECISION`: the concern is real, affects execution,
+   and needs Pietro, Product Owner, to decide the surviving behavior.
+5. `OUT_OF_PRD106A_BY_PIETRO_DECISION`: Pietro has explicitly kept the concern
+   outside PRD106A; the PRD must record the owner, reason, and follow-up PRD.
+
+No other state is allowed. "Existing callers use it" is not a state.
+
+The review also correctly validates these PRD106A priorities:
+
+- Treat Tokyo reverse placement indexes as current drift unless moved to
+  Roma-owned truth or made opaque storage with tests proving Tokyo does not
+  interpret them.
+- Decide Bob package authority before deleting `publicPackage`. If Bob remains
+  a candidate package producer temporarily, the PRD language must say that Roma
+  is the accepting product authority and Tokyo stores only accepted bytes.
+- Keep `public.instances` fenced from opportunistic PRD106 deletion unless a
+  replacement instance listing/open/publish/translation authority is explicitly
+  approved.
+- Close PRD106A with search gates and tests, not with more narrative audit.
+
 ## Execution Plan
 
 ### Phase 0 - Audit Freeze
@@ -614,6 +811,35 @@ Finding:
 - Build one deletion ledger from code and docs.
 
 Status: complete.
+
+### Phase 0.5 - Dependency And Cutover Plan
+
+Status: required before code execution.
+
+Build a cutover table before changing live service boundaries:
+
+| Concern | Current authority | Surviving authority | Caller migration | Deletion gate |
+| --- | --- | --- | --- | --- |
+| Widget browser-file materialization | Bob `publicPackage` path | Roma save/materialization | Roma uses same widget package inputs; Bob submits state only | Bob save payload parity tests pass and `publicPackage` is absent |
+| Page input acceptance | Old page source/Tokyo page routes | Roma Page Composer | Roma validates ordered instance refs + allowed metadata | Tokyo no longer receives page source/placements |
+| Page file storage | Tokyo `website/pages` / `website/publishes` | Tokyo storage-only page files | Roma submits `source.json`, `index.html`, `styles.css`, `runtime.js`, and `serve-state.json` | old `website/*` paths are unused and rejected |
+| Page public serving | Tokyo product-shaped publish/readiness | Roma-submitted `serve-state.json` + stored files | `clk.live` checks serve-state and serves stored files | `clk.live` does not generate page output or `embed.js` |
+| Affected-page recomposition | old reverse placement/index ideas | Roma Page Composer dependency knowledge | instance save asks Roma to find/recompose affected pages | recomposition failure is visible and retryable |
+| Instance registry / `public.instances` | Supabase/Tokyo registry | unresolved follow-up scope | do not change until replacement listing/open/publish truth exists | named follow-up PRD or approval |
+| Translation liveness | Tokyo PRD105 machinery | unresolved follow-up scope | do not change under PRD106A unless approved | named follow-up PRD or approval |
+
+Execution must respect dependency order:
+
+1. Define replacement authority and route contract.
+2. Add parity/negative tests against the new boundary.
+3. Move Roma callers.
+4. Keep an old path only as a temporary migration bridge when it has an owner,
+   tests, and a delete gate.
+5. Delete the old path after callers and tests prove it is unused.
+
+Do not reduce Tokyo instance/page operations to storage-only before Roma has the
+replacement route and persistence path. Do not remove `public.instances` before
+the replacement account-owned instance listing/open/publish/index truth exists.
 
 ### Phase 1 - Delete Fake Product Nouns
 
@@ -645,6 +871,10 @@ Targets:
 - Tokyo never needs selected instance lists, page dependency graphs,
   recomposition reasons, CSS/runtime dedupe plans, SEO/GEO intent, or page
   readiness semantics.
+- Define exact Roma-to-Tokyo storage contracts before implementation. Tokyo
+  accepts allowlisted file writes/reads/deletes and explicit serve-state writes
+  only. It must not receive `placements`, page source, dependency indexes,
+  readiness, SEO intent, or recomposition reason.
 
 Acceptance:
 
@@ -654,6 +884,9 @@ Acceptance:
 - Tokyo page and instance operations can be described as storage safety plus
   byte read/write/serve only, not product composition, dependency tracking,
   readiness, SEO/GEO, or product invention.
+- Bob preview, Roma widget materialization, and Page Composer input have parity
+  coverage across all active widgets before Bob browser-file generation is
+  removed from the save path.
 
 ### Phase 3 - Remove Duplicate Instance Truth
 
@@ -684,7 +917,7 @@ Targets:
 - Pages domain does not edit widget instance config/content.
 - Pages domain does not expose page-specific instance overrides, forks, or
   snapshots.
-- No duplicate fallback groups or fake unknown widget rows.
+- No duplicate grouping or fake unknown widget rows.
 
 Acceptance:
 
@@ -710,24 +943,38 @@ Acceptance:
 - Historical or marketing terms are fenced and cannot be mistaken for PRD 106
   product nouns.
 
-## Open Product Decisions
+## Product Owner Decisions Applied
 
-These must be decided before implementation changes that depend on them:
-
-- Are empty draft pages allowed? Current runtime allows create/save and blocks
-  publish. If this stays, Roma owns the publish denial.
-- What is the canonical page entitlement/cap? Current policy has widget limits,
-  but page create/publish needs an explicit account-tier boundary.
-- Is account asset upload during Bob editing an allowed explicit durable action,
-  or must all editor-origin durability wait for widget save?
-- Is manual translated-value review a Roma-owned product surface or removed from
-  Bob for PRD 106 realignment?
-- Is Tokyo translation liveness/policy out of scope because of PRD 103/105, or
-  does "Tokyo is R2 only" require a separate translation realignment?
-- Are page/index projections acceptable as submitted or derived storage, or must
-  Roma own all recomposition indexing?
-- Can Prague keep repo-authored marketing copy temporarily? If yes, what is the
-  non-page, non-block name for that fixture model?
+- Page source lives at `accounts/{account}/pages/{page}/source.json`, beside the
+  generated page files. Roma owns its meaning; Tokyo stores it.
+- Page public output lives at `accounts/{account}/pages/{page}/index.html`,
+  `styles.css`, and `runtime.js`.
+- Page serve-state works like widget serve-state: `published` or `unpublished`.
+  Public `clk.live` serving is enabled only when the page is published and files
+  exist. Unpublished, deleted, or missing pages are not publicly served.
+- Roma Pages owns affected-page dependency knowledge. It can keep a derived
+  page-service index from saved page sources; Tokyo must not own reverse
+  placement truth.
+- Empty draft pages are allowed. Publish requires at least one valid selected
+  instance.
+- Page Composer may use unpublished-but-materialized instances in draft. Page
+  publish is blocked if any included instance is unpublished, because publishing
+  the page would publicly expose that instance through the page.
+- Widget save commits the widget save first. Page recomposition failures mark
+  affected pages stale/failed with retry.
+- Page tier policy is:
+  - Free: 0 pages.
+  - Tier 1: 1 page; instances/widgets allowed by that tier.
+  - Tier 2: 3 pages; instances/widgets allowed by that tier.
+  - Tier 3: 6 pages; instances/widgets allowed by that tier.
+  - Tier 4: unlimited pages and unlimited instances/widgets.
+  - Views are unlimited for all pages across all tiers.
+- Account asset upload, Bob manual translation review, Tokyo translation
+  liveness, Tokyo instance create/duplicate/default-source authority, and
+  `public.instances` replacement are not PRD106A implementation scope unless a
+  separate PRD explicitly takes them on.
+- Prague repo-authored marketing content may remain only as Prague marketing
+  fixtures until PRD106C/D migrate it into real widget instances and pages.
 
 ## Verification
 
@@ -742,11 +989,26 @@ pnpm test
 Targeted verification must be added for changed boundaries:
 
 - Bob session/edit path tests for browser-memory-only edit behavior.
+- Negative Bob save payload tests proving Bob cannot send `publicPackage`,
+  policy decisions, translated-value durable writes, or account asset uploads
+  through the ordinary widget save path unless a separate approved command owns
+  that durability.
+- Roma widget materialization parity tests proving Bob preview, Roma save output,
+  and Page Composer input derive from the same widget state and widget software
+  contract.
 - Roma page/widget route tests for account/tier save acceptance.
+- Roma page save negative tests proving payloads with instance config/content,
+  overrides, forks, snapshots, inline edit data, blocks, sections, route maps, or
+  slugs are rejected.
 - Tokyo route tests for storage-only validation and byte read/write/serve
   behavior. Tests must prove Tokyo does not receive or require selected instance
   lists, page dependency graphs, recomposition reasons, CSS/runtime dedupe plans,
   SEO/GEO intent, or page readiness semantics.
+- Tokyo negative tests proving old product-shaped page routes, `website/pages`,
+  `website/publishes`, reverse placement indexes, generated page `embed.js`, and
+  page readiness/package logic are gone or explicitly fenced.
+- `clk.live` tests proving composed pages are served from stored page files and
+  not generated at request time.
 - Prague build/typecheck after deleting or fencing block/minibob paths.
 - A page recomposition test: save/publish a page composed from multiple widget
   instances, update one included instance through the normal instance-save path,
@@ -756,6 +1018,16 @@ Targeted verification must be added for changed boundaries:
   verify the page output dedupes shared code, preserves ordered real HTML
   sections, keeps per-instance runtime data distinct, and includes page-level
   SEO/GEO metadata.
+- Forbidden-term grep gates for active product paths, scoped to avoid historical
+  docs and explicitly fenced Prague implementation:
+
+```text
+rg -n "website/pages|website/publishes|reverse placement|publicPackage|minibob|blocks\\[\\]|BlockType" \
+  bob roma tokyo-worker prague/src scripts documentation/ai documentation/services
+```
+
+Any remaining hit must be deleted, moved, or explicitly fenced with a surviving
+authority.
 
 ## Completion Criteria
 

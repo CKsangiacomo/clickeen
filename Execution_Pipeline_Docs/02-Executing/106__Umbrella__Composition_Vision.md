@@ -6,6 +6,19 @@ Relationship: Sits under `strategy/ClickeenVision.md` and the PRD 105 tenets; it
 explains the *intent* and *mental model* behind page composition and delivery so
 implementation work stays grounded.
 
+Execution split:
+
+- `PRD106A_realignment.md` cleans up drift against this umbrella.
+- `PRD106B_PageComposer.md` defines the Roma Page Composer product boundary.
+- `PRD106C_Prague astro blocks migration to widget instances.md` ports Prague
+  Astro block work into real widgets and widget instances.
+- `PRD106D_Prague migration from astro blocks to Page composer.md` moves Prague
+  pages from Astro block assembly to composed Clickeen page output after the
+  widget-instance ports are real.
+- `PRD106E_Toxic_Flow_Deletion.md` owns the deletion/fencing campaign for active
+  fake flows, duplicate truths, toxic functions, files, routes, tests, and LOCs
+  that contradict this umbrella.
+
 ## What this doc is for
 
 PRD 106 is precise but narrow: add pages as account-owned composed output from
@@ -84,8 +97,8 @@ Admin/Clickeen-only product branches.
 
 Clickeen is a design system that ships: small, structured, self-translating
 product units that compose into larger ones — widget instances into pages, pages
-into sites later — on one substrate, so building a localized web presence
-becomes composition, not construction.
+into sites in a separate approved PRD — on one substrate, so building a
+localized web presence becomes composition, not construction.
 
 ## The mental model: a design system, but the components are products
 
@@ -98,7 +111,7 @@ Dieter          -> tokens, spacing, typography, controls
 widget          -> FAQ, Hero, CTA, Split, Countdown, Logo Showcase
 widget instance -> account-owned saved widget output
 page            -> browser-readable code composed from X widget instances
-site            -> collection of pages + nav/domain/routes - future
+site            -> collection of pages + nav/domain/routes - not PRD 106
 ```
 
 A widget is **not** a molecule. It's an organism — a whole section made of many
@@ -169,7 +182,7 @@ This is the simplest product test for PRD 106:
    saves/publishes the page, copies the page embed line, and pastes it into the
    same kind of WordPress div. WordPress now shows X Clickeen widget instances
    stacked together.
-4. The user later edits one of those widget instances in Clickeen and saves it.
+4. The user then edits one of those widget instances in Clickeen and saves it.
    WordPress keeps the same pasted page embed line, but the page now shows the
    updated instance inside the stack.
 
@@ -195,7 +208,8 @@ page            = X widget instances compiled together to browser-readable files
 ```
 
 Everything below `widget instance` is widget/Dieter/editor implementation.
-Everything above `page` (site, nav, domains) is later work, not PRD 106.
+Everything above `page` (site, nav, domains) is not PRD 106 unless Pietro,
+Product Owner, explicitly adds it to this PRD series.
 
 > Historical note: an earlier draft introduced a separate "block" object. It was
 > **removed**. Hero, Split, CTA, image/title, and similar page-shaped surfaces are widgets. There is no block.
@@ -218,8 +232,9 @@ content-addressed, edge-served, fail-visibly (no silent healing)
 
 A page does not get a second editor, a second translation model, or a second
 renderer. It *activates* this substrate at a higher level of composition. New
-output formats (pages today, sites later) inherit translation, materialization,
-and serving for free. This is the multiplicative ("100⁵"), not additive, model.
+output formats (pages today, sites in a separate approved PRD) inherit
+translation, materialization, and serving for free. This is the multiplicative
+("100⁵"), not additive, model.
 
 ## Page Composer
 
@@ -231,8 +246,10 @@ Page Composer owns:
 
 - Listing/selecting account-owned widget instances for a page.
 - Ordering/removing selected instances.
-- Knowing which pages use which widget instances, so saving an instance can
-  trigger recomposition of every affected page.
+- Saving page composition source beside the page files as
+  `accounts/{account}/pages/{page}/source.json`.
+- Knowing which pages use which widget instances through Roma Pages service
+  state, so saving an instance can trigger recomposition of every affected page.
 - Reading the current browser-readable files for each selected widget instance.
 - Composing one page `index.html`, one page `styles.css`, and one page
   `runtime.js`.
@@ -258,6 +275,44 @@ It is "smart" only at the composition boundary: dependencies, dedupe, clean
 browser files, SEO/GEO output, readiness, and clear failure states. It must stay
 dumb about editing and product shape.
 
+## Prague Block Migration Reality
+
+Prague has valuable Astro block work. That work is not discarded, but it is not
+product architecture. The migration path is to port the block implementation,
+layout behavior, content shape, responsive behavior, assets, and SEO semantics
+into Clickeen widgets and account-owned widget instances.
+
+The current Prague-derived widgets in Tokyo are partial ports:
+
+```text
+hero      -> partial widget port
+split     -> partial widget port
+cta       -> partial widget port
+steps     -> partial widget port
+cardgrid  -> partial widget port of Prague subpage-cards-style behavior
+```
+
+Treat these as approximately 50% migrated. They may stay visible for internal
+development, but they are not finished Prague block migrations. "Compiles in
+Bob" is only the halfway line. A finished migration must have:
+
+- useful non-empty defaults, not blank scaffold instances;
+- Bob controls that express the actual Prague layout knobs;
+- faithful responsive layout and visual behavior from the Astro block;
+- translatable field contracts matching the real authored content;
+- public output that visually matches the intended Prague section;
+- materialized widget instance files that Page Composer can stack without
+  special cases.
+
+The hard part is not naming. The hard part is mapping Prague layout vocabulary
+to Clickeen widget controls without inventing a new page/block system. For
+example, Prague blocks use rows, columns, variants, tile grids, media placement,
+and per-block CTA behavior. Bob does not currently have a generic "columns"
+editor primitive. PRD106C must decide, block by block, whether those become
+widget-specific layout controls, reusable Dieter/Bob controls, fixed variants,
+or blocked product decisions for Pietro. They must not become page-level columns
+or a new block object.
+
 None of that intelligence belongs in Tokyo. Tokyo does not know the selected
 instance list, dependency graph, recomposition reason, CSS/runtime dedupe plan,
 SEO/GEO intent, or page readiness meaning. If Tokyo has to understand any of
@@ -271,50 +326,56 @@ PRD 106 adds the **page** noun and the Roma-owned workflow that composes it.
 
 - A page is multiple widget instances compiled together into browser-readable
   code.
-- V1 pages are object-addressed by `pageId`, not slug-addressed by route.
+- PRD 106 pages are object-addressed by `pageId`, not slug-addressed by route.
 - Hero, Split, CTA, image/title, and similar page-shaped surfaces are not blocks.
   They are widgets — hypersimple, self-contained, full-width. No containers, no
-  nesting in V1.
+  nesting unless Pietro explicitly approves that product behavior.
 - Roma composes already-saved widget instance files into **one** page document:
   not 20 iframes, not request-time assembly, not a separate page engine.
-- Roma Pages is an arrangement surface only: select existing widget instances,
-  create a new widget instance through the normal widget-create path if needed,
-  order/remove instances, save the page, and publish the resulting page files.
-  It must not edit instance config/content inline.
+- Roma Pages is an arrangement surface only: bulk-select existing widget
+  instances through a large selection surface, order/remove references in the
+  page stack, save the page, and publish the resulting page files. It must not
+  edit instance config/content inline.
 - Output is **crawlable HTML first** for the Clickeen-hosted page URL (content
   in the initial response, head metadata/canonical/JSON-LD server-side when
   valid) so hosted pages are legible to search engines *and* AI answer systems
   (SEO + GEO). JS only enhances.
-- Pages live physically beside instances in account R2 storage:
+- Pages live physically beside instances in account R2 storage. The page source
+  follows the same source/output split as widget instances:
+  `accounts/{account}/pages/{page}/source.json`,
   `accounts/{account}/pages/{page}/index.html`,
   `accounts/{account}/pages/{page}/styles.css`, and
   `accounts/{account}/pages/{page}/runtime.js`. Product authority remains Roma.
-  Edge serving reads these already-stored files only.
+  Tokyo stores these files and serves already-stored public output only; Tokyo
+  does not interpret `source.json`.
 
 The restraint is intentional: no container/slot system, no embedded-instance
-nesting (a widget inside a widget — explicitly deferred until stacking proves
-insufficient), no sites/domains/nav, no drag-drop canvas, no A/B or
-personalization in V1. Compose full-width widget instances into page files, host
-or embed them, and add depth only when a real need proves it.
+nesting (a widget inside a widget is NOT_ALLOWED in PRD 106 unless Pietro
+explicitly approves it), no sites/domains/nav, no drag-drop canvas, no A/B or
+personalization. Compose full-width widget instances into page files, host or
+embed them, and add depth only when a real need proves it and the product owner
+approves the new scope.
 
-## V1 public coordinates
+## Approved PRD 106 public coordinates
 
-V1 uses object coordinates:
+PRD 106 uses object coordinates:
 
 ```text
 single widget: https://clk.live/{accountPublicId}/{instanceId}
 composed page: https://clk.live/{accountPublicId}/pages/{pageId}
 ```
 
-This deliberately avoids V1 slug, route-map, redirect, alias, and old-slug
-behavior. Pretty URLs, site routes, custom domains, and nav are future website
-work. Page composition does not need them to prove the product.
+This deliberately avoids slug, route-map, redirect, alias, and old-slug
+behavior. Pretty URLs, site routes, custom domains, and nav are NOT_ALLOWED in
+PRD 106 unless Pietro explicitly approves them in a separate PRD. Page
+composition does not need them to prove the product.
 
 ## Portable delivery, not a website takeover
 
 A Clickeen page is portable browser-readable content:
 
 ```text
+accounts/{account}/pages/{page}/source.json
 accounts/{account}/pages/{page}/index.html
 accounts/{account}/pages/{page}/styles.css
 accounts/{account}/pages/{page}/runtime.js
@@ -327,17 +388,18 @@ widgets useful.
 
 Prague keeps its own nav, URLs, markets, locales, and site chrome. Customer
 sites keep their own nav/header/footer. Clickeen injects whole page output; it
-does not take over site routing in V1.
+does not take over site routing in PRD 106.
 
-Selected-instance delivery from a page is not V1. If product later needs it, it
-needs a deliberate selection contract. It must not sneak in through placement
+Selected-instance delivery from a page is NOT_ALLOWED in PRD 106 unless Pietro
+explicitly approves it in a separate PRD. It must not sneak in through placement
 IDs, blocks, sections, or route maps.
 
 Generic client-side embeds can visually place Clickeen content into another
 site. That is not the same as guaranteeing first-paint SEO on the customer's
 domain. Customer-domain SEO/GEO needs a separately scoped server-side/plugin,
 custom-domain, or proxy integration. The hosted `clk.live` page must be
-crawlable; customer-domain SEO is later delivery work unless explicitly scoped.
+crawlable; customer-domain SEO/GEO is NOT_ALLOWED in PRD 106 unless Pietro
+explicitly scopes the delivery integration.
 
 ## Where it climbs next
 
@@ -350,9 +412,10 @@ token → control → widget → page → site → …
 A **site** is the next organism up: a composition of pages plus nav/domain/global
 settings. It will get translation, materialization, edge-serving, and
 AI-operability for free, because those are properties of the substrate, not of
-any one layer. The future features people ask about — translated page metadata,
+any one layer. Next-scope features people ask about — translated page metadata,
 personalization, A/B variants, campaign variants, site nav, custom domains — all
-target pages. None of them requires a new presentation primitive.
+target pages. None of them requires a new presentation primitive, and none of
+them is agent-approved scope inside PRD 106.
 
 ## Invariants for anyone (human or LLM) working under this umbrella
 
@@ -380,8 +443,9 @@ target pages. None of them requires a new presentation primitive.
    source.
 9. Localization is a property of every unit at every level, at near-zero marginal
    cost. Locale is a runtime parameter, never baked into identity.
-10. Add depth only when a concrete need proves it (the nesting/container decision
-   is the canonical example). Defer is the default; objectify is the exception.
+10. Add depth only when a concrete need proves it and Pietro approves it (the
+   nesting/container decision is the canonical example). Blocked is the default;
+   objectify is the exception.
 
 ## How to read PRD 106 with this lens
 
@@ -391,16 +455,17 @@ target pages. None of them requires a new presentation primitive.
   invariant; the page is one browser-readable document. (Invariant 6.)
 - When it says **"edit an instance, every page recomposes"** → that's the moat,
   stated as a feature. (Invariant 3.)
-- When it **defers embedded instance references / containers** → that's
+- When it **blocks embedded instance references / containers** → that's
   discipline, not an oversight. (Invariant 8.)
 - When it insists on **crawlable HTML and server-side head metadata** → that's
   the substrate's "materialize, don't assemble" rule applied to hosted-page
   SEO/GEO.
   (Invariant 6.)
-- When someone proposes `website/`, `publishes/`, `source.json`, route maps, or a
-  page package registry → that's the old AI-invented architecture coming back.
-  PRD 106 pages use the same simple account R2 shape as instances:
-  `accounts/{account}/pages/{page}/index.html`, `styles.css`, `runtime.js`.
+- When someone proposes `website/`, `publishes/`, route maps, or a page package
+  registry → that's the old AI-invented architecture coming back. PRD 106 pages
+  use the same simple account R2 shape as instances:
+  `accounts/{account}/pages/{page}/source.json`, `index.html`, `styles.css`,
+  `runtime.js`.
   (Invariant 5, 6, 8.)
 
 If a proposed change violates an invariant — most often by adding a second
