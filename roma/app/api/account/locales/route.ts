@@ -114,7 +114,6 @@ export async function PUT(request: NextRequest) {
   if (!current.ok) return current.response;
 
   const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
-  const contentType = request.headers.get('content-type') || 'application/json';
 
   try {
     const bodyResult = await readJsonPayloadOrValidation<AccountLocalesWritePayload | null>(request);
@@ -214,8 +213,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const nextPayload: AccountLocalesWritePayload = {
-      ...body,
+    const nextPayload: Required<AccountLocalesWritePayload> = {
+      localePolicy: body.localePolicy,
       selectedTargetLocales: resolveSelectedTargetLocales({
         profile: current.value.authzPayload.profile,
         baseLocale,
@@ -229,8 +228,8 @@ export async function PUT(request: NextRequest) {
         method: 'PUT',
         headers: {
           authorization: `Bearer ${current.value.accessToken}`,
-          ...(contentType ? { 'content-type': contentType } : {}),
-          accept: request.headers.get('accept') || 'application/json',
+          'content-type': 'application/json',
+          accept: 'application/json',
         },
         cache: 'no-store',
         body: JSON.stringify(nextPayload),

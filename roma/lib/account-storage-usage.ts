@@ -36,5 +36,8 @@ export async function readAccountStorageBytesUsed(args: {
     throw new Error(resolveTokyoAssetUsageError(payload, response.status));
   }
   const storageBytesUsed = Number(payload?.storageBytesUsed);
-  return Number.isFinite(storageBytesUsed) && storageBytesUsed >= 0 ? Math.trunc(storageBytesUsed) : 0;
+  if (!Number.isFinite(storageBytesUsed) || storageBytesUsed < 0) {
+    throw new Error('coreui.errors.assets.usage.invalidPayload');
+  }
+  return Math.trunc(storageBytesUsed);
 }

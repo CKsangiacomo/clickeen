@@ -169,9 +169,6 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const source = (request.headers.get('x-source') || '').trim();
-  if (source) headers.set('x-source', source);
-
   const contentType = (request.headers.get('content-type') || '').trim() || 'application/octet-stream';
   headers.set('content-type', contentType);
   headers.set('x-filename', filename);

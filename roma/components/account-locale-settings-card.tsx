@@ -136,7 +136,8 @@ export function AccountLocaleSettingsCard(args: {
         } | null;
       }>(`/api/account/locales?_t=${Date.now()}`, { method: 'GET' });
 
-      const baseLocale = normalizeLocaleToken(payload.localePolicy?.baseLocale) ?? 'en';
+      const baseLocale = normalizeLocaleToken(payload.localePolicy?.baseLocale);
+      if (!baseLocale) throw new Error('coreui.errors.account.locales.invalidBaseLocale');
       const selectedTargetLocales = normalizeSelectedTargetLocales(payload.selectedTargetLocales, baseLocale);
       setBaseLocaleLocked(payload.baseLocaleLocked === true);
       setDraftBaseLocale(baseLocale);
@@ -157,17 +158,19 @@ export function AccountLocaleSettingsCard(args: {
     void loadSettings();
   }, [loadSettings]);
 
-  const baseLocale = normalizeLocaleToken(draftBaseLocale) ?? 'en';
+  const baseLocale = normalizeLocaleToken(draftBaseLocale) ?? '';
   const effectiveSelectedTargetLocales = useMemo(
-    () =>
-      resolveSelectedTargetLocales({
+    () => {
+      if (!baseLocale) return [];
+      return resolveSelectedTargetLocales({
         profile: policyProfile,
         baseLocale,
         requestedLocales: draftSelectedTargetLocales,
-      }),
+      });
+    },
     [baseLocale, draftSelectedTargetLocales, policyProfile],
   );
-  const systemChosenLocale = useMemo(() => (usesSystemLocale ? resolveSystemChosenTargetLocale({ baseLocale }) : null), [baseLocale, usesSystemLocale]);
+  const systemChosenLocale = useMemo(() => (usesSystemLocale && baseLocale ? resolveSystemChosenTargetLocale({ baseLocale }) : null), [baseLocale, usesSystemLocale]);
   const localeOptions = useMemo(
     () =>
       CANONICAL_LOCALES.filter((entry) => entry.code !== baseLocale).map((entry) => ({
@@ -183,29 +186,30 @@ export function AccountLocaleSettingsCard(args: {
     setError(null);
     setSuccess(null);
 
-    const normalizedBase = normalizeLocaleToken(draftBaseLocale) ?? 'en';
-    const selectedTargetLocales = resolveSelectedTargetLocales({
-      profile: policyProfile,
-      baseLocale: normalizedBase,
-      requestedLocales: draftSelectedTargetLocales,
-    });
-
-    const enabledLocales = [normalizedBase, ...selectedTargetLocales];
-    const payload: AccountLocalesPayload = {
-      selectedTargetLocales,
-      localePolicy: {
-        v: 1,
-        baseLocale: normalizedBase,
-        ip: {
-          countryToLocale: buildDefaultCountryToLocale({
-            enabledLocales,
-            baseLocale: normalizedBase,
-          }),
-        },
-      },
-    };
-
     try {
+      const normalizedBase = normalizeLocaleToken(draftBaseLocale);
+      if (!normalizedBase) throw new Error('coreui.errors.account.locales.invalidBaseLocale');
+      const selectedTargetLocales = resolveSelectedTargetLocales({
+        profile: policyProfile,
+        baseLocale: normalizedBase,
+        requestedLocales: draftSelectedTargetLocales,
+      });
+
+      const enabledLocales = [normalizedBase, ...selectedTargetLocales];
+      const payload: AccountLocalesPayload = {
+        selectedTargetLocales,
+        localePolicy: {
+          v: 1,
+          baseLocale: normalizedBase,
+          ip: {
+            countryToLocale: buildDefaultCountryToLocale({
+              enabledLocales,
+              baseLocale: normalizedBase,
+            }),
+          },
+        },
+      };
+
       await accountApi.fetchJson('/api/account/locales', {
         method: 'PUT',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
@@ -256,7 +260,8 @@ export function AccountLocaleSettingsCard(args: {
               value={baseLocale}
               disabled={loading || saving || !args.canEdit || baseLocaleLocked}
               onChange={(event) => {
-                const nextBase = normalizeLocaleToken(event.target.value) ?? 'en';
+                const nextBase = normalizeLocaleToken(event.target.value);
+                if (!nextBase) return;
                 setDraftBaseLocale(nextBase);
                 setDraftSelectedTargetLocales((current) => current.filter((entry) => entry !== nextBase));
               }}

@@ -24,11 +24,6 @@ import { asTrimmedString, isUuid } from '../utils/primitives';
 const MEMBERSHIP_PAGE_SIZE = 200;
 const ACCOUNT_MEMBER_PAGE_SIZE = 200;
 const USER_QUERY_CHUNK_SIZE = 100;
-const DEFAULT_ACCOUNT_LOCALE_POLICY = {
-  v: 1,
-  baseLocale: 'en',
-  ip: { countryToLocale: {} },
-} as const;
 
 type AccountMembershipRow = {
   account_id?: unknown;
@@ -158,14 +153,8 @@ function selectDefaultAccount(
   accountId: string | null,
 ): BerlinAccountContext | null {
   if (accounts.length === 0) return null;
-
-  const preferred = accountId ? accounts.find((entry) => entry.accountId === accountId) ?? null : null;
-  if (preferred) return preferred;
-
-  // User rows are loaded in deterministic order. Bootstrap may only choose
-  // from the account attached to the current user and must never guess a
-  // privileged account.
-  return accounts[0] ?? null;
+  if (!accountId) return null;
+  return accounts.find((entry) => entry.accountId === accountId) ?? null;
 }
 
 async function loadUserRow(
@@ -235,26 +224,47 @@ function normalizeUserSettings(
 
 function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountContext[]> {
   const out: BerlinAccountContext[] = [];
+  const issues: string[] = [];
   for (const row of rows) {
     const account = row.accounts;
-    if (!account) continue;
+    if (!account) {
+      issues.push('membership.account_missing');
+      continue;
+    }
 
     const accountId = asTrimmedString(row.account_id);
     const role = normalizeRole(row.role);
     const tier = normalizeTier(account.tier);
-    if (!accountId || !isCompactAccountPublicId(accountId) || !role || !tier) continue;
+    const status = asTrimmedString(account.status);
+    if (!accountId || !isCompactAccountPublicId(accountId)) {
+      issues.push('membership.account_id_invalid');
+      continue;
+    }
+    if (!role) {
+      issues.push(`accounts.${accountId}.role_invalid`);
+      continue;
+    }
+    if (!tier) {
+      issues.push(`accounts.${accountId}.tier_invalid`);
+      continue;
+    }
+    if (!status) {
+      issues.push(`accounts.${accountId}.status_missing`);
+      continue;
+    }
     const selectedTargetLocales = account.selected_target_locales ?? [];
-    const localePolicy = account.locale_policy ?? DEFAULT_ACCOUNT_LOCALE_POLICY;
+    const localePolicy = account.locale_policy;
     const localeIssues = validateAccountLocaleState(selectedTargetLocales, localePolicy, `accounts.${accountId}`);
     if (localeIssues.length) {
-      return { ok: false, response: invalidPersistedStateResponse(localeIssues.join('|')) };
+      issues.push(...localeIssues);
+      continue;
     }
 
     out.push({
       accountId,
       accountPublicId: accountId,
       role,
-      status: asTrimmedString(account.status) ?? 'active',
+      status,
       tier,
       websiteUrl: null,
       membershipVersion: asTrimmedString(row.created_at),
@@ -268,6 +278,9 @@ function normalizeAccounts(rows: AccountMembershipRow[]): Result<BerlinAccountCo
       selectedTargetLocales,
       localePolicy,
     });
+  }
+  if (issues.length) {
+    return { ok: false, response: invalidPersistedStateResponse(issues.join('|')) };
   }
   return { ok: true, value: out };
 }

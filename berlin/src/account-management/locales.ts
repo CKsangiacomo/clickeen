@@ -15,12 +15,6 @@ type LocaleMutationResult =
   | { ok: true; warnings: string[] }
   | { ok: false; response: Response };
 
-const DEFAULT_ACCOUNT_LOCALE_POLICY: AccountLocalePolicy = {
-  v: 1,
-  baseLocale: 'en',
-  ip: { countryToLocale: {} },
-};
-
 function canManageAccountLocales(role: BerlinAccountContext['role']): boolean {
   return role === 'owner' || role === 'admin';
 }
@@ -39,11 +33,11 @@ function resolveLocaleList(
   return { ok: true, locales: parseAccountLocaleListStrict(value) };
 }
 
-function resolveAccountLocalePolicy(raw: unknown): AccountLocalePolicy {
+function resolveAccountLocalePolicy(raw: unknown): AccountLocalePolicy | null {
   try {
     return parseAccountLocalePolicyStrict(raw);
   } catch {
-    return DEFAULT_ACCOUNT_LOCALE_POLICY;
+    return null;
   }
 }
 
@@ -134,13 +128,10 @@ export async function handleAccountLocalesUpdate(args: {
   let nextPolicyPersisted: unknown = args.account.localePolicy;
   if (Object.prototype.hasOwnProperty.call(payload, 'localePolicy')) {
     const policyRaw = (payload as { localePolicy?: unknown }).localePolicy;
-    if (policyRaw != null) {
-      const issues = validateAccountLocalePolicy(policyRaw, 'localePolicy');
-      if (issues.length) return json(issues, { status: 422 });
-      nextPolicyPersisted = parseAccountLocalePolicyStrict(policyRaw);
-    } else {
-      nextPolicyPersisted = null;
-    }
+    if (policyRaw == null) return validationError('coreui.errors.account.locales.invalid');
+    const issues = validateAccountLocalePolicy(policyRaw, 'localePolicy');
+    if (issues.length) return json(issues, { status: 422 });
+    nextPolicyPersisted = parseAccountLocalePolicyStrict(policyRaw);
   }
 
   const previousLocales = resolveLocaleList(args.account.selectedTargetLocales, 'selectedTargetLocales');
@@ -158,11 +149,23 @@ export async function handleAccountLocalesUpdate(args: {
   }
 
   const nextPolicy = resolveAccountLocalePolicy(nextPolicyPersisted);
+  if (!nextPolicy) {
+    return json(
+      {
+        error: {
+          kind: 'INTERNAL',
+          reasonKey: 'coreui.errors.account.locales.invalid',
+          detail: 'locale_policy_missing_or_invalid',
+        },
+      },
+      { status: 500 },
+    );
+  }
   const patched = await patchAccountLocales({
     env: args.env,
     accountId: args.account.accountId,
     selectedTargetLocales: localesResult.locales,
-    nextPolicy: nextPolicyPersisted as AccountLocalePolicy | null,
+    nextPolicy,
   });
   if (!patched.ok) return patched.response;
 

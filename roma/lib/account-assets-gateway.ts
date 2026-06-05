@@ -92,7 +92,6 @@ export async function proxyAccountAssetJson(args: {
   path: string;
   body?: BodyInit;
   contentType?: string;
-  extraHeaders?: HeadersInit;
   passthroughSearchParams?: URLSearchParams;
 }): Promise<NextResponse> {
   let headers: Headers;
@@ -103,7 +102,6 @@ export async function proxyAccountAssetJson(args: {
       requestId: args.context.requestId,
       ...(args.contentType ? { contentType: args.contentType } : {}),
     });
-    new Headers(args.extraHeaders).forEach((value, key) => headers.set(key, value));
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return buildErrorResponse(

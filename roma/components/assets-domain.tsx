@@ -15,7 +15,7 @@ type DeleteAssetPayload = {
 
 type AccountAssetsListResponse = {
   accountId: string;
-  storageBytesUsed?: number;
+  storageBytesUsed: number;
   assets: unknown[];
 };
 
@@ -138,17 +138,25 @@ export function AssetsDomain() {
       if (!assetsResponse.ok) {
         throw new Error(parseApiErrorReason(assetsPayload, assetsResponse.status));
       }
-      const resolvedAssets =
-        assetsPayload && typeof assetsPayload === 'object' && Array.isArray((assetsPayload as AccountAssetsListResponse).assets)
-          ? (assetsPayload as AccountAssetsListResponse).assets.map(normalizeAccountAssetRecord).filter((asset): asset is AccountAssetRecord => Boolean(asset))
-          : [];
-      const nextStorageBytesUsed =
-        assetsPayload && typeof assetsPayload === 'object' && typeof (assetsPayload as AccountAssetsListResponse).storageBytesUsed === 'number'
-          ? Math.max(0, Math.trunc((assetsPayload as AccountAssetsListResponse).storageBytesUsed ?? 0))
-          : null;
+      if (
+        !assetsPayload ||
+        typeof assetsPayload !== 'object' ||
+        !Array.isArray((assetsPayload as AccountAssetsListResponse).assets) ||
+        typeof (assetsPayload as AccountAssetsListResponse).storageBytesUsed !== 'number'
+      ) {
+        throw new Error('coreui.errors.assets.invalidPayload');
+      }
+      const normalizedAssets = (assetsPayload as AccountAssetsListResponse).assets.map(normalizeAccountAssetRecord);
+      if (normalizedAssets.some((asset) => !asset)) {
+        throw new Error('coreui.errors.assets.invalidPayload');
+      }
+      const storageBytesUsed = Number((assetsPayload as AccountAssetsListResponse).storageBytesUsed);
+      if (!Number.isFinite(storageBytesUsed) || storageBytesUsed < 0) {
+        throw new Error('coreui.errors.assets.invalidPayload');
+      }
 
-      setAssets(resolvedAssets);
-      setStorageBytesUsed(nextStorageBytesUsed);
+      setAssets(normalizedAssets as AccountAssetRecord[]);
+      setStorageBytesUsed(Math.trunc(storageBytesUsed));
       setError(null);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

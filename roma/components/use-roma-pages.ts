@@ -91,10 +91,10 @@ function normalizePageSource(raw: unknown): AccountPageSource | null {
   const description = typeof headRecord.description === 'string' ? headRecord.description.trim() : '';
   const robots = normalizeRobots(headRecord.robots);
   const placements = Array.isArray(record.placements)
-    ? record.placements.map(normalizePlacement).filter((placement): placement is PagePlacement => Boolean(placement))
+    ? record.placements.map(normalizePlacement)
     : null;
-  if (!id || !title || !robots || !placements) return null;
-  return { v: 1, id, head: { title, description, robots }, placements };
+  if (!id || !title || !robots || !placements || placements.some((placement) => placement === null)) return null;
+  return { v: 1, id, head: { title, description, robots }, placements: placements as PagePlacement[] };
 }
 
 export function normalizeRomaPagesResponse(raw: unknown): RomaPagesResponse | null {
@@ -102,11 +102,11 @@ export function normalizeRomaPagesResponse(raw: unknown): RomaPagesResponse | nu
   const record = raw as Record<string, unknown>;
   const accountId = typeof record.accountId === 'string' ? record.accountId.trim() : '';
   if (!accountId || !Array.isArray(record.pages)) return null;
+  const pages = record.pages.map(normalizePageSummary);
+  if (pages.some((page) => page === null)) return null;
   return {
     accountId,
-    pages: record.pages
-      .map(normalizePageSummary)
-      .filter((page): page is AccountPageSummary => Boolean(page)),
+    pages: pages as AccountPageSummary[],
   };
 }
 

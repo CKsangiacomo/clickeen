@@ -49,7 +49,7 @@ export function normalizeUserSettingsPayload(
   return {
     userId,
     primaryEmail,
-    emailVerified: normalizeBoolean(row?.email_verified) || true,
+    emailVerified: normalizeBoolean(row?.email_verified),
     givenName: asTrimmedString(row?.first_name),
     familyName: asTrimmedString(row?.last_name),
     primaryLanguage: asTrimmedString(row?.primary_language),

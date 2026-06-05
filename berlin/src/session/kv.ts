@@ -15,6 +15,12 @@ function userSessionIndexKvKey(userId: string): string {
   return `${USER_INDEX_KV_PREFIX}:${userId}`;
 }
 
+function requireSessionKv(env: Env): KVNamespace {
+  const kv = env.BERLIN_SESSION_KV;
+  if (!kv) throw new Error('berlin.session.kv_missing');
+  return kv;
+}
+
 function toSessionState(value: unknown): SessionState | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
@@ -44,31 +50,27 @@ function toSessionState(value: unknown): SessionState | null {
 }
 
 export async function loadSessionState(env: Env, sid: string): Promise<SessionState | null> {
-  const kv = env.BERLIN_SESSION_KV;
-  if (!kv) return null;
+  const kv = requireSessionKv(env);
   const raw = await kv.get(sessionKvKey(sid), 'json').catch(() => null);
   return toSessionState(raw);
 }
 
 export async function saveSessionState(env: Env, state: SessionState): Promise<void> {
-  const kv = env.BERLIN_SESSION_KV;
-  if (!kv) return;
+  const kv = requireSessionKv(env);
   await kv.put(sessionKvKey(state.sid), JSON.stringify(state), {
     expirationTtl: REFRESH_TOKEN_TTL_SECONDS + 3600,
   });
 }
 
 async function loadUserSessionIds(env: Env, userId: string): Promise<string[]> {
-  const kv = env.BERLIN_SESSION_KV;
-  if (!kv) return [];
+  const kv = requireSessionKv(env);
   const raw = await kv.get(userSessionIndexKvKey(userId), 'json').catch(() => null);
   if (!Array.isArray(raw)) return [];
   return raw.map((entry) => (typeof entry === 'string' ? entry : '')).filter((entry) => entry.length > 0);
 }
 
 async function saveUserSessionIds(env: Env, userId: string, sessionIds: string[]): Promise<void> {
-  const kv = env.BERLIN_SESSION_KV;
-  if (!kv) return;
+  const kv = requireSessionKv(env);
   await kv.put(userSessionIndexKvKey(userId), JSON.stringify(sessionIds), {
     expirationTtl: REFRESH_TOKEN_TTL_SECONDS + 3600,
   });

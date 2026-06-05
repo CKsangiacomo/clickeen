@@ -26,6 +26,8 @@ type WidgetInstance = {
 type SystemWidgetOption = {
   widgetType: string;
   widgetCode: string;
+  label: string;
+  description: string;
   canCreate: boolean;
   disabledReasonKey: string | null;
 };
@@ -102,6 +104,8 @@ export async function GET(request: NextRequest) {
     return {
       widgetType: entry.widgetType,
       widgetCode: entry.widgetCode,
+      label: entry.widgetCode,
+      description: '',
       canCreate: canMutate && withinTypeLimit,
       disabledReasonKey: canMutate
         ? withinTypeLimit

@@ -78,9 +78,21 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
 
   const widgetType = normalizeWidgetType(raw.widgetType);
   if (!widgetType) return null;
-  const displayName = String(raw.displayName || '').trim() || DEFAULT_INSTANCE_DISPLAY_NAME;
-  const status = raw.status === 'published' ? 'published' : 'unpublished';
+  const displayName = typeof raw.displayName === 'string' ? raw.displayName.trim() : '';
+  if (raw.status !== 'published' && raw.status !== 'unpublished') return null;
+  const status = raw.status;
   const actions = raw.actions && typeof raw.actions === 'object' ? raw.actions : null;
+  if (
+    !actions ||
+    typeof actions.edit !== 'boolean' ||
+    typeof actions.duplicate !== 'boolean' ||
+    typeof actions.delete !== 'boolean' ||
+    typeof actions.rename !== 'boolean' ||
+    typeof actions.publish !== 'boolean' ||
+    typeof actions.unpublish !== 'boolean'
+  ) {
+    return null;
+  }
 
   return {
     instanceId,
@@ -88,12 +100,12 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
     displayName,
     status,
     actions: {
-      edit: actions?.edit !== false,
-      duplicate: actions?.duplicate !== false,
-      delete: actions?.delete !== false,
-      rename: actions?.rename !== false,
-      publish: actions?.publish === true,
-      unpublish: actions?.unpublish === true,
+      edit: actions.edit,
+      duplicate: actions.duplicate,
+      delete: actions.delete,
+      rename: actions.rename,
+      publish: actions.publish,
+      unpublish: actions.unpublish,
     },
   };
 }
@@ -101,7 +113,8 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
 export function normalizeSystemWidgetOption(raw: RawSystemWidgetOption): SystemWidgetOption | null {
   const widgetType = normalizeWidgetType(raw.widgetType);
   if (!widgetType) return null;
-  const label = String(raw.label || '').trim() || widgetType;
+  const label = typeof raw.label === 'string' ? raw.label.trim() : '';
+  if (!label || typeof raw.canCreate !== 'boolean') return null;
   const description = String(raw.description || '').trim();
   const disabledReasonKey = typeof raw.disabledReasonKey === 'string' && raw.disabledReasonKey.trim()
     ? raw.disabledReasonKey.trim()
@@ -110,7 +123,7 @@ export function normalizeSystemWidgetOption(raw: RawSystemWidgetOption): SystemW
     widgetType,
     label,
     description,
-    canCreate: raw.canCreate === true,
+    canCreate: raw.canCreate,
     disabledReasonKey,
   };
 }
@@ -127,21 +140,20 @@ export function normalizeRomaWidgetsResponse(raw: unknown): RomaWidgetsResponse 
         : '';
   if (!accountId) return null;
 
-  const instances = Array.isArray(record.instances)
-    ? record.instances
-        .map((item) => normalizeWidgetInstance((item || {}) as RawWidgetInstance))
-        .filter((item): item is WidgetInstance => Boolean(item))
-    : [];
-  const systemWidgets = Array.isArray(record.systemWidgets)
-    ? record.systemWidgets
-        .map((item) => normalizeSystemWidgetOption((item || {}) as RawSystemWidgetOption))
-        .filter((item): item is SystemWidgetOption => Boolean(item))
-    : [];
+  if (!Array.isArray(record.instances) || !Array.isArray(record.systemWidgets)) return null;
+  const instances = record.instances.map((item) => normalizeWidgetInstance((item || {}) as RawWidgetInstance));
+  const systemWidgets = record.systemWidgets.map((item) => normalizeSystemWidgetOption((item || {}) as RawSystemWidgetOption));
+  if (
+    instances.some((item): item is null => item === null) ||
+    systemWidgets.some((item): item is null => item === null)
+  ) {
+    return null;
+  }
 
   return {
     accountId,
-    systemWidgets,
-    instances,
+    systemWidgets: systemWidgets as SystemWidgetOption[],
+    instances: instances as WidgetInstance[],
   };
 }
 

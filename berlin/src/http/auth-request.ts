@@ -30,10 +30,7 @@ export function resolveRefreshTokenFromRequest(request: Request, body: Record<st
   const fromBody = claimAsString(body?.refreshToken);
   if (fromBody) return fromBody;
 
-  const fromCookie =
-    parseCookieValue(request, 'ck-refresh-token') ||
-    parseCookieValue(request, 'ck-roma-rt') ||
-    parseCookieValue(request, 'ck-bob-rt');
+  const fromCookie = parseCookieValue(request, 'ck-refresh-token');
   if (fromCookie) return fromCookie;
 
   const bearer = asBearerToken(request.headers.get('authorization'));
@@ -46,10 +43,7 @@ export function resolveAccessTokenFromRequest(request: Request): string | null {
   const fromBearer = asBearerToken(request.headers.get('authorization'));
   if (fromBearer && !fromBearer.startsWith(`${REFRESH_TOKEN_PREFIX}.`)) return fromBearer;
 
-  const fromCookie =
-    parseCookieValue(request, 'ck-access-token') ||
-    parseCookieValue(request, 'ck-roma-at') ||
-    parseCookieValue(request, 'ck-bob-at');
+  const fromCookie = parseCookieValue(request, 'ck-access-token');
   if (fromCookie) return fromCookie;
 
   return null;

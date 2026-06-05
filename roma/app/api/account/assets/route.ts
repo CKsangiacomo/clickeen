@@ -57,20 +57,36 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const accountId = typeof payload?.accountId === 'string' ? payload.accountId.trim() : '';
+    const storageBytesUsed = Number(payload?.storageBytesUsed);
     const assets = Array.isArray(payload?.assets)
-      ? payload.assets
-          .map(normalizeAccountAssetRecord)
-          .filter((asset) => Boolean(asset))
-      : [];
+      ? payload.assets.map(normalizeAccountAssetRecord)
+      : null;
+    if (
+      accountId !== gateway.value.accountId ||
+      !Number.isFinite(storageBytesUsed) ||
+      storageBytesUsed < 0 ||
+      !assets ||
+      assets.some((asset) => !asset)
+    ) {
+      return finalizeAccountAssetResponse({
+        request,
+        response: NextResponse.json(
+          {
+            error: {
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.assets.invalidPayload',
+            },
+          },
+          { status: 502 },
+        ),
+        setCookies: gateway.value.sessionSetCookies,
+      });
+    }
     const body = {
-      accountId:
-        typeof payload?.accountId === 'string' && payload.accountId.trim()
-          ? payload.accountId.trim()
-          : gateway.value.accountId,
-      ...(typeof payload?.storageBytesUsed === 'number' && Number.isFinite(payload.storageBytesUsed)
-        ? { storageBytesUsed: Math.max(0, Math.trunc(payload.storageBytesUsed)) }
-        : {}),
-      assets,
+      accountId,
+      storageBytesUsed: Math.trunc(storageBytesUsed),
+      assets: assets as NonNullable<ReturnType<typeof normalizeAccountAssetRecord>>[],
     };
     return finalizeAccountAssetResponse({
       request,

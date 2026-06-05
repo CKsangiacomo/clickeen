@@ -5,8 +5,14 @@ import type { PolicyProfile } from '@clickeen/ck-policy';
 const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson).map((entry) => entry.code);
 const SYSTEM_LOCALE_PRIORITY = Array.from(new Set(['en', ...CANONICAL_LOCALES]));
 
+function requireBaseLocale(baseLocale: string): string {
+  const normalized = normalizeLocaleToken(baseLocale);
+  if (!normalized) throw new Error('coreui.errors.account.locales.invalidBaseLocale');
+  return normalized;
+}
+
 export function normalizeSelectedTargetLocales(value: unknown, baseLocale: string): string[] {
-  const normalizedBase = normalizeLocaleToken(baseLocale) ?? 'en';
+  const normalizedBase = requireBaseLocale(baseLocale);
   if (!Array.isArray(value)) return [];
   return Array.from(
     new Set(
@@ -18,7 +24,7 @@ export function normalizeSelectedTargetLocales(value: unknown, baseLocale: strin
 }
 
 export function resolveSystemChosenTargetLocale(args: { baseLocale: string }): string | null {
-  const baseLocale = normalizeLocaleToken(args.baseLocale) ?? 'en';
+  const baseLocale = requireBaseLocale(args.baseLocale);
   for (const locale of SYSTEM_LOCALE_PRIORITY) {
     if (locale !== baseLocale) return locale;
   }
@@ -44,7 +50,7 @@ export function resolveDesiredServingLocales(args: {
   baseLocale: string;
   selectedTargetLocales: unknown;
 }): string[] {
-  const baseLocale = normalizeLocaleToken(args.baseLocale) ?? 'en';
+  const baseLocale = requireBaseLocale(args.baseLocale);
   const desired = normalizeSelectedTargetLocales(args.selectedTargetLocales, baseLocale);
   return [baseLocale, ...desired];
 }

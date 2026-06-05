@@ -730,7 +730,10 @@ export async function listAccountInstancesInTokyo(args: {
   const publishedCount =
     typeof payload.publishedCount === 'number' && Number.isFinite(payload.publishedCount)
       ? Math.max(0, Math.floor(payload.publishedCount))
-      : accountInstances.filter((entry) => entry.publishStatus === 'published').length;
+      : null;
+  if (publishedCount == null) {
+    return invalidTokyoPayload('invalid Tokyo account instances list publishedCount payload');
+  }
   return {
     ok: true,
     value: { accountId, accountInstances, publishedCount },
