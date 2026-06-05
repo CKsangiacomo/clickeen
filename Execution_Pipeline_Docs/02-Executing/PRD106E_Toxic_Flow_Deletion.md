@@ -6,9 +6,79 @@ Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
 Depends on:
 - `PRD106A_realignment.md`
+- `PRD106A2_WidgetShellExtraction.md`
 - `PRD106B_PageComposer.md`
 - `PRD106C_Prague astro blocks migration to widget instances.md`
 - `PRD106D_Prague migration from astro blocks to Page composer.md`
+Series step: 9
+Unlocks: clean PRD106 execution slate.
+Authority owned by this PRD: deletion/fencing of toxic flows, functions, files, routes, tests, storage shapes, docs, and LOCs.
+Authority explicitly not owned by this PRD: inventing replacement product behavior, changing product decisions, implementing page/widget features.
+
+## PRD Tenets
+
+- Execute one step at a time.
+- Do not start Step N+1 until Step N is green.
+- The current step is the only execution permission.
+- Green requires named completion evidence.
+- A blocker report stops execution; it does not unlock the next step.
+- Do not solve missing decisions by inventing product behavior.
+
+## Mandatory PRD106 Execution Contract
+
+This PRD is step-gated. Execute exactly one numbered step at a time.
+
+Before executing any step:
+
+1. Read `106__Umbrella__Composition_Vision.md`.
+2. Confirm the PRD that owns the target concern has accepted or fenced the
+   surviving authority.
+3. Name what survives before deleting what dies.
+4. Execute only the current step. Long reference sections are context, not
+   execution permission.
+
+A step is green only when its named completion evidence exists. A blocker report
+is evidence to stop, not evidence to proceed.
+
+## Dependency Gate
+
+| Dependency | Required green evidence | Status |
+| --- | --- | --- |
+| PRD106A | Drift/deletion target is identified with surviving authority. | REQUIRED |
+| PRD106A2 | Shared Shell authority accepted for Shell-related deletions. | REQUIRED for Shell deletions |
+| PRD106B | Page Composer authority accepted for page-related deletions. | REQUIRED for page deletions |
+| PRD106C/D | Prague migration/cutover authority accepted for Prague deletions. | REQUIRED for Prague deletions |
+
+## Current Step Gate
+
+Current executable step:
+
+```text
+Step 1: Build deletion ledger from accepted PRD evidence.
+```
+
+Required evidence before marking green:
+
+- Every deletion/fence target has an owning PRD.
+- Every target names the surviving authority.
+- Every target has a delete/fence decision.
+
+Stop conditions:
+
+- Target's surviving authority is unclear.
+- Deleting target would remove current generated account artifacts.
+
+## Execution Steps
+
+| Step | Action | Required evidence | Green criteria | Stop condition |
+| ---: | --- | --- | --- | --- |
+| 1 | Build deletion ledger from accepted PRD evidence. | Ledger with owner PRD and surviving authority. | Every target has delete/fence decision. | Any target lacks authority. |
+| 2 | Delete/fence fake product nouns. | Diff/`rg` evidence. | Fake nouns are gone or fenced outside product paths. | Valid widget identity would be deleted. |
+| 3 | Delete/fence wrong-service authority. | Diff/tests/`rg`. | Tokyo/Bob no longer own product logic outside their boundary. | Runtime path needs deleted behavior. |
+| 4 | Delete/fence duplicate durable truth. | Diff/tests/`rg`. | One source/publish/dependency authority remains. | Two authorities still active. |
+| 5 | Delete/fence duplicate Shell implementations. | Diff/tests/`rg`. | Widgets consume `packages/widget-shell/`. | Body requires copied Shell code. |
+| 6 | Delete/fence Prague block product paths. | Diff/screenshot/`rg`. | Migrated routes no longer use block architecture as product truth. | Prague route still needs unmigrated block. |
+| 7 | Run final search/test guards. | `rg` output/tests. | No forbidden active hits remain. | Any active forbidden hit lacks fence. |
 
 ## Purpose
 
@@ -37,6 +107,11 @@ Surviving authorities:
 
 - Bob edits one widget instance in browser memory. It is not a storage,
   materialization, entitlement, policy, page, or durable side-effect authority.
+- FAQ is the approved extraction source for the shared Widget Shell package.
+  New/migrated widgets consume `packages/widget-shell/` and replace only
+  widget-specific content.
+- `PRD106A2_WidgetShellExtraction.md` owns the exact Shell extraction and
+  validation contract used by this deletion campaign.
 - Roma owns account product orchestration, product policy, Page Composer, page
   source, page dependency knowledge, recomposition, and user-facing states.
 - Tokyo stores and serves exact bytes submitted by product authorities. It does
@@ -75,6 +150,11 @@ An active path is toxic when it is any of the following:
   demo mode, or minibob mode presented as account product truth. Real `widget`
   and `widgetType` identifiers are valid when they refer to Clickeen-authored
   widget software.
+- A duplicate widget shell: widget-specific Header/CTA/layout/translation
+  paths that bypass `packages/widget-shell/`, such as `headline`,
+  `subheadline`, `primaryCta`, `secondaryCta`, block-specific layout variants,
+  copied FAQ shell code inside each widget, or Prague copy/layout names
+  preserved as account widget truth.
 - Duplicate durable truth for widget source, page source, publish state,
   translation state, dependency indexes, readiness, or policy.
 - Product authority in the wrong service.
@@ -407,6 +487,8 @@ PRD106E is complete when:
   role.
 - Prague block architecture is absent from migrated product paths and fenced as
   migration source/marketing implementation elsewhere.
+- Migrated widgets use `packages/widget-shell/` and only add widget-specific
+  content/control bodies.
 - Tests and active docs teach the surviving architecture.
 - Search guards have no unexplained hits.
 

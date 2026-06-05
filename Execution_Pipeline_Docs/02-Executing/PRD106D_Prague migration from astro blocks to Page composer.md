@@ -4,7 +4,74 @@ Status: Draft execution PRD
 Owner: Prague + Roma
 Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
-Depends on: `PRD106B_PageComposer.md`, `PRD106C_Prague astro blocks migration to widget instances.md`
+Series step: 8
+Depends on: `PRD106A2_WidgetShellExtraction.md`, `PRD106B_PageComposer.md`, `PRD106C_Prague astro blocks migration to widget instances.md`, `PRD106C3`-`PRD106C6`
+Unlocks: Prague route cutover to composed Clickeen pages.
+Authority owned by this PRD: Prague route cutover from Astro block assembly to composed page output.
+Authority explicitly not owned by this PRD: Widget Shell extraction, widget body implementation, Page Composer implementation, account authoring truth.
+
+## PRD Tenets
+
+- Execute one step at a time.
+- Do not start Step N+1 until Step N is green.
+- The current step is the only execution permission.
+- Green requires named completion evidence.
+- A blocker report stops execution; it does not unlock the next step.
+- Do not solve missing decisions by inventing product behavior.
+
+## Mandatory PRD106 Execution Contract
+
+This PRD is step-gated. Execute exactly one numbered step at a time.
+
+Before executing any step:
+
+1. Read `106__Umbrella__Composition_Vision.md`.
+2. Confirm dependencies are green or explicitly fenced.
+3. Name the surviving authority for any route/page/widget concern being changed.
+4. Execute only the current step. Long reference sections are context, not
+   execution permission.
+
+A step is green only when its named completion evidence exists. A blocker report
+is evidence to stop, not evidence to proceed.
+
+## Dependency Gate
+
+| Dependency | Required green evidence | Status |
+| --- | --- | --- |
+| PRD106A2 | Shared Widget Shell package accepted. | REQUIRED |
+| PRD106B | Page Composer save/publish/public model accepted. | REQUIRED |
+| PRD106C | Prague block target map accepted. | REQUIRED |
+| PRD106C3-C6 | Required migrated widgets produce composition-ready packages. | REQUIRED |
+
+## Current Step Gate
+
+Current executable step:
+
+```text
+Step 1: Select one Prague route for cutover readiness.
+```
+
+Required evidence before marking green:
+
+- Route block stack is listed.
+- Every required block has a migrated widget instance target.
+- Page Composer can represent the route body stack.
+
+Stop conditions:
+
+- Route needs an unmigrated block.
+- Route needs Prague block architecture as product truth.
+
+## Execution Steps
+
+| Step | Action | Required evidence | Green criteria | Stop condition |
+| ---: | --- | --- | --- | --- |
+| 1 | Select one Prague route for cutover readiness. | Route stack and widget target evidence. | Every visual body block is representable as instances. | Unmapped block required. |
+| 2 | Create account-owned widget instances for route body. | Instance source/package evidence. | Instances are normal account-owned widgets. | Prague stores account truth. |
+| 3 | Create composed page through Page Composer. | Page source/output evidence. | Page stack matches route body order. | Page needs block/page-specific instance edits. |
+| 4 | Integrate Prague route to composed output. | Route diff/screenshot. | Prague chrome survives; body comes from composed page output. | Route recreates Page Composer locally. |
+| 5 | Verify localization/SEO behavior. | Locale screenshots/HTML evidence. | Approved route metadata and page body render. | Host-nav/customer integration is invented. |
+| 6 | Delete/fence old block assembly for route. | Diff/`rg` evidence. | Route no longer depends on migrated Astro blocks. | Old block path remains active. |
 
 ## Purpose
 
@@ -26,8 +93,10 @@ PRD106D is blocked until all of the following are true:
 - PRD106B has accepted the Page Composer source schema, storage coordinate,
   serve-state coordinate, public URL/embed shape, widget package contribution
   contract, affected-page recomposition, and Tokyo/Roma authority split.
+- PRD106A2 has accepted the shared Widget Shell package contract.
 - PRD106C has accepted the scoped Prague block inventory and all widgets needed
-  by the target Prague route have composition-ready packages.
+  by the target Prague route have composition-ready packages built from the
+  shared Widget Shell package.
 - PRD106C decisions are resolved or explicitly fenced outside migrated route
   truth for nested `accountInstanceRef` visuals, `subpage-cards` route
   semantics, locale overlays, `minibob`, carousel blocks, and unmapped blocks.
@@ -47,6 +116,18 @@ content semantics, storage, dependency tracking, or migrated SEO/GEO content.
 Prague can own website routes and chrome. It cannot own account page source,
 widget instance source, composition order, dependency tracking, dedupe,
 recomposition, or SEO/GEO generation for migrated composed content.
+
+All migrated Prague sections must become normal widget instances using the
+Widget Shell:
+
+```text
+Stage -> Pod -> ck-headerLayout(Header + widget-specific content)
+```
+
+Prague must not preserve Astro block Header/CTA/layout names inside migrated
+widget state. Prague block values are migration source only; PRD106C converts
+them into shell paths (`header.*`, `cta.*`, Stage/Pod) plus the approved
+widget-specific content body.
 
 ## Migration Shape
 
@@ -115,6 +196,9 @@ material, not the future page source for migrated routes.
 For each migrated route:
 
 - Convert eligible block content into normal account-owned widget instances.
+- Confirm those widget instances were materialized as shared Widget Shell
+  package plus widget-specific body, not Prague-derived block/control
+  architecture and not copied per-widget shell logic.
 - Convert the route's visual body stack into a normal Roma page.
 - Store only the approved Prague routing map needed to choose the public
   composed page for `{market, locale, widget, page}`.

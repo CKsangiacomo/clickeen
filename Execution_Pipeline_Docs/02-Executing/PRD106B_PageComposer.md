@@ -4,6 +4,77 @@ Status: Draft execution PRD
 Owner: Roma
 Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
+Series step: 4
+Depends on: `PRD106A_realignment.md`, `PRD106A2_WidgetShellExtraction.md`
+Unlocks: `PRD106D_Prague migration from astro blocks to Page composer.md`
+Authority owned by this PRD: Roma Page Composer, page source, page publish/serve-state intent, affected-page recomposition, page UX.
+Authority explicitly not owned by this PRD: Widget Shell extraction, widget body design, Prague block inventory, Tokyo product logic.
+
+## PRD Tenets
+
+- Execute one step at a time.
+- Do not start Step N+1 until Step N is green.
+- The current step is the only execution permission.
+- Green requires named completion evidence.
+- A blocker report stops execution; it does not unlock the next step.
+- Do not solve missing decisions by inventing product behavior.
+
+## Mandatory PRD106 Execution Contract
+
+This PRD is step-gated. Execute exactly one numbered step at a time.
+
+Before executing any step:
+
+1. Read `106__Umbrella__Composition_Vision.md`.
+2. Confirm dependencies are green or explicitly fenced.
+3. Name the surviving authority for the concern being changed.
+4. Refresh required `file:line` evidence.
+5. Execute only the current step. Long reference sections are context, not
+   execution permission.
+
+A step is green only when its named completion evidence exists. A blocker report
+is evidence to stop, not evidence to proceed.
+
+If this PRD conflicts with a sibling PRD, the umbrella authority table decides.
+
+## Dependency Gate
+
+| Dependency | Required green evidence | Status |
+| --- | --- | --- |
+| PRD106A | Service-boundary drift affecting pages is audited/fenced. | REQUIRED |
+| PRD106A2 | Shared Widget Shell package contribution shape is accepted or fenced. | REQUIRED |
+
+## Current Step Gate
+
+Current executable step:
+
+```text
+Step 1: Define page storage, source, and serve-state contracts.
+```
+
+Required evidence before marking green:
+
+- Page source schema is named.
+- Page output/serve-state coordinates are named.
+- Tokyo payload contract is storage-only.
+
+Stop conditions:
+
+- Tokyo must interpret page source or compose page output.
+- Page source needs page-specific instance edits or snapshots.
+
+## Execution Steps
+
+| Step | Action | Required evidence | Green criteria | Stop condition |
+| ---: | --- | --- | --- | --- |
+| 1 | Define page storage, source, and serve-state contracts. | Schema/coordinate diff or doc evidence. | Page source/output/serve-state are explicit and storage-only in Tokyo. | Tokyo interprets page source. |
+| 2 | Implement Roma Page Composer UX skeleton. | UI diff/screenshot. | User can create/open page composer without editing instances. | UI edits instance content. |
+| 3 | Implement Add Instances bulk flow. | UI diff/screenshot. | Large account can bulk-select saved instances and add them. | Dropdown-only picker or hidden search dependency. |
+| 4 | Implement save/draft composition. | Code diff/tests. | Page draft saves ordered instance refs and materialized output. | Missing instance package is silently healed. |
+| 5 | Implement publish/unpublish/copy. | Code diff/tests. | Publish gates match widget publish model; Copy uses existing embed/public model. | New page `embed.js` is generated. |
+| 6 | Implement affected-page recomposition on instance save. | Tests/log evidence. | Editing an included instance updates affected pages. | Dependency truth lives in Tokyo. |
+| 7 | Add SEO/GEO and localization controls specified here. | Tests/screenshot. | Crawlable initial HTML and page localization rules exist. | Host-nav integration is invented. |
+| 8 | Run deletion/search guards. | `rg` output/tests. | No Tokyo composition/readiness/page `embed.js` authority remains. | Any forbidden authority remains active. |
 
 ## Purpose
 
@@ -86,6 +157,7 @@ The approved PRD106B page source may contain only:
 - Display name/title.
 - Ordered references to account-owned widget instances.
 - Approved page-level metadata fields needed for SEO/GEO.
+- Approved page-level localization settings.
 - Timestamps and version fields needed for optimistic concurrency.
 
 The approved PRD106B page source must not contain:
@@ -155,6 +227,8 @@ compose page packages.
 - Keeping per-instance runtime state isolated.
 - SEO/GEO output: real initial HTML, ordered semantic sections, title,
   description, canonical, robots, and structured data where valid.
+- Page-level localization settings: IP/country locale routing, default locale,
+  missing-locale behavior, and optional Clickeen-owned language switcher.
 - Visible failure when a selected instance is missing, unowned, invalid, stale,
   not materialized, malformed, or not allowed by policy.
 
@@ -171,6 +245,51 @@ compose page packages.
 - Page composition.
 
 Tokyo stores and serves exact files Roma submits.
+
+## Page Localization Contract
+
+Clickeen is global by default. Pages must inherit the existing instance
+localization model instead of creating a second translation system.
+
+The page-level product rule is:
+
+```text
+one composed page -> one resolved locale context -> all included instances render in that locale
+```
+
+Page Composer does not translate, edit, fork, or own per-instance locale truth.
+Each included instance remains the source of its own locale outputs. Page
+Composer only decides which locale context the composed page should serve and
+coordinates that locale across the ordered instance stack.
+
+For PRD106B, Clickeen pages support:
+
+- IP/country localization: visitor country resolves to a configured page locale.
+- Account/page default locale when no country rule matches.
+- Optional Clickeen-owned language switcher at the top of the composed page.
+- Manual internal integration for Clickeen's own Prague/site language switcher,
+  because Clickeen controls that site and can wire its own chrome to its own
+  embedded pages.
+
+For PRD106B, Clickeen pages do not require customer host-nav integration.
+Customer websites, WordPress themes, and third-party nav controls are outside
+Clickeen's control. Asking normal users to wire JavaScript from their site nav
+to a Clickeen page is not the product path.
+
+Locale resolution for a public page is:
+
+1. Visitor-selected locale from the Clickeen page language switcher, when the
+   switcher is enabled and the visitor has selected a supported locale.
+2. IP/country locale rule, when IP localization is enabled and a rule matches.
+3. Page default locale.
+4. Account default locale only when the page default is missing or invalid.
+
+If the resolved page locale is unavailable for an included instance, Page
+Composer must not silently produce a mixed-language page as if it were correct.
+Roma must surface this before publish and choose one explicit product behavior:
+block publish for that locale, or use the approved fallback locale with a visible
+warning. The default execution posture for PRD106B is to block publish for a
+configured locale when any included instance cannot render that locale.
 
 ## Intended Product UX
 
@@ -212,6 +331,42 @@ enhancement, not as the only reorder mechanism.
 
 Removing an instance removes only the page reference. It does not delete,
 unpublish, duplicate, fork, snapshot, or modify the widget instance.
+
+### Page Settings Surface
+
+Page localization controls live in Page Composer, not in Tokyo and not in the
+customer's host website. The intended UX is a simple `Settings` panel or tab on
+the Page Composer screen beside the instance stack.
+
+Required controls:
+
+- `Default locale`: the locale used when no IP/country rule matches.
+- `IP localization`: on/off.
+- `Country language rules`: a compact table of country -> locale rows, using
+  only locales available to the account/page.
+- `Language switcher`: on/off.
+- `Language switcher position`: top of composed page. PRD106B does not add
+  alternate placements.
+- `Missing locale behavior`: block publish when a selected locale is missing
+  from any included instance. Any fallback behavior requires explicit product
+  approval because mixed-language output can damage trust and SEO/GEO.
+
+The switcher, when enabled, controls the composed page locale as a whole. It is
+not a per-instance selector repeated inside every widget. Selecting Italian
+switches the page context to Italian, and every included instance renders its
+Italian output if available.
+
+The settings surface must show readiness impact:
+
+- country rules whose target locale is missing from one or more included
+  instances;
+- whether the page can publish for each configured locale;
+- which included instances block a configured locale;
+- the current default locale and whether every selected instance can render it.
+
+The language switcher is a Clickeen-owned control rendered at the top of the
+composed page only when enabled. It solves the customer-facing manual override
+case without requiring the customer's WordPress/site nav to know about Clickeen.
 
 ### Add Instances UX
 
@@ -315,6 +470,31 @@ because page publish would publicly expose that instance through the page.
 
 Page Composer needs a stable contract for what each widget instance contributes
 to the page package. Regex over arbitrary HTML is not a product contract.
+
+The expected widget package shape is the shared Widget Shell package:
+
+```text
+Stage -> Pod -> ck-headerLayout(Header + widget-specific content)
+```
+
+The surviving implementation source for that shape is the shared Widget Shell
+package:
+
+```text
+packages/widget-shell/
+```
+
+Page Composer must treat the Shell as a stable contribution contract that was
+already materialized into each instance package. It must not import Tokyo product
+routes, parse widget-specific private layouts, or depend on copied shell code
+inside every widget.
+
+Page Composer consumes materialized widget instances. It does not care whether
+the widget-specific content is FAQ questions, Split visual, Cards items,
+Countdown timer, Logo Showcase strips, CTA header-only content, or Big Bang
+large typography. It only needs the shared package contribution contract below.
+Any widget that uses a different shell must be explicitly approved because it
+adds page-composition risk.
 
 Each materialized instance package must provide, directly or through a documented
 extractable format:
@@ -429,6 +609,10 @@ The peer review's Page Composer feedback is accepted as execution law:
 - SEO/GEO in PRD106B means crawlable initial HTML with approved metadata. Advanced
   structured-data merging, Open Graph, Twitter metadata, and route/domain
   systems are NOT_ALLOWED unless Pietro explicitly approves them.
+- Page localization in PRD106B means page-level locale resolution across the
+  existing instance locale outputs. Do not build customer host-nav integration
+  as the default product path. Customer-facing controls are IP localization and
+  an optional Clickeen-owned top-of-page language switcher.
 
 The accepted implementation shape remains boring:
 
@@ -446,18 +630,24 @@ The accepted implementation shape remains boring:
 ## Implementation Sequence
 
 1. Confirm PRD106A boundary cleanup is done or explicitly fenced.
-2. Implement the canonical page storage and serve-state coordinate.
-3. Define the Roma-owned page source schema.
-4. Define the widget package contribution contract with Bob/Roma tests.
-5. Move dependency indexing to Roma-owned truth or opaque Roma-managed storage.
-6. Replace Tokyo page product routes with storage-only routes or fence them out
+2. Confirm `PRD106A2_WidgetShellExtraction.md` has accepted the shared Widget
+   Shell package contract or explicitly fences Page Composer to the same
+   contribution shape.
+3. Implement the canonical page storage and serve-state coordinate.
+4. Define the Roma-owned page source schema.
+5. Define the widget package contribution contract with Bob/Roma tests.
+6. Add Page Composer coverage for packages generated as shared Widget Shell plus
+   different widget bodies, including FAQ, Countdown, Logo Showcase, and one new
+   Prague migration widget.
+7. Move dependency indexing to Roma-owned truth or opaque Roma-managed storage.
+8. Replace Tokyo page product routes with storage-only routes or fence them out
    of product paths.
-7. Implement Roma Page Composer save/publish/unpublish/delete flows.
-8. Implement affected-page recomposition after instance save for every page that
+9. Implement Roma Page Composer save/publish/unpublish/delete flows.
+10. Implement affected-page recomposition after instance save for every page that
    includes the instance. Unpublished pages may update draft package/status
    without enabling public serving.
-9. Implement public serving from generated files only.
-10. Delete old generated page `embed.js` behavior. A temporary fence is allowed
+11. Implement public serving from generated files only.
+12. Delete old generated page `embed.js` behavior. A temporary fence is allowed
     only if it has an owner, tests proving it is not product authority, and a
     delete gate.
 
@@ -522,6 +712,20 @@ widget instance package contract that Page Composer consumes.
   every page that includes it, or marks each failed page stale/failed with retry.
 - Initial page HTML includes ordered semantic instance content and approved
   SEO/GEO metadata.
+- Page Composer exposes localization controls in a page settings panel/tab:
+  default locale, IP localization on/off, country -> locale rules, language
+  switcher on/off, fixed top placement for the switcher, and missing-locale
+  publish blocking.
+- IP localization resolves visitor country to one page locale context and every
+  included instance renders in that locale when available.
+- The optional language switcher appears at the top of the composed page and
+  switches the whole page locale, not individual instances.
+- Publishing is blocked for any configured page locale that an included instance
+  cannot render, unless a later explicit product decision approves fallback
+  behavior.
+- Clickeen's own Prague/site language switcher may be manually connected to
+  Clickeen-owned pages because Clickeen controls that site. This is internal
+  integration, not a required customer setup flow.
 
 ## Verification
 
@@ -555,6 +759,17 @@ widget instance package contract that Page Composer consumes.
 - SEO/GEO tests inspecting generated initial HTML for title, description,
   robots, canonical, ordered semantic content, and valid structured data when
   supported.
+- Roma page settings tests proving default locale, IP localization, country ->
+  locale rules, and language switcher settings are saved in page source and are
+  not interpreted by Tokyo.
+- Locale readiness tests proving publish is blocked when a configured page
+  locale is missing from any included instance.
+- Public serving tests proving the same page resolves one locale context from
+  visitor-selected switcher locale, IP/country rule, or page default, and all
+  included instances follow that context.
+- UI tests proving the language switcher, when enabled, appears once at the top
+  of the composed page and controls the whole page rather than rendering
+  repeated per-instance selectors.
 
 ## Product Owner Decisions Applied
 
@@ -578,3 +793,9 @@ widget instance package contract that Page Composer consumes.
   - Tier 3: 6 pages; instances/widgets allowed by that tier.
   - Tier 4: unlimited pages and unlimited instances/widgets.
   - Views are unlimited for all pages across all tiers.
+- Clickeen pages support IP/country localization for choosing the page language.
+- Clickeen pages may render one optional Clickeen-owned language switcher at
+  the top of the composed page.
+- Customer host-nav integration is not required for PRD106B. Clickeen may
+  manually connect Prague/site language switching to its own Clickeen pages
+  because Clickeen controls that site.

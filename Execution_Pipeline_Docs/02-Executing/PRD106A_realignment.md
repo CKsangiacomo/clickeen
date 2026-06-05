@@ -4,6 +4,11 @@ Status: Active realignment PRD
 Owner: Codex execution agent
 Date: 2026-06-05
 Surviving authority: `Execution_Pipeline_Docs/02-Executing/106__Umbrella__Composition_Vision.md`
+Series step: 2
+Depends on: `106__Umbrella__Composition_Vision.md`
+Unlocks: `PRD106A2_WidgetShellExtraction.md`, `PRD106B_PageComposer.md`, `PRD106C_Prague astro blocks migration to widget instances.md`, `PRD106E_Toxic_Flow_Deletion.md`
+Authority owned by this PRD: drift audit, realignment plan, surviving authority map.
+Authority explicitly not owned by this PRD: implementing Page Composer, extracting Widget Shell, building widget bodies, cutting over Prague routes.
 
 This PRD is not a new product idea. It is a cleanup contract for removing code,
 docs, tests, names, and workflows that contradict PRD 106's surviving product
@@ -23,6 +28,185 @@ Sibling PRDs:
 - `PRD106E_Toxic_Flow_Deletion.md` owns the executable deletion/fencing ledger
   for toxic active flows, functions, files, routes, tests, and LOCs found during
   this realignment.
+
+## PRD Tenets
+
+- Execute one step at a time.
+- Do not start Step N+1 until Step N is green.
+- Treat this long PRD body as reference/evidence. The active execution surface
+  is the current step below.
+- A blocker report stops execution; it does not unlock the next step.
+- Do not clean around toxic mechanisms. Delete, fence, or mark blocked.
+- Do not preserve fake product nouns, fake product modes, duplicate truth, or
+  placeholders just because code still calls them.
+- Do not use PRD106A to implement Page Composer, Widget Shell extraction, Prague
+  widget bodies, or Prague route cutover. Those have their own PRDs.
+- Every step must end with evidence: `rg` output, diff summary, tests, or a
+  precise blocker.
+
+## Dependency Gate
+
+| Dependency | Required green evidence | Status |
+| --- | --- | --- |
+| Umbrella | Product tenets and authority table are current. | REQUIRED |
+
+## Current Step Gate
+
+Current executable step:
+
+```text
+Step 1: Audit Freeze
+```
+
+Required evidence before marking green:
+
+- `rg`/file evidence for each active drift category.
+- Surviving authority named for every drift item.
+- No product code edits in this step.
+
+Stop conditions:
+
+- A drift item has no surviving authority.
+- A product decision is missing.
+
+## Step-Gated Execution
+
+### Step 1 - Audit Freeze
+
+Scope: identify active drift without editing product code.
+
+Allowed:
+
+- Read current code/docs/tests.
+- Record drift against the umbrella and this PRD.
+- Produce exact deletion/fencing targets.
+
+Not allowed:
+
+- Implement fixes.
+- Rename concepts.
+- Add compatibility layers.
+
+Green:
+
+- Evidence list identifies fake nouns, wrong-service authority, duplicate
+  instance truth, Page Composer drift, Prague block drift, and copied Widget
+  Shell drift.
+
+Stop if:
+
+- The surviving authority for a concern cannot be named.
+
+### Step 2 - Dependency And Cutover Plan
+
+Scope: order deletion/fencing safely across Roma, Bob, Tokyo, Prague, and docs.
+
+Allowed:
+
+- Define which PRD owns each cleanup.
+- Mark blockers for PRD106B, PRD106A2, PRD106C, PRD106D, or PRD106E.
+
+Not allowed:
+
+- Execute cross-PRD work locally inside PRD106A.
+
+Green:
+
+- Each drift item has a surviving authority, owner PRD, and delete/fence
+  decision.
+
+Stop if:
+
+- Any drift item requires a product decision not already recorded.
+
+### Step 3 - Delete Fake Product Nouns
+
+Scope: remove/fence fake product nouns from active execution paths.
+
+Allowed:
+
+- Delete or fence active `block`, fake `widget type`, preset/template/demo mode,
+  old page builder, and minibob-as-product paths.
+
+Not allowed:
+
+- Delete valid `widget` or `widgetType` references that identify Clickeen-authored
+  widget software.
+
+Green:
+
+- Search guards show fake nouns are absent from active product paths or are
+  explicitly fenced as non-product/migration source.
+
+Stop if:
+
+- A fake noun is still required by active account authoring.
+
+### Step 4 - Restore Service Boundaries
+
+Scope: enforce Bob/Roma/Tokyo ownership.
+
+Allowed:
+
+- Fence or delete Tokyo product-brain behavior.
+- Fence Bob materialization/policy authority outside its editor role.
+- Restore Roma as product orchestration authority.
+
+Not allowed:
+
+- Move Page Composer implementation into Tokyo.
+- Make Bob a page product.
+
+Green:
+
+- Active routes follow: Bob edits, Roma orchestrates/composes, Tokyo stores and
+  serves submitted files.
+
+Stop if:
+
+- A required runtime path still depends on Tokyo product composition.
+
+### Step 5 - Remove Duplicate Durable Truth
+
+Scope: eliminate duplicate source/publish/dependency truth.
+
+Allowed:
+
+- Delete/fence obsolete page source, publish/readiness, reverse index, instance
+  source, and old package authority shapes.
+
+Not allowed:
+
+- Delete generated package bytes needed as current account artifacts.
+
+Green:
+
+- One authority remains for widget source, page source, publish state,
+  dependency knowledge, and Shell architecture.
+
+Stop if:
+
+- Two active paths still claim the same durable product truth.
+
+### Step 6 - Align Product UI And Docs
+
+Scope: ensure Roma/Bob/Prague/docs teach the surviving model.
+
+Allowed:
+
+- Update labels, navigation, errors, docs, and tests to the surviving authority.
+
+Not allowed:
+
+- Add new UX flows not specified by PRD106B/C/D.
+
+Green:
+
+- User-facing surfaces and docs no longer teach deleted concepts.
+
+Stop if:
+
+- UI needs a product decision not recorded in the owning PRD.
 
 ## Problem
 
@@ -194,10 +378,42 @@ metadata, and ordered instance references. `index.html`, `styles.css`, and
 `runtime.js` are generated browser-readable output.
 
 Roma widget materialization must use the same system widget software inputs as
-Bob preview: `tokyo/product/widgets/{widget}` plus shared Dieter/runtime
-contracts. Before removing Bob-built `publicPackage`, add parity coverage that
-Bob preview, Roma materialization, and Page Composer input are generated from
-the same saved widget state and widget definition contract.
+Bob preview: the shared Widget Shell package, the widget body definition, and
+shared Dieter/runtime contracts. Before removing Bob-built `publicPackage`, add
+parity coverage that Bob preview, Roma materialization, and Page Composer input
+are generated from the same saved widget state and widget definition contract.
+
+Widget Shell authority:
+
+- FAQ is the approved implementation reference for normal widget architecture.
+- Every normal widget is `Widget Shell + widget-specific content`.
+- The surviving Widget Shell authority must be a shared repo package,
+  `packages/widget-shell/`, not copied FAQ code and not a Tokyo-owned helper
+  folder.
+- `PRD106A2_WidgetShellExtraction.md` owns the detailed extraction contract:
+  exact FAQ source files, Shell panels, Shell state paths, body extension rules,
+  validation, and acceptance gates.
+- Widget Shell means the FAQ-proven Stage, Pod, Header, CTA, Header layout,
+  Header CTA appearance, Stage/Pod layout, Stage/Pod appearance, Typography,
+  locale switcher, branding/settings, editable-fields translation mechanism,
+  Bob preview, Roma save/materialization, and runtime/package pattern.
+- `packages/widget-shell/` owns shell schema/defaults, shell editor controls,
+  shell renderer/helpers, shell CSS/runtime helpers, and shell validation.
+- Header always means title, optional subtitle, and optional CTA through
+  `header.*` and `cta.*`.
+- New or migrated widgets must consume the shared Widget Shell and add only the
+  new widget-specific body content, body controls, body editable fields, and
+  body runtime/CSS.
+- Duplicate widget-specific paths such as `headline`, `subheadline`,
+  `primaryCta`, `secondaryCta`, `copyWidth`, `bodyWidth`, and
+  `layout.variant` are deletion targets unless a child PRD explicitly records
+  Pietro's approval for a separate widget architecture.
+- Current `tokyo/product/widgets/{widget}/` folders are repo product source
+  locations for widget body definitions and package assets. They are not
+  evidence that Tokyo owns widget architecture.
+- Countdown and Logo Showcase gold-standard upgrades are rebase work: keep the
+  shared Widget Shell, replace/fix only Countdown body behavior and Logo
+  Showcase body behavior.
 
 ## Intended Product UX
 
@@ -262,9 +478,11 @@ evidence, deletion targets, risks, and the surviving owner.
 
 Surviving authority:
 
-- `tokyo/product/widgets/{widget}/` is widget software truth. Existing code may
-  still spell this coordinate `widgetType`; that is implementation naming, not a
-  product noun.
+- `packages/widget-shell/` is shared widget architecture truth.
+- Current `tokyo/product/widgets/{widget}/` folders are repo product source for
+  widget body software and package assets. Existing code may still spell this
+  coordinate `widgetType`; that is implementation naming, not a product noun and
+  not Tokyo service ownership of widget architecture.
 - Roma may list available widgets for account creation.
 - Account data may reference widget identity/code, but cannot define widget
   software.
@@ -321,11 +539,14 @@ Page Composer authority:
 - It produces crawlable, semantic, SEO/GEO-friendly page output: real initial
   content, ordered sections, page title/description/robots/canonical, and
   structured data where valid.
+- It coordinates page-level localization across included instances by resolving
+  one page locale context from IP/country rules, page default locale, or the
+  optional Clickeen-owned top-of-page language switcher.
 - It fails visibly when selected instances are missing, unowned, invalid, stale,
   or not ready to compose.
 - None of this authority belongs to Tokyo. Tokyo must not track dependencies,
   decide recomposition, dedupe CSS/runtime, generate SEO/GEO metadata, decide
-  page readiness, or interpret page input.
+  page readiness, resolve page locale behavior, or interpret page input.
 
 Pollution to remove:
 
@@ -342,6 +563,10 @@ Pollution to remove:
   meaning.
 - Page input copied into Prague, Michael, or generated files as product truth.
 - Any page composition path that does not start from saved widget instance files.
+- Customer host-nav language integration as the required page localization path.
+  Customer pages use IP localization and the optional Clickeen page switcher;
+  only Clickeen-owned Prague/site pages may be manually wired to Clickeen's own
+  language controls.
 
 ### 4. Bob is an editor: open/edit in browser memory/user save
 

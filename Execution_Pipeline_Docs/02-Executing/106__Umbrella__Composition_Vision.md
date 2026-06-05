@@ -9,15 +9,71 @@ implementation work stays grounded.
 Execution split:
 
 - `PRD106A_realignment.md` cleans up drift against this umbrella.
+- `PRD106A2_WidgetShellExtraction.md` extracts FAQ's working Widget Shell into
+  `packages/widget-shell/` and defines the body-only widget extension contract.
 - `PRD106B_PageComposer.md` defines the Roma Page Composer product boundary.
 - `PRD106C_Prague astro blocks migration to widget instances.md` ports Prague
   Astro block work into real widgets and widget instances.
+- `PRD106C3` through `PRD106C6` define the new Prague-absorbing widgets as
+  Widget Shell plus body-only deltas.
 - `PRD106D_Prague migration from astro blocks to Page composer.md` moves Prague
   pages from Astro block assembly to composed Clickeen page output after the
   widget-instance ports are real.
 - `PRD106E_Toxic_Flow_Deletion.md` owns the deletion/fencing campaign for active
   fake flows, duplicate truths, toxic functions, files, routes, tests, and LOCs
   that contradict this umbrella.
+
+## PRD106 Execution Tenets
+
+These tenets govern every PRD in the 106 series.
+
+- Execute one PRD step at a time.
+- Do not begin the next step until the current step is green.
+- Green means the step's named completion evidence exists: diff, test, `rg`
+  output, screenshot, or docs diff.
+- A blocker report is not green. It is evidence to stop without moving to the
+  next step.
+- If a step is not green, stop and report the blocker. Do not invent product
+  behavior to keep moving.
+- Long reference sections are not execution permission. The active execution
+  permission is the current step only.
+- When two PRDs appear to overlap, the authority table below decides ownership.
+- If a required decision is missing, add it to the current PRD's
+  `OPEN QUESTIONS (BLOCKERS) FOR PIETRO, PRODUCT OWNER` section and stop.
+
+## Authority Table
+
+| Concern | Authority |
+| --- | --- |
+| Product mental model and non-negotiable tenets | This umbrella |
+| Realignment/deletion map against current drift | `PRD106A_realignment.md` |
+| Shared Widget Shell extraction | `PRD106A2_WidgetShellExtraction.md` |
+| Page Composer product/build path | `PRD106B_PageComposer.md` |
+| Prague block migration map | `PRD106C_Prague astro blocks migration to widget instances.md` |
+| Prague factual block inventory | `PRD106C2_Prague astro blocks audit.md` |
+| Split body | `PRD106C3_Split_Widget.md` |
+| Cards body | `PRD106C4_Cards_Widget.md` |
+| Big Bang body | `PRD106C5_BigBang_Widget.md` |
+| CTA body | `PRD106C6_CTA_Widget.md` |
+| Prague route cutover to composed pages | `PRD106D_Prague migration from astro blocks to Page composer.md` |
+| Toxic-flow deletion/fencing | `PRD106E_Toxic_Flow_Deletion.md` |
+
+## Series Step Order
+
+Execute in this order unless Pietro explicitly changes the order.
+
+1. Read this umbrella and confirm the product tenets.
+2. Execute `PRD106A_realignment.md` drift audit steps.
+3. Execute `PRD106A2_WidgetShellExtraction.md`.
+4. Execute `PRD106B_PageComposer.md`.
+5. Execute `PRD106C2_Prague astro blocks audit.md`.
+6. Execute `PRD106C_Prague astro blocks migration to widget instances.md`.
+7. Execute widget body PRDs one at a time: Split, Cards, Big Bang, CTA.
+8. Execute `PRD106D_Prague migration from astro blocks to Page composer.md`.
+9. Execute `PRD106E_Toxic_Flow_Deletion.md`.
+
+Do not merge steps across PRDs. A PRD may reference another PRD, but it may not
+silently execute another PRD's authority.
 
 ## What this doc is for
 
@@ -123,6 +179,85 @@ The difference from classic atomic design: in Brad Frost's world, and in every
 page builder (Webflow, Framer, Notion, Gutenberg), the composable unit is a
 **dumb fragment** that only exists inside its host. In Clickeen, the composable
 unit is a **whole product**.
+
+## Widget Shell
+
+Every normal widget uses the same FAQ-proven product architecture:
+
+```text
+Widget = Widget Shell + widget-specific content
+
+Widget Shell:
+Stage
+  Pod
+    ck-headerLayout
+      Header
+      widget-specific content
+```
+
+The Widget Shell is already working in FAQ. It includes Stage, Pod, Header, CTA,
+Header layout, Header CTA appearance, Stage/Pod layout, Stage/Pod appearance,
+Typography, locale switcher, branding/settings, editable-fields translation,
+Bob preview, Roma save/materialization, and public runtime/package behavior.
+
+This is a product architecture primitive, so the execution target is a shared
+repo package:
+
+```text
+packages/widget-shell/
+```
+
+`packages/widget-shell` owns the shell contract, shell defaults, shell controls,
+shell renderer/helpers, shell CSS/runtime helpers, and shell validation. FAQ is
+the proof and extraction source; the package is the surviving authority.
+
+Widget source folders own only widget-specific body software:
+
+```text
+widget body schema
+widget body defaults
+widget body controls
+widget body editable fields
+widget body CSS/runtime
+```
+
+The current physical location for widget source may still be
+`tokyo/product/widgets/{widget}/`, but that does not make Tokyo the widget
+architecture owner. Those files are repo product source consumed by Bob/Roma
+materialization and Tokyo validation/storage paths. Tokyo stores account source
+and generated artifacts; it does not own or decide the Widget Shell.
+
+Header has one meaning across normal widgets:
+
+```text
+Header = title + optional subtitle + optional CTA
+```
+
+The working paths are `header.*` and `cta.*`. Do not invent widget-specific
+`headline`, `subheadline`, `copy`, `primaryCta`, `secondaryCta`, `button`,
+`eyebrow`, or duplicate Header/CTA/layout paths for normal widgets.
+
+For every new or migrated widget, the only expected change is the
+widget-specific content:
+
+```text
+FAQ body           -> sections/questions/answers
+Split body         -> visual
+Cards body         -> cards/items
+Countdown body     -> timer/countdown content
+Logo Showcase body -> logo strips/items
+CTA body           -> empty/header-only content
+Big Bang body      -> large typography/content treatment
+```
+
+This rule exists so agents do not rebuild a new editor, layout model,
+appearance model, translation system, or runtime shell for every widget. Widgets
+differ by content, not by architecture.
+
+This is also how Countdown and Logo Showcase reach gold standard without
+rebuilding the product twice. They are rebased onto the shared Widget Shell, and
+their remaining work becomes only their body: timer behavior for Countdown and
+logo-strip/media behavior for Logo Showcase.
 
 ## The anchor: it's Figma's component model, for live localized web content
 
@@ -259,6 +394,11 @@ Page Composer owns:
 - Producing crawlable, semantic, SEO/GEO-friendly page HTML: real initial
   content, ordered sections, page title/description/robots/canonical, and
   structured data where valid.
+- Coordinating page-level localization across the included instances: IP/country
+  language selection, page default locale, and an optional Clickeen-owned
+  top-of-page language switcher. Page Composer does not create a second
+  translation system; it resolves one page locale context and every included
+  instance follows that context.
 - Failing visibly when an instance is missing, unowned, invalid, stale, or not
   ready to compose.
 
@@ -270,6 +410,10 @@ Page Composer does not own:
 - Blocks, sections, slots, route maps, site nav, or custom domains.
 - Request-time rendering.
 - Tokyo product authority.
+- Customer host-nav language integration as the default product path. Clickeen
+  can manually wire Prague/site language controls to Clickeen-owned pages
+  because it controls that site, but normal customer pages use IP localization
+  and the optional Clickeen page switcher.
 
 It is "smart" only at the composition boundary: dependencies, dedupe, clean
 browser files, SEO/GEO output, readiness, and clear failure states. It must stay
@@ -280,7 +424,9 @@ dumb about editing and product shape.
 Prague has valuable Astro block work. That work is not discarded, but it is not
 product architecture. The migration path is to port the block implementation,
 layout behavior, content shape, responsive behavior, assets, and SEO semantics
-into Clickeen widgets and account-owned widget instances.
+into the shared Widget Shell as widget-specific content, then save those as
+normal Clickeen widgets and account-owned widget instances. FAQ proves the
+Shell; `packages/widget-shell/` is the surviving implementation authority.
 
 The current Prague-derived widgets in Tokyo are partial ports:
 
@@ -297,21 +443,21 @@ development, but they are not finished Prague block migrations. "Compiles in
 Bob" is only the halfway line. A finished migration must have:
 
 - useful non-empty defaults, not blank scaffold instances;
-- Bob controls that express the actual Prague layout knobs;
+- the shared Widget Shell package, not a Prague-derived editor architecture;
+- Bob controls only for the widget-specific content that changes;
 - faithful responsive layout and visual behavior from the Astro block;
 - translatable field contracts matching the real authored content;
 - public output that visually matches the intended Prague section;
 - materialized widget instance files that Page Composer can stack without
   special cases.
 
-The hard part is not naming. The hard part is mapping Prague layout vocabulary
-to Clickeen widget controls without inventing a new page/block system. For
-example, Prague blocks use rows, columns, variants, tile grids, media placement,
-and per-block CTA behavior. Bob does not currently have a generic "columns"
-editor primitive. PRD106C must decide, block by block, whether those become
-widget-specific layout controls, reusable Dieter/Bob controls, fixed variants,
-or blocked product decisions for Pietro. They must not become page-level columns
-or a new block object.
+The hard part is not naming. The hard part is refusing to import Prague layout
+vocabulary as new widget architecture. Prague blocks use rows, columns,
+variants, tile grids, media placement, and per-block CTA behavior. PRD106A2
+extracts FAQ's proven shell into `packages/widget-shell/`; PRD106C then adds
+only the new widget-specific content and its required controls. Prague
+vocabulary must not become page-level columns, a new block object, or duplicate
+Header/CTA/layout state.
 
 None of that intelligence belongs in Tokyo. Tokyo does not know the selected
 instance list, dependency graph, recomposition reason, CSS/runtime dedupe plan,
@@ -423,27 +569,35 @@ them is agent-approved scope inside PRD 106.
    instance**, and **page**. Do not invent a fourth. There is no "block."
 2. Page-shaped surfaces are **widgets**. If a section needs real interactivity,
    that's still a widget — not a new object, and not page-level code.
-3. Pages are composed from widget instances. Editing a widget instance
+3. Every normal widget uses the shared Widget Shell package extracted from FAQ.
+   The only part that changes per widget is widget-specific content and its
+   exact controls.
+4. Header always means title, optional subtitle, and optional CTA using
+   `header.*` and `cta.*`. Do not invent duplicate copy/CTA paths.
+5. Pages are composed from widget instances. Editing a widget instance
    propagates to all pages by recomposition. That propagation is the product,
    not a cost.
-4. Widget instances are atomic. A page can arrange instances; it cannot own
+6. Widget instances are atomic. A page can arrange instances; it cannot own
    instance edits, page-specific overrides, instance forks, or frozen snapshots.
-5. One substrate: one editor (Bob), one translation model (editable-fields → San
+7. One substrate: one editor (Bob), one translation model (editable-fields → San
    Francisco → overlays), one renderer/runtime contract, one materialization
    path. No parallel systems.
-6. Fail visibly. Missing locales, missing referenced instances, stale markers,
+8. Fail visibly. Missing locales, missing referenced instances, stale markers,
    and invalid page inputs fail at the named boundary. No silent healing, no
    request-time invention.
-7. Materialize, don't assemble-at-request. Pages are composed to static,
+9. Materialize, don't assemble-at-request. Pages are composed to static,
    edge-served browser files. No app-shell-only pages, no stacked iframes, no
    request-time composition of public output.
-8. All Page Composer intelligence lives in Roma. Tokyo has no page-composition
+10. All Page Composer intelligence lives in Roma. Tokyo has no page-composition
    business: no dependencies, no recomposition decisions, no CSS/runtime dedupe,
    no SEO/GEO generation, no readiness semantics, and no product-shaped page
    source.
-9. Localization is a property of every unit at every level, at near-zero marginal
+11. Tokyo does not own widget architecture. Widget Shell authority belongs in
+   `packages/widget-shell`; widget folders contribute body software; Tokyo
+   stores and serves account files.
+12. Localization is a property of every unit at every level, at near-zero marginal
    cost. Locale is a runtime parameter, never baked into identity.
-10. Add depth only when a concrete need proves it and Pietro approves it (the
+13. Add depth only when a concrete need proves it and Pietro approves it (the
    nesting/container decision is the canonical example). Blocked is the default;
    objectify is the exception.
 
