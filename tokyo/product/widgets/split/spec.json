@@ -81,6 +81,46 @@
           "inset": true,
           "spread": 0,
           "enabled": false
+        },
+        "top": {
+          "x": 0,
+          "y": 12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "right": {
+          "x": -12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "bottom": {
+          "x": 0,
+          "y": -12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "left": {
+          "x": 12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
         }
       },
       "canvas": {
@@ -141,6 +181,46 @@
           "color": "#000000",
           "inset": true,
           "spread": 0,
+          "enabled": false
+        },
+        "top": {
+          "x": 0,
+          "y": 12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "right": {
+          "x": -12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "bottom": {
+          "x": 0,
+          "y": -12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "left": {
+          "x": 12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
           "enabled": false
         }
       },

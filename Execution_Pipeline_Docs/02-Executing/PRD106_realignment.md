@@ -18,13 +18,17 @@ PRD 106 was supposed to add one simple product noun: page.
 
 The intended model is:
 
-- Widgets are system software.
-- Instances are account-owned widgets created/edited through Roma/Bob and saved
-  in Tokyo.
-- Pages are account-owned ordered stacks of instances stored in Tokyo.
+- Widgets are Clickeen-authored software units that produce browser-readable
+  code.
+- Widget instances are account-owned saved widgets created/edited through
+  Roma/Bob and saved in Tokyo.
+- Pages are account-owned browser-readable code composed from X widget
+  instances.
 - Bob edits one widget in browser memory and submits save.
 - Roma owns account routing, tier/product permission, save acceptance, page
   composition, and user-facing product errors.
+- Roma Pages selects, orders, removes, saves, and publishes widget instances as a
+  page. It must not edit the instances it uses.
 - Tokyo stores submitted files in R2 and serves already-stored public files.
 - Clickeen/admin examples are normal account-owned widgets and pages.
 
@@ -39,8 +43,8 @@ Make the active repo obey the PRD 106 tenets with the smallest possible product
 surface:
 
 ```text
-instance = account-owned widget
-page     = account-owned ordered stack of instance placements
+widget instance = one account-owned widget compiled to browser-readable files
+page            = X widget instances compiled together to browser-readable files
 ```
 
 Everything else is either:
@@ -50,6 +54,25 @@ Everything else is either:
 - Bob browser-memory editing;
 - Tokyo R2 storage and public file serving;
 - Prague marketing implementation that cannot define product architecture.
+
+Tokyo has no business in Page Composer. It does not decide page input,
+dependencies, recomposition, dedupe, SEO/GEO, or readiness. Roma sends finished
+files; Tokyo stores and serves them.
+
+The product proof is the WordPress embed workflow:
+
+1. A user saves one widget instance, copies its embed line, pastes it into a
+   WordPress div, and WordPress shows that instance.
+2. The user creates more widget instances, opens Clickeen Pages, selects/orders
+   several instances, saves/publishes the page, copies the page embed line, and
+   pastes it into the same kind of WordPress div. WordPress shows X Clickeen
+   instances stacked together.
+3. The user edits one of those instances through the normal Builder/Bob path and
+   saves. WordPress keeps the same page embed line, and the page shows the
+   updated instance after recomposition.
+
+Any implementation that requires repasting into WordPress after an instance edit,
+or lets the page keep a stale copy of the edited instance, violates PRD 106.
 
 ## Non-Goals
 
@@ -82,9 +105,11 @@ evidence, deletion targets, risks, and the surviving owner.
 
 Surviving authority:
 
-- `tokyo/product/widgets/{widgetType}/` is widget software truth.
-- Roma may list system widgets for account creation.
-- Account data may reference widget type/code, but cannot define widget
+- `tokyo/product/widgets/{widget}/` is widget software truth. Existing code may
+  still spell this coordinate `widgetType`; that is implementation naming, not a
+  product noun.
+- Roma may list available widgets for account creation.
+- Account data may reference widget identity/code, but cannot define widget
   software.
 
 Pollution to remove:
@@ -101,31 +126,65 @@ Surviving authority:
 
 - Roma account routes own create/open/save commands.
 - Bob edits the in-browser working copy.
-- Tokyo stores account instance source and submitted package files.
+- Tokyo stores account instance input and submitted browser-readable files.
 
 Pollution to remove:
 
 - Durable anonymous/demo/minibob instance saves.
 - Parallel Michael/account instance tables as product truth.
-- Presets/catalogs that behave like instance sources.
+- Presets/catalogs that behave like widget instance input.
 - Admin-only create/duplicate lanes.
 
-### 3. Pages are stacks of instances that live in Tokyo
+### 3. Pages are composed browser files from widget instances
 
 Surviving authority:
 
-- Page source is `head + ordered placements[]`.
-- Each placement references an account-owned `instanceId`.
-- Tokyo stores page source and submitted page package files.
+- A page is composed from one or more account-owned widget instances.
+- A widget instance is the atomic editable unit. Pages can use instances, but
+  cannot edit, override, fork, or snapshot them.
+- The public page output is ordinary browser-readable code:
+  `accounts/{account}/pages/{page}/index.html`,
+  `accounts/{account}/pages/{page}/styles.css`, and
+  `accounts/{account}/pages/{page}/runtime.js`.
+- Any saved list/order needed to recompose a page is page input owned by Roma's
+  product boundary. It must not become a separate product architecture called
+  page source, website workspace, publish folder, block tree, or route map.
+- Tokyo stores and serves the submitted page files. It has no page-composition
+  authority.
+
+Page Composer authority:
+
+- Page Composer is the Roma-owned, dependency-aware materializer for pages.
+- It tracks which pages use which widget instances so an instance save can
+  trigger recomposition of every affected page.
+- It composes the current browser-readable files of selected widget instances
+  into one page `index.html`, one page `styles.css`, and one page `runtime.js`.
+- It dedupes shared CSS/runtime contributions and keeps per-instance runtime
+  state isolated.
+- It produces crawlable, semantic, SEO/GEO-friendly page output: real initial
+  content, ordered sections, page title/description/robots/canonical, and
+  structured data where valid.
+- It fails visibly when selected instances are missing, unowned, invalid, stale,
+  or not ready to compose.
+- None of this authority belongs to Tokyo. Tokyo must not track dependencies,
+  decide recomposition, dedupe CSS/runtime, generate SEO/GEO metadata, decide
+  page readiness, or interpret page input.
 
 Pollution to remove:
 
 - Blocks, sections, containers, slots, route maps, slugs, nav, or site nouns as
   PRD 106 page model.
 - Bob page mode.
-- Page source copied into Prague, Michael, or generated package files as product
-  truth.
-- Any page composition path that does not start from saved instance packages.
+- Page-owned instance edits, page-specific overrides, forked instances, frozen
+  instance snapshots, or inline Builder controls inside the page domain.
+- Composer logic that blindly concatenates repeated CSS/JS, produces stacked
+  iframes instead of one document, hides stale outputs, or generates request-time
+  page output.
+- Any Tokyo code path that needs the selected instance list, dependency graph,
+  recomposition reason, CSS/runtime dedupe plan, SEO/GEO intent, or readiness
+  meaning.
+- Page input copied into Prague, Michael, or generated files as product truth.
+- Any page composition path that does not start from saved widget instance files.
 
 ### 4. Bob is an editor: open/edit in browser memory/user save
 
@@ -139,7 +198,7 @@ Pollution to remove:
 
 - Bob product policy authority.
 - Bob tier/upsell decision authority.
-- Bob page source/page editor authority.
+- Bob page state/page editor authority.
 - Bob demo/minibob subject modes that can shape shared Builder behavior.
 - Bob durable storage or account routing assumptions.
 
@@ -147,18 +206,25 @@ Pollution to remove:
 
 Surviving authority:
 
-- Tokyo validates storage safety: account coordinate, path, file shape,
-  allowlisted package files, object existence, and public serve state.
-- Tokyo writes/reads R2 objects and serves already-stored public files.
+- Tokyo receives exact storage payloads from Roma.
+- Tokyo validates storage safety only: account coordinate, allowed path, file
+  shape, allowlisted browser files, content type, and object existence.
+- Tokyo writes/reads/deletes R2 objects and serves already-stored public files.
+- Tokyo may enforce mechanical file-serving gates such as "is this object allowed
+  to be public?" only when Roma has submitted that state explicitly. It must not
+  derive product meaning from page contents or page inputs.
 
 Pollution to remove:
 
 - Tokyo product policy.
 - Tokyo page composition or widget rendering.
-- Tokyo source invention.
+- Tokyo source/product invention.
 - Tokyo repair/healing of invalid product state.
-- Tokyo package registries, route maps, slugs, blocks, or product-level
-  publication decisions beyond stored serve-state transitions requested by Roma.
+- Tokyo dependency tracking, reverse placement indexes, recomposition triggers,
+  CSS/runtime dedupe, SEO/GEO metadata generation, or page readiness decisions.
+- Tokyo package registries, page source authorities, website workspaces, publish
+  folders, route maps, slugs, blocks, or product-level publication decisions
+  beyond explicit file-serving state requested by Roma.
 
 ### 6. Roma is the app
 
@@ -167,13 +233,16 @@ Surviving authority:
 - Roma routes the user to their current account.
 - Roma checks account/tier authority.
 - Roma accepts or rejects saves.
-- Roma composes page packages from saved widget packages and page source.
+- Roma composes page files from saved widget instance files and page input.
+- Roma Pages arranges widget instances only. Instance editing stays in Bob.
 
 Pollution to remove:
 
 - Roma delegating product decisions to Bob, Prague, or Tokyo.
 - Roma hiding duplicate widget/page truths behind caches or fallback groups.
 - Roma preserving fake modes instead of account/tier authority.
+- Roma page UI/API that edits instance config/content or creates page-owned
+  instance overrides.
 - Roma create/list UI that does not reflect system widgets plus account
   instances/pages.
 
@@ -204,7 +273,7 @@ before PRD 106 can be called realigned.
 Violated tenets:
 
 - Widgets are system software.
-- Pages are stacks of instances.
+- Pages are composed browser files from widget instances.
 - Clickeen uses Clickeen.
 
 Evidence:
@@ -215,7 +284,7 @@ Evidence:
   product-shaped switch, including a `minibob` branch.
 - `prague/src/blocks/minibob/minibob.astro` keeps a named demo lane around a
   public account instance embed.
-- `tokyo/prague/pages/**.json` stores repo-authored Prague page source using
+- `tokyo/prague/pages/**.json` stores repo-authored Prague page-like data using
   `blocks[]`, `minibob`, and stale fields such as `mode: "extraction"`.
 - `prague/src/lib/markdown.ts` loads `tokyo/prague/pages/**/*.json`, requires
   `blocks[]`, and validates account instance refs from that special source tree.
@@ -230,9 +299,9 @@ Required action:
 - Delete `minibob` as a product/demo mode. If Prague needs a marketing embed,
   make it an explicit public artifact embed plus signup CTA, not a Builder mode
   or product noun.
-- Replace `tokyo/prague/pages/**` as "page source" with either normal
-  account-owned page/instance references or a renamed Prague marketing fixture
-  path.
+- Replace `tokyo/prague/pages/**` as PRD 106 page data with either normal
+  account-owned public widget/page references or a renamed Prague marketing
+  fixture path.
 
 Risk:
 
@@ -251,13 +320,13 @@ Evidence:
 
 - `bob/lib/session/useSessionSaving.ts` imports and calls
   `buildSavedWidgetPublicPackage`, then sends `publicPackage` to Roma.
-- `bob/lib/session/publicPackage.ts` owns widget package generation and public
+- `bob/lib/session/publicPackage.ts` owns widget browser-file generation and public
   runtime payload shape.
 - `roma/app/api/account/instances/[instanceId]/route.ts` accepts Bob-built
-  package bytes and forwards them to Tokyo.
+  browser-file bytes and forwards them to Tokyo.
 - `bob/app/api/widgets/[widgetname]/compiled/route.ts` and
   `bob/lib/api/compiled-widget-route.ts` expose a Bob server API that reads
-  widget source/package inputs.
+  widget source/browser-file inputs.
 - `bob/lib/tokyo-static-proxy.ts` and Bob `app/assets`, `app/widgets`,
   `app/dieter`, `app/l10n`, and `app/fonts` proxy routes make Bob own
   static/account routing.
@@ -273,7 +342,7 @@ Evidence:
 
 Required action:
 
-- Move widget package materialization from Bob to Roma.
+- Move widget browser-file materialization from Bob to Roma.
 - Remove `publicPackage` from Bob save payload. Bob submits edited widget state
   and explicit save intent only.
 - Remove policy/upsell authority from Bob. Bob may display host-provided
@@ -285,7 +354,7 @@ Required action:
 
 Risk:
 
-- Moving package generation requires Roma to have the same compiled widget inputs
+- Moving browser-file generation requires Roma to have the same compiled widget inputs
   Bob currently uses. If this is split incorrectly, widget save output and page
   recomposition can diverge.
 
@@ -295,7 +364,7 @@ Violated tenets:
 
 - Tokyo is responsible for R2, nothing more.
 - Roma is the app.
-- Pages are stacks of instances.
+- Pages are composed browser files from widget instances.
 
 Evidence:
 
@@ -305,11 +374,16 @@ Evidence:
   Tokyo.
 - `tokyo-worker/src/domains/pages/source.ts` normalizes product fields, derives
   summaries, maintains `pages/index.json`, and maintains reverse placement
-  indexes.
+  indexes. That dependency graph belongs to Roma Page Composer, not Tokyo.
 - `tokyo-worker/src/domains/pages/package-files.ts` decides package readiness
-  for publish.
+  for publish. Page readiness is a Roma Page Composer/product concern, not a
+  Tokyo storage concern.
+- `tokyo-worker/src/domains/pages/keys.ts` stores pages under the invented
+  `accounts/{account}/website/pages` and
+  `accounts/{account}/website/publishes` architecture instead of the parallel
+  instance-like page path.
 - `tokyo-worker/src/routes/clk-live-routes.ts` route-generates page `embed.js`
-  instead of serving only submitted package files.
+  instead of serving only submitted browser files.
 - `tokyo-worker/src/domains/account-instances/operations.ts` creates instances
   from widget defaults, mints IDs, and duplicates source.
 - `tokyo-worker/src/domains/account-instances/source.ts` splits/recombines
@@ -321,12 +395,18 @@ Evidence:
 
 Required action:
 
-- Collapse Tokyo page routes toward storage commands: write/read/delete
-  `source.json`, write/read package files, write/read serve state.
-- Move page source acceptance and product validation into Roma.
+- Collapse Tokyo page routes toward storage commands: write/read/delete page
+  browser files under `accounts/{account}/pages/{page}/`.
+- Delete the `website/pages` and `website/publishes` storage shape.
+- Move page input acceptance and product validation into Roma.
+- Move page dependency tracking, affected-page lookup, recomposition triggers,
+  CSS/runtime dedupe, SEO/GEO metadata generation, and readiness decisions into
+  Roma Page Composer.
+- Delete reverse placement indexes, package readiness logic, page summaries, and
+  page source normalization from Tokyo.
 - Move product create/duplicate/default-source semantics out of Tokyo or mark
   them as a deliberate pre-existing exception with a separate corrective PRD.
-- Delete generated `embed.js` from Tokyo or make it a submitted stored package
+- Delete generated `embed.js` from Tokyo or make it a submitted stored browser
   file if the product keeps it.
 - Decide whether translation liveness in Tokyo is outside PRD 106 scope or must
   be realigned too.
@@ -360,7 +440,7 @@ Evidence:
 - `tokyo-worker/src/domains/account-instances/serve-state.ts` reads/writes
   publish state through the registry.
 - `tokyo-worker/src/routes/clk-live-routes.ts` checks registry-backed serve state
-  before reading R2 package files.
+  before reading R2 browser files.
 - `tokyo-worker/src/domains/account-translations/operations.ts` writes derived
   translation status back to the instance registry.
 
@@ -389,7 +469,7 @@ Risk:
 Violated tenets:
 
 - Roma is the app.
-- Pages are stacks of instances.
+- Pages are composed browser files from widget instances.
 
 Evidence:
 
@@ -397,8 +477,12 @@ Evidence:
   page entitlement or page cap.
 - `roma/components/pages-domain.tsx` enables create page based only on mutation
   state.
+- `roma/components/pages-domain.tsx` must remain an arrangement surface. Any
+  inline instance editing, override controls, fork/snapshot actions, or
+  page-owned instance state would violate PRD 106.
 - `roma/app/api/account/pages/[pageId]/route.ts` accepts a page source object
-  after only route/body ID matching, then delegates deeper acceptance downstream.
+  from the old architecture after only route/body ID matching, then delegates
+  deeper acceptance downstream.
 - `roma/app/api/account/pages/[pageId]/publish/route.ts` checks role and empty
   placements, but does not apply page-specific tier/account policy.
 - `roma/lib/account-instance-direct.ts` can save an instance and then report a
@@ -408,11 +492,20 @@ Evidence:
 Required action:
 
 - Add Roma-owned page create/save/publish policy gates.
-- Add Roma-owned page source validation, including placement validity.
+- Replace page source validation with Roma-owned page input validation: which
+  widget instances are selected, in what order, and whether the account is
+  allowed to compose/publish the resulting page files.
+- Add explicit guards or tests that page save input cannot carry instance
+  config/content, page-specific instance overrides, fork/snapshot instructions,
+  or inline edit payloads.
+- Add dependency/recomposition behavior at the Roma Page Composer boundary:
+  saving an instance must identify affected pages and recompose their page files.
+- Add composer output validation for deduped shared CSS/runtime, isolated
+  per-instance runtime state, and crawlable SEO/GEO page HTML.
 - Decide whether empty draft pages are allowed. If allowed, publish denial is
   Roma-owned and explicit.
 - Decide whether instance save should succeed even when page recomposition fails,
-  with a visible page-package stale/failure state.
+  with a visible page-file stale/failure state.
 
 Risk:
 
@@ -438,8 +531,8 @@ Required action:
 
 - Source widget labels from the system widget definition/reference boundary or
   rename/fence Prague labels as marketing-only display copy.
-- Rename Roma `systemWidgets` to `widgetDefinitions` or
-  `availableWidgetTypes` if the current name keeps causing catalog confusion.
+- Rename Roma `systemWidgets` to `widgetDefinitions` or `availableWidgets` if
+  the current name keeps causing catalog confusion.
 - Delete docs that ask for `templates.json`, preset lanes, or catalog-like
   example sources.
 
@@ -491,7 +584,7 @@ Subagents must audit; they must not edit files.
 | --- | --- | --- |
 | Widgets are system software | Kuhn | Complete |
 | Instances are created/saved through Roma/Bob/Tokyo account path | James | Complete |
-| Pages are stacks of instances | Leibniz | Complete |
+| Pages are composed browser files from widget instances | Leibniz | Complete |
 | Bob is browser-memory editor only | Halley | Complete |
 | Tokyo is R2 only | Copernicus | Complete |
 | Roma is the app/account authority | Popper | Complete |
@@ -538,25 +631,29 @@ Acceptance:
 - Fenced Prague implementation docs explicitly say it is not account page
   architecture.
 - `minibob` is not a product mode, Builder mode, or PRD 106 noun.
-- `tokyo/prague/pages/**` is not described as page source.
+- `tokyo/prague/pages/**` is not described as PRD 106 page data.
 
 ### Phase 2 - Restore Service Boundaries
 
 Targets:
 
-- Bob loses package generation, policy, upsell, and durable side-write authority
+- Bob loses browser-file generation, policy, upsell, and durable side-write authority
   on the edit path.
 - Roma owns account/tier save acceptance and page composition.
 - Tokyo routes read/write storage and serve stored files without product
   invention.
+- Tokyo never needs selected instance lists, page dependency graphs,
+  recomposition reasons, CSS/runtime dedupe plans, SEO/GEO intent, or page
+  readiness semantics.
 
 Acceptance:
 
 - Bob cannot decide tier/product permission for a local edit.
-- Bob does not submit public package bytes.
-- Roma widget/page save composes packages and sends storage payloads.
-- Tokyo page and instance operations can be described as storage safety and
-  serve-state storage, not product composition or product source invention.
+- Bob does not submit public browser-file bytes.
+- Roma widget/page save composes browser files and sends storage payloads.
+- Tokyo page and instance operations can be described as storage safety plus
+  byte read/write/serve only, not product composition, dependency tracking,
+  readiness, SEO/GEO, or product invention.
 
 ### Phase 3 - Remove Duplicate Instance Truth
 
@@ -583,13 +680,18 @@ Targets:
 
 - Widgets domain shows all system widgets and account instances, including empty
   system widget rows with create action.
-- Pages domain shows account pages as stacks of instance placements.
+- Pages domain shows account pages as ordered widget instance selections.
+- Pages domain does not edit widget instance config/content.
+- Pages domain does not expose page-specific instance overrides, forks, or
+  snapshots.
 - No duplicate fallback groups or fake unknown widget rows.
 
 Acceptance:
 
 - A widget with zero account instances is visible and creatable.
-- A page placement references an existing account instance.
+- A page selection references an existing account widget instance.
+- Changing an instance happens through the normal Builder/Bob path and triggers
+  recomposition of pages that use that instance.
 - Invalid account data fails visibly at Roma boundary.
 
 ### Phase 5 - Documentation Truth
@@ -622,8 +724,8 @@ These must be decided before implementation changes that depend on them:
   Bob for PRD 106 realignment?
 - Is Tokyo translation liveness/policy out of scope because of PRD 103/105, or
   does "Tokyo is R2 only" require a separate translation realignment?
-- Are page and placement indexes acceptable as submitted/derived storage
-  projections, or must Roma own all recomposition indexing?
+- Are page/index projections acceptable as submitted or derived storage, or must
+  Roma own all recomposition indexing?
 - Can Prague keep repo-authored marketing copy temporarily? If yes, what is the
   non-page, non-block name for that fixture model?
 
@@ -641,8 +743,19 @@ Targeted verification must be added for changed boundaries:
 
 - Bob session/edit path tests for browser-memory-only edit behavior.
 - Roma page/widget route tests for account/tier save acceptance.
-- Tokyo route tests for storage-only validation and serve-state behavior.
+- Tokyo route tests for storage-only validation and byte read/write/serve
+  behavior. Tests must prove Tokyo does not receive or require selected instance
+  lists, page dependency graphs, recomposition reasons, CSS/runtime dedupe plans,
+  SEO/GEO intent, or page readiness semantics.
 - Prague build/typecheck after deleting or fencing block/minibob paths.
+- A page recomposition test: save/publish a page composed from multiple widget
+  instances, update one included instance through the normal instance-save path,
+  and verify the page files served behind the same page embed URL include the
+  updated instance output without requiring a new embed line.
+- A composer quality test: compose multiple instances that share CSS/runtime and
+  verify the page output dedupes shared code, preserves ordered real HTML
+  sections, keeps per-instance runtime data distinct, and includes page-level
+  SEO/GEO metadata.
 
 ## Completion Criteria
 
