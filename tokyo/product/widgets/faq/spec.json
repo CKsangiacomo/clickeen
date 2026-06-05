@@ -42,9 +42,9 @@
   },
   "defaults": {
     "cta": {
-      "href": "https://example.com",
-      "label": "Contact us",
-      "enabled": true,
+      "href": "",
+      "label": "",
+      "enabled": false,
       "iconName": "arrowshape.turn.up.right",
       "openMode": "same-tab",
       "iconEnabled": true,
@@ -256,18 +256,17 @@
         "linked": true
       }
     },
-    "title": "Frequently Asked Questions",
     "header": {
       "gap": 28,
-      "title": "FAQs",
-      "enabled": true,
+      "title": "",
+      "enabled": false,
       "textGap": 4,
       "innerGap": 16,
       "alignment": "left",
       "placement": "top",
       "ctaPlacement": "right",
       "showSubtitle": false,
-      "subtitleHtml": "Modern website widgets-fast to launch, easy to customize, and built to help you convert."
+      "subtitleHtml": ""
     },
     "layout": {
       "gap": 16,
@@ -301,38 +300,7 @@
         "enabled": false
       }
     },
-    "sections": [
-      {
-        "id": "s1",
-        "faqs": [
-          {
-            "id": "q1",
-            "answer": "Clickeen is a widget SaaS platform that lets you add polished, high-performing widgets to your website in minutes-no heavy dev work required.",
-            "question": "What is Clickeen?",
-            "defaultOpen": false
-          },
-          {
-            "id": "q2",
-            "answer": "Yes. The Free plan includes 1 active widget with essential features so you can try Clickeen on a live site.",
-            "question": "Do you offer a free plan?",
-            "defaultOpen": false
-          },
-          {
-            "id": "q3",
-            "answer": "Create your widget, copy the embed code, and paste it right before the closing body tag on your website. Changes you make in Clickeen update instantly.",
-            "question": "How do I install a widget on my site?",
-            "defaultOpen": false
-          },
-          {
-            "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
-            "answer": "Launch faster with flexible design controls, simple updates, and reliable performance-so your team can ship improvements without maintaining custom code.",
-            "question": "Why use Clickeen instead of building widgets from scratch?",
-            "defaultOpen": false
-          }
-        ],
-        "title": "Getting started"
-      }
-    ],
+    "sections": [],
     "appearance": {
       "theme": "custom",
       "ctaBorder": {
@@ -1672,8 +1640,8 @@
                       "labelPlaceholder": "All Questions",
                       "labelSize": "lg",
                       "default-item": {
-                        "question": "New question",
-                        "answer": "New answer",
+                        "question": "",
+                        "answer": "",
                         "defaultOpen": false
                       }
                     }
@@ -1691,8 +1659,8 @@
                     "title": "All Questions",
                     "faqs": [
                       {
-                        "question": "New question",
-                        "answer": "New answer",
+                        "question": "",
+                        "answer": "",
                         "defaultOpen": false
                       }
                     ]

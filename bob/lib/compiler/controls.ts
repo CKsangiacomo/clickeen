@@ -261,7 +261,7 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
       if (!trimmed.includes('.') && !/__[^.]+__/.test(trimmed)) return;
       controls.push({
         panelId,
-        type: 'field',
+        type: 'textfield',
         path: trimmed,
       });
     };
@@ -313,7 +313,7 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
     if (!pathValue) continue;
     controls.push({
       panelId,
-      type: 'field',
+      type: 'textfield',
       path: pathValue,
     });
   }
