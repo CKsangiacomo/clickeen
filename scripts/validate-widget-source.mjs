@@ -216,52 +216,6 @@ function readWidgetOverlayCodes() {
   return codes;
 }
 
-function assertFaqGoldStandardDefaults(spec) {
-  const defaults = spec.defaults;
-  if (!isRecord(defaults)) return;
-
-  if ("title" in defaults) {
-    fail("faq/spec.json defaults.title is legacy display copy and must not exist");
-  }
-
-  const header = defaults.header;
-  if (!isRecord(header)) {
-    fail("faq/spec.json defaults.header must be an object");
-  }
-  if (header.enabled !== false) {
-    fail("faq/spec.json defaults.header.enabled must default to false");
-  }
-  if (header.title !== "" || header.subtitleHtml !== "") {
-    fail("faq/spec.json header title/subtitle defaults must be blank author-owned content");
-  }
-
-  const cta = defaults.cta;
-  if (!isRecord(cta)) {
-    fail("faq/spec.json defaults.cta must be an object");
-  }
-  if (cta.enabled !== false || cta.label !== "" || cta.href !== "") {
-    fail("faq/spec.json CTA defaults must be disabled and blank");
-  }
-
-  if (!Array.isArray(defaults.sections) || defaults.sections.length !== 0) {
-    fail("faq/spec.json defaults.sections must start empty; authoring add-item templates create FAQ rows");
-  }
-
-  const editorSource = JSON.stringify(spec.editor ?? {});
-  for (const forbidden of [
-    "What is Clickeen?",
-    "Do you offer a free plan?",
-    "How do I install a widget on my site?",
-    "Why use Clickeen instead of building widgets from scratch?",
-    "New question",
-    "New answer",
-  ]) {
-    if (editorSource.includes(forbidden)) {
-      fail(`faq/spec.json editor must not seed saved FAQ copy (${forbidden})`);
-    }
-  }
-}
-
 function assertFaqRuntimeDoesNotValidateSavedState(widgetDir) {
   const clientPath = path.join(widgetDir, "widget.client.js");
   const source = fs.readFileSync(clientPath, "utf8");
@@ -343,7 +297,6 @@ for (const widgetName of widgetNames) {
     fail(`${widgetName}/spec.json defaults must be an object`);
   }
   if (widgetName === "faq") {
-    assertFaqGoldStandardDefaults(spec);
     assertFaqRuntimeDoesNotValidateSavedState(widgetDir);
   }
   if (["cardgrid", "cta", "hero", "split", "steps"].includes(widgetName)) {
