@@ -9,7 +9,7 @@ Series step: 6
 Depends on: `PRD106A2_WidgetShellExtraction.md`, `PRD106C2_Prague astro blocks audit.md`
 Unlocks: `PRD106C3_Split_Widget.md`, `PRD106C4_Cards_Widget.md`, `PRD106C5_BigBang_Widget.md`, `PRD106C6_CTA_Widget.md`, `PRD106D_Prague migration from astro blocks to Page composer.md`
 Authority owned by this PRD: Prague block-to-widget migration map and child PRD scope.
-Authority explicitly not owned by this PRD: shared Shell extraction, Page Composer implementation, individual widget body implementation, Prague route cutover.
+Authority explicitly not owned by this PRD: shared Shell extraction, Page Composer implementation, individual Widget Core implementation, Prague route cutover.
 
 ## PRD Tenets
 
@@ -19,6 +19,9 @@ Authority explicitly not owned by this PRD: shared Shell extraction, Page Compos
 - Green requires named completion evidence.
 - A blocker report stops execution; it does not unlock the next step.
 - Do not solve missing decisions by inventing product behavior.
+- The goal is not to accommodate old drift. If existing code contradicts this
+  PRD's intended architecture, delete it, fence it, or stop; do not preserve it
+  and work around it.
 
 ## Mandatory PRD106 Execution Contract
 
@@ -68,7 +71,7 @@ Stop conditions:
 | 1 | Confirm surviving widget target set. | Target table from C2. | Only Split, Cards, Big Bang, CTA are customer targets. | New target widget needed. |
 | 2 | Confirm shared Shell dependency. | A2 green/fence evidence. | Child PRDs consume Shell package. | Shell contract missing. |
 | 3 | Assign Prague blocks to child PRDs. | Mapping table. | Every migrated block maps to one child PRD. | Block spans multiple PRDs without owner. |
-| 4 | Confirm per-child scope. | Child PRD links and scope bullets. | Each child owns body-only controls/content. | Child owns Header/CTA/Stage/Pod/Page Composer. |
+| 4 | Confirm per-child scope. | Child PRD links and scope bullets. | Each child owns Core-only controls/content. | Child owns Header/CTA/Stage/Pod/Page Composer. |
 | 5 | Confirm migration readiness. | Acceptance checklist. | C3-C6 can execute one at a time. | Any block lacks source evidence or decision. |
 
 ## Purpose
@@ -111,16 +114,17 @@ These are not widgets:
 Current Prague `accountInstanceRef` dies. It must not be copied into migrated
 widget state.
 
-If Clickeen wants widgets that can embed other saved instances, that is a
-separate core widget-inside-widget feature. That future feature must have its
-own PRD and explicit dependency rules. It is not Prague `accountInstanceRef`.
+Split may support embedding another saved account-owned widget instance as its
+Core. That is still not Prague `accountInstanceRef`. The surviving model is a
+normal account instance reference under the Split Core contract, with normal
+dependency, publish-readiness, and recomposition rules.
 
 ## How Bob Widget Controls Work
 
 The child PRDs must be specific because Bob is not a vague form builder.
 
 Widget controls are declared through the shared Widget Shell contract plus the
-widget body definition. The current widget folders may still store body source
+Widget Core definition. The current widget folders may still store Core source
 files such as `spec.json`, but those files are repo product source, not
 Tokyo-owned widget architecture.
 
@@ -154,14 +158,14 @@ All four migrated widgets must consume the shared Widget Shell package defined
 by `PRD106A2_WidgetShellExtraction.md`.
 
 ```text
-Widget = Widget Shell + widget-specific content
+Widget = Widget Shell + Widget Core
 
 packages/widget-shell:
 Stage
   Pod
     ck-headerLayout
       Header
-      widget-specific content
+      Widget Core
 ```
 
 FAQ is the proof and extraction source. `PRD106A2_WidgetShellExtraction.md`
@@ -191,22 +195,22 @@ Header paths are `header.*`; CTA paths are `cta.*`. Do not create
 widget-specific `headline`, `subheadline`, `primaryCta`, `secondaryCta`,
 `button`, `eyebrow`, or duplicate Header/CTA/layout paths.
 
-For PRD106C, child PRDs define only the widget-specific content:
+For PRD106C, child PRDs define only the Widget Core:
 
 ```text
-Split   -> Visual content
-Cards   -> Cards/items content
-BigBang -> Large typography/content treatment
-CTA     -> Header-only content
+Split   -> Core div with image/video/embedded-instance item software; optional carousel
+Cards   -> cards/items content
+BigBang -> large typography/content treatment
+CTA     -> empty Core; Shell Header/CTA only
 ```
 
 PRD106C widget execution is blocked until PRD106A2 accepts the shared Shell
 contract or explicitly fences the exact same Shell contribution shape. After
 that, Split, Cards, Big Bang, CTA, Countdown gold-standard repair, and Logo
-Showcase gold-standard repair are body work against the same shell.
+Showcase gold-standard repair are Core work against the same shell.
 
 Each child PRD must say which FAQ-specific content is removed, which
-widget-specific content is added, and which exact content-specific controls and
+Widget Core is added, and which exact Core-specific controls and
 editable fields exist. Layout, appearance, typography, locale, settings,
 translation, and runtime shell come from `packages/widget-shell/` unless the
 child PRD records an explicit product-owner exception.
@@ -214,7 +218,7 @@ child PRD records an explicit product-owner exception.
 ## Surviving Authorities
 
 - Shared widget architecture lives in `packages/widget-shell/`.
-- Widget body software may live in the current widget source folders during this
+- Widget Core software may live in the current widget source folders during this
   execution track. Those folders are repo product source, not Tokyo service
   ownership.
 - Useful starter defaults live in `spec.json.defaults` and object-manager
@@ -296,7 +300,7 @@ PRD106C is complete when:
 
 - all four child PRDs exist and specify exact Bob panels/controls;
 - all four child PRDs consume `packages/widget-shell/` and define only their
-  widget-specific content/control deltas;
+  Widget Core content/control deltas;
 - `split`, `cards`, `big-bang`, and `cta` are the only Prague-derived customer
   widget targets;
 - `page-meta`, `navmeta`, and `minibob` are explicitly excluded from customer

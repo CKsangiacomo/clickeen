@@ -10,12 +10,12 @@ Execution split:
 
 - `PRD106A_realignment.md` cleans up drift against this umbrella.
 - `PRD106A2_WidgetShellExtraction.md` extracts FAQ's working Widget Shell into
-  `packages/widget-shell/` and defines the body-only widget extension contract.
+  `packages/widget-shell/` and defines the Widget Core extension contract.
 - `PRD106B_PageComposer.md` defines the Roma Page Composer product boundary.
 - `PRD106C_Prague astro blocks migration to widget instances.md` ports Prague
   Astro block work into real widgets and widget instances.
 - `PRD106C3` through `PRD106C6` define the new Prague-absorbing widgets as
-  Widget Shell plus body-only deltas.
+  Widget Shell plus Widget Core deltas.
 - `PRD106D_Prague migration from astro blocks to Page composer.md` moves Prague
   pages from Astro block assembly to composed Clickeen page output after the
   widget-instance ports are real.
@@ -26,6 +26,9 @@ Execution split:
 ## PRD106 Execution Tenets
 
 These tenets govern every PRD in the 106 series.
+This section is the canonical execution contract. Child PRDs repeat the local
+current-step gate on purpose so agents cannot skip the active step, but this
+umbrella is the source of truth for the contract language.
 
 - Execute one PRD step at a time.
 - Do not begin the next step until the current step is green.
@@ -35,6 +38,9 @@ These tenets govern every PRD in the 106 series.
   next step.
 - If a step is not green, stop and report the blocker. Do not invent product
   behavior to keep moving.
+- The goal is not to accommodate old drift. If existing code contradicts the
+  intended architecture, delete it, fence it, or stop; do not preserve it and
+  work around it.
 - Long reference sections are not execution permission. The active execution
   permission is the current step only.
 - When two PRDs appear to overlap, the authority table below decides ownership.
@@ -51,10 +57,10 @@ These tenets govern every PRD in the 106 series.
 | Page Composer product/build path | `PRD106B_PageComposer.md` |
 | Prague block migration map | `PRD106C_Prague astro blocks migration to widget instances.md` |
 | Prague factual block inventory | `PRD106C2_Prague astro blocks audit.md` |
-| Split body | `PRD106C3_Split_Widget.md` |
-| Cards body | `PRD106C4_Cards_Widget.md` |
-| Big Bang body | `PRD106C5_BigBang_Widget.md` |
-| CTA body | `PRD106C6_CTA_Widget.md` |
+| Split Core | `PRD106C3_Split_Widget.md` |
+| Cards Core | `PRD106C4_Cards_Widget.md` |
+| Big Bang Core | `PRD106C5_BigBang_Widget.md` |
+| CTA Core | `PRD106C6_CTA_Widget.md` |
 | Prague route cutover to composed pages | `PRD106D_Prague migration from astro blocks to Page composer.md` |
 | Toxic-flow deletion/fencing | `PRD106E_Toxic_Flow_Deletion.md` |
 
@@ -68,7 +74,7 @@ Execute in this order unless Pietro explicitly changes the order.
 4. Execute `PRD106B_PageComposer.md`.
 5. Execute `PRD106C2_Prague astro blocks audit.md`.
 6. Execute `PRD106C_Prague astro blocks migration to widget instances.md`.
-7. Execute widget body PRDs one at a time: Split, Cards, Big Bang, CTA.
+7. Execute widget Core PRDs one at a time: Split, Cards, Big Bang, CTA.
 8. Execute `PRD106D_Prague migration from astro blocks to Page composer.md`.
 9. Execute `PRD106E_Toxic_Flow_Deletion.md`.
 
@@ -185,14 +191,14 @@ unit is a **whole product**.
 Every normal widget uses the same FAQ-proven product architecture:
 
 ```text
-Widget = Widget Shell + widget-specific content
+Widget = Widget Shell + Widget Core
 
 Widget Shell:
 Stage
   Pod
     ck-headerLayout
       Header
-      widget-specific content
+      Widget Core
 ```
 
 The Widget Shell is already working in FAQ. It includes Stage, Pod, Header, CTA,
@@ -211,14 +217,14 @@ packages/widget-shell/
 shell renderer/helpers, shell CSS/runtime helpers, and shell validation. FAQ is
 the proof and extraction source; the package is the surviving authority.
 
-Widget source folders own only widget-specific body software:
+Widget source folders own only widget-specific Core software:
 
 ```text
-widget body schema
-widget body defaults
-widget body controls
-widget body editable fields
-widget body CSS/runtime
+widget core schema
+widget core defaults
+widget core controls
+widget core editable fields
+widget core CSS/runtime
 ```
 
 The current physical location for widget source may still be
@@ -237,26 +243,33 @@ The working paths are `header.*` and `cta.*`. Do not invent widget-specific
 `headline`, `subheadline`, `copy`, `primaryCta`, `secondaryCta`, `button`,
 `eyebrow`, or duplicate Header/CTA/layout paths for normal widgets.
 
-For every new or migrated widget, the only expected change is the
-widget-specific content:
+For every new or migrated widget, the only expected change is what renders
+inside the Widget Core div. Core is the generic widget-owned slot where
+widget-specific software begins:
 
 ```text
-FAQ body           -> sections/questions/answers
-Split body         -> visual
-Cards body         -> cards/items
-Countdown body     -> timer/countdown content
-Logo Showcase body -> logo strips/items
-CTA body           -> empty/header-only content
-Big Bang body      -> large typography/content treatment
+FAQ Core div           -> FAQ software: sections/questions/answers
+Split Core div         -> Split software: image/video/embedded instance; optional carousel
+Cards Core div         -> Cards software: cards/items/treatments
+Countdown Core div     -> Countdown software: timer/countdown content
+Logo Showcase Core div -> Logo Showcase software: logo strips/items
+CTA Core div           -> empty; Shell Header/CTA only
+Big Bang Core div      -> Big Bang software: large typography/content treatment
 ```
 
 This rule exists so agents do not rebuild a new editor, layout model,
 appearance model, translation system, or runtime shell for every widget. Widgets
-differ by content, not by architecture.
+differ by the software inside the Core div, not by architecture.
+
+Because every widget has a Core div, the shared Widget Shell owns generic Core
+div sizing. Bob UI must not expose the word "Core" to users. Each widget
+provides user-facing labels for that Core div, such as `FAQs`, `Visual`,
+`Cards`, `Logos`, or `Timer`; Bob renders shared Core sizing controls using the
+widget's label.
 
 This is also how Countdown and Logo Showcase reach gold standard without
 rebuilding the product twice. They are rebased onto the shared Widget Shell, and
-their remaining work becomes only their body: timer behavior for Countdown and
+their remaining work becomes only their Core: timer behavior for Countdown and
 logo-strip/media behavior for Logo Showcase.
 
 ## The anchor: it's Figma's component model, for live localized web content
@@ -424,7 +437,7 @@ dumb about editing and product shape.
 Prague has valuable Astro block work. That work is not discarded, but it is not
 product architecture. The migration path is to port the block implementation,
 layout behavior, content shape, responsive behavior, assets, and SEO semantics
-into the shared Widget Shell as widget-specific content, then save those as
+into the shared Widget Shell as Widget Core implementation, then save those as
 normal Clickeen widgets and account-owned widget instances. FAQ proves the
 Shell; `packages/widget-shell/` is the surviving implementation authority.
 
@@ -444,7 +457,7 @@ Bob" is only the halfway line. A finished migration must have:
 
 - useful non-empty defaults, not blank scaffold instances;
 - the shared Widget Shell package, not a Prague-derived editor architecture;
-- Bob controls only for the widget-specific content that changes;
+- Bob controls only for the Widget Core that changes;
 - faithful responsive layout and visual behavior from the Astro block;
 - translatable field contracts matching the real authored content;
 - public output that visually matches the intended Prague section;
@@ -455,7 +468,7 @@ The hard part is not naming. The hard part is refusing to import Prague layout
 vocabulary as new widget architecture. Prague blocks use rows, columns,
 variants, tile grids, media placement, and per-block CTA behavior. PRD106A2
 extracts FAQ's proven shell into `packages/widget-shell/`; PRD106C then adds
-only the new widget-specific content and its required controls. Prague
+only the new Widget Core and its required controls. Prague
 vocabulary must not become page-level columns, a new block object, or duplicate
 Header/CTA/layout state.
 
@@ -570,8 +583,7 @@ them is agent-approved scope inside PRD 106.
 2. Page-shaped surfaces are **widgets**. If a section needs real interactivity,
    that's still a widget — not a new object, and not page-level code.
 3. Every normal widget uses the shared Widget Shell package extracted from FAQ.
-   The only part that changes per widget is widget-specific content and its
-   exact controls.
+   The only part that changes per widget is Widget Core and its exact controls.
 4. Header always means title, optional subtitle, and optional CTA using
    `header.*` and `cta.*`. Do not invent duplicate copy/CTA paths.
 5. Pages are composed from widget instances. Editing a widget instance
@@ -593,7 +605,7 @@ them is agent-approved scope inside PRD 106.
    no SEO/GEO generation, no readiness semantics, and no product-shaped page
    source.
 11. Tokyo does not own widget architecture. Widget Shell authority belongs in
-   `packages/widget-shell`; widget folders contribute body software; Tokyo
+   `packages/widget-shell`; widget folders contribute Core software; Tokyo
    stores and serves account files.
 12. Localization is a property of every unit at every level, at near-zero marginal
    cost. Locale is a runtime parameter, never baked into identity.

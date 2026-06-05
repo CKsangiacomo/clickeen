@@ -7,7 +7,7 @@ Parent: `PRD106C_Prague astro blocks migration to widget instances.md`
 Series step: 7.3
 Depends on: `PRD106A2_WidgetShellExtraction.md`, `PRD106C_Prague astro blocks migration to widget instances.md`
 Unlocks: Big Bang widget instances for PRD106D route migration.
-Authority owned by this PRD: Big Bang widget body state, controls, defaults, DOM, CSS, runtime, and editable fields.
+Authority owned by this PRD: Big Bang widget Core state, controls, defaults, DOM, CSS, runtime, and editable fields.
 Authority explicitly not owned by this PRD: Widget Shell, Page Composer, Split, Cards, CTA, Prague route cutover.
 
 ## PRD Tenets
@@ -18,6 +18,9 @@ Authority explicitly not owned by this PRD: Widget Shell, Page Composer, Split, 
 - Green requires named completion evidence.
 - A blocker report stops execution; it does not unlock the next step.
 - Do not solve missing decisions by inventing product behavior.
+- The goal is not to accommodate old drift. If existing code contradicts this
+  PRD's intended architecture, delete it, fence it, or stop; do not preserve it
+  and work around it.
 
 ## Mandatory PRD106 Execution Contract
 
@@ -46,14 +49,14 @@ is evidence to stop, not evidence to proceed.
 Current executable step:
 
 ```text
-Step 1: Define Big Bang body contract.
+Step 1: Define Big Bang Core contract.
 ```
 
 Required evidence before marking green:
 
-- Big Bang body paths are listed.
+- Big Bang Core paths are listed.
 - Header remains `header.*`/`cta.*`.
-- Prague statement/supporting copy maps to body paths.
+- Prague statement/supporting copy maps to Core paths.
 
 Stop conditions:
 
@@ -64,11 +67,11 @@ Stop conditions:
 
 | Step | Action | Required evidence | Green criteria | Stop condition |
 | ---: | --- | --- | --- | --- |
-| 1 | Define Big Bang body contract. | State/control/editable-field table. | Only `bigBang.*` body paths are added. | Duplicate Header/CTA path appears. |
-| 2 | Build Big Bang defaults and controls. | Spec/body diff. | Non-empty editorial defaults compile. | Blank scaffold or root headline path. |
-| 3 | Build Big Bang DOM/CSS/runtime body. | Diff and preview evidence. | Large text renders inside `.ck-headerLayout__body`. | Body bypasses Shell. |
-| 4 | Validate translation/editable fields. | Editable-fields diff/tests. | Concrete body text paths translate. | Body text omitted from editable fields. |
-| 5 | Verify Bob/Roma materialization. | Compile/save/package evidence. | Big Bang package is Shell plus body. | Duplicate Shell code appears. |
+| 1 | Define Big Bang Core contract. | State/control/editable-field table. | Only `bigBang.*` Core paths are added. | Duplicate Header/CTA path appears. |
+| 2 | Build Big Bang defaults and controls. | Spec/Core diff. | Non-empty editorial defaults compile. | Blank scaffold or root headline path. |
+| 3 | Build Big Bang DOM/CSS/runtime Core. | Diff and preview evidence. | Large text renders inside `.ck-headerLayout__body`. | Core bypasses Shell. |
+| 4 | Validate translation/editable fields. | Editable-fields diff/tests. | Concrete Core text paths translate. | Core text omitted from editable fields. |
+| 5 | Verify Bob/Roma materialization. | Compile/save/package evidence. | Big Bang package is Shell plus Core. | Duplicate Shell code appears. |
 
 ## Purpose
 
@@ -77,11 +80,11 @@ Build the surviving `big-bang` widget that absorbs Prague `big-bang`.
 Big Bang uses the shared Widget Shell extracted from FAQ:
 
 ```text
-Stage -> Pod -> ck-headerLayout(Header + Big Bang content)
+Stage -> Pod -> ck-headerLayout(Header + Big Bang Core)
 ```
 
 Big Bang is not a new editor architecture. It is the shared Widget Shell with a
-large typography/content treatment added as the widget-specific content.
+large typography/content treatment added as the Widget Core.
 
 Header still means title, optional subtitle, and optional CTA through
 `header.*` and `cta.*`. Big Bang's special value is the large editorial content
@@ -136,11 +139,11 @@ Shell state comes from `packages/widget-shell/`. Big Bang-specific state:
 | Path | Owner | Meaning |
 | --- | --- | --- |
 | `bigBang.statement` | content | Main large editorial text. |
-| `bigBang.supportingCopy` | content | Optional supporting copy inside the Big Bang content body. |
+| `bigBang.supportingCopy` | content | Optional supporting copy inside the Big Bang Core. |
 | `bigBang.showSupportingCopy` | config | Shows/hides supporting copy. |
 | `bigBang.alignment` | config | `left`, `center`. |
-| `bigBang.textWidth` | config | Text measure for the large content body. |
-| `bigBang.gap` | config | Gap inside the Big Bang content body. |
+| `bigBang.textWidth` | config | Text measure for the large Big Bang Core. |
+| `bigBang.gap` | config | Gap inside the Big Bang Core. |
 
 Do not add `headline`, `supportingCopy` at root, `primaryCta`,
 `secondaryCta`, `layout.maxWidth`, `layout.textWidth`, `layout.alignment`,
@@ -182,7 +185,7 @@ No default visible string may be empty.
 | Cluster | Control | Path | Type | Values / bounds | Why |
 | --- | --- | --- | --- | --- | --- |
 | Header | Shared Header layout | shared `header-layout` | shared | Widget Shell package. |
-| Big Bang layout | Alignment | `bigBang.alignment` | `choice-tiles` | `left`, `center` | Controls editorial posture inside the content body. |
+| Big Bang layout | Alignment | `bigBang.alignment` | `choice-tiles` | `left`, `center` | Controls editorial posture inside the Big Bang Core. |
 | Big Bang layout | Text width | `bigBang.textWidth` | `valuefield` | 480-1280, step 10 | Prevents unreadable long lines. |
 | Big Bang layout | Gap | `bigBang.gap` | `valuefield` | 8-80, step 2 | Internal Big Bang content spacing. |
 | Shared | Stage/Pod layout | shared `stagepod-layout` | shared | Widget Shell package. |

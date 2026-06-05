@@ -17,6 +17,9 @@ Authority explicitly not owned by this PRD: widget implementation, Page Composer
 - Green requires named completion evidence.
 - A blocker report stops execution; it does not unlock the next step.
 - Do not solve missing decisions by inventing product behavior.
+- The goal is not to accommodate old drift. If existing code contradicts this
+  PRD's intended architecture, delete it, fence it, or stop; do not preserve it
+  and work around it.
 
 ## Mandatory PRD106 Execution Contract
 
@@ -64,7 +67,7 @@ Stop conditions:
 | 1 | Refresh Prague block inventory. | Commands and counts from Prague source. | Every used block type is listed. | Source evidence is stale/missing. |
 | 2 | Classify each block. | Table mapping block to widget/Prague-only/dies. | Every block has one classification. | Classification needs product decision. |
 | 3 | Map approved blocks to target widgets. | Mapping table. | Only Split, Cards, Big Bang, CTA remain customer widget targets. | New target widget is invented. |
-| 4 | Record source-to-widget field hints. | Field mapping table. | Prague source informs body fields only. | Prague block architecture survives as product truth. |
+| 4 | Record source-to-widget field hints. | Field mapping table. | Prague source informs Core fields only. | Prague block architecture survives as product truth. |
 | 5 | Run audit guards. | `rg`/command output. | No unmapped used block remains. | Any used block lacks disposition. |
 
 ## Audit Rule
@@ -87,7 +90,7 @@ source must not survive as account product architecture.
 | Shared card/step rendering | `prague/src/components/StepsPrimitive.astro` |
 | Current page source | `tokyo/prague/pages/**/*.json` |
 | Shared Widget Shell target | `packages/widget-shell/**` |
-| Current widget source/body folders | `tokyo/product/widgets/**` |
+| Current widget source/Core folders | `tokyo/product/widgets/**` |
 
 ## Current Prague Block Usage
 
@@ -121,8 +124,11 @@ the current first-party page JSON counts.
 | `mobile-showcase` | `prague/src/blocks/mobile-showcase/mobile-showcase.astro` |
 | `feature-explorer` | `prague/src/blocks/feature-explorer/feature-explorer.astro` |
 
-They are not part of the four-widget migration unless Pietro separately assigns
-them to a product widget decision.
+They do not create additional widget targets. `split-carousel` and
+`embed-carousel` are source evidence for optional carousel behavior inside the
+Split Core div, owned by `PRD106C3_Split_Widget.md`. `mobile-showcase` and
+`feature-explorer` remain outside the current migration unless Pietro separately
+assigns them to a product widget decision.
 
 ## Final Migration Decision
 
@@ -140,8 +146,8 @@ them to a product widget decision.
 | `page-meta` | Dies as Prague block | Page Composer SEO/GEO PRD |
 | `navmeta` | Stays Prague navigation metadata | Prague route/nav system |
 | `minibob` | Stays Prague/admin-only demo behavior | Prague/admin-only mechanism |
-| `split-carousel` | Not in current migration | Separate product decision required |
-| `embed-carousel` | Not in current migration | Separate product decision required |
+| `split-carousel` | Source evidence for Split carousel behavior, not separate widget | `PRD106C3_Split_Widget.md` |
+| `embed-carousel` | Source evidence for Split carousel behavior, not separate widget | `PRD106C3_Split_Widget.md` |
 | `mobile-showcase` | Not in current migration | Separate product decision required |
 | `feature-explorer` | Not in current migration | Separate product decision required |
 
@@ -225,12 +231,15 @@ No standalone Steps widget in this migration.
 
 ### `split`
 
-Current layout: split copy/CTA plus visual area.
+Current layout: split copy/CTA plus media or embedded-widget area.
 
 Decision: migrate into Split.
 
-The visual area may support image/media now. Embedded instance support requires
-a separate core widget-inside-widget product feature.
+The Split Core div supports image, video, or embedded widget instance items.
+Carousel is optional Split software inside that Core div when
+`core.carousel.enabled` is true. This does not preserve Prague
+`accountInstanceRef`; it maps the useful behavior into the normal account-owned
+instance reference model.
 
 ### `big-bang`
 
@@ -283,7 +292,7 @@ The word "bottom" is page placement, not widget identity.
 | Renderer cases | `grep -n "case '" prague/src/components/WidgetBlocks.astro` |
 | Registry contracts | `sed -n '35,180p' prague/src/lib/blockRegistry.ts` |
 | Shared shell target | `packages/widget-shell` |
-| Current widget body/source targets | `find tokyo/product/widgets -maxdepth 1 -mindepth 1 -type d \| sort` |
+| Current widget Core/source targets | `find tokyo/product/widgets -maxdepth 1 -mindepth 1 -type d \| sort` |
 
 ## Acceptance
 

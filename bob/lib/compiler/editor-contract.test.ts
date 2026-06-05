@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
+import { parsePanels } from '../compiler.shared';
+import { compileControlsFromPanels } from './controls';
 import { buildEditorHtmlLines } from './editor-contract';
 import { applyWidgetNormalizationRules, normalizeWidgetNormalizationSpec } from './modules/normalization';
 
@@ -51,6 +53,16 @@ test('shared Stage/Pod appearance controls expand for every current widget', () 
       assert.doesNotMatch(html, /path='appearance\.podBorder'/, widgetCase.widgetType);
     }
   }
+});
+
+test('faq widget compiles nested section label paths from defaults', async () => {
+  const spec = readWidgetSpec('faq');
+  const panels = parsePanels(buildEditorHtmlLines(spec.editor, spec.defaults, spec.widgetname)).panels;
+  const controls = compileControlsFromPanels({ panels, defaults: spec.defaults });
+  const sectionLabelControl = controls.find((control) => control.path === 'sections.__SECTION__.title');
+
+  assert.equal(sectionLabelControl?.kind, 'string');
+  assert.ok(controls.some((control) => control.path === 'sections.__SECTION__.faqs'));
 });
 
 test('steps normalization assigns stable repeated item ids before save', () => {

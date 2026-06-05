@@ -121,7 +121,7 @@
     "items.group.small.max": {
       "kind": "limit",
       "values": {
-        "free": 5,
+        "free": 3,
         "tier1": 10,
         "tier2": 25,
         "tier3": null,
@@ -131,7 +131,7 @@
     "items.group.medium.max": {
       "kind": "limit",
       "values": {
-        "free": 10,
+        "free": 9,
         "tier1": 25,
         "tier2": 50,
         "tier3": null,
@@ -141,7 +141,7 @@
     "items.group.large.max": {
       "kind": "limit",
       "values": {
-        "free": 25,
+        "free": 16,
         "tier1": 50,
         "tier2": 100,
         "tier3": null,

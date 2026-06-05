@@ -8,7 +8,7 @@ Series step: 4
 Depends on: `PRD106A_realignment.md`, `PRD106A2_WidgetShellExtraction.md`
 Unlocks: `PRD106D_Prague migration from astro blocks to Page composer.md`
 Authority owned by this PRD: Roma Page Composer, page source, page publish/serve-state intent, affected-page recomposition, page UX.
-Authority explicitly not owned by this PRD: Widget Shell extraction, widget body design, Prague block inventory, Tokyo product logic.
+Authority explicitly not owned by this PRD: Widget Shell extraction, Widget Core design, Prague block inventory, Tokyo product logic.
 
 ## PRD Tenets
 
@@ -18,6 +18,9 @@ Authority explicitly not owned by this PRD: Widget Shell extraction, widget body
 - Green requires named completion evidence.
 - A blocker report stops execution; it does not unlock the next step.
 - Do not solve missing decisions by inventing product behavior.
+- The goal is not to accommodate old drift. If existing code contradicts this
+  PRD's intended architecture, delete it, fence it, or stop; do not preserve it
+  and work around it.
 
 ## Mandatory PRD106 Execution Contract
 
@@ -474,7 +477,7 @@ to the page package. Regex over arbitrary HTML is not a product contract.
 The expected widget package shape is the shared Widget Shell package:
 
 ```text
-Stage -> Pod -> ck-headerLayout(Header + widget-specific content)
+Stage -> Pod -> ck-headerLayout(Header + Widget Core)
 ```
 
 The surviving implementation source for that shape is the shared Widget Shell
@@ -490,9 +493,9 @@ routes, parse widget-specific private layouts, or depend on copied shell code
 inside every widget.
 
 Page Composer consumes materialized widget instances. It does not care whether
-the widget-specific content is FAQ questions, Split visual, Cards items,
-Countdown timer, Logo Showcase strips, CTA header-only content, or Big Bang
-large typography. It only needs the shared package contribution contract below.
+the Widget Core is FAQ questions, Split image/video/embedded instance, Cards
+items, Countdown timer, Logo Showcase strips, CTA empty Core, or Big Bang large
+typography. It only needs the shared package contribution contract below.
 Any widget that uses a different shell must be explicitly approved because it
 adds page-composition risk.
 
@@ -558,12 +561,42 @@ Roma owns the dependency index that answers:
 given instanceId, return pageIds that include it
 ```
 
-The Pages service owns this knowledge because it saves page source. If the
-account has no pages, widget save does no page-recomposition work. If the
-account has pages, widget save asks Roma Pages for affected pages. Roma Pages
-may answer from a derived `instanceId -> pageIds` index, or rebuild/repair that
-index by scanning saved page `source.json` files. Tokyo must not own this
-reverse placement truth.
+The Pages service owns this knowledge because it saves page source and composes
+from materialized instance packages. If the account has no pages, widget save
+does no page-recomposition work. If the account has pages, widget save asks Roma
+Pages for affected pages. Roma Pages may answer from a derived
+`instanceId -> pageIds` index, or rebuild/repair that index by scanning saved
+page `source.json` files plus package-declared embedded instance dependencies
+from the instances included by those pages. Tokyo must not own this reverse
+placement truth.
+
+The derived `instanceId -> pageIds` index is the fast path. Scanning saved page
+`source.json` files and materialized package dependency metadata is the
+correctness backstop and repair path. If the fast path and the scan disagree,
+Roma must repair the derived index or mark the page dependency state
+failed/stale visibly; it must not silently trust stale index state.
+
+Embedded widget instances inside a widget, such as Split items with
+`core.items[].instance.instanceId`, do not create a page graph service. Roma
+flattens those materialized package dependencies into the same
+`instanceId -> pageIds` answer. Example:
+
+```text
+Page P includes Split instance S.
+Split instance S embeds FAQ instance F.
+The derived index must answer:
+  S -> [P]
+  F -> [P]
+```
+
+When F is saved, Roma must re-materialize S before recomposing P, or mark the
+affected dependency path stale/failed visibly. Missing P from F's affected page
+set fails the WordPress propagation promise.
+
+This is the WordPress propagation promise: a user can paste one page embed into
+WordPress, edit an included instance in Clickeen, save it, and the old WordPress
+embed shows the recomposed page with that updated instance. Missing one affected
+page is a product failure, not a tolerable cache miss.
 
 The index must update when:
 
@@ -571,15 +604,20 @@ The index must update when:
 - A page removes an instance.
 - A page is deleted.
 - An instance is deleted or becomes unavailable.
+- A materialized package declares, removes, or changes embedded instance
+  dependencies.
 
 When a widget instance save completes:
 
 1. Roma saves the instance through the normal widget save path.
-2. Roma records the new materialized instance package.
-3. Roma finds affected pages from the dependency index.
-4. Roma recomposes each affected page package.
-5. Roma stores the new generated page files.
-6. Roma updates page status to current, stale, or failed.
+2. Roma records the new materialized instance package and its package-declared
+   embedded instance dependencies.
+3. Roma re-materializes any parent instances that depend on the saved instance,
+   or marks that parent dependency path stale/failed visibly.
+4. Roma finds affected pages from the flattened dependency index.
+5. Roma recomposes each affected page package.
+6. Roma stores the new generated page files.
+7. Roma updates page status to current, stale, or failed.
 
 Partial failure is a first-class state, not an exception hidden from users.
 
@@ -589,12 +627,16 @@ The peer review's Page Composer feedback is accepted as execution law:
 
 - Page storage, serve-state, unpublished-instance publish behavior, copy
   artifact, and page tier caps are product-owner decisions recorded in this PRD.
-- PRD106B dependency knowledge is only `instanceId -> pageIds`. Do not build a
+- PRD106B dependency knowledge answers `instanceId -> pageIds`, including
+  flattened package-declared embedded instance dependencies. Do not build a
   graph service, DAG, queue platform, readiness engine, or recomposition
   framework unless Pietro explicitly approves it in a separate PRD.
 - The `instanceId -> pageIds` store must be consistent enough that an included
   instance save cannot miss an affected page. A missed affected page fails the
   WordPress test and fails PRD106B.
+- The derived dependency index is the fast path; a scan of page `source.json`
+  files plus materialized package dependency metadata is the repair/backstop
+  path. Do not build a graph engine to solve this.
 - Pages can place only existing account-owned instances with valid materialized
   packages. Page save must not create, auto-save, or silently materialize a new
   instance.
@@ -637,7 +679,7 @@ The accepted implementation shape remains boring:
 4. Define the Roma-owned page source schema.
 5. Define the widget package contribution contract with Bob/Roma tests.
 6. Add Page Composer coverage for packages generated as shared Widget Shell plus
-   different widget bodies, including FAQ, Countdown, Logo Showcase, and one new
+   different Widget Cores, including FAQ, Countdown, Logo Showcase, and one new
    Prague migration widget.
 7. Move dependency indexing to Roma-owned truth or opaque Roma-managed storage.
 8. Replace Tokyo page product routes with storage-only routes or fence them out
@@ -710,6 +752,12 @@ widget instance package contract that Page Composer consumes.
   authority.
 - Saving an included widget instance through the normal Builder path recomposes
   every page that includes it, or marks each failed page stale/failed with retry.
+- Saving an embedded widget instance, such as an instance embedded inside a
+  Split instance, re-materializes affected parent instances and recomposes every
+  affected page, or marks the affected dependency path stale/failed visibly.
+- The flattened `instanceId -> pageIds` index includes package-declared
+  embedded dependencies; embedded dependencies do not create a separate graph
+  service.
 - Initial page HTML includes ordered semantic instance content and approved
   SEO/GEO metadata.
 - Page Composer exposes localization controls in a page settings panel/tab:
@@ -748,6 +796,9 @@ widget instance package contract that Page Composer consumes.
   stale/failed.
 - Roma dependency tests proving `instanceId -> pageIds` cannot miss affected
   pages after page save, page delete, page reorder, and instance delete.
+- Roma dependency tests proving package-declared embedded instance dependencies
+  flatten into `instanceId -> pageIds`; updating an embedded child instance
+  re-materializes the parent instance and recomposes the affected page.
 - Roma policy tests proving page limits by tier and instance-per-page limits by
   tier.
 - Publish tests proving draft pages may include unpublished materialized

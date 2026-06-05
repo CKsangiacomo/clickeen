@@ -7,8 +7,17 @@ Parent: `106__Umbrella__Composition_Vision.md`
 Series step: 3
 Depends on: `106__Umbrella__Composition_Vision.md`, `PRD106A_realignment.md`
 Unlocks: `PRD106B_PageComposer.md`, `PRD106C_Prague astro blocks migration to widget instances.md`, `PRD106C3`-`PRD106C6`
-Authority owned by this PRD: shared Widget Shell extraction and body extension contract.
-Authority explicitly not owned by this PRD: Page Composer, Prague block inventory, Prague route cutover, widget body product decisions.
+Authority owned by this PRD: shared Widget Shell extraction and Widget Core extension contract.
+Authority explicitly not owned by this PRD: Page Composer, Prague block inventory, Prague route cutover, Widget Core product decisions.
+
+## Critical Path Warning
+
+PRD106A2 is the foundation under the rest of the 106 series. A subtly wrong
+Shell extraction propagates into FAQ, Split, Cards, Big Bang, CTA, Countdown,
+Logo Showcase, and Page Composer CSS/runtime dedupe. Treat Step 3, "Rebase FAQ
+onto shared Shell with no behavior change," as the program's critical path.
+Nothing Core-specific should proceed until FAQ proves zero visible regression
+through compile, preview, save/materialization, and package output evidence.
 
 ## PRD Tenets
 
@@ -18,6 +27,9 @@ Authority explicitly not owned by this PRD: Page Composer, Prague block inventor
 - Green requires named completion evidence.
 - A blocker report stops execution; it does not unlock the next step.
 - Do not solve missing decisions by inventing product behavior.
+- The goal is not to accommodate old drift. If existing code contradicts this
+  PRD's intended architecture, delete it, fence it, or stop; do not preserve it
+  and work around it.
 
 ## Mandatory PRD106 Execution Contract
 
@@ -58,22 +70,22 @@ Required evidence before marking green:
 
 - `file:line` inventory of FAQ Shell source files.
 - Explicit list of Shell-owned paths.
-- Explicit list of FAQ-body paths excluded from Shell.
+- Explicit list of FAQ Core paths excluded from Shell.
 
 Stop conditions:
 
 - A shared control cannot be traced to FAQ's working implementation.
-- A path is ambiguous between Shell and body ownership.
+- A path is ambiguous between Shell and Core ownership.
 
 ## Execution Steps
 
 | Step | Action | Required evidence | Green criteria | Stop condition |
 | ---: | --- | --- | --- | --- |
-| 1 | Extract and prove FAQ Shell inventory. | `file:line` source inventory; path ownership list. | Shell/body boundary is explicit. | Any path ownership is ambiguous. |
-| 2 | Create `packages/widget-shell/` contract surface. | Diff showing package files and exported responsibilities. | Package owns contract/defaults/controls/render/runtime/css/validators. | Package starts owning widget body behavior. |
+| 1 | Extract and prove FAQ Shell inventory. | `file:line` source inventory; path ownership list. | Shell/Core boundary is explicit. | Any path ownership is ambiguous. |
+| 2 | Create `packages/widget-shell/` contract surface. | Diff showing package files and exported responsibilities. | Package owns contract/defaults/controls/render/runtime/css/validators. | Package starts owning Widget Core behavior. |
 | 3 | Rebase FAQ onto shared Shell with no behavior change. | Diff plus FAQ compile/render/save evidence. | FAQ output remains gold standard. | FAQ behavior changes outside intentional package import. |
-| 4 | Prove body extension with CTA. | CTA diff plus compile/render evidence. | CTA is Shell plus empty body. | CTA defines duplicate Shell paths. |
-| 5 | Prove body extension with one non-trivial widget. | Split or Cards diff plus compile/render evidence. | Body contributes only body state/controls/runtime. | Body redefines Header/CTA/Stage/Pod. |
+| 4 | Prove Core extension with CTA. | CTA diff plus compile/render evidence. | CTA is Shell plus empty Core. | CTA defines duplicate Shell paths. |
+| 5 | Prove Core extension with one non-trivial widget. | Split or Cards diff plus compile/render evidence. | Core contributes only Core state/controls/runtime. | Core redefines Header/CTA/Stage/Pod. |
 | 6 | Add validation/search guards. | Tests or `rg` guard output. | Forbidden duplicate paths fail. | Guards allow copied Shell logic. |
 
 ## Purpose
@@ -90,11 +102,11 @@ remain copied FAQ code, scattered helper files, or a Tokyo-owned concept.
 The execution goal is simple:
 
 ```text
-shared Widget Shell + widget-specific body = materialized widget package
+shared Widget Shell + Widget Core = materialized widget package
 ```
 
 FAQ proves the Shell. `packages/widget-shell/` becomes the surviving authority.
-Widgets then contribute only body-specific schema, defaults, controls, editable
+Widgets then contribute only Core-specific schema, defaults, controls, editable
 fields, DOM, CSS, and runtime.
 
 ## Product Boundary
@@ -114,7 +126,7 @@ Not allowed:
 - Tokyo owns or decides Widget Shell architecture.
 - Browser output depends on a separate request-time Shell service.
 - Each widget copies Shell code into its own private implementation.
-- Widget bodies define duplicate Header, CTA, Stage, Pod, layout, appearance,
+- Widget Cores define duplicate Header, CTA, Stage, Pod, layout, appearance,
   typography, locale selector, branding, or translation systems.
 
 ## Source Of Truth
@@ -176,7 +188,7 @@ provide these named responsibilities:
 - Shell DOM renderer/wrapper.
 - Shell CSS/runtime module keys.
 - Shell package contribution validator.
-- Body extension validator.
+- Core extension validator.
 
 ## Shell DOM Contract
 
@@ -188,7 +200,7 @@ Stage
     ck-widget root
       ck-headerLayout
         Header
-        widget-specific body
+        Widget Core slot
 ```
 
 The generated HTML must expose stable roles:
@@ -206,8 +218,11 @@ The direct children of `.ck-headerLayout` are:
 
 ```text
 Header
-Widget body
+Widget Core slot
 ```
+
+The existing implementation class name `.ck-headerLayout__body` may remain as a
+CSS/runtime compatibility detail, but the architecture noun is Widget Core.
 
 Page Composer depends on this stable package contribution shape. It must not
 parse private widget layouts.
@@ -318,7 +333,7 @@ Controls:
 | `cta.iconPlacement` | dropdown-actions | Left/right. |
 | `cta.iconName` | dropdown-actions | Approved icon choices. |
 
-Body controls follow this cluster in the same Content panel. FAQ body controls
+Core controls follow this cluster in the same Content panel. FAQ Core controls
 such as `sections[]` are not Shell controls.
 
 ### Layout Panel
@@ -327,6 +342,7 @@ Shell clusters:
 
 ```text
 shared: header-layout
+shared: core-size
 shared: stagepod-layout
 ```
 
@@ -336,10 +352,81 @@ Header layout controls:
 | --- | --- | --- |
 | `header.placement` | dropdown-actions | Top/bottom/left/right. |
 | `header.alignment` | dropdown-actions | Left/center/right. |
-| `header.gap` | valuefield | Header/body gap. |
+| `header.gap` | valuefield | Header/Core gap. |
 | `header.textGap` | valuefield | Title/subtitle gap. |
 | `header.ctaPlacement` | dropdown-actions | CTA right of title or below title. |
 | `header.innerGap` | valuefield | Header text/CTA gap. |
+
+### Core Div Sizing
+
+Every normal widget has one Core div. Shell owns generic Core div sizing because
+the Shell owns the Header/Core layout boundary.
+
+Bob UI must not say "Core". Each widget must define user-facing labels:
+
+```text
+uiLabels.core.singular
+uiLabels.core.plural
+uiLabels.core.sizeCluster
+```
+
+Examples:
+
+```text
+FAQ: uiLabels.core.sizeCluster = "FAQs size"
+Split: uiLabels.core.sizeCluster = "Visual size"
+Cards: uiLabels.core.sizeCluster = "Cards size"
+Logo Showcase: uiLabels.core.sizeCluster = "Logos size"
+Countdown: uiLabels.core.sizeCluster = "Timer size"
+Big Bang: uiLabels.core.sizeCluster = "Statement size"
+```
+
+The shared Layout panel order is:
+
+```text
+Header
+[uiLabels.core.sizeCluster]
+Widget-specific layout controls
+Stage/Pod
+```
+
+Core div sizing state:
+
+| Path | Control | Meaning |
+| --- | --- | --- |
+| `coreSize.mode` | dropdown-actions | `auto`, `fixed`, or `responsive`. |
+| `coreSize.fixedHeight` | valuefield | Exact Core div height in px when mode is `fixed`. |
+| `coreSize.minHeight` | valuefield | Minimum Core div height in px when mode is `responsive`. |
+| `coreSize.preferredVw` | valuefield | Preferred viewport-width scale for responsive clamp. |
+| `coreSize.maxHeight` | valuefield | Maximum Core div height in px when mode is `responsive`. |
+
+Core div sizing `showIf` rules:
+
+```text
+coreSize.mode == fixed
+  show coreSize.fixedHeight
+
+coreSize.mode == responsive
+  show coreSize.minHeight
+  show coreSize.preferredVw
+  show coreSize.maxHeight
+```
+
+Rendering behavior:
+
+```text
+auto:
+  height: auto
+
+fixed:
+  height: coreSize.fixedHeight px
+
+responsive:
+  min-height: clamp(coreSize.minHeight px, coreSize.preferredVw vw, coreSize.maxHeight px)
+```
+
+Default `coreSize.mode` is `auto` unless a widget PRD explicitly chooses a
+different default.
 
 Stage/Pod layout controls:
 
@@ -356,7 +443,7 @@ Stage/Pod layout controls:
 | `stage.padding.desktop.*` | toggle/valuefield | Desktop stage padding. |
 | `stage.padding.mobile.*` | toggle/valuefield | Mobile stage padding. |
 
-Widget body layout controls sit between `header-layout` and `stagepod-layout`
+Widget Core layout controls sit between `header-layout` and `stagepod-layout`
 when needed. They must not redefine Header/Stage/Pod concerns.
 
 ### Appearance Panel
@@ -409,7 +496,7 @@ Stage/Pod appearance controls:
 | `pod.radius` | dropdown-actions | Linked pod radius. |
 | `pod.radiusTL|TR|BR|BL` | dropdown-actions | Per-corner pod radius. |
 
-FAQ-specific Q&A card controls are body controls unless the product owner
+FAQ-specific Q&A card controls are Core controls unless the product owner
 explicitly approves a generic reusable card-frame Shell submodule.
 
 ### Typography Panel
@@ -425,7 +512,7 @@ button
 localeSwitcher
 ```
 
-Widget bodies may add roles:
+Widget Cores may add roles:
 
 ```text
 question
@@ -439,8 +526,8 @@ countdownLabel
 logoCaption
 ```
 
-The Shell owns role rendering mechanics. Widget bodies own only the additional
-body role names they need.
+The Shell owns role rendering mechanics. Widget Cores own only the additional
+Core role names they need.
 
 ### Settings Panel
 
@@ -472,21 +559,29 @@ typography.roles.localeSwitcher
 Page-level localization controls remain Page Composer concerns. The Shell only
 renders an instance/page-owned switcher when the materialized state asks it to.
 
-## Body Extension Contract
+## Widget Core Extension Contract
 
-Every widget body must provide:
+Every widget has one Core div. The Core div is the Shell boundary where
+widget-specific software begins.
 
-- Body state schema.
-- Body defaults.
-- Body editor controls.
-- Body editable fields.
-- Body DOM renderer for `.ck-headerLayout__body`.
-- Body CSS contribution.
-- Body runtime contribution, if behavior is needed.
-- Body typography roles, if additional roles are needed.
-- Body validation.
+Every widget spec must provide:
 
-The body must not define:
+- `uiLabels.core.*` user-facing labels for shared Core div controls.
+- `coreSize.*` defaults.
+
+Every widget-specific Core implementation must provide:
+
+- Core state schema.
+- Core defaults.
+- Core editor controls.
+- Core editable fields.
+- Core DOM renderer for `.ck-headerLayout__body`.
+- Core CSS contribution.
+- Core runtime contribution, if behavior is needed.
+- Core typography roles, if additional roles are needed.
+- Core validation.
+
+The Core must not define:
 
 - `header.*`
 - `cta.*`
@@ -496,17 +591,18 @@ The body must not define:
 - `behavior.showBacklink`
 - `behavior.socialShare.enabled`
 - duplicate layout/appearance paths for Shell-owned concepts.
+- duplicate sizing paths for the Core div. Use Shell-owned `coreSize.*`.
 
-Approved body examples:
+Approved Core div examples:
 
-| Widget | Body state |
+| Widget | Software inside the Core div |
 | --- | --- |
 | FAQ | `sections[]`, FAQ layout, FAQ item/card appearance, FAQ runtime. |
-| Split | `visual.*`. |
-| Cards | `items[]`, cards layout/treatment, cards frame/body controls. |
+| Split | image/video/embedded-instance item software; optional carousel behavior. |
+| Cards | `items[]`, cards layout/treatment, cards frame/card-copy controls. |
 | Countdown | timer target, labels, expired behavior. |
 | Logo Showcase | logos/items, row/grid/marquee behavior. |
-| CTA | no body state. |
+| CTA | no Core state. |
 | Big Bang | `bigBang.*`. |
 
 ## Editable Fields
@@ -519,12 +615,12 @@ header.subtitleHtml
 cta.label
 ```
 
-Widget bodies contribute their body text fields:
+Widget Cores contribute their Core text fields:
 
 ```text
 FAQ: sections[].title, sections[].faqs[].question, sections[].faqs[].answer
 Cards: items[].title, items[].body, items[].ctaLabel
-Split: visual.alt
+Split: image/video alt text
 Big Bang: bigBang.statement, bigBang.supportingCopy
 Countdown: countdown labels and expired copy
 Logo Showcase: logo captions/alt text if visible/editable
@@ -540,7 +636,7 @@ Bob preview, Roma save/materialization, and Page Composer input must use the
 same composition path:
 
 ```text
-Shell state + body state + Shell renderer + body renderer -> index.html/styles.css/runtime.js
+Shell state + Core state + Shell renderer + Core renderer -> index.html/styles.css/runtime.js
 ```
 
 The output remains edge-friendly:
@@ -553,11 +649,13 @@ The output remains edge-friendly:
 - no separate browser fetch for "the Shell" as product logic.
 
 Page Composer may dedupe Shell CSS/runtime modules by stable module key because
-all normal widgets share the same Shell package.
+all normal widgets share the same Shell package. It may also dedupe Core
+CSS/runtime modules by stable widget/version key when multiple instances use
+the same Core implementation.
 
 ## Validation
 
-Add validation that fails at build/materialization time when a widget body:
+Add validation that fails at build/materialization time when a widget Core:
 
 - defines forbidden Header/CTA aliases;
 - defines Shell-owned paths;
@@ -566,9 +664,9 @@ Add validation that fails at build/materialization time when a widget body:
 - introduces singleton runtime state that breaks multiple instances per page;
 - uses non-concrete control paths;
 - declares editable fields that are not present in content state;
-- stores body-specific state in Shell paths.
+- stores Core-specific state in Shell paths.
 
-Invalid state must fail at the named boundary. Do not heal body mistakes into
+Invalid state must fail at the named boundary. Do not heal Core mistakes into
 new Shell behavior.
 
 ## Execution Sequence
@@ -583,8 +681,8 @@ new Shell behavior.
    change.
 6. Add parity tests proving FAQ preview/materialization output still compiles,
    renders, saves, and publishes.
-7. Convert one simple body-only widget, CTA, to prove empty-body reuse.
-8. Convert one non-trivial body-only widget, Split or Cards, to prove body
+7. Convert one simple Core widget, CTA, to prove empty-Core reuse.
+8. Convert one non-trivial Core widget, Split or Cards, to prove Core
    extension.
 9. Mark Countdown and Logo Showcase gold-standard repair as Shell rebase tasks.
 10. Block new widget execution that does not consume `packages/widget-shell/`.
@@ -615,15 +713,20 @@ PRD. Tokyo/R2 paths remain unchanged.
 - `packages/widget-shell/` exists and is the named authority for shared widget
   architecture.
 - FAQ consumes the shared Shell and has no user-visible regression.
-- CTA consumes the shared Shell as Header-only body.
-- One non-trivial body widget consumes the shared Shell.
+- CTA consumes the shared Shell with an empty Core.
+- One non-trivial Core widget consumes the shared Shell.
 - Bob preview, Roma materialization, and Page Composer package input use the
-  same Shell + body contract.
-- Widget body validation rejects duplicate Header/CTA/Stage/Pod/layout
-  taxonomies.
-- Page Composer can identify stable root, Shell CSS/runtime modules, body
+  same Shell + Core contract.
+- Shell Layout includes the shared `core-size` cluster between Header and
+  widget-specific layout controls.
+- Bob renders Core div sizing with `uiLabels.core.sizeCluster`; the word
+  "Core" does not appear in user-facing Bob labels.
+- Widget specs provide `uiLabels.core.*` and `coreSize.*` defaults.
+- Widget Core validation rejects duplicate Header/CTA/Stage/Pod/layout
+  taxonomies and duplicate Core div sizing paths.
+- Page Composer can identify stable root, Shell CSS/runtime modules, Core
   CSS/runtime modules, instance identity, and per-instance runtime payload.
-- Countdown and Logo Showcase PRDs can be written as body rebase work instead
+- Countdown and Logo Showcase PRDs can be written as Core rebase work instead
   of full widget architecture rewrites.
 - Active docs no longer tell agents to copy FAQ architecture into each widget.
 

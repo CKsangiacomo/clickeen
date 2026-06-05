@@ -23,6 +23,9 @@ Authority explicitly not owned by this PRD: inventing replacement product behavi
 - Green requires named completion evidence.
 - A blocker report stops execution; it does not unlock the next step.
 - Do not solve missing decisions by inventing product behavior.
+- The goal is not to accommodate old drift. If existing code contradicts this
+  PRD's intended architecture, delete it, fence it, or stop; do not preserve it
+  and work around it.
 
 ## Mandatory PRD106 Execution Contract
 
@@ -76,7 +79,7 @@ Stop conditions:
 | 2 | Delete/fence fake product nouns. | Diff/`rg` evidence. | Fake nouns are gone or fenced outside product paths. | Valid widget identity would be deleted. |
 | 3 | Delete/fence wrong-service authority. | Diff/tests/`rg`. | Tokyo/Bob no longer own product logic outside their boundary. | Runtime path needs deleted behavior. |
 | 4 | Delete/fence duplicate durable truth. | Diff/tests/`rg`. | One source/publish/dependency authority remains. | Two authorities still active. |
-| 5 | Delete/fence duplicate Shell implementations. | Diff/tests/`rg`. | Widgets consume `packages/widget-shell/`. | Body requires copied Shell code. |
+| 5 | Delete/fence duplicate Shell implementations. | Diff/tests/`rg`. | Widgets consume `packages/widget-shell/`. | Core requires copied Shell code. |
 | 6 | Delete/fence Prague block product paths. | Diff/screenshot/`rg`. | Migrated routes no longer use block architecture as product truth. | Prague route still needs unmigrated block. |
 | 7 | Run final search/test guards. | `rg` output/tests. | No forbidden active hits remain. | Any active forbidden hit lacks fence. |
 
@@ -109,7 +112,7 @@ Surviving authorities:
   materialization, entitlement, policy, page, or durable side-effect authority.
 - FAQ is the approved extraction source for the shared Widget Shell package.
   New/migrated widgets consume `packages/widget-shell/` and replace only
-  widget-specific content.
+  Widget Core.
 - `PRD106A2_WidgetShellExtraction.md` owns the exact Shell extraction and
   validation contract used by this deletion campaign.
 - Roma owns account product orchestration, product policy, Page Composer, page
@@ -487,8 +490,8 @@ PRD106E is complete when:
   role.
 - Prague block architecture is absent from migrated product paths and fenced as
   migration source/marketing implementation elsewhere.
-- Migrated widgets use `packages/widget-shell/` and only add widget-specific
-  content/control bodies.
+- Migrated widgets use `packages/widget-shell/` and only add Widget Core
+  content/controls.
 - Tests and active docs teach the surviving architecture.
 - Search guards have no unexplained hits.
 

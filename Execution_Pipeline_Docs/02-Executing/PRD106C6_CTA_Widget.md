@@ -7,7 +7,7 @@ Parent: `PRD106C_Prague astro blocks migration to widget instances.md`
 Series step: 7.4
 Depends on: `PRD106A2_WidgetShellExtraction.md`, `PRD106C_Prague astro blocks migration to widget instances.md`
 Unlocks: CTA widget instances for PRD106D route migration.
-Authority owned by this PRD: CTA empty-body defaults, package proof, and validation.
+Authority owned by this PRD: CTA empty-Core defaults, package proof, and validation.
 Authority explicitly not owned by this PRD: Widget Shell, Page Composer, Split, Cards, Big Bang, Prague route cutover.
 
 ## PRD Tenets
@@ -18,6 +18,9 @@ Authority explicitly not owned by this PRD: Widget Shell, Page Composer, Split, 
 - Green requires named completion evidence.
 - A blocker report stops execution; it does not unlock the next step.
 - Do not solve missing decisions by inventing product behavior.
+- The goal is not to accommodate old drift. If existing code contradicts this
+  PRD's intended architecture, delete it, fence it, or stop; do not preserve it
+  and work around it.
 
 ## Mandatory PRD106 Execution Contract
 
@@ -46,7 +49,7 @@ is evidence to stop, not evidence to proceed.
 Current executable step:
 
 ```text
-Step 1: Confirm CTA empty-body contract.
+Step 1: Confirm CTA empty-Core contract.
 ```
 
 Required evidence before marking green:
@@ -64,11 +67,11 @@ Stop conditions:
 
 | Step | Action | Required evidence | Green criteria | Stop condition |
 | ---: | --- | --- | --- | --- |
-| 1 | Confirm CTA empty-body contract. | State/control table. | No body state beyond Shell. | Root CTA/copy path appears. |
-| 2 | Build CTA defaults. | Spec/body diff. | Non-empty Header/CTA defaults compile. | Blank scaffold or duplicate Shell paths. |
-| 3 | Build/verify empty body package. | Preview/package evidence. | CTA renders as Header-only Shell. | Widget bypasses Shell. |
-| 4 | Validate editable fields. | Editable-fields diff/tests. | Only Shell Header/CTA fields exist. | Extra CTA body fields appear. |
-| 5 | Verify Bob/Roma materialization. | Compile/save/package evidence. | CTA package is Shell plus empty body. | Duplicate Shell code appears. |
+| 1 | Confirm CTA empty-Core contract. | State/control table. | No Core state beyond Shell. | Root CTA/copy path appears. |
+| 2 | Build CTA defaults. | Spec/Core diff. | Non-empty Header/CTA defaults compile. | Blank scaffold or duplicate Shell paths. |
+| 3 | Build/verify empty Core package. | Preview/package evidence. | CTA renders as Header-only Shell. | Widget bypasses Shell. |
+| 4 | Validate editable fields. | Editable-fields diff/tests. | Only Shell Header/CTA fields exist. | Extra CTA Core fields appear. |
+| 5 | Verify Bob/Roma materialization. | Compile/save/package evidence. | CTA package is Shell plus empty Core. | Duplicate Shell code appears. |
 
 ## Purpose
 
@@ -77,13 +80,13 @@ Finish the surviving `cta` widget that absorbs Prague `cta-bottom-block`.
 CTA uses the shared Widget Shell extracted from FAQ:
 
 ```text
-Stage -> Pod -> ck-headerLayout(Header + empty content)
+Stage -> Pod -> ck-headerLayout(Header + empty Core)
 ```
 
 CTA is the Header-only case of the Widget Shell. It consumes the shared Header,
 CTA, Stage/Pod, Appearance, Typography, Settings, locale, runtime, and
-editable-fields mechanisms from `packages/widget-shell/`. Its widget-specific
-content is empty.
+editable-fields mechanisms from `packages/widget-shell/`. Its Widget Core is
+empty.
 
 "Bottom" is page placement, not widget identity. Page Composer decides where a
 CTA instance sits.
@@ -192,7 +195,7 @@ Required typography roles:
 ## Acceptance
 
 - Fresh CTA instance renders non-blank output.
-- CTA is implemented as Widget Shell package with empty widget-specific content.
+- CTA is implemented as Widget Shell package with empty Widget Core.
 - Prague `cta-bottom-block` can be represented by CTA.
 - The widget name and controls do not include page-placement language such as "bottom".
 - CTA does not define duplicate Header/CTA/Stage/Pod shell state.

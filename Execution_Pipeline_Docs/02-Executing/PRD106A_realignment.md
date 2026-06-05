@@ -8,7 +8,7 @@ Series step: 2
 Depends on: `106__Umbrella__Composition_Vision.md`
 Unlocks: `PRD106A2_WidgetShellExtraction.md`, `PRD106B_PageComposer.md`, `PRD106C_Prague astro blocks migration to widget instances.md`, `PRD106E_Toxic_Flow_Deletion.md`
 Authority owned by this PRD: drift audit, realignment plan, surviving authority map.
-Authority explicitly not owned by this PRD: implementing Page Composer, extracting Widget Shell, building widget bodies, cutting over Prague routes.
+Authority explicitly not owned by this PRD: implementing Page Composer, extracting Widget Shell, building Widget Cores, cutting over Prague routes.
 
 This PRD is not a new product idea. It is a cleanup contract for removing code,
 docs, tests, names, and workflows that contradict PRD 106's surviving product
@@ -37,10 +37,13 @@ Sibling PRDs:
   is the current step below.
 - A blocker report stops execution; it does not unlock the next step.
 - Do not clean around toxic mechanisms. Delete, fence, or mark blocked.
+- The goal is not to accommodate old drift. If existing code contradicts this
+  PRD's intended architecture, delete it, fence it, or stop; do not preserve it
+  and work around it.
 - Do not preserve fake product nouns, fake product modes, duplicate truth, or
   placeholders just because code still calls them.
 - Do not use PRD106A to implement Page Composer, Widget Shell extraction, Prague
-  widget bodies, or Prague route cutover. Those have their own PRDs.
+  Widget Cores, or Prague route cutover. Those have their own PRDs.
 - Every step must end with evidence: `rg` output, diff summary, tests, or a
   precise blocker.
 
@@ -378,7 +381,7 @@ metadata, and ordered instance references. `index.html`, `styles.css`, and
 `runtime.js` are generated browser-readable output.
 
 Roma widget materialization must use the same system widget software inputs as
-Bob preview: the shared Widget Shell package, the widget body definition, and
+Bob preview: the shared Widget Shell package, the Widget Core definition, and
 shared Dieter/runtime contracts. Before removing Bob-built `publicPackage`, add
 parity coverage that Bob preview, Roma materialization, and Page Composer input
 are generated from the same saved widget state and widget definition contract.
@@ -386,12 +389,12 @@ are generated from the same saved widget state and widget definition contract.
 Widget Shell authority:
 
 - FAQ is the approved implementation reference for normal widget architecture.
-- Every normal widget is `Widget Shell + widget-specific content`.
+- Every normal widget is `Widget Shell + Widget Core`.
 - The surviving Widget Shell authority must be a shared repo package,
   `packages/widget-shell/`, not copied FAQ code and not a Tokyo-owned helper
   folder.
 - `PRD106A2_WidgetShellExtraction.md` owns the detailed extraction contract:
-  exact FAQ source files, Shell panels, Shell state paths, body extension rules,
+  exact FAQ source files, Shell panels, Shell state paths, Core extension rules,
   validation, and acceptance gates.
 - Widget Shell means the FAQ-proven Stage, Pod, Header, CTA, Header layout,
   Header CTA appearance, Stage/Pod layout, Stage/Pod appearance, Typography,
@@ -402,18 +405,18 @@ Widget Shell authority:
 - Header always means title, optional subtitle, and optional CTA through
   `header.*` and `cta.*`.
 - New or migrated widgets must consume the shared Widget Shell and add only the
-  new widget-specific body content, body controls, body editable fields, and
-  body runtime/CSS.
+  new Widget Core content, Core controls, Core editable fields, and Core
+  runtime/CSS.
 - Duplicate widget-specific paths such as `headline`, `subheadline`,
   `primaryCta`, `secondaryCta`, `copyWidth`, `bodyWidth`, and
   `layout.variant` are deletion targets unless a child PRD explicitly records
   Pietro's approval for a separate widget architecture.
 - Current `tokyo/product/widgets/{widget}/` folders are repo product source
-  locations for widget body definitions and package assets. They are not
+  locations for Widget Core definitions and package assets. They are not
   evidence that Tokyo owns widget architecture.
 - Countdown and Logo Showcase gold-standard upgrades are rebase work: keep the
-  shared Widget Shell, replace/fix only Countdown body behavior and Logo
-  Showcase body behavior.
+  shared Widget Shell, replace/fix only Countdown Core behavior and Logo
+  Showcase Core behavior.
 
 ## Intended Product UX
 
@@ -480,7 +483,7 @@ Surviving authority:
 
 - `packages/widget-shell/` is shared widget architecture truth.
 - Current `tokyo/product/widgets/{widget}/` folders are repo product source for
-  widget body software and package assets. Existing code may still spell this
+  Widget Core software and package assets. Existing code may still spell this
   coordinate `widgetType`; that is implementation naming, not a product noun and
   not Tokyo service ownership of widget architecture.
 - Roma may list available widgets for account creation.
@@ -876,7 +879,7 @@ Evidence:
   inline instance editing, override controls, fork/snapshot actions, or
   page-owned instance state would violate PRD 106.
 - `roma/app/api/account/pages/[pageId]/route.ts` accepts a page source object
-  from the old architecture after only route/body ID matching, then delegates
+  from the old architecture after only route/content ID matching, then delegates
   deeper acceptance downstream.
 - `roma/app/api/account/pages/[pageId]/publish/route.ts` checks role and empty
   placements, but does not apply page-specific tier/account policy.
