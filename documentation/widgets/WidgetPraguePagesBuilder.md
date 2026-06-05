@@ -45,14 +45,14 @@ Do not start page writing until all inputs exist.
 2. No invented metrics.
 3. Do not copy/paste the same sentence across all 4 pages.
 4. Keep body copy localization-friendly (simple syntax, low idiom density).
-5. Follow Prague block contracts exactly.
+5. Follow Prague marketing-section contracts exactly.
 6. Express platform value as positive capability + mechanism.
 
 ---
 
-## 3) Prague block contract quick reference
+## 3) Prague Marketing Section Contract Quick Reference
 
-Supported block types for widget pages include:
+Supported section types for widget marketing pages include:
 - `page-meta`
 - `navmeta`
 - `hero`
@@ -67,7 +67,7 @@ Supported block types for widget pages include:
 - `big-bang`
 - `cta-bottom-block`
 
-Key required fields by block type:
+Key required fields by section type:
 - `hero.copy`: `headline`, `subheadline`
 - `minibob.copy`: `heading`, `subhead`
 - `split.copy`: `headline`, `subheadline`
@@ -278,7 +278,7 @@ Because Prague copy is localized across many locales:
 ## 8) Validation checklist (before commit)
 
 1. JSON validity for all 4 page files.
-2. Block contract validity (required fields present).
+2. Marketing-section contract validity (required fields present).
 3. Claim audit complete (no unsupported strong claims).
 4. Localization-safe style pass done.
 5. Account instance refs include `accountPublicId` + `instanceId` and resolve to real account-owned instances.

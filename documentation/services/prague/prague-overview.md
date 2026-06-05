@@ -36,7 +36,7 @@ At build time, Prague:
 
 At request time (widget pages only), Prague:
 - loads canonical page JSON
-- validates block contracts and compact account-instance embed IDs
+- validates Prague marketing-section contracts and compact account-instance embed IDs
 - renders HTML from that page JSON
 
 Note: the helper module is still named `prague/src/lib/markdown.ts`, but it no longer parses markdown. It loads the JSON page specs described below.
@@ -62,7 +62,7 @@ There is currently no dedicated `/{market}/{locale}/widgets/` index route in thi
 
 ### 1.2 Widget overview
 
-- `/{market}/{locale}/widgets/{widget}` — Widget landing page (overview). Renders the full landing block stack from:
+- `/{market}/{locale}/widgets/{widget}` — Widget landing page (overview). Renders the full landing marketing-section stack from:
   - `tokyo/prague/pages/{widget}/overview.json`
 
 This route is strict: it throws at build time if `overview.json` is missing required blocks/copy fields.
@@ -92,9 +92,9 @@ Current repo behavior:
 
 ---
 
-## 1.5 Authoring Prague blocks (AI checklist)
+## 1.5 Authoring Prague Marketing Sections (AI checklist)
 
-Prague widget pages are rendered from **block JSON** in Tokyo. They are marketing pages, not the account-widget authoring or translation runtime. When you add or edit blocks, keep these filesystems in lockstep:
+Prague widget pages are rendered from Prague marketing JSON in Tokyo. The legacy runtime field is named `blocks[]`, but that is a Prague marketing-section implementation detail, not the PRD 106 page model. These are marketing pages, not the account-widget authoring or translation runtime. When you add or edit sections, keep these filesystems in lockstep:
 
 1) **Renderer** (Astro): `prague/src/blocks/**` + `prague/src/lib/blockRegistry.ts`
 2) **Base copy** (source): `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`
@@ -105,19 +105,19 @@ Account-widget embeds are public artifact references only:
 - Locale selector: optional `accountInstanceRef.locale` only when the public runtime supports a locale selection. Omitted locale means the base public artifact.
 - Forbidden: widget-locale discovery modules, market-locale fallback lists, private translation state, and `wgt_*` / `ins_*` aliases
 
-### Add a new block type
+### Add a new marketing section type
 
 - Add the renderer: `prague/src/blocks/{blockType}/{blockType}.astro`
 - Register it: `prague/src/lib/blockRegistry.ts`
-- Use it in a page JSON: `tokyo/prague/pages/{widget}/*.json` (ensure each block has `{ id, type, copy: {...} }`)
+- Use it in a page JSON: `tokyo/prague/pages/{widget}/*.json` (ensure each section entry has `{ id, type, copy: {...} }`)
 - Validate contracts locally:
   - `pnpm --filter @clickeen/prague typecheck`
   - `pnpm --filter @clickeen/prague build`
 
-### Edit an existing block
+### Edit an existing marketing section
 
-- Keep `id` stable for deterministic block rendering and links.
-- Prefer adding a new block `type` over mutating semantics of an existing one.
+- Keep `id` stable for deterministic section rendering and links.
+- Prefer adding a new section `type` over mutating semantics of an existing one.
 
 ---
 
@@ -131,7 +131,7 @@ Each marketed widget must ship:
 - `tokyo/prague/pages/{widget}/features.json`
 - `tokyo/prague/pages/{widget}/pricing.json`
 
-The widget overview page uses `blocks[]` to render a deterministic layout. Example schema (shape, not a full spec):
+The widget overview page uses Prague's legacy `blocks[]` JSON field to render a deterministic marketing-section layout. Example schema (shape, not a full spec):
 ```json
 {
   "v": 1,
@@ -143,31 +143,31 @@ The widget overview page uses `blocks[]` to render a deterministic layout. Examp
 }
 ```
 
-Required non-visual blocks:
+Required non-visual marketing sections:
 - `navmeta` (overview only, used by the mega menu)
 - `page-meta` (all widget pages, used for `<head>` title/description)
 
 Notes:
 - Page JSON is the **single source of truth** for layout + base copy on Prague.
-- Visual embeds are explicit: use `accountInstanceRef.accountPublicId` plus `accountInstanceRef.instanceId` on blocks that should embed an account instance. Admin/example embeds use `accountPublicId: "CLICKEEN"`.
+- Visual embeds are explicit: use `accountInstanceRef.accountPublicId` plus `accountInstanceRef.instanceId` on sections that should embed an account instance. Admin/example embeds use `accountPublicId: "CLICKEEN"`.
 - Prague page JSON and page-owned translation sidecars deploy under R2 `prague/pages/**`.
 - Root `l10n/**` is not a Prague storage or deploy target.
 
 Prague merges page-owned translation sidecars for localized marketing pages. Account-widget translated values stay on the Tokyo account-widget path; public widget package files served from `clk.live` are stored by Tokyo-worker from the Builder/Roma save path.
 
 Validation:
-- Block meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.
+- Marketing-section meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.
 - Account instance embeds are validated against the current public instance/runtime contract; missing account instances fail fast in dev/build.
 
 ---
 
-## 3) Minibob demo block (shipped)
+## 3) Minibob Demo Section (shipped)
 
-Prague keeps the `minibob` block type as a **demo surface**, not as a second editor mode.
+Prague keeps the `minibob` section type as a **demo surface**, not as a second editor mode.
 
 Implementation:
 - `prague/src/blocks/minibob/minibob.astro`
-- renders the marketing copy block (`heading`, `subhead`)
+- renders the marketing copy section (`heading`, `subhead`)
 - embeds the public live widget through `InstanceEmbed`
 - links the user to `/{market}/{locale}/create`
 
@@ -210,5 +210,5 @@ If/when long-tail SEO is reintroduced, it should ship behind a PRD with a determ
 
 ## Links
 
-- Prague blocks catalog: `documentation/services/prague/blocks.md`
+- Prague marketing section reference: `documentation/services/prague/blocks.md`
 - Localization contract: `documentation/capabilities/localization.md`

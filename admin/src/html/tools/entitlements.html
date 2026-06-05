@@ -1314,7 +1314,7 @@
 
     const matrix = state.matrix;
     const tiers = Array.isArray(matrix.tiers) ? [...matrix.tiers] : [];
-    const preferredTierOrder = ['free', 'tier1', 'tier2', 'tier3', 'minibob', 'devstudio'];
+    const preferredTierOrder = ['free', 'tier1', 'tier2', 'tier3', 'tier4'];
     tiers.sort((a, b) => {
       const ia = preferredTierOrder.indexOf(String(a).toLowerCase());
       const ib = preferredTierOrder.indexOf(String(b).toLowerCase());

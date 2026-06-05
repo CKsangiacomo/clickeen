@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
+import { useWidgetSession } from '../lib/session/useWidgetSession';
 import { TdMenuContent } from './TdMenuContent';
 
 function normalizeWebsiteUrl(raw: string): string {
@@ -152,34 +152,23 @@ function WebsiteModal({ open, value, onClose, onSave, onRemove }: WebsiteModalPr
 
 export function SettingsPanel() {
   const session = useWidgetSession();
-  const chrome = useWidgetSessionChrome();
   const compiled = session.compiled;
-  const policy = chrome.policy;
   const settingsHtml = compiled?.panels?.find((panel) => panel.id === 'settings')?.html ?? '';
 
   const [websiteOpen, setWebsiteOpen] = useState(false);
   const websiteValue = readString((session.instanceData as any)?.context?.websiteUrl);
   const websiteDisplay = useMemo(() => normalizeWebsiteDisplay(websiteValue), [websiteValue]);
-  const websiteEnabled = Boolean(policy?.flags?.['context.website.enabled'] ?? true);
 
   const saveWebsite = useCallback(
     (next: string) => {
-      if (!websiteEnabled) {
-        chrome.requestUpsell('coreui.upsell.reason.website');
-        return;
-      }
       session.applyOps([{ op: 'set', path: 'context.websiteUrl', value: next }]);
     },
-    [chrome, session, websiteEnabled]
+    [session]
   );
 
   const removeWebsite = useCallback(() => {
-    if (!websiteEnabled) {
-      chrome.requestUpsell('coreui.upsell.reason.website');
-      return;
-    }
     session.applyOps([{ op: 'set', path: 'context.websiteUrl', value: '' }]);
-  }, [chrome, session, websiteEnabled]);
+  }, [session]);
 
   if (!compiled) {
     return (
@@ -208,10 +197,6 @@ export function SettingsPanel() {
               data-variant="primary"
               type="button"
               onClick={() => {
-                if (!websiteEnabled) {
-                  chrome.requestUpsell('coreui.upsell.reason.website');
-                  return;
-                }
                 setWebsiteOpen(true);
               }}
             >

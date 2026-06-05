@@ -140,8 +140,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Maximum distinct widget types per account.',
     enforcement: {
       status: 'enforced',
-      owner: 'Roma widget catalog/create routes',
-      note: 'Roma filters catalog create options and rejects direct create requests that would exceed the account distinct-widget-type limit.',
+      owner: 'Roma system widget/create routes',
+      note: 'Roma filters system widget create options and rejects direct create requests that would exceed the account distinct-widget-type limit.',
     },
   },
   'uploads.size.max': {

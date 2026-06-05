@@ -12,7 +12,7 @@ import {
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
-test('widget overlay codebook covers the widget catalog exactly once', () => {
+test('widget overlay codebook covers system widgets exactly once', () => {
   const widgetTypes = new Set(
     fs
       .readdirSync(path.join(repoRoot, 'tokyo/product/widgets'), { withFileTypes: true })

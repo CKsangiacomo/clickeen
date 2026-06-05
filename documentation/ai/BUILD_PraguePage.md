@@ -4,6 +4,8 @@ STATUS: EXECUTION GUIDE (AI ONLY)
 
 This is a strict, step-by-step guide for AI agents. It is **not** a design doc. Do not improvise, search widely, or invent beyond the explicit inputs below.
 
+This guide is only for Prague widget marketing JSON. It is not PRD 106 account pages. PRD 106 pages are stacks of saved widget instances; do not introduce product blocks, product catalogs, or a second page composition authority.
+
 If anything is unclear or missing, stop and ask the human.
 
 ---
@@ -12,7 +14,7 @@ If anything is unclear or missing, stop and ask the human.
 
 Stop and ask if:
 - The widget type or target page is not explicitly provided.
-- You need a new block type or a new block layout (requires PRD + block registry update).
+- You need a new Prague marketing section type or layout (requires PRD + registry update).
 - The request requires runtime changes in Prague, Bob, Roma, Tokyo-worker, Venice, or Dieter.
 - You need to modify compiled outputs or generated translation sidecars directly.
 
@@ -25,7 +27,7 @@ Only read these:
 - `documentation/services/prague/prague-overview.md`
 - `documentation/services/prague/blocks.md`
 - `documentation/capabilities/localization.md`
-- `prague/src/lib/blockRegistry.ts` (required keys + meta fields)
+- `prague/src/lib/blockRegistry.ts` (Prague marketing-section required keys + meta fields)
 - `tokyo/prague/pages/{widget}/{overview|templates|examples|features|pricing}.json` (repo-authored source; deployed R2 home is `prague/pages/**`)
 - `prague/content/allowlists/v1/**`
 
@@ -48,7 +50,7 @@ Do **not** edit:
 
 ## 3) Forbidden Actions (non-negotiable)
 
-- Do not add new block types or change the block registry.
+- Do not add new Prague marketing section types or change the registry.
 - Do not add new runtime logic in Prague.
 - Do not create locale-specific IDs or file paths.
 - Do not infer account-widget locale availability from Prague market config or route locale.
@@ -59,15 +61,15 @@ Do **not** edit:
 
 ## 4) Execution Steps (do in order)
 
-### Step 1 — Choose block stack (existing block types only)
+### Step 1 — Choose marketing section stack (existing section types only)
 
-Use only block types in `prague/src/lib/blockRegistry.ts`.
+Use only Prague section types in `prague/src/lib/blockRegistry.ts`.
 
-Required non-visual blocks:
+Required non-visual sections:
 - `navmeta` (overview only; required for mega menu)
 - `page-meta` (all widget pages; required for SEO `<head>`)
 
-If a required block is missing or the block type does not exist, stop and ask.
+If a required section is missing or the section type does not exist, stop and ask.
 
 ---
 
@@ -77,11 +79,11 @@ File:
 - `tokyo/prague/pages/{widget}/{page}.json`
 
 Rules:
-- Layout + copy: `blocks[]` contains `id`, `type`, `copy`, and allowed meta fields (e.g. `visual`).
+- Layout + copy: Prague's legacy `blocks[]` field contains section entries with `id`, `type`, `copy`, and allowed meta fields (e.g. `visual`).
 - Page JSON is the **single source of truth** for base copy; page-owned translation sidecars apply localized Prague copy at runtime.
 - `id` is unique and stable per page.
-- `type` must match a registered block type.
-- `visual` is only allowed for block types that support it (see registry). For embeds, use `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` only when the page intentionally points at a real account widget instance.
+- `type` must match a registered Prague section type.
+- `visual` is only allowed for section types that support it (see registry). For embeds, use `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` only when the page intentionally points at a real account widget instance.
 - Admin examples are normal account-owned instances under account `CLICKEEN`; there is no admin-specific lane and no hidden instance-only lookup.
 - `accountInstanceRef.locale` is allowed only as an explicit public artifact selector for authored carousel items. It is not translation state, locale availability, or an instruction to discover widget locales.
 - Do not use old `wgt_*` / `ins_*` names or private UUID account folders as current product identity.
@@ -101,7 +103,7 @@ Example shape:
 
 ---
 
-Required keys (current registry):
+Required keys (current Prague section registry):
 - `big-bang`: `headline`, `body`
 - `hero`: `headline`, `subheadline`
 - `split`: `headline`, `subheadline` (meta: `layout`, `accountInstanceRef` allowed)
@@ -116,10 +118,10 @@ Required keys (current registry):
 
 ### Step 3 — Update allowlists only when required
 
-If you add **new string keys** for an existing block type:
+If you add **new string keys** for an existing section type:
 - Update `prague/content/allowlists/v1/blocks/{blockKind}.allowlist.json`
 
-If you need a **new block type**, stop and ask (requires a PRD and registry update).
+If you need a **new Prague section type**, stop and ask (requires a PRD and registry update).
 
 ---
 
@@ -139,7 +141,7 @@ Before you finish:
 - Every page has `page-meta` (and overview has `navmeta`).
 - All block IDs are unique and stable.
 - Every page JSON includes base copy for all block IDs.
-- Base copy includes required keys for the block type.
+- Base copy includes required keys for the Prague section type.
 - No compiled files or generated translation sidecars were edited.
 
 If any requirement is unmet, stop and ask.

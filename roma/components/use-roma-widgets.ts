@@ -65,11 +65,11 @@ const romaWidgetsCache = new Map<string, RomaWidgetsCacheEntry>();
 const romaWidgetsInflight = new Map<string, Promise<RomaWidgetsResponse>>();
 const romaWidgetsRequestSeq = new Map<string, number>();
 
-export function normalizeWidgetType(value: string | null | undefined): string {
+export function normalizeWidgetType(value: string | null | undefined): string | null {
   const normalized = String(value || '')
     .trim()
     .toLowerCase();
-  return normalized || 'unknown';
+  return normalized || null;
 }
 
 export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance | null {
@@ -77,6 +77,7 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
   if (!instanceId) return null;
 
   const widgetType = normalizeWidgetType(raw.widgetType);
+  if (!widgetType) return null;
   const displayName = String(raw.displayName || '').trim() || DEFAULT_INSTANCE_DISPLAY_NAME;
   const status = raw.status === 'published' ? 'published' : 'unpublished';
   const actions = raw.actions && typeof raw.actions === 'object' ? raw.actions : null;
@@ -99,7 +100,7 @@ export function normalizeWidgetInstance(raw: RawWidgetInstance): WidgetInstance 
 
 export function normalizeSystemWidgetOption(raw: RawSystemWidgetOption): SystemWidgetOption | null {
   const widgetType = normalizeWidgetType(raw.widgetType);
-  if (widgetType === 'unknown') return null;
+  if (!widgetType) return null;
   const label = String(raw.label || '').trim() || widgetType;
   const description = String(raw.description || '').trim();
   const disabledReasonKey = typeof raw.disabledReasonKey === 'string' && raw.disabledReasonKey.trim()

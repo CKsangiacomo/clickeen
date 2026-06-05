@@ -326,11 +326,11 @@ async function loadBootstrapAccountPublicId(runner) {
 }
 
 async function loadWidgets(runner) {
-  return runner.check('Roma widget catalog', 'roma.widgets', async () => {
+  return runner.check('Roma widgets', 'roma.widgets', async () => {
     const result = await runner.request(runner.args.romaBase, '/api/account/widgets');
     assert2xx(result, 'GET /api/account/widgets');
     const instances = extractInstances(result.payload);
-    if (!instances.length) throw new Error('widget catalog returned zero instances');
+    if (!instances.length) throw new Error('Roma widgets response returned zero account instances');
     return { instances, detail: `${instances.length} account instances` };
   });
 }

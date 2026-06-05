@@ -185,7 +185,7 @@ Widget categories (illustrative, not final):
 - Information display — FAQs, pricing tables, feature lists
 - Engagement — newsletters, popups, announcements
 
-Some widgets collect data (e.g., forms, surveys). Others are presentational (e.g., testimonials, pricing tables). Both follow the same embed → claim → upgrade model. The catalog will evolve with demand, but the current account product operates on account-owned widget instances rather than legacy catalog identities.
+Some widgets collect data (e.g., forms, surveys). Others are presentational (e.g., testimonials, pricing tables). Both follow the same embed → claim → upgrade model. The system widget set will evolve with demand, but the current account product operates on account-owned widget instances rather than legacy catalog identities.
 
 **Widgets are the Trojan horse, not the destination.** They're the perfect starting point—high-ROI, viral by design, fast time-to-value. But once you're using widgets, you're already on the platform. The architecture is the product.
 
@@ -237,7 +237,7 @@ Clickeen is multi-tenant with no artificial caps on collaboration. This is the F
 - **Tier 1+ unlocks:** more editors and higher limits
 - **Tier 2+ unlocks:** SEO/GEO, more widget types, more published instances, auto-translate
 - **Tier 3 unlocks:** Supernova effects
-- **Tier 4 unlocks:** customer-owned blocks and pages
+- **Tier 4 unlocks:** customer-owned pages built from widget instances
 - **Widgets belong to workspaces, not individuals** — team-owned, portable
 
 **Switching Costs Compound:**
@@ -260,17 +260,17 @@ See: `documentation/capabilities/multitenancy.md`
 **Play without an account (marketing site):**
 - Visitor browses widgets on clickeen.com (Prague, our marketing website)
 - Chooses a widget (e.g., "FAQ", "Testimonials") and lands on the widget's landing page
-- Sees MiniBob loaded with an unpublished instance
-- Can customize config (text, colors, etc.) in the temporary marketing experience
+- Sees a public Clickeen-owned example widget embedded in the page
+- Can inspect the example and choose to create their own account instance in Roma
 - No signup needed to experiment
-- **NO Save button** in MiniBob (claim persists on signup)
+- **NO Save button** in MiniBob and no durable anonymous draft/claim path
 - **NO "Copy Code" button** in MiniBob
-- Only one button: **"Publish"**
+- Primary action sends the visitor to Roma account creation
 
-**Publish triggers signup:**
-- When visitor clicks "Publish", they're prompted to create a free account
-- After signing up, they land in the authenticated app (Roma) and the widget they just built is claimed to their account
-- The widget is now published and they can copy the embed code
+**Create triggers signup:**
+- When visitor clicks the create action, they're prompted to create a free account
+- After signing up, they land in the authenticated app (Roma)
+- Roma creates, opens, saves, publishes, and serves only real account-owned widget instances
 
 **Inside the app (authenticated Roma, with Builder powered by Bob):**
 - **"Copy Code" button always visible** — get embed snippet anytime
@@ -372,11 +372,11 @@ The implications snowball beyond what we can model. This is the "if it works, we
 
 ## Platform Vision: The Interconnected Content Platform
 
-Clickeen isn't building separate products—it's building **composable building blocks** that work together:
+Clickeen isn't building separate products—it's building **composable product units** that work together:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                     WIDGETS = ATOMIC BUILDING BLOCKS                    │
+│                     WIDGETS = COMPOSABLE PRODUCT UNITS                  │
 │                                                                         │
 │   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐           │
 │   │ Logo     │   │   FAQ    │   │Testimonial│  │  Pricing │           │
@@ -403,7 +403,7 @@ Clickeen isn't building separate products—it's building **composable building 
 | **1** | Clickeen Widgets | Embeddable widgets for websites (FAQ, Logo Showcase, Testimonials, etc.) |
 | **2** | Clickeen Emails | Email templates that embed the same widgets |
 | **3** | Clickeen Landing Pages | Landing pages composed of widgets |
-| **4** | Clickeen Creatives | Social posts, ads, memes using the same building blocks |
+| **4** | Clickeen Creatives | Social posts, ads, memes using the same composable units |
 
 ### Why Composability Matters
 

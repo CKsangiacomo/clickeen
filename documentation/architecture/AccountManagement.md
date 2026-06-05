@@ -162,7 +162,7 @@ Berlin must not preserve old `user_profiles`, `account_members`, `active_account
 
 ### Tokyo
 
-Tokyo owns widget definitions, instance state operations, translated values, submitted public package storage/readiness, and page package composition. Tokyo consumes account/user authz context; it does not decide billing or account identity and does not render widget package bytes from saved source.
+Tokyo owns widget definitions, instance state operations, translated values, and submitted public package storage/readiness for widgets and pages. Tokyo consumes account/user authz context; it does not decide billing or account identity, does not render widget package bytes from saved source, and does not compose pages.
 
 ### Public Serving
 

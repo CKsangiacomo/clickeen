@@ -2,7 +2,6 @@ import { isRecord } from '@clickeen/ck-contracts';
 import {
   isCompactAccountPublicId,
   isCompactInstanceId,
-  createCompactPageId,
   isCompactPageId,
 } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
@@ -299,35 +298,6 @@ export async function saveAccountPageSource(args: {
     now,
   });
   return { source, summary };
-}
-
-export async function createAccountPageSource(args: {
-  env: Env;
-  accountId: string;
-  head?: unknown;
-  placements?: unknown;
-  now?: string;
-}): Promise<{ source: AccountPageSource; summary: AccountPageSummary }> {
-  const accountId = assertAccountId(args.accountId);
-  const pageId = createCompactPageId();
-  const head = isRecord(args.head) ? args.head : {};
-  const source = {
-    v: 1,
-    id: pageId,
-    head: {
-      title: typeof head.title === 'string' && head.title.trim() ? head.title.trim() : 'Untitled page',
-      description: typeof head.description === 'string' ? head.description.trim() : '',
-      robots: head.robots === 'noindex,nofollow' ? 'noindex,nofollow' : 'index,follow',
-    },
-    placements: Array.isArray(args.placements) ? args.placements : [],
-  };
-  return saveAccountPageSource({
-    env: args.env,
-    accountId,
-    pageId,
-    source,
-    now: args.now,
-  });
 }
 
 export async function deleteAccountPageSource(args: {

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { publishAccountPageInTokyo } from '@roma/lib/account-page-direct';
+import {
+  loadAccountPageFromTokyo,
+  publishAccountPageInTokyo,
+} from '@roma/lib/account-page-direct';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -34,6 +37,40 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
+  const page = await loadAccountPageFromTokyo({
+    accountId,
+    pageId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!page.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: page.error }, { status: page.status }),
+      current.value.setCookies,
+    );
+  }
+  if (!page.value) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.page.notFound' } },
+        { status: 404 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (page.value.source.placements.length < 1) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.empty' } },
+        { status: 409 },
+      ),
+      current.value.setCookies,
+    );
+  }
+
   const result = await publishAccountPageInTokyo({
     accountId,
     pageId,

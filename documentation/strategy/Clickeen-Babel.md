@@ -7,7 +7,7 @@ Updated: 2026-06-02
 
 Clickeen is building account-owned presentation artifacts that start from one explicit base source and render into many validated public outputs.
 
-The product begins with widgets. The future extends the same source/overlay/materialization discipline to blocks and pages.
+The product begins with widgets. The future extends the same source/overlay/materialization discipline to pages built from saved widget instances.
 
 ```text
 one account-owned base source
@@ -37,26 +37,26 @@ There are no commercial package names in the product contract.
 
 `free`, `tier1`, `tier2`, and `tier3` are widget-only tiers.
 
-`tier4` is the first tier that includes customer-owned blocks and pages.
+`tier4` is the first tier that includes customer-owned pages built from saved widget instances.
 
 ## Product Sequence
 
 1. Widgets prove account-owned source, editor contracts, translation overlays, and public materialization.
-2. Blocks become lightweight account-owned presentation containers.
-3. Pages become ordered compositions of block instances.
-4. Widgets can appear inside blocks through approved public embed code, such as `clk.live`.
+2. Pages become ordered stacks of saved widget instances.
+3. Roma composes page packages from those saved instance packages.
+4. Tokyo stores and serves the submitted widget/page packages.
 
 The important point is not that every surface is the same product object. It is that every surface uses the same boring substrate:
 
 ```text
-Bob edits specs.
+Bob edits one account widget instance in browser memory.
 Roma opens and saves account-owned artifacts.
 Tokyo stores account-owned source and overlays.
 San Francisco translates declared fields.
-Materialization turns source + overlays into public output.
+Roma turns saved source into submitted public output.
 ```
 
-San Francisco should not need to know whether it is translating widget copy, block copy, or page metadata. Tokyo should not invent a separate storage philosophy for each surface. Product meaning belongs at the contract edge.
+San Francisco should not need to know whether it is translating widget copy or page metadata. Tokyo should not invent a separate storage philosophy for each surface. Product meaning belongs at the contract edge.
 
 ## Pricing Doctrine
 
@@ -69,7 +69,7 @@ free   = widget-only free tier
 tier1  = widget-only paid tier
 tier2  = widget-only paid tier
 tier3  = widget-only paid tier
-tier4  = blocks and pages tier
+tier4  = pages from saved widget instances tier
 ```
 
 Do not introduce named packages as architecture truth. If the company later chooses customer-facing labels for marketing copy, those labels must map to the canonical tier ids and must not leak into policy, storage, contracts, migrations, PRDs, or service logic.

@@ -5,7 +5,7 @@ import Footer from '../../../../../blocks/site/footer.astro';
 import WidgetBlocks from '../../../../../components/WidgetBlocks.astro';
 import { loadRequiredWidgetPageJsonForLocale } from '../../../../../lib/markdown';
 import { getPragueMarket, toMarketHreflang } from '../../../../../lib/markets';
-import { resolvePragueWidgetLabel } from '../../../../../lib/widgetCatalog';
+import { resolvePragueWidgetLabel } from '../../../../../lib/widgetLabels';
 
 const { market, locale, widget } = Astro.params;
 export const prerender = false;

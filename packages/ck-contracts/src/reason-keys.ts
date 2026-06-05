@@ -97,8 +97,6 @@ export const REASON_KEY_VALUES = [
   'coreui.upsell.reason.flagBlocked',
   'coreui.upsell.reason.limitReached',
   'coreui.upsell.reason.platform.uploads',
-  'coreui.upsell.reason.website',
-  'prague.widgetCatalog.invalidManifest',
   'roma.errors.auth.berlin_unavailable',
   'roma.errors.auth.config_missing',
   'roma.errors.auth.refresh_unavailable',

@@ -22,7 +22,7 @@ See also:
 - `learning.md` — How agents learn from outcomes
 - `infrastructure.md` — Sessions, agent execution state management
 - `BUILD_Widget.md` — AI execution guide for widget definitions
-- `BUILD_PraguePage.md` — AI execution guide for Prague page composition
+- `BUILD_PraguePage.md` — AI execution guide for Prague widget marketing JSON
 
 ---
 

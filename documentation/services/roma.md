@@ -15,7 +15,7 @@ Roma is the authenticated product shell for account users. It owns:
 - Person-scoped User Settings UI over Berlin-owned profile contracts
 - Active account context resolution
 - Account-scoped Team list and member-detail UI over Berlin-owned user/role contracts
-- Lightweight catalog/list APIs for product UX
+- Lightweight system-widget and account-instance list APIs for product UX
 - Bob editor orchestration via explicit host-open message
 - Account/system management-plane decisions for account instance lifecycle, including publish, unpublish, delete, downgrade/suspension follow-up, tier/cap enforcement, and published-state correctness
 
@@ -23,7 +23,7 @@ Roma is a host/orchestrator. Bob remains the editor kernel.
 
 For the 075 authoring simplification track, Roma's governing authoring path is one boring account flow: resolve current account, open one saved widget document, host Bob editing in memory, and save that document back to Tokyo.
 
-Under PRD 099/103, Roma/system account operations are the management plane. Tokyo-worker is the Tokyo storage PBX for account objects, public package storage/readiness, page composition, and `clk.live` static serving. Tokyo-worker is not the account policy engine for billing tier, publication eligibility, downgrade correctness, or account caps.
+Under PRD 099/103, Roma/system account operations are the management plane. Tokyo-worker is the Tokyo storage PBX for account objects, public package storage/readiness, page package storage, and `clk.live` static serving. Tokyo-worker is not the account policy engine for billing tier, publication eligibility, downgrade correctness, or account caps.
 
 ## Deploy plane (cloud-dev/prod)
 

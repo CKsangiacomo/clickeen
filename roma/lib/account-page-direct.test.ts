@@ -128,7 +128,7 @@ test('account page helpers compose packages in Roma before storing page bytes in
     assert.deepEqual(await createAccountPageInTokyo({
       accountId: ACCOUNT_PUBLIC_ID,
       accountCapsule: 'capsule',
-      head: source.head,
+      source,
       requestId: 'req_create',
     }), {
       ok: true,
@@ -195,6 +195,8 @@ test('account page helpers compose packages in Roma before storing page bytes in
     ]);
     const saveCall = calls.find((call) => call.method === 'PUT' && call.path === `/__internal/pages/${PAGE_ID}`);
     assert.equal(typeof saveCall?.body, 'object');
+    const createCall = calls.find((call) => call.method === 'POST' && call.path === '/__internal/pages');
+    assert.deepEqual((createCall?.body as { source?: unknown } | null)?.source, source);
     const saveBody = saveCall?.body as { pagePackage?: { indexHtml?: string; stylesCss?: string; runtimeJs?: string } } | null;
     assert.match(saveBody?.pagePackage?.indexHtml ?? '', new RegExp(`data-ck-page="${PAGE_ID}"`));
     assert.match(saveBody?.pagePackage?.indexHtml ?? '', new RegExp(`data-ck-instance-id="${INSTANCE_ID}"`));

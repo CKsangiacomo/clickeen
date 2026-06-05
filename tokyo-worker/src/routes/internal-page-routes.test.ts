@@ -144,6 +144,28 @@ test('page routes save source and maintain list and reverse placement indexes', 
   assert.equal((listPayload.pages as Array<{ id: string }>)[0]?.id, PAGE_ID);
 });
 
+test('page routes create from submitted source only', async () => {
+  const { env, objects } = createInternalRouteTestEnv();
+
+  const response = await callPageRoute({
+    env,
+    pathname: '/__internal/pages',
+    method: 'POST',
+    body: { source: pageSource([]) },
+  });
+
+  assert.equal(response?.status, 201);
+  const payload = await response?.json() as Record<string, unknown>;
+  assert.equal(payload.ok, true);
+  assert.equal(payload.accountId, ACCOUNT_ID);
+  assert.equal(payload.pageId, PAGE_ID);
+  assert.deepEqual(
+    jsonPayload(objects, `accounts/${ACCOUNT_ID}/website/pages/${PAGE_ID}/source.json`),
+    pageSource([]),
+  );
+  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/website/publishes/${PAGE_ID}/index.html`), false);
+});
+
 test('page routes allow the same widget instance in multiple placements', async () => {
   const { env, objects } = createInternalRouteTestEnv();
   seedInstances(env);
@@ -326,7 +348,7 @@ test('page routes require a submitted page package before saving source', async 
   assert.equal(objects.has(`accounts/${ACCOUNT_ID}/website/pages/${PAGE_ID}/serve-state.json`), false);
 });
 
-test('page routes reject publishing an empty page', async () => {
+test('page routes publish ready page packages without product empty-page policy', async () => {
   const { env, objects } = createInternalRouteTestEnv();
   seedInstances(env);
 
@@ -343,10 +365,13 @@ test('page routes reject publishing an empty page', async () => {
     method: 'POST',
   });
 
-  assert.equal(publishResponse?.status, 409);
-  const payload = await publishResponse?.json() as { error?: { reasonKey?: string } };
-  assert.equal(payload.error?.reasonKey, 'tokyo.errors.page.empty');
-  assert.equal(objects.has(`accounts/${ACCOUNT_ID}/website/pages/${PAGE_ID}/serve-state.json`), false);
+  assert.equal(publishResponse?.status, 200);
+  const payload = await publishResponse?.json() as { publishStatus?: string };
+  assert.equal(payload.publishStatus, 'published');
+  assert.equal(
+    (jsonPayload(objects, `accounts/${ACCOUNT_ID}/website/pages/${PAGE_ID}/serve-state.json`) as { status: string }).status,
+    'published',
+  );
 });
 
 test('page routes delete source and clean reverse placement index', async () => {

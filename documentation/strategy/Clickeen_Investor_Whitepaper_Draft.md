@@ -192,9 +192,9 @@ This enables execution at scale:
 **Onboarding SDR agent:**
 - Visitor: "Can you customize this for my business?"
 - Agent: "Share your website URL" (consent gate)
-- Agent: Reads one public page → rewrites generic widget copy → business-specific in user's language
-- Visitor sees their content in their language → "Create account to publish"
-- Conversion lift: TBD (in testing), but the **aha moment happens before signup**
+- Agent: Reads one public page and prepares account-creation intent
+- Visitor creates an account in Roma to make and save the real widget instance
+- Conversion lift: TBD (in testing), but the **aha moment stays separate from durable authoring**
 
 **Content personalization agent:** (planned)
 - Base widget template + industry context + geo signals
@@ -322,7 +322,7 @@ This enables:
    - Build evaluation harness (agent quality gates)
 
 3. **Go-to-market** (20%)
-   - PLG funnel optimization (Minibob → signup → publish → upgrade)
+   - PLG funnel optimization (Prague example → Roma signup → account-owned publish → upgrade)
    - SEO content engine (Prague long-tail surfaces)
    - Integration partnerships (Webflow, Shopify, WordPress)
 

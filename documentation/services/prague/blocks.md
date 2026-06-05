@@ -1,8 +1,8 @@
-# Prague — Block Catalog (v0)
+# Prague — Marketing Section Reference (v0)
 
-This doc is the **implementation contract** for building Prague pages at 100⁵ scale.
+This doc is the **implementation contract** for building Prague marketing pages.
 
-Goal: a small, reusable set of **primitives** and **blocks** that can compose all Prague page types (landing, features, examples, pricing, create/install, platform pages).
+Goal: a small, reusable set of **primitives** and Prague **marketing sections** for landing, features, examples, pricing, create/install, and platform pages. The runtime JSON field is still named `blocks[]`; that is a Prague-only implementation name, not the PRD 106 account page model.
 
 ## 1) Primitives (must be reusable everywhere)
 
@@ -30,31 +30,31 @@ Typography uses Dieter utilities (e.g. `.heading-*`, `.label-*`, `.overline`, `.
 
 Source: `prague/public/styles/primitives.css`.
 
-## 2) Blocks (page sections)
+## 2) Marketing Sections (legacy `blocks[]` runtime name)
 
-Blocks are **Astro components** in `prague/src/blocks/**`.
-Blocks:
+Marketing sections are **Astro components** in `prague/src/blocks/**`.
+Sections:
 - receive data via props
 - do not fetch
 - do not read from filesystem
 - use primitives for layout and UI
 
-Non-visual blocks:
-- `navmeta` and `page-meta` are data-only blocks (strings for navigation + SEO).
-- They are present in `blocks[]` but are not rendered by the block renderer.
+Non-visual sections:
+- `navmeta` and `page-meta` are data-only entries (strings for navigation + SEO).
+- They are present in `blocks[]` but are not rendered by the section renderer.
 
-Supported block types (registered):
+Supported section types (registered):
 `big-bang`, `hero`, `split`, `split-carousel`, `steps`, `subpage-cards`, `control-moat`, `global-moat`, `platform-strip`, `cta-bottom-block`, `minibob`, `embed-carousel`, `mobile-showcase`, `feature-explorer`, `navmeta`, `page-meta`.
 
-### Block registry + validation (executed)
+### Section registry + validation (executed)
 
-Prague validates widget page JSON at load time:
+Prague validates widget marketing page JSON at load time:
 - Registry: `prague/src/lib/blockRegistry.ts`
 - Loader: `prague/src/lib/markdown.ts`
 
 Validation rules:
-- A block may only include meta keys registered for its type (example: `visual`, `accountInstanceRef`).
-- Required copy keys are enforced per block type.
+- A section may only include meta keys registered for its type (example: `visual`, `accountInstanceRef`).
+- Required copy keys are enforced per section type.
 
 Required copy keys (enforced today):
 - `big-bang`: `headline`, `body`
@@ -75,21 +75,17 @@ Required copy keys (enforced today):
 Notes:
 - `embed-carousel` and `mobile-showcase` currently have no enforced required keys; they are meta-driven (`items`, `options`).
 
-Blocks without required keys in the registry have no enforced required keys yet; use their component props below as the expected shape.
+Sections without required keys in the registry have no enforced required keys yet; use their component props below as the expected shape.
 
-Only block types registered in `prague/src/lib/blockRegistry.ts` are supported at runtime. Other block folders that exist on disk but are not registered must not be referenced in page JSON.
-
-Shared block schema + AI contracts live in the composition package:
-- Block schemas: `prague/src/composition/blockSchemas.ts`
-- AI contracts: `prague/src/composition/contracts.ts` (`BLOCK_CONTRACTS`)
+Only section types registered in `prague/src/lib/blockRegistry.ts` are supported at runtime. Other section folders that exist on disk but are not registered must not be referenced in page JSON.
 
 ### Naming + taxonomy (non-negotiable)
 
 This is where we win (or die). The filesystem is the taxonomy.
 
-- **Folder names describe the block type**, not the page family: `hero/`, `steps/`, `cta/`, `minibob/`, `split/`.
-- **File names are kebab-case** and match the block type: `hero.astro`, `split.astro`, `steps.astro`.
-- **Variants prefer props over forks** when layout is the same; use a layout prop instead of new block types.
+- **Folder names describe the section type**, not the page family: `hero/`, `steps/`, `cta/`, `minibob/`, `split/`.
+- **File names are kebab-case** and match the section type: `hero.astro`, `split.astro`, `steps.astro`.
+- **Variants prefer props over forks** when layout is the same; use a layout prop instead of new section types.
 - **Site chrome lives under `blocks/site/`** (Nav, Footer) and is not part of page JSON.
 
 Examples:
@@ -123,7 +119,7 @@ prague/src/blocks/cta/cta.astro
 `site/footer`
 - Props: `{ market: string, locale: string }`
 
-Non-visual block contracts (required):
+Non-visual section contracts (required):
 - `navmeta` (overview only) requires `copy.title` + `copy.description` or the build fails.
 - `page-meta` (all widget pages) requires `copy.title` + `copy.description` or the build fails.
 
@@ -259,9 +255,9 @@ Prague must not infer widget locale availability from market locale lists, route
   - It must not boot Bob or start a draft handoff flow.
   - It must not derive storage identity from widget type. If it embeds a real example widget, that reference must be a normal account instance ref carrying `accountPublicId` + `instanceId` (`CLICKEEN` for admin examples).
 
-## 3) Page Composition
+## 3) Prague Marketing Page Layout
 
-Pages are lists of blocks in a fixed order. Example (widget landing):
+Prague marketing pages are JSON section lists in a fixed order. This is not the PRD 106 customer page model; customer pages are stacks of saved widget instances. Example Prague widget landing layout:
 - site/nav (global chrome)
 - hero
 - minibob
@@ -277,7 +273,7 @@ Prague is **JSON-only** for widget marketing pages in this repo snapshot.
 - Canonical widget pages:
   - Authored source in this repo: `tokyo/prague/pages/{widget}/{overview|examples|features|pricing}.json`.
   - Deployed R2 home: `prague/pages/{widget}/{overview|examples|features|pricing}.json`.
-  - Prague renders `blocks[]` by `type` and embeds account instances only when a complete `accountInstanceRef` is present.
+  - Prague renders the `blocks[]` marketing-section entries by `type` and embeds account instances only when a complete `accountInstanceRef` is present.
   - Prague validates `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` during page load; missing account instances fail fast in dev/build.
   - Prague may pass only an explicit authored `accountInstanceRef.locale` to public `clk.live` artifact paths. Prague must not infer widget locale from the route locale, account-widget translation internals, or market config.
   - Page JSON is layout + base copy.

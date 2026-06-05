@@ -16,7 +16,7 @@ const SCANNED_PATHS = [
   'bob/lib/compiler.server.ts',
   'bob/lib/compiler/editor-contract.ts',
   'bob/lib/compiler/modules/normalization.ts',
-  'prague/src/lib/widgetCatalog.ts',
+  'prague/src/lib/widgetLabels.ts',
   'roma/app/api/account/instances/[instanceId]/copilot/route.ts',
   'roma/app/api/account/locales/route.ts',
   'roma/components/use-roma-me.ts',

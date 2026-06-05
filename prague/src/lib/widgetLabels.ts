@@ -1,11 +1,11 @@
-export type PragueWidgetCatalogEntry = {
+export type PragueWidgetLabelEntry = {
   widgetType: string;
   label: string;
   description: string;
   category: string;
 };
 
-const WIDGET_CATALOG: PragueWidgetCatalogEntry[] = [
+const PRAGUE_WIDGET_LABELS: PragueWidgetLabelEntry[] = [
   {
     widgetType: 'faq',
     label: 'FAQ',
@@ -26,19 +26,19 @@ const WIDGET_CATALOG: PragueWidgetCatalogEntry[] = [
   },
 ];
 
-export function resolvePragueWidgetCatalogEntry(widgetType: string): PragueWidgetCatalogEntry {
+export function resolvePragueWidgetLabelEntry(widgetType: string): PragueWidgetLabelEntry {
   const normalizedWidgetType = String(widgetType || '').trim();
-  const entry = WIDGET_CATALOG.find(
+  const entry = PRAGUE_WIDGET_LABELS.find(
     (candidate) => candidate.widgetType === normalizedWidgetType,
   );
 
   if (!entry) {
-    throw new Error(`prague.widgetCatalog.missing:${normalizedWidgetType}`);
+    throw new Error(`prague.widgetLabel.missing:${normalizedWidgetType}`);
   }
 
   return entry;
 }
 
 export function resolvePragueWidgetLabel(widgetType: string): string {
-  return resolvePragueWidgetCatalogEntry(widgetType).label;
+  return resolvePragueWidgetLabelEntry(widgetType).label;
 }

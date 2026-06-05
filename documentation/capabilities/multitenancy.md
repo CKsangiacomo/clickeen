@@ -20,7 +20,7 @@ This doc mixes shipped behavior with target packaging. Shipped enforcement today
 
 Anything else in this doc (seats, instance counts, widget type counts) is directional until implemented.
 
-Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tier4`. There are no commercial tier names in the product contract. `free`, `tier1`, `tier2`, and `tier3` are widget-only tiers. `tier4` is the first tier that includes customer-owned blocks and pages.
+Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tier4`. There are no commercial tier names in the product contract. `free`, `tier1`, `tier2`, and `tier3` are widget-only tiers. `tier4` is the first tier that includes customer-owned pages built from widget instances.
 
 ---
 
@@ -32,7 +32,7 @@ Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tie
 | **Tier 1** | ∞ | 3-5 | 1 | 1 | higher limits | branding removed |
 | **Tier 2** | ∞ | ∞ | 3 | 5 | higher limits | + SEO/GEO, auto-translate |
 | **Tier 3** | ∞ | ∞ | All | ∞ | ∞ | + Supernova |
-| **Tier 4** | ∞ | ∞ | All | ∞ | ∞ | + blocks and pages |
+| **Tier 4** | ∞ | ∞ | All | ∞ | ∞ | + pages |
 
 ### Tier Details
 
@@ -74,8 +74,8 @@ Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tie
 
 **Tier 4:**
 - Everything in Tier 3
-- Customer-owned blocks and pages
-- Intended commercial home for the PRD 106 page/block product
+- Customer-owned pages built from widget instance stacks
+- Intended commercial home for the PRD 106 page composition product
 - Availability is controlled by account policy/profile, not by a separate product mode
 
 **Key rules:**
@@ -239,7 +239,7 @@ type Comment = {
 | **AI Model Quality** | Basic (Fast) | Standard | Premium | Premium (SOTA) | Premium (SOTA) |
 | **Auto-translate** | ❌ | ❌ | ✅ | ✅ | ✅ |
 | **Supernova** | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Blocks / pages** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Pages** | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Branding** | Required | Optional | None | None | None |
 
 **Upgrade triggers:**
@@ -249,7 +249,7 @@ type Comment = {
 - "Add another editor" blocked at seat limit → Tier 2
 - "I want auto-translate" → Tier 2
 - "I want Supernova effects" → Tier 3
-- "I want landing pages or reusable blocks" → Tier 4
+- "I want landing pages" → Tier 4
 - Viewers are never blocked
 
 ---
@@ -332,7 +332,7 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 
 **What still matters:**
 - Uploads and Copilot remain bounded by server-side policy limit enforcement.
-- Widget type creation is bounded by the account policy catalog path: Roma filters unavailable catalog options and rejects direct create requests that would exceed `widgets.types.max`.
+- Widget type creation is bounded by the account policy system-widget path: Roma filters unavailable system widget options and rejects direct create requests that would exceed `widgets.types.max`.
 - Monthly public view limits remain a named pre-GA enforcement gap, not a customer-facing active claim. Before GA, public view usage may be observed from the serving plane, but over-limit policy and published-projection correctness must be driven by Roma/system account operations; Venice must not become a tier/cap policy engine.
 - Shared Builder should not carry `if (minibob)` checks or other fake editor identities.
 
@@ -345,7 +345,7 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 Current shipped behavior:
 - Account member listing is read-only via `GET /api/account/team` and `GET /api/account/team/members/:memberId` for authorized users.
 - Publish and editor behavior use policy/entitlement enforcement already wired in runtime.
-- Widget catalog creation uses `widgets.types.max` to hide unavailable create options and reject direct create requests.
+- System widget creation uses `widgets.types.max` to hide unavailable create options and reject direct create requests.
 - There is no shipped seat-limit write-path enforcement yet.
 - There is no shipped `SEAT_LIMIT_EXCEEDED` runtime error yet.
 - There is no shipped `views.monthly.max` public embed enforcement yet; do not advertise it as an active runtime limit until telemetry, management-plane enforcement, and public miss/deny behavior are specified.

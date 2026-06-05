@@ -1,6 +1,5 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import {
-  createAccountPageSource,
   deleteAccountPageSource,
   listAccountPages,
   normalizePageId,
@@ -98,17 +97,18 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
       boundary: 'internal.page.create.body',
       accountId,
     });
-    if (body != null && !isRecord(body)) {
+    if (!isRecord(body) || !isRecord(body.source)) {
       return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
     }
-    const bodyRecord = isRecord(body) ? body : {};
+    const pageId = normalizePageId(body.source.id);
+    if (!pageId) return respondValidation(respond, 'tokyo.errors.page.invalidPageId');
 
     try {
-      const created = await createAccountPageSource({
+      const created = await saveAccountPageSource({
         env,
         accountId,
-        head: isRecord(bodyRecord.head) ? bodyRecord.head : null,
-        placements: bodyRecord.placements,
+        pageId,
+        source: body.source,
       });
       return respond(json({ ok: true, accountId, pageId: created.source.id, ...created }, { status: 201 }));
     } catch (error) {
@@ -141,14 +141,6 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
             json(
               { error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' } },
               { status: 404 },
-            ),
-          );
-        }
-        if (source.placements.length < 1) {
-          return respond(
-            json(
-              { error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.empty' } },
-              { status: 409 },
             ),
           );
         }

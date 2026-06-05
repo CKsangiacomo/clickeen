@@ -101,6 +101,17 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  const sourceId = typeof bodyResult.payload.source.id === 'string' ? bodyResult.payload.source.id.trim().toUpperCase() : '';
+  if (sourceId !== pageId) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.invalidPageId' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
 
   const accountId = current.value.authzPayload.accountPublicId;
   const result = await saveAccountPageInTokyo({

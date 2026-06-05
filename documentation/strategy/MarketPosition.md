@@ -81,7 +81,7 @@ We enable businesses to create content once and render infinite personalized var
 "Widget-only account with unlimited widget scale and Supernova effects."
 
 **tier4:**
-"Blocks and pages: build landing pages from reusable blocks, with widgets embedded as public `clk.live` lines."
+"Pages: build landing pages from saved widget instances, with public serving through `clk.live`."
 
 ---
 
@@ -94,7 +94,7 @@ We enable businesses to create content once and render infinite personalized var
 
 ### vs Mailchimp/SendGrid (Email)
 - ✅ Multi-language campaigns (they require plugins)
-- ✅ Block reuse (same components as widgets/pages)
+- ✅ Widget-instance reuse across pages
 - ✅ Integrated with other surfaces
 
 ### vs Unbounce/Instapage (Landing Pages)

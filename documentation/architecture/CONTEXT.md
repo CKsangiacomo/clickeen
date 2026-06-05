@@ -160,7 +160,7 @@ accounts/{accountPublicId}/
 
 - A normal account-owned instance under the Clickeen admin account.
 - Prague may embed it by writing `accountInstanceRef.accountPublicId` + `accountInstanceRef.instanceId` in page JSON. Prague must not discover account-widget locale availability, depend on private translation state, or assume a per-locale HTML file model. Any future public locale selector must be explicitly specified by the current public widget runtime contract.
-- Roma may duplicate it only through explicit product-owned catalog/reference data.
+- Roma may duplicate it only through explicit product-owned reference data.
 - The instance itself must not contain global distribution flags such as `visibleInRoma`, `listed`, or `duplicable`.
 - There is no surviving separate preset model, route authority, folder authority, or type authority.
 
@@ -227,7 +227,7 @@ How it works:
 1. Clickeen authors example instances in Builder under the admin account.
 2. Those instances are normal account-owned instances with compact generated instance IDs.
 3. Prague embeds them with `accountInstanceRef.instanceId` in `tokyo/prague/pages/**`.
-4. Roma can offer some of them to users through product-owned catalog/reference data outside the instance document.
+4. Roma can offer some of them to users through product-owned reference data outside the instance document.
 5. A user copy creates a new instance under the destination account.
 
 Why:
@@ -235,7 +235,7 @@ Why:
 - One editor: Clickeen and users author through the same Builder path.
 - One storage model: admin examples live under the admin account like every other account-owned instance.
 - No hidden distribution metadata: global/platform decisions stay out of normal customer instance data.
-- Future marketplace-compatible: a creator can later be another account whose instances are referenced from catalog data.
+- Future marketplace-compatible: a creator can later be another account whose instances are referenced from product-owned reference data.
 
 Publishing semantics: `published` / `unpublished` is Tokyo-owned instance product state. It means only whether `clk.live` may serve generated public artifacts for that instance.
 
@@ -275,7 +275,7 @@ Publishing semantics: `published` / `unpublished` is Tokyo-owned instance produc
 
 **Tokyo** — Account storage and CDN. Hosts product static resources, widget software, Roma/Prague owned static resources, account-owned instance source, translated locale value storage, generated account mini-site artifacts, and account-owned uploaded files. Runtime-managed account data lives only under `accounts/{accountPublicId}/`; git-authored product resources live under `product/`, `dieter/`, `fonts/`, and `prague/`.
 
-**Tokyo Worker** — Cloudflare Worker that serves account asset references from `accounts/{accountPublicId}/assets/{assetRef}`, exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, owns account instance config/content persistence, stores translated locale value maps, queues translation jobs, stores submitted widget public package files, composes page packages, and serves existing public artifacts from R2/CDN. Tokyo-worker is a PBX/control-plane switchboard for approved product operations: it must not infer product meaning from private storage object names, preserve storage-object vocabulary at product boundaries, render public widgets from authoring source, or rebuild widget package bytes from config/content.
+**Tokyo Worker** — Cloudflare Worker that serves account asset references from `accounts/{accountPublicId}/assets/{assetRef}`, exposes private Roma-bound asset and product-control routes over Cloudflare service bindings, owns account instance config/content persistence, stores translated locale value maps, queues translation jobs, stores submitted widget/page public package files, and serves existing public artifacts from R2/CDN. Tokyo-worker is a PBX/control-plane switchboard for approved product operations: it must not infer product meaning from private storage object names, preserve storage-object vocabulary at product boundaries, render public widgets from authoring source, compose pages, or rebuild package bytes from config/content.
 
 **Asset URL contract (pre-GA strict):**
 

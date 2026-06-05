@@ -97,9 +97,16 @@ export function WidgetsDomain() {
   }, [productAccountId, applyWidgets, refreshWidgets]);
 
   const instanceWidgetTypes = useMemo(
-    () => Array.from(new Set(widgetInstances.map((instance) => instance.widgetType).filter((widgetType) => widgetType !== 'unknown'))).sort((a, b) => a.localeCompare(b)),
+    () => Array.from(new Set(widgetInstances.map((instance) => instance.widgetType))).sort((a, b) => a.localeCompare(b)),
     [widgetInstances],
   );
+  const missingSystemWidgetTypes = useMemo(() => {
+    const systemWidgetTypeSet = new Set(systemWidgets.map((option) => option.widgetType));
+    return instanceWidgetTypes.filter((widgetType) => !systemWidgetTypeSet.has(widgetType));
+  }, [instanceWidgetTypes, systemWidgets]);
+  const widgetDataError = missingSystemWidgetTypes.length
+    ? `Widget data is invalid: account instances reference unavailable system widgets (${missingSystemWidgetTypes.join(', ')}).`
+    : dataError;
 
   const groupedInstances = useMemo<WidgetInstanceGroup[]>(() => {
     const groups = new Map<string, WidgetInstanceGroup>();
@@ -116,16 +123,7 @@ export function WidgetsDomain() {
       const group = groups.get(widgetType);
       if (group) {
         group.instances.push(instance);
-        return;
       }
-      groups.set(widgetType, {
-        widgetType,
-        label: widgetType,
-        description: '',
-        canCreate: false,
-        disabledReasonKey: null,
-        instances: [instance],
-      });
     });
 
     return Array.from(groups.values())
@@ -307,11 +305,11 @@ export function WidgetsDomain() {
 
   return (
     <>
-      {dataError || mutationError || renameError || (domainLoading && groupedInstances.length === 0) ? (
+      {widgetDataError || mutationError || renameError || (domainLoading && groupedInstances.length === 0) ? (
         <section className="rd-canvas-module">
-          {dataError ? (
+          {widgetDataError ? (
             <div className="roma-inline-stack">
-              <p className="body-m">{dataError}</p>
+              <p className="body-m">{widgetDataError}</p>
               <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" onClick={() => void refreshWidgets({ force: true })} disabled={domainLoading || domainRefreshing}>
                 <span className="diet-btn-txt__label body-m">Retry</span>
               </button>
@@ -320,11 +318,11 @@ export function WidgetsDomain() {
           {mutationError ? <p className="body-m">{mutationError}</p> : null}
           {renameError ? <p className="body-m">{renameError}</p> : null}
 
-          {domainLoading && groupedInstances.length === 0 && !dataError ? <p className="body-m">Loading widgets...</p> : null}
+          {domainLoading && groupedInstances.length === 0 && !widgetDataError ? <p className="body-m">Loading widgets...</p> : null}
         </section>
       ) : null}
 
-      {!domainLoading && !dataError && groupedInstances.length === 0 ? (
+      {!domainLoading && !widgetDataError && groupedInstances.length === 0 ? (
         <section className="rd-canvas-module">
           <p className="body-m">No widget types available.</p>
         </section>

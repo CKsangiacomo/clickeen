@@ -299,18 +299,14 @@ export async function listAccountPagesInTokyo(args: {
 export async function createAccountPageInTokyo(args: {
   accountId: string;
   accountCapsule?: string | null;
-  head?: unknown;
-  placements?: unknown;
+  source: TokyoAccountPageSource;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: { source: TokyoAccountPageSource; summary: TokyoAccountPageSummary } } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: '/__internal/pages',
     method: 'POST',
-    body: {
-      ...(args.head ? { head: args.head } : {}),
-      ...(args.placements ? { placements: args.placements } : {}),
-    },
+    body: { source: args.source },
     decode: (payload) => payload,
     errorDetail: 'tokyo_account_page_create_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
