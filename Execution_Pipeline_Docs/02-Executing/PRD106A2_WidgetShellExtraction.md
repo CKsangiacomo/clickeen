@@ -166,6 +166,150 @@ Read and preserve behavior from:
 - `tokyo/product/widgets/shared/socialShare.js`
 - `tokyo/product/widgets/shared/socialShare.css`
 
+## Step 1 Evidence: FAQ Shell Inventory
+
+Status: Step 1 green evidence, captured before any package extraction.
+
+This inventory proves the Shell/Core boundary from current FAQ code. It does not
+grant permission to create the package, rebase FAQ, or edit other widgets until
+the Current Step Gate moves to the next step.
+
+### FAQ Shell Source Inventory
+
+| Concern | Evidence |
+| --- | --- |
+| Shell state defaults: `cta.*`, `localeSwitcher.*`, `pod.*`, `stage.*`, `header.*`, `behavior.*`, `appearance.*`, `typography.*` | `tokyo/product/widgets/faq/spec.json:44`, `tokyo/product/widgets/faq/spec.json:57`, `tokyo/product/widgets/faq/spec.json:64`, `tokyo/product/widgets/faq/spec.json:165`, `tokyo/product/widgets/faq/spec.json:259`, `tokyo/product/widgets/faq/spec.json:294`, `tokyo/product/widgets/faq/spec.json:335`, `tokyo/product/widgets/faq/spec.json:454` |
+| Shell editor clusters in FAQ spec | `tokyo/product/widgets/faq/spec.json:615`, `tokyo/product/widgets/faq/spec.json:1721`, `tokyo/product/widgets/faq/spec.json:1727`, `tokyo/product/widgets/faq/spec.json:1731`, `tokyo/product/widgets/faq/spec.json:2081`, `tokyo/product/widgets/faq/spec.json:2086`, `tokyo/product/widgets/faq/spec.json:2160`, `tokyo/product/widgets/faq/spec.json:2682`, `tokyo/product/widgets/faq/spec.json:2687` |
+| Shell DOM structure: Stage, Pod, widget root, `ck-headerLayout`, Header, Core slot | `tokyo/product/widgets/faq/widget.html:15`, `tokyo/product/widgets/faq/widget.html:16`, `tokyo/product/widgets/faq/widget.html:17`, `tokyo/product/widgets/faq/widget.html:19`, `tokyo/product/widgets/faq/widget.html:24`, `tokyo/product/widgets/faq/widget.html:35` |
+| Header DOM roles | `tokyo/product/widgets/faq/widget.html:26`, `tokyo/product/widgets/faq/widget.html:27`, `tokyo/product/widgets/faq/widget.html:30` |
+| FAQ Core DOM role inside Shell Core slot | `tokyo/product/widgets/faq/widget.html:39` |
+| Shared Header Bob controls | `bob/lib/compiler/modules/header.ts:55`, `bob/lib/compiler/modules/header.ts:58`, `bob/lib/compiler/modules/header.ts:66`, `bob/lib/compiler/modules/header.ts:80`, `bob/lib/compiler/modules/header.ts:100` |
+| Shared Stage/Pod Bob controls | `bob/lib/compiler/modules/stagePod.ts:48`, `bob/lib/compiler/modules/stagePod.ts:97`, `bob/lib/compiler/modules/stagePod.ts:122` |
+| Shared Typography Bob panel builder | `bob/lib/compiler/modules/typography.ts:45` |
+| Bob editor contract recognizes Shell clusters | `bob/lib/compiler/editor-contract.ts:49`, `bob/lib/compiler/editor-contract.ts:216` |
+| Shared runtime calls from FAQ | `tokyo/product/widgets/faq/widget.client.js:255`, `tokyo/product/widgets/faq/widget.client.js:355`, `tokyo/product/widgets/faq/widget.client.js:360`, `tokyo/product/widgets/faq/widget.client.js:377`, `tokyo/product/widgets/faq/widget.client.js:382`, `tokyo/product/widgets/faq/widget.client.js:510` |
+| Shared runtime implementations | `tokyo/product/widgets/shared/surface.js:95`, `tokyo/product/widgets/shared/stagePod.js:349`, `tokyo/product/widgets/shared/header.js:142`, `tokyo/product/widgets/shared/localeSwitcher.js:184`, `tokyo/product/widgets/shared/typography.js:628`, `tokyo/product/widgets/shared/previewL10n.js:70`, `tokyo/product/widgets/shared/branding.js:143`, `tokyo/product/widgets/shared/socialShare.js:238` |
+| Roma package/page extraction already expects style/runtime module boundaries | `roma/lib/widget-public-package.ts:120`, `roma/lib/widget-public-package.ts:280`, `roma/lib/widget-public-package.ts:328`, `roma/lib/page-package-composer.ts:36`, `roma/lib/page-package-composer.ts:39`, `roma/lib/page-package-composer.ts:253`, `roma/lib/page-package-composer.ts:262` |
+| Bob compiled widget route fetches widget source files and currently includes shared social-share files | `bob/lib/api/compiled-widget-route.ts:96`, `bob/lib/api/compiled-widget-route.ts:125`, `bob/lib/api/compiled-widget-route.ts:170`, `bob/lib/api/compiled-widget-route.ts:323` |
+| Shell editable fields from FAQ | `tokyo/product/widgets/faq/editable-fields.json:6`, `tokyo/product/widgets/faq/editable-fields.json:14`, `tokyo/product/widgets/faq/editable-fields.json:22` |
+
+### Shell-Owned Paths Proved By FAQ
+
+These paths are Shell-owned because FAQ already uses them for shared widget
+state, controls, DOM/runtime, or editable-field behavior:
+
+```text
+header.enabled
+header.title
+header.showSubtitle
+header.subtitleHtml
+header.placement
+header.alignment
+header.gap
+header.textGap
+header.ctaPlacement
+header.innerGap
+
+cta.enabled
+cta.label
+cta.href
+cta.openMode
+cta.iconEnabled
+cta.iconPlacement
+cta.iconName
+
+stage.*
+pod.*
+appearance.cta*
+appearance.localeSwitcher*
+appearance.podBorder
+appearance.cardwrapper.*
+typography.*
+localeSwitcher.*
+behavior.showBacklink
+behavior.socialShare.enabled
+```
+
+`appearance.cardwrapper.*` is Shell-extractable as the shared Core frame/surface
+mechanism proven by FAQ and `CKSurface.applyCardWrapper`. FAQ-specific item
+card controls remain FAQ Core unless a child PRD explicitly uses the shared
+surface contract.
+
+### FAQ Core Paths Excluded From Shell
+
+These paths remain FAQ Core. They must not be promoted into the Shell package:
+
+```text
+sections[]
+sections[].id
+sections[].title
+sections[].faqs[]
+sections[].faqs[].id
+sections[].faqs[].question
+sections[].faqs[].answer
+displayCategoryTitles
+layout.type
+layout.columns.*
+layout.cardsLayout
+layout.gap
+layout.itemQaGap*
+layout.itemPadding*
+appearance.itemBackground
+appearance.iconStyle
+appearance.iconColor
+appearance.link*
+behavior.expandFirst
+behavior.multiOpen
+behavior.expandAll
+seoGeo.*
+seo.*
+geo.*
+```
+
+FAQ Core editable fields are excluded from Shell and keep stable array identity:
+
+```text
+sections[].title
+sections[].faqs[].question
+sections[].faqs[].answer
+```
+
+Evidence: `tokyo/product/widgets/faq/editable-fields.json:30`,
+`tokyo/product/widgets/faq/editable-fields.json:34`,
+`tokyo/product/widgets/faq/editable-fields.json:40`,
+`tokyo/product/widgets/faq/editable-fields.json:44`,
+`tokyo/product/widgets/faq/editable-fields.json:51`,
+`tokyo/product/widgets/faq/editable-fields.json:55`.
+
+### Product-Approved Shell Additions Not Proved By FAQ
+
+These are approved Shell responsibilities even though FAQ does not currently
+prove them as implemented behavior:
+
+```text
+uiLabels.core.singular
+uiLabels.core.plural
+uiLabels.core.sizeCluster
+coreSize.mode
+coreSize.fixedHeight
+coreSize.minHeight
+coreSize.preferredVw
+coreSize.maxHeight
+```
+
+Reason:
+
+- `uiLabels.core.*` is required so Bob can render user-facing Core labels such
+  as "FAQs", "Visual", "Cards", "Statement", and "CTA" without displaying the
+  architecture term "Core".
+- `coreSize.*` is required because every normal widget has one Shell-owned Core
+  slot and child widgets must not invent private height/visual/body sizing
+  paths.
+
+Implementation rule for later steps: these additions default to non-disruptive
+`auto` behavior for FAQ. They are not to be described as FAQ-proven extraction,
+and FAQ must show no visible regression when Step 3 rebases it onto the Shell.
+
 ## Package Shape
 
 Create the shared package as the surviving implementation coordinate:
