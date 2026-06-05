@@ -292,7 +292,7 @@
             "nodes": [
               {
                 "kind": "field",
-                "type": "richtext",
+                "type": "textedit",
                 "path": "headline",
                 "label": "Headline",
                 "attrs": {
@@ -301,7 +301,7 @@
               },
               {
                 "kind": "field",
-                "type": "richtext",
+                "type": "textedit",
                 "path": "subheadline",
                 "label": "Subheadline",
                 "attrs": {
@@ -324,13 +324,13 @@
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "primaryCta.label",
                 "label": "Label"
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "primaryCta.href",
                 "label": "URL"
               }
@@ -350,13 +350,13 @@
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "secondaryCta.label",
                 "label": "Label"
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "secondaryCta.href",
                 "label": "URL"
               }
@@ -406,18 +406,15 @@
                   "options": [
                     {
                       "label": "Visual right",
-                      "value": "visual-right",
-                      "icon": "panel.right"
+                      "value": "visual-right"
                     },
                     {
                       "label": "Visual left",
-                      "value": "visual-left",
-                      "icon": "panel.left"
+                      "value": "visual-left"
                     },
                     {
                       "label": "Stacked",
-                      "value": "stacked",
-                      "icon": "panel.top"
+                      "value": "stacked"
                     }
                   ]
                 }

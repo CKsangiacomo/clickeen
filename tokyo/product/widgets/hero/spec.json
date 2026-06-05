@@ -314,13 +314,13 @@
             "nodes": [
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "eyebrow",
                 "label": "Eyebrow"
               },
               {
                 "kind": "field",
-                "type": "richtext",
+                "type": "textedit",
                 "path": "headline",
                 "label": "Headline",
                 "attrs": {
@@ -329,7 +329,7 @@
               },
               {
                 "kind": "field",
-                "type": "richtext",
+                "type": "textedit",
                 "path": "subheadline",
                 "label": "Subheadline",
                 "attrs": {
@@ -352,13 +352,13 @@
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "primaryCta.label",
                 "label": "Label"
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "primaryCta.href",
                 "label": "URL"
               }
@@ -378,13 +378,13 @@
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "secondaryCta.label",
                 "label": "Label"
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "secondaryCta.href",
                 "label": "URL"
               }
@@ -434,13 +434,11 @@
                   "options": [
                     {
                       "label": "Left",
-                      "value": "left",
-                      "icon": "text.alignleft"
+                      "value": "left"
                     },
                     {
                       "label": "Center",
-                      "value": "center",
-                      "icon": "text.aligncenter"
+                      "value": "center"
                     }
                   ]
                 }

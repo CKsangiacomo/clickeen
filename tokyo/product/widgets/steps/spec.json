@@ -322,7 +322,7 @@
             "nodes": [
               {
                 "kind": "field",
-                "type": "richtext",
+                "type": "textedit",
                 "path": "title",
                 "label": "Title",
                 "attrs": {
@@ -331,7 +331,7 @@
               },
               {
                 "kind": "field",
-                "type": "richtext",
+                "type": "textedit",
                 "path": "subhead",
                 "label": "Subhead",
                 "attrs": {
@@ -350,13 +350,13 @@
                 "template": [
                   {
                     "kind": "field",
-                    "type": "text",
+                    "type": "textfield",
                     "path": "items.__INDEX__.title",
                     "label": "Title"
                   },
                   {
                     "kind": "field",
-                    "type": "richtext",
+                    "type": "textedit",
                     "path": "items.__INDEX__.body",
                     "label": "Body",
                     "attrs": {
@@ -374,7 +374,7 @@
                   },
                   {
                     "kind": "field",
-                    "type": "text",
+                    "type": "textfield",
                     "path": "items.__INDEX__.iconName",
                     "label": "Icon name"
                   }
@@ -417,13 +417,11 @@
                   "options": [
                     {
                       "label": "Cards",
-                      "value": "cards",
-                      "icon": "square.grid.2x2"
+                      "value": "cards"
                     },
                     {
                       "label": "Value props",
-                      "value": "value-props",
-                      "icon": "list.bullet.rectangle"
+                      "value": "value-props"
                     }
                   ]
                 }
@@ -478,7 +476,7 @@
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "appearance.cardRadius",
                 "label": "Card radius"
               }

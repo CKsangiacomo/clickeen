@@ -282,7 +282,7 @@
             "nodes": [
               {
                 "kind": "field",
-                "type": "richtext",
+                "type": "textedit",
                 "path": "title",
                 "label": "Title",
                 "attrs": {
@@ -291,7 +291,7 @@
               },
               {
                 "kind": "field",
-                "type": "richtext",
+                "type": "textedit",
                 "path": "body",
                 "label": "Body",
                 "attrs": {
@@ -314,13 +314,13 @@
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "primaryCta.label",
                 "label": "Label"
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "primaryCta.href",
                 "label": "URL"
               }
@@ -340,13 +340,13 @@
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "secondaryCta.label",
                 "label": "Label"
               },
               {
                 "kind": "field",
-                "type": "text",
+                "type": "textfield",
                 "path": "secondaryCta.href",
                 "label": "URL"
               }
