@@ -8,7 +8,6 @@ import {
   type SessionUpsell,
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
-import { buildSavedWidgetPublicPackage } from './publicPackage';
 
 function normalizeTranslationFollowup(payload: unknown):
   | { ok: true }
@@ -74,32 +73,17 @@ export function useSessionSaving(args: {
     if (!snapshot.isDirty) {
       return;
     }
-    if (!snapshot.compiled) {
-      setState((prev) => ({
-        ...prev,
-        error: { source: 'save', message: 'Missing widget compiler context for save.' },
-      }));
-      return;
-    }
-
     setState((prev) => ({ ...prev, isSaving: true, error: null }));
 
     try {
       const config = snapshot.instanceData;
-      const publicPackage = buildSavedWidgetPublicPackage({
-        compiled: snapshot.compiled,
-        instanceId,
-        baseLocale: meta?.baseLocale || 'en',
-        displayName: meta?.label ?? null,
-        state: config,
-      });
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
         instanceId,
         body: {
           widgetType,
           config,
-          publicPackage,
+          baseLocale: meta?.baseLocale ?? null,
           displayName: meta?.label ?? null,
           meta: meta?.meta ?? null,
         },

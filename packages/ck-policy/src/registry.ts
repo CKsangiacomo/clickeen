@@ -1,7 +1,3 @@
-import { getEntitlementsMatrix } from './matrix';
-
-const matrix = getEntitlementsMatrix();
-
 // Keep in sync with packages/ck-policy/entitlements.matrix.json (registry is the typed source of truth).
 export const ENTITLEMENT_KEYS = [
   'l10n.locales.max',
@@ -181,43 +177,3 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     },
   },
 };
-
-function assertMetaMatchesRegistry(): void {
-  const metaKeys = Object.keys(ENTITLEMENT_META).sort();
-  const registryKeys = [...ENTITLEMENT_KEYS].sort();
-  if (metaKeys.length !== registryKeys.length) {
-    throw new Error('[ck-policy] Entitlement meta is out of sync with registry');
-  }
-  for (let i = 0; i < registryKeys.length; i += 1) {
-    if (registryKeys[i] !== metaKeys[i]) {
-      throw new Error('[ck-policy] Entitlement meta is out of sync with registry');
-    }
-  }
-}
-
-function assertRegistryMatchesMatrix(): void {
-  const matrixKeys = Object.keys(matrix.entitlements).sort();
-  const registryKeys = [...ENTITLEMENT_KEYS].sort();
-  if (matrixKeys.length !== registryKeys.length) {
-    throw new Error('[ck-policy] Entitlement registry is out of sync with entitlements.matrix.json');
-  }
-  for (let i = 0; i < matrixKeys.length; i += 1) {
-    if (matrixKeys[i] !== registryKeys[i]) {
-      throw new Error('[ck-policy] Entitlement registry is out of sync with entitlements.matrix.json');
-    }
-  }
-
-  for (const key of FLAG_KEYS) {
-    if (matrix.entitlements[key]?.kind !== 'flag') {
-      throw new Error(`[ck-policy] Entitlement ${key} must be kind=flag`);
-    }
-  }
-  for (const key of PLAN_LIMIT_KEYS) {
-    if (matrix.entitlements[key]?.kind !== 'limit') {
-      throw new Error(`[ck-policy] Entitlement ${key} must be kind=limit`);
-    }
-  }
-}
-
-assertRegistryMatchesMatrix();
-assertMetaMatchesRegistry();

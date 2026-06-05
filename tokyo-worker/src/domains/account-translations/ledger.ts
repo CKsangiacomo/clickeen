@@ -211,6 +211,19 @@ async function readLocalesForOperation(env: Env, operationId: string): Promise<T
   return payload.map(normalizeLocaleRow).filter((row): row is TranslationOperationLocaleDbRow => Boolean(row));
 }
 
+function compareOperationRecency(left: TranslationOperationDbRow, right: TranslationOperationDbRow): number {
+  const requested = right.requested_at.localeCompare(left.requested_at);
+  if (requested !== 0) return requested;
+  const updated = right.updated_at.localeCompare(left.updated_at);
+  if (updated !== 0) return updated;
+  return left.id.localeCompare(right.id);
+}
+
+function selectCurrentOperation(rows: TranslationOperationDbRow[]): TranslationOperationDbRow | null {
+  const ordered = [...rows].sort(compareOperationRecency);
+  return ordered.find((row) => row.status === 'queued' || row.status === 'running') ?? ordered[0] ?? null;
+}
+
 export async function readLatestTranslationGenerationOperation(args: {
   env: Env;
   accountId: string;
@@ -221,12 +234,12 @@ export async function readLatestTranslationGenerationOperation(args: {
   const payload = await assertSupabaseOk(
     await supabaseFetch(
       args.env,
-      `/rest/v1/translation_generation_operations?account_public_id=${eq(args.accountId)}&instance_id=${eq(args.instanceId)}&select=*&order=updated_at.desc,id.asc&limit=1`,
+      `/rest/v1/translation_generation_operations?account_public_id=${eq(args.accountId)}&instance_id=${eq(args.instanceId)}&select=*&order=requested_at.desc,updated_at.desc,id.asc&limit=20`,
     ),
     'read_operation_failed',
   );
   if (!Array.isArray(payload)) throw new Error('tokyo.translation.operation.read_operation_invalid');
-  const operation = normalizeOperationRow(payload[0]);
+  const operation = selectCurrentOperation(payload.map(normalizeOperationRow).filter((row): row is TranslationOperationDbRow => Boolean(row)));
   if (!operation) return null;
   const locales = await readLocalesForOperation(args.env, operation.id);
   return documentFromRows({

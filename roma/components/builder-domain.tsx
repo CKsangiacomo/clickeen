@@ -19,11 +19,6 @@ type BobReadyMessage = {
   type: 'bob:session-ready';
 };
 
-type BobSwitchMessage = {
-  type: 'bob:request-instance-switch';
-  instanceId?: string | null;
-};
-
 type BobOpenEditorAppliedMessage = {
   type: 'bob:open-editor-applied';
   requestId?: string | null;
@@ -312,11 +307,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
   const runBobAccountCommand = useCallback(
     async (args: { source: Window; requestId: string; command: BobAccountCommand; instanceId?: string; headers?: Record<string, string>; body?: unknown }) => {
-      const route = resolveBobAccountCommandRequest({
-        command: args.command,
-        instanceId: args.instanceId,
-        body: args.body,
-      });
       const reply = (payload: Omit<HostAccountCommandResultMessage, 'type'>) => {
         const message: HostAccountCommandResultMessage = {
           type: 'host:account-command-result',
@@ -324,12 +314,32 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         };
         args.source.postMessage(message, bobBaseUrl);
       };
+      const commandUsesActiveInstance = !isAccountAssetCommand(args.command);
+      const requestedInstanceId = typeof args.instanceId === 'string' ? args.instanceId.trim() : '';
+      const scopedInstanceId = commandUsesActiveInstance ? activeInstanceId.trim() : requestedInstanceId;
+      if (commandUsesActiveInstance && requestedInstanceId && requestedInstanceId !== scopedInstanceId) {
+        reply({
+          requestId: args.requestId,
+          command: args.command,
+          instanceId: scopedInstanceId || requestedInstanceId,
+          ok: false,
+          status: 409,
+          message: 'coreui.errors.builder.instanceScopeMismatch',
+        });
+        return;
+      }
+
+      const route = resolveBobAccountCommandRequest({
+        command: args.command,
+        instanceId: scopedInstanceId,
+        body: args.body,
+      });
 
       if (!route) {
         reply({
           requestId: args.requestId,
           command: args.command,
-          ...(args.instanceId ? { instanceId: args.instanceId } : {}),
+          ...(scopedInstanceId ? { instanceId: scopedInstanceId } : {}),
           ok: false,
           status: 422,
           message: 'coreui.errors.builder.command.invalid',
@@ -377,7 +387,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         reply({
           requestId: args.requestId,
           command: args.command,
-          ...(args.instanceId ? { instanceId: args.instanceId } : {}),
+          ...(scopedInstanceId ? { instanceId: scopedInstanceId } : {}),
           ok: response.ok,
           status: response.status,
           payload,
@@ -399,14 +409,14 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         reply({
           requestId: args.requestId,
           command: args.command,
-          ...(args.instanceId ? { instanceId: args.instanceId } : {}),
+          ...(scopedInstanceId ? { instanceId: scopedInstanceId } : {}),
           ok: false,
           status: 500,
           message,
         });
       }
     },
-    [accountApi, bobBaseUrl],
+    [accountApi, activeInstanceId, bobBaseUrl],
   );
 
   const postOpenEditorAndWait = useCallback(
@@ -536,21 +546,13 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       if (event.origin !== bobBaseUrl) return;
       const source = iframeRef.current?.contentWindow;
       if (!source || event.source !== source) return;
-      const data = event.data as BobReadyMessage | BobSwitchMessage | BobAccountCommandMessage | null;
+      const data = event.data as BobReadyMessage | BobAccountCommandMessage | null;
       if (!data || typeof data !== 'object') return;
       if (data.type === 'bob:session-ready') {
         bobReadyRef.current = true;
         if (activeInstanceId) {
           void openActiveInstanceInBob();
         }
-        return;
-      }
-      if (data.type === 'bob:request-instance-switch') {
-        const switchMessage = data as BobSwitchMessage;
-        const nextInstanceId = String(switchMessage.instanceId || '').trim();
-        if (!nextInstanceId) return;
-        if (nextInstanceId === activeInstanceId) return;
-        setActiveInstanceId(nextInstanceId);
         return;
       }
       if (data.type === 'bob:account-command') {

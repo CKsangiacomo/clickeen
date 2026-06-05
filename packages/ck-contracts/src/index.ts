@@ -8,7 +8,7 @@ export * from './overlay-identity';
 export * from './translated-value-primitives';
 export * from './translation-product-state';
 
-export const INSTANCE_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,191}$/;
+export const INSTANCE_ID_RE = /^[0-9A-Z]{10}$/;
 
 export const ACCOUNT_ASSET_PATH_RE = /^\/assets\/account\/([^/?#]+)\/(.+)$/;
 export const ACCOUNT_ASSET_PATH_PATTERN = '^/assets/account/([^/?#]+)/(.+)$';
@@ -162,8 +162,6 @@ export function tokenIsExpired(token: string, leewaySeconds = 30): boolean {
 export function normalizeInstanceId(raw: unknown): string | null {
   const value = typeof raw === 'string' ? raw.trim() : '';
   if (!value) return null;
-  if (value === '.' || value === '..') return null;
-  if (value.includes('/') || value.includes('\\')) return null;
   return INSTANCE_ID_RE.test(value) ? value : null;
 }
 

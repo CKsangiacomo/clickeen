@@ -1,3 +1,5 @@
+import { getCompiledWidgetRouteResponse } from '@clickeen/bob/compiled-widget-route';
+import { normalizeLocaleToken } from '@clickeen/l10n';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
@@ -6,6 +8,7 @@ import {
 } from '@roma/lib/account-instance-direct';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
+import { buildSavedWidgetPublicPackage, type CompiledWidgetForPublicPackage } from '@roma/lib/widget-public-package';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -14,6 +17,31 @@ import {
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
+
+function isCompiledWidgetForPublicPackage(value: unknown): value is CompiledWidgetForPublicPackage {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  const widgetPackage = record.widgetPackage;
+  return (
+    typeof record.widgetname === 'string' &&
+    (typeof record.displayName === 'undefined' || typeof record.displayName === 'string') &&
+    Boolean(widgetPackage && typeof widgetPackage === 'object' && !Array.isArray(widgetPackage))
+  );
+}
+
+async function compileWidgetForSave(request: NextRequest, widgetType: string): Promise<CompiledWidgetForPublicPackage> {
+  const response = await getCompiledWidgetRouteResponse(
+    new NextRequest(new URL(`/api/widgets/${encodeURIComponent(widgetType)}/compiled`, request.url)),
+    { params: Promise.resolve({ widgetname: widgetType }) },
+  );
+  const payload = await response.json().catch(() => null);
+  if (response.ok && isCompiledWidgetForPublicPackage(payload)) return payload;
+  throw new Error(
+    payload && typeof payload === 'object' && typeof (payload as { error?: unknown }).error === 'string'
+      ? String((payload as { error?: unknown }).error)
+      : 'coreui.errors.widget.compiled.invalid',
+  );
+}
 
 export async function PUT(request: NextRequest, context: RouteContext) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
@@ -32,12 +60,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     | {
         widgetType?: string;
         config?: Record<string, unknown>;
-        publicPackage?: {
-          v?: unknown;
-          indexHtml?: unknown;
-          stylesCss?: unknown;
-          runtimeJs?: unknown;
-        };
+        baseLocale?: string | null;
         displayName?: string | null;
         meta?: Record<string, unknown> | null;
       }
@@ -54,19 +77,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
   const config = body?.config;
-  const publicPackage =
-    body?.publicPackage &&
-    body.publicPackage.v === 1 &&
-    typeof body.publicPackage.indexHtml === 'string' &&
-    typeof body.publicPackage.stylesCss === 'string' &&
-    typeof body.publicPackage.runtimeJs === 'string'
-      ? {
-          v: 1 as const,
-          indexHtml: body.publicPackage.indexHtml,
-          stylesCss: body.publicPackage.stylesCss,
-          runtimeJs: body.publicPackage.runtimeJs,
-        }
-      : null;
+  const baseLocale = normalizeLocaleToken(body?.baseLocale) ?? '';
   const displayName =
     body && Object.prototype.hasOwnProperty.call(body, 'displayName')
       ? typeof body.displayName === 'string'
@@ -83,7 +94,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
           ? null
           : undefined
       : undefined;
-  if (!widgetType || !config || typeof config !== 'object' || Array.isArray(config) || !publicPackage) {
+  if (!widgetType || !config || typeof config !== 'object' || Array.isArray(config) || !baseLocale) {
     return withSession(
       request,
       NextResponse.json(
@@ -130,6 +141,28 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     return withSession(
       request,
       NextResponse.json({ error: policyGate.error }, { status: policyGate.status }),
+      current.value.setCookies,
+    );
+  }
+
+  let publicPackage;
+  try {
+    const compiled = await compileWidgetForSave(request, widgetType);
+    publicPackage = buildSavedWidgetPublicPackage({
+      compiled,
+      instanceId,
+      baseLocale,
+      displayName: displayName ?? null,
+      state: config,
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widget.compiled.invalid', detail } },
+        { status: 422 },
+      ),
       current.value.setCookies,
     );
   }

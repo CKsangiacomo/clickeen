@@ -1,5 +1,3 @@
-import type { CompiledWidget, WidgetPackageFileContext } from '../types';
-
 export type SavedWidgetPublicPackage = {
   v: 1;
   indexHtml: string;
@@ -7,8 +5,21 @@ export type SavedWidgetPublicPackage = {
   runtimeJs: string;
 };
 
+type WidgetPackageFileContext = {
+  mediaType: 'application/json' | 'text/html' | 'text/css' | 'text/javascript';
+  source: string;
+};
+
+export type CompiledWidgetForPublicPackage = {
+  widgetname: string;
+  displayName?: string;
+  widgetPackage?: {
+    files: Partial<Record<string, WidgetPackageFileContext>>;
+  };
+};
+
 type PackageBuildArgs = {
-  compiled: CompiledWidget;
+  compiled: CompiledWidgetForPublicPackage;
   instanceId: string;
   baseLocale: string;
   displayName: string | null;
@@ -109,7 +120,7 @@ function runtimeModuleChunk(id: string, body: string): string {
   return `/* ck-runtime-module:${chunkMarkerId(id)} */\n${body}\n${RUNTIME_MODULE_END}`;
 }
 
-function packageSource(args: { compiled: CompiledWidget; key: string; fallback?: string }): string {
+function packageSource(args: { compiled: CompiledWidgetForPublicPackage; key: string; fallback?: string }): string {
   return fileSource(args.compiled.widgetPackage?.files[args.key] ?? (args.fallback ? args.compiled.widgetPackage?.files[args.fallback] : undefined));
 }
 

@@ -14,7 +14,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "rm -rf /tmp/clickeen-bob-tests && esbuild lib/translations-preview.test.ts lib/embed-snippets.test.ts lib/session/publicPackage.test.ts lib/compiler/editor-contract.test.ts components/TranslationsPanel.test.tsx --bundle --platform=node --format=esm --outdir=/tmp/clickeen-bob-tests && node --test /tmp/clickeen-bob-tests/lib/translations-preview.test.js /tmp/clickeen-bob-tests/lib/embed-snippets.test.js /tmp/clickeen-bob-tests/lib/session/publicPackage.test.js /tmp/clickeen-bob-tests/lib/compiler/editor-contract.test.js /tmp/clickeen-bob-tests/components/TranslationsPanel.test.js"
+    "test": "rm -rf /tmp/clickeen-bob-tests && esbuild lib/translations-preview.test.ts lib/embed-snippets.test.ts lib/compiler/editor-contract.test.ts components/TranslationsPanel.test.tsx --bundle --platform=node --format=esm --outdir=/tmp/clickeen-bob-tests && node --test /tmp/clickeen-bob-tests/lib/translations-preview.test.js /tmp/clickeen-bob-tests/lib/embed-snippets.test.js /tmp/clickeen-bob-tests/lib/compiler/editor-contract.test.js /tmp/clickeen-bob-tests/components/TranslationsPanel.test.js"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

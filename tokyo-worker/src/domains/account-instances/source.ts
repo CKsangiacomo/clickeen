@@ -391,14 +391,8 @@ export async function readContentDocumentByLocation(args: {
     if (!contentDoc) throw new Error('coreui.errors.instance.content.invalid');
     return contentDoc;
   }
-  if (!configDoc) return null;
-  return {
-    id: configDoc.id,
-    accountId: configDoc.accountId,
-    widgetType: configDoc.widgetType,
-    fields: {},
-    updatedAt: configDoc.updatedAt,
-  };
+  if (configDoc) throw new Error('coreui.errors.instance.content.missing');
+  return null;
 }
 
 export async function updateContentDocumentByLocation(args: {
@@ -494,6 +488,7 @@ export async function writeAccountInstanceSource(args: {
     accountId,
     widgetCode,
     instanceId,
+    configDoc: existingConfig,
   });
   const content = contentDocumentFromConfig({
     instanceId,

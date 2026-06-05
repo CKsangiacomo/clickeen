@@ -378,7 +378,7 @@ test('Tokyo generate returns active matching work on a duplicate Generate click'
   });
 });
 
-test('Tokyo generate does not create competing work while older base translation is active', async () => {
+test('Tokyo generate starts current-base work when older base translation is active', async () => {
   const { env, queued } = createTestEnv();
   const values = await seedSavedFaqInstance(env);
 
@@ -416,18 +416,19 @@ test('Tokyo generate does not create competing work while older base translation
     targetLocales: ['it'],
   });
   assert.equal(restarted.ok, true);
-  assert.equal(queued.length, 1);
+  assert.equal(queued.length, 2);
   assert.equal(restarted.ok ? restarted.generation?.active : null, true);
+  assert.equal(restarted.ok ? restarted.generation?.isCurrentBaseContent : null, true);
   const generation = await readInstanceTranslationGeneration({
     env,
     accountId: ACCOUNT_PUBLIC_ID,
     instanceId: INSTANCE_ID,
   });
   assert.equal(generation.ok, true);
-  assert.equal(generation.ok ? generation.generation.isCurrentBaseContent : null, false);
+  assert.equal(generation.ok ? generation.generation.isCurrentBaseContent : null, true);
   assert.equal(generation.ok ? generation.generation.active : null, true);
   assert.deepEqual(generation.ok ? generation.generation.locales : [], [
-    { locale: 'it', state: 'missing', reviewable: false },
+    { locale: 'it', state: 'generating', reviewable: false },
   ]);
 
   assert.deepEqual(await completeLocaleTranslation({
@@ -441,8 +442,8 @@ test('Tokyo generate does not create competing work while older base translation
     ok: true,
     applied: false,
     locale: 'it',
-    reasonKey: 'instance.translation.stale_source_text',
-    detail: 'Current saved text for the translated fields no longer matches the translation job basis.',
+    reasonKey: 'instance.translation.stale_generation',
+    detail: 'This translation job does not match the active translation operation for the instance.',
   });
 });
 

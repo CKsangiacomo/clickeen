@@ -9,7 +9,6 @@ import {
   extractSavedTextFieldsForEditableFields,
   type SavedTextField,
 } from '@clickeen/ck-contracts/translated-value-primitives';
-import { resolveLanguageOverlayCode } from '@clickeen/ck-contracts/overlay-codebooks';
 import {
   resolveAiRuntimeBudget,
   resolveAiRuntimePolicy,
@@ -689,7 +688,7 @@ export async function generateInstanceTranslations(args: {
     widgetType: instance.value.widgetType,
     currentReadyLocales,
   });
-  if (existingJob) {
+  if (existingJob && existingJob.baseContentMarker === baseContentMarker) {
     const existingTargetLocales = existingJob.targetLocales.length ? existingJob.targetLocales : uniqueTargetLocales;
     const existingGenerationRequestMarker = await buildGenerationRequestMarker({
       baseContentMarker,
@@ -726,6 +725,14 @@ export async function generateInstanceTranslations(args: {
         generation: existingSummary,
       };
     }
+  } else if (existingJob && (existingJob.status === 'queued' || existingJob.status === 'running')) {
+    await failTranslationGenerationOperation({
+      env: args.env,
+      operationId: existingJob.jobId,
+      now: requestedAt,
+      reasonKey: 'instance.translation.stale_base_content',
+      detail: 'A newer saved base content marker superseded this translation generation.',
+    });
   }
   const basis = {
     fields: currentSavedTextFields
@@ -747,15 +754,6 @@ export async function generateInstanceTranslations(args: {
   const productLocaleByLocale = new Map(productLocalesBeforeGeneration.map((entry) => [entry.locale, entry]));
 
   for (const locale of uniqueTargetLocales) {
-    if (!resolveLanguageOverlayCode(locale)) {
-      return generationFailure({
-        baseLocale,
-        locale,
-        reasonKey: 'instance.translation.language_unsupported',
-        detail: `No overlay language code for locale ${locale}`,
-      });
-    }
-
     const previousSavedTextFields = currentSavedTextFields;
     const overlay = overlays.get(locale);
     const missingTranslatedFields = currentSavedTextFields.filter((field) => typeof overlay?.values[field.path] !== 'string');

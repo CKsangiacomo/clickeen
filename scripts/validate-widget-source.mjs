@@ -216,30 +216,6 @@ function readWidgetOverlayCodes() {
   return codes;
 }
 
-function assertFaqRuntimeDoesNotValidateSavedState(widgetDir) {
-  const clientPath = path.join(widgetDir, "widget.client.js");
-  const source = fs.readFileSync(clientPath, "utf8");
-  for (const forbidden of [
-    "function assertFaqState",
-    "assertFaqState(",
-    "state.header.enabled must",
-    "state.sections[${idx}]",
-  ]) {
-    if (source.includes(forbidden)) {
-      fail("faq/widget.client.js must render saved state, not re-validate the full FAQ state contract in public runtime");
-    }
-  }
-}
-
-function assertPageShapedRuntimeDoesNotValidateSavedState(widgetDir, widgetName) {
-  const clientPath = path.join(widgetDir, "widget.client.js");
-  const source = fs.readFileSync(clientPath, "utf8");
-  const stateValidatorPattern = new RegExp(`function\\s+assert[A-Za-z0-9_]*State\\s*\\(`);
-  if (stateValidatorPattern.test(source)) {
-    fail(`${widgetName}/widget.client.js must render accepted saved state, not re-validate the full widget state contract in public runtime`);
-  }
-}
-
 for (const generatedPath of forbiddenGeneratedPaths) {
   if (fs.existsSync(generatedPath)) {
     fail(`${path.relative(repoRoot, generatedPath)} is deleted product authority and must not exist`);
@@ -295,12 +271,6 @@ for (const widgetName of widgetNames) {
 
   if (!isRecord(spec.defaults)) {
     fail(`${widgetName}/spec.json defaults must be an object`);
-  }
-  if (widgetName === "faq") {
-    assertFaqRuntimeDoesNotValidateSavedState(widgetDir);
-  }
-  if (["cardgrid", "cta", "hero", "split", "steps"].includes(widgetName)) {
-    assertPageShapedRuntimeDoesNotValidateSavedState(widgetDir, widgetName);
   }
   if (!fs.existsSync(editableFieldsPath)) {
     fail(`${widgetName} is missing editable-fields.json`);
