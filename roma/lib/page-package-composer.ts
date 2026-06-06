@@ -16,6 +16,13 @@ export type PagePackageSource = {
     robots: 'index,follow' | 'noindex,nofollow';
     canonicalUrl?: string;
   };
+  localization: {
+    defaultLocale: string;
+    ipLocalizationEnabled: boolean;
+    countryLocaleRules: Array<{ country: string; locale: string }>;
+    languageSwitcherEnabled: boolean;
+    missingLocaleBehavior: 'block_publish';
+  };
   placements: Array<{ placementId: string; instanceId: string }>;
 };
 
@@ -193,6 +200,25 @@ function pageLocale(packages: WidgetContribution[]): string {
   return locales[0] ?? 'und';
 }
 
+function pageConfiguredLocales(source: PagePackageSource): string[] {
+  return uniqueChunks([
+    source.localization.defaultLocale,
+    ...source.localization.countryLocaleRules.map((rule) => rule.locale),
+  ].map((locale) => locale.trim().toLowerCase()));
+}
+
+function assertConfiguredLocalesAvailable(args: {
+  source: PagePackageSource;
+  availableLocale: string;
+}): void {
+  const availableLocale = args.availableLocale.trim().toLowerCase();
+  const configuredLocales = pageConfiguredLocales(args.source);
+  const unavailableLocales = configuredLocales.filter((locale) => locale !== availableLocale);
+  if (unavailableLocales.length > 0) {
+    throw new Error(`page.package.localeUnavailable:${unavailableLocales.join(',')}`);
+  }
+}
+
 function toContribution(pkg: WidgetPackageForPage): WidgetContribution {
   if (FORBIDDEN_SINGLETON_RUNTIME_RE.test(pkg.runtimeJs)) {
     throw new Error(`page.package.singletonRuntime:${pkg.instanceId}`);
@@ -233,6 +259,13 @@ function composePageIndex(args: {
   const description = escapeAttribute(args.source.metadata.description);
   const robots = escapeAttribute(args.source.metadata.robots);
   const canonicalUrl = escapeAttribute(args.source.metadata.canonicalUrl || `https://clk.live/${args.accountId}/pages/${args.source.pageId}`);
+  const configuredLocales = pageConfiguredLocales(args.source);
+  const switcher = args.source.localization.languageSwitcherEnabled && configuredLocales.length > 1
+    ? `<nav class="ck-page-language-switcher" aria-label="Page language">
+${configuredLocales.map((locale) => `    <a href="?locale=${escapeAttribute(locale)}" hreflang="${escapeAttribute(locale)}">${escapeHtml(locale.toUpperCase())}</a>`).join('\n')}
+  </nav>
+`
+    : '';
   const body = args.packages
     .map((pkg) => `<section>${pkg.htmlRoot}</section>`)
     .join('\n');
@@ -248,7 +281,7 @@ function composePageIndex(args: {
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <main data-ck-page="${escapeAttribute(args.source.pageId)}" data-ck-composed-page="true">
+  ${switcher}<main data-ck-page="${escapeAttribute(args.source.pageId)}" data-ck-composed-page="true">
 ${body}
   </main>
   <script src="./runtime.js" defer></script>
@@ -264,6 +297,19 @@ function composePageStyles(packages: WidgetContribution[]): string {
 
 :where([data-ck-page] > section) {
   display: block;
+}
+
+.ck-page-language-switcher {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem;
+  font: 14px system-ui, sans-serif;
+}
+
+.ck-page-language-switcher a {
+  color: inherit;
+  text-decoration: underline;
 }`,
   ];
   chunks.push(...uniqueChunks(packages.flatMap((pkg) => pkg.styleChunks)));
@@ -296,13 +342,18 @@ export function buildPagePublicPackage(args: {
   if (FORBIDDEN_SINGLETON_RUNTIME_RE.test(runtimeJs)) {
     throw new Error('page.package.singletonRuntime:Page runtime contains forbidden window.CK_WIDGET singleton state.');
   }
+  const locale = pageLocale(contributions);
+  assertConfiguredLocalesAvailable({
+    source: args.source,
+    availableLocale: locale,
+  });
   return {
     v: 1,
     indexHtml: composePageIndex({
       accountId: args.accountId,
       source: args.source,
       packages: contributions,
-      locale: pageLocale(contributions),
+      locale,
     }),
     stylesCss: composePageStyles(contributions),
     runtimeJs,

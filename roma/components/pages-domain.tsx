@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
+import localesJson from '@clickeen/l10n/locales.json';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
@@ -26,6 +28,18 @@ import {
   type PageRobots,
   type RomaPagesResponse,
 } from './use-roma-pages';
+
+const CANONICAL_LOCALES = normalizeCanonicalLocalesFile(localesJson);
+
+function resolveLocaleUiLabel(code: string): string {
+  const normalized = normalizeLocaleToken(code) ?? code;
+  const label = resolveLocaleLabel({
+    locales: CANONICAL_LOCALES,
+    uiLocale: 'en',
+    targetLocale: normalized,
+  });
+  return `${label} (${normalized})`;
+}
 
 function reorderPlacement<T>(placements: T[], index: number, direction: -1 | 1): T[] {
   const nextIndex = index + direction;
@@ -114,6 +128,7 @@ export function PagesDomain() {
   const [pageSource, setPageSource] = useState<AccountPageSource | null>(null);
   const [pagePublishStatus, setPagePublishStatus] = useState<PagePublishStatus>('unpublished');
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
+  const [accountLocaleOptions, setAccountLocaleOptions] = useState<string[]>(['en']);
   const [addInstancesOpen, setAddInstancesOpen] = useState(false);
   const [checkedInstanceIds, setCheckedInstanceIds] = useState<string[]>([]);
   const [pickerVisibleLimit, setPickerVisibleLimit] = useState(50);
@@ -180,6 +195,24 @@ export function PagesDomain() {
     }
   }, [accountApi.fetchJson, applyWidgets, productAccountId]);
 
+  const refreshAccountLocales = useCallback(async () => {
+    try {
+      const payload = await accountApi.fetchJson<{
+        selectedTargetLocales?: unknown;
+        localePolicy?: { baseLocale?: unknown } | null;
+      }>('/api/account/locales', { method: 'GET' });
+      const baseLocale = normalizeLocaleToken(payload.localePolicy?.baseLocale) ?? 'en';
+      const selectedTargetLocales = Array.isArray(payload.selectedTargetLocales)
+        ? payload.selectedTargetLocales
+            .map((entry) => normalizeLocaleToken(entry))
+            .filter((entry): entry is string => Boolean(entry))
+        : [];
+      setAccountLocaleOptions(Array.from(new Set([baseLocale, ...selectedTargetLocales])));
+    } catch {
+      setAccountLocaleOptions(['en']);
+    }
+  }, [accountApi]);
+
   const loadPageSource = useCallback(async (pageId: string) => {
     if (!pageId) {
       setPageSource(null);
@@ -219,7 +252,8 @@ export function PagesDomain() {
     }
     void refreshPages();
     void refreshWidgets();
-  }, [applyPages, productAccountId, refreshPages, refreshWidgets]);
+    void refreshAccountLocales();
+  }, [applyPages, productAccountId, refreshAccountLocales, refreshPages, refreshWidgets]);
 
   useEffect(() => {
     if (!activePageId) {
@@ -261,7 +295,22 @@ export function PagesDomain() {
     );
   }, [instanceById, pageSource]);
 
-  const canPublishPage = Boolean(pageSource && pageSource.placements.length > 0 && publishBlockers.length === 0);
+  const ipLocalizationBlocksPublish = pageSource?.localization.ipLocalizationEnabled === true;
+  const canPublishPage = Boolean(
+    pageSource &&
+    pageSource.placements.length > 0 &&
+    publishBlockers.length === 0 &&
+    !ipLocalizationBlocksPublish,
+  );
+  const pageLocaleOptions = useMemo(() => {
+    return Array.from(new Set([
+      ...accountLocaleOptions,
+      ...(pageSource ? [
+        pageSource.localization.defaultLocale,
+        ...pageSource.localization.countryLocaleRules.map((rule) => rule.locale),
+      ] : []),
+    ].map((locale) => normalizeLocaleToken(locale)).filter((locale): locale is string => Boolean(locale))));
+  }, [accountLocaleOptions, pageSource]);
 
   const saveSource = useCallback(async (source: AccountPageSource, actionKey: string) => {
     setActiveActionKey(actionKey);
@@ -347,9 +396,35 @@ export function PagesDomain() {
     setPageSource((current) => current ? { ...current, metadata: { ...current.metadata, ...patch } } : current);
   }, []);
 
+  const updateLocalization = useCallback((patch: Partial<AccountPageSource['localization']>) => {
+    setPageSource((current) => current ? {
+      ...current,
+      localization: {
+        ...current.localization,
+        ...patch,
+        ipLocalizationEnabled: false,
+        countryLocaleRules: current.localization.countryLocaleRules,
+        missingLocaleBehavior: 'block_publish',
+      },
+    } : current);
+  }, []);
+
   const handleSaveMetadata = useCallback(async () => {
     if (!pageSource) return;
     await saveSource(pageSource, `save-metadata:${pageSource.pageId}`);
+  }, [pageSource, saveSource]);
+
+  const handleSavePageSettings = useCallback(async () => {
+    if (!pageSource) return;
+    await saveSource({
+      ...pageSource,
+      localization: {
+        ...pageSource.localization,
+        ipLocalizationEnabled: false,
+        countryLocaleRules: pageSource.localization.countryLocaleRules,
+        missingLocaleBehavior: 'block_publish',
+      },
+    }, `save-settings:${pageSource.pageId}`);
   }, [pageSource, saveSource]);
 
   const handlePagePublishState = useCallback(async (nextStatus: PagePublishStatus) => {
@@ -639,7 +714,65 @@ export function PagesDomain() {
               Publish is blocked by unpublished or unavailable instances: {publishBlockers.join(', ')}.
             </p>
           ) : null}
+          {ipLocalizationBlocksPublish ? <p className="body-s">Publish is blocked while IP localization is unavailable.</p> : null}
           {pagePublishStatus !== 'published' ? <p className="body-s">Publish this page before copying public code.</p> : null}
+        </section>
+      ) : null}
+
+      {pageSource ? (
+        <section className="rd-canvas-module">
+          <div className="roma-toolbar">
+            <h2 className="heading-4">Page settings</h2>
+          </div>
+          <div className="roma-form-grid">
+            <label className="roma-field">
+              <span className="label-s">Default locale</span>
+              <select
+                className="roma-input"
+                value={pageSource.localization.defaultLocale}
+                onChange={(event) => {
+                  const locale = normalizeLocaleToken(event.target.value);
+                  if (locale) updateLocalization({ defaultLocale: locale });
+                }}
+              >
+                {pageLocaleOptions.map((locale) => (
+                  <option key={locale} value={locale}>
+                    {resolveLocaleUiLabel(locale)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="roma-field">
+              <span className="label-s">Language switcher</span>
+              <input
+                type="checkbox"
+                checked={pageSource.localization.languageSwitcherEnabled}
+                onChange={(event) => updateLocalization({ languageSwitcherEnabled: event.target.checked })}
+              />
+            </label>
+            <label className="roma-field">
+              <span className="label-s">IP localization</span>
+              <input
+                type="checkbox"
+                checked={false}
+                disabled
+                readOnly
+              />
+            </label>
+          </div>
+          <div className="rd-canvas-module__actions">
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="primary"
+              type="button"
+              onClick={() => void handleSavePageSettings()}
+              disabled={Boolean(activeActionKey)}
+            >
+              <span className="diet-btn-txt__label body-m">{activeActionKey === `save-settings:${pageSource.pageId}` ? 'Saving...' : 'Save settings'}</span>
+            </button>
+          </div>
+          {ipLocalizationBlocksPublish ? <p className="body-s">IP localization is unavailable for publishing.</p> : null}
         </section>
       ) : null}
 
