@@ -409,6 +409,55 @@ export function PagesDomain() {
     } : current);
   }, []);
 
+  const updateCountryLocaleRule = useCallback((index: number, patch: Partial<{ country: string; locale: string }>) => {
+    setPageSource((current) => {
+      if (!current) return current;
+      const countryLocaleRules = current.localization.countryLocaleRules.map((rule, ruleIndex) => {
+        if (ruleIndex !== index) return rule;
+        return {
+          country: typeof patch.country === 'string' ? patch.country.trim().toUpperCase().slice(0, 2) : rule.country,
+          locale: typeof patch.locale === 'string' ? normalizeLocaleToken(patch.locale) ?? rule.locale : rule.locale,
+        };
+      });
+      return {
+        ...current,
+        localization: {
+          ...current.localization,
+          ipLocalizationEnabled: false,
+          countryLocaleRules,
+          missingLocaleBehavior: 'block_publish',
+        },
+      };
+    });
+  }, []);
+
+  const addCountryLocaleRule = useCallback(() => {
+    setPageSource((current) => current ? {
+      ...current,
+      localization: {
+        ...current.localization,
+        ipLocalizationEnabled: false,
+        countryLocaleRules: [
+          ...current.localization.countryLocaleRules,
+          { country: 'US', locale: current.localization.defaultLocale },
+        ],
+        missingLocaleBehavior: 'block_publish',
+      },
+    } : current);
+  }, []);
+
+  const removeCountryLocaleRule = useCallback((index: number) => {
+    setPageSource((current) => current ? {
+      ...current,
+      localization: {
+        ...current.localization,
+        ipLocalizationEnabled: false,
+        countryLocaleRules: current.localization.countryLocaleRules.filter((_, ruleIndex) => ruleIndex !== index),
+        missingLocaleBehavior: 'block_publish',
+      },
+    } : current);
+  }, []);
+
   const handleSaveMetadata = useCallback(async () => {
     if (!pageSource) return;
     await saveSource(pageSource, `save-metadata:${pageSource.pageId}`);
@@ -759,6 +808,72 @@ export function PagesDomain() {
                 readOnly
               />
             </label>
+          </div>
+          <div className="roma-toolbar">
+            <h3 className="heading-6">Country rules</h3>
+          </div>
+          {pageSource.localization.countryLocaleRules.length ? (
+            <table className="roma-table">
+              <thead>
+                <tr>
+                  <th className="table-header label-s">Country</th>
+                  <th className="table-header label-s">Locale</th>
+                  <th className="table-header label-s">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageSource.localization.countryLocaleRules.map((rule, index) => (
+                  <tr key={`${rule.country}:${index}`}>
+                    <td className="body-s">
+                      <input
+                        className="roma-input"
+                        type="text"
+                        value={rule.country}
+                        maxLength={2}
+                        onChange={(event) => updateCountryLocaleRule(index, { country: event.target.value })}
+                      />
+                    </td>
+                    <td className="body-s">
+                      <select
+                        className="roma-input"
+                        value={rule.locale}
+                        onChange={(event) => updateCountryLocaleRule(index, { locale: event.target.value })}
+                      >
+                        {pageLocaleOptions.map((locale) => (
+                          <option key={locale} value={locale}>
+                            {resolveLocaleUiLabel(locale)}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="roma-cell-actions">
+                      <button
+                        className="diet-btn-txt"
+                        data-size="md"
+                        data-variant="line2"
+                        type="button"
+                        onClick={() => removeCountryLocaleRule(index)}
+                        disabled={Boolean(activeActionKey)}
+                      >
+                        <span className="diet-btn-txt__label body-m">Remove</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : null}
+          <div className="rd-canvas-module__actions">
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="line2"
+              type="button"
+              onClick={addCountryLocaleRule}
+              disabled={Boolean(activeActionKey)}
+            >
+              <span className="diet-btn-txt__label body-m">Add country rule</span>
+            </button>
           </div>
           <div className="rd-canvas-module__actions">
             <button
