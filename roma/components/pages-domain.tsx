@@ -12,7 +12,6 @@ import {
   loadRomaWidgetsForAccount,
   readRomaWidgetsCache,
   type RomaWidgetsResponse,
-  type SystemWidgetOption,
   type WidgetInstance,
 } from './use-roma-widgets';
 import {
@@ -72,9 +71,9 @@ export function PagesDomain() {
   const [pageSource, setPageSource] = useState<AccountPageSource | null>(null);
   const [pagePublishStatus, setPagePublishStatus] = useState<PagePublishStatus>('unpublished');
   const [widgetInstances, setWidgetInstances] = useState<WidgetInstance[]>(() => cachedWidgets?.data.instances ?? []);
-  const [systemWidgets, setSystemWidgets] = useState<SystemWidgetOption[]>(() => cachedWidgets?.data.systemWidgets ?? []);
-  const [selectedExistingInstanceId, setSelectedExistingInstanceId] = useState('');
-  const [selectedCreateWidgetType, setSelectedCreateWidgetType] = useState('');
+  const [addInstancesOpen, setAddInstancesOpen] = useState(false);
+  const [checkedInstanceIds, setCheckedInstanceIds] = useState<string[]>([]);
+  const [pickerVisibleLimit, setPickerVisibleLimit] = useState(50);
   const [domainLoading, setDomainLoading] = useState(() => !cachedPages);
   const [domainRefreshing, setDomainRefreshing] = useState(false);
   const [sourceLoading, setSourceLoading] = useState(false);
@@ -92,11 +91,7 @@ export function PagesDomain() {
 
   const applyWidgets = useCallback((widgets: RomaWidgetsResponse) => {
     setWidgetInstances(widgets.instances);
-    setSystemWidgets(widgets.systemWidgets);
-    if (!selectedCreateWidgetType) {
-      setSelectedCreateWidgetType(widgets.systemWidgets.find((option) => option.canCreate)?.widgetType ?? '');
-    }
-  }, [selectedCreateWidgetType]);
+  }, []);
 
   const refreshPages = useCallback(async (args?: { force?: boolean }) => {
     const force = args?.force === true;
@@ -156,7 +151,8 @@ export function PagesDomain() {
       if (!opened) throw new Error('coreui.errors.payload.invalid');
       setPageSource(opened.source);
       setPagePublishStatus(opened.publishStatus);
-      setSelectedExistingInstanceId('');
+      setCheckedInstanceIds([]);
+      setAddInstancesOpen(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       setMutationError(resolveAccountShellErrorCopy(message, 'Failed to open this page. Please try again.'));
@@ -195,6 +191,17 @@ export function PagesDomain() {
     widgetInstances.forEach((instance) => map.set(instance.instanceId, instance));
     return map;
   }, [widgetInstances]);
+
+  const placedInstanceIds = useMemo(() => {
+    const ids = new Set<string>();
+    pageSource?.placements.forEach((placement) => ids.add(placement.instanceId));
+    return ids;
+  }, [pageSource?.placements]);
+
+  const visiblePickerInstances = useMemo(
+    () => widgetInstances.slice(0, pickerVisibleLimit),
+    [pickerVisibleLimit, widgetInstances],
+  );
 
   const saveSource = useCallback(async (source: AccountPageSource, actionKey: string) => {
     setActiveActionKey(actionKey);
@@ -308,48 +315,46 @@ export function PagesDomain() {
     }
   }, [accountApi, pageSource]);
 
-  const handleAddExisting = useCallback(async () => {
-    if (!pageSource || !selectedExistingInstanceId) return;
+  const openAddInstances = useCallback(() => {
+    setCheckedInstanceIds([]);
+    setPickerVisibleLimit(50);
+    setAddInstancesOpen(true);
+  }, []);
+
+  const toggleCheckedInstance = useCallback((instanceId: string) => {
+    setCheckedInstanceIds((current) => (
+      current.includes(instanceId)
+        ? current.filter((id) => id !== instanceId)
+        : [...current, instanceId]
+    ));
+  }, []);
+
+  const handleAddSelectedInstances = useCallback(async () => {
+    if (!pageSource || checkedInstanceIds.length === 0) return;
+    const checked = new Set(checkedInstanceIds);
+    const instancesToAdd = widgetInstances.filter(
+      (instance) => checked.has(instance.instanceId) && !placedInstanceIds.has(instance.instanceId),
+    );
+    if (instancesToAdd.length === 0) {
+      setCheckedInstanceIds([]);
+      return;
+    }
     const nextSource: AccountPageSource = {
       ...pageSource,
       placements: [
         ...pageSource.placements,
-        { placementId: createPlacementId(pageSource.placements.length), instanceId: selectedExistingInstanceId },
+        ...instancesToAdd.map((instance, index) => ({
+          placementId: createPlacementId(pageSource.placements.length + index),
+          instanceId: instance.instanceId,
+        })),
       ],
     };
-    const saved = await saveSource(nextSource, `place-existing:${selectedExistingInstanceId}`);
-    if (saved) setSelectedExistingInstanceId('');
-  }, [pageSource, saveSource, selectedExistingInstanceId]);
-
-  const handleCreateAndPlace = useCallback(async () => {
-    if (!pageSource || !selectedCreateWidgetType) return;
-    const actionKey = `create-place:${selectedCreateWidgetType}`;
-    setActiveActionKey(actionKey);
-    setMutationError(null);
-    try {
-      const created = await accountApi.fetchJson<{ instanceId?: string; widgetType?: string }>('/api/account/instances', {
-        method: 'POST',
-        headers: accountApi.buildHeaders({ contentType: 'application/json' }),
-        body: JSON.stringify({ widgetType: selectedCreateWidgetType }),
-      });
-      const instanceId = typeof created.instanceId === 'string' ? created.instanceId.trim() : '';
-      if (!instanceId) throw new Error('coreui.errors.payload.invalid');
-      await refreshWidgets({ force: true });
-      const nextSource: AccountPageSource = {
-        ...pageSource,
-        placements: [
-          ...pageSource.placements,
-          { placementId: createPlacementId(pageSource.placements.length), instanceId },
-        ],
-      };
-      await saveSource(nextSource, actionKey);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setMutationError(resolveAccountShellErrorCopy(message, 'Creating and placing the widget failed. The widget may still exist in Widgets.'));
-    } finally {
-      setActiveActionKey((current) => (current === actionKey ? null : current));
+    const saved = await saveSource(nextSource, `bulk-place:${pageSource.pageId}`);
+    if (saved) {
+      setCheckedInstanceIds([]);
+      setAddInstancesOpen(false);
     }
-  }, [accountApi, pageSource, refreshWidgets, saveSource, selectedCreateWidgetType]);
+  }, [checkedInstanceIds, pageSource, placedInstanceIds, saveSource, widgetInstances]);
 
   const handleMovePlacement = useCallback(async (index: number, direction: -1 | 1) => {
     if (!pageSource) return;
@@ -549,62 +554,107 @@ export function PagesDomain() {
               {pageSource.placements.length} {pageSource.placements.length === 1 ? 'widget' : 'widgets'}
             </p>
           </div>
-          <div className="roma-form-grid">
-            <label className="roma-field">
-              <span className="label-s">Add existing widget</span>
-              <select
-                className="roma-input"
-                value={selectedExistingInstanceId}
-                onChange={(event) => setSelectedExistingInstanceId(event.target.value)}
-              >
-                <option value="">Select widget</option>
-                {widgetInstances.map((instance) => (
-                  <option key={instance.instanceId} value={instance.instanceId}>
-                    {instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME} · {instance.widgetType}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="roma-field">
-              <span className="label-s">Create new widget</span>
-              <select
-                className="roma-input"
-                value={selectedCreateWidgetType}
-                onChange={(event) => setSelectedCreateWidgetType(event.target.value)}
-              >
-                <option value="">Select type</option>
-                {systemWidgets.map((option) => (
-                  <option key={option.widgetType} value={option.widgetType} disabled={!option.canCreate}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
           <div className="rd-canvas-module__actions">
-            <button
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="secondary"
-              type="button"
-              onClick={() => void handleAddExisting()}
-              disabled={Boolean(activeActionKey) || !selectedExistingInstanceId}
-            >
-              <span className="diet-btn-txt__label body-m">Add existing</span>
-            </button>
             <button
               className="diet-btn-txt"
               data-size="md"
               data-variant="primary"
               type="button"
-              onClick={() => void handleCreateAndPlace()}
-              disabled={Boolean(activeActionKey) || !selectedCreateWidgetType}
+              onClick={openAddInstances}
+              disabled={Boolean(activeActionKey)}
             >
-              <span className="diet-btn-txt__label body-m">
-                {activeActionKey?.startsWith('create-place:') ? 'Creating...' : 'Create and place'}
-              </span>
+              <span className="diet-btn-txt__label body-m">Add instances</span>
             </button>
           </div>
+
+          {addInstancesOpen ? (
+            <div className="roma-modal-backdrop" role="presentation">
+              <div className="roma-modal" role="dialog" aria-modal="true" aria-labelledby="roma-pages-add-instances-title">
+                <h2 id="roma-pages-add-instances-title" className="heading-6">
+                  Add instances
+                </h2>
+                <p className="body-s">
+                  {checkedInstanceIds.length} selected
+                </p>
+                {widgetInstances.length ? (
+                  <table className="roma-table">
+                    <thead>
+                      <tr>
+                        <th className="table-header label-s">Select</th>
+                        <th className="table-header label-s">Instance</th>
+                        <th className="table-header label-s">Widget</th>
+                        <th className="table-header label-s">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visiblePickerInstances.map((instance) => {
+                        const alreadyPlaced = placedInstanceIds.has(instance.instanceId);
+                        const checked = checkedInstanceIds.includes(instance.instanceId);
+                        return (
+                          <tr key={instance.instanceId}>
+                            <td className="body-s">
+                              <input
+                                type="checkbox"
+                                checked={alreadyPlaced || checked}
+                                disabled={alreadyPlaced || Boolean(activeActionKey)}
+                                aria-label={`Select ${instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}`}
+                                onChange={() => toggleCheckedInstance(instance.instanceId)}
+                              />
+                            </td>
+                            <td className="body-s">{instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}</td>
+                            <td className="body-s">{instance.widgetType}</td>
+                            <td className="body-s">
+                              {alreadyPlaced ? 'Already placed' : instance.status === 'published' ? 'Published' : 'Unpublished, blocks publish'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="body-m">No saved instances yet.</p>
+                )}
+                {pickerVisibleLimit < widgetInstances.length ? (
+                  <div className="rd-canvas-module__actions">
+                    <button
+                      className="diet-btn-txt"
+                      data-size="md"
+                      data-variant="line2"
+                      type="button"
+                      onClick={() => setPickerVisibleLimit((current) => current + 50)}
+                      disabled={Boolean(activeActionKey)}
+                    >
+                      <span className="diet-btn-txt__label body-m">Show more</span>
+                    </button>
+                  </div>
+                ) : null}
+                <div className="roma-modal__actions">
+                  <button
+                    className="diet-btn-txt"
+                    data-size="md"
+                    data-variant="line2"
+                    type="button"
+                    onClick={() => setAddInstancesOpen(false)}
+                    disabled={Boolean(activeActionKey)}
+                  >
+                    <span className="diet-btn-txt__label body-m">Cancel</span>
+                  </button>
+                  <button
+                    className="diet-btn-txt"
+                    data-size="md"
+                    data-variant="primary"
+                    type="button"
+                    onClick={() => void handleAddSelectedInstances()}
+                    disabled={Boolean(activeActionKey) || checkedInstanceIds.length === 0}
+                  >
+                    <span className="diet-btn-txt__label body-m">
+                      {activeActionKey === `bulk-place:${pageSource.pageId}` ? 'Adding...' : 'Add selected'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {pageSource.placements.length ? (
             <table className="roma-table">
