@@ -30,7 +30,7 @@ Active widget definition truth is widget-owned under `tokyo/product/widgets/{wid
 - `editable-fields.json` carries the editable/translatable field contract where the widget has one.
 - Widget `catalog.json` and `seo-geo.ts` files are deleted source. SEO/GEO can return only through a later named static publish/SEO operation.
 
-Tokyo-worker resolves widget definitions through the `listWidgetDefinitions` and `getWidgetDefinition` domain operations. Those operations read approved widget source files directly. There is no generated widget manifest or generated SEO/GEO registry in the product path. `scripts/validate-widget-source.mjs` is a non-mutating source guard.
+Tokyo-worker resolves widget definitions through the `listWidgetDefinitions` and `getWidgetDefinition` domain operations. Those operations read approved widget source files directly. There is no generated widget manifest or generated SEO/GEO registry in the product path.
 
 ## Responsibilities
 

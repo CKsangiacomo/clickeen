@@ -225,7 +225,7 @@ GATE
 - Valid JSON.
 - No forbidden path segments (`__proto__`, `constructor`, `prototype`).
 - Allowlist paths resolve against `spec.json` defaults.
-- `node scripts/validate-widget-source.mjs` validates widget source without writing generated product authority.
+- `pnpm validate:widgets` verifies the generated Tokyo-worker widget definition index is in sync.
 
 ---
 

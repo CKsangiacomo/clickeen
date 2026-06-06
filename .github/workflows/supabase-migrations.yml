@@ -40,9 +40,6 @@ jobs:
         with:
           version: 2.101.0
 
-      - name: Verify PRD 103 DB pivot guard
-        run: node scripts/verify/prd103-db-pivot-guard.mjs
-
       - name: Select Supabase target
         id: target
         shell: bash

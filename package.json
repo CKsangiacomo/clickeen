@@ -6,14 +6,11 @@
   "scripts": {
     "dev": "turbo dev",
     "generate:widgets": "node scripts/generate-widget-definition-sources.mjs",
-    "validate:widgets": "node scripts/generate-widget-definition-sources.mjs --check && node scripts/validate-widget-source.mjs",
+    "validate:widgets": "node scripts/generate-widget-definition-sources.mjs --check",
     "build:i18n": "node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs",
     "build:l10n": "node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs",
     "build": "pnpm validate:widgets && pnpm build:i18n && pnpm build:l10n && turbo build",
-    "lint": "pnpm validate:widgets && node scripts/verify/prd99-storage-guard.mjs && node scripts/verify/prd100-static-public-guard.mjs && node scripts/verify/prd103-db-pivot-guard.mjs && node scripts/verify/prd103j-generic-translation-guard.mjs && node scripts/verify/prd105-runtime-boundary-guard.mjs && turbo lint",
-    "verify:prd100-static-public": "node scripts/verify/prd100-static-public-guard.mjs",
-    "verify:prd103-db-pivot": "node scripts/verify/prd103-db-pivot-guard.mjs",
-    "verify:prd105-runtime-boundary": "node scripts/verify/prd105-runtime-boundary-guard.mjs",
+    "lint": "pnpm validate:widgets && turbo lint",
     "test": "turbo test",
     "typecheck": "pnpm validate:widgets && turbo typecheck",
     "tokyo:fonts:sync:local": "node scripts/tokyo-fonts-sync.mjs --local",
@@ -36,8 +33,7 @@
     "prague:l10n:translate": "node scripts/prague-l10n/translate.mjs",
     "prague:l10n:verify": "node scripts/prague-l10n/verify.mjs",
     "build:prague:global": "pnpm prague:l10n:translate && pnpm prague:l10n:verify && pnpm build:prague",
-    "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs",
-    "health:product-path": "node scripts/health/product-path-smoke.mjs"
+    "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

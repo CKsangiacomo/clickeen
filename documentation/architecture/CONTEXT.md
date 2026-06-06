@@ -483,7 +483,7 @@ Pages deploy rule:
 ### Deterministic compilation contract (anti-drift)
 
 - **Dieter bundling manifest (authoritative)**: `tokyo/product/dieter/manifest.json` after PRD 79 Phase 1 (public `/dieter/**` can remain a serving route)
-- **Widget definition source**: widget-owned `spec.json`, `editable-fields.json`, runtime assets, and policy-linked limit metadata under `tokyo/product/widgets/{widgetType}/`. `catalog.json` is deleted widget source. `scripts/generate-widget-definition-sources.mjs` creates the checked Tokyo-worker source index used only for bundling imports; it is not product state, not a catalog artifact, and must stay in sync through `pnpm validate:widgets`. Tokyo-worker resolves widget definitions through `listWidgetDefinitions` and `getWidgetDefinition` from widget type/code plus edit contracts. `scripts/validate-widget-source.mjs` is a non-mutating guard, not a generated manifest writer.
+- **Widget definition source**: widget-owned `spec.json`, `editable-fields.json`, runtime assets, and policy-linked limit metadata under `tokyo/product/widgets/{widgetType}/`. `catalog.json` is deleted widget source. `scripts/generate-widget-definition-sources.mjs` creates the checked Tokyo-worker source index used only for bundling imports; it is not product state, not a catalog artifact, and must stay in sync through `pnpm validate:widgets`. Tokyo-worker resolves widget definitions through `listWidgetDefinitions` and `getWidgetDefinition` from widget type/code plus edit contracts.
 - **Rule**: ToolDrawer `type="..."` drives required bundles; CSS classnames never add bundles.
 - **Verification plane**: compilation discipline is enforced through repo typecheck/build and Cloudflare verification, not a localhost Bob HTTP gate.
 
