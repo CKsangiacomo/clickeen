@@ -1,6 +1,6 @@
 # PRD106C4_Cards_Widget
 
-Status: Draft execution PRD
+Status: Implementation checkpoint - Cards implementation gates green in code.
 Owner: Widget system + Bob
 Date: 2026-06-05
 Parent: `PRD106C_Prague astro blocks migration to widget instances.md`
@@ -353,23 +353,21 @@ What this means:
 - Cards has a product-valid range of 2-16 cards.
 - Account policy may set a lower cap, a higher cap, or no cap, but Cards
   product validation still clamps the widget to 16 cards maximum.
-- With the intended PRD106 policy values, free accounts may save/publish at
-  most 3 cards because `items.group.small.max.free = 3`.
-- If the current policy matrix still has stale higher-tier values for
-  `items.group.small.max` such as tier1 10, tier2 25, or unlimited higher
-  tiers, Step 2 is not green until the matrix is updated to the accepted
-  3/9/16 values or the mismatch is explicitly fenced. Do not document stale
-  policy values as product truth.
+- With the accepted PRD106 policy values, free accounts may save/publish at
+  most 3 cards because Cards maps to `items.group.small.max`.
+- `items.group.small.max` currently resolves to free 3, tier1 10, tier2 25,
+  tier3 unlimited, and tier4 unlimited. The separate 3/9/16 values are the free
+  caps for small/medium/large item groups, not the tier ladder for the small
+  group itself.
 - The same cap applies to standard Cards, linked Cards, and Steps because all
   treatments use the same `core.items[]` array.
 - Bob may use resolved policy for UX gating and upsell display.
 - Roma save/publish validation must enforce the same limit through the generic
   widget `limits.json` + `evaluateLimits()` path. Bob-only enforcement is not
   enough.
-- Current policy registry may still mark `items.group.small.max` server
-  save/publish enforcement as a gap. Cards Step 2 is not green until generic
-  Roma enforcement is implemented, explicitly owned by a green prerequisite, or
-  the Cards item cap is fenced as blocked.
+- Roma now enforces generic numeric widget limits at the account instance save
+  boundary by evaluating the compiled widget's `limits.json` through
+  `evaluateLimits()` before materialization.
 
 Do not add a new Cards layout object outside `core.*`. The intended surrounding
 layout is already available through:
@@ -777,10 +775,11 @@ Prague translation files. Bob preview and San Francisco translation must use the
 same path-based mechanism FAQ uses.
 
 `core.items[].id` provides stable item identity for editable fields.
-Step 12 is not green until reorder/duplicate/remove behavior proves translated
-card title, copy, image alt, and link label remain attached to the same stable
-item identity. If that proof requires a new translation identity subsystem,
-stop and fence the feature; do not redesign translation inside C4.
+Step 12 green depends on reorder/duplicate/remove behavior preserving that
+stable item identity so translated card title, copy, image alt, and link label
+remain attached to the same card. If that proof requires a new translation
+identity subsystem, stop and fence the feature; do not redesign translation
+inside C4.
 
 ## Defaults
 

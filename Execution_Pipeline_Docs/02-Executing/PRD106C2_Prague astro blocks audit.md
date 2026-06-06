@@ -1,6 +1,6 @@
 # PRD106C2_Prague Astro Blocks Audit
 
-Status: Companion audit for `PRD106C_Prague astro blocks migration to widget instances.md`
+Status: Audit checkpoint - Steps 1-5 green with refreshed source evidence.
 Date: 2026-06-05
 Purpose: keep the Prague block inventory factual while PRD106C stays simple.
 Series step: 5
@@ -50,14 +50,29 @@ evidence to stop, not evidence to proceed.
 Current executable step:
 
 ```text
-Step 1: Refresh Prague block inventory.
+None. Audit inventory, classification, target mapping, field hints, and guards are green.
 ```
 
-Required evidence before marking green:
+Fresh green evidence:
 
-- Current block registry command output.
-- Current renderer switch command output.
-- Current page JSON type-count command output.
+- `sed -n '1,220p' prague/src/lib/blockRegistry.ts` confirms registered
+  block contracts for `big-bang`, `hero`, `split`, `split-carousel`, `steps`,
+  `subpage-cards`, `control-moat`, `global-moat`, `platform-strip`,
+  `cta-bottom-block`, `minibob`, `embed-carousel`, `mobile-showcase`,
+  `feature-explorer`, `navmeta`, and `page-meta`.
+- `sed -n '1,260p' prague/src/components/WidgetBlocks.astro` confirms renderer
+  cases for the same visual block set plus Prague navigation/funnel handling.
+- Page JSON type-count command over `tokyo/prague/pages/**/*.json` returns:
+  `split 14`, `hero 12`, `page-meta 12`, `steps 6`,
+  `cta-bottom-block 5`, `big-bang 4`, `minibob 3`, `navmeta 3`,
+  `platform-strip 3`, `global-moat 2`, `control-moat 1`,
+  `subpage-cards 1`.
+- `find prague/src/blocks -maxdepth 2 -type f` confirms source exists for
+  the registered Prague block implementations, including unused
+  `split-carousel`, `embed-carousel`, `mobile-showcase`, and
+  `feature-explorer`.
+- Every used block has a disposition in the tables below. No additional widget
+  target is required.
 
 Stop conditions:
 

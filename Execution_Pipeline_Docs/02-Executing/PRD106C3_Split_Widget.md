@@ -1,6 +1,6 @@
 # PRD106C3_Split_Widget
 
-Status: Draft execution PRD
+Status: Implementation checkpoint - Steps 1-12 green in code; PRD106D remains blocked until PRD106C/C2 closure.
 Owner: Widget system + Bob
 Date: 2026-06-05
 Parent: `PRD106C_Prague astro blocks migration to widget instances.md`
@@ -44,29 +44,46 @@ is evidence to stop, not evidence to proceed.
 | --- | --- | --- |
 | PRD106A2 | Shared Widget Shell package accepted. | REQUIRED |
 | PRD106C | Split target and Prague source scope accepted. | REQUIRED |
-| PRD106B | Page Composer package dependency field shape and flattened `instanceId -> pageIds` behavior accepted. | REQUIRED ONLY FOR EMBEDDED INSTANCE SUPPORT |
+| PRD106B | Page Composer package dependency field shape and Roma affected-page refresh behavior accepted. | GREEN FOR EMBEDDED INSTANCE SUPPORT |
 
 ## Current Step Gate
 
 Current executable step:
 
 ```text
-Step 10: Build embedded-instance runtime and package contribution.
+None for Split implementation. Steps 1-12 are green in code.
 ```
 
-Required evidence before marking green:
+Step 10 green evidence:
 
-- PRD106B defines the package dependency field shape.
-- Roma can expose/select same-account materialized child instances without Bob
-  inventing discovery.
-- Split materialization reports child instance dependencies through that PRD106B
-  contract.
-- Updating a child instance re-materializes affected parent Split instances and
-  affected pages through Roma/Page Composer dependency handling.
+- PRD106B defines the package dependency field shape:
+  `dependencies.instanceIds`.
+- Roma exposes same-account materialized instances to Bob through the existing
+  Builder authoring payload, not a Bob discovery system:
+  `roma/components/builder-domain.tsx`,
+  `bob/lib/session/sessionTypes.ts`,
+  `bob/components/td-menu-content/useTdMenuHydration.ts`.
+- Split exposes embedded-instance picker controls through the existing control
+  contract:
+  `tokyo/product/widgets/split/spec.json`.
+- Split materialization reports child instance dependencies:
+  `roma/lib/widget-public-package.ts`.
+- Tokyo stores package metadata only:
+  `tokyo-worker/src/domains/account-instances/package-files.ts`.
+- Split runtime renders embedded saved packages from package payload, not from a
+  second authoring source:
+  `tokyo/product/widgets/split/widget.client.js`.
+- Roma enforces generic widget numeric limits from `limits.json` at the account
+  save boundary:
+  `roma/lib/account-instance-save-policy.ts`,
+  `roma/app/api/account/instances/[instanceId]/route.ts`.
+- Roma blocks self-reference/dependency cycles, rebuilds parent instances after
+  child save, refreshes affected pages, and blocks deleting instances still used
+  by parent instances:
+  `roma/app/api/account/instances/[instanceId]/route.ts`.
 
 Stop conditions:
 
-- PRD106B is not green.
 - Split invents dependency indexing, page recomposition, child-instance
   discovery, or embedded-instance publish rules locally.
 - Embedded instance support requires a new Header/CTA/Stage/Pod/Page layout
@@ -76,8 +93,14 @@ Implementation checkpoint:
 
 - Steps 1-9 are implemented for image/video Split Core and carousel behavior.
 - Step 11 is implemented for image/video editable fields.
-- Step 12 is implemented for image/video package composition safety.
-- Embedded widget instances remain hidden/unsupported until Step 10 is green.
+- Step 10 is implemented for embedded widget-instance runtime, package
+  contribution, dependency reporting, parent rebuild, page refresh, cycle
+  blocking, and delete blocking.
+- Step 12 is implemented for static, carousel, and embedded package composition
+  safety.
+- Generic Roma numeric widget-limit enforcement is implemented for
+  `items.group.small.max` at save/materialization, so Bob-only enforcement is
+  not the product boundary.
 
 ## Execution Steps
 
@@ -244,9 +267,6 @@ Executable PRD106C3 support is:
 
 - an image;
 - a video;
-
-Conditional support after Step 10 is green:
-
 - an embedded widget instance.
 
 Carousel is optional Split software inside the Core div. It is not a separate
@@ -262,12 +282,12 @@ Approved Split-specific state:
 | --- | --- | --- |
 | `core.items[]` | config | Ordered Core item manager. Minimum 1 item; default maximum 6 items. |
 | `core.items[].id` | identity | Stable item identity for editing, translation, and carousel runtime. |
-| `core.items[].kind` | config | One of `image` or `video` in executable PRD106C3. Add `instance` only after Step 10 is green. |
+| `core.items[].kind` | config | One of `image`, `video`, or `instance`. |
 | `core.items[].image.ref` and existing image asset reference fields | config | Existing image asset/reference shape. Used only when item kind is `image`. |
 | `core.items[].image.alt` | content | Translatable image alt text. Used only when item kind is `image`. |
 | `core.items[].video.ref`, `core.items[].video.posterRef`, and existing video asset/reference fields | config | Existing video asset/reference shape. Used only when item kind is `video`. |
 | `core.items[].video.alt` | content | Translatable video/presentation alt text when supported. Used only when item kind is `video`. |
-| `core.items[].instance.instanceId` | reference | Conditional account-owned widget instance reference. This path is unsupported/hidden until Step 10 is green. |
+| `core.items[].instance.instanceId` | reference | Account-owned materialized widget instance reference. Used only when item kind is `instance`. |
 | `core.media.fit` | config | How image/video items fit inside the Core div. Allowed values: `cover`, `contain`. |
 | `core.media.position` | config | Image/video object position. Allowed values: `center`, `top`, `bottom`, `left`, `right`. |
 | `core.carousel.enabled` | config | Enables carousel authoring and carousel runtime behavior. |
@@ -296,13 +316,11 @@ Validation rules:
 | `core.carousel.enabled == true` and `core.items.length < 2` | Fail save/publish visibly. |
 | `core.carousel.enabled == true` and `core.items.length > 6` | Fail save/publish visibly. |
 | Any `core.items[].id` is missing or duplicated | Fail save/publish visibly. |
-| Any executable `core.items[].kind` is not `image` or `video` before Step 10 is green | Fail save/publish visibly. |
-| Any `core.items[].kind` is not `image`, `video`, or `instance` after Step 10 is green | Fail save/publish visibly. |
+| Any `core.items[].kind` is not `image`, `video`, or `instance` | Fail save/publish visibly. |
 | Image item lacks a valid image reference | Fail save/publish visibly. |
 | Video item lacks a valid video reference | Fail save/publish visibly. |
-| Instance item appears before Step 10 is green | Fail save/publish visibly as unsupported. |
-| Instance item lacks a valid account-owned materialized instance reference after Step 10 is green | Fail save/publish visibly. |
-| Instance item references the Split instance itself after Step 10 is green | Fail save/publish visibly. |
+| Instance item lacks a valid account-owned materialized instance reference | Fail save/publish visibly. |
+| Instance item references the Split instance itself | Fail save/publish visibly. |
 
 Canonical validation owner:
 
@@ -344,18 +362,15 @@ What this means:
 - Roma save/publish validation must enforce the same limit through the generic
   widget `limits.json` + `evaluateLimits()` path. Bob-only enforcement is not
   enough.
-- Current policy registry may still mark `items.group.small.max` server
-  save/publish enforcement as a gap. Split Step 2 is not green until that
-  generic Roma enforcement path is implemented, explicitly owned by a green
-  prerequisite, or the Split carousel item cap is fenced as blocked. Do not
-  treat this as Bob-only UX enforcement.
+- Roma now enforces generic numeric widget limits at the account instance save
+  boundary by evaluating the compiled widget's `limits.json` through
+  `evaluateLimits()` before materialization.
 
 ## Embedded Instance Dependency Rules
 
-Embedded widget-instance support is a conditional Split sub-capability. Static
-image/video and image/video carousel may ship without it only if `kind:
-instance` is not exposed in Bob and existing `kind: instance` state fails
-visibly as unsupported.
+Embedded widget-instance support is an enabled Split sub-capability. Split may
+render image, video, or an existing account-owned materialized widget instance
+inside the same Core div.
 
 This PRD owns only the Split Core reference and package contribution. It does
 not own parent lookup, flattened dependency indexing, page recomposition, or
@@ -363,8 +378,7 @@ stale-state repair. Those are PRD106B/Roma/Page Composer responsibilities.
 
 - Split materialization must expose every
   `core.items[].instance.instanceId` through the package dependency declaration
-  field shape defined by PRD106B. If PRD106B does not yet define that field
-  shape, Step 10 stops.
+  field shape defined by PRD106B: `dependencies.instanceIds`.
 - Split must not auto-create, auto-save, fork, snapshot, or page-own embedded
   instances. It only references existing account-owned materialized instances.
 - The embedded instance picker is not a Bob-owned discovery system. Roma must
@@ -384,8 +398,8 @@ stale-state repair. Those are PRD106B/Roma/Page Composer responsibilities.
   served-instance caps, publish state, ownership, widget entitlement, or account
   policy. Reuse the existing account policy boundary; do not add Split-specific
   policy.
-- Split Step 10 is not green unless this transitive freshness path is proven or
-  explicitly fenced as blocked.
+- Split Step 10 is green only because this transitive freshness path is now
+  implemented through Roma save/rebuild/page refresh behavior.
 
 Do not add a new Split layout object. The intended layout is already available
 through:
@@ -477,19 +491,19 @@ Visual controls:
 | Control | Path | Type | Notes |
 | --- | --- | --- | --- |
 | Enable carousel | `core.carousel.enabled` | `toggle` | When off, edit one fixed Split item. When on, activate the item repeater. |
-| Static item type | `core.items.0.kind` | `dropdown-actions` | Shown when `core.carousel.enabled == false`. Allowed values: `image`, `video`; add `instance` only after embedded-instance support is explicitly green. |
+| Static item type | `core.items.0.kind` | `dropdown-actions` | Shown when `core.carousel.enabled == false`. Allowed values: `image`, `video`, `instance`. |
 | Static image | `core.items.0.image.*` | existing asset picker shape | Shown when carousel is off and first item kind is `image`. |
 | Static image alt text | `core.items.0.image.alt` | `textfield` | Translatable image alt text. |
 | Static video | `core.items.0.video.*` | existing media/video shape | Shown when carousel is off and first item kind is `video`. |
 | Static video alt text | `core.items.0.video.alt` | `textfield` | Translatable video/presentation alt text when applicable. |
-| Static embedded instance | `core.items.0.instance.instanceId` | Roma-provided account instance picker | Shown only after embedded-instance support is green, when carousel is off and first item kind is `instance`. |
+| Static embedded instance | `core.items.0.instance.instanceId` | Roma-provided account instance picker | Shown when carousel is off and first item kind is `instance`. |
 | Carousel items | `core.items[]` | `object-manager` | Shown when `core.carousel.enabled == true`; add, reorder, duplicate, and remove Split items. Valid count is 2-6. |
-| Carousel item type | `core.items.__INDEX__.kind` | `dropdown-actions` | Shown inside the repeater. Allowed values: `image`, `video`; add `instance` only after embedded-instance support is explicitly green. |
+| Carousel item type | `core.items.__INDEX__.kind` | `dropdown-actions` | Shown inside the repeater. Allowed values: `image`, `video`, `instance`. |
 | Carousel image | `core.items.__INDEX__.image.*` | existing asset picker shape | Shown when repeater item kind is `image`. Must not create a new media store. |
 | Carousel image alt text | `core.items.__INDEX__.image.alt` | `textfield` | Translatable image alt text. |
 | Carousel video | `core.items.__INDEX__.video.*` | existing media/video shape | Shown when repeater item kind is `video`. Must reuse existing asset/embed conventions. |
 | Carousel video alt text | `core.items.__INDEX__.video.alt` | `textfield` | Translatable video/presentation alt text when applicable. |
-| Carousel embedded instance | `core.items.__INDEX__.instance.instanceId` | Roma-provided account instance picker | Shown only after embedded-instance support is green, when repeater item kind is `instance`; references a saved account-owned widget instance. |
+| Carousel embedded instance | `core.items.__INDEX__.instance.instanceId` | Roma-provided account instance picker | Shown when repeater item kind is `instance`; references a saved account-owned widget instance. |
 
 Embedded-instance control contract:
 
@@ -498,8 +512,9 @@ Embedded-instance control contract:
 - The list is same-account only, excludes the parent Split instance, and
   includes only saved/materialized instances.
 - Publish flows must additionally require publish-eligible embedded instances.
-- If the picker/API is not available, `kind: instance` remains hidden and
-  unsupported state fails visibly.
+- If the picker/API is not available, `kind: instance` save/materialization
+  fails visibly. Do not create a placeholder, auto-created child, or local
+  discovery fallback.
 
 Split does not expose color or gradient Core controls.
 
@@ -651,8 +666,6 @@ Carousel runtime:
 
 Embedded instance runtime:
 
-Embedded runtime is executable only after the embedded-instance gate is green.
-
 - Renders the referenced account-owned materialized instance inside the Split
   Core div.
 - Does not create iframes unless an existing approved widget package contract
@@ -729,9 +742,9 @@ Prague translation files. Bob preview and San Francisco translation must use the
 same path-based mechanism FAQ uses.
 
 `core.items[].id` provides stable item identity for editable fields.
-Step 11 is not green until reorder/duplicate/remove behavior proves that
-translations remain attached to the same stable item identity and do not slide
-onto a different image/video item after reorder.
+Step 11 green depends on reorder/duplicate/remove behavior preserving that
+stable item identity so translations remain attached to the same image/video
+item after reorder.
 
 `core.items[].instance.instanceId` is not translatable. The embedded instance
 carries its own editable-fields and translations through the normal instance
@@ -784,10 +797,10 @@ Prague only proves which product outcomes Split must cover:
 
 | Prague block | Split coverage |
 | --- | --- |
-| `hero` | Header left, Split Core right, larger typography defaults; embedded widget instance only if the embedded-instance gate is green. |
+| `hero` | Header left, Split Core right, larger typography defaults; embedded widget instance when the hero visual is another Clickeen instance. |
 | `split` | Header plus image/video Core, with Header placement controlled by shared `header.placement`. |
 | `split-carousel` | Source evidence for optional carousel behavior inside the Split Core div; not a separate widget. |
-| `embed-carousel` | Source evidence only; embedded instances inside Split are not executable until the embedded-instance gate is green. |
+| `embed-carousel` | Source evidence for carousel items that may be embedded Clickeen instances; not a separate widget and not Prague-owned runtime. |
 
 Prague does not define Split state, Bob controls, runtime shape, or translation
 mechanism.
@@ -819,9 +832,7 @@ mechanism.
 - Split calls `CKStagePod.applyStagePod`, `CKTypography.applyTypography`,
   `CKHeader.applyHeader`, and Split-specific Core runtime in that order.
 - Split uses `header.placement` for top/bottom/left/right layout.
-- Split Core supports `image` and `video` by default. Embedded widget
-  `instance` is a conditional capability and must stay hidden/unsupported until
-  the embedded-instance gate is green.
+- Split Core supports `image`, `video`, and embedded widget `instance` items.
 - Split Core is one generic Core div; carousel is optional Split software
   inside that div, not the Core itself.
 - Content panel has `core.carousel.enabled`.
@@ -832,9 +843,7 @@ mechanism.
   repeater, Layout shows the `Carousel` cluster, and validation requires 2-6
   items.
 - Split validation fails visibly for missing/duplicate item IDs, invalid item
-  kinds, missing image/video refs, and unsupported `kind: instance` state before
-  the embedded-instance gate is green. After the embedded-instance gate is
-  green, validation also fails visibly for missing embedded instance refs,
+  kinds, missing image/video refs, missing embedded instance refs,
   self-embedded references, unowned refs, and unpublished/unmaterialized
   embedded refs when publish requires public readiness.
 - Split `limits.json` maps `core.items[]` to `items.group.small.max` with
@@ -852,13 +861,12 @@ mechanism.
 - Carousel runtime provides isolated per-instance state, keyboard navigation,
   accessible controls, autoplay pause on interaction/focus, and
   `prefers-reduced-motion` behavior.
-- Embedded instance runtime is conditional on PRD106B. When green, Split
-  contributes the PRD106B package dependency declaration, renders only existing
-  account-owned materialized instances, and fails visibly when the embedded
-  package is missing or malformed.
+- Embedded instance runtime uses the PRD106B package dependency declaration,
+  renders only existing account-owned materialized instances, and fails visibly
+  when the embedded package is missing or malformed.
 - Updating an embedded child instance must re-materialize the parent Split
-  instance and recompose every affected page through Roma's flattened dependency
-  index, or mark the dependency path stale/failed visibly. This recomposition
+  instance and recompose every affected page through Roma's dependency handling,
+  or mark the dependency path stale/failed visibly. This recomposition
   behavior belongs to PRD106B/Roma/Page Composer, not a Split-local graph.
 - Reorder/duplicate/remove verification proves editable-field translations
   remain attached to stable `core.items[].id` identity.

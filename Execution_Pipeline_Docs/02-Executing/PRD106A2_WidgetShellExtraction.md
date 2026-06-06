@@ -1,6 +1,6 @@
 # PRD106A2_WidgetShellExtraction
 
-Status: Draft execution PRD
+Status: Implementation checkpoint - A2 implementation gates green in code.
 Owner: Widget system + Bob/Roma materialization
 Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`

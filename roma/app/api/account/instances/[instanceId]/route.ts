@@ -424,21 +424,22 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const policyGate = validateAccountInstanceSavePolicy({
-    config,
-    authz: current.value.authzPayload,
-  });
-  if (!policyGate.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: policyGate.error }, { status: policyGate.status }),
-      current.value.setCookies,
-    );
-  }
-
   let publicPackage;
   try {
     const compiled = await compileWidgetForSave(request, widgetType);
+    const policyGate = validateAccountInstanceSavePolicy({
+      config,
+      authz: current.value.authzPayload,
+      limits: compiled.limits ?? null,
+      context: 'publish',
+    });
+    if (!policyGate.ok) {
+      return withSession(
+        request,
+        NextResponse.json({ error: policyGate.error }, { status: policyGate.status }),
+        current.value.setCookies,
+      );
+    }
     const embeddedPackages = await loadEmbeddedPackagesForConfig({
       accountId,
       widgetType,

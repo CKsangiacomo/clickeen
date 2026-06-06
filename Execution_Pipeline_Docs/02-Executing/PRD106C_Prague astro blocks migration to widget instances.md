@@ -1,6 +1,6 @@
 # PRD106C_Prague Astro Blocks Migration To Widget Instances
 
-Status: Draft execution umbrella
+Status: Execution map checkpoint - Steps 1-5 green; PRD106D not started.
 Owner: Widget Core source + Bob controls + Roma save/materialization
 Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
@@ -50,19 +50,24 @@ is evidence to stop, not evidence to proceed.
 Current executable step:
 
 ```text
-Step 1: Confirm surviving widget target set.
+None for PRD106C. Surviving target set is confirmed.
 ```
 
-Required evidence before marking green:
+Green evidence:
 
 - Target set is exactly Split, Cards, Big Bang, CTA.
 - Out-of-scope Prague blocks are named and fenced/dropped.
-- Existing drift widget folders are named with keep/delete/fence decisions:
+- Existing drift widget folders were deleted as customer widget targets:
   `tokyo/product/widgets/hero`, `tokyo/product/widgets/steps`, and
   `tokyo/product/widgets/cardgrid`.
+- `tokyo-worker/src/generated/widget-definition-sources.ts` now imports only
+  `big-bang`, `cards`, `countdown`, `cta`, `faq`, `logoshowcase`, and `split`.
+- `packages/ck-contracts/src/overlay-codebooks.ts` no longer assigns overlay
+  codes to `hero`, `steps`, or `cardgrid`.
 - No child PRD is asked to own Shell or Page Composer behavior.
-- Split embedded-instance support is either explicitly owned by PRD106C3 as
-  visible Core behavior with approved paths, or fenced out of this migration.
+- Split embedded-instance support is explicitly owned by PRD106C3 as visible
+  Split Core behavior using `core.items[].instance.instanceId`; Prague
+  `accountInstanceRef` is not preserved.
 
 Stop conditions:
 
@@ -124,19 +129,18 @@ Existing drift widget folders must not remain customer widget targets:
 
 | Current folder | PRD106C decision |
 | --- | --- |
-| `tokyo/product/widgets/hero` | Delete or fence from customer widgets. `hero` is absorbed by `split`. |
-| `tokyo/product/widgets/steps` | Delete or fence from customer widgets. `steps` is a `cards` treatment. |
-| `tokyo/product/widgets/cardgrid` | Rename/migrate into surviving `cards`, or fence/delete after `cards` exists. Do not keep `cardgrid` as a second product widget. |
+| `tokyo/product/widgets/hero` | Deleted from customer widgets. `hero` is absorbed by `split`. |
+| `tokyo/product/widgets/steps` | Deleted from customer widgets. `steps` is a `cards` treatment. |
+| `tokyo/product/widgets/cardgrid` | Deleted from customer widgets. `cards` is the surviving widget. |
 
 Current Prague `accountInstanceRef` dies. It must not be copied into migrated
 widget state.
 
-Split embedded-instance support is not granted by this umbrella. If it survives,
-PRD106C3 must define it as explicit, visible Split Core behavior with a new
-approved Core path, no Prague iframe assumptions, no locale override, no
-page-owned override semantics, and no `accountInstanceRef` compatibility. If
-PRD106C3 does not make that behavior explicit, Split absorbs `hero` and `split`
-as media/content Core only.
+Split embedded-instance support is granted only because PRD106C3 defines it as
+explicit, visible Split Core behavior with the approved
+`core.items[].instance.instanceId` path, no Prague iframe assumptions, no locale
+override, no page-owned override semantics, and no `accountInstanceRef`
+compatibility.
 
 ## How Bob Widget Controls Work
 

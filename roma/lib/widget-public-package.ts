@@ -1,4 +1,5 @@
 import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
+import type { LimitsSpec } from '@clickeen/ck-policy';
 import {
   WIDGET_SHELL_RUNTIME_MODULE_END,
   WIDGET_SHELL_RUNTIME_PAYLOAD_END,
@@ -33,6 +34,7 @@ type WidgetPackageFileContext = {
 export type CompiledWidgetForPublicPackage = {
   widgetname: string;
   displayName?: string;
+  limits?: LimitsSpec | null;
   widgetPackage?: {
     files: Partial<Record<string, WidgetPackageFileContext>>;
   };
