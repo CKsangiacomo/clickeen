@@ -1,6 +1,6 @@
 # PRD106B_PageComposer
 
-Status: Draft execution PRD
+Status: Active execution checkpoint - Steps 1-6 green; Step 7 current
 Owner: Roma
 Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
@@ -52,24 +52,29 @@ If this PRD conflicts with a sibling PRD, the umbrella authority table decides.
 Current executable step:
 
 ```text
-Step 1: Define page storage, source, and serve-state contracts.
+Step 7: Add SEO/GEO and localization controls specified here.
 ```
 
 Required evidence before marking green:
 
-- Page source schema is named.
-- Page output/serve-state coordinates are named.
-- Storage identity uses `accountPublicId`, not private account UUID or generic
-  `{account}`.
-- `documentation/architecture/CONTEXT.md` and service docs either match the
-  accepted page coordinates or carry an explicit temporary fence/delete gate.
-- Tokyo payload contract is storage-only.
+- Page Composer exposes page localization settings in Roma, not Tokyo and not
+  the customer's host navigation.
+- Page Composer writes those settings into the Roma-owned `source.json` schema.
+- Generated page HTML remains crawlable initial HTML with title, description,
+  canonical, robots, and ordered instance sections.
+- Language switcher work is limited to the optional Clickeen-owned top-of-page
+  switcher. Host-nav integration is not invented.
+- IP localization is either implemented as selection among Roma-materialized
+  locale artifacts or explicitly fenced if public serving cannot do that
+  without product logic.
 
 Stop conditions:
 
-- Tokyo must interpret page source or compose page output.
-- Page source needs page-specific instance edits or snapshots.
-- Both `website/pages` and `pages/{pageId}` are described as current product truth.
+- Tokyo must interpret localization rules or compose localized output.
+- Page localization edits instance locale truth.
+- Customer host-nav integration is required for PRD106B to be green.
+- Generated page output becomes an empty client-side loader instead of
+  crawlable HTML.
 
 ## Execution Steps
 
@@ -83,6 +88,132 @@ Stop conditions:
 | 6 | Implement affected-page recomposition on instance save. | Tests/log evidence. | Editing an included instance updates affected pages. | Dependency truth lives in Tokyo. |
 | 7 | Add SEO/GEO and localization controls specified here. | Tests/screenshot. | Crawlable initial HTML and page localization rules exist. | Host-nav integration is invented. |
 | 8 | Run deletion/search guards. | `rg` output/tests. | No Tokyo composition/readiness/page `embed.js` authority remains. | Any forbidden authority remains active. |
+
+## Execution Checkpoint: Steps 1-6 Green
+
+This checkpoint records executed repo state so the next agent does not restart
+from Step 1 or preserve old drift.
+
+### Step 1 - Page Storage, Source, And Serve-State Contracts
+
+Status: green.
+
+Evidence:
+
+- `accounts/{accountPublicId}/pages/{pageId}/source.json`,
+  `index.html`, `styles.css`, `runtime.js`, and `serve-state.json` are the
+  current page coordinates.
+- `documentation/architecture/CONTEXT.md` no longer lists
+  `accounts/{accountPublicId}/pages/indexes/placements/{instanceId}.json` as
+  current product truth.
+- Tokyo reverse placement index keys, type, source maintenance, and internal
+  route were deleted.
+- Tokyo page source handling is storage-only for page meaning: Roma submits the
+  page source and page summary projection; Tokyo validates only account/path
+  coordinates and stores the submitted bytes/projection.
+
+Committed evidence:
+
+- `58f94e4e fix(pages): store composed pages under page root`
+- `ff5a2995 feat(pages): align source schema with composer contract`
+- `e49e8d6b fix(pages): remove Tokyo placement index route`
+- `2176fcda docs(pages): remove Tokyo placement index from context`
+- `79895416 fix(pages): make Tokyo page source storage-only`
+
+### Step 2 - Roma Page Composer UX Skeleton
+
+Status: green.
+
+Evidence:
+
+- Roma Pages domain can create, list, open, save, publish/unpublish, copy, and
+  delete pages.
+- The composer edits page metadata and selected instance references only. It
+  does not edit widget instance content.
+
+Committed evidence:
+
+- `ff5a2995 feat(pages): align source schema with composer contract`
+
+### Step 3 - Add Instances Bulk Flow
+
+Status: green.
+
+Evidence:
+
+- `Add instances` opens a modal/table, not a dropdown.
+- The table lists existing account-owned instances with checkboxes, widget type,
+  publish state, already-placed state, and incremental loading for large
+  accounts.
+- `Add selected` appends selected instances in visible list order; reordering
+  and removal happen in the composer after that.
+
+Committed evidence:
+
+- `deee4994 feat(pages): add bulk instance picker`
+
+### Step 4 - Save/Draft Composition
+
+Status: green for direct placed instances.
+
+Evidence:
+
+- Page save stores the ordered instance refs in `source.json`.
+- Roma reads current materialized instance packages and submits composed
+  `index.html`, `styles.css`, and `runtime.js` to Tokyo.
+- Missing or malformed instance packages fail the save/publish path visibly
+  instead of being silently healed.
+
+Committed evidence:
+
+- `ff5a2995 feat(pages): align source schema with composer contract`
+- `58f94e4e fix(pages): store composed pages under page root`
+- `79895416 fix(pages): make Tokyo page source storage-only`
+
+### Step 5 - Publish/Unpublish/Copy
+
+Status: green for current page publish model.
+
+Evidence:
+
+- Publish/unpublish uses page serve-state at the page root.
+- Page publish blocks empty pages.
+- Page publish blocks unpublished or unavailable placed instances.
+- Page Copy uses the existing public page URL / iframe embed model. No page
+  `embed.js` is generated.
+- Roma UI disables public copy/open actions until the page is published and
+  surfaces blocking instances before publish.
+
+Committed evidence:
+
+- `631bb17c feat(pages): add page copy actions`
+- `7341c4f7 fix(pages): block publish on unpublished placements`
+- `9257a78e fix(pages): surface page publish blockers`
+
+### Step 6 - Affected-Page Recomposition On Instance Save
+
+Status: green for direct page placements.
+
+Evidence:
+
+- Instance save asks Roma to find pages using the saved instance.
+- Roma derives affected pages by scanning saved page `source.json` files from
+  the account page list.
+- Tokyo does not own or answer reverse placement truth.
+- Affected pages are recomposed by re-saving their current page source.
+
+Committed evidence:
+
+- `4079568d fix(pages): derive affected pages in Roma`
+- `e49e8d6b fix(pages): remove Tokyo placement index route`
+
+Remaining for later steps:
+
+- User-visible `recomposing`, `stale`, and `failed` page states are not fully
+  implemented.
+- Embedded-widget dependency propagation is contract-only until the first Widget
+  Core that embeds another widget instance is green.
+- Page localization controls and localized page artifact behavior are Step 7.
 
 ## Purpose
 
