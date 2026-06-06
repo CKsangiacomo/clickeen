@@ -1,22 +1,39 @@
 import { getCompiledWidgetRouteResponse } from '@clickeen/bob/compiled-widget-route';
+import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
   listPageIdsPlacingInstanceForAccount,
+  listParentInstanceIdsDependingOnInstanceForAccount,
+  loadTokyoAccountInstanceDocument,
+  readAccountInstancePackageFromTokyo,
+  refreshPagesPlacingInstanceForAccount,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
-import { buildSavedWidgetPublicPackage, type CompiledWidgetForPublicPackage } from '@roma/lib/widget-public-package';
+import { buildSavedWidgetPublicPackage, type CompiledWidgetForPublicPackage, type EmbeddedWidgetPublicPackage } from '@roma/lib/widget-public-package';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
+  type CurrentAccountRouteContext,
 } from '../../_lib/current-account-route';
 
 export const runtime = 'edge';
 
 type RouteContext = { params: Promise<{ instanceId: string }> };
+
+type RouteFailureLike = {
+  ok: false;
+  status: number;
+  error: {
+    kind: string;
+    reasonKey: string;
+    detail?: string;
+    paths?: string[];
+  };
+};
 
 function isCompiledWidgetForPublicPackage(value: unknown): value is CompiledWidgetForPublicPackage {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -27,6 +44,155 @@ function isCompiledWidgetForPublicPackage(value: unknown): value is CompiledWidg
     (typeof record.displayName === 'undefined' || typeof record.displayName === 'string') &&
     Boolean(widgetPackage && typeof widgetPackage === 'object' && !Array.isArray(widgetPackage))
   );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function embeddedInstanceIdsFromConfig(args: {
+  widgetType: string;
+  config: Record<string, unknown>;
+  parentInstanceId: string;
+}): { ok: true; value: string[] } | RouteFailureLike {
+  if (args.widgetType !== 'split') return { ok: true, value: [] };
+  const core = isRecord(args.config.core) ? args.config.core : null;
+  const items = Array.isArray(core?.items) ? core.items : [];
+  const ids = new Set<string>();
+  for (const item of items) {
+    if (!isRecord(item) || item.kind !== 'instance') continue;
+    const instance = isRecord(item.instance) ? item.instance : null;
+    const instanceId = typeof instance?.instanceId === 'string' ? instance.instanceId.trim().toUpperCase() : '';
+    if (!isCompactInstanceId(instanceId)) {
+      return {
+        ok: false,
+        status: 422,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.widget.embeddedInstanceInvalid',
+          detail: instanceId,
+        },
+      };
+    }
+    if (instanceId === args.parentInstanceId) {
+      return {
+        ok: false,
+        status: 422,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.widget.embeddedInstanceSelfReference',
+          detail: instanceId,
+        },
+      };
+    }
+    ids.add(instanceId);
+  }
+  return { ok: true, value: [...ids].sort((left, right) => left.localeCompare(right)) };
+}
+
+async function loadEmbeddedPackagesForConfig(args: {
+  accountId: string;
+  widgetType: string;
+  parentInstanceId: string;
+  config: Record<string, unknown>;
+  accountCapsule?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true; value: EmbeddedWidgetPublicPackage[] } | RouteFailureLike> {
+  const packages: EmbeddedWidgetPublicPackage[] = [];
+  const childInstanceIds = embeddedInstanceIdsFromConfig({
+    widgetType: args.widgetType,
+    config: args.config,
+    parentInstanceId: args.parentInstanceId,
+  });
+  if (!childInstanceIds.ok) return childInstanceIds;
+  for (const childInstanceId of childInstanceIds.value) {
+    const child = await readAccountInstancePackageFromTokyo({
+      accountId: args.accountId,
+      instanceId: childInstanceId,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    });
+    if (!child.ok) return child;
+    if (!child.value) {
+      return {
+        ok: false,
+        status: 409,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.widget.embeddedPackageMissing',
+          detail: childInstanceId,
+        },
+      };
+    }
+    packages.push({
+      instanceId: childInstanceId,
+      indexHtml: child.value.indexHtml,
+      stylesCss: child.value.stylesCss,
+      runtimeJs: child.value.runtimeJs,
+    });
+    const cycle = await savedDependencyChainIncludesInstance({
+      accountId: args.accountId,
+      startInstanceId: childInstanceId,
+      targetInstanceId: args.parentInstanceId,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    });
+    if (!cycle.ok) return cycle;
+    if (cycle.value) {
+      return {
+        ok: false,
+        status: 422,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.widget.embeddedDependencyCycle',
+          detail: childInstanceId,
+        },
+      };
+    }
+  }
+  return { ok: true, value: packages };
+}
+
+async function savedDependencyChainIncludesInstance(args: {
+  accountId: string;
+  startInstanceId: string;
+  targetInstanceId: string;
+  accountCapsule?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true; value: boolean } | RouteFailureLike> {
+  const seen = new Set<string>();
+  const queue = [args.startInstanceId];
+  while (queue.length) {
+    if (seen.size > 50) {
+      return {
+        ok: false,
+        status: 409,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.widget.embeddedDependencyDepthExceeded',
+          detail: 'Embedded widget dependency chain is too deep.',
+        },
+      };
+    }
+    const current = queue.shift()!;
+    if (seen.has(current)) continue;
+    seen.add(current);
+    const pkg = await readAccountInstancePackageFromTokyo({
+      accountId: args.accountId,
+      instanceId: current,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    });
+    if (!pkg.ok) return pkg;
+    if (!pkg.value) continue;
+    if (pkg.value.dependencies.instanceIds.includes(args.targetInstanceId)) {
+      return { ok: true, value: true };
+    }
+    pkg.value.dependencies.instanceIds.forEach((instanceId) => {
+      if (!seen.has(instanceId)) queue.push(instanceId);
+    });
+  }
+  return { ok: true, value: false };
 }
 
 async function compileWidgetForSave(request: NextRequest, widgetType: string): Promise<CompiledWidgetForPublicPackage> {
@@ -41,6 +207,131 @@ async function compileWidgetForSave(request: NextRequest, widgetType: string): P
       ? String((payload as { error?: unknown }).error)
       : 'coreui.errors.widget.compiled.invalid',
   );
+}
+
+function routeFailureResponse(request: NextRequest, failure: RouteFailureLike, setCookies: CurrentAccountRouteContext['setCookies']) {
+  return withSession(
+    request,
+    NextResponse.json({ error: failure.error }, { status: failure.status }),
+    setCookies,
+  );
+}
+
+async function rebuildParentInstancesAndRefreshPages(args: {
+  request: NextRequest;
+  accountId: string;
+  seedInstanceId: string;
+  fallbackBaseLocale: string;
+  accountCapsule?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true; rebuiltParentInstanceIds: string[]; refreshedInstanceIds: string[] } | RouteFailureLike> {
+  const rebuiltParentInstanceIds = new Set<string>();
+  const refreshedInstanceIds = new Set<string>([args.seedInstanceId]);
+  const queue = [args.seedInstanceId];
+
+  while (queue.length) {
+    if (rebuiltParentInstanceIds.size > 50) {
+      return {
+        ok: false,
+        status: 409,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.widget.embeddedDependencyDepthExceeded',
+          detail: 'Embedded widget dependency chain is too deep.',
+        },
+      };
+    }
+
+    const changedInstanceId = queue.shift()!;
+    const parents = await listParentInstanceIdsDependingOnInstanceForAccount({
+      accountId: args.accountId,
+      instanceId: changedInstanceId,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    });
+    if (!parents.ok) return parents;
+
+    for (const parentInstanceId of parents.value) {
+      if (parentInstanceId === args.seedInstanceId || rebuiltParentInstanceIds.has(parentInstanceId)) continue;
+      const parent = await loadTokyoAccountInstanceDocument({
+        accountId: args.accountId,
+        instanceId: parentInstanceId,
+        accountCapsule: args.accountCapsule,
+        requestId: args.requestId,
+      });
+      if (!parent.ok) return parent;
+
+      const parentBaseLocale = (
+        normalizeLocaleToken(parent.value.row.baseLocale)
+        ?? normalizeLocaleToken(parent.value.row.meta?.baseLocale)
+        ?? args.fallbackBaseLocale
+      ) || 'en';
+      let parentPackage;
+      try {
+        const compiled = await compileWidgetForSave(args.request, parent.value.row.widgetType);
+        const embeddedPackages = await loadEmbeddedPackagesForConfig({
+          accountId: args.accountId,
+          widgetType: parent.value.row.widgetType,
+          parentInstanceId,
+          config: parent.value.config,
+          accountCapsule: args.accountCapsule,
+          requestId: args.requestId,
+        });
+        if (!embeddedPackages.ok) return embeddedPackages;
+        parentPackage = buildSavedWidgetPublicPackage({
+          compiled,
+          instanceId: parentInstanceId,
+          baseLocale: parentBaseLocale,
+          displayName: parent.value.row.displayName ?? null,
+          state: parent.value.config,
+          embeddedPackages: embeddedPackages.value,
+        });
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        return {
+          ok: false,
+          status: 422,
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.widget.compiled.invalid',
+            detail,
+          },
+        };
+      }
+
+      const savedParent = await saveAccountInstanceInTokyo({
+        accountId: args.accountId,
+        instanceId: parentInstanceId,
+        widgetType: parent.value.row.widgetType,
+        config: parent.value.config,
+        publicPackage: parentPackage,
+        displayName: parent.value.row.displayName,
+        meta: parent.value.row.meta ?? null,
+        accountCapsule: args.accountCapsule,
+        requestId: args.requestId,
+      });
+      if (!savedParent.ok) return savedParent;
+      rebuiltParentInstanceIds.add(parentInstanceId);
+      refreshedInstanceIds.add(parentInstanceId);
+      queue.push(parentInstanceId);
+    }
+  }
+
+  for (const affectedInstanceId of refreshedInstanceIds) {
+    const refreshed = await refreshPagesPlacingInstanceForAccount({
+      accountId: args.accountId,
+      instanceId: affectedInstanceId,
+      accountCapsule: args.accountCapsule,
+      requestId: args.requestId,
+    });
+    if (!refreshed.ok) return refreshed;
+  }
+
+  return {
+    ok: true,
+    rebuiltParentInstanceIds: [...rebuiltParentInstanceIds].sort((left, right) => left.localeCompare(right)),
+    refreshedInstanceIds: [...refreshedInstanceIds].sort((left, right) => left.localeCompare(right)),
+  };
 }
 
 export async function PUT(request: NextRequest, context: RouteContext) {
@@ -148,12 +439,22 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   let publicPackage;
   try {
     const compiled = await compileWidgetForSave(request, widgetType);
+    const embeddedPackages = await loadEmbeddedPackagesForConfig({
+      accountId,
+      widgetType,
+      parentInstanceId: instanceId,
+      config,
+      accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
+    });
+    if (!embeddedPackages.ok) return routeFailureResponse(request, embeddedPackages, current.value.setCookies);
     publicPackage = buildSavedWidgetPublicPackage({
       compiled,
       instanceId,
       baseLocale,
       displayName: displayName ?? null,
       state: config,
+      embeddedPackages: embeddedPackages.value,
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -180,16 +481,22 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   });
 
   if (!result.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: result.error }, { status: result.status }),
-      current.value.setCookies,
-    );
+    return routeFailureResponse(request, result, current.value.setCookies);
   }
+  const refreshed = await rebuildParentInstancesAndRefreshPages({
+    request,
+    accountId,
+    seedInstanceId: instanceId,
+    fallbackBaseLocale: baseLocale,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!refreshed.ok) return routeFailureResponse(request, refreshed, current.value.setCookies);
   return withSession(
     request,
     NextResponse.json({
       ok: true,
+      rebuiltParentInstanceIds: refreshed.rebuiltParentInstanceIds,
     }),
     current.value.setCookies,
   );
@@ -232,6 +539,36 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
             reasonKey: 'coreui.errors.instance.placedOnPage',
             detail: 'Remove this widget from every page before deleting it.',
             pageIds: placedPages.value,
+          },
+        },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const parentInstances = await listParentInstanceIdsDependingOnInstanceForAccount({
+    accountId,
+    instanceId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!parentInstances.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: parentInstances.error }, { status: parentInstances.status }),
+      current.value.setCookies,
+    );
+  }
+  if (parentInstances.value.length) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.instance.embeddedInInstance',
+            detail: 'Remove this widget from every parent widget before deleting it.',
+            instanceIds: parentInstances.value,
           },
         },
         { status: 422 },

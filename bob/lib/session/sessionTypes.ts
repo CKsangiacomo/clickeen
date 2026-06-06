@@ -40,6 +40,12 @@ export type SessionMeta = {
   publishStatus?: 'published' | 'unpublished';
   label?: string;
   meta?: Record<string, unknown> | null;
+  accountInstances?: Array<{
+    instanceId: string;
+    widgetType: string;
+    displayName: string;
+    status: 'published' | 'unpublished';
+  }>;
   translationSetup?: TranslationSetup | null;
 } | null;
 
@@ -74,6 +80,12 @@ export type EditorOpenMessage = {
   publishStatus?: 'published' | 'unpublished';
   label?: string;
   meta?: Record<string, unknown> | null;
+  accountInstances?: Array<{
+    instanceId: string;
+    widgetType: string;
+    displayName: string;
+    status: 'published' | 'unpublished';
+  }>;
   copilot?: CopilotRuntimeUi;
   translationSetup?: TranslationSetup | null;
 };

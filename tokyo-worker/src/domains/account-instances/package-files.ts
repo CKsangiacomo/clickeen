@@ -1,4 +1,6 @@
 import type { Env } from '../../types';
+import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
+import { loadJson, putJson } from '../storage';
 import {
   PUBLIC_INDEX_FILE,
   PUBLIC_RUNTIME_FILE,
@@ -24,6 +26,9 @@ export type SubmittedInstancePublicPackage = {
   indexHtml: string;
   stylesCss: string;
   runtimeJs: string;
+  dependencies: {
+    instanceIds: string[];
+  };
 };
 
 export type WriteInstancePublicPackageResult =
@@ -58,6 +63,10 @@ const FORBIDDEN_VISITOR_PATTERNS = [
 
 function instanceRoot(accountId: string, instanceId: string): string {
   return `accounts/${accountId}/instances/${instanceId}`;
+}
+
+function packageMetadataKey(accountId: string, instanceId: string): string {
+  return `${instanceRoot(accountId, instanceId)}/package.json`;
 }
 
 function textContentType(name: string): string {
@@ -98,16 +107,40 @@ function filesFromSubmittedPackage(pkg: SubmittedInstancePublicPackage): PublicP
   ];
 }
 
+function normalizeDependencyInstanceIds(value: unknown): string[] | null {
+  if (value == null) return [];
+  if (!Array.isArray(value)) return null;
+  const ids = new Set<string>();
+  for (const entry of value) {
+    const instanceId = typeof entry === 'string' ? entry.trim().toUpperCase() : '';
+    if (!isCompactInstanceId(instanceId)) return null;
+    ids.add(instanceId);
+  }
+  return [...ids].sort((left, right) => left.localeCompare(right));
+}
+
+function normalizeSubmittedPackageDependencies(value: unknown): SubmittedInstancePublicPackage['dependencies'] | null {
+  if (value == null) return { instanceIds: [] };
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  const instanceIds = normalizeDependencyInstanceIds(raw.instanceIds);
+  if (!instanceIds) return null;
+  return { instanceIds };
+}
+
 function normalizeSubmittedPackage(value: unknown): SubmittedInstancePublicPackage | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
   if (raw.v !== 1) return null;
   if (typeof raw.indexHtml !== 'string' || typeof raw.stylesCss !== 'string' || typeof raw.runtimeJs !== 'string') return null;
+  const dependencies = normalizeSubmittedPackageDependencies(raw.dependencies);
+  if (!dependencies) return null;
   return {
     v: 1,
     indexHtml: raw.indexHtml,
     stylesCss: raw.stylesCss,
     runtimeJs: raw.runtimeJs,
+    dependencies,
   };
 }
 
@@ -127,11 +160,15 @@ export async function readInstancePublicPackage(args: {
     args.env.TOKYO_R2.get(`${root}/${PUBLIC_RUNTIME_FILE}`) as Promise<R2TextObject | null>,
   ]);
   if (!indexObject || !stylesObject || !runtimeObject) return null;
-  const publicPackage = {
+  const metadata = await loadJson<{ dependencies?: unknown }>(args.env, packageMetadataKey(args.accountId, args.instanceId));
+  const dependencies = normalizeSubmittedPackageDependencies(metadata?.dependencies);
+  if (!dependencies) throw new Error('artifact.package.dependencies_invalid');
+  const publicPackage: SubmittedInstancePublicPackage = {
     v: 1 as const,
     indexHtml: await indexObject.text(),
     stylesCss: await stylesObject.text(),
     runtimeJs: await runtimeObject.text(),
+    dependencies,
   };
   const files = filesFromSubmittedPackage(publicPackage);
   files.forEach(assertNonEmptyPackageFile);
@@ -158,6 +195,10 @@ export async function writeInstancePublicPackage(args: {
         httpMetadata: { contentType: file.contentType },
       });
     }
+    await putJson(args.env, packageMetadataKey(args.accountId, args.instanceId), {
+      v: 1,
+      dependencies: args.publicPackage.dependencies,
+    });
 
     return { ok: true };
   } catch (error) {

@@ -300,6 +300,7 @@ export async function tryHandleInternalInstanceRoutes(
           displayName: instance.value.displayName,
           publishStatus: instance.value.publishStatus,
           updatedAt: instance.value.updatedAt,
+          baseLocale: instance.value.baseLocale,
           meta: instance.value.meta ?? null,
           config: instance.value.config,
         }),

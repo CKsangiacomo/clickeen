@@ -25,14 +25,20 @@
 
   function normalizeItem(raw, index) {
     if (!isRecord(raw)) throw new Error('[Split] core.items[' + index + '] must be an object');
-    var kind = raw.kind === 'video' ? 'video' : raw.kind === 'image' ? 'image' : '';
-    if (!kind) throw new Error('[Split] core.items[' + index + '].kind must be image|video');
-    var src = mediaSource(raw.media, kind);
-    if (!src) throw new Error('[Split] core.items[' + index + '].media requires a ' + kind + ' asset');
+    var kind = raw.kind === 'video' ? 'video' : raw.kind === 'image' ? 'image' : raw.kind === 'instance' ? 'instance' : '';
+    if (!kind) throw new Error('[Split] core.items[' + index + '].kind must be image|video|instance');
+    var src = kind === 'instance' ? '' : mediaSource(raw.media, kind);
+    var instance = isRecord(raw.instance) ? raw.instance : {};
+    var instanceId = typeof instance.instanceId === 'string' ? instance.instanceId.trim().toUpperCase() : '';
+    if (kind === 'instance' && !instanceId) {
+      throw new Error('[Split] core.items[' + index + '].instance.instanceId is required');
+    }
+    if (kind !== 'instance' && !src) throw new Error('[Split] core.items[' + index + '].media requires a ' + kind + ' asset');
     return {
       id: typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : 'item-' + index,
       kind: kind,
       media: raw.media,
+      instanceId: instanceId,
       alt: mediaAlt(raw),
     };
   }
@@ -73,7 +79,32 @@
     };
   }
 
-  function renderMedia(item, fit, position) {
+  function renderEmbeddedInstance(item, embeddedInstances) {
+    var embedded = embeddedInstances && embeddedInstances[item.instanceId];
+    if (!isRecord(embedded) || typeof embedded.htmlRoot !== 'string' || typeof embedded.widgetType !== 'string') {
+      throw new Error('[Split] Missing embedded widget package for ' + item.instanceId);
+    }
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'ck-split__embedded';
+    wrapper.dataset.itemId = item.id;
+    wrapper.innerHTML = embedded.htmlRoot;
+    var childRoot = wrapper.querySelector('[data-ck-widget][data-role="root"]');
+    if (!(childRoot instanceof HTMLElement)) {
+      throw new Error('[Split] Embedded widget root missing for ' + item.instanceId);
+    }
+    childRoot.setAttribute('data-ck-embedded-instance', 'true');
+    var init = window.CK_WIDGET_INITIALIZERS && window.CK_WIDGET_INITIALIZERS[embedded.widgetType];
+    if (typeof init !== 'function') {
+      throw new Error('[Split] Embedded widget initializer missing for ' + embedded.widgetType);
+    }
+    init(childRoot);
+    return wrapper;
+  }
+
+  function renderItem(item, fit, position, embeddedInstances) {
+    if (item.kind === 'instance') return renderEmbeddedInstance(item, embeddedInstances);
+
     var media = document.createElement('div');
     media.className = 'ck-split__media';
     media.dataset.itemId = item.id;
@@ -187,6 +218,9 @@
     });
 
     var normalized = normalizeState(state);
+    var embeddedInstances = runtimeContext && runtimeContext.payload && isRecord(runtimeContext.payload.embeddedInstances)
+      ? runtimeContext.payload.embeddedInstances
+      : {};
     splitRoot.dataset.transition = normalized.carousel.transition;
     coreEl.style.setProperty('--ck-split-media-fit', normalized.mediaFit);
     coreEl.style.setProperty('--ck-split-media-position', normalized.mediaPosition);
@@ -199,7 +233,7 @@
 
     var active = 0;
     var slides = normalized.items.map(function (item, index) {
-      var slide = renderMedia(item, normalized.mediaFit, normalized.mediaPosition);
+      var slide = renderItem(item, normalized.mediaFit, normalized.mediaPosition, embeddedInstances);
       slide.dataset.active = index === 0 ? 'true' : 'false';
       stage.appendChild(slide);
       return slide;

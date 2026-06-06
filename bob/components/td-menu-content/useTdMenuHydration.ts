@@ -2,6 +2,7 @@
 
 import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import { applyI18nToDom } from '../../lib/i18n/dom';
+import { getAt } from '../../lib/utils/paths';
 import {
   applyGroupHeaders,
   ensureMedia,
@@ -20,6 +21,12 @@ export function useTdMenuHydration(args: {
   widgetKey?: string;
   widgetName: string | null;
   accountAssets: AccountAssetsClient;
+  accountInstances?: Array<{
+    instanceId: string;
+    widgetType: string;
+    displayName: string;
+    status: 'published' | 'unpublished';
+  }>;
   dieterMedia?: DieterMedia;
   instanceDataRef: MutableRefObject<Record<string, unknown>>;
   showIfEntriesRef: MutableRefObject<ShowIfEntry[]>;
@@ -27,6 +34,7 @@ export function useTdMenuHydration(args: {
 }) {
   const {
     accountAssets,
+    accountInstances = [],
     containerRef,
     dieterMedia,
     instanceDataRef,
@@ -46,6 +54,19 @@ export function useTdMenuHydration(args: {
     if (!container) return;
 
     container.innerHTML = panelHtml || '';
+    container.querySelectorAll<HTMLSelectElement>('select[data-bob-instance-picker="true"]').forEach((select) => {
+      const path = select.getAttribute('data-bob-path') || '';
+      const placeholder = select.getAttribute('data-placeholder') || 'Select instance';
+      select.replaceChildren(new Option(placeholder, ''));
+      accountInstances.forEach((instance) => {
+        const label = `${instance.displayName || instance.instanceId} (${instance.widgetType})`;
+        const option = new Option(label, instance.instanceId);
+        option.dataset.status = instance.status;
+        select.appendChild(option);
+      });
+      const current = path ? getAt(instanceDataRef.current, path) : '';
+      select.value = typeof current === 'string' ? current : '';
+    });
     applyGroupHeaders(container);
     container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
       const body = getClusterBody(cluster);
@@ -76,5 +97,5 @@ export function useTdMenuHydration(args: {
     return () => {
       cleanupCollapse();
     };
-  }, [accountAssets, containerRef, dieterMedia, instanceDataRef, panelHtml, setRenderKey, showIfEntriesRef, widgetName]);
+  }, [accountAssets, accountInstances, containerRef, dieterMedia, instanceDataRef, panelHtml, setRenderKey, showIfEntriesRef, widgetName]);
 }

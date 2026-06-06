@@ -353,6 +353,8 @@
 
     const stageEl = scopeEl.closest('.stage');
     const podEl = scopeEl.closest('.pod');
+    const embeddedRoot = scopeEl.closest('[data-ck-embedded-instance="true"]');
+    const shouldNotifyHost = !(embeddedRoot instanceof HTMLElement);
     if (!(stageEl instanceof HTMLElement) || !(podEl instanceof HTMLElement)) {
       throw new Error('[CKStagePod] Missing .stage/.pod wrappers for scope');
     }
@@ -415,11 +417,14 @@
 
     // Tell the parent that the widget has applied its first state.
     // Bob uses this to avoid rendering "default" HTML before the real config is applied.
-    postReady(stageEl, scopeEl);
+    if (shouldNotifyHost) {
+      postReady(stageEl, scopeEl);
+    }
 
     // Notify parent hosts of height changes when the stage can be content-driven.
     // `viewport` must report as well; otherwise iframe hosts can get stuck at a tiny initial height.
     const shouldReport =
+      shouldNotifyHost &&
       typeof window !== 'undefined' &&
       window.parent &&
       window.parent !== window &&

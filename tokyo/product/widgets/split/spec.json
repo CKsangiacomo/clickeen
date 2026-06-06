@@ -447,7 +447,8 @@
                   "size": "md",
                   "options": [
                     { "label": "Image", "value": "image" },
-                    { "label": "Video", "value": "video" }
+                    { "label": "Video", "value": "video" },
+                    { "label": "Instance", "value": "instance" }
                   ]
                 },
                 "showIf": {
@@ -515,6 +516,22 @@
               },
               {
                 "kind": "field",
+                "type": "instance-picker",
+                "path": "core.items.0.instance.instanceId",
+                "label": "Instance",
+                "attrs": {
+                  "size": "md",
+                  "placeholder": "Select instance"
+                },
+                "showIf": {
+                  "all": [
+                    { "path": "core.carousel.enabled", "op": "isFalse" },
+                    { "path": "core.items.0.kind", "op": "equals", "value": "instance" }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
                 "type": "object-manager",
                 "groupId": "content-visuals",
                 "path": "core.items",
@@ -528,7 +545,8 @@
                       "size": "md",
                       "options": [
                         { "label": "Image", "value": "image" },
-                        { "label": "Video", "value": "video" }
+                        { "label": "Video", "value": "video" },
+                        { "label": "Instance", "value": "instance" }
                       ]
                     }
                   },
@@ -585,6 +603,21 @@
                       "op": "equals",
                       "value": "video"
                     }
+                  },
+                  {
+                    "kind": "field",
+                    "type": "instance-picker",
+                    "path": "core.items.__INDEX__.instance.instanceId",
+                    "label": "Instance",
+                    "attrs": {
+                      "size": "md",
+                      "placeholder": "Select instance"
+                    },
+                    "showIf": {
+                      "path": "core.items.__INDEX__.kind",
+                      "op": "equals",
+                      "value": "instance"
+                    }
                   }
                 ],
                 "attrs": {
@@ -608,7 +641,8 @@
                       }
                     },
                     "image": { "alt": "" },
-                    "video": { "alt": "" }
+                    "video": { "alt": "" },
+                    "instance": { "instanceId": "" }
                   }
                 },
                 "showIf": {

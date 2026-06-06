@@ -78,6 +78,7 @@ export function TdMenuContent({
     widgetKey,
     widgetName: session.compiled?.widgetname ?? null,
     accountAssets: session.accountAssets,
+    accountInstances: chrome.meta?.accountInstances ?? [],
     dieterMedia,
     instanceDataRef,
     showIfEntriesRef,

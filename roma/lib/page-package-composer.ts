@@ -31,6 +31,9 @@ export type WidgetPackageForPage = {
   indexHtml: string;
   stylesCss: string;
   runtimeJs: string;
+  dependencies?: {
+    instanceIds: string[];
+  };
 };
 
 export type ComposedPagePublicPackage = {

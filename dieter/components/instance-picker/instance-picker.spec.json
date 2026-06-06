@@ -1,0 +1,12 @@
+{
+  "name": "instance-picker",
+  "defaults": [
+    {
+      "context": {
+        "size": "md",
+        "label": "Instance",
+        "placeholder": "Select instance"
+      }
+    }
+  ]
+}
