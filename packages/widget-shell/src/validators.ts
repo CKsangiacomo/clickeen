@@ -27,6 +27,54 @@ function issue(path: string, message: string): WidgetShellValidationIssue {
   return { path, message };
 }
 
+function isShellWidgetDefaults(defaults: unknown): boolean {
+  if (!isRecord(defaults)) return false;
+  const uiLabels = isRecord(defaults.uiLabels) ? defaults.uiLabels : null;
+  return Boolean(
+    isRecord(defaults.header) ||
+    isRecord(defaults.cta) ||
+    isRecord(defaults.coreSize) ||
+    (uiLabels && isRecord(uiLabels.core)),
+  );
+}
+
+function collectObjectPaths(value: unknown, prefix = ''): string[] {
+  if (!isRecord(value)) return [];
+  const paths: string[] = [];
+  for (const [key, child] of Object.entries(value)) {
+    if (!key) continue;
+    const path = prefix ? `${prefix}.${key}` : key;
+    paths.push(path);
+    if (isRecord(child)) paths.push(...collectObjectPaths(child, path));
+  }
+  return paths;
+}
+
+function collectEditorFieldPaths(node: unknown): string[] {
+  if (!isRecord(node)) return [];
+  const paths: string[] = [];
+  if (node.kind === 'field' && typeof node.path === 'string' && node.path.trim()) {
+    paths.push(node.path.trim());
+  }
+  for (const value of Object.values(node)) {
+    if (Array.isArray(value)) value.forEach((item) => paths.push(...collectEditorFieldPaths(item)));
+    else if (isRecord(value)) paths.push(...collectEditorFieldPaths(value));
+  }
+  return paths;
+}
+
+function editorPathRequiresSharedShellNode(path: string): boolean {
+  const normalized = path.trim();
+  return (
+    normalized === 'coreSize' ||
+    normalized.startsWith('coreSize.') ||
+    normalized === 'header' ||
+    normalized.startsWith('header.') ||
+    normalized === 'cta' ||
+    normalized.startsWith('cta.')
+  );
+}
+
 export function validateCoreLabels(labels: unknown): WidgetShellValidationIssue[] {
   const issues: WidgetShellValidationIssue[] = [];
   if (!isRecord(labels)) return [issue('uiLabels.core', 'Core labels must be an object.')];
@@ -73,6 +121,44 @@ export function validateShellDom(html: string): WidgetShellValidationIssue[] {
     if (!html.includes(className)) issues.push(issue(`dom.${className}`, `Missing ${className}.`));
   });
   return issues;
+}
+
+export function validateWidgetShellSource(args: {
+  widgetType: string;
+  defaults: unknown;
+  editor: unknown;
+}): WidgetShellValidationIssue[] {
+  if (!isShellWidgetDefaults(args.defaults)) return [];
+
+  const issues: WidgetShellValidationIssue[] = [];
+  collectObjectPaths(args.defaults).forEach((path) => {
+    if (pathIsForbiddenShellAlias(path)) {
+      issues.push(issue(path, 'Shell widget source must not use old Header/CTA/layout aliases.'));
+    }
+  });
+  collectEditorFieldPaths(args.editor).forEach((path) => {
+    if (editorPathRequiresSharedShellNode(path)) {
+      issues.push(issue(path, 'Header/CTA/CoreSize editor controls must come from shared Shell editor nodes.'));
+    }
+    if (pathIsForbiddenShellAlias(path)) {
+      issues.push(issue(path, 'Shell widget editor must not control old Header/CTA/layout aliases.'));
+    }
+  });
+  return issues.map((entry) => ({
+    path: entry.path,
+    message: `${args.widgetType}: ${entry.message}`,
+  }));
+}
+
+export function assertValidWidgetShellSource(args: {
+  widgetType: string;
+  defaults: unknown;
+  editor: unknown;
+}): void {
+  const issues = validateWidgetShellSource(args);
+  if (issues.length) {
+    throw new Error(`widget_shell_source_invalid:${issues.map((entry) => entry.path).join(',')}`);
+  }
 }
 
 export function assertValidWidgetCoreExtension(contract: WidgetCoreExtensionContract): void {

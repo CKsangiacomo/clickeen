@@ -1,4 +1,5 @@
 import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
+import { assertValidWidgetShellSource } from '@clickeen/widget-shell';
 import type { CompiledPanel, CompiledWidget, WidgetPresets } from './types';
 import { RawWidget, decodeHtmlEntities, parseTooldrawerAttributes, parsePanels } from './compiler.shared';
 import { buildWidgetMedia } from './compiler/media';
@@ -230,6 +231,12 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   const rawItemKey = widgetJson.itemKey;
   const itemKey = typeof rawItemKey === 'string' && rawItemKey.trim() ? rawItemKey.trim() : null;
   const normalization = normalizeWidgetNormalizationSpec(widgetJson.normalization);
+
+  assertValidWidgetShellSource({
+    widgetType: widgetname,
+    defaults,
+    editor: widgetJson.editor,
+  });
 
   const tokyoBase = resolveTokyoBaseUrl();
   const editorHtml = buildEditorHtmlLines(widgetJson.editor, defaults, widgetname);

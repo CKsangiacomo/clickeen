@@ -63,24 +63,26 @@ If a product decision is missing, add it under
 Current executable step:
 
 ```text
-Step 6: Add validation/search guards.
+A2 implementation gates are green.
 ```
 
-Required evidence before marking green:
+Green evidence:
 
-- Targeted guard output for copied Shell paths and duplicate Shell-owned
-  taxonomies.
-- Guard implementation is product-shaped and scoped to Widget Shell/Core
-  boundaries.
+- `packages/widget-shell/src/validators.ts` rejects old Shell aliases in Shell
+  widget defaults.
+- `bob/lib/compiler.server.ts` runs the guard at the real widget-source compile
+  boundary.
+- The guard rejects custom editor fields for Header/CTA/CoreSize; those controls
+  must come from shared Shell editor nodes.
 - No root PRD scripts, broad repo scripts, or fake self-checking product flows
-  are added.
+  were added.
 
 Stop conditions:
 
-- Guards preserve old drift instead of deleting/failing it.
-- Guards recreate the deleted root PRD-script behavior.
-- Guards allow copied Header/CTA/Stage/Pod/typography/locale/branding logic in
-  widget Core files.
+- Downstream PRDs may not preserve old Header/CTA/layout aliases as
+  compatibility state.
+- Downstream PRDs may not add custom Header/CTA/CoreSize editor controls instead
+  of using shared Shell nodes.
 
 ## Execution Steps
 
