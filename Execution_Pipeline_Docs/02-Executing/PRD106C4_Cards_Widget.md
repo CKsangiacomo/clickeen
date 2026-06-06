@@ -51,29 +51,36 @@ is evidence to stop, not evidence to proceed.
 Current executable step:
 
 ```text
-Step 1: Define Cards Core contract.
+Cards implementation gates are green for the first executable widget package.
 ```
 
-Required evidence before marking green:
+Green evidence:
 
-- Cards Core state paths are listed.
-- Custom card style toggle and per-card override paths are listed.
-- Graphic between cards toggle, line paths, and icon paths are listed.
-- Cards validation rules are listed.
-- Config/content ownership for each Cards state path is explicit.
-- Steps is represented as a Cards treatment, not a new widget.
-- Shell-owned paths are excluded.
-- Prague card/step/moat source behavior is mapped to Cards Core or defaults.
+- `tokyo/product/widgets/cards/**` exists as the surviving `cards` widget.
+- Cards uses shared Shell structure: Stage, Pod, Header, CTA, CoreSize,
+  typography, locale switcher, branding, and CardWrapper surface runtime.
+- Cards Core state is only `core.items[]`, `core.treatment`, `core.columns`,
+  `core.gap`, `core.cardPadding`, `core.customCardStyles.*`,
+  `core.items[].style.*`, and `core.betweenCards.*`.
+- Content panel uses one `core.items[]` object-manager for cards, links, icon,
+  image, and alt text.
+- Layout panel uses shared `Cards size`, Cards grid controls, and the
+  `Graphic between cards` line/icon controls.
+- Appearance panel includes `Custom card styles` and per-card style controls
+  nested inside the same `core.items[]` item model.
+- Runtime supports standard cards, linked cards, and steps from the same
+  `core.items[]` array.
+- `tokyo/product/widgets/cards/limits.json` maps `core.items[]` to
+  `items.group.small.max`.
+- Two Cards instances compose on one page without duplicate runtime failure.
 
 Stop conditions:
 
-- Cards requires new Header/CTA/Stage/Pod state.
-- Prague columns become page-level layout architecture.
-- Cards requires a second item state shape outside `core.items[]`.
-- Per-card styling requires duplicate Shell/CardWrapper state paths.
-- Step connector state duplicates the Cards graphic-between-cards state.
-- Dynamic per-card Appearance sections require a new editor framework instead
-  of extending existing object-manager/ToolDrawer behavior.
+- Do not add `cardgrid` aliases or compatibility paths to make old state work.
+- Do not add bare `items[]`, `layout.*`, old `appearance.card*`, or
+  Prague-route helper state.
+- Do not split `steps` into a separate widget.
+- Do not add page-level columns to solve Cards layout.
 
 ## Execution Steps
 

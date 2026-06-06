@@ -1,0 +1,1082 @@
+{
+  "v": 1,
+  "widgetname": "cards",
+  "itemKey": "cards.item",
+  "normalization": {
+    "idRules": [
+      {
+        "arrayPath": "core.items",
+        "idKey": "id",
+        "seedKey": "title",
+        "fallbackPrefix": "card"
+      }
+    ],
+    "coerceRules": [
+      {
+        "path": "core.customCardStyles.enabled",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "path": "core.betweenCards.enabled",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "path": "behavior.showBacklink",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.enabled",
+        "type": "boolean",
+        "default": false
+      }
+    ]
+  },
+  "defaults": {
+    "header": {
+      "enabled": true,
+      "title": "Everything your visitors need to understand what comes next",
+      "showSubtitle": true,
+      "subtitleHtml": "Use cards for features, steps, pathways, and focused landing-page sections without leaving the same Clickeen editing model.",
+      "placement": "top",
+      "alignment": "center",
+      "gap": 36,
+      "textGap": 10,
+      "ctaPlacement": "below",
+      "innerGap": 18
+    },
+    "cta": {
+      "enabled": false,
+      "label": "Learn more",
+      "href": "#",
+      "openMode": "same-tab",
+      "iconEnabled": true,
+      "iconName": "arrowshape.turn.up.right",
+      "iconPlacement": "right"
+    },
+    "uiLabels": {
+      "core": {
+        "singular": "Card",
+        "plural": "Cards",
+        "sizeCluster": "Cards size"
+      }
+    },
+    "coreSize": {
+      "mode": "auto",
+      "fixedHeight": 0,
+      "minHeight": 0,
+      "preferredVw": 0,
+      "maxHeight": 0
+    },
+    "localeSwitcher": {
+      "enabled": false,
+      "byIp": false,
+      "alwaysShowLocale": "",
+      "attachTo": "stage",
+      "position": "top-right"
+    },
+    "behavior": {
+      "showBacklink": true,
+      "socialShare": {
+        "enabled": false
+      }
+    },
+    "stage": {
+      "alignment": "center",
+      "background": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
+      "shadow": {
+        "x": 0,
+        "y": 0,
+        "blur": 0,
+        "alpha": 0,
+        "color": "#000000",
+        "inset": false,
+        "spread": 0,
+        "enabled": false
+      },
+      "insideShadow": {
+        "linked": true,
+        "layer": "below-content",
+        "all": {
+          "x": 0,
+          "y": 0,
+          "blur": 0,
+          "alpha": 0,
+          "color": "#000000",
+          "inset": true,
+          "spread": 0,
+          "enabled": false
+        },
+        "top": {
+          "x": 0,
+          "y": 12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "right": {
+          "x": -12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "bottom": {
+          "x": 0,
+          "y": -12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "left": {
+          "x": 12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        }
+      },
+      "canvas": {
+        "mode": "wrap",
+        "width": 0,
+        "height": 0
+      },
+      "padding": {
+        "mobile": {
+          "all": 48,
+          "top": 48,
+          "right": 48,
+          "bottom": 48,
+          "left": 48,
+          "linked": true
+        },
+        "desktop": {
+          "all": 80,
+          "top": 80,
+          "right": 80,
+          "bottom": 80,
+          "left": 80,
+          "linked": true
+        }
+      }
+    },
+    "pod": {
+      "widthMode": "full",
+      "contentWidth": 1200,
+      "radiusLinked": true,
+      "radius": "none",
+      "radiusTL": "none",
+      "radiusTR": "none",
+      "radiusBR": "none",
+      "radiusBL": "none",
+      "background": {
+        "type": "color",
+        "color": "transparent"
+      },
+      "shadow": {
+        "x": 0,
+        "y": 0,
+        "blur": 0,
+        "alpha": 0,
+        "color": "#000000",
+        "inset": false,
+        "spread": 0,
+        "enabled": false
+      },
+      "insideShadow": {
+        "linked": true,
+        "layer": "below-content",
+        "all": {
+          "x": 0,
+          "y": 0,
+          "blur": 0,
+          "alpha": 0,
+          "color": "#000000",
+          "inset": true,
+          "spread": 0,
+          "enabled": false
+        },
+        "top": {
+          "x": 0,
+          "y": 12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "right": {
+          "x": -12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "bottom": {
+          "x": 0,
+          "y": -12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "left": {
+          "x": 12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        }
+      },
+      "padding": {
+        "mobile": {
+          "all": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0,
+          "linked": true
+        },
+        "desktop": {
+          "all": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0,
+          "linked": true
+        }
+      }
+    },
+    "appearance": {
+      "ctaSizePreset": "m",
+      "ctaPaddingLinked": false,
+      "ctaPaddingInline": 18,
+      "ctaPaddingBlock": 12,
+      "ctaBackground": "var(--color-system-blue)",
+      "ctaTextColor": "var(--color-system-white)",
+      "ctaBorder": {
+        "enabled": false,
+        "width": 1,
+        "color": "transparent"
+      },
+      "ctaRadius": "lg",
+      "ctaIconSizePreset": "m",
+      "ctaIconSize": 16,
+      "localeSwitcherBackground": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
+      "localeSwitcherTextColor": {
+        "type": "color",
+        "color": "var(--color-system-black)"
+      },
+      "localeSwitcherBorder": {
+        "enabled": true,
+        "width": 1,
+        "color": "var(--color-system-gray-5)"
+      },
+      "localeSwitcherRadius": "md",
+      "localeSwitcherPaddingInline": 12,
+      "localeSwitcherPaddingBlock": 8,
+      "podBorder": {
+        "enabled": false,
+        "width": 1,
+        "color": "var(--color-system-gray-5)"
+      }
+    },
+    "typography": {
+      "globalFamily": "Inter",
+      "roles": {
+        "title": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "700",
+          "fontStyle": "normal",
+          "sizeCustom": 56,
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1,
+          "lineHeightPreset": "custom"
+        },
+        "body": {
+          "color": "var(--color-system-gray)",
+          "family": "Inter",
+          "weight": "400",
+          "fontStyle": "normal",
+          "sizeCustom": 20,
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.45,
+          "lineHeightPreset": "custom"
+        },
+        "button": {
+          "color": "var(--color-system-white)",
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": 16,
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.2,
+          "lineHeightPreset": "custom"
+        },
+        "localeSwitcher": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "500",
+          "fontStyle": "normal",
+          "sizeCustom": 14,
+          "sizePreset": "s",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.2,
+          "lineHeightPreset": "normal"
+        }
+      }
+    },
+    "core": {
+      "items": [
+        {
+          "id": "card-1",
+          "title": "Global by default",
+          "copy": "Publish once and keep every version aligned from one source of truth.",
+          "media": {
+            "kind": "icon",
+            "iconName": "globe",
+            "image": {
+              "type": "image",
+              "image": {
+                "src": "/dieter/icons/svg/photo.svg",
+                "fit": "cover",
+                "position": "center",
+                "repeat": "no-repeat"
+              }
+            },
+            "imageAlt": ""
+          },
+          "link": {
+            "enabled": false,
+            "href": "#",
+            "label": "See details"
+          },
+          "style": {
+            "background": "",
+            "borderColor": "",
+            "radius": "",
+            "shadow": "",
+            "accentColor": "",
+            "textTone": "inherit"
+          }
+        },
+        {
+          "id": "card-2",
+          "title": "Built for pages",
+          "copy": "Stack instances into composed pages while each card stays easy to edit.",
+          "media": {
+            "kind": "icon",
+            "iconName": "square.stack.3d.up",
+            "image": {
+              "type": "image",
+              "image": {
+                "src": "/dieter/icons/svg/photo.svg",
+                "fit": "cover",
+                "position": "center",
+                "repeat": "no-repeat"
+              }
+            },
+            "imageAlt": ""
+          },
+          "link": {
+            "enabled": false,
+            "href": "#",
+            "label": "See details"
+          },
+          "style": {
+            "background": "",
+            "borderColor": "",
+            "radius": "",
+            "shadow": "",
+            "accentColor": "",
+            "textTone": "inherit"
+          }
+        },
+        {
+          "id": "card-3",
+          "title": "Simple to operate",
+          "copy": "Use the same Shell controls for layout, appearance, typography, and publishing.",
+          "media": {
+            "kind": "icon",
+            "iconName": "checkmark",
+            "image": {
+              "type": "image",
+              "image": {
+                "src": "/dieter/icons/svg/photo.svg",
+                "fit": "cover",
+                "position": "center",
+                "repeat": "no-repeat"
+              }
+            },
+            "imageAlt": ""
+          },
+          "link": {
+            "enabled": false,
+            "href": "#",
+            "label": "See details"
+          },
+          "style": {
+            "background": "",
+            "borderColor": "",
+            "radius": "",
+            "shadow": "",
+            "accentColor": "",
+            "textTone": "inherit"
+          }
+        }
+      ],
+      "treatment": "cards",
+      "columns": 3,
+      "gap": 24,
+      "cardPadding": 32,
+      "customCardStyles": {
+        "enabled": false
+      },
+      "betweenCards": {
+        "enabled": false,
+        "kind": "line",
+        "line": {
+          "widthPt": 2,
+          "color": "#D7D7DA"
+        },
+        "icon": {
+          "name": "chevron.right",
+          "sizePt": 28,
+          "color": "#222222"
+        }
+      }
+    }
+  },
+  "editor": {
+    "panels": [
+      {
+        "id": "content",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "header-content"
+          },
+          {
+            "label": "Cards",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "object-manager",
+                "groupId": "content-cards",
+                "path": "core.items",
+                "template": [
+                  {
+                    "kind": "field",
+                    "type": "textfield",
+                    "path": "core.items.__INDEX__.title",
+                    "label": "Card title"
+                  },
+                  {
+                    "kind": "field",
+                    "type": "textedit",
+                    "path": "core.items.__INDEX__.copy",
+                    "label": "Card copy"
+                  },
+                  {
+                    "kind": "field",
+                    "type": "dropdown-actions",
+                    "path": "core.items.__INDEX__.media.kind",
+                    "label": "Media",
+                    "attrs": {
+                      "size": "md",
+                      "options": [
+                        {
+                          "label": "None",
+                          "value": "none"
+                        },
+                        {
+                          "label": "Icon",
+                          "value": "icon"
+                        },
+                        {
+                          "label": "Image",
+                          "value": "image"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "kind": "field",
+                    "type": "dropdown-actions",
+                    "path": "core.items.__INDEX__.media.iconName",
+                    "label": "Icon",
+                    "attrs": {
+                      "size": "md",
+                      "options": [
+                        {
+                          "label": "Checkmark",
+                          "value": "checkmark"
+                        },
+                        {
+                          "label": "Arrow right",
+                          "value": "arrow.right"
+                        },
+                        {
+                          "label": "Chevron right",
+                          "value": "chevron.right"
+                        },
+                        {
+                          "label": "Arrowshape forward",
+                          "value": "arrowshape.forward"
+                        },
+                        {
+                          "label": "Arrowshape turn up right",
+                          "value": "arrowshape.turn.up.right"
+                        }
+                      ]
+                    },
+                    "showIf": {
+                      "path": "core.items.__INDEX__.media.kind",
+                      "op": "equals",
+                      "value": "icon"
+                    }
+                  },
+                  {
+                    "kind": "field",
+                    "type": "dropdown-fill",
+                    "path": "core.items.__INDEX__.media.image",
+                    "label": "Image",
+                    "attrs": {
+                      "size": "md",
+                      "fill-modes": "image",
+                      "allow-image": "true"
+                    },
+                    "showIf": {
+                      "path": "core.items.__INDEX__.media.kind",
+                      "op": "equals",
+                      "value": "image"
+                    }
+                  },
+                  {
+                    "kind": "field",
+                    "type": "textfield",
+                    "path": "core.items.__INDEX__.media.imageAlt",
+                    "label": "Image alt text",
+                    "showIf": {
+                      "path": "core.items.__INDEX__.media.kind",
+                      "op": "equals",
+                      "value": "image"
+                    }
+                  },
+                  {
+                    "kind": "field",
+                    "type": "toggle",
+                    "path": "core.items.__INDEX__.link.enabled",
+                    "label": "Enable link",
+                    "attrs": {
+                      "size": "md"
+                    }
+                  },
+                  {
+                    "kind": "field",
+                    "type": "textfield",
+                    "path": "core.items.__INDEX__.link.href",
+                    "label": "Link URL",
+                    "showIf": {
+                      "path": "core.items.__INDEX__.link.enabled",
+                      "op": "isTrue"
+                    }
+                  },
+                  {
+                    "kind": "field",
+                    "type": "textfield",
+                    "path": "core.items.__INDEX__.link.label",
+                    "label": "Link label",
+                    "showIf": {
+                      "path": "core.items.__INDEX__.link.enabled",
+                      "op": "isTrue"
+                    }
+                  }
+                ],
+                "attrs": {
+                  "group-label": "",
+                  "class": "diet-object-manager",
+                  "add-label": "Add card",
+                  "reorder-label": "Manage cards",
+                  "reorder-title": "Manage cards",
+                  "label-path": "title",
+                  "index-token": "__INDEX__",
+                  "default-item": {
+                    "id": "",
+                    "title": "New card",
+                    "copy": "Add supporting copy.",
+                    "media": {
+                      "kind": "none",
+                      "iconName": "checkmark",
+                      "image": {
+                        "type": "image",
+                        "image": {
+                          "src": "/dieter/icons/svg/photo.svg",
+                          "fit": "cover",
+                          "position": "center",
+                          "repeat": "no-repeat"
+                        }
+                      },
+                      "imageAlt": ""
+                    },
+                    "link": {
+                      "enabled": false,
+                      "href": "#",
+                      "label": "Learn more"
+                    },
+                    "style": {
+                      "background": "",
+                      "borderColor": "",
+                      "radius": "",
+                      "shadow": "",
+                      "accentColor": "",
+                      "textTone": "inherit"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "typography",
+        "shared": {
+          "id": "typography"
+        }
+      },
+      {
+        "id": "layout",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "header-layout"
+          },
+          {
+            "kind": "shared",
+            "id": "core-size"
+          },
+          {
+            "label": "Cards layout",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "choice-tiles",
+                "path": "core.treatment",
+                "label": "Treatment",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Cards",
+                      "value": "cards"
+                    },
+                    {
+                      "label": "Linked cards",
+                      "value": "linked-cards"
+                    },
+                    {
+                      "label": "Steps",
+                      "value": "steps"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "choice-tiles",
+                "path": "core.columns",
+                "label": "Columns",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "2",
+                      "value": 2
+                    },
+                    {
+                      "label": "3",
+                      "value": 3
+                    },
+                    {
+                      "label": "4",
+                      "value": 4
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "core.gap",
+                "label": "Card gap"
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "core.cardPadding",
+                "label": "Card padding"
+              }
+            ]
+          },
+          {
+            "label": "Graphic between cards",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "core.betweenCards.enabled",
+                "label": "Graphic between cards",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "path": "core.betweenCards.kind",
+                "label": "Graphic type",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Line",
+                      "value": "line"
+                    },
+                    {
+                      "label": "Icon",
+                      "value": "icon"
+                    }
+                  ]
+                },
+                "showIf": {
+                  "path": "core.betweenCards.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "core.betweenCards.line.widthPt",
+                "label": "Line width (pt)",
+                "showIf": {
+                  "all": [
+                    {
+                      "path": "core.betweenCards.enabled",
+                      "op": "isTrue"
+                    },
+                    {
+                      "path": "core.betweenCards.kind",
+                      "op": "equals",
+                      "value": "line"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "path": "core.betweenCards.line.color",
+                "label": "Line color",
+                "attrs": {
+                  "size": "md",
+                  "fill-modes": "color",
+                  "allow-color": "true"
+                },
+                "showIf": {
+                  "all": [
+                    {
+                      "path": "core.betweenCards.enabled",
+                      "op": "isTrue"
+                    },
+                    {
+                      "path": "core.betweenCards.kind",
+                      "op": "equals",
+                      "value": "line"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "path": "core.betweenCards.icon.name",
+                "label": "Icon",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Checkmark",
+                      "value": "checkmark"
+                    },
+                    {
+                      "label": "Arrow right",
+                      "value": "arrow.right"
+                    },
+                    {
+                      "label": "Chevron right",
+                      "value": "chevron.right"
+                    },
+                    {
+                      "label": "Arrowshape forward",
+                      "value": "arrowshape.forward"
+                    },
+                    {
+                      "label": "Arrowshape turn up right",
+                      "value": "arrowshape.turn.up.right"
+                    }
+                  ]
+                },
+                "showIf": {
+                  "all": [
+                    {
+                      "path": "core.betweenCards.enabled",
+                      "op": "isTrue"
+                    },
+                    {
+                      "path": "core.betweenCards.kind",
+                      "op": "equals",
+                      "value": "icon"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "core.betweenCards.icon.sizePt",
+                "label": "Icon size (pt)",
+                "showIf": {
+                  "all": [
+                    {
+                      "path": "core.betweenCards.enabled",
+                      "op": "isTrue"
+                    },
+                    {
+                      "path": "core.betweenCards.kind",
+                      "op": "equals",
+                      "value": "icon"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "path": "core.betweenCards.icon.color",
+                "label": "Icon color",
+                "attrs": {
+                  "size": "md",
+                  "fill-modes": "color",
+                  "allow-color": "true"
+                },
+                "showIf": {
+                  "all": [
+                    {
+                      "path": "core.betweenCards.enabled",
+                      "op": "isTrue"
+                    },
+                    {
+                      "path": "core.betweenCards.kind",
+                      "op": "equals",
+                      "value": "icon"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "kind": "shared",
+            "id": "stagepod-layout"
+          }
+        ]
+      },
+      {
+        "id": "appearance",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "header-appearance"
+          },
+          {
+            "label": "Card styles",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "core.customCardStyles.enabled",
+                "label": "Custom card styles",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "object-manager",
+                "groupId": "appearance-cards",
+                "path": "core.items",
+                "template": [
+                  {
+                    "kind": "field",
+                    "type": "dropdown-fill",
+                    "path": "core.items.__INDEX__.style.background",
+                    "label": "Background",
+                    "attrs": {
+                      "size": "md",
+                      "fill-modes": "color",
+                      "allow-color": "true"
+                    }
+                  },
+                  {
+                    "kind": "field",
+                    "type": "dropdown-fill",
+                    "path": "core.items.__INDEX__.style.borderColor",
+                    "label": "Border color",
+                    "attrs": {
+                      "size": "md",
+                      "fill-modes": "color",
+                      "allow-color": "true"
+                    }
+                  },
+                  {
+                    "kind": "field",
+                    "type": "textfield",
+                    "path": "core.items.__INDEX__.style.radius",
+                    "label": "Radius"
+                  },
+                  {
+                    "kind": "field",
+                    "type": "textfield",
+                    "path": "core.items.__INDEX__.style.shadow",
+                    "label": "Shadow"
+                  },
+                  {
+                    "kind": "field",
+                    "type": "dropdown-fill",
+                    "path": "core.items.__INDEX__.style.accentColor",
+                    "label": "Accent color",
+                    "attrs": {
+                      "size": "md",
+                      "fill-modes": "color",
+                      "allow-color": "true"
+                    }
+                  },
+                  {
+                    "kind": "field",
+                    "type": "dropdown-actions",
+                    "path": "core.items.__INDEX__.style.textTone",
+                    "label": "Text tone",
+                    "attrs": {
+                      "size": "md",
+                      "options": [
+                        {
+                          "label": "Inherit",
+                          "value": "inherit"
+                        },
+                        {
+                          "label": "Default",
+                          "value": "default"
+                        },
+                        {
+                          "label": "Muted",
+                          "value": "muted"
+                        },
+                        {
+                          "label": "Inverse",
+                          "value": "inverse"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "attrs": {
+                  "group-label": "",
+                  "class": "diet-object-manager",
+                  "add-label": "Add card",
+                  "reorder-label": "Manage card styles",
+                  "reorder-title": "Manage card styles",
+                  "label-path": "title",
+                  "index-token": "__INDEX__"
+                },
+                "showIf": {
+                  "path": "core.customCardStyles.enabled",
+                  "op": "isTrue"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "shared",
+            "id": "stagepod-appearance"
+          }
+        ]
+      },
+      {
+        "id": "settings",
+        "clusters": [
+          {
+            "label": "Behavior",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "behavior.showBacklink",
+                "label": "Show Made with Clickeen",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "behavior.socialShare.enabled",
+                "label": "Enable social share",
+                "attrs": {
+                  "size": "md"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

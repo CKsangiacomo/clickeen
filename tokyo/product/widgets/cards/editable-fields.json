@@ -1,0 +1,62 @@
+{
+  "v": 1,
+  "widgetType": "cards",
+  "fields": [
+    {
+      "path": "header.title",
+      "label": "Header title",
+      "role": "title",
+      "type": "richtext",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "header.subtitleHtml",
+      "label": "Header subtitle",
+      "role": "body",
+      "type": "richtext",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "cta.label",
+      "label": "Header CTA label",
+      "role": "button",
+      "type": "string",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "core.items[].title",
+      "label": "Card title",
+      "role": "card-title",
+      "type": "string",
+      "arrayItemIdentity": ["core.items[].id"],
+      "limits": []
+    },
+    {
+      "path": "core.items[].copy",
+      "label": "Card copy",
+      "role": "card-copy",
+      "type": "richtext",
+      "arrayItemIdentity": ["core.items[].id"],
+      "limits": []
+    },
+    {
+      "path": "core.items[].media.imageAlt",
+      "label": "Card image alt text",
+      "role": "image-alt",
+      "type": "string",
+      "arrayItemIdentity": ["core.items[].id"],
+      "limits": []
+    },
+    {
+      "path": "core.items[].link.label",
+      "label": "Card link label",
+      "role": "card-link",
+      "type": "string",
+      "arrayItemIdentity": ["core.items[].id"],
+      "limits": []
+    }
+  ]
+}

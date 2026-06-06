@@ -1,0 +1,33 @@
+{
+  "v": 1,
+  "limits": [
+    {
+      "kind": "limit",
+      "key": "items.group.small.max",
+      "path": "core.items[]",
+      "metric": "count"
+    },
+    {
+      "key": "branding.remove",
+      "kind": "flag",
+      "paths": ["behavior.showBacklink"],
+      "mode": "boolean",
+      "deny": true,
+      "enforce": {
+        "load": "sanitize",
+        "publish": "sanitize"
+      }
+    },
+    {
+      "key": "widget.socialShare.enabled",
+      "kind": "flag",
+      "paths": ["behavior.socialShare.enabled"],
+      "mode": "boolean",
+      "deny": false,
+      "enforce": {
+        "load": "sanitize",
+        "publish": "sanitize"
+      }
+    }
+  ]
+}

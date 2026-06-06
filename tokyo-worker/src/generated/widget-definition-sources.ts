@@ -3,6 +3,8 @@
 
 import cardgridEditableFields from "../../../tokyo/product/widgets/cardgrid/editable-fields.json";
 import cardgridSpec from "../../../tokyo/product/widgets/cardgrid/spec.json";
+import cardsEditableFields from "../../../tokyo/product/widgets/cards/editable-fields.json";
+import cardsSpec from "../../../tokyo/product/widgets/cards/spec.json";
 import countdownEditableFields from "../../../tokyo/product/widgets/countdown/editable-fields.json";
 import countdownSpec from "../../../tokyo/product/widgets/countdown/spec.json";
 import ctaEditableFields from "../../../tokyo/product/widgets/cta/editable-fields.json";
@@ -29,6 +31,11 @@ export const WIDGET_DEFINITION_SOURCES = [
     widgetType: "cardgrid",
     spec: cardgridSpec,
     editableFields: cardgridEditableFields,
+  },
+  {
+    widgetType: "cards",
+    spec: cardsSpec,
+    editableFields: cardsEditableFields,
   },
   {
     widgetType: "countdown",
