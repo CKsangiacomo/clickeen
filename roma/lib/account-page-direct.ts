@@ -239,6 +239,26 @@ function normalizePageMutationPayload(raw: unknown): {
   return { source, summary };
 }
 
+function stampPageSourceForSave(source: AccountPageSource): AccountPageSource {
+  return {
+    ...source,
+    version: Math.max(1, Math.floor(source.version)) + 1,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function pageSummaryFromSource(source: AccountPageSource): AccountPageSummary {
+  return {
+    pageId: source.pageId,
+    title: source.metadata.title,
+    description: source.metadata.description,
+    robots: source.metadata.robots,
+    placementCount: source.placements.length,
+    createdAt: source.updatedAt,
+    updatedAt: source.updatedAt,
+  };
+}
+
 function normalizeStoredWidgetPackage(raw: unknown): TokyoStoredWidgetPackage | null {
   if (!isRecord(raw) || raw.v !== 1) return null;
   if (typeof raw.indexHtml !== 'string' || typeof raw.stylesCss !== 'string' || typeof raw.runtimeJs !== 'string') {
@@ -354,10 +374,11 @@ export async function createAccountPageInTokyo(args: {
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: { source: AccountPageSource; summary: AccountPageSummary } } | RouteFailure> {
+  const summary = pageSummaryFromSource(args.source);
   const result = await callTokyo(tokyoCallContext(args), {
     path: '/__internal/pages',
     method: 'POST',
-    body: { source: args.source },
+    body: { source: args.source, summary },
     decode: (payload) => payload,
     errorDetail: 'tokyo_account_page_create_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
@@ -399,19 +420,21 @@ export async function saveAccountPageInTokyo(args: {
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: { source: AccountPageSource; summary: AccountPageSummary } } | RouteFailure> {
+  const source = stampPageSourceForSave(args.source);
   const pagePackage = await buildPagePackageForTokyo({
     accountId: args.accountId,
-    source: args.source,
+    source,
     accountCapsule: args.accountCapsule,
     internalServiceName: args.internalServiceName,
     requestId: args.requestId,
   });
   if (!pagePackage.ok) return pagePackage;
+  const summary = pageSummaryFromSource(source);
 
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/pages/${encodeURIComponent(args.pageId)}`,
     method: 'PUT',
-    body: { source: args.source, pagePackage: pagePackage.value },
+    body: { source, summary, pagePackage: pagePackage.value },
     decode: (payload) => payload,
     errorDetail: 'tokyo_account_page_save_http_error',
     errorKey: 'coreui.errors.db.writeFailed',

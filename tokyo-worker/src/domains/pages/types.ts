@@ -1,37 +1,5 @@
 export type PageRobots = 'index,follow' | 'noindex,nofollow';
 
-export type PageMetadata = {
-  title: string;
-  description: string;
-  robots: PageRobots;
-  canonicalUrl?: string;
-};
-
-export type PageLocalization = {
-  defaultLocale: string;
-  ipLocalizationEnabled: boolean;
-  countryLocaleRules: Array<{ country: string; locale: string }>;
-  languageSwitcherEnabled: boolean;
-  missingLocaleBehavior: 'block_publish';
-};
-
-export type PagePlacement = {
-  placementId: string;
-  instanceId: string;
-};
-
-export type AccountPageSource = {
-  schemaVersion: 1;
-  pageId: string;
-  accountPublicId: string;
-  displayName: string;
-  metadata: PageMetadata;
-  localization: PageLocalization;
-  placements: PagePlacement[];
-  version: number;
-  updatedAt: string;
-};
-
 export type PageServeState = 'published' | 'unpublished';
 
 export type AccountPageServeState = {

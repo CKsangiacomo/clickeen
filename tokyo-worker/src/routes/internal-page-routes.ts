@@ -97,7 +97,7 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
       boundary: 'internal.page.create.body',
       accountId,
     });
-    if (!isRecord(body) || !isRecord(body.source)) {
+    if (!isRecord(body) || !isRecord(body.source) || !isRecord(body.summary)) {
       return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
     }
     const pageId = normalizePageId(body.source.pageId);
@@ -109,8 +109,9 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
         accountId,
         pageId,
         source: body.source,
+        summary: body.summary,
       });
-      return respond(json({ ok: true, accountId, pageId: created.source.pageId, ...created }, { status: 201 }));
+      return respond(json({ ok: true, accountId, pageId, ...created }, { status: 201 }));
     } catch (error) {
       return respond(pageErrorResponse(error));
     }
@@ -229,7 +230,7 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
         boundary: 'internal.page.save.body',
         accountId,
       });
-      if (!isRecord(body) || !isRecord(body.source)) {
+      if (!isRecord(body) || !isRecord(body.source) || !isRecord(body.summary)) {
         return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
       }
       const submittedPagePackage = readSubmittedPagePublicPackage(body.pagePackage);
@@ -242,6 +243,7 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
           accountId,
           pageId,
           source: body.source,
+          summary: body.summary,
         });
         const packaged = await writeAccountPagePublicPackage({
           env,
