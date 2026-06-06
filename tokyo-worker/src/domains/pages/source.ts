@@ -17,7 +17,8 @@ import type {
   AccountPageSummary,
   AccountPagesIndex,
   AccountPlacementIndex,
-  PageHead,
+  PageLocalization,
+  PageMetadata,
   PagePlacement,
   PageRobots,
 } from './types';
@@ -44,20 +45,56 @@ function normalizeRobots(value: unknown): PageRobots | null {
   return null;
 }
 
-function normalizeHead(value: unknown): PageHead | null {
+function normalizeCanonicalUrl(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function normalizeMetadata(value: unknown): PageMetadata | null {
   if (!isRecord(value)) return null;
   const title = typeof value.title === 'string' ? value.title.trim() : '';
   const description = typeof value.description === 'string' ? value.description.trim() : '';
   const robots = normalizeRobots(value.robots);
   if (!title || title.length > 160 || description.length > 300 || !robots) return null;
-  return { title, description, robots };
+  const canonicalUrl = normalizeCanonicalUrl(value.canonicalUrl);
+  return { title, description, robots, ...(canonicalUrl ? { canonicalUrl } : {}) };
+}
+
+function normalizeLocale(value: unknown): string | null {
+  const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return /^[a-z]{2}(?:-[a-z0-9]{2,8})?$/.test(normalized) ? normalized : null;
+}
+
+function normalizeLocalization(value: unknown): PageLocalization | null {
+  if (!isRecord(value)) return null;
+  const defaultLocale = normalizeLocale(value.defaultLocale);
+  if (!defaultLocale) return null;
+  const countryLocaleRules = Array.isArray(value.countryLocaleRules)
+    ? value.countryLocaleRules.flatMap((entry) => {
+        if (!isRecord(entry)) return [];
+        const country = typeof entry.country === 'string' ? entry.country.trim().toUpperCase() : '';
+        const locale = normalizeLocale(entry.locale);
+        return /^[A-Z]{2}$/.test(country) && locale ? [{ country, locale }] : [];
+      })
+    : null;
+  if (!countryLocaleRules) return null;
+  return {
+    defaultLocale,
+    ipLocalizationEnabled: value.ipLocalizationEnabled === true,
+    countryLocaleRules,
+    languageSwitcherEnabled: value.languageSwitcherEnabled === true,
+    missingLocaleBehavior: 'block_publish',
+  };
 }
 
 function normalizePlacement(value: unknown): PagePlacement | null {
   if (!isRecord(value)) return null;
+  const placementId = typeof value.placementId === 'string' ? value.placementId.trim().toUpperCase() : '';
   const instanceId = typeof value.instanceId === 'string' ? value.instanceId.trim().toUpperCase() : '';
+  if (!placementId || !/^[A-Z0-9_-]{1,40}$/.test(placementId)) return null;
   if (!isCompactInstanceId(instanceId)) return null;
-  return { instanceId };
+  return { placementId, instanceId };
 }
 
 function normalizePlacements(value: unknown): PagePlacement[] | null {
@@ -96,20 +133,37 @@ function parseStoredPageSource(raw: unknown, expectedPageId: string): AccountPag
 }
 
 function normalizePageSource(raw: unknown, expectedPageId: string): AccountPageSource | null {
-  if (!isRecord(raw) || raw.v !== 1) return null;
-  const id = normalizePageId(raw.id);
-  const head = normalizeHead(raw.head);
+  if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+  const pageId = normalizePageId(raw.pageId);
+  const accountPublicId = typeof raw.accountPublicId === 'string' ? raw.accountPublicId.trim().toUpperCase() : '';
+  const displayName = typeof raw.displayName === 'string' ? raw.displayName.trim() : '';
+  const metadata = normalizeMetadata(raw.metadata);
+  const localization = normalizeLocalization(raw.localization);
   const placements = normalizePlacements(raw.placements);
-  if (!id || id !== expectedPageId || !head || !placements) return null;
-  return { v: 1, id, head, placements };
+  const version = typeof raw.version === 'number' && Number.isFinite(raw.version) ? Math.max(1, Math.floor(raw.version)) : null;
+  const updatedAt = typeof raw.updatedAt === 'string' ? raw.updatedAt.trim() : '';
+  if (
+    !pageId ||
+    pageId !== expectedPageId ||
+    !isCompactAccountPublicId(accountPublicId) ||
+    !displayName ||
+    !metadata ||
+    !localization ||
+    !placements ||
+    version == null ||
+    !updatedAt
+  ) {
+    return null;
+  }
+  return { schemaVersion: 1, pageId, accountPublicId, displayName, metadata, localization, placements, version, updatedAt };
 }
 
 function pageSummaryFromSource(source: AccountPageSource, previous: AccountPageSummary | null, now: string): AccountPageSummary {
   return {
-    id: source.id,
-    title: source.head.title,
-    description: source.head.description,
-    robots: source.head.robots,
+    pageId: source.pageId,
+    title: source.metadata.title,
+    description: source.metadata.description,
+    robots: source.metadata.robots,
     placementCount: source.placements.length,
     createdAt: previous?.createdAt ?? now,
     updatedAt: now,
@@ -127,7 +181,7 @@ async function readPagesIndex(env: Env, accountId: string): Promise<AccountPages
     pages: stored.pages.filter((page): page is AccountPageSummary => {
       return (
         isRecord(page) &&
-        typeof page.id === 'string' &&
+        typeof page.pageId === 'string' &&
         typeof page.title === 'string' &&
         typeof page.description === 'string' &&
         normalizeRobots(page.robots) != null &&
@@ -147,12 +201,12 @@ async function writePagesIndex(args: {
   now: string;
 }): Promise<AccountPageSummary> {
   const index = await readPagesIndex(args.env, args.accountId);
-  const previous = index.pages.find((page) => page.id === args.source.id) ?? null;
+  const previous = index.pages.find((page) => page.pageId === args.source.pageId) ?? null;
   const summary = pageSummaryFromSource(args.source, previous, args.now);
   const pages = [
     summary,
-    ...index.pages.filter((page) => page.id !== args.source.id),
-  ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.id.localeCompare(right.id));
+    ...index.pages.filter((page) => page.pageId !== args.source.pageId),
+  ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.pageId.localeCompare(right.pageId));
   await putJson(args.env, accountPagesIndexKey(args.accountId), { v: 1, accountId: args.accountId, pages });
   return summary;
 }
@@ -166,7 +220,7 @@ async function removePageFromPagesIndex(args: {
   await putJson(args.env, accountPagesIndexKey(args.accountId), {
     v: 1,
     accountId: args.accountId,
-    pages: index.pages.filter((page) => page.id !== args.pageId),
+    pages: index.pages.filter((page) => page.pageId !== args.pageId),
   });
 }
 
@@ -285,19 +339,30 @@ export async function saveAccountPageSource(args: {
       reasonKey: 'tokyo.errors.page.sourceInvalid',
     });
   }
+  if (source.accountPublicId !== accountId) {
+    throw new PageOperationError({
+      kind: 'VALIDATION',
+      reasonKey: 'tokyo.errors.page.invalidAccount',
+    });
+  }
   const previous = await readAccountPageSource({ env: args.env, accountId, pageId });
   const now = args.now ?? new Date().toISOString();
-  await putJson(args.env, accountPageSourceKey(accountId, pageId), source);
-  const summary = await writePagesIndex({ env: args.env, accountId, source, now });
+  const nextSource = {
+    ...source,
+    updatedAt: now,
+    version: (previous?.version ?? 0) + 1,
+  };
+  await putJson(args.env, accountPageSourceKey(accountId, pageId), nextSource);
+  const summary = await writePagesIndex({ env: args.env, accountId, source: nextSource, now });
   await updatePlacementIndexes({
     env: args.env,
     accountId,
     pageId,
     previous,
-    next: source,
+    next: nextSource,
     now,
   });
-  return { source, summary };
+  return { source: nextSource, summary };
 }
 
 export async function deleteAccountPageSource(args: {

@@ -19,45 +19,60 @@ type RouteFailure = {
   error: DirectPageRouteError;
 };
 
-export type TokyoPageRobots = 'index,follow' | 'noindex,nofollow';
-export type TokyoPagePublishStatus = 'published' | 'unpublished';
+export type PageRobots = 'index,follow' | 'noindex,nofollow';
+export type PagePublishStatus = 'published' | 'unpublished';
 
-export type TokyoAccountPageHead = {
+export type AccountPageMetadata = {
   title: string;
   description: string;
-  robots: TokyoPageRobots;
+  robots: PageRobots;
+  canonicalUrl?: string;
 };
 
-export type TokyoAccountPagePlacement = {
+export type AccountPageLocalization = {
+  defaultLocale: string;
+  ipLocalizationEnabled: boolean;
+  countryLocaleRules: Array<{ country: string; locale: string }>;
+  languageSwitcherEnabled: boolean;
+  missingLocaleBehavior: 'block_publish';
+};
+
+export type AccountPagePlacement = {
+  placementId: string;
   instanceId: string;
 };
 
-export type TokyoAccountPageSource = {
-  v: 1;
-  id: string;
-  head: TokyoAccountPageHead;
-  placements: TokyoAccountPagePlacement[];
+export type AccountPageSource = {
+  schemaVersion: 1;
+  pageId: string;
+  accountPublicId: string;
+  displayName: string;
+  metadata: AccountPageMetadata;
+  localization: AccountPageLocalization;
+  placements: AccountPagePlacement[];
+  version: number;
+  updatedAt: string;
 };
 
-export type TokyoAccountPageSummary = {
-  id: string;
+export type AccountPageSummary = {
+  pageId: string;
   title: string;
   description: string;
-  robots: TokyoPageRobots;
+  robots: PageRobots;
   placementCount: number;
   createdAt: string;
   updatedAt: string;
 };
 
-export type TokyoAccountPageOpen = {
-  source: TokyoAccountPageSource;
-  publishStatus: TokyoPagePublishStatus;
+export type AccountPageOpen = {
+  source: AccountPageSource;
+  publishStatus: PagePublishStatus;
 };
 
-export type TokyoAccountPagePublishResult = {
+export type AccountPagePublishResult = {
   accountId: string;
   pageId: string;
-  publishStatus: TokyoPagePublishStatus;
+  publishStatus: PagePublishStatus;
   changed: boolean;
 };
 
@@ -94,45 +109,81 @@ function invalidTokyoPayload(detail: string): RouteFailure {
   };
 }
 
-function normalizeRobots(value: unknown): TokyoPageRobots | null {
+function normalizeRobots(value: unknown): PageRobots | null {
   return value === 'index,follow' || value === 'noindex,nofollow' ? value : null;
 }
 
-function normalizePageHead(raw: unknown): TokyoAccountPageHead | null {
+function normalizePageMetadata(raw: unknown): AccountPageMetadata | null {
   if (!isRecord(raw)) return null;
   const title = asTrimmedString(raw.title);
   const description = typeof raw.description === 'string' ? raw.description.trim() : null;
   const robots = normalizeRobots(raw.robots);
   if (!title || description == null || !robots) return null;
-  return { title, description, robots };
+  const canonicalUrl = typeof raw.canonicalUrl === 'string' && raw.canonicalUrl.trim() ? raw.canonicalUrl.trim() : undefined;
+  return { title, description, robots, ...(canonicalUrl ? { canonicalUrl } : {}) };
 }
 
-function normalizePlacement(raw: unknown): TokyoAccountPagePlacement | null {
+function normalizeLocale(value: unknown): string | null {
+  const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return /^[a-z]{2}(?:-[a-z0-9]{2,8})?$/.test(normalized) ? normalized : null;
+}
+
+function normalizePageLocalization(raw: unknown): AccountPageLocalization | null {
   if (!isRecord(raw)) return null;
-  const instanceId = asTrimmedString(raw.instanceId);
-  if (!instanceId) return null;
-  return { instanceId };
+  const defaultLocale = normalizeLocale(raw.defaultLocale);
+  if (!defaultLocale) return null;
+  const countryLocaleRules = Array.isArray(raw.countryLocaleRules)
+    ? raw.countryLocaleRules.flatMap((entry) => {
+        if (!isRecord(entry)) return [];
+        const country = typeof entry.country === 'string' ? entry.country.trim().toUpperCase() : '';
+        const locale = normalizeLocale(entry.locale);
+        return /^[A-Z]{2}$/.test(country) && locale ? [{ country, locale }] : [];
+      })
+    : null;
+  if (!countryLocaleRules) return null;
+  return {
+    defaultLocale,
+    ipLocalizationEnabled: raw.ipLocalizationEnabled === true,
+    countryLocaleRules,
+    languageSwitcherEnabled: raw.languageSwitcherEnabled === true,
+    missingLocaleBehavior: 'block_publish',
+  };
 }
 
-function normalizePlacements(raw: unknown): TokyoAccountPagePlacement[] | null {
+function normalizePlacement(raw: unknown): AccountPagePlacement | null {
+  if (!isRecord(raw)) return null;
+  const placementId = asTrimmedString(raw.placementId);
+  const instanceId = asTrimmedString(raw.instanceId);
+  if (!placementId || !instanceId) return null;
+  return { placementId, instanceId };
+}
+
+function normalizePlacements(raw: unknown): AccountPagePlacement[] | null {
   if (!Array.isArray(raw)) return null;
   const placements = raw.map(normalizePlacement);
   if (placements.some((placement) => !placement)) return null;
-  return placements as TokyoAccountPagePlacement[];
+  return placements as AccountPagePlacement[];
 }
 
-function normalizePageSource(raw: unknown): TokyoAccountPageSource | null {
-  if (!isRecord(raw) || raw.v !== 1) return null;
-  const id = asTrimmedString(raw.id);
-  const head = normalizePageHead(raw.head);
+function normalizePageSource(raw: unknown): AccountPageSource | null {
+  if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
+  const pageId = asTrimmedString(raw.pageId);
+  const accountPublicId = asTrimmedString(raw.accountPublicId);
+  const displayName = asTrimmedString(raw.displayName);
+  const metadata = normalizePageMetadata(raw.metadata);
+  const localization = normalizePageLocalization(raw.localization);
   const placements = normalizePlacements(raw.placements);
-  if (!id || !head || !placements) return null;
-  return { v: 1, id, head, placements };
+  const version = typeof raw.version === 'number' && Number.isFinite(raw.version) ? Math.max(1, Math.floor(raw.version)) : null;
+  const updatedAt = asTrimmedString(raw.updatedAt);
+  if (!pageId || !accountPublicId || !displayName || !metadata || !localization || !placements || version == null || !updatedAt) {
+    return null;
+  }
+  return { schemaVersion: 1, pageId, accountPublicId, displayName, metadata, localization, placements, version, updatedAt };
 }
 
-function normalizePageSummary(raw: unknown): TokyoAccountPageSummary | null {
+function normalizePageSummary(raw: unknown): AccountPageSummary | null {
   if (!isRecord(raw)) return null;
-  const id = asTrimmedString(raw.id);
+  const pageId = asTrimmedString(raw.pageId);
   const title = asTrimmedString(raw.title);
   const description = typeof raw.description === 'string' ? raw.description.trim() : null;
   const robots = normalizeRobots(raw.robots);
@@ -142,17 +193,17 @@ function normalizePageSummary(raw: unknown): TokyoAccountPageSummary | null {
       : null;
   const createdAt = asTrimmedString(raw.createdAt);
   const updatedAt = asTrimmedString(raw.updatedAt);
-  if (!id || !title || description == null || !robots || placementCount == null || !createdAt || !updatedAt) {
+  if (!pageId || !title || description == null || !robots || placementCount == null || !createdAt || !updatedAt) {
     return null;
   }
-  return { id, title, description, robots, placementCount, createdAt, updatedAt };
+  return { pageId, title, description, robots, placementCount, createdAt, updatedAt };
 }
 
-function normalizePublishStatus(value: unknown): TokyoPagePublishStatus | null {
+function normalizePublishStatus(value: unknown): PagePublishStatus | null {
   return value === 'published' || value === 'unpublished' ? value : null;
 }
 
-function normalizePageOpenPayload(raw: unknown): TokyoAccountPageOpen | null {
+function normalizePageOpenPayload(raw: unknown): AccountPageOpen | null {
   if (!isRecord(raw)) return null;
   const source = normalizePageSource(raw.source);
   const publishStatus = normalizePublishStatus(raw.publishStatus);
@@ -160,7 +211,7 @@ function normalizePageOpenPayload(raw: unknown): TokyoAccountPageOpen | null {
   return { source, publishStatus };
 }
 
-function normalizePagePublishPayload(raw: unknown): TokyoAccountPagePublishResult | null {
+function normalizePagePublishPayload(raw: unknown): AccountPagePublishResult | null {
   if (!isRecord(raw)) return null;
   const accountId = asTrimmedString(raw.accountId);
   const pageId = asTrimmedString(raw.pageId);
@@ -170,16 +221,16 @@ function normalizePagePublishPayload(raw: unknown): TokyoAccountPagePublishResul
   return { accountId, pageId, publishStatus, changed };
 }
 
-function normalizePageSummaries(raw: unknown): TokyoAccountPageSummary[] | null {
+function normalizePageSummaries(raw: unknown): AccountPageSummary[] | null {
   if (!Array.isArray(raw)) return null;
   const pages = raw.map(normalizePageSummary);
   if (pages.some((page) => !page)) return null;
-  return pages as TokyoAccountPageSummary[];
+  return pages as AccountPageSummary[];
 }
 
 function normalizePageMutationPayload(raw: unknown): {
-  source: TokyoAccountPageSource;
-  summary: TokyoAccountPageSummary;
+  source: AccountPageSource;
+  summary: AccountPageSummary;
 } | null {
   if (!isRecord(raw)) return null;
   const source = normalizePageSource(raw.source);
@@ -238,7 +289,7 @@ async function readAccountInstancePackageFromTokyo(args: {
 
 async function buildPagePackageForTokyo(args: {
   accountId: string;
-  source: TokyoAccountPageSource;
+  source: AccountPageSource;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
@@ -280,7 +331,7 @@ export async function listAccountPagesInTokyo(args: {
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; value: { accountId: string; pages: TokyoAccountPageSummary[] } } | RouteFailure> {
+}): Promise<{ ok: true; value: { accountId: string; pages: AccountPageSummary[] } } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/accounts/${encodeURIComponent(args.accountId)}/pages`,
     method: 'GET',
@@ -299,10 +350,10 @@ export async function listAccountPagesInTokyo(args: {
 export async function createAccountPageInTokyo(args: {
   accountId: string;
   accountCapsule?: string | null;
-  source: TokyoAccountPageSource;
+  source: AccountPageSource;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; value: { source: TokyoAccountPageSource; summary: TokyoAccountPageSummary } } | RouteFailure> {
+}): Promise<{ ok: true; value: { source: AccountPageSource; summary: AccountPageSummary } } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: '/__internal/pages',
     method: 'POST',
@@ -323,7 +374,7 @@ export async function loadAccountPageFromTokyo(args: {
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; value: TokyoAccountPageOpen | null } | RouteFailure> {
+}): Promise<{ ok: true; value: AccountPageOpen | null } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/pages/${encodeURIComponent(args.pageId)}`,
     method: 'GET',
@@ -343,11 +394,11 @@ export async function loadAccountPageFromTokyo(args: {
 export async function saveAccountPageInTokyo(args: {
   accountId: string;
   pageId: string;
-  source: TokyoAccountPageSource;
+  source: AccountPageSource;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; value: { source: TokyoAccountPageSource; summary: TokyoAccountPageSummary } } | RouteFailure> {
+}): Promise<{ ok: true; value: { source: AccountPageSource; summary: AccountPageSummary } } | RouteFailure> {
   const pagePackage = await buildPagePackageForTokyo({
     accountId: args.accountId,
     source: args.source,
@@ -398,7 +449,7 @@ export async function publishAccountPageInTokyo(args: {
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; value: TokyoAccountPagePublishResult } | RouteFailure> {
+}): Promise<{ ok: true; value: AccountPagePublishResult } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/pages/${encodeURIComponent(args.pageId)}/publish`,
     method: 'POST',
@@ -418,7 +469,7 @@ export async function unpublishAccountPageInTokyo(args: {
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; value: TokyoAccountPagePublishResult } | RouteFailure> {
+}): Promise<{ ok: true; value: AccountPagePublishResult } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/pages/${encodeURIComponent(args.pageId)}/unpublish`,
     method: 'POST',

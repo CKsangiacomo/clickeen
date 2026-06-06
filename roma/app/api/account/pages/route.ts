@@ -9,9 +9,9 @@ import {
   listAccountPagesInTokyo,
 } from '@roma/lib/account-page-direct';
 import type {
-  TokyoAccountPageHead,
-  TokyoAccountPagePlacement,
-  TokyoAccountPageSource,
+  AccountPageMetadata,
+  AccountPagePlacement,
+  AccountPageSource,
 } from '@roma/lib/account-page-direct';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
@@ -21,7 +21,11 @@ import {
 
 export const runtime = 'edge';
 
-function normalizeCreatePageHead(raw: unknown): TokyoAccountPageHead {
+function createPlacementId(index: number): string {
+  return `P${String(index + 1).padStart(3, '0')}`;
+}
+
+function normalizeCreatePageMetadata(raw: unknown): AccountPageMetadata {
   if (!isRecord(raw)) {
     return { title: 'Untitled page', description: '', robots: 'noindex,nofollow' };
   }
@@ -30,31 +34,49 @@ function normalizeCreatePageHead(raw: unknown): TokyoAccountPageHead {
   const robots = raw.robots === 'index,follow' || raw.robots === 'noindex,nofollow'
     ? raw.robots
     : 'noindex,nofollow';
-  return { title, description, robots };
+  const canonicalUrl = typeof raw.canonicalUrl === 'string' && raw.canonicalUrl.trim() ? raw.canonicalUrl.trim() : undefined;
+  return { title, description, robots, ...(canonicalUrl ? { canonicalUrl } : {}) };
 }
 
-function normalizeCreatePagePlacements(raw: unknown): TokyoAccountPagePlacement[] | null {
+function normalizeCreatePagePlacements(raw: unknown): AccountPagePlacement[] | null {
   if (raw == null) return [];
   if (!Array.isArray(raw)) return null;
-  const placements: TokyoAccountPagePlacement[] = [];
-  for (const value of raw) {
+  const placements: AccountPagePlacement[] = [];
+  for (const [index, value] of raw.entries()) {
     if (!isRecord(value)) return null;
+    const placementId = typeof value.placementId === 'string' && value.placementId.trim()
+      ? value.placementId.trim().toUpperCase()
+      : createPlacementId(index);
     const instanceId = typeof value.instanceId === 'string' ? value.instanceId.trim().toUpperCase() : '';
     if (!isCompactInstanceId(instanceId)) return null;
-    placements.push({ instanceId });
+    placements.push({ placementId, instanceId });
   }
   return placements;
 }
 
-function createPageSourceFromRequestBody(raw: unknown): TokyoAccountPageSource | null {
+function createPageSourceFromRequestBody(raw: unknown, accountId: string): AccountPageSource | null {
   const body = isRecord(raw) ? raw : {};
   const placements = normalizeCreatePagePlacements(body.placements);
   if (!placements) return null;
+  const pageId = createCompactPageId();
+  const now = new Date().toISOString();
+  const metadata = normalizeCreatePageMetadata(body.metadata);
   return {
-    v: 1,
-    id: createCompactPageId(),
-    head: normalizeCreatePageHead(body.head),
+    schemaVersion: 1,
+    pageId,
+    accountPublicId: accountId,
+    displayName: typeof body.displayName === 'string' && body.displayName.trim() ? body.displayName.trim() : metadata.title,
+    metadata,
+    localization: {
+      defaultLocale: 'en',
+      ipLocalizationEnabled: false,
+      countryLocaleRules: [],
+      languageSwitcherEnabled: false,
+      missingLocaleBehavior: 'block_publish',
+    },
     placements,
+    version: 1,
+    updatedAt: now,
   };
 }
 
@@ -86,7 +108,7 @@ export async function POST(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
 
-  const bodyResult = await readJsonPayloadOrValidation<{ head?: unknown; placements?: unknown } | null>(request);
+  const bodyResult = await readJsonPayloadOrValidation<{ metadata?: unknown; placements?: unknown; displayName?: unknown } | null>(request);
   if (!bodyResult.ok) {
     return withSession(
       request,
@@ -96,7 +118,7 @@ export async function POST(request: NextRequest) {
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
-  const source = createPageSourceFromRequestBody(bodyResult.payload);
+  const source = createPageSourceFromRequestBody(bodyResult.payload, accountId);
   if (!source) {
     return withSession(
       request,
@@ -126,7 +148,7 @@ export async function POST(request: NextRequest) {
     NextResponse.json(
       {
         accountId,
-        pageId: result.value.source.id,
+        pageId: result.value.source.pageId,
         source: result.value.source,
         summary: result.value.summary,
       },

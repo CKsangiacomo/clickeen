@@ -4,7 +4,7 @@ import {
   loadAccountPageFromTokyo,
   saveAccountPageInTokyo,
 } from '@roma/lib/account-page-direct';
-import type { TokyoAccountPageSource } from '@roma/lib/account-page-direct';
+import type { AccountPageSource } from '@roma/lib/account-page-direct';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -83,7 +83,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const bodyResult = await readJsonPayloadOrValidation<{ source?: TokyoAccountPageSource } | null>(request);
+  const bodyResult = await readJsonPayloadOrValidation<{ source?: AccountPageSource } | null>(request);
   if (!bodyResult.ok) {
     return withSession(
       request,
@@ -101,7 +101,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const sourceId = typeof bodyResult.payload.source.id === 'string' ? bodyResult.payload.source.id.trim().toUpperCase() : '';
+  const sourceId = typeof bodyResult.payload.source.pageId === 'string' ? bodyResult.payload.source.pageId.trim().toUpperCase() : '';
   if (sourceId !== pageId) {
     return withSession(
       request,

@@ -44,19 +44,18 @@ function updatePageSummaryInCache(accountId: string, summary: AccountPageSummary
     ...current.data,
     pages: [
       summary,
-      ...current.data.pages.filter((page) => page.id !== summary.id),
-    ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.id.localeCompare(right.id)),
+      ...current.data.pages.filter((page) => page.pageId !== summary.pageId),
+    ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.pageId.localeCompare(right.pageId)),
   });
+}
+
+function createPlacementId(existingCount: number): string {
+  return `P${String(existingCount + 1).padStart(3, '0')}`;
 }
 
 function pageSavePayload(source: AccountPageSource) {
   return {
-    source: {
-      v: 1,
-      id: source.id,
-      head: source.head,
-      placements: source.placements,
-    },
+    source,
   };
 }
 
@@ -84,8 +83,8 @@ export function PagesDomain() {
   const [mutationError, setMutationError] = useState<string | null>(null);
 
   const selectedPageId = useMemo(() => (searchParams.get('page') || '').trim(), [searchParams]);
-  const activePageId = selectedPageId || pages[0]?.id || '';
-  const hostedPageUrl = pageSource ? `https://clk.live/${productAccountId}/pages/${pageSource.id}` : '';
+  const activePageId = selectedPageId || pages[0]?.pageId || '';
+  const hostedPageUrl = pageSource ? `https://clk.live/${productAccountId}/pages/${pageSource.pageId}` : '';
 
   const applyPages = useCallback((payload: RomaPagesResponse) => {
     setPages(payload.pages);
@@ -187,9 +186,9 @@ export function PagesDomain() {
       setPagePublishStatus('unpublished');
       return;
     }
-    if (pageSource?.id === activePageId) return;
+    if (pageSource?.pageId === activePageId) return;
     void loadPageSource(activePageId);
-  }, [activePageId, loadPageSource, pageSource?.id]);
+  }, [activePageId, loadPageSource, pageSource?.pageId]);
 
   const instanceById = useMemo(() => {
     const map = new Map<string, WidgetInstance>();
@@ -204,7 +203,7 @@ export function PagesDomain() {
       const payload = await accountApi.fetchJson<{
         source?: AccountPageSource;
         summary?: AccountPageSummary;
-      }>(`/api/account/pages/${encodeURIComponent(source.id)}`, {
+      }>(`/api/account/pages/${encodeURIComponent(source.pageId)}`, {
         method: 'PUT',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify(pageSavePayload(source)),
@@ -235,11 +234,12 @@ export function PagesDomain() {
         method: 'POST',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
         body: JSON.stringify({
-          head: {
+          metadata: {
             title: 'Untitled page',
             description: '',
             robots: 'index,follow',
           },
+          displayName: 'Untitled page',
         }),
       });
       const pageId = typeof payload.pageId === 'string' ? payload.pageId.trim() : '';
@@ -263,7 +263,7 @@ export function PagesDomain() {
     try {
       await accountApi.fetchJson(`/api/account/pages/${encodeURIComponent(pageId)}`, { method: 'DELETE' });
       await refreshPages({ force: true });
-      if (pageSource?.id === pageId) {
+      if (pageSource?.pageId === pageId) {
         setPageSource(null);
         setPagePublishStatus('unpublished');
         router.push('/pages');
@@ -274,26 +274,26 @@ export function PagesDomain() {
     } finally {
       setActiveActionKey((current) => (current === actionKey ? null : current));
     }
-  }, [accountApi, pageSource?.id, refreshPages, router]);
+  }, [accountApi, pageSource?.pageId, refreshPages, router]);
 
-  const updateHead = useCallback((patch: Partial<AccountPageSource['head']>) => {
-    setPageSource((current) => current ? { ...current, head: { ...current.head, ...patch } } : current);
+  const updateMetadata = useCallback((patch: Partial<AccountPageSource['metadata']>) => {
+    setPageSource((current) => current ? { ...current, metadata: { ...current.metadata, ...patch } } : current);
   }, []);
 
   const handleSaveMetadata = useCallback(async () => {
     if (!pageSource) return;
-    await saveSource(pageSource, `save-head:${pageSource.id}`);
+    await saveSource(pageSource, `save-metadata:${pageSource.pageId}`);
   }, [pageSource, saveSource]);
 
   const handlePagePublishState = useCallback(async (nextStatus: PagePublishStatus) => {
     if (!pageSource) return;
     const action = nextStatus === 'published' ? 'publish' : 'unpublish';
-    const actionKey = `${action}-page:${pageSource.id}`;
+    const actionKey = `${action}-page:${pageSource.pageId}`;
     setActiveActionKey(actionKey);
     setMutationError(null);
     try {
       const payload = await accountApi.fetchJson<{ publishStatus?: PagePublishStatus }>(
-        `/api/account/pages/${encodeURIComponent(pageSource.id)}/${action}`,
+        `/api/account/pages/${encodeURIComponent(pageSource.pageId)}/${action}`,
         { method: 'POST' },
       );
       if (payload.publishStatus !== 'published' && payload.publishStatus !== 'unpublished') {
@@ -314,7 +314,7 @@ export function PagesDomain() {
       ...pageSource,
       placements: [
         ...pageSource.placements,
-        { instanceId: selectedExistingInstanceId },
+        { placementId: createPlacementId(pageSource.placements.length), instanceId: selectedExistingInstanceId },
       ],
     };
     const saved = await saveSource(nextSource, `place-existing:${selectedExistingInstanceId}`);
@@ -339,7 +339,7 @@ export function PagesDomain() {
         ...pageSource,
         placements: [
           ...pageSource.placements,
-          { instanceId },
+          { placementId: createPlacementId(pageSource.placements.length), instanceId },
         ],
       };
       await saveSource(nextSource, actionKey);
@@ -415,15 +415,15 @@ export function PagesDomain() {
             </thead>
             <tbody>
               {pages.map((page) => {
-                const isActive = page.id === activePageId;
-                const deleteActionKey = `delete-page:${page.id}`;
+                const isActive = page.pageId === activePageId;
+                const deleteActionKey = `delete-page:${page.pageId}`;
                 return (
-                  <tr key={page.id} data-selected={isActive ? 'true' : undefined}>
+                  <tr key={page.pageId} data-selected={isActive ? 'true' : undefined}>
                     <td className="body-s">{page.title}</td>
-                    <td className="body-s">{page.id}</td>
+                    <td className="body-s">{page.pageId}</td>
                     <td className="body-s">{page.placementCount}</td>
                     <td className="roma-cell-actions">
-                      <Link className="diet-btn-txt" data-size="md" data-variant={isActive ? 'primary' : 'line2'} href={buildPagesRoute(page.id)}>
+                      <Link className="diet-btn-txt" data-size="md" data-variant={isActive ? 'primary' : 'line2'} href={buildPagesRoute(page.pageId)}>
                         <span className="diet-btn-txt__label body-m">{isActive ? 'Open' : 'Select'}</span>
                       </Link>
                       <button
@@ -431,7 +431,7 @@ export function PagesDomain() {
                         data-size="md"
                         data-variant="line2"
                         type="button"
-                        onClick={() => void handleDeletePage(page.id)}
+                        onClick={() => void handleDeletePage(page.pageId)}
                         disabled={Boolean(activeActionKey)}
                       >
                         <span className="diet-btn-txt__label body-m">{activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}</span>
@@ -451,7 +451,7 @@ export function PagesDomain() {
         <section className="rd-canvas-module">
           <div className="roma-toolbar">
             <h2 className="heading-4">Page source</h2>
-            <p className="body-m roma-toolbar-count">{pageSource.id}</p>
+            <p className="body-m roma-toolbar-count">{pageSource.pageId}</p>
             <p className="body-m roma-toolbar-count">{pagePublishStatus === 'published' ? 'Published' : 'Unpublished'}</p>
           </div>
           <div className="roma-form-grid">
@@ -460,9 +460,9 @@ export function PagesDomain() {
               <input
                 className="roma-input"
                 type="text"
-                value={pageSource.head.title}
+                value={pageSource.metadata.title}
                 maxLength={160}
-                onChange={(event) => updateHead({ title: event.target.value })}
+                onChange={(event) => updateMetadata({ title: event.target.value })}
               />
             </label>
             <label className="roma-field">
@@ -470,17 +470,17 @@ export function PagesDomain() {
               <input
                 className="roma-input"
                 type="text"
-                value={pageSource.head.description}
+                value={pageSource.metadata.description}
                 maxLength={300}
-                onChange={(event) => updateHead({ description: event.target.value })}
+                onChange={(event) => updateMetadata({ description: event.target.value })}
               />
             </label>
             <label className="roma-field">
               <span className="label-s">Robots</span>
               <select
                 className="roma-input"
-                value={pageSource.head.robots}
-                onChange={(event) => updateHead({ robots: event.target.value as PageRobots })}
+                value={pageSource.metadata.robots}
+                onChange={(event) => updateMetadata({ robots: event.target.value as PageRobots })}
               >
                 <option value="index,follow">index,follow</option>
                 <option value="noindex,nofollow">noindex,nofollow</option>
@@ -505,7 +505,7 @@ export function PagesDomain() {
               onClick={() => void handleSaveMetadata()}
               disabled={Boolean(activeActionKey)}
             >
-              <span className="diet-btn-txt__label body-m">{activeActionKey === `save-head:${pageSource.id}` ? 'Saving...' : 'Save metadata'}</span>
+              <span className="diet-btn-txt__label body-m">{activeActionKey === `save-metadata:${pageSource.pageId}` ? 'Saving...' : 'Save metadata'}</span>
             </button>
             <button
               className="diet-btn-txt"
@@ -515,7 +515,7 @@ export function PagesDomain() {
               onClick={() => void handlePagePublishState('published')}
               disabled={Boolean(activeActionKey)}
             >
-              <span className="diet-btn-txt__label body-m">{activeActionKey === `publish-page:${pageSource.id}` ? 'Publishing...' : 'Publish'}</span>
+              <span className="diet-btn-txt__label body-m">{activeActionKey === `publish-page:${pageSource.pageId}` ? 'Publishing...' : 'Publish'}</span>
             </button>
             <button
               className="diet-btn-txt"
@@ -525,7 +525,7 @@ export function PagesDomain() {
               onClick={() => void handlePagePublishState('unpublished')}
               disabled={Boolean(activeActionKey)}
             >
-              <span className="diet-btn-txt__label body-m">{activeActionKey === `unpublish-page:${pageSource.id}` ? 'Unpublishing...' : 'Unpublish'}</span>
+              <span className="diet-btn-txt__label body-m">{activeActionKey === `unpublish-page:${pageSource.pageId}` ? 'Unpublishing...' : 'Unpublish'}</span>
             </button>
             <a
               className="diet-btn-txt"
@@ -620,7 +620,7 @@ export function PagesDomain() {
                 {pageSource.placements.map((placement, index) => {
                   const instance = instanceById.get(placement.instanceId);
                   return (
-                    <tr key={`${placement.instanceId}-${index}`}>
+                    <tr key={placement.placementId}>
                       <td className="body-s">{index + 1}</td>
                       <td className="body-s">
                         {instance?.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}
@@ -652,7 +652,7 @@ export function PagesDomain() {
                           className="diet-btn-txt"
                           data-size="md"
                           data-variant="secondary"
-                          href={`${buildBuilderRoute({ instanceId: placement.instanceId })}?returnTo=${encodeURIComponent(buildPagesRoute(pageSource.id))}`}
+                          href={`${buildBuilderRoute({ instanceId: placement.instanceId })}?returnTo=${encodeURIComponent(buildPagesRoute(pageSource.pageId))}`}
                         >
                           <span className="diet-btn-txt__label body-m">Edit</span>
                         </Link>

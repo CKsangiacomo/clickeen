@@ -100,7 +100,7 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
     if (!isRecord(body) || !isRecord(body.source)) {
       return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
     }
-    const pageId = normalizePageId(body.source.id);
+    const pageId = normalizePageId(body.source.pageId);
     if (!pageId) return respondValidation(respond, 'tokyo.errors.page.invalidPageId');
 
     try {
@@ -110,7 +110,7 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
         pageId,
         source: body.source,
       });
-      return respond(json({ ok: true, accountId, pageId: created.source.id, ...created }, { status: 201 }));
+      return respond(json({ ok: true, accountId, pageId: created.source.pageId, ...created }, { status: 201 }));
     } catch (error) {
       return respond(pageErrorResponse(error));
     }

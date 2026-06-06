@@ -6,14 +6,17 @@ import {
 } from '@clickeen/widget-shell';
 
 export type PagePackageSource = {
-  v: 1;
-  id: string;
-  head: {
+  schemaVersion: 1;
+  pageId: string;
+  accountPublicId: string;
+  displayName: string;
+  metadata: {
     title: string;
     description: string;
     robots: 'index,follow' | 'noindex,nofollow';
+    canonicalUrl?: string;
   };
-  placements: Array<{ instanceId: string }>;
+  placements: Array<{ placementId: string; instanceId: string }>;
 };
 
 export type WidgetPackageForPage = {
@@ -226,10 +229,10 @@ function composePageIndex(args: {
   packages: WidgetContribution[];
   locale: string;
 }): string {
-  const title = escapeHtml(args.source.head.title);
-  const description = escapeAttribute(args.source.head.description);
-  const robots = escapeAttribute(args.source.head.robots);
-  const canonicalUrl = escapeAttribute(`https://clk.live/${args.accountId}/pages/${args.source.id}`);
+  const title = escapeHtml(args.source.metadata.title);
+  const description = escapeAttribute(args.source.metadata.description);
+  const robots = escapeAttribute(args.source.metadata.robots);
+  const canonicalUrl = escapeAttribute(args.source.metadata.canonicalUrl || `https://clk.live/${args.accountId}/pages/${args.source.pageId}`);
   const body = args.packages
     .map((pkg) => `<section>${pkg.htmlRoot}</section>`)
     .join('\n');
@@ -245,7 +248,7 @@ function composePageIndex(args: {
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <main data-ck-page="${escapeAttribute(args.source.id)}" data-ck-composed-page="true">
+  <main data-ck-page="${escapeAttribute(args.source.pageId)}" data-ck-composed-page="true">
 ${body}
   </main>
   <script src="./runtime.js" defer></script>
