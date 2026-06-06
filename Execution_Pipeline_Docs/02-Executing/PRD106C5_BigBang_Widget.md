@@ -1,6 +1,6 @@
 # PRD106C5_BigBang_Widget
 
-Status: Draft execution PRD
+Status: Implemented checkpoint
 Owner: Widget system + Bob
 Date: 2026-06-05
 Parent: `PRD106C_Prague astro blocks migration to widget instances.md`
@@ -49,15 +49,21 @@ is evidence to stop, not evidence to proceed.
 Current executable step:
 
 ```text
-Step 1: Define Big Bang Core contract.
+Implementation checkpoint complete.
 ```
 
-Required evidence before marking green:
+Green evidence:
 
-- Big Bang Core paths are listed.
+- `tokyo/product/widgets/big-bang/**` exists.
+- Big Bang uses the shared Widget Shell with only `bigBang.*` Core paths.
 - Header remains `header.*`/`cta.*`.
-- Prague statement/supporting copy maps to Core paths.
-- Product discovery/codebook requirements are named.
+- Prague statement/supporting copy maps to `bigBang.statement` and
+  `bigBang.supportingCopy`.
+- Product discovery is registered with codebook `BBG`.
+- Generated widget definition sources include `big-bang`.
+- Fresh Big Bang compile/materialize smoke passes.
+- Two Big Bang instances compose into one page package with one runtime
+  definition.
 
 Stop conditions:
 

@@ -1162,6 +1162,8 @@ var Dieter = (() => {
 
   // ../packages/ck-contracts/src/overlay-codebooks.ts
   var WIDGET_OVERLAY_CODES = Object.freeze({
+    "big-bang": "BBG",
+    cards: "CRD",
     cardgrid: "CGR",
     faq: "FAQ",
     countdown: "CTD",

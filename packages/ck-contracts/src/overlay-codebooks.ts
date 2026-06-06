@@ -1,6 +1,8 @@
 const WIDGET_CODE_RE = /^[0-9A-Z]{3}$/;
 
 export const WIDGET_OVERLAY_CODES = Object.freeze({
+  'big-bang': 'BBG',
+  cards: 'CRD',
   cardgrid: 'CGR',
   faq: 'FAQ',
   countdown: 'CTD',

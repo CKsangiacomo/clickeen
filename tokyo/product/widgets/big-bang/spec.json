@@ -1,0 +1,517 @@
+{
+  "v": 1,
+  "widgetname": "big-bang",
+  "itemKey": "bigBang.item",
+  "normalization": {
+    "coerceRules": [
+      {
+        "path": "bigBang.showSupportingCopy",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.showBacklink",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.enabled",
+        "type": "boolean",
+        "default": false
+      }
+    ]
+  },
+  "defaults": {
+    "header": {
+      "enabled": true,
+      "title": "Big announcement",
+      "showSubtitle": false,
+      "subtitleHtml": "A short setup line can live here when the section needs one.",
+      "placement": "top",
+      "alignment": "left",
+      "gap": 32,
+      "textGap": 10,
+      "ctaPlacement": "below",
+      "innerGap": 18
+    },
+    "cta": {
+      "enabled": true,
+      "label": "Start now",
+      "href": "#",
+      "openMode": "same-tab",
+      "iconEnabled": true,
+      "iconName": "arrowshape.turn.up.right",
+      "iconPlacement": "right"
+    },
+    "uiLabels": {
+      "core": {
+        "singular": "Statement",
+        "plural": "Statements",
+        "sizeCluster": "Statement size"
+      }
+    },
+    "coreSize": {
+      "mode": "auto",
+      "fixedHeight": 0,
+      "minHeight": 0,
+      "preferredVw": 0,
+      "maxHeight": 0
+    },
+    "localeSwitcher": {
+      "enabled": false,
+      "byIp": false,
+      "alwaysShowLocale": "",
+      "attachTo": "stage",
+      "position": "top-right"
+    },
+    "behavior": {
+      "showBacklink": true,
+      "socialShare": {
+        "enabled": false
+      }
+    },
+    "stage": {
+      "alignment": "center",
+      "background": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
+      "shadow": {
+        "x": 0,
+        "y": 0,
+        "blur": 0,
+        "alpha": 0,
+        "color": "#000000",
+        "inset": false,
+        "spread": 0,
+        "enabled": false
+      },
+      "insideShadow": {
+        "linked": true,
+        "layer": "below-content",
+        "all": {
+          "x": 0,
+          "y": 0,
+          "blur": 0,
+          "alpha": 0,
+          "color": "#000000",
+          "inset": true,
+          "spread": 0,
+          "enabled": false
+        },
+        "top": {
+          "x": 0,
+          "y": 12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "right": {
+          "x": -12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "bottom": {
+          "x": 0,
+          "y": -12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "left": {
+          "x": 12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        }
+      },
+      "canvas": {
+        "mode": "wrap",
+        "width": 0,
+        "height": 0
+      },
+      "padding": {
+        "mobile": {
+          "all": 48,
+          "top": 48,
+          "right": 48,
+          "bottom": 48,
+          "left": 48,
+          "linked": true
+        },
+        "desktop": {
+          "all": 80,
+          "top": 80,
+          "right": 80,
+          "bottom": 80,
+          "left": 80,
+          "linked": true
+        }
+      }
+    },
+    "pod": {
+      "widthMode": "full",
+      "contentWidth": 1200,
+      "radiusLinked": true,
+      "radius": "none",
+      "radiusTL": "none",
+      "radiusTR": "none",
+      "radiusBR": "none",
+      "radiusBL": "none",
+      "background": {
+        "type": "color",
+        "color": "transparent"
+      },
+      "shadow": {
+        "x": 0,
+        "y": 0,
+        "blur": 0,
+        "alpha": 0,
+        "color": "#000000",
+        "inset": false,
+        "spread": 0,
+        "enabled": false
+      },
+      "insideShadow": {
+        "linked": true,
+        "layer": "below-content",
+        "all": {
+          "x": 0,
+          "y": 0,
+          "blur": 0,
+          "alpha": 0,
+          "color": "#000000",
+          "inset": true,
+          "spread": 0,
+          "enabled": false
+        },
+        "top": {
+          "x": 0,
+          "y": 12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "right": {
+          "x": -12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "bottom": {
+          "x": 0,
+          "y": -12,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        },
+        "left": {
+          "x": 12,
+          "y": 0,
+          "blur": 16,
+          "alpha": 12,
+          "color": "#000000",
+          "inset": true,
+          "spread": -12,
+          "enabled": false
+        }
+      },
+      "padding": {
+        "mobile": {
+          "all": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0,
+          "linked": true
+        },
+        "desktop": {
+          "all": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0,
+          "linked": true
+        }
+      }
+    },
+    "appearance": {
+      "ctaSizePreset": "m",
+      "ctaPaddingLinked": false,
+      "ctaPaddingInline": 18,
+      "ctaPaddingBlock": 12,
+      "ctaBackground": "var(--color-system-blue)",
+      "ctaTextColor": "var(--color-system-white)",
+      "ctaBorder": {
+        "enabled": false,
+        "width": 1,
+        "color": "transparent"
+      },
+      "ctaRadius": "lg",
+      "ctaIconSizePreset": "m",
+      "ctaIconSize": 16,
+      "localeSwitcherBackground": {
+        "type": "color",
+        "color": "var(--color-system-white)"
+      },
+      "localeSwitcherTextColor": {
+        "type": "color",
+        "color": "var(--color-system-black)"
+      },
+      "localeSwitcherBorder": {
+        "enabled": true,
+        "width": 1,
+        "color": "var(--color-system-gray-5)"
+      },
+      "localeSwitcherRadius": "md",
+      "localeSwitcherPaddingInline": 12,
+      "localeSwitcherPaddingBlock": 8,
+      "podBorder": {
+        "enabled": false,
+        "width": 1,
+        "color": "var(--color-system-gray-5)"
+      }
+    },
+    "typography": {
+      "globalFamily": "Inter",
+      "roles": {
+        "title": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "700",
+          "fontStyle": "normal",
+          "sizeCustom": 56,
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1,
+          "lineHeightPreset": "custom"
+        },
+        "body": {
+          "color": "var(--color-system-gray)",
+          "family": "Inter",
+          "weight": "400",
+          "fontStyle": "normal",
+          "sizeCustom": 20,
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.45,
+          "lineHeightPreset": "custom"
+        },
+        "button": {
+          "color": "var(--color-system-white)",
+          "family": "Inter",
+          "weight": "600",
+          "fontStyle": "normal",
+          "sizeCustom": 16,
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.2,
+          "lineHeightPreset": "custom"
+        },
+        "localeSwitcher": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "500",
+          "fontStyle": "normal",
+          "sizeCustom": 14,
+          "sizePreset": "s",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.2,
+          "lineHeightPreset": "normal"
+        },
+        "bigBang": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "800",
+          "fontStyle": "normal",
+          "sizeCustom": 84,
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 0.94,
+          "lineHeightPreset": "custom"
+        }
+      }
+    },
+    "bigBang": {
+      "statement": "Make the important message impossible to miss.",
+      "showSupportingCopy": true,
+      "supportingCopy": "Use a Big Bang section when a page needs one bold statement with enough rhythm to stop the scroll.",
+      "alignment": "left",
+      "textWidth": 880,
+      "gap": 24
+    }
+  },
+  "editor": {
+    "panels": [
+      {
+        "id": "content",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "header-content"
+          },
+          {
+            "label": "Big Bang content",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "textedit",
+                "path": "bigBang.statement",
+                "label": "Statement"
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "bigBang.showSupportingCopy",
+                "label": "Show supporting copy",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textedit",
+                "path": "bigBang.supportingCopy",
+                "label": "Supporting copy",
+                "showIf": {
+                  "path": "bigBang.showSupportingCopy",
+                  "op": "isTrue"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "typography",
+        "shared": {
+          "id": "typography"
+        }
+      },
+      {
+        "id": "layout",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "header-layout"
+          },
+          {
+            "kind": "shared",
+            "id": "core-size"
+          },
+          {
+            "label": "Big Bang layout",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "choice-tiles",
+                "path": "bigBang.alignment",
+                "label": "Alignment",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Left",
+                      "value": "left"
+                    },
+                    {
+                      "label": "Center",
+                      "value": "center"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "bigBang.textWidth",
+                "label": "Text width"
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "bigBang.gap",
+                "label": "Gap"
+              }
+            ]
+          },
+          {
+            "kind": "shared",
+            "id": "stagepod-layout"
+          }
+        ]
+      },
+      {
+        "id": "appearance",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "header-appearance"
+          },
+          {
+            "kind": "shared",
+            "id": "stagepod-appearance"
+          }
+        ]
+      },
+      {
+        "id": "settings",
+        "clusters": [
+          {
+            "label": "Behavior",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "behavior.showBacklink",
+                "label": "Show Made with Clickeen",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "behavior.socialShare.enabled",
+                "label": "Enable social share",
+                "attrs": {
+                  "size": "md"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

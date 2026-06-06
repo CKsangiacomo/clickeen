@@ -1,0 +1,46 @@
+{
+  "v": 1,
+  "widgetType": "big-bang",
+  "fields": [
+    {
+      "path": "header.title",
+      "label": "Header title",
+      "role": "title",
+      "type": "richtext",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "header.subtitleHtml",
+      "label": "Header subtitle",
+      "role": "body",
+      "type": "richtext",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "cta.label",
+      "label": "Header CTA label",
+      "role": "button",
+      "type": "string",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "bigBang.statement",
+      "label": "Statement",
+      "role": "bigBang",
+      "type": "richtext",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "bigBang.supportingCopy",
+      "label": "Supporting copy",
+      "role": "body",
+      "type": "richtext",
+      "arrayItemIdentity": [],
+      "limits": []
+    }
+  ]
+}
