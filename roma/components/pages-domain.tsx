@@ -248,6 +248,21 @@ export function PagesDomain() {
     [pickerVisibleLimit, widgetInstances],
   );
 
+  const publishBlockers = useMemo(() => {
+    if (!pageSource) return [];
+    return Array.from(
+      new Set(
+        pageSource.placements.flatMap((placement) => {
+          const instance = instanceById.get(placement.instanceId);
+          if (!instance) return [placement.instanceId];
+          return instance.status === 'published' ? [] : [placement.instanceId];
+        }),
+      ),
+    );
+  }, [instanceById, pageSource]);
+
+  const canPublishPage = Boolean(pageSource && pageSource.placements.length > 0 && publishBlockers.length === 0);
+
   const saveSource = useCallback(async (source: AccountPageSource, actionKey: string) => {
     setActiveActionKey(actionKey);
     setMutationError(null);
@@ -570,7 +585,7 @@ export function PagesDomain() {
               data-variant="primary"
               type="button"
               onClick={() => void handlePagePublishState('published')}
-              disabled={Boolean(activeActionKey)}
+              disabled={Boolean(activeActionKey) || !canPublishPage}
             >
               <span className="diet-btn-txt__label body-m">{activeActionKey === `publish-page:${pageSource.pageId}` ? 'Publishing...' : 'Publish'}</span>
             </button>
@@ -604,18 +619,26 @@ export function PagesDomain() {
             >
               <span className="diet-btn-txt__label body-m">Copy embed</span>
             </button>
-            <a
-              className="diet-btn-txt"
-              data-size="md"
-              data-variant="secondary"
-              href={hostedPageUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <span className="diet-btn-txt__label body-m">Open public page</span>
-            </a>
+            {pagePublishStatus === 'published' ? (
+              <a
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="secondary"
+                href={hostedPageUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span className="diet-btn-txt__label body-m">Open public page</span>
+              </a>
+            ) : null}
           </div>
           {copyStatus ? <p className="body-s">{copyStatus}</p> : null}
+          {pageSource.placements.length === 0 ? <p className="body-s">Add at least one instance before publishing this page.</p> : null}
+          {publishBlockers.length > 0 ? (
+            <p className="body-s">
+              Publish is blocked by unpublished or unavailable instances: {publishBlockers.join(', ')}.
+            </p>
+          ) : null}
           {pagePublishStatus !== 'published' ? <p className="body-s">Publish this page before copying public code.</p> : null}
         </section>
       ) : null}
@@ -737,6 +760,7 @@ export function PagesDomain() {
                   <th className="table-header label-s">Order</th>
                   <th className="table-header label-s">Widget</th>
                   <th className="table-header label-s">Instance ID</th>
+                  <th className="table-header label-s">Status</th>
                   <th className="table-header label-s">Actions</th>
                 </tr>
               </thead>
@@ -751,6 +775,9 @@ export function PagesDomain() {
                         {instance?.widgetType ? ` · ${instance.widgetType}` : ''}
                       </td>
                       <td className="body-s">{placement.instanceId}</td>
+                      <td className="body-s">
+                        {!instance ? 'Unavailable, blocks publish' : instance.status === 'published' ? 'Published' : 'Unpublished, blocks publish'}
+                      </td>
                       <td className="roma-cell-actions">
                         <button
                           className="diet-btn-txt"
