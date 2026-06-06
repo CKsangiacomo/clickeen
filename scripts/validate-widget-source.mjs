@@ -197,11 +197,11 @@ function readWidgetOverlayCodes() {
   }
   const body = match[1] || "";
   const codes = new Map();
-  const entryRe = /^\s*([a-zA-Z0-9_]+):\s*'([0-9A-Z]{3})',?\s*$/gm;
+  const entryRe = /^\s*(?:'([^']+)'|"([^"]+)"|([a-zA-Z0-9_]+)):\s*'([0-9A-Z]{3})',?\s*$/gm;
   let entry;
   while ((entry = entryRe.exec(body))) {
-    const widgetType = entry[1];
-    const code = entry[2];
+    const widgetType = entry[1] || entry[2] || entry[3];
+    const code = entry[4];
     if (codes.has(widgetType)) {
       fail(`duplicate widget codebook entry for ${widgetType}`);
     }
