@@ -189,7 +189,8 @@ function inferControlMetadata(control: CompiledControl, defaults: Record<string,
     control.type === 'textfield' ||
     control.type === 'choice-cards' ||
     control.type === 'choice-tiles' ||
-    control.type === 'dropdown-edit'
+    control.type === 'dropdown-edit' ||
+    control.type === 'instance-picker'
   )
     return { kind: 'string' };
   if (control.type === 'slider' || control.type === 'valuefield') return { kind: 'number' };
