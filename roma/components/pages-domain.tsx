@@ -58,6 +58,49 @@ function pageSavePayload(source: AccountPageSource) {
   };
 }
 
+function resolveClkLiveBaseUrl(): string {
+  return String(process.env.NEXT_PUBLIC_CLK_LIVE_URL || process.env.PUBLIC_CLK_LIVE_URL || 'https://clk.live').replace(/\/+$/, '');
+}
+
+function buildPagePublicUrl(accountPublicId: string, pageId: string): string {
+  return `${resolveClkLiveBaseUrl()}/${encodeURIComponent(accountPublicId)}/pages/${encodeURIComponent(pageId)}`;
+}
+
+function buildPageIframeSnippet(publicUrl: string): string {
+  return `<iframe
+  src="${publicUrl}"
+  title="Clickeen page"
+  loading="lazy"
+  referrerpolicy="no-referrer"
+  sandbox="allow-scripts allow-same-origin allow-forms"
+  style="width:100%;border:0;min-height:720px;"
+></iframe>`;
+}
+
+async function copyToClipboard(text: string): Promise<boolean> {
+  if (!text) return false;
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {}
+
+  try {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.setAttribute('readonly', 'true');
+    el.style.position = 'fixed';
+    el.style.top = '-1000px';
+    el.style.left = '-1000px';
+    document.body.appendChild(el);
+    el.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(el);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export function PagesDomain() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -80,10 +123,12 @@ export function PagesDomain() {
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [dataError, setDataError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
   const selectedPageId = useMemo(() => (searchParams.get('page') || '').trim(), [searchParams]);
   const activePageId = selectedPageId || pages[0]?.pageId || '';
-  const hostedPageUrl = pageSource ? `https://clk.live/${productAccountId}/pages/${pageSource.pageId}` : '';
+  const hostedPageUrl = pageSource ? buildPagePublicUrl(productAccountId, pageSource.pageId) : '';
+  const pageIframeSnippet = hostedPageUrl ? buildPageIframeSnippet(hostedPageUrl) : '';
 
   const applyPages = useCallback((payload: RomaPagesResponse) => {
     setPages(payload.pages);
@@ -315,6 +360,13 @@ export function PagesDomain() {
     }
   }, [accountApi, pageSource]);
 
+  const handleCopyPageArtifact = useCallback(async (label: string, value: string) => {
+    setCopyStatus(null);
+    const ok = await copyToClipboard(value);
+    setCopyStatus(ok ? `Copied: ${label}` : `Copy failed: ${label}`);
+    window.setTimeout(() => setCopyStatus(null), 1800);
+  }, []);
+
   const openAddInstances = useCallback(() => {
     setCheckedInstanceIds([]);
     setPickerVisibleLimit(50);
@@ -532,6 +584,26 @@ export function PagesDomain() {
             >
               <span className="diet-btn-txt__label body-m">{activeActionKey === `unpublish-page:${pageSource.pageId}` ? 'Unpublishing...' : 'Unpublish'}</span>
             </button>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="secondary"
+              type="button"
+              onClick={() => void handleCopyPageArtifact('page URL', hostedPageUrl)}
+              disabled={Boolean(activeActionKey) || pagePublishStatus !== 'published'}
+            >
+              <span className="diet-btn-txt__label body-m">Copy URL</span>
+            </button>
+            <button
+              className="diet-btn-txt"
+              data-size="md"
+              data-variant="secondary"
+              type="button"
+              onClick={() => void handleCopyPageArtifact('page embed', pageIframeSnippet)}
+              disabled={Boolean(activeActionKey) || pagePublishStatus !== 'published'}
+            >
+              <span className="diet-btn-txt__label body-m">Copy embed</span>
+            </button>
             <a
               className="diet-btn-txt"
               data-size="md"
@@ -543,6 +615,8 @@ export function PagesDomain() {
               <span className="diet-btn-txt__label body-m">Open public page</span>
             </a>
           </div>
+          {copyStatus ? <p className="body-s">{copyStatus}</p> : null}
+          {pagePublishStatus !== 'published' ? <p className="body-s">Publish this page before copying public code.</p> : null}
         </section>
       ) : null}
 
