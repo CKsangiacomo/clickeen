@@ -1,6 +1,6 @@
 # PRD106B_PageComposer
 
-Status: Active execution checkpoint - Steps 1-7 green; Step 8 current
+Status: Execution complete - Steps 1-8 green
 Owner: Roma
 Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
@@ -52,10 +52,10 @@ If this PRD conflicts with a sibling PRD, the umbrella authority table decides.
 Current executable step:
 
 ```text
-Step 8: Run deletion/search guards.
+None. PRD106B Steps 1-8 are green.
 ```
 
-Required evidence before marking green:
+Evidence that closed Step 8:
 
 - Searches show no active `website/pages`, `website/publishes`, reverse
   placement index, or page `embed.js` authority.
@@ -66,7 +66,7 @@ Required evidence before marking green:
   localization settings.
 - Verification remains green after deletion/search guard cleanup.
 
-Stop conditions:
+Closed-gate stop conditions checked:
 
 - Any active old page coordinate survives as product truth.
 - Any page `embed.js` route/file/generator survives.
@@ -87,7 +87,7 @@ Stop conditions:
 | 7 | Add SEO/GEO and localization controls specified here. | Tests/screenshot. | Crawlable initial HTML and page localization rules exist. | Host-nav integration is invented. |
 | 8 | Run deletion/search guards. | `rg` output/tests. | No Tokyo composition/readiness/page `embed.js` authority remains. | Any forbidden authority remains active. |
 
-## Execution Checkpoint: Steps 1-7 Green
+## Execution Checkpoint: Steps 1-8 Green
 
 This checkpoint records executed repo state so the next agent does not restart
 from Step 1 or preserve old drift.
@@ -230,6 +230,41 @@ Committed evidence:
 
 - `c23c05f6 feat(pages): add page localization settings`
 - `fe8dcc96 feat(pages): add page country locale rules`
+
+### Step 8 - Deletion/Search Guards
+
+Status: green.
+
+Evidence:
+
+- Search guards found no active `website/pages`, `website/publishes`,
+  `website/indexes`, reverse placement index, or page `embed.js` authority in
+  Roma or Tokyo code.
+- Remaining matches for those terms are PRD deletion/history references, not
+  active product paths.
+- Tokyo page code keeps only storage-boundary responsibilities: account/page
+  coordinate validation, submitted `source.json` storage, Roma-submitted
+  `pages/index.json` summary storage, submitted public file storage, serve-state
+  storage, public file serving, and cache purge.
+- Tokyo does not derive page metadata, placements, localization, dependencies,
+  recomposition, copy output, or composed HTML/CSS/runtime.
+- The only Tokyo readiness check that remains verifies stored submitted package
+  files exist and are non-empty before publish. It does not interpret page
+  source or compose output.
+
+Search evidence:
+
+```sh
+rg -n "website/pages|website/publishes|website/indexes|pages/indexes|placement index|reverse placement|accountPlacementIndex|listPagesPlacingInstance|page embed\\.js|embed\\.js|/pages/.*/embed|generate.*embed|embed route" roma tokyo-worker documentation Execution_Pipeline_Docs/02-Executing -g '*.ts' -g '*.tsx' -g '*.md'
+rg -n "source\\.metadata|source\\.placements|source\\.localization|metadata\\.title|placementCount|countryLocaleRules|languageSwitcher|ipLocalization|pageSummaryFromSource|normalizePageSource|AccountPageSource|PageMetadata|PageLocalization|PagePlacement" tokyo-worker/src -g '*.ts'
+rg -n "website/pages|website/publishes|accountWebsite|accountPagePublishRoot|accountPagesRoot|accountPageSourceKey|accountPageServeStateKey|accountPagePublishFileKey|__internal/pages|__internal/accounts/.*/pages" tokyo-worker/src roma -g '*.ts' -g '*.tsx'
+rg -n "composePage|buildPage|PageComposer|pagePackage|readSubmittedPagePublicPackage|writeAccountPagePublicPackage|verifyAccountPagePublicPackageReady|source\\.placements|source\\.metadata" tokyo-worker/src -g '*.ts'
+```
+
+Committed evidence:
+
+- `79895416 fix(pages): make Tokyo page source storage-only`
+- `e49e8d6b fix(pages): remove Tokyo placement index route`
 
 Remaining for later steps:
 
