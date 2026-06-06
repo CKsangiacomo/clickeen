@@ -3,7 +3,7 @@ import { normalizeLocaleToken } from '@clickeen/l10n';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
-  listPageIdsPlacingInstanceInTokyo,
+  listPageIdsPlacingInstanceForAccount,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
@@ -209,7 +209,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const placedPages = await listPageIdsPlacingInstanceInTokyo({
+  const placedPages = await listPageIdsPlacingInstanceForAccount({
     accountId,
     instanceId,
     accountCapsule: current.value.authzToken,

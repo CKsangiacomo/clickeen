@@ -7,6 +7,7 @@ import {
 } from './tokyo-product-control';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 import {
+  listAccountPagesInTokyo,
   loadAccountPageFromTokyo,
   saveAccountPageInTokyo,
   type DirectPageRouteError,
@@ -280,41 +281,58 @@ function normalizeTokyoWidgetDefinitions(raw: unknown): TokyoWidgetDefinition[] 
   return entries as TokyoWidgetDefinition[];
 }
 
-function normalizePlacedPageIds(raw: unknown): string[] | null {
-  if (!Array.isArray(raw)) return null;
-  const pageIds = raw.map((entry) => asTrimmedString(entry)).filter((entry): entry is string => Boolean(entry));
-  return pageIds.length === raw.length ? pageIds : null;
-}
-
-export async function listPageIdsPlacingInstanceInTokyo(args: {
+export async function listPageIdsPlacingInstanceForAccount(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: string[] } | RouteFailure> {
-  const result = await callTokyo(tokyoCallContext(args), {
-    path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/pages`,
-    method: 'GET',
-    decode: (payload) => payload,
-    errorDetail: 'tokyo_instance_pages_http_error',
-    errorKey: 'coreui.errors.db.readFailed',
+  const pages = await listAccountPagesInTokyo({
+    accountId: args.accountId,
+    accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
+    requestId: args.requestId,
   });
-  if (!result.ok) return result;
-  const payload = isRecord(result.value) ? result.value : null;
-  const pageIds = normalizePlacedPageIds(payload?.pageIds);
-  if (!pageIds) return invalidTokyoPayload('invalid Tokyo instance pages payload');
-  return { ok: true, value: pageIds };
+  if (!pages.ok) return pageRouteFailureToInstanceFailure(pages);
+
+  const placedPageIds: string[] = [];
+  for (const page of pages.value.pages) {
+    const opened = await loadAccountPageFromTokyo({
+      accountId: args.accountId,
+      pageId: page.pageId,
+      accountCapsule: args.accountCapsule,
+      internalServiceName: args.internalServiceName,
+      requestId: args.requestId,
+    });
+    if (!opened.ok) return pageRouteFailureToInstanceFailure(opened);
+    if (!opened.value) {
+      return {
+        ok: false,
+        status: 404,
+        error: {
+          kind: 'NOT_FOUND',
+          reasonKey: 'coreui.errors.page.notFound',
+          detail: `page index points to missing page: ${page.pageId}`,
+        },
+      };
+    }
+    if (opened.value.source.placements.some((placement) => placement.instanceId === args.instanceId)) {
+      placedPageIds.push(page.pageId);
+    }
+  }
+
+  return { ok: true, value: placedPageIds };
 }
 
-async function refreshPagesPlacingInstanceInTokyo(args: {
+async function refreshPagesPlacingInstanceForAccount(args: {
   accountId: string;
   instanceId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true } | RouteFailure> {
-  const placedPages = await listPageIdsPlacingInstanceInTokyo(args);
+  const placedPages = await listPageIdsPlacingInstanceForAccount(args);
   if (!placedPages.ok) return placedPages;
   for (const pageId of placedPages.value) {
     const opened = await loadAccountPageFromTokyo({
@@ -488,7 +506,7 @@ export async function saveAccountInstanceInTokyo(args: {
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  const pages = await refreshPagesPlacingInstanceInTokyo({
+  const pages = await refreshPagesPlacingInstanceForAccount({
     accountId: args.accountId,
     instanceId: args.instanceId,
     accountCapsule: args.accountCapsule,
