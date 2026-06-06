@@ -12,28 +12,42 @@
 
   function mediaSource(media, kind) {
     if (!isRecord(media)) return '';
-    if (kind === 'image' && isRecord(media.image) && typeof media.image.src === 'string') return media.image.src.trim();
-    if (kind === 'video' && isRecord(media.video) && typeof media.video.src === 'string') return media.video.src.trim();
+    if (kind === 'image' && isRecord(media.image) && typeof media.image.src === 'string')
+      return media.image.src.trim();
+    if (kind === 'video' && isRecord(media.video) && typeof media.video.src === 'string')
+      return media.video.src.trim();
     return '';
   }
 
   function mediaAlt(item) {
-    if (item.kind === 'image' && isRecord(item.image) && typeof item.image.alt === 'string') return item.image.alt;
-    if (item.kind === 'video' && isRecord(item.video) && typeof item.video.alt === 'string') return item.video.alt;
+    if (item.kind === 'image' && isRecord(item.image) && typeof item.image.alt === 'string')
+      return item.image.alt;
+    if (item.kind === 'video' && isRecord(item.video) && typeof item.video.alt === 'string')
+      return item.video.alt;
     return '';
   }
 
   function normalizeItem(raw, index) {
     if (!isRecord(raw)) throw new Error('[Split] core.items[' + index + '] must be an object');
-    var kind = raw.kind === 'video' ? 'video' : raw.kind === 'image' ? 'image' : raw.kind === 'instance' ? 'instance' : '';
-    if (!kind) throw new Error('[Split] core.items[' + index + '].kind must be image|video|instance');
+    var kind =
+      raw.kind === 'video'
+        ? 'video'
+        : raw.kind === 'image'
+          ? 'image'
+          : raw.kind === 'instance'
+            ? 'instance'
+            : '';
+    if (!kind)
+      throw new Error('[Split] core.items[' + index + '].kind must be image|video|instance');
     var src = kind === 'instance' ? '' : mediaSource(raw.media, kind);
     var instance = isRecord(raw.instance) ? raw.instance : {};
-    var instanceId = typeof instance.instanceId === 'string' ? instance.instanceId.trim().toUpperCase() : '';
+    var instanceId =
+      typeof instance.instanceId === 'string' ? instance.instanceId.trim().toUpperCase() : '';
     if (kind === 'instance' && !instanceId) {
       throw new Error('[Split] core.items[' + index + '].instance.instanceId is required');
     }
-    if (kind !== 'instance' && !src) throw new Error('[Split] core.items[' + index + '].media requires a ' + kind + ' asset');
+    if (kind !== 'instance' && !src)
+      throw new Error('[Split] core.items[' + index + '].media requires a ' + kind + ' asset');
     return {
       id: typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : 'item-' + index,
       kind: kind,
@@ -48,7 +62,8 @@
     var itemsRaw = Array.isArray(state.core.items) ? state.core.items : [];
     var carousel = isRecord(state.core.carousel) ? state.core.carousel : {};
     var enabled = carousel.enabled === true;
-    if (!enabled && itemsRaw.length !== 1) throw new Error('[Split] static Split requires exactly one core item');
+    if (!enabled && itemsRaw.length !== 1)
+      throw new Error('[Split] static Split requires exactly one core item');
     if (enabled && (itemsRaw.length < 2 || itemsRaw.length > 6)) {
       throw new Error('[Split] carousel Split requires 2-6 core items');
     }
@@ -63,7 +78,10 @@
     return {
       items: items,
       mediaFit: media.fit === 'contain' ? 'contain' : 'cover',
-      mediaPosition: ['top', 'bottom', 'left', 'right', 'center'].indexOf(media.position) >= 0 ? media.position : 'center',
+      mediaPosition:
+        ['top', 'bottom', 'left', 'right', 'center'].indexOf(media.position) >= 0
+          ? media.position
+          : 'center',
       carousel: {
         enabled: enabled,
         transition: carousel.transition === 'fade' ? 'fade' : 'slide',
@@ -81,7 +99,11 @@
 
   function renderEmbeddedInstance(item, embeddedInstances) {
     var embedded = embeddedInstances && embeddedInstances[item.instanceId];
-    if (!isRecord(embedded) || typeof embedded.htmlRoot !== 'string' || typeof embedded.widgetType !== 'string') {
+    if (
+      !isRecord(embedded) ||
+      typeof embedded.htmlRoot !== 'string' ||
+      typeof embedded.widgetType !== 'string'
+    ) {
       throw new Error('[Split] Missing embedded widget package for ' + item.instanceId);
     }
 
@@ -123,7 +145,8 @@
     var videoCfg = isRecord(item.media.video) ? item.media.video : {};
     var video = document.createElement('video');
     video.src = mediaSource(item.media, 'video');
-    if (typeof videoCfg.poster === 'string' && videoCfg.poster.trim()) video.poster = videoCfg.poster.trim();
+    if (typeof videoCfg.poster === 'string' && videoCfg.poster.trim())
+      video.poster = videoCfg.poster.trim();
     video.muted = videoCfg.muted !== false;
     video.loop = videoCfg.loop !== false;
     video.autoplay = videoCfg.autoplay !== false;
@@ -172,105 +195,203 @@
   }
 
   function initSplit(widgetRoot, runtimeContext) {
-    const state = runtimeContext.state;
     const splitRoot = widgetRoot.querySelector('[data-role="split"]');
     const coreEl = widgetRoot.querySelector('[data-role="split-core"]');
     if (!(splitRoot instanceof HTMLElement)) throw new Error('[Split] Missing [data-role="split"]');
-    if (!(coreEl instanceof HTMLElement)) throw new Error('[Split] Missing [data-role="split-core"]');
-    if (widgetRoot.__ckSplitAutoplayTimer) {
-      window.clearInterval(widgetRoot.__ckSplitAutoplayTimer);
-      widgetRoot.__ckSplitAutoplayTimer = 0;
-    }
+    if (!(coreEl instanceof HTMLElement))
+      throw new Error('[Split] Missing [data-role="split-core"]');
+    const resolvedInstanceId = runtimeContext.instanceId;
 
-    if (!window.CKStagePod?.applyStagePod) throw new Error('[Split] Missing CKStagePod.applyStagePod');
-    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
+    function applyState(state, context) {
+      if (!state) return;
+      if (widgetRoot.__ckSplitAutoplayTimer) {
+        window.clearInterval(widgetRoot.__ckSplitAutoplayTimer);
+        widgetRoot.__ckSplitAutoplayTimer = 0;
+      }
 
-    if (!window.CKTypography?.applyTypography) throw new Error('[Split] Missing CKTypography.applyTypography');
-    window.CKTypography.applyTypography(
-      state.typography,
-      splitRoot,
-      {
-        title: { varKey: 'title' },
-        body: { varKey: 'body' },
-        button: { varKey: 'button' },
-        localeSwitcher: { varKey: 'localeSwitcher' },
-      },
-      { locale: runtimeContext && runtimeContext.locale, instanceId: runtimeContext && runtimeContext.instanceId },
-    );
+      if (!window.CKStagePod?.applyStagePod)
+        throw new Error('[Split] Missing CKStagePod.applyStagePod');
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
 
-    if (!window.CKHeader?.applyHeader) throw new Error('[Split] Missing CKHeader.applyHeader');
-    window.CKHeader.applyHeader(state, widgetRoot);
+      if (!window.CKTypography?.applyTypography)
+        throw new Error('[Split] Missing CKTypography.applyTypography');
+      window.CKTypography.applyTypography(
+        state.typography,
+        splitRoot,
+        {
+          title: { varKey: 'title' },
+          body: { varKey: 'body' },
+          button: { varKey: 'button' },
+          localeSwitcher: { varKey: 'localeSwitcher' },
+        },
+        { locale: context && context.locale, instanceId: context && context.instanceId },
+      );
 
-    if (!window.CKCoreSize?.applyCoreSize) throw new Error('[Split] Missing CKCoreSize.applyCoreSize');
-    window.CKCoreSize.applyCoreSize(state.coreSize, coreEl);
+      if (!window.CKHeader?.applyHeader) throw new Error('[Split] Missing CKHeader.applyHeader');
+      window.CKHeader.applyHeader(state, widgetRoot);
 
-    if (!window.CKSurface?.applyCardWrapper) throw new Error('[Split] Missing CKSurface.applyCardWrapper');
-    window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, coreEl);
+      if (!window.CKCoreSize?.applyCoreSize)
+        throw new Error('[Split] Missing CKCoreSize.applyCoreSize');
+      window.CKCoreSize.applyCoreSize(state.coreSize, coreEl);
 
-    if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
-      throw new Error('[Split] Missing CKLocaleSwitcher.applyLocaleSwitcher');
-    }
-    window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
-      composedPage: runtimeContext && runtimeContext.composedPage === true,
-      locale: runtimeContext && runtimeContext.locale,
-      previewMode: runtimeContext && runtimeContext.previewMode,
-      typographyScope: splitRoot,
-    });
+      if (!window.CKSurface?.applyCardWrapper)
+        throw new Error('[Split] Missing CKSurface.applyCardWrapper');
+      window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, coreEl);
 
-    var normalized = normalizeState(state);
-    var embeddedInstances = runtimeContext && runtimeContext.payload && isRecord(runtimeContext.payload.embeddedInstances)
-      ? runtimeContext.payload.embeddedInstances
-      : {};
-    splitRoot.dataset.transition = normalized.carousel.transition;
-    coreEl.style.setProperty('--ck-split-media-fit', normalized.mediaFit);
-    coreEl.style.setProperty('--ck-split-media-position', normalized.mediaPosition);
-
-    var stage = document.createElement('div');
-    stage.className = 'ck-split__stage';
-    stage.setAttribute('role', normalized.carousel.enabled ? 'region' : 'group');
-    stage.setAttribute('aria-roledescription', normalized.carousel.enabled ? 'carousel' : 'visual');
-    stage.setAttribute('aria-label', 'Split visual');
-
-    var active = 0;
-    var slides = normalized.items.map(function (item, index) {
-      var slide = renderItem(item, normalized.mediaFit, normalized.mediaPosition, embeddedInstances);
-      slide.dataset.active = index === 0 ? 'true' : 'false';
-      stage.appendChild(slide);
-      return slide;
-    });
-
-    function applyActive(next) {
-      if (next < 0) next = normalized.carousel.loop ? slides.length - 1 : 0;
-      if (next >= slides.length) next = normalized.carousel.loop ? 0 : slides.length - 1;
-      active = next;
-      slides.forEach(function (slide, index) {
-        slide.dataset.active = index === active ? 'true' : 'false';
+      if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
+        throw new Error('[Split] Missing CKLocaleSwitcher.applyLocaleSwitcher');
+      }
+      window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
+        composedPage: context && context.composedPage === true,
+        locale: context && context.locale,
+        previewMode: context && context.previewMode,
+        typographyScope: splitRoot,
       });
-      stage.querySelectorAll('.ck-split__dot').forEach(function (dot, index) {
-        dot.setAttribute('aria-current', index === active ? 'true' : 'false');
-      });
-    }
 
-    if (normalized.carousel.enabled) {
-      renderControls(stage, slides.length, function () { return active; }, normalized.carousel, applyActive);
-      if (normalized.carousel.autoplay && slides.length > 1) {
-        widgetRoot.__ckSplitAutoplayTimer = window.setInterval(function () {
-          if (!document.body.contains(stage)) {
-            window.clearInterval(widgetRoot.__ckSplitAutoplayTimer);
-            widgetRoot.__ckSplitAutoplayTimer = 0;
-            return;
-          }
-          applyActive(active + 1);
-        }, normalized.carousel.intervalMs);
+      var normalized = normalizeState(state);
+      var embeddedInstances =
+        runtimeContext &&
+        runtimeContext.payload &&
+        isRecord(runtimeContext.payload.embeddedInstances)
+          ? runtimeContext.payload.embeddedInstances
+          : {};
+      splitRoot.dataset.transition = normalized.carousel.transition;
+      coreEl.style.setProperty('--ck-split-media-fit', normalized.mediaFit);
+      coreEl.style.setProperty('--ck-split-media-position', normalized.mediaPosition);
+
+      var stage = document.createElement('div');
+      stage.className = 'ck-split__stage';
+      stage.setAttribute('role', normalized.carousel.enabled ? 'region' : 'group');
+      stage.setAttribute(
+        'aria-roledescription',
+        normalized.carousel.enabled ? 'carousel' : 'visual',
+      );
+      stage.setAttribute('aria-label', 'Split visual');
+
+      var active = 0;
+      var slides = normalized.items.map(function (item, index) {
+        var slide = renderItem(
+          item,
+          normalized.mediaFit,
+          normalized.mediaPosition,
+          embeddedInstances,
+        );
+        slide.dataset.active = index === 0 ? 'true' : 'false';
+        stage.appendChild(slide);
+        return slide;
+      });
+
+      function applyActive(next) {
+        if (next < 0) next = normalized.carousel.loop ? slides.length - 1 : 0;
+        if (next >= slides.length) next = normalized.carousel.loop ? 0 : slides.length - 1;
+        active = next;
+        slides.forEach(function (slide, index) {
+          slide.dataset.active = index === active ? 'true' : 'false';
+        });
+        stage.querySelectorAll('.ck-split__dot').forEach(function (dot, index) {
+          dot.setAttribute('aria-current', index === active ? 'true' : 'false');
+        });
+      }
+
+      if (normalized.carousel.enabled) {
+        renderControls(
+          stage,
+          slides.length,
+          function () {
+            return active;
+          },
+          normalized.carousel,
+          applyActive,
+        );
+        if (normalized.carousel.autoplay && slides.length > 1) {
+          widgetRoot.__ckSplitAutoplayTimer = window.setInterval(function () {
+            if (!document.body.contains(stage)) {
+              window.clearInterval(widgetRoot.__ckSplitAutoplayTimer);
+              widgetRoot.__ckSplitAutoplayTimer = 0;
+              return;
+            }
+            applyActive(active + 1);
+          }, normalized.carousel.intervalMs);
+        }
+      }
+
+      coreEl.replaceChildren(stage);
+      applyActive(0);
+
+      if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
+        window.CKBranding.applyBacklink(widgetRoot, state);
       }
     }
 
-    coreEl.replaceChildren(stage);
-    applyActive(0);
+    let previewLocaleRequest = 0;
 
-    if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
-      window.CKBranding.applyBacklink(widgetRoot, state);
+    async function applyPreviewState(
+      state,
+      locale,
+      instanceId,
+      previewMode,
+      baseLocale,
+      translatedLocaleValues,
+    ) {
+      if (!state) return;
+      const requestId = ++previewLocaleRequest;
+      const helper =
+        window.CK_PREVIEW_L10N &&
+        typeof window.CK_PREVIEW_L10N === 'object' &&
+        typeof window.CK_PREVIEW_L10N.loadLocalizedState === 'function'
+          ? window.CK_PREVIEW_L10N
+          : null;
+      let localizedState = state;
+      if (helper) {
+        try {
+          localizedState = await helper.loadLocalizedState({
+            instanceId: typeof instanceId === 'string' ? instanceId : resolvedInstanceId,
+            locale,
+            baseLocale,
+            previewMode,
+            baseState: state,
+            values: translatedLocaleValues,
+          });
+        } catch (error) {
+          if (requestId === previewLocaleRequest) {
+            console.error('[Split] preview localization load failed', error);
+          }
+          return;
+        }
+      }
+      if (requestId !== previewLocaleRequest) return;
+      applyState(localizedState, {
+        locale,
+        previewMode,
+        composedPage: runtimeContext && runtimeContext.composedPage === true,
+        instanceId: typeof instanceId === 'string' ? instanceId : resolvedInstanceId,
+      });
     }
+
+    runtime.bindStateUpdates(
+      'split',
+      resolvedInstanceId,
+      (data) => {
+        void applyPreviewState(
+          data.state,
+          data.locale,
+          data.instanceId,
+          data.previewMode,
+          data.baseLocale,
+          data.translatedLocaleValues,
+        );
+      },
+      { requireWidgetName: true },
+    );
+
+    const initialLocale = runtimeContext.locale || '';
+    const initialState = runtimeContext.state;
+    if (initialState)
+      applyState(initialState, {
+        ...runtimeContext,
+        locale: initialLocale,
+        instanceId: resolvedInstanceId,
+      });
   }
 
   runtime.register('split', initSplit);
