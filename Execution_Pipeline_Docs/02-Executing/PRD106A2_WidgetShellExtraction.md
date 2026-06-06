@@ -63,24 +63,24 @@ If a product decision is missing, add it under
 Current executable step:
 
 ```text
-Step 5: Prove Core extension with one non-trivial widget.
+Step 6: Add validation/search guards.
 ```
 
 Required evidence before marking green:
 
-- Split or Cards diff showing Shell plus Core contribution.
-- Compile/render evidence for the chosen non-trivial widget.
-- Package output evidence for the chosen non-trivial widget.
-- Explicit proof that Core contributes only Core state/controls/runtime and does
-  not redefine Header/CTA/Stage/Pod.
+- Targeted guard output for copied Shell paths and duplicate Shell-owned
+  taxonomies.
+- Guard implementation is product-shaped and scoped to Widget Shell/Core
+  boundaries.
+- No root PRD scripts, broad repo scripts, or fake self-checking product flows
+  are added.
 
 Stop conditions:
 
-- The chosen widget defines duplicate Shell paths.
-- The chosen widget creates a private Header, Stage, Pod, typography, locale
-  selector, branding, or translation system.
-- The chosen widget cannot compile as Shell plus Core.
-- The chosen widget changes FAQ or CTA behavior.
+- Guards preserve old drift instead of deleting/failing it.
+- Guards recreate the deleted root PRD-script behavior.
+- Guards allow copied Header/CTA/Stage/Pod/typography/locale/branding logic in
+  widget Core files.
 
 ## Execution Steps
 
@@ -90,7 +90,7 @@ Stop conditions:
 | 2 | Create `packages/widget-shell/` contract surface. | Diff showing package files and exported responsibilities. | Package owns contract/defaults/controls/render/runtime/css/validators. | Package starts owning Widget Core behavior. |
 | 3 | Rebase FAQ onto shared Shell with no behavior change. | Diff plus FAQ compile/render/save evidence. | FAQ output remains gold standard. | FAQ behavior changes outside intentional package import. |
 | 4 | Prove Core extension with CTA. | CTA diff plus compile/render evidence. | CTA is Shell plus empty Core. | CTA defines duplicate Shell paths. |
-| 5 | Prove Core extension with one non-trivial widget. | Split or Cards diff plus compile/render evidence. | Core contributes only Core state/controls/runtime. | Core redefines Header/CTA/Stage/Pod. |
+| 5 | Implement Split Core on the shared Shell. | Split diff plus compile/render/package evidence. | Split contributes only Core state/controls/runtime and uses shared Header/CTA/Stage/Pod. | Split redefines Header/CTA/Stage/Pod or changes FAQ/CTA behavior. |
 | 6 | Add validation/search guards. | Targeted verification or `rg` guard output. | Forbidden duplicate paths fail without adding repo-wide PRD scripts or preserving copied Shell logic. | Guards allow copied Shell logic or recreate deleted PRD-script behavior. |
 
 ## Purpose
@@ -1058,13 +1058,13 @@ Gate or the numbered Execution Steps table.
    behavior change and proves compile, preview, save/materialization, and
    package output evidence.
 4. Step 4 converts CTA to prove Shell plus empty Core reuse.
-5. Step 5 converts Split as the preferred non-trivial Core proof. Use Cards only
-   if the owning Cards PRD first resolves the `cards`/`cardgrid` naming
-   authority without aliases or compatibility shims.
+5. Step 5 implements Split Core on the shared Shell. Use Cards only if the
+   owning Cards PRD first resolves the `cards`/`cardgrid` naming authority
+   without aliases or compatibility shims.
 6. Step 6 adds product-shaped validation/search guards that reject copied Shell
    logic and duplicate Shell-owned paths without adding root PRD scripts.
 7. Countdown and Logo Showcase gold-standard repair remain downstream Shell
-   rebase tasks after FAQ, CTA, and one non-trivial Core are green.
+   rebase tasks after FAQ, CTA, and Split Core are green.
 
 ## Blast Radius
 
@@ -1083,7 +1083,7 @@ Expected touched areas:
 - `tokyo/product/widgets/shared/**`
 - `tokyo/product/widgets/faq/**`
 - `tokyo/product/widgets/cta/**`
-- `tokyo/product/widgets/split/**` for preferred non-trivial Core proof, or
+- `tokyo/product/widgets/split/**` for Split Core implementation, or
   `tokyo/product/widgets/cards/**` only after the owning Cards PRD resolves
   `cards` versus `cardgrid`.
 - Widget validation/search guards scoped to Shell/Core boundaries.
@@ -1097,7 +1097,7 @@ PRD. Tokyo/R2 paths remain unchanged.
   architecture.
 - FAQ consumes the shared Shell and has no user-visible regression.
 - CTA consumes the shared Shell with an empty Core.
-- One non-trivial Core widget consumes the shared Shell.
+- Split Core consumes the shared Shell.
 - Bob preview and Roma materialization use the same Shell + Core contract.
 - A2 emits stable package contribution metadata/module keys sufficient for
   PRD106B Page Composer consumption; PRD106B proves actual Page Composer

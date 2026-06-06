@@ -16,6 +16,7 @@ export const WIDGET_SHELL_RUNTIME_MODULE_KEYS = [
   'product/widgets/shared/surface.js',
   'product/widgets/shared/typography-data.js',
   'product/widgets/shared/typography.js',
+  'product/widgets/shared/coreSize.js',
   'product/widgets/shared/stagePod.js',
   'product/widgets/shared/branding.js',
   'product/widgets/shared/previewL10n.js',

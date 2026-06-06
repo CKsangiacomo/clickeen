@@ -51,22 +51,33 @@ is evidence to stop, not evidence to proceed.
 Current executable step:
 
 ```text
-Step 1: Define Split Core contract.
+Step 10: Build embedded-instance runtime and package contribution.
 ```
 
 Required evidence before marking green:
 
-- Split Core state paths are listed.
-- Split validation rules are listed.
-- Split embedded-instance dependency contribution is listed as a conditional,
-  hard-gated capability.
-- Shell-owned paths are excluded.
-- Prague hero/split source behavior is mapped to Split Core or defaults.
+- PRD106B defines the package dependency field shape.
+- Roma can expose/select same-account materialized child instances without Bob
+  inventing discovery.
+- Split materialization reports child instance dependencies through that PRD106B
+  contract.
+- Updating a child instance re-materializes affected parent Split instances and
+  affected pages through Roma/Page Composer dependency handling.
 
 Stop conditions:
 
-- Split requires new Header/CTA/Stage/Pod state.
-- Split requires page-level layout or columns.
+- PRD106B is not green.
+- Split invents dependency indexing, page recomposition, child-instance
+  discovery, or embedded-instance publish rules locally.
+- Embedded instance support requires a new Header/CTA/Stage/Pod/Page layout
+  model.
+
+Implementation checkpoint:
+
+- Steps 1-9 are implemented for image/video Split Core and carousel behavior.
+- Step 11 is implemented for image/video editable fields.
+- Step 12 is implemented for image/video package composition safety.
+- Embedded widget instances remain hidden/unsupported until Step 10 is green.
 
 ## Execution Steps
 
@@ -228,11 +239,14 @@ Keep FAQ's settings placement for shared behavior:
 The only Split-specific surface is the Split Core div. Core is the generic
 widget-owned slot where Split software begins; it is not the carousel itself.
 
-The Split software inside the Core div can render one or more Split items. Each
-Split item can only be:
+The Split software inside the Core div can render one or more Split items.
+Executable PRD106C3 support is:
 
 - an image;
 - a video;
+
+Conditional support after Step 10 is green:
+
 - an embedded widget instance.
 
 Carousel is optional Split software inside the Core div. It is not a separate
@@ -248,12 +262,12 @@ Approved Split-specific state:
 | --- | --- | --- |
 | `core.items[]` | config | Ordered Core item manager. Minimum 1 item; default maximum 6 items. |
 | `core.items[].id` | identity | Stable item identity for editing, translation, and carousel runtime. |
-| `core.items[].kind` | config | One of `image`, `video`, or `instance`. |
+| `core.items[].kind` | config | One of `image` or `video` in executable PRD106C3. Add `instance` only after Step 10 is green. |
 | `core.items[].image.ref` and existing image asset reference fields | config | Existing image asset/reference shape. Used only when item kind is `image`. |
 | `core.items[].image.alt` | content | Translatable image alt text. Used only when item kind is `image`. |
 | `core.items[].video.ref`, `core.items[].video.posterRef`, and existing video asset/reference fields | config | Existing video asset/reference shape. Used only when item kind is `video`. |
 | `core.items[].video.alt` | content | Translatable video/presentation alt text when supported. Used only when item kind is `video`. |
-| `core.items[].instance.instanceId` | reference | Account-owned widget instance embedded in this Core item. Used only when item kind is `instance`. |
+| `core.items[].instance.instanceId` | reference | Conditional account-owned widget instance reference. This path is unsupported/hidden until Step 10 is green. |
 | `core.media.fit` | config | How image/video items fit inside the Core div. Allowed values: `cover`, `contain`. |
 | `core.media.position` | config | Image/video object position. Allowed values: `center`, `top`, `bottom`, `left`, `right`. |
 | `core.carousel.enabled` | config | Enables carousel authoring and carousel runtime behavior. |
@@ -282,11 +296,13 @@ Validation rules:
 | `core.carousel.enabled == true` and `core.items.length < 2` | Fail save/publish visibly. |
 | `core.carousel.enabled == true` and `core.items.length > 6` | Fail save/publish visibly. |
 | Any `core.items[].id` is missing or duplicated | Fail save/publish visibly. |
-| Any `core.items[].kind` is not `image`, `video`, or `instance` | Fail save/publish visibly. |
+| Any executable `core.items[].kind` is not `image` or `video` before Step 10 is green | Fail save/publish visibly. |
+| Any `core.items[].kind` is not `image`, `video`, or `instance` after Step 10 is green | Fail save/publish visibly. |
 | Image item lacks a valid image reference | Fail save/publish visibly. |
 | Video item lacks a valid video reference | Fail save/publish visibly. |
-| Instance item lacks a valid account-owned materialized instance reference | Fail save/publish visibly. |
-| Instance item references the Split instance itself | Fail save/publish visibly. |
+| Instance item appears before Step 10 is green | Fail save/publish visibly as unsupported. |
+| Instance item lacks a valid account-owned materialized instance reference after Step 10 is green | Fail save/publish visibly. |
+| Instance item references the Split instance itself after Step 10 is green | Fail save/publish visibly. |
 
 Canonical validation owner:
 

@@ -2,6 +2,12 @@
   "v": 1,
   "limits": [
     {
+      "kind": "limit",
+      "key": "items.group.small.max",
+      "path": "core.items[]",
+      "metric": "count"
+    },
+    {
       "key": "branding.remove",
       "kind": "flag",
       "paths": ["behavior.showBacklink"],

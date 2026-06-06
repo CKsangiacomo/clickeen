@@ -3,35 +3,43 @@
   "widgetType": "split",
   "fields": [
     {
-      "path": "headline",
-      "label": "Headline",
-      "role": "title",
+      "path": "header.title",
+      "label": "Header title",
+      "role": "header-title",
       "type": "richtext",
       "arrayItemIdentity": [],
       "limits": []
     },
     {
-      "path": "subheadline",
-      "label": "Subheadline",
-      "role": "body",
+      "path": "header.subtitleHtml",
+      "label": "Header subtitle",
+      "role": "header-subtitle",
       "type": "richtext",
       "arrayItemIdentity": [],
       "limits": []
     },
     {
-      "path": "primaryCta.label",
-      "label": "Primary CTA Label",
-      "role": "button",
+      "path": "cta.label",
+      "label": "CTA label",
+      "role": "cta-label",
       "type": "string",
       "arrayItemIdentity": [],
       "limits": []
     },
     {
-      "path": "secondaryCta.label",
-      "label": "Secondary CTA Label",
-      "role": "button",
+      "path": "core.items[].image.alt",
+      "label": "Image alt text",
+      "role": "split-image-alt",
       "type": "string",
-      "arrayItemIdentity": [],
+      "arrayItemIdentity": ["core.items[].id"],
+      "limits": []
+    },
+    {
+      "path": "core.items[].video.alt",
+      "label": "Video alt text",
+      "role": "split-video-alt",
+      "type": "string",
+      "arrayItemIdentity": ["core.items[].id"],
       "limits": []
     }
   ]

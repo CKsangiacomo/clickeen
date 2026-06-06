@@ -1,5 +1,6 @@
 import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
 import type { ShellEditorSharedNodeId } from '@clickeen/widget-shell';
+import { buildCoreSizeLayoutPanelFields } from './modules/coreSize';
 import {
   buildHeaderAppearancePanelFields,
   buildHeaderContentPanelFields,
@@ -213,6 +214,8 @@ function renderSharedNode(node: EditorSharedNode, defaults: JsonObject): string[
       return buildHeaderLayoutPanelFields({ includeCta });
     case 'header-layout-no-cta':
       return buildHeaderLayoutPanelFields({ includeCta: false });
+    case 'core-size':
+      return buildCoreSizeLayoutPanelFields(defaults);
     case 'header-appearance':
       return buildHeaderAppearancePanelFields({ includeCta });
     case 'header-appearance-no-cta':

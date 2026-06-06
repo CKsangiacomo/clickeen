@@ -37,6 +37,7 @@ export const SHELL_EDITOR_SHARED_NODE_IDS = [
   'header-content-no-cta',
   'header-layout',
   'header-layout-no-cta',
+  'core-size',
   'header-appearance',
   'header-appearance-no-cta',
   'stagepod-appearance',
