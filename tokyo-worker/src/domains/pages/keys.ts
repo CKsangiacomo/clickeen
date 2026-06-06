@@ -18,14 +18,6 @@ export function accountPagesIndexKey(accountId: string): string {
   return `${accountPagesRoot(accountId)}/index.json`;
 }
 
-export function accountWebsiteIndexesRoot(accountId: string): string {
-  return `${accountPagesRoot(accountId)}/indexes`;
-}
-
-export function accountPlacementIndexKey(accountId: string, instanceId: string): string {
-  return `${accountWebsiteIndexesRoot(accountId)}/placements/${instanceId}.json`;
-}
-
 export function accountPagePublishRoot(accountId: string, pageId: string): string {
   return accountPageRoot(accountId, pageId);
 }

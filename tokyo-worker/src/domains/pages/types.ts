@@ -59,14 +59,6 @@ export type AccountPagesIndex = {
   pages: AccountPageSummary[];
 };
 
-export type AccountPlacementIndex = {
-  v: 1;
-  accountId: string;
-  instanceId: string;
-  pageIds: string[];
-  updatedAt: string;
-};
-
 export type PageOperationErrorKind =
   | 'VALIDATION'
   | 'NOT_FOUND'

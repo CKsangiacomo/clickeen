@@ -10,13 +10,11 @@ import {
   accountPageRoot,
   accountPageSourceKey,
   accountPagesIndexKey,
-  accountPlacementIndexKey,
 } from './keys';
 import type {
   AccountPageSource,
   AccountPageSummary,
   AccountPagesIndex,
-  AccountPlacementIndex,
   PageLocalization,
   PageMetadata,
   PagePlacement,
@@ -224,97 +222,12 @@ async function removePageFromPagesIndex(args: {
   });
 }
 
-async function readPlacementIndex(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-}): Promise<AccountPlacementIndex> {
-  const stored = await loadJson<AccountPlacementIndex>(
-    args.env,
-    accountPlacementIndexKey(args.accountId, args.instanceId),
-  );
-  if (!stored || stored.v !== 1 || stored.accountId !== args.accountId || stored.instanceId !== args.instanceId || !Array.isArray(stored.pageIds)) {
-    return { v: 1, accountId: args.accountId, instanceId: args.instanceId, pageIds: [], updatedAt: new Date(0).toISOString() };
-  }
-  return {
-    v: 1,
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    pageIds: stored.pageIds.filter((pageId) => normalizePageId(pageId)),
-    updatedAt: typeof stored.updatedAt === 'string' ? stored.updatedAt : new Date(0).toISOString(),
-  };
-}
-
-async function writePlacementIndex(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-  pageIds: string[];
-  now: string;
-}): Promise<void> {
-  await putJson(args.env, accountPlacementIndexKey(args.accountId, args.instanceId), {
-    v: 1,
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    pageIds: Array.from(new Set(args.pageIds)).sort(),
-    updatedAt: args.now,
-  });
-}
-
-async function updatePlacementIndexes(args: {
-  env: Env;
-  accountId: string;
-  pageId: string;
-  previous: AccountPageSource | null;
-  next: AccountPageSource | null;
-  now: string;
-}): Promise<void> {
-  const previousIds = new Set(args.previous?.placements.map((placement) => placement.instanceId) ?? []);
-  const nextIds = new Set(args.next?.placements.map((placement) => placement.instanceId) ?? []);
-  const touchedIds = new Set([...previousIds, ...nextIds]);
-  await Promise.all(
-    [...touchedIds].map(async (instanceId) => {
-      const index = await readPlacementIndex({
-        env: args.env,
-        accountId: args.accountId,
-        instanceId,
-      });
-      const withoutPage = index.pageIds.filter((pageId) => pageId !== args.pageId);
-      const pageIds = nextIds.has(instanceId) ? [...withoutPage, args.pageId] : withoutPage;
-      await writePlacementIndex({
-        env: args.env,
-        accountId: args.accountId,
-        instanceId,
-        pageIds,
-        now: args.now,
-      });
-    }),
-  );
-}
-
 export async function listAccountPages(args: {
   env: Env;
   accountId: string;
 }): Promise<AccountPagesIndex> {
   const accountId = assertAccountId(args.accountId);
   return readPagesIndex(args.env, accountId);
-}
-
-export async function listPagesPlacingInstance(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-}): Promise<string[]> {
-  const accountId = assertAccountId(args.accountId);
-  const instanceId = typeof args.instanceId === 'string' ? args.instanceId.trim().toUpperCase() : '';
-  if (!isCompactInstanceId(instanceId)) {
-    throw new PageOperationError({
-      kind: 'VALIDATION',
-      reasonKey: 'tokyo.errors.page.invalidInstanceId',
-    });
-  }
-  const index = await readPlacementIndex({ env: args.env, accountId, instanceId });
-  return index.pageIds;
 }
 
 export async function saveAccountPageSource(args: {
@@ -354,14 +267,6 @@ export async function saveAccountPageSource(args: {
   };
   await putJson(args.env, accountPageSourceKey(accountId, pageId), nextSource);
   const summary = await writePagesIndex({ env: args.env, accountId, source: nextSource, now });
-  await updatePlacementIndexes({
-    env: args.env,
-    accountId,
-    pageId,
-    previous,
-    next: nextSource,
-    now,
-  });
   return { source: nextSource, summary };
 }
 
@@ -383,13 +288,5 @@ export async function deleteAccountPageSource(args: {
   if (!previous) return { existed: false };
   await deletePrefix(args.env, `${accountPageRoot(accountId, pageId)}/`);
   await removePageFromPagesIndex({ env: args.env, accountId, pageId });
-  await updatePlacementIndexes({
-    env: args.env,
-    accountId,
-    pageId,
-    previous,
-    next: null,
-    now: args.now ?? new Date().toISOString(),
-  });
   return { existed: true };
 }

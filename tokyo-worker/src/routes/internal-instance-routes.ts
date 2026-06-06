@@ -17,7 +17,6 @@ import {
   readAccountInstanceDocument,
   renameAccountInstanceDisplay,
 } from '../domains/account-instances/source';
-import { listPagesPlacingInstance } from '../domains/pages';
 import { json } from '../http';
 import {
   authorizeAccountInstanceControlRequest,
@@ -261,42 +260,6 @@ export async function tryHandleInternalInstanceRoutes(
             },
           },
           { status: 409 },
-        ),
-      );
-    }
-  }
-
-  const internalInstancePagesMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/pages$/);
-  if (internalInstancePagesMatch) {
-    const instanceId = normalizeStorageId(decodeURIComponent(internalInstancePagesMatch[1] || ''));
-    const accountId = normalizeAccountPublicId(req.headers.get('x-account-id'));
-    if (!accountId || !instanceId || !isValidScopedInstance(instanceId, accountId)) {
-      return respondValidation(respond, 'coreui.errors.instance.invalidPayload', accountId ? 403 : 422);
-    }
-    if (req.method !== 'GET') return respondMethodNotAllowed(respond);
-    const authErr = await authorizeAccountInstanceControlRequest({
-      req,
-      env,
-      accountId,
-      minRole: 'viewer',
-    });
-    if (authErr) return respond(authErr);
-
-    try {
-      const pageIds = await listPagesPlacingInstance({ env, accountId, instanceId });
-      return respond(json({ ok: true, accountId, instanceId, pageIds }));
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return respond(
-        json(
-          {
-            error: {
-              kind: 'VALIDATION',
-              reasonKey: detail,
-              detail,
-            },
-          },
-          { status: 422 },
         ),
       );
     }
