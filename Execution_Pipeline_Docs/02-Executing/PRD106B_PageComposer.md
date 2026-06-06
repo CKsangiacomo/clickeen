@@ -1,6 +1,6 @@
 # PRD106B_PageComposer
 
-Status: Active execution checkpoint - Steps 1-6 green; Step 7 current
+Status: Active execution checkpoint - Steps 1-7 green; Step 8 current
 Owner: Roma
 Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
@@ -52,29 +52,27 @@ If this PRD conflicts with a sibling PRD, the umbrella authority table decides.
 Current executable step:
 
 ```text
-Step 7: Add SEO/GEO and localization controls specified here.
+Step 8: Run deletion/search guards.
 ```
 
 Required evidence before marking green:
 
-- Page Composer exposes page localization settings in Roma, not Tokyo and not
-  the customer's host navigation.
-- Page Composer writes those settings into the Roma-owned `source.json` schema.
-- Generated page HTML remains crawlable initial HTML with title, description,
-  canonical, robots, and ordered instance sections.
-- Language switcher work is limited to the optional Clickeen-owned top-of-page
-  switcher. Host-nav integration is not invented.
-- IP localization is either implemented as selection among Roma-materialized
-  locale artifacts or explicitly fenced if public serving cannot do that
-  without product logic.
+- Searches show no active `website/pages`, `website/publishes`, reverse
+  placement index, or page `embed.js` authority.
+- Searches show Tokyo does not inspect page metadata, placements, localization,
+  readiness semantics, dependency truth, or composition output.
+- Roma/Page Composer remains the only product boundary that decides page source,
+  dependency propagation, composition, publish blockers, copy output, and
+  localization settings.
+- Verification remains green after deletion/search guard cleanup.
 
 Stop conditions:
 
-- Tokyo must interpret localization rules or compose localized output.
-- Page localization edits instance locale truth.
-- Customer host-nav integration is required for PRD106B to be green.
-- Generated page output becomes an empty client-side loader instead of
-  crawlable HTML.
+- Any active old page coordinate survives as product truth.
+- Any page `embed.js` route/file/generator survives.
+- Tokyo still owns reverse placement truth or page composition semantics.
+- Guard cleanup would require touching Prague route migration or Widget Core
+  work; those belong to sibling PRDs.
 
 ## Execution Steps
 
@@ -89,7 +87,7 @@ Stop conditions:
 | 7 | Add SEO/GEO and localization controls specified here. | Tests/screenshot. | Crawlable initial HTML and page localization rules exist. | Host-nav integration is invented. |
 | 8 | Run deletion/search guards. | `rg` output/tests. | No Tokyo composition/readiness/page `embed.js` authority remains. | Any forbidden authority remains active. |
 
-## Execution Checkpoint: Steps 1-6 Green
+## Execution Checkpoint: Steps 1-7 Green
 
 This checkpoint records executed repo state so the next agent does not restart
 from Step 1 or preserve old drift.
@@ -207,13 +205,40 @@ Committed evidence:
 - `4079568d fix(pages): derive affected pages in Roma`
 - `e49e8d6b fix(pages): remove Tokyo placement index route`
 
+### Step 7 - SEO/GEO And Localization Controls
+
+Status: green for PRD106B. IP localization serving is explicitly fenced until a
+later public-serving design can select among already-materialized locale
+artifacts without Tokyo interpreting page source.
+
+Evidence:
+
+- Page Composer exposes `Default locale`, `Language switcher`, `IP
+  localization`, and `Country rules` in Roma Page settings.
+- Page Composer writes localization settings into the Roma-owned `source.json`.
+- Generated page HTML remains initial crawlable HTML with title, description,
+  canonical, robots, and ordered instance sections.
+- The page package composer validates configured locales against the currently
+  materialized instance package locale and fails visibly when the requested page
+  locale is unavailable.
+- The top language switcher renderer is bounded to page-level configured
+  locales and does not integrate with customer host navigation.
+- IP localization is disabled/fenced in Roma UI and blocks publish if stale
+  source data somehow enables it.
+
+Committed evidence:
+
+- `c23c05f6 feat(pages): add page localization settings`
+- `fe8dcc96 feat(pages): add page country locale rules`
+
 Remaining for later steps:
 
 - User-visible `recomposing`, `stale`, and `failed` page states are not fully
   implemented.
 - Embedded-widget dependency propagation is contract-only until the first Widget
   Core that embeds another widget instance is green.
-- Page localization controls and localized page artifact behavior are Step 7.
+- Multi-locale page artifact materialization and IP-based public file selection
+  require a later design that keeps Tokyo storage-only.
 
 ## Purpose
 
