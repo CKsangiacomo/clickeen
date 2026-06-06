@@ -141,9 +141,6 @@ accounts/{accountPublicId}/
     serving-policy.json          # account-level standalone serving gates; never package bytes
   pages/
     index.json                   # account page list projection
-    indexes/
-      placements/
-        {instanceId}.json        # reverse page placement index; derived/rebuildable
     {pageId}/
       source.json                # page metadata + ordered widget placements
       serve-state.json           # page public delivery gate
