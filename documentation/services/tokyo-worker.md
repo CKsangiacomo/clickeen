@@ -109,11 +109,12 @@ Generated package files and public availability are separate:
 - the environment public-serving URL serves only if Tokyo serve state is `published`, the generated artifact exists, and account serving policy allows standalone delivery.
 - generated `index.html`, `styles.css`, and `runtime.js` can exist for Roma page composition while the standalone widget URL remains unpublished.
 - lower-tier serving caps write `accounts/{accountPublicId}/website/serving-policy.json`; they do not delete generated package files because Roma page composition may still use those files.
-- generated page packages live under `accounts/{accountPublicId}/website/publishes/{pageId}/` and use page serve state under `website/pages/{pageId}/serve-state.json`.
-- page `embed.js` is route-generated delivery script output for published pages. It is not stored as a fourth page package file.
+- generated page packages live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`.
+- page source is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/source.json`.
+- page serve state is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/serve-state.json`.
 - if a requested generated file is missing, that request returns 404.
 - instance save writes the package files that standalone serving and Roma page composition both consume. Page save stores the Roma-submitted page package files. Publish/unpublish changes serve state, verifies package readiness before public delivery, and purges cache.
-- Support files only serve from the generated-browser-file allowlist: `styles.css` and `runtime.js`; page coordinates also allow route-generated `embed.js`.
+- Support files only serve from the generated-browser-file allowlist: `styles.css` and `runtime.js`.
 - Private source and state files are not public artifacts. `instance.config.json`, `instance.content.json`, `instance.json`, `config.json`, `publish.json`, `embed.json`, `translations.json`, `overlays/`, `published/`, source maps, hidden files, directories, and unknown files return 404 even if the object physically exists.
 
 The following are not surviving public product contracts:

@@ -81,8 +81,9 @@ Rules:
 - Browser package files `index.html`, `styles.css`, and `runtime.js` are submitted by the Builder save path and stored by Tokyo-worker. They must not be treated as identity, ownership, saved config, or product publish truth.
 - Those files can exist for composition before public standalone serving. `clk.live` serving still requires Tokyo serve state to be `published` and account serving policy to allow the instance.
 - `accounts/{accountPublicId}/website/serving-policy.json` is the named account-level standalone serving gate for lower-tier caps. It disables public delivery without deleting generated package files.
-- Generated page packages live under `accounts/{accountPublicId}/website/publishes/{pageId}/` and use page serve state under `website/pages/{pageId}/serve-state.json`.
-- Page `embed.js` is route-generated delivery script output for published pages, not a fourth generated page package file.
+- Generated page packages live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`.
+- Page source is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/source.json`.
+- Page serve state is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/serve-state.json`.
 - Prague page translations are not account-instance overlays.
 
 ## Public Static Serving
@@ -103,7 +104,7 @@ https://dev.clk.live/{accountPublicId}/pages/{pageId}
 
 Cloud-dev must not bind the dev Tokyo-worker to `clk.live`.
 
-Those routes map to generated `index.html`, `styles.css`, and `runtime.js` packages only after Tokyo serve state allows public delivery. Support files are served only when they are generated browser files on the public allowlist; page coordinates also allow route-generated `embed.js`.
+Those routes map to generated `index.html`, `styles.css`, and `runtime.js` packages only after Tokyo serve state allows public delivery. Support files are served only when they are generated browser files on the public allowlist.
 
 ## Forbidden Concepts
 

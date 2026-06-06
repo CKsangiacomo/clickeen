@@ -10,14 +10,12 @@ import {
 } from '../domains/account-instances/package-file-names';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
 
-const PAGE_EMBED_FILE = 'embed.js';
-
 function notFound(): Response {
   return new Response('Not found', { status: 404 });
 }
 
 function isPageDeliveryFile(file: string): boolean {
-  return isPublicPackageFile(file) || file === PAGE_EMBED_FILE;
+  return isPublicPackageFile(file);
 }
 
 function parseClkLivePath(pathname: string): {
@@ -67,9 +65,6 @@ function cacheControlForGeneratedFile(file: string): string {
   if (file === PUBLIC_INDEX_FILE || file === PUBLIC_STYLES_FILE || file === PUBLIC_RUNTIME_FILE) {
     return 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400';
   }
-  if (file === PAGE_EMBED_FILE) {
-    return 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400';
-  }
   return 'public, max-age=31536000, immutable';
 }
 
@@ -89,70 +84,6 @@ function responseForObject(
   headers.set('access-control-allow-origin', '*');
   headers.set('x-content-type-options', 'nosniff');
   return new Response(headOnly ? null : obj.body, { status: 200, headers });
-}
-
-function responseForText(args: {
-  body: string;
-  file: string;
-  contentType: string;
-  headOnly: boolean;
-}): Response {
-  const cacheControl = cacheControlForGeneratedFile(args.file);
-  const headers = new Headers();
-  headers.set('content-type', args.contentType);
-  headers.set('cache-control', cacheControl);
-  headers.set('cdn-cache-control', cacheControl);
-  headers.set('cloudflare-cdn-cache-control', cacheControl);
-  headers.set('access-control-allow-origin', '*');
-  headers.set('x-content-type-options', 'nosniff');
-  return new Response(args.headOnly ? null : args.body, { status: 200, headers });
-}
-
-function buildPageEmbedScript(args: {
-  baseUrl: string;
-  pageId: string;
-}): string {
-  const baseUrl = JSON.stringify(args.baseUrl);
-  const pageId = JSON.stringify(args.pageId);
-  return `(function () {
-  var baseUrl = ${baseUrl};
-  var pageId = ${pageId};
-  var doc = document;
-  var script = doc.currentScript;
-  var mount = doc.createElement('div');
-  mount.setAttribute('data-ck-page-embed', pageId);
-  if (script && script.parentNode) {
-    script.parentNode.insertBefore(mount, script);
-  } else {
-    doc.body.appendChild(mount);
-  }
-  if (!doc.querySelector('link[data-ck-page-style="' + pageId + '"]')) {
-    var style = doc.createElement('link');
-    style.rel = 'stylesheet';
-    style.href = baseUrl + '/styles.css';
-    style.setAttribute('data-ck-page-style', pageId);
-    doc.head.appendChild(style);
-  }
-  fetch(baseUrl, { credentials: 'omit' })
-    .then(function (response) {
-      if (!response.ok) throw new Error('ck_page_fetch_failed');
-      return response.text();
-    })
-    .then(function (html) {
-      var parsed = new DOMParser().parseFromString(html, 'text/html');
-      var main = parsed.querySelector('[data-ck-page]');
-      if (!main) throw new Error('ck_page_root_missing');
-      mount.innerHTML = '';
-      mount.appendChild(doc.importNode(main, true));
-      var runtime = doc.createElement('script');
-      runtime.src = baseUrl + '/runtime.js';
-      runtime.async = false;
-      mount.appendChild(runtime);
-    })
-    .catch(function (error) {
-      mount.setAttribute('data-ck-page-error', error && error.message ? error.message : String(error));
-    });
-})();`;
 }
 
 export async function tryHandleClkLiveStaticRoutes(
@@ -176,16 +107,6 @@ export async function tryHandleClkLiveStaticRoutes(
       pageId: parsed.pageId,
     });
     if (serveState !== 'published') return respond(notFound());
-
-    if (parsed.file === PAGE_EMBED_FILE) {
-      const baseUrl = `${url.origin}/${parsed.accountId}/pages/${parsed.pageId}`;
-      return respond(responseForText({
-        body: buildPageEmbedScript({ baseUrl, pageId: parsed.pageId }),
-        file: parsed.file,
-        contentType: 'text/javascript; charset=utf-8',
-        headOnly: req.method === 'HEAD',
-      }));
-    }
 
     const key = accountPagePublishFileKey(
       parsed.accountId,

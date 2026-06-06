@@ -160,7 +160,6 @@ export async function purgeAccountPagePublicCache(args: {
         `${base}/index.html`,
         `${base}/styles.css`,
         `${base}/runtime.js`,
-        `${base}/embed.js`,
       ],
     }),
   }).catch(() => undefined);

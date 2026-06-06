@@ -139,19 +139,17 @@ accounts/{accountPublicId}/
       runtime.js                 # generated public artifact
   website/
     serving-policy.json          # account-level standalone serving gates; never package bytes
-    pages/
-      index.json                 # account page list projection
-      {pageId}/
-        source.json              # page head metadata + ordered widget placements
-        serve-state.json         # page public delivery gate
+  pages/
+    index.json                   # account page list projection
     indexes/
       placements/
-        {instanceId}.json        # reverse page placement index
-    publishes/
-      {pageId}/
-        index.html               # generated composed page package
-        styles.css               # generated composed page package
-        runtime.js               # generated composed page package
+        {instanceId}.json        # reverse page placement index; derived/rebuildable
+    {pageId}/
+      source.json                # page metadata + ordered widget placements
+      serve-state.json           # page public delivery gate
+      index.html                 # generated composed page package
+      styles.css                 # generated composed page package
+      runtime.js                 # generated composed page package
 ```
 
 `widgetCode` may appear in instance metadata because it is shared codebook metadata. It is never required to locate an instance in R2 storage.

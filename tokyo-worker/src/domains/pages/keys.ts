@@ -1,9 +1,5 @@
-export function accountWebsiteRoot(accountId: string): string {
-  return `accounts/${accountId}/website`;
-}
-
 export function accountPagesRoot(accountId: string): string {
-  return `${accountWebsiteRoot(accountId)}/pages`;
+  return `accounts/${accountId}/pages`;
 }
 
 export function accountPageRoot(accountId: string, pageId: string): string {
@@ -23,7 +19,7 @@ export function accountPagesIndexKey(accountId: string): string {
 }
 
 export function accountWebsiteIndexesRoot(accountId: string): string {
-  return `${accountWebsiteRoot(accountId)}/indexes`;
+  return `${accountPagesRoot(accountId)}/indexes`;
 }
 
 export function accountPlacementIndexKey(accountId: string, instanceId: string): string {
@@ -31,7 +27,7 @@ export function accountPlacementIndexKey(accountId: string, instanceId: string):
 }
 
 export function accountPagePublishRoot(accountId: string, pageId: string): string {
-  return `${accountWebsiteRoot(accountId)}/publishes/${pageId}`;
+  return accountPageRoot(accountId, pageId);
 }
 
 export function accountPagePublishFileKey(accountId: string, pageId: string, fileName: 'index.html' | 'styles.css' | 'runtime.js'): string {
