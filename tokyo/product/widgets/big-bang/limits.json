@@ -2,25 +2,29 @@
   "v": 1,
   "limits": [
     {
-      "key": "branding.remove",
       "kind": "flag",
-      "paths": ["behavior.showBacklink"],
+      "key": "branding.remove",
+      "path": "behavior.showBacklink",
       "mode": "boolean",
-      "deny": true,
+      "deny": false,
+      "sanitizeTo": true,
       "enforce": {
         "load": "sanitize",
-        "publish": "sanitize"
+        "ops": "reject",
+        "publish": "reject"
       }
     },
     {
-      "key": "widget.socialShare.enabled",
       "kind": "flag",
-      "paths": ["behavior.socialShare.enabled"],
+      "key": "widget.socialShare.enabled",
+      "path": "behavior.socialShare.enabled",
       "mode": "boolean",
-      "deny": false,
+      "deny": true,
+      "sanitizeTo": false,
       "enforce": {
         "load": "sanitize",
-        "publish": "sanitize"
+        "ops": "reject",
+        "publish": "reject"
       }
     }
   ]

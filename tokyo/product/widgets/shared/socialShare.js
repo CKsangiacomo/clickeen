@@ -14,9 +14,34 @@
       copiedPasteSuffix: ')',
       copiedPasteLinkedIn: 'Copied (paste in LinkedIn)',
       openingPrefix: 'Opening ',
-      openingSuffix: '...'
+      openingSuffix: '...',
+      previewOnly: 'Preview only'
     }
   };
+
+  var MESSAGE_CARDS = [
+    ['copy', 'Copy link', 'copy'],
+    ['sms', 'SMS', 'copy'],
+    ['email', 'Email', 'copy'],
+    ['whatsapp', 'WhatsApp', 'copy'],
+    ['telegram', 'Telegram', 'copy'],
+    ['signal', 'Signal', 'copy'],
+    ['messenger', 'Messenger', 'copy'],
+    ['wechat', 'WeChat', 'copy'],
+    ['line', 'LINE', 'copy'],
+    ['slack', 'Slack', 'copy'],
+    ['teams', 'Teams', 'copy'],
+    ['discord', 'Discord', 'copy']
+  ];
+
+  var SOCIAL_CARDS = [
+    ['x', 'X', 'share'],
+    ['linkedin', 'LinkedIn', 'share'],
+    ['facebook', 'Facebook', 'share'],
+    ['reddit', 'Reddit', 'share'],
+    ['instagram', 'Instagram', 'share'],
+    ['tiktok', 'TikTok', 'share']
+  ];
 
   function normalizeLocale(value) {
     return String(value || 'en').toLowerCase().split('-')[0] || 'en';
@@ -76,43 +101,66 @@
     return '<button type="button" class="ck-socialShare__card" data-action="' + escapeHtml(action) + '" data-ck-share-label="' + escapeHtml(label) + '"><span class="ck-socialShare__icon" aria-hidden="true">' + socialShareIcon(icon) + '</span><span class="ck-socialShare__cardLabel">' + escapeHtml(label) + '</span></button>';
   }
 
+  function renderCardGrid(cards) {
+    return cards.map(function (card) { return shareCard(card[0], card[1], card[2]); }).join('');
+  }
+
   function shareMarkup(args) {
-    var messageCards = [
-      ['copy', 'Copy link', 'copy'],
-      ['sms', 'SMS', 'copy'],
-      ['email', 'Email', 'copy'],
-      ['whatsapp', 'WhatsApp', 'copy'],
-      ['telegram', 'Telegram', 'copy'],
-      ['signal', 'Signal', 'copy'],
-      ['messenger', 'Messenger', 'copy'],
-      ['wechat', 'WeChat', 'copy'],
-      ['line', 'LINE', 'copy'],
-      ['slack', 'Slack', 'copy'],
-      ['teams', 'Teams', 'copy'],
-      ['discord', 'Discord', 'copy']
-    ];
-    var socialCards = [
-      ['x', 'X', 'share'],
-      ['linkedin', 'LinkedIn', 'share'],
-      ['facebook', 'Facebook', 'share'],
-      ['reddit', 'Reddit', 'share'],
-      ['instagram', 'Instagram', 'share'],
-      ['tiktok', 'TikTok', 'share']
-    ];
     return '<div class="ck-socialShare" data-ck-social-share-root data-ck-share-anchor-id="' + escapeHtml(args.anchorId) + '" data-ck-widget-label="' + escapeHtml(args.widgetLabel) + '">' +
       '<div class="ck-socialShare__toast" role="status" aria-live="polite"></div>' +
       '<div class="ck-socialShare__topbar">' +
       '<details class="ck-socialShare__details">' +
       '<summary class="ck-socialShare__button"><span class="ck-socialShare__icon" aria-hidden="true">' + socialShareIcon('share') + '</span><span data-ck-share-copy-key="share">Share</span></summary>' +
       '<div class="ck-socialShare__menu" role="menu" aria-label="Share">' +
+      '<div class="ck-socialShare__section" data-ck-social-share-section="message">' +
       '<div class="ck-socialShare__sectionTitle" data-ck-share-copy-key="sendSection">Send this widget as message</div>' +
-      '<div class="ck-socialShare__grid">' + messageCards.map(function (card) { return shareCard(card[0], card[1], card[2]); }).join('') + '</div>' +
+      '<div class="ck-socialShare__grid" data-ck-social-share-grid="message"></div>' +
+      '</div>' +
+      '<div class="ck-socialShare__section" data-ck-social-share-section="social">' +
       '<div class="ck-socialShare__sectionTitle" data-ck-share-copy-key="socialSection">Share this widget on social</div>' +
-      '<div class="ck-socialShare__grid">' + socialCards.map(function (card) { return shareCard(card[0], card[1], card[2]); }).join('') + '</div>' +
+      '<div class="ck-socialShare__grid" data-ck-social-share-grid="social"></div>' +
+      '</div>' +
       '</div>' +
       '</details>' +
       '</div>' +
       '</div>';
+  }
+
+  function channelEnabled(socialShare, action) {
+    var channels = socialShare && typeof socialShare === 'object' && socialShare.channels && typeof socialShare.channels === 'object'
+      ? socialShare.channels
+      : null;
+    if (!channels || channels[action] == null) return true;
+    if (typeof channels[action] !== 'boolean') {
+      throw new Error('[CKSocialShare] state.behavior.socialShare.channels.' + action + ' must be a boolean');
+    }
+    return channels[action] === true;
+  }
+
+  function enabledCardsFor(socialShare, cards) {
+    return cards.filter(function (card) {
+      return channelEnabled(socialShare, card[0]);
+    });
+  }
+
+  function cardSignature(messageCards, socialCards) {
+    return messageCards.map(function (card) { return card[0]; }).join(',') + '|' + socialCards.map(function (card) { return card[0]; }).join(',');
+  }
+
+  function applyCards(shareRoot, messageCards, socialCards) {
+    var nextSignature = cardSignature(messageCards, socialCards);
+    if (shareRoot.getAttribute('data-ck-social-share-card-signature') === nextSignature) return;
+    shareRoot.setAttribute('data-ck-social-share-card-signature', nextSignature);
+
+    var messageSection = shareRoot.querySelector('[data-ck-social-share-section="message"]');
+    var socialSection = shareRoot.querySelector('[data-ck-social-share-section="social"]');
+    var messageGrid = shareRoot.querySelector('[data-ck-social-share-grid="message"]');
+    var socialGrid = shareRoot.querySelector('[data-ck-social-share-grid="social"]');
+
+    if (messageGrid instanceof HTMLElement) messageGrid.innerHTML = renderCardGrid(messageCards);
+    if (socialGrid instanceof HTMLElement) socialGrid.innerHTML = renderCardGrid(socialCards);
+    if (messageSection instanceof HTMLElement) messageSection.hidden = messageCards.length === 0;
+    if (socialSection instanceof HTMLElement) socialSection.hidden = socialCards.length === 0;
   }
 
   function normalizeAnchorId(value) {
@@ -121,7 +169,10 @@
 
   function ensureShareRoot(root, options) {
     var existing = shareRootForWidget(root);
-    if (existing) return existing;
+    if (existing) {
+      applyCards(existing, options.messageCards || [], options.socialCards || []);
+      return existing;
+    }
 
     var instanceId = String(options && options.instanceId || root.getAttribute('data-ck-instance-id') || '').trim();
     var widgetType = String(options && options.widgetType || root.getAttribute('data-ck-widget') || 'widget').trim();
@@ -138,6 +189,7 @@
     });
     var shareRoot = holder.firstElementChild;
     if (!(shareRoot instanceof HTMLElement)) return null;
+    applyCards(shareRoot, options.messageCards || [], options.socialCards || []);
     root.appendChild(shareRoot);
     return shareRoot;
   }
@@ -187,7 +239,16 @@
       removeShareRoot(root);
       return;
     }
-    var shareRoot = ensureShareRoot(root, options || {});
+    var messageCards = enabledCardsFor(socialShare, MESSAGE_CARDS);
+    var socialCards = enabledCardsFor(socialShare, SOCIAL_CARDS);
+    if (messageCards.length === 0 && socialCards.length === 0) {
+      removeShareRoot(root);
+      return;
+    }
+    var shareRoot = ensureShareRoot(root, Object.assign({}, options || {}, {
+      messageCards: messageCards,
+      socialCards: socialCards
+    }));
     if (!shareRoot) return;
     applyShareRootContext(shareRoot, options || {});
     shareRoot.hidden = false;
@@ -270,6 +331,11 @@
     var url = shareUrlFor(args.anchorId, action);
     var title = document.title || 'Clickeen';
     var text = shareCopyFor(action, args.widgetLabel, args.copy);
+
+    if (args.previewMode) {
+      showToast(args.toast, args.copy.previewOnly);
+      return;
+    }
 
     if (action === 'copy') {
       await copyText(url);
@@ -374,7 +440,8 @@
           widgetLabel: shareRoot.getAttribute('data-ck-widget-label') || '',
           channelLabel: button.getAttribute('data-ck-share-label') || button.textContent || action,
           toast: toast,
-          copy: copy
+          copy: copy,
+          previewMode: shareRoot.getAttribute('data-ck-preview') === 'true'
         });
       } finally {
         close();

@@ -31,6 +31,96 @@
         "path": "behavior.socialShare.enabled",
         "type": "boolean",
         "default": false
+      },
+      {
+        "path": "behavior.socialShare.channels.copy",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.sms",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.email",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.whatsapp",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.telegram",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.signal",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.messenger",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.wechat",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.line",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.slack",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.teams",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.discord",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.x",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.linkedin",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.facebook",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.reddit",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.instagram",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.tiktok",
+        "type": "boolean",
+        "default": true
       }
     ]
   },
@@ -71,7 +161,27 @@
     "behavior": {
       "showBacklink": true,
       "socialShare": {
-        "enabled": false
+        "enabled": false,
+        "channels": {
+          "copy": true,
+          "sms": true,
+          "email": true,
+          "whatsapp": true,
+          "telegram": true,
+          "signal": true,
+          "messenger": true,
+          "wechat": true,
+          "line": true,
+          "slack": true,
+          "teams": true,
+          "discord": true,
+          "x": true,
+          "linkedin": true,
+          "facebook": true,
+          "reddit": true,
+          "instagram": true,
+          "tiktok": true
+        }
       }
     },
     "stage": {
@@ -1155,27 +1265,8 @@
         "id": "settings",
         "clusters": [
           {
-            "label": "Clickeen Branding",
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "toggle",
-                "path": "behavior.showBacklink",
-                "label": "Show Made with Clickeen",
-                "attrs": {
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "path": "behavior.socialShare.enabled",
-                "label": "Enable social share",
-                "attrs": {
-                  "size": "md"
-                }
-              }
-            ]
+            "kind": "shared",
+            "id": "settings-behavior"
           }
         ]
       }

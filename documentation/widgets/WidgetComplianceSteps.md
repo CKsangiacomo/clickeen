@@ -84,6 +84,7 @@ OUTPUT
 Key                     | Kind | Path(s)                | Metric/Mode          | Enforcement              | Notes
 ----------------------- | ---- | ---------------------- | -------------------- | ------------------------ | ----------------
 branding.remove         | flag | behavior.showBacklink  | boolean (deny false) | load=sanitize ops=reject | sanitize on load
+widget.socialShare.enabled | flag | behavior.socialShare.enabled | boolean (deny true) | load=sanitize ops=reject | sanitize disabled on load
 items.group.small.max | limit | sections[]          | count                | ops+publish reject       | limit binding
 items.group.large.max | limit | sections[].faqs[]   | count-total          | ops+publish reject       | limit binding
 ```
@@ -231,7 +232,8 @@ OUTPUT
   - Typography roles for all visible text (`typography.roles`)
   - Themes (`appearance.theme` defaults to `custom`)
   - Branding (`behavior.showBacklink`)
-  - Social share (`behavior.socialShare.enabled`)
+  - Social share (`behavior.socialShare.enabled` and
+    `behavior.socialShare.channels.*`)
 - `itemKey` declared in `spec.json` (`{widgetType}.item`) with pluralization support.
 - Defaults are product starter state. Simple non-repeat widgets must include useful starter Core content so the first preview is not blank. Repeated content may include starter items only when an empty array would render as a broken product; add-item templates may create blank valid rows using existing object-manager/repeater `default-item`.
 - Do not seed fake content, lorem ipsum, `https://example.com` links, hidden test rows, or account-owned/private references.
@@ -282,6 +284,12 @@ OUTPUT
   - `shared/socialShare.js` owns the shared social-share root/markup. It must
     create the trigger/menu when `behavior.socialShare.enabled === true` and
     remove it when false in both Builder preview and public output.
+  - `shared/socialShare.js` filters the menu from
+    `behavior.socialShare.channels.*`. Missing channel leaves are treated as
+    enabled for compatibility; all channels false removes the share root.
+  - Builder preview shows the menu but suppresses real popup and clipboard
+    actions. Public iframe snippets must allow clipboard write and popup
+    opening for embedded social-share actions.
   - Roma package assembly may chunk/dedupe the shared social-share CSS/runtime,
     but it must not be the only place that creates social-share UI.
 
@@ -331,6 +339,8 @@ GATE
 - `behavior.socialShare.enabled` visibly creates/removes the shared social-share
   UI in Builder preview and public output, or the missing surface is recorded as
   a blocker before shipping.
+- `behavior.socialShare.channels.*` visibly filters the shared social-share
+  menu without console errors.
 
 ---
 
@@ -352,8 +362,11 @@ OUTPUT
   nested group label is needed.
 - Controls only for bound paths; gate variant-specific controls via structured `showIf`.
 - Settings controls for `behavior.showBacklink` and
-  `behavior.socialShare.enabled` are shared Shell controls and must be backed by
-  defaults, `limits.json`, preview behavior, and public-package behavior.
+  `behavior.socialShare.*` are shared Shell controls from the
+  `settings-behavior` shared node and must be backed by defaults,
+  `limits.json`, preview behavior, and public-package behavior.
+  Widget-specific Settings clusters may sit beside the shared node, but widgets
+  must not hand-author or relabel the shared branding/share controls.
 - No widget-authored `<bob-panel>`, `<tooldrawer-cluster>`, `<tooldrawer-field>`, `@slot:`, or escaped editor HTML in `spec.json`.
 - Vertical rhythm is **clusters + groups only**. No manual spacing, cluster
   `gap`/`space-after`, or ungrouped Core fields that visually drift from shared
@@ -477,8 +490,10 @@ Manual smoke (fast)
   `branding.remove` blocks removal when the account is not entitled.
 - Social-share smoke: toggle `Enable social share` on/off and verify the shared
   social-share trigger/menu appears/disappears in Builder preview and public
-  output. Verify `widget.socialShare.enabled` blocks enabling when the account
-  is not entitled.
+  output. Toggle individual share channels and verify the menu filters without
+  console errors. In Builder preview, share action clicks must not attempt
+  popups or clipboard writes. Verify `widget.socialShare.enabled` blocks
+  enabling when the account is not entitled.
 - Static embed: `clk.live/{accountPublicId}/{instanceId}` loads without console errors.
 - Localization: Prague locale routes localize Prague page copy through page sidecars; account-widget locales are served only as generated public artifacts. Missing required Prague page sidecars fail visibly instead of silently falling back.
 - Docs truth: when behavior or model changes, update

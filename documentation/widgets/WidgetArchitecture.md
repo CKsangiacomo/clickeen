@@ -127,7 +127,9 @@ Shell state families:
 - `typography.*`
 - `localeSwitcher.*`
 - `behavior.showBacklink`
-- `behavior.socialShare.enabled`
+- `behavior.socialShare.*`
+  - `behavior.socialShare.enabled`
+  - `behavior.socialShare.channels.*`
 - `uiLabels.core.*`
 - `coreSize.*`
 
@@ -160,6 +162,35 @@ Builder preview, and Roma public package assembly chunks the same shared
 modules. `shared/socialShare.js` owns the share trigger/menu DOM: it creates the
 shared social-share root when `behavior.socialShare.enabled === true` and
 removes it when false.
+
+Social-share channel settings are also Shell state:
+
+- `behavior.socialShare.channels.copy`
+- `behavior.socialShare.channels.sms`
+- `behavior.socialShare.channels.email`
+- `behavior.socialShare.channels.whatsapp`
+- `behavior.socialShare.channels.telegram`
+- `behavior.socialShare.channels.signal`
+- `behavior.socialShare.channels.messenger`
+- `behavior.socialShare.channels.wechat`
+- `behavior.socialShare.channels.line`
+- `behavior.socialShare.channels.slack`
+- `behavior.socialShare.channels.teams`
+- `behavior.socialShare.channels.discord`
+- `behavior.socialShare.channels.x`
+- `behavior.socialShare.channels.linkedin`
+- `behavior.socialShare.channels.facebook`
+- `behavior.socialShare.channels.reddit`
+- `behavior.socialShare.channels.instagram`
+- `behavior.socialShare.channels.tiktok`
+
+When `behavior.socialShare.enabled === true`, Builder shows these channel
+settings through the shared `settings-behavior` editor node. Missing channel
+leaves default to enabled for saved-instance compatibility. Turning every
+channel off removes the shared social-share root. Builder preview must not
+attempt real popup or clipboard actions; public embeds must include iframe
+clipboard and popup permissions so the same Shell utility works outside
+Builder.
 
 ### Core
 
@@ -338,6 +369,7 @@ Shared Shell controls are declared with shared nodes:
 - `stagepod-layout`
 - `stagepod-appearance`
 - `stagepod-corners`
+- `settings-behavior`
 - shared `typography` panel
 
 Widget Core controls are normal field nodes, but every field path must exist in
@@ -419,8 +451,8 @@ Important shared runtime/style files include:
 | `shared/coreSize.js` | Core sizing behavior |
 | `shared/surface.js` | Shared surface/card-wrapper vars |
 | `shared/previewL10n.js` | Bob translated-preview value application |
-| `shared/branding.js` | Backlink behavior; owns badge creation/hide through `behavior.showBacklink` |
-| `shared/socialShare.js` / `shared/socialShare.css` | Social-share shell utility; owns trigger/menu creation/removal through `behavior.socialShare.enabled` |
+| `shared/branding.js` | Backlink behavior; owns badge creation/removal through `behavior.showBacklink` |
+| `shared/socialShare.js` / `shared/socialShare.css` | Social-share shell utility; owns trigger/menu creation/removal through `behavior.socialShare.enabled` and channel filtering through `behavior.socialShare.channels.*` |
 
 Widget Core runtime must not replace these modules.
 

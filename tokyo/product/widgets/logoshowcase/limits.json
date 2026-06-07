@@ -8,7 +8,11 @@
       "mode": "boolean",
       "deny": false,
       "sanitizeTo": true,
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
+      "enforce": {
+        "load": "sanitize",
+        "ops": "reject",
+        "publish": "reject"
+      }
     },
     {
       "kind": "flag",
@@ -17,10 +21,29 @@
       "mode": "boolean",
       "deny": true,
       "sanitizeTo": false,
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
+      "enforce": {
+        "load": "sanitize",
+        "ops": "reject",
+        "publish": "reject"
+      }
     },
-    { "kind": "limit", "key": "items.group.small.max", "path": "strips[]", "metric": "count" },
-    { "kind": "limit", "key": "items.group.medium.max", "path": "strips[].logos[]", "metric": "count" },
-    { "kind": "limit", "key": "items.group.large.max", "path": "strips[].logos[]", "metric": "count-total" }
+    {
+      "kind": "limit",
+      "key": "items.group.small.max",
+      "path": "strips[]",
+      "metric": "count"
+    },
+    {
+      "kind": "limit",
+      "key": "items.group.medium.max",
+      "path": "strips[].logos[]",
+      "metric": "count"
+    },
+    {
+      "kind": "limit",
+      "key": "items.group.large.max",
+      "path": "strips[].logos[]",
+      "metric": "count-total"
+    }
   ]
 }

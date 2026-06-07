@@ -86,7 +86,8 @@ function buildPageIframeSnippet(publicUrl: string): string {
   title="Clickeen page"
   loading="lazy"
   referrerpolicy="no-referrer"
-  sandbox="allow-scripts allow-same-origin allow-forms"
+  allow="clipboard-write"
+  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
   style="width:100%;border:0;min-height:720px;"
 ></iframe>`;
 }

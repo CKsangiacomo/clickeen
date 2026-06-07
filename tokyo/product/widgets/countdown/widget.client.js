@@ -484,6 +484,10 @@
       typographyScope: countdownRoot,
     });
 
+    if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
+      window.CKBranding.applyBacklink(widgetRoot, state);
+    }
+
     applyAppearanceVars(state);
     applyLayoutVars(state);
     applyUnitLabels(state.timer);

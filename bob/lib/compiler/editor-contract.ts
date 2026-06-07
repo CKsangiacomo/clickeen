@@ -11,6 +11,7 @@ import {
   buildStagePodCornerAppearanceFields,
   buildStagePodLayoutPanelFields,
 } from './modules/stagePod';
+import { buildSettingsBehaviorPanelFields } from './modules/settings';
 import { buildTypographyPanel } from './modules/typography';
 
 type JsonObject = Record<string, unknown>;
@@ -230,6 +231,8 @@ function renderSharedNode(node: EditorSharedNode, defaults: JsonObject): string[
     }
     case 'stagepod-corners':
       return buildStagePodCornerAppearanceFields();
+    case 'settings-behavior':
+      return buildSettingsBehaviorPanelFields();
     default: {
       const exhaustive: never = node.id;
       throw new Error(`[BobCompiler] Unsupported shared editor control: ${exhaustive}`);

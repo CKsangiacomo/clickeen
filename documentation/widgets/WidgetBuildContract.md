@@ -29,10 +29,10 @@ Shell-owned paths come from shared nodes, and widget-specific body paths live in
 the widget's own namespace.
 
 Shared Shell controls in mixed panels are live product controls. A widget is not
-compliant if `behavior.showBacklink`, `behavior.socialShare.enabled`,
-Stage/Pod, Header, Header CTA, Typography, or CoreSize controls appear in
-Builder but do not bind through preview, save/materialization, public runtime,
-and policy when policy applies.
+compliant if `behavior.showBacklink`, `behavior.socialShare.*`, Stage/Pod,
+Header, Header CTA, Typography, or CoreSize controls appear in Builder but do
+not bind through preview, save/materialization, public runtime, and policy when
+policy applies.
 
 The FAQ widget proves the Shell/runtime model. `packages/widget-shell/` is the
 named Shell contract authority. The Call to Action widget proves the
@@ -153,7 +153,7 @@ Shell-owned state families:
 - `typography.*`
 - `localeSwitcher.*`
 - `behavior.showBacklink`
-- `behavior.socialShare.enabled`
+- `behavior.socialShare.*`
 - `uiLabels.core.*`
 - `coreSize.*`
 
@@ -312,6 +312,10 @@ Shared shell invariants:
 - behavior.showBacklink is a boolean and is bound to shared branding runtime
 - behavior.socialShare.enabled is a boolean and is bound to the shared
   social-share shell runtime
+- behavior.socialShare.channels.* booleans are shared Shell channel settings;
+  they default on for compatibility and filter the shared social-share menu
+- Settings uses the shared `settings-behavior` editor node; widgets do not
+  hand-author branding or social-share controls
 
 Core paths:
 - {widgetType}.* product body paths, for example calltoaction.headline or
@@ -375,6 +379,8 @@ MUST
   widgets unless the PRD/manifest owns a `wrap` or `fixed` inner-wrapper
   decision.
 - Define `behavior.showBacklink` and `behavior.socialShare.enabled` as booleans.
+- Define `behavior.socialShare.channels.*` booleans for every supported shared
+  share channel.
 
 MUST NOT
 
@@ -454,6 +460,8 @@ MUST
   `branding.remove` in `limits.json`.
 - Set `behavior.socialShare.enabled` to a boolean starter value and map it to
   `widget.socialShare.enabled` in `limits.json`.
+- Set each `behavior.socialShare.channels.*` default to `true` unless the PRD
+  explicitly removes that share channel from the starter menu.
 
 MUST NOT
 
@@ -487,10 +495,24 @@ Shared Settings defaults must be executable:
   `widget.socialShare.enabled`. The shared runtime creates/removes the share
   trigger/menu DOM from this state path in both Builder preview and public
   output.
+- `behavior.socialShare.channels.*`: controls which shared share actions appear
+  once social share is enabled. These are Shell settings, not Core behavior,
+  and they are rendered by the shared `settings-behavior` editor node.
+
+Supported social-share channel leaves are `copy`, `sms`, `email`, `whatsapp`,
+`telegram`, `signal`, `messenger`, `wechat`, `line`, `slack`, `teams`,
+`discord`, `x`, `linkedin`, `facebook`, `reddit`, `instagram`, and `tiktok`.
+Missing channel leaves default to enabled for saved-instance compatibility.
+If every channel is false, the shared social-share root is removed.
 
 These Settings controls are dead controls unless Builder preview, Roma
 save/materialization, public package assembly, and public runtime all respond to
 the same state path.
+
+Builder preview must show the social-share menu but suppress real popup and
+clipboard actions. Public iframe snippets must include clipboard and popup
+permissions (`allow="clipboard-write"` plus sandbox popup permissions) so
+social-share actions work when the saved widget is embedded outside Builder.
 
 Shared branding and social share are Shell utilities, not widget Core content.
 Do not implement either in `widget.client.js` except by calling the shared
@@ -568,6 +590,7 @@ MUST
   - `stagepod-layout`
   - `stagepod-appearance`
   - `stagepod-corners`
+  - `settings-behavior`
 - Use the shared `typography` panel.
 - Define `itemKey` and matching i18n strings when the widget has repeatable
   items.
@@ -577,7 +600,8 @@ MUST
 
 MUST NOT
 
-- Hand-author fields for `header.*`, `headerCta.*`, or `coreSize.*`.
+- Hand-author fields for `header.*`, `headerCta.*`, `coreSize.*`,
+  `behavior.showBacklink`, or `behavior.socialShare.*`.
 - Put widget-authored `<bob-panel>`, `<tooldrawer-cluster>`,
   `<tooldrawer-field>`, `@slot:`, or escaped editor HTML in `spec.json`.
 - Duplicate entire panels per variant.
@@ -588,6 +612,13 @@ MUST NOT
 Clusters own ToolDrawer spacing between sections. Groups own spacing between
 related controls inside a section. Groups may be visually unlabeled via
 `group-label=""`; that is the correct rhythm mechanism, not a spacing hack.
+
+`settings-behavior` renders the shared Clickeen Branding cluster:
+`behavior.showBacklink`, `behavior.socialShare.enabled`, and the gated
+`behavior.socialShare.channels.*` toggles. Widgets may add widget-specific
+Settings clusters, such as SEO/GEO or runtime behavior, beside this shared
+node. They must not duplicate or relabel the shared branding/share controls in
+their own Core contract.
 
 ### 7) Dieter Field Usage
 
@@ -958,6 +989,14 @@ Required before final response:
 - Every non-global typography role has `roleScales`.
 - `limits.json` maps to existing entitlement keys when limits apply.
 - No Shell aliases are introduced.
+- `settings-behavior` is present for Shell widgets and no widget-authored
+  editor fields control `behavior.showBacklink` or `behavior.socialShare.*`.
+- Branding smoke proves `behavior.showBacklink: false` removes/hides the shared
+  badge and `true` restores it.
+- Social-share smoke proves `behavior.socialShare.enabled` creates/removes the
+  shared menu, `behavior.socialShare.channels.*` filters actions, Builder
+  preview does not attempt popup/clipboard actions, and public iframe snippets
+  include clipboard/popup permissions.
 - No shared runtime/Bob/Roma/Tokyo-worker/Prague/Venice/Dieter edits were made
   unless the PRD explicitly owned that shared surface.
 - `pnpm validate:widgets` passes.

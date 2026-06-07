@@ -389,6 +389,10 @@
       typographyScope: faqRoot,
     });
 
+    if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
+      window.CKBranding.applyBacklink(widgetRoot, state);
+    }
+
     applyAccordionIcons(state.appearance.iconStyle);
 
     applyAppearance(state.appearance);

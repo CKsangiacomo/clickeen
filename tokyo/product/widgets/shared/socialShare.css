@@ -119,6 +119,14 @@
   display: block;
 }
 
+.ck-socialShare__section[hidden] {
+  display: none !important;
+}
+
+.ck-socialShare__section + .ck-socialShare__section {
+  margin-top: var(--space-5, 20px);
+}
+
 .ck-socialShare__sectionTitle {
   margin: 10px 6px var(--space-3, 12px);
   color: var(--color-system-black, #111);
@@ -131,10 +139,6 @@
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--space-2, 8px);
-  margin-bottom: var(--space-5, 20px);
-}
-
-.ck-socialShare__grid:last-of-type {
   margin-bottom: 0;
 }
 

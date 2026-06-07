@@ -755,6 +755,10 @@
       typographyScope: lsRoot,
     });
 
+    if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
+      window.CKBranding.applyBacklink(widgetRoot, state);
+    }
+
     const nextSignature = JSON.stringify([
       state.type,
       state.type === 'carousel' ? state.typeConfig.carousel.mode : 'grid',

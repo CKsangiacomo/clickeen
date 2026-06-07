@@ -8,7 +8,11 @@
       "mode": "boolean",
       "deny": false,
       "sanitizeTo": true,
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
+      "enforce": {
+        "load": "sanitize",
+        "ops": "reject",
+        "publish": "reject"
+      }
     },
     {
       "kind": "flag",
@@ -17,7 +21,11 @@
       "mode": "boolean",
       "deny": true,
       "sanitizeTo": false,
-      "enforce": { "load": "sanitize", "ops": "reject", "publish": "reject" }
+      "enforce": {
+        "load": "sanitize",
+        "ops": "reject",
+        "publish": "reject"
+      }
     }
   ]
 }

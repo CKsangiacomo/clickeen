@@ -12,7 +12,7 @@ export const SHELL_STATE_FAMILIES = [
   'typography',
   'localeSwitcher',
   'behavior.showBacklink',
-  'behavior.socialShare.enabled',
+  'behavior.socialShare',
 ] as const;
 
 export const SHELL_EDITABLE_FIELD_PATHS = ['header.title', 'header.subtitleHtml', 'headerCta.label'] as const;
@@ -43,6 +43,7 @@ export const SHELL_EDITOR_SHARED_NODE_IDS = [
   'stagepod-appearance',
   'stagepod-layout',
   'stagepod-corners',
+  'settings-behavior',
 ] as const;
 
 export type ShellEditorSharedNodeId = (typeof SHELL_EDITOR_SHARED_NODE_IDS)[number];

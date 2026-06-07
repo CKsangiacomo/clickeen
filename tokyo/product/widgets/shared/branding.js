@@ -38,6 +38,9 @@
         display: flex;
         transform: translate(var(--ck-branding-tx, 0), var(--ck-branding-ty, 0));
       }
+      .ck-branding[hidden] {
+        display: none !important;
+      }
 
       .ck-branding[data-ck-align="right"] {
         inset-inline-end: var(--ck-branding-inset, var(--space-6));
@@ -104,12 +107,25 @@
     return runtime.contextFor(widgetRoot, widgetType);
   }
 
+  function findBranding(widgetRoot) {
+    if (!(widgetRoot instanceof HTMLElement)) return null;
+    const pod = widgetRoot.closest('.pod');
+    if (!(pod instanceof HTMLElement)) return null;
+    const existing = pod.querySelector(`:scope > .ck-branding[data-ck-branding-for="${widgetRoot.dataset.ckWidget}"]`);
+    return existing instanceof HTMLElement ? existing : null;
+  }
+
+  function removeBranding(widgetRoot) {
+    const badge = findBranding(widgetRoot);
+    if (badge) badge.remove();
+  }
+
   function ensureBranding(widgetRoot) {
     if (!(widgetRoot instanceof HTMLElement)) return null;
     const pod = widgetRoot.closest('.pod');
     if (!(pod instanceof HTMLElement)) return null;
 
-    let existing = pod.querySelector(`:scope > .ck-branding[data-ck-branding-for="${widgetRoot.dataset.ckWidget}"]`);
+    const existing = findBranding(widgetRoot);
     if (existing instanceof HTMLElement) return existing;
 
     pod.style.position = 'relative';
@@ -135,18 +151,22 @@
   }
 
   function applyVisibility(widgetRoot, state) {
-    const badge = ensureBranding(widgetRoot);
-    if (!badge) return;
-
     const show = state?.behavior?.showBacklink;
     if (show == null) {
+      const badge = ensureBranding(widgetRoot);
+      if (!badge) return;
       badge.hidden = false;
       return;
     }
     if (typeof show !== 'boolean') {
       throw new Error('[CKBranding] state.behavior.showBacklink must be a boolean');
     }
-    badge.hidden = show !== true;
+    if (!show) {
+      removeBranding(widgetRoot);
+      return;
+    }
+    const badge = ensureBranding(widgetRoot);
+    if (badge) badge.hidden = false;
   }
 
   function applyBacklink(widgetRoot, state) {

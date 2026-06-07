@@ -85,7 +85,10 @@ function editorPathRequiresSharedShellNode(path: string): boolean {
     normalized === 'header' ||
     normalized.startsWith('header.') ||
     normalized === 'headerCta' ||
-    normalized.startsWith('headerCta.')
+    normalized.startsWith('headerCta.') ||
+    normalized === 'behavior.showBacklink' ||
+    normalized === 'behavior.socialShare' ||
+    normalized.startsWith('behavior.socialShare.')
   );
 }
 
@@ -148,6 +151,9 @@ function validateShellSharedEditorNodes(editor: unknown, defaults: unknown): Wid
   });
   if (isRecord(defaults.coreSize) && !ids.has('core-size')) {
     issues.push(issue('editor.shared.core-size', 'Shell widget editor must use the shared Core size editor node.'));
+  }
+  if (isRecord(defaults.behavior) && !ids.has('settings-behavior')) {
+    issues.push(issue('editor.shared.settings-behavior', 'Shell widget editor must use the shared Settings behavior editor node.'));
   }
   ids.forEach((id) => {
     if (!(SHELL_EDITOR_SHARED_NODE_IDS as readonly string[]).includes(id)) {
@@ -222,7 +228,7 @@ export function validateWidgetShellSource(args: {
   });
   collectEditorFieldPaths(args.editor).forEach((path) => {
     if (editorPathRequiresSharedShellNode(path)) {
-      issues.push(issue(path, 'Header/Header CTA/CoreSize editor controls must come from shared Shell editor nodes.'));
+      issues.push(issue(path, 'Shell editor controls must come from shared Shell editor nodes.'));
     }
     if (pathIsForbiddenShellAlias(path)) {
       issues.push(issue(path, 'Shell widget editor must not control old Header/Header CTA/layout aliases.'));
