@@ -13,6 +13,25 @@ Related:
 
 ---
 
+## Non-Negotiable: Builder Panels Are Mixed
+
+The Builder panels are mixed, not "shell panel then core panel":
+
+- `content`: shared header content controls plus widget core content controls.
+- `layout`: shared header/core-size/stage-pod controls plus widget core layout
+  controls.
+- `appearance`: shared header/CTA/stage-pod appearance plus widget core
+  appearance controls.
+- `typography`: shared typography panel, but it edits roles declared by both
+  shell and core.
+- `settings`: shared behavior plus widget-specific runtime behavior if needed.
+
+Panel placement is organized by the user's editing job. Ownership still matters:
+Shell paths stay in shared nodes, and widget-specific body paths stay in
+`defaults.core`.
+
+---
+
 ## System Invariants
 
 - A widget is software. An instance is account-owned saved source plus generated
@@ -50,11 +69,14 @@ policy.
 
 ## Shell/Core Model
 
-The FAQ widget is the proven Shell source example. It is gold for Shell DOM
-shape, strict runtime registration, state-update binding, editable text
-declarations, repeated content behavior, and preview localization.
+The Shell/Core model is two ownership layers in one widget, not two separate
+Builder panels.
 
-Newer Shell/Core widgets prove the Core namespace: widget-specific product
+FAQ is the proven Shell/runtime source example. It is gold for Shell DOM shape,
+strict runtime registration, state-update binding, editable text declarations,
+repeated content behavior, and preview localization.
+
+CTA, Cards, and Split prove the intended Core namespace: widget-specific product
 content, layout, and behavior live under `defaults.core`, while shared
 Stage/Pod/Header/CoreSize/Typography utilities stay in Shell-owned paths.
 
@@ -116,6 +138,27 @@ Core must not read product meaning from Shell-only paths. `header.*` and
 top-level `cta.*` remain the optional shared Header region. If the widget's
 actual body has a call-to-action, that action is widget Core state such as
 `core.button.*`.
+
+---
+
+## Current Widget Model Inventory
+
+Use this table before changing an existing widget. Active callers do not prove
+that an old body namespace is correct product architecture.
+
+| Widget | Current model | Body state authority | What to copy |
+| --- | --- | --- | --- |
+| `cta` | New Core model | `defaults.core` | Copy for simple body CTA state, mixed panels, and Core DOM bindings. |
+| `cards` | New Core model | `defaults.core` | Copy for repeated Core items and Core appearance/layout controls. |
+| `split` | New Core model | `defaults.core` | Copy for media/visual Core state inside the shared Shell. |
+| `faq` | Shell-proven, legacy body namespace | `sections[]` | Copy Shell runtime and repeated-content behavior, not the body namespace. |
+| `big-bang` | Transitional | `bigBang.*` | Migrate to `core.*` when refactored; do not copy `bigBang.*` for new work. |
+| `countdown` | Old body namespace | `timer.*` | Migration target; do not copy for new work. |
+| `logoshowcase` | Old body namespace | `strips[]` | Migration target; do not copy for new work. |
+
+New widgets and refactored widgets must use `defaults.core` for the widget body.
+Legacy body namespaces may remain only when a task explicitly defers their
+migration.
 
 ---
 

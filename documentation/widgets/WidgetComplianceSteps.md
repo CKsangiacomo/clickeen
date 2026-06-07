@@ -21,6 +21,24 @@ OUTPUTS
 
 ---
 
+## Non-Negotiable: Builder Panels Are Mixed
+
+The Builder panels are mixed, not "shell panel then core panel":
+
+- `content`: shared header content controls plus widget core content controls.
+- `layout`: shared header/core-size/stage-pod controls plus widget core layout
+  controls.
+- `appearance`: shared header/CTA/stage-pod appearance plus widget core
+  appearance controls.
+- `typography`: shared typography panel, but it edits roles declared by both
+  shell and core.
+- `settings`: shared behavior plus widget-specific runtime behavior if needed.
+
+Do not create separate shell panels and core panels. Declare shared Shell nodes
+and widget Core controls in the same panel for the same user job.
+
+---
+
 ## Step -2 - Scope + stop conditions
 
 OUTPUT
@@ -68,6 +86,30 @@ GATE
 
 ---
 
+## Step -0.5 - Existing widget model classification
+
+OUTPUT
+
+- Classification for the target widget:
+  - `new-core`: widget body already lives under `defaults.core`.
+  - `old-body`: widget body uses a legacy namespace such as `sections[]`,
+    `timer.*`, or `strips[]`.
+  - `transitional`: widget has Shell/Core labels or sizing but the body is not
+    under `defaults.core`.
+  - `shell-only bug`: widget renders meaningful product body only from Shell
+    paths such as `header.*` or top-level `cta.*`.
+- Decision:
+  - migrate body paths to `core.*` now, or
+  - defer migration with a named reason and no new code copying the legacy
+    namespace.
+
+GATE
+
+- The surviving body authority is named before ToolDrawer, DOM, runtime, or
+  editable-field work begins.
+
+---
+
 ## Step 0 - State model + Binding Map (before ToolDrawer)
 
 OUTPUT
@@ -94,6 +136,8 @@ OUTPUT
   - DOM text/HTML
   - DOM attribute / `data-*`
   - CSS var on a specific scope element
+- Every editor path must have exactly one Binding Map row. A path with no row
+  is a dead control. A path with two rows is duplicate truth.
 
 GATE
 
@@ -305,6 +349,12 @@ Required checks
 
 Manual smoke (fast)
 
+- Browser smoke: serve `tokyo/product`, load `widgets/{widgetType}/widget.html`,
+  post `spec.defaults` with `ck:state-update`, and verify the Core body is
+  nonblank with no console or page errors.
 - Bob preview: each panel control updates the preview deterministically.
 - Static embed: `clk.live/{accountPublicId}/{instanceId}` loads without console errors.
 - Localization: Prague locale routes localize Prague page copy through page sidecars; account-widget locales are served only as generated public artifacts. Missing required Prague page sidecars fail visibly instead of silently falling back.
+- Docs truth: when behavior or model changes, update
+  `WidgetArchitecture.md`, `WidgetBuildContract.md`, and
+  `WidgetComplianceSteps.md` together.

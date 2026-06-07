@@ -11,9 +11,27 @@ Normal widgets are not standalone inventions. They are:
 Widget Shell + Widget Core
 ```
 
-The FAQ widget proves the Shell model. `packages/widget-shell/` is the named
-Shell contract authority. A widget folder under `tokyo/product/widgets/` is the
-product source location for that widget's Core plus its materialized source
+## Non-Negotiable: Builder Panels Are Mixed
+
+The Builder panels are mixed, not "shell panel then core panel":
+
+- `content`: shared header content controls plus widget core content controls.
+- `layout`: shared header/core-size/stage-pod controls plus widget core layout
+  controls.
+- `appearance`: shared header/CTA/stage-pod appearance plus widget core
+  appearance controls.
+- `typography`: shared typography panel, but it edits roles declared by both
+  shell and core.
+- `settings`: shared behavior plus widget-specific runtime behavior if needed.
+
+Panels are organized by the user's editing job. Ownership is enforced by path:
+Shell-owned paths come from shared nodes, and widget-specific body paths live in
+`defaults.core`.
+
+The FAQ widget proves the Shell/runtime model. `packages/widget-shell/` is the
+named Shell contract authority. CTA, Cards, and Split prove the intended
+`defaults.core` namespace. A widget folder under `tokyo/product/widgets/` is
+the product source location for that widget's Core plus its materialized source
 files.
 
 ---
@@ -48,8 +66,12 @@ locator.
 - This contract.
 - `documentation/widgets/WidgetArchitecture.md`.
 - `packages/widget-shell/src/*`.
-- FAQ widget source as the gold Shell/Core example:
+- FAQ widget source as the Shell/runtime example:
   `tokyo/product/widgets/faq/*`.
+- CTA widget source as the simple `defaults.core` example:
+  `tokyo/product/widgets/cta/*`.
+- Cards and Split widget source as repeated-item and media Core examples:
+  `tokyo/product/widgets/cards/*`, `tokyo/product/widgets/split/*`.
 - Target widget source:
   `tokyo/product/widgets/{widgetType}/`.
 - Entitlement matrix only when binding `limits.json`:
@@ -194,7 +216,8 @@ normal widgets with widget-specific Cores inside the Shell.
 
 ### 1) Pre-Code Core Manifest
 
-Before coding, enumerate:
+Before coding, enumerate a Core Manifest. This is the surviving authority for
+the widget-specific body. If it cannot be filled out, do not edit code.
 
 - Shell-owned paths kept intact.
 - Core-owned paths introduced/changed.
@@ -207,6 +230,53 @@ Before coding, enumerate:
 - `limits.json` paths and entitlement keys.
 - Typography roles and required `roleScales`.
 - Default value for every Core path and why that value is the starter state.
+
+Template:
+
+```text
+Widget type:
+Model classification: new-core | old-body | transitional | shell-only bug
+
+Shell paths kept:
+- header.*
+- cta.* only for optional Header CTA
+- stage.*
+- pod.*
+- coreSize.*
+- typography.*
+- localeSwitcher.*
+- shared appearance.*
+- shared behavior.*
+
+Core paths:
+- core...
+
+Legacy body paths:
+- path: migrate now | defer with reason
+
+Core DOM roles:
+- path -> data-role -> update mechanism
+
+Panels:
+- content: shared node(s) + core controls
+- layout: shared node(s) + core controls
+- appearance: shared node(s) + core controls
+- typography: shared panel roles
+- settings: shared behavior + core runtime behavior
+
+Binding Map:
+| Path | Target | Mechanism | Implementation |
+| --- | --- | --- | --- |
+
+Editable fields:
+- path, type, role
+
+Limits:
+- path/op, entitlement key, enforcement boundary
+
+Typography:
+- role, global/non-global, roleScales required?
+```
 
 If this cannot be completed, stop.
 
@@ -529,6 +599,39 @@ and editable-field declarations for customer-visible text.
 
 Header placement uses the Shell system. Do not invent widget-specific header
 placement names.
+
+Canonical CTA Core example:
+
+```json
+{
+  "core": {
+    "title": "Build your next section in minutes",
+    "showCopy": true,
+    "copyHtml": "Start with a polished Clickeen widget.",
+    "button": {
+      "enabled": true,
+      "label": "Get started",
+      "href": "#",
+      "openMode": "same-tab",
+      "iconEnabled": true,
+      "iconName": "arrowshape.turn.up.right",
+      "iconPlacement": "right"
+    },
+    "alignment": "center",
+    "gap": 18,
+    "textWidth": 760
+  }
+}
+```
+
+The matching editor controls belong in mixed panels:
+
+- `content`: shared `header-content`, then `core.title`, `core.copyHtml`,
+  `core.button.*`.
+- `layout`: shared `header-layout`, shared `core-size`, then
+  `core.alignment`, `core.gap`, `core.textWidth`.
+- `appearance`: shared `header-appearance`, then any Core-specific button/body
+  appearance paths.
 
 ### 11) Typography
 

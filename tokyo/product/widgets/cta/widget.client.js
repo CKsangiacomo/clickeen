@@ -62,6 +62,31 @@
     return el;
   }
 
+  function hasTypographyRole(state, roleKey) {
+    return (
+      isRecord(state) &&
+      isRecord(state.typography) &&
+      isRecord(state.typography.roles) &&
+      isRecord(state.typography.roles[roleKey])
+    );
+  }
+
+  function hasRenderableCore(core) {
+    return (
+      isRecord(core) &&
+      typeof core.showEyebrow === 'boolean' &&
+      typeof core.eyebrow === 'string' &&
+      typeof core.title === 'string' &&
+      typeof core.showCopy === 'boolean' &&
+      typeof core.copyHtml === 'string' &&
+      isRecord(core.button) &&
+      isRecord(core.buttonStyle) &&
+      typeof core.alignment === 'string' &&
+      typeof core.gap === 'number' &&
+      typeof core.textWidth === 'number'
+    );
+  }
+
   function unwrapElement(el) {
     var parent = el.parentNode;
     if (!parent) return;
@@ -251,6 +276,11 @@
     var resolvedInstanceId = runtimeContext.instanceId;
 
     function renderCore(state) {
+      if (!hasRenderableCore(state.core)) {
+        coreEl.hidden = true;
+        return;
+      }
+      coreEl.hidden = false;
       var core = assertRecord(state.core, 'state.core');
       var alignment = assertEnum(core.alignment, 'state.core.alignment', ['left', 'center', 'right']);
       var gap = assertNumber(core.gap, 'state.core.gap', 0, 120);
@@ -289,16 +319,19 @@
       if (!window.CKTypography?.applyTypography) {
         throw new Error('[CTA] Missing CKTypography.applyTypography');
       }
+      var typographyRoles = {
+        title: { varKey: 'title' },
+        body: { varKey: 'body' },
+        button: { varKey: 'button' },
+        localeSwitcher: { varKey: 'localeSwitcher' },
+      };
+      if (hasTypographyRole(state, 'eyebrow')) {
+        typographyRoles.eyebrow = { varKey: 'eyebrow' };
+      }
       window.CKTypography.applyTypography(
         state.typography,
         ctaRoot,
-        {
-          title: { varKey: 'title' },
-          body: { varKey: 'body' },
-          eyebrow: { varKey: 'eyebrow' },
-          button: { varKey: 'button' },
-          localeSwitcher: { varKey: 'localeSwitcher' },
-        },
+        typographyRoles,
         { locale: context && context.locale, instanceId: context && context.instanceId },
       );
 
