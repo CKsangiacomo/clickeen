@@ -420,19 +420,23 @@
             "nodes": [
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "toggle",
                 "path": "core.showEyebrow",
                 "label": "Show eyebrow",
                 "attrs": {
+                  "group-label": "",
                   "size": "md"
                 }
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "textfield",
                 "path": "core.eyebrow",
                 "label": "Eyebrow",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "placeholder": "Add eyebrow text"
                 },
@@ -443,10 +447,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "dropdown-edit",
                 "path": "core.title",
                 "label": "Title",
                 "attrs": {
+                  "group-label": "",
                   "size": "lg",
                   "placeholder": "Add title text",
                   "allow-links": "false"
@@ -454,19 +460,23 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "toggle",
                 "path": "core.showCopy",
                 "label": "Show copy",
                 "attrs": {
+                  "group-label": "",
                   "size": "md"
                 }
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "dropdown-edit",
                 "path": "core.copyHtml",
                 "label": "Copy",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "placeholder": "Add supporting copy",
                   "allow-links": "true"
@@ -478,19 +488,23 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "toggle",
                 "path": "core.button.enabled",
                 "label": "Show button",
                 "attrs": {
+                  "group-label": "",
                   "size": "md"
                 }
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "textfield",
                 "path": "core.button.label",
                 "label": "Button label",
                 "attrs": {
+                  "group-label": "",
                   "size": "md"
                 },
                 "showIf": {
@@ -500,10 +514,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "textfield",
                 "path": "core.button.href",
                 "label": "Button link",
                 "attrs": {
+                  "group-label": "",
                   "size": "lg",
                   "placeholder": "https://example.com"
                 },
@@ -514,10 +530,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "dropdown-actions",
                 "path": "core.button.openMode",
                 "label": "Open link in",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "options": [
                     {
@@ -541,10 +559,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "toggle",
                 "path": "core.button.iconEnabled",
                 "label": "Show icon",
                 "attrs": {
+                  "group-label": "",
                   "size": "md"
                 },
                 "showIf": {
@@ -554,10 +574,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "dropdown-actions",
                 "path": "core.button.iconPlacement",
                 "label": "Icon position",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "options": [
                     {
@@ -585,10 +607,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-content",
                 "type": "dropdown-actions",
                 "path": "core.button.iconName",
                 "label": "Icon",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "options": [
                     {
@@ -652,10 +676,12 @@
             "nodes": [
               {
                 "kind": "field",
+                "groupId": "cta-layout",
                 "type": "choice-tiles",
                 "path": "core.alignment",
                 "label": "Alignment",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "options": [
                     {
@@ -675,10 +701,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-layout",
                 "type": "valuefield",
                 "path": "core.textWidth",
                 "label": "Text width",
                 "attrs": {
+                  "group-label": "",
                   "min": 280,
                   "max": 1200,
                   "step": 10
@@ -686,10 +714,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-layout",
                 "type": "valuefield",
                 "path": "core.gap",
                 "label": "Content gap",
                 "attrs": {
+                  "group-label": "",
                   "min": 0,
                   "max": 80,
                   "step": 1
@@ -715,10 +745,12 @@
             "nodes": [
               {
                 "kind": "field",
+                "groupId": "cta-button",
                 "type": "dropdown-fill",
                 "path": "core.buttonStyle.background",
                 "label": "Background",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "fill-modes": "color",
                   "allow-color": "true"
@@ -730,10 +762,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-button",
                 "type": "dropdown-fill",
                 "path": "core.buttonStyle.textColor",
                 "label": "Text color",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "fill-modes": "color",
                   "allow-color": "true"
@@ -745,10 +779,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-button",
                 "type": "dropdown-border",
                 "path": "core.buttonStyle.border",
                 "label": "Border",
                 "attrs": {
+                  "group-label": "",
                   "size": "md"
                 },
                 "showIf": {
@@ -758,10 +794,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-button",
                 "type": "dropdown-actions",
                 "path": "core.buttonStyle.radius",
                 "label": "Radius",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "options": [
                     {
@@ -797,10 +835,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-button",
                 "type": "valuefield",
                 "path": "core.buttonStyle.paddingInline",
                 "label": "Horizontal padding",
                 "attrs": {
+                  "group-label": "",
                   "min": 8,
                   "max": 48,
                   "step": 1
@@ -812,10 +852,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-button",
                 "type": "valuefield",
                 "path": "core.buttonStyle.paddingBlock",
                 "label": "Vertical padding",
                 "attrs": {
+                  "group-label": "",
                   "min": 6,
                   "max": 36,
                   "step": 1
@@ -827,10 +869,12 @@
               },
               {
                 "kind": "field",
+                "groupId": "cta-button",
                 "type": "valuefield",
                 "path": "core.buttonStyle.iconSize",
                 "label": "Icon size",
                 "attrs": {
+                  "group-label": "",
                   "min": 10,
                   "max": 40,
                   "step": 1
