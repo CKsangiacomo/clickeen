@@ -155,6 +155,9 @@ NOTES
   then applies normalization rules and scalar coercion.
 - Publishing/materializing old saved source still needs an explicit matching
   compatibility path when the server/public boundary can receive the old shape.
+- Roma lists account instances from the registry, not by scanning raw R2
+  prefixes. If a widget type rename leaves raw R2 folders behind, clean them as
+  orphaned data only after the registry/source migration decision is explicit.
 - Adding a typography role in `spec.json.defaults` does not make that role
   exist in old saved instance state. Do not pass optional new roles to
   `CKTypography.applyTypography` unless the posted state has them, or migrate

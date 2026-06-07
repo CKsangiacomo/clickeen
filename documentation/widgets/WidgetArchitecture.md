@@ -45,6 +45,9 @@ runtime, save/materialization, public runtime, and policy when policy applies.
 - `tokyo/product/widgets/{widgetType}/` stores widget product source files.
 - Account-owned instance source and generated public files live under
   `accounts/{accountPublicId}/instances/{instanceId}/`.
+- Roma lists live account instances from the instance registry, not by scanning
+  raw R2 prefixes. A raw R2 folder is stored bytes only; orphan prefix cleanup
+  is data operations work, not widget source truth.
 - `spec.json` owns the widget primitive variable graph used by Bob controls,
   preview, translation declarations, limits, and materialization.
 - Runtime state violations fail visibly at the named boundary. Runtime must not

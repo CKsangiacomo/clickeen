@@ -60,6 +60,10 @@ Account-owned runtime data lives under
 `accounts/{accountPublicId}/instances/{instanceId}/`, never under
 `tokyo/product/widgets/{widgetType}/`.
 
+Roma lists live account instances from the instance registry, not from raw R2
+prefixes. R2 folders are stored bytes only. Orphan R2 cleanup is data
+operations work and does not prove widget source truth.
+
 `widgetCode` is metadata/codebook identity only. It is never an R2 storage
 locator.
 
@@ -310,7 +314,8 @@ Shared shell invariants:
   social-share shell runtime
 
 Core paths:
-- core...
+- {widgetType}.* product body paths, for example calltoaction.headline or
+  calltoaction.action.label
 
 Legacy body paths:
 - path: migrate now | defer with reason
