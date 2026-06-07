@@ -135,9 +135,11 @@ OUTPUT
 
 NOTES
 
-- Bob session normalization currently coerces existing scalar leaves and applies
-  id rules. It does not deep-merge new `spec.json.defaults` into missing parent
-  objects on old saved instances.
+- Bob session load deep-merges compiled `spec.json.defaults` into old saved
+  instance state before ToolDrawer hydration and Builder preview postMessage,
+  then applies normalization rules and scalar coercion.
+- Publishing/materializing old saved source still needs an explicit matching
+  compatibility path when the server/public boundary can receive the old shape.
 - Adding a typography role in `spec.json.defaults` does not make that role
   exist in old saved instance state. Do not pass optional new roles to
   `CKTypography.applyTypography` unless the posted state has them, or migrate

@@ -204,15 +204,18 @@ Changing widget source does not rewrite every saved account instance. Existing
 instances may post runtime state that lacks newly added `core.*` paths,
 typography roles, role scales, or appearance objects.
 
-Bob session normalization currently coerces existing scalar leaves and applies
-declared id rules. It does not deep-merge new product defaults into missing
-parent objects for an existing saved instance. Therefore a widget refactor that
-adds a new body namespace or typography role must include one explicit
-compatibility path:
+Bob session normalization deep-merges compiled widget defaults into loaded
+instance state before Builder preview receives it, then applies declared
+normalization rules. This is the named load compatibility boundary for adding
+new defaulted paths such as `core.*` to old saved instances. Therefore a widget
+refactor that adds a new body namespace or typography role must include one
+explicit compatibility path:
 
 - Migrate saved account instance source at the account/storage boundary.
 - Add a named load/materialization normalization that creates the missing
-  parent state before preview/runtime receives it.
+  parent state before preview/runtime receives it. Builder session load already
+  deep-merges compiled defaults; server/public materialization must match when
+  old saved source is published.
 - Add a temporary widget-local runtime bridge that renders the old saved state
   shape while new instances use the new Core state.
 

@@ -346,6 +346,12 @@ Existing account instances are saved source. New widget defaults do not
 automatically appear in old saved state just because `spec.json.defaults`
 changed.
 
+Builder session load deep-merges compiled widget defaults into the saved
+instance state before ToolDrawer hydration and preview postMessage. This is the
+Builder-side load compatibility boundary for new defaulted paths. Widget
+runtime should not hide missing Core forever when the intended fix is load or
+materialization normalization.
+
 When a widget refactor adds, renames, or moves state paths, the build MUST name
 one compatibility path:
 

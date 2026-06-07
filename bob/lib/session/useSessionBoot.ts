@@ -12,6 +12,7 @@ import {
   type CopilotRuntimeUi,
   serializeInstanceDataSignature,
 } from './sessionTypes';
+import { normalizeSessionConfig } from './sessionConfig';
 
 export function useSessionBoot(args: {
   setState: Dispatch<SetStateAction<SessionState>>;
@@ -42,7 +43,7 @@ export function useSessionBoot(args: {
             error: 'coreui.errors.instance.config.invalid',
           };
         }
-        const instanceData = rawInstanceData as Record<string, unknown>;
+        const instanceData = normalizeSessionConfig(rawInstanceData as Record<string, unknown>, compiled);
         const savedInstanceDataSignature = serializeInstanceDataSignature(instanceData);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;
         const nextCopilot = (message.copilot as CopilotRuntimeUi | undefined) ?? null;
