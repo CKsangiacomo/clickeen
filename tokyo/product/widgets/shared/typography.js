@@ -10,6 +10,7 @@
     question: Object.freeze({ xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' }),
     answer: Object.freeze({ xs: '14px', s: '16px', m: '18px', l: '22px', xl: '24px' }),
     button: Object.freeze({ xs: '13px', s: '15px', m: '18px', l: '20px', xl: '24px' }),
+    localeSwitcher: Object.freeze({ xs: '13px', s: '15px', m: '18px', l: '20px', xl: '24px' }),
   });
   const TRACKING_PRESETS = Object.freeze({
     tighter: '-0.03em',

@@ -25,6 +25,38 @@
       "role": "cta-label",
       "arrayItemIdentity": [],
       "limits": []
+    },
+    {
+      "path": "core.eyebrow",
+      "label": "CTA eyebrow",
+      "type": "string",
+      "role": "cta-eyebrow",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "core.title",
+      "label": "CTA title",
+      "type": "richtext",
+      "role": "cta-title",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "core.copyHtml",
+      "label": "CTA copy",
+      "type": "richtext",
+      "role": "cta-copy",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "core.button.label",
+      "label": "CTA button label",
+      "type": "string",
+      "role": "cta-button-label",
+      "arrayItemIdentity": [],
+      "limits": []
     }
   ]
 }

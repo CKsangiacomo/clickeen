@@ -2,137 +2,383 @@
 
 STATUS: REFERENCE (AI-executable)
 
-PRD 105 NOTE: this doc uses the current product-operation vocabulary and instance-folder/runtime authority from `Execution_Pipeline_Docs/03-Executed/105_Instance_Runtime_And_Verification_Batch/105__PRD__Instance_Folder_Tenets.md`.
-
 Purpose: system-level reference for widget runtime and data flow.
+
 Related:
+
 - `documentation/widgets/WidgetBuildContract.md`
-- `documentation/widgets/WidgetComplianceSteps.md`
+- `documentation/ai/BUILD_Widget.md`
+- `documentation/architecture/CONTEXT.md`
+- `Execution_Pipeline_Docs/02-Executing/PRD106A2_WidgetShellExtraction.md`
 
 ---
 
-## System invariants
-- Widget software files in `tokyo/product/widgets/{widgetType}/` are the product software source of truth.
-- Account-owned widget instance runtime data lives under `accounts/{accountPublicId}/instances/{instanceId}/`; accounts have instances and assets, not widget folders.
-- `spec.json` owns the widget primitive variable graph. ToolDrawer, Copilot, Babel, Tokyo validation, Bob preview, and Builder/Roma public package output must use that same graph.
-- Orchestrators avoid widget-specific logic; they may route calls and apply shared translated-value resolution only at the named boundary.
-- Base config/content and translated-value contract violations must fail visibly. Runtime must not substitute another locale value map, repair values, or infer product meaning from private storage bodies.
+## System Invariants
+
+- A widget is software. An instance is account-owned saved source plus generated
+  browser artifacts.
+- Normal widgets are `Widget Shell + Widget Core`.
+- `packages/widget-shell/` is the Shell contract authority.
+- `tokyo/product/widgets/{widgetType}/` stores widget product source files.
+- Account-owned instance source and generated public files live under
+  `accounts/{accountPublicId}/instances/{instanceId}/`.
+- `spec.json` owns the widget primitive variable graph used by Bob controls,
+  preview, translation declarations, limits, and materialization.
+- Runtime state violations fail visibly at the named boundary. Runtime must not
+  repair, heal, or infer product meaning.
+- `widgetCode` is metadata/codebook identity only. It is never a storage
+  locator.
 
 ---
 
-## Widget definition (Tokyo)
-Location: `tokyo/product/widgets/{widgetType}/`
+## Product Truth
 
-Files:
-- `spec.json` (defaults + structured Builder editor contract)
-- `widget.html` (DOM skeleton + script tags)
-- `widget.css` (styles using tokens + CSS vars)
-- `widget.client.js` (applyState runtime)
-- `editable-fields.json` (editable/translatable text contract when needed)
-- `limits.json` (widget path/op mapping to ck-policy entitlement keys)
-- `pages/*.json` (Prague pages)
+The real authoring path is:
 
-`editable-fields.json` declares editable/translatable text primitives. Repeatable paths use `[]` only as a widget-owned declaration form; producers receive extracted concrete paths such as `sections.0.faqs.0.question`. `spec.json.overlays.text[]` is deleted authored translation-field authority.
+```text
+Roma account opens one instance -> Bob edits in memory -> Roma saves/materializes -> Tokyo stores exact submitted source/artifacts
+```
+
+Builder is the only real authoring surface. Demo, Prague, Minibob, and funnel
+surfaces are not account authoring truth.
+
+Tokyo stores widget software and account artifacts. Tokyo does not own Shell
+architecture, Page Composer behavior, editor UX, readiness, SEO/GEO, or product
+policy.
 
 ---
 
-## Core terms
-- Type: changes content model or behavior.
-- Layout: changes arrangement/placement only.
-- Array: list in state (`path[]`).
-- Item: element in an array (`path[i]`).
-- Item noun: `spec.json` declares `itemKey` (i18n key for user-facing item label).
+## Shell/Core Model
 
-Rule: Type and Layout are the only top-level variant axes.
+The FAQ widget is the proven Shell source example. It is gold for Shell DOM
+shape, strict runtime registration, state-update binding, editable text
+declarations, repeated content behavior, and preview localization.
+
+Newer Shell/Core widgets prove the Core namespace: widget-specific product
+content, layout, and behavior live under `defaults.core`, while shared
+Stage/Pod/Header/CoreSize/Typography utilities stay in Shell-owned paths.
+
+### Shell
+
+Shell is the reusable widget substrate:
+
+- Stage.
+- Pod.
+- Header title/subtitle.
+- Optional Header CTA primitive.
+- Header placement/alignment.
+- Stage/Pod layout and appearance.
+- Typography.
+- Theme hook.
+- Locale switcher.
+- Preview localization plumbing.
+- Branding/backlink.
+- Runtime registration/update binding.
+- Shared script/style module list.
+- Shared surface/card-wrapper primitive.
+- Core sizing.
+
+Shell state families:
+
+- `header.*`
+- `cta.*` for the optional Header CTA primitive.
+- `stage.*`
+- `pod.*`
+- `appearance.cta*`
+- `appearance.localeSwitcher*`
+- `appearance.podBorder`
+- `appearance.cardwrapper.*`
+- `typography.*`
+- `localeSwitcher.*`
+- `behavior.showBacklink`
+- `behavior.socialShare.enabled`
+- `uiLabels.core.*`
+- `coreSize.*`
+
+### Core
+
+Core is the widget-specific part. Every normal Shell/Core widget has a
+`defaults.core` object for the product body that makes that widget different.
+The shared Header can frame the body, but it is not a substitute for Core.
+
+- FAQ Core: FAQ sections/questions/answers and FAQ behavior.
+- Split Core: image/video/embedded-widget visual items and carousel behavior.
+- Cards Core: cards, card media/link/style options, and between-card graphics.
+- Big Bang Core: large typographic statement content.
+- CTA Core: CTA eyebrow/title/copy/button content, CTA body layout, and CTA
+  body button styling.
+
+Core DOM lives inside `.ck-headerLayout__body`. In Bob's UI, the Core should be
+labeled with the widget-appropriate noun through `uiLabels.core.*`, not exposed
+to users as "Core".
+
+Core must not read product meaning from Shell-only paths. `header.*` and
+top-level `cta.*` remain the optional shared Header region. If the widget's
+actual body has a call-to-action, that action is widget Core state such as
+`core.button.*`.
 
 ---
 
-## Builder editor contract model
-- `spec.json.editor.panels[]` is the only widget-owned Builder control contract.
-- Panels contain explicit clusters and field/shared nodes; Bob no longer reads widget-authored `<bob-panel>`, `<tooldrawer-cluster>`, `<tooldrawer-field>`, or `@slot:` strings from `spec.json`.
-- **Only clusters + groups define vertical spacing.** ToolDrawer container gaps set the rhythm; controls do not add external margins.
-- **Eyebrow labels only.** Cluster/group labels are the only elements that add a bottom margin.
-- **Clusters**: explicit `editor.panels[].clusters[]` objects. Cluster labels must be declared in `spec.json.editor`; Bob does not infer labels from paths like `stage.*` or `pod.*`.
-- **Groups**: field nodes may declare `groupId` and optional `attrs["group-label"]`; Bob merges adjacent grouped fields into a `.tdmenucontent__group`.
-- **Shared controls**: widget contracts opt into shared controls with explicit shared nodes such as `header-content`, `stagepod-layout`, and `typography`. Bob renders only the shared nodes the widget declares.
-- **Components**: Dieter controls must not add external vertical spacing; they only manage internal layout.
+## No Fourth Noun
+
+Clickeen product architecture uses widgets, instances, and Page Composer pages.
+
+Do not add another product noun such as `block`, `section`, `slot`, `fragment`,
+`accountInstanceRef`, `blockId`, or `blockType`.
+
+Prague blocks are migration input only. Prague-derived output becomes normal
+widgets with widget-specific Cores inside the Shell.
 
 ---
 
-## Global breakpoint
-- Single breakpoint: `900px` (desktop vs mobile).
-- Stage/Pod and widget CSS must switch at the same breakpoint.
+## Widget Source Location
+
+Widget source files live in:
+
+```text
+tokyo/product/widgets/{widgetType}/
+```
+
+Canonical files:
+
+- `spec.json`: defaults + structured Builder editor contract.
+- `widget.html`: DOM skeleton and script/style references.
+- `widget.css`: styles using Dieter tokens, Shell vars, and Core vars.
+- `widget.client.js`: deterministic runtime.
+- `editable-fields.json`: editable/translatable text contract when needed.
+- `limits.json`: widget path/op mapping to policy keys when needed.
+
+`pages/*.json`, Prague block files, `agent.md`, and catalog sidecars are not
+active widget architecture.
 
 ---
 
-## Data flow
+## Builder Editor Contract
 
-Editor flow (Bob):
-```
-Tokyo spec.json -> Bob compiles controls -> Bob loads instance (Roma same-origin route backed by Tokyo)
--> Bob holds working state -> Bob postMessage -> widget.client.js applyState
+`spec.json.editor.panels[]` is the only widget-owned Builder control contract.
+Panels are mixed by product job: a panel can contain both shared Shell nodes and
+widget Core controls.
+
+Panels contain explicit clusters and field/shared nodes. Bob no longer reads
+widget-authored `<bob-panel>`, `<tooldrawer-cluster>`,
+`<tooldrawer-field>`, or `@slot:` strings from `spec.json`.
+
+Shared Shell controls are declared with shared nodes:
+
+- `header-content`
+- `header-content-no-cta`
+- `header-layout`
+- `header-layout-no-cta`
+- `core-size`
+- `header-appearance`
+- `header-appearance-no-cta`
+- `stagepod-layout`
+- `stagepod-appearance`
+- `stagepod-corners`
+- shared `typography` panel
+
+Widget Core controls are normal field nodes, but every field path must exist in
+`defaults.core` and have one Binding Map row. Existing non-`core.*` widget body
+paths are legacy migration targets, not the model for new or refactored widgets.
+
+The normal panel pattern is:
+
+- `content`: shared Header content node, then Core content controls.
+- `layout`: shared Header/CoreSize/StagePod nodes, then Core layout controls.
+- `appearance`: shared Header/CTA/StagePod nodes, then Core appearance controls.
+- `typography`: shared typography panel for all declared Shell and Core text
+  roles.
+- `settings`: shared behavior plus Core runtime behavior controls.
+
+Clusters and groups define ToolDrawer spacing. Widgets must not invent editor
+spacing through margins, spacers, or fake groups.
+
+### Panel Ownership
+
+Panels are part of product architecture:
+
+- `content`: authored content, item managers, media choices, and content
+  toggles.
+- `layout`: placement, arrangement, sizing, fit, gaps, carousel behavior, and
+  responsive behavior.
+- `appearance`: fills, borders, shadows, radius, per-item styles, and visual
+  graphics.
+- `typography`: shared typography panel.
+- `settings`: runtime behavior toggles.
+
+Moving controls to the wrong panel is product drift because it makes widgets
+harder to operate and harder for AI to reason about.
+
+### Dieter Control Model
+
+Widgets use Dieter through Bob field nodes in `spec.json`. They do not paste raw
+`<diet-*>` markup into widget source.
+
+Use existing field types for the matching job:
+
+- rich customer-visible text: `textedit` or `dropdown-edit`
+- one-line text/URL: `textfield`
+- boolean: `toggle`
+- number: `valuefield`
+- enum: `dropdown-actions`, `choice-tiles`, or `segmented`
+- fill/media/color: `dropdown-fill`
+- border: `dropdown-border`
+- shadow: `dropdown-shadow`
+- complex repeated items: `object-manager`
+- embedded instance selection: `instance-picker`
+
+Every dependent control uses structured `showIf`. Every field path exists in
+`defaults`. Every runtime-read path exists in `defaults`.
+
+---
+
+## Runtime Modules
+
+Shell shared modules are named by `packages/widget-shell/src/modules.ts`.
+
+Important shared runtime/style files include:
+
+| Module | Purpose |
+| --- | --- |
+| `shared/runtime.js` | Runtime registration and Bob preview state binding |
+| `shared/stagePod.js` / `shared/stagePod.css` | Stage/Pod layout and appearance |
+| `shared/header.js` / `shared/header.css` | Header title/subtitle/CTA layout and behavior |
+| `shared/typography.js` / `shared/typography-data.js` | Typography roles and locale/script-aware stacks |
+| `shared/fill.js` / `shared/appearance.js` | Fill and appearance helpers |
+| `shared/localeSwitcher.js` / `shared/localeSwitcher.css` | Locale switcher behavior and styling |
+| `shared/coreSize.js` | Core sizing behavior |
+| `shared/surface.js` | Shared surface/card-wrapper vars |
+| `shared/previewL10n.js` | Bob translated-preview value application |
+| `shared/branding.js` | Backlink behavior |
+| `shared/socialShare.js` / `shared/socialShare.css` | Optional social share support |
+
+Widget Core runtime must not replace these modules.
+
+---
+
+## Data Flow
+
+### Editor Flow
+
+```text
+Tokyo widget source -> Bob compiles controls/package -> Roma opens account instance
+-> Bob holds working state -> Bob postMessage preview updates -> widget.client.js applies state
 ```
 
-Theme flow (global, editor-only; always enabled):
-```
-tokyo/product/themes/themes.json -> Bob compiles theme dropdown/presets from local checked-in theme truth
--> selection previews (no state change)
--> Apply theme writes ops to instance state
--> runtime reads final state only
-```
+Bob preview may load the iframe before state is available. Widget clients must
+bind state updates and apply initial state only when present.
 
-Embed flow (PRD 100 static):
-```
-Browser -> clk.live/{accountPublicId}/{instanceId}
--> static serving reads generated browser files from the account instance folder
--> widget client behavior runs from the generated support files only
-```
+Preview update payload includes the active state plus locale context:
 
-postMessage payload (Bob -> preview):
 ```js
 {
   type: 'ck:state-update',
   widgetname: 'faq',
+  instanceId: 'ABC123DEFG',
   state: { /* full instance JSON */ },
   locale: 'ja',
+  baseLocale: 'en',
+  previewMode: 'translated',
+  translatedLocaleValues: { /* editable path -> string */ },
   device: 'desktop',
   theme: 'light'
 }
 ```
 
+### Save/Materialization Flow
+
+```text
+Bob compiled widget package + current instance state
+-> Roma builds index.html/styles.css/runtime.js
+-> Roma saves source/artifacts through Tokyo product operation
+-> Tokyo stores exact submitted objects
+```
+
+Roma package assembly strips authoring scripts from `widget.html`, stamps the
+instance id, chunks CSS/runtime modules, embeds `CK_WIDGETS`, and writes
+`index.html`, `styles.css`, and `runtime.js`.
+
+Agents must not invent a second package format or ask Tokyo to render widget
+internals from private source files.
+
+### Public Embed Flow
+
+```text
+Browser -> clk.live/{accountPublicId}/{instanceId}
+-> static serving reads generated browser files from the account instance folder
+-> widget runtime applies saved state from runtime payload
+```
+
+Public runtime reads generated artifacts. It does not fetch product databases or
+authoring source at request time.
+
+### Theme Flow
+
+```text
+tokyo/product/themes/themes.json -> Bob compiles theme options
+-> selection previews in editor
+-> Apply theme writes final state values
+-> runtime reads final state only
+```
+
+Widget work uses the existing theme hook. It does not create widget-specific
+theme systems.
+
 ---
 
-## Runtime modules (shared)
-Location: `tokyo/product/widgets/shared/`
+## Page Composer Compatibility
 
-| Module | Export | Purpose |
-| --- | --- | --- |
-| `typography.js` | `window.CKTypography.applyTypography(typo, el, roleMap, runtimeContext?)` | Apply typography roles with locale/script-aware fallback stacks that respect the selected family class (`sans` vs `serif`); CJK locales use script-first stacks and tuned default line-height values for readability |
-| `stagePod.js` | `window.CKStagePod.applyStagePod(stage, pod, el)` | Apply Stage/Pod layout |
-| `fill.js` | `window.CKFill.*` | Fill normalization + color/gradient/image/video helpers |
-| `header.js` | `window.CKHeader.applyHeader(state, widgetRoot)` | Shared header block (title/subtitle/CTA) |
-| `header.css` | *(stylesheet)* | Shared header layout styles |
-| `surface.js` | `window.CKSurface.applyCardWrapper(cardwrapper, scopeEl)` | Shared card wrapper vars (border/shadow/radius) |
-| `branding.js` | *(self-managed)* | Injects/toggles backlink via `state.behavior.showBacklink` |
+Page Composer stacks ordered instances. It consumes the same materialized output
+model that standalone instances use.
+
+Therefore every widget must:
+
+- Produce stable `index.html`, `styles.css`, and `runtime.js` artifacts.
+- Keep instance runtime state isolated.
+- Use shared Shell module boundaries so Page Composer can concatenate and dedupe
+  common Shell CSS/runtime.
+- Avoid singleton global state outside documented `CK_*` registries.
+
+Page Composer belongs to Roma. Tokyo stores the resulting files; it does not
+compose pages.
 
 ---
 
 ## Media And Asset Origin
-Widgets must use canonical root-relative paths:
-- `/assets/account/{accountPublicId}/*` for account-owned assets backed by `accounts/{accountPublicId}/assets/`
-- `/dieter/*` for design-system media
-- `/widgets/*` for widget package media
 
-Runtime must not depend on `window.CK_ASSET_ORIGIN`; preview hosts and `clk.live` public serving expose canonical root-relative paths.
+Widgets use canonical root-relative paths:
+
+- `/assets/account/{accountPublicId}/*` for account-owned assets backed by
+  `accounts/{accountPublicId}/assets/`.
+- `/dieter/*` for design-system media.
+- `/widgets/*` for widget package media.
+
+Runtime must not depend on `window.CK_ASSET_ORIGIN`.
 
 ---
 
-## System responsibilities
+## System Responsibilities
 
 | System | Does | Does NOT |
 | --- | --- | --- |
-| Tokyo | Store widget software under `product/widgets/` and account runtime objects under `accounts/{accountPublicId}/instances/` | Treat account instances as widget software or use `widgetCode` as a storage locator |
-| Bob | Compile spec, render ToolDrawer, hold working state | Apply widget-specific defaults at runtime |
-| Roma | Open/save account editor state through same-origin routes backed by Tokyo | Transform widget state |
-| `clk.live` public serving | Serve stored public visitor package files for published account instances | Modify widget state, expose authoring config/content, expose translated-locale storage objects, or fetch product databases at request time |
-| Michael | Persist account/registry metadata and relational state | Per-widget validation or public embed assembly |
+| `packages/widget-shell` | Own Shell contract/defaults/helpers/module lists/validators | Own widget-specific Core behavior |
+| Tokyo | Store widget software and account runtime objects | Own Shell architecture, compose pages, or use `widgetCode` as storage locator |
+| Bob | Compile specs, render ToolDrawer, hold working state, preview via postMessage | Apply widget-specific defaults at runtime or invent Shell controls |
+| Roma | Open/save account editor state and build saved widget public packages | Transform product meaning or compose via Tokyo |
+| `clk.live` | Serve stored static public package files | Modify widget state or fetch authoring data at request time |
+| Michael | Persist account/registry metadata and relational state | Validate per-widget runtime or assemble embeds |
+
+---
+
+## Forbidden Drift
+
+Do not add:
+
+- Widget-specific Shell aliases.
+- Hand-authored Header/CTA/CoreSize controls.
+- Local translation resolvers/fetchers.
+- Alternate package formats.
+- Public locale assumptions beyond the current runtime payload.
+- Duplicate editable-field schemas.
+- Prague block/accountInstanceRef architecture.
+- Runtime healing for missing state.

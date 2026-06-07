@@ -89,7 +89,15 @@ function editorPathRequiresSharedShellNode(path: string): boolean {
   );
 }
 
-const GLOBAL_TYPOGRAPHY_SCALE_ROLES = new Set(['title', 'body', 'section', 'question', 'answer', 'button']);
+const GLOBAL_TYPOGRAPHY_SCALE_ROLES = new Set([
+  'title',
+  'body',
+  'section',
+  'question',
+  'answer',
+  'button',
+  'localeSwitcher',
+]);
 
 function validateRequiredRecord(parent: Record<string, unknown>, path: string): WidgetShellValidationIssue[] {
   const value = path.split('.').reduce<unknown>((node, key) => (isRecord(node) ? node[key] : undefined), parent);

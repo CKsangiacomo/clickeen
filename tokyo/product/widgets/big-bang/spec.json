@@ -401,9 +401,14 @@
             "nodes": [
               {
                 "kind": "field",
-                "type": "textedit",
+                "type": "dropdown-edit",
                 "path": "bigBang.statement",
-                "label": "Statement"
+                "label": "Statement",
+                "attrs": {
+                  "size": "lg",
+                  "placeholder": "Add statement text",
+                  "allow-links": "false"
+                }
               },
               {
                 "kind": "field",
@@ -416,9 +421,14 @@
               },
               {
                 "kind": "field",
-                "type": "textedit",
+                "type": "dropdown-edit",
                 "path": "bigBang.supportingCopy",
                 "label": "Supporting copy",
+                "attrs": {
+                  "size": "md",
+                  "placeholder": "Add supporting copy",
+                  "allow-links": "false"
+                },
                 "showIf": {
                   "path": "bigBang.showSupportingCopy",
                   "op": "isTrue"
@@ -471,13 +481,23 @@
                 "kind": "field",
                 "type": "valuefield",
                 "path": "bigBang.textWidth",
-                "label": "Text width"
+                "label": "Text width",
+                "attrs": {
+                  "min": 480,
+                  "max": 1280,
+                  "step": 10
+                }
               },
               {
                 "kind": "field",
                 "type": "valuefield",
                 "path": "bigBang.gap",
-                "label": "Gap"
+                "label": "Gap",
+                "attrs": {
+                  "min": 8,
+                  "max": 80,
+                  "step": 2
+                }
               }
             ]
           },
@@ -504,7 +524,7 @@
         "id": "settings",
         "clusters": [
           {
-            "label": "Behavior",
+            "label": "Clickeen Branding",
             "nodes": [
               {
                 "kind": "field",

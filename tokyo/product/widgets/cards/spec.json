@@ -308,6 +308,29 @@
         "enabled": false,
         "width": 1,
         "color": "var(--color-system-gray-5)"
+      },
+      "cardwrapper": {
+        "border": {
+          "enabled": true,
+          "width": 1,
+          "color": "var(--color-system-gray-5)"
+        },
+        "radiusLinked": true,
+        "radius": "2xl",
+        "radiusTL": "2xl",
+        "radiusTR": "2xl",
+        "radiusBR": "2xl",
+        "radiusBL": "2xl",
+        "shadow": {
+          "enabled": false,
+          "x": 0,
+          "y": 0,
+          "blur": 0,
+          "spread": 0,
+          "alpha": 0,
+          "color": "#000000",
+          "inset": false
+        }
       }
     },
     "typography": {
@@ -545,21 +568,32 @@
             "nodes": [
               {
                 "kind": "field",
-                "type": "object-manager",
+                "type": "repeater",
                 "groupId": "content-cards",
                 "path": "core.items",
+                "label": "Cards",
                 "template": [
                   {
                     "kind": "field",
-                    "type": "textfield",
+                    "type": "dropdown-edit",
                     "path": "core.items.__INDEX__.title",
-                    "label": "Card title"
+                    "label": "Card title",
+                    "attrs": {
+                      "size": "md",
+                      "placeholder": "Add card title",
+                      "allow-links": "false"
+                    }
                   },
                   {
                     "kind": "field",
-                    "type": "textedit",
+                    "type": "dropdown-edit",
                     "path": "core.items.__INDEX__.copy",
-                    "label": "Card copy"
+                    "label": "Card copy",
+                    "attrs": {
+                      "size": "md",
+                      "placeholder": "Add card copy",
+                      "allow-links": "false"
+                    }
                   },
                   {
                     "kind": "field",
@@ -679,11 +713,10 @@
                 ],
                 "attrs": {
                   "group-label": "",
-                  "class": "diet-object-manager",
+                  "size": "md",
                   "add-label": "Add card",
                   "reorder-label": "Manage cards",
                   "reorder-title": "Manage cards",
-                  "label-path": "title",
                   "index-token": "__INDEX__",
                   "default-item": {
                     "id": "",
@@ -793,13 +826,23 @@
                 "kind": "field",
                 "type": "valuefield",
                 "path": "core.gap",
-                "label": "Card gap"
+                "label": "Card gap",
+                "attrs": {
+                  "min": 8,
+                  "max": 64,
+                  "step": 1
+                }
               },
               {
                 "kind": "field",
                 "type": "valuefield",
                 "path": "core.cardPadding",
-                "label": "Card padding"
+                "label": "Card padding",
+                "attrs": {
+                  "min": 16,
+                  "max": 64,
+                  "step": 1
+                }
               }
             ]
           },
@@ -843,6 +886,11 @@
                 "type": "valuefield",
                 "path": "core.betweenCards.line.widthPt",
                 "label": "Line width (pt)",
+                "attrs": {
+                  "min": 1,
+                  "max": 24,
+                  "step": 1
+                },
                 "showIf": {
                   "all": [
                     {
@@ -930,6 +978,11 @@
                 "type": "valuefield",
                 "path": "core.betweenCards.icon.sizePt",
                 "label": "Icon size (pt)",
+                "attrs": {
+                  "min": 8,
+                  "max": 96,
+                  "step": 1
+                },
                 "showIf": {
                   "all": [
                     {
@@ -1100,7 +1153,7 @@
         "id": "settings",
         "clusters": [
           {
-            "label": "Behavior",
+            "label": "Clickeen Branding",
             "nodes": [
               {
                 "kind": "field",

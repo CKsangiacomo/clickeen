@@ -18,7 +18,7 @@
   },
   "defaults": {
     "header": {
-      "enabled": true,
+      "enabled": false,
       "title": "Build your next section in minutes",
       "showSubtitle": true,
       "subtitleHtml": "Start with a polished Clickeen widget, customize it in Builder, and publish it anywhere your site needs it.",
@@ -30,13 +30,45 @@
       "innerGap": 18
     },
     "cta": {
-      "enabled": true,
+      "enabled": false,
       "label": "Get started",
       "href": "#",
       "openMode": "same-tab",
       "iconEnabled": true,
       "iconName": "arrowshape.turn.up.right",
       "iconPlacement": "right"
+    },
+    "core": {
+      "showEyebrow": false,
+      "eyebrow": "Launch-ready widget",
+      "title": "Build your next section in minutes",
+      "showCopy": true,
+      "copyHtml": "Start with a polished Clickeen widget, customize it in Builder, and publish it anywhere your site needs it.",
+      "button": {
+        "enabled": true,
+        "label": "Get started",
+        "href": "#",
+        "openMode": "same-tab",
+        "iconEnabled": true,
+        "iconName": "arrowshape.turn.up.right",
+        "iconPlacement": "right"
+      },
+      "alignment": "center",
+      "gap": 18,
+      "textWidth": 760,
+      "buttonStyle": {
+        "background": "var(--color-system-blue)",
+        "textColor": "var(--color-system-white)",
+        "border": {
+          "enabled": false,
+          "width": 1,
+          "color": "transparent"
+        },
+        "radius": "lg",
+        "paddingInline": 18,
+        "paddingBlock": 12,
+        "iconSize": 16
+      }
     },
     "uiLabels": {
       "core": {
@@ -319,6 +351,18 @@
           "lineHeightCustom": 1.45,
           "lineHeightPreset": "custom"
         },
+        "eyebrow": {
+          "color": "var(--color-system-gray)",
+          "family": "Inter",
+          "weight": "700",
+          "fontStyle": "normal",
+          "sizeCustom": 13,
+          "sizePreset": "custom",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.2,
+          "lineHeightPreset": "custom"
+        },
         "button": {
           "color": "var(--color-system-white)",
           "family": "Inter",
@@ -345,6 +389,13 @@
         }
       },
       "roleScales": {
+        "eyebrow": {
+          "l": "16px",
+          "m": "13px",
+          "s": "12px",
+          "xl": "18px",
+          "xs": "11px"
+        },
         "localeSwitcher": {
           "l": "20px",
           "m": "18px",
@@ -363,6 +414,219 @@
           {
             "kind": "shared",
             "id": "header-content"
+          },
+          {
+            "label": "CTA content",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "core.showEyebrow",
+                "label": "Show eyebrow",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "path": "core.eyebrow",
+                "label": "Eyebrow",
+                "attrs": {
+                  "size": "md",
+                  "placeholder": "Add eyebrow text"
+                },
+                "showIf": {
+                  "path": "core.showEyebrow",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-edit",
+                "path": "core.title",
+                "label": "Title",
+                "attrs": {
+                  "size": "lg",
+                  "placeholder": "Add title text",
+                  "allow-links": "false"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "core.showCopy",
+                "label": "Show copy",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-edit",
+                "path": "core.copyHtml",
+                "label": "Copy",
+                "attrs": {
+                  "size": "md",
+                  "placeholder": "Add supporting copy",
+                  "allow-links": "true"
+                },
+                "showIf": {
+                  "path": "core.showCopy",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "core.button.enabled",
+                "label": "Show button",
+                "attrs": {
+                  "size": "md"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "path": "core.button.label",
+                "label": "Button label",
+                "attrs": {
+                  "size": "md"
+                },
+                "showIf": {
+                  "path": "core.button.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "path": "core.button.href",
+                "label": "Button link",
+                "attrs": {
+                  "size": "lg",
+                  "placeholder": "https://example.com"
+                },
+                "showIf": {
+                  "path": "core.button.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "path": "core.button.openMode",
+                "label": "Open link in",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Same tab",
+                      "value": "same-tab"
+                    },
+                    {
+                      "label": "New tab",
+                      "value": "new-tab"
+                    },
+                    {
+                      "label": "New window",
+                      "value": "new-window"
+                    }
+                  ]
+                },
+                "showIf": {
+                  "path": "core.button.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "toggle",
+                "path": "core.button.iconEnabled",
+                "label": "Show icon",
+                "attrs": {
+                  "size": "md"
+                },
+                "showIf": {
+                  "path": "core.button.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "path": "core.button.iconPlacement",
+                "label": "Icon position",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Left",
+                      "value": "left"
+                    },
+                    {
+                      "label": "Right",
+                      "value": "right"
+                    }
+                  ]
+                },
+                "showIf": {
+                  "all": [
+                    {
+                      "path": "core.button.enabled",
+                      "op": "isTrue"
+                    },
+                    {
+                      "path": "core.button.iconEnabled",
+                      "op": "isTrue"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "path": "core.button.iconName",
+                "label": "Icon",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Checkmark",
+                      "value": "checkmark"
+                    },
+                    {
+                      "label": "Arrow right",
+                      "value": "arrow.right"
+                    },
+                    {
+                      "label": "Chevron right",
+                      "value": "chevron.right"
+                    },
+                    {
+                      "label": "Arrowshape forward",
+                      "value": "arrowshape.forward"
+                    },
+                    {
+                      "label": "Arrowshape turn up right",
+                      "value": "arrowshape.turn.up.right"
+                    }
+                  ]
+                },
+                "showIf": {
+                  "all": [
+                    {
+                      "path": "core.button.enabled",
+                      "op": "isTrue"
+                    },
+                    {
+                      "path": "core.button.iconEnabled",
+                      "op": "isTrue"
+                    }
+                  ]
+                }
+              }
+            ]
           }
         ]
       },
@@ -384,6 +648,56 @@
             "id": "core-size"
           },
           {
+            "label": "CTA layout",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "choice-tiles",
+                "path": "core.alignment",
+                "label": "Alignment",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Left",
+                      "value": "left"
+                    },
+                    {
+                      "label": "Center",
+                      "value": "center"
+                    },
+                    {
+                      "label": "Right",
+                      "value": "right"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "core.textWidth",
+                "label": "Text width",
+                "attrs": {
+                  "min": 280,
+                  "max": 1200,
+                  "step": 10
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "core.gap",
+                "label": "Content gap",
+                "attrs": {
+                  "min": 0,
+                  "max": 80,
+                  "step": 1
+                }
+              }
+            ]
+          },
+          {
             "kind": "shared",
             "id": "stagepod-layout"
           }
@@ -395,6 +709,146 @@
           {
             "kind": "shared",
             "id": "header-appearance"
+          },
+          {
+            "label": "CTA button",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "path": "core.buttonStyle.background",
+                "label": "Background",
+                "attrs": {
+                  "size": "md",
+                  "fill-modes": "color",
+                  "allow-color": "true"
+                },
+                "showIf": {
+                  "path": "core.button.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "path": "core.buttonStyle.textColor",
+                "label": "Text color",
+                "attrs": {
+                  "size": "md",
+                  "fill-modes": "color",
+                  "allow-color": "true"
+                },
+                "showIf": {
+                  "path": "core.button.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-border",
+                "path": "core.buttonStyle.border",
+                "label": "Border",
+                "attrs": {
+                  "size": "md"
+                },
+                "showIf": {
+                  "path": "core.button.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "path": "core.buttonStyle.radius",
+                "label": "Radius",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "sm"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "md"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "lg"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "xl"
+                    },
+                    {
+                      "label": "2XL",
+                      "value": "2xl"
+                    }
+                  ]
+                },
+                "showIf": {
+                  "path": "core.button.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "core.buttonStyle.paddingInline",
+                "label": "Horizontal padding",
+                "attrs": {
+                  "min": 8,
+                  "max": 48,
+                  "step": 1
+                },
+                "showIf": {
+                  "path": "core.button.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "core.buttonStyle.paddingBlock",
+                "label": "Vertical padding",
+                "attrs": {
+                  "min": 6,
+                  "max": 36,
+                  "step": 1
+                },
+                "showIf": {
+                  "path": "core.button.enabled",
+                  "op": "isTrue"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "valuefield",
+                "path": "core.buttonStyle.iconSize",
+                "label": "Icon size",
+                "attrs": {
+                  "min": 10,
+                  "max": 40,
+                  "step": 1
+                },
+                "showIf": {
+                  "all": [
+                    {
+                      "path": "core.button.enabled",
+                      "op": "isTrue"
+                    },
+                    {
+                      "path": "core.button.iconEnabled",
+                      "op": "isTrue"
+                    }
+                  ]
+                }
+              }
+            ]
           },
           {
             "kind": "shared",

@@ -72,10 +72,20 @@ GATE
 
 OUTPUT
 
+- Ownership map:
+  - Shell paths kept from the shared contract (`header.*`, `cta.*`, `stage.*`, `pod.*`, `coreSize.*`, `typography.*`, `localeSwitcher.*`, shared `appearance.*`, shared `behavior.*`).
+  - Core paths introduced or changed under `core.*`.
+  - Any existing non-`core.*` widget body path that remains, why it is legacy,
+    and whether this task migrates or defers it.
 - State model summary:
   - Arrays list (`path[]`) and required stable IDs (`path[].id`).
   - Item pieces list (subparts) and whether each piece is `string` vs `richtext`.
   - Variant axes (type/layout/position) and which fields they gate.
+- Panel placement for every Core control:
+  - Content controls go in the Content panel after the relevant shared Header node.
+  - Layout controls go in the Layout panel alongside shared Header/CoreSize/StagePod nodes.
+  - Appearance controls go in the Appearance panel alongside shared Header/CTA/StagePod nodes.
+  - Typography roles are declared in defaults and edited by the shared Typography panel.
 - DOM parts map (selectors + `data-role`s) for:
   - array containers
   - item containers
@@ -98,11 +108,15 @@ OUTPUT
 - Full `defaults` state shape (no runtime fallbacks/healing).
 - Required platform fields:
   - Stage/Pod defaults (`stage.*`, `pod.*`)
+  - Header defaults (`header.*`) and optional Header CTA defaults (`cta.*`)
+  - Core defaults (`core.*`) for the widget-specific product body
   - Typography roles for all visible text (`typography.roles`)
   - Themes (`appearance.theme` defaults to `custom`)
   - Branding (`behavior.showBacklink`)
 - `itemKey` declared in `spec.json` (`{widgetType}.item`) with pluralization support.
-- Defaults are structural state, not demo/customer content. Do not seed saved account content with product marketing copy, fake Q&A rows, `https://example.com` links, or "New item" text. Repeated content starts empty; add-item templates may create blank valid rows using existing object-manager/repeater `default-item`.
+- Defaults are product starter state. Simple non-repeat widgets must include useful starter Core content so the first preview is not blank. Repeated content may include starter items only when an empty array would render as a broken product; add-item templates may create blank valid rows using existing object-manager/repeater `default-item`.
+- Do not seed fake content, lorem ipsum, `https://example.com` links, hidden test rows, or account-owned/private references.
+- Do not use Shell Header/CTA content as the widget's only visible product body. The widget-specific body must be represented in `defaults.core`.
 
 GATE
 
@@ -116,13 +130,23 @@ OUTPUT
 
 - Required wrapper hierarchy:
   - `[data-role="stage"]` contains `[data-role="pod"]` contains `[data-role="root"][data-ck-widget="{widgetType}"]`
+- Shared Shell hierarchy:
+  - `.ck-headerLayout` contains `.ck-header` and `.ck-headerLayout__body`
+  - Core DOM lives inside `.ck-headerLayout__body`
 - Stable `data-role` hooks for every runtime-mutated element.
 - Shared runtime scripts inside root (as required by the widget features):
   - `../shared/fill.js`
+  - `../shared/appearance.js`
+  - `../shared/runtime.js`
+  - `../shared/header.js`
+  - `../shared/localeSwitcher.js`
+  - `../shared/typography-data.js`
   - `../shared/stagePod.js`
   - `../shared/typography.js`
+  - `../shared/coreSize.js`
   - `../shared/branding.js`
-  - plus `../shared/surface.js` / `../shared/header.js` / `../shared/header.css` when those primitives are used
+  - `../shared/previewL10n.js`
+  - plus `../shared/surface.js`, `../shared/socialShare.js`, and matching CSS when those primitives are used
 
 GATE
 
@@ -171,6 +195,12 @@ GATE
 OUTPUT
 
 - Panels: `content`, `layout`, `appearance`, `typography`, `settings` (no extras).
+- Panels are mixed by user job, not separated by ownership:
+  - Content contains shared Header content plus Core content.
+  - Layout contains shared Header/CoreSize/StagePod plus Core layout.
+  - Appearance contains shared Header/CTA/StagePod plus Core appearance.
+  - Typography uses the shared panel for Shell and Core roles.
+  - Settings contains shared behavior plus Core runtime behavior.
 - Panels are composed of one or more explicit cluster objects and field/shared nodes.
   - Use `label`/`labelKey` on clusters for meaningful collapsible section headers.
 - Controls only for bound paths; gate variant-specific controls via structured `showIf`.
@@ -185,6 +215,7 @@ Compiler notes (current codebase behavior)
 - Bob renders shared Stage/Pod layout and appearance fields only when `spec.json.editor` declares the matching shared nodes.
 - Every widget has Stage/Pod as its universal wrapper. Do not inline expanded Stage/Pod control blobs in widget specs; use Bob's shared editor nodes.
 - Bob renders shared Header fields only when `spec.json.editor` declares the matching shared node.
+- Bob renders widget Core controls only from explicit field nodes in the same panel contract.
 - Bob renders a standardized Typography panel only when `spec.json.editor` declares the `typography` shared panel and `defaults.typography.roles` exists.
 - Bob compiles theme controls from local `tokyo/product/themes/themes.json`; missing or malformed theme truth is a compiler error.
 
@@ -200,6 +231,8 @@ OUTPUT
 
 - DOM parts map in the implementation notes or PRD execution record (scoped selectors; query within widget root).
 - Editable paths are declared in `spec.json` and, for customer-visible text, `editable-fields.json`.
+- Every Core control path has one implementation mechanism: DOM text/HTML, DOM attribute, CSS var, or shared primitive call.
+- Every runtime-read Core path exists in `defaults.core`.
 - Array ops semantics (add/remove/reorder + required `id` fields) are enforced by editor controls/runtime, not a separate `agent.md` file.
 - Binding map summary: how each path affects DOM/CSS.
 - Prohibited paths:
