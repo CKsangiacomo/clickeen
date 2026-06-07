@@ -110,6 +110,44 @@ GATE
 
 ---
 
+## Step -0.25 - Saved instance compatibility
+
+OUTPUT
+
+- List every new, moved, or renamed state path, including:
+  - `core.*` body paths
+  - typography roles and role scales
+  - appearance objects
+  - behavior/settings leaves
+- Describe the old saved state shape that existing account instances may still
+  post to preview/public runtime.
+- Pick exactly one compatibility path:
+  - storage migration
+  - load/materialization normalization
+  - temporary widget-local runtime bridge
+- If using a temporary runtime bridge, document:
+  - the old shape it accepts
+  - the new `defaults.core` shape that remains the surviving authority
+  - what test proves old state still renders
+  - when the bridge can be removed
+
+NOTES
+
+- Bob session normalization currently coerces existing scalar leaves and applies
+  id rules. It does not deep-merge new `spec.json.defaults` into missing parent
+  objects on old saved instances.
+- Adding a typography role in `spec.json.defaults` does not make that role
+  exist in old saved instance state. Do not pass optional new roles to
+  `CKTypography.applyTypography` unless the posted state has them, or migrate
+  the state first.
+
+GATE
+
+- Fresh defaults and one representative old saved state can both be rendered or
+  the task is blocked at a named migration boundary.
+
+---
+
 ## Step 0 - State model + Binding Map (before ToolDrawer)
 
 OUTPUT
@@ -352,6 +390,10 @@ Manual smoke (fast)
 - Browser smoke: serve `tokyo/product`, load `widgets/{widgetType}/widget.html`,
   post `spec.defaults` with `ck:state-update`, and verify the Core body is
   nonblank with no console or page errors.
+- Old-state smoke for refactors: post one representative pre-change saved state
+  and verify it either renders through the named compatibility path or fails at
+  the named migration boundary. It must not blank the preview with an uncaught
+  optional-role or missing-parent error.
 - Bob preview: each panel control updates the preview deterministically.
 - Static embed: `clk.live/{accountPublicId}/{instanceId}` loads without console errors.
 - Localization: Prague locale routes localize Prague page copy through page sidecars; account-widget locales are served only as generated public artifacts. Missing required Prague page sidecars fail visibly instead of silently falling back.

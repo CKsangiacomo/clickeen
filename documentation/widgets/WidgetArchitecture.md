@@ -162,6 +162,35 @@ migration.
 
 ---
 
+## Saved Instance Compatibility
+
+Changing widget source does not rewrite every saved account instance. Existing
+instances may post runtime state that lacks newly added `core.*` paths,
+typography roles, role scales, or appearance objects.
+
+Bob session normalization currently coerces existing scalar leaves and applies
+declared id rules. It does not deep-merge new product defaults into missing
+parent objects for an existing saved instance. Therefore a widget refactor that
+adds a new body namespace or typography role must include one explicit
+compatibility path:
+
+- Migrate saved account instance source at the account/storage boundary.
+- Add a named load/materialization normalization that creates the missing
+  parent state before preview/runtime receives it.
+- Add a temporary widget-local runtime bridge that renders the old saved state
+  shape while new instances use the new Core state.
+
+A compatibility bridge is not permission to create a second product truth. It
+must be scoped to the old saved shape, keep the new `defaults.core` model as the
+surviving authority, and be removed when stored instances have been migrated.
+
+Typography has the same rule. If a refactor adds `typography.roles.eyebrow`,
+the widget runtime must not ask `CKTypography` to apply `eyebrow` against old
+state unless old state has that role, or the state must be migrated before the
+runtime call.
+
+---
+
 ## No Fourth Noun
 
 Clickeen product architecture uses widgets, instances, and Page Composer pages.

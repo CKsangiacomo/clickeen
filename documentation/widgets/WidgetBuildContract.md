@@ -104,6 +104,8 @@ Stop if:
 - You cannot classify every requested behavior as Shell-owned or Core-owned.
 - Core cannot be isolated from Shell without changing shared behavior.
 - You cannot provide the pre-code Core manifest.
+- You are changing state shape and cannot name how existing saved instances
+  will keep rendering.
 - Binding Map rows are incomplete.
 - Editable text paths cannot be mapped.
 - Limits cannot be mapped to existing entitlement keys.
@@ -276,6 +278,12 @@ Limits:
 
 Typography:
 - role, global/non-global, roleScales required?
+
+Saved instance compatibility:
+- New paths/roles added:
+- Old saved state shape:
+- Compatibility path: storage migration | load/materialization normalization | temporary runtime bridge
+- Old-state smoke payload:
 ```
 
 If this cannot be completed, stop.
@@ -308,6 +316,34 @@ MUST NOT
   `primaryCta`, `secondaryCta`, `ctaText`, `ctaUrl`, `layout.copyWidth`,
   `layout.bodyWidth`, or `layout.variant`.
 - Add fallback/healing logic for missing state.
+
+### 2A) Saved Instance Compatibility
+
+Existing account instances are saved source. New widget defaults do not
+automatically appear in old saved state just because `spec.json.defaults`
+changed.
+
+When a widget refactor adds, renames, or moves state paths, the build MUST name
+one compatibility path:
+
+- Storage migration: update saved account instance source to the new state
+  shape.
+- Load/materialization normalization: create missing parent objects and leaves
+  before Builder preview and public runtime receive state.
+- Temporary runtime bridge: detect the old saved shape and render it without
+  treating it as the surviving model.
+
+Runtime bridges are allowed only as migration compatibility. They MUST be
+scoped to the old shape, documented in the Core Manifest, and tested with an
+old-state payload. They MUST NOT silently invent product meaning for arbitrary
+invalid state.
+
+Typography roles follow the same compatibility rule. Adding a role to
+`defaults.typography.roles` does not add that role to existing saved instances.
+If `applyTypography` is called with a role key missing from the posted state,
+the shared typography runtime fails visibly. Either migrate the state first or
+omit optional role keys from the runtime role map until the posted state has
+them.
 
 ### 3) Defaults
 
