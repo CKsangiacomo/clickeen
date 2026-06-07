@@ -316,107 +316,19 @@ function stampPackageRoot(args: {
   return `${args.html.slice(0, root.start)}${stampedTag}${args.html.slice(root.end)}`;
 }
 
-function insertBeforeTopLevelRootClose(html: string, markup: string): string {
-  const stack: string[] = [];
-  const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
-  const tagPattern = /<\/?([a-z][\w:-]*)(?:\s[^<>]*)?>/gi;
-  let rootStarted = false;
-  let match: RegExpExecArray | null;
-  while ((match = tagPattern.exec(html))) {
-    const tag = match[0];
-    const tagName = String(match[1] || '').toLowerCase();
-    const isClosing = tag.startsWith('</');
-    if (!rootStarted) {
-      const isRoot = !isClosing && Boolean(readHtmlAttribute(tag, 'data-ck-widget')) && readHtmlAttribute(tag, 'data-role') === 'root';
-      if (!isRoot) continue;
-      rootStarted = true;
-      if (!tag.endsWith('/>') && !voidTags.has(tagName)) stack.push(tagName);
-      continue;
-    }
-
-    if (isClosing) {
-      for (let index = stack.length - 1; index >= 0; index -= 1) {
-        const popped = stack.pop();
-        if (popped === tagName) break;
-      }
-      if (stack.length === 0) {
-        return `${html.slice(0, match.index)}${markup}\n${html.slice(match.index)}`;
-      }
-      continue;
-    }
-
-    if (!tag.endsWith('/>') && !voidTags.has(tagName)) stack.push(tagName);
-  }
-  return html;
-}
-
 function socialShareEnabled(state: Record<string, unknown>): boolean {
   const behavior = isRecord(state.behavior) ? state.behavior : {};
   const socialShare = isRecord(behavior.socialShare) ? behavior.socialShare : {};
   return socialShare.enabled === true;
 }
 
-function socialShareIcon(name: string): string {
-  switch (name) {
-    case 'share':
-      return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 14V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8.5 7.5 12 4l3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 14v5a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    case 'copy':
-      return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 9h9a2 2 0 0 1 2 2v9H11a2 2 0 0 1-2-2V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    default:
-      return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
-  }
-}
-
-function shareCard(action: string, label: string, iconName = action): string {
-  return `<button type="button" class="ck-socialShare__card" data-action="${escapeAttribute(action)}" data-ck-share-label="${escapeAttribute(label)}"><span class="ck-socialShare__icon" aria-hidden="true">${socialShareIcon(iconName)}</span><span class="ck-socialShare__cardLabel">${escapeHtml(label)}</span></button>`;
-}
-
-function socialShareMarkup(args: { instanceId: string; widgetType: string; title: string }): string {
-  const anchorId = `ck-instance-${args.instanceId.replace(/[^a-z0-9_-]+/gi, '-')}`;
-  const messageCards = [
-    ['copy', 'Copy link', 'copy'],
-    ['sms', 'SMS', 'copy'],
-    ['email', 'Email', 'copy'],
-    ['whatsapp', 'WhatsApp', 'copy'],
-    ['telegram', 'Telegram', 'copy'],
-    ['signal', 'Signal', 'copy'],
-    ['messenger', 'Messenger', 'copy'],
-    ['wechat', 'WeChat', 'copy'],
-    ['line', 'LINE', 'copy'],
-    ['slack', 'Slack', 'copy'],
-    ['teams', 'Teams', 'copy'],
-    ['discord', 'Discord', 'copy'],
-  ] as const;
-  const socialCards = [
-    ['x', 'X', 'share'],
-    ['linkedin', 'LinkedIn', 'share'],
-    ['facebook', 'Facebook', 'share'],
-    ['reddit', 'Reddit', 'share'],
-    ['instagram', 'Instagram', 'share'],
-    ['tiktok', 'TikTok', 'share'],
-  ] as const;
-
-  return `<div class="ck-socialShare" data-ck-social-share-root data-ck-share-anchor-id="${escapeAttribute(anchorId)}" data-ck-widget-label="${escapeAttribute(args.title || args.widgetType)}">
-  <div class="ck-socialShare__toast" role="status" aria-live="polite"></div>
-  <div class="ck-socialShare__topbar">
-    <details class="ck-socialShare__details">
-      <summary class="ck-socialShare__button"><span class="ck-socialShare__icon" aria-hidden="true">${socialShareIcon('share')}</span><span data-ck-share-copy-key="share">Share</span></summary>
-      <div class="ck-socialShare__menu" role="menu" aria-label="Share">
-        <div class="ck-socialShare__sectionTitle" data-ck-share-copy-key="sendSection">Send this widget as message</div>
-        <div class="ck-socialShare__grid">${messageCards.map(([action, label, icon]) => shareCard(action, label, icon)).join('')}</div>
-        <div class="ck-socialShare__sectionTitle" data-ck-share-copy-key="socialSection">Share this widget on social</div>
-        <div class="ck-socialShare__grid">${socialCards.map(([action, label, icon]) => shareCard(action, label, icon)).join('')}</div>
-      </div>
-    </details>
-  </div>
-</div>`;
-}
-
 function buildStyles(args: PackageBuildArgs, widgetHtml: string, includeSocialShare: boolean): string {
   const chunks: string[] = [];
+  const includedStyleKeys = new Set<string>();
   for (const href of extractStylesheetSources(widgetHtml)) {
     if (href.startsWith('/dieter/')) {
       chunks.push(styleChunk(href, `@import "${href}";`));
+      includedStyleKeys.add(href);
       continue;
     }
     const key = resolveProductPath(args.compiled.widgetname, href);
@@ -426,9 +338,12 @@ function buildStyles(args: PackageBuildArgs, widgetHtml: string, includeSocialSh
       key,
       fallback: key.endsWith('/widget.css') ? 'widget.css' : undefined,
     });
-    if (source) chunks.push(styleChunk(key, source));
+    if (source) {
+      chunks.push(styleChunk(key, source));
+      includedStyleKeys.add(key);
+    }
   }
-  if (includeSocialShare) {
+  if (includeSocialShare && !includedStyleKeys.has(WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY)) {
     const source = packageSource({ compiled: args.compiled, key: WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY });
     if (source) chunks.push(styleChunk('shared/socialShare.css', source));
   }
@@ -480,6 +395,7 @@ ${RUNTIME_PAYLOAD_END}`;
 
   const chunks = [payload];
   let widgetClientChunk: string | null = null;
+  const includedRuntimeKeys = new Set<string>();
   for (const src of scriptSources) {
     const key = resolveProductPath(args.compiled.widgetname, src);
     if (!key || !key.endsWith('.js')) continue;
@@ -490,13 +406,14 @@ ${RUNTIME_PAYLOAD_END}`;
     });
     if (!source) continue;
     const chunk = runtimeModuleChunk(key, source);
+    includedRuntimeKeys.add(key);
     if (key.endsWith('/widget.client.js')) {
       widgetClientChunk = chunk;
       continue;
     }
     chunks.push(chunk);
   }
-  if (includeSocialShare) {
+  if (includeSocialShare && !includedRuntimeKeys.has(WIDGET_SHELL_SOCIAL_SHARE_RUNTIME_MODULE_KEY)) {
     const source = packageSource({ compiled: args.compiled, key: WIDGET_SHELL_SOCIAL_SHARE_RUNTIME_MODULE_KEY });
     if (source) chunks.push(runtimeModuleChunk('shared/socialShare.js', source));
   }
@@ -539,16 +456,9 @@ export function buildSavedWidgetPublicPackage(args: PackageBuildArgs): SavedWidg
     instanceId: args.instanceId,
   });
   const stripped = stripScripts(stamped);
-  const body = includeSocialShare
-    ? insertBeforeTopLevelRootClose(stripped.body, socialShareMarkup({
-        instanceId: args.instanceId,
-        widgetType: args.compiled.widgetname,
-        title: args.displayName || args.compiled.displayName || args.compiled.widgetname,
-      }))
-    : stripped.body;
   return {
     v: 1,
-    indexHtml: buildIndexHtml(args, body),
+    indexHtml: buildIndexHtml(args, stripped.body),
     stylesCss: buildStyles(args, widgetHtml, includeSocialShare),
     runtimeJs: buildRuntime(args, stripped.scriptSources, includeSocialShare),
     dependencies: buildPackageDependencies(args),

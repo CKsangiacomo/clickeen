@@ -17,6 +17,7 @@
 
 [data-ck-widget][data-role="root"]:hover > .ck-socialShare .ck-socialShare__topbar,
 [data-ck-widget][data-role="root"]:focus-within > .ck-socialShare .ck-socialShare__topbar,
+.ck-socialShare[data-ck-preview="true"] .ck-socialShare__topbar,
 .ck-socialShare:focus-within .ck-socialShare__topbar {
   opacity: 1;
 }

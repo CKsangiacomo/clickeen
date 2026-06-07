@@ -139,10 +139,19 @@
     if (!badge) return;
 
     const show = state?.behavior?.showBacklink;
+    if (show == null) {
+      badge.hidden = false;
+      return;
+    }
     if (typeof show !== 'boolean') {
       throw new Error('[CKBranding] state.behavior.showBacklink must be a boolean');
     }
     badge.hidden = show !== true;
+  }
+
+  function applyBacklink(widgetRoot, state) {
+    ensureStyle(document);
+    applyVisibility(widgetRoot, state);
   }
 
   function applyInitial() {
@@ -167,6 +176,10 @@
       ? Array.from(document.querySelectorAll(`[data-ck-widget="${widgetname}"]`))
       : Array.from(document.querySelectorAll('[data-ck-widget]'));
     roots.forEach((root) => applyVisibility(root, state));
+  });
+
+  window.CKBranding = Object.assign({}, window.CKBranding || {}, {
+    applyBacklink,
   });
 
   applyInitial();

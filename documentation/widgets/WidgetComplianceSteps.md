@@ -243,19 +243,27 @@ OUTPUT
   - `../shared/typography.js`
   - `../shared/coreSize.js`
   - `../shared/branding.js`
+  - `../shared/socialShare.js`
   - `../shared/previewL10n.js`
-  - plus `../shared/surface.js`, `../shared/socialShare.js`, and matching CSS when those primitives are used
+  - plus `../shared/surface.js` when that primitive is used
+- Shared Shell styles:
+  - `../shared/header.css`
+  - `../shared/localeSwitcher.css`
+  - `../shared/stagePod.css`
+  - `../shared/socialShare.css`
 - Social-share support:
   - The widget must not create a widget-local social-share implementation.
-  - If `behavior.socialShare.enabled` is exposed, preview and public package
-    output must provide the shared social-share root/markup expected by
-    `shared/socialShare.js`.
+  - `shared/socialShare.js` owns the shared social-share root/markup. It must
+    create the trigger/menu when `behavior.socialShare.enabled === true` and
+    remove it when false in both Builder preview and public output.
+  - Roma package assembly may chunk/dedupe the shared social-share CSS/runtime,
+    but it must not be the only place that creates social-share UI.
 
 GATE
 
 - Every runtime selector exists and is stable.
-- Shared branding and social-share selectors/markup exist in the surface that
-  uses them, or the task is blocked at the named preview/package boundary.
+- Shared branding and social-share shell modules load in Builder preview and
+  public output, or the task is blocked at the named preview/package boundary.
 
 ---
 

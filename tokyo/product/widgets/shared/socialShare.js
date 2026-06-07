@@ -43,6 +43,157 @@
     return null;
   }
 
+  function escapeHtml(raw) {
+    return String(raw || '').replace(/[&<>"']/g, function (char) {
+      switch (char) {
+        case '&':
+          return '&amp;';
+        case '<':
+          return '&lt;';
+        case '>':
+          return '&gt;';
+        case '"':
+          return '&quot;';
+        default:
+          return '&#39;';
+      }
+    });
+  }
+
+  function socialShareIcon(name) {
+    switch (name) {
+      case 'share':
+        return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 14V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8.5 7.5 12 4l3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 14v5a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      case 'copy':
+        return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 9h9a2 2 0 0 1 2 2v9H11a2 2 0 0 1-2-2V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      default:
+        return '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    }
+  }
+
+  function shareCard(action, label, iconName) {
+    var icon = iconName || action;
+    return '<button type="button" class="ck-socialShare__card" data-action="' + escapeHtml(action) + '" data-ck-share-label="' + escapeHtml(label) + '"><span class="ck-socialShare__icon" aria-hidden="true">' + socialShareIcon(icon) + '</span><span class="ck-socialShare__cardLabel">' + escapeHtml(label) + '</span></button>';
+  }
+
+  function shareMarkup(args) {
+    var messageCards = [
+      ['copy', 'Copy link', 'copy'],
+      ['sms', 'SMS', 'copy'],
+      ['email', 'Email', 'copy'],
+      ['whatsapp', 'WhatsApp', 'copy'],
+      ['telegram', 'Telegram', 'copy'],
+      ['signal', 'Signal', 'copy'],
+      ['messenger', 'Messenger', 'copy'],
+      ['wechat', 'WeChat', 'copy'],
+      ['line', 'LINE', 'copy'],
+      ['slack', 'Slack', 'copy'],
+      ['teams', 'Teams', 'copy'],
+      ['discord', 'Discord', 'copy']
+    ];
+    var socialCards = [
+      ['x', 'X', 'share'],
+      ['linkedin', 'LinkedIn', 'share'],
+      ['facebook', 'Facebook', 'share'],
+      ['reddit', 'Reddit', 'share'],
+      ['instagram', 'Instagram', 'share'],
+      ['tiktok', 'TikTok', 'share']
+    ];
+    return '<div class="ck-socialShare" data-ck-social-share-root data-ck-share-anchor-id="' + escapeHtml(args.anchorId) + '" data-ck-widget-label="' + escapeHtml(args.widgetLabel) + '">' +
+      '<div class="ck-socialShare__toast" role="status" aria-live="polite"></div>' +
+      '<div class="ck-socialShare__topbar">' +
+      '<details class="ck-socialShare__details">' +
+      '<summary class="ck-socialShare__button"><span class="ck-socialShare__icon" aria-hidden="true">' + socialShareIcon('share') + '</span><span data-ck-share-copy-key="share">Share</span></summary>' +
+      '<div class="ck-socialShare__menu" role="menu" aria-label="Share">' +
+      '<div class="ck-socialShare__sectionTitle" data-ck-share-copy-key="sendSection">Send this widget as message</div>' +
+      '<div class="ck-socialShare__grid">' + messageCards.map(function (card) { return shareCard(card[0], card[1], card[2]); }).join('') + '</div>' +
+      '<div class="ck-socialShare__sectionTitle" data-ck-share-copy-key="socialSection">Share this widget on social</div>' +
+      '<div class="ck-socialShare__grid">' + socialCards.map(function (card) { return shareCard(card[0], card[1], card[2]); }).join('') + '</div>' +
+      '</div>' +
+      '</details>' +
+      '</div>' +
+      '</div>';
+  }
+
+  function normalizeAnchorId(value) {
+    return String(value || '').replace(/[^a-z0-9_-]+/gi, '-');
+  }
+
+  function ensureShareRoot(root, options) {
+    var existing = shareRootForWidget(root);
+    if (existing) return existing;
+
+    var instanceId = String(options && options.instanceId || root.getAttribute('data-ck-instance-id') || '').trim();
+    var widgetType = String(options && options.widgetType || root.getAttribute('data-ck-widget') || 'widget').trim();
+    if (instanceId) root.setAttribute('data-ck-instance-id', instanceId);
+    if (!root.id) {
+      var idSource = instanceId || widgetType || 'widget';
+      root.id = 'ck-instance-' + normalizeAnchorId(idSource);
+    }
+
+    var holder = document.createElement('div');
+    holder.innerHTML = shareMarkup({
+      anchorId: root.id,
+      widgetLabel: String(options && options.widgetLabel || widgetType || 'widget')
+    });
+    var shareRoot = holder.firstElementChild;
+    if (!(shareRoot instanceof HTMLElement)) return null;
+    root.appendChild(shareRoot);
+    return shareRoot;
+  }
+
+  function applyShareRootContext(shareRoot, options) {
+    if (!(shareRoot instanceof HTMLElement)) return;
+    if (options && options.widgetLabel) {
+      shareRoot.setAttribute('data-ck-widget-label', String(options.widgetLabel));
+    }
+    if (options && options.previewMode) {
+      shareRoot.setAttribute('data-ck-preview', 'true');
+    } else {
+      shareRoot.removeAttribute('data-ck-preview');
+    }
+  }
+
+  function removeShareRoot(root) {
+    var shareRoot = shareRootForWidget(root);
+    if (shareRoot) shareRoot.remove();
+  }
+
+  function resolveRuntimeContext(root) {
+    var runtime = window.CKWidgetRuntime;
+    if (!runtime || typeof runtime.contextFor !== 'function') return null;
+    var widgetType = root.getAttribute('data-ck-widget') || '';
+    if (!widgetType) return null;
+    try {
+      return runtime.contextFor(root, widgetType);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function applySocialShare(root, state, options) {
+    if (!(root instanceof HTMLElement)) return;
+    var behavior = state && typeof state === 'object' ? state.behavior : null;
+    var socialShare = behavior && typeof behavior === 'object' ? behavior.socialShare : null;
+    var enabled = socialShare && socialShare.enabled;
+    if (enabled == null) {
+      removeShareRoot(root);
+      return;
+    }
+    if (typeof enabled !== 'boolean') {
+      throw new Error('[CKSocialShare] state.behavior.socialShare.enabled must be a boolean');
+    }
+    if (!enabled) {
+      removeShareRoot(root);
+      return;
+    }
+    var shareRoot = ensureShareRoot(root, options || {});
+    if (!shareRoot) return;
+    applyShareRootContext(shareRoot, options || {});
+    shareRoot.hidden = false;
+    bindRoot(root);
+  }
+
   function applyCopy(root, copy) {
     var labels = root.querySelectorAll('[data-ck-share-copy-key]');
     labels.forEach(function (node) {
@@ -178,13 +329,15 @@
 
   function bindRoot(root) {
     var shareRoot = shareRootForWidget(root);
-    if (!shareRoot || shareRoot.getAttribute('data-ck-social-share-bound') === '1') return;
-    shareRoot.setAttribute('data-ck-social-share-bound', '1');
+    if (!shareRoot) return;
 
     var instanceId = root.getAttribute('data-ck-instance-id') || '';
     var context = instanceId && window.CK_WIDGETS ? window.CK_WIDGETS[instanceId] : null;
     var copy = copyForLocale(context && context.locale);
     applyCopy(shareRoot, copy);
+
+    if (shareRoot.getAttribute('data-ck-social-share-bound') === '1') return;
+    shareRoot.setAttribute('data-ck-social-share-bound', '1');
 
     var details = shareRoot.querySelector('.ck-socialShare__details');
     var menu = shareRoot.querySelector('.ck-socialShare__menu');
@@ -231,11 +384,46 @@
 
   function bindAll() {
     document.querySelectorAll('[data-ck-widget][data-role="root"][data-ck-instance-id]').forEach(function (root) {
-      if (root instanceof HTMLElement) bindRoot(root);
+      if (!(root instanceof HTMLElement)) return;
+      var context = resolveRuntimeContext(root);
+      if (context && context.state) {
+        applySocialShare(root, context.state, {
+          instanceId: context.instanceId,
+          widgetType: root.getAttribute('data-ck-widget') || '',
+          widgetLabel: document.title || root.getAttribute('data-ck-widget') || 'widget'
+        });
+        return;
+      }
+      bindRoot(root);
     });
   }
 
-  window.CKSocialShare = Object.assign({}, window.CKSocialShare || {}, { bindAll: bindAll });
+  window.addEventListener('message', function (event) {
+    var data = event.data;
+    if (!data || typeof data !== 'object') return;
+    if (data.type !== 'ck:state-update') return;
+    var state = data.state;
+    var widgetname = typeof data.widgetname === 'string' ? data.widgetname : '';
+    var roots = widgetname
+      ? document.querySelectorAll('[data-ck-widget="' + widgetname + '"][data-role="root"]')
+      : document.querySelectorAll('[data-ck-widget][data-role="root"]');
+    roots.forEach(function (root) {
+      if (!(root instanceof HTMLElement)) return;
+      var rootInstanceId = root.getAttribute('data-ck-instance-id') || '';
+      if (rootInstanceId && data.instanceId && rootInstanceId !== data.instanceId) return;
+      applySocialShare(root, state, {
+        instanceId: data.instanceId,
+        widgetType: widgetname || root.getAttribute('data-ck-widget') || '',
+        widgetLabel: document.title || widgetname || root.getAttribute('data-ck-widget') || 'widget',
+        previewMode: data.previewMode
+      });
+    });
+  });
+
+  window.CKSocialShare = Object.assign({}, window.CKSocialShare || {}, {
+    apply: applySocialShare,
+    bindAll: bindAll
+  });
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bindAll, { once: true });
   } else {

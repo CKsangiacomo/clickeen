@@ -104,6 +104,7 @@ Shell is the reusable widget substrate:
 - Locale switcher.
 - Preview localization plumbing.
 - Branding/backlink.
+- Social share.
 - Runtime registration/update binding.
 - Shared script/style module list.
 - Shared surface/card-wrapper primitive.
@@ -149,9 +150,12 @@ Removing branding is entitlement-gated through `branding.remove`.
 `behavior.socialShare.enabled` is shared Shell behavior for social sharing. It
 is not widget Core content and widgets must not invent one-off share DOM or
 runtime. The control is functional only when the default is a boolean, editor
-state and save policy use the `widget.socialShare.enabled` entitlement, public
-package assembly includes share markup plus `shared/socialShare.css` and
-`shared/socialShare.js`, and Builder preview has an equivalent preview surface.
+state and save policy use the `widget.socialShare.enabled` entitlement, the
+widget Shell loads `shared/socialShare.css` and `shared/socialShare.js` in
+Builder preview, and Roma public package assembly chunks the same shared
+modules. `shared/socialShare.js` owns the share trigger/menu DOM: it creates the
+shared social-share root when `behavior.socialShare.enabled === true` and
+removes it when false.
 
 ### Core
 
@@ -366,8 +370,8 @@ Important shared runtime/style files include:
 | `shared/coreSize.js` | Core sizing behavior |
 | `shared/surface.js` | Shared surface/card-wrapper vars |
 | `shared/previewL10n.js` | Bob translated-preview value application |
-| `shared/branding.js` | Backlink behavior |
-| `shared/socialShare.js` / `shared/socialShare.css` | Optional social share support |
+| `shared/branding.js` | Backlink behavior; owns badge creation/hide through `behavior.showBacklink` |
+| `shared/socialShare.js` / `shared/socialShare.css` | Social-share shell utility; owns trigger/menu creation/removal through `behavior.socialShare.enabled` |
 
 Widget Core runtime must not replace these modules.
 

@@ -265,7 +265,8 @@ Shared shell invariants:
 - pod.widthMode is explicit; use "full" for section-style widgets unless the
   PRD/manifest owns a wrap/fixed inner-wrapper decision
 - behavior.showBacklink is a boolean and is bound to shared branding runtime
-- behavior.socialShare.enabled is a boolean and is bound to shared social-share package/runtime
+- behavior.socialShare.enabled is a boolean and is bound to the shared
+  social-share shell runtime
 
 Core paths:
 - core...
@@ -436,12 +437,19 @@ Shared Settings defaults must be executable:
 - `behavior.showBacklink`: controls shared Clickeen branding/backlink through
   `shared/branding.js`; removing it is gated by `branding.remove`.
 - `behavior.socialShare.enabled`: controls the social-share feature through
-  shared package/runtime support; enabling it is gated by
-  `widget.socialShare.enabled`.
+  `shared/socialShare.js` and `shared/socialShare.css`; enabling it is gated by
+  `widget.socialShare.enabled`. The shared runtime creates/removes the share
+  trigger/menu DOM from this state path in both Builder preview and public
+  output.
 
 These Settings controls are dead controls unless Builder preview, Roma
 save/materialization, public package assembly, and public runtime all respond to
 the same state path.
+
+Shared branding and social share are Shell utilities, not widget Core content.
+Do not implement either in `widget.client.js` except by calling the shared
+primitive API when the existing shell pattern requires it; do not create
+widget-local backlink or share markup.
 
 ### 4) Shell DOM
 
