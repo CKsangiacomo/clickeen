@@ -19,9 +19,9 @@
       "limits": []
     },
     {
-      "path": "cta.label",
-      "label": "CTA label",
-      "role": "cta-label",
+      "path": "headerCta.label",
+      "label": "Header CTA label",
+      "role": "header-cta-label",
       "type": "string",
       "arrayItemIdentity": [],
       "limits": []
@@ -31,7 +31,9 @@
       "label": "Image alt text",
       "role": "split-image-alt",
       "type": "string",
-      "arrayItemIdentity": ["core.items[].id"],
+      "arrayItemIdentity": [
+        "core.items[].id"
+      ],
       "limits": []
     },
     {
@@ -39,7 +41,9 @@
       "label": "Video alt text",
       "role": "split-video-alt",
       "type": "string",
-      "arrayItemIdentity": ["core.items[].id"],
+      "arrayItemIdentity": [
+        "core.items[].id"
+      ],
       "limits": []
     }
   ]

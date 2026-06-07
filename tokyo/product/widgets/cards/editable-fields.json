@@ -19,7 +19,7 @@
       "limits": []
     },
     {
-      "path": "cta.label",
+      "path": "headerCta.label",
       "label": "Header CTA label",
       "role": "button",
       "type": "string",
@@ -31,7 +31,9 @@
       "label": "Card title",
       "role": "card-title",
       "type": "string",
-      "arrayItemIdentity": ["core.items[].id"],
+      "arrayItemIdentity": [
+        "core.items[].id"
+      ],
       "limits": []
     },
     {
@@ -39,7 +41,9 @@
       "label": "Card copy",
       "role": "card-copy",
       "type": "richtext",
-      "arrayItemIdentity": ["core.items[].id"],
+      "arrayItemIdentity": [
+        "core.items[].id"
+      ],
       "limits": []
     },
     {
@@ -47,7 +51,9 @@
       "label": "Card image alt text",
       "role": "image-alt",
       "type": "string",
-      "arrayItemIdentity": ["core.items[].id"],
+      "arrayItemIdentity": [
+        "core.items[].id"
+      ],
       "limits": []
     },
     {
@@ -55,7 +61,9 @@
       "label": "Card link label",
       "role": "card-link",
       "type": "string",
-      "arrayItemIdentity": ["core.items[].id"],
+      "arrayItemIdentity": [
+        "core.items[].id"
+      ],
       "limits": []
     }
   ]

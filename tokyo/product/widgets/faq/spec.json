@@ -41,15 +41,6 @@
     ]
   },
   "defaults": {
-    "cta": {
-      "href": "https://example.com",
-      "label": "Contact us",
-      "enabled": true,
-      "iconName": "arrowshape.turn.up.right",
-      "openMode": "same-tab",
-      "iconEnabled": true,
-      "iconPlacement": "right"
-    },
     "geo": {
       "answerFormat": "direct-first",
       "enableDeepLinks": true
@@ -334,12 +325,6 @@
     ],
     "appearance": {
       "theme": "custom",
-      "ctaBorder": {
-        "color": "var(--color-system-blue)",
-        "width": 1,
-        "enabled": false
-      },
-      "ctaRadius": "md",
       "iconColor": "var(--typo-question-color)",
       "iconStyle": "plus",
       "linkStyle": "underline",
@@ -425,10 +410,6 @@
         },
         "radiusLinked": true
       },
-      "ctaIconSize": 16,
-      "ctaTextColor": "var(--color-system-white)",
-      "ctaBackground": "var(--color-system-blue)",
-      "ctaSizePreset": "custom",
       "localeSwitcherBorder": {
         "color": "var(--color-system-gray-5)",
         "width": 1,
@@ -444,12 +425,24 @@
         "type": "color",
         "color": "var(--color-system-white)"
       },
-      "ctaPaddingBlock": 12,
-      "ctaPaddingInline": 16,
-      "ctaPaddingLinked": false,
-      "ctaIconSizePreset": "m",
       "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
-      "linkUnderlineColor": "var(--color-system-blue)"
+      "linkUnderlineColor": "var(--color-system-blue)",
+      "headerCta": {
+        "background": "var(--color-system-blue)",
+        "textColor": "var(--color-system-white)",
+        "border": {
+          "color": "var(--color-system-blue)",
+          "width": 1,
+          "enabled": false
+        },
+        "radius": "md",
+        "sizePreset": "custom",
+        "paddingLinked": false,
+        "paddingInline": 16,
+        "paddingBlock": 12,
+        "iconSizePreset": "m",
+        "iconSize": 16
+      }
     },
     "typography": {
       "roles": {
@@ -603,7 +596,16 @@
       },
       "globalFamily": "Inter"
     },
-    "displayCategoryTitles": false
+    "displayCategoryTitles": false,
+    "headerCta": {
+      "href": "https://example.com",
+      "label": "Contact us",
+      "enabled": true,
+      "iconName": "arrowshape.turn.up.right",
+      "openMode": "same-tab",
+      "iconEnabled": true,
+      "iconPlacement": "right"
+    }
   },
   "editor": {
     "panels": [

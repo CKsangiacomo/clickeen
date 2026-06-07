@@ -128,7 +128,7 @@
     if (raw == null || raw === '') return 'same-tab';
     var v = String(raw);
     if (v === 'same-tab' || v === 'new-tab' || v === 'new-window') return v;
-    throw new Error('[CKHeader] state.cta.openMode must be same-tab|new-tab|new-window');
+    throw new Error('[CKHeader] state.headerCta.openMode must be same-tab|new-tab|new-window');
   }
 
   var ALLOWED_CTA_ICONS = [
@@ -146,8 +146,9 @@
 
     assertObject(state, 'state');
     assertObject(state.header, 'state.header');
-    assertObject(state.cta, 'state.cta');
+    assertObject(state.headerCta, 'state.headerCta');
     assertObject(state.appearance, 'state.appearance');
+    assertObject(state.appearance.headerCta, 'state.appearance.headerCta');
 
     assertBoolean(state.header.enabled, 'state.header.enabled');
     assertString(state.header.title, 'state.header.title');
@@ -173,14 +174,14 @@
       throw new Error('[CKHeader] state.header.ctaPlacement must be right|below');
     }
 
-    assertBoolean(state.cta.enabled, 'state.cta.enabled');
-    assertString(state.cta.label, 'state.cta.label');
-    assertString(state.cta.href, 'state.cta.href');
-    assertBoolean(state.cta.iconEnabled, 'state.cta.iconEnabled');
-    assertString(state.cta.iconName, 'state.cta.iconName');
-    assertString(state.cta.iconPlacement, 'state.cta.iconPlacement');
-    if (state.cta.iconPlacement !== 'left' && state.cta.iconPlacement !== 'right') {
-      throw new Error('[CKHeader] state.cta.iconPlacement must be left|right');
+    assertBoolean(state.headerCta.enabled, 'state.headerCta.enabled');
+    assertString(state.headerCta.label, 'state.headerCta.label');
+    assertString(state.headerCta.href, 'state.headerCta.href');
+    assertBoolean(state.headerCta.iconEnabled, 'state.headerCta.iconEnabled');
+    assertString(state.headerCta.iconName, 'state.headerCta.iconName');
+    assertString(state.headerCta.iconPlacement, 'state.headerCta.iconPlacement');
+    if (state.headerCta.iconPlacement !== 'left' && state.headerCta.iconPlacement !== 'right') {
+      throw new Error('[CKHeader] state.headerCta.iconPlacement must be left|right');
     }
 
     var layoutEl = widgetRoot.querySelector('.ck-headerLayout');
@@ -252,13 +253,13 @@
     subtitleEl.innerHTML = subtitleHtml;
     subtitleEl.hidden = !wantsSubtitle || !subtitleHtml;
 
-    var hasCta = hasHeader && state.cta.enabled === true;
-    var ctaOpenMode = resolveCtaOpenMode(state.cta.openMode);
+    var hasCta = hasHeader && state.headerCta.enabled === true;
+    var ctaOpenMode = resolveCtaOpenMode(state.headerCta.openMode);
     headerEl.dataset.cta = hasCta ? 'true' : 'false';
     ctaEl.hidden = !hasCta;
-    ctaLabelEl.textContent = state.cta.label;
+    ctaLabelEl.textContent = state.headerCta.label;
 
-    var href = normalizeHttpUrl(state.cta.href);
+    var href = normalizeHttpUrl(state.headerCta.href);
     if (hasCta && href) {
       ctaEl.setAttribute('href', href);
       ctaEl.removeAttribute('aria-disabled');
@@ -289,18 +290,18 @@
       ctaEl.onclick = null;
     }
 
-    var iconEnabled = hasCta && state.cta.iconEnabled === true;
-    var iconName = iconEnabled ? normalizeIconName(state.cta.iconName) : '';
+    var iconEnabled = hasCta && state.headerCta.iconEnabled === true;
+    var iconName = iconEnabled ? normalizeIconName(state.headerCta.iconName) : '';
     if (iconEnabled && !iconName) {
-      throw new Error('[CKHeader] state.cta.iconName must be a non-empty icon id');
+      throw new Error('[CKHeader] state.headerCta.iconName must be a non-empty icon id');
     }
     if (iconEnabled && ALLOWED_CTA_ICONS.indexOf(iconName) === -1) {
       throw new Error(
-        '[CKHeader] state.cta.iconName must be one of: ' + ALLOWED_CTA_ICONS.join(', '),
+        '[CKHeader] state.headerCta.iconName must be one of: ' + ALLOWED_CTA_ICONS.join(', '),
       );
     }
     ctaIconEl.hidden = !iconEnabled;
-    ctaEl.dataset.iconPlacement = state.cta.iconPlacement;
+    ctaEl.dataset.iconPlacement = state.headerCta.iconPlacement;
     if (iconEnabled) {
       layoutEl.style.setProperty('--ck-header-cta-icon', 'url("/dieter/icons/svg/' + iconName + '.svg")');
     } else {
@@ -308,34 +309,34 @@
     }
 
     var appearance = resolveAppearance();
-    layoutEl.style.setProperty('--ck-header-cta-bg', appearance.toCssBackground(state.appearance.ctaBackground));
-    layoutEl.style.setProperty('--ck-header-cta-fg', appearance.toCssColor(state.appearance.ctaTextColor));
-    layoutEl.style.setProperty('--ck-header-cta-radius', appearance.tokenizeRadius(state.appearance.ctaRadius));
-    assertObject(state.appearance.ctaBorder, 'state.appearance.ctaBorder');
-    assertBoolean(state.appearance.ctaBorder.enabled, 'state.appearance.ctaBorder.enabled');
-    assertNumber(state.appearance.ctaBorder.width, 'state.appearance.ctaBorder.width');
-    assertString(state.appearance.ctaBorder.color, 'state.appearance.ctaBorder.color');
-    if (state.appearance.ctaBorder.width < 0 || state.appearance.ctaBorder.width > 12) {
-      throw new Error('[CKHeader] state.appearance.ctaBorder.width must be 0..12');
+    layoutEl.style.setProperty('--ck-header-cta-bg', appearance.toCssBackground(state.appearance.headerCta.background));
+    layoutEl.style.setProperty('--ck-header-cta-fg', appearance.toCssColor(state.appearance.headerCta.textColor));
+    layoutEl.style.setProperty('--ck-header-cta-radius', appearance.tokenizeRadius(state.appearance.headerCta.radius));
+    assertObject(state.appearance.headerCta.border, 'state.appearance.headerCta.border');
+    assertBoolean(state.appearance.headerCta.border.enabled, 'state.appearance.headerCta.border.enabled');
+    assertNumber(state.appearance.headerCta.border.width, 'state.appearance.headerCta.border.width');
+    assertString(state.appearance.headerCta.border.color, 'state.appearance.headerCta.border.color');
+    if (state.appearance.headerCta.border.width < 0 || state.appearance.headerCta.border.width > 12) {
+      throw new Error('[CKHeader] state.appearance.headerCta.border.width must be 0..12');
     }
     layoutEl.style.setProperty(
       '--ck-header-cta-border-width',
-      state.appearance.ctaBorder.enabled === true ? String(state.appearance.ctaBorder.width) + 'px' : '0px',
+      state.appearance.headerCta.border.enabled === true ? String(state.appearance.headerCta.border.width) + 'px' : '0px',
     );
     layoutEl.style.setProperty(
       '--ck-header-cta-border-color',
-      state.appearance.ctaBorder.enabled === true ? String(state.appearance.ctaBorder.color) : 'transparent',
+      state.appearance.headerCta.border.enabled === true ? String(state.appearance.headerCta.border.color) : 'transparent',
     );
 
-    assertBoolean(state.appearance.ctaPaddingLinked, 'state.appearance.ctaPaddingLinked');
-    assertNumber(state.appearance.ctaPaddingInline, 'state.appearance.ctaPaddingInline');
-    assertNumber(state.appearance.ctaPaddingBlock, 'state.appearance.ctaPaddingBlock');
-    assertString(state.appearance.ctaIconSizePreset, 'state.appearance.ctaIconSizePreset');
-    assertNumber(state.appearance.ctaIconSize, 'state.appearance.ctaIconSize');
+    assertBoolean(state.appearance.headerCta.paddingLinked, 'state.appearance.headerCta.paddingLinked');
+    assertNumber(state.appearance.headerCta.paddingInline, 'state.appearance.headerCta.paddingInline');
+    assertNumber(state.appearance.headerCta.paddingBlock, 'state.appearance.headerCta.paddingBlock');
+    assertString(state.appearance.headerCta.iconSizePreset, 'state.appearance.headerCta.iconSizePreset');
+    assertNumber(state.appearance.headerCta.iconSize, 'state.appearance.headerCta.iconSize');
 
-    layoutEl.style.setProperty('--ck-header-cta-padding-inline', String(state.appearance.ctaPaddingInline) + 'px');
-    layoutEl.style.setProperty('--ck-header-cta-padding-block', String(state.appearance.ctaPaddingBlock) + 'px');
-    layoutEl.style.setProperty('--ck-header-cta-icon-size', String(state.appearance.ctaIconSize) + 'px');
+    layoutEl.style.setProperty('--ck-header-cta-padding-inline', String(state.appearance.headerCta.paddingInline) + 'px');
+    layoutEl.style.setProperty('--ck-header-cta-padding-block', String(state.appearance.headerCta.paddingBlock) + 'px');
+    layoutEl.style.setProperty('--ck-header-cta-icon-size', String(state.appearance.headerCta.iconSize) + 'px');
   }
 
   window.CKHeader = window.CKHeader || {};

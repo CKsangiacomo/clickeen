@@ -19,10 +19,10 @@
       "limits": []
     },
     {
-      "path": "cta.label",
-      "label": "CTA label",
+      "path": "headerCta.label",
+      "label": "Header CTA label",
       "type": "string",
-      "role": "cta-label",
+      "role": "header-cta-label",
       "arrayItemIdentity": [],
       "limits": []
     },

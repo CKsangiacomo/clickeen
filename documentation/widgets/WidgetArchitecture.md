@@ -20,7 +20,7 @@ The Builder panels are mixed, not "shell panel then core panel":
 - `content`: shared header content controls plus widget core content controls.
 - `layout`: shared header/core-size/stage-pod controls plus widget core layout
   controls.
-- `appearance`: shared header/CTA/stage-pod appearance plus widget core
+- `appearance`: shared header/header CTA/stage-pod appearance plus widget core
   appearance controls.
 - `typography`: shared typography panel, but it edits roles declared by both
   shell and core.
@@ -28,7 +28,7 @@ The Builder panels are mixed, not "shell panel then core panel":
 
 Panel placement is organized by the user's editing job. Ownership still matters:
 Shell paths stay in shared nodes, and widget-specific body paths stay in
-`defaults.core`.
+the widget's own namespace.
 
 Shared controls in a mixed panel are not cosmetic. Every shared Shell control
 that appears in Builder must bind through defaults, editor state, preview
@@ -85,9 +85,10 @@ FAQ is the proven Shell/runtime source example. It is gold for Shell DOM shape,
 strict runtime registration, state-update binding, editable text declarations,
 repeated content behavior, and preview localization.
 
-CTA, Cards, and Split prove the intended Core namespace: widget-specific product
-content, layout, and behavior live under `defaults.core`, while shared
-Stage/Pod/Header/CoreSize/Typography utilities stay in Shell-owned paths.
+Call to Action proves the intended Core naming rule: widget-specific product
+content, layout, and behavior live under a widget-specific namespace such as
+`calltoaction.*`, while shared Stage/Pod/Header/CoreSize/Typography utilities
+stay in Shell-owned paths.
 
 ### Shell
 
@@ -113,10 +114,10 @@ Shell is the reusable widget substrate:
 Shell state families:
 
 - `header.*`
-- `cta.*` for the optional Header CTA primitive.
+- `headerCta.*` for the optional Header CTA primitive.
 - `stage.*`
 - `pod.*`
-- `appearance.cta*`
+- `appearance.headerCta.*`
 - `appearance.localeSwitcher*`
 - `appearance.podBorder`
 - `appearance.cardwrapper.*`
@@ -160,24 +161,48 @@ removes it when false.
 ### Core
 
 Core is the widget-specific part. Every normal Shell/Core widget has a
-`defaults.core` object for the product body that makes that widget different.
-The shared Header can frame the body, but it is not a substitute for Core.
+widget-owned state namespace for the product body that makes that widget
+different. The shared Header can frame the body, but it is not a substitute for
+Core.
 
 - FAQ Core: FAQ sections/questions/answers and FAQ behavior.
 - Split Core: image/video/embedded-widget visual items and carousel behavior.
 - Cards Core: cards, card media/link/style options, and between-card graphics.
 - Big Bang Core: large typographic statement content.
-- CTA Core: CTA eyebrow/title/copy/button content, CTA body layout, and CTA
-  body button styling.
+- Call to Action Core: action eyebrow/headline/supporting text/action content,
+  body layout, and body action styling.
 
 Core DOM lives inside `.ck-headerLayout__body`. In Bob's UI, the Core should be
 labeled with the widget-appropriate noun through `uiLabels.core.*`, not exposed
 to users as "Core".
 
 Core must not read product meaning from Shell-only paths. `header.*` and
-top-level `cta.*` remain the optional shared Header region. If the widget's
-actual body has a call-to-action, that action is widget Core state such as
-`core.button.*`.
+`headerCta.*` remain the optional shared Header region. If the widget's actual
+body has a call-to-action, that action is widget Core state such as
+`calltoaction.action.*`, not shared Header CTA state.
+
+### Naming Taxonomy
+
+Shell Header taxonomy is fixed:
+
+- Header region: `header.*`
+- Header title: `header.title`
+- Header subtitle: `header.subtitleHtml`
+- Header action/button: `headerCta.*`
+- Header action appearance: `appearance.headerCta.*`
+
+Widget Core taxonomy must be widget-specific. Do not create body paths named
+only `title`, `subtitle`, `cta`, `button`, `body`, or generic `core.*` when a
+similar Shell element exists. Use a product namespace and specific nouns:
+`calltoaction.headline`, `calltoaction.supportingTextHtml`,
+`calltoaction.action.*`, `cards.items[]`, `split.visual.*`, and similar. This
+keeps saved state, editable fields, translations, and ToolDrawer labels
+deterministic.
+
+User-facing labels must also carry context when similar controls appear in the
+same mixed panel. A Header control can say "Header CTA label"; a Call to Action
+body control can say "Action label". Never show users internal labels like
+"core.cta".
 
 ---
 
@@ -188,32 +213,32 @@ that an old body namespace is correct product architecture.
 
 | Widget | Current model | Body state authority | What to copy |
 | --- | --- | --- | --- |
-| `cta` | New Core model | `defaults.core` | Copy for simple body CTA state, mixed panels, and Core DOM bindings. |
-| `cards` | New Core model | `defaults.core` | Copy for repeated Core items and Core appearance/layout controls. |
-| `split` | New Core model | `defaults.core` | Copy for media/visual Core state inside the shared Shell. |
+| `calltoaction` | New widget-specific Core model | `calltoaction.*` | Copy for Shell/Header CTA separation, widget-specific body action naming, mixed panels, and Core DOM bindings. |
+| `cards` | Transitional generic Core namespace | `core.*` | Works today, but do not copy `core.*` naming for new/refactored widgets. |
+| `split` | Transitional generic Core namespace | `core.*` | Works today, but migrate toward widget-specific state when refactoring. |
 | `faq` | Shell-proven, legacy body namespace | `sections[]` | Copy Shell runtime and repeated-content behavior, not the body namespace. |
-| `big-bang` | Transitional | `bigBang.*` | Migrate to `core.*` when refactored; do not copy `bigBang.*` for new work. |
+| `big-bang` | Transitional widget-specific namespace | `bigBang.*` | Works today; normalize naming only under an explicit refactor. |
 | `countdown` | Old body namespace | `timer.*` | Migration target; do not copy for new work. |
 | `logoshowcase` | Old body namespace | `strips[]` | Migration target; do not copy for new work. |
 
-New widgets and refactored widgets must use `defaults.core` for the widget body.
-Legacy body namespaces may remain only when a task explicitly defers their
-migration.
+New widgets and refactored widgets must use a widget-specific body namespace.
+Legacy `core.*` and old body namespaces may remain only when a task explicitly
+defers their migration.
 
 ---
 
 ## Saved Instance Compatibility
 
 Changing widget source does not rewrite every saved account instance. Existing
-instances may post runtime state that lacks newly added `core.*` paths,
+instances may post runtime state that lacks newly added or renamed body paths,
 typography roles, role scales, or appearance objects.
 
 Bob session normalization deep-merges compiled widget defaults into loaded
 instance state before Builder preview receives it, then applies declared
 normalization rules. This is the named load compatibility boundary for adding
-new defaulted paths such as `core.*` to old saved instances. Therefore a widget
-refactor that adds a new body namespace or typography role must include one
-explicit compatibility path:
+new defaulted paths to old saved instances. Therefore a widget refactor that
+adds or renames body namespace, Shell namespace, or typography roles must
+include one explicit compatibility path:
 
 - Migrate saved account instance source at the account/storage boundary.
 - Add a named load/materialization normalization that creates the missing
@@ -224,8 +249,28 @@ explicit compatibility path:
   shape while new instances use the new Core state.
 
 A compatibility bridge is not permission to create a second product truth. It
-must be scoped to the old saved shape, keep the new `defaults.core` model as the
-surviving authority, and be removed when stored instances have been migrated.
+must be scoped to the old saved shape, keep the new widget-specific body
+namespace as the surviving authority, and be removed when stored instances have
+been migrated.
+
+Pre-GA contract renames should use a one-time data rewrite rather than
+long-lived runtime aliases. The `cta` -> `headerCta` Shell rename and
+`cta` widget -> `calltoaction` rename require rewriting saved instance config,
+content paths, translation overlays, and registry widget type rows:
+
+- `cta.*` -> `headerCta.*`
+- `appearance.ctaBackground` -> `appearance.headerCta.background`
+- `appearance.ctaTextColor` -> `appearance.headerCta.textColor`
+- `appearance.ctaBorder` -> `appearance.headerCta.border`
+- `appearance.ctaRadius` -> `appearance.headerCta.radius`
+- `appearance.ctaSizePreset` -> `appearance.headerCta.sizePreset`
+- `appearance.ctaPaddingLinked|Inline|Block` ->
+  `appearance.headerCta.paddingLinked|paddingInline|paddingBlock`
+- `appearance.ctaIconSizePreset|IconSize` ->
+  `appearance.headerCta.iconSizePreset|iconSize`
+- widget type `cta` -> `calltoaction`
+- body paths `core.*` in the old CTA widget ->
+  `calltoaction.*` in the Call to Action widget
 
 Typography has the same rule. If a refactor adds `typography.roles.eyebrow`,
 the widget runtime must not ask `CKTypography` to apply `eyebrow` against old
@@ -281,20 +326,21 @@ widget-authored `<bob-panel>`, `<tooldrawer-cluster>`,
 Shared Shell controls are declared with shared nodes:
 
 - `header-content`
-- `header-content-no-cta`
+  - `header-content-no-header-cta`
 - `header-layout`
-- `header-layout-no-cta`
+  - `header-layout-no-header-cta`
 - `core-size`
 - `header-appearance`
-- `header-appearance-no-cta`
+  - `header-appearance-no-header-cta`
 - `stagepod-layout`
 - `stagepod-appearance`
 - `stagepod-corners`
 - shared `typography` panel
 
 Widget Core controls are normal field nodes, but every field path must exist in
-`defaults.core` and have one Binding Map row. Existing non-`core.*` widget body
-paths are legacy migration targets, not the model for new or refactored widgets.
+the widget-owned body namespace and have one Binding Map row. Existing generic
+`core.*` or legacy widget body paths are migration targets, not the model for
+new or refactored widgets.
 
 Widget Core field nodes must participate in Bob's ToolDrawer grouping layer.
 Use `groupId` for related controls inside each Core cluster and set
@@ -306,7 +352,7 @@ The normal panel pattern is:
 
 - `content`: shared Header content node, then Core content controls.
 - `layout`: shared Header/CoreSize/StagePod nodes, then Core layout controls.
-- `appearance`: shared Header/CTA/StagePod nodes, then Core appearance controls.
+- `appearance`: shared Header/Header CTA/StagePod nodes, then Core appearance controls.
 - `typography`: shared typography panel for all declared Shell and Core text
   roles.
 - `settings`: shared behavior plus Core runtime behavior controls.
@@ -496,7 +542,7 @@ Runtime must not depend on `window.CK_ASSET_ORIGIN`.
 Do not add:
 
 - Widget-specific Shell aliases.
-- Hand-authored Header/CTA/CoreSize controls.
+- Hand-authored Header/Header CTA/CoreSize controls.
 - Local translation resolvers/fetchers.
 - Alternate package formats.
 - Public locale assumptions beyond the current runtime payload.

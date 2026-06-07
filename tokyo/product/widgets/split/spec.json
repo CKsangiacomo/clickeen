@@ -41,15 +41,6 @@
       "ctaPlacement": "below",
       "innerGap": 20
     },
-    "cta": {
-      "enabled": true,
-      "label": "Get started",
-      "href": "https://example.com",
-      "openMode": "same-tab",
-      "iconEnabled": true,
-      "iconName": "arrowshape.turn.up.right",
-      "iconPlacement": "right"
-    },
     "uiLabels": {
       "core": {
         "singular": "Visual",
@@ -304,20 +295,6 @@
       }
     },
     "appearance": {
-      "ctaSizePreset": "m",
-      "ctaPaddingLinked": false,
-      "ctaPaddingInline": 18,
-      "ctaPaddingBlock": 12,
-      "ctaBackground": "var(--color-system-blue)",
-      "ctaTextColor": "var(--color-system-white)",
-      "ctaBorder": {
-        "enabled": false,
-        "width": 1,
-        "color": "transparent"
-      },
-      "ctaRadius": "lg",
-      "ctaIconSizePreset": "m",
-      "ctaIconSize": 16,
       "cardwrapper": {
         "radiusLinked": true,
         "radius": "4xl",
@@ -361,6 +338,22 @@
         "enabled": false,
         "width": 1,
         "color": "var(--color-system-gray-5)"
+      },
+      "headerCta": {
+        "background": "var(--color-system-blue)",
+        "textColor": "var(--color-system-white)",
+        "border": {
+          "enabled": false,
+          "width": 1,
+          "color": "transparent"
+        },
+        "radius": "lg",
+        "sizePreset": "m",
+        "paddingLinked": false,
+        "paddingInline": 18,
+        "paddingBlock": 12,
+        "iconSizePreset": "m",
+        "iconSize": 16
       }
     },
     "typography": {
@@ -424,6 +417,15 @@
           "xs": "13px"
         }
       }
+    },
+    "headerCta": {
+      "enabled": true,
+      "label": "Get started",
+      "href": "https://example.com",
+      "openMode": "same-tab",
+      "iconEnabled": true,
+      "iconName": "arrowshape.turn.up.right",
+      "iconPlacement": "right"
     }
   },
   "editor": {

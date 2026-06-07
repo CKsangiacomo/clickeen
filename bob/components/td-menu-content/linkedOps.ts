@@ -350,16 +350,16 @@ export function expandLinkedOps(args: {
         continue;
       }
 
-      if (op.path === 'appearance.ctaPaddingLinked') {
+      if (op.path === 'appearance.headerCta.paddingLinked') {
         const nextLinked = op.value;
         if (nextLinked === true) {
-          const inlineValue = getAt<unknown>(args.instanceData, 'appearance.ctaPaddingInline');
+          const inlineValue = getAt<unknown>(args.instanceData, 'appearance.headerCta.paddingInline');
           const numberValue = coerceFiniteNumber(inlineValue);
           if (numberValue == null) {
             expanded.push(op);
             continue;
           }
-          expanded.push(setOp(op.path, true), setOp('appearance.ctaPaddingBlock', numberValue));
+          expanded.push(setOp(op.path, true), setOp('appearance.headerCta.paddingBlock', numberValue));
           continue;
         }
       }
@@ -438,12 +438,12 @@ export function expandLinkedOps(args: {
       }
     }
 
-    if (op.path === 'appearance.ctaPaddingInline') {
-      const linkedValue = getAt<unknown>(args.instanceData, 'appearance.ctaPaddingLinked');
+    if (op.path === 'appearance.headerCta.paddingInline') {
+      const linkedValue = getAt<unknown>(args.instanceData, 'appearance.headerCta.paddingLinked');
       const linked = linkedValue === true;
       const numberValue = coerceFiniteNumber(op.value);
       if (linked && numberValue != null) {
-        expanded.push(setOp(op.path, numberValue), setOp('appearance.ctaPaddingBlock', numberValue));
+        expanded.push(setOp(op.path, numberValue), setOp('appearance.headerCta.paddingBlock', numberValue));
         continue;
       }
     }

@@ -27,7 +27,7 @@ export type WidgetShellHeaderDefaults = {
   innerGap: number;
 };
 
-export type WidgetShellCtaDefaults = {
+export type WidgetShellHeaderCtaDefaults = {
   enabled: boolean;
   label: string;
   href: string;
@@ -39,7 +39,7 @@ export type WidgetShellCtaDefaults = {
 
 export type WidgetShellDefaultState = {
   header: WidgetShellHeaderDefaults;
-  cta: WidgetShellCtaDefaults;
+  headerCta: WidgetShellHeaderCtaDefaults;
   uiLabels: {
     core: WidgetShellCoreLabels;
   };
@@ -48,7 +48,7 @@ export type WidgetShellDefaultState = {
 
 export function createWidgetShellDefaultState(args: {
   header: Partial<WidgetShellHeaderDefaults> & Pick<WidgetShellHeaderDefaults, 'title'>;
-  cta?: Partial<WidgetShellCtaDefaults>;
+  headerCta?: Partial<WidgetShellHeaderCtaDefaults>;
   coreLabels?: Partial<WidgetShellCoreLabels>;
   coreSize?: Partial<WidgetShellCoreSize>;
 }): WidgetShellDefaultState {
@@ -65,7 +65,7 @@ export function createWidgetShellDefaultState(args: {
       innerGap: 16,
       ...args.header,
     },
-    cta: {
+    headerCta: {
       enabled: false,
       label: '',
       href: '',
@@ -73,7 +73,7 @@ export function createWidgetShellDefaultState(args: {
       iconEnabled: false,
       iconPlacement: 'right',
       iconName: 'arrow.right',
-      ...(args.cta ?? {}),
+      ...(args.headerCta ?? {}),
     },
     uiLabels: {
       core: {

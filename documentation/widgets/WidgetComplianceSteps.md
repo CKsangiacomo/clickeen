@@ -28,7 +28,7 @@ The Builder panels are mixed, not "shell panel then core panel":
 - `content`: shared header content controls plus widget core content controls.
 - `layout`: shared header/core-size/stage-pod controls plus widget core layout
   controls.
-- `appearance`: shared header/CTA/stage-pod appearance plus widget core
+- `appearance`: shared header/header CTA/stage-pod appearance plus widget core
   appearance controls.
 - `typography`: shared typography panel, but it edits roles declared by both
   shell and core.
@@ -36,6 +36,18 @@ The Builder panels are mixed, not "shell panel then core panel":
 
 Do not create separate shell panels and core panels. Declare shared Shell nodes
 and widget Core controls in the same panel for the same user job.
+
+Naming is part of compliance:
+
+- Shared Header title/subtitle live under `header.*`.
+- Shared Header action/button lives under `headerCta.*`.
+- Shared Header action appearance lives under `appearance.headerCta.*`.
+- Widget body paths must use a widget-specific namespace such as
+  `calltoaction.*`.
+- Do not introduce body paths named only `title`, `subtitle`, `cta`, `button`,
+  `body`, or new generic `core.*` paths when similar Shell elements exist.
+- ToolDrawer labels must disambiguate same-panel controls: "Header CTA label"
+  for Shell, "Action label" for a Call to Action body.
 
 ---
 
@@ -93,15 +105,18 @@ GATE
 OUTPUT
 
 - Classification for the target widget:
-  - `new-core`: widget body already lives under `defaults.core`.
+  - `new-widget-namespace`: widget body already lives under a widget-specific
+    namespace such as `calltoaction.*`.
+  - `transitional-generic-core`: widget body currently lives under generic
+    `core.*`.
   - `old-body`: widget body uses a legacy namespace such as `sections[]`,
     `timer.*`, or `strips[]`.
   - `transitional`: widget has Shell/Core labels or sizing but the body is not
-    under `defaults.core`.
+    under a widget-specific namespace.
   - `shell-only bug`: widget renders meaningful product body only from Shell
-    paths such as `header.*` or top-level `cta.*`.
+    paths such as `header.*` or `headerCta.*`.
 - Decision:
-  - migrate body paths to `core.*` now, or
+  - migrate body paths to a widget-specific namespace now, or
   - defer migration with a named reason and no new code copying the legacy
     namespace.
 
@@ -117,7 +132,7 @@ GATE
 OUTPUT
 
 - List every new, moved, or renamed state path, including:
-  - `core.*` body paths
+  - widget-specific body paths
   - typography roles and role scales
   - appearance objects
   - behavior/settings leaves
@@ -129,7 +144,7 @@ OUTPUT
   - temporary widget-local runtime bridge
 - If using a temporary runtime bridge, document:
   - the old shape it accepts
-  - the new `defaults.core` shape that remains the surviving authority
+  - the new widget-specific body shape that remains the surviving authority
   - what test proves old state still renders
   - when the bridge can be removed
 
@@ -144,6 +159,14 @@ NOTES
   exist in old saved instance state. Do not pass optional new roles to
   `CKTypography.applyTypography` unless the posted state has them, or migrate
   the state first.
+- Pre-GA contract renames should use a one-time storage/translation rewrite,
+  not long-lived runtime aliases. For the Header CTA and Call to Action rename:
+  move saved config `cta.*` to `headerCta.*`, move saved/theme
+  `appearance.cta*` values to `appearance.headerCta.*`, change widget type
+  `cta` to `calltoaction`, move old CTA widget body `core.*` values to
+  `calltoaction.*`, rewrite `editable-fields`/content paths
+  `cta.label` to `headerCta.label`, and recompute or mark translation overlays
+  out of sync.
 
 GATE
 
@@ -157,10 +180,10 @@ GATE
 OUTPUT
 
 - Ownership map:
-  - Shell paths kept from the shared contract (`header.*`, `cta.*`, `stage.*`, `pod.*`, `coreSize.*`, `typography.*`, `localeSwitcher.*`, shared `appearance.*`, shared `behavior.*`).
-  - Core paths introduced or changed under `core.*`.
-  - Any existing non-`core.*` widget body path that remains, why it is legacy,
-    and whether this task migrates or defers it.
+  - Shell paths kept from the shared contract (`header.*`, `headerCta.*`, `stage.*`, `pod.*`, `coreSize.*`, `typography.*`, `localeSwitcher.*`, shared `appearance.*`, shared `behavior.*`).
+  - Core paths introduced or changed under the widget-specific body namespace.
+  - Any existing generic `core.*` or legacy widget body path that remains, why
+    it is transitional/legacy, and whether this task migrates or defers it.
 - State model summary:
   - Arrays list (`path[]`) and required stable IDs (`path[].id`).
   - Item pieces list (subparts) and whether each piece is `string` vs `richtext`.
@@ -168,7 +191,7 @@ OUTPUT
 - Panel placement for every Core control:
   - Content controls go in the Content panel after the relevant shared Header node.
   - Layout controls go in the Layout panel alongside shared Header/CoreSize/StagePod nodes.
-  - Appearance controls go in the Appearance panel alongside shared Header/CTA/StagePod nodes.
+  - Appearance controls go in the Appearance panel alongside shared Header/Header CTA/StagePod nodes.
   - Typography roles are declared in defaults and edited by the shared Typography panel.
 - DOM parts map (selectors + `data-role`s) for:
   - array containers
@@ -200,8 +223,8 @@ OUTPUT
   - Pod width default: `pod.widthMode` is explicitly declared. Use `"full"` for
     section-style widgets unless the PRD/manifest owns a `wrap` or `fixed`
     inner-wrapper decision.
-  - Header defaults (`header.*`) and optional Header CTA defaults (`cta.*`)
-  - Core defaults (`core.*`) for the widget-specific product body
+  - Header defaults (`header.*`) and optional Header CTA defaults (`headerCta.*`)
+  - Core defaults in the widget-specific namespace for the product body
   - Typography roles for all visible text (`typography.roles`)
   - Themes (`appearance.theme` defaults to `custom`)
   - Branding (`behavior.showBacklink`)
@@ -209,7 +232,7 @@ OUTPUT
 - `itemKey` declared in `spec.json` (`{widgetType}.item`) with pluralization support.
 - Defaults are product starter state. Simple non-repeat widgets must include useful starter Core content so the first preview is not blank. Repeated content may include starter items only when an empty array would render as a broken product; add-item templates may create blank valid rows using existing object-manager/repeater `default-item`.
 - Do not seed fake content, lorem ipsum, `https://example.com` links, hidden test rows, or account-owned/private references.
-- Do not use Shell Header/CTA content as the widget's only visible product body. The widget-specific body must be represented in `defaults.core`.
+- Do not use Shell Header/Header CTA content as the widget's only visible product body. The widget-specific body must be represented in its own namespace.
 
 GATE
 
@@ -316,7 +339,7 @@ OUTPUT
 - Panels are mixed by user job, not separated by ownership:
   - Content contains shared Header content plus Core content.
   - Layout contains shared Header/CoreSize/StagePod plus Core layout.
-  - Appearance contains shared Header/CTA/StagePod plus Core appearance.
+  - Appearance contains shared Header/Header CTA/StagePod plus Core appearance.
   - Typography uses the shared panel for Shell and Core roles.
   - Settings contains shared behavior plus Core runtime behavior.
 - Panels are composed of one or more explicit cluster objects and field/shared nodes.
@@ -358,7 +381,7 @@ OUTPUT
 - DOM parts map in the implementation notes or PRD execution record (scoped selectors; query within widget root).
 - Editable paths are declared in `spec.json` and, for customer-visible text, `editable-fields.json`.
 - Every Core control path has one implementation mechanism: DOM text/HTML, DOM attribute, CSS var, or shared primitive call.
-- Every runtime-read Core path exists in `defaults.core`.
+- Every runtime-read Core path exists in defaults under the widget-specific body namespace.
 - Array ops semantics (add/remove/reorder + required `id` fields) are enforced by editor controls/runtime, not a separate `agent.md` file.
 - Binding map summary: how each path affects DOM/CSS.
 - Prohibited paths:

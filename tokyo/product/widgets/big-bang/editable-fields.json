@@ -19,7 +19,7 @@
       "limits": []
     },
     {
-      "path": "cta.label",
+      "path": "headerCta.label",
       "label": "Header CTA label",
       "role": "button",
       "type": "string",

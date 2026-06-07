@@ -204,21 +204,21 @@ function renderTemplateNodes(nodes: EditorTemplateNode[]): string {
 }
 
 function renderSharedNode(node: EditorSharedNode, defaults: JsonObject): string[] {
-  const includeCta = defaults.cta != null;
+  const includeCta = defaults.headerCta != null;
   switch (node.id) {
     case 'header-content':
       return buildHeaderContentPanelFields({ includeCta });
-    case 'header-content-no-cta':
+    case 'header-content-no-header-cta':
       return buildHeaderContentPanelFields({ includeCta: false });
     case 'header-layout':
       return buildHeaderLayoutPanelFields({ includeCta });
-    case 'header-layout-no-cta':
+    case 'header-layout-no-header-cta':
       return buildHeaderLayoutPanelFields({ includeCta: false });
     case 'core-size':
       return buildCoreSizeLayoutPanelFields(defaults);
     case 'header-appearance':
       return buildHeaderAppearancePanelFields({ includeCta });
-    case 'header-appearance-no-cta':
+    case 'header-appearance-no-header-cta':
       return buildHeaderAppearancePanelFields({ includeCta: false });
     case 'stagepod-layout':
       return buildStagePodLayoutPanelFields({ includeFloating: isPlainObject(defaults.stage) && isPlainObject(defaults.stage.floating) });

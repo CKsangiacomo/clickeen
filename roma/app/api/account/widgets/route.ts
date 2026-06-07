@@ -42,9 +42,9 @@ function routeKind(status: number): 'AUTH' | 'DENY' | 'VALIDATION' | 'UPSTREAM_U
 function widgetProductLabel(widgetType: string): string {
   const labels: Record<string, string> = {
     'big-bang': 'Big Bang',
+    calltoaction: 'Call to Action',
     cards: 'Cards',
     countdown: 'Countdown',
-    cta: 'CTA',
     faq: 'FAQ',
     logoshowcase: 'Logo Showcase',
     split: 'Split',

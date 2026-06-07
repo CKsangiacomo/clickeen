@@ -3,12 +3,12 @@
 
 import big_bangEditableFields from "../../../tokyo/product/widgets/big-bang/editable-fields.json";
 import big_bangSpec from "../../../tokyo/product/widgets/big-bang/spec.json";
+import calltoactionEditableFields from "../../../tokyo/product/widgets/calltoaction/editable-fields.json";
+import calltoactionSpec from "../../../tokyo/product/widgets/calltoaction/spec.json";
 import cardsEditableFields from "../../../tokyo/product/widgets/cards/editable-fields.json";
 import cardsSpec from "../../../tokyo/product/widgets/cards/spec.json";
 import countdownEditableFields from "../../../tokyo/product/widgets/countdown/editable-fields.json";
 import countdownSpec from "../../../tokyo/product/widgets/countdown/spec.json";
-import ctaEditableFields from "../../../tokyo/product/widgets/cta/editable-fields.json";
-import ctaSpec from "../../../tokyo/product/widgets/cta/spec.json";
 import faqEditableFields from "../../../tokyo/product/widgets/faq/editable-fields.json";
 import faqSpec from "../../../tokyo/product/widgets/faq/spec.json";
 import logoshowcaseEditableFields from "../../../tokyo/product/widgets/logoshowcase/editable-fields.json";
@@ -29,6 +29,11 @@ export const WIDGET_DEFINITION_SOURCES = [
     editableFields: big_bangEditableFields,
   },
   {
+    widgetType: "calltoaction",
+    spec: calltoactionSpec,
+    editableFields: calltoactionEditableFields,
+  },
+  {
     widgetType: "cards",
     spec: cardsSpec,
     editableFields: cardsEditableFields,
@@ -37,11 +42,6 @@ export const WIDGET_DEFINITION_SOURCES = [
     widgetType: "countdown",
     spec: countdownSpec,
     editableFields: countdownEditableFields,
-  },
-  {
-    widgetType: "cta",
-    spec: ctaSpec,
-    editableFields: ctaEditableFields,
   },
   {
     widgetType: "faq",

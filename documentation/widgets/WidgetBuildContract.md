@@ -18,7 +18,7 @@ The Builder panels are mixed, not "shell panel then core panel":
 - `content`: shared header content controls plus widget core content controls.
 - `layout`: shared header/core-size/stage-pod controls plus widget core layout
   controls.
-- `appearance`: shared header/CTA/stage-pod appearance plus widget core
+- `appearance`: shared header/header CTA/stage-pod appearance plus widget core
   appearance controls.
 - `typography`: shared typography panel, but it edits roles declared by both
   shell and core.
@@ -26,18 +26,20 @@ The Builder panels are mixed, not "shell panel then core panel":
 
 Panels are organized by the user's editing job. Ownership is enforced by path:
 Shell-owned paths come from shared nodes, and widget-specific body paths live in
-`defaults.core`.
+the widget's own namespace.
 
 Shared Shell controls in mixed panels are live product controls. A widget is not
 compliant if `behavior.showBacklink`, `behavior.socialShare.enabled`,
-Stage/Pod, Header, CTA, Typography, or CoreSize controls appear in Builder but
-do not bind through preview, save/materialization, public runtime, and policy
-when policy applies.
+Stage/Pod, Header, Header CTA, Typography, or CoreSize controls appear in
+Builder but do not bind through preview, save/materialization, public runtime,
+and policy when policy applies.
 
 The FAQ widget proves the Shell/runtime model. `packages/widget-shell/` is the
-named Shell contract authority. CTA, Cards, and Split prove the intended
-`defaults.core` namespace. A widget folder under `tokyo/product/widgets/` is
-the product source location for that widget's Core plus its materialized source
+named Shell contract authority. The Call to Action widget proves the
+widget-specific Core namespace model. Existing Cards and Split `core.*` paths
+work today but are transitional naming, not the model to copy for new or
+refactored widgets. A widget folder under `tokyo/product/widgets/` is the
+product source location for that widget's Core plus its materialized source
 files.
 
 ---
@@ -74,8 +76,8 @@ locator.
 - `packages/widget-shell/src/*`.
 - FAQ widget source as the Shell/runtime example:
   `tokyo/product/widgets/faq/*`.
-- CTA widget source as the simple `defaults.core` example:
-  `tokyo/product/widgets/cta/*`.
+- Call to Action widget source as the simple widget-specific Core example:
+  `tokyo/product/widgets/calltoaction/*`.
 - Cards and Split widget source as repeated-item and media Core examples:
   `tokyo/product/widgets/cards/*`, `tokyo/product/widgets/split/*`.
 - Target widget source:
@@ -137,10 +139,10 @@ runtime/compiler modules it names.
 Shell-owned state families:
 
 - `header.*`
-- `cta.*`
+- `headerCta.*`
 - `stage.*`
 - `pod.*`
-- `appearance.cta*`
+- `appearance.headerCta.*`
 - `appearance.localeSwitcher*`
 - `appearance.podBorder`
 - `appearance.cardwrapper.*`
@@ -187,15 +189,54 @@ The user-facing UI must not show the word "Core" unless the PRD explicitly asks
 for it. Use `uiLabels.core.*` so Bob can display "FAQs", "Visual", "Cards",
 "Logos", or another widget-appropriate label.
 
+Core is an ownership layer, not a required state root named `core`. New and
+refactored widgets must use a widget-specific body namespace:
+`calltoaction.*`, `cards.*`, `split.*`, `faq.*`, or another PRD-owned product
+namespace. Existing generic `core.*` sources are transitional and must not be
+copied into new widgets without an explicit migration decision.
+
 Shell Header controls and Core controls live together in the same product
 panels. For example, Content contains the shared Header content node and then
 the widget-owned Core content controls; Layout contains shared Header/CoreSize/
 StagePod controls and then Core layout controls. The panel is organized by user
 job, not by ownership.
 
-Top-level `cta.*` is the optional shared Header CTA. It is not the body action
-for a CTA widget or any other widget whose primary product action belongs to
-the Core. Body actions must use Core-owned paths such as `core.button.*`.
+### Naming Taxonomy
+
+Shared Header element paths are fixed:
+
+- `header.title`
+- `header.subtitleHtml`
+- `headerCta.enabled`
+- `headerCta.label`
+- `headerCta.href`
+- `headerCta.openMode`
+- `headerCta.iconEnabled`
+- `headerCta.iconName`
+- `headerCta.iconPlacement`
+- `appearance.headerCta.*`
+
+Widget Core element paths must not reuse Shell names or generic names for
+similar things. Do not create body paths named only `title`, `subtitle`, `cta`,
+`button`, `body`, or new generic `core.*` paths. Use a widget-specific
+namespace and specific nouns, for example:
+
+```text
+calltoaction.headline
+calltoaction.supportingTextHtml
+calltoaction.action.label
+calltoaction.action.href
+calltoaction.actionStyle.background
+```
+
+ToolDrawer labels must disambiguate similar elements in the same mixed panel:
+"Header CTA label" for Shell and "Action label" for Call to Action body. Do
+not expose internal terms such as `core.cta` or `body.title` to users.
+
+`headerCta.*` is the optional shared Header CTA. It is not the body action for
+a Call to Action widget or any other widget whose primary product action
+belongs to the Core. Body actions must use widget-owned paths such as
+`calltoaction.action.*`.
 
 ---
 
@@ -251,7 +292,7 @@ Model classification: new-core | old-body | transitional | shell-only bug
 
 Shell paths kept:
 - header.*
-- cta.* only for optional Header CTA
+- headerCta.* only for optional Header CTA
 - stage.*
 - pod.*
 - coreSize.*
@@ -311,8 +352,8 @@ If this cannot be completed, stop.
 MUST
 
 - Keep Shell defaults intact for Shell widgets.
-- Define `defaults.core` for every normal Shell/Core widget.
-- Put widget-specific state in Core-owned paths under `core.*`.
+- Define a widget-specific body namespace for every normal Shell/Core widget.
+- Put widget-specific state in Core-owned paths under that namespace.
 - Define arrays as `path[]` and items as `path[i]`.
 - Provide stable item identity for repeated content.
 - Provide a stable DOM Array Container role and DOM Item Container role for each
@@ -335,7 +376,7 @@ MUST NOT
 - Use widget root as an item.
 - Update DOM elements without stable `data-role`.
 - Add duplicate Shell paths under Core.
-- Use `header.*` or top-level `cta.*` as the widget's only visible product body.
+- Use `header.*` or `headerCta.*` as the widget's only visible product body.
 - Add old aliases: `headline`, `subheadline`, `copy`, `button`,
   `primaryCta`, `secondaryCta`, `ctaText`, `ctaUrl`, `layout.copyWidth`,
   `layout.bodyWidth`, or `layout.variant`.
@@ -472,7 +513,7 @@ Core DOM lives inside `.ck-headerLayout__body`.
 
 MUST NOT
 
-- Reparent Header/CTA per widget.
+- Reparent Header/Header CTA per widget.
 - Redesign Stage/Pod/Header Shell markup per widget.
 
 ### 5) Panels
@@ -483,7 +524,7 @@ Bob panels are product UX, not arbitrary buckets. Use this placement:
 | --- | --- | --- |
 | `content` | Header content shared node; Core text/content; Core media choice; repeatable Core items; content toggles that change what exists | spacing, colors, borders, typography, stage/pod layout |
 | `layout` | Header layout shared node; Core sizing shared node; Core arrangement, placement, columns, gaps, fit, carousel behavior, responsive behavior | authored copy, colors, borders, font controls |
-| `appearance` | Header/CTA appearance shared node; Stage/Pod appearance shared nodes; Core visual styling such as card styles, media surface, between-card graphics | content text, item counts, typography roles |
+| `appearance` | Header/Header CTA appearance shared node; Stage/Pod appearance shared nodes; Core visual styling such as card styles, media surface, between-card graphics | content text, item counts, typography roles |
 | `typography` | Shared typography panel only | custom text-color controls unless PRD explicitly requires them |
 | `settings` | Behavior that affects product/runtime behavior, for example backlink/social-share toggles | styling, layout, authored content |
 
@@ -513,12 +554,12 @@ MUST
 - Gate variant-specific controls via structured `showIf`.
 - Use shared nodes for Shell controls:
   - `header-content`
-  - `header-content-no-cta`
+  - `header-content-no-header-cta`
   - `header-layout`
-  - `header-layout-no-cta`
+  - `header-layout-no-header-cta`
   - `core-size`
   - `header-appearance`
-  - `header-appearance-no-cta`
+  - `header-appearance-no-header-cta`
   - `stagepod-layout`
   - `stagepod-appearance`
   - `stagepod-corners`
@@ -531,7 +572,7 @@ MUST
 
 MUST NOT
 
-- Hand-author fields for `header.*`, `cta.*`, or `coreSize.*`.
+- Hand-author fields for `header.*`, `headerCta.*`, or `coreSize.*`.
 - Put widget-authored `<bob-panel>`, `<tooldrawer-cluster>`,
   `<tooldrawer-field>`, `@slot:`, or escaped editor HTML in `spec.json`.
 - Duplicate entire panels per variant.
@@ -663,9 +704,9 @@ If a widget exposes `appearance.cardwrapper.*`, it must use
 `window.CKSurface.applyCardWrapper(...)` and the shared `--ck-cardwrapper-*`
 CSS vars.
 
-### 10) Header And CTA
+### 10) Header And Header CTA
 
-Shell widgets MUST use the shared Header/CTA primitive.
+Shell widgets MUST use the shared Header/Header CTA primitive.
 
 Required state paths include:
 
@@ -679,39 +720,39 @@ Required state paths include:
 - `header.gap`
 - `header.innerGap`
 - `header.textGap`
-- `cta.enabled`
-- `cta.label`
-- `cta.href`
-- `cta.openMode`
-- `cta.iconEnabled`
-- `cta.iconName`
-- `cta.iconPlacement`
-- `appearance.ctaBackground`
-- `appearance.ctaTextColor`
-- `appearance.ctaBorder`
-- `appearance.ctaRadius`
-- `appearance.ctaSizePreset`
-- `appearance.ctaPaddingLinked`
-- `appearance.ctaPaddingInline`
-- `appearance.ctaPaddingBlock`
-- `appearance.ctaIconSizePreset`
-- `appearance.ctaIconSize`
+- `headerCta.enabled`
+- `headerCta.label`
+- `headerCta.href`
+- `headerCta.openMode`
+- `headerCta.iconEnabled`
+- `headerCta.iconName`
+- `headerCta.iconPlacement`
+- `appearance.headerCta.background`
+- `appearance.headerCta.textColor`
+- `appearance.headerCta.border`
+- `appearance.headerCta.radius`
+- `appearance.headerCta.sizePreset`
+- `appearance.headerCta.paddingLinked`
+- `appearance.headerCta.paddingInline`
+- `appearance.headerCta.paddingBlock`
+- `appearance.headerCta.iconSizePreset`
+- `appearance.headerCta.iconSize`
 
-`header.title`, `header.subtitleHtml`, and `cta.label` belong in
-`editable-fields.json` when the shared Header/CTA content is exposed.
+`header.title`, `header.subtitleHtml`, and `headerCta.label` belong in
+`editable-fields.json` when the shared Header/Header CTA content is exposed.
 
-The shared Header CTA is not a Core body CTA. If the widget itself is a CTA
-body, or if the widget Core exposes a primary body button, the content and
-behavior for that action must be Core state such as:
+The shared Header CTA is not a Core body action. If the widget itself is a Call
+to Action body, or if the widget Core exposes a primary body button, the content
+and behavior for that action must be widget-owned Core state such as:
 
 ```text
-core.button.enabled
-core.button.label
-core.button.href
-core.button.openMode
-core.button.iconEnabled
-core.button.iconName
-core.button.iconPlacement
+calltoaction.action.enabled
+calltoaction.action.label
+calltoaction.action.href
+calltoaction.action.openMode
+calltoaction.action.iconEnabled
+calltoaction.action.iconName
+calltoaction.action.iconPlacement
 ```
 
 Those Core paths need normal Core controls, Binding Map rows, runtime bindings,
@@ -720,15 +761,15 @@ and editable-field declarations for customer-visible text.
 Header placement uses the Shell system. Do not invent widget-specific header
 placement names.
 
-Canonical CTA Core example:
+Canonical Call to Action Core example:
 
 ```json
 {
-  "core": {
-    "title": "Build your next section in minutes",
-    "showCopy": true,
-    "copyHtml": "Start with a polished Clickeen widget.",
-    "button": {
+  "calltoaction": {
+    "headline": "Build your next section in minutes",
+    "showSupportingText": true,
+    "supportingTextHtml": "Start with a polished Clickeen widget.",
+    "action": {
       "enabled": true,
       "label": "Get started",
       "href": "#",
@@ -737,21 +778,24 @@ Canonical CTA Core example:
       "iconName": "arrowshape.turn.up.right",
       "iconPlacement": "right"
     },
-    "alignment": "center",
-    "gap": 18,
-    "textWidth": 760
+    "layout": {
+      "alignment": "center",
+      "gap": 18,
+      "textWidth": 760
+    }
   }
 }
 ```
 
 The matching editor controls belong in mixed panels:
 
-- `content`: shared `header-content`, then `core.title`, `core.copyHtml`,
-  `core.button.*`.
+- `content`: shared `header-content`, then `calltoaction.headline`,
+  `calltoaction.supportingTextHtml`, `calltoaction.action.*`.
 - `layout`: shared `header-layout`, shared `core-size`, then
-  `core.alignment`, `core.gap`, `core.textWidth`.
-- `appearance`: shared `header-appearance`, then any Core-specific button/body
-  appearance paths.
+  `calltoaction.layout.alignment`, `calltoaction.layout.gap`,
+  `calltoaction.layout.textWidth`.
+- `appearance`: shared `header-appearance`, then any Core-specific body action
+  appearance paths such as `calltoaction.actionStyle.*`.
 
 ### 11) Typography
 

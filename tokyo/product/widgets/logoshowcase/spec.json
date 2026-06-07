@@ -3,15 +3,6 @@
   "widgetname": "logoshowcase",
   "itemKey": "logoshowcase.item",
   "defaults": {
-    "cta": {
-      "href": "https://example.com/contact",
-      "label": "Contact us",
-      "openMode": "same-tab",
-      "enabled": true,
-      "iconEnabled": false,
-      "iconName": "arrow.right",
-      "iconPlacement": "right"
-    },
     "pod": {
       "radius": "4xl",
       "padding": {
@@ -490,10 +481,7 @@
         "radiusLinked": true
       },
       "logoLook": "original",
-      "ctaRadius": "md",
       "logoOpacity": 0.9,
-      "ctaTextColor": "var(--color-system-white)",
-      "ctaBackground": "var(--color-system-blue)",
       "localeSwitcherBorder": {
         "color": "var(--color-system-gray-5)",
         "width": 1,
@@ -504,18 +492,23 @@
       "localeSwitcherBackground": "var(--color-system-white)",
       "localeSwitcherPaddingBlock": 10,
       "localeSwitcherPaddingInline": 14,
-      "ctaBorder": {
-        "enabled": false,
-        "width": 1,
-        "color": "var(--color-system-blue)"
-      },
-      "ctaSizePreset": "m",
-      "ctaPaddingLinked": true,
-      "ctaPaddingInline": 16,
-      "ctaPaddingBlock": 12,
-      "ctaIconSizePreset": "m",
-      "ctaIconSize": 16,
-      "itemBackground": "transparent"
+      "itemBackground": "transparent",
+      "headerCta": {
+        "background": "var(--color-system-blue)",
+        "textColor": "var(--color-system-white)",
+        "border": {
+          "enabled": false,
+          "width": 1,
+          "color": "var(--color-system-blue)"
+        },
+        "radius": "md",
+        "sizePreset": "m",
+        "paddingLinked": true,
+        "paddingInline": 16,
+        "paddingBlock": 12,
+        "iconSizePreset": "m",
+        "iconSize": 16
+      }
     },
     "typeConfig": {
       "grid": {},
@@ -584,6 +577,15 @@
         }
       },
       "globalFamily": "Inter"
+    },
+    "headerCta": {
+      "href": "https://example.com/contact",
+      "label": "Contact us",
+      "openMode": "same-tab",
+      "enabled": true,
+      "iconEnabled": false,
+      "iconName": "arrow.right",
+      "iconPlacement": "right"
     }
   },
   "editor": {

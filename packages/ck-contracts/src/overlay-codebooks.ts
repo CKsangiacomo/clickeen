@@ -2,10 +2,10 @@ const WIDGET_CODE_RE = /^[0-9A-Z]{3}$/;
 
 export const WIDGET_OVERLAY_CODES = Object.freeze({
   'big-bang': 'BBG',
+  calltoaction: 'CTA',
   cards: 'CRD',
   faq: 'FAQ',
   countdown: 'CTD',
-  cta: 'CTA',
   logoshowcase: 'LGS',
   split: 'SPL',
 } as const);

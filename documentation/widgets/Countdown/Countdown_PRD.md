@@ -71,7 +71,7 @@ Editable/translatable text primitives live in `tokyo/product/widgets/countdown/e
 - `timer.labels.hours`
 - `timer.labels.minutes`
 - `timer.labels.seconds`
-- `cta.label`
+- `headerCta.label`
 - `actions.during.text`
 - `actions.after.text`
 

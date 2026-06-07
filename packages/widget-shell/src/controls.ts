@@ -5,13 +5,13 @@ export type WidgetShellControlPath =
   | 'header.title'
   | 'header.showSubtitle'
   | 'header.subtitleHtml'
-  | 'cta.enabled'
-  | 'cta.label'
-  | 'cta.href'
-  | 'cta.openMode'
-  | 'cta.iconEnabled'
-  | 'cta.iconPlacement'
-  | 'cta.iconName'
+  | 'headerCta.enabled'
+  | 'headerCta.label'
+  | 'headerCta.href'
+  | 'headerCta.openMode'
+  | 'headerCta.iconEnabled'
+  | 'headerCta.iconPlacement'
+  | 'headerCta.iconName'
   | 'header.placement'
   | 'header.alignment'
   | 'header.gap'
@@ -39,13 +39,13 @@ export const WIDGET_SHELL_CONTROL_DEFINITIONS: readonly WidgetShellControlDefini
   { clusterId: 'header-content', path: 'header.title', owner: 'widget-shell' },
   { clusterId: 'header-content', path: 'header.showSubtitle', owner: 'widget-shell' },
   { clusterId: 'header-content', path: 'header.subtitleHtml', owner: 'widget-shell' },
-  { clusterId: 'header-content', path: 'cta.enabled', owner: 'widget-shell' },
-  { clusterId: 'header-content', path: 'cta.label', owner: 'widget-shell' },
-  { clusterId: 'header-content', path: 'cta.href', owner: 'widget-shell' },
-  { clusterId: 'header-content', path: 'cta.openMode', owner: 'widget-shell' },
-  { clusterId: 'header-content', path: 'cta.iconEnabled', owner: 'widget-shell' },
-  { clusterId: 'header-content', path: 'cta.iconPlacement', owner: 'widget-shell' },
-  { clusterId: 'header-content', path: 'cta.iconName', owner: 'widget-shell' },
+  { clusterId: 'header-content', path: 'headerCta.enabled', owner: 'widget-shell' },
+  { clusterId: 'header-content', path: 'headerCta.label', owner: 'widget-shell' },
+  { clusterId: 'header-content', path: 'headerCta.href', owner: 'widget-shell' },
+  { clusterId: 'header-content', path: 'headerCta.openMode', owner: 'widget-shell' },
+  { clusterId: 'header-content', path: 'headerCta.iconEnabled', owner: 'widget-shell' },
+  { clusterId: 'header-content', path: 'headerCta.iconPlacement', owner: 'widget-shell' },
+  { clusterId: 'header-content', path: 'headerCta.iconName', owner: 'widget-shell' },
   { clusterId: 'header-layout', path: 'header.placement', owner: 'widget-shell' },
   { clusterId: 'header-layout', path: 'header.alignment', owner: 'widget-shell' },
   { clusterId: 'header-layout', path: 'header.gap', owner: 'widget-shell' },

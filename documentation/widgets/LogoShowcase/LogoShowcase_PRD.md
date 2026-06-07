@@ -75,7 +75,7 @@ LogoShowcase is WIP but still declares the PRD 098 text primitive graph:
 
 - `header.title`
 - `header.subtitleHtml`
-- `cta.label`
+- `headerCta.label`
 - `strips[].logos[].name`
 - `strips[].logos[].caption`
 - `strips[].logos[].alt`
@@ -207,9 +207,9 @@ Note: Links + media metadata are baseline product behavior (not tier-gated). Inv
   - **changes**: title/subtitle/CTA copy + placement/alignment + CTA styling
   - **how**:
     - runtime delegates to `window.CKHeader.applyHeader(state, widgetRoot)` (no widget-specific header DOM code)
-    - Content-owned: `header.enabled`, `header.title`, `header.showSubtitle`, `header.subtitleHtml`, `cta.enabled`, `cta.label`, `cta.href`, `cta.iconEnabled`, `cta.iconName`, `cta.iconPlacement`
+    - Content-owned: `header.enabled`, `header.title`, `header.showSubtitle`, `header.subtitleHtml`, `headerCta.enabled`, `headerCta.label`, `headerCta.href`, `headerCta.iconEnabled`, `headerCta.iconName`, `headerCta.iconPlacement`
     - Layout-owned: `header.placement`, `header.alignment`, `header.ctaPlacement`, `header.gap`, `header.textGap`, `header.innerGap`
-    - Appearance-owned: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaBorder`, `appearance.ctaRadius`, `appearance.ctaSizePreset`, `appearance.ctaPadding*`, `appearance.ctaIconSizePreset`, `appearance.ctaIconSize`
+    - Appearance-owned: `appearance.headerCta.background`, `appearance.headerCta.textColor`, `appearance.headerCta.border`, `appearance.headerCta.radius`, `appearance.headerCta.sizePreset`, `appearance.headerCta.padding*`, `appearance.headerCta.iconSizePreset`, `appearance.headerCta.iconSize`
 
 ### Panel: Layout (common)
 - **Logo size**: `spacing.logoHeight` (used for both desktop + mobile)
@@ -264,7 +264,7 @@ Note: Links + media metadata are baseline product behavior (not tier-gated). Inv
   - **changes**: header title/subtitle font + text color
   - **how**: `CKTypography.applyTypography(...)` (no Appearance-level header text color controls)
 
-- **CTA styling**: `appearance.ctaBackground`, `appearance.ctaTextColor`, `appearance.ctaBorder`, `appearance.ctaRadius`, `appearance.ctaSizePreset`, `appearance.ctaPadding*`, `appearance.ctaIconSizePreset`, `appearance.ctaIconSize`
+- **CTA styling**: `appearance.headerCta.background`, `appearance.headerCta.textColor`, `appearance.headerCta.border`, `appearance.headerCta.radius`, `appearance.headerCta.sizePreset`, `appearance.headerCta.padding*`, `appearance.headerCta.iconSizePreset`, `appearance.headerCta.iconSize`
   - **changes**: CTA colors + border + radius + padding/icon sizing presets
   - **how**: `CKHeader.applyHeader(...)` writes `--ck-header-cta-bg`, `--ck-header-cta-fg`, `--ck-header-cta-border-*`, `--ck-header-cta-radius`, `--ck-header-cta-padding-*`, `--ck-header-cta-icon-size` on `.ck-headerLayout`
 
@@ -429,7 +429,7 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
       ]
     }
   ],
-  "cta": { "enabled": true, "label": "Contact us", "href": "https://example.com/contact", "style": "filled" },
+  "headerCta": { "enabled": true, "label": "Contact us", "href": "https://example.com/contact" },
   "type": "grid",
   "typeConfig": {
     "grid": {},

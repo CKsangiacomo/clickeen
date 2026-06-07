@@ -2,10 +2,10 @@ export const WIDGET_SHELL_VERSION = 1;
 
 export const SHELL_STATE_FAMILIES = [
   'header',
-  'cta',
+  'headerCta',
   'stage',
   'pod',
-  'appearance.cta',
+  'appearance.headerCta',
   'appearance.localeSwitcher',
   'appearance.podBorder',
   'appearance.cardwrapper',
@@ -15,7 +15,7 @@ export const SHELL_STATE_FAMILIES = [
   'behavior.socialShare.enabled',
 ] as const;
 
-export const SHELL_EDITABLE_FIELD_PATHS = ['header.title', 'header.subtitleHtml', 'cta.label'] as const;
+export const SHELL_EDITABLE_FIELD_PATHS = ['header.title', 'header.subtitleHtml', 'headerCta.label'] as const;
 
 export const SHELL_REQUIRED_DOM_ROLES = ['stage', 'pod', 'root'] as const;
 
@@ -34,12 +34,12 @@ export const SHELL_EDITOR_CLUSTER_IDS = [
 
 export const SHELL_EDITOR_SHARED_NODE_IDS = [
   'header-content',
-  'header-content-no-cta',
+  'header-content-no-header-cta',
   'header-layout',
-  'header-layout-no-cta',
+  'header-layout-no-header-cta',
   'core-size',
   'header-appearance',
-  'header-appearance-no-cta',
+  'header-appearance-no-header-cta',
   'stagepod-appearance',
   'stagepod-layout',
   'stagepod-corners',
@@ -54,8 +54,19 @@ export const SHELL_FORBIDDEN_ALIAS_PATHS = [
   'button',
   'primaryCta',
   'secondaryCta',
+  'cta',
   'ctaText',
   'ctaUrl',
+  'appearance.ctaBackground',
+  'appearance.ctaTextColor',
+  'appearance.ctaBorder',
+  'appearance.ctaRadius',
+  'appearance.ctaSizePreset',
+  'appearance.ctaPaddingLinked',
+  'appearance.ctaPaddingInline',
+  'appearance.ctaPaddingBlock',
+  'appearance.ctaIconSizePreset',
+  'appearance.ctaIconSize',
   'layout.copyWidth',
   'layout.bodyWidth',
   'layout.variant',

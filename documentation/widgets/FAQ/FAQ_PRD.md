@@ -189,17 +189,17 @@ Controls:
 - `sections[]` (object manager)
   - Section shape: `{ id, title, faqs[] }`
   - Item shape: `{ id, question, answer, defaultOpen }`
-- Global header (declared with shared header controls when `defaults.header` + `defaults.cta` exist):
+- Global header (declared with shared header controls when `defaults.header` + `defaults.headerCta` exist):
   - `header.enabled`
   - `header.title`
   - `header.showSubtitle`
   - `header.subtitleHtml`
-  - `cta.enabled`
-  - `cta.label`
-  - `cta.href`
-  - `cta.iconEnabled`
-  - `cta.iconName` (allowed: `checkmark`, `arrow.right`, `chevron.right`, `arrowshape.forward`, `arrowshape.turn.up.right`)
-  - `cta.iconPlacement` (`left|right`)
+  - `headerCta.enabled`
+  - `headerCta.label`
+  - `headerCta.href`
+  - `headerCta.iconEnabled`
+  - `headerCta.iconName` (allowed: `checkmark`, `arrow.right`, `chevron.right`, `arrowshape.forward`, `arrowshape.turn.up.right`)
+  - `headerCta.iconPlacement` (`left|right`)
 - `displayCategoryTitles` (toggle)
 
 Translation fields:
@@ -209,7 +209,7 @@ Translation fields:
 - Required coverage:
   - `header.title`
   - `header.subtitleHtml`
-  - `cta.label`
+  - `headerCta.label`
   - `sections[].title`
   - `sections[].faqs[].question`
   - `sections[].faqs[].answer`
@@ -238,15 +238,15 @@ Widget layout controls (spec-defined):
   - `layout.itemPadding` (when linked)
   - `layout.itemPaddingTop|Right|Bottom|Left` (when unlinked)
 
-Header layout controls (declared with shared header nodes when `defaults.header` + `defaults.cta` exist):
+Header layout controls (declared with shared header nodes when `defaults.header` + `defaults.headerCta` exist):
 
 - `header.placement`
 - `header.alignment`
-- `header.ctaPlacement` (show-if `cta.enabled == true`)
+- `header.ctaPlacement` (show-if `headerCta.enabled == true`)
 - Header spacing (px; declared shared header controls):
   - `header.gap` (header ↔ content)
   - `header.textGap` (title ↔ subtitle; show-if `header.showSubtitle == true`)
-  - `header.innerGap` (text ↔ CTA; show-if `cta.enabled == true`)
+  - `header.innerGap` (text ↔ CTA; show-if `headerCta.enabled == true`)
 
 Stage/Pod layout controls (declared with shared stage/pod nodes):
 
@@ -276,17 +276,17 @@ Widget appearance controls (spec-defined):
   - `appearance.cardwrapper.radiusLinked` + radius fields
   - `appearance.cardwrapper.border`
   - `appearance.cardwrapper.shadow`
-- Header CTA (declared with shared header controls when `defaults.header` + `defaults.cta` exist):
-  - `appearance.ctaBackground`
-  - `appearance.ctaTextColor`
-  - `appearance.ctaBorder`
-  - `appearance.ctaRadius`
-  - `appearance.ctaSizePreset` (editor preset selector; expands to button typography size + CTA padding)
-  - `appearance.ctaPaddingLinked`
-  - `appearance.ctaPaddingInline`
-  - `appearance.ctaPaddingBlock`
-  - `appearance.ctaIconSizePreset` (editor preset selector; expands to `appearance.ctaIconSize`)
-  - `appearance.ctaIconSize`
+- Header CTA (declared with shared header controls when `defaults.header` + `defaults.headerCta` exist):
+  - `appearance.headerCta.background`
+  - `appearance.headerCta.textColor`
+  - `appearance.headerCta.border`
+  - `appearance.headerCta.radius`
+  - `appearance.headerCta.sizePreset` (editor preset selector; expands to button typography size + CTA padding)
+  - `appearance.headerCta.paddingLinked`
+  - `appearance.headerCta.paddingInline`
+  - `appearance.headerCta.paddingBlock`
+  - `appearance.headerCta.iconSizePreset` (editor preset selector; expands to `appearance.headerCta.iconSize`)
+  - `appearance.headerCta.iconSize`
 - Stage/Pod (background + pod border):
   - `stage.background`
   - `pod.background`

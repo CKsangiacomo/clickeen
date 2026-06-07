@@ -245,12 +245,6 @@
           "radiusTR": "2xl",
           "radiusLinked": true
         },
-        "appearance.ctaBorder": {
-          "enabled": true,
-          "width": 1,
-          "color": "#ffffff"
-        },
-        "appearance.ctaRadius": "md",
         "appearance.iconColor": {
           "type": "color",
           "color": "#378049"
@@ -339,23 +333,10 @@
           },
           "radiusLinked": true
         },
-        "appearance.ctaIconSize": 16,
-        "appearance.ctaTextColor": {
-          "type": "color",
-          "color": "var(--color-system-white)"
-        },
-        "appearance.ctaBackground": {
-          "type": "none"
-        },
-        "appearance.ctaSizePreset": "custom",
         "appearance.linkTextColor": {
           "type": "color",
           "color": "var(--color-system-blue)"
         },
-        "appearance.ctaPaddingBlock": 12,
-        "appearance.ctaPaddingInline": 16,
-        "appearance.ctaPaddingLinked": false,
-        "appearance.ctaIconSizePreset": "m",
         "appearance.linkHighlightColor": {
           "type": "color",
           "color": "color-mix(in oklab, var(--color-system-blue), transparent 82%)"
@@ -726,7 +707,26 @@
           "inset": true,
           "spread": -35,
           "enabled": false
-        }
+        },
+        "appearance.headerCta.background": {
+          "type": "none"
+        },
+        "appearance.headerCta.textColor": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "appearance.headerCta.border": {
+          "enabled": true,
+          "width": 1,
+          "color": "#ffffff"
+        },
+        "appearance.headerCta.radius": "md",
+        "appearance.headerCta.sizePreset": "custom",
+        "appearance.headerCta.paddingLinked": false,
+        "appearance.headerCta.paddingInline": 16,
+        "appearance.headerCta.paddingBlock": 12,
+        "appearance.headerCta.iconSizePreset": "m",
+        "appearance.headerCta.iconSize": 16
       }
     },
     {
@@ -910,26 +910,6 @@
           "type": "color",
           "color": "#378049"
         },
-        "appearance.ctaSizePreset": "custom",
-        "appearance.ctaPaddingLinked": false,
-        "appearance.ctaPaddingInline": 16,
-        "appearance.ctaPaddingBlock": 12,
-        "appearance.ctaBackground": {
-          "type": "color",
-          "color": "#212121"
-        },
-        "appearance.ctaTextColor": {
-          "type": "color",
-          "color": "var(--color-system-white)"
-        },
-        "appearance.ctaBorder": {
-          "color": "var(--color-system-blue)",
-          "width": 1,
-          "enabled": false
-        },
-        "appearance.ctaRadius": "md",
-        "appearance.ctaIconSizePreset": "m",
-        "appearance.ctaIconSize": 16,
         "appearance.linkStyle": "underline",
         "appearance.linkUnderlineColor": {
           "type": "color",
@@ -1098,7 +1078,27 @@
         "pod.radiusTL": "none",
         "pod.radiusTR": "none",
         "pod.radiusBR": "none",
-        "pod.radiusBL": "none"
+        "pod.radiusBL": "none",
+        "appearance.headerCta.background": {
+          "type": "color",
+          "color": "#212121"
+        },
+        "appearance.headerCta.textColor": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "appearance.headerCta.border": {
+          "color": "var(--color-system-blue)",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.headerCta.radius": "md",
+        "appearance.headerCta.sizePreset": "custom",
+        "appearance.headerCta.paddingLinked": false,
+        "appearance.headerCta.paddingInline": 16,
+        "appearance.headerCta.paddingBlock": 12,
+        "appearance.headerCta.iconSizePreset": "m",
+        "appearance.headerCta.iconSize": 16
       }
     },
     {
@@ -1236,26 +1236,6 @@
           "type": "color",
           "color": "#378049"
         },
-        "appearance.ctaSizePreset": "custom",
-        "appearance.ctaPaddingLinked": false,
-        "appearance.ctaPaddingInline": 16,
-        "appearance.ctaPaddingBlock": 12,
-        "appearance.ctaBackground": {
-          "type": "color",
-          "color": "#212121"
-        },
-        "appearance.ctaTextColor": {
-          "type": "color",
-          "color": "var(--color-system-white)"
-        },
-        "appearance.ctaBorder": {
-          "color": "var(--color-system-blue)",
-          "width": 1,
-          "enabled": false
-        },
-        "appearance.ctaRadius": "md",
-        "appearance.ctaIconSizePreset": "m",
-        "appearance.ctaIconSize": 16,
         "appearance.linkStyle": "underline",
         "appearance.linkUnderlineColor": {
           "type": "color",
@@ -1424,7 +1404,27 @@
         "pod.radiusTL": "none",
         "pod.radiusTR": "none",
         "pod.radiusBR": "none",
-        "pod.radiusBL": "none"
+        "pod.radiusBL": "none",
+        "appearance.headerCta.background": {
+          "type": "color",
+          "color": "#212121"
+        },
+        "appearance.headerCta.textColor": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "appearance.headerCta.border": {
+          "color": "var(--color-system-blue)",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.headerCta.radius": "md",
+        "appearance.headerCta.sizePreset": "custom",
+        "appearance.headerCta.paddingLinked": false,
+        "appearance.headerCta.paddingInline": 16,
+        "appearance.headerCta.paddingBlock": 12,
+        "appearance.headerCta.iconSizePreset": "m",
+        "appearance.headerCta.iconSize": 16
       }
     },
     {
@@ -1561,26 +1561,6 @@
           "type": "color",
           "color": "#ff9500"
         },
-        "appearance.ctaSizePreset": "custom",
-        "appearance.ctaPaddingLinked": false,
-        "appearance.ctaPaddingInline": 16,
-        "appearance.ctaPaddingBlock": 12,
-        "appearance.ctaBackground": {
-          "type": "color",
-          "color": "#212121"
-        },
-        "appearance.ctaTextColor": {
-          "type": "color",
-          "color": "var(--color-system-white)"
-        },
-        "appearance.ctaBorder": {
-          "color": "var(--color-system-blue)",
-          "width": 1,
-          "enabled": false
-        },
-        "appearance.ctaRadius": "md",
-        "appearance.ctaIconSizePreset": "m",
-        "appearance.ctaIconSize": 16,
         "appearance.linkStyle": "underline",
         "appearance.linkUnderlineColor": {
           "type": "color",
@@ -1749,7 +1729,27 @@
         "pod.radiusTL": "none",
         "pod.radiusTR": "none",
         "pod.radiusBR": "none",
-        "pod.radiusBL": "none"
+        "pod.radiusBL": "none",
+        "appearance.headerCta.background": {
+          "type": "color",
+          "color": "#212121"
+        },
+        "appearance.headerCta.textColor": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "appearance.headerCta.border": {
+          "color": "var(--color-system-blue)",
+          "width": 1,
+          "enabled": false
+        },
+        "appearance.headerCta.radius": "md",
+        "appearance.headerCta.sizePreset": "custom",
+        "appearance.headerCta.paddingLinked": false,
+        "appearance.headerCta.paddingInline": 16,
+        "appearance.headerCta.paddingBlock": 12,
+        "appearance.headerCta.iconSizePreset": "m",
+        "appearance.headerCta.iconSize": 16
       }
     },
     {

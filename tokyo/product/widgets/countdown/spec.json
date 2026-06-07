@@ -322,20 +322,22 @@
       "localeSwitcherBackground": "var(--color-system-white)",
       "localeSwitcherPaddingBlock": 10,
       "localeSwitcherPaddingInline": 14,
-      "ctaBackground": "var(--color-system-blue)",
-      "ctaTextColor": "var(--color-system-white)",
-      "ctaBorder": {
-        "enabled": false,
-        "width": 1,
-        "color": "var(--color-system-blue)"
-      },
-      "ctaRadius": "md",
-      "ctaSizePreset": "m",
-      "ctaPaddingLinked": true,
-      "ctaPaddingInline": 16,
-      "ctaPaddingBlock": 12,
-      "ctaIconSizePreset": "m",
-      "ctaIconSize": 16
+      "headerCta": {
+        "background": "var(--color-system-blue)",
+        "textColor": "var(--color-system-white)",
+        "border": {
+          "enabled": false,
+          "width": 1,
+          "color": "var(--color-system-blue)"
+        },
+        "radius": "md",
+        "sizePreset": "m",
+        "paddingLinked": true,
+        "paddingInline": 16,
+        "paddingBlock": 12,
+        "iconSizePreset": "m",
+        "iconSize": 16
+      }
     },
     "typography": {
       "roles": {
@@ -435,7 +437,7 @@
       },
       "globalFamily": "Inter"
     },
-    "cta": {
+    "headerCta": {
       "href": "https://example.com",
       "label": "Learn more",
       "openMode": "same-tab",

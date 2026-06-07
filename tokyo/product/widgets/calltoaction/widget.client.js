@@ -3,7 +3,7 @@
 
   var runtime = window.CKWidgetRuntime;
   if (!runtime || typeof runtime.register !== 'function') {
-    throw new Error('[CTA] Missing CKWidgetRuntime.register');
+    throw new Error('[CallToAction] Missing CKWidgetRuntime.register');
   }
 
   var ALLOWED_ICONS = [
@@ -19,26 +19,26 @@
   }
 
   function assertRecord(value, path) {
-    if (!isRecord(value)) throw new Error('[CTA] ' + path + ' must be an object');
+    if (!isRecord(value)) throw new Error('[CallToAction] ' + path + ' must be an object');
     return value;
   }
 
   function assertString(value, path) {
-    if (typeof value !== 'string') throw new Error('[CTA] ' + path + ' must be a string');
+    if (typeof value !== 'string') throw new Error('[CallToAction] ' + path + ' must be a string');
     return value;
   }
 
   function assertBoolean(value, path) {
-    if (typeof value !== 'boolean') throw new Error('[CTA] ' + path + ' must be a boolean');
+    if (typeof value !== 'boolean') throw new Error('[CallToAction] ' + path + ' must be a boolean');
     return value;
   }
 
   function assertNumber(value, path, min, max) {
     if (typeof value !== 'number' || !Number.isFinite(value)) {
-      throw new Error('[CTA] ' + path + ' must be a finite number');
+      throw new Error('[CallToAction] ' + path + ' must be a finite number');
     }
     if (value < min || value > max) {
-      throw new Error('[CTA] ' + path + ' must be ' + min + '..' + max);
+      throw new Error('[CallToAction] ' + path + ' must be ' + min + '..' + max);
     }
     return value;
   }
@@ -46,19 +46,19 @@
   function assertEnum(value, path, options) {
     assertString(value, path);
     if (options.indexOf(value) === -1) {
-      throw new Error('[CTA] ' + path + ' must be one of: ' + options.join(', '));
+      throw new Error('[CallToAction] ' + path + ' must be one of: ' + options.join(', '));
     }
     return value;
   }
 
   function assertFillValue(value, path) {
     if (typeof value === 'string' || isRecord(value)) return value;
-    throw new Error('[CTA] ' + path + ' must be a fill value');
+    throw new Error('[CallToAction] ' + path + ' must be a fill value');
   }
 
   function queryElement(root, selector, path) {
     var el = root.querySelector(selector);
-    if (!(el instanceof HTMLElement)) throw new Error('[CTA] Missing ' + path);
+    if (!(el instanceof HTMLElement)) throw new Error('[CallToAction] Missing ' + path);
     return el;
   }
 
@@ -71,19 +71,20 @@
     );
   }
 
-  function hasRenderableCore(core) {
+  function hasRenderableCallToAction(calltoaction) {
     return (
-      isRecord(core) &&
-      typeof core.showEyebrow === 'boolean' &&
-      typeof core.eyebrow === 'string' &&
-      typeof core.title === 'string' &&
-      typeof core.showCopy === 'boolean' &&
-      typeof core.copyHtml === 'string' &&
-      isRecord(core.button) &&
-      isRecord(core.buttonStyle) &&
-      typeof core.alignment === 'string' &&
-      typeof core.gap === 'number' &&
-      typeof core.textWidth === 'number'
+      isRecord(calltoaction) &&
+      typeof calltoaction.showEyebrow === 'boolean' &&
+      typeof calltoaction.eyebrow === 'string' &&
+      typeof calltoaction.headline === 'string' &&
+      typeof calltoaction.showSupportingText === 'boolean' &&
+      typeof calltoaction.supportingTextHtml === 'string' &&
+      isRecord(calltoaction.action) &&
+      isRecord(calltoaction.actionStyle) &&
+      isRecord(calltoaction.layout) &&
+      typeof calltoaction.layout.alignment === 'string' &&
+      typeof calltoaction.layout.gap === 'number' &&
+      typeof calltoaction.layout.textWidth === 'number'
     );
   }
 
@@ -111,12 +112,12 @@
       try {
         return new URL(value).href;
       } catch {
-        throw new Error('[CTA] ' + path + ' must be a valid http(s) URL');
+        throw new Error('[CallToAction] ' + path + ' must be a valid http(s) URL');
       }
     }
     if (/^mailto:[^\s]+$/i.test(value)) return value;
     if (/^tel:[+0-9().\-\s]+$/i.test(value)) return value;
-    throw new Error('[CTA] ' + path + ' must be empty, #, root-relative, http(s), mailto, or tel');
+    throw new Error('[CallToAction] ' + path + ' must be empty, #, root-relative, http(s), mailto, or tel');
   }
 
   function sanitizeInlineHtml(html, allowLinks) {
@@ -167,133 +168,134 @@
       typeof window.CKAppearance.toCssColor !== 'function' ||
       typeof window.CKAppearance.tokenizeRadius !== 'function'
     ) {
-      throw new Error('[CTA] Missing CKAppearance helpers');
+      throw new Error('[CallToAction] Missing CKAppearance helpers');
     }
     return window.CKAppearance;
   }
 
-  function applyButtonStyle(core, coreEl) {
-    var style = assertRecord(core.buttonStyle, 'state.core.buttonStyle');
+  function applyActionStyle(calltoaction, contentEl) {
+    var style = assertRecord(calltoaction.actionStyle, 'state.calltoaction.actionStyle');
     var appearance = resolveAppearance();
-    coreEl.style.setProperty(
-      '--ck-cta-button-bg',
-      appearance.toCssBackground(assertFillValue(style.background, 'state.core.buttonStyle.background')),
+    contentEl.style.setProperty(
+      '--ck-calltoaction-action-bg',
+      appearance.toCssBackground(assertFillValue(style.background, 'state.calltoaction.actionStyle.background')),
     );
-    coreEl.style.setProperty(
-      '--ck-cta-button-fg',
-      appearance.toCssColor(assertFillValue(style.textColor, 'state.core.buttonStyle.textColor')),
+    contentEl.style.setProperty(
+      '--ck-calltoaction-action-fg',
+      appearance.toCssColor(assertFillValue(style.textColor, 'state.calltoaction.actionStyle.textColor')),
     );
-    coreEl.style.setProperty('--ck-cta-button-radius', appearance.tokenizeRadius(assertEnum(style.radius, 'state.core.buttonStyle.radius', ['none', 'sm', 'md', 'lg', 'xl', '2xl'])));
-    coreEl.style.setProperty(
-      '--ck-cta-button-padding-inline',
-      assertNumber(style.paddingInline, 'state.core.buttonStyle.paddingInline', 0, 80) + 'px',
+    contentEl.style.setProperty('--ck-calltoaction-action-radius', appearance.tokenizeRadius(assertEnum(style.radius, 'state.calltoaction.actionStyle.radius', ['none', 'sm', 'md', 'lg', 'xl', '2xl'])));
+    contentEl.style.setProperty(
+      '--ck-calltoaction-action-padding-inline',
+      assertNumber(style.paddingInline, 'state.calltoaction.actionStyle.paddingInline', 0, 80) + 'px',
     );
-    coreEl.style.setProperty(
-      '--ck-cta-button-padding-block',
-      assertNumber(style.paddingBlock, 'state.core.buttonStyle.paddingBlock', 0, 64) + 'px',
+    contentEl.style.setProperty(
+      '--ck-calltoaction-action-padding-block',
+      assertNumber(style.paddingBlock, 'state.calltoaction.actionStyle.paddingBlock', 0, 64) + 'px',
     );
-    coreEl.style.setProperty(
-      '--ck-cta-button-icon-size',
-      assertNumber(style.iconSize, 'state.core.buttonStyle.iconSize', 0, 80) + 'px',
+    contentEl.style.setProperty(
+      '--ck-calltoaction-action-icon-size',
+      assertNumber(style.iconSize, 'state.calltoaction.actionStyle.iconSize', 0, 80) + 'px',
     );
 
-    var border = assertRecord(style.border, 'state.core.buttonStyle.border');
-    assertBoolean(border.enabled, 'state.core.buttonStyle.border.enabled');
-    assertString(border.color, 'state.core.buttonStyle.border.color');
-    var borderWidth = assertNumber(border.width, 'state.core.buttonStyle.border.width', 0, 12);
-    coreEl.style.setProperty('--ck-cta-button-border-width', border.enabled === true ? borderWidth + 'px' : '0px');
-    coreEl.style.setProperty(
-      '--ck-cta-button-border-color',
+    var border = assertRecord(style.border, 'state.calltoaction.actionStyle.border');
+    assertBoolean(border.enabled, 'state.calltoaction.actionStyle.border.enabled');
+    assertString(border.color, 'state.calltoaction.actionStyle.border.color');
+    var borderWidth = assertNumber(border.width, 'state.calltoaction.actionStyle.border.width', 0, 12);
+    contentEl.style.setProperty('--ck-calltoaction-action-border-width', border.enabled === true ? borderWidth + 'px' : '0px');
+    contentEl.style.setProperty(
+      '--ck-calltoaction-action-border-color',
       border.enabled === true ? String(border.color) : 'transparent',
     );
   }
 
-  function applyButton(button, coreEl, buttonEl, labelEl, iconEl) {
-    assertRecord(button, 'state.core.button');
-    var enabled = assertBoolean(button.enabled, 'state.core.button.enabled');
-    var label = assertString(button.label, 'state.core.button.label');
-    var href = normalizeActionHref(button.href, 'state.core.button.href');
-    var openMode = assertEnum(button.openMode, 'state.core.button.openMode', ['same-tab', 'new-tab', 'new-window']);
-    var iconEnabled = assertBoolean(button.iconEnabled, 'state.core.button.iconEnabled');
-    var iconName = assertString(button.iconName, 'state.core.button.iconName').trim();
-    var iconPlacement = assertEnum(button.iconPlacement, 'state.core.button.iconPlacement', ['left', 'right']);
+  function applyAction(action, contentEl, actionEl, labelEl, iconEl) {
+    assertRecord(action, 'state.calltoaction.action');
+    var enabled = assertBoolean(action.enabled, 'state.calltoaction.action.enabled');
+    var label = assertString(action.label, 'state.calltoaction.action.label');
+    var href = normalizeActionHref(action.href, 'state.calltoaction.action.href');
+    var openMode = assertEnum(action.openMode, 'state.calltoaction.action.openMode', ['same-tab', 'new-tab', 'new-window']);
+    var iconEnabled = assertBoolean(action.iconEnabled, 'state.calltoaction.action.iconEnabled');
+    var iconName = assertString(action.iconName, 'state.calltoaction.action.iconName').trim();
+    var iconPlacement = assertEnum(action.iconPlacement, 'state.calltoaction.action.iconPlacement', ['left', 'right']);
     var showButton = enabled === true && label.trim().length > 0;
 
-    buttonEl.hidden = !showButton;
-    buttonEl.dataset.iconPlacement = iconPlacement;
+    actionEl.hidden = !showButton;
+    actionEl.dataset.iconPlacement = iconPlacement;
     labelEl.textContent = label;
 
     if (showButton && href) {
-      buttonEl.setAttribute('href', href);
-      buttonEl.removeAttribute('aria-disabled');
-      buttonEl.tabIndex = 0;
+      actionEl.setAttribute('href', href);
+      actionEl.removeAttribute('aria-disabled');
+      actionEl.tabIndex = 0;
       if (openMode === 'new-tab') {
-        buttonEl.setAttribute('target', '_blank');
-        buttonEl.setAttribute('rel', 'noopener');
-        buttonEl.onclick = null;
+        actionEl.setAttribute('target', '_blank');
+        actionEl.setAttribute('rel', 'noopener');
+        actionEl.onclick = null;
       } else if (openMode === 'new-window') {
-        buttonEl.removeAttribute('target');
-        buttonEl.removeAttribute('rel');
-        buttonEl.onclick = function (event) {
+        actionEl.removeAttribute('target');
+        actionEl.removeAttribute('rel');
+        actionEl.onclick = function (event) {
           event.preventDefault();
           var popup = window.open(href, '_blank', 'noopener,noreferrer,popup=yes,width=1024,height=720');
           if (popup) popup.opener = null;
         };
       } else {
-        buttonEl.removeAttribute('target');
-        buttonEl.removeAttribute('rel');
-        buttonEl.onclick = null;
+        actionEl.removeAttribute('target');
+        actionEl.removeAttribute('rel');
+        actionEl.onclick = null;
       }
     } else {
-      buttonEl.removeAttribute('href');
-      buttonEl.removeAttribute('target');
-      buttonEl.removeAttribute('rel');
-      buttonEl.setAttribute('aria-disabled', 'true');
-      buttonEl.tabIndex = -1;
-      buttonEl.onclick = null;
+      actionEl.removeAttribute('href');
+      actionEl.removeAttribute('target');
+      actionEl.removeAttribute('rel');
+      actionEl.setAttribute('aria-disabled', 'true');
+      actionEl.tabIndex = -1;
+      actionEl.onclick = null;
     }
 
     var showIcon = showButton && iconEnabled === true;
     if (showIcon && ALLOWED_ICONS.indexOf(iconName) === -1) {
-      throw new Error('[CTA] state.core.button.iconName must be one of: ' + ALLOWED_ICONS.join(', '));
+      throw new Error('[CallToAction] state.calltoaction.action.iconName must be one of: ' + ALLOWED_ICONS.join(', '));
     }
     iconEl.hidden = !showIcon;
-    coreEl.style.setProperty(
-      '--ck-cta-button-icon',
+    contentEl.style.setProperty(
+      '--ck-calltoaction-action-icon',
       showIcon ? 'url("/dieter/icons/svg/' + iconName + '.svg")' : 'none',
     );
   }
 
-  function initCta(widgetRoot, runtimeContext) {
-    var ctaRoot = queryElement(widgetRoot, '[data-role="cta"]', '[data-role="cta"]');
-    var coreEl = queryElement(widgetRoot, '[data-role="cta-core"]', '[data-role="cta-core"]');
-    var eyebrowEl = queryElement(widgetRoot, '[data-role="cta-eyebrow"]', '[data-role="cta-eyebrow"]');
-    var titleEl = queryElement(widgetRoot, '[data-role="cta-title"]', '[data-role="cta-title"]');
-    var copyEl = queryElement(widgetRoot, '[data-role="cta-copy"]', '[data-role="cta-copy"]');
-    var buttonEl = queryElement(widgetRoot, '[data-role="cta-button"]', '[data-role="cta-button"]');
-    var buttonLabelEl = queryElement(widgetRoot, '[data-role="cta-button-label"]', '[data-role="cta-button-label"]');
-    var buttonIconEl = queryElement(widgetRoot, '[data-role="cta-button-icon"]', '[data-role="cta-button-icon"]');
+  function initCallToAction(widgetRoot, runtimeContext) {
+    var callToActionRoot = queryElement(widgetRoot, '[data-role="calltoaction"]', '[data-role="calltoaction"]');
+    var contentEl = queryElement(widgetRoot, '[data-role="calltoaction-content"]', '[data-role="calltoaction-content"]');
+    var eyebrowEl = queryElement(widgetRoot, '[data-role="calltoaction-eyebrow"]', '[data-role="calltoaction-eyebrow"]');
+    var titleEl = queryElement(widgetRoot, '[data-role="calltoaction-headline"]', '[data-role="calltoaction-headline"]');
+    var copyEl = queryElement(widgetRoot, '[data-role="calltoaction-supporting-text"]', '[data-role="calltoaction-supporting-text"]');
+    var actionEl = queryElement(widgetRoot, '[data-role="calltoaction-action"]', '[data-role="calltoaction-action"]');
+    var actionLabelEl = queryElement(widgetRoot, '[data-role="calltoaction-action-label"]', '[data-role="calltoaction-action-label"]');
+    var actionIconEl = queryElement(widgetRoot, '[data-role="calltoaction-action-icon"]', '[data-role="calltoaction-action-icon"]');
     var resolvedInstanceId = runtimeContext.instanceId;
 
-    function renderCore(state) {
-      if (!hasRenderableCore(state.core)) {
-        coreEl.hidden = true;
+    function renderCallToAction(state) {
+      if (!hasRenderableCallToAction(state.calltoaction)) {
+        contentEl.hidden = true;
         return;
       }
-      coreEl.hidden = false;
-      var core = assertRecord(state.core, 'state.core');
-      var alignment = assertEnum(core.alignment, 'state.core.alignment', ['left', 'center', 'right']);
-      var gap = assertNumber(core.gap, 'state.core.gap', 0, 120);
-      var textWidth = assertNumber(core.textWidth, 'state.core.textWidth', 240, 1600);
-      var showEyebrow = assertBoolean(core.showEyebrow, 'state.core.showEyebrow');
-      var eyebrow = assertString(core.eyebrow, 'state.core.eyebrow');
-      var titleHtml = sanitizeInlineHtml(assertString(core.title, 'state.core.title'), false);
-      var showCopy = assertBoolean(core.showCopy, 'state.core.showCopy');
-      var copyHtml = sanitizeInlineHtml(assertString(core.copyHtml, 'state.core.copyHtml'), true);
+      contentEl.hidden = false;
+      var calltoaction = assertRecord(state.calltoaction, 'state.calltoaction');
+      var layout = assertRecord(calltoaction.layout, 'state.calltoaction.layout');
+      var alignment = assertEnum(layout.alignment, 'state.calltoaction.layout.alignment', ['left', 'center', 'right']);
+      var gap = assertNumber(layout.gap, 'state.calltoaction.layout.gap', 0, 120);
+      var textWidth = assertNumber(layout.textWidth, 'state.calltoaction.layout.textWidth', 240, 1600);
+      var showEyebrow = assertBoolean(calltoaction.showEyebrow, 'state.calltoaction.showEyebrow');
+      var eyebrow = assertString(calltoaction.eyebrow, 'state.calltoaction.eyebrow');
+      var titleHtml = sanitizeInlineHtml(assertString(calltoaction.headline, 'state.calltoaction.headline'), false);
+      var showCopy = assertBoolean(calltoaction.showSupportingText, 'state.calltoaction.showSupportingText');
+      var copyHtml = sanitizeInlineHtml(assertString(calltoaction.supportingTextHtml, 'state.calltoaction.supportingTextHtml'), true);
 
-      coreEl.dataset.align = alignment;
-      coreEl.style.setProperty('--ck-cta-core-gap', gap + 'px');
-      coreEl.style.setProperty('--ck-cta-text-width', textWidth + 'px');
+      contentEl.dataset.align = alignment;
+      contentEl.style.setProperty('--ck-calltoaction-content-gap', gap + 'px');
+      contentEl.style.setProperty('--ck-calltoaction-text-width', textWidth + 'px');
 
       eyebrowEl.textContent = eyebrow;
       eyebrowEl.hidden = !showEyebrow || eyebrow.trim().length === 0;
@@ -304,20 +306,20 @@
       copyEl.innerHTML = showCopy ? copyHtml : '';
       copyEl.hidden = !showCopy || copyHtml.length === 0;
 
-      applyButtonStyle(core, coreEl);
-      applyButton(core.button, coreEl, buttonEl, buttonLabelEl, buttonIconEl);
+      applyActionStyle(calltoaction, contentEl);
+      applyAction(calltoaction.action, contentEl, actionEl, actionLabelEl, actionIconEl);
     }
 
     function applyState(state, context) {
       if (!state) return;
       assertRecord(state, 'state');
       if (!window.CKStagePod?.applyStagePod) {
-        throw new Error('[CTA] Missing CKStagePod.applyStagePod');
+        throw new Error('[CallToAction] Missing CKStagePod.applyStagePod');
       }
       window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
 
       if (!window.CKTypography?.applyTypography) {
-        throw new Error('[CTA] Missing CKTypography.applyTypography');
+        throw new Error('[CallToAction] Missing CKTypography.applyTypography');
       }
       var typographyRoles = {
         title: { varKey: 'title' },
@@ -330,31 +332,31 @@
       }
       window.CKTypography.applyTypography(
         state.typography,
-        ctaRoot,
+        callToActionRoot,
         typographyRoles,
         { locale: context && context.locale, instanceId: context && context.instanceId },
       );
 
       if (!window.CKHeader?.applyHeader) {
-        throw new Error('[CTA] Missing CKHeader.applyHeader');
+        throw new Error('[CallToAction] Missing CKHeader.applyHeader');
       }
       window.CKHeader.applyHeader(state, widgetRoot);
 
-      renderCore(state);
+      renderCallToAction(state);
 
       if (!window.CKCoreSize?.applyCoreSize) {
-        throw new Error('[CTA] Missing CKCoreSize.applyCoreSize');
+        throw new Error('[CallToAction] Missing CKCoreSize.applyCoreSize');
       }
-      window.CKCoreSize.applyCoreSize(state.coreSize, coreEl);
+      window.CKCoreSize.applyCoreSize(state.coreSize, contentEl);
 
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
-        throw new Error('[CTA] Missing CKLocaleSwitcher.applyLocaleSwitcher');
+        throw new Error('[CallToAction] Missing CKLocaleSwitcher.applyLocaleSwitcher');
       }
       window.CKLocaleSwitcher.applyLocaleSwitcher(state, widgetRoot, {
         composedPage: context && context.composedPage === true,
         locale: context && context.locale,
         previewMode: context && context.previewMode,
-        typographyScope: ctaRoot,
+        typographyScope: callToActionRoot,
       });
 
       if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
@@ -393,7 +395,7 @@
           });
         } catch (error) {
           if (requestId === previewLocaleRequest) {
-            console.error('[CTA] preview localization load failed', error);
+            console.error('[CallToAction] preview localization load failed', error);
           }
           return;
         }
@@ -408,7 +410,7 @@
     }
 
     runtime.bindStateUpdates(
-      'cta',
+      'calltoaction',
       resolvedInstanceId,
       function (data) {
         void applyPreviewState(
@@ -434,5 +436,5 @@
     }
   }
 
-  runtime.register('cta', initCta);
+  runtime.register('calltoaction', initCallToAction);
 })();

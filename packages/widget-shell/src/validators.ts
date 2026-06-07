@@ -33,7 +33,7 @@ function isShellWidgetDefaults(defaults: unknown): boolean {
   const uiLabels = isRecord(defaults.uiLabels) ? defaults.uiLabels : null;
   return Boolean(
     isRecord(defaults.header) ||
-    isRecord(defaults.cta) ||
+    isRecord(defaults.headerCta) ||
     isRecord(defaults.coreSize) ||
     (uiLabels && isRecord(uiLabels.core)),
   );
@@ -84,8 +84,8 @@ function editorPathRequiresSharedShellNode(path: string): boolean {
     normalized.startsWith('coreSize.') ||
     normalized === 'header' ||
     normalized.startsWith('header.') ||
-    normalized === 'cta' ||
-    normalized.startsWith('cta.')
+    normalized === 'headerCta' ||
+    normalized.startsWith('headerCta.')
   );
 }
 
@@ -128,7 +128,7 @@ function validateShellTypography(defaults: Record<string, unknown>): WidgetShell
 function validateShellDefaults(defaults: unknown): WidgetShellValidationIssue[] {
   if (!isRecord(defaults) || !isShellWidgetDefaults(defaults)) return [];
   const issues: WidgetShellValidationIssue[] = [];
-  ['header', 'cta', 'stage', 'pod', 'appearance', 'typography', 'localeSwitcher', 'behavior'].forEach((path) => {
+  ['header', 'headerCta', 'stage', 'pod', 'appearance', 'typography', 'localeSwitcher', 'behavior'].forEach((path) => {
     issues.push(...validateRequiredRecord(defaults, path));
   });
   if (isRecord(defaults.uiLabels)) issues.push(...validateCoreLabels(defaults.uiLabels.core));
@@ -142,7 +142,7 @@ function validateShellSharedEditorNodes(editor: unknown, defaults: unknown): Wid
   const ids = new Set(collectEditorSharedNodeIds(editor));
   const issues: WidgetShellValidationIssue[] = [];
   ['header-content', 'header-layout', 'stagepod-layout', 'header-appearance', 'stagepod-appearance'].forEach((id) => {
-    if (!ids.has(id) && !ids.has(`${id}-no-cta`)) {
+    if (!ids.has(id) && !ids.has(`${id}-no-header-cta`)) {
       issues.push(issue(`editor.shared.${id}`, 'Shell widget editor must use the shared Shell editor node.'));
     }
   });
@@ -182,7 +182,7 @@ export function validateCoreExtensionContract(contract: WidgetCoreExtensionContr
   const issues: WidgetShellValidationIssue[] = [];
   contract.coreStatePaths.forEach((path) => {
     if (pathBelongsToShell(path)) issues.push(issue(path, 'Widget Core must not own Shell state paths.'));
-    if (pathIsForbiddenShellAlias(path)) issues.push(issue(path, 'Widget Core must not reintroduce forbidden Header/CTA aliases.'));
+    if (pathIsForbiddenShellAlias(path)) issues.push(issue(path, 'Widget Core must not reintroduce forbidden Header/Header CTA aliases.'));
   });
   contract.coreEditableFieldPaths.forEach((path) => {
     if ((SHELL_EDITABLE_FIELD_PATHS as readonly string[]).includes(path)) {
@@ -217,15 +217,15 @@ export function validateWidgetShellSource(args: {
   issues.push(...validateShellSharedEditorNodes(args.editor, args.defaults));
   collectObjectPaths(args.defaults).forEach((path) => {
     if (pathIsForbiddenShellAlias(path)) {
-      issues.push(issue(path, 'Shell widget source must not use old Header/CTA/layout aliases.'));
+      issues.push(issue(path, 'Shell widget source must not use old Header/Header CTA/layout aliases.'));
     }
   });
   collectEditorFieldPaths(args.editor).forEach((path) => {
     if (editorPathRequiresSharedShellNode(path)) {
-      issues.push(issue(path, 'Header/CTA/CoreSize editor controls must come from shared Shell editor nodes.'));
+      issues.push(issue(path, 'Header/Header CTA/CoreSize editor controls must come from shared Shell editor nodes.'));
     }
     if (pathIsForbiddenShellAlias(path)) {
-      issues.push(issue(path, 'Shell widget editor must not control old Header/CTA/layout aliases.'));
+      issues.push(issue(path, 'Shell widget editor must not control old Header/Header CTA/layout aliases.'));
     }
   });
   return issues.map((entry) => ({

@@ -148,11 +148,11 @@ PRD step and green evidence.
 
 ## Forbidden Actions
 
-- Do not reimplement Stage/Pod, Header, CTA, Core sizing, Typography, Locale
-  switcher, Branding, themes, preview localization, or runtime binding per
+- Do not reimplement Stage/Pod, Header, Header CTA, Core sizing, Typography,
+  Locale switcher, Branding, themes, preview localization, or runtime binding per
   widget.
-- Do not hand-author editor fields for `header.*`, `cta.*`, or `coreSize.*`;
-  use shared nodes.
+- Do not hand-author editor fields for `header.*`, `headerCta.*`, or
+  `coreSize.*`; use shared nodes.
 - Do not add Shell aliases such as `headline`, `subheadline`, `copy`, `button`,
   `primaryCta`, `secondaryCta`, `ctaText`, `ctaUrl`, `layout.copyWidth`,
   `layout.bodyWidth`, or `layout.variant`.
@@ -175,7 +175,8 @@ PRD step and green evidence.
 Before coding, write a short manifest for the current step:
 
 - Shell-owned paths kept from the Shell contract.
-- Core-owned paths introduced or changed by this widget.
+- Core-owned paths introduced or changed by this widget, under a
+  widget-specific namespace such as `calltoaction.*`.
 - Array paths and stable item identity fields.
 - DOM role map for Core containers/items/subparts.
 - Panel placement for every Core control.
@@ -193,12 +194,14 @@ If any row is ambiguous, stop.
 
 Rules:
 
-- Keep Shell defaults intact: `header`, `cta`, `stage`, `pod`, `appearance`,
+- Keep Shell defaults intact: `header`, `headerCta`, `stage`, `pod`, `appearance`,
   `typography`, `localeSwitcher`, `behavior`, `uiLabels.core`, and `coreSize`
   when the widget uses the Shell contract.
-- Core state must live in widget-owned Core paths.
+- Core state must live in widget-owned Core paths under a widget-specific
+  namespace. Do not introduce new generic `core.*` body paths when similar
+  Shell elements exist.
 - Every editor path must exist in `defaults`.
-- Header/CTA/CoreSize controls must use shared editor nodes:
+- Header/Header CTA/CoreSize controls must use shared editor nodes:
   `header-content`, `header-layout`, `core-size`, `header-appearance`,
   `stagepod-layout`, `stagepod-appearance`, `stagepod-corners`.
 - `typography.roles` must include Shell roles `title`, `body`, `button`, and

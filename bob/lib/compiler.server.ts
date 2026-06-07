@@ -253,7 +253,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   const themePresets = buildThemePresets(themeRegistry.themes);
 
   const hasHeader = (widgetJson.defaults as any)?.header != null;
-  const hasCta = (widgetJson.defaults as any)?.cta != null;
+  const hasCta = (widgetJson.defaults as any)?.headerCta != null;
   const headerPresets = hasHeader && hasCta ? buildHeaderPresets() : undefined;
 
   const presetsRaw = normalizePresets(widgetJson.presets);

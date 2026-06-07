@@ -1,7 +1,7 @@
 {
   "v": 1,
-  "widgetname": "cta",
-  "itemKey": "cta.item",
+  "widgetname": "calltoaction",
+  "itemKey": "calltoaction.item",
   "normalization": {
     "coerceRules": [
       {
@@ -29,52 +29,11 @@
       "ctaPlacement": "below",
       "innerGap": 18
     },
-    "cta": {
-      "enabled": false,
-      "label": "Get started",
-      "href": "#",
-      "openMode": "same-tab",
-      "iconEnabled": true,
-      "iconName": "arrowshape.turn.up.right",
-      "iconPlacement": "right"
-    },
-    "core": {
-      "showEyebrow": false,
-      "eyebrow": "Launch-ready widget",
-      "title": "Build your next section in minutes",
-      "showCopy": true,
-      "copyHtml": "Start with a polished Clickeen widget, customize it in Builder, and publish it anywhere your site needs it.",
-      "button": {
-        "enabled": true,
-        "label": "Get started",
-        "href": "#",
-        "openMode": "same-tab",
-        "iconEnabled": true,
-        "iconName": "arrowshape.turn.up.right",
-        "iconPlacement": "right"
-      },
-      "alignment": "center",
-      "gap": 18,
-      "textWidth": 760,
-      "buttonStyle": {
-        "background": "var(--color-system-blue)",
-        "textColor": "var(--color-system-white)",
-        "border": {
-          "enabled": false,
-          "width": 1,
-          "color": "transparent"
-        },
-        "radius": "lg",
-        "paddingInline": 18,
-        "paddingBlock": 12,
-        "iconSize": 16
-      }
-    },
     "uiLabels": {
       "core": {
-        "singular": "CTA",
-        "plural": "CTAs",
-        "sizeCluster": "CTA size"
+        "singular": "Call to Action",
+        "plural": "Calls to Action",
+        "sizeCluster": "Call to Action size"
       }
     },
     "coreSize": {
@@ -288,20 +247,6 @@
       }
     },
     "appearance": {
-      "ctaSizePreset": "m",
-      "ctaPaddingLinked": false,
-      "ctaPaddingInline": 18,
-      "ctaPaddingBlock": 12,
-      "ctaBackground": "var(--color-system-blue)",
-      "ctaTextColor": "var(--color-system-white)",
-      "ctaBorder": {
-        "enabled": false,
-        "width": 1,
-        "color": "transparent"
-      },
-      "ctaRadius": "lg",
-      "ctaIconSizePreset": "m",
-      "ctaIconSize": 16,
       "localeSwitcherBackground": {
         "type": "color",
         "color": "var(--color-system-white)"
@@ -322,6 +267,22 @@
         "enabled": false,
         "width": 1,
         "color": "var(--color-system-gray-5)"
+      },
+      "headerCta": {
+        "background": "var(--color-system-blue)",
+        "textColor": "var(--color-system-white)",
+        "border": {
+          "enabled": false,
+          "width": 1,
+          "color": "transparent"
+        },
+        "radius": "lg",
+        "sizePreset": "m",
+        "paddingLinked": false,
+        "paddingInline": 18,
+        "paddingBlock": 12,
+        "iconSizePreset": "m",
+        "iconSize": 16
       }
     },
     "typography": {
@@ -404,6 +365,49 @@
           "xs": "13px"
         }
       }
+    },
+    "headerCta": {
+      "enabled": false,
+      "label": "Get started",
+      "href": "#",
+      "openMode": "same-tab",
+      "iconEnabled": true,
+      "iconName": "arrowshape.turn.up.right",
+      "iconPlacement": "right"
+    },
+    "calltoaction": {
+      "showEyebrow": false,
+      "eyebrow": "Launch-ready widget",
+      "headline": "Build your next section in minutes",
+      "showSupportingText": true,
+      "supportingTextHtml": "Start with a polished Clickeen widget, customize it in Builder, and publish it anywhere your site needs it.",
+      "action": {
+        "enabled": true,
+        "label": "Get started",
+        "href": "#",
+        "openMode": "same-tab",
+        "iconEnabled": true,
+        "iconName": "arrowshape.turn.up.right",
+        "iconPlacement": "right"
+      },
+      "layout": {
+        "alignment": "center",
+        "gap": 18,
+        "textWidth": 760
+      },
+      "actionStyle": {
+        "background": "var(--color-system-blue)",
+        "textColor": "var(--color-system-white)",
+        "border": {
+          "enabled": false,
+          "width": 1,
+          "color": "transparent"
+        },
+        "radius": "lg",
+        "paddingInline": 18,
+        "paddingBlock": 12,
+        "iconSize": 16
+      }
     }
   },
   "editor": {
@@ -416,13 +420,13 @@
             "id": "header-content"
           },
           {
-            "label": "CTA content",
+            "label": "Call to Action content",
             "nodes": [
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "toggle",
-                "path": "core.showEyebrow",
+                "path": "calltoaction.showEyebrow",
                 "label": "Show eyebrow",
                 "attrs": {
                   "group-label": "",
@@ -431,9 +435,9 @@
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "textfield",
-                "path": "core.eyebrow",
+                "path": "calltoaction.eyebrow",
                 "label": "Eyebrow",
                 "attrs": {
                   "group-label": "",
@@ -441,29 +445,29 @@
                   "placeholder": "Add eyebrow text"
                 },
                 "showIf": {
-                  "path": "core.showEyebrow",
+                  "path": "calltoaction.showEyebrow",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "dropdown-edit",
-                "path": "core.title",
-                "label": "Title",
+                "path": "calltoaction.headline",
+                "label": "Action headline",
                 "attrs": {
                   "group-label": "",
                   "size": "lg",
-                  "placeholder": "Add title text",
+                  "placeholder": "Add action headline",
                   "allow-links": "false"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "toggle",
-                "path": "core.showCopy",
-                "label": "Show copy",
+                "path": "calltoaction.showSupportingText",
+                "label": "Show supporting text",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -471,10 +475,10 @@
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "dropdown-edit",
-                "path": "core.copyHtml",
-                "label": "Copy",
+                "path": "calltoaction.supportingTextHtml",
+                "label": "Supporting text",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -482,16 +486,16 @@
                   "allow-links": "true"
                 },
                 "showIf": {
-                  "path": "core.showCopy",
+                  "path": "calltoaction.showSupportingText",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "toggle",
-                "path": "core.button.enabled",
-                "label": "Show button",
+                "path": "calltoaction.action.enabled",
+                "label": "Show action button",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
@@ -499,40 +503,40 @@
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "textfield",
-                "path": "core.button.label",
-                "label": "Button label",
+                "path": "calltoaction.action.label",
+                "label": "Action label",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
                 },
                 "showIf": {
-                  "path": "core.button.enabled",
+                  "path": "calltoaction.action.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "textfield",
-                "path": "core.button.href",
-                "label": "Button link",
+                "path": "calltoaction.action.href",
+                "label": "Action link",
                 "attrs": {
                   "group-label": "",
                   "size": "lg",
                   "placeholder": "https://example.com"
                 },
                 "showIf": {
-                  "path": "core.button.enabled",
+                  "path": "calltoaction.action.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "dropdown-actions",
-                "path": "core.button.openMode",
+                "path": "calltoaction.action.openMode",
                 "label": "Open link in",
                 "attrs": {
                   "group-label": "",
@@ -553,30 +557,30 @@
                   ]
                 },
                 "showIf": {
-                  "path": "core.button.enabled",
+                  "path": "calltoaction.action.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "toggle",
-                "path": "core.button.iconEnabled",
+                "path": "calltoaction.action.iconEnabled",
                 "label": "Show icon",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
                 },
                 "showIf": {
-                  "path": "core.button.enabled",
+                  "path": "calltoaction.action.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "dropdown-actions",
-                "path": "core.button.iconPlacement",
+                "path": "calltoaction.action.iconPlacement",
                 "label": "Icon position",
                 "attrs": {
                   "group-label": "",
@@ -595,11 +599,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.button.enabled",
+                      "path": "calltoaction.action.enabled",
                       "op": "isTrue"
                     },
                     {
-                      "path": "core.button.iconEnabled",
+                      "path": "calltoaction.action.iconEnabled",
                       "op": "isTrue"
                     }
                   ]
@@ -607,9 +611,9 @@
               },
               {
                 "kind": "field",
-                "groupId": "cta-content",
+                "groupId": "calltoaction-content",
                 "type": "dropdown-actions",
-                "path": "core.button.iconName",
+                "path": "calltoaction.action.iconName",
                 "label": "Icon",
                 "attrs": {
                   "group-label": "",
@@ -640,11 +644,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.button.enabled",
+                      "path": "calltoaction.action.enabled",
                       "op": "isTrue"
                     },
                     {
-                      "path": "core.button.iconEnabled",
+                      "path": "calltoaction.action.iconEnabled",
                       "op": "isTrue"
                     }
                   ]
@@ -672,13 +676,13 @@
             "id": "core-size"
           },
           {
-            "label": "CTA layout",
+            "label": "Call to Action layout",
             "nodes": [
               {
                 "kind": "field",
-                "groupId": "cta-layout",
+                "groupId": "calltoaction-layout",
                 "type": "choice-tiles",
-                "path": "core.alignment",
+                "path": "calltoaction.layout.alignment",
                 "label": "Alignment",
                 "attrs": {
                   "group-label": "",
@@ -701,9 +705,9 @@
               },
               {
                 "kind": "field",
-                "groupId": "cta-layout",
+                "groupId": "calltoaction-layout",
                 "type": "valuefield",
-                "path": "core.textWidth",
+                "path": "calltoaction.layout.textWidth",
                 "label": "Text width",
                 "attrs": {
                   "group-label": "",
@@ -714,9 +718,9 @@
               },
               {
                 "kind": "field",
-                "groupId": "cta-layout",
+                "groupId": "calltoaction-layout",
                 "type": "valuefield",
-                "path": "core.gap",
+                "path": "calltoaction.layout.gap",
                 "label": "Content gap",
                 "attrs": {
                   "group-label": "",
@@ -741,13 +745,13 @@
             "id": "header-appearance"
           },
           {
-            "label": "CTA button",
+            "label": "Action button",
             "nodes": [
               {
                 "kind": "field",
-                "groupId": "cta-button",
+                "groupId": "calltoaction-action",
                 "type": "dropdown-fill",
-                "path": "core.buttonStyle.background",
+                "path": "calltoaction.actionStyle.background",
                 "label": "Background",
                 "attrs": {
                   "group-label": "",
@@ -756,15 +760,15 @@
                   "allow-color": "true"
                 },
                 "showIf": {
-                  "path": "core.button.enabled",
+                  "path": "calltoaction.action.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-button",
+                "groupId": "calltoaction-action",
                 "type": "dropdown-fill",
-                "path": "core.buttonStyle.textColor",
+                "path": "calltoaction.actionStyle.textColor",
                 "label": "Text color",
                 "attrs": {
                   "group-label": "",
@@ -773,30 +777,30 @@
                   "allow-color": "true"
                 },
                 "showIf": {
-                  "path": "core.button.enabled",
+                  "path": "calltoaction.action.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-button",
+                "groupId": "calltoaction-action",
                 "type": "dropdown-border",
-                "path": "core.buttonStyle.border",
+                "path": "calltoaction.actionStyle.border",
                 "label": "Border",
                 "attrs": {
                   "group-label": "",
                   "size": "md"
                 },
                 "showIf": {
-                  "path": "core.button.enabled",
+                  "path": "calltoaction.action.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-button",
+                "groupId": "calltoaction-action",
                 "type": "dropdown-actions",
-                "path": "core.buttonStyle.radius",
+                "path": "calltoaction.actionStyle.radius",
                 "label": "Radius",
                 "attrs": {
                   "group-label": "",
@@ -829,15 +833,15 @@
                   ]
                 },
                 "showIf": {
-                  "path": "core.button.enabled",
+                  "path": "calltoaction.action.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-button",
+                "groupId": "calltoaction-action",
                 "type": "valuefield",
-                "path": "core.buttonStyle.paddingInline",
+                "path": "calltoaction.actionStyle.paddingInline",
                 "label": "Horizontal padding",
                 "attrs": {
                   "group-label": "",
@@ -846,15 +850,15 @@
                   "step": 1
                 },
                 "showIf": {
-                  "path": "core.button.enabled",
+                  "path": "calltoaction.action.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-button",
+                "groupId": "calltoaction-action",
                 "type": "valuefield",
-                "path": "core.buttonStyle.paddingBlock",
+                "path": "calltoaction.actionStyle.paddingBlock",
                 "label": "Vertical padding",
                 "attrs": {
                   "group-label": "",
@@ -863,15 +867,15 @@
                   "step": 1
                 },
                 "showIf": {
-                  "path": "core.button.enabled",
+                  "path": "calltoaction.action.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
-                "groupId": "cta-button",
+                "groupId": "calltoaction-action",
                 "type": "valuefield",
-                "path": "core.buttonStyle.iconSize",
+                "path": "calltoaction.actionStyle.iconSize",
                 "label": "Icon size",
                 "attrs": {
                   "group-label": "",
@@ -882,11 +886,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.button.enabled",
+                      "path": "calltoaction.action.enabled",
                       "op": "isTrue"
                     },
                     {
-                      "path": "core.button.iconEnabled",
+                      "path": "calltoaction.action.iconEnabled",
                       "op": "isTrue"
                     }
                   ]

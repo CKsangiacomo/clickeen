@@ -4,7 +4,7 @@ export type WidgetShellEditableField = {
   path: (typeof SHELL_EDITABLE_FIELD_PATHS)[number];
   label: string;
   type: 'string' | 'richtext';
-  role: 'title' | 'body' | 'cta-label';
+  role: 'title' | 'body' | 'header-cta-label';
   arrayItemIdentity: [];
   limits: [];
 };
@@ -27,10 +27,10 @@ export const WIDGET_SHELL_EDITABLE_FIELDS: readonly WidgetShellEditableField[] =
     limits: [],
   },
   {
-    path: 'cta.label',
-    label: 'CTA label',
+    path: 'headerCta.label',
+    label: 'Header CTA label',
     type: 'string',
-    role: 'cta-label',
+    role: 'header-cta-label',
     arrayItemIdentity: [],
     limits: [],
   },

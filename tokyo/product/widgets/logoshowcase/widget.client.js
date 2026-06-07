@@ -122,15 +122,15 @@
       });
     });
 
-    assertObject(state.cta, 'state.cta');
-    assertBoolean(state.cta.enabled, 'state.cta.enabled');
-    assertString(state.cta.label, 'state.cta.label');
-    assertString(state.cta.href, 'state.cta.href');
-    assertBoolean(state.cta.iconEnabled, 'state.cta.iconEnabled');
-    assertString(state.cta.iconName, 'state.cta.iconName');
-    assertString(state.cta.iconPlacement, 'state.cta.iconPlacement');
-    if (!['left', 'right'].includes(state.cta.iconPlacement)) {
-      throw new Error('[LogoShowcase] state.cta.iconPlacement must be left|right');
+    assertObject(state.headerCta, 'state.headerCta');
+    assertBoolean(state.headerCta.enabled, 'state.headerCta.enabled');
+    assertString(state.headerCta.label, 'state.headerCta.label');
+    assertString(state.headerCta.href, 'state.headerCta.href');
+    assertBoolean(state.headerCta.iconEnabled, 'state.headerCta.iconEnabled');
+    assertString(state.headerCta.iconName, 'state.headerCta.iconName');
+    assertString(state.headerCta.iconPlacement, 'state.headerCta.iconPlacement');
+    if (!['left', 'right'].includes(state.headerCta.iconPlacement)) {
+      throw new Error('[LogoShowcase] state.headerCta.iconPlacement must be left|right');
     }
 
     if (!['grid', 'carousel'].includes(state.type)) {
@@ -195,22 +195,23 @@
       throw new Error('[LogoShowcase] state.appearance.cardwrapper.shadow.alpha must be 0..100');
     }
 
-    assertFill(state.appearance.ctaBackground, 'state.appearance.ctaBackground');
-    assertFill(state.appearance.ctaTextColor, 'state.appearance.ctaTextColor');
-    assertBorderConfig(state.appearance.ctaBorder, 'state.appearance.ctaBorder');
-    assertString(state.appearance.ctaRadius, 'state.appearance.ctaRadius');
-    assertString(state.appearance.ctaSizePreset, 'state.appearance.ctaSizePreset');
-    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.appearance.ctaSizePreset)) {
-      throw new Error('[LogoShowcase] state.appearance.ctaSizePreset must be xs|s|m|l|xl|custom');
+    assertObject(state.appearance.headerCta, 'state.appearance.headerCta');
+    assertFill(state.appearance.headerCta.background, 'state.appearance.headerCta.background');
+    assertFill(state.appearance.headerCta.textColor, 'state.appearance.headerCta.textColor');
+    assertBorderConfig(state.appearance.headerCta.border, 'state.appearance.headerCta.border');
+    assertString(state.appearance.headerCta.radius, 'state.appearance.headerCta.radius');
+    assertString(state.appearance.headerCta.sizePreset, 'state.appearance.headerCta.sizePreset');
+    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.appearance.headerCta.sizePreset)) {
+      throw new Error('[LogoShowcase] state.appearance.headerCta.sizePreset must be xs|s|m|l|xl|custom');
     }
-    assertBoolean(state.appearance.ctaPaddingLinked, 'state.appearance.ctaPaddingLinked');
-    assertNumber(state.appearance.ctaPaddingInline, 'state.appearance.ctaPaddingInline');
-    assertNumber(state.appearance.ctaPaddingBlock, 'state.appearance.ctaPaddingBlock');
-    assertString(state.appearance.ctaIconSizePreset, 'state.appearance.ctaIconSizePreset');
-    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.appearance.ctaIconSizePreset)) {
-      throw new Error('[LogoShowcase] state.appearance.ctaIconSizePreset must be xs|s|m|l|xl|custom');
+    assertBoolean(state.appearance.headerCta.paddingLinked, 'state.appearance.headerCta.paddingLinked');
+    assertNumber(state.appearance.headerCta.paddingInline, 'state.appearance.headerCta.paddingInline');
+    assertNumber(state.appearance.headerCta.paddingBlock, 'state.appearance.headerCta.paddingBlock');
+    assertString(state.appearance.headerCta.iconSizePreset, 'state.appearance.headerCta.iconSizePreset');
+    if (!['xs', 's', 'm', 'l', 'xl', 'custom'].includes(state.appearance.headerCta.iconSizePreset)) {
+      throw new Error('[LogoShowcase] state.appearance.headerCta.iconSizePreset must be xs|s|m|l|xl|custom');
     }
-    assertNumber(state.appearance.ctaIconSize, 'state.appearance.ctaIconSize');
+    assertNumber(state.appearance.headerCta.iconSize, 'state.appearance.headerCta.iconSize');
 
     assertObject(state.spacing, 'state.spacing');
     assertNumber(state.spacing.gap, 'state.spacing.gap');
