@@ -52,6 +52,8 @@ STOP / ASK (do not proceed blindly)
 - Change requires a new Dieter primitive/token.
 - Change requires `tokyo/product/widgets/shared/*` edits.
 - Change requires Bob/Roma/Tokyo-worker/Prague/public-serving edits and you don’t have an explicit PRD direction.
+- Change alters shared branding/backlink behavior, social-share behavior,
+  package assembly, or shared Settings semantics without explicit PRD direction.
 
 GATE
 
@@ -174,6 +176,7 @@ OUTPUT
   - DOM text/HTML
   - DOM attribute / `data-*`
   - CSS var on a specific scope element
+  - Shared Shell primitive/runtime/package behavior
 - Every editor path must have exactly one Binding Map row. A path with no row
   is a dead control. A path with two rows is duplicate truth.
 
@@ -190,11 +193,17 @@ OUTPUT
 - Full `defaults` state shape (no runtime fallbacks/healing).
 - Required platform fields:
   - Stage/Pod defaults (`stage.*`, `pod.*`)
+  - Stage canvas default: `stage.canvas.mode` is `"viewport"` (Builder label:
+    `Full`) unless the PRD explicitly owns a `wrap` exception
+  - Pod width default: `pod.widthMode` is explicitly declared. Use `"full"` for
+    section-style widgets unless the PRD/manifest owns a `wrap` or `fixed`
+    inner-wrapper decision.
   - Header defaults (`header.*`) and optional Header CTA defaults (`cta.*`)
   - Core defaults (`core.*`) for the widget-specific product body
   - Typography roles for all visible text (`typography.roles`)
   - Themes (`appearance.theme` defaults to `custom`)
   - Branding (`behavior.showBacklink`)
+  - Social share (`behavior.socialShare.enabled`)
 - `itemKey` declared in `spec.json` (`{widgetType}.item`) with pluralization support.
 - Defaults are product starter state. Simple non-repeat widgets must include useful starter Core content so the first preview is not blank. Repeated content may include starter items only when an empty array would render as a broken product; add-item templates may create blank valid rows using existing object-manager/repeater `default-item`.
 - Do not seed fake content, lorem ipsum, `https://example.com` links, hidden test rows, or account-owned/private references.
@@ -202,7 +211,12 @@ OUTPUT
 
 GATE
 
-- Every control path exists in defaults (compile-time and runtime strictness depend on it).
+- Every control path exists in defaults (compile-time and runtime strictness
+  depend on it).
+- Every widget default uses `stage.canvas.mode: "viewport"` unless a named PRD
+  exception is recorded.
+- Any non-`full` `pod.widthMode` default is recorded as a widget-specific
+  inner-wrapper layout decision.
 
 ---
 
@@ -229,10 +243,17 @@ OUTPUT
   - `../shared/branding.js`
   - `../shared/previewL10n.js`
   - plus `../shared/surface.js`, `../shared/socialShare.js`, and matching CSS when those primitives are used
+- Social-share support:
+  - The widget must not create a widget-local social-share implementation.
+  - If `behavior.socialShare.enabled` is exposed, preview and public package
+    output must provide the shared social-share root/markup expected by
+    `shared/socialShare.js`.
 
 GATE
 
 - Every runtime selector exists and is stable.
+- Shared branding and social-share selectors/markup exist in the surface that
+  uses them, or the task is blocked at the named preview/package boundary.
 
 ---
 
@@ -269,6 +290,11 @@ OUTPUT
 GATE
 
 - All Binding Map rows are implemented and visibly update DOM/CSS.
+- `behavior.showBacklink` visibly shows/hides shared branding in Builder
+  preview and public output.
+- `behavior.socialShare.enabled` visibly creates/removes the shared social-share
+  UI in Builder preview and public output, or the missing surface is recorded as
+  a blocker before shipping.
 
 ---
 
@@ -286,6 +312,9 @@ OUTPUT
 - Panels are composed of one or more explicit cluster objects and field/shared nodes.
   - Use `label`/`labelKey` on clusters for meaningful collapsible section headers.
 - Controls only for bound paths; gate variant-specific controls via structured `showIf`.
+- Settings controls for `behavior.showBacklink` and
+  `behavior.socialShare.enabled` are shared Shell controls and must be backed by
+  defaults, `limits.json`, preview behavior, and public-package behavior.
 - No widget-authored `<bob-panel>`, `<tooldrawer-cluster>`, `<tooldrawer-field>`, `@slot:`, or escaped editor HTML in `spec.json`.
 - Vertical rhythm is **clusters + groups only** (no manual spacing; no cluster `gap`/`space-after`).
 - Themes:
@@ -395,6 +424,17 @@ Manual smoke (fast)
   the named migration boundary. It must not blank the preview with an uncaught
   optional-role or missing-parent error.
 - Bob preview: each panel control updates the preview deterministically.
+- Stage default smoke: new widget instance opens with Stage set to `Full`
+  (`stage.canvas.mode: "viewport"`).
+- Pod width smoke: `pod.widthMode` matches the widget's declared inner-wrapper
+  decision; non-`full` defaults have a manifest/PRD reason.
+- Branding smoke: toggle `Show Made with Clickeen` off/on and verify the
+  branding badge hides/shows in Builder preview and public output. Verify
+  `branding.remove` blocks removal when the account is not entitled.
+- Social-share smoke: toggle `Enable social share` on/off and verify the shared
+  social-share trigger/menu appears/disappears in Builder preview and public
+  output. Verify `widget.socialShare.enabled` blocks enabling when the account
+  is not entitled.
 - Static embed: `clk.live/{accountPublicId}/{instanceId}` loads without console errors.
 - Localization: Prague locale routes localize Prague page copy through page sidecars; account-widget locales are served only as generated public artifacts. Missing required Prague page sidecars fail visibly instead of silently falling back.
 - Docs truth: when behavior or model changes, update

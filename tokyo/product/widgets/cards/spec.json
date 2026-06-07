@@ -154,7 +154,7 @@
         }
       },
       "canvas": {
-        "mode": "wrap",
+        "mode": "viewport",
         "width": 0,
         "height": 0
       },

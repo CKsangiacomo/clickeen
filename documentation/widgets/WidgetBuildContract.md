@@ -28,6 +28,12 @@ Panels are organized by the user's editing job. Ownership is enforced by path:
 Shell-owned paths come from shared nodes, and widget-specific body paths live in
 `defaults.core`.
 
+Shared Shell controls in mixed panels are live product controls. A widget is not
+compliant if `behavior.showBacklink`, `behavior.socialShare.enabled`,
+Stage/Pod, Header, CTA, Typography, or CoreSize controls appear in Builder but
+do not bind through preview, save/materialization, public runtime, and policy
+when policy applies.
+
 The FAQ widget proves the Shell/runtime model. `packages/widget-shell/` is the
 named Shell contract authority. CTA, Cards, and Split prove the intended
 `defaults.core` namespace. A widget folder under `tokyo/product/widgets/` is
@@ -114,6 +120,9 @@ Stop if:
   branding behavior, runtime message behavior, Bob/Roma/Tokyo-worker/Venice/
   Prague/Dieter edits, or package assembly changes, and the PRD does not
   explicitly own that shared surface.
+- The change alters social-share behavior, branding/backlink behavior, package
+  assembly, or shared Settings semantics without PRD ownership of that shared
+  surface.
 - Validation cannot run or fails.
 
 ---
@@ -151,6 +160,7 @@ Shell-owned UX/runtime:
 - Theme hook/control.
 - Locale switcher and preview localization plumbing.
 - Branding/backlink behavior.
+- Social-share package/runtime behavior.
 - Runtime registration, update binding, and message plumbing.
 - Shared script/style load order.
 - Shared surface/card-wrapper primitive.
@@ -250,6 +260,13 @@ Shell paths kept:
 - shared appearance.*
 - shared behavior.*
 
+Shared shell invariants:
+- stage.canvas.mode defaults to "viewport" (Builder label: Full)
+- pod.widthMode is explicit; use "full" for section-style widgets unless the
+  PRD/manifest owns a wrap/fixed inner-wrapper decision
+- behavior.showBacklink is a boolean and is bound to shared branding runtime
+- behavior.socialShare.enabled is a boolean and is bound to shared social-share package/runtime
+
 Core paths:
 - core...
 
@@ -305,6 +322,12 @@ MUST
 - Define `coreSize.mode`, `coreSize.fixedHeight`, `coreSize.minHeight`,
   `coreSize.preferredVw`, and `coreSize.maxHeight` when the Shell contract is
   used.
+- Define `stage.canvas.mode` with default `"viewport"` for normal widgets. This
+  is the stored value for the Builder `Full` stage option.
+- Define `pod.widthMode` explicitly. Use default `"full"` for section-style
+  widgets unless the PRD/manifest owns a `wrap` or `fixed` inner-wrapper
+  decision.
+- Define `behavior.showBacklink` and `behavior.socialShare.enabled` as booleans.
 
 MUST NOT
 
@@ -369,6 +392,15 @@ MUST
   ipsum or hidden test data.
 - Keep Shell defaults aligned with the Shell contract. Core defaults extend the
   widget; they do not rename Shell state.
+- Set `stage.canvas.mode` to `"viewport"` by default. The Builder displays this
+  as `Full`.
+- Set `pod.widthMode` explicitly. Use `"full"` by default for section-style
+  widgets; use `wrap` or `fixed` only when the widget manifest/PRD names that
+  inner-wrapper decision.
+- Set `behavior.showBacklink` to a boolean starter value and map it to
+  `branding.remove` in `limits.json`.
+- Set `behavior.socialShare.enabled` to a boolean starter value and map it to
+  `widget.socialShare.enabled` in `limits.json`.
 
 MUST NOT
 
@@ -377,6 +409,33 @@ MUST NOT
 - Use empty defaults to dodge required schema work.
 - Store account-owned asset bytes or private account references in product
   defaults.
+
+### 3A) Shared Stage And Settings Defaults
+
+Stage defaults are Shell product truth. `stage.canvas.mode: "viewport"` is the
+canonical Full stage default for normal widgets. A widget whose Stage defaults
+to `wrap` will shrink the host canvas to body content and make section
+background, Stage padding, measurement, and Page Composer/public embed behavior
+depend on the Core body. That is an explicit PRD exception, never the default
+for a new or refactored widget.
+
+Pod defaults are inner-content truth, not the Stage canvas contract.
+`pod.widthMode: "full"` keeps section-style widgets aligned to the host section
+while `pod.contentWidth`, `coreSize.*`, and Core layout controls constrain the
+visible content. `wrap` or `fixed` pod defaults are allowed only as named
+widget-specific layout decisions.
+
+Shared Settings defaults must be executable:
+
+- `behavior.showBacklink`: controls shared Clickeen branding/backlink through
+  `shared/branding.js`; removing it is gated by `branding.remove`.
+- `behavior.socialShare.enabled`: controls the social-share feature through
+  shared package/runtime support; enabling it is gated by
+  `widget.socialShare.enabled`.
+
+These Settings controls are dead controls unless Builder preview, Roma
+save/materialization, public package assembly, and public runtime all respond to
+the same state path.
 
 ### 4) Shell DOM
 

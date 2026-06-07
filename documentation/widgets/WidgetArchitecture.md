@@ -30,6 +30,10 @@ Panel placement is organized by the user's editing job. Ownership still matters:
 Shell paths stay in shared nodes, and widget-specific body paths stay in
 `defaults.core`.
 
+Shared controls in a mixed panel are not cosmetic. Every shared Shell control
+that appears in Builder must bind through defaults, editor state, preview
+runtime, save/materialization, public runtime, and policy when policy applies.
+
 ---
 
 ## System Invariants
@@ -47,6 +51,11 @@ Shell paths stay in shared nodes, and widget-specific body paths stay in
   repair, heal, or infer product meaning.
 - `widgetCode` is metadata/codebook identity only. It is never a storage
   locator.
+- The Builder label `Full` for Stage is stored as
+  `stage.canvas.mode: "viewport"`. Normal widgets default to this value.
+  Stage `wrap` is an explicit PRD-owned exception, not a starter default.
+- Pod width is a separate inner-wrapper decision. Pod/Core controls own inner
+  content width; Stage owns the host section canvas.
 
 ---
 
@@ -116,6 +125,33 @@ Shell state families:
 - `behavior.socialShare.enabled`
 - `uiLabels.core.*`
 - `coreSize.*`
+
+### Shared Stage And Settings Runtime
+
+Stage and Pod are shared Shell. `stage.canvas.mode` controls the host canvas.
+The default is `"viewport"` because widgets are embeddable sections in Builder,
+Page Composer, and public embeds. The pod and Core then control the visible
+content width. Shrink-wrapping the Stage by default makes background, padding,
+measurement, and public-page composition depend on the body content instead of
+the host section contract.
+
+`pod.widthMode` controls the inner wrapper. New and refactored section-style
+widgets usually default it to `"full"` so `pod.contentWidth`, `coreSize.*`, and
+Core layout own the content constraint. `wrap` or `fixed` pod defaults are
+widget-specific layout decisions and must be named in the widget manifest/PRD.
+
+`behavior.showBacklink` is shared Shell behavior for the Clickeen branding
+badge/backlink. The Settings control is functional only when the default is a
+boolean, the editor can mutate the path, `shared/branding.js` receives the
+posted state, and both Builder preview and public output show/hide the badge.
+Removing branding is entitlement-gated through `branding.remove`.
+
+`behavior.socialShare.enabled` is shared Shell behavior for social sharing. It
+is not widget Core content and widgets must not invent one-off share DOM or
+runtime. The control is functional only when the default is a boolean, editor
+state and save policy use the `widget.socialShare.enabled` entitlement, public
+package assembly includes share markup plus `shared/socialShare.css` and
+`shared/socialShare.js`, and Builder preview has an equivalent preview surface.
 
 ### Core
 
