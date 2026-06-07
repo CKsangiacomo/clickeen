@@ -26,6 +26,7 @@ type LastUpdate = {
 export function useTdMenuBindings(args: {
   containerRef: MutableRefObject<HTMLDivElement | null>;
   instanceData: Record<string, unknown>;
+  instanceDataRef: MutableRefObject<Record<string, unknown>>;
   applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
   panelHtml: string;
   renderKey: number;
@@ -40,6 +41,7 @@ export function useTdMenuBindings(args: {
     compiled,
     containerRef,
     instanceData,
+    instanceDataRef,
     lastUpdateRef,
     panelHtml,
     renderKey,
@@ -50,8 +52,14 @@ export function useTdMenuBindings(args: {
     const container = containerRef.current;
     if (!container) return;
 
-    const applyExpandedOps = (ops: WidgetOp[]) =>
-      applyOps(expandLinkedOps({ compiled, instanceData, ops }));
+    const readInstanceData = () => instanceDataRef.current;
+    const applyExpandedOps = (ops: WidgetOp[]) => {
+      const applied = applyOps(expandLinkedOps({ compiled, instanceData: readInstanceData(), ops }));
+      if (applied.ok) {
+        instanceDataRef.current = applied.data;
+      }
+      return applied;
+    };
 
     const applySet = (path: string, rawValue: unknown) => {
       const applied = applyExpandedOps([{ op: 'set', path, value: rawValue }]);
@@ -104,13 +112,13 @@ export function useTdMenuBindings(args: {
       if (target instanceof HTMLInputElement && target.type === 'checkbox') {
         const applied = applySet(path, target.checked);
         if (!applied.ok) {
-          target.checked = getAt(instanceData, path) === true;
+          target.checked = getAt(readInstanceData(), path) === true;
         }
         return;
       }
 
       const rawValue = target.value;
-      const currentValue = getAt(instanceData, path);
+      const currentValue = getAt(readInstanceData(), path);
 
       if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
         const parsed = parseBobJsonValue(target, rawValue);
@@ -122,7 +130,7 @@ export function useTdMenuBindings(args: {
         }
         const applied = applyExpandedOps([{ op: 'set', path, value: parsed }]);
         if (!applied.ok) {
-          const previousValue = getAt<unknown>(instanceData, path);
+          const previousValue = getAt<unknown>(readInstanceData(), path);
           const nextValue = serializeBobJsonFieldValue(target, previousValue);
           target.value = nextValue;
           target.dispatchEvent(
@@ -174,9 +182,9 @@ export function useTdMenuBindings(args: {
       const sizePresetMatch = path.match(/^typography\.roles\.([^.]+)\.sizePreset$/);
       if (sizePresetMatch && rawValue === 'custom') {
         const roleKey = sizePresetMatch[1];
-        const currentPreset = getAt<unknown>(instanceData, path);
+        const currentPreset = getAt<unknown>(readInstanceData(), path);
         if (typeof currentPreset === 'string' && currentPreset.trim() && currentPreset !== 'custom') {
-          const scaleValue = getAt<unknown>(instanceData, `typography.roleScales.${roleKey}.${currentPreset}`);
+          const scaleValue = getAt<unknown>(readInstanceData(), `typography.roleScales.${roleKey}.${currentPreset}`);
           const scalePx = coercePxNumber(scaleValue);
           if (scalePx != null) {
             const applied = applyOps([
@@ -298,6 +306,7 @@ export function useTdMenuBindings(args: {
     compiled,
     containerRef,
     instanceData,
+    instanceDataRef,
     lastUpdateRef,
     panelHtml,
     renderKey,

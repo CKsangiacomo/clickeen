@@ -82,6 +82,20 @@ function resolveSessionErrorLines(error: NonNullable<ReturnType<typeof useWidget
   return deduped.size > 0 ? Array.from(deduped) : ['Some widget edits are blocked by current limits or settings.'];
 }
 
+function hasTransientEditorWork(): boolean {
+  if (typeof document === 'undefined') return false;
+  const drawer = document.querySelector('.tooldrawer');
+  return Boolean(
+    drawer?.querySelector(
+      [
+        '[data-uploading="true"]',
+        '[data-bulk-modal]:not([hidden])',
+        '.diet-object-manager__modal:not([hidden])',
+      ].join(', '),
+    ),
+  );
+}
+
 export function ToolDrawer({
   translationPreviewLocale,
   onTranslationPreviewLocaleChange,
@@ -109,6 +123,28 @@ export function ToolDrawer({
 
   const [mode, setMode] = useState<'manual' | 'copilot'>('manual');
   const [activePanel, setActivePanel] = useState<PanelId>('content');
+  const [switchBlockMessage, setSwitchBlockMessage] = useState<string | null>(null);
+
+  const canSwitchDrawerContext = () => {
+    if (!hasTransientEditorWork()) {
+      setSwitchBlockMessage(null);
+      return true;
+    }
+    setSwitchBlockMessage('Finish the current upload or modal edit before switching panels.');
+    return false;
+  };
+
+  const requestMode = (nextMode: 'manual' | 'copilot') => {
+    if (nextMode === mode) return;
+    if (!canSwitchDrawerContext()) return;
+    setMode(nextMode);
+  };
+
+  const requestPanel = (nextPanel: PanelId) => {
+    if (nextPanel === activePanel) return;
+    if (!canSwitchDrawerContext()) return;
+    setActivePanel(nextPanel);
+  };
 
   // Reset active panel when widget changes
   useEffect(() => {
@@ -187,7 +223,7 @@ export function ToolDrawer({
               name="assist-mode"
               value="manual"
               checked={mode === 'manual'}
-              onChange={() => setMode('manual')}
+              onChange={() => requestMode('manual')}
             />
             <span className="diet-segment__surface" />
             <button
@@ -213,7 +249,7 @@ export function ToolDrawer({
               name="assist-mode"
               value="copilot"
               checked={mode === 'copilot'}
-              onChange={() => setMode('copilot')}
+              onChange={() => requestMode('copilot')}
             />
             <span className="diet-segment__surface" />
             <button
@@ -239,7 +275,7 @@ export function ToolDrawer({
       <div className="tdcontent">
         {mode === 'manual' ? (
           <>
-            <TdMenu active={activePanel} panels={menuPanels} onSelect={(id) => setActivePanel(id)} />
+            <TdMenu active={activePanel} panels={menuPanels} onSelect={requestPanel} />
             {sessionError ? (
               <div
                 role="alert"
@@ -256,6 +292,25 @@ export function ToolDrawer({
                 </div>
                 <pre className="caption" style={{ whiteSpace: 'pre-wrap', margin: 'var(--space-1) 0 0 0' }}>
                   {sessionErrorLines.join('\n')}
+                </pre>
+              </div>
+            ) : null}
+            {switchBlockMessage ? (
+              <div
+                role="alert"
+                style={{
+                  margin: 'var(--space-2)',
+                  padding: 'var(--space-2)',
+                  borderRadius: 'var(--control-radius-md)',
+                  border: alertBorderColor,
+                  background: alertBackground,
+                }}
+              >
+                <div className="label-s" style={{ color: alertLabelColor }}>
+                  Editor action pending
+                </div>
+                <pre className="caption" style={{ whiteSpace: 'pre-wrap', margin: 'var(--space-1) 0 0 0' }}>
+                  {switchBlockMessage}
                 </pre>
               </div>
             ) : null}

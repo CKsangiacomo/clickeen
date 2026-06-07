@@ -88,6 +88,7 @@ export function TdMenuContent({
   useTdMenuBindings({
     containerRef,
     instanceData,
+    instanceDataRef,
     applyOps,
     panelHtml,
     renderKey,

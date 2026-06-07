@@ -15,9 +15,15 @@ type BuilderDomainProps = {
 };
 
 const OPEN_EDITOR_TIMEOUT_MS = 7000;
+const UNSAVED_OPEN_REASON = 'coreui.errors.builder.open.unsavedChanges';
 
 type BobReadyMessage = {
   type: 'bob:session-ready';
+};
+
+type BobDirtyStateChangedMessage = {
+  type: 'bob:dirty-state-changed';
+  isDirty?: boolean;
 };
 
 type BobOpenEditorAppliedMessage = {
@@ -113,6 +119,7 @@ const BUILDER_REASON_COPY: Record<string, string> = {
   'coreui.errors.instance.widgetMissing': 'This widget is missing required data and cannot open right now.',
   'coreui.errors.instance.config.invalid': 'This widget has invalid saved data and cannot open right now.',
   'coreui.errors.builder.open.stale': 'Builder refreshed while opening this widget. Please retry.',
+  'coreui.errors.builder.open.unsavedChanges': 'Save current edits before opening another widget.',
   'coreui.errors.builder.open.timeout': 'Builder took too long to respond. Please retry.',
   'coreui.errors.builder.open.failed': 'Builder could not open this widget. Please try again.',
 };
@@ -292,6 +299,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const bobReadyRef = useRef(false);
   const openDispatchSeqRef = useRef(0);
+  const bobAppliedInstanceIdRef = useRef('');
+  const bobIsDirtyRef = useRef(false);
+  const activeInstanceIdRef = useRef('');
   const [activeInstanceId, setActiveInstanceId] = useState(() => {
     const fromPath = decodeBuilderPathInstanceId(pathname);
     if (fromPath) return fromPath;
@@ -303,6 +313,10 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   const currentUrl = pathname;
   const pathInstanceId = useMemo(() => decodeBuilderPathInstanceId(pathname), [pathname]);
   const returnTo = useMemo(() => normalizeReturnTo(searchParams.get('returnTo')), [searchParams]);
+
+  useEffect(() => {
+    activeInstanceIdRef.current = activeInstanceId;
+  }, [activeInstanceId]);
 
   // Active account authoring truth: Roma hosts one current-account Builder session and opens Bob with one explicit payload.
   const bobSrc = useMemo(() => {
@@ -339,7 +353,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       };
       const commandUsesActiveInstance = !isAccountAssetCommand(args.command);
       const requestedInstanceId = typeof args.instanceId === 'string' ? args.instanceId.trim() : '';
-      const scopedInstanceId = commandUsesActiveInstance ? activeInstanceId.trim() : requestedInstanceId;
+      const scopedInstanceId = commandUsesActiveInstance
+        ? (bobAppliedInstanceIdRef.current || activeInstanceId).trim()
+        : requestedInstanceId;
       if (commandUsesActiveInstance && requestedInstanceId && requestedInstanceId !== scopedInstanceId) {
         reply({
           requestId: args.requestId,
@@ -553,26 +569,45 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         openSeq,
       });
       if (openSeq !== openDispatchSeqRef.current) return;
+      bobAppliedInstanceIdRef.current = resolvedInstanceId;
+      bobIsDirtyRef.current = false;
       setOpenError(null);
     } catch (error) {
       if (openSeq !== openDispatchSeqRef.current) return;
       const message = error instanceof Error ? error.message : String(error);
+      if (message === UNSAVED_OPEN_REASON && bobAppliedInstanceIdRef.current) {
+        const appliedInstanceId = bobAppliedInstanceIdRef.current;
+        setActiveInstanceId(appliedInstanceId);
+        const appliedRoute = buildRomaBuilderRoute({ instanceId: appliedInstanceId });
+        if (appliedRoute !== currentUrl) {
+          router.replace(appliedRoute, { scroll: false });
+        }
+      }
       setOpenError(message);
     }
-  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, postOpenEditorAndWait]);
+  }, [accountApi, accountPolicy, activeAccount, activeInstanceId, currentUrl, postOpenEditorAndWait, router]);
+
+  const openActiveInstanceInBobRef = useRef(openActiveInstanceInBob);
+  useEffect(() => {
+    openActiveInstanceInBobRef.current = openActiveInstanceInBob;
+  }, [openActiveInstanceInBob]);
 
   useEffect(() => {
     const listener = (event: MessageEvent) => {
       if (event.origin !== bobBaseUrl) return;
       const source = iframeRef.current?.contentWindow;
       if (!source || event.source !== source) return;
-      const data = event.data as BobReadyMessage | BobAccountCommandMessage | null;
+      const data = event.data as BobReadyMessage | BobDirtyStateChangedMessage | BobAccountCommandMessage | null;
       if (!data || typeof data !== 'object') return;
       if (data.type === 'bob:session-ready') {
         bobReadyRef.current = true;
         if (activeInstanceId) {
-          void openActiveInstanceInBob();
+          void openActiveInstanceInBobRef.current();
         }
+        return;
+      }
+      if (data.type === 'bob:dirty-state-changed') {
+        bobIsDirtyRef.current = data.isDirty === true;
         return;
       }
       if (data.type === 'bob:account-command') {
@@ -595,11 +630,13 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
 
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
-  }, [activeInstanceId, bobBaseUrl, openActiveInstanceInBob, runBobAccountCommand]);
+  }, [activeInstanceId, bobBaseUrl, runBobAccountCommand]);
 
   useEffect(() => {
     bobReadyRef.current = false;
     openDispatchSeqRef.current += 1;
+    bobAppliedInstanceIdRef.current = '';
+    bobIsDirtyRef.current = false;
     setOpenError(null);
   }, [bobSrc]);
 
@@ -609,8 +646,52 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       return;
     }
     if (!bobReadyRef.current) return;
-    void openActiveInstanceInBob();
-  }, [activeInstanceId, openActiveInstanceInBob]);
+    void openActiveInstanceInBobRef.current();
+  }, [activeInstanceId]);
+
+  useEffect(() => {
+    const confirmDiscard = () => {
+      if (!bobIsDirtyRef.current) return true;
+      return window.confirm('You have unsaved Builder edits. Leave and discard them?');
+    };
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!bobIsDirtyRef.current) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    const handleClick = (event: MouseEvent) => {
+      if (!bobIsDirtyRef.current) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const navigable = target.closest('a[href], button.roma-nav__signout');
+      if (!navigable) return;
+      if (confirmDiscard()) return;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    const handlePopState = () => {
+      if (!bobIsDirtyRef.current) return;
+      if (confirmDiscard()) return;
+      const holdInstanceId = bobAppliedInstanceIdRef.current || activeInstanceIdRef.current;
+      const holdRoute = holdInstanceId ? buildRomaBuilderRoute({ instanceId: holdInstanceId }) : '/builder';
+      window.history.pushState(null, '', holdRoute);
+      if (holdInstanceId) {
+        setActiveInstanceId(holdInstanceId);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    document.addEventListener('click', handleClick, true);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, []);
 
   const builderOpenErrorCopy = resolveBuilderErrorCopy(openError || '', 'Builder could not open this widget. Please try again.');
 

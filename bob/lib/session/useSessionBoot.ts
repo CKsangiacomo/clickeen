@@ -15,18 +15,28 @@ import {
 import { normalizeSessionConfig } from './sessionConfig';
 
 export function useSessionBoot(args: {
+  stateRef: MutableRefObject<SessionState>;
+  metaRef: MutableRefObject<SessionMeta>;
   setState: Dispatch<SetStateAction<SessionState>>;
   setMeta: Dispatch<SetStateAction<SessionMeta>>;
   setPolicy: Dispatch<SetStateAction<Policy | null>>;
   setCopilot: Dispatch<SetStateAction<CopilotRuntimeUi>>;
   hostOriginRef: MutableRefObject<string | null>;
 }) {
-  const { setState, setMeta, setPolicy, setCopilot, hostOriginRef } = args;
+  const { stateRef, metaRef, setState, setMeta, setPolicy, setCopilot, hostOriginRef } = args;
   const loadInstance = useCallback(
     async (
       message: EditorOpenMessage,
     ): Promise<{ ok: true; instanceId?: string; widgetname?: string } | { ok: false; error: string }> => {
       try {
+        const current = stateRef.current;
+        if (current.isDirty && current.compiled) {
+          return {
+            ok: false,
+            error: 'coreui.errors.builder.open.unsavedChanges',
+          };
+        }
+
         const compiled = message.compiled;
         const baseLocale = typeof message.baseLocale === 'string' ? message.baseLocale.trim() : '';
         let nextLabel = typeof message.label === 'string' && message.label.trim() ? message.label.trim() : '';
@@ -52,9 +62,7 @@ export function useSessionBoot(args: {
           nextLabel = String(message.instanceId || '').trim() || 'Untitled widget';
         }
 
-        setPolicy(nextPolicy);
-        setCopilot(nextCopilot);
-        setMeta({
+        const nextMeta: SessionMeta = {
           accountPublicId: message.accountPublicId,
           instanceId: message.instanceId,
           baseLocale,
@@ -64,9 +72,9 @@ export function useSessionBoot(args: {
           meta: message.meta ?? null,
           accountInstances: Array.isArray(message.accountInstances) ? message.accountInstances : [],
           translationSetup: message.translationSetup ?? null,
-        });
-        setState((prev) => ({
-          ...prev,
+        };
+        const nextState: SessionState = {
+          ...current,
           compiled,
           instanceData,
           savedInstanceDataSignature,
@@ -77,7 +85,14 @@ export function useSessionBoot(args: {
             path: '',
             ts: Date.now(),
           },
-        }));
+        };
+
+        setPolicy(nextPolicy);
+        setCopilot(nextCopilot);
+        metaRef.current = nextMeta;
+        stateRef.current = nextState;
+        setMeta(nextMeta);
+        setState(nextState);
         return {
           ok: true,
           instanceId: message.instanceId,
@@ -90,19 +105,22 @@ export function useSessionBoot(args: {
         const messageText = err instanceof Error ? err.message : String(err);
         setPolicy(null);
         setCopilot(null);
+        metaRef.current = null;
         setMeta(null);
-        setState((prev) => ({
-          ...prev,
+        const nextState: SessionState = {
+          ...stateRef.current,
           compiled: null,
           instanceData: {},
           savedInstanceDataSignature: serializeInstanceDataSignature({}),
           isDirty: false,
           error: { source: 'load', message: messageText },
-        }));
+        };
+        stateRef.current = nextState;
+        setState(nextState);
         return { ok: false, error: messageText };
       }
     },
-    [setCopilot, setMeta, setPolicy, setState],
+    [metaRef, setCopilot, setMeta, setPolicy, setState, stateRef],
   );
 
   useEffect(() => {
@@ -123,9 +141,9 @@ export function useSessionBoot(args: {
       if (!data || typeof data !== 'object') return;
 
       if (data.type === 'ck:open-editor') {
+        if (event.source !== window.parent) return;
         const requestId = typeof data.requestId === 'string' ? data.requestId.trim() : '';
         const targetOrigin = event.origin && event.origin !== 'null' ? event.origin : '*';
-        hostOriginRef.current = targetOrigin === '*' ? hostOriginRef.current : targetOrigin;
         if (!requestId) {
           postToParent(
             {
@@ -140,6 +158,9 @@ export function useSessionBoot(args: {
 
         void loadInstance(data).then((result) => {
           if (result.ok) {
+            if (targetOrigin !== '*') {
+              hostOriginRef.current = targetOrigin;
+            }
             postToParent(
               {
                 type: 'bob:open-editor-applied',

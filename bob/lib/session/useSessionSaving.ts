@@ -73,10 +73,17 @@ export function useSessionSaving(args: {
     if (!snapshot.isDirty) {
       return;
     }
-    setState((prev) => ({ ...prev, isSaving: true, error: null }));
+    const savingState: SessionState = {
+      ...stateRef.current,
+      isSaving: true,
+      error: null,
+    };
+    stateRef.current = savingState;
+    setState(savingState);
 
     try {
       const config = snapshot.instanceData;
+      const submittedInstanceDataSignature = serializeInstanceDataSignature(config);
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',
         instanceId,
@@ -91,8 +98,8 @@ export function useSessionSaving(args: {
       if (!ok) {
         const err = json?.error;
         if (err?.kind === 'VALIDATION') {
-          setState((prev) => ({
-            ...prev,
+          const nextState: SessionState = {
+            ...stateRef.current,
             isSaving: false,
             error: {
               source: 'save',
@@ -102,28 +109,34 @@ export function useSessionSaving(args: {
                 ? err.paths.filter((path: unknown): path is string => typeof path === 'string')
                 : undefined,
             },
-          }));
+          };
+          stateRef.current = nextState;
+          setState(nextState);
           return;
         }
-        setState((prev) => ({
-          ...prev,
+        const nextState: SessionState = {
+          ...stateRef.current,
           isSaving: false,
           error: {
             source: 'save',
             message: err?.reasonKey || 'Save failed.',
             detail: typeof err?.detail === 'string' ? err.detail : undefined,
           },
-        }));
+        };
+        stateRef.current = nextState;
+        setState(nextState);
         return;
       }
 
       const current = stateRef.current;
-      const savedInstanceDataSignature = serializeInstanceDataSignature(config);
+      const currentInstanceDataSignature = serializeInstanceDataSignature(current.instanceData);
+      const hasEditsAfterSubmittedSave = currentInstanceDataSignature !== submittedInstanceDataSignature;
+      const nextInstanceData = hasEditsAfterSubmittedSave ? current.instanceData : config;
       const nextState: SessionState = {
         ...current,
-        instanceData: config,
-        savedInstanceDataSignature,
-        isDirty: false,
+        instanceData: nextInstanceData,
+        savedInstanceDataSignature: submittedInstanceDataSignature,
+        isDirty: serializeInstanceDataSignature(nextInstanceData) !== submittedInstanceDataSignature,
         isSaving: false,
         error: (() => {
           const translationFollowup = normalizeTranslationFollowup(json?.translation);
@@ -140,7 +153,13 @@ export function useSessionSaving(args: {
       setState(nextState);
     } catch (err) {
       const messageText = err instanceof Error ? err.message : String(err);
-      setState((prev) => ({ ...prev, isSaving: false, error: { source: 'save', message: messageText } }));
+      const nextState: SessionState = {
+        ...stateRef.current,
+        isSaving: false,
+        error: { source: 'save', message: messageText },
+      };
+      stateRef.current = nextState;
+      setState(nextState);
     }
   }, [
     executeAccountCommand,

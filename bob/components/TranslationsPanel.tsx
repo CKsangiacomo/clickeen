@@ -398,7 +398,7 @@ export function TranslationReviewRows({
                       data-variant="neutral"
                       type="button"
                       disabled={
-                        savingPath === item.path ||
+                        savingPath !== null ||
                         !onSaveValue ||
                         (draftValues?.[item.path] ?? item.value) === item.value
                       }
@@ -444,6 +444,10 @@ export function TranslationsPanel({
   const chrome = useWidgetSessionChrome();
   const { generateTranslations, readTranslationGeneration, saveTranslation } = useWidgetSessionTransport();
   const [draftValues, setDraftValues] = useState<Record<string, string>>({});
+  const draftValuesRef = useRef<Record<string, string>>({});
+  const dirtyDraftPathsRef = useRef<Set<string>>(new Set());
+  const activeDraftLocaleRef = useRef('');
+  const [localTranslationValuesByLocale, setLocalTranslationValuesByLocale] = useState<Record<string, Record<string, string>>>({});
   const [savingPath, setSavingPath] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [isStartingTranslations, setIsStartingTranslations] = useState(false);
@@ -460,6 +464,9 @@ export function TranslationsPanel({
   useEffect(() => {
     onRequestTranslationsRefreshRef.current = onRequestTranslationsRefresh;
   }, [onRequestTranslationsRefresh]);
+  useEffect(() => {
+    draftValuesRef.current = draftValues;
+  }, [draftValues]);
   const instanceId = chrome.meta?.instanceId ?? '';
   const baseLocale = translationSetup?.baseLocale || translatedLocales?.baseLocale || '';
   const localeState = useMemo(
@@ -522,13 +529,40 @@ export function TranslationsPanel({
   const isSelectedReviewable =
     Boolean(localeValue && localeValue !== baseLocale && panelProductState.reviewableLocales.includes(localeValue));
   const selectedTranslationEntry = isSelectedReviewable ? { locale: localeValue } : null;
-  const selectedValues =
+  const sourceSelectedValues =
     isSelectedReviewable ? translationValuesByLocale[localeValue] ?? null : null;
+  const selectedValues =
+    isSelectedReviewable ? localTranslationValuesByLocale[localeValue] ?? sourceSelectedValues : null;
   useEffect(() => {
-    setDraftValues(selectedValues ?? {});
-    setSavingPath(null);
-    setSaveMessage(null);
-  }, [localeValue, selectedValues]);
+    const localeChanged = activeDraftLocaleRef.current !== localeValue;
+    activeDraftLocaleRef.current = localeValue;
+
+    if (isSelectedReviewable && sourceSelectedValues) {
+      setLocalTranslationValuesByLocale((current) => ({
+        ...current,
+        [localeValue]: sourceSelectedValues,
+      }));
+    }
+
+    if (localeChanged) {
+      dirtyDraftPathsRef.current = new Set();
+      setDraftValues(sourceSelectedValues ?? {});
+      setSavingPath(null);
+      setSaveMessage(null);
+      return;
+    }
+
+    if (!sourceSelectedValues) return;
+    setDraftValues((current) => {
+      const next = { ...sourceSelectedValues };
+      dirtyDraftPathsRef.current.forEach((path) => {
+        if (Object.prototype.hasOwnProperty.call(current, path)) {
+          next[path] = current[path];
+        }
+      });
+      return next;
+    });
+  }, [isSelectedReviewable, localeValue, sourceSelectedValues]);
   const selectedReview = useMemo(() => {
     if (!session.compiled?.editableFields || !selectedValues) return null;
     return buildEditableFieldsTranslationReview({
@@ -636,10 +670,11 @@ export function TranslationsPanel({
     readTranslationGeneration,
   ]);
   const saveTranslationValue = async (path: string) => {
-    if (!selectedValues || !localeValue || localeValue === baseLocale || !instanceId) return;
-    const nextValue = draftValues[path] ?? selectedValues[path] ?? '';
+    if (!selectedValues || !localeValue || localeValue === baseLocale || !instanceId || savingPath) return;
+    const currentValues = localTranslationValuesByLocale[localeValue] ?? selectedValues;
+    const nextValue = draftValuesRef.current[path] ?? currentValues[path] ?? '';
     const values = buildTranslationValuesAfterEdit({
-      values: selectedValues,
+      values: currentValues,
       path,
       value: nextValue,
     });
@@ -654,6 +689,20 @@ export function TranslationsPanel({
       if (!response.ok) {
         throw new Error('Translated value could not be saved.');
       }
+      dirtyDraftPathsRef.current.delete(path);
+      setLocalTranslationValuesByLocale((current) => ({
+        ...current,
+        [localeValue]: values,
+      }));
+      setDraftValues((current) => {
+        const next = { ...values };
+        dirtyDraftPathsRef.current.forEach((draftPath) => {
+          if (Object.prototype.hasOwnProperty.call(current, draftPath)) {
+            next[draftPath] = current[draftPath];
+          }
+        });
+        return next;
+      });
       setSaveMessage('Translation saved.');
       onRequestTranslationsRefresh();
     } catch (error) {
@@ -740,6 +789,15 @@ export function TranslationsPanel({
             editable={Boolean(selectedValues && localeValue !== baseLocale)}
             savingPath={savingPath}
             onDraftValueChange={(path, value) => {
+              if (selectedValues && value === (selectedValues[path] ?? '')) {
+                dirtyDraftPathsRef.current.delete(path);
+              } else {
+                dirtyDraftPathsRef.current.add(path);
+              }
+              draftValuesRef.current = {
+                ...draftValuesRef.current,
+                [path]: value,
+              };
               setDraftValues((current) => ({
                 ...current,
                 [path]: value,

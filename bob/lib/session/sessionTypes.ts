@@ -94,6 +94,11 @@ export type BobSessionReadyMessage = {
   type: 'bob:session-ready';
 };
 
+export type BobDirtyStateChangedMessage = {
+  type: 'bob:dirty-state-changed';
+  isDirty: boolean;
+};
+
 export type BobOpenEditorAppliedMessage = {
   type: 'bob:open-editor-applied';
   requestId: string;

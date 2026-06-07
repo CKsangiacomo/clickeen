@@ -189,6 +189,7 @@ Builder translation preview is account-authenticated read-only inspection. Roma 
 Between open and save:
 
 - Base config/content edits happen in Bob's React state (in memory)
+- Bob's dirty in-memory working copy must not be replaced by host refreshes, repeated open-editor messages, panel switches, asset commands, preview refreshes, or save responses. A save response may only mark the submitted snapshot clean; edits made while that save was in flight remain in memory and remain dirty.
 - Preview updates via postMessage
 - Core account instance open stays on Roma/Bob/Tokyo product routes
 - Core account instance persistence stays on Roma/Bob/Tokyo product routes
