@@ -360,6 +360,22 @@
           "lineHeightCustom": 0.94,
           "lineHeightPreset": "custom"
         }
+      },
+      "roleScales": {
+        "localeSwitcher": {
+          "l": "20px",
+          "m": "18px",
+          "s": "15px",
+          "xl": "24px",
+          "xs": "13px"
+        },
+        "bigBang": {
+          "l": "104px",
+          "m": "84px",
+          "s": "64px",
+          "xl": "128px",
+          "xs": "48px"
+        }
       }
     },
     "bigBang": {

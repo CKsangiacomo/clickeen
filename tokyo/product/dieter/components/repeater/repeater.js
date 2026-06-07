@@ -688,7 +688,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       try {
         fn(scope);
       } catch (err) {
-        if (process.env && process.env.NODE_ENV === "development") {
+        if (window.__CK_DEV__ === true) {
           console.warn("[repeater] child hydrator error", err);
         }
       }

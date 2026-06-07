@@ -39,6 +39,20 @@ function routeKind(status: number): 'AUTH' | 'DENY' | 'VALIDATION' | 'UPSTREAM_U
   return 'UPSTREAM_UNAVAILABLE';
 }
 
+function widgetProductLabel(widgetType: string): string {
+  const labels: Record<string, string> = {
+    'big-bang': 'Big Bang',
+    cards: 'Cards',
+    countdown: 'Countdown',
+    cta: 'CTA',
+    faq: 'FAQ',
+    logoshowcase: 'Logo Showcase',
+    split: 'Split',
+  };
+  const normalized = String(widgetType || '').trim().toLowerCase();
+  return labels[normalized] ?? normalized.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export async function GET(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'viewer' });
   if (!current.ok) return current.response;
@@ -104,7 +118,7 @@ export async function GET(request: NextRequest) {
     return {
       widgetType: entry.widgetType,
       widgetCode: entry.widgetCode,
-      label: entry.widgetCode,
+      label: widgetProductLabel(entry.widgetType),
       description: '',
       canCreate: canMutate && withinTypeLimit,
       disabledReasonKey: canMutate

@@ -1164,14 +1164,11 @@ var Dieter = (() => {
   var WIDGET_OVERLAY_CODES = Object.freeze({
     "big-bang": "BBG",
     cards: "CRD",
-    cardgrid: "CGR",
     faq: "FAQ",
     countdown: "CTD",
     cta: "CTA",
-    hero: "HRO",
     logoshowcase: "LGS",
-    split: "SPL",
-    steps: "STP"
+    split: "SPL"
   });
   var WIDGET_TYPES_BY_CODE = new Map(
     Object.entries(WIDGET_OVERLAY_CODES).map(([widgetType, code]) => [code, widgetType])

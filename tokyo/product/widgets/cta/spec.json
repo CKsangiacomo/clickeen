@@ -343,6 +343,15 @@
           "lineHeightCustom": 1.2,
           "lineHeightPreset": "normal"
         }
+      },
+      "roleScales": {
+        "localeSwitcher": {
+          "l": "20px",
+          "m": "18px",
+          "s": "15px",
+          "xl": "24px",
+          "xs": "13px"
+        }
       }
     }
   },
@@ -369,6 +378,10 @@
           {
             "kind": "shared",
             "id": "header-layout"
+          },
+          {
+            "kind": "shared",
+            "id": "core-size"
           },
           {
             "kind": "shared",

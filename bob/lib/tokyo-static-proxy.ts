@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resolveTokyoBaseUrl } from './env/tokyo';
 
 type ProxyMethod = 'GET' | 'HEAD';
+type ProxyOptions = { noStore?: boolean };
 
 function copyUpstreamHeaders(res: Response): Headers {
   const headers = new Headers();
@@ -46,17 +47,21 @@ function buildTokyoUrl(pathname: string): string {
   return `${resolveTokyoBaseUrl().replace(/\/+$/, '')}${pathname}`;
 }
 
-async function proxyTokyoUrl(request: NextRequest, url: string, method: ProxyMethod) {
+async function proxyTokyoUrl(request: NextRequest, url: string, method: ProxyMethod, options: ProxyOptions = {}) {
   const cacheBust = request.nextUrl.searchParams.has('ts');
   const fetchInit: RequestInit = {
     method,
     headers: buildConditionalHeaders(request),
   };
-  if (cacheBust) fetchInit.cache = 'no-store';
+  if (cacheBust || options.noStore) fetchInit.cache = 'no-store';
 
   const res = await fetch(url, fetchInit);
   const headers = copyUpstreamHeaders(res);
-  if (cacheBust) headers.set('Cache-Control', 'no-store');
+  if (cacheBust || options.noStore) {
+    headers.set('Cache-Control', 'no-store');
+    headers.set('CDN-Cache-Control', 'no-store');
+    headers.set('Cloudflare-CDN-Cache-Control', 'no-store');
+  }
   if (method === 'HEAD') return new NextResponse(null, { status: res.status, headers });
   return new NextResponse(res.body, { status: res.status, headers });
 }
@@ -70,7 +75,7 @@ export async function proxyTokyoStaticPath(
   try {
     const joined = pathSegments.map(assertSafeSegment).join('/');
     const url = appendSearch(request, buildTokyoUrl(`/${prefix}/${joined}`));
-    return proxyTokyoUrl(request, url, method);
+    return proxyTokyoUrl(request, url, method, { noStore: prefix === 'widgets' });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: 'MISCONFIGURED', message }, { status: 500 });

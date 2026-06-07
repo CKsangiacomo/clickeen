@@ -118,7 +118,7 @@
       try {
         fn(scope);
       } catch (err) {
-        if (process.env && process.env.NODE_ENV === "development") {
+        if (window.__CK_DEV__ === true) {
           console.warn("[object-manager] child hydrator error", err);
         }
       }
@@ -255,7 +255,7 @@
             render();
           }
         } catch (err) {
-          if (process.env && process.env.NODE_ENV === "development") {
+          if (window.__CK_DEV__ === true) {
             console.warn("[object-manager] external sync failed", err);
           }
         }

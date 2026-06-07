@@ -69,6 +69,9 @@ export function buildTypographyPanel(args: {
     { key: 'label', label: 'Labels' },
     { key: 'button', label: 'CTA' },
     { key: 'localeSwitcher', label: 'Locale switcher' },
+    { key: 'bigBang', label: 'Big Bang statement' },
+    { key: 'cardTitle', label: 'Card title' },
+    { key: 'cardCopy', label: 'Card copy' },
   ].filter((entry) => hasRole(entry.key));
 
   if (roleEntries.length === 0) return [];

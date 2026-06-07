@@ -1,6 +1,7 @@
 import {
   CORE_SIZE_MODES,
   SHELL_EDITABLE_FIELD_PATHS,
+  SHELL_EDITOR_SHARED_NODE_IDS,
   SHELL_REQUIRED_DOM_CLASSES,
   SHELL_REQUIRED_DOM_ROLES,
   pathBelongsToShell,
@@ -63,6 +64,19 @@ function collectEditorFieldPaths(node: unknown): string[] {
   return paths;
 }
 
+function collectEditorSharedNodeIds(node: unknown): string[] {
+  if (!isRecord(node)) return [];
+  const ids: string[] = [];
+  if (node.kind === 'shared' && typeof node.id === 'string' && node.id.trim()) {
+    ids.push(node.id.trim());
+  }
+  for (const value of Object.values(node)) {
+    if (Array.isArray(value)) value.forEach((item) => ids.push(...collectEditorSharedNodeIds(item)));
+    else if (isRecord(value)) ids.push(...collectEditorSharedNodeIds(value));
+  }
+  return ids;
+}
+
 function editorPathRequiresSharedShellNode(path: string): boolean {
   const normalized = path.trim();
   return (
@@ -73,6 +87,66 @@ function editorPathRequiresSharedShellNode(path: string): boolean {
     normalized === 'cta' ||
     normalized.startsWith('cta.')
   );
+}
+
+const GLOBAL_TYPOGRAPHY_SCALE_ROLES = new Set(['title', 'body', 'section', 'question', 'answer', 'button']);
+
+function validateRequiredRecord(parent: Record<string, unknown>, path: string): WidgetShellValidationIssue[] {
+  const value = path.split('.').reduce<unknown>((node, key) => (isRecord(node) ? node[key] : undefined), parent);
+  return isRecord(value) ? [] : [issue(path, 'Shell widget source is missing required Shell default object.')];
+}
+
+function validateShellTypography(defaults: Record<string, unknown>): WidgetShellValidationIssue[] {
+  const typography = isRecord(defaults.typography) ? defaults.typography : null;
+  if (!typography) return [issue('typography', 'Shell widget source is missing typography defaults.')];
+  const roles = isRecord(typography.roles) ? typography.roles : null;
+  if (!roles) return [issue('typography.roles', 'Shell widget source is missing typography roles.')];
+
+  const issues: WidgetShellValidationIssue[] = [];
+  ['title', 'body', 'button', 'localeSwitcher'].forEach((role) => {
+    if (!isRecord(roles[role])) issues.push(issue(`typography.roles.${role}`, 'Shell typography role is required.'));
+  });
+
+  const roleScales = isRecord(typography.roleScales) ? typography.roleScales : {};
+  Object.keys(roles).forEach((role) => {
+    if (GLOBAL_TYPOGRAPHY_SCALE_ROLES.has(role)) return;
+    if (!isRecord(roleScales[role])) {
+      issues.push(issue(`typography.roleScales.${role}`, 'Non-global typography role must define roleScales.'));
+    }
+  });
+  return issues;
+}
+
+function validateShellDefaults(defaults: unknown): WidgetShellValidationIssue[] {
+  if (!isRecord(defaults) || !isShellWidgetDefaults(defaults)) return [];
+  const issues: WidgetShellValidationIssue[] = [];
+  ['header', 'cta', 'stage', 'pod', 'appearance', 'typography', 'localeSwitcher', 'behavior'].forEach((path) => {
+    issues.push(...validateRequiredRecord(defaults, path));
+  });
+  if (isRecord(defaults.uiLabels)) issues.push(...validateCoreLabels(defaults.uiLabels.core));
+  if (isRecord(defaults.coreSize)) issues.push(...validateCoreSize(defaults.coreSize));
+  issues.push(...validateShellTypography(defaults));
+  return issues;
+}
+
+function validateShellSharedEditorNodes(editor: unknown, defaults: unknown): WidgetShellValidationIssue[] {
+  if (!isRecord(defaults) || !isShellWidgetDefaults(defaults)) return [];
+  const ids = new Set(collectEditorSharedNodeIds(editor));
+  const issues: WidgetShellValidationIssue[] = [];
+  ['header-content', 'header-layout', 'stagepod-layout', 'header-appearance', 'stagepod-appearance'].forEach((id) => {
+    if (!ids.has(id) && !ids.has(`${id}-no-cta`)) {
+      issues.push(issue(`editor.shared.${id}`, 'Shell widget editor must use the shared Shell editor node.'));
+    }
+  });
+  if (isRecord(defaults.coreSize) && !ids.has('core-size')) {
+    issues.push(issue('editor.shared.core-size', 'Shell widget editor must use the shared Core size editor node.'));
+  }
+  ids.forEach((id) => {
+    if (!(SHELL_EDITOR_SHARED_NODE_IDS as readonly string[]).includes(id)) {
+      issues.push(issue(`editor.shared.${id}`, 'Unknown shared Shell editor node.'));
+    }
+  });
+  return issues;
 }
 
 export function validateCoreLabels(labels: unknown): WidgetShellValidationIssue[] {
@@ -131,6 +205,8 @@ export function validateWidgetShellSource(args: {
   if (!isShellWidgetDefaults(args.defaults)) return [];
 
   const issues: WidgetShellValidationIssue[] = [];
+  issues.push(...validateShellDefaults(args.defaults));
+  issues.push(...validateShellSharedEditorNodes(args.editor, args.defaults));
   collectObjectPaths(args.defaults).forEach((path) => {
     if (pathIsForbiddenShellAlias(path)) {
       issues.push(issue(path, 'Shell widget source must not use old Header/CTA/layout aliases.'));

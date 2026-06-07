@@ -414,6 +414,15 @@
           "lineHeightCustom": 1.2,
           "lineHeightPreset": "normal"
         }
+      },
+      "roleScales": {
+        "localeSwitcher": {
+          "l": "20px",
+          "m": "18px",
+          "s": "15px",
+          "xl": "24px",
+          "xs": "13px"
+        }
       }
     }
   },
@@ -446,9 +455,18 @@
                 "attrs": {
                   "size": "md",
                   "options": [
-                    { "label": "Image", "value": "image" },
-                    { "label": "Video", "value": "video" },
-                    { "label": "Instance", "value": "instance" }
+                    {
+                      "label": "Image",
+                      "value": "image"
+                    },
+                    {
+                      "label": "Video",
+                      "value": "video"
+                    },
+                    {
+                      "label": "Instance",
+                      "value": "instance"
+                    }
                   ]
                 },
                 "showIf": {
@@ -468,8 +486,15 @@
                 },
                 "showIf": {
                   "all": [
-                    { "path": "core.carousel.enabled", "op": "isFalse" },
-                    { "path": "core.items.0.kind", "op": "equals", "value": "image" }
+                    {
+                      "path": "core.carousel.enabled",
+                      "op": "isFalse"
+                    },
+                    {
+                      "path": "core.items.0.kind",
+                      "op": "equals",
+                      "value": "image"
+                    }
                   ]
                 }
               },
@@ -480,8 +505,15 @@
                 "label": "Image alt text",
                 "showIf": {
                   "all": [
-                    { "path": "core.carousel.enabled", "op": "isFalse" },
-                    { "path": "core.items.0.kind", "op": "equals", "value": "image" }
+                    {
+                      "path": "core.carousel.enabled",
+                      "op": "isFalse"
+                    },
+                    {
+                      "path": "core.items.0.kind",
+                      "op": "equals",
+                      "value": "image"
+                    }
                   ]
                 }
               },
@@ -497,8 +529,15 @@
                 },
                 "showIf": {
                   "all": [
-                    { "path": "core.carousel.enabled", "op": "isFalse" },
-                    { "path": "core.items.0.kind", "op": "equals", "value": "video" }
+                    {
+                      "path": "core.carousel.enabled",
+                      "op": "isFalse"
+                    },
+                    {
+                      "path": "core.items.0.kind",
+                      "op": "equals",
+                      "value": "video"
+                    }
                   ]
                 }
               },
@@ -509,8 +548,15 @@
                 "label": "Video alt text",
                 "showIf": {
                   "all": [
-                    { "path": "core.carousel.enabled", "op": "isFalse" },
-                    { "path": "core.items.0.kind", "op": "equals", "value": "video" }
+                    {
+                      "path": "core.carousel.enabled",
+                      "op": "isFalse"
+                    },
+                    {
+                      "path": "core.items.0.kind",
+                      "op": "equals",
+                      "value": "video"
+                    }
                   ]
                 }
               },
@@ -525,8 +571,15 @@
                 },
                 "showIf": {
                   "all": [
-                    { "path": "core.carousel.enabled", "op": "isFalse" },
-                    { "path": "core.items.0.kind", "op": "equals", "value": "instance" }
+                    {
+                      "path": "core.carousel.enabled",
+                      "op": "isFalse"
+                    },
+                    {
+                      "path": "core.items.0.kind",
+                      "op": "equals",
+                      "value": "instance"
+                    }
                   ]
                 }
               },
@@ -544,9 +597,18 @@
                     "attrs": {
                       "size": "md",
                       "options": [
-                        { "label": "Image", "value": "image" },
-                        { "label": "Video", "value": "video" },
-                        { "label": "Instance", "value": "instance" }
+                        {
+                          "label": "Image",
+                          "value": "image"
+                        },
+                        {
+                          "label": "Video",
+                          "value": "video"
+                        },
+                        {
+                          "label": "Instance",
+                          "value": "instance"
+                        }
                       ]
                     }
                   },
@@ -640,9 +702,15 @@
                         "repeat": "no-repeat"
                       }
                     },
-                    "image": { "alt": "" },
-                    "video": { "alt": "" },
-                    "instance": { "instanceId": "" }
+                    "image": {
+                      "alt": ""
+                    },
+                    "video": {
+                      "alt": ""
+                    },
+                    "instance": {
+                      "instanceId": ""
+                    }
                   }
                 },
                 "showIf": {
@@ -682,8 +750,14 @@
                 "attrs": {
                   "size": "md",
                   "options": [
-                    { "label": "Cover", "value": "cover" },
-                    { "label": "Contain", "value": "contain" }
+                    {
+                      "label": "Cover",
+                      "value": "cover"
+                    },
+                    {
+                      "label": "Contain",
+                      "value": "contain"
+                    }
                   ]
                 }
               },
@@ -695,11 +769,26 @@
                 "attrs": {
                   "size": "md",
                   "options": [
-                    { "label": "Center", "value": "center" },
-                    { "label": "Top", "value": "top" },
-                    { "label": "Bottom", "value": "bottom" },
-                    { "label": "Left", "value": "left" },
-                    { "label": "Right", "value": "right" }
+                    {
+                      "label": "Center",
+                      "value": "center"
+                    },
+                    {
+                      "label": "Top",
+                      "value": "top"
+                    },
+                    {
+                      "label": "Bottom",
+                      "value": "bottom"
+                    },
+                    {
+                      "label": "Left",
+                      "value": "left"
+                    },
+                    {
+                      "label": "Right",
+                      "value": "right"
+                    }
                   ]
                 }
               }
@@ -720,8 +809,14 @@
                 "attrs": {
                   "size": "md",
                   "options": [
-                    { "label": "Slide", "value": "slide" },
-                    { "label": "Fade", "value": "fade" }
+                    {
+                      "label": "Slide",
+                      "value": "slide"
+                    },
+                    {
+                      "label": "Fade",
+                      "value": "fade"
+                    }
                   ]
                 }
               },

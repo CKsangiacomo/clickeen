@@ -22,7 +22,6 @@ type CachedCompiledWidget = {
 };
 
 const compiledWidgetCache = new Map<string, CachedCompiledWidget>();
-const COMPILED_WIDGET_HOT_CACHE_TTL_MS = 10 * 60_000;
 
 function getFreshnessValidator(res: Response) {
   return {
@@ -174,18 +173,6 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     const cssUrl = buildWidgetSourceUrl({ tokyoRoot, widgetname, fileName: 'widget.css' });
     const jsUrl = buildWidgetSourceUrl({ tokyoRoot, widgetname, fileName: 'widget.client.js' });
     const cacheBust = req.nextUrl.searchParams.has('ts') || req.nextUrl.searchParams.has('_t');
-
-    if (!cacheBust) {
-      const cached = compiledWidgetCache.get(widgetname);
-      if (cached && Date.now() - cached.cachedAt < COMPILED_WIDGET_HOT_CACHE_TTL_MS) {
-        return NextResponse.json(cached.payload, {
-          headers: {
-            ...corsHeaders,
-            'X-Bob-Compiled-Cache': 'hot',
-          },
-        });
-      }
-    }
 
     const fetchInit: RequestInit = {};
     if (cacheBust) fetchInit.cache = 'no-store';

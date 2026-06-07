@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "gitSha": "6523b07bdf7fc80ff2dd378c0a1c1e7d6adeb9f2",
+  "gitSha": "9bb542249350a6614062cce374b9c303c7161a85",
   "components": [
     "bulk-edit",
     "button",
@@ -12,6 +12,7 @@
     "dropdown-shadow",
     "dropdown-upload",
     "icon",
+    "instance-picker",
     "menuactions",
     "object-manager",
     "popaddlink",

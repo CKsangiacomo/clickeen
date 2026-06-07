@@ -360,6 +360,53 @@
           "trackingPreset": "normal",
           "lineHeightCustom": 1.2,
           "lineHeightPreset": "normal"
+        },
+        "cardTitle": {
+          "color": "var(--color-system-black)",
+          "family": "Inter",
+          "weight": "700",
+          "fontStyle": "normal",
+          "sizeCustom": 24,
+          "sizePreset": "m",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.15,
+          "lineHeightPreset": "tight"
+        },
+        "cardCopy": {
+          "color": "color-mix(in oklab, var(--color-system-black), transparent 28%)",
+          "family": "Inter",
+          "weight": "400",
+          "fontStyle": "normal",
+          "sizeCustom": 17,
+          "sizePreset": "m",
+          "trackingCustom": 0,
+          "trackingPreset": "normal",
+          "lineHeightCustom": 1.45,
+          "lineHeightPreset": "normal"
+        }
+      },
+      "roleScales": {
+        "localeSwitcher": {
+          "l": "20px",
+          "m": "18px",
+          "s": "15px",
+          "xl": "24px",
+          "xs": "13px"
+        },
+        "cardTitle": {
+          "l": "28px",
+          "m": "24px",
+          "s": "20px",
+          "xl": "32px",
+          "xs": "18px"
+        },
+        "cardCopy": {
+          "l": "19px",
+          "m": "17px",
+          "s": "15px",
+          "xl": "22px",
+          "xs": "13px"
         }
       }
     },
