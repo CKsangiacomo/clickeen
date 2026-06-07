@@ -517,6 +517,9 @@ MUST
 - Use the shared `typography` panel.
 - Define `itemKey` and matching i18n strings when the widget has repeatable
   items.
+- Put related custom Core field nodes in a `groupId`. Use
+  `attrs["group-label"]: ""` when the group exists only to match shared
+  ToolDrawer rhythm and should not show a nested group label.
 
 MUST NOT
 
@@ -525,8 +528,12 @@ MUST NOT
   `<tooldrawer-field>`, `@slot:`, or escaped editor HTML in `spec.json`.
 - Duplicate entire panels per variant.
 - Use custom margins/spacers/gaps as editor layout.
+- Leave custom Core fields ungrouped inside a cluster when sibling shared
+  controls use grouped rhythm.
 
-Clusters own ToolDrawer spacing. Groups are optional labels, not spacing hacks.
+Clusters own ToolDrawer spacing between sections. Groups own spacing between
+related controls inside a section. Groups may be visually unlabeled via
+`group-label=""`; that is the correct rhythm mechanism, not a spacing hack.
 
 ### 7) Dieter Field Usage
 
@@ -539,10 +546,11 @@ Field node shape:
 ```json
 {
   "kind": "field",
+  "groupId": "example",
   "type": "toggle",
   "path": "core.example.enabled",
   "label": "Enable example",
-  "attrs": {},
+  "attrs": { "group-label": "" },
   "showIf": { "path": "core.mode", "op": "equals", "value": "advanced" }
 }
 ```
@@ -568,6 +576,9 @@ MUST
 - Use only field types supported by current Bob/Dieter code.
 - Provide `path` for every state-bound field.
 - Provide `label` for every visible field.
+- Provide `groupId` for custom Core fields in clusters, with
+  `attrs["group-label"]` empty or meaningful according to whether the group
+  should show a nested label.
 - Provide `options` for enum controls and ensure the default value is one of
   those options.
 - Provide explicit `fill-modes` for every `dropdown-fill`.

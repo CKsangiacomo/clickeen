@@ -292,6 +292,12 @@ Widget Core controls are normal field nodes, but every field path must exist in
 `defaults.core` and have one Binding Map row. Existing non-`core.*` widget body
 paths are legacy migration targets, not the model for new or refactored widgets.
 
+Widget Core field nodes must participate in Bob's ToolDrawer grouping layer.
+Use `groupId` for related controls inside each Core cluster and set
+`attrs["group-label"]` to `""` when the group is only for rhythm and should not
+show a nested label. Shared Shell controls already do this. Ungrouped Core
+fields render with different vertical rhythm and are non-compliant.
+
 The normal panel pattern is:
 
 - `content`: shared Header content node, then Core content controls.
@@ -302,7 +308,7 @@ The normal panel pattern is:
 - `settings`: shared behavior plus Core runtime behavior controls.
 
 Clusters and groups define ToolDrawer spacing. Widgets must not invent editor
-spacing through margins, spacers, or fake groups.
+spacing through margins, spacers, ungrouped fields, or fake groups.
 
 ### Panel Ownership
 

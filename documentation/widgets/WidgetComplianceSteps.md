@@ -313,12 +313,17 @@ OUTPUT
   - Settings contains shared behavior plus Core runtime behavior.
 - Panels are composed of one or more explicit cluster objects and field/shared nodes.
   - Use `label`/`labelKey` on clusters for meaningful collapsible section headers.
+- Custom Core fields inside clusters use `groupId`; use `attrs["group-label"]:
+  ""` for unlabeled rhythm groups and a meaningful value only when a visible
+  nested group label is needed.
 - Controls only for bound paths; gate variant-specific controls via structured `showIf`.
 - Settings controls for `behavior.showBacklink` and
   `behavior.socialShare.enabled` are shared Shell controls and must be backed by
   defaults, `limits.json`, preview behavior, and public-package behavior.
 - No widget-authored `<bob-panel>`, `<tooldrawer-cluster>`, `<tooldrawer-field>`, `@slot:`, or escaped editor HTML in `spec.json`.
-- Vertical rhythm is **clusters + groups only** (no manual spacing; no cluster `gap`/`space-after`).
+- Vertical rhythm is **clusters + groups only**. No manual spacing, cluster
+  `gap`/`space-after`, or ungrouped Core fields that visually drift from shared
+  Shell controls.
 - Themes:
   - Appearance includes a dropdown-actions control bound to `appearance.theme`.
   - Any manual edits to theme-controlled fields must reset `appearance.theme` to `custom` (editor behavior; runtime reads only final state).
@@ -426,6 +431,9 @@ Manual smoke (fast)
   the named migration boundary. It must not blank the preview with an uncaught
   optional-role or missing-parent error.
 - Bob preview: each panel control updates the preview deterministically.
+- ToolDrawer rhythm smoke: custom Core clusters visually match shared Shell
+  clusters such as Header and Stage/Pod. Related Core fields are wrapped in one
+  Bob group with an empty or meaningful group label.
 - Stage default smoke: new widget instance opens with Stage set to `Full`
   (`stage.canvas.mode: "viewport"`).
 - Pod width smoke: `pod.widthMode` matches the widget's declared inner-wrapper
