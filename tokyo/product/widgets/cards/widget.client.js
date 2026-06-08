@@ -103,7 +103,11 @@
     const between = isRecord(cards.betweenCards) ? cards.betweenCards : {};
     const line = isRecord(between.line) ? between.line : {};
     const icon = isRecord(between.icon) ? between.icon : {};
+    const appearance = isRecord(cards.appearance) ? cards.appearance : {};
     return {
+      appearance: {
+        cardwrapper: isRecord(appearance.cardwrapper) ? appearance.cardwrapper : null,
+      },
       treatment: treatment,
       columns: Math.min(Math.max(columns, 2), 4),
       gap:
@@ -196,7 +200,7 @@
 
     if (!window.CKSurface?.applyCardWrapper)
       throw new Error('[Cards] Missing CKSurface.applyCardWrapper');
-    window.CKSurface.applyCardWrapper(cards.appearance && cards.appearance.cardwrapper, card);
+    window.CKSurface.applyCardWrapper(cards.appearance.cardwrapper, card);
     card.style.setProperty('--ck-cards-card-padding', cards.cardPadding + 'px');
     applyCustomCardStyles(card, item, cards.customCardStyles);
 

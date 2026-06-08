@@ -241,6 +241,20 @@ Core owns:
 - Editable/translatable paths for widget-specific customer-visible text.
 - Limits mappings for widget-specific arrays/operations/counts.
 
+Core-owned appearance must be rendered from the widget namespace that declares
+it. For example, Cards must render card surfaces from
+`cards.appearance.cardwrapper.*`, and Split must render its visual frame from
+`split.appearance.cardwrapper.*`. A runtime that reads
+`state.appearance.cardwrapper` is wrong: root `appearance.*` is reserved for
+Shell appearance families such as `appearance.headerCta.*`,
+`appearance.localeSwitcher*`, and `appearance.podBorder`.
+
+Core must render with `coreSize.mode: "auto"`. If the Core uses absolutely
+positioned media, canvas, or embedded children, the Core CSS must provide an
+intrinsic auto size such as an aspect ratio/min-height keyed by the shared
+CoreSize mode. Do not solve a zero-height Core by giving that widget private
+Shell `coreSize` defaults.
+
 The user-facing UI must not show the word "Core" unless the PRD explicitly asks
 for it. Use `uiLabels.core.*` so Bob can display "FAQs", "Visual", "Cards",
 "Logos", or another widget-appropriate label.

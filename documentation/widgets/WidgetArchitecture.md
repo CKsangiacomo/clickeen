@@ -175,6 +175,13 @@ shared Shell has no card element. Widgets that render repeated cards/items may
 use the shared surface helper, but the card-wrapper values are part of that
 widget's Core defaults.
 
+Runtime must preserve that ownership. A shared surface helper may be reused,
+but the value passed to it must come from the widget namespace that declared the
+surface, such as `cards.appearance.cardwrapper.*`,
+`split.appearance.cardwrapper.*`, `faq.appearance.cardwrapper.*`, or
+`countdown.appearance.cardwrapper.*`. Root `appearance.cardwrapper.*` is not a
+valid Shell path.
+
 ### Shared Stage And Settings Runtime
 
 Stage and Pod are shared Shell. `stage.canvas.mode` controls the host canvas.
@@ -263,6 +270,11 @@ Pod, Core Size, branding, social share, locale switcher, or Shell typography
 roles. Bob compiles widgets against composed factory defaults
 (`Widget Shell + Widget Core`) for software/control rendering only. Product
 new-instance creation uses account defaults.
+
+Core must also be visible under the shared default `coreSize.mode: "auto"`.
+If a Core renders media, canvas, or embedded instances through absolutely
+positioned children, the widget Core CSS must provide intrinsic auto sizing.
+The fix is Core CSS, not widget-specific Shell `coreSize` defaults.
 
 ### Naming Taxonomy
 

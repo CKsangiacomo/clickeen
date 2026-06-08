@@ -19,14 +19,19 @@
     coreEl.style.removeProperty('height');
     coreEl.style.removeProperty('min-height');
 
-    if (mode === 'auto') return;
+    if (mode === 'auto') {
+      coreEl.dataset.coreSizeMode = 'auto';
+      return;
+    }
 
     if (mode === 'fixed') {
+      coreEl.dataset.coreSizeMode = 'fixed';
       coreEl.style.height = clamp(numberOr(size.fixedHeight, 0), 0, 2000) + 'px';
       return;
     }
 
     if (mode === 'responsive') {
+      coreEl.dataset.coreSizeMode = 'responsive';
       var minHeight = clamp(numberOr(size.minHeight, 0), 0, 2000);
       var preferredVw = clamp(numberOr(size.preferredVw, 40), 0, 200);
       var maxHeight = clamp(numberOr(size.maxHeight, Math.max(minHeight, 720)), minHeight, 2400);

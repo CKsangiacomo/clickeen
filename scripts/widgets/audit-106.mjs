@@ -420,8 +420,12 @@ for (const widget of widgets) {
   const widgetDir = path.join(widgetsRoot, widget.widgetType);
   const specPath = path.join(widgetDir, 'spec.json');
   const editablePath = path.join(widgetDir, 'editable-fields.json');
+  const clientPath = path.join(widgetDir, 'widget.client.js');
+  const cssPath = path.join(widgetDir, 'widget.css');
   const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
   const editable = JSON.parse(fs.readFileSync(editablePath, 'utf8'));
+  const clientSource = fs.readFileSync(clientPath, 'utf8');
+  const cssSource = fs.readFileSync(cssPath, 'utf8');
   specs.set(widget.widgetType, spec);
 
   const loc = fs.readFileSync(specPath, 'utf8').split(/\r?\n/).length;
@@ -442,6 +446,21 @@ for (const widget of widgets) {
   const staleSourceAliases = objectPaths.filter((pathValue) => staleAliasPatterns.some((pattern) => pattern.test(pathValue)));
   if (staleSourceAliases.length) {
     pushIssue(sourceIssues, widget.widgetType, 'source aliases', `old aliases remain: ${staleSourceAliases.slice(0, 20).join(', ')}`);
+  }
+  if (/\bstate\.core\b/.test(clientSource)) {
+    pushIssue(sourceIssues, widget.widgetType, 'widget.client.js', 'runtime reads transitional state.core instead of widget-specific Core namespace');
+  }
+  if (/\bstate\.appearance(?:\s*&&\s*state\.appearance)?\.cardwrapper\b/.test(clientSource)) {
+    pushIssue(sourceIssues, widget.widgetType, 'widget.client.js', 'runtime reads root state.appearance.cardwrapper; cardwrapper is widget Core appearance');
+  }
+  if (widget.widgetType === 'split') {
+    if (!/\.ck-split__core\[data-core-size-mode=['"]auto['"]\][\s\S]*aspect-ratio/.test(cssSource)) {
+      pushIssue(sourceIssues, widget.widgetType, 'widget.css', 'Split Core must define intrinsic auto sizing for absolutely positioned media');
+    }
+    const coreSizeSource = fs.readFileSync(path.join(widgetsRoot, 'shared', 'coreSize.js'), 'utf8');
+    if (!/dataset\.coreSizeMode/.test(coreSizeSource)) {
+      pushIssue(sourceIssues, widget.widgetType, '../shared/coreSize.js', 'shared CoreSize must expose active sizing mode for Core auto rendering');
+    }
   }
 
   const hasExpectedRoot = defaultRoots.includes(widget.expectedRoot);

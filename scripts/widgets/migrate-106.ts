@@ -524,6 +524,41 @@ function contentFromFullConfig(args: {
   };
 }
 
+function repairCurrentClickeenSampleText(args: {
+  widgetType: string;
+  instanceId: string;
+  config: JsonRecord;
+  shellDefaults: JsonRecord;
+}): void {
+  if (accountId !== 'CLICKEEN') return;
+  if (args.widgetType !== 'split' || args.instanceId !== 'KUGYTX2ZMQ') return;
+
+  const shellTitle = getPath(args.shellDefaults, 'header.title');
+  const shellSubtitle = getPath(args.shellDefaults, 'header.subtitleHtml');
+  const shellCtaLabel = getPath(args.shellDefaults, 'headerCta.label');
+  if (typeof getPath(args.config, 'header.title') === 'string' && !String(getPath(args.config, 'header.title')).trim()) {
+    setPath(args.config, 'header.title', typeof shellTitle === 'string' ? shellTitle : 'Build your widget in minutes');
+  }
+  if (
+    typeof getPath(args.config, 'header.subtitleHtml') === 'string' &&
+    !String(getPath(args.config, 'header.subtitleHtml')).trim()
+  ) {
+    setPath(
+      args.config,
+      'header.subtitleHtml',
+      typeof shellSubtitle === 'string'
+        ? shellSubtitle
+        : 'Start with a polished Clickeen widget, customize it in Builder, and publish it anywhere your site needs it.',
+    );
+  }
+  if (
+    typeof getPath(args.config, 'headerCta.label') === 'string' &&
+    !String(getPath(args.config, 'headerCta.label')).trim()
+  ) {
+    setPath(args.config, 'headerCta.label', typeof shellCtaLabel === 'string' ? shellCtaLabel : 'Get started');
+  }
+}
+
 async function buildPackage(args: {
   widgetType: string;
   instanceId: string;
@@ -605,6 +640,12 @@ async function migrateInstance(widget: WidgetEntry, shellDefaults: JsonRecord, n
   setPath(fullConfig, 'stage.canvas.mode', 'viewport');
   setPath(fullConfig, 'pod.widthMode', 'full');
   migrateHeaderCtaAliases(fullConfig);
+  repairCurrentClickeenSampleText({
+    widgetType: widget.widgetType,
+    instanceId: widget.instanceId,
+    config: fullConfig,
+    shellDefaults,
+  });
 
   const nextContent = contentFromFullConfig({
     widgetType: widget.widgetType,

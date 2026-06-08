@@ -10,6 +10,11 @@
   background: color-mix(in oklab, var(--color-system-gray-5), transparent 30%);
 }
 
+.ck-split__core[data-core-size-mode='auto'] {
+  min-height: 320px;
+  aspect-ratio: 16 / 9;
+}
+
 .ck-split__stage {
   position: relative;
   width: 100%;

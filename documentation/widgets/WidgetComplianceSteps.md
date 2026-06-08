@@ -345,10 +345,16 @@ OUTPUT
 - Variants implemented via `data-*` selectors and CSS vars (no DOM reparenting).
 - Dieter tokens only (no ad-hoc values).
 - One breakpoint: `900px` (desktop vs mobile).
+- Core bodies that rely on absolutely positioned children must still have an
+  intrinsic size when shared `coreSize.mode` is `auto`. Use the shared
+  CoreSize mode marker plus Core CSS aspect-ratio/min-height. Do not create
+  widget-private Shell sizing defaults to make a blank Core visible.
 
 GATE
 
 - Toggling variant/layout fields changes the visual output.
+- Fresh defaults render visible Core content in Builder preview with
+  `coreSize.mode: "auto"`.
 
 ---
 
@@ -358,6 +364,10 @@ OUTPUT
 
 - Deterministic `applyState(state)`:
   - Strict state assertions (fail-fast; fix the source).
+  - Shared Shell primitives read Shell paths only.
+  - Core appearance reads the widget namespace that declared it, such as
+    `cards.appearance.cardwrapper.*` or `split.appearance.cardwrapper.*`.
+    Runtime must not read root `state.appearance.cardwrapper`.
   - Apply Stage/Pod and Typography first, then shared primitives, then widget-specific bindings.
   - No network fetches, timers, randomness, or “healing” logic inside `applyState`.
 - postMessage support:
