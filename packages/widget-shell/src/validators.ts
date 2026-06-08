@@ -30,12 +30,13 @@ function issue(path: string, message: string): WidgetShellValidationIssue {
 
 function isShellWidgetDefaults(defaults: unknown): boolean {
   if (!isRecord(defaults)) return false;
-  const uiLabels = isRecord(defaults.uiLabels) ? defaults.uiLabels : null;
   return Boolean(
     isRecord(defaults.header) ||
     isRecord(defaults.headerCta) ||
     isRecord(defaults.coreSize) ||
-    (uiLabels && isRecord(uiLabels.core)),
+    isRecord(defaults.stage) ||
+    isRecord(defaults.pod) ||
+    isRecord(defaults.localeSwitcher),
   );
 }
 
@@ -95,9 +96,6 @@ function editorPathRequiresSharedShellNode(path: string): boolean {
 const GLOBAL_TYPOGRAPHY_SCALE_ROLES = new Set([
   'title',
   'body',
-  'section',
-  'question',
-  'answer',
   'button',
   'localeSwitcher',
 ]);

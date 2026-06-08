@@ -1,9 +1,6 @@
 import { createCompactInstanceId, isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import {
-  resolveWidgetDefaults,
-} from '../widget-definitions';
-import {
   type SubmittedInstancePublicPackage,
   verifyInstancePublicPackageReady,
   writeInstancePublicPackage,
@@ -135,11 +132,13 @@ function normalizeDisplayName(value: unknown): string | null {
   return trimmed.length > 0 && trimmed.length <= 120 ? trimmed : null;
 }
 
-export async function createAccountInstanceFromDefaults(args: {
+export async function createAccountInstanceFromSubmittedSource(args: {
   env: Env;
   accountId: string;
   widgetType: string;
   displayName?: unknown;
+  config: Record<string, unknown>;
+  meta: Record<string, unknown>;
 }): Promise<{ pointer: AccountInstanceSourcePointer; config: Record<string, unknown> }> {
   const accountId = normalizeStorageId(args.accountId);
   const widgetType = normalizeStorageId(args.widgetType);
@@ -147,21 +146,16 @@ export async function createAccountInstanceFromDefaults(args: {
     throw new Error('coreui.errors.instance.invalidPayload');
   }
 
-  const config = resolveWidgetDefaults(widgetType);
-  if (!config) {
-    throw new Error('tokyo.errors.widget.unsupported');
-  }
-
   const saved = await writeAccountInstanceSource({
     env: args.env,
     accountId,
     instanceId: await mintAccountInstanceId({ env: args.env, accountId, widgetType }),
     widgetType,
-    config,
+    config: args.config,
     displayName: normalizeDisplayName(args.displayName),
-    meta: null,
+    meta: args.meta,
   });
-  return { pointer: saved.pointer, config };
+  return { pointer: saved.pointer, config: args.config };
 }
 
 export async function saveAccountInstanceTransition(args: {

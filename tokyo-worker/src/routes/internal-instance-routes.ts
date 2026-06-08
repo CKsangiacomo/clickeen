@@ -1,7 +1,7 @@
 import { isRecord } from '@clickeen/ck-contracts';
-import { normalizeStorageId } from '../asset-utils';
+import { normalizeLocale, normalizeStorageId } from '../asset-utils';
 import {
-  createAccountInstanceFromDefaults,
+  createAccountInstanceFromSubmittedSource,
   duplicateAccountInstanceTransition,
   publishAccountInstanceTransition,
   saveAccountInstanceTransition,
@@ -31,6 +31,15 @@ import {
   readInternalProductJsonBody,
   transitionErrorResponse,
 } from './internal-product-route-utils';
+
+function normalizeSubmittedMeta(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? { ...value } : {};
+}
+
+function normalizeSubmittedTargetLocales(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  return Array.from(new Set(value.map((entry) => normalizeLocale(entry)).filter((entry): entry is string => Boolean(entry))));
+}
 
 export async function tryHandleInternalInstanceRoutes(
   args: TokyoRouteArgs,
@@ -86,13 +95,30 @@ export async function tryHandleInternalInstanceRoutes(
     if (!isRecord(rawBody)) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const widgetType = typeof rawBody.widgetType === 'string' ? rawBody.widgetType.trim() : '';
     if (!widgetType) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+    const source = isRecord(rawBody.source) ? rawBody.source : null;
+    const config = isRecord(source?.config) ? source.config : null;
+    const submittedMeta = normalizeSubmittedMeta(rawBody.meta);
+    const baseLocale = normalizeLocale(rawBody.baseLocale ?? submittedMeta.baseLocale);
+    const targetLocales = normalizeSubmittedTargetLocales(
+      Object.prototype.hasOwnProperty.call(rawBody, 'targetLocales')
+        ? rawBody.targetLocales
+        : submittedMeta.targetLocales,
+    );
+    if (!config || !baseLocale || !targetLocales) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+    const meta = {
+      ...submittedMeta,
+      baseLocale,
+      targetLocales,
+    };
 
     try {
-      const created = await createAccountInstanceFromDefaults({
+      const created = await createAccountInstanceFromSubmittedSource({
         env,
         accountId,
         widgetType,
         displayName: rawBody.displayName,
+        config,
+        meta,
       });
       return respond(
         json(

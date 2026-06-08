@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isRecord } from '@clickeen/ck-contracts';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   createAccountInstanceInTokyo,
   listAccountInstancesInTokyo,
   listTokyoWidgetDefinitions,
 } from '@roma/lib/account-instance-direct';
+import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
+import { loadAccountWidgetDefaultsInTokyo } from '@roma/lib/account-widget-defaults-direct';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -20,6 +23,41 @@ function normalizeDisplayName(value: unknown): string | null | undefined {
   const trimmed = value.trim();
   if (!trimmed) return null;
   return trimmed.length <= 120 ? trimmed : undefined;
+}
+
+function cloneValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function mergeDefaultsInto(
+  target: Record<string, unknown>,
+  source: Record<string, unknown>,
+  path: string,
+  conflicts: string[],
+): void {
+  for (const [key, value] of Object.entries(source)) {
+    const nextPath = path ? `${path}.${key}` : key;
+    const existing = target[key];
+    if (typeof existing === 'undefined') {
+      target[key] = cloneValue(value);
+      continue;
+    }
+    if (isRecord(existing) && isRecord(value)) {
+      mergeDefaultsInto(existing, value, nextPath, conflicts);
+      continue;
+    }
+    conflicts.push(nextPath);
+  }
+}
+
+function materializeInstanceConfigFromAccountDefaults(args: {
+  shell: Record<string, unknown>;
+  core: Record<string, unknown>;
+}): { ok: true; config: Record<string, unknown> } | { ok: false; conflicts: string[] } {
+  const config = cloneValue(args.shell);
+  const conflicts: string[] = [];
+  mergeDefaultsInto(config, args.core, '', conflicts);
+  return conflicts.length > 0 ? { ok: false, conflicts } : { ok: true, config };
 }
 
 export async function POST(request: NextRequest) {
@@ -112,11 +150,93 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
+  const accountWidgetDefaults = await loadAccountWidgetDefaultsInTokyo({
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!accountWidgetDefaults.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: accountWidgetDefaults.error }, { status: accountWidgetDefaults.status }),
+      current.value.setCookies,
+    );
+  }
+  const widgetDefaults = accountWidgetDefaults.value.widgetDefaults.widgets[widgetType];
+  if (!widgetDefaults) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.widgetDefaults.widgetMissing',
+            detail: `missing account defaults for widgetType "${widgetType}"`,
+          },
+        },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const materialized = materializeInstanceConfigFromAccountDefaults({
+    shell: accountWidgetDefaults.value.widgetDefaults.shell,
+    core: widgetDefaults.core,
+  });
+  if (!materialized.ok) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.widgetDefaults.shellCoreConflict',
+            paths: materialized.conflicts,
+          },
+        },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const accountLocales = await loadCurrentAccountLocalesState({
+    accessToken: current.value.accessToken,
+    accountId: current.value.authzPayload.accountId,
+    requestId: current.value.requestId,
+  });
+  if (!accountLocales.ok) {
+    return withSession(
+      request,
+      NextResponse.json(
+        accountLocales.payload ?? {
+          error: {
+            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+            reasonKey:
+              accountLocales.status === 401
+                ? 'coreui.errors.auth.required'
+                : 'coreui.errors.auth.contextUnavailable',
+            detail: accountLocales.detail,
+          },
+        },
+        { status: accountLocales.status },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const baseLocale = accountLocales.localePolicy.baseLocale;
+  const targetLocales = accountLocales.selectedTargetLocales;
   const created = await createAccountInstanceInTokyo({
     accountId,
     accountCapsule: current.value.authzToken,
     widgetType,
     displayName,
+    config: materialized.config,
+    baseLocale,
+    targetLocales,
+    meta: {
+      baseLocale,
+      targetLocales,
+    },
     requestId: current.value.requestId,
   });
   if (!created.ok) {

@@ -11,6 +11,19 @@ Normal widgets are not standalone inventions. They are:
 Widget Shell + Widget Core
 ```
 
+Default authority is split:
+
+```text
+packages/widget-shell -> global Shell factory defaults
+tokyo/product/widgets/{widgetType}/spec.json -> widget Core factory defaults
+accounts/{accountPublicId}/widget-defaults.json -> account defaults used for new instances
+```
+
+Factory defaults seed account defaults. New instances are created from account
+defaults. Bob edits one resolved instance state in browser memory and saves
+that state through Roma/Tokyo. Bob does not fetch account defaults and does not
+merge factory defaults as live account fallback.
+
 ## Non-Negotiable: Builder Panels Are Mixed
 
 The Builder panels are mixed, not "shell panel then core panel":
@@ -59,6 +72,28 @@ product policy.
 Account-owned runtime data lives under
 `accounts/{accountPublicId}/instances/{instanceId}/`, never under
 `tokyo/product/widgets/{widgetType}/`.
+
+Account-owned widget defaults live under:
+
+```text
+accounts/{accountPublicId}/widget-defaults.json
+```
+
+That document stores one shared account Shell defaults object plus per-widget
+Core defaults. New instance creation materializes:
+
+```text
+account.shell + account.widgets[widgetType].core = full instance source
+```
+
+Changing account defaults does not rewrite existing saved instances. Duplicates
+preserve the source instance state.
+
+Roma Widget Defaults edits account defaults through the compiled Builder
+control contract. Every account Shell default path and every account widget Core
+default path must be covered by a real Builder control path. If a path is not
+covered, Roma must stop with a contract error listing the missing paths. It must
+not infer a generic field, hide the path, or save through the broken contract.
 
 Roma lists live account instances from the instance registry, not from raw R2
 prefixes. R2 folders are stored bytes only. Orphan R2 cleanup is data
@@ -149,12 +184,11 @@ Shell-owned state families:
 - `appearance.headerCta.*`
 - `appearance.localeSwitcher*`
 - `appearance.podBorder`
-- `appearance.cardwrapper.*`
-- `typography.*`
+- Shell typography leaves for shared roles: `title`, `body`, `button`, and
+  `localeSwitcher`
 - `localeSwitcher.*`
 - `behavior.showBacklink`
 - `behavior.socialShare.*`
-- `uiLabels.core.*`
 - `coreSize.*`
 
 Shell-owned UX/runtime:
@@ -169,8 +203,15 @@ Shell-owned UX/runtime:
 - Social-share package/runtime behavior.
 - Runtime registration, update binding, and message plumbing.
 - Shared script/style load order.
-- Shared surface/card-wrapper primitive.
+- Shared surface helper when a Core uses the primitive.
 - Core sizing.
+
+Not Shell-owned:
+
+- `uiLabels.core.*`: widget Core extension labels for Bob's user-facing Core
+  noun.
+- `appearance.cardwrapper.*`: widget Core frame/surface defaults for widgets
+  that render cards/items. Shell has no card element.
 
 ### Core-Owned
 
@@ -204,6 +245,12 @@ panels. For example, Content contains the shared Header content node and then
 the widget-owned Core content controls; Layout contains shared Header/CoreSize/
 StagePod controls and then Core layout controls. The panel is organized by user
 job, not by ownership.
+
+`spec.json.defaults` must not author Shell-owned defaults. Widget specs declare
+shared Shell editor nodes, but Shell default values come from
+`packages/widget-shell`. Widget specs author only widget Core defaults and Core
+extension labels/roles. Bob composes Shell factory defaults plus widget Core
+factory defaults so the Builder control contract can render.
 
 ### Naming Taxonomy
 
@@ -300,7 +347,7 @@ Shell paths kept:
 - stage.*
 - pod.*
 - coreSize.*
-- typography.*
+- Shell typography roles: title, body, button, localeSwitcher
 - localeSwitcher.*
 - shared appearance.*
 - shared behavior.*
@@ -360,7 +407,9 @@ If this cannot be completed, stop.
 
 MUST
 
-- Keep Shell defaults intact for Shell widgets.
+- Keep the Shell contract intact for Shell widgets.
+- Do not author Shell defaults in widget `spec.json.defaults`; consume them from
+  `packages/widget-shell`.
 - Define a widget-specific body namespace for every normal Shell/Core widget.
 - Put widget-specific state in Core-owned paths under that namespace.
 - Define arrays as `path[]` and items as `path[i]`.
@@ -369,18 +418,11 @@ MUST
   array.
 - Provide stable `data-role` for every runtime-mutated element.
 - Define `uiLabels.core.singular`, `uiLabels.core.plural`, and
-  `uiLabels.core.sizeCluster`.
-- Define `coreSize.mode`, `coreSize.fixedHeight`, `coreSize.minHeight`,
-  `coreSize.preferredVw`, and `coreSize.maxHeight` when the Shell contract is
-  used.
-- Define `stage.canvas.mode` with default `"viewport"` for normal widgets. This
-  is the stored value for the Builder `Full` stage option.
-- Define `pod.widthMode` explicitly. Use default `"full"` for section-style
-  widgets unless the PRD/manifest owns a `wrap` or `fixed` inner-wrapper
-  decision.
-- Define `behavior.showBacklink` and `behavior.socialShare.enabled` as booleans.
-- Define `behavior.socialShare.channels.*` booleans for every supported shared
-  share channel.
+  `uiLabels.core.sizeCluster` as widget Core extension labels.
+- Verify the composed defaults include Shell values for `coreSize.*`,
+  `stage.canvas.mode`, `pod.widthMode`, `behavior.showBacklink`, and
+  `behavior.socialShare.*`. Those values come from the Shell factory defaults,
+  not the widget spec.
 
 MUST NOT
 
@@ -395,15 +437,16 @@ MUST NOT
 
 ### 2A) Saved Instance Compatibility
 
-Existing account instances are saved source. New widget defaults do not
-automatically appear in old saved state just because `spec.json.defaults`
-changed.
+Existing account instances are saved source. New widget Core defaults do not
+automatically appear in old saved state just because widget
+`spec.json.defaults` changed.
 
-Builder session load deep-merges compiled widget defaults into the saved
-instance state before ToolDrawer hydration and preview postMessage. This is the
-Builder-side load compatibility boundary for new defaulted paths. Widget
-runtime should not hide missing Core forever when the intended fix is load or
-materialization normalization.
+Builder session load deep-merges compiled widget defaults (Shell factory
+defaults plus widget Core `spec.json.defaults`) into the saved instance state
+before ToolDrawer hydration and preview postMessage. This is the Builder-side
+load compatibility boundary for new defaulted paths. Widget runtime should not
+hide missing Core forever when the intended fix is load or materialization
+normalization.
 
 When a widget refactor adds, renames, or moves state paths, the build MUST name
 one compatibility path:
@@ -432,10 +475,22 @@ them.
 Defaults are product starter state. They are not placeholders and not optional
 scaffolding.
 
+There are two factory default files:
+
+- Shell factory defaults in `packages/widget-shell/src/defaults.ts`.
+- Widget Core factory defaults in `tokyo/product/widgets/{widgetType}/spec.json`.
+
+Account widget defaults are seeded from those factories and are the only source
+used for new instance creation after the account exists.
+
 MUST
 
-- Define every editor-controlled path in `defaults` before adding the control.
-- Define every runtime-read path in `defaults` before reading it.
+- Define every Core editor-controlled path in widget `spec.json.defaults`
+  before adding the Core control.
+- Define every Core runtime-read path in widget `spec.json.defaults` before
+  reading it.
+- Use shared Shell nodes for Shell controls and rely on Shell factory defaults
+  for Shell paths.
 - Keep every default JSON-serializable. No `undefined`, functions, DOM-shaped
   values, or environment-dependent values.
 - Use the same value shape as the matching existing control family. For example,
@@ -449,27 +504,30 @@ MUST
 - Include starter items when the widget would otherwise render as a blank broken
   product. Starter content must be useful product starter content, not lorem
   ipsum or hidden test data.
-- Keep Shell defaults aligned with the Shell contract. Core defaults extend the
-  widget; they do not rename Shell state.
-- Set `stage.canvas.mode` to `"viewport"` by default. The Builder displays this
-  as `Full`.
-- Set `pod.widthMode` explicitly. Use `"full"` by default for section-style
-  widgets; use `wrap` or `fixed` only when the widget manifest/PRD names that
-  inner-wrapper decision.
-- Set `behavior.showBacklink` to a boolean starter value and map it to
-  `branding.remove` in `limits.json`.
-- Set `behavior.socialShare.enabled` to a boolean starter value and map it to
-  `widget.socialShare.enabled` in `limits.json`.
-- Set each `behavior.socialShare.channels.*` default to `true` unless the PRD
-  explicitly removes that share channel from the starter menu.
+- Keep Core defaults aligned with the Shell/Core boundary. Core defaults extend
+  the widget; they do not rename or duplicate Shell state.
+- Verify Shell factory defaults set `stage.canvas.mode` to `"viewport"`. The
+  Builder displays this as `Full`.
+- Verify Shell factory defaults set `pod.widthMode` explicitly.
+- Verify Shell factory defaults include boolean `behavior.showBacklink`,
+  boolean `behavior.socialShare.enabled`, and each
+  `behavior.socialShare.channels.*` leaf.
+- Map `behavior.showBacklink` to `branding.remove` and
+  `behavior.socialShare.enabled` to `widget.socialShare.enabled` in
+  `limits.json` when the widget uses the normal Shell.
+- Verify account Widget Defaults can map every stored Shell/Core default path to
+  compiled Builder controls. Missing coverage is a contract failure.
 
 MUST NOT
 
 - Add a ToolDrawer control for a path missing from defaults.
+- Add a Roma-only fallback/defaults editor for paths missing from Builder
+  controls.
 - Add runtime guards that silently fill missing defaults.
 - Use empty defaults to dodge required schema work.
 - Store account-owned asset bytes or private account references in product
   defaults.
+- Author Shell defaults in a widget spec.
 
 ### 3A) Shared Stage And Settings Defaults
 
@@ -518,6 +576,10 @@ Shared branding and social share are Shell utilities, not widget Core content.
 Do not implement either in `widget.client.js` except by calling the shared
 primitive API when the existing shell pattern requires it; do not create
 widget-local backlink or share markup.
+
+`appearance.cardwrapper.*` belongs to widget Core. If a widget renders repeated
+cards/items, its Core defaults may include card-wrapper values and may call the
+shared surface helper. Do not add card-wrapper defaults to the global Shell.
 
 ### 4) Shell DOM
 
@@ -744,7 +806,7 @@ CSS vars.
 
 Shell widgets MUST use the shared Header/Header CTA primitive.
 
-Required state paths include:
+Required composed state paths include:
 
 - `header.enabled`
 - `header.title`
@@ -889,15 +951,18 @@ MUST NOT
 
 ### 14) Editable Fields
 
-`editable-fields.json` is the only widget-owned declaration for
-customer-visible editable/translatable text.
+`editable-fields.json` is the widget Core declaration for customer-visible
+editable/translatable text. Shared Shell editable text paths are declared by
+the Shell contract.
 
 MUST
 
 - Declare every customer-visible text primitive.
 - Use `[]` for repeatable declarations, for example
   `core.items[].title`.
-- Keep paths aligned with `spec.json.defaults`.
+- Keep Core paths aligned with widget Core `spec.json.defaults`. Shared Shell
+  text paths must align with Shell factory defaults and Shell editable-field
+  declarations.
 - Reject prohibited segments: `__proto__`, `constructor`, `prototype`.
 
 MUST NOT

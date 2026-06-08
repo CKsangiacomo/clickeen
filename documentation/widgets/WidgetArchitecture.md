@@ -10,6 +10,7 @@ Related:
 - `documentation/ai/BUILD_Widget.md`
 - `documentation/architecture/CONTEXT.md`
 - `Execution_Pipeline_Docs/02-Executing/PRD106A2_WidgetShellExtraction.md`
+- `Execution_Pipeline_Docs/02-Executing/PRD106A3_AccountWidgetDefaults.md`
 
 ---
 
@@ -43,6 +44,11 @@ runtime, save/materialization, public runtime, and policy when policy applies.
 - Normal widgets are `Widget Shell + Widget Core`.
 - `packages/widget-shell/` is the Shell contract authority.
 - `tokyo/product/widgets/{widgetType}/` stores widget product source files.
+- `packages/widget-shell/` owns global Shell factory defaults. Widget
+  `spec.json.defaults` owns only widget-specific Core factory defaults.
+- Tokyo stores account widget defaults at
+  `accounts/{accountPublicId}/widget-defaults.json`. New instances are created
+  from those account defaults, not from widget product folder defaults.
 - Account-owned instance source and generated public files live under
   `accounts/{accountPublicId}/instances/{instanceId}/`.
 - Roma lists live account instances from the instance registry, not by scanning
@@ -76,6 +82,24 @@ surfaces are not account authoring truth.
 Tokyo stores widget software and account artifacts. Tokyo does not own Shell
 architecture, Page Composer behavior, editor UX, readiness, SEO/GEO, or product
 policy.
+
+Default flow is a separate pre-authoring step:
+
+```text
+Shell factory defaults + widget Core factory defaults -> account widget defaults
+account Shell defaults + account widget Core defaults -> new instance source
+Bob edits the new instance source in memory -> Roma/Tokyo save that instance
+```
+
+Factory defaults seed accounts. After an account has widget defaults, new
+instance creation uses account defaults. Bob never fetches account defaults and
+does not maintain a live fallback ladder.
+
+Roma Widget Defaults is not a second editor contract. It renders account
+defaults through the compiled Builder control contract. Any Shell or Core
+default path that is not covered by a Builder control is a contract error that
+must be fixed in Widget Shell or the widget spec; Roma must not invent fallback
+controls for it.
 
 ---
 
@@ -111,7 +135,7 @@ Shell is the reusable widget substrate:
 - Social share.
 - Runtime registration/update binding.
 - Shared script/style module list.
-- Shared surface/card-wrapper primitive.
+- Shared surface helper when a Core uses the primitive.
 - Core sizing.
 
 Shell state families:
@@ -123,15 +147,22 @@ Shell state families:
 - `appearance.headerCta.*`
 - `appearance.localeSwitcher*`
 - `appearance.podBorder`
-- `appearance.cardwrapper.*`
-- `typography.*`
+- shared typography leaves for Shell roles: `title`, `body`, `button`, and
+  `localeSwitcher`
 - `localeSwitcher.*`
 - `behavior.showBacklink`
 - `behavior.socialShare.*`
   - `behavior.socialShare.enabled`
   - `behavior.socialShare.channels.*`
-- `uiLabels.core.*`
 - `coreSize.*`
+
+`uiLabels.core.*` is a widget Core extension contract for user-facing Core
+labels. It is not Shell default styling or behavior.
+
+`appearance.cardwrapper.*` is widget Core, not Shell. The shared Shell has no
+card element. Widgets that render repeated cards/items may use the shared
+surface helper, but the card-wrapper values are part of that widget's Core
+defaults.
 
 ### Shared Stage And Settings Runtime
 
@@ -214,6 +245,13 @@ Core must not read product meaning from Shell-only paths. `header.*` and
 `headerCta.*` remain the optional shared Header region. If the widget's actual
 body has a call-to-action, that action is widget Core state such as
 `calltoaction.action.*`, not shared Header CTA state.
+
+Core factory defaults live in `tokyo/product/widgets/{widgetType}/spec.json`.
+They must not include Shell-owned defaults such as Header, Header CTA, Stage,
+Pod, Core Size, branding, social share, locale switcher, or Shell typography
+roles. Bob compiles widgets against composed factory defaults
+(`Widget Shell + Widget Core`) for software/control rendering only. Product
+new-instance creation uses account defaults.
 
 ### Naming Taxonomy
 

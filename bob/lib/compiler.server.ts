@@ -1,5 +1,5 @@
 import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
-import { assertValidWidgetShellSource } from '@clickeen/widget-shell';
+import { WIDGET_SHELL_FACTORY_DEFAULTS, assertValidWidgetShellSource } from '@clickeen/widget-shell';
 import type { CompiledPanel, CompiledWidget, WidgetPresets } from './types';
 import { RawWidget, decodeHtmlEntities, parseTooldrawerAttributes, parsePanels } from './compiler.shared';
 import { buildWidgetMedia } from './compiler/media';
@@ -128,6 +128,27 @@ function rewriteAssetUrlsInDefaults(defaults: Record<string, unknown>, tokyoBase
   return next;
 }
 
+function cloneJsonRecord(value: Record<string, unknown>): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
+}
+
+function mergeDefaults(base: Record<string, unknown>, override: Record<string, unknown>): Record<string, unknown> {
+  const next = cloneJsonRecord(base);
+  for (const [key, value] of Object.entries(override)) {
+    const existing = next[key];
+    if (isPlainObject(existing) && isPlainObject(value)) {
+      next[key] = mergeDefaults(existing, value);
+    } else {
+      next[key] = value;
+    }
+  }
+  return next;
+}
+
+function composeWidgetFactoryDefaults(coreDefaults: Record<string, unknown>): Record<string, unknown> {
+  return mergeDefaults(WIDGET_SHELL_FACTORY_DEFAULTS as unknown as Record<string, unknown>, coreDefaults);
+}
+
 function normalizePresets(raw: unknown): WidgetPresets | undefined {
   if (!isPlainObject(raw)) return undefined;
   const normalized: WidgetPresets = {};
@@ -216,8 +237,8 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     throw new Error('[BobCompiler] Invalid widget JSON payload');
   }
 
-  const defaults = widgetJson.defaults;
-  if (!defaults || typeof defaults !== 'object' || Array.isArray(defaults)) {
+  const coreDefaults = widgetJson.defaults;
+  if (!coreDefaults || typeof coreDefaults !== 'object' || Array.isArray(coreDefaults)) {
     throw new Error('[BobCompiler] widget JSON missing defaults object');
   }
 
@@ -231,6 +252,8 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   const rawItemKey = widgetJson.itemKey;
   const itemKey = typeof rawItemKey === 'string' && rawItemKey.trim() ? rawItemKey.trim() : null;
   const normalization = normalizeWidgetNormalizationSpec(widgetJson.normalization);
+
+  const defaults = composeWidgetFactoryDefaults(coreDefaults as Record<string, unknown>);
 
   assertValidWidgetShellSource({
     widgetType: widgetname,
@@ -252,8 +275,8 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   const themeOptions = buildThemeOptions(themeRegistry.themes);
   const themePresets = buildThemePresets(themeRegistry.themes);
 
-  const hasHeader = (widgetJson.defaults as any)?.header != null;
-  const hasCta = (widgetJson.defaults as any)?.headerCta != null;
+  const hasHeader = defaults.header != null;
+  const hasCta = defaults.headerCta != null;
   const headerPresets = hasHeader && hasCta ? buildHeaderPresets() : undefined;
 
   const presetsRaw = normalizePresets(widgetJson.presets);

@@ -125,18 +125,6 @@
     ]
   },
   "defaults": {
-    "header": {
-      "enabled": true,
-      "title": "Everything your visitors need to understand what comes next",
-      "showSubtitle": true,
-      "subtitleHtml": "Use cards for features, steps, pathways, and focused landing-page sections without leaving the same Clickeen editing model.",
-      "placement": "top",
-      "alignment": "center",
-      "gap": 36,
-      "textGap": 10,
-      "ctaPlacement": "below",
-      "innerGap": 18
-    },
     "uiLabels": {
       "core": {
         "singular": "Card",
@@ -144,258 +132,7 @@
         "sizeCluster": "Cards size"
       }
     },
-    "coreSize": {
-      "mode": "auto",
-      "fixedHeight": 0,
-      "minHeight": 0,
-      "preferredVw": 0,
-      "maxHeight": 0
-    },
-    "localeSwitcher": {
-      "enabled": false,
-      "byIp": false,
-      "alwaysShowLocale": "",
-      "attachTo": "stage",
-      "position": "top-right"
-    },
-    "behavior": {
-      "showBacklink": true,
-      "socialShare": {
-        "enabled": false,
-        "channels": {
-          "copy": true,
-          "sms": true,
-          "email": true,
-          "whatsapp": true,
-          "telegram": true,
-          "signal": true,
-          "messenger": true,
-          "wechat": true,
-          "line": true,
-          "slack": true,
-          "teams": true,
-          "discord": true,
-          "x": true,
-          "linkedin": true,
-          "facebook": true,
-          "reddit": true,
-          "instagram": true,
-          "tiktok": true
-        }
-      }
-    },
-    "stage": {
-      "alignment": "center",
-      "background": {
-        "type": "color",
-        "color": "var(--color-system-white)"
-      },
-      "shadow": {
-        "x": 0,
-        "y": 0,
-        "blur": 0,
-        "alpha": 0,
-        "color": "#000000",
-        "inset": false,
-        "spread": 0,
-        "enabled": false
-      },
-      "insideShadow": {
-        "linked": true,
-        "layer": "below-content",
-        "all": {
-          "x": 0,
-          "y": 0,
-          "blur": 0,
-          "alpha": 0,
-          "color": "#000000",
-          "inset": true,
-          "spread": 0,
-          "enabled": false
-        },
-        "top": {
-          "x": 0,
-          "y": 12,
-          "blur": 16,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": true,
-          "spread": -12,
-          "enabled": false
-        },
-        "right": {
-          "x": -12,
-          "y": 0,
-          "blur": 16,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": true,
-          "spread": -12,
-          "enabled": false
-        },
-        "bottom": {
-          "x": 0,
-          "y": -12,
-          "blur": 16,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": true,
-          "spread": -12,
-          "enabled": false
-        },
-        "left": {
-          "x": 12,
-          "y": 0,
-          "blur": 16,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": true,
-          "spread": -12,
-          "enabled": false
-        }
-      },
-      "canvas": {
-        "mode": "viewport",
-        "width": 0,
-        "height": 0
-      },
-      "padding": {
-        "mobile": {
-          "all": 48,
-          "top": 48,
-          "right": 48,
-          "bottom": 48,
-          "left": 48,
-          "linked": true
-        },
-        "desktop": {
-          "all": 80,
-          "top": 80,
-          "right": 80,
-          "bottom": 80,
-          "left": 80,
-          "linked": true
-        }
-      }
-    },
-    "pod": {
-      "widthMode": "full",
-      "contentWidth": 1200,
-      "radiusLinked": true,
-      "radius": "none",
-      "radiusTL": "none",
-      "radiusTR": "none",
-      "radiusBR": "none",
-      "radiusBL": "none",
-      "background": {
-        "type": "color",
-        "color": "transparent"
-      },
-      "shadow": {
-        "x": 0,
-        "y": 0,
-        "blur": 0,
-        "alpha": 0,
-        "color": "#000000",
-        "inset": false,
-        "spread": 0,
-        "enabled": false
-      },
-      "insideShadow": {
-        "linked": true,
-        "layer": "below-content",
-        "all": {
-          "x": 0,
-          "y": 0,
-          "blur": 0,
-          "alpha": 0,
-          "color": "#000000",
-          "inset": true,
-          "spread": 0,
-          "enabled": false
-        },
-        "top": {
-          "x": 0,
-          "y": 12,
-          "blur": 16,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": true,
-          "spread": -12,
-          "enabled": false
-        },
-        "right": {
-          "x": -12,
-          "y": 0,
-          "blur": 16,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": true,
-          "spread": -12,
-          "enabled": false
-        },
-        "bottom": {
-          "x": 0,
-          "y": -12,
-          "blur": 16,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": true,
-          "spread": -12,
-          "enabled": false
-        },
-        "left": {
-          "x": 12,
-          "y": 0,
-          "blur": 16,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": true,
-          "spread": -12,
-          "enabled": false
-        }
-      },
-      "padding": {
-        "mobile": {
-          "all": 0,
-          "top": 0,
-          "right": 0,
-          "bottom": 0,
-          "left": 0,
-          "linked": true
-        },
-        "desktop": {
-          "all": 0,
-          "top": 0,
-          "right": 0,
-          "bottom": 0,
-          "left": 0,
-          "linked": true
-        }
-      }
-    },
     "appearance": {
-      "localeSwitcherBackground": {
-        "type": "color",
-        "color": "var(--color-system-white)"
-      },
-      "localeSwitcherTextColor": {
-        "type": "color",
-        "color": "var(--color-system-black)"
-      },
-      "localeSwitcherBorder": {
-        "enabled": true,
-        "width": 1,
-        "color": "var(--color-system-gray-5)"
-      },
-      "localeSwitcherRadius": "md",
-      "localeSwitcherPaddingInline": 12,
-      "localeSwitcherPaddingBlock": 8,
-      "podBorder": {
-        "enabled": false,
-        "width": 1,
-        "color": "var(--color-system-gray-5)"
-      },
       "cardwrapper": {
         "border": {
           "enabled": true,
@@ -418,75 +155,10 @@
           "color": "#000000",
           "inset": false
         }
-      },
-      "headerCta": {
-        "background": "var(--color-system-blue)",
-        "textColor": "var(--color-system-white)",
-        "border": {
-          "enabled": false,
-          "width": 1,
-          "color": "transparent"
-        },
-        "radius": "lg",
-        "sizePreset": "m",
-        "paddingLinked": false,
-        "paddingInline": 18,
-        "paddingBlock": 12,
-        "iconSizePreset": "m",
-        "iconSize": 16
       }
     },
     "typography": {
-      "globalFamily": "Inter",
       "roles": {
-        "title": {
-          "color": "var(--color-system-black)",
-          "family": "Inter",
-          "weight": "700",
-          "fontStyle": "normal",
-          "sizeCustom": 56,
-          "sizePreset": "custom",
-          "trackingCustom": 0,
-          "trackingPreset": "normal",
-          "lineHeightCustom": 1,
-          "lineHeightPreset": "custom"
-        },
-        "body": {
-          "color": "var(--color-system-gray)",
-          "family": "Inter",
-          "weight": "400",
-          "fontStyle": "normal",
-          "sizeCustom": 20,
-          "sizePreset": "custom",
-          "trackingCustom": 0,
-          "trackingPreset": "normal",
-          "lineHeightCustom": 1.45,
-          "lineHeightPreset": "custom"
-        },
-        "button": {
-          "color": "var(--color-system-white)",
-          "family": "Inter",
-          "weight": "600",
-          "fontStyle": "normal",
-          "sizeCustom": 16,
-          "sizePreset": "custom",
-          "trackingCustom": 0,
-          "trackingPreset": "normal",
-          "lineHeightCustom": 1.2,
-          "lineHeightPreset": "custom"
-        },
-        "localeSwitcher": {
-          "color": "var(--color-system-black)",
-          "family": "Inter",
-          "weight": "500",
-          "fontStyle": "normal",
-          "sizeCustom": 14,
-          "sizePreset": "s",
-          "trackingCustom": 0,
-          "trackingPreset": "normal",
-          "lineHeightCustom": 1.2,
-          "lineHeightPreset": "normal"
-        },
         "cardTitle": {
           "color": "var(--color-system-black)",
           "family": "Inter",
@@ -513,13 +185,6 @@
         }
       },
       "roleScales": {
-        "localeSwitcher": {
-          "l": "20px",
-          "m": "18px",
-          "s": "15px",
-          "xl": "24px",
-          "xs": "13px"
-        },
         "cardTitle": {
           "l": "28px",
           "m": "24px",
@@ -655,15 +320,6 @@
           "color": "#222222"
         }
       }
-    },
-    "headerCta": {
-      "enabled": false,
-      "label": "Learn more",
-      "href": "#",
-      "openMode": "same-tab",
-      "iconEnabled": true,
-      "iconName": "arrowshape.turn.up.right",
-      "iconPlacement": "right"
     }
   },
   "editor": {

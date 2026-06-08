@@ -50,6 +50,13 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 - Update docs when behavior changes.
 - Documentation drift is a P0 bug.
 
+### 8) Cloudflare Operations Are Preflight-Gated
+- Before any Cloudflare-dependent execution, run `pnpm cf:preflight`.
+- If preflight fails, stop. Do not use dashboard scraping, random Wrangler
+  commands, guessed R2 paths, or partial evidence.
+- Cloudflare/R2 read evidence must come from the repo Cloudflare commands in
+  `documentation/architecture/CloudflareOperations.md`.
+
 ## Repository Guidelines
 
 ### Project Structure & Module Organization

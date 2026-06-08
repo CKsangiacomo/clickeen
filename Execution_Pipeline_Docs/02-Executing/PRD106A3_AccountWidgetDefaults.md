@@ -57,6 +57,12 @@ control behavior as Builder. If a control already behaves a certain way in
 Builder, Widget Defaults mirrors that behavior. If a detail is unclear, stop
 and ask instead of inventing a product rule.
 
+There is no Roma-only fallback editor for defaults. Every account default path
+must be covered by the compiled Builder control contract. If a stored Shell or
+Core default has no matching Builder control path, `Settings > Widget Defaults`
+must stop and show a contract error listing the missing paths. It must not hide
+the value, infer a generic control, or save through the broken contract.
+
 ## Bob Panel Tenet
 
 Bob's Builder panels are mixed editing surfaces. They are not "Shell panels"
@@ -100,7 +106,7 @@ New widgets should therefore be smaller and more deterministic:
 - they appear in Bob through the same mixed panel model;
 - they create new instances from account defaults.
 
-Status: Draft execution PRD - Step 1 inventory/blocker closure only
+Status: Ready for controlled execution
 Owner: Roma + Widget Shell
 Date: 2026-06-07
 Parent: `106__Umbrella__Composition_Vision.md`
@@ -109,53 +115,79 @@ Unlocks: account-owned widget defaults, smaller widget specs, deterministic new 
 Authority owned by this PRD: account default seeding, account-editable widget defaults, global Shell factory defaults, widget Core factory default extraction, and the Roma navigation/page needed to edit account defaults.
 Authority explicitly not owned by this PRD: themes, applying new defaults to existing saved instances, public runtime behavior, Page Composer behavior, or Bob editor behavior.
 
-## Current Readiness Gate
+## Execution Readiness
 
-This PRD is not ready for broad implementation yet.
+This PRD is ready for controlled execution.
 
-Current executable work is limited to:
+Start with:
 
 ```text
-Step 1: Inventory factory default split and close blocker questions.
+Step 1: Inventory the factory default split using the closed product decisions below.
 ```
 
-Do not implement storage, seeding, Roma UI, create-route changes, widget-spec
-shrinking, or Bob compile changes until the blocker questions below are closed.
+After Step 1 produces the Shell/Core path inventory, continue through the
+execution steps in order. Do not implement storage, seeding, Roma UI,
+create-route changes, widget-spec shrinking, or Bob compile changes by
+reopening the closed product decisions below.
 
-### Blocker Questions To Close Before Step 2
+### Closed Product Decisions For Step 1
 
-These are evidence-backed boundary questions, not invitations to invent new
-systems:
+These are product decisions, not invitations to invent new systems:
 
-1. Where is `account.widgetDefaults` stored and served from?
-   - The answer must name one existing product owner/boundary.
-   - Do not create a new settings subsystem.
-2. What exact payload does Roma submit to Tokyo when creating a new instance?
-   - Current target is `widgetType + full resolved config`.
-   - Close whether account locale metadata is also submitted as existing
-     `baseLocale`/`targetLocales`/`meta` data.
-3. What does Bob compile against after widget specs stop authoring Shell
-   defaults?
-   - Bob still needs a composed factory defaults object to render controls.
-   - Instance editing must not become a live factory-default fallback.
-4. Which exact current values become the global Shell factory defaults?
-   - `packages/widget-shell` is currently partial.
-   - Current widget specs carry divergent Shell starter values.
-   - Resolve path-by-path without inventing new visual values.
-5. How does Roma render Widget Defaults controls with the same control language
-   as Builder?
-   - Either reuse an existing Builder control representation or name the minimal
-     structured representation needed.
-   - Do not create a second UI/control language.
-6. Is the Settings IA change route movement or nav grouping?
-   - Current Roma routes are flat.
-   - Close whether routes remain flat with grouped nav, or move under
-     `/settings/*`.
-7. What validation evidence proves widget specs no longer own Shell defaults?
-   - `pnpm validate:widgets` alone only proves generated widget-definition
-     source sync.
-   - Add the existing `packages/widget-shell` validation boundary or a targeted
-     equivalent.
+1. `account.widgetDefaults` is stored in Tokyo under the account folder.
+   - Exact R2 key: `accounts/{accountPublicId}/widget-defaults.json`.
+   - Tokyo is the storage owner because widget defaults are account-owned
+     widget source material, like `instances/`, `assets/`, `pages/`, and
+     account website serving files.
+   - Roma may read/write the document through account-authenticated product
+     routes, but Roma does not become a second storage truth.
+2. New instance create submits a resolved instance state, not just widget type.
+   - Current create sends only `widgetType/displayName`; Tokyo then calls
+     widget factory defaults. This PRD removes that live factory-default path.
+   - Target create payload is:
+     `widgetType + displayName + source.config + baseLocale + targetLocales +
+     meta`.
+   - `source.config` is the resolved Shell + Core instance state from account
+     defaults.
+   - Roma does not submit `source.content`. Tokyo derives editable text content
+     from submitted `source.config`, stores text in `instance.content.json`, and
+     strips those content paths from persisted `instance.config.json`.
+   - `baseLocale`, `targetLocales`, and `meta` are source metadata, not defaults
+     policy. They must not be dropped at create.
+3. Bob compiles against composed factory defaults only for software/control
+   rendering.
+   - Compilation uses `global Shell factory defaults + widget Core factory
+     defaults`.
+   - Bob instance editing still opens one resolved instance state from Roma.
+   - Bob does not fetch account defaults and does not merge factory defaults as
+     a live account fallback during editing.
+4. Initial global Shell factory defaults come from the current Call to Action
+   account instance `SZBSB5HHFJ`.
+   - Step 1 must record the exact owning `accountPublicId + instanceId` before
+     extraction. Tokyo storage is account-first, so an instance ID alone is not
+     a storage coordinate.
+   - Extract only shared Shell paths from that instance.
+   - Ignore `calltoaction.*` Core paths when building global Shell defaults.
+   - Read the composed authoring state, not only raw `instance.config.json`,
+     because user-visible text may live in `instance.content.json`.
+5. Roma Widget Defaults uses Builder's existing control language.
+   - The question is implementation representation, not product behavior.
+   - The page must consume the same Builder control contract/compiled control
+     language used by Bob, including Dieter hydration behavior.
+   - Do not hand-code a second set of Roma-only controls.
+6. Settings IA is nav grouping, not a product-state subsystem.
+   - Roma's main menu becomes short: Home, Widgets, Pages, Builder, Assets,
+     Settings.
+   - Settings is expandable and shows Account, User Settings, Team, Billing,
+     Usage, AI, and Widget Defaults.
+   - Existing flat routes may remain for existing pages. Current `/settings`
+     is the Account page. New Widget Defaults may live at
+     `/settings/widget-defaults`.
+7. Validation must prove Shell defaults were extracted.
+   - `pnpm validate:widgets` is not enough by itself; it only proves generated
+     widget-definition source sync.
+   - Add/use a `packages/widget-shell` validation check that scans widget specs
+     and fails if Shell-owned default paths remain authored in widget defaults.
 
 ## Product Truth
 
@@ -169,9 +201,9 @@ This PRD changes only the source used before Bob opens a brand-new instance:
 
 ```text
 factory defaults seed account defaults
-account defaults create instance config
-Bob edits instance config
-save stores instance config
+account defaults create instance source
+Bob edits one resolved instance state
+save stores instance source
 ```
 
 The current Tokyo widget folder defaults are not the live source for new
@@ -188,7 +220,7 @@ packages/widget-shell
 widget software
   owns widget-specific Core factory defaults
 
-account settings
+tokyo account folder
   owns live account widget defaults
 ```
 
@@ -225,7 +257,25 @@ again.
 
 ## Account Default Shape
 
-Roma must persist one account-owned widget defaults document.
+Tokyo must persist one account-owned widget defaults document in the account
+folder.
+
+Canonical account key:
+
+```text
+accounts/{accountPublicId}/widget-defaults.json
+```
+
+Why this belongs in Tokyo:
+
+- defaults are account-owned widget source material;
+- the account folder already owns instances, assets, pages, and website serving
+  files;
+- new instance creation is a Tokyo-owned account product operation;
+- storing defaults beside account instances prevents Bob, Roma, Michael, or
+  widget software folders from becoming duplicate defaults truth;
+- the key uses `accountPublicId`, matching the rest of account-owned Tokyo
+  storage.
 
 Recommended shape:
 
@@ -278,8 +328,9 @@ Rules:
 
 ## Creation Boundary
 
-Roma owns account default policy and new-instance orchestration. Tokyo stores
-the exact instance config Roma submits.
+Roma owns the account defaults UX and new-instance orchestration. Tokyo owns the
+stored account defaults document and stores the exact instance source Roma
+submits.
 
 Execution must change the current product create seam so new instance creation
 does not call Tokyo widget factory defaults as live product truth. Current code
@@ -297,14 +348,38 @@ Target behavior:
 
 ```text
 Roma reads account widget defaults
-Roma materializes full instance config
-Roma submits widgetType + full config to Tokyo create
-Tokyo writes that submitted config
+Roma materializes full resolved config
+Roma submits widgetType + displayName + source.config + baseLocale + targetLocales + meta to Tokyo create
+Tokyo derives content from submitted config and writes instance.config.json + instance.content.json
 Bob opens the created instance as usual
 ```
 
+Payload meaning:
+
+- `widgetType`: the widget software to instantiate.
+- `displayName`: optional instance label.
+- `source.config`: resolved Shell + Core instance state from account defaults.
+- `source.content`: not submitted by Roma. Tokyo derives it from
+  `source.config` using the editable-fields contract.
+- `baseLocale`: current account base locale.
+- `targetLocales`: current account target locales.
+- `meta`: source metadata needed by the existing account instance source
+  document.
+
 Tokyo may still expose factory widget definitions for account seeding and
-software validation. Tokyo must not decide live account default policy.
+software validation. Tokyo must not call widget factory defaults as live account
+default policy after account defaults exist.
+
+Step 8 cannot run until Step 4 and Step 5 are green. New instance creation must
+have account defaults available before it reaches the create boundary. If
+account defaults are missing, execution must seed the account before create or
+fail at the account-default boundary; it must not add a runtime fallback to
+widget factory defaults.
+
+Locale wiring must be explicit. Either the create/write boundary accepts
+`baseLocale` and `targetLocales` directly, or Roma puts those values into the
+existing `meta` contract before Tokyo writes source. Do not rely on Tokyo's
+current default locale behavior as an accidental fallback.
 
 ## Roma IA
 
@@ -342,6 +417,11 @@ not saved instances.
 
 It should be long, grouped, and boring. Users set it up once, then new widget
 instances inherit their account defaults.
+
+The page uses Builder's existing control contract. It must not hand-code a
+parallel Roma-only form language for Shell or Core defaults. If code needs to
+move to make this reusable, extract/reuse the existing Builder control
+rendering/hydration path instead of inventing a new control model.
 
 The page has two conceptual areas:
 
@@ -388,6 +468,11 @@ Widget Core Defaults:
 The page must avoid per-widget Shell tabs. Per-widget sections are for Core
 defaults only.
 
+Every displayed field on this page must come from the compiled Builder control
+contract. Unmapped defaults are a build/product contract failure, not an
+alternate UI mode. Roma must surface the missing paths and block save/editing
+until Widget Shell or the widget spec exposes the correct control.
+
 ## Shell Defaults To Remember
 
 This PRD inherits the Shell extraction from
@@ -409,8 +494,15 @@ pod.*
 appearance.headerCta.*
 appearance.localeSwitcher*
 appearance.podBorder
-appearance.cardwrapper.*
-typography.*
+typography.globalFamily
+typography.roles.title.*
+typography.roles.body.*
+typography.roles.button.*
+typography.roles.localeSwitcher.*
+typography.roleScales.title.*
+typography.roleScales.body.*
+typography.roleScales.button.*
+typography.roleScales.localeSwitcher.*
 localeSwitcher.*
 behavior.showBacklink
 behavior.socialShare.*
@@ -420,6 +512,12 @@ coreSize.*
 `uiLabels.core.*` remains part of the Widget Core extension contract. Those
 labels name each widget's Core noun in the Builder UI, such as FAQ, Cards, or
 Split. They are not account-level Shell styling or behavior defaults.
+
+`appearance.cardwrapper.*` is widget Core, not Shell. The shared Shell has no
+card element. Card wrapper styling belongs to widgets that render repeated
+cards/items, such as Cards, FAQ, Countdown, Logo Showcase, or Split. Existing
+widgets already disagree on these values, which proves they are not one global
+Shell default.
 
 ## Explicit Shell Control Coverage
 
@@ -523,14 +621,16 @@ appearance.localeSwitcherRadius
 appearance.localeSwitcherPaddingInline
 appearance.localeSwitcherPaddingBlock
 appearance.podBorder
-appearance.cardwrapper.*
 
 typography.globalFamily
 typography.roles.title.*
 typography.roles.body.*
 typography.roles.button.*
 typography.roles.localeSwitcher.*
-typography.roleScales.*
+typography.roleScales.title.*
+typography.roleScales.body.*
+typography.roleScales.button.*
+typography.roleScales.localeSwitcher.*
 
 localeSwitcher.enabled
 localeSwitcher.byIp
@@ -546,14 +646,29 @@ Shell contract.
 
 ## Initial Factory Defaults
 
-The initial global Shell factory defaults must come from the current product's
-shared Shell starter values. Do not invent new visual defaults during this PRD.
+The initial global Shell factory defaults must come from the current Call to
+Action account instance `SZBSB5HHFJ`. Do not invent new visual defaults during
+this PRD.
 
-Stage must default to full for all widgets. A widget is a section-level product
-surface, so the shared Stage should occupy the available width by default, and
-the Pod/Core controls decide the contained presentation. Per-widget stage width
-factory defaults would recreate the scattered Shell-default problem this PRD is
-removing.
+Extraction rule:
+
+```text
+record the owning accountPublicId for instance SZBSB5HHFJ
+read composed authoring state from accounts/{accountPublicId}/instances/SZBSB5HHFJ
+extract every Shell-owned path
+ignore every calltoaction.* Core-owned path
+write extracted Shell values into packages/widget-shell factory defaults
+```
+
+Use the composed authoring state, not only raw `instance.config.json`, because
+Tokyo splits customer-visible text into `instance.content.json`.
+
+Stage must default to the Builder "Full" option for all widgets. In the current
+control/runtime contract, that option is stored as `stage.canvas.mode:
+"viewport"`. A widget is a section-level product surface, so the shared Stage
+should occupy the available width by default, and the Pod/Core controls decide
+the contained presentation. Per-widget stage width factory defaults would
+recreate the scattered Shell-default problem this PRD is removing.
 
 Widget Core factory defaults come from each widget's current Core-specific
 starter state after Shell paths have been removed.
@@ -566,24 +681,28 @@ starter state after Shell paths have been removed.
 - group controls by Builder panel vocabulary;
 - make it clear these defaults apply to new widget instances;
 - include save and discard-unsaved-change affordances;
+- protect unsaved changes across Settings navigation, section switching, browser
+  unload, and save responses;
 - avoid theme-system language;
 - avoid repeating Shell controls per widget;
 - allow social share settings to expand under `Enable social share`;
 - allow `Show Made with Clickeen` to control the account Shell branding default;
 - make widget Core default sections clearly per widget type.
+- block editing with an explicit contract error when any account default path is
+  not covered by the compiled Builder control contract.
 
 ## Execution Steps
 
 | Step | Action | Required evidence | Green criteria | Stop condition |
 | ---: | --- | --- | --- | --- |
-| 1 | Inventory factory default split. | List of global Shell factory paths and per-widget Core factory paths. | Every current default path is Shell or Core; no ambiguous owner remains. | Work tries to choose better defaults instead of splitting authority. |
+| 1 | Inventory factory default split. | List of global Shell factory paths, per-widget Core factory paths, and the `accountPublicId + SZBSB5HHFJ` extraction coordinate. | Every current default path is Shell or Core; no ambiguous owner remains. | Work tries to choose better defaults instead of splitting authority. |
 | 2 | Complete global Shell factory defaults in `packages/widget-shell/`. | Diff showing one complete shared Shell defaults object. | Shell factory defaults are centralized and same for every widget. | Any widget keeps authored Shell defaults as source truth. |
 | 3 | Extract widget Core factory defaults. | Spec/source diffs for each widget. | Widget software keeps only Core factory defaults and Core controls. | Shell paths remain live in widget default source. |
 | 4 | Define account widget defaults schema and seeding. | Schema/API/storage diff. | New accounts are seeded from global Shell factory defaults plus widget Core factory defaults. | New instance creation can run with missing account defaults. |
 | 5 | Seed existing accounts. | Migration or first-access seeding evidence. | Existing accounts have account widget defaults before new create uses them. | Runtime factory fallback is added instead of seeding. |
 | 6 | Add Roma Settings IA. | Diff/screenshot. | `Settings` is collapsible and includes `Account` plus `Widget Defaults`. | Current main nav becomes noisy or the current Settings page is lost. |
-| 7 | Build `Settings > Widget Defaults`. | Diff/screenshot. | Page renders global Shell defaults once and per-widget Core defaults by widget type. | Core sections repeat Shell controls or a global theme system appears. |
-| 8 | Change new instance creation to use account defaults. | Diff/evidence for Roma and Tokyo create seam. | Roma submits full resolved config; Tokyo stores submitted config. | Tokyo calls widget factory defaults as live account default policy. |
+| 7 | Build `Settings > Widget Defaults`. | Diff/screenshot plus dirty-state check. | Page renders global Shell defaults once and per-widget Core defaults by widget type; every rendered field comes from compiled Builder controls; unsaved edits are protected. | Core sections repeat Shell controls, a global theme system appears, unmapped defaults get generic fallback controls, or dirty edits can be lost. |
+| 8 | Change new instance creation to use account defaults. | Diff/evidence for Roma and Tokyo create seam. | Roma submits full resolved config; Tokyo derives content and stores `instance.config.json` plus `instance.content.json`. | Tokyo calls widget factory defaults as live account default policy, Roma tries to submit `source.content`, or locale metadata falls back accidentally. |
 | 9 | Preserve Bob instance behavior. | Bob smoke/typecheck evidence. | Bob opens one full state, edits in memory, saves as before. | Bob fetches account defaults or changes merge semantics for this PRD. |
 | 10 | Update widget docs. | Diffs to widget architecture/build/compliance docs. | Docs explain factory defaults, account defaults, Shell/Core split, and new instance resolution. | Docs still teach widget-local Shell defaults. |
 
@@ -593,11 +712,17 @@ Required verification:
 
 ```text
 pnpm validate:widgets
+pnpm --filter @clickeen/widget-shell validate
 pnpm --filter @clickeen/widget-shell typecheck
 pnpm --filter @clickeen/roma typecheck
 pnpm --filter @clickeen/bob typecheck
 pnpm --filter @clickeen/tokyo-worker typecheck
 ```
+
+If `@clickeen/widget-shell validate` does not exist yet, this PRD must add the
+targeted validation command. It must scan all widget specs and fail when a
+Shell-owned path is still authored in widget defaults. This is the proof that
+new widgets cannot accidentally keep the old scattered Shell-default model.
 
 Manual checks:
 
@@ -635,10 +760,9 @@ Stop and ask for product direction if:
 - new instance creation needs a runtime fallback to widget factory defaults;
 - theme selection becomes part of the work.
 
-## Open Questions
+## Future Scope Not In This PRD
 
-- Exact account settings storage implementation for `account.widgetDefaults`.
-- Whether "restore factory defaults" should be part of this PRD or a later
-  explicit action. Discarding unsaved changes is in scope; applying factory
-  defaults after account seeding is optional product behavior.
-- Whether future "apply these defaults to existing instances" needs its own PRD.
+- "Restore factory defaults" after account seeding. Discarding unsaved changes
+  is in scope; applying factory defaults to saved account defaults is not.
+- Applying new defaults to existing saved instances. This needs its own explicit
+  PRD if the product ever wants it.

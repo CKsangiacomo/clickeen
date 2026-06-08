@@ -520,6 +520,10 @@ export async function createAccountInstanceInTokyo(args: {
   accountCapsule?: string | null;
   widgetType: string;
   displayName?: string | null;
+  config: Record<string, unknown>;
+  baseLocale: string;
+  targetLocales: string[];
+  meta?: Record<string, unknown> | null;
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<
@@ -549,6 +553,16 @@ export async function createAccountInstanceInTokyo(args: {
     body: {
       widgetType: requestedWidgetType,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
+      source: {
+        config: args.config,
+      },
+      baseLocale: args.baseLocale,
+      targetLocales: args.targetLocales,
+      meta: {
+        ...(args.meta ?? {}),
+        baseLocale: args.baseLocale,
+        targetLocales: args.targetLocales,
+      },
     },
     fallbackDetail: 'tokyo_instance_create_http_error',
     fallbackReasonKey: 'coreui.errors.db.writeFailed',

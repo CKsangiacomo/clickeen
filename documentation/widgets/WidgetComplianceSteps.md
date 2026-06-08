@@ -49,6 +49,18 @@ Naming is part of compliance:
 - ToolDrawer labels must disambiguate same-panel controls: "Header CTA label"
   for Shell, "Action label" for a Call to Action body.
 
+Default authority is also non-negotiable:
+
+```text
+packages/widget-shell owns Shell factory defaults
+widget spec.json owns widget Core factory defaults
+Tokyo account widget-defaults.json owns live account defaults for new instances
+```
+
+Widget specs must not author Shell defaults. New instances are created from
+account defaults (`account.shell + account.widgets[widgetType].core`), then Bob
+edits that resolved instance state in browser memory and Roma/Tokyo save it.
+
 ---
 
 ## Step -2 - Scope + stop conditions
@@ -151,18 +163,19 @@ OUTPUT
 
 NOTES
 
-- Bob session load deep-merges compiled `spec.json.defaults` into old saved
-  instance state before ToolDrawer hydration and Builder preview postMessage,
-  then applies normalization rules and scalar coercion.
+- Bob session load deep-merges compiled defaults (Shell factory defaults plus
+  widget Core `spec.json.defaults`) into old saved instance state before
+  ToolDrawer hydration and Builder preview postMessage, then applies
+  normalization rules and scalar coercion.
 - Publishing/materializing old saved source still needs an explicit matching
   compatibility path when the server/public boundary can receive the old shape.
 - Roma lists account instances from the registry, not by scanning raw R2
   prefixes. If a widget type rename leaves raw R2 folders behind, clean them as
   orphaned data only after the registry/source migration decision is explicit.
-- Adding a typography role in `spec.json.defaults` does not make that role
-  exist in old saved instance state. Do not pass optional new roles to
-  `CKTypography.applyTypography` unless the posted state has them, or migrate
-  the state first.
+- Adding a widget Core typography role in `spec.json.defaults` does not make
+  that role exist in old saved instance state. Do not pass optional new roles
+  to `CKTypography.applyTypography` unless the posted state has them, or
+  migrate the state first.
 - Pre-GA contract renames should use a one-time storage/translation rewrite,
   not long-lived runtime aliases. For the Header CTA and Call to Action rename:
   move saved config `cta.*` to `headerCta.*`, move saved/theme
@@ -184,7 +197,9 @@ GATE
 OUTPUT
 
 - Ownership map:
-  - Shell paths kept from the shared contract (`header.*`, `headerCta.*`, `stage.*`, `pod.*`, `coreSize.*`, `typography.*`, `localeSwitcher.*`, shared `appearance.*`, shared `behavior.*`).
+  - Shell paths consumed from the shared contract (`header.*`, `headerCta.*`,
+    `stage.*`, `pod.*`, `coreSize.*`, shared Shell typography roles,
+    `localeSwitcher.*`, shared Shell `appearance.*`, shared Shell `behavior.*`).
   - Core paths introduced or changed under the widget-specific body namespace.
   - Any existing generic `core.*` or legacy widget body path that remains, why
     it is transitional/legacy, and whether this task migrates or defers it.
@@ -219,21 +234,14 @@ GATE
 
 OUTPUT
 
-- Full `defaults` state shape (no runtime fallbacks/healing).
-- Required platform fields:
-  - Stage/Pod defaults (`stage.*`, `pod.*`)
-  - Stage canvas default: `stage.canvas.mode` is `"viewport"` (Builder label:
-    `Full`) unless the PRD explicitly owns a `wrap` exception
-  - Pod width default: `pod.widthMode` is explicitly declared. Use `"full"` for
-    section-style widgets unless the PRD/manifest owns a `wrap` or `fixed`
-    inner-wrapper decision.
-  - Header defaults (`header.*`) and optional Header CTA defaults (`headerCta.*`)
-  - Core defaults in the widget-specific namespace for the product body
-  - Typography roles for all visible text (`typography.roles`)
-  - Themes (`appearance.theme` defaults to `custom`)
-  - Branding (`behavior.showBacklink`)
-  - Social share (`behavior.socialShare.enabled` and
-    `behavior.socialShare.channels.*`)
+- Full widget Core `defaults` state shape (no runtime fallbacks/healing).
+- Confirmation that Shell defaults come from `packages/widget-shell`, not this
+  widget spec.
+- Required widget Core fields:
+  - Core defaults in the widget-specific namespace for the product body.
+  - Widget Core typography roles for Core visible text (`typography.roles`).
+  - Widget Core appearance/layout/behavior defaults only.
+  - `uiLabels.core.*` labels so the ToolDrawer names the widget body correctly.
 - `itemKey` declared in `spec.json` (`{widgetType}.item`) with pluralization support.
 - Defaults are product starter state. Simple non-repeat widgets must include useful starter Core content so the first preview is not blank. Repeated content may include starter items only when an empty array would render as a broken product; add-item templates may create blank valid rows using existing object-manager/repeater `default-item`.
 - Do not seed fake content, lorem ipsum, `https://example.com` links, hidden test rows, or account-owned/private references.
@@ -241,12 +249,35 @@ OUTPUT
 
 GATE
 
-- Every control path exists in defaults (compile-time and runtime strictness
-  depend on it).
-- Every widget default uses `stage.canvas.mode: "viewport"` unless a named PRD
-  exception is recorded.
-- Any non-`full` `pod.widthMode` default is recorded as a widget-specific
-  inner-wrapper layout decision.
+- Every Core control path exists in widget `spec.json.defaults`.
+- Every Shell control path exists in Shell factory defaults.
+- Composed factory defaults (`Shell + Core`) include
+  `stage.canvas.mode: "viewport"` unless a named PRD exception is recorded in
+  the Shell contract. Builder displays this as `Full`.
+- Composed factory defaults include explicit `pod.widthMode`.
+- `pnpm --filter @clickeen/widget-shell validate` passes, proving no Shell
+  default paths remain authored in widget specs.
+
+Widget specs must not contain these Shell default families:
+
+```text
+header.*
+headerCta.*
+stage.*
+pod.*
+coreSize.*
+localeSwitcher.*
+appearance.headerCta.*
+appearance.localeSwitcher*
+appearance.podBorder
+behavior.showBacklink
+behavior.socialShare.*
+typography roles/scales for Shell roles title/body/button/localeSwitcher
+```
+
+`appearance.cardwrapper.*` is Core, not Shell. It belongs only to widgets that
+render card/item surfaces. `uiLabels.core.*` is widget Core extension metadata,
+not Shell default styling or behavior.
 
 ---
 
@@ -398,6 +429,7 @@ OUTPUT
 - Editable paths are declared in `spec.json` and, for customer-visible text, `editable-fields.json`.
 - Every Core control path has one implementation mechanism: DOM text/HTML, DOM attribute, CSS var, or shared primitive call.
 - Every runtime-read Core path exists in defaults under the widget-specific body namespace.
+- Every runtime-read Shell path exists in the shared Shell factory defaults.
 - Array ops semantics (add/remove/reorder + required `id` fields) are enforced by editor controls/runtime, not a separate `agent.md` file.
 - Binding map summary: how each path affects DOM/CSS.
 - Prohibited paths:
@@ -462,6 +494,9 @@ Required checks
 - Repo validation:
   - `pnpm typecheck`
   - `pnpm build:dieter`
+- Shell/Core defaults validation:
+  - `pnpm --filter @clickeen/widget-shell validate`
+  - `pnpm validate:widgets`
 - Defaults safety:
   - Defaults must not ship `data:` or `blob:` URLs (allowed only as user-edited/runtime values, never in `spec.json` defaults).
 - Prague pages verification (if pages changed):
@@ -482,9 +517,10 @@ Manual smoke (fast)
   clusters such as Header and Stage/Pod. Related Core fields are wrapped in one
   Bob group with an empty or meaningful group label.
 - Stage default smoke: new widget instance opens with Stage set to `Full`
-  (`stage.canvas.mode: "viewport"`).
+  (`stage.canvas.mode: "viewport"`) from account Shell defaults.
 - Pod width smoke: `pod.widthMode` matches the widget's declared inner-wrapper
-  decision; non-`full` defaults have a manifest/PRD reason.
+  decision after Shell/Core composition; non-`full` defaults have a
+  manifest/PRD reason.
 - Branding smoke: toggle `Show Made with Clickeen` off/on and verify the
   branding badge hides/shows in Builder preview and public output. Verify
   `branding.remove` blocks removal when the account is not entitled.
@@ -499,3 +535,16 @@ Manual smoke (fast)
 - Docs truth: when behavior or model changes, update
   `WidgetArchitecture.md`, `WidgetBuildContract.md`, and
   `WidgetComplianceSteps.md` together.
+
+Account defaults smoke:
+
+- `accounts/{accountPublicId}/widget-defaults.json` exists or is seeded before
+  creating a new instance.
+- Creating a new instance submits resolved `source.config` from Roma to Tokyo.
+  Tokyo derives `instance.content.json` from that config and must not call
+  widget factory defaults during product create.
+- Changing account defaults affects only future new instances. Existing saved
+  instances and duplicates keep their saved source.
+- Roma Widget Defaults maps every account Shell/Core default path to compiled
+  Builder controls. Missing coverage must show a contract error, not a generic
+  fallback editor.
