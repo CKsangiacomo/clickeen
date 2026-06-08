@@ -2,7 +2,7 @@
 
 Status: PLANNING
 Owner: Product + Architecture (San Francisco)
-Priority: P1
+Priority: P0 for Builder Copilot proof; P1 for durable workforce architecture
 Date: 2026-06-07
 Stage: 01-Planning
 Type: Architecture decision (understand → survey → recommend)
@@ -39,9 +39,71 @@ intend to make it real. This PRD's deliverable is an agreed architecture directi
 phased path — not merged code. Execution PRDs (108A, 108B, …) follow once the direction
 is locked.
 
+Peer-review correction applied on 2026-06-08: earlier drafts leaned on a stale
+`widget_instance_overlays` / RLS model as the agent safety spine. That is not current
+product truth. The current trust model is: San Francisco governs AI execution and returns
+structured outputs; Bob/Roma/Tokyo and product-owned orchestrators accept, reject, review,
+save, publish, or discard those outputs at their own named product boundaries.
+
+Copilot-first correction applied on 2026-06-08: **Builder Copilot is the first proof that
+the AI plane works.** If the shipped Copilot cannot understand visible Builder controls
+and perform simple in-memory edits like "change the button from blue to green," Clickeen
+does not yet have an AI-native Builder, no matter how elegant the future workforce-agent
+architecture sounds. The durable workforce-agent platform remains the correct long-term
+architecture, but it is secondary until PRD 108B proves that San Francisco + Bob can
+operate the actual editor.
+
 ---
 
 ## 1. Understand Clickeen first
+
+### 1.0 The immediate product proof
+
+The immediate product proof for PRD 108 is not GTM, UX Writer, MCP, or a durable
+orchestrator.
+
+The proof is Builder Copilot operating Builder correctly.
+
+Builder Copilot must be a **Builder control operator** before it is treated as an agent
+platform showcase:
+
+- Bob exposes the visible Builder controls as the action surface.
+- Each visible control has user-facing vocabulary, label, group, panel, path, value type,
+  allowed values, and current value.
+- Copilot resolves user intent against that control vocabulary.
+- Ambiguous requests ask one short clarification instead of guessing.
+- Resolved requests produce validated structured ops.
+- Bob applies valid ops to the in-memory working copy and preview.
+- Save/publish stay on the normal Roma/Tokyo product path.
+
+This is not a foundation rewrite. The addressable Builder contract is the reason this can
+be fixed cleanly: controls already have labels, paths, groups, value types, allowed values,
+and current values. The failure is that Copilot has not been wired to resolve user
+language against that contract before model planning. PRD 108B must fix that grounding
+layer; it must not turn this into schema redesign, per-widget prompt glue, or more
+workforce-agent theory.
+
+The required first proof is deliberately boring:
+
+- "What can you edit?" returns the actual current Builder controls.
+- "Change the button from blue to green" works.
+- "Change the button label to Book a demo" works.
+- "Hide the button" works.
+- "Change the background to white" resolves or clarifies correctly.
+- "Make the title bigger" resolves content-vs-typography ambiguity correctly.
+- No raw provider JSON, no fake save/publish, no translation/base-locale confusion, and no
+  stale Copilot result overwrites manual edits.
+
+Until those pass across the shipped widgets, the rest of the workforce-agent architecture
+is planning, not product proof.
+
+That first proof is not the whole Copilot. Builder Copilot also needs a Guide capability:
+when a user asks "what do I do in the panels?", "how do I add/remove/reorder this?", or
+"why don't I see that setting?", Copilot should understand the whole current widget, not
+only one isolated op. That requires a shaped whole-widget capability map: panels, groups,
+visible controls, hidden/disabled dependencies, repeatable structures, and supported
+workflows. It is not solved by vague source-code access. The Guide capability depends on
+the Operator capability because "do it" follow-ups must become validated Builder ops.
 
 ### 1.1 The company goal
 
@@ -55,58 +117,38 @@ That means agents are not a feature bolted onto the product. They are how the co
 operates and how the product self-improves. The platform that runs them is core
 infrastructure, not a side service.
 
-### 1.1.1 Why this is new territory (the actual complexity of this PRD)
+**Why PRD 108 is load-bearing for the company thesis, not just the codebase.** Builder
+Copilot is the first user-facing proof that AI can operate the product, not merely talk
+about it. GTM, UX Writer, Support, Localization, and Moderation remain the long-term AI
+workforce thesis, but they are not allowed to distract from the shipped editor failure.
+San Francisco is the constitutional layer that makes that fleet safe: every agent gets
+model access, grants, budgets, telemetry, capability checks, and typed failures through
+one plane, while product truth remains owned by Bob/Roma/Tokyo or the specific
+orchestrator/review boundary. One agent that mints its own grants, holds its own provider
+keys, calls providers directly, or writes product state directly breaks the guarantee for
+the whole system, not just itself. One Copilot that cannot operate Builder controls breaks
+the product proof today. So PRD 108 is both: (1) fix the shipped Builder Copilot as a
+control operator, and (2) preserve the single AI plane for the workforce that follows.
 
-The hard part of this decision is **not** the agents, and not the durable-vs-synchronous
-orchestration plumbing — that is ordinary engineering. The genuine complexity is that
-**Clickeen is charting territory the existing agent literature was not written for**, so
-most "best practice" for building agents on top of SaaS either does not transfer to
-Clickeen or describes a problem Clickeen has already solved at the substrate level.
+### 1.1.1 The Clickeen-specific constraint
 
-The reason is a single architectural commitment, applied **system-wide, from the ground
-up: atomic design — in Brad Frost's sense — not as a UI styling choice but as the law of
-the entire codebase.** One canonical "atom" per concept, composed by reference, with
-duplication treated as illegal and invalid state failing closed at a named boundary. This
-shows up identically across layers that have nothing else in common:
+The hard part is not the mechanics of calling a model. The hard part is keeping AI
+execution inside the same product-truth discipline as the rest of Clickeen.
 
-- **State atoms.** Instance truth is split by *product meaning* into the smallest
-  non-overlapping units — `instance.config.json` (structure/style/behavior/identity) vs.
-  `instance.content.json` (base text in declared editable paths). Not one blob, not
-  fanned-out columns. `instance.json` is explicitly demoted: "not a product source
-  authority" (`documentation/architecture/CONTEXT.md`).
-- **Truth atoms.** "Preview is not a second widget-shaped truth." "Locale is a runtime
-  parameter… IDs must be locale-free… not DB fan-out" (`Overview.md`). Localization is an
-  *overlay* on the atom, never a duplicated row per locale.
-- **Addressable text atoms.** Every editable string is a dotted path with a role and a
-  stable `identityKey` (`ck-contracts/translated-value-primitives.ts`); synonyms for an
-  existing atom are *forbidden* by constant (`SHELL_FORBIDDEN_ALIAS_PATHS`).
-- **Layered, source-tagged state atoms.** `widget_instance_overlays` stores `base + ops`
-  layers keyed by `layer ∈ {locale, geo, industry, experiment, account, behavior, user}`,
-  each tagged `source ∈ {agent, manual, import, user}`, with RLS that structurally blocks
-  agent overwrites of user edits.
-- **Service atoms.** Each concern has exactly one Product Authority (widget defs → Tokyo
-  source; publish → Tokyo ops; translations → locale-value ops). "Orchestrators = Dumb
-  Pipes." No concern has two owners.
-- **Enforcement.** "No Fallbacks… the system fails visibly." "If code cannot be explained
-  in that model, it is suspect by default." Duplicate truth is a *deletion target*
-  (AGENTS.md §1A).
+Clickeen already has named authorities:
 
-The consequence is the thing this PRD turns on: **because every concept is one atom with
-one authority, composed by reference and fail-closed on duplication, the entire company's
-truth is agent-addressable by construction.** An agent has exactly one place to read and
-one place to write for any given truth. That is precisely what legacy SaaS cannot retrofit
-— in an accreted system the same concept lives in five places (a column, a cache, a
-denormalized table, a frontend constant, a key-value entry), none authoritative, and no
-agent can safely mutate it.
+- Bob owns the in-memory Builder working copy for one open widget instance.
+- Roma owns the account Builder host and account-scoped product routes.
+- Tokyo owns instance source, translation generation state, package files, publish state,
+  and account-owned instance operations.
+- Product-specific orchestrators own their own review artifacts and workflow state.
+- San Francisco owns AI execution: provider keys, grants/policy, model routing,
+  capability validation, budgets, typed errors, telemetry, eval signals, and learning
+  event capture.
 
-This reframes how the rest of the document uses external references. The published agent
-literature — OpenAI's *Practical guide to building AI agents*, Anthropic's *Building
-agents that reach production systems with MCP*, and the broader "agents for SaaS" canon —
-was written for the accreted, non-addressable substrate Clickeen does not have. So those
-works are treated here as **literature to test against, not guidance to follow.** Where an
-idea transfers, we say so; where Clickeen's substrate already solves the problem, we mark
-it *already ahead*; where it assumes a substrate Clickeen lacks, we mark it *does not
-apply*. §1.1.2 makes that explicit; §3.5 and §3.6 apply it.
+The agent platform must preserve those boundaries. Agents may produce structured outputs
+that a product boundary applies or rejects. Agents may not become a second persistence
+owner, a second policy owner, or a second provider-key owner.
 
 ### 1.1.2 Where the agent literature does and does not apply
 
@@ -115,8 +157,8 @@ apply*. §1.1.2 makes that explicit; §3.5 and §3.6 apply it.
 | Model-swappability as table stakes for every agent | **Already ahead** | `AgentRuntimePolicy` already carries `allowModelPicker` + a pinned `selectedModel`, enforced by `modelRouter.ts`. User-facing copilot can swap from a catalogue; internal/durable agents pin an eval-locked default. This is a *policy setting per agent*, not a feature to build. |
 | Do the deterministic part deterministically; use the model only for judgment (OpenAI) | **Transfers** | Restates AGENTS.md §3 ("no fake generic layers") at the per-task level. Fixed transforms (formatting an audit report) are code, not model calls. |
 | Single-agent-first; split only when forced (OpenAI) | **Transfers** | Confirms the 108C guardrail (one real durable agent before any generalization). |
-| Layered guardrails + risk-rated human-in-the-loop gate (OpenAI) | **Transfers, but build from the substrate** | The reversibility/blast-radius signal already lives in the overlay model (`source`, `base_fingerprint`, layer composition, the user-edit-protection RLS). The gate is derived from atoms we already have, not invented. |
-| M×N integration / intent-shaped tools / one credential custody (Anthropic MCP) | **Applies only at the genuinely external edge** | *Inside* the company there is no M×N problem: internal reach is native, addressable contracts (overlay paths, single authorities). MCP-style mediation is warranted only for truly external, human-built systems (competitor pages, keyword APIs, Search Console). |
+| Layered guardrails + risk-rated human-in-the-loop gate (OpenAI) | **Transfers, but keep authority clean** | Risk belongs in agent registry/policy. San Francisco can enforce risk/policy before AI execution or before returning an actionable result, but review state and product commits belong to the owning orchestrator/product boundary. |
+| M×N integration / intent-shaped tools / one credential custody (Anthropic MCP) | **Applies only at the genuinely external edge** | Inside the company, agents should use native product-operation contracts owned by Roma/Tokyo/orchestrators. MCP-style mediation is warranted only for truly external, human-built systems (competitor pages, keyword APIs, Search Console). |
 | Wrap fragile human-shaped SaaS APIs so agents can drive them (general SaaS canon) | **Does not apply** | Premised on opaque, non-addressable state. Clickeen's state is atom-addressable, so the wrapping problem the canon solves largely does not exist internally. |
 
 ### 1.2 What San Francisco already is
@@ -420,19 +462,17 @@ before any generalization). If a durable agent later outgrows a single prompt, t
 step, and it would compose with Option C rather than fork the plane — but we don't build
 toward it speculatively (AGENTS.md §3).
 
-**(d) Guardrails are layered, and autonomous agents will need a human-in-the-loop gate —
-and that gate wants to be a plane concern, not per-agent.** The guide treats guardrails as
-a layered defense (relevance, safety/jailbreak, PII, harmful-content, brand) and rates each
-action by risk (read-only vs. write, reversibility, impact), escalating high-risk actions
-to a human. Clickeen already has the first layer (signed grants, capability/boundary
-enforcement, budgets, timeouts). The durable *autonomous* agents — GTM publishing, Community
-Moderation acting on user content — are the ones that force the next layer: a sense of how
-risky an action is, and a human checkpoint before the riskiest ones commit. The roster
-already assumes "propose → human accepts → committed" for ops agents. *What this means for
-SF's evolution:* that human gate is most coherent as a shared plane capability rather than
-re-invented inside each agent — so a uniform safety story holds as the roster grows. The
-exact shape (where risk is declared, where the gate lives) is an execution question, noted
-in §7, not decided here.
+**(d) Guardrails are layered, and autonomous agents need declared risk plus human review
+where impact requires it.** The guide treats guardrails as a layered defense (relevance,
+safety/jailbreak, PII, harmful-content, brand) and rates each action by risk (read-only
+vs. write, reversibility, impact), escalating high-risk actions to a human. Clickeen
+already has the first layer (signed grants, capability/boundary enforcement, budgets,
+timeouts). The durable *autonomous* agents — GTM publishing, Community Moderation acting
+on user content — force the next layer: declared risk in registry/policy, product-safe
+review artifacts, and approval before high-impact actions commit. *What this means for
+SF's evolution:* San Francisco should enforce risk/policy so it cannot be skipped, but it
+must not own review-state or product commits. The owning product/orchestrator boundary
+keeps those authorities.
 
 **What this is not:** we are not adopting the guide's SDK or runtime (its Agents SDK,
 declarative-vs-code-first framing, optimistic-execution machinery) — those are vendor
@@ -448,17 +488,18 @@ durable, autonomous agents actually arrive.
 execution surfaces — interactive (`/v1/execute`) and durable (governed orchestrator
 workers that route all model/policy/budget/learning through San Francisco).**
 
+Execution priority correction: the interactive surface is not just "one of the surfaces."
+Builder Copilot is the P0 proof gate. 108A-1 may ship only the thin plane hardening needed
+to stop unsupported model calls and raw provider errors. 108B then proves Builder-control
+operation. Durable workforce scaffolding is sequenced after that proof.
+
 Why this is the right fit for *Clickeen specifically*:
 
-0. **It is the only option that preserves the system-wide atomic invariant** (§1.1.1).
-   Clickeen's whole codebase is one-atom-per-concept, no duplicate truth, fail-closed.
-   Option B gives the AI spine N copies (the atomic sin at the platform layer); Option A
-   collapses two volatility classes into one atom that should stay separate. Option C keeps
-   the AI spine a single atom with one authority, and lets durable agents *compose over*
-   the product's existing atoms (overlay paths, source-tagged layers, single Product
-   Authorities) rather than become a second source of truth. The workforce obeys the same
-   law as the rest of the system — which is the entire reason an agent workforce is
-   tractable here at all.
+0. **It preserves named authority boundaries** (§1.1.1). Option B gives provider calls,
+   grants, model routing, budgets, and telemetry N copies. Option A collapses two
+   volatility classes into one deployable. Option C keeps the AI spine one authority while
+   letting each product/orchestrator boundary keep its own persistence, review, and commit
+   authority.
 1. **It honors the shipped isolation tenet** while keeping the "AI Workforce OS" real —
    the two things the canonical docs insist on simultaneously.
 2. **It generalizes a pattern already in production**, not a theory: account-widget
@@ -486,6 +527,16 @@ differentiated by a `role` flag) splits into shared plane primitives vs. per-age
 behavior. That split is in-scope for the first interactive-surface execution PRD, not this
 decision doc.
 
+**The AI-plane / product-boundary co-dependency (why there is no partial compliance).**
+The customer-trust promise is current product truth, not a legacy overlay table: Bob edits
+one in-memory working copy; Roma mediates account-scoped Builder operations; Tokyo owns
+instance, translation, package, and publish operations; service orchestrators own their
+own review artifacts. San Francisco is the AI execution plane that supplies governed,
+typed, measurable AI results to those boundaries. An agent that bypasses San Francisco
+for model access, grants, budgets, telemetry, or provider-key custody breaks the AI-plane
+guarantee. An agent that bypasses Bob/Roma/Tokyo/orchestrator boundaries for persistence
+breaks the product-truth guarantee. There is no partial compliance.
+
 ### What stays fixed (non-negotiable, regardless of agent)
 - Provider keys live only in San Francisco.
 - Grant verification, capability + boundary enforcement, model routing, budget/timeout
@@ -495,10 +546,10 @@ decision doc.
 - **External reach is shared, not per-agent** (§3.5): when a durable agent needs an
   outside system, it goes through a common, intent-shaped outbound layer with one credential
   custodian — not a bespoke per-agent client with its own key handling.
-- **Safety is a plane property, not a prompt** (§3.6): the riskiest autonomous actions
-  (irreversible, externally publishing, acting on user content) get a human checkpoint that
-  is owned by the plane, so one safety story holds across the whole roster. The mechanism
-  is for execution to design (§7).
+- **Safety is enforced by the plane, but review/commit authority stays outside it**
+  (§3.6): risk class lives in registry/policy, San Francisco refuses unsafe AI execution
+  or actionable results without the required policy/approval signal, and the owning
+  product/orchestrator boundary owns review state, artifacts, and commits.
 - **Model choice stays in the plane, not hard-coded in orchestrators** (§3.6): model
   selection lives in the signed policy SF resolves, leaving room for finer-grained (even
   per-phase) choice to grow over time.
@@ -516,21 +567,35 @@ decision doc.
 
 This decision doc proposes the sequence; each phase becomes its own `02-Executing` PRD.
 
-- **108A — Formalize the AI plane contract.** Define the internal execution interface San
-  Francisco exposes to *both* surfaces: input validation, grant/policy/boundary
-  enforcement, model resolution, budget accounting, structured result + usage, learning
-  event. Make `/v1/execute` and the service-binding path both consume it. Extend the
-  registry so durable/service agents are first-class (not just `execute` vs `endpoint`).
-  This is also where the §3.6 capabilities get their concrete contract — how an action's
-  risk is expressed, where the human-review gate lives, and how finer-grained model choice
-  is carried in policy — designed then, not pre-decided here.
-- **108B — Interactive surface cleanup (resolves EB-007).** Split `widgetCopilotCore.ts`
-  into shared plane primitives vs. per-agent behavior; remove `role`-flag flattening; make
-  "add an interactive agent" a registry + thin behavior-module operation.
-- **108C — Durable agent pattern (reference implementation).** Stand up the governed
-  durable-agent pattern end-to-end with **one** real agent (recommend **UX Writer** first:
-  service-scoped, no account-truth risk, clear human-review output, smallest blast radius)
-  — orchestrator worker + SF-routed execution. This becomes the template.
+- **108A-1 — Urgent user-facing plane hardening.** Define model capability metadata,
+  provider-conformance checks, typed provider errors, and picker eligibility so Builder
+  Copilot cannot select or call an unsupported model shape. This thin slice unblocks the
+  P0 108B rescue without waiting for the full durable-agent plane. It must not become a
+  broad platform build before Copilot can edit Builder.
+- **108B-1 — P0 Interactive Builder Copilot Operator rescue (resolves EB-007).** Use Bob's
+  compiled Builder control contract as Copilot's action surface; build the visible-control
+  vocabulary; answer capability questions deterministically; validate structured ops
+  against current editable paths; apply only to Bob's in-memory working copy; preserve
+  dirty state; add fixture/eval scenarios for the shipped widgets. The first green bar is
+  not abstract: button green, button label, hide button, background, title, share, and
+  branding edits must work or clarify correctly in preview.
+- **108B-2 — Builder Copilot Guide layer.** After the Operator slice is green, add
+  whole-widget/panel/workflow guidance for prompts like "what do I do in the panels?",
+  "how do I add/remove/reorder this?", and "why don't I see that setting?" This is not
+  grounding alone and not abstract advice. It requires a full current-widget capability
+  map, panel/workflow map, repeatable structure map, conditional control map, and a
+  Guide-to-op bridge so practical guidance can become validated Builder edits.
+- **108A-2 — Durable/service plane contract.** Define the service-binding execution
+  interface San Francisco exposes to durable orchestrators: service-scoped policy/grant
+  model, budget split, shared execution core, structured result + usage, telemetry,
+  eval/observability fields, and learning-event capture. Extend the registry so
+  durable/service agents are first-class (not just `execute` vs `endpoint`).
+- **108C — Durable agent scaffold with one real reference agent.** Stand up the governed
+  durable-agent pattern end-to-end with **one** real low-risk reference agent (recommend
+  **UX Writer** first: service-scoped, no account-truth risk, clear human-review output,
+  smallest blast radius) — orchestrator worker + SF-routed execution + review artifact
+  store. This becomes the template. Scaffold-only platform work is explicitly rejected.
+  108C does not enter execution until 108B has proven the user-facing Builder Copilot.
 - **108D — GTM Agent on the pattern.** Re-base the existing GTM spec onto the governed
   plane (drop its standalone grant/model/telemetry; reuse SF's). GTM is the **first agent
   that needs external reach**, so this is where §3.5's outbound layer gets built for real:
@@ -539,6 +604,16 @@ This decision doc proposes the sequence; each phase becomes its own `02-Executin
   search+execute code-orchestration shape. Pair the agent with a **skill** (a written
   playbook for *how* to use those tools well): per the MCP article, tools grant access
   while skills supply procedural know-how, and the most capable agents carry both.
+  - **Design-before-build note:** 108D's *implementation* follows 108C, but its
+    *architecture* must be decided before 108C ships. The outbound-layer shape (§3.5 —
+    intent-shaped tools, one credential custodian, code-orchestration for large API
+    surfaces) and the external credential-custody model (vault-style store in the AI
+    plane; OAuth/payment flows via browser handoff, never inline tool calls) constrain
+    what the SF plane contract can assume about any durable agent's outbound reach. The
+    design dependency runs earlier than the build dependency: before 108C enters
+    `02-Executing`, the team should have decided Open Questions 6 and 7 at the design
+    level — not built, but decided — so 108D implements against a known contract instead
+    of arriving as a retrofit.
 - **108E+ — Support Reply, Community Moderation** onto whichever surface fits (Support
   Reply likely interactive; Moderation likely durable). These carry the roster's
   **highest-risk actions** (live customer-facing replies; acting on user content), so they
@@ -546,6 +621,14 @@ This decision doc proposes the sequence; each phase becomes its own `02-Executin
   safety capability (designed in 108A) exists.
 
 Each phase ships docs-in-sync with code before moving to `03-Executed`, per the pipeline.
+
+- **108F — Learning loop (named direction, execution deferred).** Outcome capture and
+  observability are first-class from 108A onward, but policy/prompt/model self-improvement
+  is not built in 108A–108E. 108A must persist queryable metadata for
+  `(agent_id, phase, model, capability_profile_version, prompt_version, policy_version)`
+  and 108B/108C must ship eval scenarios/gates. The future 108F loop may use those records
+  to propose policy, prompt, risk, or model changes, subject to human promotion. The closed
+  loop itself remains separate execution work.
 
 ---
 
@@ -574,11 +657,11 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
    the company's operating thesis, while keeping the product CRUD path boring and safe.
 
 5. **Safe, predictable, effective in production (per the OpenAI guide's deployment test)?**
-   The direction is set up to be. The doc names layered guardrails and a human checkpoint
-   for irreversible actions as plane-level concerns (§3.6), and the phased path is
-   deliberately incremental (one agent, validated, before generalizing) so the guide's
-   "start small, validate, layer guardrails, escalate to humans" discipline is followed.
-   The concrete safety mechanism is execution work (108A, §7), not settled here.
+   The direction is set up to be only if execution adds evals and observability early, not
+   as a future flourish. 108A owns provider conformance and typed failures; 108B owns
+   Builder fixture/eval scenarios; 108C owns reference-agent eval and review artifacts.
+   No autonomous-write or customer-facing workforce action ships without risk policy,
+   human review where required, and measurable pass/fail gates.
 
 ---
 
@@ -606,13 +689,32 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
    keyword-API keys live, and what refreshes them? (Lean: a vault-style store owned by the
    AI plane, parallel to provider-key custody; OAuth/payment flows use browser handoff,
    never inline tool calls.)
-8. **Risk-rating + human-gate model (§3.6):** is risk a fixed registry attribute per agent
-   action, or computed (write-access × reversibility × impact)? And does the human-review
-   gate live in the plane (uniform) or in each orchestrator (flexible)? (Lean: rating in
-   the registry; gate primitive in the plane so it can't be skipped per agent.)
+8. **Risk-rating + human-gate model (§3.6):** which `riskClass` values belong in the
+   registry/policy, what policy/approval signal must San Francisco require for each class,
+   and which product/orchestrator boundary owns review artifacts, approval state, and
+   commits? (Lean: risk declared in registry/policy; San Francisco enforces it; review
+   state and product commits stay outside San Francisco.)
 9. **Per-phase model selection (§3.6):** does the signed policy carry a single model per
    agent, or a model-per-phase map? (Lean: per-phase map, so cheap phases use cheap models
    once evals prove parity.)
+10. **Concurrency model for the durable-agent calling pattern (resolve in 108A).** The
+   current guard in `sanfrancisco/src/concurrency.ts` — `MAX_INFLIGHT_PER_ISOLATE = 8`, an
+   in-isolate counter that throws 429 on overflow — is a *copilot* guard: it protects the
+   interactive `/v1/execute` path from concurrent user turns, and is the right primitive
+   for that workload. When durable orchestrators begin calling SF via service binding
+   (Open Question 1), they introduce a second workload class: long-running, multi-step,
+   non-interactive calls that may run for hours and make many sequential model requests.
+   These classes must **not** share a ceiling — a saturated GTM run should not 429 a real
+   user's copilot turn, and vice versa. *Design direction for 108A:* distinguish the two
+   surfaces at the binding layer (HTTP `/v1/execute` = interactive; service-binding RPC =
+   durable-agent) and apply separate concurrency budgets. The interactive ceiling stays
+   tight (latency-sensitive, user-facing); the durable-agent budget is governed
+   differently — likely a Workflow-level queue rather than an in-isolate counter, which
+   fits the async nature of durable orchestration and aligns with Cloudflare Workflows V2's
+   raised limits (50,000 concurrent running instances; 2M queued; waiting/sleeping
+   instances don't count against concurrency — [Cloudflare Workflows limits](https://developers.cloudflare.com/workflows/reference/limits/)).
+   This is a 108A design requirement, not a 108C discovery. (Lean: separate budgets keyed
+   on calling surface; durable side queued at the orchestration layer.)
 
 ---
 
@@ -622,8 +724,8 @@ Approve, amend, or reject **Option C** as San Francisco's agent-platform directi
 including the §3.5 outbound-reach principles (one shared, intent-shaped external layer with
 central credential custody) and the §3.6 agent-internal direction (keep work deterministic
 where possible; treat model/tools/instructions as the unit with model choice owned by the
-plane; single-agent-first; and make layered guardrails + a human checkpoint for the
-riskiest actions a plane concern rather than a per-agent one). These are stated as
-direction; their mechanisms are for the execution PRDs to design. On approval, this doc
-graduates the phased path (108A–108E) into the pipeline and the first execution PRD (108A)
-enters `02-Executing`. EB-007 is marked `promoted → PRD 108B`.
+plane; single-agent-first; and make risk policy/evals/review gates explicit before
+autonomous or customer-facing actions ship). These are stated as direction; their
+mechanisms are for the execution PRDs to design. On approval, this doc graduates the
+phased path (108A-1, 108B, 108A-2, 108C, 108D, 108E+, with 108F named as a deferred
+direction) into the pipeline. EB-007 is marked `promoted → PRD 108B`.
