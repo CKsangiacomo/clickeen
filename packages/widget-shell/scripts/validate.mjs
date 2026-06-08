@@ -20,6 +20,28 @@ const shellAppearanceKeys = new Set([
   'podBorder',
 ]);
 const shellTypographyRoles = new Set(['title', 'body', 'button', 'localeSwitcher']);
+const shellSharedEditorNodeIds = new Set([
+  'header-content',
+  'header-content-no-header-cta',
+  'header-layout',
+  'header-layout-no-header-cta',
+  'core-size',
+  'header-appearance',
+  'header-appearance-no-header-cta',
+  'stagepod-appearance',
+  'stagepod-layout',
+  'stagepod-corners',
+  'settings-behavior',
+]);
+const requiredShellSharedEditorFamilies = [
+  ['header-content', 'header-content-no-header-cta'],
+  ['header-layout', 'header-layout-no-header-cta'],
+  ['core-size'],
+  ['stagepod-layout'],
+  ['header-appearance', 'header-appearance-no-header-cta'],
+  ['stagepod-appearance'],
+  ['settings-behavior'],
+];
 
 function isRecord(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -48,6 +70,38 @@ function isShellPath(pathValue) {
   return false;
 }
 
+function collectSharedEditorNodeIds(value) {
+  if (!isRecord(value)) return [];
+  const ids = [];
+  if (value.kind === 'shared' && typeof value.id === 'string' && value.id.trim()) {
+    ids.push(value.id.trim());
+  }
+  for (const child of Object.values(value)) {
+    if (Array.isArray(child)) {
+      child.forEach((entry) => ids.push(...collectSharedEditorNodeIds(entry)));
+    } else if (isRecord(child)) {
+      ids.push(...collectSharedEditorNodeIds(child));
+    }
+  }
+  return ids;
+}
+
+function validateSharedEditorNodes(widgetType, editor) {
+  const ids = new Set(collectSharedEditorNodeIds(editor));
+  const localIssues = [];
+  requiredShellSharedEditorFamilies.forEach((family) => {
+    if (!family.some((id) => ids.has(id))) {
+      localIssues.push(`${widgetType}:editor.shared.${family[0]}`);
+    }
+  });
+  ids.forEach((id) => {
+    if (!shellSharedEditorNodeIds.has(id)) {
+      localIssues.push(`${widgetType}:editor.shared.${id}:unknown`);
+    }
+  });
+  return localIssues;
+}
+
 const issues = [];
 for (const widgetType of fs.readdirSync(widgetsRoot).sort()) {
   const specPath = path.join(widgetsRoot, widgetType, 'spec.json');
@@ -56,6 +110,7 @@ for (const widgetType of fs.readdirSync(widgetsRoot).sort()) {
   for (const pathValue of leafPaths(spec.defaults || {}).filter(Boolean)) {
     if (isShellPath(pathValue)) issues.push(`${widgetType}:${pathValue}`);
   }
+  issues.push(...validateSharedEditorNodes(widgetType, spec.editor));
 }
 
 if (issues.length) {
@@ -64,4 +119,4 @@ if (issues.length) {
   process.exit(1);
 }
 
-console.log('[widget-shell validate] OK: widget specs contain Core defaults only');
+console.log('[widget-shell validate] OK: widget specs contain Core defaults only and declare required Shell editor nodes');

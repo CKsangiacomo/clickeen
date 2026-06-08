@@ -45,17 +45,26 @@ export function Workspace({
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
   const [resolvedAssets, setResolvedAssets] = useState<Map<string, ResolvedAccountAsset>>(() => new Map());
+  const lastMaterializedPreviewRef = useRef<Record<string, unknown> | null>(null);
   const mediaAssetRefs = useMemo(
     () => collectConfigMediaAssetRefs(instanceData),
     [instanceData],
   );
+  const unresolvedMediaAssetRefs = useMemo(
+    () => mediaAssetRefs.filter((assetRef) => !resolvedAssets.has(assetRef)),
+    [mediaAssetRefs, resolvedAssets],
+  );
   const previewInstanceData = useMemo(() => {
     if (!mediaAssetRefs.length) return instanceData;
+    if (unresolvedMediaAssetRefs.length && lastMaterializedPreviewRef.current) {
+      return lastMaterializedPreviewRef.current;
+    }
     const materialized = materializeConfigMedia(instanceData, resolvedAssets);
     return materialized && typeof materialized === 'object' && !Array.isArray(materialized)
       ? (materialized as Record<string, unknown>)
       : instanceData;
-  }, [instanceData, mediaAssetRefs, resolvedAssets]);
+  }, [instanceData, mediaAssetRefs, resolvedAssets, unresolvedMediaAssetRefs]);
+  const previewStateReady = !unresolvedMediaAssetRefs.length || lastMaterializedPreviewRef.current != null;
   const effectivePreviewableLocales = useMemo(() => {
     const previewableLocales = Array.from(
       new Set(
@@ -84,6 +93,11 @@ export function Workspace({
     if (!selectedTranslationValues) return previewInstanceData;
     return resolveTranslatedValues(previewInstanceData, selectedTranslationValues);
   }, [previewInstanceData, selectedTranslationValues]);
+
+  useEffect(() => {
+    if (!previewStateReady) return;
+    lastMaterializedPreviewRef.current = previewInstanceData;
+  }, [previewInstanceData, previewStateReady]);
   const latestRef = useRef({
     compiled,
     instanceData: resolvedPreviewInstanceData,
@@ -128,7 +142,7 @@ export function Workspace({
       };
     }
 
-    const missingAssetRefs = mediaAssetRefs.filter((assetRef) => !resolvedAssets.has(assetRef));
+    const missingAssetRefs = unresolvedMediaAssetRefs;
     if (!missingAssetRefs.length) {
       return () => {
         cancelled = true;
@@ -157,7 +171,12 @@ export function Workspace({
     return () => {
       cancelled = true;
     };
-  }, [accountAssets, mediaAssetRefs, resolvedAssets]);
+  }, [accountAssets, mediaAssetRefs, resolvedAssets, unresolvedMediaAssetRefs]);
+
+  useEffect(() => {
+    if (previewStateReady) return;
+    setIframeHasState(false);
+  }, [previewStateReady]);
 
   useEffect(() => {
     if (!switcherNotice) return undefined;
@@ -204,7 +223,9 @@ export function Workspace({
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    const visibilityFallbackTimeout = window.setTimeout(() => setIframeHasState(true), 1500);
+    const visibilityFallbackTimeout = previewStateReady
+      ? window.setTimeout(() => setIframeHasState(true), 1500)
+      : null;
     let readyTimeout: number | null = null;
     const handleLoad = () => {
       setIframeLoaded(true);
@@ -213,6 +234,7 @@ export function Workspace({
       const nextCompiled = snapshot.compiled;
       const iframeWindow = iframe.contentWindow;
       if (!iframeWindow || !nextCompiled) return;
+      if (!previewStateReady) return;
       iframeWindow.postMessage(
         {
           type: 'ck:state-update',
@@ -247,13 +269,14 @@ export function Workspace({
     return () => {
       iframe.removeEventListener('load', handleLoad);
       iframe.removeEventListener('error', handleError);
-      window.clearTimeout(visibilityFallbackTimeout);
+      if (visibilityFallbackTimeout != null) window.clearTimeout(visibilityFallbackTimeout);
       if (readyTimeout != null) window.clearTimeout(readyTimeout);
     };
-  }, [iframeSrc]);
+  }, [iframeSrc, previewStateReady]);
 
   useEffect(() => {
     if (!hasWidget || !compiled) return;
+    if (!previewStateReady) return;
     const iframeWindow = iframeRef.current?.contentWindow;
     if (!iframeWindow) return;
     if (!iframeLoaded) return;
@@ -282,6 +305,7 @@ export function Workspace({
     device,
     theme,
     iframeLoaded,
+    previewStateReady,
   ]);
 
   useEffect(() => {

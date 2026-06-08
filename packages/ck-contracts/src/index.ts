@@ -443,25 +443,20 @@ export function normalizeWidgetLocaleSwitcherSettings(raw: unknown): WidgetLocal
   };
 }
 
-function normalizeResolvedAssetSource(entry: unknown): ResolvedAccountAsset | null {
-  if (!isRecord(entry)) return null;
-  const directUrl = typeof entry.url === 'string' ? entry.url.trim() : '';
-  const parsed = directUrl ? parseAccountAssetRef(directUrl) : null;
-  if (!parsed) return null;
-  return {
-    assetRef: parsed.assetRef,
-    url: directUrl,
-  };
+function normalizeResolvedAssetSource(entry: unknown, expectedAssetRef: string): ResolvedAccountAsset | null {
+  const normalized = normalizeResolvedAccountAsset(entry);
+  if (!normalized || normalized.assetRef !== expectedAssetRef) return null;
+  return normalized;
 }
 
 function readResolvedAssetByRef(resolvedAssets: unknown, assetRefRaw: unknown): ResolvedAccountAsset | null {
   const assetRef = normalizeAccountAssetRef(assetRefRaw);
   if (!assetRef) return null;
   if (resolvedAssets instanceof Map) {
-    return normalizeResolvedAssetSource(resolvedAssets.get(assetRef));
+    return normalizeResolvedAssetSource(resolvedAssets.get(assetRef), assetRef);
   }
   if (isRecord(resolvedAssets)) {
-    return normalizeResolvedAssetSource(resolvedAssets[assetRef]);
+    return normalizeResolvedAssetSource(resolvedAssets[assetRef], assetRef);
   }
   return null;
 }

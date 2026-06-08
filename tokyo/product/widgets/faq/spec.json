@@ -1490,6 +1490,10 @@
             "id": "header-layout"
           },
           {
+            "kind": "shared",
+            "id": "core-size"
+          },
+          {
             "nodes": [
               {
                 "kind": "field",
