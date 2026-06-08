@@ -7,8 +7,18 @@ Parent: `PRD106C_Prague astro blocks migration to widget instances.md`
 Series step: 7.4
 Depends on: `PRD106A2_WidgetShellExtraction.md`, `PRD106C_Prague astro blocks migration to widget instances.md`
 Unlocks: CTA widget instances for PRD106D route migration.
-Authority owned by this PRD: CTA empty-Core defaults, package proof, and validation.
+Authority owned by this PRD: historical CTA acceptance; final authority is
+`calltoaction.*` Core defaults, package proof, and validation.
 Authority explicitly not owned by this PRD: Widget Shell, Page Composer, Split, Cards, Big Bang, Prague route cutover.
+
+## PRD106 Closure Note
+
+This historical PRD predates the final PRD106 naming correction. The surviving
+widget type is `calltoaction`, not generic `cta`, and the widget has
+widget-specific Core state under `calltoaction.*`. Shared Header action state is
+Shell-owned as `headerCta.*` with appearance at `appearance.headerCta.*`. Do not
+copy historical Header CTA, private CTA, or Shell-only body language as current
+architecture.
 
 ## PRD Tenets
 
@@ -49,27 +59,27 @@ is evidence to stop, not evidence to proceed.
 Current executable step:
 
 ```text
-No current executable step. CTA was implemented as the PRD106A2 Step 4
-empty-Core proof.
+No current executable step. Historical CTA was replaced by the surviving
+`calltoaction` widget with widget-specific Core state.
 ```
 
 Green evidence:
 
-- CTA adds no widget-specific state.
-- Header/CTA/Stage/Pod are all Shell-owned.
-- CTA-specific controls are none; imported controls are exactly the A2 Shell
-  contract.
+- Call to Action uses shared Shell state plus widget-specific `calltoaction.*`
+  Core state.
+- Header/Header CTA/Stage/Pod are all Shell-owned.
+- Call to Action body controls live under `calltoaction.*`.
 - Existing CTA root `title`, `body`, `primaryCta`, `secondaryCta`, and
   private `layout.*` paths were deleted/rebased.
 - "Bottom" remains page placement, not widget identity.
 - Bob/Roma typechecks passed.
 - `pnpm validate:widgets` passed.
-- CTA compile/materialization smoke passed with Shell-only controls and empty
-  Core DOM.
+- Call to Action compile/materialization smoke passed with Shell controls plus
+  `calltoaction.*` Core DOM.
 
 Stop conditions:
 
-- CTA introduces root CTA/copy paths.
+- Call to Action introduces root CTA/copy paths outside `calltoaction.*`.
 - CTA adds page-placement logic to widget state.
 - CTA keeps a compatibility mapper, legacy state normalizer, local Shell copy,
   second CTA support, or CTA-specific placement/variant model.
@@ -78,11 +88,11 @@ Stop conditions:
 
 | Step | Action | Required evidence | Green criteria | Stop condition |
 | ---: | --- | --- | --- | --- |
-| 1 | Confirm CTA empty-Core contract. | State/control table and old-state deletion list. | No Core state beyond Shell; old CTA paths are deleted/rebased, not bridged. | Root CTA/copy path, compatibility mapper, or legacy state normalizer appears. |
-| 2 | Build CTA defaults. | Spec/Core diff with Shell defaults, `uiLabels.core.*`, and `coreSize.*`. | Non-empty Header/CTA defaults compile; empty Core sizing is Shell-owned auto/no-op. | Blank scaffold, duplicate Shell paths, or fake CTA body sizing. |
-| 3 | Build/verify empty Core package. | Preview/package evidence. | CTA renders as Header-only Shell with empty `.ck-headerLayout__body`. | Widget bypasses Shell or retains private CTA DOM/runtime. |
-| 4 | Validate editable fields. | Editable-fields diff/tests. | Only Shell Header/CTA fields exist. | Extra CTA Core fields or old `primaryCta`/`secondaryCta` fields appear. |
-| 5 | Verify product discovery and Bob/Roma materialization. | Regenerated widget source evidence, compile/save/package evidence. | CTA remains reachable through existing `CTA` widget code and package is Shell plus empty Core. | Missing source regeneration, duplicate Shell code, or stale old CTA path still compiles. |
+| 1 | Confirm Call to Action Core contract. | State/control table and old-state deletion list. | Body state lives under `calltoaction.*`; old CTA paths are deleted/rebased, not bridged. | Root CTA/copy path, compatibility mapper, or legacy state normalizer appears. |
+| 2 | Build Call to Action defaults. | Spec/Core diff with account Shell defaults and `calltoaction.*` Core defaults. | Non-empty Header/Header CTA and body action defaults compile. | Blank scaffold, duplicate Shell paths, or fake Shell-owned body sizing. |
+| 3 | Build/verify Core package. | Preview/package evidence. | Call to Action renders Shell plus `.ck-calltoaction__body` from `calltoaction.*`. | Widget bypasses Shell or retains private CTA DOM/runtime. |
+| 4 | Validate editable fields. | Editable-fields diff/tests. | Shell Header/Header CTA fields plus `calltoaction.*` body fields exist. | Old `primaryCta`/`secondaryCta` fields appear. |
+| 5 | Verify product discovery and Bob/Roma materialization. | Regenerated widget source evidence, compile/save/package evidence. | `calltoaction` remains reachable through widget code `CTA` and package is Shell plus widget Core. | Missing source regeneration, duplicate Shell code, or stale old CTA path still compiles. |
 
 ## Implementation Evidence
 
@@ -90,16 +100,16 @@ Implemented by commit scope under PRD106A2 Step 4.
 
 Changed files:
 
-- `tokyo/product/widgets/cta/spec.json`
-- `tokyo/product/widgets/cta/editable-fields.json`
-- `tokyo/product/widgets/cta/widget.html`
-- `tokyo/product/widgets/cta/widget.css`
-- `tokyo/product/widgets/cta/widget.client.js`
+- `tokyo/product/widgets/calltoaction/spec.json`
+- `tokyo/product/widgets/calltoaction/editable-fields.json`
+- `tokyo/product/widgets/calltoaction/widget.html`
+- `tokyo/product/widgets/calltoaction/widget.css`
+- `tokyo/product/widgets/calltoaction/widget.client.js`
 
 Old-path guard:
 
 ```text
-rg "primaryCta|secondaryCta|layout\.maxWidth|layout\.bodyWidth|layout\.gap|ck-cta__body|ck-cta__actions|cta-primary|cta-secondary|data-role=\"cta-body\"|data-role=\"cta-actions\"" tokyo/product/widgets/cta
+rg "primaryCta|secondaryCta|layout\.maxWidth|layout\.bodyWidth|layout\.gap|ck-cta__body|ck-cta__actions|cta-primary|cta-secondary|data-role=\"cta-body\"|data-role=\"cta-actions\"" tokyo/product/widgets/calltoaction
 ```
 
 Result:
@@ -126,10 +136,10 @@ Compile/materialization smoke output:
 
 ```json
 {
-  "widget": "cta",
+  "widget": "calltoaction",
   "panels": ["content", "typography", "layout", "appearance", "settings"],
   "controls": 125,
-  "shellControls": ["header.title", "cta.label"],
+  "shellControls": ["header.title", "headerCta.label"],
   "stylesBytes": 13520,
   "runtimeBytes": 110815
 }
@@ -137,18 +147,19 @@ Compile/materialization smoke output:
 
 ## Purpose
 
-Finish the surviving `cta` widget that absorbs Prague `cta-bottom-block`.
+Finish the surviving `calltoaction` widget that absorbs Prague
+`cta-bottom-block`.
 
-CTA uses the shared Widget Shell extracted from FAQ:
+Call to Action uses the shared Widget Shell extracted from FAQ:
 
 ```text
-Stage -> Pod -> ck-headerLayout(Header + empty Core)
+Stage -> Pod -> ck-headerLayout(Header + Call to Action Core)
 ```
 
-CTA is the Header-only case of the Widget Shell. It consumes the shared Header,
-CTA, Stage/Pod, Appearance, Typography, Settings, locale, runtime, and
-editable-fields mechanisms from `packages/widget-shell/`. Its Widget Core is
-empty.
+Call to Action consumes the shared Header, Header CTA, Stage/Pod, Appearance,
+Typography, Settings, locale, runtime, and editable-fields mechanisms from
+`packages/widget-shell/`. Its widget-specific body/action state lives under
+`calltoaction.*`.
 
 "Bottom" is page placement, not widget identity. Page Composer decides where a
 CTA instance sits.
@@ -171,12 +182,12 @@ Prague `cta-bottom-block` renders:
 
 Surviving widget source:
 
-- `tokyo/product/widgets/cta/spec.json`
-- `tokyo/product/widgets/cta/editable-fields.json`
-- `tokyo/product/widgets/cta/limits.json`
-- `tokyo/product/widgets/cta/widget.html`
-- `tokyo/product/widgets/cta/widget.css`
-- `tokyo/product/widgets/cta/widget.client.js`
+- `tokyo/product/widgets/calltoaction/spec.json`
+- `tokyo/product/widgets/calltoaction/editable-fields.json`
+- `tokyo/product/widgets/calltoaction/limits.json`
+- `tokyo/product/widgets/calltoaction/widget.html`
+- `tokyo/product/widgets/calltoaction/widget.css`
+- `tokyo/product/widgets/calltoaction/widget.client.js`
 
 Also regenerate existing widget discovery source after the CTA rebase:
 
@@ -188,33 +199,39 @@ a new widget code or rename the widget to `bottom-cta`.
 
 ## Instance Shape
 
-CTA adds no widget-specific state. It uses the shared Widget Shell state:
+Call to Action uses the shared Widget Shell state:
 
 - `header.*`
-- `cta.*`
+- `headerCta.*`
 - `stage.*`
 - `pod.*`
-- `appearance.cta*`
+- `appearance.headerCta.*`
 - `localeSwitcher.*`
 - `appearance.localeSwitcher*`
 - `typography.*`
 - `behavior.showBacklink`
 - `behavior.socialShare.enabled`
 
-CTA-specific controls:
+Call to Action-specific Core state:
 
 ```text
-none
+calltoaction.showEyebrow
+calltoaction.eyebrow
+calltoaction.headline
+calltoaction.showSupportingText
+calltoaction.supportingTextHtml
+calltoaction.action.*
+calltoaction.layout.*
+calltoaction.actionStyle.*
 ```
 
-Imported controls are exactly the PRD106A2 Widget Shell controls. Do not add
-`copy`, `button`, `ctaText`, `primaryCta`, `secondaryCta`, `layout.maxWidth`,
-`layout.bodyWidth`, or `layout.gap`.
+Imported Shell controls are exactly the PRD106A2 Widget Shell controls. Do not
+add root `copy`, `button`, `ctaText`, `primaryCta`, `secondaryCta`,
+`layout.maxWidth`, `layout.bodyWidth`, or `layout.gap`.
 
-CTA still renders a Shell Core div because every Shell widget has one, but the
-Core is empty. CTA inherits Shell `coreSize.*` defaults with `coreSize.mode =
-auto`; any Core-size UI for CTA must be hidden or clearly Shell-owned/no-op. It
-must not become fake CTA body sizing.
+Call to Action still renders a Shell Core div because every Shell widget has
+one. Core-size remains Shell-owned through `coreSize.*`; Call to Action body
+layout and action styling live under `calltoaction.*`.
 
 Existing account/dev CTA instances that still use old `title`, `body`,
 `primaryCta`, `secondaryCta`, or private `layout.*` state are invalid after this
@@ -232,17 +249,24 @@ Required defaults:
 - `header.placement`: `top`
 - `header.alignment`: `center`
 - `header.ctaPlacement`: `below`
-- `cta.enabled`: `true`
-- `cta.label`: "Get started"
-- `cta.href`: "#"
-- `uiLabels.core.singular`: "CTA"
-- `uiLabels.core.plural`: "CTAs"
-- `uiLabels.core.sizeCluster`: "CTA size"
+- `headerCta.enabled`: `true`
+- `headerCta.label`: "Get started"
+- `headerCta.href`: "#"
+- `uiLabels.core.singular`: "Call to Action"
+- `uiLabels.core.plural`: "Call to Action"
+- `uiLabels.core.sizeCluster`: "Call to Action size"
 - `coreSize.mode`: `auto`
 - `coreSize.minHeight`: `0`
 - `coreSize.preferredVw`: `0`
 - `coreSize.maxHeight`: `0`
 - `coreSize.fixedHeight`: `0`
+- `calltoaction.showEyebrow`: `true`
+- `calltoaction.eyebrow`: useful non-empty eyebrow text
+- `calltoaction.headline`: useful non-empty body headline
+- `calltoaction.showSupportingText`: `true`
+- `calltoaction.supportingTextHtml`: useful non-empty body copy
+- `calltoaction.action.enabled`: `true`
+- `calltoaction.action.label`: useful non-empty body action label
 
 No default visible string may be empty.
 
@@ -253,6 +277,7 @@ No default visible string may be empty.
 | Cluster | Control | Path | Type | Why |
 | --- | --- | --- | --- | --- |
 | Header | Shared Header content | shared `header-content` | shared | Widget Shell package. |
+| Call to Action | Eyebrow/headline/copy/action content | `calltoaction.*` | widget Core | Body content belongs to the widget-specific namespace. |
 
 ### Layout Panel
 
@@ -260,6 +285,7 @@ No default visible string may be empty.
 | --- | --- | --- | --- | --- | --- |
 | Header | Shared Header layout | shared `header-layout` | shared | Widget Shell package. |
 | Shared | Stage/Pod layout | shared `stagepod-layout` | shared | Widget Shell package. |
+| Call to Action | Body layout | `calltoaction.layout.*` | widget Core | Body alignment, width, and spacing are widget-owned. |
 
 ### Appearance Panel
 
@@ -267,6 +293,7 @@ No default visible string may be empty.
 | --- | --- | --- | --- | --- |
 | Header CTA | Shared Header CTA appearance | shared `header-appearance` | shared | Widget Shell package. |
 | Shared | Stage/Pod appearance | shared `stagepod-appearance` | shared | Widget Shell package. |
+| Call to Action | Body action appearance | `calltoaction.actionStyle.*` | widget Core | Body action styling is not the Shell Header CTA. |
 
 Behavior toggles stay in Settings, matching FAQ.
 
@@ -285,7 +312,8 @@ Required typography roles:
 | --- | --- |
 | `title` | Header title |
 | `body` | Header subtitle |
-| `button` | CTA labels |
+| `button` | Header CTA and body action labels |
+| `eyebrow` | Call to Action eyebrow |
 
 ## Editable Fields
 
@@ -293,27 +321,32 @@ Required typography roles:
 
 - `header.title`
 - `header.subtitleHtml`
-- `cta.label`
+- `headerCta.label`
+- `calltoaction.eyebrow`
+- `calltoaction.headline`
+- `calltoaction.supportingTextHtml`
+- `calltoaction.action.label`
 
 ## Acceptance
 
-- Fresh CTA instance renders non-blank output.
-- CTA is implemented as Widget Shell package with empty Widget Core.
-- Prague `cta-bottom-block` can be represented by CTA.
+- Fresh Call to Action instance renders non-blank output.
+- Call to Action is implemented as Widget Shell plus `calltoaction.*` Widget
+  Core.
+- Prague `cta-bottom-block` can be represented by Call to Action.
 - The widget name and controls do not include page-placement language such as "bottom".
-- CTA does not define duplicate Header/CTA/Stage/Pod shell state.
+- Call to Action does not define duplicate Header/Header CTA/Stage/Pod Shell
+  state.
 - Existing old CTA root paths `title`, `body`, `primaryCta`, `secondaryCta`,
   and private `layout.*` do not compile as product-valid CTA state after the
   rebase.
-- CTA does not include a compatibility mapper, legacy normalizer, page
+- Call to Action does not include a compatibility mapper, legacy normalizer, page
   placement enum, CTA variant model, action group model, second CTA support, or
   Prague block adapter.
-- CTA DOM uses shared `.ck-headerLayout`, direct `.ck-header`, and an empty
-  direct `.ck-headerLayout__body`; retained private CTA DOM such as
-  `.ck-cta__title`, `.ck-cta__body`, `.ck-cta__actions`, or CTA-specific
-  max/body width CSS fails this PRD.
-- CTA keeps existing product discovery via the `CTA` widget code and regenerated
-  widget definition source evidence.
+- Call to Action DOM uses shared `.ck-headerLayout`, direct `.ck-header`, and
+  widget-owned `.ck-calltoaction__body`; retained old private CTA DOM such as
+  `.ck-cta__title`, `.ck-cta__body`, or `.ck-cta__actions` fails this PRD.
+- Call to Action keeps existing product discovery via the `CTA` widget code and
+  regenerated widget definition source evidence.
 - Bob exposes the controls above with correct paths and show/hide behavior.
 - CTA materializes to `index.html`, `styles.css`, and `runtime.js`.
 - Two CTA instances on one composed page do not collide in CSS/runtime; this is

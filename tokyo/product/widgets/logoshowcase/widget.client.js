@@ -74,6 +74,7 @@
 
   function assertLogoShowcaseState(state) {
     assertObject(state, 'state');
+    assertObject(state.logoshowcase, 'state.logoshowcase');
 
     assertObject(state.header, 'state.header');
     assertBoolean(state.header.enabled, 'state.header.enabled');
@@ -93,32 +94,32 @@
       throw new Error('[LogoShowcase] state.header.ctaPlacement must be right|below');
     }
 
-    assertArray(state.strips, 'state.strips');
-    state.strips.forEach((strip, stripIdx) => {
-      assertObject(strip, `state.strips[${stripIdx}]`);
-      assertString(strip.id, `state.strips[${stripIdx}].id`);
-      assertArray(strip.logos, `state.strips[${stripIdx}].logos`);
+    assertArray(state.logoshowcase.strips, 'state.logoshowcase.strips');
+    state.logoshowcase.strips.forEach((strip, stripIdx) => {
+      assertObject(strip, `state.logoshowcase.strips[${stripIdx}]`);
+      assertString(strip.id, `state.logoshowcase.strips[${stripIdx}].id`);
+      assertArray(strip.logos, `state.logoshowcase.strips[${stripIdx}].logos`);
       strip.logos.forEach((logo, logoIdx) => {
-        assertObject(logo, `state.strips[${stripIdx}].logos[${logoIdx}]`);
-        assertString(logo.id, `state.strips[${stripIdx}].logos[${logoIdx}].id`);
-        assertString(logo.name, `state.strips[${stripIdx}].logos[${logoIdx}].name`);
-        assertString(logo.logoFill, `state.strips[${stripIdx}].logos[${logoIdx}].logoFill`);
+        assertObject(logo, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}]`);
+        assertString(logo.id, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].id`);
+        assertString(logo.name, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].name`);
+        assertString(logo.logoFill, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].logoFill`);
         if (logo.asset != null) {
-          assertObject(logo.asset, `state.strips[${stripIdx}].logos[${logoIdx}].asset`);
+          assertObject(logo.asset, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].asset`);
           if (
             logo.asset.assetId != null &&
             (typeof logo.asset.assetId !== 'string' ||
               !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(logo.asset.assetId.trim()))
           ) {
-            throw new Error(`[LogoShowcase] state.strips[${stripIdx}].logos[${logoIdx}].asset.assetId invalid`);
+            throw new Error(`[LogoShowcase] state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].asset.assetId invalid`);
           }
         }
-        assertString(logo.href, `state.strips[${stripIdx}].logos[${logoIdx}].href`);
-        assertBoolean(logo.targetBlank, `state.strips[${stripIdx}].logos[${logoIdx}].targetBlank`);
-        assertBoolean(logo.nofollow, `state.strips[${stripIdx}].logos[${logoIdx}].nofollow`);
-        assertString(logo.alt, `state.strips[${stripIdx}].logos[${logoIdx}].alt`);
-        assertString(logo.title, `state.strips[${stripIdx}].logos[${logoIdx}].title`);
-        assertString(logo.caption, `state.strips[${stripIdx}].logos[${logoIdx}].caption`);
+        assertString(logo.href, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].href`);
+        assertBoolean(logo.targetBlank, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].targetBlank`);
+        assertBoolean(logo.nofollow, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].nofollow`);
+        assertString(logo.alt, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].alt`);
+        assertString(logo.title, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].title`);
+        assertString(logo.caption, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].caption`);
       });
     });
 
@@ -133,66 +134,65 @@
       throw new Error('[LogoShowcase] state.headerCta.iconPlacement must be left|right');
     }
 
-    if (!['grid', 'carousel'].includes(state.type)) {
-      throw new Error('[LogoShowcase] state.type must be grid|carousel');
+    if (!['grid', 'carousel'].includes(state.logoshowcase.type)) {
+      throw new Error('[LogoShowcase] state.logoshowcase.type must be grid|carousel');
     }
 
-    assertObject(state.typeConfig, 'state.typeConfig');
-    assertObject(state.typeConfig.grid, 'state.typeConfig.grid');
-
-    assertObject(state.typeConfig.carousel, 'state.typeConfig.carousel');
-    if (!['paged', 'continuous'].includes(state.typeConfig.carousel.mode)) {
-      throw new Error('[LogoShowcase] state.typeConfig.carousel.mode must be paged|continuous');
+    assertObject(state.logoshowcase.typeConfig, 'state.logoshowcase.typeConfig');
+    assertObject(state.logoshowcase.typeConfig.carousel, 'state.logoshowcase.typeConfig.carousel');
+    if (!['paged', 'continuous'].includes(state.logoshowcase.typeConfig.carousel.mode)) {
+      throw new Error('[LogoShowcase] state.logoshowcase.typeConfig.carousel.mode must be paged|continuous');
     }
-    if (!['logo', 'page'].includes(state.typeConfig.carousel.step)) {
-      throw new Error('[LogoShowcase] state.typeConfig.carousel.step must be logo|page');
+    if (!['logo', 'page'].includes(state.logoshowcase.typeConfig.carousel.step)) {
+      throw new Error('[LogoShowcase] state.logoshowcase.typeConfig.carousel.step must be logo|page');
     }
-    assertBoolean(state.typeConfig.carousel.showArrows, 'state.typeConfig.carousel.showArrows');
-    assertBoolean(state.typeConfig.carousel.allowSwipe, 'state.typeConfig.carousel.allowSwipe');
-    assertBoolean(state.typeConfig.carousel.autoplay, 'state.typeConfig.carousel.autoplay');
-    assertBoolean(state.typeConfig.carousel.pauseOnHover, 'state.typeConfig.carousel.pauseOnHover');
-    assertNumber(state.typeConfig.carousel.autoSlideDelayMs, 'state.typeConfig.carousel.autoSlideDelayMs');
-    assertNumber(state.typeConfig.carousel.transitionMs, 'state.typeConfig.carousel.transitionMs');
-    assertNumber(state.typeConfig.carousel.speed, 'state.typeConfig.carousel.speed');
-    if (!['left', 'right'].includes(state.typeConfig.carousel.direction)) {
-      throw new Error('[LogoShowcase] state.typeConfig.carousel.direction must be left|right');
+    assertBoolean(state.logoshowcase.typeConfig.carousel.showArrows, 'state.logoshowcase.typeConfig.carousel.showArrows');
+    assertBoolean(state.logoshowcase.typeConfig.carousel.allowSwipe, 'state.logoshowcase.typeConfig.carousel.allowSwipe');
+    assertBoolean(state.logoshowcase.typeConfig.carousel.autoplay, 'state.logoshowcase.typeConfig.carousel.autoplay');
+    assertBoolean(state.logoshowcase.typeConfig.carousel.pauseOnHover, 'state.logoshowcase.typeConfig.carousel.pauseOnHover');
+    assertNumber(state.logoshowcase.typeConfig.carousel.autoSlideDelayMs, 'state.logoshowcase.typeConfig.carousel.autoSlideDelayMs');
+    assertNumber(state.logoshowcase.typeConfig.carousel.transitionMs, 'state.logoshowcase.typeConfig.carousel.transitionMs');
+    assertNumber(state.logoshowcase.typeConfig.carousel.speed, 'state.logoshowcase.typeConfig.carousel.speed');
+    if (!['left', 'right'].includes(state.logoshowcase.typeConfig.carousel.direction)) {
+      throw new Error('[LogoShowcase] state.logoshowcase.typeConfig.carousel.direction must be left|right');
     }
 
     assertObject(state.appearance, 'state.appearance');
-    if (!['original', 'grayscale'].includes(state.appearance.logoLook)) {
-      throw new Error('[LogoShowcase] state.appearance.logoLook must be original|grayscale');
+    assertObject(state.logoshowcase.appearance, 'state.logoshowcase.appearance');
+    if (!['original', 'grayscale'].includes(state.logoshowcase.appearance.logoLook)) {
+      throw new Error('[LogoShowcase] state.logoshowcase.appearance.logoLook must be original|grayscale');
     }
-    assertNumber(state.appearance.logoOpacity, 'state.appearance.logoOpacity');
-    if (state.appearance.logoOpacity < 0 || state.appearance.logoOpacity > 1) {
-      throw new Error('[LogoShowcase] state.appearance.logoOpacity must be 0..1');
+    assertNumber(state.logoshowcase.appearance.logoOpacity, 'state.logoshowcase.appearance.logoOpacity');
+    if (state.logoshowcase.appearance.logoOpacity < 0 || state.logoshowcase.appearance.logoOpacity > 1) {
+      throw new Error('[LogoShowcase] state.logoshowcase.appearance.logoOpacity must be 0..1');
     }
 
-    assertFill(state.appearance.itemBackground, 'state.appearance.itemBackground');
-    assertObject(state.appearance.cardwrapper, 'state.appearance.cardwrapper');
+    assertFill(state.logoshowcase.appearance.itemBackground, 'state.logoshowcase.appearance.itemBackground');
+    assertObject(state.logoshowcase.appearance.cardwrapper, 'state.logoshowcase.appearance.cardwrapper');
 
-    assertBoolean(state.appearance.cardwrapper.radiusLinked, 'state.appearance.cardwrapper.radiusLinked');
-    assertString(state.appearance.cardwrapper.radius, 'state.appearance.cardwrapper.radius');
-    assertString(state.appearance.cardwrapper.radiusTL, 'state.appearance.cardwrapper.radiusTL');
-    assertString(state.appearance.cardwrapper.radiusTR, 'state.appearance.cardwrapper.radiusTR');
-    assertString(state.appearance.cardwrapper.radiusBR, 'state.appearance.cardwrapper.radiusBR');
-    assertString(state.appearance.cardwrapper.radiusBL, 'state.appearance.cardwrapper.radiusBL');
+    assertBoolean(state.logoshowcase.appearance.cardwrapper.radiusLinked, 'state.logoshowcase.appearance.cardwrapper.radiusLinked');
+    assertString(state.logoshowcase.appearance.cardwrapper.radius, 'state.logoshowcase.appearance.cardwrapper.radius');
+    assertString(state.logoshowcase.appearance.cardwrapper.radiusTL, 'state.logoshowcase.appearance.cardwrapper.radiusTL');
+    assertString(state.logoshowcase.appearance.cardwrapper.radiusTR, 'state.logoshowcase.appearance.cardwrapper.radiusTR');
+    assertString(state.logoshowcase.appearance.cardwrapper.radiusBR, 'state.logoshowcase.appearance.cardwrapper.radiusBR');
+    assertString(state.logoshowcase.appearance.cardwrapper.radiusBL, 'state.logoshowcase.appearance.cardwrapper.radiusBL');
 
-    assertObject(state.appearance.cardwrapper.border, 'state.appearance.cardwrapper.border');
-    assertBoolean(state.appearance.cardwrapper.border.enabled, 'state.appearance.cardwrapper.border.enabled');
-    assertNumber(state.appearance.cardwrapper.border.width, 'state.appearance.cardwrapper.border.width');
-    assertString(state.appearance.cardwrapper.border.color, 'state.appearance.cardwrapper.border.color');
+    assertObject(state.logoshowcase.appearance.cardwrapper.border, 'state.logoshowcase.appearance.cardwrapper.border');
+    assertBoolean(state.logoshowcase.appearance.cardwrapper.border.enabled, 'state.logoshowcase.appearance.cardwrapper.border.enabled');
+    assertNumber(state.logoshowcase.appearance.cardwrapper.border.width, 'state.logoshowcase.appearance.cardwrapper.border.width');
+    assertString(state.logoshowcase.appearance.cardwrapper.border.color, 'state.logoshowcase.appearance.cardwrapper.border.color');
 
-    assertObject(state.appearance.cardwrapper.shadow, 'state.appearance.cardwrapper.shadow');
-    assertBoolean(state.appearance.cardwrapper.shadow.enabled, 'state.appearance.cardwrapper.shadow.enabled');
-    assertBoolean(state.appearance.cardwrapper.shadow.inset, 'state.appearance.cardwrapper.shadow.inset');
-    assertNumber(state.appearance.cardwrapper.shadow.x, 'state.appearance.cardwrapper.shadow.x');
-    assertNumber(state.appearance.cardwrapper.shadow.y, 'state.appearance.cardwrapper.shadow.y');
-    assertNumber(state.appearance.cardwrapper.shadow.blur, 'state.appearance.cardwrapper.shadow.blur');
-    assertNumber(state.appearance.cardwrapper.shadow.spread, 'state.appearance.cardwrapper.shadow.spread');
-    assertString(state.appearance.cardwrapper.shadow.color, 'state.appearance.cardwrapper.shadow.color');
-    assertNumber(state.appearance.cardwrapper.shadow.alpha, 'state.appearance.cardwrapper.shadow.alpha');
-    if (state.appearance.cardwrapper.shadow.alpha < 0 || state.appearance.cardwrapper.shadow.alpha > 100) {
-      throw new Error('[LogoShowcase] state.appearance.cardwrapper.shadow.alpha must be 0..100');
+    assertObject(state.logoshowcase.appearance.cardwrapper.shadow, 'state.logoshowcase.appearance.cardwrapper.shadow');
+    assertBoolean(state.logoshowcase.appearance.cardwrapper.shadow.enabled, 'state.logoshowcase.appearance.cardwrapper.shadow.enabled');
+    assertBoolean(state.logoshowcase.appearance.cardwrapper.shadow.inset, 'state.logoshowcase.appearance.cardwrapper.shadow.inset');
+    assertNumber(state.logoshowcase.appearance.cardwrapper.shadow.x, 'state.logoshowcase.appearance.cardwrapper.shadow.x');
+    assertNumber(state.logoshowcase.appearance.cardwrapper.shadow.y, 'state.logoshowcase.appearance.cardwrapper.shadow.y');
+    assertNumber(state.logoshowcase.appearance.cardwrapper.shadow.blur, 'state.logoshowcase.appearance.cardwrapper.shadow.blur');
+    assertNumber(state.logoshowcase.appearance.cardwrapper.shadow.spread, 'state.logoshowcase.appearance.cardwrapper.shadow.spread');
+    assertString(state.logoshowcase.appearance.cardwrapper.shadow.color, 'state.logoshowcase.appearance.cardwrapper.shadow.color');
+    assertNumber(state.logoshowcase.appearance.cardwrapper.shadow.alpha, 'state.logoshowcase.appearance.cardwrapper.shadow.alpha');
+    if (state.logoshowcase.appearance.cardwrapper.shadow.alpha < 0 || state.logoshowcase.appearance.cardwrapper.shadow.alpha > 100) {
+      throw new Error('[LogoShowcase] state.logoshowcase.appearance.cardwrapper.shadow.alpha must be 0..100');
     }
 
     assertObject(state.appearance.headerCta, 'state.appearance.headerCta');
@@ -213,16 +213,17 @@
     }
     assertNumber(state.appearance.headerCta.iconSize, 'state.appearance.headerCta.iconSize');
 
-    assertObject(state.spacing, 'state.spacing');
-    assertNumber(state.spacing.gap, 'state.spacing.gap');
-    assertNumber(state.spacing.rowGap, 'state.spacing.rowGap');
-    assertNumber(state.spacing.stripGap, 'state.spacing.stripGap');
-    assertNumber(state.spacing.logoHeight, 'state.spacing.logoHeight');
-    assertNumber(state.spacing.mobileGap, 'state.spacing.mobileGap');
-    assertNumber(state.spacing.mobileStripGap, 'state.spacing.mobileStripGap');
+    assertObject(state.logoshowcase.spacing, 'state.logoshowcase.spacing');
+    assertNumber(state.logoshowcase.spacing.gap, 'state.logoshowcase.spacing.gap');
+    assertNumber(state.logoshowcase.spacing.rowGap, 'state.logoshowcase.spacing.rowGap');
+    assertNumber(state.logoshowcase.spacing.stripGap, 'state.logoshowcase.spacing.stripGap');
+    assertNumber(state.logoshowcase.spacing.logoHeight, 'state.logoshowcase.spacing.logoHeight');
+    assertNumber(state.logoshowcase.spacing.mobileGap, 'state.logoshowcase.spacing.mobileGap');
+    assertNumber(state.logoshowcase.spacing.mobileStripGap, 'state.logoshowcase.spacing.mobileStripGap');
 
     assertObject(state.behavior, 'state.behavior');
-    assertBoolean(state.behavior.randomOrder, 'state.behavior.randomOrder');
+    assertObject(state.logoshowcase.behavior, 'state.logoshowcase.behavior');
+    assertBoolean(state.logoshowcase.behavior.randomOrder, 'state.logoshowcase.behavior.randomOrder');
     assertBoolean(state.behavior.showBacklink, 'state.behavior.showBacklink');
 
     assertObject(state.stage, 'state.stage');
@@ -277,24 +278,24 @@
   }
 
   function applyLayoutVars(state) {
-    lsRoot.style.setProperty('--ls-gap', `${state.spacing.gap}px`);
-    lsRoot.style.setProperty('--ls-gap-mobile', `${state.spacing.mobileGap}px`);
-    lsRoot.style.setProperty('--ls-strip-gap', `${state.spacing.stripGap}px`);
-    lsRoot.style.setProperty('--ls-strip-gap-mobile', `${state.spacing.mobileStripGap}px`);
-    lsRoot.style.setProperty('--ls-row-gap', `${state.spacing.rowGap}px`);
-    lsRoot.style.setProperty('--ls-logo-h', `${state.spacing.logoHeight}px`);
-    lsRoot.style.setProperty('--ls-logo-h-mobile', `${state.spacing.logoHeight}px`);
+    lsRoot.style.setProperty('--ls-gap', `${state.logoshowcase.spacing.gap}px`);
+    lsRoot.style.setProperty('--ls-gap-mobile', `${state.logoshowcase.spacing.mobileGap}px`);
+    lsRoot.style.setProperty('--ls-strip-gap', `${state.logoshowcase.spacing.stripGap}px`);
+    lsRoot.style.setProperty('--ls-strip-gap-mobile', `${state.logoshowcase.spacing.mobileStripGap}px`);
+    lsRoot.style.setProperty('--ls-row-gap', `${state.logoshowcase.spacing.rowGap}px`);
+    lsRoot.style.setProperty('--ls-logo-h', `${state.logoshowcase.spacing.logoHeight}px`);
+    lsRoot.style.setProperty('--ls-logo-h-mobile', `${state.logoshowcase.spacing.logoHeight}px`);
   }
 
   function applyAppearanceVars(state) {
-    lsRoot.style.setProperty('--ls-logo-opacity', String(state.appearance.logoOpacity));
-    lsRoot.style.setProperty('--ls-logo-filter', state.appearance.logoLook === 'grayscale' ? 'grayscale(1)' : 'none');
+    lsRoot.style.setProperty('--ls-logo-opacity', String(state.logoshowcase.appearance.logoOpacity));
+    lsRoot.style.setProperty('--ls-logo-filter', state.logoshowcase.appearance.logoLook === 'grayscale' ? 'grayscale(1)' : 'none');
 
-    lsRoot.style.setProperty('--ls-item-bg', resolveAppearanceHelpers().toCssBackground(state.appearance.itemBackground));
+    lsRoot.style.setProperty('--ls-item-bg', resolveAppearanceHelpers().toCssBackground(state.logoshowcase.appearance.itemBackground));
     if (!window.CKSurface?.applyCardWrapper) {
       throw new Error('[LogoShowcase] Missing CKSurface.applyCardWrapper');
     }
-    window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, lsRoot);
+    window.CKSurface.applyCardWrapper(state.logoshowcase.appearance.cardwrapper, lsRoot);
   }
 
   function renderLogoTile(logo) {
@@ -353,7 +354,7 @@
 
     stripsEl.innerHTML = '';
 
-    state.strips.forEach((strip) => {
+    state.logoshowcase.strips.forEach((strip) => {
       const stripEl = document.createElement('div');
       stripEl.className = 'ck-logoshowcase__strip';
       stripEl.setAttribute('data-role', 'strip');
@@ -368,12 +369,12 @@
       trackEl.setAttribute('data-role', 'strip-track');
 
       const logos = (() => {
-        if (state.behavior.randomOrder !== true) return strip.logos;
+        if (state.logoshowcase.behavior.randomOrder !== true) return strip.logos;
         const seedString = `${strip.id}|${strip.logos.map((l) => l.id).join(',')}`;
         return shuffleWithSeed(strip.logos, fnv1a32(seedString));
       })();
 
-      const isContinuous = state.type === 'carousel' && state.typeConfig.carousel.mode === 'continuous';
+      const isContinuous = state.logoshowcase.type === 'carousel' && state.logoshowcase.typeConfig.carousel.mode === 'continuous';
       if (isContinuous) {
         const copyA = document.createElement('div');
         copyA.className = 'ck-logoshowcase__ticker-copy';
@@ -507,7 +508,7 @@
     if (!(prevBtn instanceof HTMLButtonElement)) return;
     if (!(nextBtn instanceof HTMLButtonElement)) return;
 
-    const cfg = state.typeConfig.carousel;
+    const cfg = state.logoshowcase.typeConfig.carousel;
 
     stripEl.dataset.swipe = cfg.allowSwipe === true ? 'true' : 'false';
     stripEl.dataset.pauseOnHover = 'false';
@@ -540,7 +541,7 @@
       const itemCount = stripEl.querySelectorAll('[data-role="logos"] [data-role="logo"]').length;
       const first = stripEl.querySelector('[data-role="logos"] [data-role="logo"]');
       const tileW = first instanceof HTMLElement ? first.getBoundingClientRect().width : 0;
-      const gap = isMobile() ? state.spacing.mobileGap : state.spacing.gap;
+      const gap = isMobile() ? state.logoshowcase.spacing.mobileGap : state.logoshowcase.spacing.gap;
       const viewportW = viewportEl.clientWidth;
       const perPage = tileW > 0 ? Math.max(1, Math.floor((viewportW + gap) / (tileW + gap))) : 1;
       const stepMode = cfg.step === 'logo' ? 'logo' : 'page';
@@ -635,7 +636,7 @@
     if (!(prevBtn instanceof HTMLButtonElement)) return;
     if (!(nextBtn instanceof HTMLButtonElement)) return;
 
-    const cfg = state.typeConfig.carousel;
+    const cfg = state.logoshowcase.typeConfig.carousel;
 
     stripEl.dataset.swipe = 'false';
     stripEl.dataset.pauseOnHover = cfg.pauseOnHover === true ? 'true' : 'false';
@@ -687,8 +688,8 @@
     Array.from(stripsEl.querySelectorAll('[data-role="strip"]')).forEach((stripEl) => {
       cleanupStrip(stripEl);
       if (!(stripEl instanceof HTMLElement)) return;
-      if (state.type === 'carousel') {
-        if (state.typeConfig.carousel.mode === 'continuous') bindContinuousMotion(stripEl, state);
+      if (state.logoshowcase.type === 'carousel') {
+        if (state.logoshowcase.typeConfig.carousel.mode === 'continuous') bindContinuousMotion(stripEl, state);
         else bindPagedMotion(stripEl, state);
       } else {
         // grid: no motion bindings
@@ -730,9 +731,9 @@
       { locale: runtimeContext && runtimeContext.locale, instanceId: resolvedInstanceId },
     );
 
-    lsRoot.setAttribute('data-type', state.type);
-    if (state.type === 'carousel') {
-      lsRoot.setAttribute('data-motion', state.typeConfig.carousel.mode);
+    lsRoot.setAttribute('data-type', state.logoshowcase.type);
+    if (state.logoshowcase.type === 'carousel') {
+      lsRoot.setAttribute('data-motion', state.logoshowcase.typeConfig.carousel.mode);
     } else {
       lsRoot.removeAttribute('data-motion');
     }
@@ -760,10 +761,10 @@
     }
 
     const nextSignature = JSON.stringify([
-      state.type,
-      state.type === 'carousel' ? state.typeConfig.carousel.mode : 'grid',
-      state.behavior.randomOrder === true,
-      state.strips,
+      state.logoshowcase.type,
+      state.logoshowcase.type === 'carousel' ? state.logoshowcase.typeConfig.carousel.mode : 'grid',
+      state.logoshowcase.behavior.randomOrder === true,
+      state.logoshowcase.strips,
     ]);
     if (nextSignature !== lastStripsSignature) {
       lastStripsSignature = nextSignature;

@@ -129,7 +129,7 @@ Stage -> Pod -> ck-headerLayout(Header + Widget Core)
 
 Prague must not preserve Astro block Header/CTA/layout names inside migrated
 widget state. Prague block values are migration source only; PRD106C converts
-them into shell paths (`header.*`, `cta.*`, Stage/Pod) plus the approved
+them into shell paths (`header.*`, `headerCta.*`, Stage/Pod) plus the approved
 Widget Core.
 
 ## Migration Shape

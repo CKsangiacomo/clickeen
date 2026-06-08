@@ -56,8 +56,8 @@ function embeddedInstanceIdsFromConfig(args: {
   parentInstanceId: string;
 }): { ok: true; value: string[] } | RouteFailureLike {
   if (args.widgetType !== 'split') return { ok: true, value: [] };
-  const core = isRecord(args.config.core) ? args.config.core : null;
-  const items = Array.isArray(core?.items) ? core.items : [];
+  const split = isRecord(args.config.split) ? args.config.split : null;
+  const items = Array.isArray(split?.items) ? split.items : [];
   const ids = new Set<string>();
   for (const item of items) {
     if (!isRecord(item) || item.kind !== 'instance') continue;

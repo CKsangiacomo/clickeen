@@ -136,7 +136,7 @@
     const value = String(raw || '').trim();
     const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
     if (!match) {
-      throw new Error('[Countdown] state.timer.targetDate must be ISO YYYY-MM-DDTHH:MM(:SS)');
+      throw new Error('[Countdown] state.countdown.timer.targetDate must be ISO YYYY-MM-DDTHH:MM(:SS)');
     }
     const year = Number(match[1]);
     const month = Number(match[2]);
@@ -144,11 +144,11 @@
     const hour = Number(match[4]);
     const minute = Number(match[5]);
     const second = match[6] ? Number(match[6]) : 0;
-    if (month < 1 || month > 12) throw new Error('[Countdown] state.timer.targetDate month must be 1..12');
-    if (day < 1 || day > 31) throw new Error('[Countdown] state.timer.targetDate day must be 1..31');
-    if (hour < 0 || hour > 23) throw new Error('[Countdown] state.timer.targetDate hour must be 0..23');
-    if (minute < 0 || minute > 59) throw new Error('[Countdown] state.timer.targetDate minute must be 0..59');
-    if (second < 0 || second > 59) throw new Error('[Countdown] state.timer.targetDate second must be 0..59');
+    if (month < 1 || month > 12) throw new Error('[Countdown] state.countdown.timer.targetDate month must be 1..12');
+    if (day < 1 || day > 31) throw new Error('[Countdown] state.countdown.timer.targetDate day must be 1..31');
+    if (hour < 0 || hour > 23) throw new Error('[Countdown] state.countdown.timer.targetDate hour must be 0..23');
+    if (minute < 0 || minute > 59) throw new Error('[Countdown] state.countdown.timer.targetDate minute must be 0..59');
+    if (second < 0 || second > 59) throw new Error('[Countdown] state.countdown.timer.targetDate second must be 0..59');
     return { year, month, day, hour, minute, second };
   }
 
@@ -164,6 +164,7 @@
 
   function assertCountdownState(state) {
     assertObject(state, 'state');
+    assertObject(state.countdown, 'state.countdown');
 
     assertObject(state.header, 'state.header');
     assertBoolean(state.header.enabled, 'state.header.enabled');
@@ -194,69 +195,70 @@
       throw new Error('[Countdown] state.headerCta.iconPlacement must be left|right');
     }
 
-    assertObject(state.timer, 'state.timer');
-    if (!['date', 'personal', 'number'].includes(state.timer.mode)) {
-      throw new Error('[Countdown] state.timer.mode must be date|personal|number');
+    assertObject(state.countdown.timer, 'state.countdown.timer');
+    if (!['date', 'personal', 'number'].includes(state.countdown.timer.mode)) {
+      throw new Error('[Countdown] state.countdown.timer.mode must be date|personal|number');
     }
-    if (state.timer.labels !== undefined) {
-      assertObject(state.timer.labels, 'state.timer.labels');
+    if (state.countdown.timer.labels !== undefined) {
+      assertObject(state.countdown.timer.labels, 'state.countdown.timer.labels');
       TIMER_UNIT_KEYS.forEach((unit) => {
-        assertString(state.timer.labels[unit], `state.timer.labels.${unit}`);
+        assertString(state.countdown.timer.labels[unit], `state.countdown.timer.labels.${unit}`);
       });
     }
 
-    if (state.timer.mode === 'date') {
-      assertString(state.timer.targetDate, 'state.timer.targetDate');
-      assertString(state.timer.timezone, 'state.timer.timezone');
-      parseTargetDate(state.timer.targetDate);
-      if (state.timer.timezone !== 'browser' && !isValidTimeZone(state.timer.timezone)) {
-        throw new Error('[Countdown] state.timer.timezone must be a valid IANA timezone or "browser"');
+    if (state.countdown.timer.mode === 'date') {
+      assertString(state.countdown.timer.targetDate, 'state.countdown.timer.targetDate');
+      assertString(state.countdown.timer.timezone, 'state.countdown.timer.timezone');
+      parseTargetDate(state.countdown.timer.targetDate);
+      if (state.countdown.timer.timezone !== 'browser' && !isValidTimeZone(state.countdown.timer.timezone)) {
+        throw new Error('[Countdown] state.countdown.timer.timezone must be a valid IANA timezone or "browser"');
       }
-    } else if (state.timer.mode === 'personal') {
-      assertNumber(state.timer.timeAmount, 'state.timer.timeAmount');
-      if (state.timer.timeAmount <= 0) {
-        throw new Error('[Countdown] state.timer.timeAmount must be > 0');
+    } else if (state.countdown.timer.mode === 'personal') {
+      assertNumber(state.countdown.timer.timeAmount, 'state.countdown.timer.timeAmount');
+      if (state.countdown.timer.timeAmount <= 0) {
+        throw new Error('[Countdown] state.countdown.timer.timeAmount must be > 0');
       }
-      if (!['minutes', 'hours', 'days', 'weeks', 'months'].includes(state.timer.timeUnit)) {
-        throw new Error('[Countdown] state.timer.timeUnit must be minutes|hours|days|weeks|months');
+      if (!['minutes', 'hours', 'days', 'weeks', 'months'].includes(state.countdown.timer.timeUnit)) {
+        throw new Error('[Countdown] state.countdown.timer.timeUnit must be minutes|hours|days|weeks|months');
       }
-      if (!['never', '1 minute', '5 minutes', '1 hour', '1 day', '1 week'].includes(state.timer.repeat)) {
-        throw new Error('[Countdown] state.timer.repeat must be never|1 minute|5 minutes|1 hour|1 day|1 week');
+      if (!['never', '1 minute', '5 minutes', '1 hour', '1 day', '1 week'].includes(state.countdown.timer.repeat)) {
+        throw new Error('[Countdown] state.countdown.timer.repeat must be never|1 minute|5 minutes|1 hour|1 day|1 week');
       }
-    } else if (state.timer.mode === 'number') {
-      assertNumber(state.timer.targetNumber, 'state.timer.targetNumber');
-      assertNumber(state.timer.startingNumber, 'state.timer.startingNumber');
-      assertNumber(state.timer.countDuration, 'state.timer.countDuration');
-      if (state.timer.countDuration <= 0) {
-        throw new Error('[Countdown] state.timer.countDuration must be > 0');
+    } else if (state.countdown.timer.mode === 'number') {
+      assertNumber(state.countdown.timer.targetNumber, 'state.countdown.timer.targetNumber');
+      assertNumber(state.countdown.timer.startingNumber, 'state.countdown.timer.startingNumber');
+      assertNumber(state.countdown.timer.countDuration, 'state.countdown.timer.countDuration');
+      if (state.countdown.timer.countDuration <= 0) {
+        throw new Error('[Countdown] state.countdown.timer.countDuration must be > 0');
       }
     }
-    assertObject(state.layout, 'state.layout');
-    assertString(state.layout.position, 'state.layout.position');
-    if (!LAYOUT_POSITION_KEYS.has(state.layout.position)) {
-      throw new Error(`[Countdown] state.layout.position must be ${LAYOUT_POSITION_LIST.join('|')}`);
+    assertObject(state.countdown.layout, 'state.countdown.layout');
+    assertString(state.countdown.layout.position, 'state.countdown.layout.position');
+    if (!LAYOUT_POSITION_KEYS.has(state.countdown.layout.position)) {
+      throw new Error(`[Countdown] state.countdown.layout.position must be ${LAYOUT_POSITION_LIST.join('|')}`);
     }
     assertObject(state.appearance, 'state.appearance');
-    assertString(state.appearance.timerStyle, 'state.appearance.timerStyle');
-    if (!['separated', 'inline'].includes(state.appearance.timerStyle)) {
-      throw new Error('[Countdown] state.appearance.timerStyle must be separated|inline');
+    assertObject(state.countdown.appearance, 'state.countdown.appearance');
+    assertString(state.countdown.appearance.timerStyle, 'state.countdown.appearance.timerStyle');
+    if (!['separated', 'inline'].includes(state.countdown.appearance.timerStyle)) {
+      throw new Error('[Countdown] state.countdown.appearance.timerStyle must be separated|inline');
     }
-    assertString(state.appearance.timeFormat, 'state.appearance.timeFormat');
-    if (!['auto', 'D:H:M:S', 'H:M:S'].includes(state.appearance.timeFormat)) {
-      throw new Error('[Countdown] state.appearance.timeFormat must be auto|D:H:M:S|H:M:S');
+    assertString(state.countdown.appearance.timeFormat, 'state.countdown.appearance.timeFormat');
+    if (!['auto', 'D:H:M:S', 'H:M:S'].includes(state.countdown.appearance.timeFormat)) {
+      throw new Error('[Countdown] state.countdown.appearance.timeFormat must be auto|D:H:M:S|H:M:S');
     }
-    assertBoolean(state.appearance.showLabels, 'state.appearance.showLabels');
-    assertString(state.appearance.theme, 'state.appearance.theme');
-    if (!THEME_KEYS.has(state.appearance.theme)) {
-      throw new Error(`[Countdown] state.appearance.theme must be one of: ${Array.from(THEME_KEYS).join(', ')}`);
+    assertBoolean(state.countdown.appearance.showLabels, 'state.countdown.appearance.showLabels');
+    assertString(state.countdown.appearance.theme, 'state.countdown.appearance.theme');
+    if (!THEME_KEYS.has(state.countdown.appearance.theme)) {
+      throw new Error(`[Countdown] state.countdown.appearance.theme must be one of: ${Array.from(THEME_KEYS).join(', ')}`);
     }
-    assertString(state.appearance.animation, 'state.appearance.animation');
-    if (!ANIMATION_KEYS.has(state.appearance.animation)) {
-      throw new Error(`[Countdown] state.appearance.animation must be one of: ${Array.from(ANIMATION_KEYS).join(', ')}`);
+    assertString(state.countdown.appearance.animation, 'state.countdown.appearance.animation');
+    if (!ANIMATION_KEYS.has(state.countdown.appearance.animation)) {
+      throw new Error(`[Countdown] state.countdown.appearance.animation must be one of: ${Array.from(ANIMATION_KEYS).join(', ')}`);
     }
-    assertFill(state.appearance.textColor, 'state.appearance.textColor');
-    assertFill(state.appearance.itemBackground, 'state.appearance.itemBackground');
-    assertString(state.appearance.separator, 'state.appearance.separator');
+    assertFill(state.countdown.appearance.textColor, 'state.countdown.appearance.textColor');
+    assertFill(state.countdown.appearance.itemBackground, 'state.countdown.appearance.itemBackground');
+    assertString(state.countdown.appearance.separator, 'state.countdown.appearance.separator');
     assertObject(state.appearance.headerCta, 'state.appearance.headerCta');
     assertFill(state.appearance.headerCta.background, 'state.appearance.headerCta.background');
     assertFill(state.appearance.headerCta.textColor, 'state.appearance.headerCta.textColor');
@@ -274,40 +276,40 @@
       throw new Error('[Countdown] state.appearance.headerCta.iconSizePreset must be xs|s|m|l|xl|custom');
     }
     assertNumber(state.appearance.headerCta.iconSize, 'state.appearance.headerCta.iconSize');
-    assertObject(state.appearance.cardwrapper, 'state.appearance.cardwrapper');
-    assertBoolean(state.appearance.cardwrapper.radiusLinked, 'state.appearance.cardwrapper.radiusLinked');
-    assertString(state.appearance.cardwrapper.radius, 'state.appearance.cardwrapper.radius');
-    assertString(state.appearance.cardwrapper.radiusTL, 'state.appearance.cardwrapper.radiusTL');
-    assertString(state.appearance.cardwrapper.radiusTR, 'state.appearance.cardwrapper.radiusTR');
-    assertString(state.appearance.cardwrapper.radiusBR, 'state.appearance.cardwrapper.radiusBR');
-    assertString(state.appearance.cardwrapper.radiusBL, 'state.appearance.cardwrapper.radiusBL');
-    assertBorderConfig(state.appearance.cardwrapper.border, 'state.appearance.cardwrapper.border');
-    assertShadowConfig(state.appearance.cardwrapper.shadow, 'state.appearance.cardwrapper.shadow');
+    assertObject(state.countdown.appearance.cardwrapper, 'state.countdown.appearance.cardwrapper');
+    assertBoolean(state.countdown.appearance.cardwrapper.radiusLinked, 'state.countdown.appearance.cardwrapper.radiusLinked');
+    assertString(state.countdown.appearance.cardwrapper.radius, 'state.countdown.appearance.cardwrapper.radius');
+    assertString(state.countdown.appearance.cardwrapper.radiusTL, 'state.countdown.appearance.cardwrapper.radiusTL');
+    assertString(state.countdown.appearance.cardwrapper.radiusTR, 'state.countdown.appearance.cardwrapper.radiusTR');
+    assertString(state.countdown.appearance.cardwrapper.radiusBR, 'state.countdown.appearance.cardwrapper.radiusBR');
+    assertString(state.countdown.appearance.cardwrapper.radiusBL, 'state.countdown.appearance.cardwrapper.radiusBL');
+    assertBorderConfig(state.countdown.appearance.cardwrapper.border, 'state.countdown.appearance.cardwrapper.border');
+    assertShadowConfig(state.countdown.appearance.cardwrapper.shadow, 'state.countdown.appearance.cardwrapper.shadow');
     assertBorderConfig(state.appearance.podBorder, 'state.appearance.podBorder');
     assertObject(state.behavior, 'state.behavior');
     assertBoolean(state.behavior.showBacklink, 'state.behavior.showBacklink');
-    assertObject(state.actions, 'state.actions');
-    assertObject(state.actions.during, 'state.actions.during');
-    if (!['link'].includes(state.actions.during.type)) {
-      throw new Error('[Countdown] state.actions.during.type must be link');
+    assertObject(state.countdown.actions, 'state.countdown.actions');
+    assertObject(state.countdown.actions.during, 'state.countdown.actions.during');
+    if (!['link'].includes(state.countdown.actions.during.type)) {
+      throw new Error('[Countdown] state.countdown.actions.during.type must be link');
     }
-    assertString(state.actions.during.url, 'state.actions.during.url');
-    assertString(state.actions.during.text, 'state.actions.during.text');
-    if (!['primary', 'secondary'].includes(state.actions.during.style)) {
-      throw new Error('[Countdown] state.actions.during.style must be primary|secondary');
+    assertString(state.countdown.actions.during.url, 'state.countdown.actions.during.url');
+    assertString(state.countdown.actions.during.text, 'state.countdown.actions.during.text');
+    if (!['primary', 'secondary'].includes(state.countdown.actions.during.style)) {
+      throw new Error('[Countdown] state.countdown.actions.during.style must be primary|secondary');
     }
-    assertBoolean(state.actions.during.newTab, 'state.actions.during.newTab');
-    assertObject(state.actions.after, 'state.actions.after');
-    if (!['hide', 'link'].includes(state.actions.after.type)) {
-      throw new Error('[Countdown] state.actions.after.type must be hide|link');
+    assertBoolean(state.countdown.actions.during.newTab, 'state.countdown.actions.during.newTab');
+    assertObject(state.countdown.actions.after, 'state.countdown.actions.after');
+    if (!['hide', 'link'].includes(state.countdown.actions.after.type)) {
+      throw new Error('[Countdown] state.countdown.actions.after.type must be hide|link');
     }
-    assertString(state.actions.after.url, 'state.actions.after.url');
-    assertString(state.actions.after.text, 'state.actions.after.text');
+    assertString(state.countdown.actions.after.url, 'state.countdown.actions.after.url');
+    assertString(state.countdown.actions.after.text, 'state.countdown.actions.after.text');
     assertObject(state.stage, 'state.stage');
     assertObject(state.pod, 'state.pod');
     assertObject(state.typography, 'state.typography');
-    assertObject(state.seoGeo, 'state.seoGeo');
-    assertBoolean(state.seoGeo.enabled, 'state.seoGeo.enabled');
+    assertObject(state.countdown.seoGeo, 'state.countdown.seoGeo');
+    assertBoolean(state.countdown.seoGeo.enabled, 'state.countdown.seoGeo.enabled');
   }
 
   function sanitizeInlineHtml(html) {
@@ -490,14 +492,14 @@
 
     applyAppearanceVars(state);
     applyLayoutVars(state);
-    applyUnitLabels(state.timer);
+    applyUnitLabels(state.countdown.timer);
 
     applyActionsDuring(state);
     applyAfterMessage(state);
 
-    countdownRoot.setAttribute('data-mode', state.timer.mode);
+    countdownRoot.setAttribute('data-mode', state.countdown.timer.mode);
 
-    if (state.timer.mode === 'number') {
+    if (state.countdown.timer.mode === 'number') {
       numberDisplayEl.hidden = false;
       unitsDisplayEl.hidden = true;
     } else {
@@ -519,12 +521,12 @@
 
   function applyAppearanceVars(state) {
     const helpers = resolveAppearanceHelpers();
-    const textColor = helpers.toCssColor(state.appearance.textColor);
-    const itemBackground = helpers.toCssBackground(state.appearance.itemBackground);
+    const textColor = helpers.toCssColor(state.countdown.appearance.textColor);
+    const itemBackground = helpers.toCssBackground(state.countdown.appearance.itemBackground);
 
-    countdownRoot.setAttribute('data-timer-style', state.appearance.timerStyle);
-    countdownRoot.setAttribute('data-show-labels', state.appearance.showLabels ? 'true' : 'false');
-    countdownRoot.setAttribute('data-animation', state.appearance.animation);
+    countdownRoot.setAttribute('data-timer-style', state.countdown.appearance.timerStyle);
+    countdownRoot.setAttribute('data-show-labels', state.countdown.appearance.showLabels ? 'true' : 'false');
+    countdownRoot.setAttribute('data-animation', state.countdown.appearance.animation);
     countdownRoot.style.setProperty('--countdown-text-color', textColor);
     countdownRoot.style.setProperty('--countdown-item-bg', itemBackground);
 
@@ -537,9 +539,9 @@
     if (!window.CKSurface?.applyCardWrapper) {
       throw new Error('[Countdown] Missing CKSurface.applyCardWrapper');
     }
-    window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, countdownRoot);
+    window.CKSurface.applyCardWrapper(state.countdown.appearance.cardwrapper, countdownRoot);
 
-    const separatorText = String(state.appearance.separator || ':');
+    const separatorText = String(state.countdown.appearance.separator || ':');
     timerEl.querySelectorAll('[data-role="separator"]').forEach((el) => {
       el.textContent = separatorText;
     });
@@ -571,7 +573,7 @@
   }
 
   function applyLayoutVars(state) {
-    const rawLayoutPosition = state.layout?.position;
+    const rawLayoutPosition = state.countdown.layout?.position;
     const layoutPosition = typeof rawLayoutPosition === 'string' && RENDER_LAYOUT_POSITION_KEYS.has(rawLayoutPosition)
       ? rawLayoutPosition
       : 'inline';
@@ -589,11 +591,11 @@
 
 
   function applyActionsDuring(state) {
-    const href = normalizeHref(state.actions.during.url);
-    hasDuringCta = state.actions.during.type === 'link' && Boolean(href);
+    const href = normalizeHref(state.countdown.actions.during.url);
+    hasDuringCta = state.countdown.actions.during.type === 'link' && Boolean(href);
 
-    ctaEl.setAttribute('data-variant', state.actions.during.style);
-    ctaEl.textContent = state.actions.during.text;
+    ctaEl.setAttribute('data-variant', state.countdown.actions.during.style);
+    ctaEl.textContent = state.countdown.actions.during.text;
 
     if (!hasDuringCta) {
       ctaEl.removeAttribute('href');
@@ -603,7 +605,7 @@
     }
 
     ctaEl.setAttribute('href', href);
-    if (state.actions.during.newTab) {
+    if (state.countdown.actions.during.newTab) {
       ctaEl.setAttribute('target', '_blank');
       ctaEl.setAttribute('rel', 'noopener');
     } else {
@@ -613,10 +615,10 @@
   }
 
   function applyAfterMessage(state) {
-    const href = normalizeHref(state.actions.after.url);
-    hasAfterLink = state.actions.after.type === 'link' && Boolean(href);
+    const href = normalizeHref(state.countdown.actions.after.url);
+    hasAfterLink = state.countdown.actions.after.type === 'link' && Boolean(href);
 
-    afterLinkEl.textContent = state.actions.after.text;
+    afterLinkEl.textContent = state.countdown.actions.after.text;
 
     if (!hasAfterLink) {
       afterLinkEl.removeAttribute('href');
@@ -639,7 +641,7 @@
       return;
     }
 
-    if (state.actions.after.type === 'hide') {
+    if (state.countdown.actions.after.type === 'hide') {
       stageEl.hidden = true;
       return;
     }
@@ -651,17 +653,17 @@
   }
 
   function resolveTimerKey(state) {
-    if (state.timer.mode === 'date') {
-      return `date|${state.timer.targetDate}|${state.timer.timezone}`;
+    if (state.countdown.timer.mode === 'date') {
+      return `date|${state.countdown.timer.targetDate}|${state.countdown.timer.timezone}`;
     }
-    if (state.timer.mode === 'personal') {
+    if (state.countdown.timer.mode === 'personal') {
       const storageKey = resolveStorageKey(state) || '';
-      return `personal|${storageKey}|${state.timer.timeAmount}|${state.timer.timeUnit}|${state.timer.repeat}`;
+      return `personal|${storageKey}|${state.countdown.timer.timeAmount}|${state.countdown.timer.timeUnit}|${state.countdown.timer.repeat}`;
     }
-    if (state.timer.mode === 'number') {
-      return `number|${state.timer.startingNumber}|${state.timer.targetNumber}|${state.timer.countDuration}`;
+    if (state.countdown.timer.mode === 'number') {
+      return `number|${state.countdown.timer.startingNumber}|${state.countdown.timer.targetNumber}|${state.countdown.timer.countDuration}`;
     }
-    return String(state.timer.mode || '');
+    return String(state.countdown.timer.mode || '');
   }
 
   function syncTimerScheduler(state) {
@@ -677,9 +679,9 @@
     currentAnimationFrame = null;
     timerInterval = null;
 
-    if (state.timer.mode === 'date') {
-      const targetParts = parseTargetDate(state.timer.targetDate);
-      const targetTimeMs = resolveTargetTimestamp(targetParts, state.timer.timezone);
+    if (state.countdown.timer.mode === 'date') {
+      const targetParts = parseTargetDate(state.countdown.timer.targetDate);
+      const targetTimeMs = resolveTargetTimestamp(targetParts, state.countdown.timer.timezone);
 
       const tick = () => {
         const totalSeconds = Math.max(0, Math.floor((targetTimeMs - Date.now()) / 1000));
@@ -693,7 +695,7 @@
       return;
     }
 
-    if (state.timer.mode === 'personal') {
+    if (state.countdown.timer.mode === 'personal') {
       const storageKey = resolveStorageKey(state);
       let startMs = Date.now();
       if (storageKey) {
@@ -709,8 +711,8 @@
         }
       }
 
-      const durationSeconds = getDurationSeconds(state.timer.timeAmount, state.timer.timeUnit);
-      const repeatSeconds = getRepeatSeconds(state.timer.repeat);
+      const durationSeconds = getDurationSeconds(state.countdown.timer.timeAmount, state.countdown.timer.timeUnit);
+      const repeatSeconds = getRepeatSeconds(state.countdown.timer.repeat);
       const cycleSeconds = repeatSeconds > 0 ? durationSeconds + repeatSeconds : durationSeconds;
 
       const tick = () => {
@@ -741,10 +743,10 @@
       return;
     }
 
-    if (state.timer.mode === 'number') {
-      const start = state.timer.startingNumber;
-      const end = state.timer.targetNumber;
-      const durationMs = state.timer.countDuration * 1000;
+    if (state.countdown.timer.mode === 'number') {
+      const start = state.countdown.timer.startingNumber;
+      const end = state.countdown.timer.targetNumber;
+      const durationMs = state.countdown.timer.countDuration * 1000;
       const startTime = Date.now();
 
       const animate = () => {
@@ -781,7 +783,7 @@
       valueEl.textContent = String(time[unit]).padStart(2, '0');
 
       // timeFormat logic
-      const format = currentState && currentState.appearance && currentState.appearance.timeFormat || 'auto';
+      const format = currentState && currentState.countdown.appearance && currentState.countdown.appearance.timeFormat || 'auto';
       let show = true;
       if (format === 'H:M:S' && unit === 'days') show = false;
       if (format === 'auto' && unit === 'days' && time.days === 0) show = false;

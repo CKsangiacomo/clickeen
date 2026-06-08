@@ -169,6 +169,12 @@ NOTES
   normalization rules and scalar coercion.
 - Publishing/materializing old saved source still needs an explicit matching
   compatibility path when the server/public boundary can receive the old shape.
+- Generated package files are stored artifacts. Existing account
+  `index.html`, `styles.css`, `runtime.js`, and `package.json` do not change
+  just because widget source, shared Shell code, or account defaults changed.
+  Any refactor that changes saved state language, package assembly, public
+  runtime, or Page Composer output must include package regeneration or
+  recomposition for affected live instances/pages, or stop with a named blocker.
 - Roma lists account instances from the registry, not by scanning raw R2
   prefixes. If a widget type rename leaves raw R2 folders behind, clean them as
   orphaned data only after the registry/source migration decision is explicit.
@@ -178,11 +184,11 @@ NOTES
   migrate the state first.
 - Pre-GA contract renames should use a one-time storage/translation rewrite,
   not long-lived runtime aliases. For the Header CTA and Call to Action rename:
-  move saved config `cta.*` to `headerCta.*`, move saved/theme
-  `appearance.cta*` values to `appearance.headerCta.*`, change widget type
-  `cta` to `calltoaction`, move old CTA widget body `core.*` values to
-  `calltoaction.*`, rewrite `editable-fields`/content paths
-  `cta.label` to `headerCta.label`, and recompute or mark translation overlays
+  move legacy Header CTA state to `headerCta.*`, move legacy Header CTA
+  appearance to `appearance.headerCta.*`, change the legacy Call to Action
+  widget type to `calltoaction`, move old CTA widget body state to
+  `calltoaction.*`, rewrite legacy Header CTA editable/content paths to
+  `headerCta.label`, and recompute or mark translation overlays
   out of sync.
 
 GATE
@@ -275,9 +281,9 @@ behavior.socialShare.*
 typography roles/scales for Shell roles title/body/button/localeSwitcher
 ```
 
-`appearance.cardwrapper.*` is Core, not Shell. It belongs only to widgets that
-render card/item surfaces. `uiLabels.core.*` is widget Core extension metadata,
-not Shell default styling or behavior.
+`{widgetNamespace}.appearance.cardwrapper.*` is Core, not Shell. It belongs only
+to widgets that render card/item surfaces. `uiLabels.core.*` is widget Core
+extension metadata, not Shell default styling or behavior.
 
 ---
 
@@ -497,6 +503,12 @@ Required checks
 - Shell/Core defaults validation:
   - `pnpm --filter @clickeen/widget-shell validate`
   - `pnpm validate:widgets`
+  - `pnpm audit:106 -- --skip-r2` when touching the Shell/Core/default
+    contract locally
+- Live account/R2 closure when touching account defaults, saved instances, or
+  generated account packages:
+  - `pnpm cf:preflight`
+  - `pnpm audit:106`
 - Defaults safety:
   - Defaults must not ship `data:` or `blob:` URLs (allowed only as user-edited/runtime values, never in `spec.json` defaults).
 - Prague pages verification (if pages changed):
@@ -543,8 +555,15 @@ Account defaults smoke:
 - Creating a new instance submits resolved `source.config` from Roma to Tokyo.
   Tokyo derives `instance.content.json` from that config and must not call
   widget factory defaults during product create.
+- Create/save/materialization carries source metadata such as `baseLocale`,
+  `targetLocales`, and `meta`; those are not account defaults policy and must
+  not be dropped or silently defaulted.
 - Changing account defaults affects only future new instances. Existing saved
   instances and duplicates keep their saved source.
 - Roma Widget Defaults maps every account Shell/Core default path to compiled
   Builder controls. Missing coverage must show a contract error, not a generic
   fallback editor.
+- Software metadata such as `uiLabels.core.*`, `typography.roleScales.*`, and
+  widget-owned hidden metadata is canonicalized from software at the account
+  defaults boundary. It is not editable account truth and must not appear as an
+  unmapped fallback editor.

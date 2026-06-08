@@ -5,14 +5,14 @@
   "normalization": {
     "idRules": [
       {
-        "arrayPath": "core.items",
+        "arrayPath": "split.items",
         "idKey": "id",
         "fallbackPrefix": "split-item"
       }
     ],
     "coerceRules": [
       {
-        "path": "core.carousel.enabled",
+        "path": "split.carousel.enabled",
         "type": "boolean",
         "default": false
       },
@@ -126,7 +126,7 @@
         "sizeCluster": "Visual size"
       }
     },
-    "core": {
+    "split": {
       "items": [
         {
           "id": "visual-1",
@@ -160,30 +160,30 @@
         "loop": true,
         "showArrows": true,
         "showDots": true
-      }
-    },
-    "appearance": {
-      "cardwrapper": {
-        "radiusLinked": true,
-        "radius": "4xl",
-        "radiusTL": "4xl",
-        "radiusTR": "4xl",
-        "radiusBR": "4xl",
-        "radiusBL": "4xl",
-        "border": {
-          "enabled": false,
-          "width": 1,
-          "color": "var(--color-system-gray-5)"
-        },
-        "shadow": {
-          "enabled": true,
-          "x": 0,
-          "y": 24,
-          "blur": 80,
-          "spread": 0,
-          "alpha": 12,
-          "color": "#000000",
-          "inset": false
+      },
+      "appearance": {
+        "cardwrapper": {
+          "radiusLinked": true,
+          "radius": "4xl",
+          "radiusTL": "4xl",
+          "radiusTR": "4xl",
+          "radiusBR": "4xl",
+          "radiusBL": "4xl",
+          "border": {
+            "enabled": false,
+            "width": 1,
+            "color": "var(--color-system-gray-5)"
+          },
+          "shadow": {
+            "enabled": true,
+            "x": 0,
+            "y": 24,
+            "blur": 80,
+            "spread": 0,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": false
+          }
         }
       }
     }
@@ -203,7 +203,7 @@
               {
                 "kind": "field",
                 "type": "toggle",
-                "path": "core.carousel.enabled",
+                "path": "split.carousel.enabled",
                 "label": "Enable carousel",
                 "attrs": {
                   "size": "md"
@@ -212,7 +212,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "path": "core.items.0.kind",
+                "path": "split.items.0.kind",
                 "label": "Type",
                 "attrs": {
                   "size": "md",
@@ -232,14 +232,14 @@
                   ]
                 },
                 "showIf": {
-                  "path": "core.carousel.enabled",
+                  "path": "split.carousel.enabled",
                   "op": "isFalse"
                 }
               },
               {
                 "kind": "field",
                 "type": "dropdown-fill",
-                "path": "core.items.0.media",
+                "path": "split.items.0.media",
                 "label": "Image",
                 "attrs": {
                   "size": "md",
@@ -249,11 +249,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.carousel.enabled",
+                      "path": "split.carousel.enabled",
                       "op": "isFalse"
                     },
                     {
-                      "path": "core.items.0.kind",
+                      "path": "split.items.0.kind",
                       "op": "equals",
                       "value": "image"
                     }
@@ -263,16 +263,16 @@
               {
                 "kind": "field",
                 "type": "textfield",
-                "path": "core.items.0.image.alt",
+                "path": "split.items.0.image.alt",
                 "label": "Image alt text",
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.carousel.enabled",
+                      "path": "split.carousel.enabled",
                       "op": "isFalse"
                     },
                     {
-                      "path": "core.items.0.kind",
+                      "path": "split.items.0.kind",
                       "op": "equals",
                       "value": "image"
                     }
@@ -282,7 +282,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-fill",
-                "path": "core.items.0.media",
+                "path": "split.items.0.media",
                 "label": "Video",
                 "attrs": {
                   "size": "md",
@@ -292,11 +292,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.carousel.enabled",
+                      "path": "split.carousel.enabled",
                       "op": "isFalse"
                     },
                     {
-                      "path": "core.items.0.kind",
+                      "path": "split.items.0.kind",
                       "op": "equals",
                       "value": "video"
                     }
@@ -306,16 +306,16 @@
               {
                 "kind": "field",
                 "type": "textfield",
-                "path": "core.items.0.video.alt",
+                "path": "split.items.0.video.alt",
                 "label": "Video alt text",
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.carousel.enabled",
+                      "path": "split.carousel.enabled",
                       "op": "isFalse"
                     },
                     {
-                      "path": "core.items.0.kind",
+                      "path": "split.items.0.kind",
                       "op": "equals",
                       "value": "video"
                     }
@@ -325,7 +325,7 @@
               {
                 "kind": "field",
                 "type": "instance-picker",
-                "path": "core.items.0.instance.instanceId",
+                "path": "split.items.0.instance.instanceId",
                 "label": "Instance",
                 "attrs": {
                   "size": "md",
@@ -334,11 +334,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.carousel.enabled",
+                      "path": "split.carousel.enabled",
                       "op": "isFalse"
                     },
                     {
-                      "path": "core.items.0.kind",
+                      "path": "split.items.0.kind",
                       "op": "equals",
                       "value": "instance"
                     }
@@ -349,12 +349,12 @@
                 "kind": "field",
                 "type": "object-manager",
                 "groupId": "content-visuals",
-                "path": "core.items",
+                "path": "split.items",
                 "template": [
                   {
                     "kind": "field",
                     "type": "dropdown-actions",
-                    "path": "core.items.__INDEX__.kind",
+                    "path": "split.items.__INDEX__.kind",
                     "label": "Type",
                     "attrs": {
                       "size": "md",
@@ -377,7 +377,7 @@
                   {
                     "kind": "field",
                     "type": "dropdown-fill",
-                    "path": "core.items.__INDEX__.media",
+                    "path": "split.items.__INDEX__.media",
                     "label": "Image",
                     "attrs": {
                       "size": "md",
@@ -385,7 +385,7 @@
                       "allow-image": "true"
                     },
                     "showIf": {
-                      "path": "core.items.__INDEX__.kind",
+                      "path": "split.items.__INDEX__.kind",
                       "op": "equals",
                       "value": "image"
                     }
@@ -393,10 +393,10 @@
                   {
                     "kind": "field",
                     "type": "textfield",
-                    "path": "core.items.__INDEX__.image.alt",
+                    "path": "split.items.__INDEX__.image.alt",
                     "label": "Image alt text",
                     "showIf": {
-                      "path": "core.items.__INDEX__.kind",
+                      "path": "split.items.__INDEX__.kind",
                       "op": "equals",
                       "value": "image"
                     }
@@ -404,7 +404,7 @@
                   {
                     "kind": "field",
                     "type": "dropdown-fill",
-                    "path": "core.items.__INDEX__.media",
+                    "path": "split.items.__INDEX__.media",
                     "label": "Video",
                     "attrs": {
                       "size": "md",
@@ -412,7 +412,7 @@
                       "allow-image": "true"
                     },
                     "showIf": {
-                      "path": "core.items.__INDEX__.kind",
+                      "path": "split.items.__INDEX__.kind",
                       "op": "equals",
                       "value": "video"
                     }
@@ -420,10 +420,10 @@
                   {
                     "kind": "field",
                     "type": "textfield",
-                    "path": "core.items.__INDEX__.video.alt",
+                    "path": "split.items.__INDEX__.video.alt",
                     "label": "Video alt text",
                     "showIf": {
-                      "path": "core.items.__INDEX__.kind",
+                      "path": "split.items.__INDEX__.kind",
                       "op": "equals",
                       "value": "video"
                     }
@@ -431,14 +431,14 @@
                   {
                     "kind": "field",
                     "type": "instance-picker",
-                    "path": "core.items.__INDEX__.instance.instanceId",
+                    "path": "split.items.__INDEX__.instance.instanceId",
                     "label": "Instance",
                     "attrs": {
                       "size": "md",
                       "placeholder": "Select instance"
                     },
                     "showIf": {
-                      "path": "core.items.__INDEX__.kind",
+                      "path": "split.items.__INDEX__.kind",
                       "op": "equals",
                       "value": "instance"
                     }
@@ -476,7 +476,7 @@
                   }
                 },
                 "showIf": {
-                  "path": "core.carousel.enabled",
+                  "path": "split.carousel.enabled",
                   "op": "isTrue"
                 }
               }
@@ -507,7 +507,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "path": "core.media.fit",
+                "path": "split.media.fit",
                 "label": "Fit",
                 "attrs": {
                   "size": "md",
@@ -526,7 +526,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "path": "core.media.position",
+                "path": "split.media.position",
                 "label": "Position",
                 "attrs": {
                   "size": "md",
@@ -559,14 +559,14 @@
           {
             "label": "Carousel",
             "showIf": {
-              "path": "core.carousel.enabled",
+              "path": "split.carousel.enabled",
               "op": "isTrue"
             },
             "nodes": [
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "path": "core.carousel.transition",
+                "path": "split.carousel.transition",
                 "label": "Transition",
                 "attrs": {
                   "size": "md",
@@ -585,7 +585,7 @@
               {
                 "kind": "field",
                 "type": "toggle",
-                "path": "core.carousel.autoplay",
+                "path": "split.carousel.autoplay",
                 "label": "Autoplay",
                 "attrs": {
                   "size": "md"
@@ -594,21 +594,21 @@
               {
                 "kind": "field",
                 "type": "valuefield",
-                "path": "core.carousel.intervalMs",
+                "path": "split.carousel.intervalMs",
                 "label": "Interval (ms)",
                 "attrs": {
                   "min": "2000",
                   "max": "12000"
                 },
                 "showIf": {
-                  "path": "core.carousel.autoplay",
+                  "path": "split.carousel.autoplay",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
                 "type": "toggle",
-                "path": "core.carousel.loop",
+                "path": "split.carousel.loop",
                 "label": "Loop",
                 "attrs": {
                   "size": "md"
@@ -617,7 +617,7 @@
               {
                 "kind": "field",
                 "type": "toggle",
-                "path": "core.carousel.showArrows",
+                "path": "split.carousel.showArrows",
                 "label": "Show arrows",
                 "attrs": {
                   "size": "md"
@@ -626,7 +626,7 @@
               {
                 "kind": "field",
                 "type": "toggle",
-                "path": "core.carousel.showDots",
+                "path": "split.carousel.showDots",
                 "label": "Show dots",
                 "attrs": {
                   "size": "md"

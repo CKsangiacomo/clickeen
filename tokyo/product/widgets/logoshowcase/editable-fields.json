@@ -27,46 +27,46 @@
       "limits": []
     },
     {
-      "path": "strips[].logos[].name",
+      "path": "logoshowcase.strips[].logos[].name",
       "label": "Logo name",
       "type": "string",
       "role": "logo-name",
       "arrayItemIdentity": [
-        "strips[].id",
-        "strips[].logos[].id"
+        "logoshowcase.strips[].id",
+        "logoshowcase.strips[].logos[].id"
       ],
       "limits": []
     },
     {
-      "path": "strips[].logos[].caption",
+      "path": "logoshowcase.strips[].logos[].caption",
       "label": "Logo caption",
       "type": "string",
       "role": "logo-caption",
       "arrayItemIdentity": [
-        "strips[].id",
-        "strips[].logos[].id"
+        "logoshowcase.strips[].id",
+        "logoshowcase.strips[].logos[].id"
       ],
       "limits": []
     },
     {
-      "path": "strips[].logos[].alt",
+      "path": "logoshowcase.strips[].logos[].alt",
       "label": "Logo alt text",
       "type": "string",
       "role": "logo-alt",
       "arrayItemIdentity": [
-        "strips[].id",
-        "strips[].logos[].id"
+        "logoshowcase.strips[].id",
+        "logoshowcase.strips[].logos[].id"
       ],
       "limits": []
     },
     {
-      "path": "strips[].logos[].title",
+      "path": "logoshowcase.strips[].logos[].title",
       "label": "Logo title",
       "type": "string",
       "role": "logo-title",
       "arrayItemIdentity": [
-        "strips[].id",
-        "strips[].logos[].id"
+        "logoshowcase.strips[].id",
+        "logoshowcase.strips[].logos[].id"
       ],
       "limits": []
     }

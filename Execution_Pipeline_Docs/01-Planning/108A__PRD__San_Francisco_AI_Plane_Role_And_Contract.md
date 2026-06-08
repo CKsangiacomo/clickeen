@@ -29,11 +29,12 @@ This PRD defines the overall role of San Francisco.
 San Francisco is not a chatbot service and not an agent-specific worker. San Francisco is
 the **single AI control and execution plane** for Clickeen.
 
-Copilot-first correction: the first execution slice of this PRD exists to unblock Builder
-Copilot, not to build the whole future workforce platform. 108A-1 is successful only when
-Builder can no longer select or call unsupported model shapes and raw provider payloads no
-longer leak into Copilot. Anything durable, service-scoped, autonomous, or workforce-agent
-specific belongs to 108A-2/108C and must not delay the 108B control-operator proof.
+Copilot-first correction: the first execution slice of this PRD is a release gate for
+Builder Copilot model/provider safety, not a blocker for Bob's `EditorContract` projection
+work. 108A-1 is successful only when Builder can no longer select or call unsupported model
+shapes and raw provider payloads no longer leak into Copilot. Anything durable,
+service-scoped, autonomous, or workforce-agent specific belongs to 108A-2/108C and must not
+delay the 108B control-operator proof.
 
 Two different AI classes consume that plane:
 
@@ -52,7 +53,9 @@ Execution sequencing:
 - **108A-2** is the durable/service-plane slice: service-binding execution,
   service-scoped policy/grants, durable budget separation, and workforce-agent telemetry.
 
-The sequence is mandatory: 108A-1 -> 108B -> 108A-2 -> 108C.
+Execution order: 108B-1/108B-2 may start immediately. 108A-1 runs in parallel and must be
+green before release. 108A-2 and 108C remain deferred until the shipped Builder Copilot is
+green.
 
 ---
 

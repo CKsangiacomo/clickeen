@@ -272,10 +272,10 @@ Widget appearance controls (spec-defined):
   - `appearance.iconStyle`
   - `appearance.iconColor`
 - Q&A card:
-  - `appearance.itemBackground`
-  - `appearance.cardwrapper.radiusLinked` + radius fields
-  - `appearance.cardwrapper.border`
-  - `appearance.cardwrapper.shadow`
+  - `faq.appearance.itemBackground`
+  - `faq.appearance.cardwrapper.radiusLinked` + radius fields
+  - `faq.appearance.cardwrapper.border`
+  - `faq.appearance.cardwrapper.shadow`
 - Header CTA (declared with shared header controls when `defaults.header` + `defaults.headerCta` exist):
   - `appearance.headerCta.background`
   - `appearance.headerCta.textColor`

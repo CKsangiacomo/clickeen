@@ -57,14 +57,18 @@
     return typeof media.image.src === 'string' ? media.image.src.trim() : '';
   }
 
-  function normalizeItems(state) {
-    if (!isRecord(state.core)) throw new Error('[Cards] state.core must be an object');
-    const rawItems = Array.isArray(state.core.items) ? state.core.items : [];
+  function assertCardsState(state) {
+    if (!isRecord(state.cards)) throw new Error('[Cards] state.cards must be an object');
+    return state.cards;
+  }
+
+  function normalizeItems(cards) {
+    const rawItems = Array.isArray(cards.items) ? cards.items : [];
     if (rawItems.length < 2 || rawItems.length > 16)
-      throw new Error('[Cards] core.items must contain 2-16 cards');
+      throw new Error('[Cards] cards.items must contain 2-16 cards');
     const seen = {};
     return rawItems.map(function (raw, index) {
-      if (!isRecord(raw)) throw new Error('[Cards] core.items[' + index + '] must be an object');
+      if (!isRecord(raw)) throw new Error('[Cards] cards.items[' + index + '] must be an object');
       const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : 'card-' + index;
       if (seen[id]) throw new Error('[Cards] duplicate card id: ' + id);
       seen[id] = true;
@@ -91,26 +95,26 @@
     });
   }
 
-  function normalizeCore(state) {
-    const core = isRecord(state.core) ? state.core : {};
+  function normalizeCards(state) {
+    const cards = assertCardsState(state);
     const treatment =
-      ['cards', 'linked-cards', 'steps'].indexOf(core.treatment) >= 0 ? core.treatment : 'cards';
-    const columns = typeof core.columns === 'number' ? Math.round(core.columns) : 3;
-    const between = isRecord(core.betweenCards) ? core.betweenCards : {};
+      ['cards', 'linked-cards', 'steps'].indexOf(cards.treatment) >= 0 ? cards.treatment : 'cards';
+    const columns = typeof cards.columns === 'number' ? Math.round(cards.columns) : 3;
+    const between = isRecord(cards.betweenCards) ? cards.betweenCards : {};
     const line = isRecord(between.line) ? between.line : {};
     const icon = isRecord(between.icon) ? between.icon : {};
     return {
       treatment: treatment,
       columns: Math.min(Math.max(columns, 2), 4),
       gap:
-        typeof core.gap === 'number' && Number.isFinite(core.gap)
-          ? Math.min(Math.max(core.gap, 8), 64)
+        typeof cards.gap === 'number' && Number.isFinite(cards.gap)
+          ? Math.min(Math.max(cards.gap, 8), 64)
           : 24,
       cardPadding:
-        typeof core.cardPadding === 'number' && Number.isFinite(core.cardPadding)
-          ? Math.min(Math.max(core.cardPadding, 16), 64)
+        typeof cards.cardPadding === 'number' && Number.isFinite(cards.cardPadding)
+          ? Math.min(Math.max(cards.cardPadding, 16), 64)
           : 32,
-      customCardStyles: isRecord(core.customCardStyles) && core.customCardStyles.enabled === true,
+      customCardStyles: isRecord(cards.customCardStyles) && cards.customCardStyles.enabled === true,
       betweenCards: {
         enabled: between.enabled === true,
         kind: between.kind === 'icon' ? 'icon' : 'line',
@@ -132,7 +136,7 @@
             typeof icon.color === 'string' && icon.color.trim() ? icon.color.trim() : '#222222',
         },
       },
-      items: normalizeItems(state),
+      items: normalizeItems(cards),
     };
   }
 
@@ -180,9 +184,9 @@
     return media;
   }
 
-  function renderCard(item, core, state) {
-    const linked = core.treatment === 'linked-cards' || item.linkEnabled;
-    if (core.treatment === 'linked-cards' && (!item.href || !item.linkLabel)) {
+  function renderCard(item, cards, state) {
+    const linked = cards.treatment === 'linked-cards' || item.linkEnabled;
+    if (cards.treatment === 'linked-cards' && (!item.href || !item.linkLabel)) {
       throw new Error('[Cards] linked-cards treatment requires every card link href and label');
     }
     const card = document.createElement(linked && item.href ? 'a' : 'article');
@@ -192,9 +196,9 @@
 
     if (!window.CKSurface?.applyCardWrapper)
       throw new Error('[Cards] Missing CKSurface.applyCardWrapper');
-    window.CKSurface.applyCardWrapper(state.appearance && state.appearance.cardwrapper, card);
-    card.style.setProperty('--ck-cards-card-padding', core.cardPadding + 'px');
-    applyCustomCardStyles(card, item, core.customCardStyles);
+    window.CKSurface.applyCardWrapper(cards.appearance && cards.appearance.cardwrapper, card);
+    card.style.setProperty('--ck-cards-card-padding', cards.cardPadding + 'px');
+    applyCustomCardStyles(card, item, cards.customCardStyles);
 
     const media = renderMedia(item);
     if (media) card.appendChild(media);
@@ -220,29 +224,29 @@
     return card;
   }
 
-  function renderBetween(core, index) {
-    if (!core.betweenCards.enabled) return null;
+  function renderBetween(cards, index) {
+    if (!cards.betweenCards.enabled) return null;
     const between = document.createElement('span');
     between.className = 'ck-cards__between';
     between.setAttribute('aria-hidden', 'true');
-    between.dataset.kind = core.betweenCards.kind;
-    const isEndOfRow = (index + 1) % core.columns === 0;
+    between.dataset.kind = cards.betweenCards.kind;
+    const isEndOfRow = (index + 1) % cards.columns === 0;
     between.dataset.axis = isEndOfRow ? 'y' : 'x';
-    if (core.betweenCards.kind === 'icon') {
+    if (cards.betweenCards.kind === 'icon') {
       between.style.setProperty(
         '--ck-cards-between-icon',
-        'url("/dieter/icons/svg/' + core.betweenCards.icon.name + '.svg")',
+        'url("/dieter/icons/svg/' + cards.betweenCards.icon.name + '.svg")',
       );
-      between.style.setProperty('--ck-cards-between-size', core.betweenCards.icon.sizePt + 'pt');
+      between.style.setProperty('--ck-cards-between-size', cards.betweenCards.icon.sizePt + 'pt');
       between.style.setProperty(
         '--ck-cards-between-color',
-        cssFill(core.betweenCards.icon.color, '#222222'),
+        cssFill(cards.betweenCards.icon.color, '#222222'),
       );
     } else {
-      between.style.setProperty('--ck-cards-between-width', core.betweenCards.line.widthPt + 'pt');
+      between.style.setProperty('--ck-cards-between-width', cards.betweenCards.line.widthPt + 'pt');
       between.style.setProperty(
         '--ck-cards-between-color',
-        cssFill(core.betweenCards.line.color, '#D7D7DA'),
+        cssFill(cards.betweenCards.line.color, '#D7D7DA'),
       );
     }
     return between;
@@ -295,19 +299,19 @@
         typographyScope: cardsRoot,
       });
 
-      const core = normalizeCore(state);
-      const grid = document.createElement(core.treatment === 'steps' ? 'ol' : 'div');
+      const cards = normalizeCards(state);
+      const grid = document.createElement(cards.treatment === 'steps' ? 'ol' : 'div');
       grid.className = 'ck-cards__grid';
-      grid.dataset.treatment = core.treatment;
-      grid.style.setProperty('--ck-cards-columns', String(core.columns));
-      grid.style.setProperty('--ck-cards-gap', core.gap + 'px');
+      grid.dataset.treatment = cards.treatment;
+      grid.style.setProperty('--ck-cards-columns', String(cards.columns));
+      grid.style.setProperty('--ck-cards-gap', cards.gap + 'px');
 
-      core.items.forEach(function (item, index) {
-        const slot = document.createElement(core.treatment === 'steps' ? 'li' : 'div');
+      cards.items.forEach(function (item, index) {
+        const slot = document.createElement(cards.treatment === 'steps' ? 'li' : 'div');
         slot.className = 'ck-cards__slot';
-        slot.appendChild(renderCard(item, core, state));
-        if (index < core.items.length - 1) {
-          const between = renderBetween(core, index);
+        slot.appendChild(renderCard(item, cards, state));
+        if (index < cards.items.length - 1) {
+          const between = renderBetween(cards, index);
           if (between) slot.appendChild(between);
         }
         grid.appendChild(slot);

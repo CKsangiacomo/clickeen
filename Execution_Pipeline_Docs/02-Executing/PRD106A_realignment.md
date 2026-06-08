@@ -430,7 +430,7 @@ Widget Shell authority:
 - `packages/widget-shell/` owns shell schema/defaults, shell editor controls,
   shell renderer/helpers, shell CSS/runtime helpers, and shell validation.
 - Header always means title, optional subtitle, and optional CTA through
-  `header.*` and `cta.*`.
+  `header.*` and `headerCta.*`.
 - New or migrated widgets must consume the shared Widget Shell and add only the
   new Widget Core content, Core controls, Core editable fields, and Core
   runtime/CSS.

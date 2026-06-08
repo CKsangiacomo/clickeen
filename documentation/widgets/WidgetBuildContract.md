@@ -49,11 +49,10 @@ policy applies.
 
 The FAQ widget proves the Shell/runtime model. `packages/widget-shell/` is the
 named Shell contract authority. The Call to Action widget proves the
-widget-specific Core namespace model. Existing Cards and Split `core.*` paths
-work today but are transitional naming, not the model to copy for new or
-refactored widgets. A widget folder under `tokyo/product/widgets/` is the
-product source location for that widget's Core plus its materialized source
-files.
+widget-specific Core namespace model. Cards, Split, FAQ, Countdown, Logo
+Showcase, Big Bang, and Call to Action now use widget-specific Core namespaces.
+A widget folder under `tokyo/product/widgets/` is the product source location
+for that widget's Core plus its materialized source files.
 
 ---
 
@@ -72,6 +71,11 @@ product policy.
 Account-owned runtime data lives under
 `accounts/{accountPublicId}/instances/{instanceId}/`, never under
 `tokyo/product/widgets/{widgetType}/`.
+
+Instance source metadata travels with the instance. `baseLocale`,
+`targetLocales`, and `meta` are source metadata, not account default policy.
+Create/save/materialization code must carry them through explicitly and must not
+drop them or silently invent fallback values.
 
 Account-owned widget defaults live under:
 
@@ -94,6 +98,13 @@ control contract. Every account Shell default path and every account widget Core
 default path must be covered by a real Builder control path. If a path is not
 covered, Roma must stop with a contract error listing the missing paths. It must
 not infer a generic field, hide the path, or save through the broken contract.
+
+The only exception is software metadata, not account-editable defaults:
+`uiLabels.core.*`, `typography.roleScales.*`, and widget-owned hidden metadata
+leaves that parameterize fixed runtime/software behavior are canonicalized from
+widget software at the account defaults boundary. User-submitted values for
+those paths are not account truth. Non-metadata leaves without compiled Builder
+control coverage are rejected server-side.
 
 Roma lists live account instances from the instance registry, not from raw R2
 prefixes. R2 folders are stored bytes only. Orphan R2 cleanup is data
@@ -210,8 +221,8 @@ Not Shell-owned:
 
 - `uiLabels.core.*`: widget Core extension labels for Bob's user-facing Core
   noun.
-- `appearance.cardwrapper.*`: widget Core frame/surface defaults for widgets
-  that render cards/items. Shell has no card element.
+- `{widgetNamespace}.appearance.cardwrapper.*`: widget Core frame/surface
+  defaults for widgets that render cards/items. Shell has no card element.
 
 ### Core-Owned
 
@@ -238,7 +249,9 @@ Core is an ownership layer, not a required state root named `core`. New and
 refactored widgets must use a widget-specific body namespace:
 `calltoaction.*`, `cards.*`, `split.*`, `faq.*`, or another PRD-owned product
 namespace. Existing generic `core.*` sources are transitional and must not be
-copied into new widgets without an explicit migration decision.
+copied into new widgets. If `core.*` appears in source, it is a migration
+blocker unless the PRD explicitly fences it as temporary saved-state
+compatibility.
 
 Shell Header controls and Core controls live together in the same product
 panels. For example, Content contains the shared Header content node and then
@@ -441,6 +454,13 @@ Existing account instances are saved source. New widget Core defaults do not
 automatically appear in old saved state just because widget
 `spec.json.defaults` changed.
 
+Generated account package files are stored artifacts. Existing `index.html`,
+`styles.css`, `runtime.js`, and `package.json` do not update when widget source,
+shared Shell code, or account defaults change. Any refactor that changes saved
+state language, package assembly, public runtime, or Page Composer output MUST
+include one explicit package regeneration/recomposition path for affected live
+instances and pages, or stop with a named blocker.
+
 Builder session load deep-merges compiled widget defaults (Shell factory
 defaults plus widget Core `spec.json.defaults`) into the saved instance state
 before ToolDrawer hydration and preview postMessage. This is the Builder-side
@@ -577,9 +597,10 @@ Do not implement either in `widget.client.js` except by calling the shared
 primitive API when the existing shell pattern requires it; do not create
 widget-local backlink or share markup.
 
-`appearance.cardwrapper.*` belongs to widget Core. If a widget renders repeated
-cards/items, its Core defaults may include card-wrapper values and may call the
-shared surface helper. Do not add card-wrapper defaults to the global Shell.
+`{widgetNamespace}.appearance.cardwrapper.*` belongs to widget Core. If a widget
+renders repeated cards/items, its Core defaults may include card-wrapper values
+and may call the shared surface helper. Do not add card-wrapper defaults to the
+global Shell.
 
 ### 4) Shell DOM
 
@@ -695,10 +716,10 @@ Field node shape:
   "kind": "field",
   "groupId": "example",
   "type": "toggle",
-  "path": "core.example.enabled",
+  "path": "faq.example.enabled",
   "label": "Enable example",
   "attrs": { "group-label": "" },
-  "showIf": { "path": "core.mode", "op": "equals", "value": "advanced" }
+  "showIf": { "path": "faq.mode", "op": "equals", "value": "advanced" }
 }
 ```
 
@@ -732,7 +753,7 @@ MUST
 - Use `object-manager` for arrays whose item has multiple fields, media, links,
   or per-item styling.
 - Put object-manager item fields under the array item path using
-  `__INDEX__`, for example `core.items.__INDEX__.title`.
+  `__INDEX__`, for example `{widgetNamespace}.items.__INDEX__.title`.
 - Keep Dieter control choice boring and consistent with FAQ/Shell patterns.
 
 MUST NOT
@@ -798,7 +819,7 @@ Item/card surfaces:
 - Outside shadow and inside shadow layer control.
 - Radius.
 
-If a widget exposes `appearance.cardwrapper.*`, it must use
+If a widget exposes `{widgetNamespace}.appearance.cardwrapper.*`, it must use
 `window.CKSurface.applyCardWrapper(...)` and the shared `--ck-cardwrapper-*`
 CSS vars.
 
@@ -959,7 +980,7 @@ MUST
 
 - Declare every customer-visible text primitive.
 - Use `[]` for repeatable declarations, for example
-  `core.items[].title`.
+  `{widgetNamespace}.items[].title`.
 - Keep Core paths aligned with widget Core `spec.json.defaults`. Shared Shell
   text paths must align with Shell factory defaults and Shell editable-field
   declarations.
@@ -1015,9 +1036,9 @@ Template:
 
 | Path | Target | Mechanism | Implementation |
 | --- | --- | --- | --- |
-| `core.layout` | Core root | data-attr | `coreRoot.setAttribute('data-layout', state.core.layout)` |
-| `core.items[].title` | `[data-role="card-title"]` | dom | `el.textContent = item.title` |
-| `core.gap` | Core root | css-var | `root.style.setProperty('--ck-core-gap', value)` |
+| `{widgetNamespace}.layout` | Core root | data-attr | `coreRoot.setAttribute('data-layout', state[widgetNamespace].layout)` |
+| `{widgetNamespace}.items[].title` | `[data-role="item-title"]` | dom | `el.textContent = item.title` |
+| `{widgetNamespace}.gap` | Core root | css-var | `root.style.setProperty('--ck-core-gap', value)` |
 
 ---
 
@@ -1065,6 +1086,11 @@ Required before final response:
 - No shared runtime/Bob/Roma/Tokyo-worker/Prague/Venice/Dieter edits were made
   unless the PRD explicitly owned that shared surface.
 - `pnpm validate:widgets` passes.
+- `pnpm audit:106 -- --skip-r2` passes for local source/default contract
+  closure when touching the Shell/Core model.
+- `pnpm cf:preflight` and `pnpm audit:106` pass for full live-account closure
+  when touching account defaults, saved instances, generated packages, or PRD
+  106 migration work.
 - Relevant workspace typecheck passes.
 - Bob compile/preview for the touched widget is verified on desktop and mobile,
   or the missing verification is reported as a blocker.

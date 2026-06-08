@@ -489,9 +489,10 @@ execution surfaces — interactive (`/v1/execute`) and durable (governed orchest
 workers that route all model/policy/budget/learning through San Francisco).**
 
 Execution priority correction: the interactive surface is not just "one of the surfaces."
-Builder Copilot is the P0 proof gate. 108A-1 may ship only the thin plane hardening needed
-to stop unsupported model calls and raw provider errors. 108B then proves Builder-control
-operation. Durable workforce scaffolding is sequenced after that proof.
+Builder Copilot is the P0 proof gate. The concrete 108B Builder-contract projection work is
+not blocked by 108A-1; Bob can start projecting `EditorContract` into Copilot immediately.
+108A-1 runs in parallel as the release gate for model capability, picker eligibility, and
+typed provider errors. Durable workforce scaffolding is sequenced after the Copilot proof.
 
 Why this is the right fit for *Clickeen specifically*:
 
@@ -567,24 +568,26 @@ breaks the product-truth guarantee. There is no partial compliance.
 
 This decision doc proposes the sequence; each phase becomes its own `02-Executing` PRD.
 
-- **108A-1 — Urgent user-facing plane hardening.** Define model capability metadata,
-  provider-conformance checks, typed provider errors, and picker eligibility so Builder
-  Copilot cannot select or call an unsupported model shape. This thin slice unblocks the
-  P0 108B rescue without waiting for the full durable-agent plane. It must not become a
-  broad platform build before Copilot can edit Builder.
 - **108B-1 — P0 Interactive Builder Copilot Operator rescue (resolves EB-007).** Use Bob's
   compiled Builder control contract as Copilot's action surface; build the visible-control
   vocabulary; answer capability questions deterministically; validate structured ops
   against current editable paths; apply only to Bob's in-memory working copy; preserve
-  dirty state; add fixture/eval scenarios for the shipped widgets. The first green bar is
-  not abstract: button green, button label, hide button, background, title, share, and
-  branding edits must work or clarify correctly in preview.
+  dirty state; add fixture/eval scenarios for the shipped widgets. First code gate:
+  project the existing `EditorContract` into Copilot instead of flattening it to
+  keyword-ranked `controls[]`. The first green bar is not abstract: button green, button
+  label, hide button, background, title, share, and branding edits must work or clarify
+  correctly in preview.
 - **108B-2 — Builder Copilot Guide layer.** After the Operator slice is green, add
   whole-widget/panel/workflow guidance for prompts like "what do I do in the panels?",
   "how do I add/remove/reorder this?", and "why don't I see that setting?" This is not
   grounding alone and not abstract advice. It requires a full current-widget capability
   map, panel/workflow map, repeatable structure map, conditional control map, and a
   Guide-to-op bridge so practical guidance can become validated Builder edits.
+- **108A-1 — Parallel release gate for user-facing plane hardening.** Define model
+  capability metadata, provider-conformance checks, typed provider errors, and picker
+  eligibility so Builder Copilot cannot select or call an unsupported model shape. This
+  runs alongside 108B-1/108B-2 and must be green before release, but it must not block the
+  Bob `EditorContract` projection work.
 - **108A-2 — Durable/service plane contract.** Define the service-binding execution
   interface San Francisco exposes to durable orchestrators: service-scoped policy/grant
   model, budget split, shared execution core, structured result + usage, telemetry,
@@ -727,5 +730,6 @@ where possible; treat model/tools/instructions as the unit with model choice own
 plane; single-agent-first; and make risk policy/evals/review gates explicit before
 autonomous or customer-facing actions ship). These are stated as direction; their
 mechanisms are for the execution PRDs to design. On approval, this doc graduates the
-phased path (108A-1, 108B, 108A-2, 108C, 108D, 108E+, with 108F named as a deferred
-direction) into the pipeline. EB-007 is marked `promoted → PRD 108B`.
+phased path (108B-1, 108B-2, parallel 108A-1 release gate, 108A-2, 108C, 108D, 108E+, with
+108F named as a deferred direction) into the pipeline. EB-007 is marked
+`promoted → PRD 108B`.

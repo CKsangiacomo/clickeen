@@ -6,7 +6,9 @@ Priority: P0
 Date: 2026-06-08
 Stage: 01-Planning
 Type: Sub-PRD from PRD 108
-Blocked-by: PRD 108A-1 (model capability + typed provider-error hardening)
+Ship-gate: PRD 108A-1 (model capability + typed provider-error hardening) must be green
+before release. The `EditorContract` projection and deterministic Builder Guide work are
+not blocked by 108A-1.
 
 Parent:
 - `Execution_Pipeline_Docs/01-Planning/108__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
@@ -77,9 +79,10 @@ Execution is therefore split:
   repeatable structures, conditional controls, add/remove/reorder workflows, and
   explanation-to-op apply where appropriate.
 
-108B-1 ships first. 108B-2 is still Builder Copilot, not a workforce agent, but it must not
-be confused with abstract advice. It is practical product guidance over the whole current
-widget.
+108B-1 and 108B-2 both start with the same concrete code move: project the existing
+`EditorContract` into Copilot instead of flattening it into scraps. 108A-1 can run in
+parallel as a provider/model safety ship gate, but it does not block Bob from fixing the
+payload.
 
 The first green bar is not theoretical:
 
@@ -139,6 +142,21 @@ This exposes several failures:
 - Copilot lacks grounded product vocabulary: it does not reliably map user words like
   "button", "CTA", "title", "background", "card", "stage", or "share" to the actual
   Builder controls and paths available in the open widget
+
+Current code defect, named:
+
+- `bob/lib/compiler/editor-contract.ts` already models the editor as a structured
+  `EditorContract` tree: panels, clusters, shared nodes, field nodes, `showIf`, and field
+  templates.
+- The current compiler path renders that tree into ToolDrawer HTML.
+- `compileWidgetServer` / `CompiledWidget` returns the rendered editor and flat compiled
+  controls, but not the structured editor tree as Copilot authority.
+- `bob/components/CopilotPane.tsx` sends Copilot a flattened `compiled.controls` summary.
+- `sanfrancisco/src/agents/csPromptPayload.ts` then keyword-ranks that flat list, trims it,
+  and pads the prompt with widget source snippets.
+
+So the whole-widget contract exists, but the Copilot turn receives a lossy single-op
+projection. The first execution gate is to stop shredding the contract.
 
 Non-failures:
 
@@ -402,6 +420,9 @@ Required substrate:
   snapshot: widget type, user-facing widget name, panels, groups, visible controls,
   current values, hidden/disabled controls with dependencies, repeatable structures,
   layout, appearance, typography, behavior, active locale, and preview/device context.
+  This map is derived from the existing `bob/lib/compiler/editor-contract.ts`
+  `EditorContract` tree, not a new schema. Execution should extract the structured contract
+  before ToolDrawer HTML rendering and merge current values from `currentConfig`.
 - **Panel/workflow map** - a derived map of what users can do in each panel for the current
   widget: content edits, layout changes, appearance changes, typography roles, settings,
   translations, repeatable item actions, asset actions, social share, backlink, header,
@@ -414,6 +435,35 @@ Required substrate:
 - **Guide-to-op bridge** - answers that describe an action must know whether the action can
   be applied immediately as validated ops, needs a required value from the user, or is
   unsupported by the current widget.
+
+### 3.2.5 Concrete first implementation slice
+
+The first slice is a focused refactor, not a platform project:
+
+1. **Bob compiler projection** - add a structured `builderContract` / `editorContract`
+   projection to `CompiledWidget` from the existing `EditorContract` tree. The projection
+   must include panels, clusters/groups, fields, shared Shell nodes, labels, paths, types,
+   options/enums, `kind`, `showIf` dependencies, repeatable/template metadata, and the
+   current value/visibility state needed by Copilot.
+2. **Bob Copilot payload** - `CopilotPane` sends the structured contract snapshot as the
+   Copilot authority. A flat `controls[]` may remain only as an apply allowlist/outcome
+   metadata helper.
+3. **Roma payload validation** - the account Copilot route validates that the structured
+   snapshot exists and is shaped correctly before calling San Francisco.
+4. **San Francisco contract input** - `widgetCopilotCore` accepts the structured contract
+   and uses it for deterministic Guide answers and target resolution.
+5. **Stop prompt shredding** - `csPromptPayload` must stop using keyword-ranked control
+   fragments and raw `widget.html` / `widget.css` / `widget.client.js` snippets as the
+   primary Builder guidance payload.
+6. **Deterministic Guide answers** - "what can you edit?", "what do I do in the panels?",
+   and "where is X?" answer from the structured contract without a model call.
+7. **Deterministic Operator resolver** - ambiguous edit targets ask clarification before
+   model planning; the model may help with values only after the target is grounded.
+8. **Bob apply/undo/conflict safety** - ops still apply through Bob validation; stale
+   Copilot responses reject when the relevant working-copy snapshot changed.
+
+108A-1 runs in parallel and is a release gate for picker/model/raw-provider-error safety.
+108A-2 and 108C remain deferred.
 
 ### 3.3 Bob validates every op before applying
 
@@ -544,6 +594,12 @@ when policy and model capability allow it.
 - Fix Builder Copilot's user-facing runtime behavior.
 - Separate Copilot behavior from future workforce-agent behavior.
 - Use compiled Builder controls as the source of edit capability.
+- Project the existing `EditorContract` tree into Copilot's turn payload instead of
+  creating a parallel Guide schema.
+- Add the projected contract to `CompiledWidget` / compiler output so Bob does not
+  reconstruct Guide context from flat controls.
+- Remove raw widget source padding and keyword-prefiltered controls as the primary
+  Builder guidance payload.
 - Build the visible-control vocabulary map that lets Copilot understand user words like
   button/title/background/share/card/stage/pod.
 - Build the deterministic resolver that maps natural-language user phrases to visible
@@ -569,6 +625,8 @@ when policy and model capability allow it.
 - External outbound tool/MCP layer.
 - Any direct San Francisco write to account instance persistence.
 - Replacing Builder controls.
+- Building a second whole-widget Guide schema parallel to `EditorContract`.
+- Blocking the Bob `EditorContract` projection on 108A-1 model/provider work.
 - Rebuilding widget schema or adding per-widget prompt glue to compensate for missing
   grounding.
 - Letting the model choose edit targets from raw metadata without deterministic visible
@@ -603,6 +661,12 @@ This PRD is execution-ready only when the execution spec can answer:
 - Which panels, groups, controls, repeatable structures, and workflows does Guide expose
   for each shipped widget?
 - How are hidden/disabled control dependencies represented?
+- How is the structured panel/control/condition/repeatable map projected from
+  `EditorContract` into the Copilot turn payload?
+- Which flat `controls[]` usage remains only as an apply allowlist or outcome metadata
+  helper?
+- Which raw source snippets and keyword-prefilter paths are removed from normal Builder
+  Guide payloads?
 - How does a Guide answer become validated Builder ops when the user says "do it"?
 
 Execution is complete only when:
@@ -617,8 +681,16 @@ Execution is complete only when:
   "background," "card," "stage," "pod," or "share" means.
 - "What do I do in the panels?" returns a useful whole-widget explanation grounded in the
   current widget's actual panels, groups, and controls.
+- The Copilot turn payload carries the structured panel/control/condition/repeatable map
+  projected from `EditorContract`; a flat, keyword-ranked `controls[]` is no longer the
+  whole-widget authority.
+- Normal Builder Guide payloads no longer depend on raw `widget.html`, `widget.css`, or
+  `widget.client.js` source snippets.
+- "What can you edit?", "What do I do in the panels?", and "Where is X?" do not call the
+  model.
 - "How do I add/remove/reorder X?" answers with the correct current-widget workflow and can
   apply validated ops when enough information is present.
+- Repeatable actions use stable item identity where available, not only array indexes.
 - "Why don't I see X?" explains the actual conditional dependency or states that the
   current widget does not support it.
 - Guide answers that offer "I can do that" convert to the same validated Bob ops as manual

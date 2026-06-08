@@ -19,7 +19,7 @@
       "limits": []
     },
     {
-      "path": "timer.labels.days",
+      "path": "countdown.timer.labels.days",
       "label": "Days label",
       "type": "string",
       "role": "timer-days-label",
@@ -27,7 +27,7 @@
       "limits": []
     },
     {
-      "path": "timer.labels.hours",
+      "path": "countdown.timer.labels.hours",
       "label": "Hours label",
       "type": "string",
       "role": "timer-hours-label",
@@ -35,7 +35,7 @@
       "limits": []
     },
     {
-      "path": "timer.labels.minutes",
+      "path": "countdown.timer.labels.minutes",
       "label": "Minutes label",
       "type": "string",
       "role": "timer-minutes-label",
@@ -43,7 +43,7 @@
       "limits": []
     },
     {
-      "path": "timer.labels.seconds",
+      "path": "countdown.timer.labels.seconds",
       "label": "Seconds label",
       "type": "string",
       "role": "timer-seconds-label",
@@ -59,7 +59,7 @@
       "limits": []
     },
     {
-      "path": "actions.during.text",
+      "path": "countdown.actions.during.text",
       "label": "Active CTA text",
       "type": "string",
       "role": "active-action-text",
@@ -67,7 +67,7 @@
       "limits": []
     },
     {
-      "path": "actions.after.text",
+      "path": "countdown.actions.after.text",
       "label": "Finished action text",
       "type": "string",
       "role": "finished-action-text",

@@ -249,7 +249,10 @@
     return window.CKAppearance;
   }
 
-  function applyAppearance(appearance) {
+  function applyAppearance(appearance, shellAppearance) {
+    if (!shellAppearance || typeof shellAppearance !== 'object' || Array.isArray(shellAppearance)) {
+      throw new Error('[FAQ] state.appearance must be an object');
+    }
     const helpers = resolveAppearanceHelpers();
     faqRoot.style.setProperty('--faq-item-bg', helpers.toCssBackground(appearance.itemBackground));
     if (!window.CKSurface?.applyCardWrapper) {
@@ -263,7 +266,7 @@
     faqRoot.style.setProperty('--faq-icon-color', helpers.toCssColor(appearance.iconColor));
 
     if (podEl instanceof HTMLElement) {
-      const podBorder = appearance.podBorder;
+      const podBorder = shellAppearance.podBorder;
       const podEnabled = podBorder.enabled === true && podBorder.width > 0;
       podEl.style.setProperty('--pod-border-width', podEnabled ? `${podBorder.width}px` : '0px');
       podEl.style.setProperty('--pod-border-color', podEnabled ? podBorder.color : 'transparent');
@@ -351,6 +354,12 @@
 
   function applyState(state, runtimeContext) {
     lastState = state;
+    if (!state || typeof state !== 'object' || Array.isArray(state)) {
+      throw new Error('[FAQ] state must be an object');
+    }
+    if (!state.faq || typeof state.faq !== 'object' || Array.isArray(state.faq)) {
+      throw new Error('[FAQ] state.faq must be an object');
+    }
 
     if (!window.CKStagePod?.applyStagePod) {
       throw new Error('[FAQ] Missing CKStagePod.applyStagePod');
@@ -393,11 +402,11 @@
       window.CKBranding.applyBacklink(widgetRoot, state);
     }
 
-    applyAccordionIcons(state.appearance.iconStyle);
+    applyAccordionIcons(state.faq.appearance.iconStyle);
 
-    applyAppearance(state.appearance);
-    applyLayout(state.layout);
-    accordionRuntime.deepLinksEnabled = state.geo.enableDeepLinks === true;
+    applyAppearance(state.faq.appearance, state.appearance);
+    applyLayout(state.faq.layout);
+    accordionRuntime.deepLinksEnabled = state.faq.geo.enableDeepLinks === true;
 
     // If we rebuild list markup (e.g. while typing in Bob), preserve the current expanded state.
     // Otherwise, "expandFirst/defaultOpen" would only apply on the initial mount and get lost on re-render.
@@ -414,47 +423,47 @@
     };
 
     const nextItemsSignature = JSON.stringify([
-      state.sections,
-      state.displayCategoryTitles === true,
-      state.layout.type,
+      state.faq.sections,
+      state.faq.displayCategoryTitles === true,
+      state.faq.layout.type,
     ]);
     if (nextItemsSignature !== lastItemsSignature) {
       lastItemsSignature = nextItemsSignature;
-      if (accordionRuntime.isAccordion === true && state.layout.type === 'accordion') {
+      if (accordionRuntime.isAccordion === true && state.faq.layout.type === 'accordion') {
         const expanded = captureExpandedAnchors();
         desiredExpandedAnchorIds = expanded.length ? expanded : null;
       }
       renderItems(
-        state.sections,
-        state.behavior,
-        state.displayCategoryTitles === true,
-        state.layout.type === 'accordion',
+        state.faq.sections,
+        state.faq.behavior,
+        state.faq.displayCategoryTitles === true,
+        state.faq.layout.type === 'accordion',
       );
-      if (accordionRuntime.isAccordion === true && state.layout.type === 'accordion' && !desiredExpandedAnchorIds) {
+      if (accordionRuntime.isAccordion === true && state.faq.layout.type === 'accordion' && !desiredExpandedAnchorIds) {
         // No items were open before the re-render: re-run initial expand logic (expandFirst/defaultOpen/expandAll).
         lastAccordionSignature = '';
       }
     }
 
-    const hasAny = state.sections.some((section) => section.faqs.length > 0);
+    const hasAny = state.faq.sections.some((section) => section.faqs.length > 0);
     faqRoot.setAttribute('data-state', hasAny ? 'ready' : 'empty');
     emptyEl.hidden = hasAny;
 
-    if (state.layout.type === 'list' || state.layout.type === 'multicolumn') {
+    if (state.faq.layout.type === 'list' || state.faq.layout.type === 'multicolumn') {
       accordionRuntime.isAccordion = false;
-      lastAccordionSignature = JSON.stringify([state.layout.type]);
+      lastAccordionSignature = JSON.stringify([state.faq.layout.type]);
       return;
     }
 
     const buttons = listEl.querySelectorAll('[data-role="faq-question"]');
     accordionRuntime.isAccordion = true;
-    accordionRuntime.multiOpen = state.behavior.multiOpen === true;
+    accordionRuntime.multiOpen = state.faq.behavior.multiOpen === true;
     const sig = JSON.stringify([
-      state.layout.type,
-      state.behavior.multiOpen === true,
-      state.behavior.expandAll === true,
-      state.behavior.expandFirst === true,
-      state.sections.map((section) => section.faqs.map((faq) => faq.defaultOpen === true)),
+      state.faq.layout.type,
+      state.faq.behavior.multiOpen === true,
+      state.faq.behavior.expandAll === true,
+      state.faq.behavior.expandFirst === true,
+      state.faq.sections.map((section) => section.faqs.map((faq) => faq.defaultOpen === true)),
     ]);
     if (desiredExpandedAnchorIds && desiredExpandedAnchorIds.length) {
       lastAccordionSignature = sig;
@@ -484,14 +493,14 @@
       });
       collapseAll(listEl);
 
-      if (state.behavior.expandAll === true) {
+      if (state.faq.behavior.expandAll === true) {
         buttons.forEach((button) => setExpanded(button, true));
-      } else if (state.sections.some((section) => section.faqs.some((faq) => faq.defaultOpen === true))) {
-        const flat = state.sections.flatMap((section) => section.faqs);
+      } else if (state.faq.sections.some((section) => section.faqs.some((faq) => faq.defaultOpen === true))) {
+        const flat = state.faq.sections.flatMap((section) => section.faqs);
         buttons.forEach((button, idx) => {
           if (flat[idx]?.defaultOpen === true) setExpanded(button, true);
         });
-      } else if (state.behavior.expandFirst === true) {
+      } else if (state.faq.behavior.expandFirst === true) {
         const first = buttons[0];
         if (first) setExpanded(first, true);
       }
@@ -573,7 +582,7 @@
       typeof structuredClone === 'function' ? structuredClone(lastState) : JSON.parse(JSON.stringify(lastState));
 
     const allowedKeyRe =
-      /^(header\.(?:title|subtitleHtml)|sections\.\d+\.title|sections\.\d+\.faqs\.\d+\.(?:question|answer))$/;
+      /^(header\.(?:title|subtitleHtml)|faq\.sections\.\d+\.title|faq\.sections\.\d+\.faqs\.\d+\.(?:question|answer))$/;
 
     let applied = 0;
     Object.keys(overrides).forEach((key) => {

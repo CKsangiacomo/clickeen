@@ -27,42 +27,42 @@
       "limits": []
     },
     {
-      "path": "core.items[].title",
+      "path": "cards.items[].title",
       "label": "Card title",
       "role": "card-title",
       "type": "string",
       "arrayItemIdentity": [
-        "core.items[].id"
+        "cards.items[].id"
       ],
       "limits": []
     },
     {
-      "path": "core.items[].copy",
+      "path": "cards.items[].copy",
       "label": "Card copy",
       "role": "card-copy",
       "type": "richtext",
       "arrayItemIdentity": [
-        "core.items[].id"
+        "cards.items[].id"
       ],
       "limits": []
     },
     {
-      "path": "core.items[].media.imageAlt",
+      "path": "cards.items[].media.imageAlt",
       "label": "Card image alt text",
       "role": "image-alt",
       "type": "string",
       "arrayItemIdentity": [
-        "core.items[].id"
+        "cards.items[].id"
       ],
       "limits": []
     },
     {
-      "path": "core.items[].link.label",
+      "path": "cards.items[].link.label",
       "label": "Card link label",
       "role": "card-link",
       "type": "string",
       "arrayItemIdentity": [
-        "core.items[].id"
+        "cards.items[].id"
       ],
       "limits": []
     }

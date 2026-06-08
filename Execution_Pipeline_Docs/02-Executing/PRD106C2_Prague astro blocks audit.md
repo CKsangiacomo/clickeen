@@ -288,8 +288,8 @@ The word "bottom" is page placement, not widget identity.
 ## Bob Mapping Hints
 
 These are source-to-widget hints only. They are not executable Bob paths and do
-not define final Widget Core schema. Child PRDs own exact `core.*` paths,
-controls, defaults, validation, and editable fields.
+not define final Widget Core schema. Child PRDs own exact widget-specific Core
+namespaces, controls, defaults, validation, and editable fields.
 
 | Prague value | Likely destination area |
 | --- | --- |
@@ -300,7 +300,7 @@ controls, defaults, validation, and editable fields.
 | `items[].iconName` | Repeated item icon config. |
 | `items[].imagePath`, `visual.image` | Widget/account media config after asset promotion. |
 | `items[].imageAlt` | Content if authored alt text is exposed. |
-| `primaryCta.label`, `secondaryCta.label` | `cta.label` through the shared Header CTA. |
+| `primaryCta.label`, `secondaryCta.label` | `headerCta.label` through the shared Header CTA. |
 | `primaryCta.href`, `secondaryCta.href`, card links | Shared CTA href or child-owned repeated item link config where the child PRD explicitly says so. |
 | `layout` | Product-labeled config, not raw Prague enum if unclear |
 | `market`, `locale`, `resolvePragueHref` | Prague route context; not widget truth |

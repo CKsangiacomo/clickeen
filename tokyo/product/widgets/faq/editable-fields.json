@@ -27,34 +27,34 @@
       "limits": []
     },
     {
-      "path": "sections[].title",
+      "path": "faq.sections[].title",
       "label": "Section title",
       "type": "string",
       "role": "section-title",
       "arrayItemIdentity": [
-        "sections[].id"
+        "faq.sections[].id"
       ],
       "limits": []
     },
     {
-      "path": "sections[].faqs[].question",
+      "path": "faq.sections[].faqs[].question",
       "label": "FAQ question",
       "type": "string",
       "role": "faq-question",
       "arrayItemIdentity": [
-        "sections[].id",
-        "sections[].faqs[].id"
+        "faq.sections[].id",
+        "faq.sections[].faqs[].id"
       ],
       "limits": []
     },
     {
-      "path": "sections[].faqs[].answer",
+      "path": "faq.sections[].faqs[].answer",
       "label": "FAQ answer",
       "type": "richtext",
       "role": "faq-answer",
       "arrayItemIdentity": [
-        "sections[].id",
-        "sections[].faqs[].id"
+        "faq.sections[].id",
+        "faq.sections[].faqs[].id"
       ],
       "limits": []
     }

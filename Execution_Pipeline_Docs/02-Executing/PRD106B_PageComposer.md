@@ -495,7 +495,7 @@ only as opaque bytes when it appears in package metadata.
     "instances": [
       {
         "instanceId": "CHILD_INSTANCEID",
-        "path": "core.items[0].instance.instanceId"
+        "path": "split.items[0].instance.instanceId"
       }
     ]
   },
@@ -819,7 +819,8 @@ inside every widget.
 
 Page Composer consumes materialized widget instances. It does not care whether
 the Widget Core is FAQ questions, Split image/video/embedded instance, Cards
-items, Countdown timer, Logo Showcase strips, CTA empty Core, or Big Bang large
+items, Countdown timer, Logo Showcase strips, Call to Action body/action content,
+or Big Bang large
 typography. It only needs the shared package contribution contract below.
 Any widget that uses a different shell must be explicitly approved because it
 adds page-composition risk.
@@ -902,7 +903,7 @@ Roma must repair the derived index or mark the page dependency state
 failed/stale visibly; it must not silently trust stale index state.
 
 Embedded widget instances inside a widget, such as Split items with
-`core.items[].instance.instanceId`, do not create a page graph service. Roma
+`split.items[].instance.instanceId`, do not create a page graph service. Roma
 flattens those materialized package dependencies into the same
 `instanceId -> pageIds` answer. Example:
 

@@ -30,19 +30,19 @@
     {
       "kind": "limit",
       "key": "items.group.small.max",
-      "path": "strips[]",
+      "path": "logoshowcase.strips[]",
       "metric": "count"
     },
     {
       "kind": "limit",
       "key": "items.group.medium.max",
-      "path": "strips[].logos[]",
+      "path": "logoshowcase.strips[].logos[]",
       "metric": "count"
     },
     {
       "kind": "limit",
       "key": "items.group.large.max",
-      "path": "strips[].logos[]",
+      "path": "logoshowcase.strips[].logos[]",
       "metric": "count-total"
     }
   ]

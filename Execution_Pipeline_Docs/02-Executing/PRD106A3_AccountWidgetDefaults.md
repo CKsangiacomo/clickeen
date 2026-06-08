@@ -478,8 +478,8 @@ until Widget Shell or the widget spec exposes the correct control.
 This PRD inherits the Shell extraction from
 `PRD106A2_WidgetShellExtraction.md`, with current naming corrections:
 
-- old `cta.*` is now `headerCta.*`;
-- old `appearance.cta*` is now `appearance.headerCta.*`;
+- legacy Header CTA state is now `headerCta.*`;
+- legacy Header CTA appearance is now `appearance.headerCta.*`;
 - old `behavior.socialShare.enabled` is now the full
   `behavior.socialShare.*` family, including channel defaults.
 
@@ -513,9 +513,9 @@ coreSize.*
 labels name each widget's Core noun in the Builder UI, such as FAQ, Cards, or
 Split. They are not account-level Shell styling or behavior defaults.
 
-`appearance.cardwrapper.*` is widget Core, not Shell. The shared Shell has no
-card element. Card wrapper styling belongs to widgets that render repeated
-cards/items, such as Cards, FAQ, Countdown, Logo Showcase, or Split. Existing
+`{widgetNamespace}.appearance.cardwrapper.*` is widget Core, not Shell. The
+shared Shell has no card element. Card wrapper styling belongs to widgets that
+render repeated cards/items, such as Cards, FAQ, Countdown, Logo Showcase, or Split. Existing
 widgets already disagree on these values, which proves they are not one global
 Shell default.
 

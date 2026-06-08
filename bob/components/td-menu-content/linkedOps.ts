@@ -17,6 +17,8 @@ type PresetEntry = {
   targetPaths: string[];
 };
 
+const surfaceOwnerPattern = '(?:stage|pod|(?:[a-zA-Z0-9_-]+\\.)?appearance\\.cardwrapper)';
+
 export { isPlainRecord };
 
 export function isFiniteNumber(value: unknown): value is number {
@@ -118,7 +120,7 @@ export function expandLinkedOps(args: {
       presetOps.set(op.path, op);
     }
     if (op.op === 'set' && typeof op.path === 'string' && typeof op.value === 'boolean') {
-      const insideShadowLinkMatch = op.path.match(/^(stage|pod|appearance\.cardwrapper)\.insideShadow\.linked$/);
+      const insideShadowLinkMatch = op.path.match(new RegExp(`^(${surfaceOwnerPattern})\\.insideShadow\\.linked$`));
       if (insideShadowLinkMatch) insideShadowLinkedOverrides.set(insideShadowLinkMatch[1], op.value);
     }
   }
@@ -195,7 +197,7 @@ export function expandLinkedOps(args: {
     }
 
     if (typeof op.value === 'boolean') {
-      const radiusLinkMatch = op.path.match(/^(pod|appearance\.cardwrapper)\.radiusLinked$/);
+      const radiusLinkMatch = op.path.match(new RegExp(`^((?:pod|(?:[a-zA-Z0-9_-]+\\.)?appearance\\.cardwrapper))\\.radiusLinked$`));
       if (radiusLinkMatch) {
         const nextLinked = op.value;
         const base = radiusLinkMatch[1];
@@ -224,7 +226,7 @@ export function expandLinkedOps(args: {
         continue;
       }
 
-      const insideShadowLinkMatch = op.path.match(/^(stage|pod|appearance\.cardwrapper)\.insideShadow\.linked$/);
+      const insideShadowLinkMatch = op.path.match(new RegExp(`^(${surfaceOwnerPattern})\\.insideShadow\\.linked$`));
       if (insideShadowLinkMatch) {
         const nextLinked = op.value;
         const base = insideShadowLinkMatch[1];
@@ -385,7 +387,7 @@ export function expandLinkedOps(args: {
       }
     }
 
-    const insideShadowAllMatch = op.path.match(/^(stage|pod|appearance\.cardwrapper)\.insideShadow\.all$/);
+    const insideShadowAllMatch = op.path.match(new RegExp(`^(${surfaceOwnerPattern})\\.insideShadow\\.all$`));
     if (insideShadowAllMatch) {
       const base = insideShadowAllMatch[1];
       const linkedOverride = insideShadowLinkedOverrides.get(base);
@@ -405,7 +407,7 @@ export function expandLinkedOps(args: {
       }
     }
 
-    const radiusValueMatch = op.path.match(/^(pod|appearance\.cardwrapper)\.radius$/);
+    const radiusValueMatch = op.path.match(new RegExp(`^((?:pod|(?:[a-zA-Z0-9_-]+\\.)?appearance\\.cardwrapper))\\.radius$`));
     if (radiusValueMatch) {
       const base = radiusValueMatch[1];
       const linkedValue = getAt<unknown>(args.instanceData, `${base}.radiusLinked`);

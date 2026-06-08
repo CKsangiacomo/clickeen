@@ -55,18 +55,19 @@ None for PRD106C. Surviving target set is confirmed.
 
 Green evidence:
 
-- Target set is exactly Split, Cards, Big Bang, CTA.
+- Target set is exactly Split, Cards, Big Bang, Call to Action.
 - Out-of-scope Prague blocks are named and fenced/dropped.
 - Existing drift widget folders were deleted as customer widget targets:
   `tokyo/product/widgets/hero`, `tokyo/product/widgets/steps`, and
   `tokyo/product/widgets/cardgrid`.
 - `tokyo-worker/src/generated/widget-definition-sources.ts` now imports only
-  `big-bang`, `cards`, `countdown`, `cta`, `faq`, `logoshowcase`, and `split`.
+  `big-bang`, `calltoaction`, `cards`, `countdown`, `faq`, `logoshowcase`,
+  and `split`.
 - `packages/ck-contracts/src/overlay-codebooks.ts` no longer assigns overlay
   codes to `hero`, `steps`, or `cardgrid`.
 - No child PRD is asked to own Shell or Page Composer behavior.
 - Split embedded-instance support is explicitly owned by PRD106C3 as visible
-  Split Core behavior using `core.items[].instance.instanceId`; Prague
+  Split Core behavior using `split.items[].instance.instanceId`; Prague
   `accountInstanceRef` is not preserved.
 
 Stop conditions:
@@ -138,7 +139,7 @@ widget state.
 
 Split embedded-instance support is granted only because PRD106C3 defines it as
 explicit, visible Split Core behavior with the approved
-`core.items[].instance.instanceId` path, no Prague iframe assumptions, no locale
+`split.items[].instance.instanceId` path, no Prague iframe assumptions, no locale
 override, no page-owned override semantics, and no `accountInstanceRef`
 compatibility.
 
@@ -214,22 +215,22 @@ Header has one meaning:
 Header = title + optional subtitle + optional CTA
 ```
 
-Header paths are `header.*`; CTA paths are `cta.*`. Do not create
+Header paths are `header.*`; Header CTA paths are `headerCta.*`. Do not create
 widget-specific `headline`, `subheadline`, `primaryCta`, `secondaryCta`,
 `button`, `eyebrow`, or duplicate Header/CTA/layout paths.
 
 For PRD106C, child PRDs define only the Widget Core:
 
 ```text
-Split   -> Core div with image/video item software; optional carousel; embedded instance only if PRD106C3 explicitly approves it
-Cards   -> cards/items content
-BigBang -> large typography/content treatment
-CTA     -> empty Core; Shell Header/CTA only
+Split          -> split.* image/video/embedded-instance software; optional carousel
+Cards          -> cards.* card/item content
+BigBang        -> bigBang.* large typography/content treatment
+Calltoaction   -> calltoaction.* body/action content plus shared Shell Header/Header CTA
 ```
 
 PRD106C widget execution is blocked until PRD106A2 accepts the shared Shell
 contract or explicitly fences the exact same Shell contribution shape. After
-that, Split, Cards, Big Bang, CTA, Countdown gold-standard repair, and Logo
+that, Split, Cards, Big Bang, Call to Action, Countdown gold-standard repair, and Logo
 Showcase gold-standard repair are Core work against the same shell.
 
 Each child PRD must say which FAQ-specific content is removed, which

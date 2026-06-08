@@ -3,292 +3,294 @@
   "widgetname": "logoshowcase",
   "itemKey": "logoshowcase.item",
   "defaults": {
-    "type": "grid",
-    "seoGeo": {
-      "enabled": false
-    },
-    "strips": [
-      {
-        "id": "s1",
-        "logos": [
-          {
-            "id": "l1",
-            "alt": "",
-            "href": "",
-            "name": "Audi",
-            "asset": {
-              "name": "Audi.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Audi.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l2",
-            "alt": "",
-            "href": "",
-            "name": "BMW",
-            "asset": {
-              "name": "BMW.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/BMW.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l3",
-            "alt": "",
-            "href": "",
-            "name": "Chana",
-            "asset": {
-              "name": "Chana.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Chana.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l4",
-            "alt": "",
-            "href": "",
-            "name": "Daihatsu",
-            "asset": {
-              "name": "Daihatsu.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Daihatsu.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l5",
-            "alt": "",
-            "href": "",
-            "name": "Ford",
-            "asset": {
-              "name": "Ford.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Ford.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l6",
-            "alt": "",
-            "href": "",
-            "name": "Honda",
-            "asset": {
-              "name": "Honda.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Honda.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l7",
-            "alt": "",
-            "href": "",
-            "name": "Isuzu",
-            "asset": {
-              "name": "Isuzu.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Isuzu.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l8",
-            "alt": "",
-            "href": "",
-            "name": "Lambo",
-            "asset": {
-              "name": "Lambo.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Lambo.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l9",
-            "alt": "",
-            "href": "",
-            "name": "Perodua",
-            "asset": {
-              "name": "Perodua.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Perodua.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l10",
-            "alt": "",
-            "href": "",
-            "name": "Peugeot",
-            "asset": {
-              "name": "Peugeot.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Peugeot.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l11",
-            "alt": "",
-            "href": "",
-            "name": "Proton",
-            "asset": {
-              "name": "Proton.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Proton.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l12",
-            "alt": "",
-            "href": "",
-            "name": "Suzuki",
-            "asset": {
-              "name": "Suzuki.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Suzuki.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l13",
-            "alt": "",
-            "href": "",
-            "name": "Tesla",
-            "asset": {
-              "name": "Tesla.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Tesla.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l14",
-            "alt": "",
-            "href": "",
-            "name": "Toyota",
-            "asset": {
-              "name": "Toyota.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Toyota.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l15",
-            "alt": "",
-            "href": "",
-            "name": "VW",
-            "asset": {
-              "name": "VW.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/VW.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          },
-          {
-            "id": "l16",
-            "alt": "",
-            "href": "",
-            "name": "Volvo",
-            "asset": {
-              "name": "Volvo.svg"
-            },
-            "title": "",
-            "caption": "",
-            "logoFill": "url(/widgets/logoshowcase/media/Volvo.svg) center / contain no-repeat",
-            "nofollow": false,
-            "targetBlank": false
-          }
-        ]
-      }
-    ],
-    "spacing": {
-      "gap": 20,
-      "rowGap": 16,
-      "stripGap": 16,
-      "mobileGap": 16,
-      "logoHeight": 40,
-      "mobileStripGap": 12
-    },
-    "behavior": {
-      "randomOrder": false
-    },
-    "appearance": {
-      "cardwrapper": {
-        "border": {
-          "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)",
-          "width": 1,
-          "enabled": false
-        },
-        "radius": "4xl",
-        "shadow": {
-          "x": 0,
-          "y": 8,
-          "blur": 24,
-          "alpha": 18,
-          "color": "#000000",
-          "inset": false,
-          "spread": 0,
-          "enabled": false
-        },
-        "radiusBL": "4xl",
-        "radiusBR": "4xl",
-        "radiusTL": "4xl",
-        "radiusTR": "4xl",
-        "radiusLinked": true
+    "logoshowcase": {
+      "type": "grid",
+      "seoGeo": {
+        "enabled": false
       },
-      "logoLook": "original",
-      "logoOpacity": 0.9,
-      "itemBackground": "transparent"
-    },
-    "typeConfig": {
-      "carousel": {
-        "mode": "paged",
-        "step": "page",
-        "speed": 30,
-        "autoplay": false,
-        "direction": "left",
-        "allowSwipe": true,
-        "showArrows": true,
-        "pauseOnHover": true,
-        "transitionMs": 350,
-        "autoSlideDelayMs": 2500
+      "strips": [
+        {
+          "id": "s1",
+          "logos": [
+            {
+              "id": "l1",
+              "alt": "",
+              "href": "",
+              "name": "Audi",
+              "asset": {
+                "name": "Audi.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Audi.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l2",
+              "alt": "",
+              "href": "",
+              "name": "BMW",
+              "asset": {
+                "name": "BMW.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/BMW.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l3",
+              "alt": "",
+              "href": "",
+              "name": "Chana",
+              "asset": {
+                "name": "Chana.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Chana.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l4",
+              "alt": "",
+              "href": "",
+              "name": "Daihatsu",
+              "asset": {
+                "name": "Daihatsu.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Daihatsu.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l5",
+              "alt": "",
+              "href": "",
+              "name": "Ford",
+              "asset": {
+                "name": "Ford.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Ford.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l6",
+              "alt": "",
+              "href": "",
+              "name": "Honda",
+              "asset": {
+                "name": "Honda.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Honda.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l7",
+              "alt": "",
+              "href": "",
+              "name": "Isuzu",
+              "asset": {
+                "name": "Isuzu.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Isuzu.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l8",
+              "alt": "",
+              "href": "",
+              "name": "Lambo",
+              "asset": {
+                "name": "Lambo.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Lambo.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l9",
+              "alt": "",
+              "href": "",
+              "name": "Perodua",
+              "asset": {
+                "name": "Perodua.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Perodua.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l10",
+              "alt": "",
+              "href": "",
+              "name": "Peugeot",
+              "asset": {
+                "name": "Peugeot.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Peugeot.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l11",
+              "alt": "",
+              "href": "",
+              "name": "Proton",
+              "asset": {
+                "name": "Proton.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Proton.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l12",
+              "alt": "",
+              "href": "",
+              "name": "Suzuki",
+              "asset": {
+                "name": "Suzuki.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Suzuki.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l13",
+              "alt": "",
+              "href": "",
+              "name": "Tesla",
+              "asset": {
+                "name": "Tesla.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Tesla.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l14",
+              "alt": "",
+              "href": "",
+              "name": "Toyota",
+              "asset": {
+                "name": "Toyota.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Toyota.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l15",
+              "alt": "",
+              "href": "",
+              "name": "VW",
+              "asset": {
+                "name": "VW.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/VW.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            },
+            {
+              "id": "l16",
+              "alt": "",
+              "href": "",
+              "name": "Volvo",
+              "asset": {
+                "name": "Volvo.svg"
+              },
+              "title": "",
+              "caption": "",
+              "logoFill": "url(/widgets/logoshowcase/media/Volvo.svg) center / contain no-repeat",
+              "nofollow": false,
+              "targetBlank": false
+            }
+          ]
+        }
+      ],
+      "spacing": {
+        "gap": 20,
+        "rowGap": 16,
+        "stripGap": 16,
+        "mobileGap": 16,
+        "logoHeight": 40,
+        "mobileStripGap": 12
+      },
+      "behavior": {
+        "randomOrder": false
+      },
+      "appearance": {
+        "cardwrapper": {
+          "border": {
+            "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)",
+            "width": 1,
+            "enabled": false
+          },
+          "radius": "4xl",
+          "shadow": {
+            "x": 0,
+            "y": 8,
+            "blur": 24,
+            "alpha": 18,
+            "color": "#000000",
+            "inset": false,
+            "spread": 0,
+            "enabled": false
+          },
+          "radiusBL": "4xl",
+          "radiusBR": "4xl",
+          "radiusTL": "4xl",
+          "radiusTR": "4xl",
+          "radiusLinked": true
+        },
+        "logoLook": "original",
+        "logoOpacity": 0.9,
+        "itemBackground": "transparent"
+      },
+      "typeConfig": {
+        "carousel": {
+          "mode": "paged",
+          "step": "page",
+          "speed": 30,
+          "autoplay": false,
+          "direction": "left",
+          "allowSwipe": true,
+          "showArrows": true,
+          "pauseOnHover": true,
+          "transitionMs": 350,
+          "autoSlideDelayMs": 2500
+        }
       }
     }
   },
@@ -307,12 +309,12 @@
                 "kind": "field",
                 "type": "choice-tiles",
                 "groupId": "content-layout",
-                "path": "type",
+                "path": "logoshowcase.type",
                 "label": "Layout",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "value": "{{type}}",
+                  "value": "{{logoshowcase.type}}",
                   "options": [
                     {
                       "label": "Grid",
@@ -331,24 +333,24 @@
                 "kind": "field",
                 "type": "object-manager",
                 "groupId": "content-logos",
-                "path": "strips",
+                "path": "logoshowcase.strips",
                 "template": [
                   {
                     "kind": "field",
                     "type": "repeater",
-                    "path": "strips.__STRIP__.logos",
+                    "path": "logoshowcase.strips.__STRIP__.logos",
                     "label": "Logos",
                     "template": [
                       {
                         "kind": "field",
                         "type": "dropdown-upload",
-                        "path": "strips.__STRIP__.logos.__INDEX__.logoFill",
+                        "path": "logoshowcase.strips.__STRIP__.logos.__INDEX__.logoFill",
                         "label": "Logo",
                         "template": [
                           {
                             "kind": "field",
                             "type": "textfield",
-                            "path": "strips.__STRIP__.logos.__INDEX__.name",
+                            "path": "logoshowcase.strips.__STRIP__.logos.__INDEX__.name",
                             "label": "Name",
                             "attrs": {
                               "size": "sm",
@@ -358,7 +360,7 @@
                           {
                             "kind": "field",
                             "type": "textfield",
-                            "path": "strips.__STRIP__.logos.__INDEX__.caption",
+                            "path": "logoshowcase.strips.__STRIP__.logos.__INDEX__.caption",
                             "label": "Caption",
                             "attrs": {
                               "size": "sm",
@@ -368,7 +370,7 @@
                         ],
                         "attrs": {
                           "size": "md",
-                          "meta-path": "strips.__STRIP__.logos.__INDEX__.asset",
+                          "meta-path": "logoshowcase.strips.__STRIP__.logos.__INDEX__.asset",
                           "placeholder": "Upload logo",
                           "accept": "image/*,.svg"
                         }
@@ -427,7 +429,7 @@
                 "kind": "field",
                 "type": "bulk-edit",
                 "groupId": "content-logos",
-                "path": "strips",
+                "path": "logoshowcase.strips",
                 "label": "Logo details...",
                 "attrs": {
                   "group-label": "",
@@ -491,7 +493,7 @@
                 "kind": "field",
                 "type": "segmented",
                 "groupId": "carousel-settings",
-                "path": "typeConfig.carousel.mode",
+                "path": "logoshowcase.typeConfig.carousel.mode",
                 "label": "Mode",
                 "attrs": {
                   "group-label": "",
@@ -512,10 +514,10 @@
                 "kind": "field",
                 "type": "segmented",
                 "groupId": "carousel-settings",
-                "path": "typeConfig.carousel.step",
+                "path": "logoshowcase.typeConfig.carousel.step",
                 "label": "Step",
                 "showIf": {
-                  "path": "typeConfig.carousel.mode",
+                  "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
                   "value": "paged"
                 },
@@ -538,10 +540,10 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "carousel-settings",
-                "path": "typeConfig.carousel.showArrows",
+                "path": "logoshowcase.typeConfig.carousel.showArrows",
                 "label": "Show arrows",
                 "showIf": {
-                  "path": "typeConfig.carousel.mode",
+                  "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
                   "value": "paged"
                 },
@@ -554,10 +556,10 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "carousel-settings",
-                "path": "typeConfig.carousel.allowSwipe",
+                "path": "logoshowcase.typeConfig.carousel.allowSwipe",
                 "label": "Allow swipe/drag",
                 "showIf": {
-                  "path": "typeConfig.carousel.mode",
+                  "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
                   "value": "paged"
                 },
@@ -570,10 +572,10 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "carousel-settings",
-                "path": "typeConfig.carousel.autoplay",
+                "path": "logoshowcase.typeConfig.carousel.autoplay",
                 "label": "Autoplay",
                 "showIf": {
-                  "path": "typeConfig.carousel.mode",
+                  "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
                   "value": "paged"
                 },
@@ -586,17 +588,17 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "carousel-settings",
-                "path": "typeConfig.carousel.autoSlideDelayMs",
+                "path": "logoshowcase.typeConfig.carousel.autoSlideDelayMs",
                 "label": "Autoplay delay (ms)",
                 "showIf": {
                   "all": [
                     {
-                      "path": "typeConfig.carousel.mode",
+                      "path": "logoshowcase.typeConfig.carousel.mode",
                       "op": "equals",
                       "value": "paged"
                     },
                     {
-                      "path": "typeConfig.carousel.autoplay",
+                      "path": "logoshowcase.typeConfig.carousel.autoplay",
                       "op": "isTrue"
                     }
                   ]
@@ -610,10 +612,10 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "carousel-settings",
-                "path": "typeConfig.carousel.transitionMs",
+                "path": "logoshowcase.typeConfig.carousel.transitionMs",
                 "label": "Transition (ms)",
                 "showIf": {
-                  "path": "typeConfig.carousel.mode",
+                  "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
                   "value": "paged"
                 },
@@ -626,10 +628,10 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "carousel-settings",
-                "path": "typeConfig.carousel.speed",
+                "path": "logoshowcase.typeConfig.carousel.speed",
                 "label": "Speed (px/sec)",
                 "showIf": {
-                  "path": "typeConfig.carousel.mode",
+                  "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
                   "value": "continuous"
                 },
@@ -642,17 +644,17 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "carousel-settings",
-                "path": "typeConfig.carousel.direction",
+                "path": "logoshowcase.typeConfig.carousel.direction",
                 "label": "Direction",
                 "showIf": {
-                  "path": "typeConfig.carousel.mode",
+                  "path": "logoshowcase.typeConfig.carousel.mode",
                   "op": "equals",
                   "value": "continuous"
                 },
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "value": "{{typeConfig.carousel.direction}}",
+                  "value": "{{logoshowcase.typeConfig.carousel.direction}}",
                   "options": [
                     {
                       "label": "Left",
@@ -669,7 +671,7 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "carousel-settings",
-                "path": "typeConfig.carousel.pauseOnHover",
+                "path": "logoshowcase.typeConfig.carousel.pauseOnHover",
                 "label": "Pause on hover",
                 "attrs": {
                   "group-label": "",
@@ -678,7 +680,7 @@
               }
             ],
             "showIf": {
-              "path": "type",
+              "path": "logoshowcase.type",
               "op": "equals",
               "value": "carousel"
             }
@@ -708,7 +710,7 @@
                 "kind": "field",
                 "type": "slider",
                 "groupId": "spacing-settings",
-                "path": "spacing.logoHeight",
+                "path": "logoshowcase.spacing.logoHeight",
                 "label": "Logo size",
                 "attrs": {
                   "group-label": "",
@@ -721,7 +723,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "spacing-settings",
-                "path": "spacing.gap",
+                "path": "logoshowcase.spacing.gap",
                 "label": "Logo gap (px)",
                 "attrs": {
                   "group-label": "",
@@ -732,10 +734,10 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "spacing-settings",
-                "path": "spacing.rowGap",
+                "path": "logoshowcase.spacing.rowGap",
                 "label": "Row gap (px)",
                 "showIf": {
-                  "path": "type",
+                  "path": "logoshowcase.type",
                   "op": "equals",
                   "value": "grid"
                 },
@@ -748,7 +750,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "spacing-settings",
-                "path": "spacing.stripGap",
+                "path": "logoshowcase.spacing.stripGap",
                 "label": "Strip gap (px)",
                 "attrs": {
                   "group-label": "",
@@ -759,7 +761,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "spacing-mobile",
-                "path": "spacing.mobileGap",
+                "path": "logoshowcase.spacing.mobileGap",
                 "label": "Logo gap (mobile px)",
                 "attrs": {
                   "group-label": "",
@@ -770,7 +772,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "spacing-mobile",
-                "path": "spacing.mobileStripGap",
+                "path": "logoshowcase.spacing.mobileStripGap",
                 "label": "Strip gap (mobile px)",
                 "attrs": {
                   "group-label": "",
@@ -781,7 +783,7 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "layout-behavior",
-                "path": "behavior.randomOrder",
+                "path": "logoshowcase.behavior.randomOrder",
                 "label": "Randomize logo order",
                 "attrs": {
                   "group-label": "",
@@ -806,12 +808,12 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-logos",
-                "path": "appearance.logoLook",
+                "path": "logoshowcase.appearance.logoLook",
                 "label": "Logo look",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "value": "{{appearance.logoLook}}",
+                  "value": "{{logoshowcase.appearance.logoLook}}",
                   "options": [
                     {
                       "label": "Original",
@@ -828,7 +830,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "appearance-logos",
-                "path": "appearance.logoOpacity",
+                "path": "logoshowcase.appearance.logoOpacity",
                 "label": "Logo opacity (0-1)",
                 "attrs": {
                   "group-label": "",
@@ -846,127 +848,8 @@
               {
                 "kind": "field",
                 "type": "dropdown-fill",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherBackground",
-                "label": "Background",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "fill-modes": "color",
-                  "value": "{{appearance.localeSwitcherBackground}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-fill",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherTextColor",
-                "label": "Text color",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "fill-modes": "color",
-                  "value": "{{appearance.localeSwitcherTextColor}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-border",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherBorder",
-                "label": "Border",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{appearance.localeSwitcherBorder}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-actions",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherRadius",
-                "label": "Corner radius",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{appearance.localeSwitcherRadius}}",
-                  "options": [
-                    {
-                      "label": "None",
-                      "value": "none"
-                    },
-                    {
-                      "label": "X-Small",
-                      "value": "xs"
-                    },
-                    {
-                      "label": "Small",
-                      "value": "sm"
-                    },
-                    {
-                      "label": "Medium",
-                      "value": "md"
-                    },
-                    {
-                      "label": "Large",
-                      "value": "lg"
-                    },
-                    {
-                      "label": "X-Large",
-                      "value": "xl"
-                    },
-                    {
-                      "label": "2X-Large",
-                      "value": "2xl"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
-                "type": "valuefield",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherPaddingInline",
-                "label": "Horizontal padding (px)",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{appearance.localeSwitcherPaddingInline}}",
-                  "min": 0,
-                  "max": 48,
-                  "step": 1
-                }
-              },
-              {
-                "kind": "field",
-                "type": "valuefield",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherPaddingBlock",
-                "label": "Vertical padding (px)",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{appearance.localeSwitcherPaddingBlock}}",
-                  "min": 0,
-                  "max": 32,
-                  "step": 1
-                }
-              }
-            ],
-            "label": "Locale switcher",
-            "showIf": {
-              "path": "localeSwitcher.enabled",
-              "op": "isTrue"
-            }
-          },
-          {
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "dropdown-fill",
                 "groupId": "appearance-item-card",
-                "path": "appearance.itemBackground",
+                "path": "logoshowcase.appearance.itemBackground",
                 "label": "Logo tile background",
                 "attrs": {
                   "group-label": "",
@@ -979,14 +862,14 @@
                       "count": 1
                     }
                   },
-                  "value": "{{appearance.itemBackground}}"
+                  "value": "{{logoshowcase.appearance.itemBackground}}"
                 }
               },
               {
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "appearance-item-card",
-                "path": "appearance.cardwrapper.radiusLinked",
+                "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                 "label": "Link logo tile radius",
                 "attrs": {
                   "group-label": "",
@@ -998,7 +881,7 @@
                       "count": 1
                     }
                   },
-                  "value": "{{appearance.cardwrapper.radiusLinked}}",
+                  "value": "{{logoshowcase.appearance.cardwrapper.radiusLinked}}",
                   "default": true
                 }
               },
@@ -1006,10 +889,10 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
-                "path": "appearance.cardwrapper.radius",
+                "path": "logoshowcase.appearance.cardwrapper.radius",
                 "label": "Logo tile radius",
                 "showIf": {
-                  "path": "appearance.cardwrapper.radiusLinked",
+                  "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isTrue"
                 },
                 "attrs": {
@@ -1023,7 +906,7 @@
                     }
                   },
                   "placeholder": "Choose radius",
-                  "value": "{{appearance.cardwrapper.radius}}",
+                  "value": "{{logoshowcase.appearance.cardwrapper.radius}}",
                   "options": [
                     {
                       "label": "None",
@@ -1052,10 +935,10 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
-                "path": "appearance.cardwrapper.radiusTL",
+                "path": "logoshowcase.appearance.cardwrapper.radiusTL",
                 "label": "Logo tile top-left radius",
                 "showIf": {
-                  "path": "appearance.cardwrapper.radiusLinked",
+                  "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -1069,7 +952,7 @@
                     }
                   },
                   "placeholder": "Choose radius",
-                  "value": "{{appearance.cardwrapper.radiusTL}}",
+                  "value": "{{logoshowcase.appearance.cardwrapper.radiusTL}}",
                   "options": [
                     {
                       "label": "None",
@@ -1098,10 +981,10 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
-                "path": "appearance.cardwrapper.radiusTR",
+                "path": "logoshowcase.appearance.cardwrapper.radiusTR",
                 "label": "Logo tile top-right radius",
                 "showIf": {
-                  "path": "appearance.cardwrapper.radiusLinked",
+                  "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -1115,7 +998,7 @@
                     }
                   },
                   "placeholder": "Choose radius",
-                  "value": "{{appearance.cardwrapper.radiusTR}}",
+                  "value": "{{logoshowcase.appearance.cardwrapper.radiusTR}}",
                   "options": [
                     {
                       "label": "None",
@@ -1144,10 +1027,10 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
-                "path": "appearance.cardwrapper.radiusBR",
+                "path": "logoshowcase.appearance.cardwrapper.radiusBR",
                 "label": "Logo tile bottom-right radius",
                 "showIf": {
-                  "path": "appearance.cardwrapper.radiusLinked",
+                  "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -1161,7 +1044,7 @@
                     }
                   },
                   "placeholder": "Choose radius",
-                  "value": "{{appearance.cardwrapper.radiusBR}}",
+                  "value": "{{logoshowcase.appearance.cardwrapper.radiusBR}}",
                   "options": [
                     {
                       "label": "None",
@@ -1190,10 +1073,10 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
-                "path": "appearance.cardwrapper.radiusBL",
+                "path": "logoshowcase.appearance.cardwrapper.radiusBL",
                 "label": "Logo tile bottom-left radius",
                 "showIf": {
-                  "path": "appearance.cardwrapper.radiusLinked",
+                  "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -1207,7 +1090,7 @@
                     }
                   },
                   "placeholder": "Choose radius",
-                  "value": "{{appearance.cardwrapper.radiusBL}}",
+                  "value": "{{logoshowcase.appearance.cardwrapper.radiusBL}}",
                   "options": [
                     {
                       "label": "None",
@@ -1236,7 +1119,7 @@
                 "kind": "field",
                 "type": "dropdown-border",
                 "groupId": "appearance-item-card",
-                "path": "appearance.cardwrapper.border",
+                "path": "logoshowcase.appearance.cardwrapper.border",
                 "label": "Logo tile border",
                 "attrs": {
                   "group-label": "",
@@ -1248,14 +1131,14 @@
                       "count": 1
                     }
                   },
-                  "value": "{{appearance.cardwrapper.border}}"
+                  "value": "{{logoshowcase.appearance.cardwrapper.border}}"
                 }
               },
               {
                 "kind": "field",
                 "type": "dropdown-shadow",
                 "groupId": "appearance-item-card",
-                "path": "appearance.cardwrapper.shadow",
+                "path": "logoshowcase.appearance.cardwrapper.shadow",
                 "label": "Logo tile outside shadow",
                 "attrs": {
                   "group-label": "",
@@ -1267,7 +1150,7 @@
                       "count": 1
                     }
                   },
-                  "value": "{{appearance.cardwrapper.shadow}}"
+                  "value": "{{logoshowcase.appearance.cardwrapper.shadow}}"
                 }
               }
             ],
@@ -1288,7 +1171,7 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "settings-seo",
-                "path": "seoGeo.enabled",
+                "path": "logoshowcase.seoGeo.enabled",
                 "label": "Enable SEO/GEO optimization",
                 "attrs": {
                   "group-label": "",

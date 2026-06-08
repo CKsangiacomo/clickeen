@@ -35,7 +35,7 @@ These are required patterns to keep editor UX deterministic and prevent dead con
   - Handle `{ type: 'ck:state-update' }` by updating DOM/CSS only (no network work).
 - **DOM contract (stable `data-role` hooks)**:
   - Root: `[data-ck-widget="logoshowcase"]` and `[data-role="logoshowcase"]`
-  - Header: `[data-role="header"]`, title `[data-role="title"]`, subtitle `[data-role="subtitle"]`, CTA `[data-role="cta"]`
+  - Header: `[data-role="header"]`, title `[data-role="title"]`, subtitle `[data-role="subtitle"]`, Header CTA `[data-role="header-cta"]`
   - Strips container: `[data-role="strips"]`
   - Strip item container (generated): `[data-role="strip"]`
   - Logos list per strip: `[data-role="logos"]`
@@ -45,9 +45,9 @@ These are required patterns to keep editor UX deterministic and prevent dead con
 - **Editor arrays pattern**:
   - Use `object-manager` + nested `repeater` templates for `strips[] → strips[i].logos[]` so editing/reorder is standard and stable.
 - **Appearance schemas (must match Dieter controls)**:
-  - Border uses `appearance.cardwrapper.border` object (wired to `dropdown-border`)
-  - Shadow uses `appearance.cardwrapper.shadow` object (wired to `dropdown-shadow`)
-  - Radius uses `appearance.cardwrapper.radiusLinked` and `appearance.cardwrapper.radius*` (linked/unlinked)
+  - Border uses `logoshowcase.appearance.cardwrapper.border` object (wired to `dropdown-border`)
+  - Shadow uses `logoshowcase.appearance.cardwrapper.shadow` object (wired to `dropdown-shadow`)
+  - Radius uses `logoshowcase.appearance.cardwrapper.radiusLinked` and `logoshowcase.appearance.cardwrapper.radius*` (linked/unlinked)
 
 ### What ships (authoritative widget definition)
 The widget must be implemented as the standard Tokyo package (core runtime + contracts):
@@ -203,7 +203,7 @@ Note: Links + media metadata are baseline product behavior (not tier-gated). Inv
     - the popover template stays minimal (caption/name only; see Section 4)
       - selecting an image updates asset metadata immediately through upload (no replace-in-place flow)
 
-- **Header (shared primitive)**: `header.*` + `cta.*`
+- **Header (shared primitive)**: `header.*` + `headerCta.*`
   - **changes**: title/subtitle/CTA copy + placement/alignment + CTA styling
   - **how**:
     - runtime delegates to `window.CKHeader.applyHeader(state, widgetRoot)` (no widget-specific header DOM code)
@@ -254,11 +254,11 @@ Note: Links + media metadata are baseline product behavior (not tier-gated). Inv
   - **how**: root CSS var `--ls-logo-opacity`
 
 - **Per-logo tile styling (platform schemas; Dieter-backed)**:
-  - **Fill**: `appearance.itemBackground` (`dropdown-fill`)
-  - **Border**: `appearance.cardwrapper.border` (object schema; `dropdown-border`)
-  - **Shadow**: `appearance.cardwrapper.shadow` (object schema; `dropdown-shadow`)
-  - **Radius**: `appearance.cardwrapper.radiusLinked` + `appearance.cardwrapper.radius*` (linked/unlinked)
-  - **how**: runtime calls `CKSurface.applyCardWrapper(state.appearance.cardwrapper, root)` which sets `--ck-cardwrapper-*` vars on the widget root; the logo tile CSS consumes them
+  - **Fill**: `logoshowcase.appearance.itemBackground` (`dropdown-fill`)
+  - **Border**: `logoshowcase.appearance.cardwrapper.border` (object schema; `dropdown-border`)
+  - **Shadow**: `logoshowcase.appearance.cardwrapper.shadow` (object schema; `dropdown-shadow`)
+  - **Radius**: `logoshowcase.appearance.cardwrapper.radiusLinked` + `logoshowcase.appearance.cardwrapper.radius*` (linked/unlinked)
+  - **how**: runtime calls `CKSurface.applyCardWrapper(state.logoshowcase.appearance.cardwrapper, root)` which sets `--ck-cardwrapper-*` vars on the widget root; the logo tile CSS consumes them
 
 - **Header text styling**: Typography roles `title` + `body`
   - **changes**: header title/subtitle font + text color
@@ -446,23 +446,29 @@ The full defaults object (used verbatim as `spec.json` → `defaults`):
       "direction": "left"
     }
   },
+  "logoshowcase": {
+    "appearance": {
+      "logoLook": "original",
+      "logoOpacity": 0.9,
+      "itemBackground": "transparent",
+      "cardwrapper": {
+        "radiusLinked": true,
+        "radius": "4xl",
+        "radiusTL": "4xl",
+        "radiusTR": "4xl",
+        "radiusBR": "4xl",
+        "radiusBL": "4xl",
+        "border": { "enabled": false, "width": 1, "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)" },
+        "shadow": { "enabled": false, "inset": false, "x": 0, "y": 8, "blur": 24, "spread": 0, "color": "#000000", "alpha": 18 }
+      }
+    }
+  },
   "appearance": {
-    "logoLook": "original",
-    "logoOpacity": 0.9,
-    "itemBackground": "transparent",
-    "cardwrapper": {
-      "radiusLinked": true,
-      "radius": "4xl",
-      "radiusTL": "4xl",
-      "radiusTR": "4xl",
-      "radiusBR": "4xl",
-      "radiusBL": "4xl",
-      "border": { "enabled": false, "width": 1, "color": "color-mix(in oklab, var(--color-system-black), transparent 88%)" },
-      "shadow": { "enabled": false, "inset": false, "x": 0, "y": 8, "blur": 24, "spread": 0, "color": "#000000", "alpha": 18 }
-    },
-    "ctaBackground": "var(--color-system-blue)",
-    "ctaTextColor": "var(--color-system-white)",
-    "ctaRadius": "md"
+    "headerCta": {
+      "background": "var(--color-system-blue)",
+      "textColor": "var(--color-system-white)",
+      "radius": "md"
+    }
   },
   "spacing": {
     "gap": 20,

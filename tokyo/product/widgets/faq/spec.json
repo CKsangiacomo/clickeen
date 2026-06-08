@@ -5,13 +5,13 @@
   "normalization": {
     "idRules": [
       {
-        "arrayPath": "sections",
+        "arrayPath": "faq.sections",
         "idKey": "id",
         "seedKey": "title",
         "fallbackPrefix": "section"
       },
       {
-        "arrayPath": "sections[].faqs",
+        "arrayPath": "faq.sections[].faqs",
         "idKey": "id",
         "seedKey": "question",
         "fallbackPrefix": "faq"
@@ -19,12 +19,12 @@
     ],
     "coerceRules": [
       {
-        "path": "sections[].faqs[].defaultOpen",
+        "path": "faq.sections[].faqs[].defaultOpen",
         "type": "boolean",
         "default": false
       },
       {
-        "path": "displayCategoryTitles",
+        "path": "faq.displayCategoryTitles",
         "type": "boolean",
         "default": false
       },
@@ -131,165 +131,6 @@
     ]
   },
   "defaults": {
-    "geo": {
-      "answerFormat": "direct-first",
-      "enableDeepLinks": true
-    },
-    "seo": {
-      "businessType": "online-service",
-      "canonicalUrl": "",
-      "enableSchema": true
-    },
-    "layout": {
-      "gap": 16,
-      "type": "list",
-      "columns": {
-        "mobile": 1,
-        "desktop": 2
-      },
-      "cardsLayout": "grid",
-      "itemPadding": 20,
-      "itemPaddingTop": 20,
-      "itemPaddingLeft": 20,
-      "itemQaGapCustom": 8,
-      "itemQaGapPreset": "s",
-      "itemPaddingRight": 20,
-      "itemPaddingBottom": 20,
-      "itemPaddingLinked": true
-    },
-    "seoGeo": {
-      "enabled": false
-    },
-    "context": {
-      "websiteUrl": ""
-    },
-    "behavior": {
-      "expandAll": false,
-      "multiOpen": false,
-      "expandFirst": true
-    },
-    "sections": [
-      {
-        "id": "s1",
-        "faqs": [
-          {
-            "id": "q1",
-            "answer": "Clickeen is a widget SaaS platform that lets you add polished, high-performing widgets to your website in minutes--no heavy dev work required.",
-            "question": "What is Clickeen?",
-            "defaultOpen": false
-          },
-          {
-            "id": "q2",
-            "answer": "Yes. The Free plan includes 1 active widget with essential features so you can try Clickeen on a live site.",
-            "question": "Do you offer a free plan?",
-            "defaultOpen": false
-          },
-          {
-            "id": "q3",
-            "answer": "Create your widget, copy the embed code, and paste it right before the closing </body> tag on your website. Changes you make in Clickeen update instantly.",
-            "question": "How do I install a widget on my site?",
-            "defaultOpen": false
-          },
-          {
-            "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
-            "answer": "Launch faster with flexible design controls, simple updates, and reliable performance--so your team can ship improvements without maintaining custom code.",
-            "question": "Why use Clickeen instead of building widgets from scratch?",
-            "defaultOpen": false
-          }
-        ],
-        "title": "Getting started"
-      }
-    ],
-    "appearance": {
-      "theme": "custom",
-      "iconColor": "var(--typo-question-color)",
-      "iconStyle": "plus",
-      "linkStyle": "underline",
-      "cardwrapper": {
-        "border": {
-          "color": "#efeff2",
-          "width": 1,
-          "enabled": true
-        },
-        "radius": "2xl",
-        "shadow": {
-          "x": 23,
-          "y": 12,
-          "blur": 21,
-          "alpha": 38,
-          "color": "#e5e5ea",
-          "inset": false,
-          "spread": -5,
-          "enabled": true
-        },
-        "radiusBL": "2xl",
-        "radiusBR": "2xl",
-        "radiusTL": "2xl",
-        "radiusTR": "2xl",
-        "insideShadow": {
-          "all": {
-            "x": 0,
-            "y": 0,
-            "blur": 24,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": 0,
-            "enabled": false
-          },
-          "top": {
-            "x": 0,
-            "y": 12,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          },
-          "left": {
-            "x": 12,
-            "y": 0,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          },
-          "layer": "below-content",
-          "right": {
-            "x": -12,
-            "y": 0,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          },
-          "bottom": {
-            "x": 0,
-            "y": -12,
-            "blur": 16,
-            "alpha": 12,
-            "color": "#000000",
-            "inset": true,
-            "spread": -12,
-            "enabled": false
-          },
-          "linked": true
-        },
-        "radiusLinked": true
-      },
-      "linkTextColor": "var(--color-system-blue)",
-      "itemBackground": {
-        "type": "color",
-        "color": "var(--color-system-white)"
-      },
-      "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
-      "linkUnderlineColor": "var(--color-system-blue)"
-    },
     "typography": {
       "roles": {
         "answer": {
@@ -362,7 +203,168 @@
         }
       }
     },
-    "displayCategoryTitles": false
+    "faq": {
+      "geo": {
+        "answerFormat": "direct-first",
+        "enableDeepLinks": true
+      },
+      "seo": {
+        "businessType": "online-service",
+        "canonicalUrl": "",
+        "enableSchema": true
+      },
+      "layout": {
+        "gap": 16,
+        "type": "list",
+        "columns": {
+          "mobile": 1,
+          "desktop": 2
+        },
+        "cardsLayout": "grid",
+        "itemPadding": 20,
+        "itemPaddingTop": 20,
+        "itemPaddingLeft": 20,
+        "itemQaGapCustom": 8,
+        "itemQaGapPreset": "s",
+        "itemPaddingRight": 20,
+        "itemPaddingBottom": 20,
+        "itemPaddingLinked": true
+      },
+      "seoGeo": {
+        "enabled": false
+      },
+      "context": {
+        "websiteUrl": ""
+      },
+      "behavior": {
+        "expandAll": false,
+        "multiOpen": false,
+        "expandFirst": true
+      },
+      "sections": [
+        {
+          "id": "s1",
+          "faqs": [
+            {
+              "id": "q1",
+              "answer": "Clickeen is a widget SaaS platform that lets you add polished, high-performing widgets to your website in minutes--no heavy dev work required.",
+              "question": "What is Clickeen?",
+              "defaultOpen": false
+            },
+            {
+              "id": "q2",
+              "answer": "Yes. The Free plan includes 1 active widget with essential features so you can try Clickeen on a live site.",
+              "question": "Do you offer a free plan?",
+              "defaultOpen": false
+            },
+            {
+              "id": "q3",
+              "answer": "Create your widget, copy the embed code, and paste it right before the closing </body> tag on your website. Changes you make in Clickeen update instantly.",
+              "question": "How do I install a widget on my site?",
+              "defaultOpen": false
+            },
+            {
+              "id": "89cc1b7e-73b8-44ac-aeb3-7a6667387e94",
+              "answer": "Launch faster with flexible design controls, simple updates, and reliable performance--so your team can ship improvements without maintaining custom code.",
+              "question": "Why use Clickeen instead of building widgets from scratch?",
+              "defaultOpen": false
+            }
+          ],
+          "title": "Getting started"
+        }
+      ],
+      "appearance": {
+        "theme": "custom",
+        "iconColor": "var(--typo-question-color)",
+        "iconStyle": "plus",
+        "linkStyle": "underline",
+        "cardwrapper": {
+          "border": {
+            "color": "#efeff2",
+            "width": 1,
+            "enabled": true
+          },
+          "radius": "2xl",
+          "shadow": {
+            "x": 23,
+            "y": 12,
+            "blur": 21,
+            "alpha": 38,
+            "color": "#e5e5ea",
+            "inset": false,
+            "spread": -5,
+            "enabled": true
+          },
+          "radiusBL": "2xl",
+          "radiusBR": "2xl",
+          "radiusTL": "2xl",
+          "radiusTR": "2xl",
+          "insideShadow": {
+            "all": {
+              "x": 0,
+              "y": 0,
+              "blur": 24,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": 0,
+              "enabled": false
+            },
+            "top": {
+              "x": 0,
+              "y": 12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "left": {
+              "x": 12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "layer": "below-content",
+            "right": {
+              "x": -12,
+              "y": 0,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "bottom": {
+              "x": 0,
+              "y": -12,
+              "blur": 16,
+              "alpha": 12,
+              "color": "#000000",
+              "inset": true,
+              "spread": -12,
+              "enabled": false
+            },
+            "linked": true
+          },
+          "radiusLinked": true
+        },
+        "linkTextColor": "var(--color-system-blue)",
+        "itemBackground": {
+          "type": "color",
+          "color": "var(--color-system-white)"
+        },
+        "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
+        "linkUnderlineColor": "var(--color-system-blue)"
+      },
+      "displayCategoryTitles": false
+    }
   },
   "editor": {
     "panels": [
@@ -379,12 +381,12 @@
                 "kind": "field",
                 "type": "object-manager",
                 "groupId": "content-sections",
-                "path": "sections",
+                "path": "faq.sections",
                 "template": [
                   {
                     "kind": "field",
                     "type": "repeater",
-                    "path": "sections.__SECTION__.faqs",
+                    "path": "faq.sections.__SECTION__.faqs",
                     "label": "Questions",
                     "template": [
                       {
@@ -894,7 +896,7 @@
                                       "type": "hidden",
                                       "class": "diet-dropdown-edit__field",
                                       "value": "Type your question",
-                                      "data-bob-path": "sections.__SECTION__.faqs.__INDEX__.question"
+                                      "data-bob-path": "faq.sections.__SECTION__.faqs.__INDEX__.question"
                                     },
                                     "children": []
                                   }
@@ -1399,7 +1401,7 @@
                                           "type": "hidden",
                                           "class": "diet-dropdown-edit__field",
                                           "value": "Type your answer",
-                                          "data-bob-path": "sections.__SECTION__.faqs.__INDEX__.answer"
+                                          "data-bob-path": "faq.sections.__SECTION__.faqs.__INDEX__.answer"
                                         },
                                         "children": []
                                       }
@@ -1425,7 +1427,7 @@
                           "count": 1
                         }
                       },
-                      "labelPath": "sections.__SECTION__.title",
+                      "labelPath": "faq.sections.__SECTION__.title",
                       "labelInputLabel": "Section",
                       "labelPlaceholder": "All Questions",
                       "labelSize": "lg",
@@ -1465,7 +1467,7 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "title-settings",
-                "path": "displayCategoryTitles",
+                "path": "faq.displayCategoryTitles",
                 "label": "Show section title",
                 "attrs": {
                   "group-label": "",
@@ -1499,12 +1501,12 @@
                 "kind": "field",
                 "type": "choice-tiles",
                 "groupId": "layout-choice",
-                "path": "layout.type",
+                "path": "faq.layout.type",
                 "label": "Layout",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "value": "{{layout.type}}",
+                  "value": "{{faq.layout.type}}",
                   "options": [
                     {
                       "label": "Accordion",
@@ -1528,7 +1530,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "type-settings",
-                "path": "layout.gap",
+                "path": "faq.layout.gap",
                 "label": "Gap (px)",
                 "attrs": {
                   "group-label": "",
@@ -1539,10 +1541,10 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "type-settings",
-                "path": "behavior.expandFirst",
+                "path": "faq.behavior.expandFirst",
                 "label": "Open first question by default",
                 "showIf": {
-                  "path": "layout.type",
+                  "path": "faq.layout.type",
                   "op": "equals",
                   "value": "accordion"
                 },
@@ -1555,10 +1557,10 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "type-settings",
-                "path": "behavior.multiOpen",
+                "path": "faq.behavior.multiOpen",
                 "label": "Allow multiple open",
                 "showIf": {
-                  "path": "layout.type",
+                  "path": "faq.layout.type",
                   "op": "equals",
                   "value": "accordion"
                 },
@@ -1571,10 +1573,10 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "type-settings",
-                "path": "behavior.expandAll",
+                "path": "faq.behavior.expandAll",
                 "label": "Expand all questions",
                 "showIf": {
-                  "path": "layout.type",
+                  "path": "faq.layout.type",
                   "op": "equals",
                   "value": "accordion"
                 },
@@ -1587,10 +1589,10 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "type-settings",
-                "path": "layout.columns.desktop",
+                "path": "faq.layout.columns.desktop",
                 "label": "Columns (desktop)",
                 "showIf": {
-                  "path": "layout.type",
+                  "path": "faq.layout.type",
                   "op": "equals",
                   "value": "multicolumn"
                 },
@@ -1603,10 +1605,10 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "type-settings",
-                "path": "layout.columns.mobile",
+                "path": "faq.layout.columns.mobile",
                 "label": "Columns (mobile)",
                 "showIf": {
-                  "path": "layout.type",
+                  "path": "faq.layout.type",
                   "op": "equals",
                   "value": "multicolumn"
                 },
@@ -1619,10 +1621,10 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "type-settings",
-                "path": "layout.cardsLayout",
+                "path": "faq.layout.cardsLayout",
                 "label": "Cards layout",
                 "showIf": {
-                  "path": "layout.type",
+                  "path": "faq.layout.type",
                   "op": "equals",
                   "value": "multicolumn"
                 },
@@ -1630,7 +1632,7 @@
                   "group-label": "",
                   "size": "md",
                   "placeholder": "Choose layout",
-                  "value": "{{layout.cardsLayout}}",
+                  "value": "{{faq.layout.cardsLayout}}",
                   "options": [
                     {
                       "label": "Grid",
@@ -1652,12 +1654,12 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "item-spacing",
-                "path": "layout.itemQaGapPreset",
+                "path": "faq.layout.itemQaGapPreset",
                 "label": "Q/A spacing",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "value": "{{layout.itemQaGapPreset}}",
+                  "value": "{{faq.layout.itemQaGapPreset}}",
                   "options": [
                     {
                       "label": "X-Small",
@@ -1690,17 +1692,17 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "item-spacing",
-                "path": "layout.itemQaGapCustom",
+                "path": "faq.layout.itemQaGapCustom",
                 "label": "Custom Q/A spacing (px)",
                 "showIf": {
-                  "path": "layout.itemQaGapPreset",
+                  "path": "faq.layout.itemQaGapPreset",
                   "op": "equals",
                   "value": "custom"
                 },
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "value": "{{layout.itemQaGapCustom}}",
+                  "value": "{{faq.layout.itemQaGapCustom}}",
                   "min": 0,
                   "max": 120,
                   "step": 1
@@ -1710,7 +1712,7 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "item-padding",
-                "path": "layout.itemPaddingLinked",
+                "path": "faq.layout.itemPaddingLinked",
                 "label": "Link Q&A card padding",
                 "attrs": {
                   "group-label": "",
@@ -1722,7 +1724,7 @@
                       "count": 1
                     }
                   },
-                  "value": "{{layout.itemPaddingLinked}}",
+                  "value": "{{faq.layout.itemPaddingLinked}}",
                   "default": true
                 }
               },
@@ -1730,10 +1732,10 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "item-padding",
-                "path": "layout.itemPadding",
+                "path": "faq.layout.itemPadding",
                 "label": "Q&A card padding (px)",
                 "showIf": {
-                  "path": "layout.itemPaddingLinked",
+                  "path": "faq.layout.itemPaddingLinked",
                   "op": "isTrue"
                 },
                 "attrs": {
@@ -1752,10 +1754,10 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "item-padding",
-                "path": "layout.itemPaddingTop",
+                "path": "faq.layout.itemPaddingTop",
                 "label": "Q&A card top padding (px)",
                 "showIf": {
-                  "path": "layout.itemPaddingLinked",
+                  "path": "faq.layout.itemPaddingLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -1774,10 +1776,10 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "item-padding",
-                "path": "layout.itemPaddingRight",
+                "path": "faq.layout.itemPaddingRight",
                 "label": "Q&A card right padding (px)",
                 "showIf": {
-                  "path": "layout.itemPaddingLinked",
+                  "path": "faq.layout.itemPaddingLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -1796,10 +1798,10 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "item-padding",
-                "path": "layout.itemPaddingBottom",
+                "path": "faq.layout.itemPaddingBottom",
                 "label": "Q&A card bottom padding (px)",
                 "showIf": {
-                  "path": "layout.itemPaddingLinked",
+                  "path": "faq.layout.itemPaddingLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -1818,10 +1820,10 @@
                 "kind": "field",
                 "type": "valuefield",
                 "groupId": "item-padding",
-                "path": "layout.itemPaddingLeft",
+                "path": "faq.layout.itemPaddingLeft",
                 "label": "Q&A card left padding (px)",
                 "showIf": {
-                  "path": "layout.itemPaddingLinked",
+                  "path": "faq.layout.itemPaddingLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -1854,22 +1856,22 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-theme",
-                "path": "appearance.theme",
+                "path": "faq.appearance.theme",
                 "label": "Theme",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "value": "{{appearance.theme}}"
+                  "value": "{{faq.appearance.theme}}"
                 }
               },
               {
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-accordion",
-                "path": "appearance.iconStyle",
+                "path": "faq.appearance.iconStyle",
                 "label": "Accordion icon",
                 "showIf": {
-                  "path": "layout.type",
+                  "path": "faq.layout.type",
                   "op": "equals",
                   "value": "accordion"
                 },
@@ -1877,7 +1879,7 @@
                   "group-label": "",
                   "size": "md",
                   "placeholder": "Choose icon",
-                  "value": "{{appearance.iconStyle}}",
+                  "value": "{{faq.appearance.iconStyle}}",
                   "options": [
                     {
                       "label": "Plus",
@@ -1902,10 +1904,10 @@
                 "kind": "field",
                 "type": "dropdown-fill",
                 "groupId": "appearance-accordion",
-                "path": "appearance.iconColor",
+                "path": "faq.appearance.iconColor",
                 "label": "Accordion icon color",
                 "showIf": {
-                  "path": "layout.type",
+                  "path": "faq.layout.type",
                   "op": "equals",
                   "value": "accordion"
                 },
@@ -1913,7 +1915,7 @@
                   "group-label": "",
                   "size": "md",
                   "fill-modes": "color",
-                  "value": "{{appearance.iconColor}}"
+                  "value": "{{faq.appearance.iconColor}}"
                 }
               }
             ]
@@ -1926,133 +1928,14 @@
             "nodes": [
               {
                 "kind": "field",
-                "type": "dropdown-fill",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherBackground",
-                "label": "Background",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "fill-modes": "color",
-                  "value": "{{appearance.localeSwitcherBackground}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-fill",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherTextColor",
-                "label": "Text color",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "fill-modes": "color",
-                  "value": "{{appearance.localeSwitcherTextColor}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-border",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherBorder",
-                "label": "Border",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{appearance.localeSwitcherBorder}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-actions",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherRadius",
-                "label": "Corner radius",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{appearance.localeSwitcherRadius}}",
-                  "options": [
-                    {
-                      "label": "None",
-                      "value": "none"
-                    },
-                    {
-                      "label": "X-Small",
-                      "value": "xs"
-                    },
-                    {
-                      "label": "Small",
-                      "value": "sm"
-                    },
-                    {
-                      "label": "Medium",
-                      "value": "md"
-                    },
-                    {
-                      "label": "Large",
-                      "value": "lg"
-                    },
-                    {
-                      "label": "X-Large",
-                      "value": "xl"
-                    },
-                    {
-                      "label": "2X-Large",
-                      "value": "2xl"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
-                "type": "valuefield",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherPaddingInline",
-                "label": "Horizontal padding (px)",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{appearance.localeSwitcherPaddingInline}}",
-                  "min": 0,
-                  "max": 48,
-                  "step": 1
-                }
-              },
-              {
-                "kind": "field",
-                "type": "valuefield",
-                "groupId": "locale-switcher-appearance",
-                "path": "appearance.localeSwitcherPaddingBlock",
-                "label": "Vertical padding (px)",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{appearance.localeSwitcherPaddingBlock}}",
-                  "min": 0,
-                  "max": 32,
-                  "step": 1
-                }
-              }
-            ],
-            "label": "Locale switcher",
-            "showIf": {
-              "path": "localeSwitcher.enabled",
-              "op": "isTrue"
-            }
-          },
-          {
-            "nodes": [
-              {
-                "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-links",
-                "path": "appearance.linkStyle",
+                "path": "faq.appearance.linkStyle",
                 "label": "Link style",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
-                  "value": "{{appearance.linkStyle}}",
+                  "value": "{{faq.appearance.linkStyle}}",
                   "options": [
                     {
                       "label": "Underline",
@@ -2073,10 +1956,10 @@
                 "kind": "field",
                 "type": "dropdown-fill",
                 "groupId": "appearance-links",
-                "path": "appearance.linkUnderlineColor",
+                "path": "faq.appearance.linkUnderlineColor",
                 "label": "Underline color",
                 "showIf": {
-                  "path": "appearance.linkStyle",
+                  "path": "faq.appearance.linkStyle",
                   "op": "equals",
                   "value": "underline"
                 },
@@ -2084,17 +1967,17 @@
                   "group-label": "",
                   "size": "md",
                   "fill-modes": "color",
-                  "value": "{{appearance.linkUnderlineColor}}"
+                  "value": "{{faq.appearance.linkUnderlineColor}}"
                 }
               },
               {
                 "kind": "field",
                 "type": "dropdown-fill",
                 "groupId": "appearance-links",
-                "path": "appearance.linkHighlightColor",
+                "path": "faq.appearance.linkHighlightColor",
                 "label": "Highlight color",
                 "showIf": {
-                  "path": "appearance.linkStyle",
+                  "path": "faq.appearance.linkStyle",
                   "op": "equals",
                   "value": "highlight"
                 },
@@ -2102,17 +1985,17 @@
                   "group-label": "",
                   "size": "md",
                   "fill-modes": "color",
-                  "value": "{{appearance.linkHighlightColor}}"
+                  "value": "{{faq.appearance.linkHighlightColor}}"
                 }
               },
               {
                 "kind": "field",
                 "type": "dropdown-fill",
                 "groupId": "appearance-links",
-                "path": "appearance.linkTextColor",
+                "path": "faq.appearance.linkTextColor",
                 "label": "Link text color",
                 "showIf": {
-                  "path": "appearance.linkStyle",
+                  "path": "faq.appearance.linkStyle",
                   "op": "equals",
                   "value": "color"
                 },
@@ -2120,7 +2003,7 @@
                   "group-label": "",
                   "size": "md",
                   "fill-modes": "color",
-                  "value": "{{appearance.linkTextColor}}"
+                  "value": "{{faq.appearance.linkTextColor}}"
                 }
               }
             ],
@@ -2129,7 +2012,7 @@
               "call": "hasLinks",
               "args": [
                 {
-                  "path": "sections"
+                  "path": "faq.sections"
                 }
               ]
             }
@@ -2140,7 +2023,7 @@
                 "kind": "field",
                 "type": "dropdown-fill",
                 "groupId": "appearance-card",
-                "path": "appearance.itemBackground",
+                "path": "faq.appearance.itemBackground",
                 "label": "Q&A card background",
                 "attrs": {
                   "group-label": "",
@@ -2153,14 +2036,14 @@
                       "count": 1
                     }
                   },
-                  "value": "{{appearance.itemBackground}}"
+                  "value": "{{faq.appearance.itemBackground}}"
                 }
               },
               {
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "appearance-card",
-                "path": "appearance.cardwrapper.radiusLinked",
+                "path": "faq.appearance.cardwrapper.radiusLinked",
                 "label": "Link Q&A card corners",
                 "attrs": {
                   "group-label": "",
@@ -2172,7 +2055,7 @@
                       "count": 1
                     }
                   },
-                  "value": "{{appearance.cardwrapper.radiusLinked}}",
+                  "value": "{{faq.appearance.cardwrapper.radiusLinked}}",
                   "default": true
                 }
               },
@@ -2180,17 +2063,17 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
-                "path": "appearance.cardwrapper.radius",
+                "path": "faq.appearance.cardwrapper.radius",
                 "label": "Corner radius",
                 "showIf": {
-                  "path": "appearance.cardwrapper.radiusLinked",
+                  "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isTrue"
                 },
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "placeholder": "Choose radius",
-                  "value": "{{appearance.cardwrapper.radius}}",
+                  "value": "{{faq.appearance.cardwrapper.radius}}",
                   "options": [
                     {
                       "label": "None",
@@ -2219,10 +2102,10 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
-                "path": "appearance.cardwrapper.radiusTL",
+                "path": "faq.appearance.cardwrapper.radiusTL",
                 "label": "Q&A card top-left radius",
                 "showIf": {
-                  "path": "appearance.cardwrapper.radiusLinked",
+                  "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -2236,7 +2119,7 @@
                     }
                   },
                   "placeholder": "Choose radius",
-                  "value": "{{appearance.cardwrapper.radiusTL}}",
+                  "value": "{{faq.appearance.cardwrapper.radiusTL}}",
                   "options": [
                     {
                       "label": "None",
@@ -2265,10 +2148,10 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
-                "path": "appearance.cardwrapper.radiusTR",
+                "path": "faq.appearance.cardwrapper.radiusTR",
                 "label": "Q&A card top-right radius",
                 "showIf": {
-                  "path": "appearance.cardwrapper.radiusLinked",
+                  "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -2282,7 +2165,7 @@
                     }
                   },
                   "placeholder": "Choose radius",
-                  "value": "{{appearance.cardwrapper.radiusTR}}",
+                  "value": "{{faq.appearance.cardwrapper.radiusTR}}",
                   "options": [
                     {
                       "label": "None",
@@ -2311,10 +2194,10 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
-                "path": "appearance.cardwrapper.radiusBR",
+                "path": "faq.appearance.cardwrapper.radiusBR",
                 "label": "Q&A card bottom-right radius",
                 "showIf": {
-                  "path": "appearance.cardwrapper.radiusLinked",
+                  "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -2328,7 +2211,7 @@
                     }
                   },
                   "placeholder": "Choose radius",
-                  "value": "{{appearance.cardwrapper.radiusBR}}",
+                  "value": "{{faq.appearance.cardwrapper.radiusBR}}",
                   "options": [
                     {
                       "label": "None",
@@ -2357,10 +2240,10 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
-                "path": "appearance.cardwrapper.radiusBL",
+                "path": "faq.appearance.cardwrapper.radiusBL",
                 "label": "Q&A card bottom-left radius",
                 "showIf": {
-                  "path": "appearance.cardwrapper.radiusLinked",
+                  "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
                 },
                 "attrs": {
@@ -2374,7 +2257,7 @@
                     }
                   },
                   "placeholder": "Choose radius",
-                  "value": "{{appearance.cardwrapper.radiusBL}}",
+                  "value": "{{faq.appearance.cardwrapper.radiusBL}}",
                   "options": [
                     {
                       "label": "None",
@@ -2403,7 +2286,7 @@
                 "kind": "field",
                 "type": "dropdown-border",
                 "groupId": "appearance-card",
-                "path": "appearance.cardwrapper.border",
+                "path": "faq.appearance.cardwrapper.border",
                 "label": "Q&A card border",
                 "attrs": {
                   "group-label": "",
@@ -2415,14 +2298,14 @@
                       "count": 1
                     }
                   },
-                  "value": "{{appearance.cardwrapper.border}}"
+                  "value": "{{faq.appearance.cardwrapper.border}}"
                 }
               },
               {
                 "kind": "field",
                 "type": "dropdown-shadow",
                 "groupId": "appearance-card",
-                "path": "appearance.cardwrapper.shadow",
+                "path": "faq.appearance.cardwrapper.shadow",
                 "label": "Q&A card outside shadow",
                 "attrs": {
                   "group-label": "",
@@ -2434,7 +2317,7 @@
                       "count": 1
                     }
                   },
-                  "value": "{{appearance.cardwrapper.shadow}}"
+                  "value": "{{faq.appearance.cardwrapper.shadow}}"
                 }
               }
             ],
@@ -2455,7 +2338,7 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "settings-seo-toggle",
-                "path": "seoGeo.enabled",
+                "path": "faq.seoGeo.enabled",
                 "label": "Enable SEO/GEO optimization",
                 "attrs": {
                   "group-label": "",
@@ -2466,10 +2349,10 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "settings-seo",
-                "path": "seo.enableSchema",
+                "path": "faq.seo.enableSchema",
                 "label": "Enable schema",
                 "showIf": {
-                  "path": "seoGeo.enabled",
+                  "path": "faq.seoGeo.enabled",
                   "op": "isTrue"
                 },
                 "attrs": {
@@ -2481,10 +2364,10 @@
                 "kind": "field",
                 "type": "textfield",
                 "groupId": "settings-seo",
-                "path": "seo.canonicalUrl",
+                "path": "faq.seo.canonicalUrl",
                 "label": "Canonical URL",
                 "showIf": {
-                  "path": "seoGeo.enabled",
+                  "path": "faq.seoGeo.enabled",
                   "op": "isTrue"
                 },
                 "attrs": {
@@ -2497,10 +2380,10 @@
                 "kind": "field",
                 "type": "toggle",
                 "groupId": "settings-geo",
-                "path": "geo.enableDeepLinks",
+                "path": "faq.geo.enableDeepLinks",
                 "label": "Enable deep links",
                 "showIf": {
-                  "path": "seoGeo.enabled",
+                  "path": "faq.seoGeo.enabled",
                   "op": "isTrue"
                 },
                 "attrs": {

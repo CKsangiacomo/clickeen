@@ -66,9 +66,9 @@ Important typography rule:
 This corrects the old overly broad interpretation where all `typography.*`
 looked Shell-owned.
 
-`appearance.cardwrapper.*` is Core, not Shell. The shared Shell has no card
-element; card wrapper styling is owned by widgets that render repeated
-cards/items.
+`{widgetNamespace}.appearance.cardwrapper.*` is Core, not Shell. The shared
+Shell has no card element; card wrapper styling is owned by widgets that render
+repeated cards/items.
 
 ## Per-Widget Core Factory Paths
 
@@ -89,8 +89,8 @@ calltoaction:
   uiLabels.core
 
 cards:
-  appearance.cardwrapper
-  core
+  cards.appearance.cardwrapper
+  cards
   typography.roleScales.cardCopy
   typography.roleScales.cardTitle
   typography.roles.cardCopy
@@ -98,46 +98,46 @@ cards:
   uiLabels.core
 
 countdown:
-  actions
-  appearance.animation
-  appearance.cardwrapper
-  appearance.itemBackground
-  appearance.separator
-  appearance.showLabels
-  appearance.textColor
-  appearance.theme
-  appearance.timeFormat
-  appearance.timerStyle
-  geo
-  layout
-  seo
-  seoGeo
-  timer
+  countdown.actions
+  countdown.appearance.animation
+  countdown.appearance.cardwrapper
+  countdown.appearance.itemBackground
+  countdown.appearance.separator
+  countdown.appearance.showLabels
+  countdown.appearance.textColor
+  countdown.appearance.theme
+  countdown.appearance.timeFormat
+  countdown.appearance.timerStyle
+  countdown.geo
+  countdown.layout
+  countdown.seo
+  countdown.seoGeo
+  countdown.timer
   typography.roleScales.label
   typography.roleScales.timer
   typography.roles.label
   typography.roles.timer
 
 faq:
-  appearance.cardwrapper
-  appearance.iconColor
-  appearance.iconStyle
-  appearance.itemBackground
-  appearance.linkHighlightColor
-  appearance.linkStyle
-  appearance.linkTextColor
-  appearance.linkUnderlineColor
-  appearance.theme
-  behavior.expandAll
-  behavior.expandFirst
-  behavior.multiOpen
-  context
-  displayCategoryTitles
-  geo
-  layout
-  sections
-  seo
-  seoGeo
+  faq.appearance.cardwrapper
+  faq.appearance.iconColor
+  faq.appearance.iconStyle
+  faq.appearance.itemBackground
+  faq.appearance.linkHighlightColor
+  faq.appearance.linkStyle
+  faq.appearance.linkTextColor
+  faq.appearance.linkUnderlineColor
+  faq.appearance.theme
+  faq.behavior.expandAll
+  faq.behavior.expandFirst
+  faq.behavior.multiOpen
+  faq.context
+  faq.displayCategoryTitles
+  faq.geo
+  faq.layout
+  faq.sections
+  faq.seo
+  faq.seoGeo
   typography.roleScales.answer
   typography.roleScales.question
   typography.roleScales.section
@@ -146,20 +146,20 @@ faq:
   typography.roles.section
 
 logoshowcase:
-  appearance.cardwrapper
-  appearance.itemBackground
-  appearance.logoLook
-  appearance.logoOpacity
-  behavior.randomOrder
-  seoGeo
-  spacing
-  strips
-  type
-  typeConfig
+  logoshowcase.appearance.cardwrapper
+  logoshowcase.appearance.itemBackground
+  logoshowcase.appearance.logoLook
+  logoshowcase.appearance.logoOpacity
+  logoshowcase.behavior.randomOrder
+  logoshowcase.seoGeo
+  logoshowcase.spacing
+  logoshowcase.strips
+  logoshowcase.type
+  logoshowcase.typeConfig
 
 split:
-  appearance.cardwrapper
-  core
+  split.appearance.cardwrapper
+  split
   uiLabels.core
 ```
 

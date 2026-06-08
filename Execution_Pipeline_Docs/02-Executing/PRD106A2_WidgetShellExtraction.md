@@ -91,8 +91,8 @@ Stop conditions:
 | 1 | Extract and prove FAQ Shell inventory. | `file:line` source inventory; path ownership list. | Shell/Core boundary is explicit. | Any path ownership is ambiguous. |
 | 2 | Create `packages/widget-shell/` contract surface. | Diff showing package files and exported responsibilities. | Package owns contract/defaults/controls/render/runtime/css/validators. | Package starts owning Widget Core behavior. |
 | 3 | Rebase FAQ onto shared Shell with no behavior change. | Diff plus FAQ compile/render/save evidence. | FAQ output remains gold standard. | FAQ behavior changes outside intentional package import. |
-| 4 | Prove Core extension with CTA. | CTA diff plus compile/render evidence. | CTA is Shell plus empty Core. | CTA defines duplicate Shell paths. |
-| 5 | Implement Split Core on the shared Shell. | Split diff plus compile/render/package evidence. | Split contributes only Core state/controls/runtime and uses shared Header/CTA/Stage/Pod. | Split redefines Header/CTA/Stage/Pod or changes FAQ/CTA behavior. |
+| 4 | Prove Core extension with Call to Action. | Call to Action diff plus compile/render evidence. | Call to Action is shared Shell plus `calltoaction.*` Core. | Call to Action defines duplicate Shell paths. |
+| 5 | Implement Split Core on the shared Shell. | Split diff plus compile/render/package evidence. | Split contributes only Core state/controls/runtime and uses shared Header/Header CTA/Stage/Pod. | Split redefines Header/Header CTA/Stage/Pod or changes FAQ/Call to Action behavior. |
 | 6 | Add validation/search guards. | Targeted verification or `rg` guard output. | Forbidden duplicate paths fail without adding repo-wide PRD scripts or preserving copied Shell logic. | Guards allow copied Shell logic or recreate deleted PRD-script behavior. |
 
 ## Purpose
@@ -180,7 +180,7 @@ the Current Step Gate moves to the next step.
 
 | Concern | Evidence |
 | --- | --- |
-| Shell state defaults: `cta.*`, `localeSwitcher.*`, `pod.*`, `stage.*`, `header.*`, `behavior.*`, `appearance.*`, `typography.*` | `tokyo/product/widgets/faq/spec.json:44`, `tokyo/product/widgets/faq/spec.json:57`, `tokyo/product/widgets/faq/spec.json:64`, `tokyo/product/widgets/faq/spec.json:165`, `tokyo/product/widgets/faq/spec.json:259`, `tokyo/product/widgets/faq/spec.json:294`, `tokyo/product/widgets/faq/spec.json:335`, `tokyo/product/widgets/faq/spec.json:454` |
+| Shell state defaults: `headerCta.*`, `localeSwitcher.*`, `pod.*`, `stage.*`, `header.*`, `behavior.*`, `appearance.*`, `typography.*` | `tokyo/product/widgets/faq/spec.json:44`, `tokyo/product/widgets/faq/spec.json:57`, `tokyo/product/widgets/faq/spec.json:64`, `tokyo/product/widgets/faq/spec.json:165`, `tokyo/product/widgets/faq/spec.json:259`, `tokyo/product/widgets/faq/spec.json:294`, `tokyo/product/widgets/faq/spec.json:335`, `tokyo/product/widgets/faq/spec.json:454` |
 | Shell editor clusters in FAQ spec | `tokyo/product/widgets/faq/spec.json:615`, `tokyo/product/widgets/faq/spec.json:1721`, `tokyo/product/widgets/faq/spec.json:1727`, `tokyo/product/widgets/faq/spec.json:1731`, `tokyo/product/widgets/faq/spec.json:2081`, `tokyo/product/widgets/faq/spec.json:2086`, `tokyo/product/widgets/faq/spec.json:2160`, `tokyo/product/widgets/faq/spec.json:2682`, `tokyo/product/widgets/faq/spec.json:2687` |
 | Shell DOM structure: Stage, Pod, widget root, `ck-headerLayout`, Header, Core slot | `tokyo/product/widgets/faq/widget.html:15`, `tokyo/product/widgets/faq/widget.html:16`, `tokyo/product/widgets/faq/widget.html:17`, `tokyo/product/widgets/faq/widget.html:19`, `tokyo/product/widgets/faq/widget.html:24`, `tokyo/product/widgets/faq/widget.html:35` |
 | Header DOM roles | `tokyo/product/widgets/faq/widget.html:26`, `tokyo/product/widgets/faq/widget.html:27`, `tokyo/product/widgets/faq/widget.html:30` |
@@ -212,30 +212,29 @@ header.textGap
 header.ctaPlacement
 header.innerGap
 
-cta.enabled
-cta.label
-cta.href
-cta.openMode
-cta.iconEnabled
-cta.iconPlacement
-cta.iconName
+headerCta.enabled
+headerCta.label
+headerCta.href
+headerCta.openMode
+headerCta.iconEnabled
+headerCta.iconPlacement
+headerCta.iconName
 
 stage.*
 pod.*
-appearance.cta*
+appearance.headerCta.*
 appearance.localeSwitcher*
 appearance.podBorder
-appearance.cardwrapper.*
 typography.*
 localeSwitcher.*
 behavior.showBacklink
 behavior.socialShare.enabled
 ```
 
-`appearance.cardwrapper.*` is Shell-extractable as the shared Core frame/surface
-mechanism proven by FAQ and `CKSurface.applyCardWrapper`. FAQ-specific item
-card controls remain FAQ Core unless a child PRD explicitly uses the shared
-surface contract.
+Core frame/surface state is widget-specific Core, not Shell. Widgets may use
+shared `CKSurface.applyCardWrapper`, but the surviving state path must live
+under the widget namespace, such as `cards.appearance.cardwrapper.*` or
+`split.appearance.cardwrapper.*`.
 
 ### FAQ Core Paths Excluded From Shell
 
@@ -474,19 +473,21 @@ item controls, FAQ runtime, FAQ CSS, or FAQ DOM into the Shell package. It only
 rebased shared compiler/materialization contract constants onto
 `@clickeen/widget-shell`.
 
-## Step 4 Evidence: CTA Empty-Core Shell Proof
+## Step 4 Evidence: Call To Action Shell/Core Proof
 
 Status: Step 4 green evidence.
 
-Changed CTA from duplicate private widget state to Shell plus empty Core:
+106 closure supersedes the early CTA Shell proof. Current Call to Action
+is shared Shell plus widget-specific Core under `calltoaction.*`:
 
 - Deleted root `title`, root `body`, `primaryCta`, `secondaryCta`, and private
-  `layout.*` state from `tokyo/product/widgets/cta/spec.json`.
-- Replaced CTA Content/Layout/Appearance panels with shared Shell controls.
-- Replaced CTA editable fields with only `header.title`,
-  `header.subtitleHtml`, and `cta.label`.
-- Replaced private CTA DOM with `ck-headerLayout`, `.ck-header`, and an empty
-  `.ck-headerLayout__body` Core div.
+  `layout.*` state from `tokyo/product/widgets/calltoaction/spec.json`.
+- Replaced Call to Action Content/Layout/Appearance Shell controls with shared
+  Shell controls.
+- Replaced Header CTA editable fields with `header.title`,
+  `header.subtitleHtml`, and `headerCta.label`.
+- Replaced private CTA DOM with `ck-headerLayout`, `.ck-header`, and a
+  `.ck-calltoaction__body` Core region.
 - Replaced private CTA runtime/link logic with shared Shell helper calls:
   `CKStagePod`, `CKTypography`, `CKHeader`, `CKLocaleSwitcher`, and
   `CKBranding`.
@@ -494,7 +495,7 @@ Changed CTA from duplicate private widget state to Shell plus empty Core:
 Old-path guard:
 
 ```text
-rg "primaryCta|secondaryCta|layout\.maxWidth|layout\.bodyWidth|layout\.gap|ck-cta__body|ck-cta__actions|cta-primary|cta-secondary|data-role=\"cta-body\"|data-role=\"cta-actions\"" tokyo/product/widgets/cta
+rg "primaryCta|secondaryCta|layout\.maxWidth|layout\.bodyWidth|layout\.gap|ck-cta__body|ck-cta__actions|cta-primary|cta-secondary|data-role=\"cta-body\"|data-role=\"cta-actions\"" tokyo/product/widgets/calltoaction
 ```
 
 Result:
@@ -526,29 +527,31 @@ buildSavedWidgetPublicPackage(cta package)
 
 Assertions proved:
 
-- `compiled.widgetname == "cta"`.
+- `compiled.widgetname == "calltoaction"`.
 - Bob panel order is `content`, `typography`, `layout`, `appearance`,
   `settings`.
-- CTA compiled control count is `125`.
-- Shell control paths `header.title` and `cta.label` are present.
+- Call to Action compiled controls include shared Shell plus `calltoaction.*`
+  Core body/action controls.
+- Shell control paths `header.title` and `headerCta.label` are present.
 - No compiled controls include `primaryCta`, `secondaryCta`,
   `layout.maxWidth`, `layout.bodyWidth`, or `layout.gap`.
-- Saved package HTML contains `data-ck-widget="cta"`,
-  `class="ck-cta ck-headerLayout"`, and
-  `class="ck-cta__core ck-headerLayout__body"`.
-- Saved package HTML does not contain `.ck-cta__body` or `.ck-cta__actions`.
+- Saved package HTML contains `data-ck-widget="calltoaction"`,
+  `class="ck-calltoaction ck-headerLayout"`, and
+  `class="ck-calltoaction__content ck-headerLayout__body"`.
+- Saved package HTML does not contain retired private CTA body/action DOM
+  classes.
 - Saved package CSS/runtime contain current shared markers
-  `shared-header.css`, `cta-widget-css`, `shared-header.js`, and
-  `cta-widget-client.js`.
+  `shared-header.css`, `shared-header.js`, and Call to Action widget
+  CSS/runtime contribution markers.
 
 Smoke output:
 
 ```json
 {
-  "widget": "cta",
+  "widget": "calltoaction",
   "panels": ["content", "typography", "layout", "appearance", "settings"],
-  "controls": 125,
-  "shellControls": ["header.title", "cta.label"],
+  "shellControls": ["header.title", "headerCta.label"],
+  "coreControls": ["calltoaction.headline", "calltoaction.action.label"],
   "stylesBytes": 13520,
   "runtimeBytes": 110815
 }
@@ -556,9 +559,9 @@ Smoke output:
 
 Behavior statement:
 
-CTA is now the Header-only Shell case. It keeps the `cta` widget name and
-existing limits file, but it does not keep the old CTA product model or bridge
-old invalid state.
+Call to Action now uses the `calltoaction` widget name, shared Shell, and
+`calltoaction.*` Core. It does not keep the old CTA product model or bridge old
+invalid state.
 
 ## Shell DOM Contract
 
@@ -603,10 +606,10 @@ The Shell owns these state families:
 
 ```text
 header.*
-cta.*
+headerCta.*
 stage.*
 pod.*
-appearance.cta*
+appearance.headerCta.*
 appearance.localeSwitcher*
 appearance.podBorder
 typography.*
@@ -650,13 +653,13 @@ header.textGap
 header.ctaPlacement
 header.innerGap
 
-cta.enabled
-cta.label
-cta.href
-cta.openMode
-cta.iconEnabled
-cta.iconPlacement
-cta.iconName
+headerCta.enabled
+headerCta.label
+headerCta.href
+headerCta.openMode
+headerCta.iconEnabled
+headerCta.iconPlacement
+headerCta.iconName
 ```
 
 Forbidden duplicate paths:
@@ -695,13 +698,13 @@ Controls:
 | `header.title` | dropdown-edit | Header title. |
 | `header.showSubtitle` | toggle | Show/hide subtitle. |
 | `header.subtitleHtml` | dropdown-edit | Header subtitle. |
-| `cta.enabled` | toggle | Show/hide CTA. |
-| `cta.label` | textfield | CTA label. |
-| `cta.href` | textfield | CTA target URL. |
-| `cta.openMode` | dropdown-actions | Same tab/new tab/new window. |
-| `cta.iconEnabled` | toggle | Show/hide CTA icon. |
-| `cta.iconPlacement` | dropdown-actions | Left/right. |
-| `cta.iconName` | dropdown-actions | Approved icon choices. |
+| `headerCta.enabled` | toggle | Show/hide Header CTA. |
+| `headerCta.label` | textfield | Header CTA label. |
+| `headerCta.href` | textfield | Header CTA target URL. |
+| `headerCta.openMode` | dropdown-actions | Same tab/new tab/new window. |
+| `headerCta.iconEnabled` | toggle | Show/hide Header CTA icon. |
+| `headerCta.iconPlacement` | dropdown-actions | Left/right. |
+| `headerCta.iconName` | dropdown-actions | Approved icon choices. |
 
 Core controls follow this cluster in the same Content panel. FAQ Core controls
 such as `sections[]` are not Shell controls.
@@ -832,20 +835,20 @@ shared: header-appearance
 shared: stagepod-appearance
 ```
 
-CTA appearance controls:
+Header CTA appearance controls:
 
 | Path | Control | Meaning |
 | --- | --- | --- |
-| `appearance.ctaSizePreset` | dropdown-actions | CTA size preset. |
-| `appearance.ctaPaddingLinked` | toggle | Link CTA padding. |
-| `appearance.ctaPaddingInline` | valuefield | Inline CTA padding. |
-| `appearance.ctaPaddingBlock` | valuefield | Block CTA padding. |
-| `appearance.ctaBackground` | dropdown-fill | CTA background. |
-| `appearance.ctaTextColor` | dropdown-fill | CTA text color. |
-| `appearance.ctaBorder` | dropdown-border | CTA border. |
-| `appearance.ctaRadius` | dropdown-actions | CTA corner radius. |
-| `appearance.ctaIconSizePreset` | dropdown-actions | CTA icon size preset. |
-| `appearance.ctaIconSize` | valuefield | Custom CTA icon size. |
+| `appearance.headerCta.sizePreset` | dropdown-actions | Header CTA size preset. |
+| `appearance.headerCta.paddingLinked` | toggle | Link Header CTA padding. |
+| `appearance.headerCta.paddingInline` | valuefield | Inline Header CTA padding. |
+| `appearance.headerCta.paddingBlock` | valuefield | Block Header CTA padding. |
+| `appearance.headerCta.background` | dropdown-fill | Header CTA background. |
+| `appearance.headerCta.textColor` | dropdown-fill | Header CTA text color. |
+| `appearance.headerCta.border` | dropdown-border | Header CTA border. |
+| `appearance.headerCta.radius` | dropdown-actions | Header CTA corner radius. |
+| `appearance.headerCta.iconSizePreset` | dropdown-actions | Header CTA icon size preset. |
+| `appearance.headerCta.iconSize` | valuefield | Custom Header CTA icon size. |
 
 Locale switcher appearance controls:
 
@@ -961,7 +964,7 @@ Every widget-specific Core implementation must provide:
 The Core must not define:
 
 - `header.*`
-- `cta.*`
+- `headerCta.*`
 - `stage.*`
 - `pod.*`
 - `localeSwitcher.*`
@@ -979,17 +982,17 @@ Approved Core div examples:
 | Cards | `items[]`, cards layout/treatment, cards frame/card-copy controls. |
 | Countdown | timer target, labels, expired behavior. |
 | Logo Showcase | logos/items, row/grid/marquee behavior. |
-| CTA | no Core state. |
+| Call to Action | `calltoaction.*`. |
 | Big Bang | `bigBang.*`. |
 
 ## Editable Fields
 
-The Shell contributes only shared Header/CTA editable fields:
+The Shell contributes only shared Header/Header CTA editable fields:
 
 ```text
 header.title
 header.subtitleHtml
-cta.label
+headerCta.label
 ```
 
 Widget Cores contribute their Core text fields:
@@ -1001,7 +1004,7 @@ Split: image/video alt text
 Big Bang: bigBang.statement, bigBang.supportingCopy
 Countdown: countdown labels and expired copy
 Logo Showcase: logo captions/alt text if visible/editable
-CTA: none beyond Shell Header/CTA
+Call to Action: calltoaction.eyebrow, calltoaction.headline, calltoaction.supportingTextHtml, calltoaction.action.label
 ```
 
 Array fields must declare stable item identity. No wildcard paths are allowed in
@@ -1059,14 +1062,14 @@ Gate or the numbered Execution Steps table.
 3. Step 3 rebases FAQ onto `packages/widget-shell/` with no user-visible
    behavior change and proves compile, preview, save/materialization, and
    package output evidence.
-4. Step 4 converts CTA to prove Shell plus empty Core reuse.
+4. Step 4 converts Call to Action to prove Shell plus widget Core reuse.
 5. Step 5 implements Split Core on the shared Shell. Use Cards only if the
    owning Cards PRD first resolves the `cards`/`cardgrid` naming authority
    without aliases or compatibility shims.
 6. Step 6 adds product-shaped validation/search guards that reject copied Shell
    logic and duplicate Shell-owned paths without adding root PRD scripts.
 7. Countdown and Logo Showcase gold-standard repair remain downstream Shell
-   rebase tasks after FAQ, CTA, and Split Core are green.
+   rebase tasks after FAQ, Call to Action, and Split Core are green.
 
 ## Blast Radius
 
@@ -1084,7 +1087,7 @@ Expected touched areas:
   compatibility/handoff evidence; PRD106B owns Page Composer behavior.
 - `tokyo/product/widgets/shared/**`
 - `tokyo/product/widgets/faq/**`
-- `tokyo/product/widgets/cta/**`
+- `tokyo/product/widgets/calltoaction/**`
 - `tokyo/product/widgets/split/**` for Split Core implementation, or
   `tokyo/product/widgets/cards/**` only after the owning Cards PRD resolves
   `cards` versus `cardgrid`.
@@ -1098,7 +1101,7 @@ PRD. Tokyo/R2 paths remain unchanged.
 - `packages/widget-shell/` exists and is the named authority for shared widget
   architecture.
 - FAQ consumes the shared Shell and has no user-visible regression.
-- CTA consumes the shared Shell with an empty Core.
+- Call to Action consumes the shared Shell with `calltoaction.*` Core.
 - Split Core consumes the shared Shell.
 - Bob preview and Roma materialization use the same Shell + Core contract.
 - A2 emits stable package contribution metadata/module keys sufficient for

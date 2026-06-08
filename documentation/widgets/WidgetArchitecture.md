@@ -95,11 +95,22 @@ Factory defaults seed accounts. After an account has widget defaults, new
 instance creation uses account defaults. Bob never fetches account defaults and
 does not maintain a live fallback ladder.
 
+Source metadata travels with the instance source. `baseLocale`, `targetLocales`,
+and `meta` are not account default policy and must not be dropped, silently
+defaulted, or inferred during create/save/materialization.
+
 Roma Widget Defaults is not a second editor contract. It renders account
 defaults through the compiled Builder control contract. Any Shell or Core
 default path that is not covered by a Builder control is a contract error that
 must be fixed in Widget Shell or the widget spec; Roma must not invent fallback
 controls for it.
+
+Software metadata is not account-editable default truth. `uiLabels.core.*`,
+`typography.roleScales.*`, and widget-owned hidden metadata leaves used only to
+parameterize runtime/software behavior are canonicalized from widget software at
+the account defaults boundary. Roma does not render fallback editors for those
+paths, and Tokyo rejects non-metadata default leaves that are not covered by
+compiled Builder controls.
 
 ---
 
@@ -159,10 +170,10 @@ Shell state families:
 `uiLabels.core.*` is a widget Core extension contract for user-facing Core
 labels. It is not Shell default styling or behavior.
 
-`appearance.cardwrapper.*` is widget Core, not Shell. The shared Shell has no
-card element. Widgets that render repeated cards/items may use the shared
-surface helper, but the card-wrapper values are part of that widget's Core
-defaults.
+`{widgetNamespace}.appearance.cardwrapper.*` is widget Core, not Shell. The
+shared Shell has no card element. Widgets that render repeated cards/items may
+use the shared surface helper, but the card-wrapper values are part of that
+widget's Core defaults.
 
 ### Shared Stage And Settings Runtime
 
@@ -286,16 +297,17 @@ that an old body namespace is correct product architecture.
 | Widget | Current model | Body state authority | What to copy |
 | --- | --- | --- | --- |
 | `calltoaction` | New widget-specific Core model | `calltoaction.*` | Copy for Shell/Header CTA separation, widget-specific body action naming, mixed panels, and Core DOM bindings. |
-| `cards` | Transitional generic Core namespace | `core.*` | Works today, but do not copy `core.*` naming for new/refactored widgets. |
-| `split` | Transitional generic Core namespace | `core.*` | Works today, but migrate toward widget-specific state when refactoring. |
-| `faq` | Shell-proven, legacy body namespace | `sections[]` | Copy Shell runtime and repeated-content behavior, not the body namespace. |
-| `big-bang` | Transitional widget-specific namespace | `bigBang.*` | Works today; normalize naming only under an explicit refactor. |
-| `countdown` | Old body namespace | `timer.*` | Migration target; do not copy for new work. |
-| `logoshowcase` | Old body namespace | `strips[]` | Migration target; do not copy for new work. |
+| `big-bang` | Widget-specific Core model | `bigBang.*` | Copy for simple statement/copy Core paths and Shell composition. |
+| `cards` | Widget-specific Core model | `cards.*` plus Core cardwrapper appearance where declared | Copy for repeated-item Core paths and stable item identity. |
+| `countdown` | Widget-specific Core model | `countdown.*` | Copy for widget-owned timing/action/SEO metadata under one namespace. |
+| `faq` | Widget-specific Core model | `faq.*` | Copy for repeated sections/questions and Shell runtime behavior. |
+| `logoshowcase` | Widget-specific Core model | `logoshowcase.*` | Copy for nested repeated logo collections. |
+| `split` | Widget-specific Core model | `split.*` plus Core cardwrapper appearance where declared | Copy for mixed media/instance item Core paths. |
 
 New widgets and refactored widgets must use a widget-specific body namespace.
-Legacy `core.*` and old body namespaces may remain only when a task explicitly
-defers their migration.
+Legacy generic Core paths, legacy Header CTA paths, private CTA paths, root
+`title`, and old body namespaces are not acceptable surviving widget source
+language.
 
 ---
 
@@ -304,6 +316,14 @@ defers their migration.
 Changing widget source does not rewrite every saved account instance. Existing
 instances may post runtime state that lacks newly added or renamed body paths,
 typography roles, role scales, or appearance objects.
+
+Generated public files are stored artifacts, not live views of widget source.
+Changing `spec.json`, `widget.client.js`, shared Shell code, or account defaults
+does not update existing `index.html`, `styles.css`, `runtime.js`, or
+`package.json`. Any live widget refactor must include a package regeneration or
+recomposition plan for affected account instances and Page Composer pages, or it
+must stop with a named blocker. Stale generated artifacts are a data migration
+problem, not proof that the source change failed.
 
 Bob session normalization deep-merges compiled widget defaults into loaded
 instance state before Builder preview receives it, then applies declared
@@ -326,13 +346,12 @@ namespace as the surviving authority, and be removed when stored instances have
 been migrated.
 
 Pre-GA contract renames should use a one-time data rewrite rather than
-long-lived runtime aliases. The `cta` -> `headerCta` Shell rename and
-`cta` widget -> `calltoaction` rename require rewriting saved instance config,
-content paths, translation overlays, and registry widget type rows:
+long-lived runtime aliases. The Header CTA Shell rename and Call to Action
+widget rename require rewriting saved instance config, content paths,
+translation overlays, and registry widget type rows:
 
-- `cta.*` -> `headerCta.*`
-- `appearance.ctaBackground` -> `appearance.headerCta.background`
-- `appearance.ctaTextColor` -> `appearance.headerCta.textColor`
+- legacy Header CTA state -> `headerCta.*`
+- legacy Header CTA appearance -> `appearance.headerCta.*`
 - `appearance.ctaBorder` -> `appearance.headerCta.border`
 - `appearance.ctaRadius` -> `appearance.headerCta.radius`
 - `appearance.ctaSizePreset` -> `appearance.headerCta.sizePreset`

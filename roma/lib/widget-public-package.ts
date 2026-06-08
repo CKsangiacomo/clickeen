@@ -67,8 +67,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function extractSplitChildInstanceIds(state: Record<string, unknown>, parentInstanceId: string): string[] {
-  const core = isRecord(state.core) ? state.core : null;
-  const items = Array.isArray(core?.items) ? core.items : [];
+  const split = isRecord(state.split) ? state.split : null;
+  const items = Array.isArray(split?.items) ? split.items : [];
   const ids = new Set<string>();
   items.forEach((item) => {
     if (!isRecord(item) || item.kind !== 'instance') return;

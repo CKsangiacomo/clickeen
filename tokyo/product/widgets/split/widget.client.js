@@ -28,7 +28,7 @@
   }
 
   function normalizeItem(raw, index) {
-    if (!isRecord(raw)) throw new Error('[Split] core.items[' + index + '] must be an object');
+    if (!isRecord(raw)) throw new Error('[Split] split.items[' + index + '] must be an object');
     var kind =
       raw.kind === 'video'
         ? 'video'
@@ -38,16 +38,16 @@
             ? 'instance'
             : '';
     if (!kind)
-      throw new Error('[Split] core.items[' + index + '].kind must be image|video|instance');
+      throw new Error('[Split] split.items[' + index + '].kind must be image|video|instance');
     var src = kind === 'instance' ? '' : mediaSource(raw.media, kind);
     var instance = isRecord(raw.instance) ? raw.instance : {};
     var instanceId =
       typeof instance.instanceId === 'string' ? instance.instanceId.trim().toUpperCase() : '';
     if (kind === 'instance' && !instanceId) {
-      throw new Error('[Split] core.items[' + index + '].instance.instanceId is required');
+      throw new Error('[Split] split.items[' + index + '].instance.instanceId is required');
     }
     if (kind !== 'instance' && !src)
-      throw new Error('[Split] core.items[' + index + '].media requires a ' + kind + ' asset');
+      throw new Error('[Split] split.items[' + index + '].media requires a ' + kind + ' asset');
     return {
       id: typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : 'item-' + index,
       kind: kind,
@@ -58,23 +58,24 @@
   }
 
   function normalizeState(state) {
-    if (!isRecord(state.core)) throw new Error('[Split] state.core must be an object');
-    var itemsRaw = Array.isArray(state.core.items) ? state.core.items : [];
-    var carousel = isRecord(state.core.carousel) ? state.core.carousel : {};
+    if (!isRecord(state.split)) throw new Error('[Split] state.split must be an object');
+    var split = state.split;
+    var itemsRaw = Array.isArray(split.items) ? split.items : [];
+    var carousel = isRecord(split.carousel) ? split.carousel : {};
     var enabled = carousel.enabled === true;
     if (!enabled && itemsRaw.length !== 1)
-      throw new Error('[Split] static Split requires exactly one core item');
+      throw new Error('[Split] static Split requires exactly one split item');
     if (enabled && (itemsRaw.length < 2 || itemsRaw.length > 6)) {
-      throw new Error('[Split] carousel Split requires 2-6 core items');
+      throw new Error('[Split] carousel Split requires 2-6 split items');
     }
     var seen = {};
     var items = itemsRaw.map(function (item, index) {
       var normalized = normalizeItem(item, index);
-      if (seen[normalized.id]) throw new Error('[Split] duplicate core item id: ' + normalized.id);
+      if (seen[normalized.id]) throw new Error('[Split] duplicate split item id: ' + normalized.id);
       seen[normalized.id] = true;
       return normalized;
     });
-    var media = isRecord(state.core.media) ? state.core.media : {};
+    var media = isRecord(split.media) ? split.media : {};
     return {
       items: items,
       mediaFit: media.fit === 'contain' ? 'contain' : 'cover',
@@ -236,7 +237,7 @@
 
       if (!window.CKSurface?.applyCardWrapper)
         throw new Error('[Split] Missing CKSurface.applyCardWrapper');
-      window.CKSurface.applyCardWrapper(state.appearance.cardwrapper, coreEl);
+      window.CKSurface.applyCardWrapper(state.split.appearance.cardwrapper, coreEl);
 
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
         throw new Error('[Split] Missing CKLocaleSwitcher.applyLocaleSwitcher');

@@ -5,7 +5,7 @@
   "normalization": {
     "idRules": [
       {
-        "arrayPath": "core.items",
+        "arrayPath": "cards.items",
         "idKey": "id",
         "seedKey": "title",
         "fallbackPrefix": "card"
@@ -13,12 +13,12 @@
     ],
     "coerceRules": [
       {
-        "path": "core.customCardStyles.enabled",
+        "path": "cards.customCardStyles.enabled",
         "type": "boolean",
         "default": false
       },
       {
-        "path": "core.betweenCards.enabled",
+        "path": "cards.betweenCards.enabled",
         "type": "boolean",
         "default": false
       },
@@ -132,31 +132,6 @@
         "sizeCluster": "Cards size"
       }
     },
-    "appearance": {
-      "cardwrapper": {
-        "border": {
-          "enabled": true,
-          "width": 1,
-          "color": "var(--color-system-gray-5)"
-        },
-        "radiusLinked": true,
-        "radius": "2xl",
-        "radiusTL": "2xl",
-        "radiusTR": "2xl",
-        "radiusBR": "2xl",
-        "radiusBL": "2xl",
-        "shadow": {
-          "enabled": false,
-          "x": 0,
-          "y": 0,
-          "blur": 0,
-          "spread": 0,
-          "alpha": 0,
-          "color": "#000000",
-          "inset": false
-        }
-      }
-    },
     "typography": {
       "roles": {
         "cardTitle": {
@@ -201,7 +176,32 @@
         }
       }
     },
-    "core": {
+    "cards": {
+      "appearance": {
+        "cardwrapper": {
+          "border": {
+            "enabled": true,
+            "width": 1,
+            "color": "var(--color-system-gray-5)"
+          },
+          "radiusLinked": true,
+          "radius": "2xl",
+          "radiusTL": "2xl",
+          "radiusTR": "2xl",
+          "radiusBR": "2xl",
+          "radiusBL": "2xl",
+          "shadow": {
+            "enabled": false,
+            "x": 0,
+            "y": 0,
+            "blur": 0,
+            "spread": 0,
+            "alpha": 0,
+            "color": "#000000",
+            "inset": false
+          }
+        }
+      },
       "items": [
         {
           "id": "card-1",
@@ -338,13 +338,13 @@
                 "kind": "field",
                 "type": "repeater",
                 "groupId": "content-cards",
-                "path": "core.items",
+                "path": "cards.items",
                 "label": "Cards",
                 "template": [
                   {
                     "kind": "field",
                     "type": "dropdown-edit",
-                    "path": "core.items.__INDEX__.title",
+                    "path": "cards.items.__INDEX__.title",
                     "label": "Card title",
                     "attrs": {
                       "size": "md",
@@ -355,7 +355,7 @@
                   {
                     "kind": "field",
                     "type": "dropdown-edit",
-                    "path": "core.items.__INDEX__.copy",
+                    "path": "cards.items.__INDEX__.copy",
                     "label": "Card copy",
                     "attrs": {
                       "size": "md",
@@ -366,7 +366,7 @@
                   {
                     "kind": "field",
                     "type": "dropdown-actions",
-                    "path": "core.items.__INDEX__.media.kind",
+                    "path": "cards.items.__INDEX__.media.kind",
                     "label": "Media",
                     "attrs": {
                       "size": "md",
@@ -389,7 +389,7 @@
                   {
                     "kind": "field",
                     "type": "dropdown-actions",
-                    "path": "core.items.__INDEX__.media.iconName",
+                    "path": "cards.items.__INDEX__.media.iconName",
                     "label": "Icon",
                     "attrs": {
                       "size": "md",
@@ -417,7 +417,7 @@
                       ]
                     },
                     "showIf": {
-                      "path": "core.items.__INDEX__.media.kind",
+                      "path": "cards.items.__INDEX__.media.kind",
                       "op": "equals",
                       "value": "icon"
                     }
@@ -425,7 +425,7 @@
                   {
                     "kind": "field",
                     "type": "dropdown-fill",
-                    "path": "core.items.__INDEX__.media.image",
+                    "path": "cards.items.__INDEX__.media.image",
                     "label": "Image",
                     "attrs": {
                       "size": "md",
@@ -433,7 +433,7 @@
                       "allow-image": "true"
                     },
                     "showIf": {
-                      "path": "core.items.__INDEX__.media.kind",
+                      "path": "cards.items.__INDEX__.media.kind",
                       "op": "equals",
                       "value": "image"
                     }
@@ -441,10 +441,10 @@
                   {
                     "kind": "field",
                     "type": "textfield",
-                    "path": "core.items.__INDEX__.media.imageAlt",
+                    "path": "cards.items.__INDEX__.media.imageAlt",
                     "label": "Image alt text",
                     "showIf": {
-                      "path": "core.items.__INDEX__.media.kind",
+                      "path": "cards.items.__INDEX__.media.kind",
                       "op": "equals",
                       "value": "image"
                     }
@@ -452,7 +452,7 @@
                   {
                     "kind": "field",
                     "type": "toggle",
-                    "path": "core.items.__INDEX__.link.enabled",
+                    "path": "cards.items.__INDEX__.link.enabled",
                     "label": "Enable link",
                     "attrs": {
                       "size": "md"
@@ -461,20 +461,20 @@
                   {
                     "kind": "field",
                     "type": "textfield",
-                    "path": "core.items.__INDEX__.link.href",
+                    "path": "cards.items.__INDEX__.link.href",
                     "label": "Link URL",
                     "showIf": {
-                      "path": "core.items.__INDEX__.link.enabled",
+                      "path": "cards.items.__INDEX__.link.enabled",
                       "op": "isTrue"
                     }
                   },
                   {
                     "kind": "field",
                     "type": "textfield",
-                    "path": "core.items.__INDEX__.link.label",
+                    "path": "cards.items.__INDEX__.link.label",
                     "label": "Link label",
                     "showIf": {
-                      "path": "core.items.__INDEX__.link.enabled",
+                      "path": "cards.items.__INDEX__.link.enabled",
                       "op": "isTrue"
                     }
                   }
@@ -547,7 +547,7 @@
               {
                 "kind": "field",
                 "type": "choice-tiles",
-                "path": "core.treatment",
+                "path": "cards.treatment",
                 "label": "Treatment",
                 "attrs": {
                   "size": "md",
@@ -570,7 +570,7 @@
               {
                 "kind": "field",
                 "type": "choice-tiles",
-                "path": "core.columns",
+                "path": "cards.columns",
                 "label": "Columns",
                 "attrs": {
                   "size": "md",
@@ -593,7 +593,7 @@
               {
                 "kind": "field",
                 "type": "valuefield",
-                "path": "core.gap",
+                "path": "cards.gap",
                 "label": "Card gap",
                 "attrs": {
                   "min": 8,
@@ -604,7 +604,7 @@
               {
                 "kind": "field",
                 "type": "valuefield",
-                "path": "core.cardPadding",
+                "path": "cards.cardPadding",
                 "label": "Card padding",
                 "attrs": {
                   "min": 16,
@@ -620,7 +620,7 @@
               {
                 "kind": "field",
                 "type": "toggle",
-                "path": "core.betweenCards.enabled",
+                "path": "cards.betweenCards.enabled",
                 "label": "Graphic between cards",
                 "attrs": {
                   "size": "md"
@@ -629,7 +629,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "path": "core.betweenCards.kind",
+                "path": "cards.betweenCards.kind",
                 "label": "Graphic type",
                 "attrs": {
                   "size": "md",
@@ -645,14 +645,14 @@
                   ]
                 },
                 "showIf": {
-                  "path": "core.betweenCards.enabled",
+                  "path": "cards.betweenCards.enabled",
                   "op": "isTrue"
                 }
               },
               {
                 "kind": "field",
                 "type": "valuefield",
-                "path": "core.betweenCards.line.widthPt",
+                "path": "cards.betweenCards.line.widthPt",
                 "label": "Line width (pt)",
                 "attrs": {
                   "min": 1,
@@ -662,11 +662,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.betweenCards.enabled",
+                      "path": "cards.betweenCards.enabled",
                       "op": "isTrue"
                     },
                     {
-                      "path": "core.betweenCards.kind",
+                      "path": "cards.betweenCards.kind",
                       "op": "equals",
                       "value": "line"
                     }
@@ -676,7 +676,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-fill",
-                "path": "core.betweenCards.line.color",
+                "path": "cards.betweenCards.line.color",
                 "label": "Line color",
                 "attrs": {
                   "size": "md",
@@ -686,11 +686,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.betweenCards.enabled",
+                      "path": "cards.betweenCards.enabled",
                       "op": "isTrue"
                     },
                     {
-                      "path": "core.betweenCards.kind",
+                      "path": "cards.betweenCards.kind",
                       "op": "equals",
                       "value": "line"
                     }
@@ -700,7 +700,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "path": "core.betweenCards.icon.name",
+                "path": "cards.betweenCards.icon.name",
                 "label": "Icon",
                 "attrs": {
                   "size": "md",
@@ -730,11 +730,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.betweenCards.enabled",
+                      "path": "cards.betweenCards.enabled",
                       "op": "isTrue"
                     },
                     {
-                      "path": "core.betweenCards.kind",
+                      "path": "cards.betweenCards.kind",
                       "op": "equals",
                       "value": "icon"
                     }
@@ -744,7 +744,7 @@
               {
                 "kind": "field",
                 "type": "valuefield",
-                "path": "core.betweenCards.icon.sizePt",
+                "path": "cards.betweenCards.icon.sizePt",
                 "label": "Icon size (pt)",
                 "attrs": {
                   "min": 8,
@@ -754,11 +754,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.betweenCards.enabled",
+                      "path": "cards.betweenCards.enabled",
                       "op": "isTrue"
                     },
                     {
-                      "path": "core.betweenCards.kind",
+                      "path": "cards.betweenCards.kind",
                       "op": "equals",
                       "value": "icon"
                     }
@@ -768,7 +768,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-fill",
-                "path": "core.betweenCards.icon.color",
+                "path": "cards.betweenCards.icon.color",
                 "label": "Icon color",
                 "attrs": {
                   "size": "md",
@@ -778,11 +778,11 @@
                 "showIf": {
                   "all": [
                     {
-                      "path": "core.betweenCards.enabled",
+                      "path": "cards.betweenCards.enabled",
                       "op": "isTrue"
                     },
                     {
-                      "path": "core.betweenCards.kind",
+                      "path": "cards.betweenCards.kind",
                       "op": "equals",
                       "value": "icon"
                     }
@@ -810,7 +810,7 @@
               {
                 "kind": "field",
                 "type": "toggle",
-                "path": "core.customCardStyles.enabled",
+                "path": "cards.customCardStyles.enabled",
                 "label": "Custom card styles",
                 "attrs": {
                   "size": "md"
@@ -820,12 +820,12 @@
                 "kind": "field",
                 "type": "object-manager",
                 "groupId": "appearance-cards",
-                "path": "core.items",
+                "path": "cards.items",
                 "template": [
                   {
                     "kind": "field",
                     "type": "dropdown-fill",
-                    "path": "core.items.__INDEX__.style.background",
+                    "path": "cards.items.__INDEX__.style.background",
                     "label": "Background",
                     "attrs": {
                       "size": "md",
@@ -836,7 +836,7 @@
                   {
                     "kind": "field",
                     "type": "dropdown-fill",
-                    "path": "core.items.__INDEX__.style.borderColor",
+                    "path": "cards.items.__INDEX__.style.borderColor",
                     "label": "Border color",
                     "attrs": {
                       "size": "md",
@@ -847,19 +847,19 @@
                   {
                     "kind": "field",
                     "type": "textfield",
-                    "path": "core.items.__INDEX__.style.radius",
+                    "path": "cards.items.__INDEX__.style.radius",
                     "label": "Radius"
                   },
                   {
                     "kind": "field",
                     "type": "textfield",
-                    "path": "core.items.__INDEX__.style.shadow",
+                    "path": "cards.items.__INDEX__.style.shadow",
                     "label": "Shadow"
                   },
                   {
                     "kind": "field",
                     "type": "dropdown-fill",
-                    "path": "core.items.__INDEX__.style.accentColor",
+                    "path": "cards.items.__INDEX__.style.accentColor",
                     "label": "Accent color",
                     "attrs": {
                       "size": "md",
@@ -870,7 +870,7 @@
                   {
                     "kind": "field",
                     "type": "dropdown-actions",
-                    "path": "core.items.__INDEX__.style.textTone",
+                    "path": "cards.items.__INDEX__.style.textTone",
                     "label": "Text tone",
                     "attrs": {
                       "size": "md",
@@ -905,7 +905,7 @@
                   "index-token": "__INDEX__"
                 },
                 "showIf": {
-                  "path": "core.customCardStyles.enabled",
+                  "path": "cards.customCardStyles.enabled",
                   "op": "isTrue"
                 }
               }

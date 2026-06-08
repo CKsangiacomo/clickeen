@@ -10,6 +10,13 @@ Unlocks: Big Bang widget instances for PRD106D route migration.
 Authority owned by this PRD: Big Bang widget Core state, controls, defaults, DOM, CSS, runtime, and editable fields.
 Authority explicitly not owned by this PRD: Widget Shell, Page Composer, Split, Cards, CTA, Prague route cutover.
 
+## PRD106 Closure Note
+
+This historical PRD predates the final Header CTA naming correction. Big Bang
+Core state remains `bigBang.*`. Shared Header action state is `headerCta.*` and
+shared Header action appearance is `appearance.headerCta.*`; historical Header
+CTA references are not current architecture.
+
 ## PRD Tenets
 
 - Execute one step at a time.
@@ -56,7 +63,7 @@ Green evidence:
 
 - `tokyo/product/widgets/big-bang/**` exists.
 - Big Bang uses the shared Widget Shell with only `bigBang.*` Core paths.
-- Header remains `header.*`/`cta.*`.
+- Header remains `header.*`/`headerCta.*`.
 - Prague statement/supporting copy maps to `bigBang.statement` and
   `bigBang.supportingCopy`.
 - Product discovery is registered with codebook `BBG`.
@@ -96,7 +103,7 @@ Big Bang is not a new editor architecture. It is the shared Widget Shell with a
 large typography/content treatment added as the Widget Core.
 
 Header still means title, optional subtitle, and optional CTA through
-`header.*` and `cta.*`. Big Bang's special value is the large editorial content
+`header.*` and `headerCta.*`. Big Bang's special value is the large editorial content
 inside `.ck-headerLayout__body`.
 
 Big Bang is not a block, page section framework, hero replacement, Prague
@@ -107,7 +114,7 @@ adapter, SEO/GEO model, or second CTA model.
 Consume `packages/widget-shell/`. The package owns:
 
 - `header.*`
-- `cta.*`
+- `headerCta.*`
 - `stage.*`
 - `pod.*`
 - shared `header-content`
@@ -206,9 +213,9 @@ Required defaults:
 - `header.showSubtitle`: `false`
 - `header.placement`: `top`
 - `header.alignment`: `left`
-- `cta.enabled`: `true`
-- `cta.label`: "Start now"
-- `cta.href`: "#"
+- `headerCta.enabled`: `true`
+- `headerCta.label`: "Start now"
+- `headerCta.href`: "#"
 
 No default visible string may be empty.
 
@@ -273,7 +280,7 @@ Shell-visible fields expected in the final merged contract:
 
 - `header.title`
 - `header.subtitleHtml`
-- `cta.label`
+- `headerCta.label`
 
 Big Bang Core fields:
 

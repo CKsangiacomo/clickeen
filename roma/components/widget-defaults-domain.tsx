@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { listWidgetShellAccountDefaultMetadataPaths } from '@clickeen/widget-shell';
 import { useRomaAccountApi } from './account-api';
 import { getCompiledWidget } from './compiled-widget-cache';
 
@@ -8,9 +9,12 @@ type AccountWidgetDefaultsDocument = {
   v: 1;
   accountId: string;
   shell: Record<string, unknown>;
-  widgets: Record<string, {
-    core: Record<string, unknown>;
-  }>;
+  widgets: Record<
+    string,
+    {
+      core: Record<string, unknown>;
+    }
+  >;
   seededAt: string;
   updatedAt: string;
 };
@@ -44,8 +48,17 @@ type ControlGroup = {
 };
 
 const PANEL_ORDER = ['content', 'layout', 'appearance', 'typography', 'settings'];
-const SHELL_TOP_LEVEL_PATHS = new Set(['header', 'headerCta', 'stage', 'pod', 'coreSize', 'localeSwitcher']);
+const SHELL_TOP_LEVEL_PATHS = new Set([
+  'header',
+  'headerCta',
+  'stage',
+  'pod',
+  'coreSize',
+  'localeSwitcher',
+]);
 const SHELL_TYPOGRAPHY_ROLES = new Set(['title', 'body', 'button', 'localeSwitcher']);
+const SHELL_SOFTWARE_METADATA_PATHS = new Set(listWidgetShellAccountDefaultMetadataPaths());
+const CORE_SOFTWARE_METADATA_PATHS = new Set(['uiLabels.core', 'typography.roleScales']);
 
 function stableJson(value: unknown): string {
   return JSON.stringify(value);
@@ -112,7 +125,11 @@ function pathExists(root: Record<string, unknown>, path: string): boolean {
   return typeof readPathValue(root, path) !== 'undefined';
 }
 
-function setPathValue(root: Record<string, unknown>, path: string, value: unknown): Record<string, unknown> {
+function setPathValue(
+  root: Record<string, unknown>,
+  path: string,
+  value: unknown,
+): Record<string, unknown> {
   const next = cloneValue(root);
   const parts = path.split('.').filter(Boolean);
   let cursor: unknown = next;
@@ -215,14 +232,17 @@ function compiledControlsFromPayload(payload: unknown): DefaultsControl[] {
   return payload.controls
     .map((control, index) => normalizeCompiledControl(control, index))
     .filter((control): control is DefaultsControl => Boolean(control))
-    .sort((left, right) => panelSortValue(left.panelId) - panelSortValue(right.panelId) || left.order - right.order);
+    .sort(
+      (left, right) =>
+        panelSortValue(left.panelId) - panelSortValue(right.panelId) || left.order - right.order,
+    );
 }
 
 function uniqueControls(controls: DefaultsControl[]): DefaultsControl[] {
   const seen = new Set<string>();
   const unique: DefaultsControl[] = [];
   for (const control of controls) {
-    const key = `${control.panelId}:${control.path}:${control.type}`;
+    const key = control.path;
     if (seen.has(key)) continue;
     seen.add(key);
     unique.push(control);
@@ -237,10 +257,19 @@ function isPathCoveredByControl(path: string, controlPaths: Set<string>): boolea
   return false;
 }
 
+function isPathCoveredByMetadata(path: string, metadataPaths: Set<string>): boolean {
+  for (const metadataPath of metadataPaths) {
+    if (path === metadataPath || path.startsWith(`${metadataPath}.`)) return true;
+  }
+  return false;
+}
+
 function collectDefaultPaths(value: unknown, prefix = ''): string[] {
   if (Array.isArray(value)) return prefix ? [prefix] : [];
   if (!isRecord(value)) return prefix ? [prefix] : [];
-  const paths = Object.entries(value).flatMap(([key, child]) => collectDefaultPaths(child, prefix ? `${prefix}.${key}` : key));
+  const paths = Object.entries(value).flatMap(([key, child]) =>
+    collectDefaultPaths(child, prefix ? `${prefix}.${key}` : key),
+  );
   return paths.length > 0 ? paths : prefix ? [prefix] : [];
 }
 
@@ -359,7 +388,9 @@ function DefaultsField(args: {
             <option value={selected}>{selected}</option>
           ) : null}
           {control.options.map((option) => (
-            <option key={option.value} value={option.value}>{option.label}</option>
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
           ))}
         </select>
       </label>
@@ -385,7 +416,11 @@ function DefaultsField(args: {
   }
 
   const text = typeof value === 'string' ? value : '';
-  const multiline = control.type === 'textedit' || control.type === 'dropdown-edit' || text.length > 72 || /<[^>]+>/.test(text);
+  const multiline =
+    control.type === 'textedit' ||
+    control.type === 'dropdown-edit' ||
+    text.length > 72 ||
+    /<[^>]+>/.test(text);
   return (
     <label className="widget-defaults-field">
       <span className="body-s">{label}</span>
@@ -439,16 +474,25 @@ export function WidgetDefaultsDomain() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const widgetTypes = useMemo(() => (draft ? Object.keys(draft.widgets).sort((left, right) => left.localeCompare(right)) : []), [draft]);
+  const widgetTypes = useMemo(
+    () =>
+      draft ? Object.keys(draft.widgets).sort((left, right) => left.localeCompare(right)) : [],
+    [draft],
+  );
   const widgetTypesKey = widgetTypes.join('\n');
   const dirty = Boolean(baseline && draft && stableJson(baseline) !== stableJson(draft));
-  const controlsLoaded = widgetTypes.length > 0 && widgetTypes.every((widgetType) => Array.isArray(compiledControls[widgetType]));
+  const controlsLoaded =
+    widgetTypes.length > 0 &&
+    widgetTypes.every((widgetType) => Array.isArray(compiledControls[widgetType]));
 
   const loadDefaults = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const payload = await accountApi.fetchJson<WidgetDefaultsPayload>('/api/account/widget-defaults', { method: 'GET' });
+      const payload = await accountApi.fetchJson<WidgetDefaultsPayload>(
+        '/api/account/widget-defaults',
+        { method: 'GET' },
+      );
       setBaseline(cloneDefaults(payload.widgetDefaults));
       setDraft(cloneDefaults(payload.widgetDefaults));
     } catch (error) {
@@ -519,7 +563,9 @@ export function WidgetDefaultsDomain() {
     const compiledShellControls = uniqueControls(
       Object.values(compiledControls)
         .flat()
-        .filter((control) => isShellControlPath(control.path) && pathExists(draft.shell, control.path)),
+        .filter(
+          (control) => isShellControlPath(control.path) && pathExists(draft.shell, control.path),
+        ),
     );
     return groupControls(compiledShellControls);
   }, [compiledControls, draft]);
@@ -529,7 +575,9 @@ export function WidgetDefaultsDomain() {
     return widgetTypes.map((widgetType) => {
       const core = draft.widgets[widgetType]?.core ?? {};
       const compiledCoreControls = uniqueControls(
-        (compiledControls[widgetType] ?? []).filter((control) => !isShellControlPath(control.path) && pathExists(core, control.path)),
+        (compiledControls[widgetType] ?? []).filter(
+          (control) => !isShellControlPath(control.path) && pathExists(core, control.path),
+        ),
       );
       return [widgetType, core, groupControls(compiledCoreControls)] as const;
     });
@@ -540,21 +588,27 @@ export function WidgetDefaultsDomain() {
     const compiledShellControls = uniqueControls(
       Object.values(compiledControls)
         .flat()
-        .filter((control) => isShellControlPath(control.path) && pathExists(draft.shell, control.path)),
+        .filter(
+          (control) => isShellControlPath(control.path) && pathExists(draft.shell, control.path),
+        ),
     );
     const shellControlPaths = new Set(compiledShellControls.map((control) => control.path));
     const shellPaths = collectDefaultPaths(draft.shell)
       .filter((path) => !isPathCoveredByControl(path, shellControlPaths))
+      .filter((path) => !isPathCoveredByMetadata(path, SHELL_SOFTWARE_METADATA_PATHS))
       .map((path) => `Shell: ${path}`);
 
     const corePaths = widgetTypes.flatMap((widgetType) => {
       const core = draft.widgets[widgetType]?.core ?? {};
       const compiledCoreControls = uniqueControls(
-        (compiledControls[widgetType] ?? []).filter((control) => !isShellControlPath(control.path) && pathExists(core, control.path)),
+        (compiledControls[widgetType] ?? []).filter(
+          (control) => !isShellControlPath(control.path) && pathExists(core, control.path),
+        ),
       );
       const coreControlPaths = new Set(compiledCoreControls.map((control) => control.path));
       return collectDefaultPaths(core)
         .filter((path) => !isPathCoveredByControl(path, coreControlPaths))
+        .filter((path) => !isPathCoveredByMetadata(path, CORE_SOFTWARE_METADATA_PATHS))
         .map((path) => `${widgetLabel(widgetType)}: ${path}`);
     });
 
@@ -562,7 +616,9 @@ export function WidgetDefaultsDomain() {
   }, [compiledControls, controlsLoaded, draft, widgetTypes]);
 
   const updateShellPath = useCallback((path: string, value: unknown) => {
-    setDraft((current) => current ? { ...current, shell: setPathValue(current.shell, path, value) } : current);
+    setDraft((current) =>
+      current ? { ...current, shell: setPathValue(current.shell, path, value) } : current,
+    );
   }, []);
 
   const updateWidgetPath = useCallback((widgetType: string, path: string, value: unknown) => {
@@ -594,14 +650,19 @@ export function WidgetDefaultsDomain() {
     setSaving(true);
     setError('');
     try {
-      const payload = await accountApi.fetchJson<WidgetDefaultsPayload>('/api/account/widget-defaults', {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ widgetDefaults: draft }),
-      });
+      const payload = await accountApi.fetchJson<WidgetDefaultsPayload>(
+        '/api/account/widget-defaults',
+        {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ widgetDefaults: draft }),
+        },
+      );
       const saved = cloneDefaults(payload.widgetDefaults);
       setBaseline(saved);
-      setDraft((current) => (current && stableJson(current) !== snapshot ? current : cloneDefaults(saved)));
+      setDraft((current) =>
+        current && stableJson(current) !== snapshot ? current : cloneDefaults(saved),
+      );
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Saving widget defaults failed.');
     } finally {
@@ -618,7 +679,13 @@ export function WidgetDefaultsDomain() {
       <section className="roma-module-surface">
         <p className="body-m">{error || 'Widget defaults are unavailable.'}</p>
         <div className="rd-canvas-module__actions">
-          <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" onClick={() => void loadDefaults()}>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="primary"
+            type="button"
+            onClick={() => void loadDefaults()}
+          >
             <span className="diet-btn-txt__label body-m">Reload</span>
           </button>
         </div>
@@ -638,10 +705,12 @@ export function WidgetDefaultsDomain() {
           {error ? <p className="body-s widget-defaults-error">{error}</p> : null}
         </div>
         <p className="body-m">
-          Account defaults contain paths that are not exposed by the compiled Builder control contract. Fix Widget Shell or the widget
-          spec before editing defaults.
+          Account defaults contain paths that are not exposed by the compiled Builder control
+          contract. Fix Widget Shell or the widget spec before editing defaults.
         </p>
-        <pre className="widget-defaults-contract-error__paths">{unmappedDefaultPaths.join('\n')}</pre>
+        <pre className="widget-defaults-contract-error__paths">
+          {unmappedDefaultPaths.join('\n')}
+        </pre>
       </section>
     );
   }
@@ -655,10 +724,24 @@ export function WidgetDefaultsDomain() {
           {error ? <p className="body-s widget-defaults-error">{error}</p> : null}
         </div>
         <div className="widget-defaults-actions">
-          <button className="diet-btn-txt" data-size="md" data-variant="line2" type="button" disabled={!dirty || saving} onClick={discard}>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="line2"
+            type="button"
+            disabled={!dirty || saving}
+            onClick={discard}
+          >
             <span className="diet-btn-txt__label body-m">Discard</span>
           </button>
-          <button className="diet-btn-txt" data-size="md" data-variant="primary" type="button" disabled={!dirty || saving} onClick={() => void save()}>
+          <button
+            className="diet-btn-txt"
+            data-size="md"
+            data-variant="primary"
+            type="button"
+            disabled={!dirty || saving}
+            onClick={() => void save()}
+          >
             <span className="diet-btn-txt__label body-m">{saving ? 'Saving...' : 'Save'}</span>
           </button>
         </div>
@@ -666,7 +749,12 @@ export function WidgetDefaultsDomain() {
 
       <div className="widget-defaults-section">
         {shellGroups.map((group) => (
-          <DefaultsGroup key={group.key} group={group} values={draft.shell} onChange={updateShellPath} />
+          <DefaultsGroup
+            key={group.key}
+            group={group}
+            values={draft.shell}
+            onChange={updateShellPath}
+          />
         ))}
       </div>
 

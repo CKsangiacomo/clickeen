@@ -4,7 +4,7 @@
     {
       "kind": "limit",
       "key": "items.group.small.max",
-      "path": "core.items[]",
+      "path": "cards.items[]",
       "metric": "count"
     },
     {

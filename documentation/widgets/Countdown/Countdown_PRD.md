@@ -96,14 +96,13 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 - Legacy layout fields are ignored by runtime (use Stage/Pod layout controls instead).
 - `appearance.theme`: 'custom' | 'light' | 'dark' | 'gradient' + 10 holiday presets (global themes; selection is staged until "Apply theme" is clicked; Cancel restores prior values. Applying a theme sets Stage/Pod/Item appearance values + typography font family; editing any theme-controlled path resets theme to `custom`).
 - `pod.background`: Fill picker (color/gradient/image/video) for the widget surface.
-- `appearance.textColor`: Color picker (fill object, type `color`).
-- `appearance.itemBackground`: Fill picker (color/gradient) for timer tiles.
-- `appearance.cardwrapper.border`: Border (enabled/width/color).
-- `appearance.cardwrapper.shadow`: Shadow (enabled/inset/x/y/blur/spread/color/alpha).
-- `appearance.cardwrapper.radiusLinked|radius|radiusTL|TR|BR|BL`: Radius controls for tiles.
-- `appearance.podBorder`: Pod border (enabled/width/color).
-- `appearance.separator`: Color/style picker.
-- `appearance.animation`: 'fade' (only; skip advanced).
+- `countdown.appearance.textColor`: Color picker (fill object, type `color`).
+- `countdown.appearance.itemBackground`: Fill picker (color/gradient) for timer tiles.
+- `countdown.appearance.cardwrapper.border`: Border (enabled/width/color).
+- `countdown.appearance.cardwrapper.shadow`: Shadow (enabled/inset/x/y/blur/spread/color/alpha).
+- `countdown.appearance.cardwrapper.radiusLinked|radius|radiusTL|TR|BR|BL`: Radius controls for tiles.
+- `countdown.appearance.separator`: Color/style picker.
+- `countdown.appearance.animation`: 'fade' (only; skip advanced).
 - `actions.during.type`: 'link' (V1).
 - `actions.during.url`: URL input (supports internal/external).
 - `actions.during.text`: Text input (max 50; default: "Purchase now").
@@ -123,7 +122,7 @@ Required roles (minimum):
 - Unit tiles: `[data-role="unit"][data-unit="days|hours|minutes|seconds"]`
   - value: `[data-role="value"]`
   - label: `[data-role="label"]`
-- CTA: `[data-role="cta"]` (anchor/button)
+- Header CTA: `[data-role="header-cta"]` (anchor/button)
 - After-end message: `[data-role="after-message"]`
 
 ## 5) Runtime requirements (deterministic)
@@ -136,7 +135,7 @@ Required roles (minimum):
 - Apply platform globals:
   - `CKStagePod.applyStagePod(state.stage, state.pod, root)`
   - `CKTypography.applyTypography(state.typography, root, roleMap)`
-  - `CKSurface.applyCardWrapper(state.appearance.cardwrapper, root)` (sets `--ck-cardwrapper-*` for timer tiles)
+  - `CKSurface.applyCardWrapper(state.countdown.appearance.cardwrapper, root)` (sets `--ck-cardwrapper-*` for timer tiles)
 
 Personal countdown persistence rule (deterministic):
 - Store start time in `localStorage` keyed by **widget instance id** (use `state.instanceId` or runtime `instanceId`; do not invent random ids).
@@ -178,7 +177,7 @@ Defaults must include:
 - Stage/Pod v2 padding shape: `padding.desktop` + `padding.mobile` objects
 - `timer: { mode: 'date', targetDate: '2026-01-20T12:00', timezone: 'UTC', headline: 'Get 50% off before it\'s too late 🎯' }`
 - `layout: { position: 'inline' }`
-- `appearance: { theme: 'custom', animation: 'fade', textColor: { type: 'color', color: 'var(--color-system-black)' }, itemBackground: { type: 'color', color: 'var(--color-system-gray-5)' }, cardwrapper: { radiusLinked: true, radius: '2xl', radiusTL: '2xl', radiusTR: '2xl', radiusBR: '2xl', radiusBL: '2xl', border: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, shadow: { enabled: false, inset: false, x: 0, y: 8, blur: 24, spread: 0, alpha: 18, color: '#000000' } }, podBorder: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, separator: ':' }`
+- `countdown.appearance: { theme: 'custom', animation: 'fade', textColor: { type: 'color', color: 'var(--color-system-black)' }, itemBackground: { type: 'color', color: 'var(--color-system-gray-5)' }, cardwrapper: { radiusLinked: true, radius: '2xl', radiusTL: '2xl', radiusTR: '2xl', radiusBR: '2xl', radiusBL: '2xl', border: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, shadow: { enabled: false, inset: false, x: 0, y: 8, blur: 24, spread: 0, alpha: 18, color: '#000000' } }, separator: ':' }`
 - `actions: { during: { type: 'link', url: '', text: 'Purchase now', style: 'primary', newTab: true }, after: { type: 'hide' } }`
 
 ## 8) Additional Notes from Competitor Analysis

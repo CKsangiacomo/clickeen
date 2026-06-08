@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const scriptPath = fileURLToPath(import.meta.url);
@@ -139,7 +141,7 @@ function parseListObjectsXml(xml) {
   };
 }
 
-async function s3Request(config, method, key, searchParams = new URLSearchParams()) {
+async function s3Request(config, method, key, searchParams = new URLSearchParams(), body = '', contentType = '') {
   if (!config.accessKeyId || !config.secretAccessKey) {
     throw new Error('Missing CLOUDFLARE_R2_ACCESS_KEY_ID or CLOUDFLARE_R2_SECRET_ACCESS_KEY for R2 S3 access.');
   }
@@ -151,9 +153,11 @@ async function s3Request(config, method, key, searchParams = new URLSearchParams
   const now = new Date();
   const amzDate = formatAmzDate(now);
   const dateStamp = amzDate.slice(0, 8);
-  const payloadHash = hashHex('');
-  const canonicalHeaders = `host:${endpoint.host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
-  const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+  const payload = typeof body === 'string' ? body : '';
+  const payloadHash = hashHex(payload);
+  const contentTypeHeader = contentType ? `content-type:${contentType}\n` : '';
+  const canonicalHeaders = `${contentTypeHeader}host:${endpoint.host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
+  const signedHeaders = `${contentType ? 'content-type;' : ''}host;x-amz-content-sha256;x-amz-date`;
   const canonicalRequest = [method, pathname, canonicalQuery, canonicalHeaders, signedHeaders, payloadHash].join('\n');
   const credentialScope = `${dateStamp}/auto/s3/aws4_request`;
   const stringToSign = ['AWS4-HMAC-SHA256', amzDate, credentialScope, hashHex(canonicalRequest)].join('\n');
@@ -164,9 +168,11 @@ async function s3Request(config, method, key, searchParams = new URLSearchParams
     method,
     headers: {
       Authorization: `AWS4-HMAC-SHA256 Credential=${config.accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
+      ...(contentType ? { 'content-type': contentType } : {}),
       'x-amz-content-sha256': payloadHash,
       'x-amz-date': amzDate,
     },
+    ...(method === 'PUT' ? { body: payload } : {}),
   });
   const text = await response.text();
   if (!response.ok) {
@@ -194,6 +200,10 @@ async function listObjectsS3(config, prefix, limit) {
 
 async function getObjectS3(config, key) {
   return s3Request(config, 'GET', key);
+}
+
+async function putObjectS3(config, key, body, contentType) {
+  await s3Request(config, 'PUT', key, new URLSearchParams(), body, contentType);
 }
 
 async function listObjectsRest(config, prefix, limit) {
@@ -233,6 +243,43 @@ async function getObjectRest(config, key) {
   return response.text();
 }
 
+async function putObjectRest() {
+  throw new Error('R2 REST put is not supported by this helper. Add CLOUDFLARE_R2_ACCESS_KEY_ID and CLOUDFLARE_R2_SECRET_ACCESS_KEY.');
+}
+
+function putObjectWrangler(config, key, body, contentType) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ck-r2-wrangler-put-'));
+  const file = path.join(dir, 'body');
+  try {
+    fs.writeFileSync(file, body);
+    const args = [
+      '--filter',
+      '@clickeen/tokyo-worker',
+      'exec',
+      'wrangler',
+      'r2',
+      'object',
+      'put',
+      `${config.bucket}/${key}`,
+      '--file',
+      file,
+      '--remote',
+    ];
+    if (contentType) args.push('--content-type', contentType);
+    const env = { ...process.env };
+    delete env.CLOUDFLARE_API_TOKEN;
+    delete env.CF_API_TOKEN;
+    execFileSync('pnpm', args, { cwd: repoRoot, stdio: 'pipe', env });
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+function isS3WriteDenied(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('AccessDenied') || message.includes('Cloudflare R2 S3 failed 403');
+}
+
 function hasS3Credentials(config) {
   return Boolean(config.accessKeyId && config.secretAccessKey);
 }
@@ -245,6 +292,23 @@ async function getObject(config, key) {
   return hasS3Credentials(config) ? getObjectS3(config, key) : getObjectRest(config, key);
 }
 
+async function putObject(config, key, body, contentType) {
+  if (hasS3Credentials(config)) {
+    try {
+      await putObjectS3(config, key, body, contentType);
+      return;
+    } catch (error) {
+      if (!isS3WriteDenied(error)) throw error;
+      console.error('[cf:r2] S3 put denied; falling back to remote Wrangler R2 object put.');
+    }
+  }
+  if (config.token || !hasS3Credentials(config)) {
+    putObjectWrangler(config, key, body, contentType);
+    return;
+  }
+  await putObjectRest(config, key, body, contentType);
+}
+
 function parseLimit(args, fallback = 100) {
   const index = args.indexOf('--limit');
   if (index < 0) return fallback;
@@ -252,11 +316,19 @@ function parseLimit(args, fallback = 100) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
+function parseContentType(args, fallback = 'application/octet-stream') {
+  const index = args.indexOf('--content-type');
+  if (index < 0) return fallback;
+  const value = args[index + 1]?.trim();
+  return value || fallback;
+}
+
 function printUsage() {
   console.error(`Usage:
-  pnpm cf:preflight
-  pnpm cf:r2:ls <prefix> [--limit 100]
-  pnpm cf:r2:get <key>
+	  pnpm cf:preflight
+	  pnpm cf:r2:ls <prefix> [--limit 100]
+	  pnpm cf:r2:get <key>
+	  pnpm cf:r2:put <key> <local-file> [--content-type application/json]
 
 Required env, loaded from .env.local if not exported:
   CLOUDFLARE_ACCOUNT_ID
@@ -315,6 +387,18 @@ async function main() {
     const key = args.find((arg) => !arg.startsWith('--')) || '';
     if (!key) throw new Error('Missing object key.');
     process.stdout.write(await getObject(config, key));
+    return;
+  }
+
+  if (command === 'put') {
+    const positional = args.filter((arg) => !arg.startsWith('--'));
+    const key = positional[0] || '';
+    const localFile = positional[1] || '';
+    if (!key) throw new Error('Missing object key.');
+    if (!localFile) throw new Error('Missing local file.');
+    const body = fs.readFileSync(path.resolve(process.cwd(), localFile), 'utf8');
+    await putObject(config, key, body, parseContentType(args));
+    console.log(`[cf:r2] wrote ${key}`);
     return;
   }
 

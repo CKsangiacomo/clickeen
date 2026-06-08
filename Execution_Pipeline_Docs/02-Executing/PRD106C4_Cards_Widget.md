@@ -12,6 +12,14 @@ CSS, runtime, and editable fields.
 Authority explicitly not owned by this PRD: Widget Shell, Page Composer, Split,
 Big Bang, CTA, Prague route cutover.
 
+## PRD106 Closure Note
+
+This historical PRD predates the final PRD106 Shell/Core naming correction. The
+surviving Cards Core namespace is `cards.*`. Shared Header action state is
+`headerCta.*` and shared Header action appearance is
+`appearance.headerCta.*`. Do not copy historical Header CTA or generic Core
+language as current architecture.
+
 ## PRD Tenets
 
 - Execute one step at a time.
@@ -59,18 +67,18 @@ Green evidence:
 - `tokyo/product/widgets/cards/**` exists as the surviving `cards` widget.
 - Cards uses shared Shell structure: Stage, Pod, Header, CTA, CoreSize,
   typography, locale switcher, branding, and CardWrapper surface runtime.
-- Cards Core state is only `core.items[]`, `core.treatment`, `core.columns`,
-  `core.gap`, `core.cardPadding`, `core.customCardStyles.*`,
-  `core.items[].style.*`, and `core.betweenCards.*`.
-- Content panel uses one `core.items[]` object-manager for cards, links, icon,
+- Cards Core state is only `cards.items[]`, `cards.treatment`, `cards.columns`,
+  `cards.gap`, `cards.cardPadding`, `cards.customCardStyles.*`,
+  `cards.items[].style.*`, and `cards.betweenCards.*`.
+- Content panel uses one `cards.items[]` object-manager for cards, links, icon,
   image, and alt text.
 - Layout panel uses shared `Cards size`, Cards grid controls, and the
   `Graphic between cards` line/icon controls.
 - Appearance panel includes `Custom card styles` and per-card style controls
-  nested inside the same `core.items[]` item model.
+  nested inside the same `cards.items[]` item model.
 - Runtime supports standard cards, linked cards, and steps from the same
-  `core.items[]` array.
-- `tokyo/product/widgets/cards/limits.json` maps `core.items[]` to
+  `cards.items[]` array.
+- `tokyo/product/widgets/cards/limits.json` maps `cards.items[]` to
   `items.group.small.max`.
 - Two Cards instances compose on one page without duplicate runtime failure.
 
@@ -86,17 +94,17 @@ Stop conditions:
 
 | Step | Action | Required evidence | Green criteria | Stop condition |
 | ---: | --- | --- | --- | --- |
-| 1 | Define Cards state, labels, and forbidden paths. | State table, label defaults, forbidden path list. | Only `core.items[]`, `core.treatment`, `core.columns`, `core.gap`, `core.cardPadding`, `core.customCardStyles.*`, `core.items[].style.*`, `core.betweenCards.*`, `coreSize.*`, and `uiLabels.core.*` are added. | Shell path or duplicate item state needed. |
-| 2 | Define validation and policy limits contract. | Validation table and `limits.json` mapping. | Invalid item counts, IDs, media, links, style overrides, graphic controls, and treatment values fail visibly; `core.items[]` maps to `items.group.small.max`. | Silent healing, Prague route helper, or per-widget tier table. |
+| 1 | Define Cards state, labels, and forbidden paths. | State table, label defaults, forbidden path list. | Only `cards.items[]`, `cards.treatment`, `cards.columns`, `cards.gap`, `cards.cardPadding`, `cards.customCardStyles.*`, `cards.items[].style.*`, `cards.betweenCards.*`, `coreSize.*`, and `uiLabels.core.*` are added. | Shell path or duplicate item state needed. |
+| 2 | Define validation and policy limits contract. | Validation table and `limits.json` mapping. | Invalid item counts, IDs, media, links, style overrides, graphic controls, and treatment values fail visibly; `cards.items[]` maps to `items.group.small.max`. | Silent healing, Prague route helper, or per-widget tier table. |
 | 3 | Confirm shared Shell dependency. | A2 green/fence evidence for Core div, `coreSize.*`, `uiLabels.core.*`, and Layout order. | Cards consumes Shell sizing/labels; no local Core sizing fork. | A2 cannot provide required Shell behavior. |
-| 4 | Build Content controls: card manager. | Spec/control diff and Bob compile evidence. | `Cards` object-manager edits `core.items[]` with stable IDs and 2-16 item validation, subject to account policy caps. | Bare `items[]`, wildcard paths, unstable identity, or a new translation identity model. |
+| 4 | Build Content controls: card manager. | Spec/control diff and Bob compile evidence. | `Cards` object-manager edits `cards.items[]` with stable IDs and 2-16 item validation, subject to account policy caps. | Bare `items[]`, wildcard paths, unstable identity, or a new translation identity model. |
 | 5 | Build Content controls: per-card media and links. | Spec/control diff and Bob compile evidence naming reused media/icon/link contracts. | Media/link show-if rules are concrete and conflict-free; existing asset picker, CTA icon source, and safe-anchor/link behavior are reused. | Separate icon/image toggles, new media store, new icon taxonomy, or Cards-specific link subsystem. |
-| 6 | Build Layout controls: Cards size and grid. | Spec/control diff and Bob compile evidence. | `Cards size` uses shared `coreSize.*`; grid controls use `core.columns`, `core.gap`, and `core.cardPadding`. | `core.height`, `layout.maxWidth`, or page-level columns appear. |
+| 6 | Build Layout controls: Cards size and grid. | Spec/control diff and Bob compile evidence. | `Cards size` uses shared `coreSize.*`; grid controls use `cards.columns`, `cards.gap`, and `cards.cardPadding`. | `core.height`, `layout.maxWidth`, or page-level columns appear. |
 | 7 | Build Layout controls: treatment and graphics between cards. | Spec/control diff and Bob compile evidence. | Treatment controls switch cards/linked-cards/steps; `Graphic between cards` is off by default and reveals only valid line/icon controls. | Steps becomes a separate widget or duplicates graphic connector state. |
 | 8 | Build Appearance controls: custom card styles. | Spec/control diff and Bob compile evidence. | `Custom card styles` toggle creates per-card Appearance sections keyed by stable card ID; overrides inherit from shared CardWrapper style. | Per-card styles duplicate Shell paths, appear in Content, or require a new editor subsystem. |
 | 9 | Build Cards runtime. | DOM/CSS/runtime diff and preview evidence. | Cards render in `.ck-headerLayout__body`, responsive grid works, custom style overrides apply through scoped CSS variables, and cards do not collide across instances. | Runtime bypasses Shell or assumes singleton instance. |
 | 10 | Build linked-cards runtime. | DOM/CSS/runtime diff and accessibility notes. | Linked-card treatment renders valid anchors and accessible labels. | Route-specific Prague helpers or invalid nested anchors. |
-| 11 | Build steps runtime. | DOM/CSS/runtime diff and accessibility notes. | Steps treatment renders ordered sequence and optional graphics between cards from the same `core.items[]`. | New step item model or page-level layout dependency. |
+| 11 | Build steps runtime. | DOM/CSS/runtime diff and accessibility notes. | Steps treatment renders ordered sequence and optional graphics between cards from the same `cards.items[]`. | New step item model or page-level layout dependency. |
 | 12 | Validate editable fields and translations. | Editable-fields diff and compile/typecheck evidence. | Card title/copy/link labels/image alt use stable item identity; style overrides are not translatable fields. | Missing stable identity or fake wildcard. |
 | 13 | Verify Bob/Roma materialization and composed-page safety. | Compile/save/package/page-composition evidence. | Cards packages materialize; two Cards instances on one page do not collide. | Duplicate Shell code, stale package, or page composition miss. |
 
@@ -200,13 +208,13 @@ Cards must keep FAQ's working shared model.
 ### State Kept
 
 - `header.*`
-- `cta.*`
+- `headerCta.*`
 - `stage.*`
 - `pod.*`
 - `appearance.theme`
-- `appearance.cta*`
+- `appearance.headerCta.*`
 - `appearance.podBorder`
-- `appearance.cardwrapper.*`
+- `cards.appearance.cardwrapper.*`
 - `localeSwitcher.*`
 - `appearance.localeSwitcher*`
 - `typography.*`
@@ -238,41 +246,41 @@ The only Cards-specific surface is the Cards Core div. Core is the generic
 widget-owned slot where Cards software begins; it is not the card grid itself.
 
 The Cards software inside the Core div renders an ordered set of cards. The
-same `core.items[]` array powers standard cards, linked cards, and steps.
+same `cards.items[]` array powers standard cards, linked cards, and steps.
 
 Approved Cards-specific state:
 
 | Path | Owner | Meaning |
 | --- | --- | --- |
-| `core.items[]` | config | Ordered card manager. Minimum 2 cards, maximum 16 cards, subject to account policy caps. |
-| `core.items[].id` | identity | Stable item identity for reorder, translation, and runtime keys. |
-| `core.items[].title` | content | Card title. |
-| `core.items[].copy` | content | Card supporting copy. |
-| `core.items[].media.kind` | config | One of `none`, `icon`, or `image`. |
-| `core.items[].media.iconName` | config | Dieter icon name from the same icon source used by CTA icons. Used only when media kind is `icon`. |
-| `core.items[].media.image` | config | Existing widget/account media reference using the existing asset picker/media contract. Used only when media kind is `image`. |
-| `core.items[].media.imageAlt` | content | Authored alt text for image media. |
-| `core.items[].link.enabled` | config | Enables card destination fields. |
-| `core.items[].link.href` | config | Card URL using the existing CTA/safe-anchor link behavior. |
-| `core.items[].link.label` | content | Card CTA label. |
-| `core.customCardStyles.enabled` | config | Enables per-card Appearance sections. Default `false`. |
-| `core.items[].style.background` | config | Optional per-card background override. Inherits shared CardWrapper background when omitted or custom styles are disabled. |
-| `core.items[].style.borderColor` | config | Optional per-card border color override. Inherits shared CardWrapper border when omitted or custom styles are disabled. |
-| `core.items[].style.radius` | config | Optional per-card radius override. Inherits shared CardWrapper radius when omitted or custom styles are disabled. |
-| `core.items[].style.shadow` | config | Optional per-card shadow override. Inherits shared CardWrapper shadow when omitted or custom styles are disabled. |
-| `core.items[].style.accentColor` | config | Optional per-card accent color override for card-local affordances. Inherits widget/global accent when omitted or custom styles are disabled. |
-| `core.items[].style.textTone` | config | Optional per-card text tone override. Allowed values: `inherit`, `default`, `muted`, `inverse`. |
-| `core.treatment` | config | One of `cards`, `linked-cards`, or `steps`. |
-| `core.columns` | config | Desktop card columns. Allowed values: `2`, `3`, `4`. |
-| `core.gap` | config | Gap between cards. |
-| `core.cardPadding` | config | Padding inside each card. |
-| `core.betweenCards.enabled` | config | Shows a decorative graphic between adjacent cards. Default `false`. |
-| `core.betweenCards.kind` | config | One of `line` or `icon`. Shown only when between-card graphics are enabled. |
-| `core.betweenCards.line.widthPt` | config | Vertical line width in points. Used only when graphics are enabled and kind is `line`. |
-| `core.betweenCards.line.color` | config | Vertical line color. Used only when graphics are enabled and kind is `line`. |
-| `core.betweenCards.icon.name` | config | Dieter icon name, using the same icon picker source as CTA icons. Used only when graphics are enabled and kind is `icon`. |
-| `core.betweenCards.icon.sizePt` | config | Icon size in points. Used only when graphics are enabled and kind is `icon`. |
-| `core.betweenCards.icon.color` | config | Icon color. Used only when graphics are enabled and kind is `icon`. |
+| `cards.items[]` | config | Ordered card manager. Minimum 2 cards, maximum 16 cards, subject to account policy caps. |
+| `cards.items[].id` | identity | Stable item identity for reorder, translation, and runtime keys. |
+| `cards.items[].title` | content | Card title. |
+| `cards.items[].copy` | content | Card supporting copy. |
+| `cards.items[].media.kind` | config | One of `none`, `icon`, or `image`. |
+| `cards.items[].media.iconName` | config | Dieter icon name from the same icon source used by CTA icons. Used only when media kind is `icon`. |
+| `cards.items[].media.image` | config | Existing widget/account media reference using the existing asset picker/media contract. Used only when media kind is `image`. |
+| `cards.items[].media.imageAlt` | content | Authored alt text for image media. |
+| `cards.items[].link.enabled` | config | Enables card destination fields. |
+| `cards.items[].link.href` | config | Card URL using the existing CTA/safe-anchor link behavior. |
+| `cards.items[].link.label` | content | Card CTA label. |
+| `cards.customCardStyles.enabled` | config | Enables per-card Appearance sections. Default `false`. |
+| `cards.items[].style.background` | config | Optional per-card background override. Inherits shared CardWrapper background when omitted or custom styles are disabled. |
+| `cards.items[].style.borderColor` | config | Optional per-card border color override. Inherits shared CardWrapper border when omitted or custom styles are disabled. |
+| `cards.items[].style.radius` | config | Optional per-card radius override. Inherits shared CardWrapper radius when omitted or custom styles are disabled. |
+| `cards.items[].style.shadow` | config | Optional per-card shadow override. Inherits shared CardWrapper shadow when omitted or custom styles are disabled. |
+| `cards.items[].style.accentColor` | config | Optional per-card accent color override for card-local affordances. Inherits widget/global accent when omitted or custom styles are disabled. |
+| `cards.items[].style.textTone` | config | Optional per-card text tone override. Allowed values: `inherit`, `default`, `muted`, `inverse`. |
+| `cards.treatment` | config | One of `cards`, `linked-cards`, or `steps`. |
+| `cards.columns` | config | Desktop card columns. Allowed values: `2`, `3`, `4`. |
+| `cards.gap` | config | Gap between cards. |
+| `cards.cardPadding` | config | Padding inside each card. |
+| `cards.betweenCards.enabled` | config | Shows a decorative graphic between adjacent cards. Default `false`. |
+| `cards.betweenCards.kind` | config | One of `line` or `icon`. Shown only when between-card graphics are enabled. |
+| `cards.betweenCards.line.widthPt` | config | Vertical line width in points. Used only when graphics are enabled and kind is `line`. |
+| `cards.betweenCards.line.color` | config | Vertical line color. Used only when graphics are enabled and kind is `line`. |
+| `cards.betweenCards.icon.name` | config | Dieter icon name, using the same icon picker source as CTA icons. Used only when graphics are enabled and kind is `icon`. |
+| `cards.betweenCards.icon.sizePt` | config | Icon size in points. Used only when graphics are enabled and kind is `icon`. |
+| `cards.betweenCards.icon.color` | config | Icon color. Used only when graphics are enabled and kind is `icon`. |
 
 Cards `uiLabels.core`:
 
@@ -288,32 +296,32 @@ remains Core; the user-facing panel must not display "Core".
 State validity:
 
 ```text
-core.items.length must be 2-16, subject to account policy caps
-core.treatment must be cards, linked-cards, or steps
-core.items[].style.* applies only when core.customCardStyles.enabled == true
-core.betweenCards.* applies only when core.betweenCards.enabled == true
+cards.items.length must be 2-16, subject to account policy caps
+cards.treatment must be cards, linked-cards, or steps
+cards.items[].style.* applies only when cards.customCardStyles.enabled == true
+cards.betweenCards.* applies only when cards.betweenCards.enabled == true
 ```
 
 Validation rules:
 
 | Condition | Required result |
 | --- | --- |
-| `core.items.length < 2` | Fail save/publish visibly. |
-| `core.items.length > 16` | Fail save/publish visibly. |
-| Any `core.items[].id` is missing or duplicated | Fail save/publish visibly. |
+| `cards.items.length < 2` | Fail save/publish visibly. |
+| `cards.items.length > 16` | Fail save/publish visibly. |
+| Any `cards.items[].id` is missing or duplicated | Fail save/publish visibly. |
 | Any enabled visible string is empty | Fail save/publish visibly. |
-| Any `core.items[].media.kind` is not `none`, `icon`, or `image` | Fail save/publish visibly. |
+| Any `cards.items[].media.kind` is not `none`, `icon`, or `image` | Fail save/publish visibly. |
 | Media kind is `icon` and `media.iconName` is missing | Fail save/publish visibly. |
 | Media kind is `image` and `media.image` is missing | Fail save/publish visibly. |
 | Media kind is `image` and `media.imageAlt` is missing | Fail save/publish visibly. |
-| `core.treatment == linked-cards` and any card link is disabled or missing `href` | Fail save/publish visibly. |
+| `cards.treatment == linked-cards` and any card link is disabled or missing `href` | Fail save/publish visibly. |
 | Any enabled card link has empty `href` or `label` | Fail save/publish visibly. |
-| `core.betweenCards.enabled == true` and `core.betweenCards.kind` is not `line` or `icon` | Fail save/publish visibly. |
-| `core.betweenCards.kind == line` and line width or color is missing | Fail save/publish visibly. |
-| `core.betweenCards.kind == line` and `core.betweenCards.line.widthPt` is outside 1-24 | Fail save/publish visibly. |
-| `core.betweenCards.kind == icon` and icon name, size, or color is missing | Fail save/publish visibly. |
-| `core.betweenCards.kind == icon` and `core.betweenCards.icon.sizePt` is outside 8-96 | Fail save/publish visibly. |
-| `core.items[].style.textTone` is not `inherit`, `default`, `muted`, or `inverse` | Fail save/publish visibly. |
+| `cards.betweenCards.enabled == true` and `cards.betweenCards.kind` is not `line` or `icon` | Fail save/publish visibly. |
+| `cards.betweenCards.kind == line` and line width or color is missing | Fail save/publish visibly. |
+| `cards.betweenCards.kind == line` and `cards.betweenCards.line.widthPt` is outside 1-24 | Fail save/publish visibly. |
+| `cards.betweenCards.kind == icon` and icon name, size, or color is missing | Fail save/publish visibly. |
+| `cards.betweenCards.kind == icon` and `cards.betweenCards.icon.sizePt` is outside 8-96 | Fail save/publish visibly. |
+| `cards.items[].style.textTone` is not `inherit`, `default`, `muted`, or `inverse` | Fail save/publish visibly. |
 | Any style override tries to store layout, spacing, typography scale, Header, Stage, Pod, or global CardWrapper state | Fail save/publish visibly. |
 
 Do not silently delete, merge, or repair cards to fit the 2-16 count. If state
@@ -341,7 +349,7 @@ Cards maps its card count to the existing small item-group policy key:
 {
   "kind": "limit",
   "key": "items.group.small.max",
-  "path": "core.items[]",
+  "path": "cards.items[]",
   "metric": "count"
 }
 ```
@@ -360,7 +368,7 @@ What this means:
   caps for small/medium/large item groups, not the tier ladder for the small
   group itself.
 - The same cap applies to standard Cards, linked Cards, and Steps because all
-  treatments use the same `core.items[]` array.
+  treatments use the same `cards.items[]` array.
 - Bob may use resolved policy for UX gating and upsell display.
 - Roma save/publish validation must enforce the same limit through the generic
   widget `limits.json` + `evaluateLimits()` path. Bob-only enforcement is not
@@ -369,7 +377,7 @@ What this means:
   boundary by evaluating the compiled widget's `limits.json` through
   `evaluateLimits()` before materialization.
 
-Do not add a new Cards layout object outside `core.*`. The intended surrounding
+Do not add a new Cards layout object outside `cards.*`. The intended surrounding
 layout is already available through:
 
 - `header.placement`: top, bottom, left, right
@@ -397,8 +405,8 @@ these paths forward:
 - `layout.cardPadding`
 - `layout.maxWidth`
 - `layout.variant`
-- `core.steps.showConnectors`
-- `core.steps.connectorIcon`
+- `cards.steps.showConnectors`
+- `cards.steps.connectorIcon`
 - `core.connector*`
 - `core.graphics*`
 - `appearance.cardBackground`
@@ -419,13 +427,13 @@ these paths forward:
 - Prague route helper paths such as `resolvePragueHref`
 
 Header copy belongs to `header.title` and `header.subtitleHtml`.
-Header CTA belongs to `cta.*`.
-Cards supporting text belongs to `core.items[].copy`.
-Card destinations belong to `core.items[].link.*`.
-Layout belongs to shared Header/Stage/Pod plus Cards-owned `core.*` layout.
-Shared card framing belongs to `appearance.cardwrapper.*`. Per-card style
-exceptions belong only to `core.items[].style.*` and are active only when
-`core.customCardStyles.enabled == true`.
+Header CTA belongs to `headerCta.*`.
+Cards supporting text belongs to `cards.items[].copy`.
+Card destinations belong to `cards.items[].link.*`.
+Layout belongs to shared Header/Stage/Pod plus Cards-owned `cards.*` layout.
+Shared card framing belongs to `cards.appearance.cardwrapper.*`. Per-card style
+exceptions belong only to `cards.items[].style.*` and are active only when
+`cards.customCardStyles.enabled == true`.
 
 ## DOM Contract
 
@@ -468,37 +476,37 @@ Cards controls:
 
 | Control | Path | Type | Notes |
 | --- | --- | --- | --- |
-| Cards | `core.items[]` | `object-manager` | Add, reorder, duplicate, and remove cards. Product-valid count is 2-16, subject to `items.group.small.max`. |
-| Card title | `core.items.__INDEX__.title` | `textfield` | Translatable card title. |
-| Card copy | `core.items.__INDEX__.copy` | `textedit` | Translatable supporting copy. |
-| Media type | `core.items.__INDEX__.media.kind` | `dropdown-actions` | `none`, `icon`, or `image`. Prevents conflicting icon+image state. |
-| Icon | `core.items.__INDEX__.media.iconName` | existing CTA/Dieter icon picker source | Shown when media kind is `icon`. Must not create a second icon taxonomy. |
-| Image | `core.items.__INDEX__.media.image` | existing asset picker/media reference shape | Shown when media kind is `image`. Must not create a new media store. |
-| Image alt text | `core.items.__INDEX__.media.imageAlt` | `textfield` | Shown when media kind is `image`. Translatable image alt text. |
-| Enable link | `core.items.__INDEX__.link.enabled` | `toggle` | Enables per-card link fields. |
-| Link URL | `core.items.__INDEX__.link.href` | `textfield` | Shown when card link is enabled. Reuse existing CTA/safe-anchor link behavior. |
-| Link label | `core.items.__INDEX__.link.label` | `textfield` | Shown when card link is enabled. Translatable card CTA text. |
+| Cards | `cards.items[]` | `object-manager` | Add, reorder, duplicate, and remove cards. Product-valid count is 2-16, subject to `items.group.small.max`. |
+| Card title | `cards.items.__INDEX__.title` | `textfield` | Translatable card title. |
+| Card copy | `cards.items.__INDEX__.copy` | `textedit` | Translatable supporting copy. |
+| Media type | `cards.items.__INDEX__.media.kind` | `dropdown-actions` | `none`, `icon`, or `image`. Prevents conflicting icon+image state. |
+| Icon | `cards.items.__INDEX__.media.iconName` | existing CTA/Dieter icon picker source | Shown when media kind is `icon`. Must not create a second icon taxonomy. |
+| Image | `cards.items.__INDEX__.media.image` | existing asset picker/media reference shape | Shown when media kind is `image`. Must not create a new media store. |
+| Image alt text | `cards.items.__INDEX__.media.imageAlt` | `textfield` | Shown when media kind is `image`. Translatable image alt text. |
+| Enable link | `cards.items.__INDEX__.link.enabled` | `toggle` | Enables per-card link fields. |
+| Link URL | `cards.items.__INDEX__.link.href` | `textfield` | Shown when card link is enabled. Reuse existing CTA/safe-anchor link behavior. |
+| Link label | `cards.items.__INDEX__.link.label` | `textfield` | Shown when card link is enabled. Translatable card CTA text. |
 
 Content-panel `showIf` rules:
 
 ```text
-core.items.__INDEX__.media.kind == 'icon'
+cards.items.__INDEX__.media.kind == 'icon'
   show icon control
 
-core.items.__INDEX__.media.kind == 'image'
+cards.items.__INDEX__.media.kind == 'image'
   show image and image alt controls
 
-core.items.__INDEX__.link.enabled == true
+cards.items.__INDEX__.link.enabled == true
   show link URL and link label controls
 ```
 
-Do not use `core.items.length` or ad hoc count expressions in `showIf`.
+Do not use `cards.items.length` or ad hoc count expressions in `showIf`.
 Item count is validation, not UI visibility logic.
 
 Do not introduce bare `items[]` or `core.item.*` as a second item state shape.
-All Cards treatments edit the same `core.items[]` array.
+All Cards treatments edit the same `cards.items[]` array.
 
-If `core.treatment == linked-cards`, Bob must surface missing link URL/label
+If `cards.treatment == linked-cards`, Bob must surface missing link URL/label
 requirements clearly in the card manager. It must not auto-fill links, silently
 disable links, or downgrade the treatment to avoid validation.
 
@@ -522,77 +530,77 @@ Cards Layout controls:
 
 | Control | Path | Type | Notes |
 | --- | --- | --- | --- |
-| Treatment | `core.treatment` | `choice-tiles` | `cards`, `linked-cards`, `steps`. |
-| Columns | `core.columns` | `choice-tiles` | `2`, `3`, `4`. Desktop only; mobile stacks. |
-| Card gap | `core.gap` | `valuefield` | Recommended range 8-64 px, step 2. |
-| Card padding | `core.cardPadding` | `valuefield` | Recommended range 16-64 px, step 2. |
+| Treatment | `cards.treatment` | `choice-tiles` | `cards`, `linked-cards`, `steps`. |
+| Columns | `cards.columns` | `choice-tiles` | `2`, `3`, `4`. Desktop only; mobile stacks. |
+| Card gap | `cards.gap` | `valuefield` | Recommended range 8-64 px, step 2. |
+| Card padding | `cards.cardPadding` | `valuefield` | Recommended range 16-64 px, step 2. |
 
 Graphic between cards controls:
 
 | Control | Path | Type | Notes |
 | --- | --- | --- | --- |
-| Graphic between cards | `core.betweenCards.enabled` | `toggle` | Default off. When off, no line or icon controls are shown and no graphic renders between cards. |
-| Graphic type | `core.betweenCards.kind` | dropdown | `line` or `icon`. Shown only when graphics are enabled. |
-| Line width | `core.betweenCards.line.widthPt` | valuefield | Width in points. Shown only when graphics are enabled and type is `line`. Recommended range 1-24 pt. |
-| Line color | `core.betweenCards.line.color` | color selector | Shown only when graphics are enabled and type is `line`. |
-| Icon | `core.betweenCards.icon.name` | same icon dropdown/source as CTA icons | Shown only when graphics are enabled and type is `icon`. Must not create a second icon taxonomy. |
-| Icon size | `core.betweenCards.icon.sizePt` | valuefield | Size in points. Shown only when graphics are enabled and type is `icon`. Recommended range 8-96 pt. |
-| Icon color | `core.betweenCards.icon.color` | color selector | Shown only when graphics are enabled and type is `icon`. |
+| Graphic between cards | `cards.betweenCards.enabled` | `toggle` | Default off. When off, no line or icon controls are shown and no graphic renders between cards. |
+| Graphic type | `cards.betweenCards.kind` | dropdown | `line` or `icon`. Shown only when graphics are enabled. |
+| Line width | `cards.betweenCards.line.widthPt` | valuefield | Width in points. Shown only when graphics are enabled and type is `line`. Recommended range 1-24 pt. |
+| Line color | `cards.betweenCards.line.color` | color selector | Shown only when graphics are enabled and type is `line`. |
+| Icon | `cards.betweenCards.icon.name` | same icon dropdown/source as CTA icons | Shown only when graphics are enabled and type is `icon`. Must not create a second icon taxonomy. |
+| Icon size | `cards.betweenCards.icon.sizePt` | valuefield | Size in points. Shown only when graphics are enabled and type is `icon`. Recommended range 8-96 pt. |
+| Icon color | `cards.betweenCards.icon.color` | color selector | Shown only when graphics are enabled and type is `icon`. |
 
 Layout-panel `showIf` rules:
 
 ```text
 Graphic type:
-  show-if core.betweenCards.enabled == true
+  show-if cards.betweenCards.enabled == true
 
 Line width and Line color:
-  show-if core.betweenCards.enabled == true
-       && core.betweenCards.kind == 'line'
+  show-if cards.betweenCards.enabled == true
+       && cards.betweenCards.kind == 'line'
 
 Icon, Icon size, and Icon color:
-  show-if core.betweenCards.enabled == true
-       && core.betweenCards.kind == 'icon'
+  show-if cards.betweenCards.enabled == true
+       && cards.betweenCards.kind == 'icon'
 ```
 
 Do not add `layout.maxWidth`, `layout.columns`, or page-level columns. Header
 placement, shared `coreSize.*`, and Stage/Pod already own the surrounding
 layout; Cards owns only the grid inside the Core div.
 
-Do not create separate `core.steps.*` connector controls. Steps is a Cards
-treatment and uses the same `core.betweenCards.*` graphic controls as standard
+Do not create separate `cards.steps.*` connector controls. Steps is a Cards
+treatment and uses the same `cards.betweenCards.*` graphic controls as standard
 Cards and linked Cards.
 
 ### Runtime And Accessibility Contract
 
 Standard Cards runtime:
 
-- Renders 2-16 cards from `core.items[]` inside the Cards Core div, subject to
+- Renders 2-16 cards from `cards.items[]` inside the Cards Core div, subject to
   account policy caps.
-- Applies `core.columns`, `core.gap`, and `core.cardPadding`.
+- Applies `cards.columns`, `cards.gap`, and `cards.cardPadding`.
 - Stacks cards to one column on narrow viewports.
 - Applies shared `coreSize.*` to the Core div.
-- Applies `appearance.cardwrapper.*` to each rendered card surface.
+- Applies `cards.appearance.cardwrapper.*` to each rendered card surface.
 - Renders a decorative graphic between adjacent cards only when
-  `core.betweenCards.enabled == true`.
-- Applies `core.items[].style.*` only when
-  `core.customCardStyles.enabled == true`, using scoped CSS variables on the
+  `cards.betweenCards.enabled == true`.
+- Applies `cards.items[].style.*` only when
+  `cards.customCardStyles.enabled == true`, using scoped CSS variables on the
   rendered card element and shared CardWrapper values as fallbacks.
 - Does not use Prague route helpers, page names, locale names, or market names.
 
 Linked Cards runtime:
 
-- Runs when `core.treatment == linked-cards`.
+- Runs when `cards.treatment == linked-cards`.
 - Requires every card to have an enabled, valid link.
 - Renders each card as one accessible link target or renders a clearly scoped
   link inside the card. It must not create invalid nested anchors.
-- Uses `core.items[].link.label` for visible CTA text when the design shows a
+- Uses `cards.items[].link.label` for visible CTA text when the design shows a
   CTA.
 
 Steps runtime:
 
-- Runs when `core.treatment == steps`.
-- Renders the same `core.items[]` as an ordered sequence.
-- Uses the same `core.betweenCards.*` graphic controls as the other Cards
+- Runs when `cards.treatment == steps`.
+- Renders the same `cards.items[]` as an ordered sequence.
+- Uses the same `cards.betweenCards.*` graphic controls as the other Cards
   treatments.
 - Does not create a second steps item model.
 - Hides, stacks, or reflows between-card graphics on narrow viewports when
@@ -608,11 +616,11 @@ Graphic between cards runtime:
 - In multi-column desktop layout, renders in the gap between cards that are
   adjacent in the same row.
 - In stacked/mobile layout, renders in the vertical gap between cards.
-- For `line`, renders a vertical line using `core.betweenCards.line.widthPt`
-  and `core.betweenCards.line.color`.
+- For `line`, renders a vertical line using `cards.betweenCards.line.widthPt`
+  and `cards.betweenCards.line.color`.
 - For `icon`, renders the selected Dieter icon using
-  `core.betweenCards.icon.name`, `core.betweenCards.icon.sizePt`, and
-  `core.betweenCards.icon.color`.
+  `cards.betweenCards.icon.name`, `cards.betweenCards.icon.sizePt`, and
+  `cards.betweenCards.icon.color`.
 - Does not create translatable fields, links, item identity, or a second card
   item model.
 
@@ -633,37 +641,37 @@ Required clusters:
 - Theme selector
 - shared `header-appearance`
 - Locale switcher appearance
-- Card frame controls using `appearance.cardwrapper.*`
+- Card frame controls using `cards.appearance.cardwrapper.*`
 - Custom card styles
 - Per-card style sections when custom card styles are enabled
 - shared `stagepod-appearance`
 
 Card frame controls should reuse the existing surface/card controls and runtime:
 
-- `appearance.cardwrapper.radiusLinked`
-- `appearance.cardwrapper.radius`
-- `appearance.cardwrapper.radiusTL|TR|BR|BL`
-- `appearance.cardwrapper.border`
-- `appearance.cardwrapper.shadow`
+- `cards.appearance.cardwrapper.radiusLinked`
+- `cards.appearance.cardwrapper.radius`
+- `cards.appearance.cardwrapper.radiusTL|TR|BR|BL`
+- `cards.appearance.cardwrapper.border`
+- `cards.appearance.cardwrapper.shadow`
 - `CKSurface.applyCardWrapper`
 
 Custom card style controls:
 
 | Control | Path | Type | Notes |
 | --- | --- | --- | --- |
-| Custom card styles | `core.customCardStyles.enabled` | `toggle` | Default off. When off, every card inherits the shared CardWrapper style and no per-card sections are shown. |
+| Custom card styles | `cards.customCardStyles.enabled` | `toggle` | Default off. When off, every card inherits the shared CardWrapper style and no per-card sections are shown. |
 
-When `core.customCardStyles.enabled == true`, Bob must create one Appearance
+When `cards.customCardStyles.enabled == true`, Bob must create one Appearance
 ToolDrawer section per card. The section label must derive from the current
 card title and stable identity:
 
 ```text
-Card: {core.items[].title}
+Card: {cards.items[].title}
 ```
 
 If the title is empty while editing, Bob may display `Card: Untitled`, but
 save/publish validation still rejects empty enabled visible strings. Sections
-must be keyed by `core.items[].id`, not by array index, so reordering cards
+must be keyed by `cards.items[].id`, not by array index, so reordering cards
 does not move style overrides to the wrong card.
 
 If current Bob ToolDrawer/control compilation cannot support per-card
@@ -675,12 +683,12 @@ Per-card style section controls:
 
 | Control | Path | Type | Notes |
 | --- | --- | --- | --- |
-| Background | `core.items.__INDEX__.style.background` | color/control matching existing color field patterns | Optional. Empty means inherit shared CardWrapper background. |
-| Border color | `core.items.__INDEX__.style.borderColor` | color/control matching existing color field patterns | Optional. Empty means inherit shared CardWrapper border color. |
-| Radius | `core.items.__INDEX__.style.radius` | radius/value control | Optional. Empty means inherit shared CardWrapper radius. This is a single per-card radius override, not four independent corner paths. |
-| Shadow | `core.items.__INDEX__.style.shadow` | shadow control matching existing shadow field patterns | Optional. Empty means inherit shared CardWrapper shadow. |
-| Accent color | `core.items.__INDEX__.style.accentColor` | color/control matching existing color field patterns | Optional. Applies only to card-local affordances. |
-| Text tone | `core.items.__INDEX__.style.textTone` | choice/dropdown | `inherit`, `default`, `muted`, `inverse`. Default `inherit`. |
+| Background | `cards.items.__INDEX__.style.background` | color/control matching existing color field patterns | Optional. Empty means inherit shared CardWrapper background. |
+| Border color | `cards.items.__INDEX__.style.borderColor` | color/control matching existing color field patterns | Optional. Empty means inherit shared CardWrapper border color. |
+| Radius | `cards.items.__INDEX__.style.radius` | radius/value control | Optional. Empty means inherit shared CardWrapper radius. This is a single per-card radius override, not four independent corner paths. |
+| Shadow | `cards.items.__INDEX__.style.shadow` | shadow control matching existing shadow field patterns | Optional. Empty means inherit shared CardWrapper shadow. |
+| Accent color | `cards.items.__INDEX__.style.accentColor` | color/control matching existing color field patterns | Optional. Applies only to card-local affordances. |
+| Text tone | `cards.items.__INDEX__.style.textTone` | choice/dropdown | `inherit`, `default`, `muted`, `inverse`. Default `inherit`. |
 | Reset card style | action | action | Clears that card's `style.*` overrides without changing card content. |
 
 Custom-card-style behavior:
@@ -694,10 +702,10 @@ Custom-card-style behavior:
 - Removing a card removes its style overrides with that card.
 - Duplicating a card may duplicate the source card's style overrides because
   the user explicitly duplicated that card.
-- Reordering cards keeps style overrides attached to stable `core.items[].id`.
+- Reordering cards keeps style overrides attached to stable `cards.items[].id`.
 - Renaming a card updates only the section label.
 - Turning the toggle off does not need to delete overrides immediately; runtime
-  ignores `core.items[].style.*` while the toggle is off so turning it back on
+  ignores `cards.items[].style.*` while the toggle is off so turning it back on
   can restore the user's previous work.
 - Per-card controls inherit from the shared card style unless the user sets an
   override.
@@ -732,7 +740,7 @@ style first, optional per-card override second.
 Do not add `appearance.cardRadius`, `appearance.cardShadow`,
 `core.radius`, `core.border`, or `core.shadow` duplicate paths. Framing belongs
 to the shared Surface/CardWrapper controls. The only approved per-card
-exception is the controlled `core.items[].style.*` override set listed above.
+exception is the controlled `cards.items[].style.*` override set listed above.
 
 ### Typography Panel
 
@@ -743,9 +751,9 @@ Required roles:
 - `title` for `header.title`
 - `body` for `header.subtitleHtml`; this is the existing FAQ typography role
   name, not widget Core terminology
-- `cardTitle` for `core.items[].title`
-- `cardCopy` for `core.items[].copy`
-- `button` for `cta.label` and `core.items[].link.label`
+- `cardTitle` for `cards.items[].title`
+- `cardCopy` for `cards.items[].copy`
+- `button` for `headerCta.label` and `cards.items[].link.label`
 
 ### Settings Panel
 
@@ -764,17 +772,17 @@ Use the exact same editable-fields mechanism as FAQ.
 
 - `header.title`
 - `header.subtitleHtml`
-- `cta.label`
-- `core.items[].title`
-- `core.items[].copy`
-- `core.items[].media.imageAlt`
-- `core.items[].link.label`
+- `headerCta.label`
+- `cards.items[].title`
+- `cards.items[].copy`
+- `cards.items[].media.imageAlt`
+- `cards.items[].link.label`
 
 Do not add `localization.json`, text packs, wildcard paths, layer sidecars, or
 Prague translation files. Bob preview and San Francisco translation must use the
 same path-based mechanism FAQ uses.
 
-`core.items[].id` provides stable item identity for editable fields.
+`cards.items[].id` provides stable item identity for editable fields.
 Step 12 green depends on reorder/duplicate/remove behavior preserving that
 stable item identity so translated card title, copy, image alt, and link label
 remain attached to the same card. If that proof requires a new translation
@@ -794,38 +802,38 @@ Required useful defaults:
 - `header.placement`: `top`
 - `header.alignment`: `center`
 - `header.ctaPlacement`: `below`
-- `cta.enabled`: `false`
+- `headerCta.enabled`: `false`
 - `uiLabels.core.singular`: "Card"
 - `uiLabels.core.plural`: "Cards"
 - `uiLabels.core.sizeCluster`: "Cards size"
-- `core.items`: three useful non-empty cards
-- `core.items[].id`: stable generated IDs
-- `core.items[0].title`: "Clear answers"
-- `core.items[0].copy`: "Give visitors the information they need without making them search."
-- `core.items[1].title`: "Easy updates"
-- `core.items[1].copy`: "Edit once in Clickeen and keep every embedded section current."
-- `core.items[2].title`: "Built to scale"
-- `core.items[2].copy`: "Use the same pattern for links, features, or step-by-step flows."
+- `cards.items`: three useful non-empty cards
+- `cards.items[].id`: stable generated IDs
+- `cards.items[0].title`: "Clear answers"
+- `cards.items[0].copy`: "Give visitors the information they need without making them search."
+- `cards.items[1].title`: "Easy updates"
+- `cards.items[1].copy`: "Edit once in Clickeen and keep every embedded section current."
+- `cards.items[2].title`: "Built to scale"
+- `cards.items[2].copy`: "Use the same pattern for links, features, or step-by-step flows."
 - Each default card `media.kind`: `icon`
-- `core.items[0].media.iconName`: "check"
-- `core.items[1].media.iconName`: "refresh-cw"
-- `core.items[2].media.iconName`: "layers"
+- `cards.items[0].media.iconName`: "check"
+- `cards.items[1].media.iconName`: "refresh-cw"
+- `cards.items[2].media.iconName`: "layers"
 - Each default card `link.enabled`: `false`
-- `core.customCardStyles.enabled`: `false`
+- `cards.customCardStyles.enabled`: `false`
 - Each default card `style.textTone`: `inherit`
 - Each default card has no background, border, radius, shadow, or accent
   override
-- `core.betweenCards.enabled`: `false`
-- `core.betweenCards.kind`: `line`
-- `core.betweenCards.line.widthPt`: `1`
-- `core.betweenCards.line.color`: current shared border/accent fallback
-- `core.betweenCards.icon.name`: "arrow-right"
-- `core.betweenCards.icon.sizePt`: `24`
-- `core.betweenCards.icon.color`: current shared accent fallback
-- `core.treatment`: `cards`
-- `core.columns`: `3`
-- `core.gap`: `24`
-- `core.cardPadding`: `32`
+- `cards.betweenCards.enabled`: `false`
+- `cards.betweenCards.kind`: `line`
+- `cards.betweenCards.line.widthPt`: `1`
+- `cards.betweenCards.line.color`: current shared border/accent fallback
+- `cards.betweenCards.icon.name`: "arrow-right"
+- `cards.betweenCards.icon.sizePt`: `24`
+- `cards.betweenCards.icon.color`: current shared accent fallback
+- `cards.treatment`: `cards`
+- `cards.columns`: `3`
+- `cards.gap`: `24`
+- `cards.cardPadding`: `32`
 - `coreSize.mode`: `auto`
 - `coreSize.minHeight`: `0`
 - `coreSize.preferredVw`: `0`
@@ -856,7 +864,7 @@ mechanism.
 ## Acceptance
 
 - Cards is implemented by deriving from FAQ's working architecture.
-- Cards declares `defaults.header` and `defaults.cta`.
+- Cards declares `defaults.header` and `defaults.headerCta`.
 - Cards uses shared `header-content`, `header-layout`, `header-appearance`,
   `core-size`, `stagepod-layout`, `stagepod-appearance`, and standardized
   `typography`.
@@ -878,20 +886,20 @@ mechanism.
 - Cards calls `CKStagePod.applyStagePod`, `CKTypography.applyTypography`,
   `CKHeader.applyHeader`, and Cards-specific Core runtime in that order.
 - Cards uses `header.placement` for top/bottom/left/right Header layout.
-- Cards Core uses one `core.items[]` array for standard cards, linked cards,
+- Cards Core uses one `cards.items[]` array for standard cards, linked cards,
   and steps.
 - Cards Core supports only `none`, `icon`, and `image` media per card.
 - Cards Core does not support embedded widget instances.
 - `steps` is a Cards treatment, not a separate widget.
-- Content panel never uses `core.items.length` or ad hoc count expressions in
+- Content panel never uses `cards.items.length` or ad hoc count expressions in
   Bob `showIf`; item count is validation only.
 - Layout has a `Graphic between cards` toggle. It is off by default.
 - When `Graphic between cards` is on, Bob shows a `line` or `icon` dropdown.
 - Line controls show only for `line`: width in points and line color.
 - Icon controls show only for `icon`: the same icon picker source used by CTA,
   icon size in points, and icon color.
-- Steps uses the same `core.betweenCards.*` graphic controls as standard Cards
-  and linked Cards; it does not define `core.steps.*` connector state.
+- Steps uses the same `cards.betweenCards.*` graphic controls as standard Cards
+  and linked Cards; it does not define `cards.steps.*` connector state.
 - Cards validation fails visibly for missing/duplicate item IDs, invalid item
   counts, invalid treatment values, missing media refs, missing link fields, and
   empty enabled visible strings, and invalid graphic controls.
@@ -905,19 +913,19 @@ mechanism.
   shadow, accent color, and text tone. They do not control layout, spacing,
   typography scale, Header, Stage, Pod, or global CardWrapper state.
 - Per-card style overrides inherit from shared CardWrapper controls when empty
-  or when `core.customCardStyles.enabled == false`.
+  or when `cards.customCardStyles.enabled == false`.
 - Runtime applies per-card style overrides through scoped CSS variables on each
   card element, not by generating repetitive per-card CSS blocks.
 - Turning `Custom card styles` off ignores per-card overrides without changing
   card content.
-- Cards `limits.json` maps `core.items[]` to `items.group.small.max` with
+- Cards `limits.json` maps `cards.items[]` to `items.group.small.max` with
   `metric: count`; free accounts are capped at 3 cards through the global policy
   matrix, not a per-widget tier table.
 - Roma save/publish enforcement applies the generic widget limits path for Cards
   item counts. Bob-only policy gating is not sufficient.
 - Linked Cards treatment requires valid card links and never renders invalid
   nested anchors.
-- Steps treatment renders the same `core.items[]` as an ordered sequence and
+- Steps treatment renders the same `cards.items[]` as an ordered sequence and
   does not create a second steps item model.
 - Cards does not ship old Prague/current-Cards paths listed in Forbidden State.
 - Cards materializes to `index.html`, `styles.css`, and `runtime.js`.

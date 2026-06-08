@@ -27,22 +27,22 @@
       "limits": []
     },
     {
-      "path": "core.items[].image.alt",
+      "path": "split.items[].image.alt",
       "label": "Image alt text",
       "role": "split-image-alt",
       "type": "string",
       "arrayItemIdentity": [
-        "core.items[].id"
+        "split.items[].id"
       ],
       "limits": []
     },
     {
-      "path": "core.items[].video.alt",
+      "path": "split.items[].video.alt",
       "label": "Video alt text",
       "role": "split-video-alt",
       "type": "string",
       "arrayItemIdentity": [
-        "core.items[].id"
+        "split.items[].id"
       ],
       "limits": []
     }

@@ -11,6 +11,14 @@ Unlocks: Split widget instances for PRD106D route migration.
 Authority owned by this PRD: Split widget Core state, controls, defaults, DOM, CSS, runtime, and editable fields.
 Authority explicitly not owned by this PRD: Widget Shell, Page Composer dependency indexing/recomposition, Cards, Big Bang, CTA, Prague route cutover.
 
+## PRD106 Closure Note
+
+This historical PRD predates the final PRD106 Shell/Core naming correction. The
+surviving Split Core namespace is `split.*`. Shared Header action state is
+`headerCta.*` and shared Header action appearance is
+`appearance.headerCta.*`. Do not copy historical Header CTA, private CTA, or
+generic Core language as current architecture.
+
 ## PRD Tenets
 
 - Execute one step at a time.
@@ -106,17 +114,17 @@ Implementation checkpoint:
 
 | Step | Action | Required evidence | Green criteria | Stop condition |
 | ---: | --- | --- | --- | --- |
-| 1 | Define Split state, labels, and forbidden paths. | State table, label defaults, forbidden path list. | Only `core.items[]`, `core.media.*`, `core.carousel.*`, `coreSize.*`, and `uiLabels.core.*` are added. | Shell path or duplicate state shape needed. |
-| 2 | Define validation, policy limits, and dependency contract. | Validation table, `limits.json` mapping, and embedded dependency rules. | Invalid item counts/kinds/refs fail visibly; `core.items[]` maps to `items.group.small.max`; embedded refs are reported to materialization. | Silent healing, untracked embedded ref, or per-widget tier table. |
+| 1 | Define Split state, labels, and forbidden paths. | State table, label defaults, forbidden path list. | Only `split.items[]`, `split.media.*`, `split.carousel.*`, `coreSize.*`, and `uiLabels.core.*` are added. | Shell path or duplicate state shape needed. |
+| 2 | Define validation, policy limits, and dependency contract. | Validation table, `limits.json` mapping, and embedded dependency rules. | Invalid item counts/kinds/refs fail visibly; `split.items[]` maps to `items.group.small.max`; embedded refs are reported to materialization. | Silent healing, untracked embedded ref, or per-widget tier table. |
 | 3 | Confirm shared Shell dependency. | A2 green/fence evidence for Core div, `coreSize.*`, `uiLabels.core.*`, and Layout order. | Split consumes Shell sizing/labels; no local Core sizing fork. | A2 cannot provide required Shell behavior. |
-| 4 | Build Content controls: static mode. | Spec/control diff and Bob compile evidence. | `core.carousel.enabled=false` shows only `core.items.0.*` static editor. | Repeater visible or duplicate `core.item.*` state appears. |
-| 5 | Build Content controls: carousel mode. | Spec/control diff and Bob compile evidence. | `core.carousel.enabled=true` shows `core.items[]` object-manager with per-item kind controls. | Item-count `showIf`, wildcard path, or unstable identity. |
-| 6 | Build Layout controls: Visual size and Media Fit. | Spec/control diff and Bob compile evidence. | `Visual size` uses shared `coreSize.*`; Media Fit follows it and applies to image/video. | `core.height`, `visual.height`, or complex mixed-item `showIf`. |
-| 7 | Build Layout controls: Carousel. | Spec/control diff and Bob compile evidence. | Carousel cluster shows only when enabled; interval shows only when autoplay true. | `core.display.mode` or item-count `showIf`. |
-| 8 | Build static image/video runtime. | DOM/CSS/runtime diff and preview evidence. | One image/video renders in `.ck-headerLayout__body`; `coreSize.*` and `core.media.*` apply. | Runtime bypasses Shell or assumes singleton instance. |
+| 4 | Build Content controls: static mode. | Spec/control diff and Bob compile evidence. | `split.carousel.enabled=false` shows only `split.items.0.*` static editor. | Repeater visible or duplicate `split.item.*` state appears. |
+| 5 | Build Content controls: carousel mode. | Spec/control diff and Bob compile evidence. | `split.carousel.enabled=true` shows `split.items[]` object-manager with per-item kind controls. | Item-count `showIf`, wildcard path, or unstable identity. |
+| 6 | Build Layout controls: Visual size and Media Fit. | Spec/control diff and Bob compile evidence. | `Visual size` uses shared `coreSize.*`; Media Fit follows it and applies to image/video. | `split.height`, `visual.height`, or complex mixed-item `showIf`. |
+| 7 | Build Layout controls: Carousel. | Spec/control diff and Bob compile evidence. | Carousel cluster shows only when enabled; interval shows only when autoplay true. | `split.display.mode` or item-count `showIf`. |
+| 8 | Build static image/video runtime. | DOM/CSS/runtime diff and preview evidence. | One image/video renders in `.ck-headerLayout__body`; `coreSize.*` and `split.media.*` apply. | Runtime bypasses Shell or assumes singleton instance. |
 | 9 | Build carousel runtime. | DOM/CSS/runtime diff, accessibility notes, preview evidence. | Multiple items render with transition/autoplay/loop/arrows/dots without collisions. | No keyboard/ARIA behavior or global singleton state. |
 | 10 | Build embedded-instance runtime and package contribution. | PRD106B green evidence plus runtime/materialization diff and dependency evidence. | Embedded instances render as account-owned materialized packages and are exposed through the PRD106B package dependency contract. | PRD106B is not green, embedded ref is untracked, auto-created, forked, page-owned, or Split invents dependency indexing/recomposition. |
-| 11 | Validate editable fields and translations. | Editable-fields diff/tests. | `core.items[].image.alt` and `core.items[].video.alt` use stable item identity; embedded instance text stays in embedded instance. | Missing stable identity or fake wildcard. |
+| 11 | Validate editable fields and translations. | Editable-fields diff/tests. | `split.items[].image.alt` and `split.items[].video.alt` use stable item identity; embedded instance text stays in embedded instance. | Missing stable identity or fake wildcard. |
 | 12 | Verify Bob/Roma materialization and composed-page safety. | Compile/save/package/page-composition evidence. | Static, carousel, and embedded Split packages materialize; two Split instances on one page do not collide. | Duplicate Shell code, stale embedded dependency, or page recomposition miss. |
 
 ## Purpose
@@ -226,13 +234,13 @@ Split must keep FAQ's working shared model.
 ### State Kept
 
 - `header.*`
-- `cta.*`
+- `headerCta.*`
 - `stage.*`
 - `pod.*`
 - `appearance.theme`
-- `appearance.cta*`
+- `appearance.headerCta.*`
 - `appearance.podBorder`
-- `appearance.cardwrapper.*`
+- `split.appearance.cardwrapper.*`
 - `localeSwitcher.*`
 - `appearance.localeSwitcher*`
 - `typography.*`
@@ -280,29 +288,29 @@ Approved Split-specific state:
 
 | Path | Owner | Meaning |
 | --- | --- | --- |
-| `core.items[]` | config | Ordered Core item manager. Minimum 1 item; default maximum 6 items. |
-| `core.items[].id` | identity | Stable item identity for editing, translation, and carousel runtime. |
-| `core.items[].kind` | config | One of `image`, `video`, or `instance`. |
-| `core.items[].image.ref` and existing image asset reference fields | config | Existing image asset/reference shape. Used only when item kind is `image`. |
-| `core.items[].image.alt` | content | Translatable image alt text. Used only when item kind is `image`. |
-| `core.items[].video.ref`, `core.items[].video.posterRef`, and existing video asset/reference fields | config | Existing video asset/reference shape. Used only when item kind is `video`. |
-| `core.items[].video.alt` | content | Translatable video/presentation alt text when supported. Used only when item kind is `video`. |
-| `core.items[].instance.instanceId` | reference | Account-owned materialized widget instance reference. Used only when item kind is `instance`. |
-| `core.media.fit` | config | How image/video items fit inside the Core div. Allowed values: `cover`, `contain`. |
-| `core.media.position` | config | Image/video object position. Allowed values: `center`, `top`, `bottom`, `left`, `right`. |
-| `core.carousel.enabled` | config | Enables carousel authoring and carousel runtime behavior. |
-| `core.carousel.transition` | config | Carousel transition. Allowed values: `slide`, `fade`. |
-| `core.carousel.autoplay` | config | Whether the carousel advances automatically. |
-| `core.carousel.intervalMs` | config | Autoplay interval in milliseconds. |
-| `core.carousel.loop` | config | Whether next/previous wraps at ends. |
-| `core.carousel.showArrows` | config | Shows previous/next controls. |
-| `core.carousel.showDots` | config | Shows position dots. |
+| `split.items[]` | config | Ordered Core item manager. Minimum 1 item; default maximum 6 items. |
+| `split.items[].id` | identity | Stable item identity for editing, translation, and carousel runtime. |
+| `split.items[].kind` | config | One of `image`, `video`, or `instance`. |
+| `split.items[].image.ref` and existing image asset reference fields | config | Existing image asset/reference shape. Used only when item kind is `image`. |
+| `split.items[].image.alt` | content | Translatable image alt text. Used only when item kind is `image`. |
+| `split.items[].video.ref`, `split.items[].video.posterRef`, and existing video asset/reference fields | config | Existing video asset/reference shape. Used only when item kind is `video`. |
+| `split.items[].video.alt` | content | Translatable video/presentation alt text when supported. Used only when item kind is `video`. |
+| `split.items[].instance.instanceId` | reference | Account-owned materialized widget instance reference. Used only when item kind is `instance`. |
+| `split.media.fit` | config | How image/video items fit inside the Core div. Allowed values: `cover`, `contain`. |
+| `split.media.position` | config | Image/video object position. Allowed values: `center`, `top`, `bottom`, `left`, `right`. |
+| `split.carousel.enabled` | config | Enables carousel authoring and carousel runtime behavior. |
+| `split.carousel.transition` | config | Carousel transition. Allowed values: `slide`, `fade`. |
+| `split.carousel.autoplay` | config | Whether the carousel advances automatically. |
+| `split.carousel.intervalMs` | config | Autoplay interval in milliseconds. |
+| `split.carousel.loop` | config | Whether next/previous wraps at ends. |
+| `split.carousel.showArrows` | config | Shows previous/next controls. |
+| `split.carousel.showDots` | config | Shows position dots. |
 
 State validity:
 
 ```text
-core.carousel.enabled == false -> core.items.length must be exactly 1
-core.carousel.enabled == true  -> core.items.length must be 2-6
+split.carousel.enabled == false -> split.items.length must be exactly 1
+split.carousel.enabled == true  -> split.items.length must be 2-6
 ```
 
 Do not silently delete extra items when carousel is disabled. If state violates
@@ -312,11 +320,11 @@ Validation rules:
 
 | Condition | Required result |
 | --- | --- |
-| `core.carousel.enabled == false` and `core.items.length != 1` | Fail save/publish visibly. |
-| `core.carousel.enabled == true` and `core.items.length < 2` | Fail save/publish visibly. |
-| `core.carousel.enabled == true` and `core.items.length > 6` | Fail save/publish visibly. |
-| Any `core.items[].id` is missing or duplicated | Fail save/publish visibly. |
-| Any `core.items[].kind` is not `image`, `video`, or `instance` | Fail save/publish visibly. |
+| `split.carousel.enabled == false` and `split.items.length != 1` | Fail save/publish visibly. |
+| `split.carousel.enabled == true` and `split.items.length < 2` | Fail save/publish visibly. |
+| `split.carousel.enabled == true` and `split.items.length > 6` | Fail save/publish visibly. |
+| Any `split.items[].id` is missing or duplicated | Fail save/publish visibly. |
+| Any `split.items[].kind` is not `image`, `video`, or `instance` | Fail save/publish visibly. |
 | Image item lacks a valid image reference | Fail save/publish visibly. |
 | Video item lacks a valid video reference | Fail save/publish visibly. |
 | Instance item lacks a valid account-owned materialized instance reference | Fail save/publish visibly. |
@@ -343,7 +351,7 @@ Split maps its item count to the existing small item-group policy key:
 {
   "kind": "limit",
   "key": "items.group.small.max",
-  "path": "core.items[]",
+  "path": "split.items[]",
   "metric": "count"
 }
 ```
@@ -377,7 +385,7 @@ not own parent lookup, flattened dependency indexing, page recomposition, or
 stale-state repair. Those are PRD106B/Roma/Page Composer responsibilities.
 
 - Split materialization must expose every
-  `core.items[].instance.instanceId` through the package dependency declaration
+  `split.items[].instance.instanceId` through the package dependency declaration
   field shape defined by PRD106B: `dependencies.instanceIds`.
 - Split must not auto-create, auto-save, fork, snapshot, or page-own embedded
   instances. It only references existing account-owned materialized instances.
@@ -429,20 +437,20 @@ these paths forward:
 - `layout.copyGap`
 - `visual.radius`
 - `visual.*`
-- `core.kind`
-- `core.image.*`
-- `core.video.*`
-- `core.instance.*`
-- `core.height`
-- `core.item.*`
-- `core.display.mode`
+- `split.kind`
+- `split.image.*`
+- `split.video.*`
+- `split.instance.*`
+- `split.height`
+- `split.item.*`
+- `split.display.mode`
 - Prague `accountInstanceRef`
 
 Header copy belongs to `header.title` and `header.subtitleHtml`.
-CTA belongs to `cta.*`.
+Header CTA belongs to `headerCta.*`.
 Layout belongs to shared Header and Stage/Pod controls.
-Core framing belongs to `appearance.cardwrapper.*`.
-Embedded widget references belong to `core.items[].instance.instanceId`; do not revive
+Core framing belongs to `split.appearance.cardwrapper.*`.
+Embedded widget references belong to `split.items[].instance.instanceId`; do not revive
 Prague `accountInstanceRef`.
 
 ## DOM Contract
@@ -490,20 +498,20 @@ Visual controls:
 
 | Control | Path | Type | Notes |
 | --- | --- | --- | --- |
-| Enable carousel | `core.carousel.enabled` | `toggle` | When off, edit one fixed Split item. When on, activate the item repeater. |
-| Static item type | `core.items.0.kind` | `dropdown-actions` | Shown when `core.carousel.enabled == false`. Allowed values: `image`, `video`, `instance`. |
-| Static image | `core.items.0.image.*` | existing asset picker shape | Shown when carousel is off and first item kind is `image`. |
-| Static image alt text | `core.items.0.image.alt` | `textfield` | Translatable image alt text. |
-| Static video | `core.items.0.video.*` | existing media/video shape | Shown when carousel is off and first item kind is `video`. |
-| Static video alt text | `core.items.0.video.alt` | `textfield` | Translatable video/presentation alt text when applicable. |
-| Static embedded instance | `core.items.0.instance.instanceId` | Roma-provided account instance picker | Shown when carousel is off and first item kind is `instance`. |
-| Carousel items | `core.items[]` | `object-manager` | Shown when `core.carousel.enabled == true`; add, reorder, duplicate, and remove Split items. Valid count is 2-6. |
-| Carousel item type | `core.items.__INDEX__.kind` | `dropdown-actions` | Shown inside the repeater. Allowed values: `image`, `video`, `instance`. |
-| Carousel image | `core.items.__INDEX__.image.*` | existing asset picker shape | Shown when repeater item kind is `image`. Must not create a new media store. |
-| Carousel image alt text | `core.items.__INDEX__.image.alt` | `textfield` | Translatable image alt text. |
-| Carousel video | `core.items.__INDEX__.video.*` | existing media/video shape | Shown when repeater item kind is `video`. Must reuse existing asset/embed conventions. |
-| Carousel video alt text | `core.items.__INDEX__.video.alt` | `textfield` | Translatable video/presentation alt text when applicable. |
-| Carousel embedded instance | `core.items.__INDEX__.instance.instanceId` | Roma-provided account instance picker | Shown when repeater item kind is `instance`; references a saved account-owned widget instance. |
+| Enable carousel | `split.carousel.enabled` | `toggle` | When off, edit one fixed Split item. When on, activate the item repeater. |
+| Static item type | `split.items.0.kind` | `dropdown-actions` | Shown when `split.carousel.enabled == false`. Allowed values: `image`, `video`, `instance`. |
+| Static image | `split.items.0.image.*` | existing asset picker shape | Shown when carousel is off and first item kind is `image`. |
+| Static image alt text | `split.items.0.image.alt` | `textfield` | Translatable image alt text. |
+| Static video | `split.items.0.video.*` | existing media/video shape | Shown when carousel is off and first item kind is `video`. |
+| Static video alt text | `split.items.0.video.alt` | `textfield` | Translatable video/presentation alt text when applicable. |
+| Static embedded instance | `split.items.0.instance.instanceId` | Roma-provided account instance picker | Shown when carousel is off and first item kind is `instance`. |
+| Carousel items | `split.items[]` | `object-manager` | Shown when `split.carousel.enabled == true`; add, reorder, duplicate, and remove Split items. Valid count is 2-6. |
+| Carousel item type | `split.items.__INDEX__.kind` | `dropdown-actions` | Shown inside the repeater. Allowed values: `image`, `video`, `instance`. |
+| Carousel image | `split.items.__INDEX__.image.*` | existing asset picker shape | Shown when repeater item kind is `image`. Must not create a new media store. |
+| Carousel image alt text | `split.items.__INDEX__.image.alt` | `textfield` | Translatable image alt text. |
+| Carousel video | `split.items.__INDEX__.video.*` | existing media/video shape | Shown when repeater item kind is `video`. Must reuse existing asset/embed conventions. |
+| Carousel video alt text | `split.items.__INDEX__.video.alt` | `textfield` | Translatable video/presentation alt text when applicable. |
+| Carousel embedded instance | `split.items.__INDEX__.instance.instanceId` | Roma-provided account instance picker | Shown when repeater item kind is `instance`; references a saved account-owned widget instance. |
 
 Embedded-instance control contract:
 
@@ -521,37 +529,37 @@ Split does not expose color or gradient Core controls.
 Content-panel `showIf` rules:
 
 ```text
-core.carousel.enabled == false
-  show static item controls for core.items.0.*
+split.carousel.enabled == false
+  show static item controls for split.items.0.*
 
-core.carousel.enabled == true
-  show carousel object-manager controls for core.items[]
+split.carousel.enabled == true
+  show carousel object-manager controls for split.items[]
 
-core.items.0.kind == 'image'
+split.items.0.kind == 'image'
   show static image controls
 
-core.items.0.kind == 'video'
+split.items.0.kind == 'video'
   show static video controls
 
-core.items.0.kind == 'instance'
+split.items.0.kind == 'instance'
   show static embedded instance control
 
-core.items.__INDEX__.kind == 'image'
+split.items.__INDEX__.kind == 'image'
   show repeater image controls
 
-core.items.__INDEX__.kind == 'video'
+split.items.__INDEX__.kind == 'video'
   show repeater video controls
 
-core.items.__INDEX__.kind == 'instance'
+split.items.__INDEX__.kind == 'instance'
   show repeater embedded instance control
 ```
 
-Do not use `core.items.length` or ad hoc count expressions in `showIf`.
+Do not use `split.items.length` or ad hoc count expressions in `showIf`.
 Item count is validation, not UI visibility logic.
 
-Do not introduce `core.item.*` as a second static-item state shape. Static and
-carousel authoring both edit the same `core.items[]` array. If Bob cannot bind
-concrete numeric paths like `core.items.0.kind`, extend the editor contract
+Do not introduce `split.item.*` as a second static-item state shape. Static and
+carousel authoring both edit the same `split.items[]` array. If Bob cannot bind
+concrete numeric paths like `split.items.0.kind`, extend the editor contract
 narrowly for concrete numeric array paths or stop; do not duplicate state.
 
 ### Layout Panel
@@ -581,8 +589,8 @@ Split-specific Media Fit controls:
 
 | Control | Path | Type | Notes |
 | --- | --- | --- | --- |
-| Fit | `core.media.fit` | `dropdown-actions` | `cover` or `contain`. Applies only to image/video items. Ignored for embedded instances. |
-| Position | `core.media.position` | `dropdown-actions` | `center`, `top`, `bottom`, `left`, `right`. Applies only to image/video items. Ignored for embedded instances. |
+| Fit | `split.media.fit` | `dropdown-actions` | `cover` or `contain`. Applies only to image/video items. Ignored for embedded instances. |
+| Position | `split.media.position` | `dropdown-actions` | `center`, `top`, `bottom`, `left`, `right`. Applies only to image/video items. Ignored for embedded instances. |
 
 The Media Fit cluster is always visible in Split Layout. Do not add complex
 `showIf` rules for mixed carousel items; image/video items apply the values,
@@ -592,18 +600,18 @@ Carousel controls:
 
 | Control | Path | Type | Notes |
 | --- | --- | --- | --- |
-| Transition | `core.carousel.transition` | `dropdown-actions` | Allowed values: `slide`, `fade`. |
-| Autoplay | `core.carousel.autoplay` | `toggle` | Enables automatic slide advance. |
-| Interval | `core.carousel.intervalMs` | `valuefield` | Recommended range 2000-12000 ms. |
-| Loop | `core.carousel.loop` | `toggle` | Wraps next/previous at ends. |
-| Show arrows | `core.carousel.showArrows` | `toggle` | Shows previous/next controls. |
-| Show dots | `core.carousel.showDots` | `toggle` | Shows position dots. |
+| Transition | `split.carousel.transition` | `dropdown-actions` | Allowed values: `slide`, `fade`. |
+| Autoplay | `split.carousel.autoplay` | `toggle` | Enables automatic slide advance. |
+| Interval | `split.carousel.intervalMs` | `valuefield` | Recommended range 2000-12000 ms. |
+| Loop | `split.carousel.loop` | `toggle` | Wraps next/previous at ends. |
+| Show arrows | `split.carousel.showArrows` | `toggle` | Shows previous/next controls. |
+| Show dots | `split.carousel.showDots` | `toggle` | Shows position dots. |
 
 Layout-panel `showIf` rules:
 
 ```text
 Carousel cluster:
-  show-if core.carousel.enabled == true
+  show-if split.carousel.enabled == true
 
 Transition:
   inherits Carousel cluster show-if
@@ -612,8 +620,8 @@ Autoplay:
   inherits Carousel cluster show-if
 
 Interval:
-  show-if core.carousel.enabled == true
-       && core.carousel.autoplay == true
+  show-if split.carousel.enabled == true
+       && split.carousel.autoplay == true
 
 Loop:
   inherits Carousel cluster show-if
@@ -625,12 +633,12 @@ Show dots:
   inherits Carousel cluster show-if
 ```
 
-Do not add `core.display.mode`. The Content-panel `core.carousel.enabled`
+Do not add `split.display.mode`. The Content-panel `split.carousel.enabled`
 toggle is the only static/carousel switch:
 
 ```text
-core.carousel.enabled == false -> static single item
-core.carousel.enabled == true  -> carousel repeater and carousel layout controls
+split.carousel.enabled == false -> static single item
+split.carousel.enabled == true  -> carousel repeater and carousel layout controls
 ```
 
 Do not add `layout.variant`, `copyWidth`, `bodyWidth`, max-width, or Split gap
@@ -641,19 +649,19 @@ behavior.
 
 Static image/video runtime:
 
-- Renders exactly one `core.items[0]` when `core.carousel.enabled == false`.
+- Renders exactly one `split.items[0]` when `split.carousel.enabled == false`.
 - Applies shared `coreSize.*` to the Core div.
-- Applies `core.media.fit` and `core.media.position` to image/video media.
+- Applies `split.media.fit` and `split.media.position` to image/video media.
 - Uses the item's alt text for image/video accessibility.
 - Does not render carousel arrows, dots, autoplay timers, or slide wrappers that
   affect semantics.
 
 Carousel runtime:
 
-- Runs only when `core.carousel.enabled == true`.
+- Runs only when `split.carousel.enabled == true`.
 - Requires 2-6 valid items.
 - Renders all items inside the Split Core div.
-- Applies `core.carousel.transition`, `autoplay`, `intervalMs`, `loop`,
+- Applies `split.carousel.transition`, `autoplay`, `intervalMs`, `loop`,
   `showArrows`, and `showDots`.
 - Does not use global singleton state. Multiple Split instances on the same
   page must have isolated carousel state and event listeners.
@@ -686,17 +694,17 @@ Required clusters:
 - Theme selector
 - shared `header-appearance`
 - Locale switcher appearance
-- Core frame controls using `appearance.cardwrapper.*`
+- Core frame controls using `split.appearance.cardwrapper.*`
 - shared `stagepod-appearance`
 
 Core frame controls should reuse the existing surface/card controls and
 runtime:
 
-- `appearance.cardwrapper.radiusLinked`
-- `appearance.cardwrapper.radius`
-- `appearance.cardwrapper.radiusTL|TR|BR|BL`
-- `appearance.cardwrapper.border`
-- `appearance.cardwrapper.shadow`
+- `split.appearance.cardwrapper.radiusLinked`
+- `split.appearance.cardwrapper.radius`
+- `split.appearance.cardwrapper.radiusTL|TR|BR|BL`
+- `split.appearance.cardwrapper.border`
+- `split.appearance.cardwrapper.shadow`
 - `CKSurface.applyCardWrapper`
 
 Do not add `visual.radius`, `visual.border`, `visual.shadow`, or any
@@ -712,7 +720,7 @@ Required roles:
 - `title` for `header.title`
 - `body` for `header.subtitleHtml`; this is the existing FAQ typography role
   name, not widget Core terminology
-- `button` for `cta.label`
+- `button` for `headerCta.label`
 
 Split Core captions are not part of PRD106C3.
 
@@ -733,20 +741,20 @@ Use the exact same editable-fields mechanism as FAQ.
 
 - `header.title`
 - `header.subtitleHtml`
-- `cta.label`
-- `core.items[].image.alt`
-- `core.items[].video.alt`
+- `headerCta.label`
+- `split.items[].image.alt`
+- `split.items[].video.alt`
 
 Do not add `localization.json`, text packs, wildcard paths, layer sidecars, or
 Prague translation files. Bob preview and San Francisco translation must use the
 same path-based mechanism FAQ uses.
 
-`core.items[].id` provides stable item identity for editable fields.
+`split.items[].id` provides stable item identity for editable fields.
 Step 11 green depends on reorder/duplicate/remove behavior preserving that
 stable item identity so translations remain attached to the same image/video
 item after reorder.
 
-`core.items[].instance.instanceId` is not translatable. The embedded instance
+`split.items[].instance.instanceId` is not translatable. The embedded instance
 carries its own editable-fields and translations through the normal instance
 system.
 
@@ -763,31 +771,31 @@ Required useful defaults:
 - `header.placement`: `left`
 - `header.alignment`: `left`
 - `header.ctaPlacement`: `below`
-- `cta.enabled`: `true`
-- `cta.label`: "Get started"
-- `cta.href`: "#"
+- `headerCta.enabled`: `true`
+- `headerCta.label`: "Get started"
+- `headerCta.href`: "#"
 - `uiLabels.core.singular`: "Visual"
 - `uiLabels.core.plural`: "Visuals"
 - `uiLabels.core.sizeCluster`: "Visual size"
-- `core.items`: one useful non-empty image item using the existing
+- `split.items`: one useful non-empty image item using the existing
   asset/default convention
-- `core.items[0].id`: stable generated ID
-- `core.items[0].kind`: `image`
-- `core.items[0].image.alt`: "Product preview"
+- `split.items[0].id`: stable generated ID
+- `split.items[0].kind`: `image`
+- `split.items[0].image.alt`: "Product preview"
 - `coreSize.mode`: `responsive`
 - `coreSize.minHeight`: `260`
 - `coreSize.preferredVw`: `34`
 - `coreSize.maxHeight`: `620`
 - `coreSize.fixedHeight`: `420`
-- `core.media.fit`: `cover`
-- `core.media.position`: `center`
-- `core.carousel.enabled`: `false`
-- `core.carousel.transition`: `slide`
-- `core.carousel.autoplay`: `false`
-- `core.carousel.intervalMs`: `5000`
-- `core.carousel.loop`: `true`
-- `core.carousel.showArrows`: `true`
-- `core.carousel.showDots`: `true`
+- `split.media.fit`: `cover`
+- `split.media.position`: `center`
+- `split.carousel.enabled`: `false`
+- `split.carousel.transition`: `slide`
+- `split.carousel.autoplay`: `false`
+- `split.carousel.intervalMs`: `5000`
+- `split.carousel.loop`: `true`
+- `split.carousel.showArrows`: `true`
+- `split.carousel.showDots`: `true`
 
 No visible enabled string may be empty.
 
@@ -808,7 +816,7 @@ mechanism.
 ## Acceptance
 
 - Split is implemented by deriving from FAQ's working architecture.
-- Split declares `defaults.header` and `defaults.cta`.
+- Split declares `defaults.header` and `defaults.headerCta`.
 - Split uses shared `header-content`, `header-layout`, `header-appearance`,
   `stagepod-layout`, `stagepod-appearance`, and standardized `typography`.
 - Split removes FAQ-specific sections, Q/A manager, accordion/list/multicolumn
@@ -822,7 +830,7 @@ mechanism.
   `uiLabels.core.plural = "Visuals"`, and
   `uiLabels.core.sizeCluster = "Visual size"`.
 - Split uses shared Shell `coreSize.*` for Visual/Core div sizing; it does not
-  define `core.height`, `visual.height`, or duplicate sizing paths.
+  define `split.height`, `visual.height`, or duplicate sizing paths.
 - Split defaults `coreSize.mode` to `responsive` with min/preferred/max values
   for modern viewport resizing.
 - Split Layout includes a `Media Fit` cluster after `Visual size`; it is always
@@ -835,28 +843,28 @@ mechanism.
 - Split Core supports `image`, `video`, and embedded widget `instance` items.
 - Split Core is one generic Core div; carousel is optional Split software
   inside that div, not the Core itself.
-- Content panel has `core.carousel.enabled`.
-- When `core.carousel.enabled == false`, Content shows one fixed item editor
-  for `core.items.0.*`, the repeater is hidden, and validation requires exactly
+- Content panel has `split.carousel.enabled`.
+- When `split.carousel.enabled == false`, Content shows one fixed item editor
+  for `split.items.0.*`, the repeater is hidden, and validation requires exactly
   one item.
-- When `core.carousel.enabled == true`, Content shows the `core.items[]`
+- When `split.carousel.enabled == true`, Content shows the `split.items[]`
   repeater, Layout shows the `Carousel` cluster, and validation requires 2-6
   items.
 - Split validation fails visibly for missing/duplicate item IDs, invalid item
   kinds, missing image/video refs, missing embedded instance refs,
   self-embedded references, unowned refs, and unpublished/unmaterialized
   embedded refs when publish requires public readiness.
-- Split `limits.json` maps `core.items[]` to `items.group.small.max` with
+- Split `limits.json` maps `split.items[]` to `items.group.small.max` with
   `metric: count`; free accounts are capped at 3 Split carousel items through
   the global policy matrix, not a per-widget tier table.
 - Roma save/publish enforcement applies the generic widget limits path for Split
   item counts. Bob-only policy gating is not sufficient.
 - Layout `Carousel` controls are shown only when
-  `core.carousel.enabled == true`; `core.carousel.intervalMs` is shown only
+  `split.carousel.enabled == true`; `split.carousel.intervalMs` is shown only
   when autoplay is true.
-- Split does not define `core.display.mode`; `core.carousel.enabled` is the
+- Split does not define `split.display.mode`; `split.carousel.enabled` is the
   only static/carousel switch.
-- Split never uses `core.items.length` or ad hoc count expressions in Bob
+- Split never uses `split.items.length` or ad hoc count expressions in Bob
   `showIf`; item count is validation only.
 - Carousel runtime provides isolated per-instance state, keyboard navigation,
   accessible controls, autoplay pause on interaction/focus, and
@@ -869,7 +877,7 @@ mechanism.
   or mark the dependency path stale/failed visibly. This recomposition
   behavior belongs to PRD106B/Roma/Page Composer, not a Split-local graph.
 - Reorder/duplicate/remove verification proves editable-field translations
-  remain attached to stable `core.items[].id` identity.
+  remain attached to stable `split.items[].id` identity.
 - Split Core does not support color/gradient/decorative fill.
 - Split does not ship old Prague/current-Split paths listed in Forbidden State.
 - Split materializes to `index.html`, `styles.css`, and `runtime.js`.

@@ -15,37 +15,11 @@ function cloneSessionConfig(config: Record<string, unknown>): Record<string, unk
   return cloneJsonValue(config);
 }
 
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function mergeDefaultsIntoConfig(
-  defaults: Record<string, unknown> | undefined,
-  config: Record<string, unknown>,
-): Record<string, unknown> {
-  if (!defaults) return cloneSessionConfig(config);
-  const merge = (defaultValue: unknown, configValue: unknown): unknown => {
-    if (configValue === undefined) return cloneJsonValue(defaultValue);
-    if (isPlainRecord(defaultValue) && isPlainRecord(configValue)) {
-      const next: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(defaultValue)) {
-        next[key] = merge(value, configValue[key]);
-      }
-      for (const [key, value] of Object.entries(configValue)) {
-        if (next[key] === undefined) next[key] = cloneJsonValue(value);
-      }
-      return next;
-    }
-    return cloneJsonValue(configValue);
-  };
-  return merge(defaults, config) as Record<string, unknown>;
-}
-
 export function normalizeSessionConfig(
   config: Record<string, unknown>,
-  compiled?: Pick<CompiledWidget, 'controls' | 'defaults' | 'normalization'> | null,
+  compiled?: Pick<CompiledWidget, 'controls' | 'normalization'> | null,
 ): Record<string, unknown> {
-  let next = mergeDefaultsIntoConfig(compiled?.defaults, config);
+  let next = cloneSessionConfig(config);
   next = applyWidgetNormalizationRules(next, compiled?.normalization);
 
   for (const control of compiled?.controls ?? []) {
