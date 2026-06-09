@@ -13,6 +13,11 @@ on:
         description: Type APPLY_MIGRATIONS to deploy reviewed migrations
         required: true
         type: string
+      repair_applied_versions:
+        description: Optional comma-separated migration versions to mark applied before push
+        required: false
+        type: string
+        default: ""
 
 concurrency:
   group: supabase-migrations-${{ inputs.target }}
@@ -74,6 +79,18 @@ jobs:
 
       - name: Link Supabase project
         run: supabase link --project-ref "${{ steps.target.outputs.project_ref }}"
+
+      - name: Repair reviewed migration history
+        if: ${{ inputs.repair_applied_versions != '' }}
+        shell: bash
+        run: |
+          IFS=',' read -ra versions <<< "${{ inputs.repair_applied_versions }}"
+          for raw_version in "${versions[@]}"; do
+            version="$(echo "$raw_version" | xargs)"
+            if [ -n "$version" ]; then
+              supabase migration repair "$version" --status applied --linked
+            fi
+          done
 
       - name: Deploy reviewed migrations
         run: supabase db push --linked
