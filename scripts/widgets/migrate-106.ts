@@ -533,29 +533,25 @@ function repairCurrentClickeenSampleText(args: {
   if (accountId !== 'CLICKEEN') return;
   if (args.widgetType !== 'split' || args.instanceId !== 'KUGYTX2ZMQ') return;
 
-  const shellTitle = getPath(args.shellDefaults, 'header.title');
-  const shellSubtitle = getPath(args.shellDefaults, 'header.subtitleHtml');
-  const shellCtaLabel = getPath(args.shellDefaults, 'headerCta.label');
+  const requireShellString = (path: string): string => {
+    const value = getPath(args.shellDefaults, path);
+    if (typeof value === 'string' && value.trim()) return value;
+    throw new Error(`missing_required_shell_default:${path}`);
+  };
   if (typeof getPath(args.config, 'header.title') === 'string' && !String(getPath(args.config, 'header.title')).trim()) {
-    setPath(args.config, 'header.title', typeof shellTitle === 'string' ? shellTitle : 'Build your widget in minutes');
+    setPath(args.config, 'header.title', requireShellString('header.title'));
   }
   if (
     typeof getPath(args.config, 'header.subtitleHtml') === 'string' &&
     !String(getPath(args.config, 'header.subtitleHtml')).trim()
   ) {
-    setPath(
-      args.config,
-      'header.subtitleHtml',
-      typeof shellSubtitle === 'string'
-        ? shellSubtitle
-        : 'Start with a polished Clickeen widget, customize it in Builder, and publish it anywhere your site needs it.',
-    );
+    setPath(args.config, 'header.subtitleHtml', requireShellString('header.subtitleHtml'));
   }
   if (
     typeof getPath(args.config, 'headerCta.label') === 'string' &&
     !String(getPath(args.config, 'headerCta.label')).trim()
   ) {
-    setPath(args.config, 'headerCta.label', typeof shellCtaLabel === 'string' ? shellCtaLabel : 'Get started');
+    setPath(args.config, 'headerCta.label', requireShellString('headerCta.label'));
   }
 }
 

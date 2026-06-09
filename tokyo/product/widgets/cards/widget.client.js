@@ -103,10 +103,13 @@
     const between = isRecord(cards.betweenCards) ? cards.betweenCards : {};
     const line = isRecord(between.line) ? between.line : {};
     const icon = isRecord(between.icon) ? between.icon : {};
-    const appearance = isRecord(cards.appearance) ? cards.appearance : {};
+    const appearance = isRecord(cards.appearance) ? cards.appearance : null;
+    if (!appearance || !isRecord(appearance.cardwrapper)) {
+      throw new Error('[Cards] cards.appearance.cardwrapper must be an object');
+    }
     return {
       appearance: {
-        cardwrapper: isRecord(appearance.cardwrapper) ? appearance.cardwrapper : null,
+        cardwrapper: appearance.cardwrapper,
       },
       treatment: treatment,
       columns: Math.min(Math.max(columns, 2), 4),
