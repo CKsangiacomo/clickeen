@@ -809,6 +809,13 @@ MUST
 - Repeater/object-manager item templates may contain normal supported Builder
   fields, including `showIf`-gated variant fields. The compiler must preserve
   nested `showIf`. A widget is broken if every variant field appears at once.
+- Repeater/object-manager Dieter runtime must forward Bob's hydrator
+  dependencies to child controls. Nested `dropdown-fill` media fields require
+  the same `accountAssets` context as top-level media fields; rendering the row
+  without that context creates an inert control.
+- Keep value-control row rhythm consistent. `dropdown-fill`, including media
+  selectors, aligns as label-left/value-right like the other drawer dropdown
+  controls.
 - Keep Dieter control choice boring and consistent with FAQ/Shell patterns.
 
 MUST NOT

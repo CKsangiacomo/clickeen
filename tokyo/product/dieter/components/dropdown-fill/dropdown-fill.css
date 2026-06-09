@@ -48,10 +48,11 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  justify-content: flex-start;
+  justify-content: flex-end;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: end;
   color: var(--color-system-black);
 }
 
@@ -121,6 +122,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: end;
 }
 .diet-dropdown-fill .diet-dropdown-header-value.has-chip {
   justify-content: flex-end;

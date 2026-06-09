@@ -419,6 +419,13 @@ OUTPUT
   variant field is visible at once. Account-instance selection is not a generic
   field type and requires a product-owner-approved component before any widget
   may depend on it.
+- Repeater/object-manager nested controls must hydrate with the same Bob
+  dependency context as top-level controls. Media `dropdown-fill` fields inside
+  repeaters must open and mutate exactly like a top-level `dropdown-fill`, not
+  render as inert labels.
+- Value controls in the ToolDrawer align label-left/value-right. A
+  `dropdown-fill` media selector must follow that rhythm; do not make it look
+  like a selected section row or custom card.
 - PRD106C3 Split-family media widgets use real media controls only:
   `split-media` has one `dropdown-fill` at `splitMedia.media` with
   `fill-modes: "image,video"` only; `split-carousel-media` has one `repeater`

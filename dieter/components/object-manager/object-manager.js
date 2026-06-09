@@ -105,7 +105,7 @@
     return /^\d+$/.test(seg);
   }
 
-  function runChildHydrators(scope) {
+  function runChildHydrators(scope, options) {
     if (typeof window === "undefined" || !window.Dieter) return;
     const entries = Object.entries(window.Dieter).filter(
       ([name, fn]) =>
@@ -116,7 +116,7 @@
     );
     entries.forEach(([, fn]) => {
       try {
-        fn(scope);
+        fn(scope, options);
       } catch (err) {
         if (window.__CK_DEV__ === true) {
           console.warn("[object-manager] child hydrator error", err);
@@ -125,7 +125,7 @@
     });
   }
 
-  function hydrateObjectManager(scope) {
+  function hydrateObjectManager(scope, options) {
     const roots = scope.querySelectorAll(".diet-object-manager");
     roots.forEach((root) => {
       if (root.dataset.hydrated === "true") return;
@@ -235,7 +235,7 @@
           list.appendChild(container);
         });
         // Hydrate any nested components (e.g., repeaters) inside new items.
-        runChildHydrators(list);
+        runChildHydrators(list, options);
         const canManage = items.length > 1;
         manageBtn.hidden = !canManage;
         manageBtn.style.display = canManage ? "" : "none";

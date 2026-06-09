@@ -373,6 +373,12 @@ Each widget must pass before the next slice starts:
 - Bob compile route returns 200 for the widget.
 - Builder preview renders nonblank output with no console runtime errors.
 - ToolDrawer shows only controls that can affect the current widget.
+- Split-family media controls preserve shared ToolDrawer value-row rhythm:
+  media `dropdown-fill` rows align label-left/value-right and do not render as
+  custom selected rows.
+- `split-carousel-media` repeater children hydrate with the same Bob
+  dependencies as top-level controls; nested media `dropdown-fill` opens and
+  mutates using the account asset context.
 - Save/materialization succeeds for valid state.
 - Save/materialization fails with a named reason for invalid required state.
 - Public package contains no duplicate Shell source and no old `split` alias.

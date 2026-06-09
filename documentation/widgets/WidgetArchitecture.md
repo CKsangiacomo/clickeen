@@ -532,6 +532,17 @@ second-class HTML. They use the same Builder control language as top-level
 controls: `showIf` must survive compilation and all nested controls must be
 real supported Dieter/Bob controls.
 
+Dieter containers that render nested Builder controls must forward the same
+hydrator dependency object they receive from Bob to every child hydrator. A
+container must not call child hydrators with only `scope`, because controls such
+as `dropdown-fill` need Bob-provided account asset commands to open media
+pickers and write image/video fills.
+
+Drawer row alignment is also part of the control contract. Value controls,
+including `dropdown-fill`, use the shared label-left/value-right rhythm. A media
+fill selector is still a value row, not a full-width custom card or ad-hoc
+button.
+
 Every dependent control uses structured `showIf`. Every field path exists in
 `defaults`. Every runtime-read path exists in `defaults`.
 

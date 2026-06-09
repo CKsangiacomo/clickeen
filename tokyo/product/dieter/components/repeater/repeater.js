@@ -216,7 +216,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     return icon ? icon.cloneNode(true) : null;
   }
 
-  function hydrateRepeater(scope) {
+  function hydrateRepeater(scope, options) {
     const roots = scope.querySelectorAll(".diet-repeater");
     roots.forEach((root) => {
       if (registry.has(root)) return;
@@ -244,6 +244,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
         defaultItem: null,
         minItems: parseItemLimit(root.dataset.minItems),
         maxItems: parseItemLimit(root.dataset.maxItems),
+        hydratorOptions: options,
         iconHandle: cloneIcon(root, ".diet-repeater__icon-handle"),
         iconTrash: cloneIcon(root, ".diet-repeater__icon-trash"),
       };
@@ -455,9 +456,9 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       list.appendChild(item);
     });
 
-    runChildHydrators(list);
+    runChildHydrators(list, state.hydratorOptions);
     if (root) {
-      runChildHydrators(root);
+      runChildHydrators(root, state.hydratorOptions);
     }
 
     if (!reorder) {
@@ -693,7 +694,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     item.addEventListener("pointerdown", onPointerDown);
   }
 
-  function runChildHydrators(scope) {
+  function runChildHydrators(scope, options) {
     if (typeof window === "undefined" || !window.Dieter) return;
     const entries = Object.entries(window.Dieter).filter(
       ([name, fn]) =>
@@ -704,7 +705,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     );
     entries.forEach(([, fn]) => {
       try {
-        fn(scope);
+        fn(scope, options);
       } catch (err) {
         if (window.__CK_DEV__ === true) {
           console.warn("[repeater] child hydrator error", err);
