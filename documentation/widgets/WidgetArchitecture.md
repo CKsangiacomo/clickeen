@@ -290,6 +290,20 @@ If a Core renders media, canvas, or embedded instances through absolutely
 positioned children, the widget Core CSS must provide intrinsic auto sizing.
 The fix is Core CSS, not widget-specific Shell `coreSize` defaults.
 
+`coreSize.mode` defaults to `"auto"`, but the inactive fixed/responsive values
+are still real Shell defaults. They must be positive, usable values because
+Builder applies them immediately when the user switches sizing mode. A zero
+`coreSize.fixedHeight`, `coreSize.minHeight`, `coreSize.preferredVw`, or
+`coreSize.maxHeight` is invalid product state because it can collapse Core.
+
+Linked Shell controls are control groups, not no-op toggles. Paths such as
+`stage.padding.desktop.linked`, `pod.padding.mobile.linked`,
+`pod.radiusLinked`, `stage.insideShadow.linked`,
+`pod.insideShadow.linked`, and `appearance.headerCta.paddingLinked` must use
+the shared Shell paths so Bob can expand linked ops and re-evaluate `show-if`
+visibility after every edit. Widget-specific copies of these link controls are
+wrong.
+
 ### Naming Taxonomy
 
 Shell Header taxonomy is fixed:

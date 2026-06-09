@@ -95,6 +95,7 @@ export function TdMenuContent({
     requestUpsell: chrome.requestUpsell,
     lastUpdateRef,
     activePathRef,
+    showIfEntriesRef,
   });
 
   if (!panelId) {

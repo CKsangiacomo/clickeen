@@ -145,6 +145,22 @@ function auditHeaderCtaHref(issues, scope, state) {
   }
 }
 
+function auditCoreSizeSeeds(issues, scope, state) {
+  const size = getPath(state, 'coreSize');
+  if (!isRecord(size)) return;
+  [
+    ['fixedHeight', 'fixed mode height'],
+    ['minHeight', 'responsive minimum height'],
+    ['preferredVw', 'responsive preferred viewport height'],
+    ['maxHeight', 'responsive maximum height'],
+  ].forEach(([key, label]) => {
+    const value = size[key];
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+      pushIssue(issues, scope, `coreSize.${key}`, `${label} must be a positive latent value, got ${JSON.stringify(value)}`);
+    }
+  });
+}
+
 function collectEditorPaths(node) {
   if (!isRecord(node)) return [];
   const paths = [];
@@ -574,6 +590,7 @@ if (!skipR2) {
     );
   const accountShell = accountDefaults.shell || {};
   auditHeaderCtaHref(accountIssues, 'account shell defaults', accountShell);
+  auditCoreSizeSeeds(accountIssues, 'account shell defaults', accountShell);
   const shellControls = shellControlPaths(accountShell);
   collectLeafPaths(accountShell)
     .filter((pathValue) => !isPathCovered(pathValue, shellControls))
@@ -643,6 +660,7 @@ if (!skipR2) {
       if (!isRecord(state[root])) pushIssue(instanceIssues, widget.instanceId, root, 'missing Shell state root');
     });
     auditHeaderCtaHref(instanceIssues, widget.instanceId, state);
+    auditCoreSizeSeeds(instanceIssues, widget.instanceId, state);
     ['headerCta', 'localeSwitcherBackground', 'localeSwitcherTextColor', 'localeSwitcherBorder', 'localeSwitcherRadius', 'localeSwitcherPaddingInline', 'localeSwitcherPaddingBlock', 'podBorder'].forEach((key) => {
       if (typeof state.appearance?.[key] === 'undefined') {
         pushIssue(instanceIssues, widget.instanceId, `appearance.${key}`, 'missing Shell appearance default');

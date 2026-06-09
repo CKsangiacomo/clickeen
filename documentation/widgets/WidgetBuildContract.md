@@ -259,6 +259,12 @@ intrinsic auto size such as an aspect ratio/min-height keyed by the shared
 CoreSize mode. Do not solve a zero-height Core by giving that widget private
 Shell `coreSize` defaults.
 
+The shared Shell `coreSize` default may keep `mode: "auto"`, but the latent
+values for the other modes must be positive: `fixedHeight`, `minHeight`,
+`preferredVw`, and `maxHeight`. Builder switches modes by applying the selected
+mode immediately. If those latent values are `0`, Fixed or Responsive mode can
+collapse the Core before the user sees a useful sizing field.
+
 The user-facing UI must not show the word "Core" unless the PRD explicitly asks
 for it. Use `uiLabels.core.*` so Bob can display "FAQs", "Visual", "Cards",
 "Logos", or another widget-appropriate label.
@@ -850,6 +856,9 @@ MUST
   such as `split-carousel-media`, are always carousel widgets and must not add
   an enable-carousel toggle.
 - Gate custom sizing fields behind `coreSize.mode`.
+- Linked-value controls must use the shared Shell paths and the shared Bob
+  linked-op expander. Turning a link toggle on/off must reveal the relevant
+  one-value or per-side/per-corner controls immediately through `show-if`.
 - Ensure hidden controls still have valid defaults because they may become
   visible later.
 

@@ -30,6 +30,12 @@ const accountId = process.env.CK_106_ACCOUNT_ID || 'CLICKEEN';
 const apply = process.argv.includes('--apply');
 const legacyHeaderCtaHrefs = new Set(['www.clickeen.com', '#']);
 const defaultHeaderCtaHref = 'https://www.clickeen.com';
+const defaultCoreSize = {
+  fixedHeight: 360,
+  minHeight: 280,
+  preferredVw: 32,
+  maxHeight: 640,
+};
 
 const widgets: WidgetEntry[] = [
   { widgetType: 'big-bang', instanceId: 'QD1G068MX7' },
@@ -456,6 +462,7 @@ function shellFromState(base: JsonRecord, state: JsonRecord): JsonRecord {
   setPath(shell, 'pod.widthMode', 'full');
   repairHeaderCtaPaddingSeed(shell);
   repairHeaderCtaHrefSeed(shell);
+  repairCoreSizeSeed(shell);
   return shell;
 }
 
@@ -476,6 +483,17 @@ function repairHeaderCtaHrefSeed(state: JsonRecord): void {
   const href = getPath(state, 'headerCta.href');
   if (typeof href === 'string' && legacyHeaderCtaHrefs.has(href.trim())) {
     setPath(state, 'headerCta.href', defaultHeaderCtaHref);
+  }
+}
+
+function repairCoreSizeSeed(state: JsonRecord): void {
+  const coreSize = getPath(state, 'coreSize');
+  if (!isRecord(coreSize)) return;
+  for (const [key, value] of Object.entries(defaultCoreSize)) {
+    const current = coreSize[key];
+    if (typeof current !== 'number' || !Number.isFinite(current) || current <= 0) {
+      setPath(state, `coreSize.${key}`, value);
+    }
   }
 }
 
@@ -868,6 +886,7 @@ async function migrateInstance(widget: WidgetEntry, shellDefaults: JsonRecord, n
   migrateHeaderCtaAliases(fullConfig);
   repairHeaderCtaPaddingSeed(fullConfig);
   repairHeaderCtaHrefSeed(fullConfig);
+  repairCoreSizeSeed(fullConfig);
   const nextContent = contentFromFullConfig({
     widgetType: widget.widgetType,
     instanceId: widget.instanceId,

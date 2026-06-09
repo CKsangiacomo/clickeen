@@ -351,12 +351,20 @@ OUTPUT
   intrinsic size when shared `coreSize.mode` is `auto`. Use the shared
   CoreSize mode marker plus Core CSS aspect-ratio/min-height. Do not create
   widget-private Shell sizing defaults to make a blank Core visible.
+- Shared `coreSize` latent values for fixed/responsive modes must be positive
+  (`fixedHeight`, `minHeight`, `preferredVw`, `maxHeight`). `mode: "auto"` is
+  the default behavior, but zero latent values are invalid because switching to
+  Fixed or Responsive immediately applies them.
 
 GATE
 
 - Toggling variant/layout fields changes the visual output.
 - Fresh defaults render visible Core content in Builder preview with
   `coreSize.mode: "auto"`.
+- Switching Core size to Fixed reveals the fixed-height field and does not
+  collapse the Core.
+- Toggling linked Shell controls reveals the correct linked/unlinked control
+  set immediately and expands saved values to the dependent paths.
 
 ---
 

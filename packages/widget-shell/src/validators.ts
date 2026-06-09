@@ -177,6 +177,8 @@ export function validateCoreSize(size: unknown): WidgetShellValidationIssue[] {
   (['fixedHeight', 'minHeight', 'preferredVw', 'maxHeight'] as const).forEach((key) => {
     if (typeof size[key] !== 'number' || !Number.isFinite(size[key])) {
       issues.push(issue(`coreSize.${key}`, 'Core size value must be a finite number.'));
+    } else if (size[key] <= 0) {
+      issues.push(issue(`coreSize.${key}`, 'Core size value must be positive so alternate sizing modes cannot collapse Core.'));
     }
   });
   return issues;

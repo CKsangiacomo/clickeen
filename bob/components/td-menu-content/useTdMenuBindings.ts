@@ -16,6 +16,7 @@ import {
   resolvePathFromTarget,
   serializeBobJsonFieldValue,
 } from './fieldValue';
+import { applyShowIfVisibility, type ShowIfEntry } from './showIf';
 
 type LastUpdate = {
   source: 'field' | 'load' | 'external' | 'ops' | 'unknown';
@@ -34,6 +35,7 @@ export function useTdMenuBindings(args: {
   requestUpsell: (reasonKey: string, detail?: string) => void;
   lastUpdateRef: MutableRefObject<LastUpdate>;
   activePathRef: MutableRefObject<string | null>;
+  showIfEntriesRef: MutableRefObject<ShowIfEntry[]>;
 }) {
   const {
     activePathRef,
@@ -46,6 +48,7 @@ export function useTdMenuBindings(args: {
     panelHtml,
     renderKey,
     requestUpsell,
+    showIfEntriesRef,
   } = args;
 
   useEffect(() => {
@@ -57,6 +60,7 @@ export function useTdMenuBindings(args: {
       const applied = applyOps(expandLinkedOps({ compiled, instanceData: readInstanceData(), ops }));
       if (applied.ok) {
         instanceDataRef.current = applied.data;
+        applyShowIfVisibility(showIfEntriesRef.current, applied.data);
       }
       return applied;
     };
@@ -208,6 +212,7 @@ export function useTdMenuBindings(args: {
     container.addEventListener('change', handleContainerEvent, true);
 
     const fields = Array.from(container.querySelectorAll<HTMLElement>('[data-bob-path]'));
+    applyShowIfVisibility(showIfEntriesRef.current, instanceData);
 
     fields.forEach((field) => {
       const path = field.getAttribute('data-bob-path');
@@ -311,5 +316,6 @@ export function useTdMenuBindings(args: {
     panelHtml,
     renderKey,
     requestUpsell,
+    showIfEntriesRef,
   ]);
 }

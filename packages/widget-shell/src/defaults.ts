@@ -2,10 +2,10 @@ import type { WidgetShellCoreLabels, WidgetShellCoreSize } from './contract';
 
 export const DEFAULT_WIDGET_SHELL_CORE_SIZE: WidgetShellCoreSize = {
   mode: 'auto',
-  fixedHeight: 0,
-  minHeight: 0,
-  preferredVw: 0,
-  maxHeight: 0,
+  fixedHeight: 360,
+  minHeight: 280,
+  preferredVw: 32,
+  maxHeight: 640,
 };
 
 export const DEFAULT_WIDGET_SHELL_CORE_LABELS: WidgetShellCoreLabels = {
@@ -228,11 +228,11 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
     widthMode: 'full',
   },
   coreSize: {
-    fixedHeight: 0,
-    maxHeight: 0,
-    minHeight: 0,
+    fixedHeight: 360,
+    maxHeight: 640,
+    minHeight: 280,
     mode: 'auto',
-    preferredVw: 0,
+    preferredVw: 32,
   },
   localeSwitcher: {
     alwaysShowLocale: '',
