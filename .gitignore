@@ -65,6 +65,9 @@ tooling/whisper/
 .cache/
 .tmp/
 artifacts/
+playwright-report/
+test-results/
+e2e/.auth/
 Logs/
 .dev-up.lock/
 prague-strings/compiled/
