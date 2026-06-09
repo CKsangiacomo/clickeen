@@ -40,12 +40,95 @@ function socialShareRequested(config: Record<string, unknown>): boolean {
   return socialShare.enabled === true;
 }
 
+function structureViolation(args: {
+  reasonKey?: string;
+  detail: string;
+  paths: string[];
+}): SavePolicyValidationResult {
+  return {
+    ok: false,
+    status: 422,
+    error: {
+      kind: 'VALIDATION',
+      reasonKey: args.reasonKey ?? 'coreui.errors.widget.structureInvalid',
+      detail: args.detail,
+      paths: args.paths,
+    },
+  };
+}
+
+function validateSplitCarouselMediaStructure(config: Record<string, unknown>): SavePolicyValidationResult {
+  const splitCarouselMedia = isRecord(config.splitCarouselMedia) ? config.splitCarouselMedia : null;
+  const items = Array.isArray(splitCarouselMedia?.items) ? splitCarouselMedia.items : null;
+  if (!items) {
+    return structureViolation({
+      detail: 'split-carousel-media requires splitCarouselMedia.items.',
+      paths: ['splitCarouselMedia.items'],
+    });
+  }
+  if (items.length < 2 || items.length > 6) {
+    return structureViolation({
+      detail: `split-carousel-media requires 2-6 visuals; received ${items.length}.`,
+      paths: ['splitCarouselMedia.items'],
+    });
+  }
+
+  const ids = new Set<string>();
+  for (let index = 0; index < items.length; index += 1) {
+    const item = items[index];
+    const itemPath = `splitCarouselMedia.items.${index}`;
+    if (!isRecord(item)) {
+      return structureViolation({
+        detail: `split-carousel-media item ${index + 1} must be an object.`,
+        paths: [itemPath],
+      });
+    }
+    const id = typeof item.id === 'string' ? item.id.trim() : '';
+    if (!id || ids.has(id)) {
+      return structureViolation({
+        detail: `split-carousel-media item ${index + 1} requires a unique stable id.`,
+        paths: [`${itemPath}.id`],
+      });
+    }
+    ids.add(id);
+
+    const media = isRecord(item.media) ? item.media : null;
+    if (!media || (media.kind !== 'image' && media.kind !== 'video')) {
+      return structureViolation({
+        detail: `split-carousel-media item ${index + 1} requires image or video media.`,
+        paths: [`${itemPath}.media.kind`],
+      });
+    }
+  }
+
+  return { ok: true };
+}
+
+export function validateAccountInstanceConfigStructure(args: {
+  widgetType: string;
+  config: Record<string, unknown>;
+}): SavePolicyValidationResult {
+  if (args.widgetType === 'split-carousel-media') {
+    return validateSplitCarouselMediaStructure(args.config);
+  }
+  return { ok: true };
+}
+
 export function validateAccountInstanceSavePolicy(args: {
+  widgetType?: string;
   config: Record<string, unknown>;
   authz: SavePolicyContext;
   limits?: LimitsSpec | null;
   context?: LimitContext;
 }): SavePolicyValidationResult {
+  if (args.widgetType) {
+    const structureGate = validateAccountInstanceConfigStructure({
+      widgetType: args.widgetType,
+      config: args.config,
+    });
+    if (!structureGate.ok) return structureGate;
+  }
+
   const policy = resolvePolicyFromEntitlementsSnapshot({
     profile: args.authz.profile,
     role: args.authz.role,

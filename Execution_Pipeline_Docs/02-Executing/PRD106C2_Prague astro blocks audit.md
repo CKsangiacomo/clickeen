@@ -87,7 +87,7 @@ Stop conditions:
 | ---: | --- | --- | --- | --- |
 | 1 | Refresh Prague block inventory. | Commands and counts from Prague source. | Every used block type is listed. | Source evidence is stale/missing. |
 | 2 | Classify each block. | Table mapping block to widget/Prague-only/dies. | Every block has one classification. | Classification needs product decision. |
-| 3 | Map approved blocks to target widgets. | Mapping table. | Only Split, Cards, Big Bang, CTA remain customer widget targets. | New target widget is invented. |
+| 3 | Map approved blocks to target widgets. | Mapping table. | Only Split-family, Cards, Big Bang, CTA remain customer widget families. | New target widget is invented. |
 | 4 | Record source-to-widget field hints. | Field mapping table. | Prague source informs Core fields only. | Prague block architecture survives as product truth. |
 | 5 | Run audit guards. | `rg`/command output. | No unmapped used block remains. | Any used block lacks disposition. |
 
@@ -145,18 +145,18 @@ the current first-party page JSON counts.
 | `mobile-showcase` | `prague/src/blocks/mobile-showcase/mobile-showcase.astro` |
 | `feature-explorer` | `prague/src/blocks/feature-explorer/feature-explorer.astro` |
 
-They do not create additional widget targets. `split-carousel` and
-`embed-carousel` are source evidence for optional carousel behavior inside the
-Split Core div, owned by `PRD106C3_Split_Widget.md`. `mobile-showcase` and
-`feature-explorer` remain outside the current migration unless Pietro separately
-assigns them to a product widget decision.
+`split-carousel` and `embed-carousel` now feed the PRD106C3 Split-family
+correction. They are source evidence for `split-carousel-media` and
+`split-carousel-instance`, not optional modes inside one `split` widget.
+`mobile-showcase` and `feature-explorer` remain outside the current migration
+unless Pietro separately assigns them to a product widget decision.
 
 ## Final Migration Decision
 
 | Prague block | Decision | Target PRD |
 | --- | --- | --- |
-| `hero` | Migrate as Split | `PRD106C3_Split_Widget.md` |
-| `split` | Migrate as Split | `PRD106C3_Split_Widget.md` |
+| `hero` | Migrate as `split-media` or `split-instance` according to its visual source | `PRD106C3_Split_Widget.md` |
+| `split` | Migrate as `split-media` | `PRD106C3_Split_Widget.md` |
 | `subpage-cards` | Migrate as Cards | `PRD106C4_Cards_Widget.md` |
 | `steps` | Migrate as Cards treatment | `PRD106C4_Cards_Widget.md` |
 | `global-moat` | Migrate as Cards content/treatment | `PRD106C4_Cards_Widget.md` |
@@ -167,8 +167,8 @@ assigns them to a product widget decision.
 | `page-meta` | Dies as Prague block | Page Composer SEO/GEO PRD |
 | `navmeta` | Stays Prague navigation metadata | Prague route/nav system |
 | `minibob` | Prague site-owned demo/funnel behavior only; not customer widget, account authoring lane, policy mode, save-capable path, or Page Composer input | Prague site-owned demo/funnel mechanism |
-| `split-carousel` | Optional source evidence for Split carousel behavior, not separate widget and not a product requirement | `PRD106C3_Split_Widget.md` |
-| `embed-carousel` | Optional source evidence for Split carousel behavior, not separate widget and not a product requirement | `PRD106C3_Split_Widget.md` |
+| `split-carousel` | Migrate as `split-carousel-media` when used by customer/product surfaces | `PRD106C3_Split_Widget.md` |
+| `embed-carousel` | Migrate as `split-carousel-instance` when used by customer/product surfaces | `PRD106C3_Split_Widget.md` |
 | `mobile-showcase` | Not in current migration | Separate product decision required |
 | `feature-explorer` | Not in current migration | Separate product decision required |
 
@@ -179,12 +179,12 @@ The FAQ overview page currently stacks these blocks:
 | Order | Block | What it looks like | Migration result |
 | ---: | --- | --- | --- |
 | 1 | `page-meta` | SEO title/description | Dies into Page Composer SEO/GEO |
-| 2 | `hero` | Left copy/CTA, right live widget preview | Split |
+| 2 | `hero` | Left copy/CTA, right live widget preview | Split-family |
 | 3 | `navmeta` | Navigation label/description | Prague nav metadata |
 | 4 | `minibob` | Prague demo section with live embedded instance | Prague/admin-only |
 | 5 | `subpage-cards` | Header plus three linked cards | Cards |
 | 6 | `steps` | Header plus three value cards | Cards treatment |
-| 7 | `split` | Left copy/CTA, right visual/live preview | Split |
+| 7 | `split` | Left copy/CTA, right visual/live preview | Split-family |
 | 8 | `big-bang` | Large typography band | Big Bang |
 | 9 | `global-moat` | Header plus three cards | Cards |
 | 10 | `platform-strip` | Header plus three cards | Cards |
@@ -254,13 +254,14 @@ No standalone Steps widget in this migration.
 
 Current layout: split copy/CTA plus media or embedded-widget area.
 
-Decision: migrate into Split.
+Decision: migrate into the appropriate Split-family widget.
 
 Prague source shows image/video and embedded-widget-like areas. This audit does
-not approve Split Core implementation paths. PRD106C3 owns whether Split ships
-image, video, carousel, or embedded-instance Core behavior. Any embedded
-instance behavior must be explicit visible Core behavior in PRD106C3 and must
-not preserve Prague `accountInstanceRef`.
+not approve implementation paths. PRD106C3 now owns the four concrete targets:
+`split-media`, `split-instance`, `split-carousel-media`, and
+`split-carousel-instance`. Any embedded instance behavior must be explicit
+Split-family instance-widget behavior and must not preserve Prague
+`accountInstanceRef`.
 
 ### `big-bang`
 

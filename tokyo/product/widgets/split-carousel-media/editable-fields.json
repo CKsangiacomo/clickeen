@@ -1,0 +1,40 @@
+{
+  "v": 1,
+  "widgetType": "split-carousel-media",
+  "fields": [
+    {
+      "path": "header.title",
+      "label": "Header title",
+      "role": "header-title",
+      "type": "richtext",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "header.subtitleHtml",
+      "label": "Header subtitle",
+      "role": "header-subtitle",
+      "type": "richtext",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "headerCta.label",
+      "label": "Header CTA label",
+      "role": "header-cta-label",
+      "type": "string",
+      "arrayItemIdentity": [],
+      "limits": []
+    },
+    {
+      "path": "splitCarouselMedia.items[].media.alt",
+      "label": "Carousel visual alt text",
+      "role": "split-carousel-media-alt",
+      "type": "string",
+      "arrayItemIdentity": [
+        "splitCarouselMedia.items[].id"
+      ],
+      "limits": []
+    }
+  ]
+}

@@ -49,7 +49,7 @@ policy applies.
 
 The FAQ widget proves the Shell/runtime model. `packages/widget-shell/` is the
 named Shell contract authority. The Call to Action widget proves the
-widget-specific Core namespace model. Cards, Split, FAQ, Countdown, Logo
+widget-specific Core namespace model. Cards, Split-family widgets, FAQ, Countdown, Logo
 Showcase, Big Bang, and Call to Action now use widget-specific Core namespaces.
 A widget folder under `tokyo/product/widgets/` is the product source location
 for that widget's Core plus its materialized source files.
@@ -128,8 +128,11 @@ locator.
   `tokyo/product/widgets/faq/*`.
 - Call to Action widget source as the simple widget-specific Core example:
   `tokyo/product/widgets/calltoaction/*`.
-- Cards and Split widget source as repeated-item and media Core examples:
-  `tokyo/product/widgets/cards/*`, `tokyo/product/widgets/split/*`.
+- Cards widget source as the repeated-item Core example:
+  `tokyo/product/widgets/cards/*`.
+- Split media widget sources as media Core examples:
+  `tokyo/product/widgets/split-media/*` and
+  `tokyo/product/widgets/split-carousel-media/*`.
 - Target widget source:
   `tokyo/product/widgets/{widgetType}/`.
 - Entitlement matrix only when binding `limits.json`:
@@ -243,8 +246,9 @@ Core owns:
 
 Core-owned appearance must be rendered from the widget namespace that declares
 it. For example, Cards must render card surfaces from
-`cards.appearance.cardwrapper.*`, and Split must render its visual frame from
-`split.appearance.cardwrapper.*`. A runtime that reads
+`cards.appearance.cardwrapper.*`, Split Media must render its visual frame from
+`splitMedia.appearance.cardwrapper.*`, and Split Carousel Media must render its
+visual frame from `splitCarouselMedia.appearance.cardwrapper.*`. A runtime that reads
 `state.appearance.cardwrapper` is wrong: root `appearance.*` is reserved for
 Shell appearance families such as `appearance.headerCta.*`,
 `appearance.localeSwitcher*`, and `appearance.podBorder`.
@@ -535,6 +539,10 @@ MUST
   starter content should default on; a toggle for advanced/custom behavior
   should default off.
 - Give every repeatable item a stable `id` or equivalent item identity.
+- Reject structural Core invariants that can break package/runtime output at
+  the create/save boundary before persistence. Examples: carousel array min/max
+  counts, required stable item IDs, and item kind constraints. Runtime may fail
+  loudly too; runtime must not be the only enforcement.
 - Include starter items when the widget would otherwise render as a blank broken
   product. Starter content must be useful product starter content, not lorem
   ipsum or hidden test data.
@@ -749,9 +757,13 @@ Use the existing field type that matches the product job:
 | Background/fill/color/media fill | `dropdown-fill` with explicit `fill-modes` |
 | Border | `dropdown-border` |
 | Shadow | `dropdown-shadow` |
-| Manage repeatable complex items | `object-manager` with `default-item`, `label-path`, and an item template |
-| Simple repeatable item editing where an existing widget already uses it | `repeater` |
-| Select another account instance | `instance-picker` |
+| Flat primary repeated item list | `repeater` with `default-item` and an item template |
+| Grouped containers, nested lists, or secondary per-object settings | `object-manager` with `default-item`, `label-path`, and an item template |
+
+Account-instance selection is not an approved generic field type. A widget that
+references another account-owned instance must wait for a product-owner-approved
+Dieter/Bob account-instance selector component and the corresponding Roma
+account data contract.
 
 MUST
 
@@ -764,16 +776,17 @@ MUST
 - Provide `options` for enum controls and ensure the default value is one of
   those options.
 - Provide explicit `fill-modes` for every `dropdown-fill`.
-- Use `object-manager` for arrays whose item has multiple fields, media, links,
-  or per-item styling.
-- Put object-manager item fields under the array item path using
+- Use `repeater` for flat primary content arrays, even when each item has
+  multiple fields, media, links, or per-item styling. Cards, FAQ questions, Logo
+  Showcase logos, and carousel visuals are repeater-shaped.
+- Use `object-manager` for grouped containers, arrays that contain nested
+  repeated lists, or secondary per-object settings. FAQ sections and Logo
+  Showcase strips are object-manager-shaped.
+- Put repeater/object-manager item fields under the array item path using
   `__INDEX__`, for example `{widgetNamespace}.items.__INDEX__.title`.
-- Object-manager item templates may contain normal Builder fields, including
-  `showIf`-gated variant fields and `instance-picker`. The compiler must
-  preserve nested `showIf`, and Bob must hydrate nested instance pickers after
-  the object-manager renders dynamic rows. A widget is broken if every variant
-  field appears at once or if nested instance pickers stay empty while account
-  instances exist.
+- Repeater/object-manager item templates may contain normal supported Builder
+  fields, including `showIf`-gated variant fields. The compiler must preserve
+  nested `showIf`. A widget is broken if every variant field appears at once.
 - Keep Dieter control choice boring and consistent with FAQ/Shell patterns.
 
 MUST NOT

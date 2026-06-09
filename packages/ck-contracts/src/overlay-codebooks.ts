@@ -8,6 +8,8 @@ export const WIDGET_OVERLAY_CODES = Object.freeze({
   countdown: 'CTD',
   logoshowcase: 'LGS',
   split: 'SPL',
+  'split-carousel-media': 'SCM',
+  'split-media': 'SPM',
 } as const);
 
 export type WidgetOverlayType = keyof typeof WIDGET_OVERLAY_CODES;

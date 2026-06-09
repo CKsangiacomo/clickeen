@@ -1168,7 +1168,9 @@ var Dieter = (() => {
     faq: "FAQ",
     countdown: "CTD",
     logoshowcase: "LGS",
-    split: "SPL"
+    split: "SPL",
+    "split-carousel-media": "SCM",
+    "split-media": "SPM"
   });
   var WIDGET_TYPES_BY_CODE = new Map(
     Object.entries(WIDGET_OVERLAY_CODES).map(([widgetType, code]) => [code, widgetType])

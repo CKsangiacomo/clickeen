@@ -428,6 +428,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   try {
     const compiled = await compileWidgetForSave(request, widgetType);
     const policyGate = validateAccountInstanceSavePolicy({
+      widgetType,
       config,
       authz: current.value.authzPayload,
       limits: compiled.limits ?? null,

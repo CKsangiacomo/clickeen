@@ -1,13 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { PanelId } from '../lib/types';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../lib/ops';
 import { useWidgetSession, useWidgetSessionChrome } from '../lib/session/useWidgetSession';
 import { type DieterMedia } from './td-menu-content/dom';
 import { resolvePathFromTarget } from './td-menu-content/fieldValue';
-import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './td-menu-content/showIf';
+import { type ShowIfEntry } from './td-menu-content/showIf';
 import { useTdMenuBindings } from './td-menu-content/useTdMenuBindings';
-import { hydrateInstancePickers, useTdMenuHydration } from './td-menu-content/useTdMenuHydration';
+import { useTdMenuHydration } from './td-menu-content/useTdMenuHydration';
 
 type TdMenuContentProps = {
   panelId: PanelId | null;
@@ -78,8 +78,6 @@ export function TdMenuContent({
     widgetKey,
     widgetName: session.compiled?.widgetname ?? null,
     accountAssets: session.accountAssets,
-    accountInstances: chrome.meta?.accountInstances ?? [],
-    currentInstanceId: chrome.meta?.instanceId ?? null,
     dieterMedia,
     instanceDataRef,
     showIfEntriesRef,
@@ -97,19 +95,6 @@ export function TdMenuContent({
     requestUpsell: chrome.requestUpsell,
     lastUpdateRef,
     activePathRef,
-  });
-
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    hydrateInstancePickers({
-      container,
-      accountInstances: chrome.meta?.accountInstances ?? [],
-      currentInstanceId: chrome.meta?.instanceId ?? null,
-      instanceData,
-    });
-    showIfEntriesRef.current = buildShowIfEntries(container);
-    applyShowIfVisibility(showIfEntriesRef.current, instanceData);
   });
 
   if (!panelId) {

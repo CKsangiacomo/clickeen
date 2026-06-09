@@ -1,0 +1,582 @@
+{
+  "v": 1,
+  "widgetname": "split-media",
+  "itemKey": "split-media.item",
+  "normalization": {
+    "coerceRules": [
+      {
+        "path": "behavior.showBacklink",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.enabled",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "path": "behavior.socialShare.channels.copy",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.sms",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.email",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.whatsapp",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.telegram",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.signal",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.messenger",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.wechat",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.line",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.slack",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.teams",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.discord",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.x",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.linkedin",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.facebook",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.reddit",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.instagram",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "path": "behavior.socialShare.channels.tiktok",
+        "type": "boolean",
+        "default": true
+      }
+    ]
+  },
+  "defaults": {
+    "uiLabels": {
+      "core": {
+        "singular": "Visual",
+        "plural": "Visuals",
+        "sizeCluster": "Visual size"
+      }
+    },
+    "splitMedia": {
+      "media": {
+        "kind": "image",
+        "image": {
+          "type": "image",
+          "image": {
+            "src": "/dieter/icons/svg/photo.svg",
+            "fit": "contain",
+            "position": "center",
+            "repeat": "no-repeat"
+          }
+        },
+        "video": {
+          "type": "video",
+          "video": {
+            "src": "",
+            "poster": "",
+            "muted": true,
+            "loop": true,
+            "autoplay": true
+          }
+        },
+        "alt": "Product visual",
+        "fit": "cover",
+        "position": "center"
+      },
+      "appearance": {
+        "cardwrapper": {
+          "radiusLinked": true,
+          "radius": "4xl",
+          "radiusTL": "4xl",
+          "radiusTR": "4xl",
+          "radiusBR": "4xl",
+          "radiusBL": "4xl",
+          "border": {
+            "enabled": false,
+            "width": 1,
+            "color": "var(--color-system-gray-5)"
+          },
+          "shadow": {
+            "enabled": true,
+            "x": 0,
+            "y": 24,
+            "blur": 80,
+            "spread": 0,
+            "alpha": 12,
+            "color": "#000000",
+            "inset": false
+          }
+        }
+      }
+    }
+  },
+  "editor": {
+    "panels": [
+      {
+        "id": "content",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "header-content"
+          },
+          {
+            "label": "Visual",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "path": "splitMedia.media.kind",
+                "label": "Type",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Image",
+                      "value": "image"
+                    },
+                    {
+                      "label": "Video",
+                      "value": "video"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "path": "splitMedia.media.image",
+                "label": "Image",
+                "attrs": {
+                  "size": "md",
+                  "fill-modes": "image",
+                  "allow-image": "true"
+                },
+                "showIf": {
+                  "path": "splitMedia.media.kind",
+                  "op": "equals",
+                  "value": "image"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-fill",
+                "path": "splitMedia.media.video",
+                "label": "Video",
+                "attrs": {
+                  "size": "md",
+                  "fill-modes": "video",
+                  "allow-image": "true"
+                },
+                "showIf": {
+                  "path": "splitMedia.media.kind",
+                  "op": "equals",
+                  "value": "video"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "textfield",
+                "path": "splitMedia.media.alt",
+                "label": "Alt text"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "typography",
+        "shared": {
+          "id": "typography"
+        }
+      },
+      {
+        "id": "layout",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "header-layout"
+          },
+          {
+            "kind": "shared",
+            "id": "core-size"
+          },
+          {
+            "label": "Media fit",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "path": "splitMedia.media.fit",
+                "label": "Fit",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Cover",
+                      "value": "cover"
+                    },
+                    {
+                      "label": "Contain",
+                      "value": "contain"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "path": "splitMedia.media.position",
+                "label": "Position",
+                "attrs": {
+                  "size": "md",
+                  "options": [
+                    {
+                      "label": "Center",
+                      "value": "center"
+                    },
+                    {
+                      "label": "Top",
+                      "value": "top"
+                    },
+                    {
+                      "label": "Bottom",
+                      "value": "bottom"
+                    },
+                    {
+                      "label": "Left",
+                      "value": "left"
+                    },
+                    {
+                      "label": "Right",
+                      "value": "right"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "kind": "shared",
+            "id": "stagepod-layout"
+          }
+        ]
+      },
+      {
+        "id": "appearance",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "header-appearance"
+          },
+          {
+            "label": "Visual frame",
+            "nodes": [
+              {
+                "kind": "field",
+                "type": "toggle",
+                "groupId": "appearance-visual-frame",
+                "path": "splitMedia.appearance.cardwrapper.radiusLinked",
+                "label": "Link visual radius",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{splitMedia.appearance.cardwrapper.radiusLinked}}",
+                  "default": true
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-visual-frame",
+                "path": "splitMedia.appearance.cardwrapper.radius",
+                "label": "Visual radius",
+                "showIf": {
+                  "path": "splitMedia.appearance.cardwrapper.radiusLinked",
+                  "op": "isTrue"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{splitMedia.appearance.cardwrapper.radius}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-visual-frame",
+                "path": "splitMedia.appearance.cardwrapper.radiusTL",
+                "label": "Visual top-left radius",
+                "showIf": {
+                  "path": "splitMedia.appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{splitMedia.appearance.cardwrapper.radiusTL}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-visual-frame",
+                "path": "splitMedia.appearance.cardwrapper.radiusTR",
+                "label": "Visual top-right radius",
+                "showIf": {
+                  "path": "splitMedia.appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{splitMedia.appearance.cardwrapper.radiusTR}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-visual-frame",
+                "path": "splitMedia.appearance.cardwrapper.radiusBR",
+                "label": "Visual bottom-right radius",
+                "showIf": {
+                  "path": "splitMedia.appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{splitMedia.appearance.cardwrapper.radiusBR}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-actions",
+                "groupId": "appearance-visual-frame",
+                "path": "splitMedia.appearance.cardwrapper.radiusBL",
+                "label": "Visual bottom-left radius",
+                "showIf": {
+                  "path": "splitMedia.appearance.cardwrapper.radiusLinked",
+                  "op": "isFalse"
+                },
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "placeholder": "Choose radius",
+                  "value": "{{splitMedia.appearance.cardwrapper.radiusBL}}",
+                  "options": [
+                    {
+                      "label": "None",
+                      "value": "none"
+                    },
+                    {
+                      "label": "Small",
+                      "value": "2xl"
+                    },
+                    {
+                      "label": "Medium",
+                      "value": "4xl"
+                    },
+                    {
+                      "label": "Large",
+                      "value": "6xl"
+                    },
+                    {
+                      "label": "X-Large",
+                      "value": "10xl"
+                    }
+                  ]
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-border",
+                "groupId": "appearance-visual-frame",
+                "path": "splitMedia.appearance.cardwrapper.border",
+                "label": "Visual border",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{splitMedia.appearance.cardwrapper.border}}"
+                }
+              },
+              {
+                "kind": "field",
+                "type": "dropdown-shadow",
+                "groupId": "appearance-visual-frame",
+                "path": "splitMedia.appearance.cardwrapper.shadow",
+                "label": "Visual outside shadow",
+                "attrs": {
+                  "group-label": "",
+                  "size": "md",
+                  "value": "{{splitMedia.appearance.cardwrapper.shadow}}"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "shared",
+            "id": "stagepod-appearance"
+          }
+        ]
+      },
+      {
+        "id": "settings",
+        "clusters": [
+          {
+            "kind": "shared",
+            "id": "settings-behavior"
+          }
+        ]
+      }
+    ]
+  }
+}

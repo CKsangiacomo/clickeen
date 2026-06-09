@@ -8,7 +8,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRomaAccountApi } from './account-api';
 import { getCompiledWidget } from './compiled-widget-cache';
 import { useRomaAccountContext } from './roma-account-context';
-import { normalizeRomaWidgetsResponse } from './use-roma-widgets';
 
 type BuilderDomainProps = {
   initialInstanceId?: string;
@@ -80,12 +79,6 @@ type BobOpenEditorMessage = {
   instanceData: Record<string, unknown>;
   publishStatus?: 'published' | 'unpublished';
   meta?: Record<string, unknown> | null;
-  accountInstances?: Array<{
-    instanceId: string;
-    widgetType: string;
-    displayName: string;
-    status: 'published' | 'unpublished';
-  }>;
   policy?: unknown;
   copilot?: unknown;
   translationSetup?: {
@@ -253,23 +246,6 @@ function buildTranslationSetup(args: {
 
 function isAccountAssetCommand(command: BobAccountCommand): boolean {
   return command === 'list-assets' || command === 'resolve-assets' || command === 'upload-asset';
-}
-
-async function loadAccountInstancesForBob(args: {
-  fetchJson: ReturnType<typeof useRomaAccountApi>['fetchJson'];
-  activeInstanceId: string;
-}): Promise<NonNullable<BobOpenEditorPayload['accountInstances']>> {
-  const payload = await args.fetchJson<unknown>('/api/account/widgets', { method: 'GET' });
-  const normalized = normalizeRomaWidgetsResponse(payload);
-  if (!normalized) return [];
-  return normalized.instances
-    .filter((instance) => instance.instanceId !== args.activeInstanceId)
-    .map((instance) => ({
-      instanceId: instance.instanceId,
-      widgetType: instance.widgetType,
-      displayName: instance.displayName,
-      status: instance.status,
-    }));
 }
 
 function decodeBuilderPathInstanceId(pathname: string): string {
@@ -531,10 +507,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       const builderOpen = await accountApi.fetchJson<BuilderOpenResponse>(`/api/builder/${encodeURIComponent(activeInstanceId)}/open`);
       const widgetType = builderOpen.widgetType;
       const { payload: compiled } = await getCompiledWidget(widgetType);
-      const accountInstances = await loadAccountInstancesForBob({
-        fetchJson: accountApi.fetchJson,
-        activeInstanceId,
-      }).catch(() => []);
 
       if (openSeq !== openDispatchSeqRef.current) return;
 
@@ -558,7 +530,6 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
         instanceData: config,
         publishStatus: builderOpen.publishStatus,
         meta: builderOpen.meta ?? null,
-        accountInstances,
         policy: accountPolicy,
         copilot: builderOpen.copilot ?? null,
         translationSetup,

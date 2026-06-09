@@ -50,25 +50,27 @@ is evidence to stop, not evidence to proceed.
 Current executable step:
 
 ```text
-None for PRD106C. Surviving target set is confirmed.
+None for PRD106C. Surviving target set is confirmed by the PRD106C3 Split-family correction.
 ```
 
 Green evidence:
 
-- Target set is exactly Split, Cards, Big Bang, Call to Action.
+- Target set is exactly Split-family, Cards, Big Bang, Call to Action.
 - Out-of-scope Prague blocks are named and fenced/dropped.
 - Existing drift widget folders were deleted as customer widget targets:
   `tokyo/product/widgets/hero`, `tokyo/product/widgets/steps`, and
   `tokyo/product/widgets/cardgrid`.
 - `tokyo-worker/src/generated/widget-definition-sources.ts` now imports only
   `big-bang`, `calltoaction`, `cards`, `countdown`, `faq`, `logoshowcase`,
-  and `split`.
+  and the legacy `split` target is now superseded by `split-media`,
+  `split-instance`, `split-carousel-media`, and `split-carousel-instance`.
 - `packages/ck-contracts/src/overlay-codebooks.ts` no longer assigns overlay
   codes to `hero`, `steps`, or `cardgrid`.
 - No child PRD is asked to own Shell or Page Composer behavior.
-- Split embedded-instance support is explicitly owned by PRD106C3 as visible
-  Split Core behavior using `split.items[].instance.instanceId`; Prague
-  `accountInstanceRef` is not preserved.
+- Split-family embedded-instance support is explicitly owned by PRD106C3 as
+  `split-instance` and `split-carousel-instance`, with real package
+  dependencies and a product-owner-approved account-instance selector
+  component. Prague `accountInstanceRef` is not preserved.
 
 Stop conditions:
 
@@ -76,14 +78,15 @@ Stop conditions:
 - A child PRD needs Shell behavior not accepted by PRD106A2.
 - `hero`, `steps`, or `cardgrid` remains exposed as a customer widget target
   without a deletion/fence/rename decision.
-- Split embedded-instance support is treated as hidden nested behavior or as
-  Prague `accountInstanceRef` compatibility.
+- Split embedded-instance support is treated as hidden nested behavior, as
+  Prague `accountInstanceRef` compatibility, or as a mode inside one
+  polymorphic `split` widget.
 
 ## Execution Steps
 
 | Step | Action | Required evidence | Green criteria | Stop condition |
 | ---: | --- | --- | --- | --- |
-| 1 | Confirm surviving widget target set. | Target table from C2. | Only Split, Cards, Big Bang, CTA are customer targets. | New target widget needed. |
+| 1 | Confirm surviving widget target set. | Target table from C2. | Only Split-family, Cards, Big Bang, CTA are customer targets. | New target widget needed. |
 | 2 | Confirm shared Shell dependency. | A2 green/fence evidence. | Child PRDs consume Shell package. | Shell contract missing. |
 | 3 | Assign Prague blocks to child PRDs. | Mapping table. | Every migrated block maps to one child PRD. | Block spans multiple PRDs without owner. |
 | 4 | Confirm per-child scope. | Child PRD links and scope bullets. | Each child owns Core-only controls/content. | Child owns Header/CTA/Stage/Pod/Page Composer. |
@@ -101,7 +104,7 @@ The executable widget work is split into child PRDs:
 
 | PRD | Widget | Absorbs Prague blocks |
 | --- | --- | --- |
-| `PRD106C3_Split_Widget.md` | `split` | `hero`, `split` |
+| `PRD106C3_Split_Widget.md` | `split-media`, `split-instance`, `split-carousel-media`, `split-carousel-instance` | `hero`, `split`, `split-carousel`, `embed-carousel` |
 | `PRD106C4_Cards_Widget.md` | `cards` | `subpage-cards`, `steps`, `global-moat`, `platform-strip`, `control-moat` |
 | `PRD106C5_BigBang_Widget.md` | `big-bang` | `big-bang` |
 | `PRD106C6_CTA_Widget.md` | `cta` | `cta-bottom-block` |
@@ -111,12 +114,15 @@ child PRD.
 
 ## Product Decision
 
-The Prague block migration creates or finishes **four** customer widget types:
+The Prague block migration creates or finishes **seven** customer widget types:
 
-1. `split`
-2. `cards`
-3. `big-bang`
-4. `cta`
+1. `split-media`
+2. `split-instance`
+3. `split-carousel-media`
+4. `split-carousel-instance`
+5. `cards`
+6. `big-bang`
+7. `calltoaction`
 
 These are not widgets:
 
@@ -130,18 +136,19 @@ Existing drift widget folders must not remain customer widget targets:
 
 | Current folder | PRD106C decision |
 | --- | --- |
-| `tokyo/product/widgets/hero` | Deleted from customer widgets. `hero` is absorbed by `split`. |
+| `tokyo/product/widgets/hero` | Deleted from customer widgets. `hero` is absorbed by `split-media` or `split-instance` according to its visual source. |
 | `tokyo/product/widgets/steps` | Deleted from customer widgets. `steps` is a `cards` treatment. |
 | `tokyo/product/widgets/cardgrid` | Deleted from customer widgets. `cards` is the surviving widget. |
+| `tokyo/product/widgets/split` | Superseded as a customer widget. It is a migration/deletion source for the four Split-family widgets, not the surviving architecture. |
 
 Current Prague `accountInstanceRef` dies. It must not be copied into migrated
 widget state.
 
-Split embedded-instance support is granted only because PRD106C3 defines it as
-explicit, visible Split Core behavior with the approved
-`split.items[].instance.instanceId` path, no Prague iframe assumptions, no locale
-override, no page-owned override semantics, and no `accountInstanceRef`
-compatibility.
+Split embedded-instance support is granted only as explicit Split-family widget
+identity: `split-instance` and `split-carousel-instance`. It is not a hidden
+mode of `split-media`, not a `split.items[].kind` variant, not a Prague iframe
+assumption, not a locale override, not page-owned override semantics, and not
+`accountInstanceRef` compatibility.
 
 ## How Bob Widget Controls Work
 
@@ -222,10 +229,13 @@ widget-specific `headline`, `subheadline`, `primaryCta`, `secondaryCta`,
 For PRD106C, child PRDs define only the Widget Core:
 
 ```text
-Split          -> split.* image/video/embedded-instance software; optional carousel
-Cards          -> cards.* card/item content
-BigBang        -> bigBang.* large typography/content treatment
-Calltoaction   -> calltoaction.* body/action content plus shared Shell Header/Header CTA
+Split Media              -> splitMedia.* one image/video visual
+Split Instance           -> splitInstance.* one embedded account-owned widget instance
+Split Carousel Media     -> splitCarouselMedia.* 2-6 image/video visuals plus carousel behavior
+Split Carousel Instance  -> splitCarouselInstance.* 2-6 embedded account-owned widget instances plus carousel behavior
+Cards                    -> cards.* card/item content
+BigBang                  -> bigBang.* large typography/content treatment
+Calltoaction             -> calltoaction.* body/action content plus shared Shell Header/Header CTA
 ```
 
 PRD106C widget execution is blocked until PRD106A2 accepts the shared Shell

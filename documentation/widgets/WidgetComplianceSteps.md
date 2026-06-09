@@ -366,7 +366,9 @@ OUTPUT
   - Strict state assertions (fail-fast; fix the source).
   - Shared Shell primitives read Shell paths only.
   - Core appearance reads the widget namespace that declared it, such as
-    `cards.appearance.cardwrapper.*` or `split.appearance.cardwrapper.*`.
+    `cards.appearance.cardwrapper.*`,
+    `splitMedia.appearance.cardwrapper.*`, or
+    `splitCarouselMedia.appearance.cardwrapper.*`.
     Runtime must not read root `state.appearance.cardwrapper`.
   - Apply Stage/Pod and Typography first, then shared primitives, then widget-specific bindings.
   - No network fetches, timers, randomness, or “healing” logic inside `applyState`.
@@ -408,10 +410,13 @@ OUTPUT
   ""` for unlabeled rhythm groups and a meaningful value only when a visible
   nested group label is needed.
 - Controls only for bound paths; gate variant-specific controls via structured `showIf`.
-- `object-manager` templates are real Builder controls. Nested item controls
-  must preserve `showIf` and hydrate dynamic controls such as
-  `instance-picker`; do not accept a panel where every item variant field is
-  visible at once or where nested pickers have no account instance options.
+- `repeater` is for flat primary repeated item lists. `object-manager` is for
+  grouped containers, nested lists, or secondary per-object settings.
+- Repeater/object-manager templates are real Builder controls. Nested item
+  controls must preserve `showIf`; do not accept a panel where every item
+  variant field is visible at once. Account-instance selection is not a generic
+  field type and requires a product-owner-approved component before any widget
+  may depend on it.
 - Settings controls for `behavior.showBacklink` and
   `behavior.socialShare.*` are shared Shell controls from the
   `settings-behavior` shared node and must be backed by defaults,
@@ -450,7 +455,10 @@ OUTPUT
 - Every Core control path has one implementation mechanism: DOM text/HTML, DOM attribute, CSS var, or shared primitive call.
 - Every runtime-read Core path exists in defaults under the widget-specific body namespace.
 - Every runtime-read Shell path exists in the shared Shell factory defaults.
-- Array ops semantics (add/remove/reorder + required `id` fields) are enforced by editor controls/runtime, not a separate `agent.md` file.
+- Array ops semantics (add/remove/reorder + required `id` fields) are enforced
+  by editor controls and by the create/save boundary when they are structural
+  package invariants. Runtime may fail loudly too; runtime cannot be the only
+  enforcement for invalid persisted state.
 - Binding map summary: how each path affects DOM/CSS.
 - Prohibited paths:
   - Anything outside `editable-fields.json` for translatable text.

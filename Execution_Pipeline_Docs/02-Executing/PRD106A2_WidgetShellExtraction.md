@@ -92,7 +92,7 @@ Stop conditions:
 | 2 | Create `packages/widget-shell/` contract surface. | Diff showing package files and exported responsibilities. | Package owns contract/defaults/controls/render/runtime/css/validators. | Package starts owning Widget Core behavior. |
 | 3 | Rebase FAQ onto shared Shell with no behavior change. | Diff plus FAQ compile/render/save evidence. | FAQ output remains gold standard. | FAQ behavior changes outside intentional package import. |
 | 4 | Prove Core extension with Call to Action. | Call to Action diff plus compile/render evidence. | Call to Action is shared Shell plus `calltoaction.*` Core. | Call to Action defines duplicate Shell paths. |
-| 5 | Implement Split Core on the shared Shell. | Split diff plus compile/render/package evidence. | Split contributes only Core state/controls/runtime and uses shared Header/Header CTA/Stage/Pod. | Split redefines Header/Header CTA/Stage/Pod or changes FAQ/Call to Action behavior. |
+| 5 | Implement Split-family Cores on the shared Shell. | Split-family diff plus compile/render/package evidence. | Split-family widgets contribute only Core state/controls/runtime and use shared Header/Header CTA/Stage/Pod. | Any Split-family widget redefines Header/Header CTA/Stage/Pod or changes FAQ/Call to Action behavior. |
 | 6 | Add validation/search guards. | Targeted verification or `rg` guard output. | Forbidden duplicate paths fail without adding repo-wide PRD scripts or preserving copied Shell logic. | Guards allow copied Shell logic or recreate deleted PRD-script behavior. |
 
 ## Purpose
@@ -234,7 +234,7 @@ behavior.socialShare.enabled
 Core frame/surface state is widget-specific Core, not Shell. Widgets may use
 shared `CKSurface.applyCardWrapper`, but the surviving state path must live
 under the widget namespace, such as `cards.appearance.cardwrapper.*` or
-`split.appearance.cardwrapper.*`.
+`splitMedia.appearance.cardwrapper.*`.
 
 ### FAQ Core Paths Excluded From Shell
 
@@ -978,7 +978,10 @@ Approved Core div examples:
 | Widget | Software inside the Core div |
 | --- | --- |
 | FAQ | `sections[]`, FAQ layout, FAQ item/card appearance, FAQ runtime. |
-| Split | image/video/embedded-instance item software; optional carousel behavior. |
+| Split Media | `splitMedia.*` one image/video visual. |
+| Split Instance | `splitInstance.*` one embedded account-owned widget instance. |
+| Split Carousel Media | `splitCarouselMedia.*` 2-6 image/video visuals plus carousel behavior. |
+| Split Carousel Instance | `splitCarouselInstance.*` 2-6 embedded account-owned widget instances plus carousel behavior. |
 | Cards | `items[]`, cards layout/treatment, cards frame/card-copy controls. |
 | Countdown | timer target, labels, expired behavior. |
 | Logo Showcase | logos/items, row/grid/marquee behavior. |
@@ -1063,13 +1066,13 @@ Gate or the numbered Execution Steps table.
    behavior change and proves compile, preview, save/materialization, and
    package output evidence.
 4. Step 4 converts Call to Action to prove Shell plus widget Core reuse.
-5. Step 5 implements Split Core on the shared Shell. Use Cards only if the
+5. Step 5 implements Split-family Cores on the shared Shell. Use Cards only if the
    owning Cards PRD first resolves the `cards`/`cardgrid` naming authority
    without aliases or compatibility shims.
 6. Step 6 adds product-shaped validation/search guards that reject copied Shell
    logic and duplicate Shell-owned paths without adding root PRD scripts.
 7. Countdown and Logo Showcase gold-standard repair remain downstream Shell
-   rebase tasks after FAQ, Call to Action, and Split Core are green.
+   rebase tasks after FAQ, Call to Action, and Split-family Core work is green.
 
 ## Blast Radius
 
@@ -1088,7 +1091,11 @@ Expected touched areas:
 - `tokyo/product/widgets/shared/**`
 - `tokyo/product/widgets/faq/**`
 - `tokyo/product/widgets/calltoaction/**`
-- `tokyo/product/widgets/split/**` for Split Core implementation, or
+- `tokyo/product/widgets/split-media/**` and
+  `tokyo/product/widgets/split-carousel-media/**` for shipped Split-family
+  media Core implementation. `split-instance` and `split-carousel-instance`
+  remain future gated widgets until the account-instance selector contract
+  exists, or
   `tokyo/product/widgets/cards/**` only after the owning Cards PRD resolves
   `cards` versus `cardgrid`.
 - Widget validation/search guards scoped to Shell/Core boundaries.
@@ -1102,7 +1109,7 @@ PRD. Tokyo/R2 paths remain unchanged.
   architecture.
 - FAQ consumes the shared Shell and has no user-visible regression.
 - Call to Action consumes the shared Shell with `calltoaction.*` Core.
-- Split Core consumes the shared Shell.
+- Split-family Cores consume the shared Shell.
 - Bob preview and Roma materialization use the same Shell + Core contract.
 - A2 emits stable package contribution metadata/module keys sufficient for
   PRD106B Page Composer consumption; PRD106B proves actual Page Composer

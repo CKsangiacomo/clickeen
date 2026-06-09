@@ -178,9 +178,10 @@ widget's Core defaults.
 Runtime must preserve that ownership. A shared surface helper may be reused,
 but the value passed to it must come from the widget namespace that declared the
 surface, such as `cards.appearance.cardwrapper.*`,
-`split.appearance.cardwrapper.*`, `faq.appearance.cardwrapper.*`, or
-`countdown.appearance.cardwrapper.*`. Root `appearance.cardwrapper.*` is not a
-valid Shell path.
+`splitMedia.appearance.cardwrapper.*`,
+`splitCarouselMedia.appearance.cardwrapper.*`,
+`faq.appearance.cardwrapper.*`, or `countdown.appearance.cardwrapper.*`. Root
+`appearance.cardwrapper.*` is not a valid Shell path.
 
 ### Shared Stage And Settings Runtime
 
@@ -249,7 +250,16 @@ different. The shared Header can frame the body, but it is not a substitute for
 Core.
 
 - FAQ Core: FAQ sections/questions/answers and FAQ behavior.
-- Split Core: image/video/embedded-widget visual items and carousel behavior.
+- Split Media Core: one image/video visual.
+- Split Instance Core: one embedded account-owned widget instance.
+- Split Carousel Media Core: 2-6 image/video visuals plus carousel behavior.
+- Split Carousel Instance Core: 2-6 embedded account-owned widget instances
+  plus carousel behavior.
+
+As of PRD106C3 execution, `split-media` and `split-carousel-media` are the
+shipped Split-family widgets. `split-instance` and
+`split-carousel-instance` are future gated targets and must not be built with a
+fake `instance-picker` or Bob-only selector.
 - Cards Core: cards, card media/link/style options, and between-card graphics.
 - Big Bang Core: large typographic statement content.
 - Call to Action Core: action eyebrow/headline/supporting text/action content,
@@ -495,13 +505,18 @@ Use existing field types for the matching job:
 - fill/media/color: `dropdown-fill`
 - border: `dropdown-border`
 - shadow: `dropdown-shadow`
-- complex repeated items: `object-manager`
-- embedded instance selection: `instance-picker`
+- flat primary repeated item lists: `repeater`
+- grouped containers, nested lists, or secondary per-object settings:
+  `object-manager`
+Account-instance selection is not a generic field type. It requires a
+product-owner-approved Dieter/Bob component and a Roma-provided account instance
+data source. Do not use or document `instance-picker` as an approved widget
+control.
 
-Nested controls inside an `object-manager` template are not second-class HTML.
-They use the same Builder control language as top-level controls: `showIf`
-must survive compilation, and dynamic controls such as `instance-picker` must
-hydrate after rows are rendered.
+Nested controls inside `repeater` and `object-manager` templates are not
+second-class HTML. They use the same Builder control language as top-level
+controls: `showIf` must survive compilation and all nested controls must be
+real supported Dieter/Bob controls.
 
 Every dependent control uses structured `showIf`. Every field path exists in
 `defaults`. Every runtime-read path exists in `defaults`.

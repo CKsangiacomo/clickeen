@@ -57,7 +57,7 @@ umbrella is the source of truth for the contract language.
 | Page Composer product/build path | `PRD106B_PageComposer.md` |
 | Prague block migration map | `PRD106C_Prague astro blocks migration to widget instances.md` |
 | Prague factual block inventory | `PRD106C2_Prague astro blocks audit.md` |
-| Split Core | `PRD106C3_Split_Widget.md` |
+| Split-family Cores | `PRD106C3_Split_Widget.md` |
 | Cards Core | `PRD106C4_Cards_Widget.md` |
 | Big Bang Core | `PRD106C5_BigBang_Widget.md` |
 | CTA Core | `PRD106C6_CTA_Widget.md` |
@@ -239,7 +239,7 @@ Header has one meaning across normal widgets:
 Header = title + optional subtitle + optional CTA
 ```
 
-The working paths are `header.*` and `cta.*`. Do not invent widget-specific
+The working paths are `header.*` and `headerCta.*`. Do not invent widget-specific
 `headline`, `subheadline`, `copy`, `primaryCta`, `secondaryCta`, `button`,
 `eyebrow`, or duplicate Header/CTA/layout paths for normal widgets.
 
@@ -248,13 +248,16 @@ inside the Widget Core div. Core is the generic widget-owned slot where
 widget-specific software begins:
 
 ```text
-FAQ Core div           -> FAQ software: sections/questions/answers
-Split Core div         -> Split software: image/video/embedded instance; optional carousel
-Cards Core div         -> Cards software: cards/items/treatments
-Countdown Core div     -> Countdown software: timer/countdown content
-Logo Showcase Core div -> Logo Showcase software: logo strips/items
-CTA Core div           -> empty; Shell Header/CTA only
-Big Bang Core div      -> Big Bang software: large typography/content treatment
+FAQ Core div                     -> FAQ software: sections/questions/answers
+Split Media Core div             -> one image/video visual
+Split Instance Core div          -> one embedded account-owned widget instance
+Split Carousel Media Core div    -> 2-6 image/video visuals plus carousel runtime
+Split Carousel Instance Core div -> 2-6 embedded account-owned widget instances plus carousel runtime
+Cards Core div                   -> Cards software: cards/items/treatments
+Countdown Core div               -> Countdown software: timer/countdown content
+Logo Showcase Core div           -> Logo Showcase software: logo strips/items
+CTA Core div                     -> empty; Shell Header/CTA only
+Big Bang Core div                -> Big Bang software: large typography/content treatment
 ```
 
 This rule exists so agents do not rebuild a new editor, layout model,
@@ -508,12 +511,15 @@ PRD 106 adds the **page** noun and the Roma-owned workflow that composes it.
   Tokyo stores these files and serves already-stored public output only; Tokyo
   does not interpret `source.json`.
 
-The restraint is intentional: no container/slot system, no embedded-instance
-nesting (a widget inside a widget is NOT_ALLOWED in PRD 106 unless Pietro
-explicitly approves it), no sites/domains/nav, no drag-drop canvas, no A/B or
+The restraint is intentional: no container/slot system, no generic
+embedded-instance nesting, no sites/domains/nav, no drag-drop canvas, no A/B or
 personalization. Compose full-width widget instances into page files, host or
 embed them, and add depth only when a real need proves it and the product owner
-approves the new scope.
+approves the new scope. The only PRD106 widget-inside-widget scope currently
+approved for execution is explicit Split-family instance widgets:
+`split-instance` and `split-carousel-instance`; those require their own real
+account-instance selector component and package dependency path, not a hidden
+generic nesting model.
 
 ## Approved PRD 106 public coordinates
 

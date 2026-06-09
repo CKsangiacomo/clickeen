@@ -232,8 +232,12 @@ Rules:
   customer-visible text, `textfield` for one-line strings/URLs, `toggle` for
   booleans, `valuefield` for numbers, `dropdown-actions`/`choice-tiles`/
   `segmented` for enums, `dropdown-fill` for fills, `dropdown-border` for
-  borders, `dropdown-shadow` for shadows, `object-manager` for complex arrays,
-  `instance-picker` for embedded instances.
+  borders, `dropdown-shadow` for shadows, `repeater` for flat primary repeated
+  item lists, and `object-manager` for grouped containers, nested lists, or
+  secondary per-object settings.
+- Do not use `instance-picker`. Account-instance selection requires a
+  product-owner-approved Dieter/Bob component and Roma account-data contract
+  before any widget can depend on it.
 - Every dependent control must have structured `showIf`; do not rely on runtime
   to ignore irrelevant controls.
 

@@ -12,6 +12,7 @@ import {
   saveAccountPageInTokyo,
   type DirectPageRouteError,
 } from './account-page-direct';
+import { isLegacyWidgetType } from './legacy-widget-types';
 
 // Roma's direct instance path is the server boundary for one boring product flow:
 // call Tokyo's named account-instance verbs and surface their result.
@@ -648,6 +649,36 @@ export async function duplicateAccountInstanceInTokyo(args: {
     }
   | RouteFailure
 > {
+  const source = await openAccountInstanceFromTokyo({
+    accountId: args.accountId,
+    instanceId: args.sourceInstanceId,
+    accountCapsule: args.accountCapsule,
+    internalServiceName: args.internalServiceName,
+    requestId: args.requestId,
+  });
+  if (!source.ok) return source;
+  if (!source.value) {
+    return {
+      ok: false,
+      status: 404,
+      error: {
+        kind: 'NOT_FOUND',
+        reasonKey: 'coreui.errors.instance.notFound',
+        detail: `source instance not found: ${args.sourceInstanceId}`,
+      },
+    };
+  }
+  if (isLegacyWidgetType(source.value.row.widgetType)) {
+    return {
+      ok: false,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.instance.widgetLegacy',
+        detail: `legacy widget type cannot be duplicated: ${source.value.row.widgetType}`,
+      },
+    };
+  }
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.sourceInstanceId)}/duplicate`,
     method: 'POST',
@@ -690,6 +721,32 @@ async function postInstanceStatusTransition(args: {
   | { ok: true; value: { instanceId: string; status: AccountInstanceLiveStatus; changed: boolean } }
   | RouteFailure
 > {
+  if (args.action === 'publish') {
+    const source = await openAccountInstanceFromTokyo(args);
+    if (!source.ok) return source;
+    if (!source.value) {
+      return {
+        ok: false,
+        status: 404,
+        error: {
+          kind: 'NOT_FOUND',
+          reasonKey: 'coreui.errors.instance.notFound',
+          detail: `instance not found: ${args.instanceId}`,
+        },
+      };
+    }
+    if (isLegacyWidgetType(source.value.row.widgetType)) {
+      return {
+        ok: false,
+        status: 422,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.instance.widgetLegacy',
+          detail: `legacy widget type cannot be published: ${source.value.row.widgetType}`,
+        },
+      };
+    }
+  }
   const result = await fetchTokyoJson({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,

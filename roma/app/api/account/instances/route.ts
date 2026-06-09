@@ -6,8 +6,10 @@ import {
   listAccountInstancesInTokyo,
   listTokyoWidgetDefinitions,
 } from '@roma/lib/account-instance-direct';
+import { validateAccountInstanceConfigStructure } from '@roma/lib/account-instance-save-policy';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { loadAccountWidgetDefaultsInTokyo } from '@roma/lib/account-widget-defaults-direct';
+import { isLegacyWidgetType } from '@roma/lib/legacy-widget-types';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -82,6 +84,22 @@ export async function POST(request: NextRequest) {
       request,
       NextResponse.json(
         { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (isLegacyWidgetType(widgetType)) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.instance.widgetLegacy',
+            detail: `legacy widget type cannot create new instances: ${widgetType}`,
+          },
+        },
         { status: 422 },
       ),
       current.value.setCookies,
@@ -196,6 +214,17 @@ export async function POST(request: NextRequest) {
         },
         { status: 422 },
       ),
+      current.value.setCookies,
+    );
+  }
+  const structureGate = validateAccountInstanceConfigStructure({
+    widgetType,
+    config: materialized.config,
+  });
+  if (!structureGate.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: structureGate.error }, { status: structureGate.status }),
       current.value.setCookies,
     );
   }

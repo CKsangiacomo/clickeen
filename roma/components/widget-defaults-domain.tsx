@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { listWidgetShellAccountDefaultMetadataPaths } from '@clickeen/widget-shell';
+import { isLegacyWidgetType } from '@roma/lib/legacy-widget-types';
 import { useRomaAccountApi } from './account-api';
 import { getCompiledWidget } from './compiled-widget-cache';
 
@@ -96,6 +97,8 @@ function widgetLabel(widgetType: string): string {
     countdown: 'Countdown',
     faq: 'FAQ',
     logoshowcase: 'Logo Showcase',
+    'split-carousel-media': 'Split Carousel Media',
+    'split-media': 'Split Media',
     split: 'Split',
   };
   return labels[widgetType] ?? fieldLabel(widgetType);
@@ -476,7 +479,11 @@ export function WidgetDefaultsDomain() {
 
   const widgetTypes = useMemo(
     () =>
-      draft ? Object.keys(draft.widgets).sort((left, right) => left.localeCompare(right)) : [],
+      draft
+        ? Object.keys(draft.widgets)
+            .filter((widgetType) => !isLegacyWidgetType(widgetType))
+            .sort((left, right) => left.localeCompare(right))
+        : [],
     [draft],
   );
   const widgetTypesKey = widgetTypes.join('\n');

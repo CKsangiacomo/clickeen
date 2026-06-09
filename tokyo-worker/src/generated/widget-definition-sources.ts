@@ -15,6 +15,10 @@ import logoshowcaseEditableFields from "../../../tokyo/product/widgets/logoshowc
 import logoshowcaseSpec from "../../../tokyo/product/widgets/logoshowcase/spec.json";
 import splitEditableFields from "../../../tokyo/product/widgets/split/editable-fields.json";
 import splitSpec from "../../../tokyo/product/widgets/split/spec.json";
+import split_carousel_mediaEditableFields from "../../../tokyo/product/widgets/split-carousel-media/editable-fields.json";
+import split_carousel_mediaSpec from "../../../tokyo/product/widgets/split-carousel-media/spec.json";
+import split_mediaEditableFields from "../../../tokyo/product/widgets/split-media/editable-fields.json";
+import split_mediaSpec from "../../../tokyo/product/widgets/split-media/spec.json";
 
 export type WidgetDefinitionSource = {
   widgetType: string;
@@ -57,5 +61,15 @@ export const WIDGET_DEFINITION_SOURCES = [
     widgetType: "split",
     spec: splitSpec,
     editableFields: splitEditableFields,
+  },
+  {
+    widgetType: "split-carousel-media",
+    spec: split_carousel_mediaSpec,
+    editableFields: split_carousel_mediaEditableFields,
+  },
+  {
+    widgetType: "split-media",
+    spec: split_mediaSpec,
+    editableFields: split_mediaEditableFields,
   },
 ] as const satisfies readonly WidgetDefinitionSource[];

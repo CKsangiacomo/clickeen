@@ -224,10 +224,6 @@
                     {
                       "label": "Video",
                       "value": "video"
-                    },
-                    {
-                      "label": "Instance",
-                      "value": "instance"
                     }
                   ]
                 },
@@ -324,29 +320,6 @@
               },
               {
                 "kind": "field",
-                "type": "instance-picker",
-                "path": "split.items.0.instance.instanceId",
-                "label": "Instance",
-                "attrs": {
-                  "size": "md",
-                  "placeholder": "Select instance"
-                },
-                "showIf": {
-                  "all": [
-                    {
-                      "path": "split.carousel.enabled",
-                      "op": "isFalse"
-                    },
-                    {
-                      "path": "split.items.0.kind",
-                      "op": "equals",
-                      "value": "instance"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
                 "type": "object-manager",
                 "groupId": "content-visuals",
                 "path": "split.items",
@@ -366,10 +339,6 @@
                         {
                           "label": "Video",
                           "value": "video"
-                        },
-                        {
-                          "label": "Instance",
-                          "value": "instance"
                         }
                       ]
                     }
@@ -427,21 +396,6 @@
                       "op": "equals",
                       "value": "video"
                     }
-                  },
-                  {
-                    "kind": "field",
-                    "type": "instance-picker",
-                    "path": "split.items.__INDEX__.instance.instanceId",
-                    "label": "Instance",
-                    "attrs": {
-                      "size": "md",
-                      "placeholder": "Select instance"
-                    },
-                    "showIf": {
-                      "path": "split.items.__INDEX__.kind",
-                      "op": "equals",
-                      "value": "instance"
-                    }
                   }
                 ],
                 "attrs": {
@@ -469,9 +423,6 @@
                     },
                     "video": {
                       "alt": ""
-                    },
-                    "instance": {
-                      "instanceId": ""
                     }
                   }
                 },

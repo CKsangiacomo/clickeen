@@ -70,7 +70,6 @@ export function useSessionBoot(args: {
           publishStatus: message.publishStatus,
           label: nextLabel,
           meta: message.meta ?? null,
-          accountInstances: Array.isArray(message.accountInstances) ? message.accountInstances : [],
           translationSetup: message.translationSetup ?? null,
         };
         const nextState: SessionState = {

@@ -21,6 +21,12 @@ const widgets = [
   { widgetType: 'split', instanceId: 'KUGYTX2ZMQ', expectedRoot: 'split', published: false },
 ];
 
+const sourceWidgets = [
+  ...widgets,
+  { widgetType: 'split-carousel-media', expectedRoot: 'splitCarouselMedia' },
+  { widgetType: 'split-media', expectedRoot: 'splitMedia' },
+];
+
 const shellTopLevel = new Set(['header', 'headerCta', 'stage', 'pod', 'coreSize', 'localeSwitcher']);
 const shellAppearanceKeys = new Set([
   'headerCta',
@@ -416,7 +422,7 @@ const instanceIssues = [];
 const warnings = [];
 const specs = new Map();
 
-for (const widget of widgets) {
+for (const widget of sourceWidgets) {
   const widgetDir = path.join(widgetsRoot, widget.widgetType);
   const specPath = path.join(widgetDir, 'spec.json');
   const editablePath = path.join(widgetDir, 'editable-fields.json');
@@ -453,8 +459,15 @@ for (const widget of widgets) {
   if (/\bstate\.appearance(?:\s*&&\s*state\.appearance)?\.cardwrapper\b/.test(clientSource)) {
     pushIssue(sourceIssues, widget.widgetType, 'widget.client.js', 'runtime reads root state.appearance.cardwrapper; cardwrapper is widget Core appearance');
   }
-  if (widget.widgetType === 'split') {
-    if (!/\.ck-split__core\[data-core-size-mode=['"]auto['"]\][\s\S]*aspect-ratio/.test(cssSource)) {
+  if (['split', 'split-carousel-media', 'split-media'].includes(widget.widgetType)) {
+    const coreClass =
+      widget.widgetType === 'split'
+        ? 'ck-split__core'
+        : widget.widgetType === 'split-media'
+          ? 'ck-split-media__core'
+          : 'ck-split-carousel-media__core';
+    const autoSizingPattern = new RegExp(`\\.${coreClass}\\[data-core-size-mode=['"]auto['"]\\][\\s\\S]*aspect-ratio`);
+    if (!autoSizingPattern.test(cssSource)) {
       pushIssue(sourceIssues, widget.widgetType, 'widget.css', 'Split Core must define intrinsic auto sizing for absolutely positioned media');
     }
     const coreSizeSource = fs.readFileSync(path.join(widgetsRoot, 'shared', 'coreSize.js'), 'utf8');
