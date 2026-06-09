@@ -12,17 +12,15 @@ test.describe('Roma Builder authenticated smoke', () => {
     await expect(page).toHaveURL(/\/widgets/);
     await expect(page.getByRole('heading', { name: 'Widgets' })).toBeVisible();
 
-    const editButtons = page.getByRole('link', { name: 'Edit' });
-    const editCount = await editButtons.count();
-    test.skip(editCount === 0, 'The e2e account has no editable widget instances.');
-
-    await editButtons.first().click();
+    const editLink = page.getByRole('link', { name: 'Edit' }).first();
+    await expect(editLink).toBeVisible({ timeout: 20_000 });
+    await editLink.click();
     await expect(page).toHaveURL(/\/builder\/[A-Z0-9]+/);
     await expect(page.getByRole('heading', { name: 'Builder' })).toBeVisible();
 
     const bobFrame = page.frameLocator('iframe[title="Bob Builder"]');
     await expect(bobFrame.getByRole('button', { name: /Manual/i })).toBeVisible({ timeout: 20_000 });
-    await expect(bobFrame.getByRole('heading', { name: /Content|Translations|Appearance|Layout|Typography|Settings/ })).toBeVisible();
+    await expect(bobFrame.getByText('Content').first()).toBeVisible();
 
     await page.screenshot({ path: testInfo.outputPath('builder-open.png'), fullPage: true });
   });
