@@ -28,6 +28,8 @@ const repoRoot = path.resolve(path.dirname(scriptPath), '..', '..');
 const widgetsRoot = path.join(repoRoot, 'tokyo', 'product', 'widgets');
 const accountId = process.env.CK_106_ACCOUNT_ID || 'CLICKEEN';
 const apply = process.argv.includes('--apply');
+const legacyHeaderCtaHrefs = new Set(['www.clickeen.com', '#']);
+const defaultHeaderCtaHref = 'https://www.clickeen.com';
 
 const widgets: WidgetEntry[] = [
   { widgetType: 'big-bang', instanceId: 'QD1G068MX7' },
@@ -453,6 +455,7 @@ function shellFromState(base: JsonRecord, state: JsonRecord): JsonRecord {
   setPath(shell, 'stage.canvas.mode', 'viewport');
   setPath(shell, 'pod.widthMode', 'full');
   repairHeaderCtaPaddingSeed(shell);
+  repairHeaderCtaHrefSeed(shell);
   return shell;
 }
 
@@ -467,6 +470,13 @@ function repairHeaderCtaPaddingSeed(state: JsonRecord): void {
   if (!oldSeed && !unlinkedEqual) return;
   setPath(state, 'appearance.headerCta.paddingLinked', true);
   if (oldSeed) setPath(state, 'appearance.headerCta.paddingBlock', 18);
+}
+
+function repairHeaderCtaHrefSeed(state: JsonRecord): void {
+  const href = getPath(state, 'headerCta.href');
+  if (typeof href === 'string' && legacyHeaderCtaHrefs.has(href.trim())) {
+    setPath(state, 'headerCta.href', defaultHeaderCtaHref);
+  }
 }
 
 function migrateHeaderCtaAliases(state: JsonRecord): void {
@@ -857,6 +867,7 @@ async function migrateInstance(widget: WidgetEntry, shellDefaults: JsonRecord, n
   setPath(fullConfig, 'pod.widthMode', 'full');
   migrateHeaderCtaAliases(fullConfig);
   repairHeaderCtaPaddingSeed(fullConfig);
+  repairHeaderCtaHrefSeed(fullConfig);
   const nextContent = contentFromFullConfig({
     widgetType: widget.widgetType,
     instanceId: widget.instanceId,

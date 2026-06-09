@@ -117,6 +117,34 @@ function collectObjectPaths(value, prefix = '') {
   return paths;
 }
 
+function getPath(root, pathValue) {
+  let cursor = root;
+  for (const part of pathValue.split('.').filter(Boolean)) {
+    if (!isRecord(cursor)) return undefined;
+    cursor = cursor[part];
+  }
+  return cursor;
+}
+
+function isValidHeaderCtaHref(value) {
+  if (typeof value !== 'string' || !value.trim()) return false;
+  if (!/^https?:\/\//i.test(value.trim())) return false;
+  try {
+    new URL(value.trim());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function auditHeaderCtaHref(issues, scope, state) {
+  if (getPath(state, 'headerCta.enabled') !== true) return;
+  const href = getPath(state, 'headerCta.href');
+  if (!isValidHeaderCtaHref(href)) {
+    pushIssue(issues, scope, 'headerCta.href', `enabled Header CTA requires an absolute http(s) URL, got ${JSON.stringify(href)}`);
+  }
+}
+
 function collectEditorPaths(node) {
   if (!isRecord(node)) return [];
   const paths = [];
@@ -545,6 +573,7 @@ if (!skipR2) {
       pushIssue(accountIssues, 'account widget defaults', `widgets.${widgetType}`, 'unsupported widget defaults key remains'),
     );
   const accountShell = accountDefaults.shell || {};
+  auditHeaderCtaHref(accountIssues, 'account shell defaults', accountShell);
   const shellControls = shellControlPaths(accountShell);
   collectLeafPaths(accountShell)
     .filter((pathValue) => !isPathCovered(pathValue, shellControls))
@@ -613,6 +642,7 @@ if (!skipR2) {
     ['header', 'headerCta', 'stage', 'pod', 'coreSize', 'localeSwitcher', 'behavior', 'appearance', 'typography'].forEach((root) => {
       if (!isRecord(state[root])) pushIssue(instanceIssues, widget.instanceId, root, 'missing Shell state root');
     });
+    auditHeaderCtaHref(instanceIssues, widget.instanceId, state);
     ['headerCta', 'localeSwitcherBackground', 'localeSwitcherTextColor', 'localeSwitcherBorder', 'localeSwitcherRadius', 'localeSwitcherPaddingInline', 'localeSwitcherPaddingBlock', 'podBorder'].forEach((key) => {
       if (typeof state.appearance?.[key] === 'undefined') {
         pushIssue(instanceIssues, widget.instanceId, `appearance.${key}`, 'missing Shell appearance default');
