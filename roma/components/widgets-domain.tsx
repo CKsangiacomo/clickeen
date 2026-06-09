@@ -340,6 +340,17 @@ export function WidgetsDomain() {
               <p className="body-m roma-toolbar-count">
                 {group.instances.length} {group.instances.length === 1 ? 'instance' : 'instances'}
               </p>
+              <button
+                className="diet-btn-txt"
+                data-size="md"
+                data-variant="line2"
+                type="button"
+                onClick={() => void handleCreateInstance(group.widgetType)}
+                disabled={Boolean(activeActionKey) || !group.canCreate}
+                title={createTitle}
+              >
+                <span className="diet-btn-txt__label body-m">{activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}</span>
+              </button>
             </div>
 
             <table className="roma-table">
@@ -502,20 +513,7 @@ export function WidgetsDomain() {
                 {group.instances.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="body-s">
-                      <div className="roma-cell-actions">
-                        <span>No instances yet.</span>
-                        <button
-                          className="diet-btn-txt"
-                          data-size="md"
-                          data-variant="line2"
-                          type="button"
-                          onClick={() => void handleCreateInstance(group.widgetType)}
-                          disabled={Boolean(activeActionKey) || !group.canCreate}
-                          title={createTitle}
-                        >
-                          <span className="diet-btn-txt__label body-m">{activeActionKey === createActionKey ? 'Creating...' : 'Create instance'}</span>
-                        </button>
-                      </div>
+                      No instances yet.
                     </td>
                   </tr>
                 ) : null}
