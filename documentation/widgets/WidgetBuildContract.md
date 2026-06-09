@@ -100,11 +100,11 @@ covered, Roma must stop with a contract error listing the missing paths. It must
 not infer a generic field, hide the path, or save through the broken contract.
 
 The only exception is software metadata, not account-editable defaults:
-`uiLabels.core.*`, `typography.roleScales.*`, and widget-owned hidden metadata
-leaves that parameterize fixed runtime/software behavior are canonicalized from
-widget software at the account defaults boundary. User-submitted values for
-those paths are not account truth. Non-metadata leaves without compiled Builder
-control coverage are rejected server-side.
+`uiLabels.core.*` and `typography.roleScales.*`. These families exist so Builder
+can name Core groups and resolve typography presets. Hidden widget runtime
+constants such as SEO/GEO answer formats, business types, workspace URLs, or
+fixed action types must not live in account defaults. Non-metadata leaves
+without compiled Builder control coverage are rejected server-side.
 
 Roma lists live account instances from the instance registry, not from raw R2
 prefixes. R2 folders are stored bytes only. Orphan R2 cleanup is data

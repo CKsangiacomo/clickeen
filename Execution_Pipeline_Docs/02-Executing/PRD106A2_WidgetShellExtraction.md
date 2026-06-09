@@ -843,7 +843,7 @@ Header CTA appearance controls:
 | Path | Control | Meaning |
 | --- | --- | --- |
 | `appearance.headerCta.sizePreset` | dropdown-actions | Header CTA size preset. |
-| `appearance.headerCta.paddingLinked` | toggle | Link Header CTA padding. |
+| `appearance.headerCta.paddingLinked` | toggle | Sync Header CTA horizontal and vertical padding. |
 | `appearance.headerCta.paddingInline` | valuefield | Inline Header CTA padding. |
 | `appearance.headerCta.paddingBlock` | valuefield | Block Header CTA padding. |
 | `appearance.headerCta.background` | dropdown-fill | Header CTA background. |

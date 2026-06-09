@@ -103,7 +103,8 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 - `countdown.appearance.cardwrapper.radiusLinked|radius|radiusTL|TR|BR|BL`: Radius controls for tiles.
 - `countdown.appearance.separator`: Color/style picker.
 - `countdown.appearance.animation`: 'fade' (only; skip advanced).
-- `actions.during.type`: 'link' (V1).
+- During-countdown action type is fixed to link in V1 and must not be stored as
+  an account default unless a future Builder control makes it editable.
 - `actions.during.url`: URL input (supports internal/external).
 - `actions.during.text`: Text input (max 50; default: "Purchase now").
 - `actions.during.style`: 'primary' | 'secondary'.

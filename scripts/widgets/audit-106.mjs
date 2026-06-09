@@ -41,10 +41,7 @@ const shellAppearanceKeys = new Set([
 ]);
 const shellTypographyRoles = new Set(['title', 'body', 'button', 'localeSwitcher']);
 const shellMetadataRoots = ['typography.roleScales'];
-const coreMetadataRootsByWidgetType = {
-  countdown: ['countdown.actions.during.type', 'countdown.geo.answerFormat', 'countdown.seo.businessType'],
-  faq: ['faq.context.websiteUrl', 'faq.geo.answerFormat', 'faq.seo.businessType'],
-};
+const coreMetadataRootsByWidgetType = {};
 const requiredSharedNodes = [
   ['header-content', 'header-content-no-header-cta'],
   ['header-layout', 'header-layout-no-header-cta'],

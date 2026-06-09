@@ -70,12 +70,10 @@
         "enabled": false
       },
       "seo": {
-        "businessType": "online-service",
         "canonicalUrl": "",
         "enableSchema": true
       },
       "geo": {
-        "answerFormat": "direct-first",
         "enableDeepLinks": true
       },
       "actions": {
@@ -87,7 +85,6 @@
         "during": {
           "url": "",
           "text": "Purchase now",
-          "type": "link",
           "style": "primary",
           "newTab": true
         }

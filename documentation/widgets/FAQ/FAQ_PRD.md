@@ -307,8 +307,6 @@ Source: `tokyo/product/widgets/faq/spec.json`
 
 Controls:
 
-- Copilot context:
-- `context.websiteUrl` (canonical Copilot/product context; runtime ignores it)
 - SEO/GEO:
   - `seoGeo.enabled`
   - `seo.enableSchema` (shown when `seoGeo.enabled == true`)
@@ -339,9 +337,10 @@ Controls (FAQ roles):
 - `typography.roles.answer.*`
 - `typography.roles.button.*`
 
-## 5.1) AI behavior (Copilot, uses `context.websiteUrl`)
+## 5.1) AI behavior (Copilot, uses account website context)
 
-If `context.websiteUrl` is present and policy allows it, Copilot may:
+If the account/workspace website URL is present and policy allows it, Copilot
+may:
 
 - Rewrite or propose FAQ content (sections/questions/answers) based on the website URL.
 - Preserve the widget’s deterministic render: this is content generation only; runtime does not “fetch the website”.
@@ -356,10 +355,11 @@ Compiler-injected (because defaults include `typography.roles`):
 - Selection previews in-editor; only **Apply theme** commits changes to state.
 - Themes apply only: `stage.background`, `pod.background`, `appearance.itemBackground`, and `typography.globalFamily`.
 - Canonical non-runtime fields:
-  - `appearance.theme` and `context.websiteUrl` remain part of the canonical authored FAQ document
-  - editor/Copilot/product flows may use them
-  - save/open boundary still validates the saved document shape
-  - FAQ runtime must not depend on either field
+  - `appearance.theme` remains part of the canonical authored FAQ document when
+    explicitly supported by the editor.
+  - Website URL is account/workspace context, not FAQ widget default or instance
+    config.
+  - FAQ runtime must not depend on either field.
 
 ## 6) Runtime requirements
 

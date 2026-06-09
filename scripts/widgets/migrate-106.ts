@@ -452,7 +452,21 @@ function shellFromState(base: JsonRecord, state: JsonRecord): JsonRecord {
 
   setPath(shell, 'stage.canvas.mode', 'viewport');
   setPath(shell, 'pod.widthMode', 'full');
+  repairHeaderCtaPaddingSeed(shell);
   return shell;
+}
+
+function repairHeaderCtaPaddingSeed(state: JsonRecord): void {
+  const headerCta = getPath(state, 'appearance.headerCta');
+  if (!isRecord(headerCta)) return;
+  const linked = headerCta.paddingLinked;
+  const inline = headerCta.paddingInline;
+  const block = headerCta.paddingBlock;
+  const oldSeed = linked === false && inline === 18 && block === 12;
+  const unlinkedEqual = linked === false && typeof inline === 'number' && inline === block;
+  if (!oldSeed && !unlinkedEqual) return;
+  setPath(state, 'appearance.headerCta.paddingLinked', true);
+  if (oldSeed) setPath(state, 'appearance.headerCta.paddingBlock', 18);
 }
 
 function migrateHeaderCtaAliases(state: JsonRecord): void {
@@ -682,13 +696,19 @@ function migrateWidgetNamespaces(widgetType: string, state: JsonRecord): JsonRec
   if (widgetType === 'countdown') {
     ['timer', 'layout', 'seoGeo', 'seo', 'geo', 'actions'].forEach((key) => moveObject(next, key, `countdown.${key}`));
     moveLegacyAppearanceToWidgetRoot(next, 'countdown');
+    deletePath(next, 'countdown.actions.during.type');
+    deletePath(next, 'countdown.geo.answerFormat');
+    deletePath(next, 'countdown.seo.businessType');
   }
 
   if (widgetType === 'faq') {
-    ['sections', 'layout', 'seoGeo', 'seo', 'geo', 'context', 'displayCategoryTitles'].forEach((key) =>
+    ['sections', 'layout', 'seoGeo', 'seo', 'geo', 'displayCategoryTitles'].forEach((key) =>
       moveObject(next, key, `faq.${key}`),
     );
     moveLegacyAppearanceToWidgetRoot(next, 'faq');
+    deletePath(next, 'faq.context');
+    deletePath(next, 'faq.geo.answerFormat');
+    deletePath(next, 'faq.seo.businessType');
     const behavior = isRecord(next.behavior) ? next.behavior : {};
     const coreBehavior: JsonRecord = {};
     ['displayImages', 'displayVideos', 'expandAll', 'expandFirst', 'multiOpen'].forEach((key) => {
@@ -836,6 +856,7 @@ async function migrateInstance(widget: WidgetEntry, shellDefaults: JsonRecord, n
   setPath(fullConfig, 'stage.canvas.mode', 'viewport');
   setPath(fullConfig, 'pod.widthMode', 'full');
   migrateHeaderCtaAliases(fullConfig);
+  repairHeaderCtaPaddingSeed(fullConfig);
   const nextContent = contentFromFullConfig({
     widgetType: widget.widgetType,
     instanceId: widget.instanceId,

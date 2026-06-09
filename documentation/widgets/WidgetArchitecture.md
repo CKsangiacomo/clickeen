@@ -105,12 +105,14 @@ default path that is not covered by a Builder control is a contract error that
 must be fixed in Widget Shell or the widget spec; Roma must not invent fallback
 controls for it.
 
-Software metadata is not account-editable default truth. `uiLabels.core.*`,
-`typography.roleScales.*`, and widget-owned hidden metadata leaves used only to
-parameterize runtime/software behavior are canonicalized from widget software at
-the account defaults boundary. Roma does not render fallback editors for those
-paths, and Tokyo rejects non-metadata default leaves that are not covered by
-compiled Builder controls.
+Software metadata is not account-editable default truth. Only
+`uiLabels.core.*` and `typography.roleScales.*` may travel with account defaults
+as non-editable software metadata because Builder needs them to name Core groups
+and resolve typography presets. Hidden widget runtime constants such as
+SEO/GEO answer formats, business types, workspace URLs, or fixed action types
+must not live in account defaults. If a stored default path is not covered by a
+compiled Builder control and is not one of the approved metadata families, Tokyo
+and Roma must reject it instead of rendering a fallback editor.
 
 ---
 

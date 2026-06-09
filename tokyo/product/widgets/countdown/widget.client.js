@@ -290,9 +290,6 @@
     assertBoolean(state.behavior.showBacklink, 'state.behavior.showBacklink');
     assertObject(state.countdown.actions, 'state.countdown.actions');
     assertObject(state.countdown.actions.during, 'state.countdown.actions.during');
-    if (!['link'].includes(state.countdown.actions.during.type)) {
-      throw new Error('[Countdown] state.countdown.actions.during.type must be link');
-    }
     assertString(state.countdown.actions.during.url, 'state.countdown.actions.during.url');
     assertString(state.countdown.actions.during.text, 'state.countdown.actions.during.text');
     if (!['primary', 'secondary'].includes(state.countdown.actions.during.style)) {
@@ -592,7 +589,7 @@
 
   function applyActionsDuring(state) {
     const href = normalizeHref(state.countdown.actions.during.url);
-    hasDuringCta = state.countdown.actions.during.type === 'link' && Boolean(href);
+    hasDuringCta = Boolean(href);
 
     ctaEl.setAttribute('data-variant', state.countdown.actions.during.style);
     ctaEl.textContent = state.countdown.actions.during.text;

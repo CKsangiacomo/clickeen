@@ -605,7 +605,7 @@ Account defaults smoke:
 - Roma Widget Defaults maps every account Shell/Core default path to compiled
   Builder controls. Missing coverage must show a contract error, not a generic
   fallback editor.
-- Software metadata such as `uiLabels.core.*`, `typography.roleScales.*`, and
-  widget-owned hidden metadata is canonicalized from software at the account
-  defaults boundary. It is not editable account truth and must not appear as an
-  unmapped fallback editor.
+- Software metadata in account defaults is limited to `uiLabels.core.*` and
+  `typography.roleScales.*`. Hidden widget runtime constants such as SEO/GEO
+  answer formats, business types, workspace URLs, or fixed action types must
+  not live in account defaults.

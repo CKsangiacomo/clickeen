@@ -205,11 +205,9 @@
     },
     "faq": {
       "geo": {
-        "answerFormat": "direct-first",
         "enableDeepLinks": true
       },
       "seo": {
-        "businessType": "online-service",
         "canonicalUrl": "",
         "enableSchema": true
       },
@@ -232,9 +230,6 @@
       },
       "seoGeo": {
         "enabled": false
-      },
-      "context": {
-        "websiteUrl": ""
       },
       "behavior": {
         "expandAll": false,

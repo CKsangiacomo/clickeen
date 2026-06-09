@@ -648,6 +648,13 @@ number/label roles, are account widget Core defaults for that widget type. They
 are not global Shell defaults unless a later PRD promotes them into the shared
 Shell contract.
 
+Account defaults may carry only two non-editable software metadata families:
+`uiLabels.core.*` and `typography.roleScales.*`. Hidden widget runtime constants
+such as SEO/GEO answer formats, business types, workspace URLs, or fixed action
+types are not account defaults. If a widget needs one of those values, it must
+either expose it as a real Builder control or keep it as widget software/runtime
+behavior outside the account defaults document.
+
 ## Initial Factory Defaults
 
 The initial global Shell factory defaults must come from the current Call to

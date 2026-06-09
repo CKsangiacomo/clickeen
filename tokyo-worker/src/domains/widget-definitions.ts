@@ -136,22 +136,10 @@ function collectCoreAccountDefaultControlPaths(defaults: unknown, editor: unknow
   return [...paths].sort((left, right) => left.localeCompare(right));
 }
 
-const CORE_SOFTWARE_METADATA_PATHS_BY_WIDGET_TYPE: Record<string, readonly string[]> = {
-  countdown: [
-    'countdown.actions.during.type',
-    'countdown.geo.answerFormat',
-    'countdown.seo.businessType',
-  ],
-  faq: ['faq.context.websiteUrl', 'faq.geo.answerFormat', 'faq.seo.businessType'],
-};
-
-function collectCoreAccountDefaultMetadataPaths(defaults: unknown, widgetType: string): string[] {
+function collectCoreAccountDefaultMetadataPaths(defaults: unknown): string[] {
   const paths: string[] = [];
   if (pathExists(defaults, 'uiLabels.core')) paths.push('uiLabels.core');
   if (pathExists(defaults, 'typography.roleScales')) paths.push('typography.roleScales');
-  for (const path of CORE_SOFTWARE_METADATA_PATHS_BY_WIDGET_TYPE[widgetType] ?? []) {
-    if (pathExists(defaults, path)) paths.push(path);
-  }
   return paths;
 }
 
@@ -189,7 +177,7 @@ function readWidgetDefinitionSource(source: WidgetDefinitionSource): WidgetDefin
         ...collectCoreCardWrapperControlPaths(spec.defaults, widgetType),
       ]),
     ].sort((left, right) => left.localeCompare(right)),
-    accountDefaultMetadataPaths: collectCoreAccountDefaultMetadataPaths(spec.defaults, widgetType),
+    accountDefaultMetadataPaths: collectCoreAccountDefaultMetadataPaths(spec.defaults),
   };
 }
 

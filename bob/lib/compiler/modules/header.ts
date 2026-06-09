@@ -103,7 +103,7 @@ export function buildHeaderAppearancePanelFields({ includeCta = true }: HeaderPa
   return [
     '  <tooldrawer-cluster label=\'Header CTA\' show-if=\"header.enabled == true && headerCta.enabled == true\">',
     `    <tooldrawer-field-headerappearance group-label='' type='dropdown-actions' size='md' path='appearance.headerCta.sizePreset' label='Size' placeholder='Choose size' value='{{appearance.headerCta.sizePreset}}' options='${sizePresetOptions}' />`,
-    "    <tooldrawer-field-headerappearance group-label='' type='toggle' size='md' path='appearance.headerCta.paddingLinked' label='Link padding' value='{{appearance.headerCta.paddingLinked}}' default='true' />",
+    "    <tooldrawer-field-headerappearance group-label='' type='toggle' size='md' path='appearance.headerCta.paddingLinked' label='Sync padding' value='{{appearance.headerCta.paddingLinked}}' default='true' />",
     "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingInline' label='Padding (px)' show-if=\"appearance.headerCta.paddingLinked == true\" />",
     "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingInline' label='Horizontal padding (px)' show-if=\"appearance.headerCta.paddingLinked == false\" />",
     "    <tooldrawer-field-headerappearance group-label='' type='valuefield' size='md' path='appearance.headerCta.paddingBlock' label='Vertical padding (px)' show-if=\"appearance.headerCta.paddingLinked == false\" />",
