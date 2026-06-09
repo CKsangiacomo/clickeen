@@ -768,6 +768,12 @@ MUST
   or per-item styling.
 - Put object-manager item fields under the array item path using
   `__INDEX__`, for example `{widgetNamespace}.items.__INDEX__.title`.
+- Object-manager item templates may contain normal Builder fields, including
+  `showIf`-gated variant fields and `instance-picker`. The compiler must
+  preserve nested `showIf`, and Bob must hydrate nested instance pickers after
+  the object-manager renders dynamic rows. A widget is broken if every variant
+  field appears at once or if nested instance pickers stay empty while account
+  instances exist.
 - Keep Dieter control choice boring and consistent with FAQ/Shell patterns.
 
 MUST NOT

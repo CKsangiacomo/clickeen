@@ -498,6 +498,11 @@ Use existing field types for the matching job:
 - complex repeated items: `object-manager`
 - embedded instance selection: `instance-picker`
 
+Nested controls inside an `object-manager` template are not second-class HTML.
+They use the same Builder control language as top-level controls: `showIf`
+must survive compilation, and dynamic controls such as `instance-picker` must
+hydrate after rows are rendered.
+
 Every dependent control uses structured `showIf`. Every field path exists in
 `defaults`. Every runtime-read path exists in `defaults`.
 

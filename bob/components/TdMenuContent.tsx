@@ -7,7 +7,7 @@ import { type DieterMedia } from './td-menu-content/dom';
 import { resolvePathFromTarget } from './td-menu-content/fieldValue';
 import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './td-menu-content/showIf';
 import { useTdMenuBindings } from './td-menu-content/useTdMenuBindings';
-import { useTdMenuHydration } from './td-menu-content/useTdMenuHydration';
+import { hydrateInstancePickers, useTdMenuHydration } from './td-menu-content/useTdMenuHydration';
 
 type TdMenuContentProps = {
   panelId: PanelId | null;
@@ -79,6 +79,7 @@ export function TdMenuContent({
     widgetName: session.compiled?.widgetname ?? null,
     accountAssets: session.accountAssets,
     accountInstances: chrome.meta?.accountInstances ?? [],
+    currentInstanceId: chrome.meta?.instanceId ?? null,
     dieterMedia,
     instanceDataRef,
     showIfEntriesRef,
@@ -101,6 +102,12 @@ export function TdMenuContent({
   useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    hydrateInstancePickers({
+      container,
+      accountInstances: chrome.meta?.accountInstances ?? [],
+      currentInstanceId: chrome.meta?.instanceId ?? null,
+      instanceData,
+    });
     showIfEntriesRef.current = buildShowIfEntries(container);
     applyShowIfVisibility(showIfEntriesRef.current, instanceData);
   });

@@ -408,6 +408,10 @@ OUTPUT
   ""` for unlabeled rhythm groups and a meaningful value only when a visible
   nested group label is needed.
 - Controls only for bound paths; gate variant-specific controls via structured `showIf`.
+- `object-manager` templates are real Builder controls. Nested item controls
+  must preserve `showIf` and hydrate dynamic controls such as
+  `instance-picker`; do not accept a panel where every item variant field is
+  visible at once or where nested pickers have no account instance options.
 - Settings controls for `behavior.showBacklink` and
   `behavior.socialShare.*` are shared Shell controls from the
   `settings-behavior` shared node and must be backed by defaults,

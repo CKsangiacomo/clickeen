@@ -171,7 +171,8 @@ async function renderNestedTooldrawerFields(
       rendered = rendered.replace(/{{\s*template\s*}}/g, decodedNested);
     }
 
-    out += rendered;
+    const showIf = attrsInner['show-if'] ? decodeHtmlEntities(attrsInner['show-if']) : '';
+    out += showIf ? `<div data-bob-showif="${encodeHtmlEntities(showIf)}">${rendered}</div>` : rendered;
     cursor = tdRegex.lastIndex;
   }
 
