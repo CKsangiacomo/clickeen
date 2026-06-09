@@ -8,6 +8,7 @@ NEXT_PUBLIC_TOKYO_URL = "https://tokyo.dev.clickeen.com"
 BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
 SANFRANCISCO_BASE_URL = "https://sanfrancisco.dev.clickeen.com"
 NEXT_PUBLIC_BOB_URL = "https://bob.dev.clickeen.com"
+E2E_AUTH_ENABLED = "true"
 
 [[services]]
 binding = "TOKYO_ASSET_CONTROL"

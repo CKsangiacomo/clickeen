@@ -38,7 +38,8 @@ bootstrap:
 
 1. Playwright calls Roma `POST /api/e2e/session`.
 2. Roma calls Berlin `POST /internal/e2e/session`.
-3. Berlin issues normal access/refresh tokens for an allowlisted e2e email.
+3. Berlin resolves the allowlisted e2e email through the existing `email`
+   login provider and issues normal access/refresh tokens.
 4. Roma fetches the normal Berlin account bootstrap and sets normal shared
    Roma/Bob cookies.
 5. Playwright saves the session to `e2e/.auth/roma-dev.json`.
@@ -49,7 +50,7 @@ After that, tests exercise the real product path:
 Roma -> Bob iframe -> Tokyo product APIs
 ```
 
-No fake Builder mode is introduced.
+No fake Builder mode, account type, or login provider is introduced.
 
 ## Required Secrets
 

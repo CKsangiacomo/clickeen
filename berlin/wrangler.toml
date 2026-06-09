@@ -17,6 +17,8 @@ BERLIN_GOOGLE_CALLBACK_URL = "https://berlin.dev.clickeen.com/auth/login/google/
 BERLIN_FINISH_REDIRECT_URL = "https://roma.dev.clickeen.com/api/session/finish"
 BERLIN_ALLOWED_PROVIDERS = "google"
 ENV_STAGE = "cloud-dev"
+E2E_AUTH_ENABLED = "true"
+E2E_ALLOWED_EMAILS = "playwright@clickeen.com"
 
 [[kv_namespaces]]
 binding = "BERLIN_SESSION_KV"

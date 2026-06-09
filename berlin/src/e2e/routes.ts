@@ -57,7 +57,7 @@ async function handleIssueE2ESession(request: Request, env: Env): Promise<Respon
   }
 
   const identity: ProviderIdentity = {
-    provider: 'e2e',
+    provider: 'email',
     providerSubject: email,
     email,
     emailVerified: true,
