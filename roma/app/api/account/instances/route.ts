@@ -9,7 +9,6 @@ import {
 import { validateAccountInstanceConfigStructure } from '@roma/lib/account-instance-save-policy';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { loadAccountWidgetDefaultsInTokyo } from '@roma/lib/account-widget-defaults-direct';
-import { isLegacyWidgetType } from '@roma/lib/legacy-widget-types';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -89,23 +88,6 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
-  if (isLegacyWidgetType(widgetType)) {
-    return withSession(
-      request,
-      NextResponse.json(
-        {
-          error: {
-            kind: 'VALIDATION',
-            reasonKey: 'coreui.errors.instance.widgetLegacy',
-            detail: `legacy widget type cannot create new instances: ${widgetType}`,
-          },
-        },
-        { status: 422 },
-      ),
-      current.value.setCookies,
-    );
-  }
-
   const accountId = current.value.authzPayload.accountPublicId;
   const widgetDefinitions = await listTokyoWidgetDefinitions({
     accountId,

@@ -38,6 +38,9 @@
 
 .ck-headerLayout > .ck-headerLayout__body {
   grid-area: body;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .ck-header {

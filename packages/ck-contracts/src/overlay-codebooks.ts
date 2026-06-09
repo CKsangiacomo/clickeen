@@ -7,7 +7,6 @@ export const WIDGET_OVERLAY_CODES = Object.freeze({
   faq: 'FAQ',
   countdown: 'CTD',
   logoshowcase: 'LGS',
-  split: 'SPL',
   'split-carousel-media': 'SCM',
   'split-media': 'SPM',
 } as const);

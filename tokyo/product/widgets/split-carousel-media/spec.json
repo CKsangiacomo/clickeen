@@ -3,13 +3,6 @@
   "widgetname": "split-carousel-media",
   "itemKey": "split-carousel-media.item",
   "normalization": {
-    "idRules": [
-      {
-        "arrayPath": "splitCarouselMedia.items",
-        "idKey": "id",
-        "fallbackPrefix": "split-carousel-media-item"
-      }
-    ],
     "coerceRules": [
       {
         "path": "behavior.showBacklink",
@@ -126,54 +119,28 @@
         {
           "id": "visual-1",
           "media": {
-            "kind": "image",
+            "type": "image",
             "image": {
-              "type": "image",
-              "image": {
-                "src": "/dieter/icons/svg/photo.svg",
-                "fit": "contain",
-                "position": "center",
-                "repeat": "no-repeat"
-              }
-            },
-            "video": {
-              "type": "video",
-              "video": {
-                "src": "",
-                "poster": "",
-                "muted": true,
-                "loop": true,
-                "autoplay": true
-              }
-            },
-            "alt": "First visual"
-          }
+              "src": "/dieter/icons/svg/photo.svg",
+              "fit": "contain",
+              "position": "center",
+              "repeat": "no-repeat"
+            }
+          },
+          "alt": "First visual"
         },
         {
           "id": "visual-2",
           "media": {
-            "kind": "image",
+            "type": "image",
             "image": {
-              "type": "image",
-              "image": {
-                "src": "/dieter/icons/svg/photo.svg",
-                "fit": "contain",
-                "position": "center",
-                "repeat": "no-repeat"
-              }
-            },
-            "video": {
-              "type": "video",
-              "video": {
-                "src": "",
-                "poster": "",
-                "muted": true,
-                "loop": true,
-                "autoplay": true
-              }
-            },
-            "alt": "Second visual"
-          }
+              "src": "/dieter/icons/svg/photo.svg",
+              "fit": "contain",
+              "position": "center",
+              "repeat": "no-repeat"
+            }
+          },
+          "alt": "Second visual"
         }
       ],
       "media": {
@@ -236,59 +203,19 @@
                 "template": [
                   {
                     "kind": "field",
-                    "type": "dropdown-actions",
-                    "path": "splitCarouselMedia.items.__INDEX__.media.kind",
-                    "label": "Type",
-                    "attrs": {
-                      "size": "md",
-                      "options": [
-                        {
-                          "label": "Image",
-                          "value": "image"
-                        },
-                        {
-                          "label": "Video",
-                          "value": "video"
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "kind": "field",
                     "type": "dropdown-fill",
-                    "path": "splitCarouselMedia.items.__INDEX__.media.image",
-                    "label": "Image",
+                    "path": "splitCarouselMedia.items.__INDEX__.media",
+                    "label": "Media",
                     "attrs": {
                       "size": "md",
-                      "fill-modes": "image",
+                      "fill-modes": "image,video",
                       "allow-image": "true"
-                    },
-                    "showIf": {
-                      "path": "splitCarouselMedia.items.__INDEX__.media.kind",
-                      "op": "equals",
-                      "value": "image"
-                    }
-                  },
-                  {
-                    "kind": "field",
-                    "type": "dropdown-fill",
-                    "path": "splitCarouselMedia.items.__INDEX__.media.video",
-                    "label": "Video",
-                    "attrs": {
-                      "size": "md",
-                      "fill-modes": "video",
-                      "allow-image": "true"
-                    },
-                    "showIf": {
-                      "path": "splitCarouselMedia.items.__INDEX__.media.kind",
-                      "op": "equals",
-                      "value": "video"
                     }
                   },
                   {
                     "kind": "field",
                     "type": "textfield",
-                    "path": "splitCarouselMedia.items.__INDEX__.media.alt",
+                    "path": "splitCarouselMedia.items.__INDEX__.alt",
                     "label": "Alt text"
                   }
                 ],
@@ -297,31 +224,20 @@
                   "add-label": "Add visual",
                   "reorder-label": "Reorder visuals",
                   "reorder-title": "Reorder visuals",
+                  "min": "2",
+                  "max": "6",
                   "default-item": {
                     "id": "",
                     "media": {
-                      "kind": "image",
+                      "type": "image",
                       "image": {
-                        "type": "image",
-                        "image": {
-                          "src": "/dieter/icons/svg/photo.svg",
-                          "fit": "contain",
-                          "position": "center",
-                          "repeat": "no-repeat"
-                        }
-                      },
-                      "video": {
-                        "type": "video",
-                        "video": {
-                          "src": "",
-                          "poster": "",
-                          "muted": true,
-                          "loop": true,
-                          "autoplay": true
-                        }
-                      },
-                      "alt": ""
-                    }
+                        "src": "/dieter/icons/svg/photo.svg",
+                        "fit": "contain",
+                        "position": "center",
+                        "repeat": "no-repeat"
+                      }
+                    },
+                    "alt": ""
                   }
                 }
               }

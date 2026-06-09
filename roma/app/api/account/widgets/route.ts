@@ -4,7 +4,6 @@ import {
   listAccountInstancesInTokyo,
   listTokyoWidgetDefinitions,
 } from '@roma/lib/account-instance-direct';
-import { isLegacyWidgetType } from '@roma/lib/legacy-widget-types';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
 export const runtime = 'edge';
@@ -50,7 +49,6 @@ function widgetProductLabel(widgetType: string): string {
     logoshowcase: 'Logo Showcase',
     'split-carousel-media': 'Split Carousel Media',
     'split-media': 'Split Media',
-    split: 'Split',
   };
   const normalized = String(widgetType || '').trim().toLowerCase();
   return labels[normalized] ?? normalized.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
@@ -116,28 +114,23 @@ export async function GET(request: NextRequest) {
       : null;
   const usedWidgetTypes = new Set(widgetInstances.value.accountInstances.map((instance) => instance.widgetType));
   const systemWidgets: SystemWidgetOption[] = widgetDefinitions.value.widgetDefinitions
-    .filter((entry) => !isLegacyWidgetType(entry.widgetType) || usedWidgetTypes.has(entry.widgetType))
     .map((entry) => {
       const existingType = usedWidgetTypes.has(entry.widgetType);
-      const legacyType = isLegacyWidgetType(entry.widgetType);
       const withinTypeLimit = widgetTypesLimit == null || existingType || usedWidgetTypes.size < widgetTypesLimit;
       return {
         widgetType: entry.widgetType,
         widgetCode: entry.widgetCode,
         label: widgetProductLabel(entry.widgetType),
         description: '',
-        canCreate: canMutate && withinTypeLimit && !legacyType,
-        disabledReasonKey: legacyType
-          ? null
-          : canMutate
-            ? withinTypeLimit
-              ? null
-              : 'coreui.upsell.reason.limitReached'
-            : 'coreui.errors.auth.forbidden',
+        canCreate: canMutate && withinTypeLimit,
+        disabledReasonKey: canMutate
+          ? withinTypeLimit
+            ? null
+            : 'coreui.upsell.reason.limitReached'
+          : 'coreui.errors.auth.forbidden',
       };
     });
   const accountInstances: WidgetInstance[] = widgetInstances.value.accountInstances.map((instance) => {
-    const legacyType = isLegacyWidgetType(instance.widgetType);
     return {
       instanceId: instance.instanceId,
       widgetType: instance.widgetType,
@@ -145,10 +138,10 @@ export async function GET(request: NextRequest) {
       status: instance.publishStatus,
       actions: {
         edit: canMutate,
-        duplicate: canMutate && !legacyType,
+        duplicate: canMutate,
         delete: canMutate,
         rename: canMutate,
-        publish: canMutate && !legacyType,
+        publish: canMutate,
         unpublish: canMutate && instance.publishStatus === 'published',
       },
     };

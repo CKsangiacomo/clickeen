@@ -29,24 +29,24 @@
   }
 
   function mediaSource(fill, kind) {
-    assertRecord(fill, 'state.splitMedia.media.' + kind);
-    assertEnum(fill.type, 'state.splitMedia.media.' + kind + '.type', [kind]);
-    const bucket = assertRecord(fill[kind], 'state.splitMedia.media.' + kind + '.' + kind);
-    const src = assertString(bucket.src, 'state.splitMedia.media.' + kind + '.' + kind + '.src').trim();
-    if (!src) throw new Error('[SplitMedia] state.splitMedia.media.' + kind + ' requires a ' + kind + ' asset');
+    assertRecord(fill, 'state.splitMedia.media');
+    assertEnum(fill.type, 'state.splitMedia.media.type', [kind]);
+    const bucket = assertRecord(fill[kind], 'state.splitMedia.media.' + kind);
+    const src = assertString(bucket.src, 'state.splitMedia.media.' + kind + '.src').trim();
+    if (!src) throw new Error('[SplitMedia] state.splitMedia.media requires a ' + kind + ' asset');
     return src;
   }
 
   function normalizeState(state) {
     const splitMedia = assertRecord(state.splitMedia, 'state.splitMedia');
     const media = assertRecord(splitMedia.media, 'state.splitMedia.media');
-    const kind = assertEnum(media.kind, 'state.splitMedia.media.kind', ['image', 'video']);
+    const kind = assertEnum(media.type, 'state.splitMedia.media.type', ['image', 'video']);
     return {
       kind,
-      fill: kind === 'image' ? assertRecord(media.image, 'state.splitMedia.media.image') : assertRecord(media.video, 'state.splitMedia.media.video'),
-      alt: assertString(media.alt, 'state.splitMedia.media.alt'),
-      fit: assertEnum(media.fit, 'state.splitMedia.media.fit', ['cover', 'contain']),
-      position: assertEnum(media.position, 'state.splitMedia.media.position', ['top', 'bottom', 'left', 'right', 'center']),
+      fill: media,
+      alt: assertString(splitMedia.alt, 'state.splitMedia.alt'),
+      fit: assertEnum(splitMedia.fit, 'state.splitMedia.fit', ['cover', 'contain']),
+      position: assertEnum(splitMedia.position, 'state.splitMedia.position', ['top', 'bottom', 'left', 'right', 'center']),
       appearance: assertRecord(splitMedia.appearance, 'state.splitMedia.appearance'),
     };
   }
@@ -66,7 +66,7 @@
       return media;
     }
 
-    const videoFill = assertRecord(normalized.fill.video, 'state.splitMedia.media.video.video');
+    const videoFill = assertRecord(normalized.fill.video, 'state.splitMedia.media.video');
     const video = document.createElement('video');
     video.src = mediaSource(normalized.fill, 'video');
     const poster = typeof videoFill.poster === 'string' ? videoFill.poster.trim() : '';

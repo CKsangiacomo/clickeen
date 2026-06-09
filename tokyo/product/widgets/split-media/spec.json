@@ -116,30 +116,17 @@
     },
     "splitMedia": {
       "media": {
-        "kind": "image",
+        "type": "image",
         "image": {
-          "type": "image",
-          "image": {
-            "src": "/dieter/icons/svg/photo.svg",
-            "fit": "contain",
-            "position": "center",
-            "repeat": "no-repeat"
-          }
-        },
-        "video": {
-          "type": "video",
-          "video": {
-            "src": "",
-            "poster": "",
-            "muted": true,
-            "loop": true,
-            "autoplay": true
-          }
-        },
-        "alt": "Product visual",
-        "fit": "cover",
-        "position": "center"
+          "src": "/dieter/icons/svg/photo.svg",
+          "fit": "contain",
+          "position": "center",
+          "repeat": "no-repeat"
+        }
       },
+      "alt": "Product visual",
+      "fit": "cover",
+      "position": "center",
       "appearance": {
         "cardwrapper": {
           "radiusLinked": true,
@@ -181,59 +168,19 @@
             "nodes": [
               {
                 "kind": "field",
-                "type": "dropdown-actions",
-                "path": "splitMedia.media.kind",
-                "label": "Type",
-                "attrs": {
-                  "size": "md",
-                  "options": [
-                    {
-                      "label": "Image",
-                      "value": "image"
-                    },
-                    {
-                      "label": "Video",
-                      "value": "video"
-                    }
-                  ]
-                }
-              },
-              {
-                "kind": "field",
                 "type": "dropdown-fill",
-                "path": "splitMedia.media.image",
-                "label": "Image",
+                "path": "splitMedia.media",
+                "label": "Media",
                 "attrs": {
                   "size": "md",
-                  "fill-modes": "image",
+                  "fill-modes": "image,video",
                   "allow-image": "true"
-                },
-                "showIf": {
-                  "path": "splitMedia.media.kind",
-                  "op": "equals",
-                  "value": "image"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-fill",
-                "path": "splitMedia.media.video",
-                "label": "Video",
-                "attrs": {
-                  "size": "md",
-                  "fill-modes": "video",
-                  "allow-image": "true"
-                },
-                "showIf": {
-                  "path": "splitMedia.media.kind",
-                  "op": "equals",
-                  "value": "video"
                 }
               },
               {
                 "kind": "field",
                 "type": "textfield",
-                "path": "splitMedia.media.alt",
+                "path": "splitMedia.alt",
                 "label": "Alt text"
               }
             ]
@@ -263,7 +210,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "path": "splitMedia.media.fit",
+                "path": "splitMedia.fit",
                 "label": "Fit",
                 "attrs": {
                   "size": "md",
@@ -282,7 +229,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "path": "splitMedia.media.position",
+                "path": "splitMedia.position",
                 "label": "Position",
                 "attrs": {
                   "size": "md",

@@ -58,18 +58,15 @@
     const id = assertString(item.id, 'state.splitCarouselMedia.items[' + index + '].id').trim();
     if (!id) throw new Error('[SplitCarouselMedia] state.splitCarouselMedia.items[' + index + '].id is required');
     const media = assertRecord(item.media, 'state.splitCarouselMedia.items[' + index + '].media');
-    const kind = assertEnum(media.kind, 'state.splitCarouselMedia.items[' + index + '].media.kind', [
+    const kind = assertEnum(media.type, 'state.splitCarouselMedia.items[' + index + '].media.type', [
       'image',
       'video',
     ]);
     return {
       id,
       kind,
-      fill:
-        kind === 'image'
-          ? assertRecord(media.image, 'state.splitCarouselMedia.items[' + index + '].media.image')
-          : assertRecord(media.video, 'state.splitCarouselMedia.items[' + index + '].media.video'),
-      alt: assertString(media.alt, 'state.splitCarouselMedia.items[' + index + '].media.alt'),
+      fill: media,
+      alt: assertString(item.alt, 'state.splitCarouselMedia.items[' + index + '].alt'),
     };
   }
 
@@ -125,7 +122,7 @@
       image.src = mediaSource(
         item.fill,
         'image',
-        'state.splitCarouselMedia.items[' + index + '].media.image',
+        'state.splitCarouselMedia.items[' + index + '].media',
       );
       image.alt = item.alt;
       image.loading = 'lazy';
@@ -137,13 +134,13 @@
 
     const videoFill = assertRecord(
       item.fill.video,
-      'state.splitCarouselMedia.items[' + index + '].media.video.video',
+      'state.splitCarouselMedia.items[' + index + '].media.video',
     );
     const video = document.createElement('video');
     video.src = mediaSource(
       item.fill,
       'video',
-      'state.splitCarouselMedia.items[' + index + '].media.video',
+      'state.splitCarouselMedia.items[' + index + '].media',
     );
     const poster = typeof videoFill.poster === 'string' ? videoFill.poster.trim() : '';
     if (poster) video.poster = poster;

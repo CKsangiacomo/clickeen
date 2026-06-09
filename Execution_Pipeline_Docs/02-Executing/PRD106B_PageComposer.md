@@ -902,10 +902,11 @@ correctness backstop and repair path. If the fast path and the scan disagree,
 Roma must repair the derived index or mark the page dependency state
 failed/stale visibly; it must not silently trust stale index state.
 
-Embedded widget instances inside a widget, such as `split-instance` or
-`split-carousel-instance` child references, do not create a page graph service.
-Roma flattens those materialized package dependencies into the same
-`instanceId -> pageIds` answer. Example:
+Future embedded widget instances inside a widget, such as selector-gated
+`split-instance` or `split-carousel-instance` child references, do not create a
+page graph service. Once those future widgets exist, Roma flattens their
+materialized package dependencies into the same `instanceId -> pageIds` answer.
+Example:
 
 ```text
 Page P includes Split Instance parent S.

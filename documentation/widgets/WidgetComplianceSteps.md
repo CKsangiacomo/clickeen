@@ -295,7 +295,9 @@ OUTPUT
   - `[data-role="stage"]` contains `[data-role="pod"]` contains `[data-role="root"][data-ck-widget="{widgetType}"]`
 - Shared Shell hierarchy:
   - `.ck-headerLayout` contains `.ck-header` and `.ck-headerLayout__body`
-  - Core DOM lives inside `.ck-headerLayout__body`
+  - Core DOM lives inside `.ck-headerLayout__body`, and therefore inside the
+    shared Pod. Do not render widget Core as a sibling of `[data-role="pod"]`
+    or in a page-section wrapper outside the Shell.
 - Stable `data-role` hooks for every runtime-mutated element.
 - Shared runtime scripts inside root (as required by the widget features):
   - `../shared/fill.js`
@@ -417,6 +419,17 @@ OUTPUT
   variant field is visible at once. Account-instance selection is not a generic
   field type and requires a product-owner-approved component before any widget
   may depend on it.
+- PRD106C3 Split-family media widgets use real media controls only:
+  `split-media` has one `dropdown-fill` at `splitMedia.media` with
+  `fill-modes: "image,video"` only; `split-carousel-media` has one `repeater`
+  at `splitCarouselMedia.items`, and each item template has exactly one
+  `dropdown-fill` at `splitCarouselMedia.items.__INDEX__.media` with
+  `fill-modes: "image,video"` only. Declare `min: "2"` and `max: "6"` on that
+  repeater, and enforce the same count plus required stable item IDs at
+  create/save. Do not use a media kind picker, separate image/video sibling
+  controls, generic normalization `idRules` that heal missing IDs,
+  `object-manager` carousel visuals, `instance-picker`, or a fake
+  account-instance selector.
 - Settings controls for `behavior.showBacklink` and
   `behavior.socialShare.*` are shared Shell controls from the
   `settings-behavior` shared node and must be backed by defaults,

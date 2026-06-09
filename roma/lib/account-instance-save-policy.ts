@@ -57,6 +57,38 @@ function structureViolation(args: {
   };
 }
 
+function validateMediaFill(args: {
+  widgetLabel: string;
+  media: unknown;
+  path: string;
+}): SavePolicyValidationResult {
+  if (!isRecord(args.media)) {
+    return structureViolation({
+      detail: `${args.widgetLabel} requires media fill.`,
+      paths: [args.path],
+    });
+  }
+  if (Object.prototype.hasOwnProperty.call(args.media, 'kind')) {
+    return structureViolation({
+      detail: `${args.widgetLabel} media must use fill.type, not media.kind.`,
+      paths: [`${args.path}.kind`],
+    });
+  }
+  if (args.media.type !== 'image' && args.media.type !== 'video') {
+    return structureViolation({
+      detail: `${args.widgetLabel} requires image or video media fill.`,
+      paths: [`${args.path}.type`],
+    });
+  }
+  if (!isRecord(args.media[args.media.type])) {
+    return structureViolation({
+      detail: `${args.widgetLabel} media fill is missing its ${args.media.type} bucket.`,
+      paths: [`${args.path}.${args.media.type}`],
+    });
+  }
+  return { ok: true };
+}
+
 function validateSplitCarouselMediaStructure(config: Record<string, unknown>): SavePolicyValidationResult {
   const splitCarouselMedia = isRecord(config.splitCarouselMedia) ? config.splitCarouselMedia : null;
   const items = Array.isArray(splitCarouselMedia?.items) ? splitCarouselMedia.items : null;
@@ -92,16 +124,24 @@ function validateSplitCarouselMediaStructure(config: Record<string, unknown>): S
     }
     ids.add(id);
 
-    const media = isRecord(item.media) ? item.media : null;
-    if (!media || (media.kind !== 'image' && media.kind !== 'video')) {
-      return structureViolation({
-        detail: `split-carousel-media item ${index + 1} requires image or video media.`,
-        paths: [`${itemPath}.media.kind`],
-      });
-    }
+    const mediaGate = validateMediaFill({
+      widgetLabel: `split-carousel-media item ${index + 1}`,
+      media: item.media,
+      path: `${itemPath}.media`,
+    });
+    if (!mediaGate.ok) return mediaGate;
   }
 
   return { ok: true };
+}
+
+function validateSplitMediaStructure(config: Record<string, unknown>): SavePolicyValidationResult {
+  const splitMedia = isRecord(config.splitMedia) ? config.splitMedia : null;
+  return validateMediaFill({
+    widgetLabel: 'split-media',
+    media: splitMedia?.media,
+    path: 'splitMedia.media',
+  });
 }
 
 export function validateAccountInstanceConfigStructure(args: {
@@ -110,6 +150,9 @@ export function validateAccountInstanceConfigStructure(args: {
 }): SavePolicyValidationResult {
   if (args.widgetType === 'split-carousel-media') {
     return validateSplitCarouselMediaStructure(args.config);
+  }
+  if (args.widgetType === 'split-media') {
+    return validateSplitMediaStructure(args.config);
   }
   return { ok: true };
 }

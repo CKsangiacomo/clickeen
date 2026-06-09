@@ -27,7 +27,7 @@
       "limits": []
     },
     {
-      "path": "splitMedia.media.alt",
+      "path": "splitMedia.alt",
       "label": "Visual alt text",
       "role": "split-media-alt",
       "type": "string",

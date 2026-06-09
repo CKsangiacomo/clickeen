@@ -265,11 +265,12 @@ for it. Use `uiLabels.core.*` so Bob can display "FAQs", "Visual", "Cards",
 
 Core is an ownership layer, not a required state root named `core`. New and
 refactored widgets must use a widget-specific body namespace:
-`calltoaction.*`, `cards.*`, `split.*`, `faq.*`, or another PRD-owned product
-namespace. Existing generic `core.*` sources are transitional and must not be
-copied into new widgets. If `core.*` appears in source, it is a migration
-blocker unless the PRD explicitly fences it as temporary saved-state
-compatibility.
+`calltoaction.*`, `cards.*`, `splitMedia.*`, `splitCarouselMedia.*`, `faq.*`,
+or another PRD-owned product namespace. Legacy `split.*` is a deletion/cleanup
+input, not a namespace to copy. Existing generic `core.*` sources are
+transitional and must not be copied into new widgets. If `core.*` appears in
+source, it is a migration blocker unless the PRD explicitly fences it as
+temporary saved-state compatibility.
 
 Shell Header controls and Core controls live together in the same product
 panels. For example, Content contains the shared Header content node and then
@@ -642,11 +643,16 @@ MUST use this hierarchy:
 ```
 
 Core DOM lives inside `.ck-headerLayout__body`.
+Because `.ck-headerLayout__body` lives inside `[data-role="pod"]`, widget Core
+must stay inside the shared Pod. Do not render Core as a sibling of the Pod,
+outside the Shell, or in a page-section wrapper that creates a second layout
+truth.
 
 MUST NOT
 
 - Reparent Header/Header CTA per widget.
 - Redesign Stage/Pod/Header Shell markup per widget.
+- Put widget Core DOM outside `[data-role="pod"]`.
 
 ### 5) Panels
 
@@ -765,6 +771,22 @@ references another account-owned instance must wait for a product-owner-approved
 Dieter/Bob account-instance selector component and the corresponding Roma
 account data contract.
 
+PRD106C3 Split-family media rule: `split-media` uses one real `dropdown-fill`
+media field at `splitMedia.media` with `fill-modes: "image,video"` only.
+`split-carousel-media` uses a `repeater` at `splitCarouselMedia.items`; each
+item template uses exactly one real `dropdown-fill` media field at
+`splitCarouselMedia.items.__INDEX__.media` with
+`fill-modes: "image,video"` only. Do not use a fake media kind picker, separate
+image/video sibling controls, `object-manager` for carousel visuals, or any
+instance selector.
+
+When a repeater has hard product cardinality, declare the same `min`/`max`
+attrs in the Builder control and enforce them at create/save. For
+`split-carousel-media`, the repeater is `min: "2"` and `max: "6"`.
+Item IDs are created by the repeater add action for newly added rows; do not
+use generic Bob normalization `idRules` to heal missing IDs in saved/imported
+state.
+
 MUST
 
 - Use only field types supported by current Bob/Dieter code.
@@ -816,7 +838,10 @@ MUST
 - Gate every dependent field behind its controlling toggle or mode.
 - Gate array manager fields when the array is inactive.
 - Gate media fields by media kind.
-- Gate carousel controls behind the carousel-enabled toggle.
+- Gate carousel controls behind the carousel-enabled toggle only when a widget
+  PRD explicitly supports an optional carousel mode. Concrete carousel widgets,
+  such as `split-carousel-media`, are always carousel widgets and must not add
+  an enable-carousel toggle.
 - Gate custom sizing fields behind `coreSize.mode`.
 - Ensure hidden controls still have valid defaults because they may become
   visible later.

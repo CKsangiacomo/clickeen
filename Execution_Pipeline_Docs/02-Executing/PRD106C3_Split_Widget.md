@@ -32,7 +32,11 @@ dependencies, runtime semantics, and Builder UX. Modeling those four products
 as one widget produced invalid intermediate state, stale preview DOM, fake
 control infrastructure, and a Builder panel that exposed impossible operations.
 
-The surviving architecture is four widget identities:
+The surviving architecture names four concrete widget identities, but only the
+media identities are executable in this PRD pass. The embedded-instance
+identities are reserved future targets and must not get source folders,
+defaults, specs, Builder controls, runtime, package payloads, or migration work
+until a real account-instance selector contract exists.
 
 | Widget type | User promise | Core source | Behavior |
 | --- | --- | --- | --- |
@@ -41,11 +45,13 @@ The surviving architecture is four widget identities:
 | `split-carousel-media` | A text/media split with a visual carousel. | 2-6 image/video assets. | Carousel. |
 | `split-carousel-instance` | A text/widget split with an embedded widget carousel. | 2-6 account-owned embedded widget instances. | Carousel. |
 
-The old `split` widget is not the destination. It is a legacy
-deletion/migration source only: no new instances, no duplication, no publishing,
-no Widget Defaults exposure, and no compatibility alias. Existing dev/account
-data may retain the old source only long enough to open, inspect, unpublish, or
-delete it without orphaning stored instances.
+The old `split` widget is not the destination and is not a compatibility
+surface. Delete the legacy `split` widget source, registry/codebook/defaults
+exposure, generated definition import, and new-instance paths. Any existing
+dev/account data that still names `split` is controlled cleanup input: migrate
+it to an approved Split-family target or mark it invalid for deletion through a
+data operation. Do not preserve old `split` source so the product can keep
+opening, duplicating, publishing, or silently materializing it.
 
 ## Product Tenets
 
@@ -57,6 +63,10 @@ delete it without orphaning stored instances.
 - Carousel widgets do not expose an "enable carousel" toggle.
 - No widget depends on `instance-picker`. That is not a product-owner-approved
   Builder/Dieter component.
+- Core DOM stays inside the shared Shell Pod, specifically inside
+  `.ck-headerLayout__body`. Split-family widgets must not render a separate
+  full-width sibling, preview-only body, or page-section wrapper outside the
+  Pod.
 - Invalid state fails at the named boundary. Do not silently heal, duplicate,
   delete, or auto-create items.
 - Bob edits one resolved instance state in memory. Preview must not invent a
@@ -91,8 +101,14 @@ report stops execution; it does not unlock the next slice.
 Current executable status:
 
 ```text
-Slices 0-5 are implemented for the media Split-family path.
-Slice 6 is the remaining controlled account-data cleanup/migration gate.
+Documentation has been corrected before the next execution pass.
+
+Next implementation execution:
+1. Delete the legacy `split` widget source/exposure.
+2. Repair `split-media` and `split-carousel-media` to use real media controls.
+3. Keep `split-instance` and `split-carousel-instance` deferred until a real
+   account-instance selector exists.
+4. Run controlled account-data cleanup only after source/default truth is clean.
 ```
 
 Slice 0 is green only when:
@@ -100,20 +116,20 @@ Slice 0 is green only when:
 - PRD106C3 no longer describes one `split` widget with `split.carousel.enabled`.
 - PRD106C/A2 references name the four Split-family widgets.
 - Widget build docs no longer list `instance-picker` as an approved control.
-- The current `tokyo/product/widgets/split/**` implementation is legacy-only
-  and fenced from new product state, not preserved as architecture.
+- The current `tokyo/product/widgets/split/**` implementation is deleted from
+  product source/exposure, not fenced as a long-lived architecture.
 
 ## Execution Slices
 
 | Slice | Action | Required evidence | Green criteria | Stop condition |
 | ---: | --- | --- | --- | --- |
 | 0 | Correct PRD106 truth. | PRD/doc diff. | Four widget identities are the only approved Split-family target. | Any doc still blesses one polymorphic Split as destination. |
-| 1 | Inventory and delete fake infrastructure. | `rg` evidence and deletion diff. | `instance-picker` docs/spec usage and Bob custom hydrator are removed or fenced outside product. | Any widget still depends on `instance-picker`. |
-| 2 | Build `split-media`. | Source diff, explicit registry/codebook decision, compile, Bob preview, save/package evidence. | One image/video media split renders and edits through real controls only. | Embedded instance or carousel paths appear. |
-| 3 | Build `split-carousel-media`. | Source diff, explicit registry/codebook decision, compile, Bob preview, save/package evidence. | 2-6 image/video items render with carousel behavior, and item-count/identity invariants fail at create/save before persistence. | Static mode toggle, embedded instance paths, or runtime-only structural validation appear. |
-| 4 | Stop at embedded-widget selector gate. | `rg` evidence. | No `split-instance`, `split-carousel-instance`, or `instance-picker` source exists until a real selector contract is approved. | AI invents a selector or Bob-only hydrator. |
-| 5 | Fence legacy `split` exposure. | Roma/defaults/source audit. | New creation and Widget Defaults expose `split-media` and `split-carousel-media`, not the old polymorphic `split`. Existing dev `split` source remains legacy-only until data migration deletes it. | New product state can still be born as `split`. |
-| 6 | Account data cleanup. | R2/Tokyo source audit and controlled updates. | Existing dev instances point to approved widget identities only. | Old `split` remains a customer-visible widget. |
+| 1 | Delete fake and legacy infrastructure. | `rg` evidence and deletion diff. | `instance-picker` docs/spec usage, Bob custom hydrator paths, and `tokyo/product/widgets/split/**` product source/exposure are removed. | Any widget still depends on `instance-picker`, or old `split` can still be created, duplicated, published, compiled, or listed as a customer target. |
+| 2 | Build/repair `split-media`. | Source diff, explicit registry/codebook decision, compile, Bob preview, save/package evidence. | One image/video media split renders and edits through one real `dropdown-fill` media control at `splitMedia.media` with `fill-modes: "image,video"` only. | Embedded instance paths, carousel paths, a fake media kind picker, or separate image/video sibling controls appear. |
+| 3 | Build/repair `split-carousel-media`. | Source diff, explicit registry/codebook decision, compile, Bob preview, save/package evidence. | A `repeater` at `splitCarouselMedia.items` manages 2-6 items; each item has stable identity, one real `dropdown-fill` media control at `splitCarouselMedia.items.__INDEX__.media` with `fill-modes: "image,video"` only, and item alt text. Item-count/identity invariants fail at create/save before persistence. | Static mode toggle, embedded instance paths, object-manager carousel visuals, a fake media kind picker, separate image/video sibling controls, or runtime-only structural validation appear. |
+| 4 | Stop at embedded-widget selector gate. | `rg` evidence. | No `split-instance`, `split-carousel-instance`, `instance-picker`, fake selector, or Bob-only hydrator source/default/spec/runtime exists until a real selector contract is approved. | AI invents a selector, package payload, or Builder-only child-instance hydrator. |
+| 5 | Confirm legacy `split` deletion in product exposure. | Roma/defaults/source audit. | New creation, Widget Defaults, codebook/registry, generated widget definitions, and Prague migration maps expose `split-media` and `split-carousel-media`, not the old polymorphic `split`. | New product state can still be born as `split`. |
+| 6 | Account data cleanup. | R2/Tokyo source audit and controlled updates. | Existing dev instances point to approved widget identities only or are explicitly marked invalid for deletion. | Old `split` remains a customer-visible widget or depends on preserved legacy source. |
 | 7 | Full verification. | End-to-end evidence across Bob/Roma/Tokyo/package/page. | Built media widgets pass compile, preview, save, publish/materialize where applicable, and composed page safety. Instance widgets remain gated. | Any widget needs another compatibility path. |
 
 ## Shared Shell Contract
@@ -157,21 +173,19 @@ Core namespace: `splitMedia.*`
 
 Required Core defaults:
 
-- `splitMedia.media.kind`: `image` or `video`
-- `splitMedia.media.image` using the existing `dropdown-fill` image/media shape
-- `splitMedia.media.video` using the existing `dropdown-fill` video/media shape
-- `splitMedia.media.alt`
-- `splitMedia.media.fit`
-- `splitMedia.media.position`
+- `splitMedia.media`: one standard `dropdown-fill` media payload written by a
+  real Dieter/Bob media fill control with `fill-modes: "image,video"` only
+- `splitMedia.alt`
+- `splitMedia.fit`
+- `splitMedia.position`
 - `splitMedia.appearance.cardwrapper.*`
 
 Content panel:
 
 - shared Header content
 - Media cluster
-  - `splitMedia.media.kind`
-  - image fill when kind is `image`
-  - video fill when kind is `video`
+  - one `dropdown-fill` field bound to `splitMedia.media`
+  - `attrs["fill-modes"] = "image,video"`
   - alt text
 
 Layout panel:
@@ -181,7 +195,9 @@ Layout panel:
 - Media fit/position
 - shared Stage/Pod layout
 
-No carousel controls. No embedded instance controls.
+No carousel controls. No embedded instance controls. No media kind picker. No
+separate image/video controls outside the one `dropdown-fill` bound to
+`splitMedia.media`.
 
 ### `split-carousel-media`
 
@@ -191,10 +207,10 @@ Required Core defaults:
 
 - `splitCarouselMedia.items[]` with 2-6 items
 - `splitCarouselMedia.items[].id`
-- `splitCarouselMedia.items[].media.kind`: `image` or `video`
-- `splitCarouselMedia.items[].media.image`
-- `splitCarouselMedia.items[].media.video`
-- `splitCarouselMedia.items[].media.alt`
+- `splitCarouselMedia.items[].media`: one standard `dropdown-fill` media
+  payload written by a real Dieter/Bob media fill control with
+  `fill-modes: "image,video"` only
+- `splitCarouselMedia.items[].alt`
 - `splitCarouselMedia.media.fit`
 - `splitCarouselMedia.media.position`
 - `splitCarouselMedia.carousel.transition`
@@ -208,7 +224,20 @@ Required Core defaults:
 Content panel:
 
 - shared Header content
-- Visuals repeater for 2-6 media items
+- Visuals `repeater` bound to `splitCarouselMedia.items` with 2-6 media items,
+  stable item IDs, and a `default-item`
+- Each repeater item template contains exactly one media fill field:
+  `type: "dropdown-fill"`, `path:
+  "splitCarouselMedia.items.__INDEX__.media"`, `attrs["fill-modes"]:
+  "image,video"`
+- Each repeater item template may contain item alt text bound to
+  `splitCarouselMedia.items.__INDEX__.alt`
+- The repeater control exposes `min: "2"` and `max: "6"`. Add/remove UX should
+  stop users from creating invalid item counts, while Roma create/save remains
+  the authoritative failure boundary.
+- Item IDs are created by the repeater add action when the user intentionally
+  adds an item. `split-carousel-media` must not use Bob normalization `idRules`
+  to silently fill missing IDs in arbitrary saved/imported state.
 
 Layout panel:
 
@@ -218,72 +247,46 @@ Layout panel:
 - Carousel controls
 - shared Stage/Pod layout
 
-No static/carousel toggle. No embedded instance controls.
+No static/carousel toggle. No embedded instance controls. No media kind picker.
+No separate image/video controls outside each item's one `dropdown-fill` bound
+to `splitCarouselMedia.items.__INDEX__.media`. No object-manager for carousel
+visuals.
 
-### `split-instance`
+### `split-instance` (Reserved, Deferred)
 
 Core namespace: `splitInstance.*`
 
-Required Core defaults:
+This widget is a reserved future target only. Do not create
+`tokyo/product/widgets/split-instance/**`, Core defaults, widget-defaults seed
+state, generated widget definitions, Bob controls, runtime, package payload
+code, or Prague migration output for this identity until the account-instance
+selector component exists as a real Dieter/Bob control backed by Roma account
+instance data.
 
-- `splitInstance.instance.instanceId`
-- `splitInstance.appearance.cardwrapper.*`
+Future implementation must use the reserved `splitInstance.*` namespace, no
+image/video controls, no carousel controls, and no `instance-picker`.
 
-Content panel:
-
-- shared Header content
-- Embedded widget cluster with a product-owner-approved account-instance
-  selector component.
-
-Layout panel:
-
-- shared Header layout
-- shared Core size
-- shared Stage/Pod layout
-
-No image/video controls. No carousel controls. No `instance-picker`.
-
-Hard gate: this widget cannot ship a working Builder editing experience until
-the account-instance selector component exists as a real Dieter/Bob control.
-
-### `split-carousel-instance`
+### `split-carousel-instance` (Reserved, Deferred)
 
 Core namespace: `splitCarouselInstance.*`
 
-Required Core defaults:
+This widget is a reserved future target only. Do not create
+`tokyo/product/widgets/split-carousel-instance/**`, Core defaults,
+widget-defaults seed state, generated widget definitions, Bob controls,
+runtime, package payload code, or Prague migration output for this identity
+until the account-instance selector component exists as a real Dieter/Bob
+control backed by Roma account instance data.
 
-- `splitCarouselInstance.items[]` with 2-6 items
-- `splitCarouselInstance.items[].id`
-- `splitCarouselInstance.items[].instance.instanceId`
-- `splitCarouselInstance.carousel.transition`
-- `splitCarouselInstance.carousel.autoplay`
-- `splitCarouselInstance.carousel.intervalMs`
-- `splitCarouselInstance.carousel.loop`
-- `splitCarouselInstance.carousel.showArrows`
-- `splitCarouselInstance.carousel.showDots`
-- `splitCarouselInstance.appearance.cardwrapper.*`
-
-Content panel:
-
-- shared Header content
-- Embedded widgets object-manager for 2-6 account-owned instances, using the
-  product-owner-approved account-instance selector component.
-
-Layout panel:
-
-- shared Header layout
-- shared Core size
-- Carousel controls
-- shared Stage/Pod layout
-
-No image/video controls. No static/carousel toggle. No `instance-picker`.
-
-Hard gate: this widget cannot ship a working Builder editing experience until
-the account-instance selector component exists as a real Dieter/Bob control.
+Future implementation must use the reserved `splitCarouselInstance.*`
+namespace, stable item identity, 2-6 account-owned child instance references,
+carousel behavior, no image/video controls, no static/carousel toggle, and no
+`instance-picker`.
 
 ## Embedded Instance Package Contract
 
-Embedded widgets are package dependencies, not nested authoring state.
+Embedded widgets are package dependencies, not nested authoring state. This
+section is a future contract note only; it is not execution permission before
+the account-instance selector exists.
 
 For `split-instance` and `split-carousel-instance`:
 
@@ -337,8 +340,8 @@ headerCta.label
 Core contributes:
 
 ```text
-split-media: splitMedia.media.alt
-split-carousel-media: splitCarouselMedia.items[].media.alt
+split-media: splitMedia.alt
+split-carousel-media: splitCarouselMedia.items[].alt
 split-instance: none; embedded instance carries its own editable fields
 split-carousel-instance: none; embedded instances carry their own editable fields
 ```
@@ -350,10 +353,10 @@ Array editable fields must use stable item identity.
 | Prague source | New widget target |
 | --- | --- |
 | `hero` with media visual | `split-media` |
-| `hero` with embedded widget visual | `split-instance` |
+| `hero` with embedded widget visual | Deferred; future `split-instance` only after selector approval |
 | `split` media block | `split-media` |
 | `split-carousel` media carousel | `split-carousel-media` |
-| `embed-carousel` / embedded carousel behavior | `split-carousel-instance` |
+| `embed-carousel` / embedded carousel behavior | Deferred; future `split-carousel-instance` only after selector approval |
 
 Prague does not define state paths, Builder controls, runtime shape, locale
 behavior, or compatibility aliases.
@@ -386,17 +389,28 @@ For embedded-instance widgets, additional gates:
 
 ## Acceptance
 
-- The single polymorphic `split` widget is deleted or fully fenced from customer
-  widget targets.
+- The single polymorphic `split` widget is deleted from customer widget targets
+  and product source/exposure.
 - `split-media` and `split-carousel-media` are the shipped Split-family media
   widget targets.
 - `split-instance` and `split-carousel-instance` are approved future targets,
   but they remain blocked until the account-instance selector component is
   product-owner-approved and implemented as a real Dieter/Bob control.
+- `split-media` uses one real media `dropdown-fill` field at `splitMedia.media`
+  with `fill-modes: "image,video"` only.
+- `split-carousel-media` uses a `repeater` at `splitCarouselMedia.items`; each
+  item uses one real media `dropdown-fill` field at
+  `splitCarouselMedia.items.__INDEX__.media` with `fill-modes: "image,video"`
+  only.
+- Split-family Core DOM stays inside the shared Shell Pod and
+  `.ck-headerLayout__body`.
 - Shipped Split-family widgets consume the shared Shell.
 - Media widgets ship without embedded package dependencies.
 - `split-carousel-media` rejects invalid item counts or missing/duplicate item
   IDs at Roma create/save before Tokyo stores source or package artifacts.
+- `split-carousel-media` uses repeater add-time identity creation, not generic
+  saved-state ID healing, and the Builder repeater enforces the same 2-6 count
+  limits in the panel.
 - No docs or widget specs list `instance-picker` as an approved control.
 - No Builder UI exposes a control that cannot render, preview, save, and
   materialize through the same product path.

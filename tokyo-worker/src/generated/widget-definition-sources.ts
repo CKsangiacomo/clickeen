@@ -13,8 +13,6 @@ import faqEditableFields from "../../../tokyo/product/widgets/faq/editable-field
 import faqSpec from "../../../tokyo/product/widgets/faq/spec.json";
 import logoshowcaseEditableFields from "../../../tokyo/product/widgets/logoshowcase/editable-fields.json";
 import logoshowcaseSpec from "../../../tokyo/product/widgets/logoshowcase/spec.json";
-import splitEditableFields from "../../../tokyo/product/widgets/split/editable-fields.json";
-import splitSpec from "../../../tokyo/product/widgets/split/spec.json";
 import split_carousel_mediaEditableFields from "../../../tokyo/product/widgets/split-carousel-media/editable-fields.json";
 import split_carousel_mediaSpec from "../../../tokyo/product/widgets/split-carousel-media/spec.json";
 import split_mediaEditableFields from "../../../tokyo/product/widgets/split-media/editable-fields.json";
@@ -56,11 +54,6 @@ export const WIDGET_DEFINITION_SOURCES = [
     widgetType: "logoshowcase",
     spec: logoshowcaseSpec,
     editableFields: logoshowcaseEditableFields,
-  },
-  {
-    widgetType: "split",
-    spec: splitSpec,
-    editableFields: splitEditableFields,
   },
   {
     widgetType: "split-carousel-media",

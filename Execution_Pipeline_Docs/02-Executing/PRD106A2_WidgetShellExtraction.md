@@ -596,6 +596,9 @@ Widget Core slot
 
 The existing implementation class name `.ck-headerLayout__body` may remain as a
 CSS/runtime compatibility detail, but the architecture noun is Widget Core.
+Widget Core must remain inside the Shell Pod through this Core slot. A widget
+must not render its product body as a sibling of the Pod, as a preview-only
+outside wrapper, or as a page-section container that bypasses the Shell.
 
 Page Composer depends on this stable package contribution shape. It must not
 parse private widget layouts.
@@ -1093,10 +1096,12 @@ Expected touched areas:
 - `tokyo/product/widgets/calltoaction/**`
 - `tokyo/product/widgets/split-media/**` and
   `tokyo/product/widgets/split-carousel-media/**` for shipped Split-family
-  media Core implementation. `split-instance` and `split-carousel-instance`
-  remain future gated widgets until the account-instance selector contract
-  exists, or
-  `tokyo/product/widgets/cards/**` only after the owning Cards PRD resolves
+  media Core implementation.
+- Legacy `tokyo/product/widgets/split/**` only as a deletion target, never as a
+  compatibility alias or source of new product state.
+- `split-instance` and `split-carousel-instance` remain future gated widgets
+  until the account-instance selector contract exists.
+- `tokyo/product/widgets/cards/**` only after the owning Cards PRD resolves
   `cards` versus `cardgrid`.
 - Widget validation/search guards scoped to Shell/Core boundaries.
 

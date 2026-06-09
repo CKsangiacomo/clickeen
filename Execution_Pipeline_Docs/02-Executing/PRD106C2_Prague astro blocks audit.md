@@ -145,9 +145,10 @@ the current first-party page JSON counts.
 | `mobile-showcase` | `prague/src/blocks/mobile-showcase/mobile-showcase.astro` |
 | `feature-explorer` | `prague/src/blocks/feature-explorer/feature-explorer.astro` |
 
-`split-carousel` and `embed-carousel` now feed the PRD106C3 Split-family
-correction. They are source evidence for `split-carousel-media` and
-`split-carousel-instance`, not optional modes inside one `split` widget.
+`split-carousel` now feeds the executable PRD106C3 `split-carousel-media`
+target. `embed-carousel` is source evidence for a reserved future
+`split-carousel-instance` target only after a real account-instance selector
+exists. Neither is an optional mode inside one `split` widget.
 `mobile-showcase` and `feature-explorer` remain outside the current migration
 unless Pietro separately assigns them to a product widget decision.
 
@@ -155,7 +156,7 @@ unless Pietro separately assigns them to a product widget decision.
 
 | Prague block | Decision | Target PRD |
 | --- | --- | --- |
-| `hero` | Migrate as `split-media` or `split-instance` according to its visual source | `PRD106C3_Split_Widget.md` |
+| `hero` | Migrate media visuals as `split-media`; embedded-widget visuals are deferred until selector-gated `split-instance` exists | `PRD106C3_Split_Widget.md` |
 | `split` | Migrate as `split-media` | `PRD106C3_Split_Widget.md` |
 | `subpage-cards` | Migrate as Cards | `PRD106C4_Cards_Widget.md` |
 | `steps` | Migrate as Cards treatment | `PRD106C4_Cards_Widget.md` |
@@ -168,7 +169,7 @@ unless Pietro separately assigns them to a product widget decision.
 | `navmeta` | Stays Prague navigation metadata | Prague route/nav system |
 | `minibob` | Prague site-owned demo/funnel behavior only; not customer widget, account authoring lane, policy mode, save-capable path, or Page Composer input | Prague site-owned demo/funnel mechanism |
 | `split-carousel` | Migrate as `split-carousel-media` when used by customer/product surfaces | `PRD106C3_Split_Widget.md` |
-| `embed-carousel` | Migrate as `split-carousel-instance` when used by customer/product surfaces | `PRD106C3_Split_Widget.md` |
+| `embed-carousel` | Deferred; future `split-carousel-instance` only after a real account-instance selector exists | `PRD106C3_Split_Widget.md` |
 | `mobile-showcase` | Not in current migration | Separate product decision required |
 | `feature-explorer` | Not in current migration | Separate product decision required |
 
@@ -257,9 +258,10 @@ Current layout: split copy/CTA plus media or embedded-widget area.
 Decision: migrate into the appropriate Split-family widget.
 
 Prague source shows image/video and embedded-widget-like areas. This audit does
-not approve implementation paths. PRD106C3 now owns the four concrete targets:
-`split-media`, `split-instance`, `split-carousel-media`, and
-`split-carousel-instance`. Any embedded instance behavior must be explicit
+not approve implementation paths. PRD106C3 now owns the executable media
+targets `split-media` and `split-carousel-media`, and reserves
+`split-instance` and `split-carousel-instance` for later account-instance
+selector-gated work. Any future embedded instance behavior must be explicit
 Split-family instance-widget behavior and must not preserve Prague
 `accountInstanceRef`.
 

@@ -157,11 +157,27 @@ logoshowcase:
   logoshowcase.type
   logoshowcase.typeConfig
 
-split:
+legacy split (historical deletion input only; superseded by PRD106C3):
   split.appearance.cardwrapper
   split
   uiLabels.core
+
+split-media:
+  splitMedia.appearance.cardwrapper
+  splitMedia
+  uiLabels.core
+
+split-carousel-media:
+  splitCarouselMedia.appearance.cardwrapper
+  splitCarouselMedia
+  uiLabels.core
 ```
+
+The legacy `split` row records what the Step 1 inventory found before the
+PRD106C3 correction. It is not an approved current account-default namespace.
+Current Split-family media account defaults must use `splitMedia.*` and
+`splitCarouselMedia.*`; `split-instance` and `split-carousel-instance` remain
+deferred until a real account-instance selector exists.
 
 ## Green Criteria
 

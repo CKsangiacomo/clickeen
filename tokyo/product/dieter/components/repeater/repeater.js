@@ -63,6 +63,19 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     return JSON.stringify(value);
   }
 
+  function parseItemLimit(value) {
+    const parsed = Number.parseInt(String(value || "").trim(), 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  }
+
+  function syncLimitControls(state) {
+    const count = Array.isArray(state.value) ? state.value.length : 0;
+    state.addBtn.disabled = state.maxItems != null && count >= state.maxItems;
+    state.list.querySelectorAll(".diet-repeater__item-remove").forEach((button) => {
+      button.disabled = state.minItems != null && count <= state.minItems;
+    });
+  }
+
   function diffArrays(prev, next) {
     if (!Array.isArray(prev) || !Array.isArray(next)) {
       return { structuralChange: true, valueChanges: [] };
@@ -229,6 +242,8 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
         reorder: root.dataset.reorder === "on",
         value: parseJsonArray(hidden.value),
         defaultItem: null,
+        minItems: parseItemLimit(root.dataset.minItems),
+        maxItems: parseItemLimit(root.dataset.maxItems),
         iconHandle: cloneIcon(root, ".diet-repeater__icon-handle"),
         iconTrash: cloneIcon(root, ".diet-repeater__icon-trash"),
       };
@@ -302,6 +317,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
 
       addBtn.addEventListener("click", () => {
         const next = Array.isArray(state.value) ? [...state.value] : [];
+        if (state.maxItems != null && next.length >= state.maxItems) return;
         const kind = inferItemKind(state);
         if (kind === "primitive") {
           next.push(typeof state.defaultItem === "string" ? state.defaultItem : "");
@@ -386,6 +402,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
         remove.appendChild(removeIcon);
       }
       remove.addEventListener("click", () => {
+        if (state.minItems != null && state.value.length <= state.minItems) return;
         const next = [...state.value];
         next.splice(index, 1);
         state.value = next;
@@ -453,6 +470,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
         el.style.transform = "";
       });
     }
+    syncLimitControls(state);
   }
 
   function updateItemFields(state, itemEl, itemValue, index) {

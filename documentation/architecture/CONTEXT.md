@@ -398,6 +398,11 @@ Canonical reference:
 
 | Widget        | Status    | Components Used                                                                                                                                       |
 | ------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Big Bang      | ✅ Active | See `tokyo/product/widgets/big-bang/spec.json`                                                                                                        |
+| Call to Action | ✅ Active | See `tokyo/product/widgets/calltoaction/spec.json`                                                                                                    |
+| Cards         | ✅ Active | See `tokyo/product/widgets/cards/spec.json`                                                                                                           |
+| Split Media   | ✅ Active | See `tokyo/product/widgets/split-media/spec.json` (single image/video `dropdown-fill`)                                                                |
+| Split Carousel Media | ✅ Active | See `tokyo/product/widgets/split-carousel-media/spec.json` (repeater of image/video `dropdown-fill` items)                                    |
 | FAQ           | ✅ Active | See `tokyo/product/widgets/faq/spec.json` (object-manager, repeater, dropdown-edit, toggle, textfield, dropdown-fill, dropdown-actions, choice-tiles) |
 | Countdown     | ✅ Active | See `tokyo/product/widgets/countdown/spec.json`                                                                                                       |
 | Logo Showcase | ✅ Active | See `tokyo/product/widgets/logoshowcase/spec.json`                                                                                                    |

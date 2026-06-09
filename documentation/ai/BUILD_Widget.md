@@ -238,6 +238,16 @@ Rules:
 - Do not use `instance-picker`. Account-instance selection requires a
   product-owner-approved Dieter/Bob component and Roma account-data contract
   before any widget can depend on it.
+- For PRD106C3 Split-family media widgets, use real media controls only:
+  `split-media` gets one `dropdown-fill` at `splitMedia.media` with
+  `fill-modes: "image,video"`; `split-carousel-media` gets one `repeater` at
+  `splitCarouselMedia.items`, and each item gets exactly one `dropdown-fill` at
+  `splitCarouselMedia.items.__INDEX__.media` with
+  `fill-modes: "image,video"`. Declare `min: "2"` and `max: "6"` on the
+  carousel repeater, and enforce the same count plus required stable item IDs
+  at create/save. Do not add a media kind picker, separate image/video sibling
+  controls, generic normalization `idRules` that heal saved-state item IDs, or
+  fake instance selector.
 - Every dependent control must have structured `showIf`; do not rely on runtime
   to ignore irrelevant controls.
 
@@ -251,7 +261,9 @@ Rules:
 stage -> pod -> root -> ck-headerLayout -> ck-header + ck-headerLayout__body
 ```
 
-- Core DOM lives inside `.ck-headerLayout__body`.
+- Core DOM lives inside `.ck-headerLayout__body`, and therefore inside the
+  shared Pod. Do not render widget Core as a sibling of `pod` or in a
+  page-section wrapper outside the Shell.
 - Every dynamic Core part has a stable `data-role`.
 - Keep shared script/style order aligned with FAQ and `packages/widget-shell`.
 - Do not redesign Shell markup per widget.

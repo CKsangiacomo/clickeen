@@ -62,15 +62,17 @@ Green evidence:
   `tokyo/product/widgets/cardgrid`.
 - `tokyo-worker/src/generated/widget-definition-sources.ts` now imports only
   `big-bang`, `calltoaction`, `cards`, `countdown`, `faq`, `logoshowcase`,
-  and the legacy `split` target is now superseded by `split-media`,
-  `split-instance`, `split-carousel-media`, and `split-carousel-instance`.
+  `split-media`, and `split-carousel-media`. The legacy `split` target is
+  deleted from product source/exposure, not kept as an alias or compatibility
+  widget.
 - `packages/ck-contracts/src/overlay-codebooks.ts` no longer assigns overlay
   codes to `hero`, `steps`, or `cardgrid`.
 - No child PRD is asked to own Shell or Page Composer behavior.
-- Split-family embedded-instance support is explicitly owned by PRD106C3 as
-  `split-instance` and `split-carousel-instance`, with real package
-  dependencies and a product-owner-approved account-instance selector
-  component. Prague `accountInstanceRef` is not preserved.
+- Split-family embedded-instance support is deferred by PRD106C3. The reserved
+  future names are `split-instance` and `split-carousel-instance`, but no source
+  folder, default, spec, Builder control, package payload, or migration output
+  may be created until a product-owner-approved account-instance selector
+  component exists. Prague `accountInstanceRef` is not preserved.
 
 Stop conditions:
 
@@ -104,7 +106,7 @@ The executable widget work is split into child PRDs:
 
 | PRD | Widget | Absorbs Prague blocks |
 | --- | --- | --- |
-| `PRD106C3_Split_Widget.md` | `split-media`, `split-instance`, `split-carousel-media`, `split-carousel-instance` | `hero`, `split`, `split-carousel`, `embed-carousel` |
+| `PRD106C3_Split_Widget.md` | `split-media`, `split-carousel-media`; reserves `split-instance` and `split-carousel-instance` for later selector-gated work | `hero`, `split`, `split-carousel`; `embed-carousel` is deferred |
 | `PRD106C4_Cards_Widget.md` | `cards` | `subpage-cards`, `steps`, `global-moat`, `platform-strip`, `control-moat` |
 | `PRD106C5_BigBang_Widget.md` | `big-bang` | `big-bang` |
 | `PRD106C6_CTA_Widget.md` | `cta` | `cta-bottom-block` |
@@ -114,15 +116,19 @@ child PRD.
 
 ## Product Decision
 
-The Prague block migration creates or finishes **seven** customer widget types:
+The current Prague block migration creates or finishes **five** executable
+customer widget types and reserves two selector-gated Split-family names:
 
 1. `split-media`
-2. `split-instance`
-3. `split-carousel-media`
-4. `split-carousel-instance`
-5. `cards`
-6. `big-bang`
-7. `calltoaction`
+2. `split-carousel-media`
+3. `cards`
+4. `big-bang`
+5. `calltoaction`
+
+Reserved, not executable in the current pass:
+
+- `split-instance`
+- `split-carousel-instance`
 
 These are not widgets:
 
@@ -136,19 +142,20 @@ Existing drift widget folders must not remain customer widget targets:
 
 | Current folder | PRD106C decision |
 | --- | --- |
-| `tokyo/product/widgets/hero` | Deleted from customer widgets. `hero` is absorbed by `split-media` or `split-instance` according to its visual source. |
+| `tokyo/product/widgets/hero` | Deleted from customer widgets. Media hero visuals are absorbed by `split-media`; embedded-widget hero visuals are deferred until selector-gated `split-instance` exists. |
 | `tokyo/product/widgets/steps` | Deleted from customer widgets. `steps` is a `cards` treatment. |
 | `tokyo/product/widgets/cardgrid` | Deleted from customer widgets. `cards` is the surviving widget. |
-| `tokyo/product/widgets/split` | Superseded as a customer widget. It is a migration/deletion source for the four Split-family widgets, not the surviving architecture. |
+| `tokyo/product/widgets/split` | Deleted as a customer widget source/exposure. Existing account data that still names `split` is controlled cleanup input, not a reason to preserve source or aliases. |
 
 Current Prague `accountInstanceRef` dies. It must not be copied into migrated
 widget state.
 
-Split embedded-instance support is granted only as explicit Split-family widget
-identity: `split-instance` and `split-carousel-instance`. It is not a hidden
-mode of `split-media`, not a `split.items[].kind` variant, not a Prague iframe
-assumption, not a locale override, not page-owned override semantics, and not
-`accountInstanceRef` compatibility.
+Split embedded-instance support is deferred. The only allowed future shape is
+explicit Split-family widget identity: `split-instance` and
+`split-carousel-instance`, after a real account-instance selector exists. It is
+not a hidden mode of `split-media`, not a `split.items[].kind` variant, not a
+Prague iframe assumption, not a locale override, not page-owned override
+semantics, and not `accountInstanceRef` compatibility.
 
 ## How Bob Widget Controls Work
 
@@ -341,8 +348,10 @@ PRD106C is complete when:
 - all four child PRDs exist and specify exact Bob panels/controls;
 - all four child PRDs consume `packages/widget-shell/` and define only their
   Widget Core content/control deltas;
-- `split`, `cards`, `big-bang`, and `cta` are the only Prague-derived customer
-  widget targets;
+- `big-bang`, `calltoaction`, `cards`, `split-media`, and
+  `split-carousel-media` are the only Prague-derived customer widget targets;
+- legacy `split` is deleted from customer widget source/exposure and treated
+  only as controlled account-data cleanup input;
 - `hero` and `steps` are not exposed as customer widget targets;
 - `cardgrid` is resolved into surviving `cards` or fenced/deleted;
 - `page-meta`, `navmeta`, and `minibob` are explicitly excluded from customer

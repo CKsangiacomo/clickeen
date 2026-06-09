@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { NextRequest } from 'next/server';
 import { getCompiledWidgetRouteResponse } from '../../bob/lib/api/compiled-widget-route';
+import { resolveWidgetOverlayCode, toAccountAssetPublicPath } from '../../packages/ck-contracts/src';
 import {
   extractSavedTextFieldsForEditableFields,
   extractTextPrimitiveValuesForEditableFields,
@@ -19,7 +20,6 @@ type JsonRecord = Record<string, unknown>;
 
 type WidgetEntry = {
   widgetType: string;
-  widgetCode: string;
   instanceId: string;
 };
 
@@ -30,14 +30,19 @@ const accountId = process.env.CK_106_ACCOUNT_ID || 'CLICKEEN';
 const apply = process.argv.includes('--apply');
 
 const widgets: WidgetEntry[] = [
-  { widgetType: 'big-bang', widgetCode: 'BBG', instanceId: 'QD1G068MX7' },
-  { widgetType: 'calltoaction', widgetCode: 'CTA', instanceId: 'SZBSB5HHFJ' },
-  { widgetType: 'cards', widgetCode: 'CRD', instanceId: 'U37WRSMY7J' },
-  { widgetType: 'countdown', widgetCode: 'CNT', instanceId: 'H7IF9M2K9B' },
-  { widgetType: 'faq', widgetCode: 'FAQ', instanceId: 'UZ3JEJSHII' },
-  { widgetType: 'logoshowcase', widgetCode: 'LOG', instanceId: '8FMVZFFPJV' },
-  { widgetType: 'split', widgetCode: 'SPL', instanceId: 'KUGYTX2ZMQ' },
+  { widgetType: 'big-bang', instanceId: 'QD1G068MX7' },
+  { widgetType: 'calltoaction', instanceId: 'SZBSB5HHFJ' },
+  { widgetType: 'cards', instanceId: 'U37WRSMY7J' },
+  { widgetType: 'countdown', instanceId: 'H7IF9M2K9B' },
+  { widgetType: 'faq', instanceId: 'UZ3JEJSHII' },
+  { widgetType: 'logoshowcase', instanceId: '8FMVZFFPJV' },
+  { widgetType: 'split-carousel-media', instanceId: 'P10U6N7Y2X' },
+  { widgetType: 'split-media', instanceId: 'KUGYTX2ZMQ' },
 ];
+const accountDefaultWidgetTypes = [
+  ...widgets.map((widget) => widget.widgetType),
+];
+const supportedWidgetTypes = new Set(accountDefaultWidgetTypes);
 
 const shellTopLevelKeys = ['header', 'headerCta', 'stage', 'pod', 'coreSize', 'localeSwitcher'] as const;
 const shellAppearanceKeys = [
@@ -287,6 +292,88 @@ function r2PutText(key: string, body: string, contentType: string): void {
   }
 }
 
+function requireSupabaseConfig(): { baseUrl: string; serviceRoleKey: string } {
+  const baseUrl = String(process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  if (!baseUrl || !serviceRoleKey) {
+    throw new Error('missing_supabase_env_for_registry_cleanup');
+  }
+  return { baseUrl, serviceRoleKey };
+}
+
+async function supabaseJson(
+  pathnameWithQuery: string,
+  init?: RequestInit,
+): Promise<{ status: number; payload: unknown }> {
+  const { baseUrl, serviceRoleKey } = requireSupabaseConfig();
+  const headers = new Headers(init?.headers);
+  headers.set('apikey', serviceRoleKey);
+  headers.set('Authorization', `Bearer ${serviceRoleKey}`);
+  if (init?.body && !headers.has('content-type')) headers.set('content-type', 'application/json');
+  const response = await fetch(`${baseUrl}${pathnameWithQuery}`, { ...init, headers });
+  const text = await response.text();
+  let payload: unknown = null;
+  if (text.trim()) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = text;
+    }
+  }
+  if (!response.ok) {
+    throw new Error(`supabase_registry_${response.status}:${typeof payload === 'string' ? payload : JSON.stringify(payload)}`);
+  }
+  return { status: response.status, payload };
+}
+
+async function listRegistryRows(): Promise<JsonRecord[]> {
+  const pathValue = `/rest/v1/instances?account_id=eq.${encodeURIComponent(accountId)}&select=id,widget_type,publish_status,translation_status,created_at,edited_at&order=id.asc`;
+  const { payload } = await supabaseJson(pathValue);
+  return Array.isArray(payload) ? payload.filter(isRecord) : [];
+}
+
+async function patchRegistryWidgetType(instanceId: string, widgetType: string, now: string): Promise<void> {
+  if (!apply) return;
+  await supabaseJson(
+    `/rest/v1/instances?account_id=eq.${encodeURIComponent(accountId)}&id=eq.${encodeURIComponent(instanceId)}`,
+    {
+      method: 'PATCH',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({ widget_type: widgetType, edited_at: now }),
+    },
+  );
+}
+
+async function deleteRegistryRow(instanceId: string): Promise<void> {
+  if (!apply) return;
+  await supabaseJson(
+    `/rest/v1/instances?account_id=eq.${encodeURIComponent(accountId)}&id=eq.${encodeURIComponent(instanceId)}`,
+    {
+      method: 'DELETE',
+      headers: { Prefer: 'return=minimal' },
+    },
+  );
+}
+
+async function cleanupRegistry(now: string): Promise<void> {
+  const expected = new Map(widgets.map((widget) => [widget.instanceId, widget.widgetType]));
+  const rows = await listRegistryRows();
+  for (const row of rows) {
+    const instanceId = typeof row.id === 'string' ? row.id.trim() : '';
+    const widgetType = typeof row.widget_type === 'string' ? row.widget_type.trim() : '';
+    const expectedWidgetType = expected.get(instanceId);
+    if (expectedWidgetType) {
+      if (widgetType !== expectedWidgetType) {
+        await patchRegistryWidgetType(instanceId, expectedWidgetType, now);
+        console.log(`${apply ? '[apply]' : '[dry-run]'} registry ${instanceId}: ${widgetType || '(missing)'} -> ${expectedWidgetType}`);
+      }
+      continue;
+    }
+    await deleteRegistryRow(instanceId);
+    console.log(`${apply ? '[apply]' : '[dry-run]'} registry ${instanceId}: removed unsupported ${widgetType || '(missing)'}`);
+  }
+}
+
 function loadSpec(widgetType: string): JsonRecord {
   return JSON.parse(fs.readFileSync(path.join(widgetsRoot, widgetType, 'spec.json'), 'utf8')) as JsonRecord;
 }
@@ -412,6 +499,173 @@ function moveLegacyAppearanceToWidgetRoot(root: JsonRecord, widgetType: string):
   pruneEmptyObject(root, 'appearance');
 }
 
+function publicAssetPath(assetRef: string): string {
+  return toAccountAssetPublicPath(`accounts/${accountId}/assets/${assetRef}`) ?? '';
+}
+
+function normalizeImageFillBucket(bucket: JsonRecord): JsonRecord {
+  const assetRef =
+    typeof bucket.assetRef === 'string' && bucket.assetRef.trim()
+      ? bucket.assetRef.trim()
+      : typeof bucket.name === 'string' && bucket.name.trim()
+        ? bucket.name.trim()
+        : '';
+  const src =
+    typeof bucket.src === 'string' && bucket.src.trim()
+      ? bucket.src.trim()
+      : assetRef
+        ? publicAssetPath(assetRef)
+        : '';
+  return {
+    ...(assetRef ? { assetRef } : {}),
+    ...(typeof bucket.name === 'string' && bucket.name.trim() ? { name: bucket.name.trim() } : {}),
+    src,
+    fit: typeof bucket.fit === 'string' && bucket.fit.trim() ? bucket.fit.trim() : 'cover',
+    position: typeof bucket.position === 'string' && bucket.position.trim() ? bucket.position.trim() : 'center',
+    repeat: typeof bucket.repeat === 'string' && bucket.repeat.trim() ? bucket.repeat.trim() : 'no-repeat',
+  };
+}
+
+function normalizeVideoFillBucket(bucket: JsonRecord): JsonRecord {
+  const assetRef =
+    typeof bucket.assetRef === 'string' && bucket.assetRef.trim()
+      ? bucket.assetRef.trim()
+      : typeof bucket.name === 'string' && bucket.name.trim()
+        ? bucket.name.trim()
+        : '';
+  const src =
+    typeof bucket.src === 'string' && bucket.src.trim()
+      ? bucket.src.trim()
+      : assetRef
+        ? publicAssetPath(assetRef)
+        : '';
+  const posterAssetRef =
+    typeof bucket.posterAssetRef === 'string' && bucket.posterAssetRef.trim()
+      ? bucket.posterAssetRef.trim()
+      : '';
+  return {
+    ...(assetRef ? { assetRef } : {}),
+    ...(typeof bucket.name === 'string' && bucket.name.trim() ? { name: bucket.name.trim() } : {}),
+    src,
+    poster:
+      typeof bucket.poster === 'string' && bucket.poster.trim()
+        ? bucket.poster.trim()
+        : posterAssetRef
+          ? publicAssetPath(posterAssetRef)
+          : '',
+    ...(posterAssetRef ? { posterAssetRef } : {}),
+    autoplay: bucket.autoplay !== false,
+    loop: bucket.loop !== false,
+    muted: bucket.muted !== false,
+  };
+}
+
+function normalizeMediaFill(raw: unknown, fallback: JsonRecord): JsonRecord {
+  if (!isRecord(raw)) return clone(fallback);
+
+  if (typeof raw.kind === 'string' && isRecord(raw[raw.kind])) {
+    const selected = raw[raw.kind];
+    if (isRecord(selected) && selected.type === raw.kind) {
+      return normalizeMediaFill(selected, fallback);
+    }
+  }
+
+  if (raw.type === 'image') {
+    return {
+      type: 'image',
+      image: normalizeImageFillBucket(isRecord(raw.image) ? raw.image : {}),
+    };
+  }
+
+  if (raw.type === 'video') {
+    return {
+      type: 'video',
+      video: normalizeVideoFillBucket(isRecord(raw.video) ? raw.video : {}),
+    };
+  }
+
+  return clone(fallback);
+}
+
+function normalizeSplitMediaCore(next: JsonRecord): void {
+  const splitMediaSpecDefaults = loadSpec('split-media').defaults;
+  const splitMediaDefaults =
+    isRecord(splitMediaSpecDefaults) && isRecord(splitMediaSpecDefaults.splitMedia)
+      ? splitMediaSpecDefaults.splitMedia
+      : {};
+  const fallbackFill = isRecord(splitMediaDefaults.media) ? splitMediaDefaults.media : {};
+  const existingSplitMedia = isRecord(next.splitMedia) ? next.splitMedia : {};
+  const legacySplit = isRecord(next.split) ? next.split : {};
+  const legacyItems = Array.isArray(legacySplit.items) ? legacySplit.items : [];
+  const firstItem = isRecord(legacyItems[0]) ? legacyItems[0] : {};
+  const sourceMedia = isRecord(existingSplitMedia.media)
+    ? existingSplitMedia.media
+    : isRecord(firstItem.media)
+      ? firstItem.media
+      : {};
+  const alt =
+    typeof existingSplitMedia.alt === 'string'
+      ? existingSplitMedia.alt
+      : typeof getPath(firstItem, 'image.alt') === 'string'
+        ? (getPath(firstItem, 'image.alt') as string)
+        : typeof getPath(firstItem, 'media.alt') === 'string'
+          ? (getPath(firstItem, 'media.alt') as string)
+          : typeof splitMediaDefaults.alt === 'string'
+            ? splitMediaDefaults.alt
+            : 'Product visual';
+  const legacyMedia = isRecord(legacySplit.media) ? legacySplit.media : {};
+  const nextCore = mergeRecords(splitMediaDefaults, existingSplitMedia);
+  nextCore.media = normalizeMediaFill(sourceMedia, fallbackFill);
+  nextCore.alt = alt;
+  nextCore.fit =
+    typeof existingSplitMedia.fit === 'string'
+      ? existingSplitMedia.fit
+      : typeof legacyMedia.fit === 'string'
+        ? legacyMedia.fit
+        : nextCore.fit;
+  nextCore.position =
+    typeof existingSplitMedia.position === 'string'
+      ? existingSplitMedia.position
+      : typeof legacyMedia.position === 'string'
+        ? legacyMedia.position
+        : nextCore.position;
+  next.splitMedia = nextCore;
+  deletePath(next, 'split');
+}
+
+function normalizeSplitCarouselMediaCore(next: JsonRecord): void {
+  const specDefaults = loadSpec('split-carousel-media').defaults;
+  const defaults =
+    isRecord(specDefaults) && isRecord(specDefaults.splitCarouselMedia)
+      ? specDefaults.splitCarouselMedia
+      : {};
+  const fallbackItems = Array.isArray(defaults.items) ? defaults.items : [];
+  const fallbackFill = isRecord(fallbackItems[0]) && isRecord(fallbackItems[0].media) ? fallbackItems[0].media : {};
+  const existing = isRecord(next.splitCarouselMedia) ? next.splitCarouselMedia : {};
+  const nextCore = mergeRecords(defaults, existing);
+  const items = Array.isArray(nextCore.items) ? nextCore.items : [];
+  nextCore.items = items.map((rawItem, index) => {
+    const fallbackItem = isRecord(fallbackItems[index])
+      ? fallbackItems[index]
+      : isRecord(fallbackItems[0])
+        ? fallbackItems[0]
+        : {};
+    const item = isRecord(rawItem) ? rawItem : {};
+    const id = typeof item.id === 'string' && item.id.trim() ? item.id.trim() : `visual-${index + 1}`;
+    const media = normalizeMediaFill(item.media, fallbackFill);
+    const alt =
+      typeof item.alt === 'string'
+        ? item.alt
+        : typeof getPath(item, 'media.alt') === 'string'
+          ? (getPath(item, 'media.alt') as string)
+          : typeof fallbackItem.alt === 'string'
+            ? fallbackItem.alt
+            : '';
+    return { ...item, id, media, alt };
+  });
+  next.splitCarouselMedia = nextCore;
+}
+
 function migrateWidgetNamespaces(widgetType: string, state: JsonRecord): JsonRecord {
   const next = clone(state);
   migrateHeaderCtaAliases(next);
@@ -423,18 +677,6 @@ function migrateWidgetNamespaces(widgetType: string, state: JsonRecord): JsonRec
   if (widgetType === 'cards') {
     moveObject(next, 'core', 'cards');
     moveLegacyAppearanceToWidgetRoot(next, 'cards');
-  }
-
-  if (widgetType === 'split') {
-    moveObject(next, 'core', 'split');
-    moveLegacyAppearanceToWidgetRoot(next, 'split');
-    const visual = isRecord(next.visual) ? next.visual : null;
-    if (visual && visual.enabled !== false && isRecord(visual.fill)) {
-      setPath(next, 'split.items.0.kind', visual.fill.type === 'video' ? 'video' : 'image');
-      setPath(next, 'split.items.0.media', visual.fill);
-    }
-    deletePath(next, 'visual');
-    deletePath(next, 'layout');
   }
 
   if (widgetType === 'countdown') {
@@ -464,6 +706,14 @@ function migrateWidgetNamespaces(widgetType: string, state: JsonRecord): JsonRec
     if (typeof behavior.randomOrder !== 'undefined') setPath(next, 'logoshowcase.behavior.randomOrder', behavior.randomOrder);
     next.behavior = keepOnlyShellBehavior(behavior);
     pruneEmptyObject(next, 'behavior');
+  }
+
+  if (widgetType === 'split-media') {
+    normalizeSplitMediaCore(next);
+  }
+
+  if (widgetType === 'split-carousel-media') {
+    normalizeSplitCarouselMediaCore(next);
   }
 
   return next;
@@ -524,37 +774,6 @@ function contentFromFullConfig(args: {
   };
 }
 
-function repairCurrentClickeenSampleText(args: {
-  widgetType: string;
-  instanceId: string;
-  config: JsonRecord;
-  shellDefaults: JsonRecord;
-}): void {
-  if (accountId !== 'CLICKEEN') return;
-  if (args.widgetType !== 'split' || args.instanceId !== 'KUGYTX2ZMQ') return;
-
-  const requireShellString = (path: string): string => {
-    const value = getPath(args.shellDefaults, path);
-    if (typeof value === 'string' && value.trim()) return value;
-    throw new Error(`missing_required_shell_default:${path}`);
-  };
-  if (typeof getPath(args.config, 'header.title') === 'string' && !String(getPath(args.config, 'header.title')).trim()) {
-    setPath(args.config, 'header.title', requireShellString('header.title'));
-  }
-  if (
-    typeof getPath(args.config, 'header.subtitleHtml') === 'string' &&
-    !String(getPath(args.config, 'header.subtitleHtml')).trim()
-  ) {
-    setPath(args.config, 'header.subtitleHtml', requireShellString('header.subtitleHtml'));
-  }
-  if (
-    typeof getPath(args.config, 'headerCta.label') === 'string' &&
-    !String(getPath(args.config, 'headerCta.label')).trim()
-  ) {
-    setPath(args.config, 'headerCta.label', requireShellString('headerCta.label'));
-  }
-}
-
 async function buildPackage(args: {
   widgetType: string;
   instanceId: string;
@@ -570,36 +789,12 @@ async function buildPackage(args: {
   if (!response.ok || !isRecord(compiled) || !isRecord(compiled.widgetPackage)) {
     throw new Error(`compiled_widget_invalid:${args.widgetType}:${response.status}`);
   }
-  const embeddedPackages = await loadEmbeddedPackages(args.state);
   return buildSavedWidgetPublicPackage({
     compiled: compiled as any,
     instanceId: args.instanceId,
     baseLocale: args.baseLocale,
     displayName: args.displayName,
     state: args.state,
-    embeddedPackages,
-  });
-}
-
-async function loadEmbeddedPackages(state: JsonRecord) {
-  const split = isRecord(state.split) ? state.split : null;
-  const items = Array.isArray(split?.items) ? split.items : [];
-  const ids = Array.from(
-    new Set(
-      items
-        .map((item) => (isRecord(item) && isRecord(item.instance) && typeof item.instance.instanceId === 'string' ? item.instance.instanceId : ''))
-        .map((id) => id.trim().toUpperCase())
-        .filter(Boolean),
-    ),
-  );
-  return ids.map((instanceId) => {
-    const root = `accounts/${accountId}/instances/${instanceId}`;
-    return {
-      instanceId,
-      indexHtml: r2GetText(`${root}/index.html`),
-      stylesCss: r2GetText(`${root}/styles.css`),
-      runtimeJs: r2GetText(`${root}/runtime.js`),
-    };
   });
 }
 
@@ -607,13 +802,16 @@ function migrateAccountDefaults(accountDefaults: JsonRecord, shellDefaults: Json
   const next = clone(accountDefaults);
   next.shell = shellDefaults;
   const widgetsDoc = isRecord(next.widgets) ? next.widgets : {};
-  for (const widget of widgets) {
-    const specDefaults = isRecord(loadSpec(widget.widgetType).defaults) ? (loadSpec(widget.widgetType).defaults as JsonRecord) : {};
-    const currentCore = isRecord(widgetsDoc[widget.widgetType]) && isRecord((widgetsDoc[widget.widgetType] as JsonRecord).core)
-      ? ((widgetsDoc[widget.widgetType] as JsonRecord).core as JsonRecord)
+  for (const key of Object.keys(widgetsDoc)) {
+    if (!supportedWidgetTypes.has(key)) delete widgetsDoc[key];
+  }
+  for (const widgetType of accountDefaultWidgetTypes) {
+    const specDefaults = isRecord(loadSpec(widgetType).defaults) ? (loadSpec(widgetType).defaults as JsonRecord) : {};
+    const currentCore = isRecord(widgetsDoc[widgetType]) && isRecord((widgetsDoc[widgetType] as JsonRecord).core)
+      ? ((widgetsDoc[widgetType] as JsonRecord).core as JsonRecord)
       : {};
-    const migrated = migrateWidgetNamespaces(widget.widgetType, currentCore);
-    widgetsDoc[widget.widgetType] = {
+    const migrated = migrateWidgetNamespaces(widgetType, currentCore);
+    widgetsDoc[widgetType] = {
       core: mergeRecords(specDefaults, migrated),
     };
   }
@@ -628,6 +826,8 @@ async function migrateInstance(widget: WidgetEntry, shellDefaults: JsonRecord, n
   const root = `accounts/${accountId}/instances/${widget.instanceId}`;
   const configDoc = r2GetJson<JsonRecord>(`${root}/instance.config.json`);
   const contentDoc = r2GetJson<JsonRecord>(`${root}/instance.content.json`);
+  const widgetCode = resolveWidgetOverlayCode(widget.widgetType);
+  if (!widgetCode) throw new Error(`unsupported_widget_type:${widget.widgetType}`);
   const currentFull = composeConfigWithContent(isRecord(configDoc.config) ? configDoc.config : {}, contentDoc);
   const migratedCurrent = migrateWidgetNamespaces(widget.widgetType, currentFull);
   const specDefaults = isRecord(loadSpec(widget.widgetType).defaults) ? (loadSpec(widget.widgetType).defaults as JsonRecord) : {};
@@ -636,13 +836,6 @@ async function migrateInstance(widget: WidgetEntry, shellDefaults: JsonRecord, n
   setPath(fullConfig, 'stage.canvas.mode', 'viewport');
   setPath(fullConfig, 'pod.widthMode', 'full');
   migrateHeaderCtaAliases(fullConfig);
-  repairCurrentClickeenSampleText({
-    widgetType: widget.widgetType,
-    instanceId: widget.instanceId,
-    config: fullConfig,
-    shellDefaults,
-  });
-
   const nextContent = contentFromFullConfig({
     widgetType: widget.widgetType,
     instanceId: widget.instanceId,
@@ -655,7 +848,7 @@ async function migrateInstance(widget: WidgetEntry, shellDefaults: JsonRecord, n
     ...configDoc,
     accountId,
     id: widget.instanceId,
-    widgetCode: widget.widgetCode,
+    widgetCode,
     widgetType: widget.widgetType,
     config: stripContent(fullConfig, widget.widgetType),
     updatedAt: now,
@@ -706,6 +899,7 @@ async function main() {
   for (const widget of widgets) {
     await migrateInstance(widget, shellDefaults, now);
   }
+  await cleanupRegistry(now);
 
   if (!apply) {
     console.log('\nDry run only. Re-run with --apply to write R2 objects.');

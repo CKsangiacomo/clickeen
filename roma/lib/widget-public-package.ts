@@ -1,4 +1,3 @@
-import { isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import type { LimitsSpec } from '@clickeen/ck-policy';
 import {
   WIDGET_SHELL_RUNTIME_MODULE_END,
@@ -17,13 +16,6 @@ export type SavedWidgetPublicPackage = {
   dependencies: {
     instanceIds: string[];
   };
-};
-
-export type EmbeddedWidgetPublicPackage = {
-  instanceId: string;
-  indexHtml: string;
-  stylesCss: string;
-  runtimeJs: string;
 };
 
 type WidgetPackageFileContext = {
@@ -46,140 +38,15 @@ type PackageBuildArgs = {
   baseLocale: string;
   displayName: string | null;
   state: Record<string, unknown>;
-  embeddedPackages?: EmbeddedWidgetPublicPackage[];
 };
 
 const STYLE_CHUNK_END = WIDGET_SHELL_STYLE_CHUNK_END;
 const RUNTIME_PAYLOAD_START = WIDGET_SHELL_RUNTIME_PAYLOAD_START;
 const RUNTIME_PAYLOAD_END = WIDGET_SHELL_RUNTIME_PAYLOAD_END;
 const RUNTIME_MODULE_END = WIDGET_SHELL_RUNTIME_MODULE_END;
-const STYLE_MODULE_RE = new RegExp(
-  `/\\*\\s*ck-style-module:[^*]*\\*/\\n([\\s\\S]*?)\\n${STYLE_CHUNK_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
-  'g',
-);
-const RUNTIME_MODULE_RE = new RegExp(
-  `/\\*\\s*ck-runtime-module:[^*]*\\*/\\n([\\s\\S]*?)\\n${RUNTIME_MODULE_END.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
-  'g',
-);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function extractSplitChildInstanceIds(state: Record<string, unknown>, parentInstanceId: string): string[] {
-  const split = isRecord(state.split) ? state.split : null;
-  const items = Array.isArray(split?.items) ? split.items : [];
-  const ids = new Set<string>();
-  items.forEach((item) => {
-    if (!isRecord(item) || item.kind !== 'instance') return;
-    const instance = isRecord(item.instance) ? item.instance : null;
-    const instanceId = typeof instance?.instanceId === 'string' ? instance.instanceId.trim().toUpperCase() : '';
-    if (!isCompactInstanceId(instanceId)) {
-      throw new Error('coreui.errors.widget.embeddedInstanceInvalid');
-    }
-    if (instanceId === parentInstanceId) {
-      throw new Error('coreui.errors.widget.embeddedInstanceSelfReference');
-    }
-    ids.add(instanceId);
-  });
-  return [...ids].sort((left, right) => left.localeCompare(right));
-}
-
-function buildPackageDependencies(args: PackageBuildArgs): SavedWidgetPublicPackage['dependencies'] {
-  if (args.compiled.widgetname !== 'split') return { instanceIds: [] };
-  return {
-    instanceIds: extractSplitChildInstanceIds(args.state, args.instanceId),
-  };
-}
-
-function extractMarkedChunks(args: { body: string; pattern: RegExp }): string[] {
-  args.pattern.lastIndex = 0;
-  return [...args.body.matchAll(args.pattern)].map((match) => String(match[1] ?? '').trim()).filter(Boolean);
-}
-
-function extractRuntimeContribution(runtime: string): { payload: string; modules: string[] } {
-  const startIndex = runtime.indexOf(RUNTIME_PAYLOAD_START);
-  const endIndex = runtime.indexOf(RUNTIME_PAYLOAD_END);
-  if (startIndex < 0 || endIndex < startIndex) {
-    throw new Error('coreui.errors.widget.embeddedRuntimeInvalid');
-  }
-  const payload = runtime.slice(startIndex, endIndex + RUNTIME_PAYLOAD_END.length).trim();
-  const modulesSource = `${runtime.slice(0, startIndex)}\n${runtime.slice(endIndex + RUNTIME_PAYLOAD_END.length)}`;
-  return {
-    payload,
-    modules: extractMarkedChunks({ body: modulesSource, pattern: RUNTIME_MODULE_RE }),
-  };
-}
-
-function extractSingleWidgetRoot(html: string, instanceId: string): { htmlRoot: string; widgetType: string } {
-  const roots: Array<{ start: number; end: number; openingTag: string; insideRoot: boolean }> = [];
-  const stack: Array<{ tagName: string; isRoot: boolean; start: number; openingTag: string }> = [];
-  const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
-  const tagPattern = /<\/?([a-z][\w:-]*)(?:\s[^<>]*)?>/gi;
-  let match: RegExpExecArray | null;
-  while ((match = tagPattern.exec(html))) {
-    const tag = match[0];
-    const tagName = String(match[1] || '').toLowerCase();
-    const isClosing = tag.startsWith('</');
-    if (isClosing) {
-      for (let index = stack.length - 1; index >= 0; index -= 1) {
-        const popped = stack.pop();
-        if (!popped) break;
-        if (popped.tagName !== tagName) continue;
-        if (popped.isRoot) {
-          roots.push({
-            start: popped.start,
-            end: match.index + tag.length,
-            openingTag: popped.openingTag,
-            insideRoot: stack.some((entry) => entry.isRoot),
-          });
-        }
-        break;
-      }
-      continue;
-    }
-    const widgetType = readHtmlAttribute(tag, 'data-ck-widget');
-    const isRoot = Boolean(widgetType) && readHtmlAttribute(tag, 'data-role') === 'root';
-    if (!tag.endsWith('/>') && !voidTags.has(tagName)) {
-      stack.push({ tagName, isRoot, start: match.index, openingTag: tag });
-    }
-  }
-  const topLevelRoots = roots.filter((root) => !root.insideRoot);
-  if (topLevelRoots.length !== 1) throw new Error('coreui.errors.widget.embeddedRootInvalid');
-  const root = topLevelRoots[0]!;
-  if (readHtmlAttribute(root.openingTag, 'data-ck-instance-id') !== instanceId) {
-    throw new Error('coreui.errors.widget.embeddedRootInvalid');
-  }
-  return {
-    htmlRoot: extractBody(html),
-    widgetType: readHtmlAttribute(root.openingTag, 'data-ck-widget'),
-  };
-}
-
-function embeddedPackageContributions(args: PackageBuildArgs): Array<{
-  instanceId: string;
-  widgetType: string;
-  htmlRoot: string;
-  styleChunks: string[];
-  runtimePayload: string;
-  runtimeModules: string[];
-}> {
-  const required = new Set(buildPackageDependencies(args).instanceIds);
-  const embedded = args.embeddedPackages ?? [];
-  return [...required].map((instanceId) => {
-    const pkg = embedded.find((entry) => entry.instanceId === instanceId);
-    if (!pkg) throw new Error(`coreui.errors.widget.embeddedPackageMissing:${instanceId}`);
-    const root = extractSingleWidgetRoot(pkg.indexHtml, instanceId);
-    const runtime = extractRuntimeContribution(pkg.runtimeJs);
-    return {
-      instanceId,
-      widgetType: root.widgetType,
-      htmlRoot: root.htmlRoot,
-      styleChunks: extractMarkedChunks({ body: pkg.stylesCss, pattern: STYLE_MODULE_RE }),
-      runtimePayload: runtime.payload,
-      runtimeModules: runtime.modules,
-    };
-  });
 }
 
 function fileSource(file: WidgetPackageFileContext | undefined): string {
@@ -347,22 +214,10 @@ function buildStyles(args: PackageBuildArgs, widgetHtml: string, includeSocialSh
     const source = packageSource({ compiled: args.compiled, key: WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY });
     if (source) chunks.push(styleChunk('shared/socialShare.css', source));
   }
-  embeddedPackageContributions(args).forEach((entry) => {
-    chunks.push(...entry.styleChunks.map((chunk, index) => styleChunk(`embedded/${entry.instanceId}/${index}.css`, chunk)));
-  });
   return `${chunks.join('\n\n')}\n`;
 }
 
 function buildRuntime(args: PackageBuildArgs, scriptSources: string[], includeSocialShare: boolean): string {
-  const embeddedContributions = embeddedPackageContributions(args);
-  const embeddedInstances = Object.fromEntries(embeddedContributions.map((entry) => [
-    entry.instanceId,
-    {
-      instanceId: entry.instanceId,
-      widgetType: entry.widgetType,
-      htmlRoot: entry.htmlRoot,
-    },
-  ]));
   const locales = { [args.baseLocale]: args.state };
   const localePolicy = {
     baseLocale: args.baseLocale,
@@ -370,7 +225,7 @@ function buildRuntime(args: PackageBuildArgs, scriptSources: string[], includeSo
   };
   const payload = `${RUNTIME_PAYLOAD_START}
 (function () {
-  var payload = ${JSON.stringify({ instanceId: args.instanceId, baseLocale: args.baseLocale, locales, embeddedInstances })};
+  var payload = ${JSON.stringify({ instanceId: args.instanceId, baseLocale: args.baseLocale, locales })};
   var params = new URLSearchParams(window.location.search || '');
   var requestedLocale = String(params.get('locale') || '').toLowerCase();
   var selectedLocale = Object.prototype.hasOwnProperty.call(payload.locales, requestedLocale)
@@ -387,8 +242,7 @@ function buildRuntime(args: PackageBuildArgs, scriptSources: string[], includeSo
     locale: selectedLocale,
     baseLocale: payload.baseLocale,
     state: selectedState,
-    locales: payload.locales,
-    embeddedInstances: payload.embeddedInstances || {}
+    locales: payload.locales
   };
 })();
 ${RUNTIME_PAYLOAD_END}`;
@@ -417,12 +271,6 @@ ${RUNTIME_PAYLOAD_END}`;
     const source = packageSource({ compiled: args.compiled, key: WIDGET_SHELL_SOCIAL_SHARE_RUNTIME_MODULE_KEY });
     if (source) chunks.push(runtimeModuleChunk('shared/socialShare.js', source));
   }
-  embeddedContributions.forEach((entry) => {
-    chunks.push(entry.runtimePayload);
-    entry.runtimeModules.forEach((moduleSource, index) => {
-      chunks.push(runtimeModuleChunk(`embedded/${entry.instanceId}/${index}.js`, moduleSource));
-    });
-  });
   if (widgetClientChunk) chunks.push(widgetClientChunk);
   return `${chunks.join('\n\n')}\n`;
 }
@@ -461,6 +309,6 @@ export function buildSavedWidgetPublicPackage(args: PackageBuildArgs): SavedWidg
     indexHtml: buildIndexHtml(args, stripped.body),
     stylesCss: buildStyles(args, widgetHtml, includeSocialShare),
     runtimeJs: buildRuntime(args, stripped.scriptSources, includeSocialShare),
-    dependencies: buildPackageDependencies(args),
+    dependencies: { instanceIds: [] },
   };
 }

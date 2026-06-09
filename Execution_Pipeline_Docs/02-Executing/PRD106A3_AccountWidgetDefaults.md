@@ -20,9 +20,10 @@ There are three default authorities, and they must not be confused:
   branding, social share, behavior, and Shell-owned Core Size. They live in the
   shared Shell system and are the same for every widget.
 - Widget Core factory defaults are specific to the widget software. They cover
-  what makes FAQ different from Cards, Countdown, Split, Big Bang, Logo
-  Showcase, or Call to Action: FAQ sections/questions, card items, countdown
-  time, split media, logos, or any widget-specific body/action state.
+  what makes FAQ different from Cards, Countdown, Split-family media, Big Bang,
+  Logo Showcase, or Call to Action: FAQ sections/questions, card items,
+  countdown time, `splitMedia.*`, `splitCarouselMedia.*`, logos, or any
+  widget-specific body/action state.
 - Account widget defaults are the live defaults used to create new instances
   for that account. They are seeded from factory defaults at account creation.
   From that moment on, new instances use account defaults, not factory defaults.
@@ -294,8 +295,10 @@ Meaning:
 `core` is the architecture bucket in the account defaults document. It does not
 mean every widget-owned path must be renamed to `core.*`. It contains all
 approved non-Shell state paths for that widget, such as `sections`,
-`displayCategoryTitles`, `timer`, `cards`, `logos`, `split`, or `calltoaction`
-depending on the widget.
+`displayCategoryTitles`, `timer`, `cards`, `logos`, `splitMedia`,
+`splitCarouselMedia`, or `calltoaction` depending on the widget. Legacy
+`split` is not an approved current Core namespace; PRD106C3 makes it a
+deletion/cleanup input.
 
 The stored account defaults should be complete enough to create a new instance
 without querying widget factory defaults. The only exception is the explicit
@@ -510,14 +513,15 @@ coreSize.*
 ```
 
 `uiLabels.core.*` remains part of the Widget Core extension contract. Those
-labels name each widget's Core noun in the Builder UI, such as FAQ, Cards, or
-Split. They are not account-level Shell styling or behavior defaults.
+labels name each widget's Core noun in the Builder UI, such as FAQ, Cards,
+Split Media, or Split Carousel Media. They are not account-level Shell styling
+or behavior defaults.
 
 `{widgetNamespace}.appearance.cardwrapper.*` is widget Core, not Shell. The
 shared Shell has no card element. Card wrapper styling belongs to widgets that
-render repeated cards/items, such as Cards, FAQ, Countdown, Logo Showcase, or Split. Existing
-widgets already disagree on these values, which proves they are not one global
-Shell default.
+render repeated cards/items, such as Cards, FAQ, Countdown, Logo Showcase, or
+Split-family media. Existing widgets already disagree on these values, which
+proves they are not one global Shell default.
 
 ## Explicit Shell Control Coverage
 

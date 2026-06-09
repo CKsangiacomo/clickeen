@@ -335,8 +335,9 @@ Inventory and delete/fence:
 - `BlockType`, `BLOCK_REGISTRY`, `WidgetBlocks`, `blocks[]`, block JSON, and
   block translation sidecars on migrated routes.
 - `minibob` as anything other than a marketing/funnel surface.
-- `accountInstanceRef` nested live-widget previews unless PRD106C/D approves the
-  migration behavior.
+- `accountInstanceRef` nested live-widget previews. Current PRD106C/D
+  migration does not approve them; Split-family embedded-instance behavior is
+  deferred until a real account-instance selector exists.
 
 Preserve:
 

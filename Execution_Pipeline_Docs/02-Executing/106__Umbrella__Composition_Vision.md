@@ -444,19 +444,20 @@ into the shared Widget Shell as Widget Core implementation, then save those as
 normal Clickeen widgets and account-owned widget instances. FAQ proves the
 Shell; `packages/widget-shell/` is the surviving implementation authority.
 
-The current Prague-derived widgets in Tokyo are partial ports:
+The surviving Prague-derived widget targets in Tokyo are:
 
 ```text
-hero      -> partial widget port
-split     -> partial widget port
-cta       -> partial widget port
-steps     -> partial widget port
-cardgrid  -> partial widget port of Prague subpage-cards-style behavior
+big-bang              -> migrated widget target
+calltoaction          -> migrated widget target
+cards                 -> migrated widget target
+split-media           -> shipped Split-family media target
+split-carousel-media  -> shipped Split-family media carousel target
 ```
 
-Treat these as approximately 50% migrated. They may stay visible for internal
-development, but they are not finished Prague block migrations. "Compiles in
-Bob" is only the halfway line. A finished migration must have:
+Deleted or deferred Prague-derived targets are not compatibility surfaces:
+`hero`, `steps`, legacy polymorphic `split`, and `cardgrid` must not remain
+customer widget targets. "Compiles in Bob" is only the halfway line. A finished
+migration must have:
 
 - useful non-empty defaults, not blank scaffold instances;
 - the shared Widget Shell package, not a Prague-derived editor architecture;
@@ -515,11 +516,12 @@ The restraint is intentional: no container/slot system, no generic
 embedded-instance nesting, no sites/domains/nav, no drag-drop canvas, no A/B or
 personalization. Compose full-width widget instances into page files, host or
 embed them, and add depth only when a real need proves it and the product owner
-approves the new scope. The only PRD106 widget-inside-widget scope currently
-approved for execution is explicit Split-family instance widgets:
-`split-instance` and `split-carousel-instance`; those require their own real
-account-instance selector component and package dependency path, not a hidden
-generic nesting model.
+approves the new scope. Split-family embedded-instance widgets are reserved
+future names only: `split-instance` and `split-carousel-instance` remain
+deferred until a real account-instance selector component and package
+dependency path exist. They must not be faked through `instance-picker`,
+Prague `accountInstanceRef`, page placement IDs, or a hidden generic nesting
+model.
 
 ## Approved PRD 106 public coordinates
 

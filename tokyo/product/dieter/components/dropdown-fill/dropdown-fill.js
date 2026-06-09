@@ -1168,7 +1168,6 @@ var Dieter = (() => {
     faq: "FAQ",
     countdown: "CTD",
     logoshowcase: "LGS",
-    split: "SPL",
     "split-carousel-media": "SCM",
     "split-media": "SPM"
   });

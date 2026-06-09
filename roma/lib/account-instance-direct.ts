@@ -12,7 +12,6 @@ import {
   saveAccountPageInTokyo,
   type DirectPageRouteError,
 } from './account-page-direct';
-import { isLegacyWidgetType } from './legacy-widget-types';
 
 // Roma's direct instance path is the server boundary for one boring product flow:
 // call Tokyo's named account-instance verbs and surface their result.
@@ -28,16 +27,6 @@ type RouteFailure = {
   ok: false;
   status: number;
   error: DirectRouteError;
-};
-
-type TokyoStoredWidgetPackage = {
-  v: 1;
-  indexHtml: string;
-  stylesCss: string;
-  runtimeJs: string;
-  dependencies: {
-    instanceIds: string[];
-  };
 };
 
 export type AccountInstanceCoreRow = {
@@ -379,86 +368,6 @@ async function refreshPagesPlacingInstanceForAccount(args: {
   return { ok: true };
 }
 
-function normalizeStoredWidgetPackage(raw: unknown): TokyoStoredWidgetPackage | null {
-  if (!isRecord(raw) || raw.v !== 1) return null;
-  if (typeof raw.indexHtml !== 'string' || typeof raw.stylesCss !== 'string' || typeof raw.runtimeJs !== 'string') {
-    return null;
-  }
-  const dependencies = isRecord(raw.dependencies) && Array.isArray(raw.dependencies.instanceIds)
-    ? {
-        instanceIds: Array.from(new Set(raw.dependencies.instanceIds
-          .map((entry) => (typeof entry === 'string' ? entry.trim().toUpperCase() : ''))
-          .filter(Boolean))).sort((left, right) => left.localeCompare(right)),
-      }
-    : { instanceIds: [] };
-  return {
-    v: 1,
-    indexHtml: raw.indexHtml,
-    stylesCss: raw.stylesCss,
-    runtimeJs: raw.runtimeJs,
-    dependencies,
-  };
-}
-
-export async function readAccountInstancePackageFromTokyo(args: {
-  accountId: string;
-  instanceId: string;
-  accountCapsule?: string | null;
-  internalServiceName?: string | null;
-  requestId?: string | null;
-}): Promise<{ ok: true; value: TokyoStoredWidgetPackage | null } | RouteFailure> {
-  const result = await callTokyo(tokyoCallContext(args), {
-    path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/package`,
-    method: 'GET',
-    decode: (payload) => payload,
-    errorDetail: 'tokyo_account_instance_package_http_error',
-    errorKey: 'coreui.errors.db.readFailed',
-  });
-  if (!result.ok) {
-    if (result.status === 404) return { ok: true, value: null };
-    return result;
-  }
-  const payload = isRecord(result.value) ? result.value : null;
-  const publicPackage = normalizeStoredWidgetPackage(payload?.publicPackage);
-  if (!publicPackage) return invalidTokyoPayload('invalid Tokyo instance package payload');
-  return { ok: true, value: publicPackage };
-}
-
-export async function listParentInstanceIdsDependingOnInstanceForAccount(args: {
-  accountId: string;
-  instanceId: string;
-  accountCapsule?: string | null;
-  internalServiceName?: string | null;
-  requestId?: string | null;
-}): Promise<{ ok: true; value: string[] } | RouteFailure> {
-  const instances = await listAccountInstancesInTokyo({
-    accountId: args.accountId,
-    accountCapsule: args.accountCapsule,
-    internalServiceName: args.internalServiceName,
-    requestId: args.requestId,
-  });
-  if (!instances.ok) return instances;
-
-  const parents: string[] = [];
-  for (const instance of instances.value.accountInstances) {
-    if (instance.instanceId === args.instanceId) continue;
-    const pkg = await readAccountInstancePackageFromTokyo({
-      accountId: args.accountId,
-      instanceId: instance.instanceId,
-      accountCapsule: args.accountCapsule,
-      internalServiceName: args.internalServiceName,
-      requestId: args.requestId,
-    });
-    if (!pkg.ok) return pkg;
-    if (!pkg.value) continue;
-    if (pkg.value.dependencies.instanceIds.includes(args.instanceId)) {
-      parents.push(instance.instanceId);
-    }
-  }
-
-  return { ok: true, value: parents.sort((left, right) => left.localeCompare(right)) };
-}
-
 export { refreshPagesPlacingInstanceForAccount };
 
 function normalizeAccountInstancePayload(payload: unknown):
@@ -668,17 +577,6 @@ export async function duplicateAccountInstanceInTokyo(args: {
       },
     };
   }
-  if (isLegacyWidgetType(source.value.row.widgetType)) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.instance.widgetLegacy',
-        detail: `legacy widget type cannot be duplicated: ${source.value.row.widgetType}`,
-      },
-    };
-  }
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.sourceInstanceId)}/duplicate`,
     method: 'POST',
@@ -721,32 +619,6 @@ async function postInstanceStatusTransition(args: {
   | { ok: true; value: { instanceId: string; status: AccountInstanceLiveStatus; changed: boolean } }
   | RouteFailure
 > {
-  if (args.action === 'publish') {
-    const source = await openAccountInstanceFromTokyo(args);
-    if (!source.ok) return source;
-    if (!source.value) {
-      return {
-        ok: false,
-        status: 404,
-        error: {
-          kind: 'NOT_FOUND',
-          reasonKey: 'coreui.errors.instance.notFound',
-          detail: `instance not found: ${args.instanceId}`,
-        },
-      };
-    }
-    if (isLegacyWidgetType(source.value.row.widgetType)) {
-      return {
-        ok: false,
-        status: 422,
-        error: {
-          kind: 'VALIDATION',
-          reasonKey: 'coreui.errors.instance.widgetLegacy',
-          detail: `legacy widget type cannot be published: ${source.value.row.widgetType}`,
-        },
-      };
-    }
-  }
   const result = await fetchTokyoJson({
     accountId: args.accountId,
     accountCapsule: args.accountCapsule,

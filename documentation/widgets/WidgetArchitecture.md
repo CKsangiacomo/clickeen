@@ -265,9 +265,11 @@ fake `instance-picker` or Bob-only selector.
 - Call to Action Core: action eyebrow/headline/supporting text/action content,
   body layout, and body action styling.
 
-Core DOM lives inside `.ck-headerLayout__body`. In Bob's UI, the Core should be
-labeled with the widget-appropriate noun through `uiLabels.core.*`, not exposed
-to users as "Core".
+Core DOM lives inside `.ck-headerLayout__body`, which lives inside the shared
+Shell Pod. Core must not render outside `[data-role="pod"]`, and preview must
+not create a second body wrapper outside the Shell. In Bob's UI, the Core
+should be labeled with the widget-appropriate noun through `uiLabels.core.*`,
+not exposed to users as "Core".
 
 Core must not read product meaning from Shell-only paths. `header.*` and
 `headerCta.*` remain the optional shared Header region. If the widget's actual
@@ -300,9 +302,9 @@ Widget Core taxonomy must be widget-specific. Do not create body paths named
 only `title`, `subtitle`, `cta`, `button`, `body`, or generic `core.*` when a
 similar Shell element exists. Use a product namespace and specific nouns:
 `calltoaction.headline`, `calltoaction.supportingTextHtml`,
-`calltoaction.action.*`, `cards.items[]`, `split.visual.*`, and similar. This
-keeps saved state, editable fields, translations, and ToolDrawer labels
-deterministic.
+`calltoaction.action.*`, `cards.items[]`, `splitMedia.*`, and
+`splitCarouselMedia.items[]` or similar. This keeps saved state, editable
+fields, translations, and ToolDrawer labels deterministic.
 
 User-facing labels must also carry context when similar controls appear in the
 same mixed panel. A Header control can say "Header CTA label"; a Call to Action
@@ -324,7 +326,9 @@ that an old body namespace is correct product architecture.
 | `countdown` | Widget-specific Core model | `countdown.*` | Copy for widget-owned timing/action/SEO metadata under one namespace. |
 | `faq` | Widget-specific Core model | `faq.*` | Copy for repeated sections/questions and Shell runtime behavior. |
 | `logoshowcase` | Widget-specific Core model | `logoshowcase.*` | Copy for nested repeated logo collections. |
-| `split` | Widget-specific Core model | `split.*` plus Core cardwrapper appearance where declared | Copy for mixed media/instance item Core paths. |
+| `split-media` | Widget-specific Core model | `splitMedia.*` plus Core cardwrapper appearance where declared | Copy for one media slot edited by one real media `dropdown-fill` control. |
+| `split-carousel-media` | Widget-specific Core model | `splitCarouselMedia.*` plus Core cardwrapper appearance where declared | Copy for flat carousel media repeaters with stable item identity and one real media `dropdown-fill` per item. |
+| `split` | Legacy deletion target | none | Do not copy. Delete source/exposure and migrate or invalidate existing account data through controlled cleanup. |
 
 New widgets and refactored widgets must use a widget-specific body namespace.
 Legacy generic Core paths, legacy Header CTA paths, private CTA paths, root
@@ -512,6 +516,16 @@ Account-instance selection is not a generic field type. It requires a
 product-owner-approved Dieter/Bob component and a Roma-provided account instance
 data source. Do not use or document `instance-picker` as an approved widget
 control.
+
+For PRD106C3 Split-family media widgets, real media control means one
+`dropdown-fill` field with `fill-modes: "image,video"` for each media slot.
+`split-media` binds that field to `splitMedia.media`.
+`split-carousel-media` binds a `repeater` to `splitCarouselMedia.items`, and
+each item template binds exactly one media field to
+`splitCarouselMedia.items.__INDEX__.media`. Do not split this into a fake media
+kind picker plus separate image/video fields. Its repeater declares `min: "2"`
+and `max: "6"`; item IDs are created when the user adds a row, not silently
+healed by generic saved-state normalization.
 
 Nested controls inside `repeater` and `object-manager` templates are not
 second-class HTML. They use the same Builder control language as top-level

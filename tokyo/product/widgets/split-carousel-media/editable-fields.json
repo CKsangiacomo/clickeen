@@ -27,7 +27,7 @@
       "limits": []
     },
     {
-      "path": "splitCarouselMedia.items[].media.alt",
+      "path": "splitCarouselMedia.items[].alt",
       "label": "Carousel visual alt text",
       "role": "split-carousel-media-alt",
       "type": "string",

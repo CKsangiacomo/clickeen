@@ -18,14 +18,15 @@ const widgets = [
   { widgetType: 'countdown', instanceId: 'H7IF9M2K9B', expectedRoot: 'countdown', published: true },
   { widgetType: 'faq', instanceId: 'UZ3JEJSHII', expectedRoot: 'faq', published: true },
   { widgetType: 'logoshowcase', instanceId: '8FMVZFFPJV', expectedRoot: 'logoshowcase', published: true },
-  { widgetType: 'split', instanceId: 'KUGYTX2ZMQ', expectedRoot: 'split', published: false },
+  { widgetType: 'split-carousel-media', instanceId: 'P10U6N7Y2X', expectedRoot: 'splitCarouselMedia', published: false },
+  { widgetType: 'split-media', instanceId: 'KUGYTX2ZMQ', expectedRoot: 'splitMedia', published: false },
 ];
 
 const sourceWidgets = [
   ...widgets,
-  { widgetType: 'split-carousel-media', expectedRoot: 'splitCarouselMedia' },
-  { widgetType: 'split-media', expectedRoot: 'splitMedia' },
 ];
+const supportedWidgetTypes = new Set(sourceWidgets.map((widget) => widget.widgetType));
+const expectedInstanceIds = new Set(widgets.map((widget) => widget.instanceId));
 
 const shellTopLevel = new Set(['header', 'headerCta', 'stage', 'pod', 'coreSize', 'localeSwitcher']);
 const shellAppearanceKeys = new Set([
@@ -401,6 +402,47 @@ function r2ListKeys(prefix) {
     .filter((key) => key && key.startsWith(prefix));
 }
 
+function listSupabaseInstanceRows() {
+  const baseUrl = String(process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  if (!baseUrl || !serviceRoleKey) {
+    warnings.push({
+      scope: 'supabase registry',
+      path: 'env',
+      message: 'SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY missing; registry row audit skipped',
+    });
+    return [];
+  }
+
+  const url = `${baseUrl}/rest/v1/instances?account_id=eq.${encodeURIComponent(accountId)}&select=id,account_id,widget_type,publish_status,translation_status,created_at,edited_at&order=id.asc`;
+  const text = execFileSync(
+    'node',
+    [
+      '-e',
+      `
+const url = process.argv[1];
+const key = process.argv[2];
+const response = await fetch(url, { headers: { apikey: key, Authorization: 'Bearer ' + key } });
+const text = await response.text();
+if (!response.ok) {
+  console.error(text || response.statusText);
+  process.exit(1);
+}
+process.stdout.write(text);
+`,
+      url,
+      serviceRoleKey,
+    ],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      maxBuffer: 50 * 1024 * 1024,
+    },
+  );
+  const rows = JSON.parse(text);
+  return Array.isArray(rows) ? rows : [];
+}
+
 function pushIssue(issues, scope, pathValue, message) {
   issues.push({ scope, path: pathValue, message });
 }
@@ -459,13 +501,11 @@ for (const widget of sourceWidgets) {
   if (/\bstate\.appearance(?:\s*&&\s*state\.appearance)?\.cardwrapper\b/.test(clientSource)) {
     pushIssue(sourceIssues, widget.widgetType, 'widget.client.js', 'runtime reads root state.appearance.cardwrapper; cardwrapper is widget Core appearance');
   }
-  if (['split', 'split-carousel-media', 'split-media'].includes(widget.widgetType)) {
+  if (['split-carousel-media', 'split-media'].includes(widget.widgetType)) {
     const coreClass =
-      widget.widgetType === 'split'
-        ? 'ck-split__core'
-        : widget.widgetType === 'split-media'
-          ? 'ck-split-media__core'
-          : 'ck-split-carousel-media__core';
+      widget.widgetType === 'split-media'
+        ? 'ck-split-media__core'
+        : 'ck-split-carousel-media__core';
     const autoSizingPattern = new RegExp(`\\.${coreClass}\\[data-core-size-mode=['"]auto['"]\\][\\s\\S]*aspect-ratio`);
     if (!autoSizingPattern.test(cssSource)) {
       pushIssue(sourceIssues, widget.widgetType, 'widget.css', 'Split Core must define intrinsic auto sizing for absolutely positioned media');
@@ -501,6 +541,12 @@ for (const widget of sourceWidgets) {
 if (!skipR2) {
   execFileSync('node', ['scripts/cloudflare/r2.mjs', 'preflight'], { cwd: repoRoot, stdio: 'pipe' });
   const accountDefaults = r2GetJson(`accounts/${accountId}/widget-defaults.json`);
+  const accountWidgetDefaults = isRecord(accountDefaults.widgets) ? accountDefaults.widgets : {};
+  Object.keys(accountWidgetDefaults)
+    .filter((widgetType) => !supportedWidgetTypes.has(widgetType))
+    .forEach((widgetType) =>
+      pushIssue(accountIssues, 'account widget defaults', `widgets.${widgetType}`, 'unsupported widget defaults key remains'),
+    );
   const accountShell = accountDefaults.shell || {};
   const shellControls = shellControlPaths(accountShell);
   collectLeafPaths(accountShell)
@@ -522,6 +568,35 @@ if (!skipR2) {
       .filter((pathValue) => !isPathCovered(pathValue, controls))
       .filter((pathValue) => !isMetadataPath(pathValue, metadataRoots))
       .forEach((pathValue) => pushIssue(accountIssues, widget.widgetType, pathValue, 'not covered by Builder control contract'));
+  }
+
+  const registryRows = listSupabaseInstanceRows();
+  for (const row of registryRows) {
+    const id = typeof row?.id === 'string' ? row.id : '';
+    const widgetType = typeof row?.widget_type === 'string' ? row.widget_type : '';
+    if (!expectedInstanceIds.has(id)) {
+      pushIssue(instanceIssues, 'supabase registry', id || '(missing id)', `unexpected live instance row remains (${widgetType || 'unknown widget type'})`);
+      continue;
+    }
+    const expected = widgets.find((widget) => widget.instanceId === id);
+    if (expected && widgetType !== expected.widgetType) {
+      pushIssue(instanceIssues, 'supabase registry', id, `expected ${expected.widgetType}, got ${widgetType || 'unknown widget type'}`);
+    }
+    if (widgetType && !supportedWidgetTypes.has(widgetType)) {
+      pushIssue(instanceIssues, 'supabase registry', id, `unsupported widget_type ${widgetType}`);
+    }
+  }
+
+  const instanceRootKeys = r2ListKeys(`accounts/${accountId}/instances/`);
+  const r2InstanceIds = new Set(
+    instanceRootKeys
+      .map((key) => key.match(new RegExp(`^accounts/${accountId}/instances/([^/]+)/instance\\.config\\.json$`))?.[1])
+      .filter(Boolean),
+  );
+  for (const instanceId of r2InstanceIds) {
+    if (!expectedInstanceIds.has(instanceId)) {
+      pushIssue(instanceIssues, 'r2 instances', instanceId, 'unexpected live instance source remains');
+    }
   }
 
   for (const widget of widgets) {
