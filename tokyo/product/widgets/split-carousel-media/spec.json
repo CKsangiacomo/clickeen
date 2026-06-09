@@ -412,7 +412,7 @@
                 "type": "toggle",
                 "groupId": "appearance-visual-frame",
                 "path": "splitCarouselMedia.appearance.cardwrapper.radiusLinked",
-                "label": "Link visual radius",
+                "label": "Link visual corners",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -425,7 +425,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitCarouselMedia.appearance.cardwrapper.radius",
-                "label": "Visual radius",
+                "label": "Visual corner radius",
                 "showIf": {
                   "path": "splitCarouselMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isTrue"
@@ -464,7 +464,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitCarouselMedia.appearance.cardwrapper.radiusTL",
-                "label": "Visual top-left radius",
+                "label": "Visual top-left corner",
                 "showIf": {
                   "path": "splitCarouselMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -503,7 +503,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitCarouselMedia.appearance.cardwrapper.radiusTR",
-                "label": "Visual top-right radius",
+                "label": "Visual top-right corner",
                 "showIf": {
                   "path": "splitCarouselMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -542,7 +542,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitCarouselMedia.appearance.cardwrapper.radiusBR",
-                "label": "Visual bottom-right radius",
+                "label": "Visual bottom-right corner",
                 "showIf": {
                   "path": "splitCarouselMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -581,7 +581,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitCarouselMedia.appearance.cardwrapper.radiusBL",
-                "label": "Visual bottom-left radius",
+                "label": "Visual bottom-left corner",
                 "showIf": {
                   "path": "splitCarouselMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"

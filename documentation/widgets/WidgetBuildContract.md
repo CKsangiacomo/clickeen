@@ -253,6 +253,18 @@ visual frame from `splitCarouselMedia.appearance.cardwrapper.*`. A runtime that 
 Shell appearance families such as `appearance.headerCta.*`,
 `appearance.localeSwitcher*`, and `appearance.podBorder`.
 
+`cardwrapper.*` is not just a saved control family. The rendered widget must
+consume the shared `--ck-cardwrapper-radius`, `--ck-cardwrapper-border-*`, and
+`--ck-cardwrapper-shadow` variables on the visible Core surface that the controls
+name. If the panel says "Visual frame", those variables must style the visual
+frame, not an invisible parent or root placeholder.
+
+Corner controls must use corner language in the ToolDrawer. The state paths stay
+`radiusLinked`, `radius`, and `radiusTL|TR|BR|BL`, but the UI labels must read
+`Link ... corners`, `Corner radius`, and `... top-left corner` / `... top-right
+corner` / `... bottom-right corner` / `... bottom-left corner`. Do not label the
+linked toggle as `Link ... radius`.
+
 Core must render with `coreSize.mode: "auto"`. If the Core uses absolutely
 positioned media, canvas, or embedded children, the Core CSS must provide an
 intrinsic auto size such as an aspect ratio/min-height keyed by the shared

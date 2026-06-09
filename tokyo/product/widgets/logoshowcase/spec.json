@@ -870,7 +870,7 @@
                 "type": "toggle",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
-                "label": "Link logo tile radius",
+                "label": "Link logo tile corners",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -890,7 +890,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radius",
-                "label": "Logo tile radius",
+                "label": "Logo tile corner radius",
                 "showIf": {
                   "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isTrue"
@@ -936,7 +936,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radiusTL",
-                "label": "Logo tile top-left radius",
+                "label": "Logo tile top-left corner",
                 "showIf": {
                   "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -982,7 +982,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radiusTR",
-                "label": "Logo tile top-right radius",
+                "label": "Logo tile top-right corner",
                 "showIf": {
                   "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -1028,7 +1028,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radiusBR",
-                "label": "Logo tile bottom-right radius",
+                "label": "Logo tile bottom-right corner",
                 "showIf": {
                   "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -1074,7 +1074,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item-card",
                 "path": "logoshowcase.appearance.cardwrapper.radiusBL",
-                "label": "Logo tile bottom-left radius",
+                "label": "Logo tile bottom-left corner",
                 "showIf": {
                   "path": "logoshowcase.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"

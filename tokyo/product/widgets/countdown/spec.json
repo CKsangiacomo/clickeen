@@ -789,7 +789,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.radiusTL",
-                "label": "Tile top-left radius",
+                "label": "Tile top-left corner",
                 "showIf": {
                   "path": "countdown.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -828,7 +828,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.radiusTR",
-                "label": "Tile top-right radius",
+                "label": "Tile top-right corner",
                 "showIf": {
                   "path": "countdown.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -867,7 +867,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.radiusBR",
-                "label": "Tile bottom-right radius",
+                "label": "Tile bottom-right corner",
                 "showIf": {
                   "path": "countdown.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -906,7 +906,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-item",
                 "path": "countdown.appearance.cardwrapper.radiusBL",
-                "label": "Tile bottom-left radius",
+                "label": "Tile bottom-left corner",
                 "showIf": {
                   "path": "countdown.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"

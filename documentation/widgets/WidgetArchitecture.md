@@ -185,6 +185,15 @@ surface, such as `cards.appearance.cardwrapper.*`,
 `faq.appearance.cardwrapper.*`, or `countdown.appearance.cardwrapper.*`. Root
 `appearance.cardwrapper.*` is not a valid Shell path.
 
+Core surface controls must visibly apply to the named surface. If Split Media
+declares `splitMedia.appearance.cardwrapper.*` for "Visual frame", the visual
+frame must consume the shared `--ck-cardwrapper-*` variables. Applying the values
+to an ancestor that the user cannot see is a broken control contract.
+
+Radius state represents corners. Labels must say `Link ... corners`, `Corner
+radius`, and per-corner names such as `top-left corner`; the `radius*` path names
+are implementation paths, not the user-facing vocabulary.
+
 ### Shared Stage And Settings Runtime
 
 Stage and Pod are shared Shell. `stage.canvas.mode` controls the host canvas.

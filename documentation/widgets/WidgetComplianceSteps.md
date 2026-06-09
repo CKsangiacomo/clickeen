@@ -380,6 +380,11 @@ OUTPUT
     `splitMedia.appearance.cardwrapper.*`, or
     `splitCarouselMedia.appearance.cardwrapper.*`.
     Runtime must not read root `state.appearance.cardwrapper`.
+    The visible Core surface must consume the shared `--ck-cardwrapper-*`
+    variables. A "Visual frame" control that writes state but does not change the
+    visual frame fails compliance.
+    Corner labels must use corner language: `Link ... corners`, `Corner radius`,
+    and per-corner labels such as `top-left corner`.
   - Apply Stage/Pod and Typography first, then shared primitives, then widget-specific bindings.
   - No network fetches, timers, randomness, or “healing” logic inside `applyState`.
 - postMessage support:

@@ -6,7 +6,7 @@
 .ck-split-carousel-media__core {
   position: relative;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   background: color-mix(in oklab, var(--color-system-gray-5), transparent 30%);
 }
 
@@ -20,7 +20,11 @@
   width: 100%;
   height: 100%;
   min-height: inherit;
+  box-sizing: border-box;
   overflow: hidden;
+  border: var(--ck-cardwrapper-border-width) solid var(--ck-cardwrapper-border-color);
+  border-radius: var(--ck-cardwrapper-radius);
+  box-shadow: var(--ck-cardwrapper-shadow);
 }
 
 .ck-split-carousel-media__media,

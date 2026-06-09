@@ -2098,7 +2098,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.radiusTL",
-                "label": "Q&A card top-left radius",
+                "label": "Q&A card top-left corner",
                 "showIf": {
                   "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -2144,7 +2144,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.radiusTR",
-                "label": "Q&A card top-right radius",
+                "label": "Q&A card top-right corner",
                 "showIf": {
                   "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -2190,7 +2190,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.radiusBR",
-                "label": "Q&A card bottom-right radius",
+                "label": "Q&A card bottom-right corner",
                 "showIf": {
                   "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"
@@ -2236,7 +2236,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-card",
                 "path": "faq.appearance.cardwrapper.radiusBL",
-                "label": "Q&A card bottom-left radius",
+                "label": "Q&A card bottom-left corner",
                 "showIf": {
                   "path": "faq.appearance.cardwrapper.radiusLinked",
                   "op": "isFalse"

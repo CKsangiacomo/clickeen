@@ -104,10 +104,10 @@ export function buildStagePodCornerAppearanceFields(): string[] {
   return [
     "    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='toggle' size='md' path='pod.radiusLinked' label='Link pod corners' value='{{pod.radiusLinked}}' default='true' />",
     `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radius' label='Corner radius' placeholder='Choose radius' value='{{pod.radius}}' show-if=\"pod.radiusLinked == true\" options='${radiusOptions}' />`,
-    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusTL' label='Pod top-left radius' placeholder='Choose radius' value='{{pod.radiusTL}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
-    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusTR' label='Pod top-right radius' placeholder='Choose radius' value='{{pod.radiusTR}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
-    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusBR' label='Pod bottom-right radius' placeholder='Choose radius' value='{{pod.radiusBR}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
-    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusBL' label='Pod bottom-left radius' placeholder='Choose radius' value='{{pod.radiusBL}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusTL' label='Pod top-left corner' placeholder='Choose radius' value='{{pod.radiusTL}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusTR' label='Pod top-right corner' placeholder='Choose radius' value='{{pod.radiusTR}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusBR' label='Pod bottom-right corner' placeholder='Choose radius' value='{{pod.radiusBR}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='Stage/Pod' type='dropdown-actions' size='md' path='pod.radiusBL' label='Pod bottom-left corner' placeholder='Choose radius' value='{{pod.radiusBL}}' show-if=\"pod.radiusLinked == false\" options='${radiusOptions}' />`,
   ];
 }
 
@@ -214,19 +214,19 @@ export function buildCoreCardWrapperAppearancePanelFields(
   );
   push(
     `${basePath}.radiusTL`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusTL' label='Item top-left radius' value='{{${basePath}.radiusTL}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusTL' label='Item top-left corner' value='{{${basePath}.radiusTL}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
   );
   push(
     `${basePath}.radiusTR`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusTR' label='Item top-right radius' value='{{${basePath}.radiusTR}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusTR' label='Item top-right corner' value='{{${basePath}.radiusTR}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
   );
   push(
     `${basePath}.radiusBR`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusBR' label='Item bottom-right radius' value='{{${basePath}.radiusBR}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusBR' label='Item bottom-right corner' value='{{${basePath}.radiusBR}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
   );
   push(
     `${basePath}.radiusBL`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusBL' label='Item bottom-left radius' value='{{${basePath}.radiusBL}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusBL' label='Item bottom-left corner' value='{{${basePath}.radiusBL}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
   );
   push(
     `${basePath}.border`,
