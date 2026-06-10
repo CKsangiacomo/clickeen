@@ -51,11 +51,16 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 - Documentation drift is a P0 bug.
 
 ### 8) Cloudflare Operations Are Preflight-Gated
-- Before any Cloudflare-dependent execution, run `pnpm cf:preflight`.
+- Before any Cloudflare-dependent execution, run the preflight for the Cloudflare
+  surface being touched:
+  - R2/Tokyo artifact operations: `pnpm cf:preflight`
+  - Pages, custom domains, DNS, Worker/Page config: `pnpm cf:api:preflight`
 - If preflight fails, stop. Do not use dashboard scraping, random Wrangler
   commands, guessed R2 paths, or partial evidence.
 - Cloudflare/R2 read evidence must come from the repo Cloudflare commands in
   `documentation/architecture/CloudflareOperations.md`.
+- In this Cloudflare account, DNS is under `Domains -> clickeen.com -> DNS
+  records`; do not refer to it as "Websites".
 
 ## Repository Guidelines
 
@@ -70,7 +75,7 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 
 ### Build, Test, and Development Commands
 - Install: `pnpm install` (workspace root).
-- Dev: `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:admin`, `pnpm dev:venice`; `pnpm dev` runs them together via Turbo.
+- Dev: canonical local support stack is `scripts/dev-up.sh` (Bob, Berlin, Tokyo stub, Tokyo-worker). App-specific dev commands include `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:venice`, and `pnpm dev:prague`; DevStudio runtime evidence is Cloudflare Pages, not local Vite.
 - Build: `pnpm build:dieter` first, then `pnpm build` (Turbo fan-out).
 - Lint/Typecheck: `pnpm lint`, `pnpm typecheck`; per-app linting with `pnpm --filter @clickeen/bob lint` or `.../devstudio lint`.
 - Tests: `pnpm test` (Turbo) or targeted `pnpm --filter @clickeen/devstudio test`.

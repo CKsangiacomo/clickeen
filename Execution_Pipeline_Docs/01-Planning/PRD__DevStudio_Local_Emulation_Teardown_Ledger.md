@@ -62,5 +62,6 @@ A teardown PRD should split the work into explicit lanes:
 
 ## Step 7 Result
 
-Step 7 is green when this planning artifact is committed. The next migration step
-remains Step 8, and Step 8 is blocked by 108A-1 green.
+Step 7 is green when this planning artifact is committed. DevStudio Cloudflare
+migration closure stops here. The post-108 policy-page extension is a follow-up
+DevStudio update after 108A-1 defines the new schema authority.

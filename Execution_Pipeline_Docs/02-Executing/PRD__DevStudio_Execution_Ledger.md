@@ -1,6 +1,6 @@
 # DevStudio PRD Execution Ledger
 
-Status: active execution
+Status: migration complete through Step 7; post-108 policy follow-up deferred
 Started: 2026-06-09
 
 ## Slice 0A — Canonical Host + Berlin Auth Topology
@@ -481,8 +481,9 @@ Evidence recorded 2026-06-10:
 
 ## Step 7 — Local Emulation Teardown Ledger
 
-Status: green; Step 7 complete. Current PRD step: Step 8, blocked by 108A-1
-green.
+Status: green; Step 7 complete. DevStudio Cloudflare migration complete through
+the migration scope. The post-108 policy-page extension is deferred until 108A-1
+defines the new schema authority.
 
 Evidence recorded 2026-06-10:
 
@@ -506,3 +507,30 @@ Evidence recorded 2026-06-10:
 - NOT_ALLOWED held: no teardown item was executed; no runtime script, wrangler
   config, env file, generated local state, Cloudflare setting, or product code
   was changed in Step 7.
+
+## Closure Realignment — Migration Complete, Post-108 Follow-Up Deferred
+
+Status: green; DevStudio Cloudflare migration complete through Step 7.
+
+Evidence recorded 2026-06-10:
+
+- Product-owner clarification: 108 is not a blocker for DevStudio migration
+  closure. 108 is a higher-priority standalone AI-plane PRD. When 108A-1 is green,
+  DevStudio can update the Policy section against 108's surviving schema authority.
+- Migration acceptance is satisfied by the shipped Cloudflare Pages DevStudio,
+  Berlin/Google auth boundary, route contract, policy read/write lanes,
+  local-DevStudio decommission, docs sync, and local-emulation teardown ledger.
+- Deletion accounting from migration commit
+  `3238cfcd9d5ff31ab7a63aca6ef304cd640657e9`:
+  `admin/src/BobNativeCatalog.ts` deleted,
+  `admin/src/html/tools/bob-ui-native.html` deleted,
+  dead `dieter` route branch removed, local DevStudio launch removed from
+  `scripts/dev-up.sh`, and local policy/theme/rebuild-icon middleware removed
+  from `admin/vite.config.ts`.
+- Deletion audit follow-up: `AGENTS.md` no longer lists `pnpm dev:admin` as a
+  local workflow command. The package script remains intentionally available as a
+  Vite toolchain/debug entrypoint; DevStudio runtime evidence is Cloudflare Pages.
+- Follow-up deletion was intentionally not done in Step 7. The PRD forbids teardown
+  execution there; the ledger exists so a separate local-emulation teardown PRD can
+  decide what to delete, keep, or fence without breaking Bob/Berlin/Tokyo local
+  support workflows by accident.

@@ -1,9 +1,9 @@
 # PRD — DevStudio Cloudflare Migration
 
-Status: PLANNING — ready for product-owner ratification of Step 0
+Status: MIGRATION COMPLETE through Step 7; post-108 policy extension deferred
 Owner: Internal platform (DevStudio)
 Date: 2026-06-09 (revised same day after full page-by-page inspection)
-Stage: 01-Planning
+Stage: 01-Planning / migration record
 Numbering: deliberately unnumbered per product owner — this PRD is not part of the
 106 or 108 series. It executes in the window while the 108 D1–D9 decisions are being
 ratified and 106F lands, and runs parallel to (never ahead of) the 108 P0 slices.
@@ -15,6 +15,10 @@ Decision record:
 - 2026-06-09 (Pietro): **DevStudio canonical host is `https://devstudio.clickeen.com`,
   not a `*.dev.clickeen.com` surface. Auth is Berlin/Google using the existing
   Clickeen admin account. Cloudflare Access is not the DevStudio auth boundary.**
+- 2026-06-10 (Pietro): **108 is not a blocker for DevStudio migration closure.**
+  The Cloudflare migration is complete through Step 7. The former Step 8 policy-page
+  extension is post-migration follow-up after 108A-1 owns the new AI routing,
+  capability, conformance, and schema truth.
 
 Related:
 
@@ -42,7 +46,7 @@ Related:
 | ---------------------------------------------- | ------------------------------------------------------------------------------------- |
 | DevStudio product boundary (what it is/is not) | `documentation/services/devstudio.md` tenets, carried over unchanged                  |
 | Pages deploy mechanics                         | `CloudflarePagesCloudDevChecklist.md`                                                 |
-| Policy/AI matrix schemas and validation        | `packages/ck-policy` (and PRD 108A-1 once it rewrites the AI matrix)                  |
+| Policy/AI matrix schemas and validation        | `packages/ck-policy` for today's matrices; 108A-1 owns future AI routing/capability/conformance schema truth |
 | Local-emulation teardown execution             | **Not this PRD** — this PRD produces the ledger; teardown is a separate follow-up PRD |
 
 ---
@@ -73,8 +77,8 @@ owner's machine (`localhost:5173`). Three reasons it must move to Cloudflare:
 
 Scope in one sentence: lift the design-system showcase as-is, keep the Policy Editor
 **including its editing capability** by giving it a cloud write path (§3.5), delete
-the dead weight found during review, and add nothing else except the 108A-1-gated
-Policy extension.
+the dead weight found during review, and stop the migration there. The 108A-1-gated
+Policy extension is a later DevStudio update, not a migration blocker.
 
 ## 2. What DevStudio actually is today (verified page-by-page, 2026-06-09)
 
@@ -210,7 +214,7 @@ Decision (Pietro, 2026-06-09): in-UI policy editing is kept. Design:
   commit**; upstream GitHub failures return typed errors; the page never silently
   loses an edit (it refetches after every save, as it already does today).
 - **Editability scope is unchanged from today:** entitlement flags/limits editable;
-  copilot AI-runtime rows editable; system agents display-only. The Step 8 views
+  copilot AI-runtime rows editable; system agents display-only. The post-108 views
   (routing/capabilities) are **read-only** — extending editing to them is out of
   scope until decided after 108A-1.
 - **Side effect, accepted:** each policy commit to `main` triggers a DevStudio
@@ -219,7 +223,7 @@ Decision (Pietro, 2026-06-09): in-UI policy editing is kept. Design:
 
 Known coupling: the AI-runtime _editor_ edits today's matrix schema, which 108A-1
 rewrites. The editor ports as-is now (it must keep working through the migration)
-and is **adapted in Step 8** together with the new read-only views. Build-once does
+and is **adapted in the post-108 follow-up** together with the new read-only views. Build-once does
 not apply here because the editor already exists and is in use.
 
 ### 3.6 Design freeze (binding, product-owner mandate)
@@ -244,7 +248,7 @@ Mechanical enforcement:
 - **The shell changes exactly two things:** nav group titles/order (`tools` retired,
   `Policy` added) and the entitlements route. No CSS, class, spacing, or markup
   changes beyond those two.
-- **Step 8 new views (routing/capabilities) invent nothing visually.** They compose
+- **Post-108 new views (routing/capabilities) invent nothing visually.** They compose
   the existing `entitlements-table` styles and Dieter tokens verbatim. Zero new
   color values, font sizes, spacing values, border treatments, or component
   patterns. If a new view genuinely needs a style that does not exist, that style
@@ -256,10 +260,14 @@ Mechanical enforcement:
 
 - This PRD executes **now**, in the window while 108's D1–D9 decisions are ratified
   and 106F lands. It must not delay 108A-1/108B-1; if contention arises, 108 P0 wins.
-- **Step 8 (Policy extension + AI-editor schema adaptation) is blocked-by 108A-1
-  green.** Everything else is 108-independent.
-- Until Step 8 unlocks: zero investment in extending policy tooling beyond the lift
-  and the write path.
+- 108 is **not** a blocker for DevStudio Cloudflare migration completion. Migration
+  closure is Steps 0-7: cloud host, Berlin auth, route contract, policy read/write
+  path, local DevStudio decommission, docs sync, and teardown ledger.
+- 108A-1 is the authority for the future AI routing/capability/conformance schema.
+  DevStudio must not invent that schema or duplicate its logic.
+- The former Step 8 is therefore reclassified as a **post-migration follow-up**:
+  update the DevStudio Policy section after 108A-1 is green, using 108's surviving
+  authority and existing DevStudio/Dieter visual patterns.
 
 ## 5. Steps
 
@@ -273,7 +281,7 @@ Mechanical enforcement:
 | 5    | Docs sync: rewrite `documentation/services/devstudio.md` (cloud model, three-section IA, Berlin auth boundary, cookie rule, write-path description, removed-husk note); update the `Overview.md` system map row (DevStudio: Local Vite → Cloudflare Pages, internal Berlin-authenticated).                                                                  | Docs diff in the same PR as Steps 2–4 code.                                                                                                                                                                                                                                                                                                                                                  | Deferring docs; leaving the husk listed as a tool.                                                                                                                                           |
 | 6    | Decommission local DevStudio: remove it from `scripts/dev-up.sh` and local workflow docs; delete the entire policy/themes/rebuild-icons middleware from `vite.config.ts` (superseded by Step 4; themes/rebuild-icons lanes are dead today).                                                                                                                 | dev-up diff; `rg "api/entitlements                                                                                                                                                                                                                                                                                                                                                           | api/ai-runtime                                                                                                                                                                               | api/themes                                                                                                                                                                           | rebuild-icons" admin/vite.config.ts`→ 0;`rg "5173"` in scripts/docs → 0 (excluding historical PRDs). | Tearing down any non-DevStudio local infrastructure in this step. |
 | 7    | Produce the **local-emulation teardown ledger** as a planning artifact for a follow-up PRD: enumerate `scripts/dev-up.sh`, `[env.local]` forks (berlin/tokyo-worker/sanfrancisco wrangler.tomls), the Tokyo local CDN stub, `.dev.vars` + `generate-berlin-keys.mjs`, `Logs/`, `.wrangler/state` — each with a delete/keep/fence proposal and blast radius. | Ledger document committed to `01-Planning`.                                                                                                                                                                                                                                                                                                                                                  | Executing any teardown item inside this PRD.                                                                                                                                                 |
-| 8    | **Blocked-by 108A-1 green.** Extend the Policy section: read-only routing tables and capability/conformance views from the post-108A-1 schema; adapt the AI-runtime **editor** to the new schema (routing-table cells per D8 editability rules, if 108A-1's D8 decision allows; otherwise display-only).                                                    | Views render the new schema; one conformance-status value spot-checked against its report file; editor round-trip green against the new schema; **new views use only existing `entitlements-table` styles + Dieter tokens — `rg` for new hex/rgb/oklch literals in `admin/` → 0 (§3.6)**.                                                                                                    | Starting before 108A-1 is green; inventing editability rules not decided in D8; duplicating plane logic in the viewer; **any new visual style without named product-owner approval (§3.6)**. |
+| Follow-up | After 108A-1 is green, extend the Policy section: read-only routing tables and capability/conformance views from the post-108A-1 schema; adapt the AI-runtime **editor** to the new schema (routing-table cells per D8 editability rules, if 108A-1's D8 decision allows; otherwise display-only). | Views render the new schema; one conformance-status value spot-checked against its report file; editor round-trip green against the new schema; **new views use only existing `entitlements-table` styles + Dieter tokens — `rg` for new hex/rgb/oklch literals in `admin/` → 0 (§3.6)**. | Treating this as a blocker for migration closure; starting before 108A-1 is green; inventing editability rules not decided in D8; duplicating plane logic in the viewer; **any new visual style without named product-owner approval (§3.6)**. |
 
 ## 6. Out of scope
 
@@ -281,7 +289,7 @@ Mechanical enforcement:
   a follow-up PRD executes it).
 - PR-based review mode for policy edits (named future hardening; v1 is
   commit-to-main per §3.5).
-- Editing affordances on the Step 8 routing/capability views beyond what D8 decides.
+- Editing affordances on the post-108 routing/capability views beyond what D8 decides.
 - Widget verification or QA surfaces (106-series QA belongs to product surfaces and
   the Playwright harness, not DevStudio).
 - Workforce-agent review UI (future, 108C-era; cloud DevStudio is the candidate host
@@ -311,8 +319,8 @@ Mechanical enforcement:
   its pre-migration source; the shell diff is exactly the two permitted changes; no
   new color/style literals or styling dependencies entered `admin/`.**
 - Teardown ledger exists with per-item delete/keep/fence proposals.
-- (Post-108A-1) Policy section renders routing/capability/conformance from the new
-  schema; the AI-runtime editor round-trips against the new schema.
+- Post-108A-1 Policy section work is excluded from migration acceptance. It is a
+  follow-up DevStudio update after 108A-1 defines the new schema authority.
 
 ## 8. Planning review (per pipeline README)
 
@@ -325,7 +333,8 @@ Mechanical enforcement:
    silent local disk writes).
 3. **Avoids over-architecture?** Yes — the review shrank this PRD twice (husk
    deleted, future sections cut); the write path is commit-to-main v1 with PR-mode
-   explicitly deferred; the 108-coupled work is gated in Step 8 so it is built once.
+   explicitly deferred; the 108-coupled work is a post-migration follow-up so it is
+   built once against 108's surviving authority.
 4. **Moves toward intended architecture?** Yes — agent-reachable internal surface
    (the company thesis), policy changes as attributed commits, and the local
    emulation plane unblocked for teardown (the 10x simplification), while feeding
@@ -406,7 +415,7 @@ is ticked. No page may ship that is not in this table.
 | Default route | Unknown/empty hash → first item of first group (today's behavior, kept).                                                            |
 | Brand header  | "DevStudio" (unchanged).                                                                                                            |
 
-### Step 8 additions (blocked-by 108A-1 — specified here, built later)
+### Post-108 Policy Additions (follow-up, not migration closure)
 
 | Page          | New route               | Contract                                                                                                                                                                                                             |
 | ------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
