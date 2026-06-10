@@ -1,6 +1,6 @@
 # PRD106F_WidgetSystemicCertificationLedger
 
-Status: Source + authenticated browser certification complete - commit/deploy pending
+Status: Live source, deploy, account-defaults, and authenticated browser certification complete
 Owner: Widget system + Bob/Roma/Tokyo runtime
 Date: 2026-06-09
 Parent: `106__Umbrella__Composition_Vision.md`
@@ -2063,8 +2063,8 @@ Cross-widget items still carried forward:
 
 ## Cross-Widget Certification
 
-Status: Green for source, live account defaults, live instances, and
-authenticated browser save/reload certification. Commit/deploy still pending.
+Status: Green for source, live account defaults, live instances, deploy graph,
+and authenticated browser save/reload certification.
 
 Executed after all widget slices were source-green, then repeated with a real
 Roma -> Bob -> Tokyo browser session.
@@ -2079,11 +2079,16 @@ Validation proof:
 - `pnpm lint` passed.
 - `pnpm exec playwright test e2e/widgets/prd106f-builder-certification.spec.ts`
   passed: 16/16.
-- `pnpm e2e` passed with authenticated remote Roma/Bob/Tokyo coverage: 18/18.
+- `pnpm exec playwright test e2e/widgets/prd106f-builder-certification.spec.ts e2e/widgets/widget-defaults.spec.ts --project=chromium --reporter=line`
+  passed with authenticated remote Roma/Bob/Tokyo coverage: 17/17.
+- `pnpm e2e` passed with authenticated remote Roma/Bob/Tokyo coverage: 19/19.
 
 Browser certification harness:
 
 - Added `e2e/widgets/prd106f-builder-certification.spec.ts`.
+- Added `e2e/widgets/widget-defaults.spec.ts` to certify that Roma
+  Settings -> Widget Defaults loads account defaults without Tokyo unmapped
+  path errors.
 - Uses the real authenticated Roma Builder route for the eight PRD106F
   certified instances:
   `calltoaction/SZBSB5HHFJ`, `big-bang/QD1G068MX7`,
@@ -2103,6 +2108,27 @@ Browser certification harness:
 - Uses one bounded click on Roma's visible `Retry` affordance if Bob opens with
   no selected instance. If the retry does not select the instance, the test
   fails.
+
+Live deploy regression found and fixed during certification:
+
+- Browser QA found Roma Widget Defaults returning HTTP 422 with
+  `tokyo.widgetDefaults.unmappedPaths` for FAQ and Logo Showcase
+  `uiLabels.core.*` metadata.
+- Source validation was already correct: `uiLabels.core` is widget software
+  metadata, canonicalized from factory defaults, and intentionally not exposed
+  as an editable Roma default.
+- Root cause was the deploy graph, not widget state: the cloud-dev Worker
+  workflow did not trigger/redeploy Tokyo Worker for changes to
+  `packages/widget-shell`, even though Tokyo Worker depends on that package for
+  Shell/account-default validation.
+- Fixed `.github/workflows/cloud-dev-workers.yml` so shared package changes
+  trigger the workflow, `packages/widget-shell` marks Tokyo Worker as changed,
+  and workflow edits force the worker deploy path instead of producing a
+  no-op green run.
+- GitHub run `27249419466` deployed berlin-dev, sanfrancisco-dev,
+  `tokyo-assets-dev` Worker, and synced Tokyo deploy roots to R2 successfully.
+- Re-ran Widget Defaults and full e2e after deployment; Widget Defaults 422 is
+  gone.
 
 Live data cleanup performed during certification:
 
@@ -2124,9 +2150,9 @@ Required matrix:
 | Shared control vocabulary consistent | Green at source and panel-open level | Shared labels and controls compile and render through Bob. Further copy polish can be separate UX work. |
 | Dieter/ToolDrawer primitives reused consistently | Green | Browser certifies repeater/object-manager aggregate paths and dropdown/media surfaces open without errors. |
 | Runtime apply order consistent | Green | Browser preview opens nonblank for every widget and save/reload emits no widget/page errors. |
-| New instance creation uses account Shell defaults + widget Core defaults | Green | `audit:106`, source validation, Shell validation, typecheck, lint, and live account-default cleanup pass. |
+| New instance creation uses account Shell defaults + widget Core defaults | Green | `audit:106`, source validation, Shell validation, typecheck, lint, live account-default cleanup, Widget Defaults e2e, and fixed Worker deploy graph pass. |
 | Existing starter/account instances compile and open | Green | Authenticated browser spec opens all eight live instances through Roma/Bob. |
-| Browser QA confirms controls change preview, save, reload, and restore | Green | PRD106F spec passes 16/16; full `pnpm e2e` passes 18/18. |
+| Browser QA confirms controls change preview, save, reload, and restore | Green | PRD106F spec passes 16/16; targeted PRD106F + Widget Defaults passes 17/17; full `pnpm e2e` passes 19/19. |
 
 Final carry-forward items:
 
