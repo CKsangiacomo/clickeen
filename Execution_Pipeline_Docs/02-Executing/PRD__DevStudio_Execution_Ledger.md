@@ -318,3 +318,47 @@ Live verification after E2E secret unification recorded 2026-06-10:
   `devstudio.clickeen.com`.
 - Step 2 live blocker is closed. Step 3 remains next; screenshots and three
   entitlement-value spot-checks are separate Step 3 evidence.
+
+## Step 3 — Showcase And Policy Read-Lane Verification
+
+Status: green; Step 3 complete. Current PRD step: Step 4.
+
+Evidence recorded 2026-06-10:
+
+- Surviving authority: `PRD__DevStudio_Cloudflare_Migration.md` Step 3,
+  Appendix A, and `packages/ck-policy` matrix files from `main`.
+- `pnpm cf:api:preflight` — pass: Cloudflare token/account, DevStudio Pages
+  project/domain, and DNS are readable through the repo Cloudflare command.
+- `pnpm cf:pages:devstudio-env` — pass: live DevStudio Pages env matches
+  `admin/wrangler.toml`; required Pages secrets `DEVSTUDIO_GITHUB_TOKEN` and
+  `E2E_AUTH_SECRET` are present as `secret_text`. This command proves
+  presence/type only, not secret values.
+- Non-printing auth probe using the repo Playwright bootstrap contract:
+  `POST https://devstudio.clickeen.com/api/e2e/session` — `200`, account id
+  present; `POST https://berlin-dev.clickeen.workers.dev/internal/e2e/session`
+  — `200`, account id and token fields present.
+- Live Playwright route contract rerun:
+  `E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json E2E_REFRESH_AUTH=1 pnpm exec playwright test e2e/devstudio/route-contract.spec.ts --project=chromium --reporter=line`
+  — pass, 27 checks.
+- Screenshot set saved outside the repo:
+  `/tmp/clickeen-devstudio-step3/foundations-colors.png`,
+  `/tmp/clickeen-devstudio-step3/dieter-button.png`,
+  `/tmp/clickeen-devstudio-step3/policy-entitlements.png`.
+- Live Policy Editor read endpoints:
+  `GET /api/entitlements/matrix` — `200`, path
+  `packages/ck-policy/entitlements.matrix.json`, sha present;
+  `GET /api/ai-runtime/matrix` — `200`, path
+  `packages/ck-policy/ai-runtime.matrix.json`, sha present.
+- Entitlement spot-checks against
+  `packages/ck-policy/entitlements.matrix.json`:
+  `branding.remove` `tier1` expected `true`, API returned `true`, UI switch
+  checked `true`; `instances.published.max` `tier2` expected `5`, API returned
+  `5`, UI input value `5`; `views.monthly.max` `tier2` expected `null`, API
+  returned `null`, UI input empty with `∞` placeholder.
+- AI runtime read check against `packages/ck-policy/ai-runtime.matrix.json`:
+  `cs.widget.copilot.v1` `tier2` `defaultModel` expected
+  `{ provider: "openai", model: "gpt-5.2" }`, API matched, UI select value
+  `openai::gpt-5.2`.
+- Browser evidence reported `consoleErrors: []` and `pageErrors: []`.
+- No write-path controls were clicked, typed into, or submitted. Step 4 remains
+  the write-path gate.
