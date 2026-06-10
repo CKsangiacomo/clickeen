@@ -11,6 +11,10 @@ on:
       - "tokyo/product/fonts/**"
       - "tokyo/product/themes/**"
       - "tokyo/product/dieter/**"
+      - "packages/ck-contracts/**"
+      - "packages/ck-policy/**"
+      - "packages/l10n/**"
+      - "packages/widget-shell/**"
       - "scripts/infra/**"
       - "scripts/verify/**"
       - "scripts/tokyo-fonts-sync.mjs"
@@ -81,15 +85,20 @@ jobs:
           tokyo=false
           tokyo_assets=false
 
-          if path_changed '^(berlin/|scripts/infra/)'; then
+          workflow_changed=false
+          if path_changed '^\.github/workflows/cloud-dev-workers\.yml$'; then
+            workflow_changed=true
+          fi
+
+          if [ "$workflow_changed" = "true" ] || path_changed '^(berlin/|scripts/infra/)'; then
             berlin=true
           fi
 
-          if path_changed '^(sanfrancisco/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n)/)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(sanfrancisco/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n)/)'; then
             sanfrancisco=true
           fi
 
-          if path_changed '^(tokyo-worker/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n)/)'; then
+          if [ "$workflow_changed" = "true" ] || path_changed '^(tokyo-worker/|scripts/infra/|packages/(ck-contracts|ck-policy|l10n|widget-shell)/)'; then
             tokyo=true
           fi
 
