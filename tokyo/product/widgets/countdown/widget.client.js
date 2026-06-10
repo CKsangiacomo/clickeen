@@ -864,9 +864,11 @@
     );
   }, { requireWidgetName: true });
 
-  const initialLocale = runtimeContext.locale || '';
-  applyState(runtimeContext.state, { locale: initialLocale });
-  syncTimerScheduler(runtimeContext.state);
+  if (runtimeContext.payload) {
+    const initialLocale = runtimeContext.locale || '';
+    applyState(runtimeContext.state, { locale: initialLocale });
+    syncTimerScheduler(runtimeContext.state);
+  }
   }
 
   runtime.register('countdown', initCountdown);

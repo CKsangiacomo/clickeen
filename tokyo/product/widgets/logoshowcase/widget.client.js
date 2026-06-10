@@ -954,8 +954,10 @@
     );
   });
 
-  const initialLocale = runtimeContext.locale || '';
-  applyState(runtimeContext.state, { locale: initialLocale });
+  if (runtimeContext.payload) {
+    const initialLocale = runtimeContext.locale || '';
+    applyState(runtimeContext.state, { locale: initialLocale });
+  }
   }
 
   runtime.register('logoshowcase', initLogoShowcase);

@@ -216,12 +216,14 @@
       { requireWidgetName: true },
     );
 
-    const initialLocale = runtimeContext.locale || '';
-    applyState(runtimeContext.state, {
-      ...runtimeContext,
-      locale: initialLocale,
-      instanceId: resolvedInstanceId,
-    });
+    if (runtimeContext.payload) {
+      const initialLocale = runtimeContext.locale || '';
+      applyState(runtimeContext.state, {
+        ...runtimeContext,
+        locale: initialLocale,
+        instanceId: resolvedInstanceId,
+      });
+    }
   }
 
   runtime.register('big-bang', initBigBang);

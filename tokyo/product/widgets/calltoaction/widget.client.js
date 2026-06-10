@@ -415,12 +415,14 @@
       { requireWidgetName: true },
     );
 
-    var initialLocale = runtimeContext.locale || '';
-    applyState(runtimeContext.state, {
-      ...runtimeContext,
-      locale: initialLocale,
-      instanceId: resolvedInstanceId,
-    });
+    if (runtimeContext.payload) {
+      var initialLocale = runtimeContext.locale || '';
+      applyState(runtimeContext.state, {
+        ...runtimeContext,
+        locale: initialLocale,
+        instanceId: resolvedInstanceId,
+      });
+    }
   }
 
   runtime.register('calltoaction', initCallToAction);
