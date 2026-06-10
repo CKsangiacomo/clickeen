@@ -601,6 +601,12 @@ via lookup; it only inherits flavor-4 labels.)
 
 ## Part IV — Execution-spec skeletons (the augmentation)
 
+> **SUPERSEDED (2026-06-09, round 2):** these skeletons were the v1 drafts. The
+> authoritative execution contracts are now `108A1__EXEC__…` and `108B1__EXEC__…`
+> (v2). Known drift in the skeletons below: the TurnClass enum still lists
+> `freeform` (abolished — split into `advice` + out-of-domain per Q3 round 5), and
+> no Q6 conversion mode exists here. Do not execute from this section.
+
 These are proposed contents for the two execution specs PR-7 requires. They follow the
 106 contract: one step at a time; green = named evidence; a blocker report stops
 execution; NOT_ALLOWED is binding per step.
@@ -716,7 +722,12 @@ place.
    'durable'` and `subject: 'account' | 'service'`; keep `boundary` as is.
 4. **Billing/usage:** pre-GA, emit usage in the learning record (108A §3.5 fields) and
    defer aggregation to a billing PRD. Do not build metering now.
-5. **First durable agent:** confirm UX Writer. (108C already defaults to it.)
+5. **First durable agent:** ~~UX Writer~~ **superseded (Pietro, 2026-06-09): the
+   Widget Instance Translator is the shipped internal agent and becomes the 108C
+   reference via re-base** — the scaffold formalizes a production workload under
+   the D9 regression gate instead of building a speculative agent. UX Writer
+   deferred until a real need exists. (108C's text must be amended accordingly
+   before it enters execution.)
 6. **Outbound layer shape:** decide at 108D *design* time (before 108C ships, per the
    108 doc's own note): start as a thin shared client module with intent-shaped
    functions; promote to an internal MCP server only when ≥2 agents or ≥3 external
@@ -739,17 +750,32 @@ place.
 
 ## Part VI — Decision checklist (ratify before anything enters `02-Executing`)
 
-| # | Decision | Owner | Blocks |
-|---|---|---|---|
-| D1 | Target model lineup (PR-2 / brief): per use case, provider:model, picker stance, DeepSeek in/out | Pietro | 108A-1 Step 0 |
-| D2 | Resolver ownership = Bob; SF scorer deleted (PR-3) | Pietro | 108B-1 Step 0 |
-| D3 | Conformance gating = recorded attestation + freshness validator (PR-5) | Pietro | 108A-1 Steps 2–3 |
-| D4 | Snapshot/input budgets per turn class (PR-6) | Pietro + execution | 108B-1 Step 3 |
-| D5 | OQ1–OQ10 dispositions (Part V) | Pietro | 108A-2 / 108C design |
-| D6 | ~~Picker posture~~ **DECIDED (2026-06-09): picker ships in Copilot.** Consequence: D1 lineup must include ≥2 conformance-passed Copilot models; user pick honored within allowed set, never silently overridden (PR-12) | — decided | 108A-1 Steps 6–7 |
-| D7 | Pre-GA learning capture at 100% for internal accounts (PR-10) | Pietro | any time, cheap |
-| D8 | Routing contract (PR-13): ratify turn classes, the per-agent routing tables within the D1 lineup, and the failover/escalation posture (is declared cross-provider failover allowed, and under which error classes) | Pietro | 108A-1 Step 6, 108B-1 Steps 2–3 |
-| D9 | Shipped-use disposition (PR-14): translator = keep/protect/re-base with regression gate; Prague translator = freeze now, delete on 106D (inventory added to 106E ledger); Copilot = rebuild per 108B with per-file disposition | Pietro | 108A-1 Step 7, 108B-1 spec, 106E ledger |
+All nine ratified by Pietro on 2026-06-09 (round 3). Record:
+
+| # | Decision (RATIFIED 2026-06-09) | Blocks |
+|---|---|---|
+| D1 | **Two providers: OpenAI current-generation models + DeepSeek** (keys exist for both). Gemini/Mistral not onboarded. The binding rule is the mechanism, not the models: lineup lives only in the capability registry + policy matrix, swap-without-code, PR-15 guards so nothing is hardcoded-and-forgotten. DeepSeek China-routing concern is a GA-gate item handled by the reserved residency dimension when EU customers appear. | 108A-1 Step 0 |
+| D2 | **Resolved one level above the Bob-vs-SF question: disambiguation is compiler output.** The compiled contract carries per-control user-facing vocabulary, aliases, and ambiguity groups (compile-time validated: visible controls sharing an alias without a disambiguation group fail compilation). Bob's resolver is a lookup over that data; SF receives resolved targets; the SF keyword scorer is deleted. | 108B-1 Steps 0–2 |
+| D3 | **Multi-model infra is baked in as the plane's shape** (registry + conformance + typed errors + routing). Conformance mechanism defaults to recorded attestation + 30-day CI freshness (implementation detail, not product decision; no provider keys in CI). | 108A-1 Steps 2–3 |
+| D4 | **Adopt the industry pattern** (budgeted, priority-ranked context assembly with explicit truncation — the GitHub Copilot "prompt crafting" shape; select-and-rank, never dump). Opening caps 2KB resolved-edit / 16KB Guide / 0 capability turns; evals tune the numbers. | 108B-1 Step 3 |
+| D5 | **Deferred off the product owner's plate**, with one correction (Pietro, 2026-06-09): the translator IS the shipped internal agent — so the 108C reference agent is the **Widget Instance Translator re-base** (formalize the pattern it already runs in production, guarded by the D9 regression fixture), not a greenfield UX Writer. UX Writer waits until actually needed. Remaining OQ dispositions bind later PRDs, re-presented when due. | 108A-2 / 108C design |
+| D6 | **Picker ships in Copilot** (decided earlier same day). D1's two-provider lineup satisfies the ≥2 callable options requirement; user pick never silently overridden. | 108A-1 Steps 6–7 |
+| D7 | **100% learning capture on internal accounts pre-GA** — treated as an execution default in 108B-1, not a ceremony decision. Plainly: stop throwing away the records that become Copilot's test cases while all users are internal. | 108B-1 |
+| D8 | **Adopt the industry pattern:** cascade routing (cheap first, escalate once on machine-validated failure — Bob's op validation is the trigger), declared failover chains on provider errors (LiteLLM/OpenRouter shape, inside the plane, across the two D1 providers), pinned user picks are sacred (visible error, never a silent switch), every route/escalation/failover decision recorded. | 108A-1 Step 6, 108B-1 Steps 2–3 |
+| D9 | **Dispositions with a "better, not worse" bar:** translator — regression fixture is the floor, policy-driven models + deleted silent fallbacks + typed failures + eventual re-base is the ceiling; Prague translator — improves by dying into the one translation substrate on 106D; Copilot — rebuilt per 108B, earth tests as proof. | 108A-1 Step 7, 108B-1 spec, 106E ledger |
+
+Round 4–6 product decisions (Pietro, 2026-06-09, after the three-perspective
+pre-execution review; Q3/Q5 amended in round 5, Q6 added in round 6; round-2 review
+fixes applied to all consuming docs same day):
+
+| # | Decision (RATIFIED) | Binds |
+|---|---|---|
+| Q1 | **Copilot UX = immediate apply + one-turn undo.** Copilot edits apply to the in-memory working copy and preview instantly; the shipped blocking Keep/Undo gate in `CopilotPane.tsx` is removed. Safety boundary = dirty state + the normal Save path. | 108B1 Steps 3/5; CopilotPane disposition |
+| Q2 | **User-facing copy is a fixed table** (error code/state → exact string), drafted in 108B1, product-owner-editable any time, shipped as deterministic canned strings — never model-generated. English-only pre-GA. Non-blocker: edits to the table don't gate steps. | 108B1 copy table |
+| Q3 | **AMENDED (round 5 + round 7 simplification, Pietro, 2026-06-09):** in-domain product questions ("what do you think of my widget?", "best color for this button?", "why might conversion be low?") are NOT freeform — they are a routed **`advice`** class: model-backed, grounded in the widget snapshot, answering about THIS widget in plain text. If the answer suggests a change and the user says "do it," that next message is a normal edit turn. **No suggestion buttons, no carried ops, no special accept path** (round 7: these were AI-invented UI and were removed). Available on all tiers. Only out-of-domain requests (meta-chat, off-product asks) get the canned redirect. | 108B1 Step 2; 108A1 routing schema |
+| Q4 | **No interim work on the live Copilot.** Not disabled, not patched, not re-pointed — the 108B1/108A1 refactor is the fix. Zero effort spent on the broken version. | nothing — explicitly no work |
+| Q6 | **Free-vs-paid Copilot routing (Pietro, 2026-06-09, round 6; simplified round 7):** PAID = the full structured Copilot (Operator + advice now, Guide at 108B-2). FREE = **one model call per month — spent however the user chooses** (edit or advice; limits count calls, they never grade "usefulness" — round 7 removed the useful-turn/refund logic as AI-invented). After it: every response is the fixed **conversion template**: grounded encouragement (one short model sentence referencing the actual widget) + one paid-feature recommendation matched to the user's question from the entitlements matrix + upgrade CTA. It works off policy like everything else: Roma stamps the mode in the grant, the server refuses full model runs in conversion mode, every response path renders per the mode. Clarifications and canned answers don't call the model, so they cost nothing automatically — no special rules. Honesty rule: "that's a paid feature," never "I can't." Every conversion turn is a measurable event (feature cited × question × upgrade click). The "1" lives in the entitlements matrix. | 108A1 policy schema; 108B1 conversion mode |
+| Q5 | **Turn-class boundary rule (amended with Q3 round 5):** if a request can land on a control it is an edit (possibly after one clarification — "write me a slogan" → "want that as your Header title?"); if it is about how Builder works it is Guide (108B-2; pre-Guide, redirect naming the panel); if it is about the user's widget/design/content without an edit target it is **`advice`** (grounded model answer + actionable offer); only off-domain requests get the canned redirect. | 108B1 Step 2 resolver + fixtures |
 
 Sequencing after ratification:
 
@@ -759,7 +785,8 @@ Sequencing after ratification:
    108A-1 Steps 1–5 (registry + adapters + errors) ┘
 3. 108B-1 Steps 3–6 (payload swap needs both tracks)
 4. Release gate: 108A-1 green + earth tests green on all 8 widgets
-5. 108B-2 (Guide), then 108A-2 (durable contract), then 108C (UX Writer reference)
+5. 108B-2 (Guide), then 108A-2 (durable contract), then 108C (translator re-base
+   reference, per D5)
 6. 108D design decisions (OQ6/OQ7) recorded before 108C ships
 ```
 
