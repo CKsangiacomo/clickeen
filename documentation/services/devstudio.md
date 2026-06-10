@@ -21,6 +21,11 @@ resolve through Berlin bootstrap to the normal Clickeen admin account
 (`accountPublicId: "CLICKEEN"`) with an admin/owner role. `CLICKEEN` is a normal
 account coordinate, not a superadmin bypass.
 
+DevStudio uses host-scoped session cookies on `devstudio.clickeen.com`, set by
+the DevStudio Pages finish route after Berlin login. Those cookies are for the
+internal toolbench only; Roma/Bob product sessions do not consume DevStudio
+cookies, and DevStudio must not consume customer product-session cookies.
+
 Cloudflare Access is not the DevStudio auth boundary.
 
 ## Current Surface
@@ -56,8 +61,9 @@ POST /api/ai-runtime/matrix/cell
 Policy reads use the GitHub contents API against current `main`, so the editor
 shows committed policy state rather than the Pages build snapshot. Policy writes
 apply `@clickeen/ck-policy` validators and commit updated JSON back to `main`.
-Invalid edits return typed failures and do not commit. GitHub SHA conflicts return
-typed conflicts and require a refetch/retry.
+Every policy API request verifies the Berlin session and Clickeen admin account
+context before reading or writing. Invalid edits return typed failures and do not
+commit. GitHub SHA conflicts return typed conflicts and require a refetch/retry.
 
 Required Pages configuration:
 

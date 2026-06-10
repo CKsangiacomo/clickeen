@@ -414,3 +414,30 @@ Evidence recorded 2026-06-10:
   separate non-admin browser cookie was minted; the live DevStudio bootstrap
   boundary admits only account `CLICKEEN` with `owner/admin`.
 - Browser write-path evidence reported `consoleErrors: []` and `pageErrors: []`.
+
+## Step 5 — Docs Sync
+
+Status: green; Step 5 complete. Current PRD step: Step 6.
+
+Evidence recorded 2026-06-10:
+
+- `documentation/services/devstudio.md` describes the Cloudflare Pages DevStudio
+  model, canonical `https://devstudio.clickeen.com` host, Berlin/Google auth
+  boundary, normal Clickeen admin account requirement, and the fact that
+  Cloudflare Access is not the DevStudio auth boundary.
+- `documentation/services/devstudio.md` records the host-scoped DevStudio cookie
+  rule: DevStudio uses cookies scoped to `devstudio.clickeen.com`; Roma/Bob
+  product sessions do not consume DevStudio cookies, and DevStudio must not
+  consume customer product-session cookies.
+- `documentation/services/devstudio.md` records the three-section IA:
+  Foundations, Dieter Components, and Policy.
+- `documentation/services/devstudio.md` records that the Bob UI Native husk and
+  old local widget-authoring workspace are removed.
+- `documentation/services/devstudio.md` records the four policy routes, GitHub
+  contents-API read/write model, `@clickeen/ck-policy` validation, typed invalid
+  edit failures, typed GitHub SHA conflicts, and per-request Berlin session plus
+  Clickeen admin account verification.
+- `documentation/architecture/Overview.md` already records DevStudio as
+  `admin/` on Cloudflare Pages and as the internal Berlin-authenticated
+  toolbench for Dieter/foundation inspection and policy editing.
+- Read-only docs audit found no remaining `Overview.md` Step 5 gap.
