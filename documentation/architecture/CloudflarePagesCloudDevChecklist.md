@@ -169,11 +169,12 @@ Env contract:
 | `DEVSTUDIO_GITHUB_REPOSITORY` | yes | `CKsangiacomo/clickeen` | `admin/wrangler.toml` |
 | `ENV_STAGE` | yes | `cloud-dev` | `admin/wrangler.toml` |
 | `DEVSTUDIO_GITHUB_TOKEN` | yes | GitHub contents token scoped to this repo | Cloudflare Pages secret |
+| `E2E_AUTH_SECRET` | yes | shared Berlin/Playwright e2e bootstrap secret | Cloudflare Pages secret |
 
 Verification:
 - `pnpm cf:pages:devstudio-env` compares live DevStudio Pages env against
-  `admin/wrangler.toml` and confirms whether the live-only
-  `DEVSTUDIO_GITHUB_TOKEN` Pages secret exists.
+  `admin/wrangler.toml` and confirms whether the live-only required Pages
+  secrets exist.
 
 Policy API:
 - Pages Functions own `/api/entitlements/matrix`, `/api/entitlements/matrix/cell`,
@@ -214,6 +215,7 @@ Worker secrets:
 
 Pages secrets:
 - Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing. Roma -> Tokyo/Tokyo-worker product control uses service bindings and account-widget l10n generation runs through Tokyo-worker -> San Francisco `SANFRANCISCO_L10N`.
+- DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes; `E2E_AUTH_SECRET` is required for the dev-only remote Playwright bootstrap.
 
 CI secrets/vars:
 - `CLOUDFLARE_API_TOKEN` for GitHub Actions/Wrangler workflows only. Do not reuse

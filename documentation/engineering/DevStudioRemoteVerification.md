@@ -27,6 +27,11 @@ That points Playwright global setup at `POST /api/e2e/session` on the configured
 base URL and stores a host-specific state file for DevStudio. Roma's default e2e
 target remains `https://roma.dev.clickeen.com`.
 
+DevStudio Pages must carry `E2E_AUTH_SECRET` as a production secret in cloud-dev so
+that `/api/e2e/session` can call Berlin's e2e bootstrap. This is verification
+plumbing only: normal DevStudio users still authenticate through Berlin/Google, and
+the e2e route stays disabled when `ENV_STAGE` is production.
+
 ## Package Commands
 
 DevStudio verification is owned by `@clickeen/devstudio`:
