@@ -362,3 +362,55 @@ Evidence recorded 2026-06-10:
 - Browser evidence reported `consoleErrors: []` and `pageErrors: []`.
 - No write-path controls were clicked, typed into, or submitted. Step 4 remains
   the write-path gate.
+
+## Step 4 — Cloud Policy Write Path Verification
+
+Status: green; Step 4 complete. Current PRD step: Step 5.
+
+Evidence recorded 2026-06-10:
+
+- Surviving authority: `PRD__DevStudio_Cloudflare_Migration.md` Step 4 and
+  §3.5; policy write truth remains
+  `packages/ck-policy/entitlements.matrix.json` on `main`, with
+  `@clickeen/ck-policy` validators in the Pages Functions write path.
+- Write target: `widget.socialShare.enabled` `tier4`, a reversible flag. Baseline
+  value on `main` was `true` at
+  `360ccf89a0b44b1ea2ac1b5c14c666d11bc0505a`.
+- Negative guards before mutation:
+  unauthenticated `POST /api/entitlements/matrix/cell` — `401`,
+  `AUTH`, `coreui.errors.auth.required`; authenticated cross-origin POST —
+  `403`, `AUTH`, `devstudio.errors.origin.forbidden`; invalid flag value POST —
+  `422`, `VALIDATION`, `coreui.errors.entitlements.updateFailed`,
+  `[ck-policy] Entitlements flag update value must be boolean`. Remote `main`
+  stayed at `360ccf89a0b44b1ea2ac1b5c14c666d11bc0505a`.
+- Live UI write on `https://devstudio.clickeen.com/#/policy/entitlements`:
+  toggled `widget.socialShare.enabled` `tier4` from `true` to `false`.
+  API response `200`; commit
+  `3c42d1ce3fe00c75b32adc651f57869d5d351249` appeared on `main` with message
+  `policy(devstudio): widget.socialShare.enabled tier4 true -> false`.
+  Diff was only `packages/ck-policy/entitlements.matrix.json`, one insertion and
+  one deletion; parent value `true`, commit value `false`.
+- Page refetch after the write showed `widget.socialShare.enabled` `tier4` as
+  unchecked/`false`.
+- Restore write: set `widget.socialShare.enabled` `tier4` back to `true`.
+  Commit `e06bfeb98e0c42f4adbb5f5008a83cda207e2a16` appeared on `main` with
+  message `policy(devstudio): widget.socialShare.enabled tier4 false -> true`.
+  Diff was only `packages/ck-policy/entitlements.matrix.json`, one insertion and
+  one deletion; parent value `false`, commit value `true`.
+- Stale/conflict evidence: a concurrent restore POST returned `409`,
+  `CONFLICT`, `devstudio.errors.github.shaConflict` while the successful restore
+  commit landed.
+- Page refetch after restore showed `widget.socialShare.enabled` `tier4` as
+  checked/`true`.
+- Final matrix blob equals the pre-write baseline:
+  `packages/ck-policy/entitlements.matrix.json`
+  `1c03dd06db50fd68ca6e8718fea6785bd9b14ef9` before and after.
+- Design-freeze check: `admin/src/html/tools/entitlements.html` blob stayed
+  `1cc17e62d24e6b19bd57c4abaed5397fb8a5c854` before and after; no editor HTML
+  change was made.
+- Non-admin/unapproved e2e identity probe:
+  `POST https://devstudio.clickeen.com/api/e2e/session` returned `403`,
+  `DENY`, `coreui.errors.auth.forbidden`, with no account id returned. No
+  separate non-admin browser cookie was minted; the live DevStudio bootstrap
+  boundary admits only account `CLICKEEN` with `owner/admin`.
+- Browser write-path evidence reported `consoleErrors: []` and `pageErrors: []`.
