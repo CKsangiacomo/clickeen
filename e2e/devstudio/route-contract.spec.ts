@@ -75,7 +75,7 @@ test.describe('DevStudio route contract', () => {
 
       await page.goto(route.path);
       await expect(page.locator('.devstudio-page')).toBeVisible();
-      await expect(page.getByRole('heading', { name: route.title })).toBeVisible();
+      await expect(page.getByRole('heading', { name: route.title, exact: true })).toBeVisible();
       await expect(page.locator('.nav-link[aria-current="page"]')).toHaveAttribute(
         'href',
         route.path.slice(1),

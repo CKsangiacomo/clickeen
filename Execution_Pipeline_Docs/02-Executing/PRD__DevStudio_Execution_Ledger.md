@@ -198,14 +198,123 @@ Live conclusion:
 
 - Cloudflare project/domain/DNS is no longer the blocker.
 - The Pages project build-config blocker is cleared.
-- The Pages production env/secret blocker is cleared.
-- PRD Step 1 is still not green only because the live project serves the old
-  static deployment. These repo changes must reach `main`, and the Git-connected
-  Pages deployment must build from the new `admin` root with `admin/wrangler.toml`.
+- The Pages production app-runtime env/GitHub policy-write secret blocker is
+  cleared for Step 1.
+- `feat(devstudio): migrate toolbench to Cloudflare Pages`
+  (`3238cfcd9d5ff31ab7a63aca6ef304cd640657e9`) was pushed to `main`.
+- Cloudflare Pages deployment `4315aafb-ec7d-459c-a4c4-147dc6778816` for
+  `3238cfcd9d5ff31ab7a63aca6ef304cd640657e9` completed successfully:
+  queued, initialize, clone_repo, build, and deploy all `success`.
+- `curl https://devstudio.clickeen.com/` — `302` to
+  `/api/session/login/google?next=%2F`.
+- `curl https://devstudio-dev.pages.dev/` — `308` to
+  `https://devstudio.clickeen.com/`.
+- `curl https://devstudio.clickeen.com/api/entitlements/matrix` without cookies
+  — `401` with `coreui.errors.auth.required`.
+- `curl https://devstudio.clickeen.com/api/session/login/google` — `302` to
+  Berlin Google login start with
+  `finishRedirectUrl=https://devstudio.clickeen.com/api/session/finish`.
+- 2026-06-10 product-owner browser evidence: after Google login at
+  `https://devstudio.clickeen.com`, the DevStudio app loads.
+- PRD Step 1 is green for the authenticated admin path, unauthenticated boundary,
+  and fallback-host redirect. Non-admin denial remains covered by the same
+  Berlin bootstrap account/role check in the Pages middleware and policy API; no
+  non-admin live credential was available for manual browser evidence.
 
 Verification limitation:
 
-- The remaining deploy/runtime check must happen through the Git-connected Pages
-  build after the DevStudio Pages project is rooted at `admin`, the required
-  `DEVSTUDIO_GITHUB_TOKEN` Pages secret exists, and these repo changes reach
-  `main`.
+- Step 1 deployment/runtime checks are complete. The remaining live gate is Step
+  2 authenticated Appendix A verification, recorded below.
+
+## Step 2 — Page Contract / IA / Deletion Evidence
+
+Status: green; Step 2 complete. Current PRD step: Step 3.
+
+Evidence recorded 2026-06-10:
+
+- Current PRD step after Step 1: Step 2.
+- Surviving authority: `PRD__DevStudio_Cloudflare_Migration.md` Appendix A and
+  `documentation/services/devstudio.md`.
+- `admin/src/data/routes.ts` defines exactly three nav groups from the surviving
+  folders: Foundations, Dieter Components, Policy.
+- `admin/src/html/` contains the 24 surviving pages:
+  20 component fragments, 3 foundation fragments, and
+  `tools/entitlements.html`.
+- Pushed Migration diff `83e52bf3..3238cfcd` changes no carried HTML fragments;
+  the only `admin/src/html` file changed by the commit is the A2 deletion
+  `admin/src/html/tools/bob-ui-native.html`.
+- `git diff --check 83e52bf3..3238cfcd` — pass.
+- `git ls-files admin/dist` — pass, no committed `admin/dist`.
+- `git ls-files admin/src/html/tools/bob-ui-native.html admin/src/BobNativeCatalog.ts`
+  — pass, no committed husk files.
+- `rg "BobNativeCatalog|bob-ui-native|folder === 'dieter'|api/themes|rebuild-icons|local-edit-entitlements|local-edit-ai-runtime" admin scripts documentation packages -g '*.*'`
+  — pass, no matches.
+- `pnpm --filter @clickeen/devstudio lint` — pass, with existing ESLintRC
+  deprecation warning.
+- `pnpm --filter @clickeen/devstudio typecheck` — pass.
+
+Live verification system alignment recorded 2026-06-10:
+
+- Normal DevStudio auth remains Berlin/Google. `E2E_AUTH_SECRET` is not normal
+  product auth; it gates only the dev-only `/api/e2e/session` bootstrap used by
+  the repo Playwright harness.
+- Added the explicit DevStudio verification contract:
+  `admin/wrangler.toml` and `scripts/cloudflare/api.mjs` now require both
+  `DEVSTUDIO_GITHUB_TOKEN` and `E2E_AUTH_SECRET` as DevStudio Pages secrets.
+- Added `e2e/devstudio/route-contract.spec.ts` for the Step 2 cloud contract:
+  the authenticated shell, all 24 Appendix A routes, the policy read lane, and
+  the deleted tool route fallback.
+- `pnpm exec playwright test e2e/devstudio/route-contract.spec.ts --list` —
+  pass, 27 checks listed.
+- After the product owner added `E2E_AUTH_SECRET` in Cloudflare Pages,
+  `pnpm cf:pages:devstudio-env` — pass: live DevStudio Pages env matches all
+  non-secret vars and has both required Pages secrets,
+  `DEVSTUDIO_GITHUB_TOKEN` and `E2E_AUTH_SECRET`.
+- `pnpm cf:pages:sync-devstudio-env --apply` — blocked by Cloudflare
+  `403 Authentication error`; the current `CLOUDFLARE_REST_API_TOKEN` can read
+  Pages/DNS but cannot mutate the Pages project env.
+- Cloudflare Pages deployment `6b67c566-80a2-4453-8441-6eb2bc709524` for
+  `3238cfcd9d5ff31ab7a63aca6ef304cd640657e9` completed successfully after the
+  secret change: queued, initialize, clone_repo, build, and deploy all `success`.
+- `POST /api/e2e/session` with an intentionally invalid secret now returns
+  `401` with `detail: "e2e_secret_invalid"`, proving the e2e route is live and
+  sees an `E2E_AUTH_SECRET` value.
+- Live Playwright run:
+  `E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json E2E_REFRESH_AUTH=1 pnpm exec playwright test e2e/devstudio/route-contract.spec.ts --project=chromium --reporter=line`
+  — blocked in global setup: `POST /api/e2e/session` returned `401` with
+  `detail: "e2e_secret_invalid"`.
+- Direct non-printing secret probes show the value in `e2e/.auth/e2e.env` is the
+  Berlin e2e truth (`POST https://berlin-dev.clickeen.workers.dev/internal/e2e/session`
+  returns `200` with token fields present), while the `.env.local` value is
+  rejected by Berlin. DevStudio Pages currently accepts the `.env.local` value,
+  then Berlin rejects it. No secret values were printed.
+
+Live verification after E2E secret unification recorded 2026-06-10:
+
+- Product owner unified `E2E_AUTH_SECRET` across root `.env.local`,
+  `e2e/.auth/e2e.env`, and DevStudio Pages production runtime. Secret values were
+  not printed or recorded.
+- `pnpm cf:api:preflight` — pass: Cloudflare token/account, DevStudio Pages
+  project/domain, and DNS are readable through the repo Cloudflare command.
+- `pnpm cf:pages:devstudio-env` — pass: live DevStudio Pages env matches all
+  non-secret vars and both required Pages secrets are present as `secret_text`.
+  This command proves presence/type only, not secret values.
+- Pushed Step 2 verification contract commit
+  `ce2150ad0f5ba46e9aa77898c08fa40c5157d699`
+  (`test(devstudio): add Cloudflare route contract`) to `main`.
+- Cloudflare Pages deployment `1b3d431a-a32d-42c2-aeb0-847a620905bf` for
+  `ce2150ad0f5ba46e9aa77898c08fa40c5157d699` completed successfully: queued,
+  initialize, clone_repo, build, and deploy all `success`.
+- Non-printing auth probes with the unified local secret:
+  `POST https://devstudio.clickeen.com/api/e2e/session` — `200`, account id
+  present; `POST https://berlin-dev.clickeen.workers.dev/internal/e2e/session`
+  — `200`, account id and token fields present.
+- Live Playwright route contract:
+  `E2E_BASE_URL=https://devstudio.clickeen.com E2E_AUTH_STATE=e2e/.auth/devstudio.json E2E_REFRESH_AUTH=1 pnpm exec playwright test e2e/devstudio/route-contract.spec.ts --project=chromium --reporter=line`
+  — pass, 27 checks.
+- The route-contract run proves the authenticated shell, exactly three nav
+  sections (Foundations `3`, Dieter Components `20`, Policy `1`), all 24
+  Appendix A live routes, policy read GETs, and deleted tool-route fallback on
+  `devstudio.clickeen.com`.
+- Step 2 live blocker is closed. Step 3 remains next; screenshots and three
+  entitlement-value spot-checks are separate Step 3 evidence.
