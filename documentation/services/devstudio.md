@@ -82,23 +82,22 @@ that file without exposing secret values. Use
 `pnpm cf:pages:sync-devstudio-env --apply` to write the non-secret vars and the
 required Pages secrets from root `.env.local`.
 
-## Local Development
+## Local Runtime
 
-Use package-level local DevStudio only for fast static UI iteration:
+`scripts/dev-up.sh` does not start DevStudio. DevStudio product evidence comes
+from the Berlin-authenticated Cloudflare Pages surface, not from local Vite.
+Local runtime work must not reintroduce hidden local write lanes.
+
+Use package-level checks for build and Pages Functions verification:
 
 ```bash
-pnpm --filter @clickeen/devstudio dev
 pnpm --filter @clickeen/devstudio build
 pnpm --filter @clickeen/devstudio check:functions
 ```
 
-`scripts/dev-up.sh` does not start DevStudio. Local DevStudio is not product-state
-evidence, does not replace the cloud surface, and must not reintroduce hidden local
-write lanes.
-
 ## Build-Time Generation
 
-DevStudio generates Dieter/component showcase pages at build time:
+DevStudio generates Dieter/component showcase pages before build:
 
 - `scripts/generate-component-pages.ts`
 - `scripts/generate-icons-showcase.local.cjs`

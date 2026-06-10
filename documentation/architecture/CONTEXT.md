@@ -431,7 +431,6 @@ pnpm build                      # Build all packages
 # Development
 bash scripts/dev-up.sh          # Canonical local support stack (Tokyo/Tokyo-worker/Berlin/Bob)
 pnpm dev:bob                    # Bob only
-pnpm dev:admin                  # DevStudio only
 
 # Quality
 pnpm lint && pnpm typecheck
@@ -450,8 +449,7 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 - Instances are **not** created by scripts anymore.
 - Supported product/account instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
-- Local DevStudio is optional package-level static UI iteration, not “local Roma” parity.
-- DevStudio policy editing evidence comes from the Berlin-authenticated Cloudflare Pages surface.
+- DevStudio policy editing and showcase evidence comes from the Berlin-authenticated Cloudflare Pages surface.
 
 **Local auth target (important):**
 
@@ -464,7 +462,7 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 | Environment                 | Bob                            | Roma                            | Tokyo                            | Public serving              | San Francisco                           | DevStudio                |
 | --------------------------- | ------------------------------ | ------------------------------- | -------------------------------- | --------------------------- | --------------------------------------- | ------------------------ |
-| **Local**                   | `http://localhost:3000`        | `https://roma.dev.clickeen.com` | `http://localhost:4000`          | local Tokyo-worker host     | `—`                                     | optional package dev     |
+| **Local**                   | `http://localhost:3000`        | `https://roma.dev.clickeen.com` | `http://localhost:4000`          | local Tokyo-worker host     | `—`                                     | `https://devstudio.clickeen.com` |
 | **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://dev.clk.live`      | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.clickeen.com` |
 | **UAT**                     | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://clk.live`          | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
 | **Limited GA**              | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://clk.live`          | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |

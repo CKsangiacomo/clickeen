@@ -441,3 +441,40 @@ Evidence recorded 2026-06-10:
   `admin/` on Cloudflare Pages and as the internal Berlin-authenticated
   toolbench for Dieter/foundation inspection and policy editing.
 - Read-only docs audit found no remaining `Overview.md` Step 5 gap.
+
+## Step 6 — Local DevStudio Decommission
+
+Status: green; Step 6 complete. Current PRD step: Step 7.
+
+Evidence recorded 2026-06-10:
+
+- Surviving authority: DevStudio product/runtime authority is
+  `https://devstudio.clickeen.com` on Cloudflare Pages behind Berlin/Google auth.
+  Local Vite remains the package build/dev toolchain only; it is not product
+  evidence or local workflow authority.
+- Scope ruling: Step 6 does not require deleting `package.json` `dev:admin`,
+  `admin/package.json` `dev`, Vite, or `admin/vite.config.ts` port `5173`.
+  The PRD keeps Vite as the bundle toolchain; the `5173` guard is scoped to
+  scripts/docs, not `admin/vite.config.ts`.
+- `scripts/dev-up.sh` decommission evidence already landed in pushed migration
+  commit `3238cfcd9d5ff31ab7a63aca6ef304cd640657e9`; it removed DevStudio from
+  the canonical local support stack. No new `dev-up` diff was manufactured.
+- `scripts/dev-up.sh` currently starts Tokyo, Tokyo Worker, Berlin, and Bob only;
+  no DevStudio/Admin startup remains.
+- `rg "api/entitlements|api/ai-runtime|api/themes|rebuild-icons" admin/vite.config.ts`
+  — pass, no matches. The local policy/theme/rebuild-icon middleware is gone.
+- `rg "5173" scripts README.md documentation admin/README.md -g '*.md' -g '*.sh' -g '*.ts'`
+  — pass, no active workflow-doc matches. Historical PRD matches remain outside
+  the Step 6 scripts/docs guard.
+- Active workflow docs no longer instruct `pnpm --filter @clickeen/devstudio dev`,
+  `pnpm dev:admin`, or `dev:admin` in `README.md`, `documentation/`,
+  `admin/README.md`, or `scripts/`.
+- Step 6 docs updated:
+  `README.md`, `admin/README.md`, `documentation/architecture/CONTEXT.md`,
+  `documentation/architecture/RuntimeProfiles.md`,
+  `documentation/services/dieter.md`, and
+  `documentation/services/devstudio.md` now point DevStudio evidence to the
+  Berlin-authenticated Cloudflare Pages surface instead of a local Vite workflow.
+- NOT_ALLOWED held: no package dev entrypoints removed; Vite kept; no non-DevStudio
+  local infrastructure, Tokyo local stub, Berlin local worker, Bob local dev,
+  `.wrangler/state`, `Logs/`, `.dev.vars`, or wrangler env forks were torn down.

@@ -14,8 +14,8 @@ Local boot topology:
 
 DevStudio is not part of `dev-up`. Its canonical internal runtime is
 `https://devstudio.clickeen.com` on Cloudflare Pages behind Berlin/Google auth.
-Package-level local DevStudio may still be used for fast static UI iteration, but
-it is not product-state evidence and must not own hidden local write lanes.
+Local DevStudio is not part of the supported local runtime profile and must not
+own hidden local write lanes.
 
 There are no alternate local runtime modes behind `dev-up`. Local development
 should not require developers to reason about multiple boot topologies behind one
