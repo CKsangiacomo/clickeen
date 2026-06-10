@@ -113,7 +113,7 @@ export function buildStagePodCornerAppearanceFields(): string[] {
 
 function buildInsideShadowFields(args: {
   owner: string;
-  label: 'Stage' | 'Pod' | 'Core item';
+  label: string;
   existingPaths?: ReadonlySet<string>;
 }): string[] {
   const owner = args.owner;
@@ -187,7 +187,11 @@ export function buildLocaleSwitcherAppearancePanelFields(
     "    <tooldrawer-field-podstageappearance group-label='' type='valuefield' size='md' path='appearance.localeSwitcherPaddingBlock' label='Vertical padding (px)' min='0' max='32' step='1' value='{{appearance.localeSwitcherPaddingBlock}}' show-if=\"localeSwitcher.enabled == true\" />",
   );
   return fields.length
-    ? ["  <tooldrawer-cluster label='Locale switcher'>", ...fields, '  </tooldrawer-cluster>']
+    ? [
+        '  <tooldrawer-cluster label=\'Locale switcher\' show-if="localeSwitcher.enabled == true">',
+        ...fields,
+        '  </tooldrawer-cluster>',
+      ]
     : [];
 }
 
@@ -196,17 +200,23 @@ export function buildCoreCardWrapperAppearancePanelFields(
     basePath: string;
     existingPaths?: ReadonlySet<string>;
     includeInsideShadow?: boolean;
+    itemLabel?: string;
   },
 ): string[] {
   const basePath = args.basePath;
   const existingPaths = args.existingPaths ?? new Set<string>();
+  const itemLabel = typeof args.itemLabel === 'string' && args.itemLabel.trim()
+    ? args.itemLabel.trim()
+    : 'Item';
+  const label = itemLabel.replace(/'/g, '&apos;');
+  const lowerItemLabel = itemLabel.toLowerCase().replace(/'/g, '&apos;');
   const fields: string[] = [];
   const push = (path: string, line: string) => {
     if (!existingPaths.has(path)) fields.push(line);
   };
   push(
     `${basePath}.radiusLinked`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='${basePath}.radiusLinked' label='Link item corners' value='{{${basePath}.radiusLinked}}' default='true' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='toggle' size='md' path='${basePath}.radiusLinked' label='Link ${lowerItemLabel} corners' value='{{${basePath}.radiusLinked}}' default='true' />`,
   );
   push(
     `${basePath}.radius`,
@@ -214,39 +224,39 @@ export function buildCoreCardWrapperAppearancePanelFields(
   );
   push(
     `${basePath}.radiusTL`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusTL' label='Item top-left corner' value='{{${basePath}.radiusTL}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusTL' label='${label} top-left corner' value='{{${basePath}.radiusTL}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
   );
   push(
     `${basePath}.radiusTR`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusTR' label='Item top-right corner' value='{{${basePath}.radiusTR}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusTR' label='${label} top-right corner' value='{{${basePath}.radiusTR}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
   );
   push(
     `${basePath}.radiusBR`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusBR' label='Item bottom-right corner' value='{{${basePath}.radiusBR}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusBR' label='${label} bottom-right corner' value='{{${basePath}.radiusBR}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
   );
   push(
     `${basePath}.radiusBL`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusBL' label='Item bottom-left corner' value='{{${basePath}.radiusBL}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-actions' size='md' path='${basePath}.radiusBL' label='${label} bottom-left corner' value='{{${basePath}.radiusBL}}' show-if=\"${basePath}.radiusLinked == false\" options='${radiusOptions}' />`,
   );
   push(
     `${basePath}.border`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='${basePath}.border' label='Item border' value='{{${basePath}.border}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-border' size='md' path='${basePath}.border' label='${label} border' value='{{${basePath}.border}}' />`,
   );
   push(
     `${basePath}.shadow`,
-    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='${basePath}.shadow' label='Item outside shadow' value='{{${basePath}.shadow}}' />`,
+    `    <tooldrawer-field-podstageappearance group-label='' type='dropdown-shadow' size='md' path='${basePath}.shadow' label='${label} outside shadow' value='{{${basePath}.shadow}}' />`,
   );
   if (args.includeInsideShadow) {
     fields.push(
       ...buildInsideShadowFields({
         owner: basePath,
-        label: 'Core item',
+        label,
         existingPaths,
       }),
     );
   }
   return fields.length
-    ? ["  <tooldrawer-cluster label='Item surface'>", ...fields, '  </tooldrawer-cluster>']
+    ? [`  <tooldrawer-cluster label='${label} surface'>`, ...fields, '  </tooldrawer-cluster>']
     : [];
 }
 

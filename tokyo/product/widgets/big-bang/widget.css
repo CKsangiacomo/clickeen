@@ -64,7 +64,6 @@
 
 @media (max-width: 700px) {
   .ck-bigBang__statement {
-    font-size: var(--typo-bigBang-mobile-size, 48px);
-    line-height: var(--typo-bigBang-mobile-line-height, 1);
+    line-height: var(--typo-bigBang-line-height, 1);
   }
 }

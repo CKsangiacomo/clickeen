@@ -15,11 +15,35 @@ function cloneSessionConfig(config: Record<string, unknown>): Record<string, unk
   return cloneJsonValue(config);
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function mergeMissingDefaults(
+  defaults: Record<string, unknown>,
+  config: Record<string, unknown>,
+): Record<string, unknown> {
+  const next = cloneJsonValue(config);
+
+  for (const [key, defaultValue] of Object.entries(defaults)) {
+    const currentValue = next[key];
+    if (currentValue === undefined) {
+      next[key] = cloneJsonValue(defaultValue);
+      continue;
+    }
+    if (isPlainRecord(defaultValue) && isPlainRecord(currentValue)) {
+      next[key] = mergeMissingDefaults(defaultValue, currentValue);
+    }
+  }
+
+  return next;
+}
+
 export function normalizeSessionConfig(
   config: Record<string, unknown>,
-  compiled?: Pick<CompiledWidget, 'controls' | 'normalization'> | null,
+  compiled?: Pick<CompiledWidget, 'controls' | 'defaults' | 'normalization'> | null,
 ): Record<string, unknown> {
-  let next = cloneSessionConfig(config);
+  let next = compiled?.defaults ? mergeMissingDefaults(compiled.defaults, config) : cloneSessionConfig(config);
   next = applyWidgetNormalizationRules(next, compiled?.normalization);
 
   for (const control of compiled?.controls ?? []) {

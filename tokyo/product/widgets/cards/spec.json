@@ -2,128 +2,6 @@
   "v": 1,
   "widgetname": "cards",
   "itemKey": "cards.item",
-  "normalization": {
-    "idRules": [
-      {
-        "arrayPath": "cards.items",
-        "idKey": "id",
-        "seedKey": "title",
-        "fallbackPrefix": "card"
-      }
-    ],
-    "coerceRules": [
-      {
-        "path": "cards.customCardStyles.enabled",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "cards.betweenCards.enabled",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "behavior.showBacklink",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.enabled",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "behavior.socialShare.channels.copy",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.sms",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.email",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.whatsapp",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.telegram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.signal",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.messenger",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.wechat",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.line",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.slack",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.teams",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.discord",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.x",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.linkedin",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.facebook",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.reddit",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.instagram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.tiktok",
-        "type": "boolean",
-        "default": true
-      }
-    ]
-  },
   "defaults": {
     "uiLabels": {
       "core": {
@@ -229,8 +107,6 @@
           "style": {
             "background": "",
             "borderColor": "",
-            "radius": "",
-            "shadow": "",
             "accentColor": "",
             "textTone": "inherit"
           }
@@ -261,8 +137,6 @@
           "style": {
             "background": "",
             "borderColor": "",
-            "radius": "",
-            "shadow": "",
             "accentColor": "",
             "textTone": "inherit"
           }
@@ -293,8 +167,6 @@
           "style": {
             "background": "",
             "borderColor": "",
-            "radius": "",
-            "shadow": "",
             "accentColor": "",
             "textTone": "inherit"
           }
@@ -349,7 +221,8 @@
                     "attrs": {
                       "size": "md",
                       "placeholder": "Add card title",
-                      "allow-links": "false"
+                      "allow-links": "false",
+                      "required": true
                     }
                   },
                   {
@@ -360,7 +233,8 @@
                     "attrs": {
                       "size": "md",
                       "placeholder": "Add card copy",
-                      "allow-links": "false"
+                      "allow-links": "false",
+                      "required": true
                     }
                   },
                   {
@@ -390,13 +264,21 @@
                     "kind": "field",
                     "type": "dropdown-actions",
                     "path": "cards.items.__INDEX__.media.iconName",
-                    "label": "Icon",
+                    "label": "Card icon",
                     "attrs": {
                       "size": "md",
                       "options": [
                         {
                           "label": "Checkmark",
                           "value": "checkmark"
+                        },
+                        {
+                          "label": "Globe",
+                          "value": "globe"
+                        },
+                        {
+                          "label": "Stack",
+                          "value": "square.stack.3d.up"
                         },
                         {
                           "label": "Arrow right",
@@ -453,7 +335,7 @@
                     "kind": "field",
                     "type": "toggle",
                     "path": "cards.items.__INDEX__.link.enabled",
-                    "label": "Enable link",
+                    "label": "Enable card link",
                     "attrs": {
                       "size": "md"
                     }
@@ -462,7 +344,7 @@
                     "kind": "field",
                     "type": "textfield",
                     "path": "cards.items.__INDEX__.link.href",
-                    "label": "Link URL",
+                    "label": "Card link URL",
                     "showIf": {
                       "path": "cards.items.__INDEX__.link.enabled",
                       "op": "isTrue"
@@ -472,7 +354,7 @@
                     "kind": "field",
                     "type": "textfield",
                     "path": "cards.items.__INDEX__.link.label",
-                    "label": "Link label",
+                    "label": "Card link label",
                     "showIf": {
                       "path": "cards.items.__INDEX__.link.enabled",
                       "op": "isTrue"
@@ -483,9 +365,13 @@
                   "group-label": "",
                   "size": "md",
                   "add-label": "Add card",
+                  "remove-label": "Remove card {index}",
+                  "move-label": "Move card {index}",
                   "reorder-label": "Manage cards",
                   "reorder-title": "Manage cards",
                   "index-token": "__INDEX__",
+                  "min": "2",
+                  "max": "16",
                   "default-item": {
                     "id": "",
                     "title": "New card",
@@ -512,8 +398,6 @@
                     "style": {
                       "background": "",
                       "borderColor": "",
-                      "radius": "",
-                      "shadow": "",
                       "accentColor": "",
                       "textTone": "inherit"
                     }
@@ -548,7 +432,7 @@
                 "kind": "field",
                 "type": "choice-tiles",
                 "path": "cards.treatment",
-                "label": "Treatment",
+                "label": "Cards treatment",
                 "attrs": {
                   "size": "md",
                   "options": [
@@ -571,7 +455,7 @@
                 "kind": "field",
                 "type": "choice-tiles",
                 "path": "cards.columns",
-                "label": "Columns",
+                "label": "Card columns",
                 "attrs": {
                   "size": "md",
                   "options": [
@@ -701,7 +585,7 @@
                 "kind": "field",
                 "type": "dropdown-actions",
                 "path": "cards.betweenCards.icon.name",
-                "label": "Icon",
+                "label": "Connector icon",
                 "attrs": {
                   "size": "md",
                   "options": [
@@ -826,7 +710,7 @@
                     "kind": "field",
                     "type": "dropdown-fill",
                     "path": "cards.items.__INDEX__.style.background",
-                    "label": "Background",
+                    "label": "Card background",
                     "attrs": {
                       "size": "md",
                       "fill-modes": "color",
@@ -837,7 +721,7 @@
                     "kind": "field",
                     "type": "dropdown-fill",
                     "path": "cards.items.__INDEX__.style.borderColor",
-                    "label": "Border color",
+                    "label": "Card border color",
                     "attrs": {
                       "size": "md",
                       "fill-modes": "color",
@@ -846,21 +730,9 @@
                   },
                   {
                     "kind": "field",
-                    "type": "textfield",
-                    "path": "cards.items.__INDEX__.style.radius",
-                    "label": "Radius"
-                  },
-                  {
-                    "kind": "field",
-                    "type": "textfield",
-                    "path": "cards.items.__INDEX__.style.shadow",
-                    "label": "Shadow"
-                  },
-                  {
-                    "kind": "field",
                     "type": "dropdown-fill",
                     "path": "cards.items.__INDEX__.style.accentColor",
-                    "label": "Accent color",
+                    "label": "Card accent color",
                     "attrs": {
                       "size": "md",
                       "fill-modes": "color",
@@ -871,7 +743,7 @@
                     "kind": "field",
                     "type": "dropdown-actions",
                     "path": "cards.items.__INDEX__.style.textTone",
-                    "label": "Text tone",
+                    "label": "Card text tone",
                     "attrs": {
                       "size": "md",
                       "options": [
@@ -902,7 +774,8 @@
                   "reorder-label": "Manage card styles",
                   "reorder-title": "Manage card styles",
                   "label-path": "title",
-                  "index-token": "__INDEX__"
+                  "index-token": "__INDEX__",
+                  "allow-structure": "false"
                 },
                 "showIf": {
                   "path": "cards.customCardStyles.enabled",

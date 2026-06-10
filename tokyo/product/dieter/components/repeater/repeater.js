@@ -226,10 +226,16 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       const addBtn = root.querySelector(".diet-repeater__add");
       const reorderBtn = root.querySelector(".diet-repeater__reorder");
       if (!hidden || !list || !templateEl || !addBtn || !reorderBtn) return;
+      const labelWithIndex = (label, index) =>
+        String(label || "")
+          .replace(/\{index\}/g, String(index + 1))
+          .replace(/\{position\}/g, String(index + 1));
       const syncReorderControls = () => {
         root.dataset.reorder = state.reorder ? "on" : "off";
         reorderBtn.setAttribute("aria-pressed", state.reorder ? "true" : "false");
         reorderBtn.setAttribute("data-variant", state.reorder ? "secondary" : "neutral");
+        reorderBtn.setAttribute("aria-label", state.reorderLabel);
+        reorderBtn.setAttribute("title", state.reorderLabel);
       };
 
       const state = {
@@ -244,6 +250,9 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
         defaultItem: null,
         minItems: parseItemLimit(root.dataset.minItems),
         maxItems: parseItemLimit(root.dataset.maxItems),
+        reorderLabel: root.dataset.reorderLabel || "Reorder items",
+        removeLabel: root.dataset.removeLabel || "Remove item {index}",
+        moveLabel: root.dataset.moveLabel || "Move item {index}",
         hydratorOptions: options,
         iconHandle: cloneIcon(root, ".diet-repeater__icon-handle"),
         iconTrash: cloneIcon(root, ".diet-repeater__icon-trash"),
@@ -384,6 +393,8 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       handle.className = "diet-btn-ic diet-repeater__item-handle";
       handle.setAttribute("data-size", "sm");
       handle.setAttribute("data-variant", "neutral");
+      handle.setAttribute("aria-label", labelWithIndex(state.moveLabel, index));
+      handle.setAttribute("title", labelWithIndex(state.moveLabel, index));
       const handleIcon = state.iconHandle ? state.iconHandle.cloneNode(true) : null;
       if (handleIcon) {
         handle.appendChild(handleIcon);
@@ -398,6 +409,8 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       remove.className = "diet-btn-ic diet-repeater__item-remove";
       remove.setAttribute("data-size", "sm");
       remove.setAttribute("data-variant", "neutral");
+      remove.setAttribute("aria-label", labelWithIndex(state.removeLabel, index));
+      remove.setAttribute("title", labelWithIndex(state.removeLabel, index));
       const removeIcon = state.iconTrash ? state.iconTrash.cloneNode(true) : null;
       if (removeIcon) {
         remove.appendChild(removeIcon);

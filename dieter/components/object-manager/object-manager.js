@@ -59,6 +59,13 @@
     return JSON.stringify(value);
   }
 
+  function parseItemLimit(value) {
+    if (value == null || value === "") return null;
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 0) return null;
+    return parsed;
+  }
+
   function decodeHtmlEntities(value) {
     return value
       .replace(/&quot;/g, '"')
@@ -156,6 +163,7 @@
       }
       const indexToken = (root.getAttribute("data-index-token") || "__INDEX__").trim();
       const labelPath = root.getAttribute("data-label-path") || "";
+      const minItems = parseItemLimit(root.getAttribute("data-min-items"));
       const defaultItemAttr = root.getAttribute("data-default-item") || "";
       let defaultItem = null;
       if (defaultItemAttr) {
@@ -340,6 +348,9 @@
             const up = row.querySelector("[data-objects-up]");
             const down = row.querySelector("[data-objects-down]");
             const del = row.querySelector("[data-objects-delete]");
+            if (del) {
+              del.disabled = minItems != null && working.length <= minItems;
+            }
             up?.addEventListener("click", () => {
               if (idx === 0) return;
               const [moved] = working.splice(idx, 1);
@@ -353,6 +364,7 @@
               rebuildRows();
             });
             del?.addEventListener("click", () => {
+              if (minItems != null && working.length <= minItems) return;
               working.splice(idx, 1);
               rebuildRows();
             });

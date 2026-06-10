@@ -1,4 +1,9 @@
 import { getCompiledWidgetRouteResponse } from '@clickeen/bob/compiled-widget-route';
+import {
+  collectConfigMediaAssetRefs,
+  materializeConfigMedia,
+  normalizeResolvedAccountAsset,
+} from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -19,6 +24,10 @@ import {
   withSession,
   type CurrentAccountRouteContext,
 } from '../../_lib/current-account-route';
+import {
+  buildTokyoAssetControlHeaders,
+  fetchTokyoAssetControl,
+} from '@roma/lib/tokyo-asset-control';
 
 export const runtime = 'edge';
 
@@ -70,6 +79,104 @@ function routeFailureResponse(
     NextResponse.json({ error: failure.error }, { status: failure.status }),
     setCookies,
   );
+}
+
+async function materializePublicPackageMedia(args: {
+  accountId: string;
+  accountCapsule: string;
+  requestId: string;
+  config: Record<string, unknown>;
+}): Promise<
+  | { ok: true; state: Record<string, unknown> }
+  | {
+      ok: false;
+      status: 422 | 502;
+      error: {
+        kind: 'VALIDATION' | 'UPSTREAM_UNAVAILABLE';
+        reasonKey: string;
+        detail?: string;
+        paths?: string[];
+      };
+    }
+> {
+  const assetRefs = collectConfigMediaAssetRefs(args.config);
+  if (!assetRefs.length) return { ok: true, state: args.config };
+
+  let upstream: Response;
+  try {
+    upstream = await fetchTokyoAssetControl({
+      path: `/__internal/assets/account/${encodeURIComponent(args.accountId)}/resolve`,
+      method: 'POST',
+      headers: buildTokyoAssetControlHeaders({
+        accountId: args.accountId,
+        accountCapsule: args.accountCapsule,
+        contentType: 'application/json',
+        requestId: args.requestId,
+      }),
+      body: JSON.stringify({ assetRefs }),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      status: 502,
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'roma.errors.proxy.tokyo_unavailable',
+        detail: error instanceof Error ? error.message : String(error),
+      },
+    };
+  }
+
+  const payload = await upstream.json().catch(() => null);
+  if (!upstream.ok || !payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return {
+      ok: false,
+      status: 502,
+      error: {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'coreui.errors.assets.resolve.failed',
+      },
+    };
+  }
+
+  const assetsByRef: Record<string, unknown> = {};
+  const assets = Array.isArray((payload as { assets?: unknown }).assets)
+    ? ((payload as { assets: unknown[] }).assets)
+    : [];
+  for (const raw of assets) {
+    const asset = normalizeResolvedAccountAsset(raw);
+    if (asset) assetsByRef[asset.assetRef] = asset;
+  }
+  const missingAssetRefs = Array.isArray((payload as { missingAssetRefs?: unknown }).missingAssetRefs)
+    ? (payload as { missingAssetRefs: unknown[] }).missingAssetRefs.map((entry) => String(entry || '').trim()).filter(Boolean)
+    : [];
+  const unresolved = assetRefs.filter((assetRef) => !assetsByRef[assetRef]);
+  const missing = Array.from(new Set([...missingAssetRefs, ...unresolved]));
+  if (missing.length) {
+    return {
+      ok: false,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.assets.resolve.missing',
+        detail: missing.join(', '),
+        paths: missing.map((assetRef) => `assetRef:${assetRef}`),
+      },
+    };
+  }
+
+  const materialized = materializeConfigMedia(args.config, assetsByRef);
+  if (!materialized || typeof materialized !== 'object' || Array.isArray(materialized)) {
+    return {
+      ok: false,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.assets.resolve.invalidMaterialization',
+      },
+    };
+  }
+  return { ok: true, state: materialized as Record<string, unknown> };
 }
 
 export async function PUT(request: NextRequest, context: RouteContext) {
@@ -179,12 +286,25 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         current.value.setCookies,
       );
     }
+    const materializedMedia = await materializePublicPackageMedia({
+      accountId,
+      accountCapsule: current.value.authzToken,
+      requestId: current.value.requestId,
+      config,
+    });
+    if (!materializedMedia.ok) {
+      return withSession(
+        request,
+        NextResponse.json({ error: materializedMedia.error }, { status: materializedMedia.status }),
+        current.value.setCookies,
+      );
+    }
     publicPackage = buildSavedWidgetPublicPackage({
       compiled,
       instanceId,
       baseLocale,
       displayName: displayName ?? null,
-      state: config,
+      state: materializedMedia.state,
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);

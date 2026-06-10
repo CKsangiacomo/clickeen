@@ -43,58 +43,59 @@ Widget definition (the software): `tokyo/product/widgets/countdown/`
 ## 2) Types available (core framework)
 In Clickeen terms, **Type = miniwidget**.
 
-Countdown has 3 Types (selected by `timer.mode`):
+Countdown has 3 Types (selected by `countdown.timer.mode`):
 - `date` — countdown to a specific date/time + timezone
 - `personal` — per-visitor countdown starting at first view (optional repeat)
 - `number` — count up/down toward a target over a duration
 
-Rule: `timer.mode` is the only Type axis. Everything else is a normal control binding.
+Rule: `countdown.timer.mode` is the only Type axis. Everything else is a normal control binding.
 
 ## 3) Canonical state (authoritative)
 Defaults are the state contract. No runtime merges.
 
-Top-level groups:
-- `timer.*` — type + mode settings + headline
-- `layout.*` — placement (banner positioning)
-- `appearance.*` — paint (fills, borders, colors)
-- `behavior.*` — backlink + small toggles
-- `actions.*` — "during" CTA + "after end" behavior
-- `seoGeo.*` — embed optimization toggle (instance setting; not tier-gated)
-- `typography.*` — roles (explicitly declared shared typography panel)
-- `stage.*`, `pod.*` — Stage/Pod v2 (desktop+mobile padding objects)
+Shell groups:
+- `header.*` and `headerCta.*` — shared Header and shared Header CTA content/behavior.
+- `stage.*`, `pod.*`, `coreSize.*` — shared Stage/Pod/Core Size layout.
+- `appearance.headerCta.*`, `appearance.localeSwitcher*`, and `appearance.podBorder` — shared Shell appearance.
+- `behavior.showBacklink` and `behavior.socialShare.*` — shared Shell Settings.
+- `typography.*` — shared typography panel roles declared by Shell and Countdown Core.
+- `localeSwitcher.*` — shared Locale Switcher settings.
+
+Countdown Core groups:
+- `countdown.timer.*` — timer type and mode settings.
+- `countdown.appearance.*` — Countdown timer text/tile appearance.
+- `countdown.actions.*` — "during" CTA and "after end" behavior.
 
 Editable/translatable text primitives live in `tokyo/product/widgets/countdown/editable-fields.json`.
 
 - `header.title`
 - `header.subtitleHtml`
-- `timer.labels.days`
-- `timer.labels.hours`
-- `timer.labels.minutes`
-- `timer.labels.seconds`
+- `countdown.timer.labels.days`
+- `countdown.timer.labels.hours`
+- `countdown.timer.labels.minutes`
+- `countdown.timer.labels.seconds`
 - `headerCta.label`
-- `actions.during.text`
-- `actions.after.text`
+- `countdown.actions.during.text`
+- `countdown.actions.after.text`
 
 The widget must not add `localization.json`, layer sidecars, text packs, or wildcard producer payloads.
 
 Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace). It is not part of widget instance config; Copilot may use it as context.
 
 ### Detailed State from Competitor Analysis
-- `timer.mode`: 'date' | 'personal' | 'number' (visual cards with icons: calendar for date, user for personal, numbers for number).
-- `timer.targetDate`: Date/time picker (MM/DD/YYYY + HH:MM AM/PM) for date mode.
-- `timer.timezone`: Text field (IANA timezone, or `browser`) for date mode.
-- `timer.timeAmount`: Numeric (1-999, default 1) for personal mode.
-- `timer.timeUnit`: 'hours' | 'minutes' | 'days' | 'weeks' | 'months' (default: 'hours') for personal mode.
-- `timer.repeat`: '1 minute' | '5 minutes' | '1 hour' | '1 day' | '1 week' | 'never' (default: 'never') for personal mode.
-- `timer.targetNumber`: Numeric (0-9999999) for number mode.
-- `timer.startingNumber`: Numeric (default 0) for number mode.
-- `timer.countDuration`: Numeric seconds (default 5) for number mode.
-- `timer.headline`: Rich text (bold, italic, link, lists; max 500 chars; default: "Get 50% off before it's too late 🎯").
-- `layout.position`: supports `'inline' | 'full-width' | 'top-bar' | 'bottom-bar' | 'static-top'` in runtime validation.
-- Current editor control surface exposes `inline` while preserving runtime compatibility for legacy values.
-- Note: content alignment follows `stage.alignment` (left/center/right). Pod sizing is driven by stage/pod layout controls.
-- Legacy layout fields are ignored by runtime (use Stage/Pod layout controls instead).
-- `appearance.theme`: 'custom' | 'light' | 'dark' | 'gradient' + 10 holiday presets (global themes; selection is staged until "Apply theme" is clicked; Cancel restores prior values. Applying a theme sets Stage/Pod/Item appearance values + typography font family; editing any theme-controlled path resets theme to `custom`).
+- `countdown.timer.mode`: 'date' | 'personal' | 'number' (visual cards with icons: calendar for date, user for personal, numbers for number).
+- `countdown.timer.targetDate`: ISO `YYYY-MM-DDTHH:MM(:SS)` text for date mode.
+- `countdown.timer.timezone`: Text field (IANA timezone, or `browser`) for date mode.
+- `countdown.timer.timeAmount`: Numeric (1-999, default 1) for personal mode.
+- `countdown.timer.timeUnit`: 'hours' | 'minutes' | 'days' | 'weeks' | 'months' (default: 'hours') for personal mode.
+- `countdown.timer.repeat`: '1 minute' | '5 minutes' | '1 hour' | '1 day' | '1 week' | 'never' (default: 'never') for personal mode.
+- `countdown.timer.targetNumber`: Numeric (0-9999999) for number mode.
+- `countdown.timer.startingNumber`: Numeric (default 0) for number mode.
+- `countdown.timer.countDuration`: Numeric seconds (default 5) for number mode.
+- Countdown has no widget-owned layout placement control. Content alignment,
+  pod sizing, and stage sizing are owned by the shared Stage/Pod Shell controls.
+- Countdown has no widget-owned theme preset system. Any future theme system must
+  be shared Shell/product infrastructure, not a Countdown-only dead control.
 - `pod.background`: Fill picker (color/gradient/image/video) for the widget surface.
 - `countdown.appearance.textColor`: Color picker (fill object, type `color`).
 - `countdown.appearance.itemBackground`: Fill picker (color/gradient) for timer tiles.
@@ -102,16 +103,15 @@ Note: `workspace.websiteUrl` is a workspace setting (persistent on the workspace
 - `countdown.appearance.cardwrapper.shadow`: Shadow (enabled/inset/x/y/blur/spread/color/alpha).
 - `countdown.appearance.cardwrapper.radiusLinked|radius|radiusTL|TR|BR|BL`: Radius controls for tiles.
 - `countdown.appearance.separator`: Color/style picker.
-- `countdown.appearance.animation`: 'fade' (only; skip advanced).
 - During-countdown action type is fixed to link in V1 and must not be stored as
   an account default unless a future Builder control makes it editable.
-- `actions.during.url`: URL input (supports internal/external).
-- `actions.during.text`: Text input (max 50; default: "Purchase now").
-- `actions.during.style`: 'primary' | 'secondary'.
-- `actions.during.newTab`: Boolean (default true).
-- `actions.after.type`: 'hide' | 'link'.
-- `actions.after.url`: URL (if link).
-- `actions.after.text`: Text (if link).
+- `countdown.actions.during.url`: URL input (supports `#`, root-relative, http(s), mailto, and tel).
+- `countdown.actions.during.text`: Text input (default: "Purchase now").
+- `countdown.actions.during.style`: 'primary' | 'secondary'.
+- `countdown.actions.during.newTab`: Boolean (default true).
+- `countdown.actions.after.type`: 'hide' | 'link'.
+- `countdown.actions.after.url`: URL (if link).
+- `countdown.actions.after.text`: Text (if link).
 
 ## 4) DOM contract (stable hooks)
 All runtime selectors must be scoped within `[data-ck-widget="countdown"]`.
@@ -134,9 +134,13 @@ Required roles (minimum):
 - Keep `applyState(state)` pure: do not create timers/intervals inside it. Schedule ticking outside `applyState` and render from the latest state.
 - Drive all visual differences via CSS vars + `data-*`.
 - Apply platform globals:
-  - `CKStagePod.applyStagePod(state.stage, state.pod, root)`
+  - `CKStagePod.applyStagePod(state.stage, state.pod, root, state.appearance)`
   - `CKTypography.applyTypography(state.typography, root, roleMap)`
+  - `CKHeader.applyHeader(state, root)`
+  - `CKCoreSize.applyCoreSize(state.coreSize, coreEl)`
   - `CKSurface.applyCardWrapper(state.countdown.appearance.cardwrapper, root)` (sets `--ck-cardwrapper-*` for timer tiles)
+  - `CKBranding.applyBacklink(root, state)`
+  - `CKSocialShare.apply(root, state, options)`
 
 Personal countdown persistence rule (deterministic):
 - Store start time in `localStorage` keyed by **widget instance id** (use `state.instanceId` or runtime `instanceId`; do not invent random ids).
@@ -144,11 +148,12 @@ Personal countdown persistence rule (deterministic):
 
 ## 6) ToolDrawer panels (required mapping)
 Panels:
-- **Content**: `timer.*` (mode + settings + headline) and `actions.*` (CTA during + after-end behavior)
-- **Layout**: `layout.*` (position)
-- **Appearance**: `appearance.*` + Stage/Pod controls
+- **Content**: shared Header controls plus `countdown.timer.*` and `countdown.actions.*`.
+- **Layout**: shared Header/Core Size/Stage/Pod controls only.
+- **Appearance**: shared Header CTA/Stage/Pod/Locale Switcher appearance plus
+  `countdown.appearance.*`.
 - **Typography**: `typography.*` (explicitly declared shared typography panel)
-- **Settings**: `seoGeo.enabled` and `behavior.showBacklink`
+- **Settings**: shared behavior controls only.
 
 ToolDrawer spacing rule (authoring):
 - Vertical rhythm is **clusters + groups only**. Use explicit cluster objects and field `groupId` values in `spec.json.editor`.
@@ -163,23 +168,18 @@ ToolDrawer spacing rule (authoring):
   - Headline: Rich text editor (bold, italic, link, lists, code view; max 500 chars).
   - CTA (while running) + After timer ends.
 - **Layout Panel**:
-  - Position: current editor surface shows `inline`; runtime keeps compatibility for `full-width`, `top-bar`, `bottom-bar`, and `static-top`.
   - Stage/Pod: Shared layout controls (pod width/content width, stage alignment, stage canvas sizing, stage/pod padding).
+  - Core Size: Shared Core Size controls for the Countdown body.
 - **Appearance Panel**:
-  - Theme: Dropdown with custom/light/dark/gradient + holiday presets.
   - Colors: Pod background, text, timer tiles, separators.
   - Borders/shadows: Timer tile radius/border/shadow + pod border.
-  - Animations: Fade only.
 ## 7) Defaults (authoritative `spec.json` → `defaults`)
 The implementer must translate this PRD into a complete defaults object in `tokyo/product/widgets/countdown/spec.json`.
 Defaults must include:
-- `seoGeo: { enabled: false }`
-- `behavior: { showBacklink: true }`
-- Stage/Pod v2 padding shape: `padding.desktop` + `padding.mobile` objects
-- `timer: { mode: 'date', targetDate: '2026-01-20T12:00', timezone: 'UTC', headline: 'Get 50% off before it\'s too late 🎯' }`
-- `layout: { position: 'inline' }`
-- `countdown.appearance: { theme: 'custom', animation: 'fade', textColor: { type: 'color', color: 'var(--color-system-black)' }, itemBackground: { type: 'color', color: 'var(--color-system-gray-5)' }, cardwrapper: { radiusLinked: true, radius: '2xl', radiusTL: '2xl', radiusTR: '2xl', radiusBR: '2xl', radiusBL: '2xl', border: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, shadow: { enabled: false, inset: false, x: 0, y: 8, blur: 24, spread: 0, alpha: 18, color: '#000000' } }, separator: ':' }`
-- `actions: { during: { type: 'link', url: '', text: 'Purchase now', style: 'primary', newTab: true }, after: { type: 'hide' } }`
+- Countdown Core defaults only. Shell defaults come from the shared Shell/account defaults authority.
+- `countdown.timer: { mode: 'date', targetDate: '2030-01-01T00:00', timezone: 'UTC' }`
+- `countdown.appearance: { textColor: { type: 'color', color: 'var(--color-system-black)' }, itemBackground: { type: 'color', color: 'var(--color-system-gray-5)' }, cardwrapper: { radiusLinked: true, radius: '2xl', radiusTL: '2xl', radiusTR: '2xl', radiusBR: '2xl', radiusBL: '2xl', border: { enabled: false, width: 1, color: 'var(--color-system-gray-5)' }, shadow: { enabled: false, inset: false, x: 0, y: 8, blur: 24, spread: 0, alpha: 18, color: '#000000' } }, separator: ':' }`
+- `countdown.actions: { during: { url: '#', text: 'Purchase now', style: 'primary', newTab: true }, after: { type: 'hide' } }`
 
 ## 8) Additional Notes from Competitor Analysis
 - Unit controls: Show/hide individual units (days/hours/minutes/seconds); format: separated boxes or inline.

@@ -28,19 +28,145 @@
     return value;
   }
 
+  function assertBoolean(value, path) {
+    if (typeof value !== 'boolean') throw new Error('[SplitMedia] ' + path + ' must be a boolean');
+  }
+
+  function assertNumber(value, path) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new Error('[SplitMedia] ' + path + ' must be a finite number');
+    }
+  }
+
+  function assertPositiveNumber(value, path) {
+    assertNumber(value, path);
+    if (value <= 0) throw new Error('[SplitMedia] ' + path + ' must be > 0');
+  }
+
+  function assertFillSource(src, path) {
+    assertString(src, path);
+    const value = src.trim();
+    if (!value) throw new Error('[SplitMedia] ' + path + ' must be a non-empty asset URL');
+    if (/[\n\r;]/.test(value) || /^javascript:/i.test(value)) {
+      throw new Error('[SplitMedia] ' + path + ' contains an invalid URL');
+    }
+    if (value.startsWith('/') || value.startsWith('./') || value.startsWith('../') || /^https?:\/\//i.test(value)) {
+      return value;
+    }
+    throw new Error('[SplitMedia] ' + path + ' must use a relative, absolute-path, or http(s) URL');
+  }
+
+  function assertBorderConfig(value, path) {
+    assertRecord(value, path);
+    assertBoolean(value.enabled, path + '.enabled');
+    assertNumber(value.width, path + '.width');
+    assertString(value.color, path + '.color');
+    if (value.width < 0 || value.width > 12) throw new Error('[SplitMedia] ' + path + '.width must be 0..12');
+  }
+
+  function assertShadowConfig(value, path) {
+    assertRecord(value, path);
+    assertBoolean(value.enabled, path + '.enabled');
+    assertBoolean(value.inset, path + '.inset');
+    assertNumber(value.x, path + '.x');
+    assertNumber(value.y, path + '.y');
+    assertNumber(value.blur, path + '.blur');
+    assertNumber(value.spread, path + '.spread');
+    assertNumber(value.alpha, path + '.alpha');
+    assertString(value.color, path + '.color');
+    if (value.alpha < 0 || value.alpha > 100) throw new Error('[SplitMedia] ' + path + '.alpha must be 0..100');
+  }
+
+  function assertCardWrapper(value, path) {
+    assertRecord(value, path);
+    assertBoolean(value.radiusLinked, path + '.radiusLinked');
+    assertString(value.radius, path + '.radius');
+    assertString(value.radiusTL, path + '.radiusTL');
+    assertString(value.radiusTR, path + '.radiusTR');
+    assertString(value.radiusBR, path + '.radiusBR');
+    assertString(value.radiusBL, path + '.radiusBL');
+    assertBorderConfig(value.border, path + '.border');
+    assertShadowConfig(value.shadow, path + '.shadow');
+  }
+
+  function assertCoreSize(value, path) {
+    assertRecord(value, path);
+    assertEnum(value.mode, path + '.mode', ['auto', 'fixed', 'responsive']);
+    assertPositiveNumber(value.fixedHeight, path + '.fixedHeight');
+    assertPositiveNumber(value.minHeight, path + '.minHeight');
+    assertPositiveNumber(value.preferredVw, path + '.preferredVw');
+    assertPositiveNumber(value.maxHeight, path + '.maxHeight');
+    if (value.maxHeight < value.minHeight) {
+      throw new Error('[SplitMedia] ' + path + '.maxHeight must be >= ' + path + '.minHeight');
+    }
+  }
+
+  function assertLocaleSwitcher(value, path) {
+    assertRecord(value, path);
+    assertBoolean(value.enabled, path + '.enabled');
+    assertBoolean(value.byIp, path + '.byIp');
+    assertString(value.alwaysShowLocale, path + '.alwaysShowLocale');
+    assertEnum(value.attachTo, path + '.attachTo', ['stage', 'pod']);
+    assertEnum(value.position, path + '.position', [
+      'top-left',
+      'top-center',
+      'top-right',
+      'right-middle',
+      'bottom-right',
+      'bottom-center',
+      'bottom-left',
+      'left-middle',
+    ]);
+  }
+
+  const SOCIAL_SHARE_CHANNELS = [
+    'copy',
+    'sms',
+    'email',
+    'whatsapp',
+    'telegram',
+    'signal',
+    'messenger',
+    'wechat',
+    'line',
+    'slack',
+    'teams',
+    'discord',
+    'x',
+    'linkedin',
+    'facebook',
+    'reddit',
+    'instagram',
+    'tiktok',
+  ];
+
+  function assertSocialShare(value, path) {
+    assertRecord(value, path);
+    assertBoolean(value.enabled, path + '.enabled');
+    assertRecord(value.channels, path + '.channels');
+    SOCIAL_SHARE_CHANNELS.forEach((channel) => {
+      assertBoolean(value.channels[channel], path + '.channels.' + channel);
+    });
+  }
+
   function mediaSource(fill, kind) {
     assertRecord(fill, 'state.splitMedia.media');
     assertEnum(fill.type, 'state.splitMedia.media.type', [kind]);
     const bucket = assertRecord(fill[kind], 'state.splitMedia.media.' + kind);
-    const src = assertString(bucket.src, 'state.splitMedia.media.' + kind + '.src').trim();
-    if (!src) throw new Error('[SplitMedia] state.splitMedia.media requires a ' + kind + ' asset');
-    return src;
+    return assertFillSource(bucket.src, 'state.splitMedia.media.' + kind + '.src');
   }
 
   function normalizeState(state) {
+    assertRecord(state, 'state');
+    assertCoreSize(state.coreSize, 'state.coreSize');
+    assertLocaleSwitcher(state.localeSwitcher, 'state.localeSwitcher');
+    assertRecord(state.behavior, 'state.behavior');
+    assertSocialShare(state.behavior.socialShare, 'state.behavior.socialShare');
+
     const splitMedia = assertRecord(state.splitMedia, 'state.splitMedia');
     const media = assertRecord(splitMedia.media, 'state.splitMedia.media');
     const kind = assertEnum(media.type, 'state.splitMedia.media.type', ['image', 'video']);
+    assertCardWrapper(splitMedia.appearance?.cardwrapper, 'state.splitMedia.appearance.cardwrapper');
     return {
       kind,
       fill: media,
@@ -95,12 +221,12 @@
     const resolvedInstanceId = runtimeContext.instanceId;
 
     function applyState(state, context) {
-      if (!state) return;
+      const normalized = normalizeState(state);
 
       if (!window.CKStagePod?.applyStagePod) {
         throw new Error('[SplitMedia] Missing CKStagePod.applyStagePod');
       }
-      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
 
       if (!window.CKTypography?.applyTypography) {
         throw new Error('[SplitMedia] Missing CKTypography.applyTypography');
@@ -125,12 +251,6 @@
       }
       window.CKCoreSize.applyCoreSize(state.coreSize, coreEl);
 
-      const normalized = normalizeState(state);
-      if (!window.CKSurface?.applyCardWrapper) {
-        throw new Error('[SplitMedia] Missing CKSurface.applyCardWrapper');
-      }
-      window.CKSurface.applyCardWrapper(normalized.appearance.cardwrapper, coreEl);
-
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
         throw new Error('[SplitMedia] Missing CKLocaleSwitcher.applyLocaleSwitcher');
       }
@@ -150,11 +270,26 @@
       stage.setAttribute('aria-roledescription', 'visual');
       stage.setAttribute('aria-label', 'Split media visual');
       stage.appendChild(renderMedia(normalized));
+      if (!window.CKSurface?.applyCardWrapper) {
+        throw new Error('[SplitMedia] Missing CKSurface.applyCardWrapper');
+      }
+      window.CKSurface.applyCardWrapper(normalized.appearance.cardwrapper, stage);
       coreEl.replaceChildren(stage);
 
-      if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
-        window.CKBranding.applyBacklink(widgetRoot, state);
+      if (!window.CKBranding || typeof window.CKBranding.applyBacklink !== 'function') {
+        throw new Error('[SplitMedia] Missing CKBranding.applyBacklink');
       }
+      window.CKBranding.applyBacklink(widgetRoot, state);
+
+      if (!window.CKSocialShare || typeof window.CKSocialShare.apply !== 'function') {
+        throw new Error('[SplitMedia] Missing CKSocialShare.apply');
+      }
+      window.CKSocialShare.apply(widgetRoot, state, {
+        instanceId: resolvedInstanceId,
+        widgetType: 'split-media',
+        widgetLabel: 'Split Media',
+        previewMode: context && context.previewMode,
+      });
     }
 
     let previewLocaleRequest = 0;
@@ -167,7 +302,6 @@
       baseLocale,
       translatedLocaleValues,
     ) {
-      if (!state) return;
       const requestId = ++previewLocaleRequest;
       const helper =
         window.CK_PREVIEW_L10N &&
@@ -219,14 +353,11 @@
     );
 
     const initialLocale = runtimeContext.locale || '';
-    const initialState = runtimeContext.state;
-    if (initialState) {
-      applyState(initialState, {
-        ...runtimeContext,
-        locale: initialLocale,
-        instanceId: resolvedInstanceId,
-      });
-    }
+    applyState(runtimeContext.state, {
+      ...runtimeContext,
+      locale: initialLocale,
+      instanceId: resolvedInstanceId,
+    });
   }
 
   runtime.register('split-media', initSplitMedia);

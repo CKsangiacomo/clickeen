@@ -11,6 +11,8 @@ export default defineConfig({
     timeout: 10_000,
   },
   fullyParallel: false,
+  // Remote e2e mutates shared account/widget state; parallel workers make certification nondeterministic.
+  workers: 1,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['line'], ['html', { open: 'never' }]] : [['list'], ['html', { open: 'never' }]],

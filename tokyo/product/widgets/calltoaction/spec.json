@@ -2,110 +2,6 @@
   "v": 1,
   "widgetname": "calltoaction",
   "itemKey": "calltoaction.item",
-  "normalization": {
-    "coerceRules": [
-      {
-        "path": "behavior.showBacklink",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.enabled",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "behavior.socialShare.channels.copy",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.sms",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.email",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.whatsapp",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.telegram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.signal",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.messenger",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.wechat",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.line",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.slack",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.teams",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.discord",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.x",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.linkedin",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.facebook",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.reddit",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.instagram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.tiktok",
-        "type": "boolean",
-        "default": true
-      }
-    ]
-  },
   "defaults": {
     "uiLabels": {
       "core": {
@@ -565,7 +461,7 @@
                 "groupId": "calltoaction-action",
                 "type": "dropdown-actions",
                 "path": "calltoaction.actionStyle.radius",
-                "label": "Radius",
+                "label": "Corner radius",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -606,7 +502,7 @@
                 "groupId": "calltoaction-action",
                 "type": "valuefield",
                 "path": "calltoaction.actionStyle.paddingInline",
-                "label": "Horizontal padding",
+                "label": "Horizontal padding (px)",
                 "attrs": {
                   "group-label": "",
                   "min": 8,
@@ -623,7 +519,7 @@
                 "groupId": "calltoaction-action",
                 "type": "valuefield",
                 "path": "calltoaction.actionStyle.paddingBlock",
-                "label": "Vertical padding",
+                "label": "Vertical padding (px)",
                 "attrs": {
                   "group-label": "",
                   "min": 6,
@@ -640,7 +536,7 @@
                 "groupId": "calltoaction-action",
                 "type": "valuefield",
                 "path": "calltoaction.actionStyle.iconSize",
-                "label": "Icon size",
+                "label": "Icon size (px)",
                 "attrs": {
                   "group-label": "",
                   "min": 10,

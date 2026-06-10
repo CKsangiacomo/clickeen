@@ -6,7 +6,7 @@
       "path": "header.title",
       "label": "Header title",
       "type": "richtext",
-      "role": "header-title",
+      "role": "title",
       "arrayItemIdentity": [],
       "limits": []
     },
@@ -14,7 +14,7 @@
       "path": "header.subtitleHtml",
       "label": "Header subtitle",
       "type": "richtext",
-      "role": "header-subtitle",
+      "role": "body",
       "arrayItemIdentity": [],
       "limits": []
     },

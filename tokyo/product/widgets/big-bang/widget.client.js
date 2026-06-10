@@ -10,6 +10,39 @@
     return Boolean(value && typeof value === 'object' && !Array.isArray(value));
   }
 
+  function assertRecord(value, path) {
+    if (!isRecord(value)) throw new Error('[BigBang] ' + path + ' must be an object');
+    return value;
+  }
+
+  function assertString(value, path) {
+    if (typeof value !== 'string') throw new Error('[BigBang] ' + path + ' must be a string');
+    return value;
+  }
+
+  function assertBoolean(value, path) {
+    if (typeof value !== 'boolean') throw new Error('[BigBang] ' + path + ' must be a boolean');
+    return value;
+  }
+
+  function assertNumber(value, path, min, max) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new Error('[BigBang] ' + path + ' must be a finite number');
+    }
+    if (value < min || value > max) {
+      throw new Error('[BigBang] ' + path + ' must be ' + min + '..' + max);
+    }
+    return value;
+  }
+
+  function assertEnum(value, path, options) {
+    assertString(value, path);
+    if (!options.includes(value)) {
+      throw new Error('[BigBang] ' + path + ' must be one of: ' + options.join(', '));
+    }
+    return value;
+  }
+
   function sanitizeInlineHtml(html) {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = String(html || '');
@@ -30,23 +63,19 @@
     return wrapper.innerHTML;
   }
 
-  function normalizeBigBang(state) {
-    const bigBang = isRecord(state.bigBang) ? state.bigBang : {};
-    const textWidth =
-      typeof bigBang.textWidth === 'number' && Number.isFinite(bigBang.textWidth)
-        ? Math.min(Math.max(bigBang.textWidth, 480), 1280)
-        : 880;
-    const gap =
-      typeof bigBang.gap === 'number' && Number.isFinite(bigBang.gap)
-        ? Math.min(Math.max(bigBang.gap, 8), 80)
-        : 24;
+  function validateBigBangState(state) {
+    assertRecord(state, 'state');
+    assertRecord(state.coreSize, 'state.coreSize');
+    const bigBang = assertRecord(state.bigBang, 'state.bigBang');
+    const statement = assertString(bigBang.statement, 'state.bigBang.statement').trim();
+    if (!statement) throw new Error('[BigBang] state.bigBang.statement is required');
     return {
-      statement: String(bigBang.statement || '').trim(),
-      showSupportingCopy: bigBang.showSupportingCopy !== false,
-      supportingCopy: String(bigBang.supportingCopy || '').trim(),
-      alignment: bigBang.alignment === 'center' ? 'center' : 'left',
-      textWidth: textWidth,
-      gap: gap,
+      statement,
+      showSupportingCopy: assertBoolean(bigBang.showSupportingCopy, 'state.bigBang.showSupportingCopy'),
+      supportingCopy: assertString(bigBang.supportingCopy, 'state.bigBang.supportingCopy').trim(),
+      alignment: assertEnum(bigBang.alignment, 'state.bigBang.alignment', ['left', 'center']),
+      textWidth: assertNumber(bigBang.textWidth, 'state.bigBang.textWidth', 480, 1280),
+      gap: assertNumber(bigBang.gap, 'state.bigBang.gap', 8, 80),
     };
   }
 
@@ -66,10 +95,10 @@
     const resolvedInstanceId = runtimeContext.instanceId;
 
     function applyState(state, context) {
-      if (!state) return;
+      const bigBang = validateBigBangState(state);
       if (!window.CKStagePod?.applyStagePod)
         throw new Error('[BigBang] Missing CKStagePod.applyStagePod');
-      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
 
       if (!window.CKTypography?.applyTypography)
         throw new Error('[BigBang] Missing CKTypography.applyTypography');
@@ -93,6 +122,13 @@
         throw new Error('[BigBang] Missing CKCoreSize.applyCoreSize');
       window.CKCoreSize.applyCoreSize(state.coreSize, coreEl);
 
+      coreEl.dataset.align = bigBang.alignment;
+      coreEl.style.setProperty('--ck-bigBang-text-width', bigBang.textWidth + 'px');
+      coreEl.style.setProperty('--ck-bigBang-gap', bigBang.gap + 'px');
+      statementEl.innerHTML = sanitizeInlineHtml(bigBang.statement);
+      supportEl.innerHTML = sanitizeInlineHtml(bigBang.supportingCopy);
+      supportEl.hidden = !bigBang.showSupportingCopy || !bigBang.supportingCopy;
+
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
         throw new Error('[BigBang] Missing CKLocaleSwitcher.applyLocaleSwitcher');
       }
@@ -103,18 +139,20 @@
         typographyScope: bigBangRoot,
       });
 
-      const bigBang = normalizeBigBang(state);
-      if (!bigBang.statement) throw new Error('[BigBang] bigBang.statement is required');
-      coreEl.dataset.align = bigBang.alignment;
-      coreEl.style.setProperty('--ck-bigBang-text-width', bigBang.textWidth + 'px');
-      coreEl.style.setProperty('--ck-bigBang-gap', bigBang.gap + 'px');
-      statementEl.innerHTML = sanitizeInlineHtml(bigBang.statement);
-      supportEl.innerHTML = sanitizeInlineHtml(bigBang.supportingCopy);
-      supportEl.hidden = !bigBang.showSupportingCopy || !bigBang.supportingCopy;
-
-      if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
-        window.CKBranding.applyBacklink(widgetRoot, state);
+      if (!window.CKBranding?.applyBacklink) {
+        throw new Error('[BigBang] Missing CKBranding.applyBacklink');
       }
+      window.CKBranding.applyBacklink(widgetRoot, state);
+
+      if (!window.CKSocialShare?.apply) {
+        throw new Error('[BigBang] Missing CKSocialShare.apply');
+      }
+      window.CKSocialShare.apply(widgetRoot, state, {
+        instanceId: context && context.instanceId,
+        widgetType: 'big-bang',
+        widgetLabel: document.title || 'Big Bang',
+        previewMode: context && context.previewMode,
+      });
     }
 
     let previewLocaleRequest = 0;
@@ -127,7 +165,7 @@
       baseLocale,
       translatedLocaleValues,
     ) {
-      if (!state) return;
+      assertRecord(state, 'state');
       const requestId = ++previewLocaleRequest;
       const helper =
         window.CK_PREVIEW_L10N &&
@@ -179,13 +217,11 @@
     );
 
     const initialLocale = runtimeContext.locale || '';
-    const initialState = runtimeContext.state;
-    if (initialState)
-      applyState(initialState, {
-        ...runtimeContext,
-        locale: initialLocale,
-        instanceId: resolvedInstanceId,
-      });
+    applyState(runtimeContext.state, {
+      ...runtimeContext,
+      locale: initialLocale,
+      instanceId: resolvedInstanceId,
+    });
   }
 
   runtime.register('big-bang', initBigBang);

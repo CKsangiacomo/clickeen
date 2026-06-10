@@ -16,6 +16,7 @@
     }
 
     const countdownRoot = requireElement(widgetRoot, '[data-role="countdown"]', '[Countdown] Missing [data-role="countdown"] root');
+    const coreEl = requireElement(countdownRoot, '[data-role="countdown-core"]', '[Countdown] Missing [data-role="countdown-core"]');
     const timerEl = requireElement(countdownRoot, '[data-role="timer"]', '[Countdown] Missing [data-role="timer"]');
     const afterMsgEl = requireElement(countdownRoot, '[data-role="after-message"]', '[Countdown] Missing [data-role="after-message"]');
     const stageEl = widgetRoot.closest('.stage');
@@ -32,6 +33,7 @@
     return {
       widgetRoot,
       countdownRoot,
+      coreEl,
       timerEl,
       numberDisplayEl: requireElement(timerEl, '[data-role="number-display"]', '[Countdown] Missing [data-role="number-display"]'),
       numberValueEl: requireElement(timerEl, '[data-role="number-value"]', '[Countdown] Missing [data-role="number-value"]'),

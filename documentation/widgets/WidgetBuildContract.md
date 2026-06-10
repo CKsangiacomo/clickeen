@@ -460,6 +460,9 @@ MUST
 - Keep the Shell contract intact for Shell widgets.
 - Do not author Shell defaults in widget `spec.json.defaults`; consume them from
   `packages/widget-shell`.
+- Do not author Shell normalization in widget `spec.json.normalization`.
+  Widget-local `normalization.idRules` and `normalization.coerceRules` are
+  Core-only and must target the widget namespace.
 - Define a widget-specific body namespace for every normal Shell/Core widget.
 - Put widget-specific state in Core-owned paths under that namespace.
 - Define arrays as `path[]` and items as `path[i]`.
@@ -504,6 +507,13 @@ before ToolDrawer hydration and preview postMessage. This is the Builder-side
 load compatibility boundary for new defaulted paths. Widget runtime should not
 hide missing Core forever when the intended fix is load or materialization
 normalization.
+
+Widget spec normalization is not a Shell fallback ladder. It may repair
+Core-owned saved state, such as widget item IDs or widget namespace scalar
+types. It must not repair `behavior.showBacklink`, `behavior.socialShare.*`,
+`header.*`, `headerCta.*`, `stage.*`, `pod.*`, `coreSize.*`, or shared Shell
+appearance/typography paths. The compiler rejects Shell paths in widget
+`normalization.coerceRules`.
 
 When a widget refactor adds, renames, or moves state paths, the build MUST name
 one compatibility path:
@@ -856,6 +866,7 @@ Supported condition shapes:
 - `{ "path": "x.y", "op": "notEquals", "value": "value" }`
 - `{ "path": "x.y", "op": "in", "value": ["a", "b"] }`
 - `{ "all": [ ...conditions ] }`
+- `{ "any": [ ...conditions ] }`
 - `{ "call": "hasLinks", "args": [{ "path": "..." }] }`
 
 MUST

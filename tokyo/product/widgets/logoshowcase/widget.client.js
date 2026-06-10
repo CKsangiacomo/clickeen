@@ -15,9 +15,9 @@
     throw new Error('[LogoShowcase] Missing [data-role="logoshowcase"] root');
   }
 
-  const stripsEl = lsRoot.querySelector('[data-role="strips"]');
+  const stripsEl = lsRoot.querySelector('[data-role="logoshowcase-core"]');
   if (!(stripsEl instanceof HTMLElement)) {
-    throw new Error('[LogoShowcase] Missing [data-role="strips"]');
+    throw new Error('[LogoShowcase] Missing [data-role="logoshowcase-core"]');
   }
 
   widgetRoot.style.setProperty('--ls-icon-prev', 'url("/dieter/icons/svg/chevron.left.svg")');
@@ -34,8 +34,23 @@
     }
   }
 
+  function assertNonNegativeNumber(value, path) {
+    assertNumber(value, path);
+    if (value < 0) throw new Error(`[LogoShowcase] ${path} must be >= 0`);
+  }
+
+  function assertPositiveNumber(value, path) {
+    assertNumber(value, path);
+    if (value <= 0) throw new Error(`[LogoShowcase] ${path} must be > 0`);
+  }
+
   function assertString(value, path) {
     if (typeof value !== 'string') throw new Error(`[LogoShowcase] ${path} must be a string`);
+  }
+
+  function assertNonEmptyString(value, path) {
+    assertString(value, path);
+    if (!value.trim()) throw new Error(`[LogoShowcase] ${path} must be a non-empty string`);
   }
 
   function assertObject(value, path) {
@@ -58,6 +73,13 @@
     if (!Array.isArray(value)) throw new Error(`[LogoShowcase] ${path} must be an array`);
   }
 
+  function assertEnum(value, path, allowed) {
+    assertString(value, path);
+    if (!allowed.includes(value)) {
+      throw new Error(`[LogoShowcase] ${path} must be one of: ${allowed.join('|')}`);
+    }
+  }
+
   function assertBorderConfig(value, path) {
     assertObject(value, path);
     assertBoolean(value.enabled, `${path}.enabled`);
@@ -68,6 +90,84 @@
     }
   }
 
+  function assertLogoFill(value, path) {
+    assertString(value, path);
+    const v = value.trim();
+    if (v === 'transparent' || v === 'none') return;
+
+    const match = v.match(/^url\((["']?)([^"')]+)\1\)\s+center\s*\/\s*contain\s+no-repeat$/i);
+    if (!match) {
+      throw new Error(`[LogoShowcase] ${path} must be transparent or a materialized logo image fill`);
+    }
+
+    const url = match[2].trim();
+    if (!url || /[\n\r;]/.test(url) || /^javascript:/i.test(url)) {
+      throw new Error(`[LogoShowcase] ${path} contains an invalid URL`);
+    }
+    if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../') || /^https?:\/\//i.test(url)) return;
+    throw new Error(`[LogoShowcase] ${path} must use a relative, absolute-path, or http(s) URL`);
+  }
+
+  function assertCoreSize(value, path) {
+    assertObject(value, path);
+    assertEnum(value.mode, `${path}.mode`, ['auto', 'fixed', 'responsive']);
+    assertPositiveNumber(value.fixedHeight, `${path}.fixedHeight`);
+    assertPositiveNumber(value.minHeight, `${path}.minHeight`);
+    assertPositiveNumber(value.preferredVw, `${path}.preferredVw`);
+    assertPositiveNumber(value.maxHeight, `${path}.maxHeight`);
+    if (value.maxHeight < value.minHeight) {
+      throw new Error(`[LogoShowcase] ${path}.maxHeight must be >= ${path}.minHeight`);
+    }
+  }
+
+  function assertLocaleSwitcher(value, path) {
+    assertObject(value, path);
+    assertBoolean(value.enabled, `${path}.enabled`);
+    assertBoolean(value.byIp, `${path}.byIp`);
+    assertString(value.alwaysShowLocale, `${path}.alwaysShowLocale`);
+    assertEnum(value.attachTo, `${path}.attachTo`, ['stage', 'pod']);
+    assertEnum(value.position, `${path}.position`, [
+      'top-left',
+      'top-center',
+      'top-right',
+      'right-middle',
+      'bottom-right',
+      'bottom-center',
+      'bottom-left',
+      'left-middle',
+    ]);
+  }
+
+  const SOCIAL_SHARE_CHANNELS = [
+    'copy',
+    'sms',
+    'email',
+    'whatsapp',
+    'telegram',
+    'signal',
+    'messenger',
+    'wechat',
+    'line',
+    'slack',
+    'teams',
+    'discord',
+    'x',
+    'linkedin',
+    'facebook',
+    'reddit',
+    'instagram',
+    'tiktok',
+  ];
+
+  function assertSocialShare(value, path) {
+    assertObject(value, path);
+    assertBoolean(value.enabled, `${path}.enabled`);
+    assertObject(value.channels, `${path}.channels`);
+    SOCIAL_SHARE_CHANNELS.forEach((channel) => {
+      assertBoolean(value.channels[channel], `${path}.channels.${channel}`);
+    });
+  }
+
   function clamp(n, min, max) {
     return Math.max(min, Math.min(max, n));
   }
@@ -75,6 +175,7 @@
   function assertLogoShowcaseState(state) {
     assertObject(state, 'state');
     assertObject(state.logoshowcase, 'state.logoshowcase');
+    assertCoreSize(state.coreSize, 'state.coreSize');
 
     assertObject(state.header, 'state.header');
     assertBoolean(state.header.enabled, 'state.header.enabled');
@@ -95,23 +196,38 @@
     }
 
     assertArray(state.logoshowcase.strips, 'state.logoshowcase.strips');
+    if (state.logoshowcase.strips.length < 1) {
+      throw new Error('[LogoShowcase] state.logoshowcase.strips must contain at least one strip');
+    }
+    const stripIds = new Set();
     state.logoshowcase.strips.forEach((strip, stripIdx) => {
       assertObject(strip, `state.logoshowcase.strips[${stripIdx}]`);
-      assertString(strip.id, `state.logoshowcase.strips[${stripIdx}].id`);
+      assertNonEmptyString(strip.id, `state.logoshowcase.strips[${stripIdx}].id`);
+      if (stripIds.has(strip.id)) {
+        throw new Error(`[LogoShowcase] duplicate strip id: ${strip.id}`);
+      }
+      stripIds.add(strip.id);
       assertArray(strip.logos, `state.logoshowcase.strips[${stripIdx}].logos`);
+      if (strip.logos.length < 1) {
+        throw new Error(`[LogoShowcase] state.logoshowcase.strips[${stripIdx}].logos must contain at least one logo`);
+      }
+      const logoIds = new Set();
       strip.logos.forEach((logo, logoIdx) => {
         assertObject(logo, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}]`);
-        assertString(logo.id, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].id`);
+        assertNonEmptyString(logo.id, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].id`);
+        if (logoIds.has(logo.id)) {
+          throw new Error(`[LogoShowcase] duplicate logo id in strip ${strip.id}: ${logo.id}`);
+        }
+        logoIds.add(logo.id);
         assertString(logo.name, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].name`);
-        assertString(logo.logoFill, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].logoFill`);
+        assertLogoFill(logo.logoFill, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].logoFill`);
         if (logo.asset != null) {
           assertObject(logo.asset, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].asset`);
-          if (
-            logo.asset.assetId != null &&
-            (typeof logo.asset.assetId !== 'string' ||
-              !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(logo.asset.assetId.trim()))
-          ) {
-            throw new Error(`[LogoShowcase] state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].asset.assetId invalid`);
+          if (logo.asset.assetRef != null) {
+            assertNonEmptyString(
+              logo.asset.assetRef,
+              `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].asset.assetRef`,
+            );
           }
         }
         assertString(logo.href, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].href`);
@@ -127,6 +243,7 @@
     assertBoolean(state.headerCta.enabled, 'state.headerCta.enabled');
     assertString(state.headerCta.label, 'state.headerCta.label');
     assertString(state.headerCta.href, 'state.headerCta.href');
+    assertEnum(state.headerCta.openMode, 'state.headerCta.openMode', ['same-tab', 'new-tab', 'new-window']);
     assertBoolean(state.headerCta.iconEnabled, 'state.headerCta.iconEnabled');
     assertString(state.headerCta.iconName, 'state.headerCta.iconName');
     assertString(state.headerCta.iconPlacement, 'state.headerCta.iconPlacement');
@@ -150,9 +267,9 @@
     assertBoolean(state.logoshowcase.typeConfig.carousel.allowSwipe, 'state.logoshowcase.typeConfig.carousel.allowSwipe');
     assertBoolean(state.logoshowcase.typeConfig.carousel.autoplay, 'state.logoshowcase.typeConfig.carousel.autoplay');
     assertBoolean(state.logoshowcase.typeConfig.carousel.pauseOnHover, 'state.logoshowcase.typeConfig.carousel.pauseOnHover');
-    assertNumber(state.logoshowcase.typeConfig.carousel.autoSlideDelayMs, 'state.logoshowcase.typeConfig.carousel.autoSlideDelayMs');
-    assertNumber(state.logoshowcase.typeConfig.carousel.transitionMs, 'state.logoshowcase.typeConfig.carousel.transitionMs');
-    assertNumber(state.logoshowcase.typeConfig.carousel.speed, 'state.logoshowcase.typeConfig.carousel.speed');
+    assertNonNegativeNumber(state.logoshowcase.typeConfig.carousel.autoSlideDelayMs, 'state.logoshowcase.typeConfig.carousel.autoSlideDelayMs');
+    assertNonNegativeNumber(state.logoshowcase.typeConfig.carousel.transitionMs, 'state.logoshowcase.typeConfig.carousel.transitionMs');
+    assertPositiveNumber(state.logoshowcase.typeConfig.carousel.speed, 'state.logoshowcase.typeConfig.carousel.speed');
     if (!['left', 'right'].includes(state.logoshowcase.typeConfig.carousel.direction)) {
       throw new Error('[LogoShowcase] state.logoshowcase.typeConfig.carousel.direction must be left|right');
     }
@@ -225,17 +342,24 @@
     assertObject(state.logoshowcase.behavior, 'state.logoshowcase.behavior');
     assertBoolean(state.logoshowcase.behavior.randomOrder, 'state.logoshowcase.behavior.randomOrder');
     assertBoolean(state.behavior.showBacklink, 'state.behavior.showBacklink');
+    assertSocialShare(state.behavior.socialShare, 'state.behavior.socialShare');
 
     assertObject(state.stage, 'state.stage');
     assertObject(state.pod, 'state.pod');
     assertObject(state.typography, 'state.typography');
+    assertLocaleSwitcher(state.localeSwitcher, 'state.localeSwitcher');
   }
 
   function normalizeHttpUrl(raw) {
     const v = String(raw || '').trim();
     if (!v) return null;
-    if (!/^https?:\/\//i.test(v)) return null;
-    return v;
+    try {
+      const parsed = new URL(v);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+      return parsed.href;
+    } catch (_error) {
+      return null;
+    }
   }
 
   function fnv1a32(str) {
@@ -502,11 +626,11 @@
     const prevBtn = stripEl.querySelector('[data-role="arrow"][data-dir="prev"]');
     const nextBtn = stripEl.querySelector('[data-role="arrow"][data-dir="next"]');
 
-    if (!(viewportEl instanceof HTMLElement)) return;
-    if (!(navEl instanceof HTMLElement)) return;
-    if (!(dotsEl instanceof HTMLElement)) return;
-    if (!(prevBtn instanceof HTMLButtonElement)) return;
-    if (!(nextBtn instanceof HTMLButtonElement)) return;
+    if (!(viewportEl instanceof HTMLElement)) throw new Error('[LogoShowcase] Missing paged strip viewport');
+    if (!(navEl instanceof HTMLElement)) throw new Error('[LogoShowcase] Missing paged strip nav');
+    if (!(dotsEl instanceof HTMLElement)) throw new Error('[LogoShowcase] Missing paged strip dots');
+    if (!(prevBtn instanceof HTMLButtonElement)) throw new Error('[LogoShowcase] Missing paged previous button');
+    if (!(nextBtn instanceof HTMLButtonElement)) throw new Error('[LogoShowcase] Missing paged next button');
 
     const cfg = state.logoshowcase.typeConfig.carousel;
 
@@ -629,12 +753,12 @@
     const prevBtn = stripEl.querySelector('[data-role="arrow"][data-dir="prev"]');
     const nextBtn = stripEl.querySelector('[data-role="arrow"][data-dir="next"]');
 
-    if (!(viewportEl instanceof HTMLElement)) return;
-    if (!(trackEl instanceof HTMLElement)) return;
-    if (!(navEl instanceof HTMLElement)) return;
-    if (!(dotsEl instanceof HTMLElement)) return;
-    if (!(prevBtn instanceof HTMLButtonElement)) return;
-    if (!(nextBtn instanceof HTMLButtonElement)) return;
+    if (!(viewportEl instanceof HTMLElement)) throw new Error('[LogoShowcase] Missing continuous strip viewport');
+    if (!(trackEl instanceof HTMLElement)) throw new Error('[LogoShowcase] Missing continuous strip track');
+    if (!(navEl instanceof HTMLElement)) throw new Error('[LogoShowcase] Missing continuous strip nav');
+    if (!(dotsEl instanceof HTMLElement)) throw new Error('[LogoShowcase] Missing continuous strip dots');
+    if (!(prevBtn instanceof HTMLButtonElement)) throw new Error('[LogoShowcase] Missing continuous previous button');
+    if (!(nextBtn instanceof HTMLButtonElement)) throw new Error('[LogoShowcase] Missing continuous next button');
 
     const cfg = state.logoshowcase.typeConfig.carousel;
 
@@ -652,10 +776,9 @@
 
     const applyTickerVars = () => {
       const listEl = stripEl.querySelector('[data-role="ticker-a"] [data-role="logos"]');
-      if (!(listEl instanceof HTMLElement)) return;
+      if (!(listEl instanceof HTMLElement)) throw new Error('[LogoShowcase] Missing continuous ticker list');
       const distancePx = Math.max(0, Math.ceil(listEl.scrollWidth));
       const speed = cfg.speed;
-      if (!(typeof speed === 'number' && Number.isFinite(speed) && speed > 0)) return;
       const durationSec = distancePx / speed;
 
       trackEl.style.setProperty('--ls-ticker-duration', `${durationSec}s`);
@@ -715,7 +838,7 @@
     if (!window.CKStagePod?.applyStagePod) {
       throw new Error('[LogoShowcase] Missing CKStagePod.applyStagePod');
     }
-    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
+    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
 
     if (!window.CKTypography?.applyTypography) {
       throw new Error('[LogoShowcase] Missing CKTypography.applyTypography');
@@ -731,20 +854,15 @@
       { locale: runtimeContext && runtimeContext.locale, instanceId: resolvedInstanceId },
     );
 
-    lsRoot.setAttribute('data-type', state.logoshowcase.type);
-    if (state.logoshowcase.type === 'carousel') {
-      lsRoot.setAttribute('data-motion', state.logoshowcase.typeConfig.carousel.mode);
-    } else {
-      lsRoot.removeAttribute('data-motion');
-    }
-
-    applyLayoutVars(state);
-    applyAppearanceVars(state);
-
     if (!window.CKHeader?.applyHeader) {
       throw new Error('[LogoShowcase] Missing CKHeader.applyHeader');
     }
     window.CKHeader.applyHeader(state, widgetRoot);
+
+    if (!window.CKCoreSize?.applyCoreSize) {
+      throw new Error('[LogoShowcase] Missing CKCoreSize.applyCoreSize');
+    }
+    window.CKCoreSize.applyCoreSize(state.coreSize, stripsEl);
 
     if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
       throw new Error('[LogoShowcase] Missing CKLocaleSwitcher.applyLocaleSwitcher');
@@ -756,9 +874,15 @@
       typographyScope: lsRoot,
     });
 
-    if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
-      window.CKBranding.applyBacklink(widgetRoot, state);
+    lsRoot.setAttribute('data-type', state.logoshowcase.type);
+    if (state.logoshowcase.type === 'carousel') {
+      lsRoot.setAttribute('data-motion', state.logoshowcase.typeConfig.carousel.mode);
+    } else {
+      lsRoot.removeAttribute('data-motion');
     }
+
+    applyLayoutVars(state);
+    applyAppearanceVars(state);
 
     const nextSignature = JSON.stringify([
       state.logoshowcase.type,
@@ -772,6 +896,21 @@
     }
 
     bindMotion(state);
+
+    if (!window.CKBranding || typeof window.CKBranding.applyBacklink !== 'function') {
+      throw new Error('[LogoShowcase] Missing CKBranding.applyBacklink');
+    }
+    window.CKBranding.applyBacklink(widgetRoot, state);
+
+    if (!window.CKSocialShare || typeof window.CKSocialShare.apply !== 'function') {
+      throw new Error('[LogoShowcase] Missing CKSocialShare.apply');
+    }
+    window.CKSocialShare.apply(widgetRoot, state, {
+      instanceId: resolvedInstanceId,
+      widgetType: 'logoshowcase',
+      widgetLabel: 'Logo Showcase',
+      previewMode: runtimeContext && runtimeContext.previewMode,
+    });
   }
 
   let previewLocaleRequest = 0;
@@ -816,8 +955,7 @@
   });
 
   const initialLocale = runtimeContext.locale || '';
-  const initialState = runtimeContext.state;
-  if (initialState) applyState(initialState, { locale: initialLocale });
+  applyState(runtimeContext.state, { locale: initialLocale });
   }
 
   runtime.register('logoshowcase', initLogoShowcase);

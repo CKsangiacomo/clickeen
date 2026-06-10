@@ -222,6 +222,8 @@ export async function buildContext(
   const labelParamsRaw = attrs.labelParams || attrs['label-params'] || (merged.labelParams as string) || '';
   let labelParams = normalizeJsonAttrValue(labelParamsRaw);
   const addLabel = attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item';
+  const removeLabel = attrs.removeLabel || attrs['remove-label'] || (merged.removeLabel as string) || 'Remove item {index}';
+  const moveLabel = attrs.moveLabel || attrs['move-label'] || (merged.moveLabel as string) || 'Move item {index}';
   let addLabelKey = attrs.addLabelKey || attrs['add-label-key'] || (merged.addLabelKey as string) || '';
   const addLabelParamsRaw = attrs.addLabelParams || attrs['add-label-params'] || (merged.addLabelParams as string) || '';
   let addLabelParams = normalizeJsonAttrValue(addLabelParamsRaw);
@@ -298,6 +300,10 @@ export async function buildContext(
 
   const min = attrs.min || (merged.min as string) || '';
   const max = attrs.max || (merged.max as string) || '';
+  const step = attrs.step || (merged.step as string) || '';
+  const allowStructureRaw =
+    attrs.allowStructure || attrs['allow-structure'] || (merged.allowStructure as string) || 'true';
+  const allowStructure = parseBooleanAttr(allowStructureRaw) === false ? 'false' : 'true';
 
   const accept = attrs.accept || (merged.accept as string) || 'image/*';
   const maxSizeMb = attrs.maxSizeMb || attrs['max-size-mb'] || (merged.maxSizeMb as string) || '';
@@ -386,6 +392,8 @@ export async function buildContext(
     fillModes: component === 'dropdown-fill' ? fillModes : undefined,
     min,
     max,
+    step,
+    allowStructure,
     accept: component === 'dropdown-upload' ? accept : undefined,
     maxSizeMb: component === 'dropdown-upload' ? maxSizeMb : undefined,
     axis: component === 'dropdown-shadow' ? axis : undefined,
@@ -395,6 +403,8 @@ export async function buildContext(
     optionsRaw,
     objectType,
     addLabel,
+    removeLabel,
+    moveLabel,
     addLabelKey,
     addLabelParams,
     addOpen,

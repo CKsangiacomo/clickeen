@@ -87,6 +87,43 @@
     return appearance;
   }
 
+  function assertBoolean(value, path) {
+    if (typeof value !== 'boolean') {
+      throw new Error('[CKStagePod] ' + path + ' must be a boolean');
+    }
+  }
+
+  function assertNumber(value, path) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new Error('[CKStagePod] ' + path + ' must be a finite number');
+    }
+  }
+
+  function assertString(value, path) {
+    if (typeof value !== 'string') {
+      throw new Error('[CKStagePod] ' + path + ' must be a string');
+    }
+  }
+
+  function assertRecord(value, path) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error('[CKStagePod] ' + path + ' must be an object');
+    }
+    return value;
+  }
+
+  function resolvePodBorder(appearanceCfg) {
+    const appearanceCfgRecord = assertRecord(appearanceCfg, 'appearance');
+    const podBorder = assertRecord(appearanceCfgRecord.podBorder, 'appearance.podBorder');
+    assertBoolean(podBorder.enabled, 'appearance.podBorder.enabled');
+    assertNumber(podBorder.width, 'appearance.podBorder.width');
+    assertString(podBorder.color, 'appearance.podBorder.color');
+    if (podBorder.width < 0 || podBorder.width > 12) {
+      throw new Error('[CKStagePod] appearance.podBorder.width must be 0..12');
+    }
+    return podBorder;
+  }
+
   function clampNumber(value, min, max) {
     const n = typeof value === 'number' && Number.isFinite(value) ? value : min;
     return Math.min(max, Math.max(min, n));
@@ -346,7 +383,7 @@
     window.parent.postMessage({ type: 'ck:ready', widgetname, instanceId }, '*');
   }
 
-  function applyStagePod(stageCfg, podCfg, scopeEl) {
+  function applyStagePod(stageCfg, podCfg, scopeEl, appearanceCfg) {
     if (!(scopeEl instanceof HTMLElement)) {
       throw new Error('[CKStagePod] scope must be an HTMLElement');
     }
@@ -357,10 +394,12 @@
       throw new Error('[CKStagePod] Missing .stage/.pod wrappers for scope');
     }
 
+    const appearance = resolveAppearance();
+    const podBorder = resolvePodBorder(appearanceCfg);
+
     if (window.CKFill && typeof window.CKFill.applyMediaLayer === 'function') {
       window.CKFill.applyMediaLayer(stageEl, stageCfg.background, { contentEl: podEl });
     }
-    const appearance = resolveAppearance();
     stageEl.style.setProperty('--stage-bg', resolveBackgroundFill(stageCfg.background));
     stageEl.style.setProperty('--stage-shadow', appearance.shadowToBoxShadow(appearance.forceInset(stageCfg.shadow, false)));
     applyInsideShadowLayer(stageEl, computeInsideFadeBackground(stageCfg.insideShadow), {
@@ -398,6 +437,10 @@
     if (window.CKFill && typeof window.CKFill.applyMediaLayer === 'function') {
       window.CKFill.applyMediaLayer(podEl, podCfg.background, { contentEl: scopeEl });
     }
+    const podBorderEnabled = podBorder.enabled === true && podBorder.width > 0;
+    podEl.style.setProperty('--pod-border-width', podBorderEnabled ? `${podBorder.width}px` : '0px');
+    podEl.style.setProperty('--pod-border-color', podBorderEnabled ? podBorder.color : 'transparent');
+
     const podPads = resolvePaddingV2(podCfg);
     applyPaddingVars(podEl, 'pod-pad-desktop', podPads.desktop);
     applyPaddingVars(podEl, 'pod-pad-mobile', podPads.mobile);

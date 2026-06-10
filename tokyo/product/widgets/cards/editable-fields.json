@@ -21,7 +21,7 @@
     {
       "path": "headerCta.label",
       "label": "Header CTA label",
-      "role": "button",
+      "role": "header-cta-label",
       "type": "string",
       "arrayItemIdentity": [],
       "limits": []

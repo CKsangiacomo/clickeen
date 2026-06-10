@@ -523,6 +523,18 @@ for (const widget of sourceWidgets) {
   if (shellDefaults.length) {
     pushIssue(sourceIssues, widget.widgetType, 'spec.defaults', `contains Shell default paths: ${shellDefaults.slice(0, 20).join(', ')}`);
   }
+  const shellNormalizationRules = (spec.normalization?.coerceRules || [])
+    .map((rule) => (typeof rule?.path === 'string' ? rule.path.trim() : ''))
+    .filter(Boolean)
+    .filter(isShellPath);
+  if (shellNormalizationRules.length) {
+    pushIssue(
+      sourceIssues,
+      widget.widgetType,
+      'spec.normalization.coerceRules',
+      `widget-owned normalization cannot repair Shell paths: ${shellNormalizationRules.slice(0, 20).join(', ')}`,
+    );
+  }
 
   const sharedIds = collectSharedIds(spec.editor || {});
   requiredSharedNodes.forEach((family) => {

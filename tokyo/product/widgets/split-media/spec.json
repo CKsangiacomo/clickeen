@@ -2,110 +2,6 @@
   "v": 1,
   "widgetname": "split-media",
   "itemKey": "split-media.item",
-  "normalization": {
-    "coerceRules": [
-      {
-        "path": "behavior.showBacklink",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.enabled",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "behavior.socialShare.channels.copy",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.sms",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.email",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.whatsapp",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.telegram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.signal",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.messenger",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.wechat",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.line",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.slack",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.teams",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.discord",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.x",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.linkedin",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.facebook",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.reddit",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.instagram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.tiktok",
-        "type": "boolean",
-        "default": true
-      }
-    ]
-  },
   "defaults": {
     "uiLabels": {
       "core": {
@@ -169,9 +65,11 @@
               {
                 "kind": "field",
                 "type": "dropdown-fill",
+                "groupId": "content-visual",
                 "path": "splitMedia.media",
                 "label": "Media",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "fill-modes": "image,video",
                   "allow-image": "true"
@@ -180,8 +78,12 @@
               {
                 "kind": "field",
                 "type": "textfield",
+                "groupId": "content-visual",
                 "path": "splitMedia.alt",
-                "label": "Alt text"
+                "label": "Alt text",
+                "attrs": {
+                  "group-label": ""
+                }
               }
             ]
           }
@@ -210,9 +112,11 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
+                "groupId": "layout-media-fit",
                 "path": "splitMedia.fit",
                 "label": "Fit",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "options": [
                     {
@@ -229,9 +133,11 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
+                "groupId": "layout-media-fit",
                 "path": "splitMedia.position",
                 "label": "Position",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "options": [
                     {
@@ -293,7 +199,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitMedia.appearance.cardwrapper.radius",
-                "label": "Visual corner radius",
+                "label": "Corner radius",
                 "showIf": {
                   "path": "splitMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isTrue"

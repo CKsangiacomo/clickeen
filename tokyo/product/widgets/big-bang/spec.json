@@ -2,115 +2,6 @@
   "v": 1,
   "widgetname": "big-bang",
   "itemKey": "bigBang.item",
-  "normalization": {
-    "coerceRules": [
-      {
-        "path": "bigBang.showSupportingCopy",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.showBacklink",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.enabled",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "behavior.socialShare.channels.copy",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.sms",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.email",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.whatsapp",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.telegram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.signal",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.messenger",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.wechat",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.line",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.slack",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.teams",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.discord",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.x",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.linkedin",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.facebook",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.reddit",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.instagram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.tiktok",
-        "type": "boolean",
-        "default": true
-      }
-    ]
-  },
   "defaults": {
     "uiLabels": {
       "core": {
@@ -173,7 +64,8 @@
                 "attrs": {
                   "size": "lg",
                   "placeholder": "Add statement text",
-                  "allow-links": "false"
+                  "allow-links": "false",
+                  "required": true
                 }
               },
               {
@@ -228,7 +120,7 @@
                 "kind": "field",
                 "type": "choice-tiles",
                 "path": "bigBang.alignment",
-                "label": "Alignment",
+                "label": "Statement alignment",
                 "attrs": {
                   "size": "md",
                   "options": [
@@ -247,7 +139,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "path": "bigBang.textWidth",
-                "label": "Text width",
+                "label": "Statement width (px)",
                 "attrs": {
                   "min": 480,
                   "max": 1280,
@@ -258,7 +150,7 @@
                 "kind": "field",
                 "type": "valuefield",
                 "path": "bigBang.gap",
-                "label": "Gap",
+                "label": "Statement/copy gap (px)",
                 "attrs": {
                   "min": 8,
                   "max": 80,

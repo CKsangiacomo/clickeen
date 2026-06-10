@@ -1,4 +1,4 @@
-<div class="diet-repeater" data-size="{{size}}" data-reorder="off"{{#if defaultItem}} data-default-item="{{defaultItem}}"{{/if}}{{#if addOpen}} data-add-open="{{addOpen}}"{{/if}}{{#if min}} data-min-items="{{min}}"{{/if}}{{#if max}} data-max-items="{{max}}"{{/if}}>
+<div class="diet-repeater" data-size="{{size}}" data-reorder="off" data-reorder-label="{{reorderLabel}}" data-remove-label="{{removeLabel}}" data-move-label="{{moveLabel}}"{{#if defaultItem}} data-default-item="{{defaultItem}}"{{/if}}{{#if addOpen}} data-add-open="{{addOpen}}"{{/if}}{{#if min}} data-min-items="{{min}}"{{/if}}{{#if max}} data-max-items="{{max}}"{{/if}}>
   <div class="diet-repeater__header {{#if labelPath}}has-editable-label{{/if}}">
     <div class="diet-repeater__header-main">
       {{#if labelPath}}
@@ -23,7 +23,7 @@
       {{/if}}
 
       <div class="diet-repeater__actions">
-        <button class="diet-btn-ic diet-repeater__reorder" type="button" data-size="lg" data-variant="neutral" aria-pressed="false">
+        <button class="diet-btn-ic diet-repeater__reorder" type="button" data-size="lg" data-variant="neutral" aria-label="{{reorderLabel}}" title="{{reorderLabel}}" aria-pressed="false">
           <span class="diet-btn-ic__icon diet-repeater__reorder-icon" data-icon="pointer.arrow.and.square.on.square.dashed"></span>
           <span class="diet-btn-ic__icon diet-repeater__reorder-icon--active" data-icon="checkmark"></span>
         </button>

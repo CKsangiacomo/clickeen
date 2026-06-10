@@ -60,6 +60,8 @@ Tokyo account widget-defaults.json owns live account defaults for new instances
 Widget specs must not author Shell defaults. New instances are created from
 account defaults (`account.shell + account.widgets[widgetType].core`), then Bob
 edits that resolved instance state in browser memory and Roma/Tokyo save it.
+Widget specs also must not author Shell normalization. `spec.json.normalization`
+is only for widget Core paths under the widget namespace.
 
 ---
 
@@ -166,7 +168,12 @@ NOTES
 - Bob session load deep-merges compiled defaults (Shell factory defaults plus
   widget Core `spec.json.defaults`) into old saved instance state before
   ToolDrawer hydration and Builder preview postMessage, then applies
-  normalization rules and scalar coercion.
+  Core-owned widget normalization rules and scalar coercion.
+- Widget normalization is not a Shell fallback ladder. Do not add coerce rules
+  for `behavior.showBacklink`, `behavior.socialShare.*`, `header.*`,
+  `headerCta.*`, `stage.*`, `pod.*`, `coreSize.*`, or shared Shell
+  appearance/typography paths. Shell compatibility belongs to the shared
+  Shell/account/materialization boundary.
 - Publishing/materializing old saved source still needs an explicit matching
   compatibility path when the server/public boundary can receive the old shape.
 - Generated package files are stored artifacts. Existing account

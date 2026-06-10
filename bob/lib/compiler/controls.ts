@@ -269,6 +269,8 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
     if (type && path) {
       const min = parseNumberAttr(attrs.min);
       const max = parseNumberAttr(attrs.max);
+      const step = parseNumberAttr(attrs.step);
+      const required = parseBooleanAttr(attrs.required);
       const fillModes = type === 'dropdown-fill' ? parseFillModes(attrs.fillModes || attrs['fill-modes']) : null;
       const allowImageOverride = parseBooleanAttr(attrs.allowImage || attrs['allow-image']);
       const inferredAllowsImage = (() => {
@@ -292,6 +294,8 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
         allowImage,
         min,
         max,
+        step,
+        required,
       });
       addDerivedPath(attrs.labelPath);
       addDerivedPath(attrs.reorderLabelPath || attrs['reorder-label-path']);

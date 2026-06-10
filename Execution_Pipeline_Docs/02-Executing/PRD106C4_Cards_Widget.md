@@ -70,7 +70,7 @@ Green evidence:
 - Cards Core state is only `cards.items[]`, `cards.treatment`, `cards.columns`,
   `cards.gap`, `cards.cardPadding`, `cards.customCardStyles.*`,
   `cards.items[].style.*`, and `cards.betweenCards.*`.
-- Content panel uses one `cards.items[]` object-manager for cards, links, icon,
+- Content panel uses one `cards.items[]` repeater for cards, links, icon,
   image, and alt text.
 - Layout panel uses shared `Cards size`, Cards grid controls, and the
   `Graphic between cards` line/icon controls.
@@ -97,7 +97,7 @@ Stop conditions:
 | 1 | Define Cards state, labels, and forbidden paths. | State table, label defaults, forbidden path list. | Only `cards.items[]`, `cards.treatment`, `cards.columns`, `cards.gap`, `cards.cardPadding`, `cards.customCardStyles.*`, `cards.items[].style.*`, `cards.betweenCards.*`, `coreSize.*`, and `uiLabels.core.*` are added. | Shell path or duplicate item state needed. |
 | 2 | Define validation and policy limits contract. | Validation table and `limits.json` mapping. | Invalid item counts, IDs, media, links, style overrides, graphic controls, and treatment values fail visibly; `cards.items[]` maps to `items.group.small.max`. | Silent healing, Prague route helper, or per-widget tier table. |
 | 3 | Confirm shared Shell dependency. | A2 green/fence evidence for Core div, `coreSize.*`, `uiLabels.core.*`, and Layout order. | Cards consumes Shell sizing/labels; no local Core sizing fork. | A2 cannot provide required Shell behavior. |
-| 4 | Build Content controls: card manager. | Spec/control diff and Bob compile evidence. | `Cards` object-manager edits `cards.items[]` with stable IDs and 2-16 item validation, subject to account policy caps. | Bare `items[]`, wildcard paths, unstable identity, or a new translation identity model. |
+| 4 | Build Content controls: card manager. | Spec/control diff and Bob compile evidence. | `Cards` repeater edits the flat `cards.items[]` list with stable IDs and 2-16 item validation, subject to account policy caps. | Bare `items[]`, wildcard paths, unstable identity, object-manager for the primary flat content list, or a new translation identity model. |
 | 5 | Build Content controls: per-card media and links. | Spec/control diff and Bob compile evidence naming reused media/icon/link contracts. | Media/link show-if rules are concrete and conflict-free; existing asset picker, CTA icon source, and safe-anchor/link behavior are reused. | Separate icon/image toggles, new media store, new icon taxonomy, or Cards-specific link subsystem. |
 | 6 | Build Layout controls: Cards size and grid. | Spec/control diff and Bob compile evidence. | `Cards size` uses shared `coreSize.*`; grid controls use `cards.columns`, `cards.gap`, and `cards.cardPadding`. | `core.height`, `layout.maxWidth`, or page-level columns appear. |
 | 7 | Build Layout controls: treatment and graphics between cards. | Spec/control diff and Bob compile evidence. | Treatment controls switch cards/linked-cards/steps; `Graphic between cards` is off by default and reveals only valid line/icon controls. | Steps becomes a separate widget or duplicates graphic connector state. |
@@ -266,8 +266,6 @@ Approved Cards-specific state:
 | `cards.customCardStyles.enabled` | config | Enables per-card Appearance sections. Default `false`. |
 | `cards.items[].style.background` | config | Optional per-card background override. Inherits shared CardWrapper background when omitted or custom styles are disabled. |
 | `cards.items[].style.borderColor` | config | Optional per-card border color override. Inherits shared CardWrapper border when omitted or custom styles are disabled. |
-| `cards.items[].style.radius` | config | Optional per-card radius override. Inherits shared CardWrapper radius when omitted or custom styles are disabled. |
-| `cards.items[].style.shadow` | config | Optional per-card shadow override. Inherits shared CardWrapper shadow when omitted or custom styles are disabled. |
 | `cards.items[].style.accentColor` | config | Optional per-card accent color override for card-local affordances. Inherits widget/global accent when omitted or custom styles are disabled. |
 | `cards.items[].style.textTone` | config | Optional per-card text tone override. Allowed values: `inherit`, `default`, `muted`, `inverse`. |
 | `cards.treatment` | config | One of `cards`, `linked-cards`, or `steps`. |
@@ -476,7 +474,7 @@ Cards controls:
 
 | Control | Path | Type | Notes |
 | --- | --- | --- | --- |
-| Cards | `cards.items[]` | `object-manager` | Add, reorder, duplicate, and remove cards. Product-valid count is 2-16, subject to `items.group.small.max`. |
+| Cards | `cards.items[]` | `repeater` | Add, reorder, and remove cards. Product-valid count is 2-16, subject to `items.group.small.max`. |
 | Card title | `cards.items.__INDEX__.title` | `textfield` | Translatable card title. |
 | Card copy | `cards.items.__INDEX__.copy` | `textedit` | Translatable supporting copy. |
 | Media type | `cards.items.__INDEX__.media.kind` | `dropdown-actions` | `none`, `icon`, or `image`. Prevents conflicting icon+image state. |
@@ -685,12 +683,8 @@ Per-card style section controls:
 | --- | --- | --- | --- |
 | Background | `cards.items.__INDEX__.style.background` | color/control matching existing color field patterns | Optional. Empty means inherit shared CardWrapper background. |
 | Border color | `cards.items.__INDEX__.style.borderColor` | color/control matching existing color field patterns | Optional. Empty means inherit shared CardWrapper border color. |
-| Radius | `cards.items.__INDEX__.style.radius` | radius/value control | Optional. Empty means inherit shared CardWrapper radius. This is a single per-card radius override, not four independent corner paths. |
-| Shadow | `cards.items.__INDEX__.style.shadow` | shadow control matching existing shadow field patterns | Optional. Empty means inherit shared CardWrapper shadow. |
 | Accent color | `cards.items.__INDEX__.style.accentColor` | color/control matching existing color field patterns | Optional. Applies only to card-local affordances. |
 | Text tone | `cards.items.__INDEX__.style.textTone` | choice/dropdown | `inherit`, `default`, `muted`, `inverse`. Default `inherit`. |
-| Reset card style | action | action | Clears that card's `style.*` overrides without changing card content. |
-
 Custom-card-style behavior:
 
 - Off by default.
@@ -698,10 +692,9 @@ Custom-card-style behavior:
   sections.
 - When on, Bob shows per-card Appearance sections below the shared CardWrapper
   controls and before shared `stagepod-appearance`.
-- Adding a card creates a new per-card section only while the toggle is on.
+- Adding a card in Content creates a new per-card style section the next time
+  custom card styles are visible.
 - Removing a card removes its style overrides with that card.
-- Duplicating a card may duplicate the source card's style overrides because
-  the user explicitly duplicated that card.
 - Reordering cards keeps style overrides attached to stable `cards.items[].id`.
 - Renaming a card updates only the section label.
 - Turning the toggle off does not need to delete overrides immediately; runtime
@@ -783,7 +776,7 @@ Prague translation files. Bob preview and San Francisco translation must use the
 same path-based mechanism FAQ uses.
 
 `cards.items[].id` provides stable item identity for editable fields.
-Step 12 green depends on reorder/duplicate/remove behavior preserving that
+Step 12 green depends on add/reorder/remove behavior preserving that
 stable item identity so translated card title, copy, image alt, and link label
 remain attached to the same card. If that proof requires a new translation
 identity subsystem, stop and fence the feature; do not redesign translation
@@ -840,7 +833,7 @@ Required useful defaults:
 - `coreSize.maxHeight`: `0`
 - `coreSize.fixedHeight`: `0`
 
-The object-manager default item must create a non-empty card with a stable
+The repeater default item must create a non-empty card with a stable
 generated ID. No visible enabled string may be empty.
 
 ## Prague Evidence

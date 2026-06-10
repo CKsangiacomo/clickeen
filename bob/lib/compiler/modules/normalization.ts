@@ -1,4 +1,5 @@
 import { isRecord as isPlainRecord } from '@clickeen/ck-contracts';
+import { pathBelongsToShell } from '@clickeen/widget-shell';
 import type {
   WidgetNormalizationCoerceRule,
   WidgetNormalizationIdRule,
@@ -129,6 +130,9 @@ function parseCoerceRule(ruleRaw: unknown, index: number): WidgetNormalizationCo
     throw new Error(`[BobCompiler] normalization.coerceRules[${index}].path must be a non-empty string`);
   }
   const path = splitPath(pathRaw, false).join('.');
+  if (pathBelongsToShell(path)) {
+    throw new Error(`[BobCompiler] normalization.coerceRules[${index}].path must be widget Core-owned; Shell path "${path}" belongs to Widget Shell`);
+  }
 
   const typeRaw = ruleRaw.type;
   if (typeRaw !== 'string' && typeRaw !== 'number' && typeRaw !== 'boolean') {

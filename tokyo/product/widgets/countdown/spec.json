@@ -3,6 +3,13 @@
   "widgetname": "countdown",
   "itemKey": "countdown.item",
   "defaults": {
+    "uiLabels": {
+      "core": {
+        "singular": "Timer tile",
+        "plural": "Timer tiles",
+        "sizeCluster": "Timer size"
+      }
+    },
     "typography": {
       "roles": {
         "label": {
@@ -51,7 +58,7 @@
         "repeat": "never",
         "timeUnit": "hours",
         "timezone": "UTC",
-        "targetDate": "2026-01-20T12:00",
+          "targetDate": "2030-01-01T00:00",
         "timeAmount": 1,
         "targetNumber": 1000,
         "countDuration": 5,
@@ -63,19 +70,6 @@
           "seconds": "Seconds"
         }
       },
-      "layout": {
-        "position": "inline"
-      },
-      "seoGeo": {
-        "enabled": false
-      },
-      "seo": {
-        "canonicalUrl": "",
-        "enableSchema": true
-      },
-      "geo": {
-        "enableDeepLinks": true
-      },
       "actions": {
         "after": {
           "url": "",
@@ -83,7 +77,7 @@
           "type": "hide"
         },
         "during": {
-          "url": "",
+          "url": "#",
           "text": "Purchase now",
           "style": "primary",
           "newTab": true
@@ -93,8 +87,6 @@
         "timerStyle": "separated",
         "timeFormat": "auto",
         "showLabels": true,
-        "theme": "custom",
-        "animation": "fade",
         "separator": ":",
         "textColor": {
           "type": "color",
@@ -224,7 +216,12 @@
                 }
               }
             ],
-            "label": "Time unit labels"
+            "label": "Time unit labels",
+            "showIf": {
+              "path": "countdown.timer.mode",
+              "op": "notEquals",
+              "value": "number"
+            }
           },
           {
             "nodes": [
@@ -246,7 +243,7 @@
                 "type": "textfield",
                 "groupId": "timer-date",
                 "path": "countdown.timer.timezone",
-                "label": "Timezone (IANA or browser)",
+                "label": "Time zone",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -409,7 +406,7 @@
                 "type": "textfield",
                 "groupId": "actions-during",
                 "path": "countdown.actions.during.url",
-                "label": "Button URL",
+                "label": "Countdown action link",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -422,7 +419,7 @@
                 "type": "textfield",
                 "groupId": "actions-during",
                 "path": "countdown.actions.during.text",
-                "label": "Button text",
+                "label": "Countdown action label",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -434,7 +431,7 @@
                 "type": "dropdown-actions",
                 "groupId": "actions-during",
                 "path": "countdown.actions.during.style",
-                "label": "Button style",
+                "label": "Countdown action style",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -494,7 +491,7 @@
                 "type": "textfield",
                 "groupId": "actions-after",
                 "path": "countdown.actions.after.url",
-                "label": "URL",
+                "label": "Finished action link",
                 "showIf": {
                   "path": "countdown.actions.after.type",
                   "op": "equals",
@@ -512,7 +509,7 @@
                 "type": "textfield",
                 "groupId": "actions-after",
                 "path": "countdown.actions.after.text",
-                "label": "Link text",
+                "label": "Finished action label",
                 "showIf": {
                   "path": "countdown.actions.after.type",
                   "op": "equals",
@@ -547,30 +544,6 @@
             "id": "core-size"
           },
           {
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "choice-tiles",
-                "groupId": "layout-position",
-                "path": "countdown.layout.position",
-                "label": "Widget position",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{countdown.layout.position}}",
-                  "options": [
-                    {
-                      "label": "Inline",
-                      "value": "inline",
-                      "icon": "line.3.horizontal.decrease.circle"
-                    }
-                  ]
-                }
-              }
-            ],
-            "label": "Placement"
-          },
-          {
             "kind": "shared",
             "id": "stagepod-layout"
           }
@@ -587,6 +560,11 @@
                 "groupId": "appearance-theme",
                 "path": "countdown.appearance.timerStyle",
                 "label": "Timer style",
+                "showIf": {
+                  "path": "countdown.timer.mode",
+                  "op": "notEquals",
+                  "value": "number"
+                },
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -609,6 +587,11 @@
                 "groupId": "appearance-theme",
                 "path": "countdown.appearance.timeFormat",
                 "label": "Time format",
+                "showIf": {
+                  "path": "countdown.timer.mode",
+                  "op": "notEquals",
+                  "value": "number"
+                },
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -635,40 +618,15 @@
                 "groupId": "appearance-theme",
                 "path": "countdown.appearance.showLabels",
                 "label": "Show unit labels",
+                "showIf": {
+                  "path": "countdown.timer.mode",
+                  "op": "notEquals",
+                  "value": "number"
+                },
                 "attrs": {
                   "group-label": "",
                   "size": "md",
                   "default": true
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-actions",
-                "groupId": "appearance-theme",
-                "path": "countdown.appearance.theme",
-                "label": "Theme",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{countdown.appearance.theme}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-actions",
-                "groupId": "appearance-theme",
-                "path": "countdown.appearance.animation",
-                "label": "Animation",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{countdown.appearance.animation}}",
-                  "options": [
-                    {
-                      "label": "Fade",
-                      "value": "fade"
-                    }
-                  ]
                 }
               },
               {
@@ -690,6 +648,11 @@
                 "groupId": "appearance-settings",
                 "path": "countdown.appearance.separator",
                 "label": "Separator",
+                "showIf": {
+                  "path": "countdown.timer.mode",
+                  "op": "notEquals",
+                  "value": "number"
+                },
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -967,9 +930,27 @@
             ],
             "label": "Timer background",
             "showIf": {
-              "path": "countdown.appearance.timerStyle",
-              "op": "equals",
-              "value": "separated"
+              "any": [
+                {
+                  "path": "countdown.timer.mode",
+                  "op": "equals",
+                  "value": "number"
+                },
+                {
+                  "all": [
+                    {
+                      "path": "countdown.timer.mode",
+                      "op": "notEquals",
+                      "value": "number"
+                    },
+                    {
+                      "path": "countdown.appearance.timerStyle",
+                      "op": "equals",
+                      "value": "separated"
+                    }
+                  ]
+                }
+              ]
             }
           },
           {
@@ -982,176 +963,10 @@
         "id": "settings",
         "clusters": [
           {
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "settings-seo-toggle",
-                "path": "countdown.seoGeo.enabled",
-                "label": "Enable SEO/GEO optimization",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "settings-seo",
-                "path": "countdown.seo.enableSchema",
-                "label": "Enable schema",
-                "showIf": {
-                  "path": "countdown.seoGeo.enabled",
-                  "op": "isTrue"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "textfield",
-                "groupId": "settings-seo",
-                "path": "countdown.seo.canonicalUrl",
-                "label": "Canonical URL",
-                "showIf": {
-                  "path": "countdown.seoGeo.enabled",
-                  "op": "isTrue"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "lg",
-                  "placeholder": "https://example.com/page"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "settings-geo",
-                "path": "countdown.geo.enableDeepLinks",
-                "label": "Enable deep links",
-                "showIf": {
-                  "path": "countdown.seoGeo.enabled",
-                  "op": "isTrue"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              }
-            ],
-            "label": "SEO/GEO"
-          },
-          {
             "kind": "shared",
             "id": "settings-behavior"
           }
         ]
-      }
-    ]
-  },
-  "normalization": {
-    "coerceRules": [
-      {
-        "path": "behavior.showBacklink",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.enabled",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "behavior.socialShare.channels.copy",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.sms",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.email",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.whatsapp",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.telegram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.signal",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.messenger",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.wechat",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.line",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.slack",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.teams",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.discord",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.x",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.linkedin",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.facebook",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.reddit",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.instagram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.tiktok",
-        "type": "boolean",
-        "default": true
       }
     ]
   }

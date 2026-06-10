@@ -59,6 +59,13 @@
     return JSON.stringify(value);
   }
 
+  function parseItemLimit(value) {
+    if (value == null || value === "") return null;
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed < 0) return null;
+    return parsed;
+  }
+
   function decodeHtmlEntities(value) {
     return value
       .replace(/&quot;/g, '"')
@@ -140,6 +147,7 @@
       const rowTpl = root.querySelector("template[data-objects-row]");
       const saveBtn = root.querySelector("[data-objects-save]");
       const cancelBtn = root.querySelector("[data-objects-cancel]");
+      const footer = root.querySelector(".diet-object-manager__footer");
       if (
         !hidden ||
         !list ||
@@ -154,8 +162,15 @@
       ) {
         return;
       }
+      const allowStructure = root.getAttribute("data-allow-structure") !== "false";
+      if (!allowStructure) {
+        if (footer) footer.hidden = true;
+        addBtn.hidden = true;
+        manageBtn.hidden = true;
+      }
       const indexToken = (root.getAttribute("data-index-token") || "__INDEX__").trim();
       const labelPath = root.getAttribute("data-label-path") || "";
+      const minItems = parseItemLimit(root.getAttribute("data-min-items"));
       const defaultItemAttr = root.getAttribute("data-default-item") || "";
       let defaultItem = null;
       if (defaultItemAttr) {
@@ -236,7 +251,7 @@
         });
         // Hydrate any nested components (e.g., repeaters) inside new items.
         runChildHydrators(list, options);
-        const canManage = items.length > 1;
+        const canManage = allowStructure && items.length > 1;
         manageBtn.hidden = !canManage;
         manageBtn.style.display = canManage ? "" : "none";
       };
@@ -312,18 +327,21 @@
       root.addEventListener("input", handleNestedChange, true);
       root.addEventListener("change", handleNestedChange, true);
 
-      addBtn.addEventListener("click", () => {
-        const next = read();
-        let item = defaultItem ? deepClone(defaultItem) : {};
-        if (!item || typeof item !== "object" || Array.isArray(item)) item = {};
-        if (!item.id) item.id = createId();
-        ensureIdsDeep(item);
-        next.push(item);
-        write(next);
-        render();
-      });
+      if (allowStructure) {
+        addBtn.addEventListener("click", () => {
+          const next = read();
+          let item = defaultItem ? deepClone(defaultItem) : {};
+          if (!item || typeof item !== "object" || Array.isArray(item)) item = {};
+          if (!item.id) item.id = createId();
+          ensureIdsDeep(item);
+          next.push(item);
+          write(next);
+          render();
+        });
+      }
 
       manageBtn.addEventListener("click", () => {
+        if (!allowStructure) return;
         const items = read();
         modalList.innerHTML = "";
         const rowTemplate = rowTpl.content.firstElementChild;
@@ -340,6 +358,9 @@
             const up = row.querySelector("[data-objects-up]");
             const down = row.querySelector("[data-objects-down]");
             const del = row.querySelector("[data-objects-delete]");
+            if (del) {
+              del.disabled = minItems != null && working.length <= minItems;
+            }
             up?.addEventListener("click", () => {
               if (idx === 0) return;
               const [moved] = working.splice(idx, 1);
@@ -353,6 +374,7 @@
               rebuildRows();
             });
             del?.addEventListener("click", () => {
+              if (minItems != null && working.length <= minItems) return;
               working.splice(idx, 1);
               rebuildRows();
             });

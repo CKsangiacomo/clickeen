@@ -26,111 +26,18 @@
       {
         "path": "faq.displayCategoryTitles",
         "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "behavior.showBacklink",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.enabled",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "behavior.socialShare.channels.copy",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.sms",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.email",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.whatsapp",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.telegram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.signal",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.messenger",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.wechat",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.line",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.slack",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.teams",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.discord",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.x",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.linkedin",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.facebook",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.reddit",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.instagram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.tiktok",
-        "type": "boolean",
         "default": true
       }
     ]
   },
   "defaults": {
+    "uiLabels": {
+      "core": {
+        "singular": "Q&A card",
+        "plural": "Q&A cards",
+        "sizeCluster": "FAQs size"
+      }
+    },
     "typography": {
       "roles": {
         "answer": {
@@ -207,10 +114,6 @@
       "geo": {
         "enableDeepLinks": true
       },
-      "seo": {
-        "canonicalUrl": "",
-        "enableSchema": true
-      },
       "layout": {
         "gap": 16,
         "type": "list",
@@ -227,9 +130,6 @@
         "itemPaddingRight": 20,
         "itemPaddingBottom": 20,
         "itemPaddingLinked": true
-      },
-      "seoGeo": {
-        "enabled": false
       },
       "behavior": {
         "expandAll": false,
@@ -269,7 +169,6 @@
         }
       ],
       "appearance": {
-        "theme": "custom",
         "iconColor": "var(--typo-question-color)",
         "iconStyle": "plus",
         "linkStyle": "underline",
@@ -358,7 +257,7 @@
         "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
         "linkUnderlineColor": "var(--color-system-blue)"
       },
-      "displayCategoryTitles": false
+      "displayCategoryTitles": true
     }
   },
   "editor": {
@@ -1405,6 +1304,20 @@
                                 ]
                               }
                             ]
+                          },
+                          {
+                            "kind": "field",
+                            "type": "toggle",
+                            "path": "faq.sections.__SECTION__.faqs.__INDEX__.defaultOpen",
+                            "label": "Open by default",
+                            "showIf": {
+                              "path": "faq.layout.type",
+                              "op": "equals",
+                              "value": "accordion"
+                            },
+                            "attrs": {
+                              "size": "md"
+                            }
                           }
                         ]
                       }
@@ -1415,6 +1328,8 @@
                         "count": 2
                       },
                       "add-label": "Add question",
+                      "remove-label": "Remove question {index}",
+                      "move-label": "Move question {index}",
                       "add-label-key": "faq.actions.addItem",
                       "add-label-params": {
                         "item": {
@@ -1539,9 +1454,17 @@
                 "path": "faq.behavior.expandFirst",
                 "label": "Open first question by default",
                 "showIf": {
-                  "path": "faq.layout.type",
-                  "op": "equals",
-                  "value": "accordion"
+                  "all": [
+                    {
+                      "path": "faq.layout.type",
+                      "op": "equals",
+                      "value": "accordion"
+                    },
+                    {
+                      "path": "faq.behavior.expandAll",
+                      "op": "isFalse"
+                    }
+                  ]
                 },
                 "attrs": {
                   "group-label": "",
@@ -1850,18 +1773,6 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "groupId": "appearance-theme",
-                "path": "faq.appearance.theme",
-                "label": "Theme",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md",
-                  "value": "{{faq.appearance.theme}}"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "dropdown-actions",
                 "groupId": "appearance-accordion",
                 "path": "faq.appearance.iconStyle",
                 "label": "Accordion icon",
@@ -1885,11 +1796,11 @@
                       "value": "chevron"
                     },
                     {
-                      "label": "Arrow One",
+                      "label": "Arrow",
                       "value": "arrow"
                     },
                     {
-                      "label": "Arrow Two",
+                      "label": "Arrowshape",
                       "value": "arrowshape"
                     }
                   ]
@@ -2332,54 +2243,12 @@
               {
                 "kind": "field",
                 "type": "toggle",
-                "groupId": "settings-seo-toggle",
-                "path": "faq.seoGeo.enabled",
-                "label": "Enable SEO/GEO optimization",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "settings-seo",
-                "path": "faq.seo.enableSchema",
-                "label": "Enable schema",
-                "showIf": {
-                  "path": "faq.seoGeo.enabled",
-                  "op": "isTrue"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "textfield",
-                "groupId": "settings-seo",
-                "path": "faq.seo.canonicalUrl",
-                "label": "Canonical URL",
-                "showIf": {
-                  "path": "faq.seoGeo.enabled",
-                  "op": "isTrue"
-                },
-                "attrs": {
-                  "group-label": "",
-                  "size": "lg",
-                  "placeholder": "https://example.com/page"
-                }
-              },
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "settings-geo",
                 "path": "faq.geo.enableDeepLinks",
-                "label": "Enable deep links",
+                "label": "Allow question deep links",
                 "showIf": {
-                  "path": "faq.seoGeo.enabled",
-                  "op": "isTrue"
+                  "path": "faq.layout.type",
+                  "op": "equals",
+                  "value": "accordion"
                 },
                 "attrs": {
                   "group-label": "",
@@ -2387,7 +2256,7 @@
                 }
               }
             ],
-            "label": "SEO/GEO"
+            "label": "FAQ behavior"
           },
           {
             "kind": "shared",

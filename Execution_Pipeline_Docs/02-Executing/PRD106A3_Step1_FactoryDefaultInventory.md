@@ -99,19 +99,13 @@ cards:
 
 countdown:
   countdown.actions
-  countdown.appearance.animation
   countdown.appearance.cardwrapper
   countdown.appearance.itemBackground
   countdown.appearance.separator
   countdown.appearance.showLabels
   countdown.appearance.textColor
-  countdown.appearance.theme
   countdown.appearance.timeFormat
   countdown.appearance.timerStyle
-  countdown.geo
-  countdown.layout
-  countdown.seo
-  countdown.seoGeo
   countdown.timer
   typography.roleScales.label
   typography.roleScales.timer
@@ -127,31 +121,28 @@ faq:
   faq.appearance.linkStyle
   faq.appearance.linkTextColor
   faq.appearance.linkUnderlineColor
-  faq.appearance.theme
   faq.behavior.expandAll
   faq.behavior.expandFirst
   faq.behavior.multiOpen
-  faq.context
   faq.displayCategoryTitles
   faq.geo
   faq.layout
   faq.sections
-  faq.seo
-  faq.seoGeo
   typography.roleScales.answer
   typography.roleScales.question
   typography.roleScales.section
   typography.roles.answer
   typography.roles.question
   typography.roles.section
+  uiLabels.core
 
 logoshowcase:
+  uiLabels.core
   logoshowcase.appearance.cardwrapper
   logoshowcase.appearance.itemBackground
   logoshowcase.appearance.logoLook
   logoshowcase.appearance.logoOpacity
   logoshowcase.behavior.randomOrder
-  logoshowcase.seoGeo
   logoshowcase.spacing
   logoshowcase.strips
   logoshowcase.type

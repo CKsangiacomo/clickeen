@@ -2,12 +2,31 @@
   "v": 1,
   "widgetname": "logoshowcase",
   "itemKey": "logoshowcase.item",
+  "normalization": {
+    "idRules": [
+      {
+        "arrayPath": "logoshowcase.strips",
+        "idKey": "id",
+        "fallbackPrefix": "strip"
+      },
+      {
+        "arrayPath": "logoshowcase.strips[].logos",
+        "idKey": "id",
+        "seedKey": "name",
+        "fallbackPrefix": "logo"
+      }
+    ]
+  },
   "defaults": {
+    "uiLabels": {
+      "core": {
+        "singular": "Logo tile",
+        "plural": "Logo tiles",
+        "sizeCluster": "Logo showcase size"
+      }
+    },
     "logoshowcase": {
       "type": "grid",
-      "seoGeo": {
-        "enabled": false
-      },
       "strips": [
         {
           "id": "s1",
@@ -307,10 +326,10 @@
             "nodes": [
               {
                 "kind": "field",
-                "type": "choice-tiles",
-                "groupId": "content-layout",
+                "type": "segmented",
+                "groupId": "content-type",
                 "path": "logoshowcase.type",
-                "label": "Layout",
+                "label": "Type",
                 "attrs": {
                   "group-label": "",
                   "size": "md",
@@ -379,9 +398,12 @@
                     "attrs": {
                       "size": "md",
                       "add-label": "Add logo",
+                      "remove-label": "Remove logo {index}",
+                      "move-label": "Move logo {index}",
                       "reorder-label": "Manage logos",
                       "reorder-title": "Manage logos",
                       "add-open": "bulk-edit",
+                      "min": "1",
                       "default-item": {
                         "name": "New logo",
                         "asset": {
@@ -406,6 +428,7 @@
                   "reorder-title": "Manage strips",
                   "label-path": "logos.0.name",
                   "index-token": "__STRIP__",
+                  "min": "1",
                   "default-item": {
                     "logos": [
                       {
@@ -1166,130 +1189,10 @@
         "id": "settings",
         "clusters": [
           {
-            "nodes": [
-              {
-                "kind": "field",
-                "type": "toggle",
-                "groupId": "settings-seo",
-                "path": "logoshowcase.seoGeo.enabled",
-                "label": "Enable SEO/GEO optimization",
-                "attrs": {
-                  "group-label": "",
-                  "size": "md"
-                }
-              }
-            ],
-            "label": "SEO/GEO"
-          },
-          {
             "kind": "shared",
             "id": "settings-behavior"
           }
         ]
-      }
-    ]
-  },
-  "normalization": {
-    "coerceRules": [
-      {
-        "path": "behavior.showBacklink",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.enabled",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "behavior.socialShare.channels.copy",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.sms",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.email",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.whatsapp",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.telegram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.signal",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.messenger",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.wechat",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.line",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.slack",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.teams",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.discord",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.x",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.linkedin",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.facebook",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.reddit",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.instagram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.tiktok",
-        "type": "boolean",
-        "default": true
       }
     ]
   }

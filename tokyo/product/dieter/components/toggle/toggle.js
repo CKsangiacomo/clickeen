@@ -29,6 +29,12 @@ var Dieter = (() => {
       const input = root.querySelector(".diet-toggle__input");
       if (!input || input.dataset.toggleWired === "true") return;
       input.dataset.toggleWired = "true";
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          input.click();
+        }
+      });
       const switchLabel = root.querySelector(".diet-toggle__switch");
       if (switchLabel) {
         switchLabel.addEventListener("keydown", (event) => {

@@ -54,23 +54,6 @@
   --countdown-text-align: right;
 }
 
-@keyframes ck-countdown-fade {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.ck-countdown[data-animation='fade'] {
-  animation: ck-countdown-fade 0.4s ease-out both;
-}
-
-
-
 .ck-countdown__timer {
   display: flex;
   align-items: center;
@@ -118,7 +101,7 @@
   font-weight: var(--typo-timer-weight, 700);
   letter-spacing: var(--typo-timer-tracking, 0em);
   line-height: var(--typo-timer-line-height, 1);
-  color: var(--countdown-text-color, var(--typo-timer-color));
+  color: var(--typo-timer-color, var(--countdown-text-color));
 }
 
 .ck-countdown__value {
@@ -128,7 +111,7 @@
   font-weight: var(--typo-timer-weight, 700);
   letter-spacing: var(--typo-timer-tracking, 0em);
   line-height: var(--typo-timer-line-height, 1);
-  color: var(--countdown-text-color, var(--typo-timer-color));
+  color: var(--typo-timer-color, var(--countdown-text-color));
 }
 
 .ck-countdown__label {
@@ -139,7 +122,7 @@
   font-weight: var(--typo-label-weight, 400);
   letter-spacing: var(--typo-label-tracking, 0em);
   line-height: var(--typo-label-line-height, var(--lh-tight));
-  color: color-mix(in oklab, var(--countdown-text-color, var(--typo-label-color)), transparent 30%);
+  color: color-mix(in oklab, var(--typo-label-color, var(--countdown-text-color)), transparent 30%);
 }
 
 .ck-countdown[data-timer-style='inline'] .ck-countdown__units {
@@ -219,7 +202,7 @@
   font-weight: var(--typo-label-weight, 500);
   letter-spacing: var(--typo-label-tracking, 0em);
   line-height: var(--typo-label-line-height, var(--lh-tight));
-  color: var(--countdown-text-color, var(--typo-label-color));
+  color: var(--typo-label-color, var(--countdown-text-color));
   text-decoration: none;
 }
 

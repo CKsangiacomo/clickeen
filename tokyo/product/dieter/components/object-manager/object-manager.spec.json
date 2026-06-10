@@ -1,6 +1,6 @@
 {
   "component": "object-manager",
-  "syntax": "<tooldrawer-field type='object-manager' path='{{PATH}}' add-label='{{ADD_LABEL}}' reorder-label='{{REORDER_LABEL}}' reorder-title='{{REORDER_TITLE}}' reorder-title-params='{{REORDER_TITLE_PARAMS}}' label-path='{{LABEL_PATH}}' template='{{TEMPLATE}}' />",
+  "syntax": "<tooldrawer-field type='object-manager' path='{{PATH}}' add-label='{{ADD_LABEL}}' reorder-label='{{REORDER_LABEL}}' reorder-title='{{REORDER_TITLE}}' reorder-title-params='{{REORDER_TITLE_PARAMS}}' label-path='{{LABEL_PATH}}' allow-structure='{{ALLOW_STRUCTURE}}' template='{{TEMPLATE}}' />",
   "attributes": {
     "path": {},
     "add-label": { "optional": true },
@@ -8,6 +8,7 @@
     "reorder-title": { "optional": true },
     "reorder-title-params": { "optional": true },
     "label-path": { "optional": true },
+    "allow-structure": { "optional": true },
     "template": { "optional": true },
     "index-token": { "optional": true },
     "default-item": { "optional": true }
@@ -22,6 +23,7 @@
         "reorderTitle": "Manage objects",
         "reorderTitleParams": "",
         "labelPath": "",
+        "allowStructure": "true",
         "template": "",
         "indexToken": "__INDEX__",
         "defaultItem": ""

@@ -7,12 +7,23 @@
   position: relative;
   min-width: 0;
   overflow: visible;
-  background: color-mix(in oklab, var(--color-system-gray-5), transparent 30%);
 }
 
 .ck-split-media__core[data-core-size-mode='auto'] {
   min-height: 320px;
   aspect-ratio: 16 / 9;
+}
+
+.ck-split-media__core[data-core-size-mode='fixed'] .ck-split-media__stage,
+.ck-split-media__core[data-core-size-mode='fixed'] .ck-split-media__media {
+  height: 100%;
+}
+
+.ck-split-media__core[data-core-size-mode='responsive'] .ck-split-media__stage,
+.ck-split-media__core[data-core-size-mode='responsive'] .ck-split-media__media,
+.ck-split-media__core[data-core-size-mode='responsive'] .ck-split-media__media > img,
+.ck-split-media__core[data-core-size-mode='responsive'] .ck-split-media__media > video {
+  min-height: inherit;
 }
 
 .ck-split-media__stage {

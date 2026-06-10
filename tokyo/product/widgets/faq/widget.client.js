@@ -10,11 +10,14 @@
   }
 
   function initFaq(widgetRoot, runtimeContext) {
-  const podEl = widgetRoot.closest('.pod');
-
   const faqRoot = widgetRoot.querySelector('[data-role="faq"]');
   if (!(faqRoot instanceof HTMLElement)) {
     throw new Error('[FAQ] Missing [data-role="faq"] root');
+  }
+
+  const coreEl = faqRoot.querySelector('[data-role="faq-core"]');
+  if (!(coreEl instanceof HTMLElement)) {
+    throw new Error('[FAQ] Missing [data-role="faq-core"]');
   }
 
   const emptyEl = faqRoot.querySelector('[data-role="faq-empty"]');
@@ -36,6 +39,7 @@
     l: 'var(--space-4)',
     xl: 'var(--space-5)',
   };
+  const QA_GAP_PRESET_KEYS = ['xs', 's', 'm', 'l', 'xl', 'custom'];
 
   function escapeHtml(value) {
     return String(value)
@@ -83,8 +87,11 @@
           el.removeAttribute('target');
           el.removeAttribute('rel');
         } else {
-          if (el.getAttribute('target') === '_blank') el.setAttribute('rel', 'noopener');
-          else el.removeAttribute('rel');
+          if (el.getAttribute('target') === '_blank') el.setAttribute('rel', 'noopener noreferrer');
+          else {
+            el.removeAttribute('target');
+            el.removeAttribute('rel');
+          }
         }
         Array.from(el.attributes).forEach((attr) => {
           if (['href', 'target', 'rel'].includes(attr.name)) return;
@@ -98,55 +105,181 @@
     return wrapper.innerHTML;
   }
 
+  function isRecord(value) {
+    return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+  }
+
+  function assertRecord(value, path) {
+    if (!isRecord(value)) throw new Error(`[FAQ] ${path} must be an object`);
+    return value;
+  }
+
+  function assertArray(value, path, min, max) {
+    if (!Array.isArray(value)) throw new Error(`[FAQ] ${path} must be an array`);
+    if (typeof min === 'number' && value.length < min) {
+      throw new Error(`[FAQ] ${path} must contain at least ${min} item(s)`);
+    }
+    if (typeof max === 'number' && value.length > max) {
+      throw new Error(`[FAQ] ${path} must contain at most ${max} item(s)`);
+    }
+    return value;
+  }
+
+  function assertString(value, path) {
+    if (typeof value !== 'string') throw new Error(`[FAQ] ${path} must be a string`);
+    return value;
+  }
+
+  function assertNonEmptyString(value, path) {
+    const text = assertString(value, path).trim();
+    if (!text) throw new Error(`[FAQ] ${path} must not be empty`);
+    return text;
+  }
+
+  function assertBoolean(value, path) {
+    if (typeof value !== 'boolean') throw new Error(`[FAQ] ${path} must be a boolean`);
+    return value;
+  }
+
+  function assertNumber(value, path, min, max) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new Error(`[FAQ] ${path} must be a number`);
+    }
+    if (typeof min === 'number' && value < min) throw new Error(`[FAQ] ${path} must be >= ${min}`);
+    if (typeof max === 'number' && value > max) throw new Error(`[FAQ] ${path} must be <= ${max}`);
+    return value;
+  }
+
+  function assertInteger(value, path, min, max) {
+    const number = assertNumber(value, path, min, max);
+    if (!Number.isInteger(number)) throw new Error(`[FAQ] ${path} must be an integer`);
+    return number;
+  }
+
+  function assertEnum(value, path, allowed) {
+    if (typeof value !== 'string' || !allowed.includes(value)) {
+      throw new Error(`[FAQ] ${path} must be one of: ${allowed.join(', ')}`);
+    }
+    return value;
+  }
+
+  function assertFillValue(value, path) {
+    if (typeof value === 'string') return value;
+    if (isRecord(value)) return value;
+    throw new Error(`[FAQ] ${path} must be a fill value`);
+  }
+
+  function assertBorder(value, path) {
+    const border = assertRecord(value, path);
+    assertBoolean(border.enabled, `${path}.enabled`);
+    assertNumber(border.width, `${path}.width`, 0, 32);
+    assertString(border.color, `${path}.color`);
+  }
+
+  function assertShadow(value, path) {
+    const shadow = assertRecord(value, path);
+    assertBoolean(shadow.enabled, `${path}.enabled`);
+    assertBoolean(shadow.inset, `${path}.inset`);
+    assertNumber(shadow.x, `${path}.x`, -200, 200);
+    assertNumber(shadow.y, `${path}.y`, -200, 200);
+    assertNumber(shadow.blur, `${path}.blur`, 0, 400);
+    assertNumber(shadow.spread, `${path}.spread`, -200, 200);
+    assertNumber(shadow.alpha, `${path}.alpha`, 0, 100);
+    assertString(shadow.color, `${path}.color`);
+  }
+
+  function assertCardWrapper(value, path) {
+    const cardwrapper = assertRecord(value, path);
+    assertBoolean(cardwrapper.radiusLinked, `${path}.radiusLinked`);
+    assertString(cardwrapper.radius, `${path}.radius`);
+    assertString(cardwrapper.radiusTL, `${path}.radiusTL`);
+    assertString(cardwrapper.radiusTR, `${path}.radiusTR`);
+    assertString(cardwrapper.radiusBR, `${path}.radiusBR`);
+    assertString(cardwrapper.radiusBL, `${path}.radiusBL`);
+    assertBorder(cardwrapper.border, `${path}.border`);
+    assertShadow(cardwrapper.shadow, `${path}.shadow`);
+  }
+
+  function assertFaqState(state) {
+    assertRecord(state, 'state');
+    assertRecord(state.header, 'state.header');
+    assertRecord(state.headerCta, 'state.headerCta');
+    assertRecord(state.stage, 'state.stage');
+    assertRecord(state.pod, 'state.pod');
+    assertRecord(state.coreSize, 'state.coreSize');
+    assertRecord(state.appearance, 'state.appearance');
+    assertRecord(state.typography, 'state.typography');
+    assertRecord(state.localeSwitcher, 'state.localeSwitcher');
+    assertRecord(state.behavior, 'state.behavior');
+
+    assertString(state.headerCta.openMode, 'state.headerCta.openMode');
+    assertEnum(state.headerCta.openMode, 'state.headerCta.openMode', ['same-tab', 'new-tab']);
+
+    const faq = assertRecord(state.faq, 'state.faq');
+    assertBoolean(faq.displayCategoryTitles, 'state.faq.displayCategoryTitles');
+
+    const geo = assertRecord(faq.geo, 'state.faq.geo');
+    assertBoolean(geo.enableDeepLinks, 'state.faq.geo.enableDeepLinks');
+
+    const behavior = assertRecord(faq.behavior, 'state.faq.behavior');
+    assertBoolean(behavior.expandAll, 'state.faq.behavior.expandAll');
+    assertBoolean(behavior.multiOpen, 'state.faq.behavior.multiOpen');
+    assertBoolean(behavior.expandFirst, 'state.faq.behavior.expandFirst');
+
+    const layout = assertRecord(faq.layout, 'state.faq.layout');
+    assertEnum(layout.type, 'state.faq.layout.type', ['accordion', 'list', 'multicolumn']);
+    assertNumber(layout.gap, 'state.faq.layout.gap', 0, 160);
+    assertRecord(layout.columns, 'state.faq.layout.columns');
+    assertInteger(layout.columns.desktop, 'state.faq.layout.columns.desktop', 1, 4);
+    assertInteger(layout.columns.mobile, 'state.faq.layout.columns.mobile', 1, 2);
+    assertEnum(layout.cardsLayout, 'state.faq.layout.cardsLayout', ['grid', 'masonry']);
+    assertEnum(layout.itemQaGapPreset, 'state.faq.layout.itemQaGapPreset', QA_GAP_PRESET_KEYS);
+    assertNumber(layout.itemQaGapCustom, 'state.faq.layout.itemQaGapCustom', 0, 120);
+    assertBoolean(layout.itemPaddingLinked, 'state.faq.layout.itemPaddingLinked');
+    assertNumber(layout.itemPadding, 'state.faq.layout.itemPadding', 0, 160);
+    assertNumber(layout.itemPaddingTop, 'state.faq.layout.itemPaddingTop', 0, 160);
+    assertNumber(layout.itemPaddingRight, 'state.faq.layout.itemPaddingRight', 0, 160);
+    assertNumber(layout.itemPaddingBottom, 'state.faq.layout.itemPaddingBottom', 0, 160);
+    assertNumber(layout.itemPaddingLeft, 'state.faq.layout.itemPaddingLeft', 0, 160);
+
+    const appearance = assertRecord(faq.appearance, 'state.faq.appearance');
+    assertEnum(appearance.iconStyle, 'state.faq.appearance.iconStyle', Object.keys(ICON_PAIRS));
+    assertEnum(appearance.linkStyle, 'state.faq.appearance.linkStyle', ['underline', 'highlight', 'color']);
+    assertFillValue(appearance.iconColor, 'state.faq.appearance.iconColor');
+    assertFillValue(appearance.itemBackground, 'state.faq.appearance.itemBackground');
+    assertFillValue(appearance.linkUnderlineColor, 'state.faq.appearance.linkUnderlineColor');
+    assertFillValue(appearance.linkHighlightColor, 'state.faq.appearance.linkHighlightColor');
+    assertFillValue(appearance.linkTextColor, 'state.faq.appearance.linkTextColor');
+    assertCardWrapper(appearance.cardwrapper, 'state.faq.appearance.cardwrapper');
+
+    const sections = assertArray(faq.sections, 'state.faq.sections', 1, 20);
+    const sectionIds = new Set();
+    sections.forEach((section, sectionIndex) => {
+      const sectionPath = `state.faq.sections.${sectionIndex}`;
+      assertRecord(section, sectionPath);
+      const sectionId = assertNonEmptyString(section.id, `${sectionPath}.id`);
+      if (sectionIds.has(sectionId)) throw new Error(`[FAQ] duplicate section id: ${sectionId}`);
+      sectionIds.add(sectionId);
+      assertString(section.title, `${sectionPath}.title`);
+      const faqs = assertArray(section.faqs, `${sectionPath}.faqs`, 1, 100);
+      const faqIds = new Set();
+      faqs.forEach((item, itemIndex) => {
+        const itemPath = `${sectionPath}.faqs.${itemIndex}`;
+        assertRecord(item, itemPath);
+        const itemId = assertNonEmptyString(item.id, `${itemPath}.id`);
+        if (faqIds.has(itemId)) throw new Error(`[FAQ] duplicate FAQ id in section ${sectionId}: ${itemId}`);
+        faqIds.add(itemId);
+        assertString(item.question, `${itemPath}.question`);
+        assertString(item.answer, `${itemPath}.answer`);
+        assertBoolean(item.defaultOpen, `${itemPath}.defaultOpen`);
+      });
+    });
+  }
+
   function renderAnswerHtml(html) {
     if (html == null) throw new Error('[FAQ] answer must be a string');
 
-    const sanitized = sanitizeInlineHtml(html, true);
-
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = sanitized;
-
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const textNodes = [];
-    const walker = document.createTreeWalker(wrapper, NodeFilter.SHOW_TEXT);
-    let node = walker.nextNode();
-    while (node) {
-      const parent = node.parentNode;
-      if (!(parent instanceof HTMLElement) || parent.tagName !== 'A') {
-        if (typeof node.textContent === 'string' && /(https?:\/\/)/i.test(node.textContent)) {
-          textNodes.push(node);
-        }
-      }
-      node = walker.nextNode();
-    }
-
-    function buildUrlNode(url) {
-      const trimmed = url.trim();
-      if (!/^https?:\/\/\S+$/i.test(trimmed)) return document.createTextNode(url);
-
-      const a = document.createElement('a');
-      a.href = trimmed;
-      a.target = '_blank';
-      a.rel = 'noreferrer';
-      a.textContent = trimmed;
-      return a;
-    }
-
-    textNodes.forEach((textNode) => {
-      const raw = textNode.textContent || '';
-      const parts = raw.split(urlRegex);
-      if (parts.length <= 1) return;
-
-      const frag = document.createDocumentFragment();
-      parts.forEach((part) => {
-        const url = part.trim();
-        if (/^https?:\/\/\S+$/i.test(url)) frag.appendChild(buildUrlNode(url));
-        else frag.appendChild(document.createTextNode(part));
-      });
-      textNode.parentNode?.replaceChild(frag, textNode);
-    });
-
-    return wrapper.innerHTML;
+    return sanitizeInlineHtml(html, true);
   }
 
   function collapseAll(listEl) {
@@ -249,10 +382,7 @@
     return window.CKAppearance;
   }
 
-  function applyAppearance(appearance, shellAppearance) {
-    if (!shellAppearance || typeof shellAppearance !== 'object' || Array.isArray(shellAppearance)) {
-      throw new Error('[FAQ] state.appearance must be an object');
-    }
+  function applyAppearance(appearance) {
     const helpers = resolveAppearanceHelpers();
     faqRoot.style.setProperty('--faq-item-bg', helpers.toCssBackground(appearance.itemBackground));
     if (!window.CKSurface?.applyCardWrapper) {
@@ -264,29 +394,20 @@
     faqRoot.style.setProperty('--faq-link-highlight-color', helpers.toCssBackground(appearance.linkHighlightColor));
     faqRoot.style.setProperty('--faq-link-text-color', helpers.toCssColor(appearance.linkTextColor));
     faqRoot.style.setProperty('--faq-icon-color', helpers.toCssColor(appearance.iconColor));
-
-    if (podEl instanceof HTMLElement) {
-      const podBorder = shellAppearance.podBorder;
-      const podEnabled = podBorder.enabled === true && podBorder.width > 0;
-      podEl.style.setProperty('--pod-border-width', podEnabled ? `${podBorder.width}px` : '0px');
-      podEl.style.setProperty('--pod-border-color', podEnabled ? podBorder.color : 'transparent');
-    }
   }
 
   function applyLayout(layout) {
     faqRoot.style.setProperty('--layout-gap', `${layout.gap}px`);
-    const qaGapPreset = typeof layout.itemQaGapPreset === 'string' ? layout.itemQaGapPreset : 's';
     const qaGapValue =
-      qaGapPreset === 'custom'
-        ? `${Math.max(0, Math.min(120, layout.itemQaGapCustom))}px`
-        : QA_GAP_PRESETS[qaGapPreset] || QA_GAP_PRESETS.s;
+      layout.itemQaGapPreset === 'custom'
+        ? `${layout.itemQaGapCustom}px`
+        : QA_GAP_PRESETS[layout.itemQaGapPreset];
     faqRoot.style.setProperty('--faq-qa-gap', qaGapValue);
     faqRoot.style.setProperty('--faq-columns-desktop', String(layout.columns.desktop));
     faqRoot.style.setProperty('--faq-columns-mobile', String(layout.columns.mobile));
     faqRoot.setAttribute('data-layout', layout.type);
     if (layout.type === 'multicolumn') {
-      const cardsLayout = typeof layout.cardsLayout === 'string' ? layout.cardsLayout : 'grid';
-      faqRoot.setAttribute('data-cards-layout', cardsLayout);
+      faqRoot.setAttribute('data-cards-layout', layout.cardsLayout);
     } else {
       faqRoot.removeAttribute('data-cards-layout');
     }
@@ -353,18 +474,13 @@
   });
 
   function applyState(state, runtimeContext) {
+    assertFaqState(state);
     lastState = state;
-    if (!state || typeof state !== 'object' || Array.isArray(state)) {
-      throw new Error('[FAQ] state must be an object');
-    }
-    if (!state.faq || typeof state.faq !== 'object' || Array.isArray(state.faq)) {
-      throw new Error('[FAQ] state.faq must be an object');
-    }
 
     if (!window.CKStagePod?.applyStagePod) {
       throw new Error('[FAQ] Missing CKStagePod.applyStagePod');
     }
-    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
+    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
 
     if (!window.CKTypography?.applyTypography) {
       throw new Error('[FAQ] Missing CKTypography.applyTypography');
@@ -388,6 +504,11 @@
     }
     window.CKHeader.applyHeader(state, widgetRoot);
 
+    if (!window.CKCoreSize?.applyCoreSize) {
+      throw new Error('[FAQ] Missing CKCoreSize.applyCoreSize');
+    }
+    window.CKCoreSize.applyCoreSize(state.coreSize, coreEl);
+
     if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
       throw new Error('[FAQ] Missing CKLocaleSwitcher.applyLocaleSwitcher');
     }
@@ -404,7 +525,7 @@
 
     applyAccordionIcons(state.faq.appearance.iconStyle);
 
-    applyAppearance(state.faq.appearance, state.appearance);
+    applyAppearance(state.faq.appearance);
     applyLayout(state.faq.layout);
     accordionRuntime.deepLinksEnabled = state.faq.geo.enableDeepLinks === true;
 
@@ -562,10 +683,6 @@
     return /\bhttps?:\/\//i.test(value) || /\bwww\./i.test(value);
   }
 
-  function escapeHtml(value) {
-    return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
   function trimCopy(value, maxLen) {
     const trimmed = String(value || '').replace(/\s+/g, ' ').trim();
     if (!trimmed) return '';
@@ -637,8 +754,7 @@
   });
 
   const initialLocale = runtimeContext.locale || '';
-  const initialState = runtimeContext.state;
-  if (initialState) applyState(initialState, { locale: initialLocale });
+  applyState(runtimeContext.state, { locale: initialLocale });
   }
 
   runtime.register('faq', initFaq);

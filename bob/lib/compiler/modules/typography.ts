@@ -68,7 +68,7 @@ export function buildTypographyPanel(args: {
     { key: 'heading', label: 'Heading' },
     { key: 'timer', label: 'Timer' },
     { key: 'label', label: 'Labels' },
-    { key: 'button', label: 'CTA' },
+    { key: 'button', label: 'Button text' },
     { key: 'localeSwitcher', label: 'Locale switcher' },
     { key: 'bigBang', label: 'Big Bang statement' },
     { key: 'cardTitle', label: 'Card title' },

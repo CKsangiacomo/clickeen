@@ -10,6 +10,7 @@
     "default-item": { "optional": true },
     "toggleLabel": { "optional": true },
     "togglePath": { "optional": true },
+    "move-label": { "optional": true },
     "add-open": { "optional": true }
   },
   "defaults": [
@@ -20,6 +21,7 @@
       "context": {
         "label": "Items",
         "addLabel": "Add item",
+        "moveLabel": "Move item {index}",
         "size": "md",
         "labelInputLabel": "Title",
         "labelPlaceholder": "",

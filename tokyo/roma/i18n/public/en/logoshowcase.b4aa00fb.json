@@ -1,0 +1,16 @@
+{
+  "logoshowcase.item": {
+    "one": "Logo tile",
+    "other": "Logo tiles"
+  },
+  "logoshowcase.labels.itemBackground": "{item} background",
+  "logoshowcase.labels.itemBorder": "{item} border",
+  "logoshowcase.labels.itemBottomLeftRadius": "{item} bottom-left corner",
+  "logoshowcase.labels.itemBottomRightRadius": "{item} bottom-right corner",
+  "logoshowcase.labels.itemOutsideShadow": "{item} outside shadow",
+  "logoshowcase.labels.itemRadius": "{item} corner radius",
+  "logoshowcase.labels.itemShadow": "{item} shadow",
+  "logoshowcase.labels.itemTopLeftRadius": "{item} top-left corner",
+  "logoshowcase.labels.itemTopRightRadius": "{item} top-right corner",
+  "logoshowcase.labels.linkItemRadius": "Link {item} corners"
+}

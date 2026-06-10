@@ -30,14 +30,90 @@
     return wrapper.innerHTML;
   }
 
-  function normalizeHref(value) {
-    const href = String(value || '').trim();
-    return /^(?:https?:\/\/|\/|#)/i.test(href) ? href : '';
+  function assertRecord(value, path) {
+    if (!isRecord(value)) throw new Error('[Cards] ' + path + ' must be an object');
+    return value;
   }
 
-  function normalizeIconName(value, fallback) {
-    const iconName = String(value || '').trim();
-    return /^[a-z0-9_.-]+$/i.test(iconName) ? iconName : fallback || 'checkmark';
+  function assertArray(value, path, min, max) {
+    if (!Array.isArray(value)) throw new Error('[Cards] ' + path + ' must be an array');
+    if (value.length < min || value.length > max) {
+      throw new Error('[Cards] ' + path + ' must contain ' + min + '-' + max + ' cards');
+    }
+    return value;
+  }
+
+  function assertString(value, path) {
+    if (typeof value !== 'string') throw new Error('[Cards] ' + path + ' must be a string');
+    return value;
+  }
+
+  function assertNonEmptyString(value, path) {
+    const text = assertString(value, path).trim();
+    if (!text) throw new Error('[Cards] ' + path + ' must not be empty');
+    return text;
+  }
+
+  function assertBoolean(value, path) {
+    if (typeof value !== 'boolean') throw new Error('[Cards] ' + path + ' must be a boolean');
+    return value;
+  }
+
+  function assertNumber(value, path, min, max) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw new Error('[Cards] ' + path + ' must be a number');
+    }
+    if (value < min || value > max) {
+      throw new Error('[Cards] ' + path + ' must be between ' + min + ' and ' + max);
+    }
+    return value;
+  }
+
+  function assertInteger(value, path, min, max) {
+    const number = assertNumber(value, path, min, max);
+    if (!Number.isInteger(number)) throw new Error('[Cards] ' + path + ' must be an integer');
+    return number;
+  }
+
+  function assertEnum(value, path, allowed) {
+    if (typeof value !== 'string' || allowed.indexOf(value) < 0) {
+      throw new Error('[Cards] ' + path + ' must be one of: ' + allowed.join(', '));
+    }
+    return value;
+  }
+
+  function assertIconName(value, path) {
+    const iconName = assertNonEmptyString(value, path);
+    if (!/^[a-z0-9_.-]+$/i.test(iconName)) {
+      throw new Error('[Cards] ' + path + ' must be a Dieter icon name');
+    }
+    return iconName;
+  }
+
+  function assertFillValue(value, path, allowEmpty) {
+    if (typeof value === 'string') {
+      if (!allowEmpty && !value.trim()) throw new Error('[Cards] ' + path + ' must not be empty');
+      return value;
+    }
+    if (isRecord(value)) return value;
+    throw new Error('[Cards] ' + path + ' must be a fill value');
+  }
+
+  function normalizeActionHref(raw, path) {
+    var value = assertString(raw, path).trim();
+    if (!value) return '';
+    if (value.charAt(0) === '#' && !/\s/.test(value)) return value;
+    if (value.charAt(0) === '/' && value.charAt(1) !== '/' && !/\s/.test(value)) return value;
+    if (/^https?:\/\//i.test(value)) {
+      try {
+        return new URL(value).href;
+      } catch {
+        throw new Error('[Cards] ' + path + ' must be a valid http(s) URL');
+      }
+    }
+    if (/^mailto:[^\s]+$/i.test(value)) return value;
+    if (/^tel:[+0-9().\-\s]+$/i.test(value)) return value;
+    throw new Error('[Cards] ' + path + ' must be empty, #, root-relative, http(s), mailto, or tel');
   }
 
   function cssFill(value, fallback) {
@@ -52,98 +128,129 @@
     return fallback || '';
   }
 
-  function mediaSource(media) {
-    if (!isRecord(media) || !isRecord(media.image)) return '';
-    return typeof media.image.src === 'string' ? media.image.src.trim() : '';
+  function mediaSource(fill, path) {
+    const mediaFill = assertRecord(fill, path);
+    assertEnum(mediaFill.type, path + '.type', ['image']);
+    const image = assertRecord(mediaFill.image, path + '.image');
+    return assertNonEmptyString(image.src, path + '.image.src');
   }
 
-  function assertCardsState(state) {
-    if (!isRecord(state.cards)) throw new Error('[Cards] state.cards must be an object');
-    return state.cards;
+  function assertBorder(border, path) {
+    const value = assertRecord(border, path);
+    assertBoolean(value.enabled, path + '.enabled');
+    assertNumber(value.width, path + '.width', 0, 32);
+    assertString(value.color, path + '.color');
   }
 
-  function normalizeItems(cards) {
-    const rawItems = Array.isArray(cards.items) ? cards.items : [];
-    if (rawItems.length < 2 || rawItems.length > 16)
-      throw new Error('[Cards] cards.items must contain 2-16 cards');
+  function assertShadow(shadow, path) {
+    const value = assertRecord(shadow, path);
+    assertBoolean(value.enabled, path + '.enabled');
+    assertBoolean(value.inset, path + '.inset');
+    assertNumber(value.x, path + '.x', -200, 200);
+    assertNumber(value.y, path + '.y', -200, 200);
+    assertNumber(value.blur, path + '.blur', 0, 400);
+    assertNumber(value.spread, path + '.spread', -200, 200);
+    assertString(value.color, path + '.color');
+    assertNumber(value.alpha, path + '.alpha', 0, 100);
+  }
+
+  function assertCardWrapper(cardwrapper, path) {
+    const value = assertRecord(cardwrapper, path);
+    assertBoolean(value.radiusLinked, path + '.radiusLinked');
+    assertString(value.radius, path + '.radius');
+    assertString(value.radiusTL, path + '.radiusTL');
+    assertString(value.radiusTR, path + '.radiusTR');
+    assertString(value.radiusBR, path + '.radiusBR');
+    assertString(value.radiusBL, path + '.radiusBL');
+    assertBorder(value.border, path + '.border');
+    assertShadow(value.shadow, path + '.shadow');
+    return value;
+  }
+
+  function validateItems(cards, treatment) {
+    const rawItems = assertArray(cards.items, 'state.cards.items', 2, 16);
     const seen = {};
     return rawItems.map(function (raw, index) {
-      if (!isRecord(raw)) throw new Error('[Cards] cards.items[' + index + '] must be an object');
-      const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : 'card-' + index;
+      const itemPath = 'state.cards.items.' + index;
+      assertRecord(raw, itemPath);
+      const id = assertNonEmptyString(raw.id, itemPath + '.id');
       if (seen[id]) throw new Error('[Cards] duplicate card id: ' + id);
       seen[id] = true;
-      const media = isRecord(raw.media) ? raw.media : {};
-      const mediaKind = media.kind === 'icon' || media.kind === 'image' ? media.kind : 'none';
-      const link = isRecord(raw.link) ? raw.link : {};
-      const enabledLink = link.enabled === true;
-      const href = enabledLink ? normalizeHref(link.href) : '';
-      const style = isRecord(raw.style) ? raw.style : {};
+      const title = assertNonEmptyString(raw.title, itemPath + '.title');
+      const copy = assertNonEmptyString(raw.copy, itemPath + '.copy');
+      const media = assertRecord(raw.media, itemPath + '.media');
+      const mediaKind = assertEnum(media.kind, itemPath + '.media.kind', ['none', 'icon', 'image']);
+      const iconName = mediaKind === 'icon'
+        ? assertIconName(media.iconName, itemPath + '.media.iconName')
+        : assertString(media.iconName, itemPath + '.media.iconName');
+      const imageSrc = mediaKind === 'image' ? mediaSource(media.image, itemPath + '.media.image') : '';
+      const imageAlt = assertString(media.imageAlt, itemPath + '.media.imageAlt');
+      const link = assertRecord(raw.link, itemPath + '.link');
+      const enabledLink = assertBoolean(link.enabled, itemPath + '.link.enabled');
+      assertString(link.href, itemPath + '.link.href');
+      assertString(link.label, itemPath + '.link.label');
+      const forceLink = treatment === 'linked-cards';
+      const href = enabledLink || forceLink ? normalizeActionHref(link.href, itemPath + '.link.href') : '';
+      const linkLabel = enabledLink || forceLink
+        ? assertNonEmptyString(link.label, itemPath + '.link.label')
+        : link.label.trim();
+      if ((enabledLink || forceLink) && !href) {
+        throw new Error('[Cards] ' + itemPath + '.link.href must not be empty when card link is enabled');
+      }
+      const style = assertRecord(raw.style, itemPath + '.style');
+      assertFillValue(style.background, itemPath + '.style.background', true);
+      assertFillValue(style.borderColor, itemPath + '.style.borderColor', true);
+      assertFillValue(style.accentColor, itemPath + '.style.accentColor', true);
+      assertEnum(style.textTone, itemPath + '.style.textTone', ['inherit', 'default', 'muted', 'inverse']);
       return {
         id: id,
-        title: String(raw.title || '').trim(),
-        copy: String(raw.copy || '').trim(),
+        title: title,
+        copy: copy,
         media: media,
         mediaKind: mediaKind,
-        iconName: normalizeIconName(media.iconName, 'checkmark'),
-        imageSrc: mediaKind === 'image' ? mediaSource(media.image) : '',
-        imageAlt: String(media.imageAlt || '').trim(),
+        iconName: iconName,
+        imageSrc: imageSrc,
+        imageAlt: imageAlt,
         linkEnabled: enabledLink,
         href: href,
-        linkLabel: String(link.label || '').trim(),
+        linkLabel: linkLabel,
         style: style,
       };
     });
   }
 
-  function normalizeCards(state) {
-    const cards = assertCardsState(state);
-    const treatment =
-      ['cards', 'linked-cards', 'steps'].indexOf(cards.treatment) >= 0 ? cards.treatment : 'cards';
-    const columns = typeof cards.columns === 'number' ? Math.round(cards.columns) : 3;
-    const between = isRecord(cards.betweenCards) ? cards.betweenCards : {};
-    const line = isRecord(between.line) ? between.line : {};
-    const icon = isRecord(between.icon) ? between.icon : {};
-    const appearance = isRecord(cards.appearance) ? cards.appearance : null;
-    if (!appearance || !isRecord(appearance.cardwrapper)) {
-      throw new Error('[Cards] cards.appearance.cardwrapper must be an object');
-    }
+  function validateCardsState(state) {
+    assertRecord(state, 'state');
+    const cards = assertRecord(state.cards, 'state.cards');
+    const treatment = assertEnum(cards.treatment, 'state.cards.treatment', ['cards', 'linked-cards', 'steps']);
+    const between = assertRecord(cards.betweenCards, 'state.cards.betweenCards');
+    const line = assertRecord(between.line, 'state.cards.betweenCards.line');
+    const icon = assertRecord(between.icon, 'state.cards.betweenCards.icon');
+    const customCardStyles = assertRecord(cards.customCardStyles, 'state.cards.customCardStyles');
+    const appearance = assertRecord(cards.appearance, 'state.cards.appearance');
     return {
       appearance: {
-        cardwrapper: appearance.cardwrapper,
+        cardwrapper: assertCardWrapper(appearance.cardwrapper, 'state.cards.appearance.cardwrapper'),
       },
       treatment: treatment,
-      columns: Math.min(Math.max(columns, 2), 4),
-      gap:
-        typeof cards.gap === 'number' && Number.isFinite(cards.gap)
-          ? Math.min(Math.max(cards.gap, 8), 64)
-          : 24,
-      cardPadding:
-        typeof cards.cardPadding === 'number' && Number.isFinite(cards.cardPadding)
-          ? Math.min(Math.max(cards.cardPadding, 16), 64)
-          : 32,
-      customCardStyles: isRecord(cards.customCardStyles) && cards.customCardStyles.enabled === true,
+      columns: assertInteger(cards.columns, 'state.cards.columns', 2, 4),
+      gap: assertNumber(cards.gap, 'state.cards.gap', 8, 64),
+      cardPadding: assertNumber(cards.cardPadding, 'state.cards.cardPadding', 16, 64),
+      customCardStyles: assertBoolean(customCardStyles.enabled, 'state.cards.customCardStyles.enabled'),
       betweenCards: {
-        enabled: between.enabled === true,
-        kind: between.kind === 'icon' ? 'icon' : 'line',
+        enabled: assertBoolean(between.enabled, 'state.cards.betweenCards.enabled'),
+        kind: assertEnum(between.kind, 'state.cards.betweenCards.kind', ['line', 'icon']),
         line: {
-          widthPt:
-            typeof line.widthPt === 'number' && Number.isFinite(line.widthPt)
-              ? Math.min(Math.max(line.widthPt, 1), 24)
-              : 2,
-          color:
-            typeof line.color === 'string' && line.color.trim() ? line.color.trim() : '#D7D7DA',
+          widthPt: assertNumber(line.widthPt, 'state.cards.betweenCards.line.widthPt', 1, 24),
+          color: assertFillValue(line.color, 'state.cards.betweenCards.line.color', false),
         },
         icon: {
-          name: normalizeIconName(icon.name, 'chevron.right'),
-          sizePt:
-            typeof icon.sizePt === 'number' && Number.isFinite(icon.sizePt)
-              ? Math.min(Math.max(icon.sizePt, 8), 96)
-              : 28,
-          color:
-            typeof icon.color === 'string' && icon.color.trim() ? icon.color.trim() : '#222222',
+          name: assertIconName(icon.name, 'state.cards.betweenCards.icon.name'),
+          sizePt: assertNumber(icon.sizePt, 'state.cards.betweenCards.icon.sizePt', 8, 96),
+          color: assertFillValue(icon.color, 'state.cards.betweenCards.icon.color', false),
         },
       },
-      items: normalizeItems(cards),
+      items: validateItems(cards, treatment),
     };
   }
 
@@ -151,17 +258,10 @@
     if (!enabled || !isRecord(item.style)) return;
     const background = cssFill(item.style.background, '');
     const borderColor = cssFill(item.style.borderColor, '');
-    const radius = typeof item.style.radius === 'string' ? item.style.radius.trim() : '';
-    const shadow = typeof item.style.shadow === 'string' ? item.style.shadow.trim() : '';
     const accentColor = cssFill(item.style.accentColor, '');
-    const textTone =
-      ['inherit', 'default', 'muted', 'inverse'].indexOf(item.style.textTone) >= 0
-        ? item.style.textTone
-        : 'inherit';
+    const textTone = item.style.textTone;
     if (background) card.style.setProperty('background', background);
     if (borderColor) card.style.setProperty('border-color', borderColor);
-    if (radius) card.style.setProperty('border-radius', radius);
-    if (shadow) card.style.setProperty('box-shadow', shadow);
     if (accentColor) card.style.setProperty('--ck-cards-card-accent', accentColor);
     card.dataset.tone = textTone;
   }
@@ -191,7 +291,7 @@
     return media;
   }
 
-  function renderCard(item, cards, state) {
+  function renderCard(item, cards) {
     const linked = cards.treatment === 'linked-cards' || item.linkEnabled;
     if (cards.treatment === 'linked-cards' && (!item.href || !item.linkLabel)) {
       throw new Error('[Cards] linked-cards treatment requires every card link href and label');
@@ -268,10 +368,10 @@
     const resolvedInstanceId = runtimeContext.instanceId;
 
     function applyState(state, context) {
-      if (!state) return;
+      const cards = validateCardsState(state);
       if (!window.CKStagePod?.applyStagePod)
         throw new Error('[Cards] Missing CKStagePod.applyStagePod');
-      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
 
       if (!window.CKTypography?.applyTypography)
         throw new Error('[Cards] Missing CKTypography.applyTypography');
@@ -306,7 +406,6 @@
         typographyScope: cardsRoot,
       });
 
-      const cards = normalizeCards(state);
       const grid = document.createElement(cards.treatment === 'steps' ? 'ol' : 'div');
       grid.className = 'ck-cards__grid';
       grid.dataset.treatment = cards.treatment;
@@ -316,7 +415,7 @@
       cards.items.forEach(function (item, index) {
         const slot = document.createElement(cards.treatment === 'steps' ? 'li' : 'div');
         slot.className = 'ck-cards__slot';
-        slot.appendChild(renderCard(item, cards, state));
+        slot.appendChild(renderCard(item, cards));
         if (index < cards.items.length - 1) {
           const between = renderBetween(cards, index);
           if (between) slot.appendChild(between);
@@ -326,9 +425,20 @@
 
       coreEl.replaceChildren(grid);
 
-      if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
-        window.CKBranding.applyBacklink(widgetRoot, state);
+      if (!window.CKBranding?.applyBacklink) {
+        throw new Error('[Cards] Missing CKBranding.applyBacklink');
       }
+      window.CKBranding.applyBacklink(widgetRoot, state);
+
+      if (!window.CKSocialShare?.apply) {
+        throw new Error('[Cards] Missing CKSocialShare.apply');
+      }
+      window.CKSocialShare.apply(widgetRoot, state, {
+        instanceId: context && context.instanceId,
+        widgetType: 'cards',
+        widgetLabel: document.title || 'Cards',
+        previewMode: context && context.previewMode,
+      });
     }
 
     let previewLocaleRequest = 0;
@@ -341,7 +451,7 @@
       baseLocale,
       translatedLocaleValues,
     ) {
-      if (!state) return;
+      assertRecord(state, 'state');
       const requestId = ++previewLocaleRequest;
       const helper =
         window.CK_PREVIEW_L10N &&
@@ -393,13 +503,11 @@
     );
 
     const initialLocale = runtimeContext.locale || '';
-    const initialState = runtimeContext.state;
-    if (initialState)
-      applyState(initialState, {
-        ...runtimeContext,
-        locale: initialLocale,
-        instanceId: resolvedInstanceId,
-      });
+    applyState(runtimeContext.state, {
+      ...runtimeContext,
+      locale: initialLocale,
+      instanceId: resolvedInstanceId,
+    });
   }
 
   runtime.register('cards', initCards);

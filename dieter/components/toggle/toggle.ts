@@ -5,7 +5,14 @@ export function hydrateToggle(scope: Element | DocumentFragment): void {
     if (!input || input.dataset.toggleWired === 'true') return;
     input.dataset.toggleWired = 'true';
 
-    // Ensure space/enter toggles when the wrapping label is clicked (native works, but keep parity with other controls)
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        input.click();
+      }
+    });
+
+    // Ensure space/enter toggles when the visible switch receives delegated focus.
     const switchLabel = root.querySelector<HTMLElement>('.diet-toggle__switch');
     if (switchLabel) {
       switchLabel.addEventListener('keydown', (event) => {

@@ -86,6 +86,141 @@ function validateMediaFill(args: {
       paths: [`${args.path}.${args.media.type}`],
     });
   }
+  const bucket = args.media[args.media.type];
+  if (isRecord(bucket)) {
+    const src = typeof bucket.src === 'string' ? bucket.src.trim() : '';
+    const assetRef = typeof bucket.assetRef === 'string' ? bucket.assetRef.trim() : '';
+    if (!src && !assetRef) {
+      return structureViolation({
+        detail: `${args.widgetLabel} media fill requires a source or asset reference.`,
+        paths: [`${args.path}.${args.media.type}.src`, `${args.path}.${args.media.type}.assetRef`],
+      });
+    }
+  }
+  return { ok: true };
+}
+
+function validateEnum(args: {
+  widgetLabel: string;
+  value: unknown;
+  path: string;
+  values: string[];
+}): SavePolicyValidationResult {
+  if (typeof args.value !== 'string' || !args.values.includes(args.value)) {
+    return structureViolation({
+      detail: `${args.widgetLabel} ${args.path} must be one of: ${args.values.join(', ')}.`,
+      paths: [args.path],
+    });
+  }
+  return { ok: true };
+}
+
+function validateBoolean(args: {
+  widgetLabel: string;
+  value: unknown;
+  path: string;
+}): SavePolicyValidationResult {
+  if (typeof args.value !== 'boolean') {
+    return structureViolation({
+      detail: `${args.widgetLabel} ${args.path} must be a boolean.`,
+      paths: [args.path],
+    });
+  }
+  return { ok: true };
+}
+
+function validateNumberRange(args: {
+  widgetLabel: string;
+  value: unknown;
+  path: string;
+  min: number;
+  max: number;
+}): SavePolicyValidationResult {
+  if (
+    typeof args.value !== 'number' ||
+    !Number.isFinite(args.value) ||
+    args.value < args.min ||
+    args.value > args.max
+  ) {
+    return structureViolation({
+      detail: `${args.widgetLabel} ${args.path} must be ${args.min}..${args.max}.`,
+      paths: [args.path],
+    });
+  }
+  return { ok: true };
+}
+
+function validateCardWrapper(args: {
+  widgetLabel: string;
+  cardwrapper: unknown;
+  path: string;
+}): SavePolicyValidationResult {
+  const cardwrapper = isRecord(args.cardwrapper) ? args.cardwrapper : null;
+  if (!cardwrapper) {
+    return structureViolation({
+      detail: `${args.widgetLabel} requires visual frame settings.`,
+      paths: [args.path],
+    });
+  }
+  const requiredBooleans = ['radiusLinked'];
+  for (const key of requiredBooleans) {
+    if (typeof cardwrapper[key] !== 'boolean') {
+      return structureViolation({
+        detail: `${args.widgetLabel} ${args.path}.${key} must be a boolean.`,
+        paths: [`${args.path}.${key}`],
+      });
+    }
+  }
+  const requiredStrings = ['radius', 'radiusTL', 'radiusTR', 'radiusBR', 'radiusBL'];
+  for (const key of requiredStrings) {
+    if (typeof cardwrapper[key] !== 'string' || !cardwrapper[key]) {
+      return structureViolation({
+        detail: `${args.widgetLabel} ${args.path}.${key} must be a string.`,
+        paths: [`${args.path}.${key}`],
+      });
+    }
+  }
+  const border = isRecord(cardwrapper.border) ? cardwrapper.border : null;
+  if (!border) {
+    return structureViolation({
+      detail: `${args.widgetLabel} requires visual frame border settings.`,
+      paths: [`${args.path}.border`],
+    });
+  }
+  if (typeof border.enabled !== 'boolean' || typeof border.width !== 'number' || typeof border.color !== 'string') {
+    return structureViolation({
+      detail: `${args.widgetLabel} visual frame border is invalid.`,
+      paths: [`${args.path}.border`],
+    });
+  }
+  const shadow = isRecord(cardwrapper.shadow) ? cardwrapper.shadow : null;
+  if (!shadow) {
+    return structureViolation({
+      detail: `${args.widgetLabel} requires visual frame shadow settings.`,
+      paths: [`${args.path}.shadow`],
+    });
+  }
+  if (
+    typeof shadow.enabled !== 'boolean' ||
+    typeof shadow.inset !== 'boolean' ||
+    typeof shadow.x !== 'number' ||
+    typeof shadow.y !== 'number' ||
+    typeof shadow.blur !== 'number' ||
+    typeof shadow.spread !== 'number' ||
+    typeof shadow.alpha !== 'number' ||
+    typeof shadow.color !== 'string'
+  ) {
+    return structureViolation({
+      detail: `${args.widgetLabel} visual frame shadow is invalid.`,
+      paths: [`${args.path}.shadow`],
+    });
+  }
+  if (shadow.alpha < 0 || shadow.alpha > 100) {
+    return structureViolation({
+      detail: `${args.widgetLabel} visual frame shadow alpha must be 0..100.`,
+      paths: [`${args.path}.shadow.alpha`],
+    });
+  }
   return { ok: true };
 }
 
@@ -123,6 +258,12 @@ function validateSplitCarouselMediaStructure(config: Record<string, unknown>): S
       });
     }
     ids.add(id);
+    if (typeof item.alt !== 'string') {
+      return structureViolation({
+        detail: `split-carousel-media item ${index + 1} requires alt text.`,
+        paths: [`${itemPath}.alt`],
+      });
+    }
 
     const mediaGate = validateMediaFill({
       widgetLabel: `split-carousel-media item ${index + 1}`,
@@ -132,15 +273,86 @@ function validateSplitCarouselMediaStructure(config: Record<string, unknown>): S
     if (!mediaGate.ok) return mediaGate;
   }
 
-  return { ok: true };
+  const media = isRecord(splitCarouselMedia?.media) ? splitCarouselMedia.media : null;
+  const fitGate = validateEnum({
+    widgetLabel: 'split-carousel-media',
+    value: media?.fit,
+    path: 'splitCarouselMedia.media.fit',
+    values: ['cover', 'contain'],
+  });
+  if (!fitGate.ok) return fitGate;
+  const positionGate = validateEnum({
+    widgetLabel: 'split-carousel-media',
+    value: media?.position,
+    path: 'splitCarouselMedia.media.position',
+    values: ['top', 'bottom', 'left', 'right', 'center'],
+  });
+  if (!positionGate.ok) return positionGate;
+
+  const carousel = isRecord(splitCarouselMedia?.carousel) ? splitCarouselMedia.carousel : null;
+  const transitionGate = validateEnum({
+    widgetLabel: 'split-carousel-media',
+    value: carousel?.transition,
+    path: 'splitCarouselMedia.carousel.transition',
+    values: ['slide', 'fade'],
+  });
+  if (!transitionGate.ok) return transitionGate;
+  const autoplayGate = validateBoolean({
+    widgetLabel: 'split-carousel-media',
+    value: carousel?.autoplay,
+    path: 'splitCarouselMedia.carousel.autoplay',
+  });
+  if (!autoplayGate.ok) return autoplayGate;
+  const intervalGate = validateNumberRange({
+    widgetLabel: 'split-carousel-media',
+    value: carousel?.intervalMs,
+    path: 'splitCarouselMedia.carousel.intervalMs',
+    min: 2000,
+    max: 12000,
+  });
+  if (!intervalGate.ok) return intervalGate;
+  for (const key of ['loop', 'showArrows', 'showDots']) {
+    const gate = validateBoolean({
+      widgetLabel: 'split-carousel-media',
+      value: carousel?.[key],
+      path: `splitCarouselMedia.carousel.${key}`,
+    });
+    if (!gate.ok) return gate;
+  }
+
+  return validateCardWrapper({
+    widgetLabel: 'split-carousel-media',
+    cardwrapper: isRecord(splitCarouselMedia?.appearance) ? splitCarouselMedia.appearance.cardwrapper : null,
+    path: 'splitCarouselMedia.appearance.cardwrapper',
+  });
 }
 
 function validateSplitMediaStructure(config: Record<string, unknown>): SavePolicyValidationResult {
   const splitMedia = isRecord(config.splitMedia) ? config.splitMedia : null;
-  return validateMediaFill({
+  const mediaGate = validateMediaFill({
     widgetLabel: 'split-media',
     media: splitMedia?.media,
     path: 'splitMedia.media',
+  });
+  if (!mediaGate.ok) return mediaGate;
+  const fitGate = validateEnum({
+    widgetLabel: 'split-media',
+    value: splitMedia?.fit,
+    path: 'splitMedia.fit',
+    values: ['cover', 'contain'],
+  });
+  if (!fitGate.ok) return fitGate;
+  const positionGate = validateEnum({
+    widgetLabel: 'split-media',
+    value: splitMedia?.position,
+    path: 'splitMedia.position',
+    values: ['top', 'bottom', 'left', 'right', 'center'],
+  });
+  if (!positionGate.ok) return positionGate;
+  return validateCardWrapper({
+    widgetLabel: 'split-media',
+    cardwrapper: isRecord(splitMedia?.appearance) ? splitMedia.appearance.cardwrapper : null,
+    path: 'splitMedia.appearance.cardwrapper',
   });
 }
 

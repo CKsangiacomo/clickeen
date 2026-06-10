@@ -2,110 +2,6 @@
   "v": 1,
   "widgetname": "split-carousel-media",
   "itemKey": "split-carousel-media.item",
-  "normalization": {
-    "coerceRules": [
-      {
-        "path": "behavior.showBacklink",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.enabled",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "behavior.socialShare.channels.copy",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.sms",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.email",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.whatsapp",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.telegram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.signal",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.messenger",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.wechat",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.line",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.slack",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.teams",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.discord",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.x",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.linkedin",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.facebook",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.reddit",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.instagram",
-        "type": "boolean",
-        "default": true
-      },
-      {
-        "path": "behavior.socialShare.channels.tiktok",
-        "type": "boolean",
-        "default": true
-      }
-    ]
-  },
   "defaults": {
     "uiLabels": {
       "core": {
@@ -220,8 +116,11 @@
                   }
                 ],
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "add-label": "Add visual",
+                  "remove-label": "Remove visual {index}",
+                  "move-label": "Move visual {index}",
                   "reorder-label": "Reorder visuals",
                   "reorder-title": "Reorder visuals",
                   "min": "2",
@@ -268,9 +167,11 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
+                "groupId": "layout-media-fit",
                 "path": "splitCarouselMedia.media.fit",
                 "label": "Fit",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "options": [
                     {
@@ -287,9 +188,11 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
+                "groupId": "layout-media-fit",
                 "path": "splitCarouselMedia.media.position",
                 "label": "Position",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "options": [
                     {
@@ -323,9 +226,11 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
+                "groupId": "layout-carousel",
                 "path": "splitCarouselMedia.carousel.transition",
                 "label": "Transition",
                 "attrs": {
+                  "group-label": "",
                   "size": "md",
                   "options": [
                     {
@@ -342,18 +247,22 @@
               {
                 "kind": "field",
                 "type": "toggle",
+                "groupId": "layout-carousel",
                 "path": "splitCarouselMedia.carousel.autoplay",
                 "label": "Autoplay",
                 "attrs": {
+                  "group-label": "",
                   "size": "md"
                 }
               },
               {
                 "kind": "field",
                 "type": "valuefield",
+                "groupId": "layout-carousel",
                 "path": "splitCarouselMedia.carousel.intervalMs",
                 "label": "Interval (ms)",
                 "attrs": {
+                  "group-label": "",
                   "min": "2000",
                   "max": "12000"
                 },
@@ -365,27 +274,33 @@
               {
                 "kind": "field",
                 "type": "toggle",
+                "groupId": "layout-carousel",
                 "path": "splitCarouselMedia.carousel.loop",
                 "label": "Loop",
                 "attrs": {
+                  "group-label": "",
                   "size": "md"
                 }
               },
               {
                 "kind": "field",
                 "type": "toggle",
+                "groupId": "layout-carousel",
                 "path": "splitCarouselMedia.carousel.showArrows",
                 "label": "Show arrows",
                 "attrs": {
+                  "group-label": "",
                   "size": "md"
                 }
               },
               {
                 "kind": "field",
                 "type": "toggle",
+                "groupId": "layout-carousel",
                 "path": "splitCarouselMedia.carousel.showDots",
                 "label": "Show dots",
                 "attrs": {
+                  "group-label": "",
                   "size": "md"
                 }
               }
@@ -425,7 +340,7 @@
                 "type": "dropdown-actions",
                 "groupId": "appearance-visual-frame",
                 "path": "splitCarouselMedia.appearance.cardwrapper.radius",
-                "label": "Visual corner radius",
+                "label": "Corner radius",
                 "showIf": {
                   "path": "splitCarouselMedia.appearance.cardwrapper.radiusLinked",
                   "op": "isTrue"

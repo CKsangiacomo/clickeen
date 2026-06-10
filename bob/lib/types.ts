@@ -45,6 +45,8 @@ export interface CompiledControl {
   itemIdPath?: string;
   min?: number;
   max?: number;
+  step?: number;
+  required?: boolean;
 }
 
 export type WidgetPresetSpec = {

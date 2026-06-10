@@ -296,15 +296,6 @@ function renderTable(
   hydrateUploadControls(tableWrap, accountAssets);
 }
 
-function dispatchUpsell(root: HTMLElement, reasonKey: string) {
-  root.dispatchEvent(
-    new CustomEvent('bob-upsell', {
-      detail: { reasonKey },
-      bubbles: true,
-    })
-  );
-}
-
 export function hydrateBulkEdit(
   scope: Element | DocumentFragment,
   options?: { accountAssets?: AccountAssetsClient },
@@ -336,13 +327,6 @@ export function hydrateBulkEdit(
     };
 
     const openModal = () => {
-      const flags = readPolicyFlags(root);
-      const allowLinks = isFlagEnabled(flags, 'links.enabled');
-      const allowMeta = isFlagEnabled(flags, 'media.meta.enabled');
-      if (!allowLinks && !allowMeta) {
-        dispatchUpsell(root, 'coreui.upsell.reason.flagBlocked');
-        return;
-      }
       render();
       modal.hidden = false;
       const firstInput = modal.querySelector<HTMLInputElement>('input');

@@ -383,6 +383,13 @@ new defaulted paths to old saved instances. Therefore a widget refactor that
 adds or renames body namespace, Shell namespace, or typography roles must
 include one explicit compatibility path:
 
+Widget-local normalization is Core-only. A widget `spec.json` may normalize its
+own namespace, such as repeated item IDs or widget-specific booleans, but it
+must not normalize Shell paths such as `behavior.showBacklink`,
+`behavior.socialShare.*`, `header.*`, `headerCta.*`, `stage.*`, `pod.*`, or
+`coreSize.*`. Shell compatibility belongs at the shared Shell/account defaults
+or materialization boundary, not repeated inside every widget spec.
+
 - Migrate saved account instance source at the account/storage boundary.
 - Add a named load/materialization normalization that creates the missing
   parent state before preview/runtime receives it. Builder session load already

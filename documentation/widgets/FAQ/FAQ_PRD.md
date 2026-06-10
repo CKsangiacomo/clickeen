@@ -24,8 +24,8 @@ How it differs from other widgets:
 
 Layout choices (inside the same Type):
 
-- `layout.type = accordion | list | multicolumn`
-- When `layout.type = multicolumn` (“Cards”), cards packing is controlled by `layout.cardsLayout = grid | masonry`.
+- `faq.layout.type = accordion | list | multicolumn`
+- When `faq.layout.type = multicolumn` (“Cards”), cards packing is controlled by `faq.layout.cardsLayout = grid | masonry`.
 
 ## 0) Non-negotiables (Architecture)
 
@@ -50,9 +50,9 @@ Entitlements mapping (must match `tokyo/product/widgets/faq/limits.json`):
 Key                        | Kind | Path(s)                    | Metric/Mode          | Enforcement        | Notes
 -------------------------- | ---- | -------------------------- | -------------------- | ------------------ | ----------------------------
 branding.remove            | flag | behavior.showBacklink      | boolean (deny false) | load sanitize; ops | Bob gates/rejects editor ops; server save/publish is a named gap
-items.group.small.max  | limit | sections[]                 | count                | ops+publish        | section count limit group
-items.group.medium.max | limit | sections[].faqs[]          | count                | ops+publish        | per-section Q/A count limit group
-items.group.large.max  | limit | sections[].faqs[]          | count-total          | ops+publish        | total Q/A count limit group
+items.group.small.max  | limit | faq.sections[]             | count                | ops+publish        | section count limit group
+items.group.medium.max | limit | faq.sections[].faqs[]      | count                | ops+publish        | per-section Q/A count limit group
+items.group.large.max  | limit | faq.sections[].faqs[]      | count-total          | ops+publish        | total Q/A count limit group
 ```
 
 Current implementation note: `limits.json` maps FAQ state paths to real `ck-policy` keys. Bob enforces the mapping during editor operations today. Server save/publish enforcement is a named `ck-policy` gap and must not be implied until implemented.
@@ -88,17 +88,17 @@ Runtime DOM contract (sections):
 - Each FAQ item has:
   - `id` (string; required, stable)
   - `question` (supports a small allowed set of inline tags; links are not allowed)
-  - `answer` (supports the same inline tags + links; URLs auto-link to anchors only)
+  - `answer` (supports the same inline tags + authored rich-text links only)
   - `defaultOpen` (boolean; accordion only)
 
 ### Canonical IDs (required)
 
-FAQ is strict: `sections[].id` and `sections[].faqs[].id` must exist at runtime.
+FAQ is strict: `faq.sections[].id` and `faq.sections[].faqs[].id` must exist at runtime.
 
 Why:
 
 - Stable list keys (editor + runtime)
-- Deterministic deep links when enabled (`geo.enableDeepLinks`)
+- Deterministic deep links when enabled (`faq.geo.enableDeepLinks`)
 
 Rules:
 
@@ -111,20 +111,20 @@ Rules:
 
 ### Layouts
 
-State: `layout.type`
+State: `faq.layout.type`
 
 - `accordion`: interactive expand/collapse
 - `list`: all answers visible, no interaction
 - `multicolumn` (“Cards”): all answers visible, multi-column layout (responsive columns)
 
-Cards packing (only when `layout.type = multicolumn`):
+Cards packing (only when `faq.layout.type = multicolumn`):
 
-- `layout.cardsLayout = grid` (row/column grid; DOM order maps to row-scan)
-- `layout.cardsLayout = masonry` (CSS columns; visual scan order is column-first top→bottom per column)
+- `faq.layout.cardsLayout = grid` (row/column grid; DOM order maps to row-scan)
+- `faq.layout.cardsLayout = masonry` (CSS columns; visual scan order is column-first top→bottom per column)
 
 ### Accordion behavior
 
-State: `behavior.*`
+State: `faq.behavior.*`
 
 - `expandFirst`
 - `multiOpen`
@@ -135,11 +135,12 @@ State: `behavior.*`
 State: no media toggles.
 
 - Answers do not embed image/video media.
-- URL-like text in answers is sanitized and rendered as safe links.
+- Plain URL-like text in answers stays text. Links render only when authored as
+  rich-text links in Builder.
 
 ## 3) Accordion icon system (single choice, deterministic pairs)
 
-State: `appearance.iconStyle`
+State: `faq.appearance.iconStyle`
 
 - `plus` → expand `plus`, collapse `minus`
 - `chevron` → expand `chevron.down`, collapse `chevron.up`
@@ -147,20 +148,29 @@ State: `appearance.iconStyle`
 - `arrowshape` → expand `arrowshape.down`, collapse `arrowshape.up`
 
 Icons are Dieter icons and should be rendered as `diet-btn-ic` (neutral).
-Icon color is controlled via `appearance.iconColor` (color fill).
+Icon color is controlled via `faq.appearance.iconColor` (color fill).
 
 ## 4) Canonical state (current)
 
 Grouped state (source of truth: `tokyo/product/widgets/faq/spec.json`):
 
-- `sections[]` — content tree (section title + list of Q/A items)
-- `layout.*` — layout type, responsive columns, gap
-- `appearance.*` — link styling + accordion icon choice/color + Q&A card styling (background/border/radius/shadow) + pod border + `appearance.theme` (global theme selector stored in the canonical authored document; runtime ignores it)
-- `behavior.*` — accordion toggles + backlink
-- `seoGeo.*` + `seo.*` + `geo.*` — SEO/GEO controls (schema, canonical URL, deep links)
-- `context.*` — Copilot/product context stored in the canonical authored document (runtime ignores it)
-- `typography.*` — global family + per-role selections (including text colors; explicitly declared shared typography panel)
-- `stage.*` + `pod.*` — stage/pod layout and appearance (including pod shadow)
+- `faq.sections[]` — content tree (section title + list of Q/A items)
+- `faq.displayCategoryTitles` — section title visibility; default is on so authored
+  section content is visible in new instances
+- `faq.layout.*` — layout type, responsive columns, gap, card/list padding
+- `faq.behavior.*` — accordion toggles
+- `faq.geo.enableDeepLinks` — real FAQ runtime behavior for hash-opening questions
+  when `faq.layout.type = accordion`
+- `faq.appearance.*` — link styling + accordion icon choice/color + Q&A card styling
+  (background/border/corners/shadow)
+- `typography.*` — global family + per-role selections (including text colors;
+  explicitly declared shared typography panel)
+- `uiLabels.core.*` — widget-language labels consumed by shared core controls
+
+Resolved instances also contain shared Shell roots (`header`, `headerCta`,
+`stage`, `pod`, `behavior.showBacklink`, social share, locale switcher, Shell
+typography roles). Those roots come from account Shell defaults, not FAQ factory
+Core defaults.
 
 ## 5) Builder editor panels (current)
 
@@ -168,8 +178,8 @@ Panels defined in `tokyo/product/widgets/faq/spec.json`:
 
 - `content` — section manager + Q/A editing + explicitly declared shared header controls
 - `layout` — widget layout + accordion behaviors + responsive columns + explicitly declared shared stage/pod layout
-- `appearance` — theme dropdown (global) + widget appearance + stage/pod appearance
-- `settings` — AI context (website URL) + SEO/GEO toggles + backlink
+- `appearance` — widget appearance + shared header/stage/pod appearance
+- `settings` — FAQ deep-link behavior + shared behavior/backlink controls
 
 Builder editor spacing rule (authoring):
 
@@ -186,10 +196,13 @@ Source: `tokyo/product/widgets/faq/spec.json`
 
 Controls:
 
-- `sections[]` (object manager)
+- `faq.sections[]` (object manager)
   - Section shape: `{ id, title, faqs[] }`
   - Item shape: `{ id, question, answer, defaultOpen }`
-- Global header (declared with shared header controls when `defaults.header` + `defaults.headerCta` exist):
+- `faq.sections[].faqs[].defaultOpen` — per-question toggle shown when
+  `faq.layout.type = accordion`
+- Global header (declared through the shared `header-content` cluster and backed
+  by resolved account Shell defaults):
   - `header.enabled`
   - `header.title`
   - `header.showSubtitle`
@@ -210,10 +223,10 @@ Translation fields:
   - `header.title`
   - `header.subtitleHtml`
   - `headerCta.label`
-  - `sections[].title`
-  - `sections[].faqs[].question`
-  - `sections[].faqs[].answer`
-- Before producer calls, repeatable declarations are expanded against the saved config into concrete paths such as `sections.0.faqs.0.question`.
+  - `faq.sections[].title`
+  - `faq.sections[].faqs[].question`
+  - `faq.sections[].faqs[].answer`
+- Before producer calls, repeatable declarations are expanded against the saved config into concrete paths such as `faq.sections.0.faqs.0.question`.
 - FAQ must not add `localization.json`, layer sidecars, text packs, or wildcard producer payloads.
 - In Builder preview, selecting a translated locale must change FAQ title, subtitle, CTA text, section titles, every question, and every answer together. A target language without translated values for the current save must not display old FAQ text.
 
@@ -223,22 +236,23 @@ Source: `tokyo/product/widgets/faq/spec.json.editor`
 
 Widget layout controls (spec-defined):
 
-- `layout.type` (choice tiles): `accordion | list | multicolumn`
-- `layout.gap` (px number)
+- `faq.layout.type` (choice tiles): `accordion | list | multicolumn`
+- `faq.layout.gap` (px number)
 - Accordion-only:
-  - `behavior.expandFirst`
-  - `behavior.multiOpen`
-  - `behavior.expandAll`
+  - `faq.behavior.expandFirst` (hidden when `faq.behavior.expandAll = true`)
+  - `faq.behavior.multiOpen`
+  - `faq.behavior.expandAll`
 - Multicolumn-only:
-  - `layout.columns.desktop`
-  - `layout.columns.mobile`
-  - `layout.cardsLayout` (`grid | masonry`)
+  - `faq.layout.columns.desktop`
+  - `faq.layout.columns.mobile`
+  - `faq.layout.cardsLayout` (`grid | masonry`)
 - Item padding:
-  - `layout.itemPaddingLinked`
-  - `layout.itemPadding` (when linked)
-  - `layout.itemPaddingTop|Right|Bottom|Left` (when unlinked)
+  - `faq.layout.itemPaddingLinked`
+  - `faq.layout.itemPadding` (when linked)
+  - `faq.layout.itemPaddingTop|Right|Bottom|Left` (when unlinked)
 
-Header layout controls (declared with shared header nodes when `defaults.header` + `defaults.headerCta` exist):
+Header layout controls (declared through shared header nodes and backed by
+resolved account Shell defaults):
 
 - `header.placement`
 - `header.alignment`
@@ -262,21 +276,21 @@ Source: `tokyo/product/widgets/faq/spec.json.editor`
 
 Widget appearance controls (spec-defined):
 
-- `appearance.theme` (canonical authoring theme selector; runtime ignores it)
 - Links (only shown when content contains links):
-  - `appearance.linkStyle`
-  - `appearance.linkUnderlineColor` (when `linkStyle == 'underline'`)
-  - `appearance.linkHighlightColor` (when `linkStyle == 'highlight'`)
-  - `appearance.linkTextColor` (when `linkStyle == 'color'`)
+  - `faq.appearance.linkStyle`
+  - `faq.appearance.linkUnderlineColor` (when `faq.appearance.linkStyle == 'underline'`)
+  - `faq.appearance.linkHighlightColor` (when `faq.appearance.linkStyle == 'highlight'`)
+  - `faq.appearance.linkTextColor` (when `faq.appearance.linkStyle == 'color'`)
 - Accordion-only:
-  - `appearance.iconStyle`
-  - `appearance.iconColor`
+  - `faq.appearance.iconStyle`
+  - `faq.appearance.iconColor`
 - Q&A card:
   - `faq.appearance.itemBackground`
   - `faq.appearance.cardwrapper.radiusLinked` + radius fields
   - `faq.appearance.cardwrapper.border`
   - `faq.appearance.cardwrapper.shadow`
-- Header CTA (declared with shared header controls when `defaults.header` + `defaults.headerCta` exist):
+- Header CTA (declared through shared header controls and backed by resolved
+  account Shell defaults):
   - `appearance.headerCta.background`
   - `appearance.headerCta.textColor`
   - `appearance.headerCta.border`
@@ -307,11 +321,8 @@ Source: `tokyo/product/widgets/faq/spec.json`
 
 Controls:
 
-- SEO/GEO:
-  - `seoGeo.enabled`
-  - `seo.enableSchema` (shown when `seoGeo.enabled == true`)
-  - `seo.canonicalUrl` (shown when `seoGeo.enabled == true`)
-  - `geo.enableDeepLinks` (shown when `seoGeo.enabled == true`)
+- FAQ behavior:
+  - `faq.geo.enableDeepLinks` (shown only when `faq.layout.type = accordion`)
 - Behavior:
   - `behavior.showBacklink`
 
@@ -349,17 +360,13 @@ Compiler-injected (because defaults include `typography.roles`):
 
 - `typography` — standardized typography controls (this is the only place for text styling; compiler strips any author-defined typography panel)
 
-## 5.2) Themes (global, editor-only)
+## 5.2) Non-runtime context
 
-- Theme is a **global** dropdown in Appearance (`appearance.theme`).
-- Selection previews in-editor; only **Apply theme** commits changes to state.
-- Themes apply only: `stage.background`, `pod.background`, `appearance.itemBackground`, and `typography.globalFamily`.
-- Canonical non-runtime fields:
-  - `appearance.theme` remains part of the canonical authored FAQ document when
-    explicitly supported by the editor.
-  - Website URL is account/workspace context, not FAQ widget default or instance
-    config.
-  - FAQ runtime must not depend on either field.
+- Website URL is account/workspace context, not FAQ widget default or instance
+  config.
+- FAQ runtime must not depend on account/workspace context.
+- FAQ does not expose theme, schema, or canonical URL controls until a named
+  product output path exists.
 
 ## 6) Runtime requirements
 
@@ -367,7 +374,8 @@ Widget runtime (`tokyo/product/widgets/faq/widget.client.js`) must:
 
 - Render from state deterministically (no default merges; missing required state is an editor bug)
 - Sanitize any inline HTML allowed in questions/answers
-- Convert URLs in answers to links only (no media embedding)
+- Render links only when authored as rich-text links; runtime must not invent
+  links from plain URL text that Builder cannot see
 - Use Dieter tokens + Dieter icon system for visuals
 
 Saved/open boundary requirements:
@@ -384,5 +392,7 @@ When changing FAQ state/controls/runtime, keep the system coherent:
 2. `tokyo/product/widgets/faq/widget.client.js`: update `assertFaqState(...)` + `applyState(...)` so every control has a deterministic effect.
 3. Do not create `tokyo/product/widgets/faq/agent.md`; it is deleted widget source and not schema authority.
 4. `tokyo/product/widgets/faq/limits.json`: update policy-key mappings if you add gated controls/metrics.
-5. Do not add widget `seo-geo.ts` or `catalog.capabilities.seoGeo`; SEO/GEO output belongs to a later named static publish/SEO operation.
+5. Do not add widget `seo-geo.ts`, `catalog.capabilities.seoGeo`, or
+   user-facing schema/canonical controls until a named static publish/SEO
+   operation exists.
 6. Verify with repo typecheck/build and the relevant Cloudflare verification; do not use a localhost Bob HTTP compile gate.

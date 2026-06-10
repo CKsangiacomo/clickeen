@@ -71,23 +71,6 @@
     );
   }
 
-  function hasRenderableCallToAction(calltoaction) {
-    return (
-      isRecord(calltoaction) &&
-      typeof calltoaction.showEyebrow === 'boolean' &&
-      typeof calltoaction.eyebrow === 'string' &&
-      typeof calltoaction.headline === 'string' &&
-      typeof calltoaction.showSupportingText === 'boolean' &&
-      typeof calltoaction.supportingTextHtml === 'string' &&
-      isRecord(calltoaction.action) &&
-      isRecord(calltoaction.actionStyle) &&
-      isRecord(calltoaction.layout) &&
-      typeof calltoaction.layout.alignment === 'string' &&
-      typeof calltoaction.layout.gap === 'number' &&
-      typeof calltoaction.layout.textWidth === 'number'
-    );
-  }
-
   function unwrapElement(el) {
     var parent = el.parentNode;
     if (!parent) return;
@@ -187,15 +170,15 @@
     contentEl.style.setProperty('--ck-calltoaction-action-radius', appearance.tokenizeRadius(assertEnum(style.radius, 'state.calltoaction.actionStyle.radius', ['none', 'sm', 'md', 'lg', 'xl', '2xl'])));
     contentEl.style.setProperty(
       '--ck-calltoaction-action-padding-inline',
-      assertNumber(style.paddingInline, 'state.calltoaction.actionStyle.paddingInline', 0, 80) + 'px',
+      assertNumber(style.paddingInline, 'state.calltoaction.actionStyle.paddingInline', 8, 48) + 'px',
     );
     contentEl.style.setProperty(
       '--ck-calltoaction-action-padding-block',
-      assertNumber(style.paddingBlock, 'state.calltoaction.actionStyle.paddingBlock', 0, 64) + 'px',
+      assertNumber(style.paddingBlock, 'state.calltoaction.actionStyle.paddingBlock', 6, 36) + 'px',
     );
     contentEl.style.setProperty(
       '--ck-calltoaction-action-icon-size',
-      assertNumber(style.iconSize, 'state.calltoaction.actionStyle.iconSize', 0, 80) + 'px',
+      assertNumber(style.iconSize, 'state.calltoaction.actionStyle.iconSize', 10, 40) + 'px',
     );
 
     var border = assertRecord(style.border, 'state.calltoaction.actionStyle.border');
@@ -277,22 +260,20 @@
     var resolvedInstanceId = runtimeContext.instanceId;
 
     function renderCallToAction(state) {
-      if (!hasRenderableCallToAction(state.calltoaction)) {
-        contentEl.hidden = true;
-        return;
-      }
-      contentEl.hidden = false;
       var calltoaction = assertRecord(state.calltoaction, 'state.calltoaction');
       var layout = assertRecord(calltoaction.layout, 'state.calltoaction.layout');
+      var action = assertRecord(calltoaction.action, 'state.calltoaction.action');
+      assertRecord(calltoaction.actionStyle, 'state.calltoaction.actionStyle');
       var alignment = assertEnum(layout.alignment, 'state.calltoaction.layout.alignment', ['left', 'center', 'right']);
-      var gap = assertNumber(layout.gap, 'state.calltoaction.layout.gap', 0, 120);
-      var textWidth = assertNumber(layout.textWidth, 'state.calltoaction.layout.textWidth', 240, 1600);
+      var gap = assertNumber(layout.gap, 'state.calltoaction.layout.gap', 0, 80);
+      var textWidth = assertNumber(layout.textWidth, 'state.calltoaction.layout.textWidth', 280, 1200);
       var showEyebrow = assertBoolean(calltoaction.showEyebrow, 'state.calltoaction.showEyebrow');
       var eyebrow = assertString(calltoaction.eyebrow, 'state.calltoaction.eyebrow');
       var titleHtml = sanitizeInlineHtml(assertString(calltoaction.headline, 'state.calltoaction.headline'), false);
       var showCopy = assertBoolean(calltoaction.showSupportingText, 'state.calltoaction.showSupportingText');
       var copyHtml = sanitizeInlineHtml(assertString(calltoaction.supportingTextHtml, 'state.calltoaction.supportingTextHtml'), true);
 
+      contentEl.hidden = false;
       contentEl.dataset.align = alignment;
       contentEl.style.setProperty('--ck-calltoaction-content-gap', gap + 'px');
       contentEl.style.setProperty('--ck-calltoaction-text-width', textWidth + 'px');
@@ -307,16 +288,15 @@
       copyEl.hidden = !showCopy || copyHtml.length === 0;
 
       applyActionStyle(calltoaction, contentEl);
-      applyAction(calltoaction.action, contentEl, actionEl, actionLabelEl, actionIconEl);
+      applyAction(action, contentEl, actionEl, actionLabelEl, actionIconEl);
     }
 
     function applyState(state, context) {
-      if (!state) return;
       assertRecord(state, 'state');
       if (!window.CKStagePod?.applyStagePod) {
         throw new Error('[CallToAction] Missing CKStagePod.applyStagePod');
       }
-      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
 
       if (!window.CKTypography?.applyTypography) {
         throw new Error('[CallToAction] Missing CKTypography.applyTypography');
@@ -342,12 +322,12 @@
       }
       window.CKHeader.applyHeader(state, widgetRoot);
 
-      renderCallToAction(state);
-
       if (!window.CKCoreSize?.applyCoreSize) {
         throw new Error('[CallToAction] Missing CKCoreSize.applyCoreSize');
       }
       window.CKCoreSize.applyCoreSize(state.coreSize, contentEl);
+
+      renderCallToAction(state);
 
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
         throw new Error('[CallToAction] Missing CKLocaleSwitcher.applyLocaleSwitcher');
@@ -362,6 +342,16 @@
       if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
         window.CKBranding.applyBacklink(widgetRoot, state);
       }
+
+      if (!window.CKSocialShare?.apply) {
+        throw new Error('[CallToAction] Missing CKSocialShare.apply');
+      }
+      window.CKSocialShare.apply(widgetRoot, state, {
+        instanceId: context && context.instanceId,
+        widgetType: 'calltoaction',
+        widgetLabel: document.title || 'Call to Action',
+        previewMode: context && context.previewMode,
+      });
     }
 
     var previewLocaleRequest = 0;
@@ -374,7 +364,7 @@
       baseLocale,
       translatedLocaleValues,
     ) {
-      if (!state) return;
+      assertRecord(state, 'state');
       var requestId = ++previewLocaleRequest;
       var helper =
         window.CK_PREVIEW_L10N &&
@@ -426,14 +416,11 @@
     );
 
     var initialLocale = runtimeContext.locale || '';
-    var initialState = runtimeContext.state;
-    if (initialState) {
-      applyState(initialState, {
-        ...runtimeContext,
-        locale: initialLocale,
-        instanceId: resolvedInstanceId,
-      });
-    }
+    applyState(runtimeContext.state, {
+      ...runtimeContext,
+      locale: initialLocale,
+      instanceId: resolvedInstanceId,
+    });
   }
 
   runtime.register('calltoaction', initCallToAction);

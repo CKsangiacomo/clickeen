@@ -259,14 +259,6 @@ var Dieter = (() => {
     tableWrap.appendChild(table);
     hydrateUploadControls(tableWrap, accountAssets);
   }
-  function dispatchUpsell(root, reasonKey) {
-    root.dispatchEvent(
-      new CustomEvent("bob-upsell", {
-        detail: { reasonKey },
-        bubbles: true
-      })
-    );
-  }
   function hydrateBulkEdit(scope, options) {
     scope.querySelectorAll(".diet-bulk-edit").forEach((root) => {
       if (root.dataset.bulkEditHydrated === "true") return;
@@ -290,13 +282,6 @@ var Dieter = (() => {
         renderTable(tableWrap, rows, columns, flags, emptyLabel, options?.accountAssets ?? null);
       };
       const openModal = () => {
-        const flags = readPolicyFlags(root);
-        const allowLinks = isFlagEnabled(flags, "links.enabled");
-        const allowMeta = isFlagEnabled(flags, "media.meta.enabled");
-        if (!allowLinks && !allowMeta) {
-          dispatchUpsell(root, "coreui.upsell.reason.flagBlocked");
-          return;
-        }
         render();
         modal.hidden = false;
         const firstInput = modal.querySelector("input");

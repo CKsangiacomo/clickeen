@@ -26,7 +26,8 @@ type EditorCondition =
   | { path: string; op: 'isTrue' | 'isFalse' }
   | { path: string; op: 'in'; value: Array<string | number | boolean | null> }
   | { call: 'hasLinks'; args: Array<{ path: string }> }
-  | { all: EditorCondition[] };
+  | { all: EditorCondition[] }
+  | { any: EditorCondition[] };
 
 type EditorTextNode = {
   kind: 'text';
@@ -120,6 +121,12 @@ export function renderEditorShowIf(condition: unknown): string {
     const parts = condition.all.map((part) => renderEditorShowIf(part));
     if (parts.length === 0) throw new Error('[BobCompiler] showIf.all must not be empty');
     return parts.join(' && ');
+  }
+
+  if (Array.isArray(condition.any)) {
+    const parts = condition.any.map((part) => `(${renderEditorShowIf(part)})`);
+    if (parts.length === 0) throw new Error('[BobCompiler] showIf.any must not be empty');
+    return parts.join(' || ');
   }
 
   if (condition.call === 'hasLinks') {
@@ -287,13 +294,20 @@ function readRecordPath(root: JsonObject, path: string): JsonObject | null {
 function resolveCardWrapperPath(
   defaults: JsonObject,
   widgetname: string,
-): { basePath: string; hasInsideShadow: boolean } | null {
+): { basePath: string; hasInsideShadow: boolean; itemLabel?: string } | null {
   const candidates = [`${widgetname}.appearance.cardwrapper`];
+  const coreLabel =
+    isPlainObject(defaults.uiLabels) &&
+    isPlainObject(defaults.uiLabels.core) &&
+    typeof defaults.uiLabels.core.singular === 'string'
+      ? defaults.uiLabels.core.singular.trim()
+      : '';
   for (const basePath of candidates) {
     if (readRecordPath(defaults, basePath)) {
       return {
         basePath,
         hasInsideShadow: Boolean(readRecordPath(defaults, `${basePath}.insideShadow`)),
+        itemLabel: coreLabel || undefined,
       };
     }
   }
@@ -391,6 +405,7 @@ function renderPanel(
               basePath: cardWrapper.basePath,
               existingPaths: editorFieldPaths,
               includeInsideShadow: cardWrapper.hasInsideShadow,
+              itemLabel: cardWrapper.itemLabel,
             }),
           );
           injectedCoreCardWrapper = true;

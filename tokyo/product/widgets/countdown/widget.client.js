@@ -17,6 +17,7 @@
   const {
     widgetRoot: resolvedWidgetRoot,
     countdownRoot,
+    coreEl,
     timerEl,
     numberDisplayEl,
     numberValueEl,
@@ -30,48 +31,7 @@
   } = dom;
   widgetRoot = resolvedWidgetRoot;
 
-  const THEME_KEYS = new Set([
-    'custom',
-    'light',
-    'dark',
-    'gradient',
-    'pastel',
-    'halloween',
-    'thanksgiving',
-    'black-friday',
-    'cyber-monday',
-    'christmas',
-    'new-year',
-    'valentines',
-    'easter',
-    'summer',
-  ]);
-  const ANIMATION_KEYS = new Set(['fade']);
   const TIMER_UNIT_KEYS = ['days', 'hours', 'minutes', 'seconds'];
-  const LAYOUT_POSITION_LIST = [
-    'inline',
-    'full-width',
-    'top-bar',
-    'bottom-bar',
-    'static-top',
-    'top',
-    'bottom',
-    'left',
-    'right',
-    'center',
-    'top-left',
-    'top-right',
-    'bottom-left',
-    'bottom-right',
-  ];
-  const LAYOUT_POSITION_KEYS = new Set(LAYOUT_POSITION_LIST);
-  const RENDER_LAYOUT_POSITION_KEYS = new Set(['inline', 'full-width', 'top-bar', 'bottom-bar', 'static-top']);
-  const DEFAULT_TIMER_LABELS = {
-    days: 'Days',
-    hours: 'Hours',
-    minutes: 'Minutes',
-    seconds: 'Seconds',
-  };
 
   function assertBoolean(value, path) {
     if (typeof value !== 'boolean') {
@@ -91,6 +51,27 @@
     }
   }
 
+  function assertNonEmptyString(value, path) {
+    assertString(value, path);
+    if (!value.trim()) {
+      throw new Error(`[Countdown] ${path} must not be empty`);
+    }
+  }
+
+  function assertEnum(value, path, options) {
+    assertString(value, path);
+    if (!options.includes(value)) {
+      throw new Error(`[Countdown] ${path} must be one of: ${options.join(', ')}`);
+    }
+  }
+
+  function assertPositiveNumber(value, path) {
+    assertNumber(value, path);
+    if (value <= 0) {
+      throw new Error(`[Countdown] ${path} must be > 0`);
+    }
+  }
+
   function assertObject(value, path) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       throw new Error(`[Countdown] ${path} must be an object`);
@@ -105,6 +86,22 @@
     if (typeof value.type !== 'string' || !value.type.trim()) {
       throw new Error(`[Countdown] ${path}.type must be a string`);
     }
+  }
+
+  function resolveActionHref(raw, path, options) {
+    const required = options && options.required === true;
+    assertString(raw, path);
+    const value = raw.trim();
+    if (!value) {
+      if (required) throw new Error(`[Countdown] ${path} must not be empty`);
+      return '';
+    }
+    if (value === '#') return value;
+    if (value.startsWith('/')) return value;
+    if (/^https?:\/\//i.test(value)) return value;
+    if (/^mailto:[^\s]+$/i.test(value)) return value;
+    if (/^tel:[+0-9().\-\s]+$/i.test(value)) return value;
+    throw new Error(`[Countdown] ${path} must be empty, #, root-relative, http(s), mailto, or tel`);
   }
 
   function assertBorderConfig(value, path) {
@@ -132,6 +129,66 @@
     }
   }
 
+  function assertCoreSize(value, path) {
+    assertObject(value, path);
+    assertEnum(value.mode, `${path}.mode`, ['auto', 'fixed', 'responsive']);
+    assertPositiveNumber(value.fixedHeight, `${path}.fixedHeight`);
+    assertPositiveNumber(value.minHeight, `${path}.minHeight`);
+    assertPositiveNumber(value.preferredVw, `${path}.preferredVw`);
+    assertPositiveNumber(value.maxHeight, `${path}.maxHeight`);
+    if (value.maxHeight < value.minHeight) {
+      throw new Error(`[Countdown] ${path}.maxHeight must be >= ${path}.minHeight`);
+    }
+  }
+
+  function assertLocaleSwitcher(value, path) {
+    assertObject(value, path);
+    assertBoolean(value.enabled, `${path}.enabled`);
+    assertBoolean(value.byIp, `${path}.byIp`);
+    assertString(value.alwaysShowLocale, `${path}.alwaysShowLocale`);
+    assertEnum(value.attachTo, `${path}.attachTo`, ['stage', 'pod']);
+    assertEnum(value.position, `${path}.position`, [
+      'top-left',
+      'top-center',
+      'top-right',
+      'right-middle',
+      'bottom-right',
+      'bottom-center',
+      'bottom-left',
+      'left-middle',
+    ]);
+  }
+
+  const SOCIAL_SHARE_CHANNELS = [
+    'copy',
+    'sms',
+    'email',
+    'whatsapp',
+    'telegram',
+    'signal',
+    'messenger',
+    'wechat',
+    'line',
+    'slack',
+    'teams',
+    'discord',
+    'x',
+    'linkedin',
+    'facebook',
+    'reddit',
+    'instagram',
+    'tiktok',
+  ];
+
+  function assertSocialShare(value, path) {
+    assertObject(value, path);
+    assertBoolean(value.enabled, `${path}.enabled`);
+    assertObject(value.channels, `${path}.channels`);
+    SOCIAL_SHARE_CHANNELS.forEach((channel) => {
+      assertBoolean(value.channels[channel], `${path}.channels.${channel}`);
+    });
+  }
+
   function parseTargetDate(raw) {
     const value = String(raw || '').trim();
     const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
@@ -149,6 +206,17 @@
     if (hour < 0 || hour > 23) throw new Error('[Countdown] state.countdown.timer.targetDate hour must be 0..23');
     if (minute < 0 || minute > 59) throw new Error('[Countdown] state.countdown.timer.targetDate minute must be 0..59');
     if (second < 0 || second > 59) throw new Error('[Countdown] state.countdown.timer.targetDate second must be 0..59');
+    const calendarDate = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+    if (
+      calendarDate.getUTCFullYear() !== year ||
+      calendarDate.getUTCMonth() !== month - 1 ||
+      calendarDate.getUTCDate() !== day ||
+      calendarDate.getUTCHours() !== hour ||
+      calendarDate.getUTCMinutes() !== minute ||
+      calendarDate.getUTCSeconds() !== second
+    ) {
+      throw new Error('[Countdown] state.countdown.timer.targetDate must be a real calendar date');
+    }
     return { year, month, day, hour, minute, second };
   }
 
@@ -194,17 +262,19 @@
     if (!['left', 'right'].includes(state.headerCta.iconPlacement)) {
       throw new Error('[Countdown] state.headerCta.iconPlacement must be left|right');
     }
+    assertString(state.headerCta.openMode, 'state.headerCta.openMode');
+    if (!['same-tab', 'new-tab', 'new-window'].includes(state.headerCta.openMode)) {
+      throw new Error('[Countdown] state.headerCta.openMode must be same-tab|new-tab|new-window');
+    }
 
     assertObject(state.countdown.timer, 'state.countdown.timer');
     if (!['date', 'personal', 'number'].includes(state.countdown.timer.mode)) {
       throw new Error('[Countdown] state.countdown.timer.mode must be date|personal|number');
     }
-    if (state.countdown.timer.labels !== undefined) {
-      assertObject(state.countdown.timer.labels, 'state.countdown.timer.labels');
-      TIMER_UNIT_KEYS.forEach((unit) => {
-        assertString(state.countdown.timer.labels[unit], `state.countdown.timer.labels.${unit}`);
-      });
-    }
+    assertObject(state.countdown.timer.labels, 'state.countdown.timer.labels');
+    TIMER_UNIT_KEYS.forEach((unit) => {
+      assertNonEmptyString(state.countdown.timer.labels[unit], `state.countdown.timer.labels.${unit}`);
+    });
 
     if (state.countdown.timer.mode === 'date') {
       assertString(state.countdown.timer.targetDate, 'state.countdown.timer.targetDate');
@@ -232,11 +302,6 @@
         throw new Error('[Countdown] state.countdown.timer.countDuration must be > 0');
       }
     }
-    assertObject(state.countdown.layout, 'state.countdown.layout');
-    assertString(state.countdown.layout.position, 'state.countdown.layout.position');
-    if (!LAYOUT_POSITION_KEYS.has(state.countdown.layout.position)) {
-      throw new Error(`[Countdown] state.countdown.layout.position must be ${LAYOUT_POSITION_LIST.join('|')}`);
-    }
     assertObject(state.appearance, 'state.appearance');
     assertObject(state.countdown.appearance, 'state.countdown.appearance');
     assertString(state.countdown.appearance.timerStyle, 'state.countdown.appearance.timerStyle');
@@ -248,14 +313,6 @@
       throw new Error('[Countdown] state.countdown.appearance.timeFormat must be auto|D:H:M:S|H:M:S');
     }
     assertBoolean(state.countdown.appearance.showLabels, 'state.countdown.appearance.showLabels');
-    assertString(state.countdown.appearance.theme, 'state.countdown.appearance.theme');
-    if (!THEME_KEYS.has(state.countdown.appearance.theme)) {
-      throw new Error(`[Countdown] state.countdown.appearance.theme must be one of: ${Array.from(THEME_KEYS).join(', ')}`);
-    }
-    assertString(state.countdown.appearance.animation, 'state.countdown.appearance.animation');
-    if (!ANIMATION_KEYS.has(state.countdown.appearance.animation)) {
-      throw new Error(`[Countdown] state.countdown.appearance.animation must be one of: ${Array.from(ANIMATION_KEYS).join(', ')}`);
-    }
     assertFill(state.countdown.appearance.textColor, 'state.countdown.appearance.textColor');
     assertFill(state.countdown.appearance.itemBackground, 'state.countdown.appearance.itemBackground');
     assertString(state.countdown.appearance.separator, 'state.countdown.appearance.separator');
@@ -276,6 +333,12 @@
       throw new Error('[Countdown] state.appearance.headerCta.iconSizePreset must be xs|s|m|l|xl|custom');
     }
     assertNumber(state.appearance.headerCta.iconSize, 'state.appearance.headerCta.iconSize');
+    assertFill(state.appearance.localeSwitcherBackground, 'state.appearance.localeSwitcherBackground');
+    assertFill(state.appearance.localeSwitcherTextColor, 'state.appearance.localeSwitcherTextColor');
+    assertBorderConfig(state.appearance.localeSwitcherBorder, 'state.appearance.localeSwitcherBorder');
+    assertString(state.appearance.localeSwitcherRadius, 'state.appearance.localeSwitcherRadius');
+    assertNumber(state.appearance.localeSwitcherPaddingInline, 'state.appearance.localeSwitcherPaddingInline');
+    assertNumber(state.appearance.localeSwitcherPaddingBlock, 'state.appearance.localeSwitcherPaddingBlock');
     assertObject(state.countdown.appearance.cardwrapper, 'state.countdown.appearance.cardwrapper');
     assertBoolean(state.countdown.appearance.cardwrapper.radiusLinked, 'state.countdown.appearance.cardwrapper.radiusLinked');
     assertString(state.countdown.appearance.cardwrapper.radius, 'state.countdown.appearance.cardwrapper.radius');
@@ -288,6 +351,7 @@
     assertBorderConfig(state.appearance.podBorder, 'state.appearance.podBorder');
     assertObject(state.behavior, 'state.behavior');
     assertBoolean(state.behavior.showBacklink, 'state.behavior.showBacklink');
+    assertSocialShare(state.behavior.socialShare, 'state.behavior.socialShare');
     assertObject(state.countdown.actions, 'state.countdown.actions');
     assertObject(state.countdown.actions.during, 'state.countdown.actions.during');
     assertString(state.countdown.actions.during.url, 'state.countdown.actions.during.url');
@@ -303,68 +367,21 @@
     assertString(state.countdown.actions.after.url, 'state.countdown.actions.after.url');
     assertString(state.countdown.actions.after.text, 'state.countdown.actions.after.text');
     assertObject(state.stage, 'state.stage');
+    assertEnum(state.stage.alignment, 'state.stage.alignment', ['left', 'center', 'right', 'top', 'bottom']);
     assertObject(state.pod, 'state.pod');
+    assertCoreSize(state.coreSize, 'state.coreSize');
+    assertLocaleSwitcher(state.localeSwitcher, 'state.localeSwitcher');
     assertObject(state.typography, 'state.typography');
-    assertObject(state.countdown.seoGeo, 'state.countdown.seoGeo');
-    assertBoolean(state.countdown.seoGeo.enabled, 'state.countdown.seoGeo.enabled');
-  }
-
-  function sanitizeInlineHtml(html) {
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = String(html);
-    const allowed = new Set(['STRONG', 'B', 'EM', 'I', 'U', 'S', 'A', 'BR']);
-    wrapper.querySelectorAll('*').forEach((node) => {
-      const el = node;
-      const tag = el.tagName;
-      if (!allowed.has(tag)) {
-        const parent = el.parentNode;
-        if (!parent) return;
-        const before = el.previousSibling;
-        const after = el.nextSibling;
-        const needsSpaceBefore =
-          before &&
-          before.nodeType === Node.TEXT_NODE &&
-          before.textContent &&
-          !/\s$/.test(before.textContent);
-        const needsSpaceAfter =
-          after &&
-          after.nodeType === Node.TEXT_NODE &&
-          after.textContent &&
-          !/^\s/.test(after.textContent);
-        if (needsSpaceBefore) parent.insertBefore(document.createTextNode(' '), el);
-        while (el.firstChild) parent.insertBefore(el.firstChild, el);
-        if (needsSpaceAfter) parent.insertBefore(document.createTextNode(' '), el.nextSibling);
-        parent.removeChild(el);
-        return;
-      }
-
-      if (tag === 'A') {
-        const href = el.getAttribute('href') || '';
-        if (!/^(?:https?:\/\/|\/|#)/i.test(href)) {
-          el.removeAttribute('href');
-          el.removeAttribute('target');
-          el.removeAttribute('rel');
-        } else {
-          if (el.getAttribute('target') === '_blank') el.setAttribute('rel', 'noopener');
-          else el.removeAttribute('rel');
-        }
-        Array.from(el.attributes).forEach((attr) => {
-          if (['href', 'target', 'rel'].includes(attr.name)) return;
-          if (attr.name === 'class' && /\bdiet-dropdown-edit-link\b/.test(attr.value)) return;
-          el.removeAttribute(attr.name);
-        });
-      } else {
-        Array.from(el.attributes).forEach((attr) => el.removeAttribute(attr.name));
-      }
-    });
-    return wrapper.innerHTML;
-  }
-
-  function normalizeHref(raw) {
-    const v = String(raw || '').trim();
-    if (!v) return null;
-    if (/^(?:https?:\/\/|\/|#)/i.test(v)) return v;
-    return null;
+    resolveActionHref(state.countdown.actions.during.url, 'state.countdown.actions.during.url', { required: false });
+    if (state.countdown.actions.during.url.trim()) {
+      assertNonEmptyString(state.countdown.actions.during.text, 'state.countdown.actions.during.text');
+    }
+    if (state.countdown.actions.after.type === 'link') {
+      resolveActionHref(state.countdown.actions.after.url, 'state.countdown.actions.after.url', { required: true });
+      assertNonEmptyString(state.countdown.actions.after.text, 'state.countdown.actions.after.text');
+    } else {
+      resolveActionHref(state.countdown.actions.after.url, 'state.countdown.actions.after.url', { required: false });
+    }
   }
 
   function getTimeZoneOffset(date, timeZone) {
@@ -450,7 +467,7 @@
     if (!window.CKStagePod?.applyStagePod) {
       throw new Error('[Countdown] Missing CKStagePod.applyStagePod');
     }
-    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
+    window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
 
     if (!window.CKTypography?.applyTypography) {
       throw new Error('[Countdown] Missing CKTypography.applyTypography');
@@ -464,6 +481,7 @@
         timer: { varKey: 'timer' },
         label: { varKey: 'label' },
         button: { varKey: 'button' },
+        localeSwitcher: { varKey: 'localeSwitcher' },
       },
       { locale: runtimeContext && runtimeContext.locale, instanceId: resolvedInstanceId },
     );
@@ -472,6 +490,11 @@
       throw new Error('[Countdown] Missing CKHeader.applyHeader');
     }
     window.CKHeader.applyHeader(state, widgetRoot);
+
+    if (!window.CKCoreSize?.applyCoreSize) {
+      throw new Error('[Countdown] Missing CKCoreSize.applyCoreSize');
+    }
+    window.CKCoreSize.applyCoreSize(state.coreSize, coreEl);
 
     if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
       throw new Error('[Countdown] Missing CKLocaleSwitcher.applyLocaleSwitcher');
@@ -482,10 +505,6 @@
       previewMode: runtimeContext && runtimeContext.previewMode,
       typographyScope: countdownRoot,
     });
-
-    if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
-      window.CKBranding.applyBacklink(widgetRoot, state);
-    }
 
     applyAppearanceVars(state);
     applyLayoutVars(state);
@@ -503,6 +522,21 @@
       numberDisplayEl.hidden = true;
       unitsDisplayEl.hidden = false;
     }
+
+    if (!window.CKBranding?.applyBacklink) {
+      throw new Error('[Countdown] Missing CKBranding.applyBacklink');
+    }
+    window.CKBranding.applyBacklink(widgetRoot, state);
+
+    if (!window.CKSocialShare?.apply) {
+      throw new Error('[Countdown] Missing CKSocialShare.apply');
+    }
+    window.CKSocialShare.apply(widgetRoot, state, {
+      instanceId: runtimeContext && runtimeContext.instanceId || resolvedInstanceId,
+      widgetType: 'countdown',
+      widgetLabel: document.title || 'Countdown',
+      previewMode: runtimeContext && runtimeContext.previewMode,
+    });
   }
 
   function resolveAppearanceHelpers() {
@@ -523,39 +557,21 @@
 
     countdownRoot.setAttribute('data-timer-style', state.countdown.appearance.timerStyle);
     countdownRoot.setAttribute('data-show-labels', state.countdown.appearance.showLabels ? 'true' : 'false');
-    countdownRoot.setAttribute('data-animation', state.countdown.appearance.animation);
     countdownRoot.style.setProperty('--countdown-text-color', textColor);
     countdownRoot.style.setProperty('--countdown-item-bg', itemBackground);
 
-    if (podEl instanceof HTMLElement) {
-      const podBorder = state.appearance.podBorder;
-      const podEnabled = podBorder.enabled === true && podBorder.width > 0;
-      podEl.style.setProperty('--pod-border-width', podEnabled ? `${podBorder.width}px` : '0px');
-      podEl.style.setProperty('--pod-border-color', podEnabled ? podBorder.color : 'transparent');
-    }
     if (!window.CKSurface?.applyCardWrapper) {
       throw new Error('[Countdown] Missing CKSurface.applyCardWrapper');
     }
     window.CKSurface.applyCardWrapper(state.countdown.appearance.cardwrapper, countdownRoot);
 
-    const separatorText = String(state.countdown.appearance.separator || ':');
     timerEl.querySelectorAll('[data-role="separator"]').forEach((el) => {
-      el.textContent = separatorText;
+      el.textContent = state.countdown.appearance.separator;
     });
   }
 
   function resolveTimerLabels(timerState) {
-    const resolved = { ...DEFAULT_TIMER_LABELS };
-    const labels = timerState && typeof timerState === 'object' ? timerState.labels : null;
-    if (!labels || typeof labels !== 'object') return resolved;
-    TIMER_UNIT_KEYS.forEach((unit) => {
-      const raw = labels[unit];
-      if (typeof raw !== 'string') return;
-      const trimmed = raw.trim();
-      if (!trimmed) return;
-      resolved[unit] = trimmed;
-    });
-    return resolved;
+    return timerState.labels;
   }
 
   function applyUnitLabels(timerState) {
@@ -570,17 +586,9 @@
   }
 
   function applyLayoutVars(state) {
-    const rawLayoutPosition = state.countdown.layout?.position;
-    const layoutPosition = typeof rawLayoutPosition === 'string' && RENDER_LAYOUT_POSITION_KEYS.has(rawLayoutPosition)
-      ? rawLayoutPosition
-      : 'inline';
-    const stageAlignment = state.stage?.alignment;
-    const derivedAlignment = stageAlignment === 'left' || stageAlignment === 'right' ? stageAlignment : 'center';
-    const alignment = derivedAlignment;
-
-    countdownRoot.setAttribute('data-layout-position', layoutPosition);
-    countdownRoot.setAttribute('data-layout-align', alignment);
-    stageEl.setAttribute('data-layout-position', layoutPosition);
+    countdownRoot.setAttribute('data-layout-position', 'inline');
+    countdownRoot.setAttribute('data-layout-align', 'center');
+    stageEl.setAttribute('data-layout-position', 'inline');
     countdownRoot.style.removeProperty('--countdown-content-width');
     countdownRoot.removeAttribute('data-layout-width');
   }
@@ -588,7 +596,7 @@
 
 
   function applyActionsDuring(state) {
-    const href = normalizeHref(state.countdown.actions.during.url);
+    const href = resolveActionHref(state.countdown.actions.during.url, 'state.countdown.actions.during.url', { required: false });
     hasDuringCta = Boolean(href);
 
     ctaEl.setAttribute('data-variant', state.countdown.actions.during.style);
@@ -612,7 +620,9 @@
   }
 
   function applyAfterMessage(state) {
-    const href = normalizeHref(state.countdown.actions.after.url);
+    const href = resolveActionHref(state.countdown.actions.after.url, 'state.countdown.actions.after.url', {
+      required: state.countdown.actions.after.type === 'link',
+    });
     hasAfterLink = state.countdown.actions.after.type === 'link' && Boolean(href);
 
     afterLinkEl.textContent = state.countdown.actions.after.text;
@@ -632,6 +642,7 @@
   function renderPhase(state, phase) {
     if (phase === 'active') {
       stageEl.hidden = false;
+      coreEl.hidden = false;
       timerEl.hidden = false;
       afterMsgEl.hidden = true;
       ctaEl.hidden = !hasDuringCta;
@@ -639,11 +650,13 @@
     }
 
     if (state.countdown.actions.after.type === 'hide') {
-      stageEl.hidden = true;
+      stageEl.hidden = false;
+      coreEl.hidden = true;
       return;
     }
 
     stageEl.hidden = false;
+    coreEl.hidden = false;
     timerEl.hidden = true;
     ctaEl.hidden = true;
     afterMsgEl.hidden = !hasAfterLink;
@@ -694,17 +707,27 @@
 
     if (state.countdown.timer.mode === 'personal') {
       const storageKey = resolveStorageKey(state);
-      let startMs = Date.now();
-      if (storageKey) {
+      if (!storageKey) {
+        throw new Error('[Countdown] personal timer requires an instance id');
+      }
+      let startMs;
+      let stored;
+      try {
+        stored = localStorage.getItem(`countdown_${storageKey}`);
+      } catch {
+        throw new Error('[Countdown] personal timer storage is unavailable');
+      }
+      if (stored) {
+        startMs = Number(stored);
+        if (!Number.isFinite(startMs)) {
+          throw new Error('[Countdown] personal timer stored start is invalid');
+        }
+      } else {
+        startMs = Date.now();
         try {
-          const stored = localStorage.getItem(`countdown_${storageKey}`);
-          if (stored) startMs = Number(stored);
-          if (!Number.isFinite(startMs)) startMs = Date.now();
-          if (!stored || !Number.isFinite(Number(stored))) {
-            localStorage.setItem(`countdown_${storageKey}`, String(startMs));
-          }
+          localStorage.setItem(`countdown_${storageKey}`, String(startMs));
         } catch {
-          startMs = Date.now();
+          throw new Error('[Countdown] personal timer storage is unavailable');
         }
       }
 
@@ -842,11 +865,8 @@
   }, { requireWidgetName: true });
 
   const initialLocale = runtimeContext.locale || '';
-  const initialState = runtimeContext.state;
-  if (initialState) {
-    applyState(initialState, { locale: initialLocale });
-    syncTimerScheduler(initialState);
-  }
+  applyState(runtimeContext.state, { locale: initialLocale });
+  syncTimerScheduler(runtimeContext.state);
   }
 
   runtime.register('countdown', initCountdown);

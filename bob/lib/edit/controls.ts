@@ -116,6 +116,12 @@ export function coerceValueStrict(control: CompiledControl, rawValue: unknown): 
     if (parsed === null) {
       return { ok: false, message: 'Value must be a number' };
     }
+    if (typeof control.min === 'number' && parsed < control.min) {
+      return { ok: false, message: `Value must be greater than or equal to ${control.min}` };
+    }
+    if (typeof control.max === 'number' && parsed > control.max) {
+      return { ok: false, message: `Value must be less than or equal to ${control.max}` };
+    }
     return { ok: true, value: parsed };
   }
 
@@ -190,5 +196,8 @@ export function coerceValueStrict(control: CompiledControl, rawValue: unknown): 
   // string / unknown
   if (rawValue == null) return { ok: false, message: 'Value is required' };
   if (typeof rawValue !== 'string') return { ok: false, message: 'Value must be a string' };
+  if (control.required === true && rawValue.trim() === '') {
+    return { ok: false, message: 'Value cannot be empty' };
+  }
   return { ok: true, value: rawValue };
 }

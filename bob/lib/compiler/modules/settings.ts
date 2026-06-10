@@ -78,8 +78,10 @@ export function buildLocaleSwitcherSettingsPanelFields(
 
 export function buildSettingsBehaviorPanelFields(): string[] {
   return [
-    "  <tooldrawer-cluster label='Clickeen Branding'>",
+    "  <tooldrawer-cluster label='Clickeen branding'>",
     "    <tooldrawer-field-settingsbehavior group-label='' type='toggle' size='md' path='behavior.showBacklink' label='Show Made with Clickeen' />",
+    '  </tooldrawer-cluster>',
+    "  <tooldrawer-cluster label='Social share'>",
     "    <tooldrawer-field-settingsbehavior group-label='' type='toggle' size='md' path='behavior.socialShare.enabled' label='Enable social share' />",
     ...socialShareChannels.map(channelField),
     '  </tooldrawer-cluster>',

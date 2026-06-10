@@ -36,6 +36,13 @@
     return value;
   }
 
+  function assertPositiveNumber(value, path) {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+      throw new Error('[SplitCarouselMedia] ' + path + ' must be a positive finite number');
+    }
+    return value;
+  }
+
   function assertEnum(value, path, options) {
     assertString(value, path);
     if (options.indexOf(value) === -1) {
@@ -44,13 +51,115 @@
     return value;
   }
 
+  function assertFillSource(src, path) {
+    assertString(src, path);
+    const value = src.trim();
+    if (!value) throw new Error('[SplitCarouselMedia] ' + path + ' must be a non-empty asset URL');
+    if (/[\n\r;]/.test(value) || /^javascript:/i.test(value)) {
+      throw new Error('[SplitCarouselMedia] ' + path + ' contains an invalid URL');
+    }
+    if (value.startsWith('/') || value.startsWith('./') || value.startsWith('../') || /^https?:\/\//i.test(value)) {
+      return value;
+    }
+    throw new Error('[SplitCarouselMedia] ' + path + ' must use a relative, absolute-path, or http(s) URL');
+  }
+
+  function assertBorderConfig(value, path) {
+    assertRecord(value, path);
+    assertBoolean(value.enabled, path + '.enabled');
+    assertNumber(value.width, path + '.width', 0, 12);
+    assertString(value.color, path + '.color');
+  }
+
+  function assertShadowConfig(value, path) {
+    assertRecord(value, path);
+    assertBoolean(value.enabled, path + '.enabled');
+    assertBoolean(value.inset, path + '.inset');
+    assertNumber(value.x, path + '.x', -200, 200);
+    assertNumber(value.y, path + '.y', -200, 200);
+    assertNumber(value.blur, path + '.blur', 0, 400);
+    assertNumber(value.spread, path + '.spread', -200, 200);
+    assertNumber(value.alpha, path + '.alpha', 0, 100);
+    assertString(value.color, path + '.color');
+  }
+
+  function assertCardWrapper(value, path) {
+    assertRecord(value, path);
+    assertBoolean(value.radiusLinked, path + '.radiusLinked');
+    assertString(value.radius, path + '.radius');
+    assertString(value.radiusTL, path + '.radiusTL');
+    assertString(value.radiusTR, path + '.radiusTR');
+    assertString(value.radiusBR, path + '.radiusBR');
+    assertString(value.radiusBL, path + '.radiusBL');
+    assertBorderConfig(value.border, path + '.border');
+    assertShadowConfig(value.shadow, path + '.shadow');
+  }
+
+  function assertCoreSize(value, path) {
+    assertRecord(value, path);
+    assertEnum(value.mode, path + '.mode', ['auto', 'fixed', 'responsive']);
+    assertPositiveNumber(value.fixedHeight, path + '.fixedHeight');
+    assertPositiveNumber(value.minHeight, path + '.minHeight');
+    assertPositiveNumber(value.preferredVw, path + '.preferredVw');
+    assertPositiveNumber(value.maxHeight, path + '.maxHeight');
+    if (value.maxHeight < value.minHeight) {
+      throw new Error('[SplitCarouselMedia] ' + path + '.maxHeight must be >= ' + path + '.minHeight');
+    }
+  }
+
+  function assertLocaleSwitcher(value, path) {
+    assertRecord(value, path);
+    assertBoolean(value.enabled, path + '.enabled');
+    assertBoolean(value.byIp, path + '.byIp');
+    assertString(value.alwaysShowLocale, path + '.alwaysShowLocale');
+    assertEnum(value.attachTo, path + '.attachTo', ['stage', 'pod']);
+    assertEnum(value.position, path + '.position', [
+      'top-left',
+      'top-center',
+      'top-right',
+      'right-middle',
+      'bottom-right',
+      'bottom-center',
+      'bottom-left',
+      'left-middle',
+    ]);
+  }
+
+  const SOCIAL_SHARE_CHANNELS = [
+    'copy',
+    'sms',
+    'email',
+    'whatsapp',
+    'telegram',
+    'signal',
+    'messenger',
+    'wechat',
+    'line',
+    'slack',
+    'teams',
+    'discord',
+    'x',
+    'linkedin',
+    'facebook',
+    'reddit',
+    'instagram',
+    'tiktok',
+  ];
+
+  function assertSocialShare(value, path) {
+    assertRecord(value, path);
+    assertBoolean(value.enabled, path + '.enabled');
+    assertRecord(value.channels, path + '.channels');
+    SOCIAL_SHARE_CHANNELS.forEach(function (channel) {
+      assertBoolean(value.channels[channel], path + '.channels.' + channel);
+    });
+  }
+
   function mediaSource(fill, kind, path) {
     assertRecord(fill, path);
     assertEnum(fill.type, path + '.type', [kind]);
     const bucket = assertRecord(fill[kind], path + '.' + kind);
-    const src = assertString(bucket.src, path + '.' + kind + '.src').trim();
-    if (!src) throw new Error('[SplitCarouselMedia] ' + path + ' requires a ' + kind + ' asset');
-    return src;
+    return assertFillSource(bucket.src, path + '.' + kind + '.src');
   }
 
   function normalizeItem(raw, index) {
@@ -71,6 +180,12 @@
   }
 
   function normalizeState(state) {
+    assertRecord(state, 'state');
+    assertCoreSize(state.coreSize, 'state.coreSize');
+    assertLocaleSwitcher(state.localeSwitcher, 'state.localeSwitcher');
+    assertRecord(state.behavior, 'state.behavior');
+    assertSocialShare(state.behavior.socialShare, 'state.behavior.socialShare');
+
     const splitCarouselMedia = assertRecord(state.splitCarouselMedia, 'state.splitCarouselMedia');
     const itemsRaw = Array.isArray(splitCarouselMedia.items) ? splitCarouselMedia.items : null;
     if (!itemsRaw) throw new Error('[SplitCarouselMedia] state.splitCarouselMedia.items must be an array');
@@ -87,6 +202,7 @@
     const media = assertRecord(splitCarouselMedia.media, 'state.splitCarouselMedia.media');
     const carousel = assertRecord(splitCarouselMedia.carousel, 'state.splitCarouselMedia.carousel');
     const appearance = assertRecord(splitCarouselMedia.appearance, 'state.splitCarouselMedia.appearance');
+    assertCardWrapper(appearance.cardwrapper, 'state.splitCarouselMedia.appearance.cardwrapper');
     return {
       items,
       fit: assertEnum(media.fit, 'state.splitCarouselMedia.media.fit', ['cover', 'contain']),
@@ -210,13 +326,13 @@
     }
 
     function applyState(state, context) {
-      if (!state) return;
+      const normalized = normalizeState(state);
       clearAutoplay();
 
       if (!window.CKStagePod?.applyStagePod) {
         throw new Error('[SplitCarouselMedia] Missing CKStagePod.applyStagePod');
       }
-      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot);
+      window.CKStagePod.applyStagePod(state.stage, state.pod, widgetRoot, state.appearance);
 
       if (!window.CKTypography?.applyTypography) {
         throw new Error('[SplitCarouselMedia] Missing CKTypography.applyTypography');
@@ -243,12 +359,6 @@
       }
       window.CKCoreSize.applyCoreSize(state.coreSize, coreEl);
 
-      const normalized = normalizeState(state);
-      if (!window.CKSurface?.applyCardWrapper) {
-        throw new Error('[SplitCarouselMedia] Missing CKSurface.applyCardWrapper');
-      }
-      window.CKSurface.applyCardWrapper(normalized.appearance.cardwrapper, coreEl);
-
       if (!window.CKLocaleSwitcher?.applyLocaleSwitcher) {
         throw new Error('[SplitCarouselMedia] Missing CKLocaleSwitcher.applyLocaleSwitcher');
       }
@@ -268,6 +378,10 @@
       stage.setAttribute('role', 'region');
       stage.setAttribute('aria-roledescription', 'carousel');
       stage.setAttribute('aria-label', 'Split carousel media visuals');
+      if (!window.CKSurface?.applyCardWrapper) {
+        throw new Error('[SplitCarouselMedia] Missing CKSurface.applyCardWrapper');
+      }
+      window.CKSurface.applyCardWrapper(normalized.appearance.cardwrapper, stage);
 
       let active = 0;
       const slides = normalized.items.map(function (item, index) {
@@ -312,9 +426,20 @@
       coreEl.replaceChildren(stage);
       applyActive(0);
 
-      if (window.CKBranding && typeof window.CKBranding.applyBacklink === 'function') {
-        window.CKBranding.applyBacklink(widgetRoot, state);
+      if (!window.CKBranding || typeof window.CKBranding.applyBacklink !== 'function') {
+        throw new Error('[SplitCarouselMedia] Missing CKBranding.applyBacklink');
       }
+      window.CKBranding.applyBacklink(widgetRoot, state);
+
+      if (!window.CKSocialShare || typeof window.CKSocialShare.apply !== 'function') {
+        throw new Error('[SplitCarouselMedia] Missing CKSocialShare.apply');
+      }
+      window.CKSocialShare.apply(widgetRoot, state, {
+        instanceId: resolvedInstanceId,
+        widgetType: 'split-carousel-media',
+        widgetLabel: 'Split Carousel Media',
+        previewMode: context && context.previewMode,
+      });
     }
 
     let previewLocaleRequest = 0;
@@ -327,7 +452,6 @@
       baseLocale,
       translatedLocaleValues,
     ) {
-      if (!state) return;
       const requestId = ++previewLocaleRequest;
       const helper =
         window.CK_PREVIEW_L10N &&
@@ -379,14 +503,11 @@
     );
 
     const initialLocale = runtimeContext.locale || '';
-    const initialState = runtimeContext.state;
-    if (initialState) {
-      applyState(initialState, {
-        ...runtimeContext,
-        locale: initialLocale,
-        instanceId: resolvedInstanceId,
-      });
-    }
+    applyState(runtimeContext.state, {
+      ...runtimeContext,
+      locale: initialLocale,
+      instanceId: resolvedInstanceId,
+    });
   }
 
   runtime.register('split-carousel-media', initSplitCarouselMedia);
