@@ -48,26 +48,22 @@ const getFolderFromPath = (path: string): string => {
 };
 
 const buildPagePath = (folder: string, slug: string): string => {
-  if (folder === 'tools') return `#/tools/${slug}`;
+  if (folder === 'tools' && slug === 'entitlements') return '#/policy/entitlements';
   return `#/dieter/${slug}`;
 };
 
 const getFolderTitle = (folder: string): string => {
-  if (folder === 'dieter') return 'Dieter Components';
   if (folder === 'components') return 'Dieter Components';
-  if (folder === 'tools') return 'Tools';
+  if (folder === 'tools') return 'Policy';
   return folder.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 // Build showcase pages from discovered files
 const staticShowcasePaths = Object.keys(staticShowcaseModules).sort();
-const slugTitleOverrides: Record<string, string> = {
-  'bob-ui-native': 'Bob UI Native',
-};
 
 const staticShowcasePages: ShowcasePage[] = staticShowcasePaths.map((path) => {
   const slug = toSlug(path);
-  const title = slugTitleOverrides[slug] ?? toTitle(slug);
+  const title = toTitle(slug);
   const folder = getFolderFromPath(path);
   const css: string[] = [];
   if (folder === 'components') {
@@ -107,49 +103,23 @@ const buildShowcaseGroups = (): NavGroup[] => {
     folderMap.get(folder)!.push(page);
   }
 
-  // Convert to nav groups with specific order
-  const groups: NavGroup[] = [];
-  const folderOrder = ['tools', 'components', 'dieter', 'foundations'];
-  const foundationSlugs = new Set(['colors', 'typography', 'icons']);
-
-  const foundationItems: NavItem[] = [];
-
-  for (const folder of folderOrder) {
-    const pages = folderMap.get(folder);
-    if (pages) {
-      if (folder === 'dieter') {
-        const foundationPages = pages.filter((page) => foundationSlugs.has(page.slug));
-        const componentPages = pages.filter((page) => !foundationSlugs.has(page.slug));
-
-        if (componentPages.length > 0) {
-          groups.push({
-            id: 'dieter-full-library',
-            title: getFolderTitle(folder),
-            items: componentPages.map(pageToNav),
-          });
-        }
-        foundationItems.push(...foundationPages.map(pageToNav));
-      } else if (folder === 'foundations') {
-        foundationItems.push(...pages.map(pageToNav));
-      } else {
-        groups.push({
-          id: folder.toLowerCase().replace(/_/g, '-'),
-          title: getFolderTitle(folder),
-          items: pages.map(pageToNav),
-        });
-      }
-    }
-  }
-
-  if (foundationItems.length > 0) {
-    groups.push({
+  return [
+    {
       id: 'foundations',
-      title: 'Foundations',
-      items: foundationItems,
-    });
-  }
-
-  return groups;
+      title: getFolderTitle('foundations'),
+      items: (folderMap.get('foundations') ?? []).map(pageToNav),
+    },
+    {
+      id: 'dieter-components',
+      title: getFolderTitle('components'),
+      items: (folderMap.get('components') ?? []).map(pageToNav),
+    },
+    {
+      id: 'policy',
+      title: getFolderTitle('tools'),
+      items: (folderMap.get('tools') ?? []).map(pageToNav),
+    },
+  ].filter((group) => group.items.length > 0);
 };
 
 export const navGroups: NavGroup[] = buildShowcaseGroups();

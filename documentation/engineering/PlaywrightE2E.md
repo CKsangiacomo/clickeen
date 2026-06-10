@@ -29,6 +29,17 @@ Override with:
 E2E_ROMA_URL=https://roma.dev.clickeen.com pnpm e2e
 ```
 
+For a non-Roma deployed surface, use the generic base URL override and a
+surface-specific storage state file:
+
+```bash
+E2E_BASE_URL=https://devstudio.clickeen.com \
+E2E_AUTH_STATE=e2e/.auth/devstudio.json \
+pnpm e2e
+```
+
+The Roma default is preserved when neither `E2E_ROMA_URL` nor `E2E_BASE_URL` is set.
+
 ## Authenticated Product Flows
 
 Do not automate Google OAuth.
@@ -51,6 +62,10 @@ Roma -> Bob iframe -> Tokyo product APIs
 ```
 
 No fake Builder mode, account type, or login provider is introduced.
+
+DevStudio uses the same rule: remote DevStudio e2e must call `/api/e2e/session` on
+`https://devstudio.clickeen.com` through `E2E_BASE_URL`; it must not automate Google
+OAuth or add a local/dev auth mode.
 
 ## Required Secrets
 

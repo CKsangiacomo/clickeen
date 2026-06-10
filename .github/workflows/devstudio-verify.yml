@@ -1,0 +1,51 @@
+name: devstudio verify
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'admin/**'
+      - 'documentation/engineering/DevStudioRemoteVerification.md'
+      - 'documentation/engineering/PlaywrightE2E.md'
+      - '.github/workflows/devstudio-verify.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  group: devstudio-verify-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check:
+          - name: Typecheck DevStudio
+            command: pnpm --filter @clickeen/devstudio typecheck
+          - name: Lint DevStudio
+            command: pnpm --filter @clickeen/devstudio lint
+          - name: Test DevStudio
+            command: pnpm --filter @clickeen/devstudio test
+          - name: Build DevStudio
+            command: pnpm --filter @clickeen/devstudio build
+          - name: Check DevStudio Functions
+            command: pnpm --filter @clickeen/devstudio check:functions
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: {}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: ${{ matrix.check.name }}
+        run: ${{ matrix.check.command }}

@@ -7,6 +7,7 @@ export type Env = {
   BERLIN_REFRESH_SECRET?: string;
   BERLIN_ALLOWED_PROVIDERS?: string;
   BERLIN_FINISH_REDIRECT_URL?: string;
+  BERLIN_ALLOWED_FINISH_REDIRECT_URLS?: string;
   BERLIN_GOOGLE_CLIENT_ID?: string;
   BERLIN_GOOGLE_CLIENT_SECRET?: string;
   BERLIN_GOOGLE_CALLBACK_URL?: string;
@@ -82,6 +83,7 @@ export type OAuthTransaction = {
   intent?: LoginIntent;
   next?: string;
   invitationId?: string;
+  finishRedirectUrl?: string;
 };
 
 export type LoginIntent = 'signin' | 'signup_prague';
@@ -100,6 +102,7 @@ export type OAuthFinishTransaction = {
   next: string;
   createdAt: number;
   finishExpiresAt: number;
+  finishRedirectUrl?: string;
 };
 
 export type SessionIssueArgs = {

@@ -4,7 +4,7 @@ set -euo pipefail
 # Canonical local startup script.
 # Keeps local bring-up boring:
 # - load env
-# - start the DevStudio operating lane
+# - start the local support stack
 # - seed required local platform state
 # - health checks + verification
 
@@ -25,7 +25,7 @@ DEV_UP_HEALTH_INTERVAL="${DEV_UP_HEALTH_INTERVAL:-1}"
 DEV_UP_FULL_REBUILD=0
 DEV_UP_RESET=0
 STARTED_PID=""
-STACK_PORTS=(3000 3005 4000 5173 8791)
+STACK_PORTS=(3000 3005 4000 8791)
 
 ensure_lock() {
   if [ -d "$LOCK_DIR" ]; then
@@ -163,7 +163,7 @@ preflight_existing_stack() {
   fi
 
   if [ "$listeners" -ge 4 ]; then
-    echo "[dev-up] Existing local DevStudio lane detected ($listeners listening ports)."
+    echo "[dev-up] Existing local support stack detected ($listeners listening ports)."
     echo "[dev-up] Re-run with --reset to force a clean restart."
     print_stack_port_status
     exit 0
@@ -180,7 +180,7 @@ preflight_existing_stack() {
 ensure_stack_ports_healthy() {
   local attempts="${1:-8}"
   local interval_seconds="${2:-1}"
-  local ports=(3000 3005 4000 5173 8791)
+  local ports=(3000 3005 4000 8791)
 
   local attempt port
   local failed_ports=()
@@ -199,7 +199,7 @@ ensure_stack_ports_healthy() {
     fi
   done
 
-  echo "[dev-up] ERROR: local DevStudio lane failed readiness checks."
+  echo "[dev-up] ERROR: local support stack failed readiness checks."
   for port in "${failed_ports[@]}"; do
     echo "[dev-up]   failed health check on port $port"
   done
@@ -207,7 +207,6 @@ ensure_stack_ports_healthy() {
   tail_log "$LOG_DIR/tokyo-worker.dev.log"
   tail_log "$LOG_DIR/berlin.dev.log"
   tail_log "$LOG_DIR/bob.dev.log"
-  tail_log "$LOG_DIR/devstudio.dev.log"
   return 1
 }
 
@@ -219,7 +218,6 @@ is_stack_service_healthy() {
     3001) url="http://localhost:3001/api/healthz" ;;
     3005) url="http://localhost:3005/internal/healthz" ;;
     4000) url="http://localhost:4000/healthz" ;;
-    5173) url="http://localhost:5173" ;;
     8791) url="http://localhost:8791/healthz" ;;
   esac
 
@@ -341,7 +339,7 @@ for arg in "$@"; do
       echo ""
       echo "Options:"
       echo "  --full        Runs workspace build before starting services."
-      echo "  --reset       Force a clean restart of the local DevStudio lane managed by dev-up."
+      echo "  --reset       Force a clean restart of the local support stack managed by dev-up."
       exit 0
       ;;
     *)
@@ -386,7 +384,7 @@ if [ -z "${SUPABASE_ANON_KEY_VALUE:-}" ]; then
 fi
 
 echo "[dev-up] Runtime data target: configured Supabase URL"
-echo "[dev-up] No persona seed: DevStudio is toolbench-only; product auth belongs to Roma/Berlin"
+echo "[dev-up] No persona seed: product auth belongs to Roma/Berlin"
 
 TOKYO_URL=${TOKYO_URL:-http://localhost:4000}
 BERLIN_URL=${BERLIN_URL:-http://localhost:3005}
@@ -406,7 +404,7 @@ else
 fi
 
 echo "[dev-up] Stopping stale listeners"
-for p in 3000 3001 3002 3003 3005 4000 4321 5173 8790 8791; do
+for p in 3000 3001 3002 3003 3005 4000 4321 8790 8791; do
   stop_port "$p"
 done
 
@@ -469,23 +467,11 @@ echo "[dev-up] Starting Bob (3000)"
 wait_for_url "http://localhost:3000" "Bob" "$LOG_DIR/bob.dev.log"
 prewarm_bob_routes
 
-echo "[dev-up] Starting DevStudio (5173)"
-(
-  cd "$ROOT_DIR/admin"
-  start_detached "$LOG_DIR/devstudio.dev.log" env CI=1 PORT=5173 TOKYO_URL="$TOKYO_URL" TOKYO_DEV_JWT="$TOKYO_DEV_JWT" pnpm dev
-  DEVSTUDIO_PID="$STARTED_PID"
-  echo "[dev-up] DevStudio PID: $DEVSTUDIO_PID"
-  register_pid "devstudio" "$DEVSTUDIO_PID" "5173" "$LOG_DIR/devstudio.dev.log"
-)
-wait_for_url "http://localhost:5173" "DevStudio" "$LOG_DIR/devstudio.dev.log"
-
 echo "[dev-up] URLs:"
 echo "  Tokyo URL: $TOKYO_URL"
 echo "  Tokyo local stub: http://localhost:4000/healthz"
 echo "  Berlin:    http://localhost:3005/internal/healthz"
 echo "  Bob:       http://localhost:3000"
-echo "  DevStudio: http://localhost:5173"
-echo "  DevStudio tools: http://localhost:5173/#/tools/bob-ui-native and http://localhost:5173/#/tools/entitlements"
 echo "[dev-up] Local boot uses the configured Supabase URL; it does not seed, migrate, reset, or switch Supabase targets."
 echo "[dev-up] Logs:      $LOG_DIR/*.dev.log"
 print_stack_port_status

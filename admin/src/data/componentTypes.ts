@@ -1,7 +1,12 @@
+export type ComponentSpec = Record<string, unknown> & {
+  defaults?: unknown;
+  previews?: unknown;
+};
+
 export interface ComponentSource {
   name: string;
   title: string;
-  spec: any;
+  spec: ComponentSpec;
   template?: string;
   css?: string;
   paths: {

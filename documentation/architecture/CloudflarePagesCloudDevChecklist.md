@@ -17,7 +17,7 @@ Rules:
 - Bob and Roma keep host/base-URL runtime vars in app-local `wrangler.toml`. Supabase project values are live environment config, not committed repo literals.
 - Bob and Roma `wrangler.toml` files must stay within the Pages-supported schema. Worker-only blocks such as top-level `observability` or named environments like `local` are not valid Pages config.
 - Prague keeps runtime vars in the Cloudflare Pages dashboard because it does not use app-local Wrangler config today.
-- DevStudio is local-only and is not part of the Cloudflare Pages `cloud-dev` contract.
+- DevStudio is the canonical internal Pages toolbench at `https://devstudio.clickeen.com`.
 - GitHub runtime verification stays unauthenticated until a real provider-based test adapter exists; do not keep public password login for smoke coverage.
 - Authenticated cloud-dev smoke is manual Google login, Roma bootstrap, Builder open/save, Widgets read, locales, assets, and logout.
 - Berlin/Roma product auth, bootstrap, Builder, account registry, Tokyo, and Tokyo-worker account-control paths must not require shared-secret bearer auth. Internal San Francisco tooling requests use signed request bodies.
@@ -134,6 +134,54 @@ Env contract:
 Dashboard action:
 - Keep the 3 public base URLs in the Cloudflare Pages dashboard.
 
+## DevStudio
+
+Project:
+- Project name: `devstudio`
+- Pages fallback host: `devstudio-dev.pages.dev`
+
+Git settings:
+- Repo: `CKsangiacomo/clickeen`
+- Production branch: `main`
+- Root directory: `admin`
+- Build command: `pnpm build`
+- Output directory: `dist`
+- Deploy trigger: Git-connected Cloudflare Pages build only
+
+Public host:
+- Canonical host: `https://devstudio.clickeen.com`
+- Required: yes
+- `*.pages.dev` allowed as public runtime host: no, except if Cloudflare project
+  health checks require fallback reachability.
+
+Auth:
+- Berlin/Google login is the only auth boundary.
+- Cloudflare Access is not the DevStudio auth boundary.
+- The signed-in Berlin session must resolve to the normal Clickeen admin account.
+
+Env contract:
+
+| Variable | Required | Cloud-dev value | Source-of-truth owner |
+| --- | --- | --- | --- |
+| `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `admin/wrangler.toml` |
+| `DEVSTUDIO_CANONICAL_ORIGIN` | yes | `https://devstudio.clickeen.com` | `admin/wrangler.toml` |
+| `DEVSTUDIO_GITHUB_BRANCH` | yes | `main` | `admin/wrangler.toml` |
+| `DEVSTUDIO_GITHUB_REPOSITORY` | yes | `CKsangiacomo/clickeen` | `admin/wrangler.toml` |
+| `ENV_STAGE` | yes | `cloud-dev` | `admin/wrangler.toml` |
+| `DEVSTUDIO_GITHUB_TOKEN` | yes | GitHub contents token scoped to this repo | Cloudflare Pages secret |
+
+Verification:
+- `pnpm cf:pages:devstudio-env` compares live DevStudio Pages env against
+  `admin/wrangler.toml` and confirms whether the live-only
+  `DEVSTUDIO_GITHUB_TOKEN` Pages secret exists.
+
+Policy API:
+- Pages Functions own `/api/entitlements/matrix`, `/api/entitlements/matrix/cell`,
+  `/api/ai-runtime/matrix`, and `/api/ai-runtime/matrix/cell`.
+- GET reads current `main` through the GitHub contents API.
+- POST applies `@clickeen/ck-policy` validators and commits the updated JSON back
+  to `main`.
+
 ## Tokyo/R2 Git-Authored Asset Roots
 
 These roots are deployed from git-authored repo sources into R2. They are not mutated by account runtime operations.
@@ -168,7 +216,9 @@ Pages secrets:
 - Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing. Roma -> Tokyo/Tokyo-worker product control uses service bindings and account-widget l10n generation runs through Tokyo-worker -> San Francisco `SANFRANCISCO_L10N`.
 
 CI secrets/vars:
-- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_API_TOKEN` for GitHub Actions/Wrangler workflows only. Do not reuse
+  this ambiguous name for local repo Cloudflare helper commands.
+- `CLOUDFLARE_REST_API_TOKEN` for local Pages/DNS/config repo helper commands.
 - `CLOUDFLARE_ACCOUNT_ID`
 - `AI_GRANT_HMAC_SECRET` for Prague string translation request signing
 - No Supabase deploy secrets are required by GitHub Actions. Supabase migrations are applied deliberately from an authenticated operator/agent environment, then committed as schema history.

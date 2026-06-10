@@ -9,6 +9,7 @@ import {
   parseAllowedProviders,
   resolveFinishRedirectUrl,
   resolveLoginErrorRedirectUrl,
+  resolveRequestedFinishRedirectUrl,
 } from './config';
 import {
   consumeOauthFinishTransaction,
@@ -136,8 +137,10 @@ async function createProviderLoginStart(args: {
   providerRaw: unknown;
   intentRaw: unknown;
   nextRaw: unknown;
+  finishRedirectRaw: unknown;
   hasIntent: boolean;
   hasNext: boolean;
+  hasFinishRedirect: boolean;
 }): Promise<
   | {
       ok: true;
@@ -169,6 +172,20 @@ async function createProviderLoginStart(args: {
       reasonKey: 'coreui.errors.auth.next.invalid',
     });
     return { ok: false, response: validationError('coreui.errors.auth.next.invalid'), reason: 'coreui.errors.auth.next.invalid' };
+  }
+
+  const finishRedirect = resolveRequestedFinishRedirectUrl(args.env, args.finishRedirectRaw, args.hasFinishRedirect);
+  if (!finishRedirect.ok) {
+    logAuthFlow(args.request, 'warn', 'auth.provider.start.rejected', {
+      provider,
+      reasonKey: 'coreui.errors.auth.next.invalid',
+      detailCode: finishRedirect.detail,
+    });
+    return {
+      ok: false,
+      response: validationError('coreui.errors.auth.next.invalid', finishRedirect.detail),
+      reason: 'coreui.errors.auth.next.invalid',
+    };
   }
 
   const allowed = parseAllowedProviders(args.env);
@@ -203,6 +220,7 @@ async function createProviderLoginStart(args: {
     expiresAt: nowSec + OAUTH_STATE_TTL_SECONDS,
     intent: intent || 'signin',
     next: nextPath || '/home',
+    ...(finishRedirect.url ? { finishRedirectUrl: finishRedirect.url } : {}),
   };
   const invitationId = resolveInvitationIdFromNextPath(transaction.next || null);
   if (invitationId) {
@@ -261,8 +279,10 @@ async function handleProviderLoginRedirectStart(
     providerRaw,
     intentRaw: url.searchParams.get('intent'),
     nextRaw: url.searchParams.get('next'),
+    finishRedirectRaw: url.searchParams.get('finishRedirectUrl'),
     hasIntent: url.searchParams.has('intent'),
     hasNext: url.searchParams.has('next'),
+    hasFinishRedirect: url.searchParams.has('finishRedirectUrl'),
   });
   if (!started.ok) {
     const loginRedirectUrl = resolveLoginErrorRedirectUrl(env, started.reason);
@@ -383,7 +403,7 @@ async function handleProviderLoginCallback(
 
   const intent = transaction.intent || 'signin';
   const nextPath = transaction.next || '/home';
-  const finishRedirectUrl = resolveFinishRedirectUrl(env);
+  const finishRedirectUrl = transaction.finishRedirectUrl || resolveFinishRedirectUrl(env);
   if (!finishRedirectUrl) {
     logAuthFlow(request, 'error', 'auth.provider.callback.failed', {
       provider: transaction.provider,
@@ -408,6 +428,7 @@ async function handleProviderLoginCallback(
     next: nextPath,
     createdAt: nowSec,
     finishExpiresAt: nowSec + OAUTH_FINISH_TTL_SECONDS,
+    finishRedirectUrl,
   };
   const stored = await saveOauthFinishTransaction(env, finishId, finishTransaction);
   if (!stored) {

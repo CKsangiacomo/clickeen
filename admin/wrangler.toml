@@ -1,0 +1,13 @@
+name = "devstudio"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-12-28"
+
+[vars]
+BERLIN_BASE_URL = "https://berlin-dev.clickeen.workers.dev"
+DEVSTUDIO_CANONICAL_ORIGIN = "https://devstudio.clickeen.com"
+DEVSTUDIO_GITHUB_BRANCH = "main"
+DEVSTUDIO_GITHUB_REPOSITORY = "CKsangiacomo/clickeen"
+ENV_STAGE = "cloud-dev"
+
+[secrets]
+required = ["DEVSTUDIO_GITHUB_TOKEN"]

@@ -1,87 +1,101 @@
 # DevStudio — Internal Toolbench
 
-DevStudio is Clickeen's **local internal toolbench**.
+DevStudio is Clickeen's internal platform toolbench, served from Cloudflare Pages.
 
-It is where the internal human running Clickeen:
-- tests and verifies widgets
-- curates Clickeen-owned example content
-- inspects runtime and deploy behavior from the local machine
-- uses small local verification pages that do not belong in Roma
+Canonical URL:
 
-DevStudio is **not**:
-- Roma 2
-- a customer account shell
-- a browse-all-accounts dashboard
-- a global superadmin portal
-- a canonical Cloudflare or `cloud-dev` runtime
-- the place to test customer auth/session realism by default
+```text
+https://devstudio.clickeen.com
+```
 
 ## Boundary
 
-- `Roma` = customer/member shell
-- `DevStudio` = local internal toolbench
-- `Bob` = editor kernel
-- `Berlin` = canonical product identity/account boundary
+- DevStudio is not Roma 2.
+- DevStudio is not a customer account shell.
+- DevStudio is not a global superadmin dashboard.
+- DevStudio does not own widget authoring truth.
+- DevStudio does not create a second account model, allowlist model, or auth bypass.
 
-DevStudio may surface internal tools for Clickeen operations, but it must not invent a second account model or teach internal humans to act like privileged customers browsing accounts.
+Berlin/Google login is the only DevStudio auth boundary. The signed-in user must
+resolve through Berlin bootstrap to the normal Clickeen admin account
+(`accountPublicId: "CLICKEEN"`) with an admin/owner role. `CLICKEEN` is a normal
+account coordinate, not a superadmin bypass.
 
-Future company-plane actions such as moderation, commercial overrides, support authority, or sponsored-account ops belong to the separate internal control plane, not to Berlin product roles and not to a fake DevStudio account shell.
+Cloudflare Access is not the DevStudio auth boundary.
 
-Under PRD 099, Admin is not a separate product lane. The Clickeen/admin account is the normal account with `accountPublicId` `CLICKEEN`, and admin-owned example instances live under `accounts/CLICKEEN/instances/{instanceId}/` like every customer-owned instance. DevStudio may help inspect or curate those references locally, but it must not create `admin/widgets`, account-UUID widget folders, instance-only public references, or any other special storage lane.
+## Current Surface
 
-## Environment
+DevStudio has three sections:
 
-### Local
+- **Foundations** — Colors, Typography, Icons.
+- **Dieter Components** — generated/static component showcase pages.
+- **Policy** — the entitlements and AI runtime Policy Editor.
 
-URL: `http://localhost:5173`
+The old Bob UI Native husk is removed. The old local widget-authoring workspace is
+also removed. Widget editing belongs to the real Roma -> Bob -> Tokyo product path.
 
-Purpose:
-- fast internal toolbench on the owner machine
-- widget curation and verification
+## Runtime Model
 
-Local contract:
-- local DevStudio does **not** require Roma-style login semantics by default
-- local DevStudio is never treated as a product user session or account-switch authority
-- the removed widget-authoring workspace must not be recreated through a new hidden local API lane
-- admin curation references must carry `accountPublicId: "CLICKEEN"` plus `instanceId`; `CLICKEEN` is a normal account coordinate, not a superadmin bypass
+DevStudio deploys as the `devstudio` Cloudflare Pages project. Its Pages fallback
+host is `devstudio-dev.pages.dev`; that host is not canonical and must redirect or
+be blocked unless Cloudflare project health checks require otherwise.
 
-There is no canonical Cloudflare DevStudio runtime.
+The Vite build remains the static app bundle. The policy API is implemented as
+Pages Functions in `admin/functions/`; local Vite middleware must not own policy,
+theme, or icon rebuild write APIs.
 
-## Shipped tools
+Policy routes:
 
-The local widget-authoring workspace at `/#/tools/dev-widget-workspace` is removed.
-DevStudio no longer hosts a local Bob widget-authoring lane.
-That removal is intentional: DevStudio remains the internal toolbench, but it is no longer an alternate widget workspace host.
+```text
+GET  /api/entitlements/matrix
+POST /api/entitlements/matrix/cell
+GET  /api/ai-runtime/matrix
+POST /api/ai-runtime/matrix/cell
+```
 
-Current local tool surface includes:
-- `/#/tools/bob-ui-native`
-- `/#/tools/entitlements`
-- Dieter previews and generated component/foundation documentation
+Policy reads use the GitHub contents API against current `main`, so the editor
+shows committed policy state rather than the Pages build snapshot. Policy writes
+apply `@clickeen/ck-policy` validators and commit updated JSON back to `main`.
+Invalid edits return typed failures and do not commit. GitHub SHA conflicts return
+typed conflicts and require a refetch/retry.
 
-### Dieter / design-system pages
+Required Pages configuration:
 
-DevStudio still hosts the Dieter previews and generated component documentation.
-That remains a valid internal-toolbench use case.
+- `BERLIN_BASE_URL`
+- `DEVSTUDIO_CANONICAL_ORIGIN`
+- `DEVSTUDIO_GITHUB_BRANCH`
+- `DEVSTUDIO_GITHUB_REPOSITORY`
+- `ENV_STAGE`
+- `DEVSTUDIO_GITHUB_TOKEN` as a Pages secret
 
-Local lane note:
-- `pnpm --filter @clickeen/devstudio dev` starts the local DevStudio toolbench
-- DevStudio no longer seeds a fake platform/account lane; product state must come from the real Roma -> Bob -> Tokyo account path
-- DevStudio no longer has a special admin widget lane. Clickeen-owned examples are normal account-owned instances in account `CLICKEEN`, opened and saved through the same Roma -> Bob -> Tokyo path when edited.
-- do not reintroduce cloud-derived or blob-only repair logic into boot
+`admin/wrangler.toml` is the source of truth for non-secret Pages configuration
+once the Cloudflare Pages project root is `admin`. Use
+`pnpm cf:pages:devstudio-env` from the repo root to compare live Pages env against
+that file without exposing secret values. Use
+`pnpm cf:pages:sync-devstudio-env --apply` to write the non-secret vars and the
+`DEVSTUDIO_GITHUB_TOKEN` Pages secret from root `.env.local`.
 
-Removed local lanes:
-- `/#/tools/dev-widget-workspace`
-- local `/api/devstudio/control/*` action lanes for support/commercial operations
+## Local Development
 
-## Troubleshooting
+Use package-level local DevStudio only for fast static UI iteration:
 
-### DevStudio local no longer hosts widget editing
+```bash
+pnpm --filter @clickeen/devstudio dev
+pnpm --filter @clickeen/devstudio build
+pnpm --filter @clickeen/devstudio check:functions
+```
 
-This is intentional.
-If you need the active widget-editing product lane, use Roma as the host surface.
-Do not reintroduce a hidden DevStudio widget workspace to work around product-path issues.
+`scripts/dev-up.sh` does not start DevStudio. Local DevStudio is not product-state
+evidence, does not replace the cloud surface, and must not reintroduce hidden local
+write lanes.
 
-### DevStudio local no longer hosts company-plane mutation actions
+## Build-Time Generation
 
-This is also intentional.
-If an operation needs real support, sponsorship, moderation, or commercial authority, it belongs in the separate internal control plane rather than hidden local DevStudio routes.
+DevStudio generates Dieter/component showcase pages at build time:
+
+- `scripts/generate-component-pages.ts`
+- `scripts/generate-icons-showcase.local.cjs`
+- `scripts/generate-typography-json.cjs`
+
+Generated showcase pages mirror Dieter source. They do not define component
+behavior.

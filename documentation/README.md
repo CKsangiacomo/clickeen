@@ -92,7 +92,7 @@ This repo is operated by **1 human architect + multiple AI dev teams**. The syst
 
 - **Modular surfaces:** widgets in `tokyo/product/widgets/`; services isolated under `bob/`, `roma/`, `admin/`, `prague/`, `venice/`, `tokyo-worker/`, `sanfrancisco/`.
 - **Explicit contracts:** `spec.json`, `editable-fields.json`, `*.allowlist.json`, PRDs, and service docs define what is safe to change. If it is not in a contract, assume it is unsafe.
-- **Automation intent:** local changes are designed to propagate through the local DevStudio operating lane automatically. Cloud-dev propagation is explicit (promote/deploy).
+- **Automation intent:** local support-stack changes are local only. Cloud-dev propagation is explicit (promote/deploy).
 - **Agent expectation:** AIs must understand the end-to-end journey below. If you do not, stop and re-trace from code before editing.
 
 ## Tokyo R2 Storage Contract
@@ -120,11 +120,11 @@ Do not introduce root `widgets/`, `public/`, `published/`, or `l10n/` storage. F
 
 ---
 
-## End-to-End Journey (widget folder → Roma, DevStudio, Bob, Prague)
+## End-to-End Journey (widget folder → Roma, Bob, Prague)
 
 Local runtime:
 
-- `bash scripts/dev-up.sh` starts the canonical local DevStudio operating lane.
+- `bash scripts/dev-up.sh` starts the canonical local support stack.
 - See `documentation/architecture/RuntimeProfiles.md`.
 
 ### A) Widget definition path (local)
@@ -136,14 +136,15 @@ Source of truth: `tokyo/product/widgets/{widget}/` (spec + runtime + widget cont
    - Serves friendly `/widgets/**` and `/dieter/**` routes directly from the repo. These are route aliases, not root R2 storage folders.
 2. **Bob runtime** reads widget definitions/assets from Tokyo:
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
-3. **Local DevStudio** remains the internal toolbench:
+3. **DevStudio** is the cloud internal toolbench:
+   - canonical host is `https://devstudio.clickeen.com`
    - it no longer hosts the local widget-authoring workspace
-   - local Bob/Tokyo debugging happens through direct local services and current internal pages, not through `/#/tools/dev-widget-workspace`
+   - local Bob/Tokyo debugging happens through direct local services, not through DevStudio widget-authoring routes
 4. **Cloud-dev Roma** is the supported product/account host surface:
    - `roma/app/api/bootstrap/route.ts` proxies to Berlin `GET /v1/session/bootstrap`
    - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
    - local code changes only appear there after deploy
-Result: the supported local topology is one boring stack: local DevStudio + local Bob + local Tokyo + local Tokyo-worker + local Berlin. Roma remains the customer account shell; DevStudio remains the internal toolbench.
+Result: the supported local topology is one boring stack: local Bob + local Tokyo + local Tokyo-worker + local Berlin. Roma remains the customer account shell; DevStudio remains the Berlin-authenticated internal toolbench on Cloudflare Pages.
 
 ### A.1) Local auth issuer alignment (critical)
 
@@ -154,7 +155,7 @@ Local app servers use the explicitly configured Supabase target loaded by `bash 
 
 Invariant:
 
-- The Supabase JWT used against local Bob/Roma helper surfaces must be issued by the **same** Supabase project the local DevStudio lane is configured to use.
+- The Supabase JWT used against local Bob/Roma helper surfaces must be issued by the **same** Supabase project the local support stack is configured to use.
 - If you use a token from a different Supabase project, local auth surfaces return `403 coreui.errors.auth.forbidden` with `issuer_mismatch` by design.
 
 ### B) Instance + asset path (local)
@@ -165,8 +166,8 @@ Instances are account-owned data, not code. Tokyo/R2 stores them under `accounts
    - Roma Widgets lists, duplicates, renames, publishes, unpublishes, and deletes real account-owned instances through current-account same-origin routes.
    - Default/gallery creation is not an active product surface.
    - Bob save writes base config via account `PUT`.
-2. **DevStudio Local does not host widget authoring**.
-   - Curated/main verification remains an internal toolbench concern only.
+2. **DevStudio does not host widget authoring**.
+   - Internal verification remains a toolbench concern only.
    - Widget editing belongs to Roma-hosted Builder, not hidden DevStudio routes.
 3. **Assets** referenced in configs point at local Tokyo in canonical local development (`http://localhost:4000`).
 

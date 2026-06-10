@@ -2,7 +2,7 @@ import { consumeAuthTicket, storeAuthTicket, type TicketConsumeResult } from './
 import { enc, toBase64Url } from '../crypto/encoding';
 import { claimAsNumber, claimAsString } from '../utils/claims';
 import { type Env, type OAuthFinishTransaction, type OAuthTransaction } from '../types';
-import { normalizeIntent, normalizeNextPath, normalizeProvider } from './config';
+import { normalizeFinishRedirectUrl, normalizeIntent, normalizeNextPath, normalizeProvider } from './config';
 
 export function createOauthStateId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(24));
@@ -38,6 +38,7 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
   const intent = normalizeIntent(record.intent) || undefined;
   const next = normalizeNextPath(record.next) || undefined;
   const invitationId = claimAsString(record.invitationId) || undefined;
+  const finishRedirectUrl = normalizeFinishRedirectUrl(record.finishRedirectUrl) || undefined;
 
   if (version !== 1) return null;
   if ((flow !== 'login' && flow !== 'link') || !provider || !codeVerifier) return null;
@@ -45,6 +46,7 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
   if (flow === 'link' && (!sid || !userId)) return null;
   if (record.intent !== undefined && !intent) return null;
   if (record.next !== undefined && !next) return null;
+  if (record.finishRedirectUrl !== undefined && !finishRedirectUrl) return null;
   if (
     record.invitationId !== undefined &&
     (!invitationId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(invitationId))
@@ -64,6 +66,7 @@ function toOauthTransaction(value: unknown): OAuthTransaction | null {
     ...(intent ? { intent } : {}),
     ...(next ? { next } : {}),
     ...(invitationId ? { invitationId } : {}),
+    ...(finishRedirectUrl ? { finishRedirectUrl } : {}),
   };
 }
 
@@ -83,6 +86,7 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
   const next = normalizeNextPath(record.next);
   const createdAt = claimAsNumber(record.createdAt);
   const finishExpiresAt = claimAsNumber(record.finishExpiresAt);
+  const finishRedirectUrl = normalizeFinishRedirectUrl(record.finishRedirectUrl) || undefined;
 
   if (version !== 1) return null;
   if (!provider || !userId || !sessionId) return null;
@@ -91,6 +95,7 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
   if (!refreshTokenMaxAge || refreshTokenMaxAge <= 0) return null;
   if (!intent || !next) return null;
   if (!createdAt || !finishExpiresAt || finishExpiresAt <= createdAt) return null;
+  if (record.finishRedirectUrl !== undefined && !finishRedirectUrl) return null;
 
   return {
     v: 1,
@@ -106,6 +111,7 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
     next,
     createdAt,
     finishExpiresAt,
+    ...(finishRedirectUrl ? { finishRedirectUrl } : {}),
   };
 }
 

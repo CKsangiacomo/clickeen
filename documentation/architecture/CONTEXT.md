@@ -244,7 +244,7 @@ Publishing semantics: `published` / `unpublished` is Tokyo-owned instance produc
 | **Prague**        | Marketing site + gallery + demo/funnel surfaces                                 | Cloudflare Pages                | `prague/`       |
 | **Bob**           | Account Builder editor runtime; the real widget authoring UI                    | Cloudflare Pages (Next.js)      | `bob/`          |
 | **Roma**          | Current-account product shell + Builder host orchestration                      | Cloudflare Pages (Next.js)      | `roma/`         |
-| **DevStudio**     | Internal toolbench for platform curation, verification, and local utility pages | Local Vite toolbench            | `admin/`        |
+| **DevStudio**     | Internal Berlin-authenticated toolbench for Dieter/foundation inspection and policy editing | Cloudflare Pages            | `admin/`        |
 | **Venice**        | Legacy embed runtime being removed by PRD 100                                   | Cloudflare Pages (Next.js Edge) | `venice/`       |
 | **San Francisco** | AI Workforce OS (agents, learning)                                              | Workers (D1/KV/R2/Queues)       | `sanfrancisco/` |
 | **Michael**       | Database                                                                        | Supabase Postgres               | `supabase/`     |
@@ -261,7 +261,7 @@ Publishing semantics: `published` / `unpublished` is Tokyo-owned instance produc
 
 **Roma** — Product shell and account experience. Domain-driven app (`/home`, `/widgets`, `/builder`, etc.) that resolves account context through `/api/bootstrap`, keeps session and account authz in httpOnly cookies, opens Bob by waiting for `bob:session-ready` and sending one `ck:open-editor` payload, reads account instance state through same-origin routes backed by Tokyo product operations, and saves that one widget instance back through the same account boundary. Browser JavaScript does not own the raw account authz capsule; Roma server code validates it and forwards it to Tokyo over private service bindings. Roma's authed shell owns account bootstrap, auth-required redirect, account-context failure, and the ready account context exposed to domains; individual domain pages must not render their own account-loading, account-error, no-account, or default fake account states. On the active Widgets/Builder path, Roma treats Tokyo as the user-facing instance identity, translated locale value, publish state, and public artifact owner. Michael may still carry registry/status residue during cutover, but it is not the surviving publish/unpublish authority. In product terms, `Save` writes approved instance config/content plus the submitted `index.html` / `styles.css` / `runtime.js` widget package; `Generate translations` asks Tokyo to queue missing/changed locale work; `Publish` / `Unpublish` changes whether `clk.live` may serve stored package artifacts. Current Roma is a single-current-account customer shell and does not expose customer account switching. Roma is the real account/product boundary for Builder. It must not model a fake anonymous editor/account mode inside shared account truth, and account context must not derive platform flags, names, or slugs from compact account ids. In cloud-dev, this still usually collapses to one effective account: the seeded Clickeen/admin account.
 
-**DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as widget curation, verification, and small local utility pages. The old local DevStudio widget-authoring lane is removed. DevStudio must not invent a second account or provider truth model and it must not become a generic customer-account browser.
+**DevStudio** — Internal toolbench. It is where Clickeen runs internal platform work such as Dieter/foundation inspection and policy editing. Its canonical host is `https://devstudio.clickeen.com` behind Berlin/Google auth for the normal Clickeen admin account. The old local DevStudio widget-authoring lane is removed. DevStudio must not invent a second account or provider truth model and it must not become a generic customer-account browser.
 
 **Venice** — Legacy SSR embed runtime being removed by PRD 100. It is not the surviving public serving plane. The surviving model is static mini-site delivery from Tokyo at `https://clk.live/{accountPublicId}/{instanceId}`; browser requests must receive generated files, not Venice-computed widget HTML.
 
@@ -429,7 +429,7 @@ pnpm build:dieter               # Build Dieter media first
 pnpm build                      # Build all packages
 
 # Development
-bash scripts/dev-up.sh          # Canonical local DevStudio operating lane (Tokyo/Tokyo-worker/Berlin/Bob/DevStudio)
+bash scripts/dev-up.sh          # Canonical local support stack (Tokyo/Tokyo-worker/Berlin/Bob)
 pnpm dev:bob                    # Bob only
 pnpm dev:admin                  # DevStudio only
 
@@ -450,8 +450,8 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 - Instances are **not** created by scripts anymore.
 - Supported product/account instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
-- Local DevStudio is the local internal toolbench, not “local Roma” parity.
-- That local verification scope currently centers on seeded Clickeen/admin account state and local translation/runtime checks.
+- Local DevStudio is optional package-level static UI iteration, not “local Roma” parity.
+- DevStudio policy editing evidence comes from the Berlin-authenticated Cloudflare Pages surface.
 
 **Local auth target (important):**
 
@@ -464,8 +464,8 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
 | Environment                 | Bob                            | Roma                            | Tokyo                            | Public serving              | San Francisco                           | DevStudio                |
 | --------------------------- | ------------------------------ | ------------------------------- | -------------------------------- | --------------------------- | --------------------------------------- | ------------------------ |
-| **Local**                   | `http://localhost:3000`        | `https://roma.dev.clickeen.com` | `http://localhost:4000`          | local Tokyo-worker host     | `—`                                     | `http://localhost:5173`  |
-| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://dev.clk.live`      | `https://sanfrancisco.dev.clickeen.com` | `— local only`           |
+| **Local**                   | `http://localhost:3000`        | `https://roma.dev.clickeen.com` | `http://localhost:4000`          | local Tokyo-worker host     | `—`                                     | optional package dev     |
+| **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://dev.clk.live`      | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.clickeen.com` |
 | **UAT**                     | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://clk.live`          | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
 | **Limited GA**              | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://clk.live`          | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
 | **GA**                      | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://clk.live`          | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |

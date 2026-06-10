@@ -286,7 +286,7 @@ Whenever tokens or component CSS changes:
    ```bash
    pnpm --filter @clickeen/devstudio dev
    ```
-   - Visit `http://localhost:5173/#/dieter/` or `http://localhost:5173/#/dieter-components-new/`
+   - Open the local Vite URL printed by the command and inspect the Dieter component routes.
 4. Commit changes; consuming apps should use `/dieter/**`, backed by rebuilt `tokyo/product/dieter` deploy artifacts synced to R2 `dieter/**`.
 
 Never hand-edit `/bob/public/dieter/**`; treat it as a generated artifact.
@@ -299,7 +299,7 @@ DevStudio (`admin/`) is the preview harness for Dieter. It loads component specs
 
 ### 2.1 Running & Viewing
 
-- Development: `pnpm --filter @clickeen/devstudio dev` → `http://localhost:5173`
+- Development: `pnpm --filter @clickeen/devstudio dev`
 - Dieter showcase routes:
   - `/#/dieter/` (curated showcases)
   - `/#/dieter-components-new/` (generated per-component pages)

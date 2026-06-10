@@ -82,7 +82,7 @@ This keeps customer actions close to one cross-service request, removes stale re
 | **Prague**        | `prague/`       | Cloudflare Pages                     | Marketing + SEO surface                                                 | ✅ Active   |
 | **Bob**           | `bob/`          | Cloudflare Pages                     | Widget builder, compiler, ToolDrawer, preview                           | ✅ Active   |
 | **Roma**          | `roma/`         | Cloudflare Pages                     | Product shell, account domains, Bob host orchestration                  | ✅ Active   |
-| **DevStudio**     | `admin/`        | Local Vite                           | Internal toolbench for platform curation, verification, and local utility pages | ✅ Internal |
+| **DevStudio**     | `admin/`        | Cloudflare Pages                     | Internal Berlin-authenticated toolbench for Dieter/foundation inspection and policy editing | ✅ Internal |
 | **Venice**        | `venice/`       | Cloudflare Pages (Next.js Edge)      | Legacy SSR embed runtime replaced by `clk.live` static artifacts        | Removed from active serving |
 | **San Francisco** | `sanfrancisco/` | Cloudflare Workers (D1/KV/R2/Queues) | AI Workforce OS: agents, learning, orchestration                        | ✅ Phase 1  |
 | **Michael**       | `supabase/`     | Supabase Postgres                    | Database with RLS                                                       | ✅ Active   |
@@ -126,6 +126,7 @@ Each release proceeds in 3 steps:
 | **Public embeds** | `https://dev.clk.live`                       | `https://clk.live`                  |
 | **Tokyo**         | `https://tokyo.dev.clickeen.com`             | `https://tokyo.clickeen.com`        |
 | **San Francisco** | `https://sanfrancisco.dev.clickeen.com`      | `https://sanfrancisco.clickeen.com` |
+| **DevStudio**     | `https://devstudio.clickeen.com`             | internal-only                       |
 
 **Fallback origins (when custom domains aren’t configured yet):**
 
@@ -210,12 +211,13 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 - Roma serves Berlin-backed account member reads on same-origin routes (`GET /api/account/team` and `GET /api/account/team/members/:memberId`).
 - Roma Builder embeds Bob and sends one explicit `ck:open-editor` payload after `bob:session-ready`.
 
-#### DevStudio (Local toolbench)
+#### DevStudio (Pages)
 
 - DevStudio is the internal toolbench, not a second customer account shell.
-- It is the surface where Clickeen runs internal platform work such as curation, verification, and local utilities.
-- In local development, DevStudio is a local Vite toolbench for static/internal verification pages; removed widget-authoring and company-plane action lanes must not be reintroduced there.
-- There is no canonical Cloudflare DevStudio runtime. DevStudio is local-only.
+- It is the surface where Clickeen runs internal platform work such as Dieter/foundation inspection and policy editing.
+- Canonical host is `https://devstudio.clickeen.com`.
+- Berlin/Google login is the sole auth boundary. The signed-in user must resolve to the normal Clickeen admin account; DevStudio does not invent a second account, allowlist, or Cloudflare Access auth model.
+- Removed widget-authoring and company-plane action lanes must not be reintroduced.
 
 #### Public Embeds (`clk.live`)
 
@@ -335,7 +337,7 @@ Non-negotiable:
 ### Security & config (Cloudflare-level defaults)
 
 - **HTTPS everywhere**: redirect HTTP → HTTPS; HSTS enabled on production domains.
-- **Dev surfaces protected**: shared `*.dev` surfaces may be protected behind Cloudflare Access; DevStudio is local-only.
+- **Dev surfaces protected**: shared `*.dev` surfaces may be protected behind Cloudflare Access. DevStudio uses Berlin/Google auth on `https://devstudio.clickeen.com`, not Cloudflare Access.
 - **Secrets isolation**:
   - Provider keys live only in San Francisco.
   - Supabase service role lives only in Berlin/Tokyo-worker where explicitly required.

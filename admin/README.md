@@ -1,83 +1,47 @@
 # DevStudio — Internal Toolbench
 
 **Package**: `@clickeen/devstudio`
-**Port**: `5173`
-**URL**: `http://localhost:5173`
+**Canonical URL**: `https://devstudio.clickeen.com`
+**Cloudflare Pages project**: `devstudio`
 
-## What DevStudio is
+DevStudio is Clickeen's internal platform toolbench. It hosts Dieter/foundation
+showcases and the Policy Editor; it is not Roma, not a customer shell, and not a
+superadmin account browser.
 
-DevStudio is Clickeen's local internal toolbench.
+## Current Surface
 
-It exists for:
-- widget curation and verification
-- Dieter previews and internal fixtures
-- deploy/runtime verification from the owner machine
-- other narrowly scoped internal tools that do not belong in Roma
+- Foundations: Colors, Typography, Icons.
+- Dieter Components: generated/static component showcase pages.
+- Policy: entitlements + AI runtime Policy Editor at `/#/policy/entitlements`.
 
-It is not:
-- a customer shell
-- a generic superadmin dashboard
-- a global account browser
-- a Cloudflare-hosted shared runtime
-- the place to test product-auth realism by default
+The Bob UI Native husk and the local widget-authoring workspace are removed.
 
-## Current tool surface
+## Runtime Layout
 
-Shipped tools today include:
-- `/#/tools/bob-ui-native`
-- `/#/tools/entitlements`
-- Dieter/foundations pages generated from source
-- other internal dev/verification pages under `src/html/tools/`
+- `src/html/` contains static HTML fragments bundled by Vite.
+- `src/data/routes.ts` owns DevStudio section and hash-route discovery.
+- `functions/` owns Cloudflare Pages auth/session middleware and policy API routes.
+- `vite.config.ts` owns the Vite shell only; it must not reintroduce local policy,
+  theme, or icon rebuild write APIs.
 
-The old `account-operator` surface is intentionally removed.
-
-## Local contract
-
-DevStudio local runs as an internal toolbench on the owner machine.
-
-Rules:
-- local DevStudio does not require Roma-style login semantics by default
-- local DevStudio must not grow hidden company-plane authority or fake product routes
-
-## Runtime layout
-
-The local widget-authoring workspace at `/#/tools/dev-widget-workspace` is removed.
-DevStudio remains the internal toolbench for internal pages and supporting local tooling.
-
-Current runtime layout:
-- [devstudio.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite/devstudio.ts) owns the remaining DevStudio Vite route fallback
-- [vite.config.ts](/Users/piero_macpro/code/VS/clickeen/admin/vite.config.ts) is the Vite shell plus plugin registration
+Policy writes go through Pages Functions, validate with `@clickeen/ck-policy`, and
+commit matrix JSON updates to GitHub.
 
 ## Development
 
 ```bash
 pnpm --filter @clickeen/devstudio dev
 pnpm --filter @clickeen/devstudio build
+pnpm --filter @clickeen/devstudio check:functions
 ```
 
-Canonical startup:
+Local DevStudio is for static UI iteration only. The canonical internal surface is
+the Cloudflare Pages deployment behind Berlin/Google auth.
 
-```bash
-pnpm --filter @clickeen/devstudio dev
-```
+## Build-Time Generation
 
-`scripts/dev-up.sh` is bootstrap-era full-stack local orchestration and is not the canonical way to run DevStudio.
+DevStudio generates Dieter/component showcase pages before dev/build:
 
-## Build-time generation
-
-DevStudio still generates Dieter/component showcase pages at build time.
-That truth-mirror behavior remains valid and important.
-
-Key generators:
 - `scripts/generate-component-pages.ts`
 - `scripts/generate-icons-showcase.local.cjs`
 - `scripts/generate-typography-json.cjs`
-
-## Editing rules
-
-When changing DevStudio:
-1. keep it a local internal toolbench
-2. do not add Roma-style product IA
-3. do not invent new account/admin concepts in DevStudio
-4. do not reintroduce removed local widget-authoring or company-plane action lanes
-5. if a tool needs company-plane authority, that belongs in the separate internal control plane, not in a fake product account shell

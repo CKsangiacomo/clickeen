@@ -127,10 +127,6 @@ export function readEditableTextPrimitiveValue(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
-function parsePrimitiveType(value: unknown): WidgetTextPrimitiveType {
-  return value === 'richtext' ? 'richtext' : 'string';
-}
-
 function parseStringArray(value: unknown, label: string): string[] {
   if (!Array.isArray(value)) throw new Error(`${label}_invalid`);
   return value.map((entry, index) => {

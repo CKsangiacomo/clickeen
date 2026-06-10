@@ -3,7 +3,6 @@ import '@dieter/components/popover/popover.css';
 import '@dieter/components/valuefield/valuefield.css';
 import '@dieter/components/toggle/toggle.css';
 import { navGroups, showcaseIndex, showcaseModules } from './data/routes';
-import { generateBobNativeCatalog } from './BobNativeCatalog';
 import { getIcon } from './data/icons';
 import {
   hydrateChoiceTiles,
@@ -49,7 +48,7 @@ const showcaseAccountAssets: AccountAssetsClient = {
     return [];
   },
   async resolveAssets() {
-    return { assetsById: new Map(), missingAssetIds: [] };
+    return { assetsByRef: new Map(), missingAssetRefs: [] };
   },
   async uploadAsset() {
     throw new Error('Asset uploads are not available in the Dieter showcase.');
@@ -253,34 +252,6 @@ function hydrateDieterComponents(scope: Element | DocumentFragment): void {
   hydratePopAddLink(scope);
 }
 
-function renderBobNative(): DocumentFragment {
-  const catalog = generateBobNativeCatalog();
-  const fragment = document.createDocumentFragment();
-  const grid = document.createElement('div');
-  grid.className = 'component-masonry';
-
-  Object.entries(catalog).forEach(([name, primitive]) => {
-    const wrapper = document.createElement('article');
-    wrapper.className = 'component-wrapper';
-    wrapper.innerHTML = `
-      <header class="spec-wrapper">
-        <span class="spec-line body-small">${name}</span>
-        <span class="spec-line body-small">${primitive.source}</span>
-      </header>
-      <div class="bob-preview-wrapper">
-        <style>${primitive.css}</style>
-        ${primitive.html}
-      </div>
-    `;
-    grid.append(wrapper);
-  });
-
-  fragment.append(grid);
-  hydrateIcons(fragment);
-  hydrateDieterComponents(fragment);
-  return fragment;
-}
-
 function executeScripts(scope: DocumentFragment | Element) {
   scope.querySelectorAll('script').forEach((oldScript) => {
     const script = document.createElement('script');
@@ -479,12 +450,7 @@ function renderFromHash() {
     pageStyles.push(dietIconCss);
   }
 
-  let content: DocumentFragment;
-  if (page.slug === 'bob-ui-native') {
-    content = renderBobNative();
-  } else {
-    content = renderHtmlPage(page.htmlPath, pageStyles);
-  }
+  const content = renderHtmlPage(page.htmlPath, pageStyles);
 
   const wrapped = wrapWithPageChrome(content, page.title);
   setActive(page.path);

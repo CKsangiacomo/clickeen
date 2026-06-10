@@ -127,8 +127,8 @@ Health contract:
 Canonical Google login currently works like this:
 
 1. Roma sends the browser to `GET /auth/login/google/start`.
-2. Berlin validates provider, intent, and next path.
-3. Berlin creates a one-time OAuth state ticket in `BERLIN_AUTH_TICKETS`.
+2. Berlin validates provider, intent, next path, and an optional `finishRedirectUrl`.
+3. Berlin creates a one-time OAuth state ticket in `BERLIN_AUTH_TICKETS`, including the selected finish redirect.
 4. Berlin redirects to Google with PKCE and `prompt=select_account`.
 5. Google redirects back to `GET /auth/login/google/callback`.
 6. Berlin consumes the OAuth state ticket once.
@@ -137,10 +137,14 @@ Canonical Google login currently works like this:
 9. Berlin resolves or creates the Clickeen user/account landing state through the approved `users` model.
 10. Berlin issues the Clickeen session.
 11. Berlin stores a short-lived one-time finish transaction in `BERLIN_AUTH_TICKETS`.
-12. Berlin redirects the browser to Roma's finish route with only a `finishId`.
-13. Roma redeems the finish transaction through `POST /auth/finish`, sets its product cookies, and sends the user to the continuation path.
+12. Berlin redirects the browser to the selected finish route with only a `finishId`.
+13. The selected surface redeems the finish transaction through `POST /auth/finish`, sets its surface-owned session cookies, and sends the user to the continuation path.
 
 The browser is a redirect courier. It must never receive session material in the provider callback URL.
+
+Roma does not send `finishRedirectUrl`; it continues to use `BERLIN_FINISH_REDIRECT_URL`.
+DevStudio may send `finishRedirectUrl=https://devstudio.clickeen.com/api/session/finish`.
+Requested finish redirects must be absolute `http`/`https` URLs, normalized by Berlin, and exactly present in the allowlist. `BERLIN_FINISH_REDIRECT_URL` is always included in that allowlist.
 
 ## Token Model
 
@@ -171,6 +175,7 @@ OAuth transaction state:
 
 - One-time opaque `state` IDs are persisted in `BERLIN_AUTH_TICKETS` with consume-once semantics.
 - PKCE verifier + flow metadata are never encoded in callback URLs.
+- The selected finish redirect is stored on the state ticket so callback returns the `finishId` to the same allowlisted surface that started login.
 
 OAuth finish state:
 
@@ -233,6 +238,7 @@ Recommended:
 - `BERLIN_AUDIENCE`
 - `BERLIN_ALLOWED_PROVIDERS` (default: `google`)
 - `BERLIN_FINISH_REDIRECT_URL` (cloud-dev points at Roma `/api/session/finish`)
+- `BERLIN_ALLOWED_FINISH_REDIRECT_URLS` (comma-separated additional absolute finish URLs; default finish URL is automatically allowed)
 - `ENV_STAGE`
 
 Optional key rotation:

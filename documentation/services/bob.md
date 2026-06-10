@@ -123,7 +123,7 @@ Shared Builder opens through one host message. Roma opens Bob with one explicit 
 
 ### Hybrid dev (Roma in cloud, Bob local)
 
-The old DevStudio local widget-authoring workspace is removed.
+The old DevStudio widget-authoring workspace is removed.
 Bob’s active account-mode host surface is Roma.
 
 ### Instance write surfaces (current)
@@ -507,7 +507,7 @@ Reference:
 Important boundary:
 
 - Roma product example/externally referenced-instance discovery is Roma-owned through `/api/account/widgets`.
-- DevStudio local must not use Roma example routes for instance discovery.
+- DevStudio must not use Roma example routes for instance discovery.
 
 Bob editor routes are explicit:
 
@@ -537,7 +537,7 @@ It:
 - Builds Dieter into `tokyo/product/dieter`
 - Builds i18n bundles from `tokyo/roma/i18n/source` into `tokyo/roma/i18n/public`
 - Clears stale Next chunks (`bob/.next`)
-- Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), (optional) SanFrancisco (3002), Bob (3000), DevStudio (5173), Prague (4321)
+- Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), and Bob (3000)
 - DB Pivot blocks `dev-up` from managing Supabase lifecycle or switching between local and remote Supabase targets. Supabase schema changes must go through reviewed migrations and the approved deploy path.
 - Local Bob uses Berlin/Roma/Tokyo product boundaries; it must not depend on a script-selected Supabase target.
 - Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).

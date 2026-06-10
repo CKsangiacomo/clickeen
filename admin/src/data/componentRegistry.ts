@@ -1,8 +1,8 @@
-import type { ComponentSource } from './componentTypes';
+import type { ComponentSource, ComponentSpec } from './componentTypes';
 
 const specModules = import.meta.glob('../../../dieter/components/*/*.spec.json', {
   eager: true,
-}) as Record<string, any>;
+}) as Record<string, ComponentSpec>;
 
 const templateModules = import.meta.glob('../../../dieter/components/*/*.html', {
   eager: true,

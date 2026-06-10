@@ -25,11 +25,11 @@ function resolveKey(key: string, stack: StencilContext[]): unknown {
   const ctxIndex = stack.length - 1 - upLevels;
   if (ctxIndex < 0) return undefined;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let value: any = stack[ctxIndex];
+  let value: unknown = stack[ctxIndex];
   for (let i = 0; i < segments.length; i += 1) {
     if (value == null) return undefined;
-    value = value[segments[i]];
+    if (typeof value !== 'object') return undefined;
+    value = (value as Record<string, unknown>)[segments[i]];
   }
   return value;
 }
@@ -69,8 +69,9 @@ export function renderStencil(stencil: string, context: StencilContext): string 
       const value = resolveKey(key, stack);
       if (!Array.isArray(value)) return '';
       return value
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((item: any) => renderBlock(block, [...stack, typeof item === 'object' && item !== null ? item : { this: item }]))
+        .map((item: unknown) =>
+          renderBlock(block, [...stack, typeof item === 'object' && item !== null ? (item as StencilContext) : { this: item }]),
+        )
         .join('');
     });
 
@@ -88,7 +89,7 @@ export function renderStencil(stencil: string, context: StencilContext): string 
       return renderBlock(block, stack);
     });
 
-    input = input.replace(/{{\s*([^#\/][^}\s]+)\s*}}/g, (_match, key: string) => {
+    input = input.replace(/{{\s*([^#/][^}\s]+)\s*}}/g, (_match, key: string) => {
       const value = resolveKey(key, stack);
       return value == null ? '' : String(value);
     });

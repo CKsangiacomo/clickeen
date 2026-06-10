@@ -49,7 +49,7 @@ function getConfig() {
   const endpoint = optionalEnv('CLOUDFLARE_R2_ENDPOINT') || `https://${accountId}.r2.cloudflarestorage.com`;
   const accessKeyId = optionalEnv('CLOUDFLARE_R2_ACCESS_KEY_ID');
   const secretAccessKey = optionalEnv('CLOUDFLARE_R2_SECRET_ACCESS_KEY');
-  const token = optionalEnv('CLOUDFLARE_API_TOKEN');
+  const token = optionalEnv('CLOUDFLARE_R2_REST_API_TOKEN');
 
   return {
     accountId,
@@ -85,7 +85,7 @@ async function cfJson(config, url) {
 
 async function verifyToken(config) {
   if (!config.token) {
-    throw new Error('Missing CLOUDFLARE_API_TOKEN for REST API verification.');
+    throw new Error('Missing CLOUDFLARE_R2_REST_API_TOKEN for R2 REST API verification.');
   }
   const body = await cfJson(config, 'https://api.cloudflare.com/client/v4/user/tokens/verify');
   return body.result ?? {};
@@ -208,7 +208,7 @@ async function putObjectS3(config, key, body, contentType) {
 
 async function listObjectsRest(config, prefix, limit) {
   if (!config.token) {
-    throw new Error('Missing CLOUDFLARE_API_TOKEN for REST R2 access.');
+    throw new Error('Missing CLOUDFLARE_R2_REST_API_TOKEN for REST R2 access.');
   }
   const objects = [];
   let cursor = '';
@@ -228,7 +228,7 @@ async function listObjectsRest(config, prefix, limit) {
 
 async function getObjectRest(config, key) {
   if (!config.token) {
-    throw new Error('Missing CLOUDFLARE_API_TOKEN for REST R2 access.');
+    throw new Error('Missing CLOUDFLARE_R2_REST_API_TOKEN for REST R2 access.');
   }
   const url = `https://api.cloudflare.com/client/v4/accounts/${config.accountId}/r2/buckets/${config.bucket}/objects/${encodeKeyPath(key)}`;
   const response = await fetch(url, {
@@ -340,7 +340,7 @@ Preferred R2 object auth:
   CLOUDFLARE_R2_ENDPOINT (optional; defaults from account id)
 
 REST fallback auth:
-  CLOUDFLARE_API_TOKEN`);
+  CLOUDFLARE_R2_REST_API_TOKEN`);
 }
 
 async function main() {
