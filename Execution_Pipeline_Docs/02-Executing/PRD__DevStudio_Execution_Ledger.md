@@ -478,3 +478,31 @@ Evidence recorded 2026-06-10:
 - NOT_ALLOWED held: no package dev entrypoints removed; Vite kept; no non-DevStudio
   local infrastructure, Tokyo local stub, Berlin local worker, Bob local dev,
   `.wrangler/state`, `Logs/`, `.dev.vars`, or wrangler env forks were torn down.
+
+## Step 7 — Local Emulation Teardown Ledger
+
+Status: green; Step 7 complete. Current PRD step: Step 8, blocked by 108A-1
+green.
+
+Evidence recorded 2026-06-10:
+
+- Surviving authority: DevStudio runtime/evidence authority is
+  `https://devstudio.clickeen.com` on Cloudflare Pages behind Berlin/Google
+  auth. The remaining local-emulation plane belongs only to the local
+  Bob/Berlin/Tokyo support workflow until a separate teardown PRD acts on it.
+- Created planning artifact:
+  `Execution_Pipeline_Docs/01-Planning/PRD__DevStudio_Local_Emulation_Teardown_Ledger.md`.
+- The ledger enumerates the required Step 7 targets:
+  `scripts/dev-up.sh`, `[env.local]` forks in `berlin/wrangler.toml`,
+  `tokyo-worker/wrangler.toml`, and `sanfrancisco/wrangler.toml`, the Tokyo
+  local CDN stub, `berlin/.dev.vars` plus
+  `scripts/dev/generate-berlin-keys.mjs`, `Logs/`, and `.wrangler/state`.
+- The ledger also records direct dependencies discovered during inventory:
+  root `.env.local`, `prague/.env.local`, `.dev-up.lock/`, service
+  `.wrangler/tmp` caches, the local upload route in `tokyo/dev-server.mjs`,
+  `TOKYO_DEV_JWT`, local ports, health checks, and Bob prewarm behavior.
+- Every ledger row has one `delete`, `keep`, or `fence` proposal, names the
+  surviving authority, and describes blast radius plus follow-up requirements.
+- NOT_ALLOWED held: no teardown item was executed; no runtime script, wrangler
+  config, env file, generated local state, Cloudflare setting, or product code
+  was changed in Step 7.
