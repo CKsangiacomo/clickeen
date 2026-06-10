@@ -291,6 +291,14 @@ product-boundary-safe output.
 - For 108A-1, define product-safe error envelopes and prevent raw provider JSON from
   reaching Builder.
 - For 108A-1, make model picker eligibility depend on provider conformance and policy.
+- For 108A-1, ship the routing contract (PR-13/D8): `AgentRoutingPolicy` in the signed
+  policy (turn-class → model within the allowed set, single-step escalation on invalid
+  structured output, declared failover on typed provider errors, every decision
+  recorded in the learning event; pinned user picks exempt from automatic switching).
+- For 108A-1, enforce Q6 conversion mode in the plane: the signed policy carries
+  `copilotMode: 'full' | 'conversion'` (derived by Roma at grant mint from tier ∧
+  useful-turn usage); a conversion-mode grant can never obtain a full model
+  execution — the plane returns only the validated conversion template.
 - For 108A-2, define the shared execution core contract used by Copilots and workforce
   agents.
 - For 108A-2, separate interactive and durable workload budget concepts.
@@ -328,13 +336,20 @@ product-boundary-safe output.
 - What eval/smoke scenarios prove the Copilot model-call contract cannot silently drift?
 - Which docs must be updated when code ships?
 
-108A-1 execution is complete only when:
+108A-1 execution is complete only when (criteria are lineup-agnostic per PR-2/D1 —
+the gpt-5.2 incident is the motivating example, never the definition of done):
 
-- `gpt-5.2` is never called with unsupported reasoning values.
+- no model is callable without a fresh passing conformance profile.
+- no provider request parameter is derived from model-id string matching.
 - a model capability declaration cannot merge without a passing conformance check.
 - an unverified model is not picker-eligible.
-- raw provider JSON no longer appears in Builder Copilot UI.
+- raw provider payloads never reach product surfaces (negative fixture proves it).
 - model picker options cannot select a model shape San Francisco cannot call.
+- routing (PR-13/D8): turn-class routing, single-step escalation, and declared
+  recorded failover are enforced by the plane; pinned user picks are never silently
+  overridden.
+
+Authoritative execution contract: `108A1__EXEC__AI_Plane_Capability_Conformance_Routing.md`.
 
 108A-2 is execution-ready only after 108B is green and can answer:
 

@@ -6,7 +6,9 @@ Priority: P2 / Deferred until 108B is green
 Date: 2026-06-08
 Stage: 01-Planning
 Type: Sub-PRD from PRD 108
-Blocked-by: PRD 108B and PRD 108A-2
+Blocked-by: PRD 108B, PRD 108A-2, and design-level decisions on 108 OQ6/OQ7
+(outbound layer shape; external credential custody) recorded before this PRD enters
+`02-Executing` (per review IV.4)
 
 Blocker meanings:
 - 108B = Builder Copilot control-operator proof.
@@ -241,19 +243,24 @@ This PRD does not build the outbound layer.
 
 ## 5. First Reference Agent
 
-PRD 108 recommends UX Writer as the first durable workforce-agent reference implementation.
+SUPERSEDED (D5, ratified 2026-06-09): the reference agent is the **Widget Instance
+Translator re-base**, not UX Writer.
 
 Reason:
 
-- service-scoped
-- low account-truth risk
-- clear human-review output
-- useful to Clickeen immediately
-- smaller external-dependency surface than GTM
+- it is the shipped internal agent — production-real, not speculative
+- it already runs the Option C pattern (orchestration in Tokyo-worker, execution
+  through San Francisco via the `INSTANCE_TRANSLATION_JOBS` queue); 108C formalizes
+  and improves what production already proves
+- the D9 regression gate (29-locale overlay fixture) bounds the risk better than any
+  greenfield agent could
+- it satisfies the product owner's "better, not worse" bar: the re-base IS the
+  improvement path (policy-driven models, typed failures, learning events, durable
+  budgets)
 
-This PRD keeps that recommendation and makes it the default execution target. If product
-chooses a different first reference agent, that decision must be explicit before 108C moves
-to `02-Executing`.
+UX Writer is deferred until a real need exists. An earlier draft of this PRD
+recommended UX Writer; building a speculative agent to validate a pattern that
+production already runs was rejected by the product owner.
 
 The reference implementation must be thin but real:
 
@@ -274,8 +281,8 @@ The reference implementation must be thin but real:
 - Define review artifact boundary.
 - Define risk/human-gate direction.
 - Define external outbound layer principles.
-- Build one real low-risk reference agent through the scaffold, with UX Writer as the
-  default.
+- Re-base the Widget Instance Translator through the scaffold as the reference agent
+  (D5), under the D9 regression gate.
 
 This scope begins only after the prerequisites above are green. Until then, this PRD stays
 as architecture scaffolding, not active build work.

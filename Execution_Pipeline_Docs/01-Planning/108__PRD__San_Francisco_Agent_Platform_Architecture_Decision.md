@@ -232,6 +232,14 @@ org") and its Terms section naming `support.reply` and `ops.communityModeration`
 intended end-state explicit: a workforce spanning **editor assistance, localization,
 marketing, support, and ops moderation.**
 
+Dispositions for the shipped roster (PR-14/D9, ratified 2026-06-09):
+
+| Shipped agent | Disposition |
+|---|---|
+| Builder Copilot | **Rebuild** per 108B (earth tests as proof) |
+| Widget Instance Translator | **Keep + protect** (29-locale regression gate on any plane change), then **re-base** onto the durable scaffold as the 108C reference agent (D5) |
+| Prague Copy Translator | **Freeze now, delete on 106D** — no 108 investment; SF-side deletion inventory lives in the 106E ledger |
+
 ### 2.2 Classification (the dimensions that matter for platform shape)
 
 **Dimension A — Execution mode (the load-bearing one):**
@@ -336,8 +344,10 @@ execution surfaces sit behind that one plane:
    task-fanout (Durable Object/queue/cron) may run as a **governed sibling worker per
    durable agent** (preserving isolation and independent deploy), but **all model calls,
    grant/policy enforcement, budget accounting, and learning-event emission route back
-   through San Francisco's shared spine** (e.g. a private service binding, exactly like
-   Tokyo-worker → `SANFRANCISCO_L10N` already does for instance translation).
+   through San Francisco's shared spine** (exactly like Tokyo-worker already dispatches
+   instance translation to San Francisco through the `INSTANCE_TRANSLATION_JOBS` queue;
+   corrected per review PR-1 — the previously cited `SANFRANCISCO_L10N` service binding
+   exists only in stale docs, not in code).
 
 In other words: **orchestration is per-agent and isolated; the AI plane is singular and
 shared.** No agent re-implements grants, keys, routing, budgets, or learning. SF governs
@@ -450,8 +460,15 @@ swappable catalogue is genuinely table stakes for an end-user assistant), while 
 `defaultModel` (for an internal agent, swapping the model is *not* table stakes — its
 output is validated against a pinned model, and silent model drift would break that
 guarantee). All three registered agents technically share the same picker pathway today;
-the registry already has the lever, it just needs pulling per agent. This is a policy
-setting, not new platform code.
+the registry already has the lever, it just needs pulling per agent.
+
+> **SUPERSEDED in part (PR-13 / D8, 2026-06-09):** "a policy setting, not new platform
+> code" understated the need. The ratified routing contract adds a third plane atom —
+> routing (turn-class → model tables, single-step escalation on invalid structured
+> output, declared recorded failover, pinned user picks never overridden). The
+> mechanism is `AgentRoutingPolicy` in the signed policy; `modelRouter.ts` becomes a
+> real router. See `108A1__EXEC__…` Step 6. "No silent cross-switching" remains true:
+> switching is declared, bounded, and recorded — never silent.
 
 **(c) Single-agent-first — which is the discipline this doc already adopts.** The guide is
 explicit that teams succeed by maximizing one agent before adding multi-agent complexity,
@@ -504,9 +521,9 @@ Why this is the right fit for *Clickeen specifically*:
 1. **It honors the shipped isolation tenet** while keeping the "AI Workforce OS" real —
    the two things the canonical docs insist on simultaneously.
 2. **It generalizes a pattern already in production**, not a theory: account-widget
-   instance translation is already an external orchestrator (Tokyo-worker/queues) calling
-   San Francisco's execution plane through a private binding. Option C is "do that, on
-   purpose, for every durable agent."
+   instance translation is already an external orchestrator (Tokyo-worker) dispatching
+   work to San Francisco's execution plane through the `INSTANCE_TRANSLATION_JOBS`
+   queue. Option C is "do that, on purpose, for every durable agent."
 3. **It refuses duplicate truth.** One provider-key home, one model router, one budget
    authority, one learning loop. Adding the GTM Agent does not re-implement any of that —
    it implements only its orchestration + its prompts + its boundary.
@@ -593,12 +610,14 @@ This decision doc proposes the sequence; each phase becomes its own `02-Executin
   model, budget split, shared execution core, structured result + usage, telemetry,
   eval/observability fields, and learning-event capture. Extend the registry so
   durable/service agents are first-class (not just `execute` vs `endpoint`).
-- **108C — Durable agent scaffold with one real reference agent.** Stand up the governed
-  durable-agent pattern end-to-end with **one** real low-risk reference agent (recommend
-  **UX Writer** first: service-scoped, no account-truth risk, clear human-review output,
-  smallest blast radius) — orchestrator worker + SF-routed execution + review artifact
-  store. This becomes the template. Scaffold-only platform work is explicitly rejected.
-  108C does not enter execution until 108B has proven the user-facing Builder Copilot.
+- **108C — Durable agent scaffold proven on the shipped reference agent.** Stand up the
+  governed durable-agent pattern by **re-basing the Widget Instance Translator** — the
+  internal agent already running in production — onto the formalized scaffold, guarded
+  by the D9 29-locale regression gate. (SUPERSEDED per D5, 2026-06-09: an earlier
+  draft recommended a greenfield UX Writer; building a speculative agent to validate a
+  pattern production already runs was rejected. UX Writer waits for a real need.)
+  Scaffold-only platform work remains explicitly rejected. 108C does not enter
+  execution until 108B has proven the user-facing Builder Copilot.
 - **108D — GTM Agent on the pattern.** Re-base the existing GTM spec onto the governed
   plane (drop its standalone grant/model/telemetry; reuse SF's). GTM is the **first agent
   that needs external reach**, so this is where §3.5's outbound layer gets built for real:
@@ -670,9 +689,11 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
 
 ## 7. Open questions (resolve before 108A execution)
 
-1. **Service-scoped execution transport:** do durable orchestrators call San Francisco via
-   a private service binding (like `SANFRANCISCO_L10N`) only, or is there also an
-   authenticated internal HTTP path? (Lean: binding-first.)
+1. **Service-scoped execution transport:** RESOLVED (D5 dispositions, 2026-06-09):
+   request/response durable calls → private service binding; fire-and-forget jobs →
+   queue (matching the shipped `INSTANCE_TRANSLATION_JOBS` pattern — note the
+   previously cited `SANFRANCISCO_L10N` binding never existed in code). No
+   authenticated internal HTTP path.
 2. **Where do ops-agent outputs live?** GTM JSON and UX audit reports are neither account
    truth nor SF telemetry. Proposed: a service-owned review store (R2 + D1) owned by the
    agent's orchestrator, explicitly outside product persistence. Confirm the boundary name.
@@ -681,8 +702,10 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
    `durable`/`interactive` cleanly?
 4. **Billing/usage aggregation** for service-scoped autonomous runs (the overview already
    flags "where AI usage is recorded for billing" as open).
-5. **First durable agent:** confirm UX Writer as the reference implementation over GTM
-   (lower blast radius, no account-truth coupling).
+5. **First durable agent:** SUPERSEDED (D5, 2026-06-09): the **Widget Instance
+   Translator re-base** is the 108C reference — it is the shipped internal agent, and
+   formalizing a production workload under the D9 regression gate beats building a
+   speculative one. UX Writer waits until a real need exists.
 6. **Outbound layer shape (§3.5):** when GTM (108D) first needs external systems, is the
    common outbound layer an internal MCP-style server SF/orchestrators consume, or a
    thinner shared client module? (Lean: adopt the *principles* — intent tools, one
@@ -697,9 +720,10 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
    and which product/orchestrator boundary owns review artifacts, approval state, and
    commits? (Lean: risk declared in registry/policy; San Francisco enforces it; review
    state and product commits stay outside San Francisco.)
-9. **Per-phase model selection (§3.6):** does the signed policy carry a single model per
-   agent, or a model-per-phase map? (Lean: per-phase map, so cheap phases use cheap models
-   once evals prove parity.)
+9. **Per-phase model selection (§3.6):** SUPERSEDED by PR-13/D8 (2026-06-09): routing
+   is a first-class plane contract (`AgentRoutingPolicy`), not schema room. Interactive
+   turn-class routing ships in 108A-1; the durable phase-class dimension ships in
+   108A-2 and is mandatory for multi-phase durable agents.
 10. **Concurrency model for the durable-agent calling pattern (resolve in 108A).** The
    current guard in `sanfrancisco/src/concurrency.ts` — `MAX_INFLIGHT_PER_ISOLATE = 8`, an
    in-isolate counter that throws 429 on overflow — is a *copilot* guard: it protects the

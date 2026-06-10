@@ -63,6 +63,10 @@ jobs:
 2. **Guide** - explain how the current widget works in Builder: what the panels do, where
    controls live, how to add/remove/reorder/configure things, why controls are visible or
    hidden, and how to perform multi-step widget workflows.
+3. **Advice** (added Q3 round 5, 2026-06-09) - answer in-domain product questions about
+   the user's widget, grounded in its actual state, ending with an actionable offer.
+   Free-tier behavior follows Q6: one useful turn (any capability), then the conversion
+   template (grounded encouragement + entitlement-matched upgrade recommendation).
 
 The Operator job fixes the lowest embarrassing failure: "change button color to blue" must
 be a deterministic Builder edit. The Guide job fixes the larger product failure: Copilot
@@ -319,9 +323,19 @@ The execution PRD must cover these Builder Copilot intents first:
 - add/remove/reorder repeatable Core items where the compiled contract explicitly exposes
   that structure
 - explain why a requested edit cannot be performed
+- answer in-domain product questions about the user's widget (`advice`, Q3 round 5:
+  grounded in the widget snapshot, ending with an actionable offer — "what do you
+  think of my widget?", "what's the best color for this button?")
 
-Requests outside that taxonomy must fail with a product-safe explanation rather than
-guessing or writing private paths.
+Only **out-of-domain** requests (meta-chat, off-product asks) fail with the
+product-safe canned redirect; in-domain questions without an edit target are
+`advice`, not failures. (Earlier drafts of this section said all out-of-taxonomy
+requests must fail — superseded by Q3 round 5, 2026-06-09.) On free accounts, the
+Q6 conversion model applies after the useful-turn quota (see the authoritative
+execution contract). No request may guess or write private paths.
+
+Authoritative execution contract: `108B1__EXEC__Builder_Copilot_Operator.md` (where
+this PRD and the EXEC spec differ, the EXEC spec governs).
 
 ### 3.2.2 Earth-test scenarios
 
