@@ -104,8 +104,9 @@
   }
 
   function normalizeImage(raw) {
-    if (!isRecord(raw)) return { src: '', fit: 'cover', position: 'center', repeat: 'no-repeat' };
+    if (!isRecord(raw)) throw new Error('[CKFill] image fill requires src');
     var src = readAssetSrc(raw);
+    if (!src) throw new Error('[CKFill] image fill requires src');
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
     var repeat = typeof raw.repeat === 'string' && raw.repeat.trim() ? raw.repeat.trim() : 'no-repeat';
@@ -158,7 +159,6 @@
     if (fill.type === 'color') return fill.color || 'transparent';
     if (fill.type === 'gradient') return buildGradientCss(fill.gradient);
     if (fill.type === 'image') {
-      if (!fill.image || !fill.image.src) return 'transparent';
       var fit = fill.image.fit === 'contain' ? 'contain' : 'cover';
       var position = fill.image.position || 'center';
       var repeat = fill.image.repeat || 'no-repeat';

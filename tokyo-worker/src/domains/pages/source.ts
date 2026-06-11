@@ -105,25 +105,55 @@ function normalizeSubmittedPageSummary(value: unknown, args: {
 }
 
 async function readPagesIndex(env: Env, accountId: string): Promise<AccountPagesIndex> {
-  const stored = await loadJson<AccountPagesIndex>(env, accountPagesIndexKey(accountId));
-  if (!stored || stored.v !== 1 || stored.accountId !== accountId || !Array.isArray(stored.pages)) {
+  const obj = await env.TOKYO_R2.get(accountPagesIndexKey(accountId));
+  if (!obj) {
     return { v: 1, accountId, pages: [] };
+  }
+  let stored: unknown;
+  try {
+    stored = await obj.json();
+  } catch {
+    throw new PageOperationError({
+      kind: 'VALIDATION',
+      reasonKey: 'tokyo.errors.page.indexInvalid',
+    });
+  }
+  if (!isRecord(stored) || stored.v !== 1 || stored.accountId !== accountId || !Array.isArray(stored.pages)) {
+    throw new PageOperationError({
+      kind: 'VALIDATION',
+      reasonKey: 'tokyo.errors.page.indexInvalid',
+    });
   }
   return {
     v: 1,
     accountId,
-    pages: stored.pages.filter((page): page is AccountPageSummary => {
-      return (
-        isRecord(page) &&
-        typeof page.pageId === 'string' &&
-        typeof page.title === 'string' &&
-        typeof page.description === 'string' &&
-        normalizeRobots(page.robots) != null &&
-        typeof page.placementCount === 'number' &&
-        Number.isFinite(page.placementCount) &&
-        typeof page.createdAt === 'string' &&
-        typeof page.updatedAt === 'string'
-      );
+    pages: stored.pages.map((page, index): AccountPageSummary => {
+      if (
+        !isRecord(page) ||
+        typeof page.pageId !== 'string' ||
+        typeof page.title !== 'string' ||
+        typeof page.description !== 'string' ||
+        normalizeRobots(page.robots) == null ||
+        typeof page.placementCount !== 'number' ||
+        !Number.isFinite(page.placementCount) ||
+        typeof page.createdAt !== 'string' ||
+        typeof page.updatedAt !== 'string'
+      ) {
+        throw new PageOperationError({
+          kind: 'VALIDATION',
+          reasonKey: 'tokyo.errors.page.indexInvalid',
+          paths: [`pages.${index}`],
+        });
+      }
+      return {
+        pageId: page.pageId,
+        title: page.title,
+        description: page.description,
+        robots: page.robots,
+        placementCount: page.placementCount,
+        createdAt: page.createdAt,
+        updatedAt: page.updatedAt,
+      };
     }),
   };
 }

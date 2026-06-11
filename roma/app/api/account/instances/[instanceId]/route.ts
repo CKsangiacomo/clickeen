@@ -44,6 +44,8 @@ type RouteFailureLike = {
   };
 };
 
+const WIDGET_PACKAGE_MISSING_PREFIX = 'coreui.errors.widget.packageMissing:';
+
 function isCompiledWidgetForPublicPackage(value: unknown): value is CompiledWidgetForPublicPackage {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const record = value as Record<string, unknown>;
@@ -308,6 +310,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
+    if (detail.startsWith(WIDGET_PACKAGE_MISSING_PREFIX)) {
+      return withSession(
+        request,
+        NextResponse.json(
+          { error: { kind: 'VALIDATION', reasonKey: detail } },
+          { status: 422 },
+        ),
+        current.value.setCookies,
+      );
+    }
     return withSession(
       request,
       NextResponse.json(

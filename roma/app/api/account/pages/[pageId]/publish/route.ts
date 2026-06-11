@@ -6,6 +6,7 @@ import {
 import {
   listAccountInstancesInTokyo,
 } from '@roma/lib/account-instance-direct';
+import { loadAccountPublishContainment } from '@roma/lib/berlin-product';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -46,7 +47,41 @@ export async function POST(request: NextRequest, context: RouteContext) {
     );
   }
 
+  const berlinAccountId = current.value.authzPayload.accountId;
   const accountId = current.value.authzPayload.accountPublicId;
+  const containment = await loadAccountPublishContainment(
+    berlinAccountId,
+    current.value.accessToken,
+    current.value.requestId,
+  );
+  if (!containment.ok) {
+    const status = containment.status === 401 ? 401 : containment.status === 403 ? 403 : 502;
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: routeKind(status), reasonKey: containment.reasonKey, detail: containment.detail } },
+        { status },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (containment.containment.active) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'DENY',
+            reasonKey: 'coreui.errors.account.publishingPaused',
+            detail: containment.containment.reason ?? 'account_publish_containment_active',
+          },
+        },
+        { status: 403 },
+      ),
+      current.value.setCookies,
+    );
+  }
+
   const page = await loadAccountPageFromTokyo({
     accountId,
     pageId,

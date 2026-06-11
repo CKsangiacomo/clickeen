@@ -205,10 +205,9 @@ function buildStyles(args: PackageBuildArgs, widgetHtml: string, includeSocialSh
       key,
       fallback: key.endsWith('/widget.css') ? 'widget.css' : undefined,
     });
-    if (source) {
-      chunks.push(styleChunk(key, source));
-      includedStyleKeys.add(key);
-    }
+    if (!source) throw new Error(`coreui.errors.widget.packageMissing:${key}`);
+    chunks.push(styleChunk(key, source));
+    includedStyleKeys.add(key);
   }
   if (includeSocialShare && !includedStyleKeys.has(WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY)) {
     const source = packageSource({ compiled: args.compiled, key: WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY });
@@ -258,7 +257,7 @@ ${RUNTIME_PAYLOAD_END}`;
       key,
       fallback: key.endsWith('/widget.client.js') ? 'widget.client.js' : undefined,
     });
-    if (!source) continue;
+    if (!source) throw new Error(`coreui.errors.widget.packageMissing:${key}`);
     const chunk = runtimeModuleChunk(key, source);
     includedRuntimeKeys.add(key);
     if (key.endsWith('/widget.client.js')) {

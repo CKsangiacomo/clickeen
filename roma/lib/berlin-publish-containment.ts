@@ -2,6 +2,7 @@ import {
   asTrimmedString,
   berlinProductUnavailableResult,
   fetchBerlinProductJson,
+  isRecord,
   type BerlinAccountPublishContainmentResult,
 } from './berlin-product-shared';
 
@@ -19,11 +20,20 @@ export async function loadAccountPublishContainment(
       requestId,
     });
     if (!containment.ok) return containment;
+    const value = containment.value;
+    if (!isRecord(value) || !isRecord(value.containment) || typeof value.containment.active !== 'boolean') {
+      return {
+        ok: false,
+        status: 502,
+        reasonKey: 'coreui.errors.payload.invalid',
+        detail: 'berlin_publish_containment_invalid_payload',
+      };
+    }
     return {
       ok: true,
       containment: {
-        active: Boolean(containment.value.containment?.active),
-        reason: asTrimmedString(containment.value.containment?.reason),
+        active: value.containment.active,
+        reason: asTrimmedString(value.containment.reason),
       },
     };
   } catch (error) {

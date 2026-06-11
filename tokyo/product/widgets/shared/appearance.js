@@ -34,6 +34,7 @@
     if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
       return window.CKFill.toCssBackground(value);
     }
+    if (isRecord(value)) throw new Error('[CKAppearance] Missing CKFill');
     return String(value ?? '');
   }
 
@@ -41,6 +42,7 @@
     if (window.CKFill && typeof window.CKFill.toCssColor === 'function') {
       return window.CKFill.toCssColor(value);
     }
+    if (isRecord(value)) throw new Error('[CKAppearance] Missing CKFill');
     return String(value ?? '');
   }
 
