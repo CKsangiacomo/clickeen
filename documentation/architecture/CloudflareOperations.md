@@ -108,11 +108,11 @@ pnpm cf:pages:sync-devstudio-project --apply
 
 `pnpm cf:pages:devstudio-env` is read-only. It compares the live DevStudio Pages
 env against `admin/wrangler.toml` and the required live-only
-`DEVSTUDIO_GITHUB_TOKEN` secret.
+`DEVSTUDIO_GITHUB_TOKEN` and `E2E_AUTH_SECRET` secrets.
 
 `pnpm cf:pages:sync-devstudio-env --apply` writes the non-secret DevStudio Pages
-production vars from `admin/wrangler.toml` and writes `DEVSTUDIO_GITHUB_TOKEN`
-from root `.env.local` as a Cloudflare Pages secret. The command redacts secret
+production vars from `admin/wrangler.toml` and writes the required Pages secrets
+from root `.env.local` as Cloudflare Pages secrets. The command redacts secret
 values in output.
 
 If the dry-run passes and `--apply` returns Cloudflare `403`, the token is valid

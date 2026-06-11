@@ -27,21 +27,19 @@ The Bob UI Native husk and the local widget-authoring workspace are removed.
 Policy writes go through Pages Functions, validate with `@clickeen/ck-policy`, and
 commit matrix JSON updates to GitHub.
 
-## Development
+## Verification
 
 ```bash
-pnpm --filter @clickeen/devstudio dev
 pnpm --filter @clickeen/devstudio build
 pnpm --filter @clickeen/devstudio check:functions
 ```
 
-Local DevStudio is for static UI iteration only. The canonical internal surface is
-the Cloudflare Pages deployment behind Berlin/Google auth.
+DevStudio evidence comes from the Cloudflare Pages deployment behind
+Berlin/Google auth, not from a local Vite server.
 
 ## Build-Time Generation
 
-DevStudio generates Dieter/component showcase pages before dev/build:
+DevStudio generates Dieter/component showcase pages before build:
 
 - `scripts/generate-component-pages.ts`
-- `scripts/generate-icons-showcase.local.cjs`
 - `scripts/generate-typography-json.cjs`

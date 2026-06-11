@@ -20,8 +20,8 @@ async function readJsonBody(request) {
   return payload;
 }
 
-function requestSecret(request, body) {
-  return stringValue(request.headers.get(E2E_AUTH_HEADER)) || stringValue(body?.secret) || null;
+function requestSecret(request) {
+  return stringValue(request.headers.get(E2E_AUTH_HEADER)) || null;
 }
 
 export async function onRequest(context) {
@@ -35,7 +35,7 @@ export async function onRequest(context) {
 
   const body = await readJsonBody(request);
   const email = normalizeEmail(body?.email);
-  const secret = requestSecret(request, body);
+  const secret = requestSecret(request);
   if (!email) {
     return json(
       {

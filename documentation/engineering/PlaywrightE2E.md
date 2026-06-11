@@ -93,7 +93,14 @@ E2E_AUTH_ENABLED=true
 E2E_AUTH_SECRET=...
 ```
 
-The same `E2E_AUTH_SECRET` must be configured in Playwright, Roma, and Berlin.
+DevStudio:
+
+```text
+E2E_AUTH_SECRET=...
+```
+
+The same `E2E_AUTH_SECRET` must be configured in Playwright, Berlin, and the
+deployed surface being tested.
 
 ## Storage State
 

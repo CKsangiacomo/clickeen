@@ -355,7 +355,7 @@ function serveStatic(req, res, prefix) {
 }
 
 const server = http.createServer((req, res) => {
-  // Allow local origins (Bob 3000, DevStudio 5173, etc.)
+  // Allow local app origins.
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader(

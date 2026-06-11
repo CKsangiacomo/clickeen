@@ -10,7 +10,7 @@ const envPath = path.join(repoRoot, '.env.local');
 const devstudioWranglerPath = path.join(repoRoot, 'admin', 'wrangler.toml');
 const API_BASE = 'https://api.cloudflare.com/client/v4';
 const DEVSTUDIO_PROJECT_NAME = 'devstudio';
-const DEVSTUDIO_REQUIRED_SECRET_KEYS = ['DEVSTUDIO_GITHUB_TOKEN'];
+const DEVSTUDIO_REQUIRED_SECRET_KEYS = ['DEVSTUDIO_GITHUB_TOKEN', 'E2E_AUTH_SECRET'];
 const DEVSTUDIO_PROJECT_CONFIG = {
   production_branch: 'main',
   build_config: {
@@ -228,8 +228,8 @@ function summarizeRequiredEnv(envVars = {}) {
     'DEVSTUDIO_CANONICAL_ORIGIN',
     'DEVSTUDIO_GITHUB_BRANCH',
     'DEVSTUDIO_GITHUB_REPOSITORY',
-    'DEVSTUDIO_GITHUB_TOKEN',
     'ENV_STAGE',
+    ...DEVSTUDIO_REQUIRED_SECRET_KEYS,
   ];
   return Object.fromEntries(
     required.map((name) => [

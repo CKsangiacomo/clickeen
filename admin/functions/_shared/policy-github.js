@@ -8,9 +8,6 @@ import { resolveDevstudioOrigin } from './env.js';
 import { cloneResponseWithCookies, json, methodNotAllowed } from './http.js';
 import { resolveDevstudioSession } from './session.js';
 
-const DEFAULT_REPOSITORY = 'CKsangiacomo/clickeen';
-const DEFAULT_BRANCH = 'main';
-
 const POLICY_FILES = {
   entitlements: {
     path: 'packages/ck-policy/entitlements.matrix.json',
@@ -64,7 +61,8 @@ function formatPolicyValue(value) {
 }
 
 function resolveRepository(env) {
-  const repository = stringValue(env.DEVSTUDIO_GITHUB_REPOSITORY) || DEFAULT_REPOSITORY;
+  const repository = stringValue(env.DEVSTUDIO_GITHUB_REPOSITORY);
+  if (!repository) throw new Error('DEVSTUDIO_GITHUB_REPOSITORY missing');
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
     throw new Error('DEVSTUDIO_GITHUB_REPOSITORY invalid');
   }
@@ -72,13 +70,14 @@ function resolveRepository(env) {
 }
 
 function resolveBranch(env) {
-  const branch = stringValue(env.DEVSTUDIO_GITHUB_BRANCH) || DEFAULT_BRANCH;
-  if (!branch || branch.length > 128) throw new Error('DEVSTUDIO_GITHUB_BRANCH invalid');
+  const branch = stringValue(env.DEVSTUDIO_GITHUB_BRANCH);
+  if (!branch) throw new Error('DEVSTUDIO_GITHUB_BRANCH missing');
+  if (branch.length > 128) throw new Error('DEVSTUDIO_GITHUB_BRANCH invalid');
   return branch;
 }
 
 function resolveGithubToken(env) {
-  const token = stringValue(env.DEVSTUDIO_GITHUB_TOKEN) || stringValue(env.GITHUB_TOKEN);
+  const token = stringValue(env.DEVSTUDIO_GITHUB_TOKEN);
   if (!token) throw new Error('DEVSTUDIO_GITHUB_TOKEN missing');
   return token;
 }

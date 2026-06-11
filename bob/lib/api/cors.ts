@@ -2,9 +2,6 @@ import type { NextRequest } from 'next/server';
 
 const DEFAULT_ALLOWED_HEADERS = 'authorization, content-type, x-request-id';
 const HOST_ALLOWED_ORIGINS = [
-  /^http:\/\/localhost:5173$/i,
-  /^http:\/\/127\.0\.0\.1:5173$/i,
-  /^https:\/\/devstudio\.dev\.clickeen\.com$/i,
   /^http:\/\/localhost:4321$/i,
   /^http:\/\/127\.0\.0\.1:4321$/i,
   /^https:\/\/prague\.dev\.clickeen\.com$/i,

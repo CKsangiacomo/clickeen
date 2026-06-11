@@ -1,5 +1,3 @@
-const DEFAULT_DEVSTUDIO_ORIGIN = 'https://devstudio.clickeen.com';
-
 function readString(env, key) {
   return typeof env?.[key] === 'string' ? env[key].trim() : '';
 }
@@ -11,7 +9,8 @@ export function resolveBerlinBaseUrl(env) {
 }
 
 export function resolveDevstudioOrigin(env) {
-  const configured = readString(env, 'DEVSTUDIO_CANONICAL_ORIGIN') || DEFAULT_DEVSTUDIO_ORIGIN;
+  const configured = readString(env, 'DEVSTUDIO_CANONICAL_ORIGIN');
+  if (!configured) throw new Error('DEVSTUDIO_CANONICAL_ORIGIN missing');
   return new URL(configured).origin;
 }
 

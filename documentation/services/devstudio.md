@@ -21,6 +21,11 @@ resolve through Berlin bootstrap to the normal Clickeen admin account
 (`accountPublicId: "CLICKEEN"`) with an admin/owner role. `CLICKEEN` is a normal
 account coordinate, not a superadmin bypass.
 
+DevStudio uses host-scoped session cookies on `devstudio.clickeen.com`, set by
+the DevStudio Pages finish route after Berlin login. Those cookies are for the
+internal toolbench only; Roma/Bob product sessions do not consume DevStudio
+cookies, and DevStudio must not consume customer product-session cookies.
+
 Cloudflare Access is not the DevStudio auth boundary.
 
 ## Current Surface
@@ -56,8 +61,9 @@ POST /api/ai-runtime/matrix/cell
 Policy reads use the GitHub contents API against current `main`, so the editor
 shows committed policy state rather than the Pages build snapshot. Policy writes
 apply `@clickeen/ck-policy` validators and commit updated JSON back to `main`.
-Invalid edits return typed failures and do not commit. GitHub SHA conflicts return
-typed conflicts and require a refetch/retry.
+Every policy API request verifies the Berlin session and Clickeen admin account
+context before reading or writing. Invalid edits return typed failures and do not
+commit. GitHub SHA conflicts return typed conflicts and require a refetch/retry.
 
 Required Pages configuration:
 
@@ -67,34 +73,33 @@ Required Pages configuration:
 - `DEVSTUDIO_GITHUB_REPOSITORY`
 - `ENV_STAGE`
 - `DEVSTUDIO_GITHUB_TOKEN` as a Pages secret
+- `E2E_AUTH_SECRET` as a Pages secret for remote Playwright verification
 
 `admin/wrangler.toml` is the source of truth for non-secret Pages configuration
 once the Cloudflare Pages project root is `admin`. Use
 `pnpm cf:pages:devstudio-env` from the repo root to compare live Pages env against
 that file without exposing secret values. Use
 `pnpm cf:pages:sync-devstudio-env --apply` to write the non-secret vars and the
-`DEVSTUDIO_GITHUB_TOKEN` Pages secret from root `.env.local`.
+required Pages secrets from root `.env.local`.
 
-## Local Development
+## Local Runtime
 
-Use package-level local DevStudio only for fast static UI iteration:
+`scripts/dev-up.sh` does not start DevStudio. DevStudio product evidence comes
+from the Berlin-authenticated Cloudflare Pages surface, not from local Vite.
+Local runtime work must not reintroduce hidden local write lanes.
+
+Use package-level checks for build and Pages Functions verification:
 
 ```bash
-pnpm --filter @clickeen/devstudio dev
 pnpm --filter @clickeen/devstudio build
 pnpm --filter @clickeen/devstudio check:functions
 ```
 
-`scripts/dev-up.sh` does not start DevStudio. Local DevStudio is not product-state
-evidence, does not replace the cloud surface, and must not reintroduce hidden local
-write lanes.
-
 ## Build-Time Generation
 
-DevStudio generates Dieter/component showcase pages at build time:
+DevStudio generates Dieter/component showcase pages before build:
 
 - `scripts/generate-component-pages.ts`
-- `scripts/generate-icons-showcase.local.cjs`
 - `scripts/generate-typography-json.cjs`
 
 Generated showcase pages mirror Dieter source. They do not define component

@@ -5,13 +5,16 @@ Owner: Internal platform (DevStudio) + Dieter
 Date: 2026-06-09
 Stage: 01-Planning
 Numbering: deliberately unnumbered per product owner; sibling of
-`PRD__DevStudio_Cloudflare_Migration.md`.
-Blocked-by: `PRD__DevStudio_Cloudflare_Migration.md` Steps 1–6 green (the instrument
-moves to cloud first; this PRD rebuilds what it shows). Not blocked by PRD 108.
+`Execution_Pipeline_Docs/03-Executed/PRD__DevStudio_Cloudflare_Migration.md`.
+Prerequisite status: `Execution_Pipeline_Docs/03-Executed/PRD__DevStudio_Cloudflare_Migration.md`
+is complete through Step 7. This PRD is not executing in the migration-cleanup pass.
+Policy-section extension remains deferred until 108A-1 defines the surviving schema
+authority.
 
 Related:
-- `PRD__DevStudio_Cloudflare_Migration.md` (§3.5 write path — reused here; §3.6
-  design freeze — binding here; Appendix A hash-frozen pages — the visual baseline)
+- `Execution_Pipeline_Docs/03-Executed/PRD__DevStudio_Cloudflare_Migration.md`
+  (§3.5 write path — reused here; §3.6 design freeze — binding here; Appendix A
+  hash-frozen pages — the visual baseline)
 - `dieter/components/*` (stencils, specs, CSS — component truth)
 - `dieter/tokens/*` (`dieter-color-tokens.css`, `dieter-typography.css`,
   `dieter-foundation-tokens.css`, `tokens.css` — token truth)
@@ -66,9 +69,9 @@ current code topology that changes blast radius:
 - The existing component generator is incomplete. It renders defaults/previews
   but does not prove every spec attribute/state is shown, can leave stencil
   markers in output, and misses `textedit`.
-- Icon generation currently writes to `dieter/dieteradmin/.../icons.html`, while
-  DevStudio serves `admin/src/html/foundations/icons.html`. That duplicate output
-  must be deleted or redirected to the served page.
+- Migration cleanup deleted the wrong-target `dieter/dieteradmin/.../icons.html`
+  generation lane. The served `admin/src/html/foundations/icons.html` page still
+  needs Step 3 generation before this PRD can edit icon truth.
 - The token-editor deploy story is not automatic today. Worker R2 sync currently
   triggers on `tokyo/product/dieter/**`, not `dieter/tokens/**`. Token editing
   must not ship until CI proves source token edits rebuild Dieter artifacts and
@@ -126,7 +129,7 @@ The failures, measured and corrected against the current repo:
 | Components | Spec-backed Dieter components | Partially — an existing generator rewrites `admin/src/html/components/*.html`, but it is incomplete and unguarded | `dieter/components` has **21 specs**, DevStudio has **20 component pages**, and the built Dieter manifest lists **23 components**. `textedit` has a spec/stencil/CSS but no page. `textrename` has stencil/CSS/hydrator but no spec. Current generated output can contain unresolved stencil syntax and does not prove full attribute coverage. |
 | Colors | Color declarations in `dieter/tokens/dieter-color-tokens.css` plus approved themed color declarations | No — hand-picked | Source has **132 color declarations**. Served page has **216 hand-authored chips** and only **36 unique `var()` refs**; references **2 tokens that do not exist** (`--neutral-base`, `--radius-4`) — the audit surface displays invented tokens. |
 | Typography | `dieter-typography.css` | **Half** — `generate-typography-json.cjs` runs at build, but the page's section lists are hand-frozen arrays | Generated JSON has **33 roles**; `typography.ts` renders **30**. Missing rendered roles: `body`, `body-small`, `body-large`. |
-| Icons | `dieter/icons/icons.json` + SVG files | Wrong served target — build calls a generator, but it writes to `dieter/dieteradmin/...`, not the DevStudio page | Source has **157 icon symbols** and **157 SVG files**. Served icons page shows **143 unique icons**, missing 14. The old manual trigger `/api/rebuild-icons` is deleted by the Migration PRD, but the served generation path is still wrong. |
+| Icons | `dieter/icons/icons.json` + SVG files | Not generated into the served page yet — migration cleanup deleted the wrong-target `dieter/dieteradmin/...` generator | Source has **157 icon symbols** and **157 SVG files**. Served icons page shows **143 unique icons**, missing 14. The old manual trigger `/api/rebuild-icons` is deleted by the Migration PRD; Step 3 must add the served generation path. |
 | CI/deploy | Remote-only build/deploy graph | Incomplete for this PRD | PR gates do not explicitly cover `admin/**`; no DevStudio canonical-host verify workflow exists yet; Tokyo R2 sync does not trigger from `dieter/tokens/**`. |
 
 Conclusion: the pages are honest about the skin and lie by omission about the
@@ -144,8 +147,8 @@ before continuing.
 | DevStudio serving model | Generated static HTML under `admin/src/html/**`, discovered by current routing, with generated headers and guards | Hand-authored ownership of generated pages; direct manual edits to generated HTML |
 | Component generator | One hardened generator path using spec + stencil + CSS and a named frozen template | Parallel component renderers, per-component generator forks, stale `dieter/components/registry.json` if it remains non-authoritative |
 | Component inventory | Directories with `{name}.spec.json`, `{name}.html`, and `{name}.css` are governed components | `textedit` missing page; `textrename` lacking spec; `icon`/`shared` helper treatment must be explicit |
-| Icons | `dieter/icons/**` source and one served DevStudio icons page | `dieter/dieteradmin/src/html/dieter-showcase/icons.html`; `admin/scripts/generate-icons-showcase.local.cjs` if it keeps writing the wrong artifact |
-| Typography | Generated role data + generated page sections | Hand-frozen section arrays; missing `body`, `body-small`, `body-large`; dead analysis files if not used (`typography.usage.json`, old extract scripts) |
+| Icons | `dieter/icons/**` source and one served DevStudio icons page | Reintroducing wrong-target `dieter/dieteradmin/**` generation or manual regeneration lanes |
+| Typography | Generated role data + generated page sections | Hand-frozen section arrays; missing `body`, `body-small`, `body-large` |
 | Colors | Generated page from governed color tokens | Hand-authored chip list; ghost refs `--neutral-base` and `--radius-4`; page-local helper tokens masquerading as source truth |
 | Local APIs | Pages Functions from Migration PRD, remote-only | Vite local token/theme/rebuild routes, `/api/rebuild-icons`, `/api/themes/*`, local-only write routes, local Tokyo static conveniences if Migration PRD removes them |
 | Bob-native tool | Whatever survives Migration PRD by explicit evidence | `bob-ui-native` route and `BobNativeCatalog` after Migration PRD says they are deleted |
@@ -204,8 +207,7 @@ A hardened build-time generator becomes the only authority for component pages:
 
 - The icons page is regenerated from `dieter/icons/icons.json` + SVG files during
   the Dieter/Admin build and writes to the **served** DevStudio page or to a
-  generated module imported by that page. `dieter/dieteradmin/.../icons.html` is
-  deleted or fenced as non-authoritative.
+  generated module imported by that page.
 - The dead manual trigger is already deleted by the Migration PRD; this PRD must
   not recreate a manual regeneration lane.
 
@@ -264,7 +266,7 @@ A `scripts/dieter/governance-guards.mjs` (or equivalent) wired into CI:
 | 0 | **Preflight/topology lock:** prove Migration PRD Steps 1–6 are green; run Cloudflare preflight for remote-only work; record exact token/icon/component counts; lock generated static HTML as the served artifact model; record treatment for `textedit`, `textrename`, `icon`, `shared`; record ghost-token resolution; lock token deploy model as source commit -> CI build -> R2 sync. | This PRD updated with a decision/evidence record: workflow links, counts, component inventory table, deletion ledger. | Starting execution from stale counts; deleting served HTML without replacing routing; inventing a new route framework; preserving local-only write paths. |
 | 1 | **Typography generation completed:** section lists derived from generated JSON; all 33 generated roles render unless Step 0 proves a new source count; hand-frozen arrays deleted. | Page shows 33/33 roles (or Step 0 current source count); visual parity vs frozen baseline; arrays gone (`rg "BODY_SCALE|LABEL_SCALE|WEBSITE_BODY_SCALE" admin/src` → 0). | New layout/styles; hand-curating role lists. |
 | 2 | **Colors generation:** chip grid generated from token CSS; both themes; ghost tokens resolved per Step 0 decision. | Page shows the Step 0 governed color-token count exactly; ghost-guard green; visual parity vs frozen baseline. | Hand-picking tokens; inventing chip styles; silently defining ghost tokens without the Step 0 decision. |
-| 3 | **Icons generation wired into the served DevStudio page;** page derived every build from source icons. | Page shows 157/157 (or current count); a test icon added to `dieter/icons/icons.json` appears without manual steps; `dieter/dieteradmin/.../icons.html` deleted/fenced. | Manual regeneration lanes; writing generated icons to an unserved artifact. |
+| 3 | **Icons generation wired into the served DevStudio page;** page derived every build from source icons. | Page shows 157/157 (or current count); a test icon added to `dieter/icons/icons.json` appears without manual steps; no wrong-target `dieter/dieteradmin/**` output is reintroduced. | Manual regeneration lanes; writing generated icons to an unserved artifact. |
 | 4 | **Component page generator hardened:** spec+stencil enumeration through the frozen layout template for all governed components; hydration wired uniformly; generated files carry headers. | Coverage guard green per component (every governed spec attribute/variant rendered — including `min-items`, `allow-structure`, `data-axis`, `data-databinding`, repeater's full surface); no unresolved `{{...}}`; visual parity vs frozen baselines; `textedit`/`textrename` treatment proven. | New visual language; per-component generator forks; keeping hand pages "as backup"; deleting the static artifact folder without replacing `routes.ts`. |
 | 5 | **CI guards live before writes:** tokenization (incl. inline TSX styles with explicit exemptions), coverage, ghost, no-hand-authoring, generated-output validity. | Guards run in CI; a seeded violation of each class fails the build (negative fixtures); current tree passes; `admin/**` is included in relevant PR/verify gates. | Warn-only guards; scoping guards down to pass dirty code; enabling token writes first. |
 | 6 | **Reusable DevStudio write path:** extract/reuse Migration PRD §3.5 GitHub commit mechanics for token routes; no local Vite write path. | Berlin session/account identity -> server-side GitHub commit; no client secrets; path allowlist to token files; typed 401/403/409/422; conflict and rollback SOP documented. | New auth model; dashboard-only manual commits; local-only mutation APIs. |

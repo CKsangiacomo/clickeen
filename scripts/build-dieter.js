@@ -287,11 +287,6 @@ async function main() {
   if (fs.existsSync(iconsJsonSrc)) copyRecursiveSync(iconsJsonSrc, iconsJsonDst);
   copyRecursiveSync(svgsSrc, svgsDst);
 
-  // 4b) Generate DevStudio icons showcase from icon sources
-  try {
-    runNodeScript('generate-icons-showcase.js');
-  } catch (_) {}
-
   // 5) Copy component and foundation CSS (for direct consumers)
   const componentsDst = path.join(dist, 'components');
   if (fs.existsSync(componentsSrc)) {
