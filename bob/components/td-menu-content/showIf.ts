@@ -303,11 +303,7 @@ export function applyShowIfVisibility(entries: ShowIfEntry[], data: Record<strin
         }
       }
     }
-    const hideTarget =
-      entry.el.closest<HTMLElement>(
-        '[data-bob-group], .diet-textfield, .diet-valuefield, .diet-toggle, [data-bob-control]'
-      ) || entry.el;
-    hideTarget.toggleAttribute('hidden', !isVisible);
-    hideTarget.setAttribute('style', isVisible ? '' : 'display: none;');
+    entry.el.toggleAttribute('hidden', !isVisible);
+    entry.el.setAttribute('style', isVisible ? '' : 'display: none;');
   });
 }
