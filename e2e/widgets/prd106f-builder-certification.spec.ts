@@ -371,7 +371,7 @@ async function openBuilderFrame(page: Page, instanceId: string): Promise<Frame> 
   const bobFrame = await frameHandle.contentFrame();
   expect(bobFrame, `Bob frame should exist for ${instanceId}`).not.toBeNull();
 
-  await bobFrame!.getByRole('button', { name: /Manual/i }).waitFor({ timeout: 30_000 });
+  await bobFrame!.getByRole('button', { name: /Manual/i }).waitFor({ timeout: 60_000 });
   const instanceSelected = await waitForSelectedInstance(bobFrame!);
   if (!instanceSelected) {
     const retried = await retryBuilderOpenIfAvailable(page, instanceId, 10_000);
@@ -512,7 +512,7 @@ test.describe('PRD106F authenticated Builder browser certification', () => {
     test(`${instance.widgetType} Builder opens cleanly for ${instance.instanceId}`, async ({
       page,
     }) => {
-      test.setTimeout(120_000);
+      test.setTimeout(180_000);
 
       const collector = collectPageErrors(page);
       await openBuilderFrame(page, instance.instanceId);

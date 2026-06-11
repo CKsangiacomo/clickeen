@@ -14,6 +14,7 @@ type BuilderDomainProps = {
 };
 
 const OPEN_EDITOR_TIMEOUT_MS = 7000;
+const OPEN_EDITOR_RECONCILE_DELAYS_MS = [250, 1000, 2500] as const;
 const UNSAVED_OPEN_REASON = 'coreui.errors.builder.open.unsavedChanges';
 
 type BobReadyMessage = {
@@ -625,6 +626,26 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     if (!bobReadyRef.current) return;
     void openActiveInstanceInBobRef.current();
   }, [activeInstanceId]);
+
+  useEffect(() => {
+    if (!activeInstanceId) return;
+    let cancelled = false;
+    const timers = OPEN_EDITOR_RECONCILE_DELAYS_MS.map((delay) =>
+      window.setTimeout(() => {
+        if (cancelled) return;
+        const requestedInstanceId = activeInstanceIdRef.current;
+        if (!requestedInstanceId) return;
+        if (bobAppliedInstanceIdRef.current === requestedInstanceId) return;
+        if (!iframeRef.current?.contentWindow) return;
+        bobReadyRef.current = true;
+        void openActiveInstanceInBobRef.current();
+      }, delay),
+    );
+    return () => {
+      cancelled = true;
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [activeInstanceId, bobSrc]);
 
   useEffect(() => {
     const confirmDiscard = () => {
