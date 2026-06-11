@@ -132,6 +132,16 @@
     });
   }
 
+  function dispatchControlsRendered(root, source) {
+    if (!root || typeof CustomEvent === "undefined") return;
+    root.dispatchEvent(
+      new CustomEvent("dieter-controls-rendered", {
+        bubbles: true,
+        detail: { source },
+      }),
+    );
+  }
+
   function hydrateObjectManager(scope, options) {
     const roots = scope.querySelectorAll(".diet-object-manager");
     roots.forEach((root) => {
@@ -247,6 +257,7 @@
         const canManage = items.length > 1;
         manageBtn.hidden = !canManage;
         manageBtn.style.display = canManage ? "" : "none";
+        dispatchControlsRendered(root, "object-manager");
       };
 
       const handleExternalSync = (ev) => {
@@ -283,12 +294,6 @@
           return;
         }
         if (target === hidden) return;
-        if (
-          target.classList.contains("diet-repeater__field") ||
-          target.classList.contains("diet-object-manager__field")
-        ) {
-          return;
-        }
         const basePath = hidden.getAttribute("data-bob-path") || hidden.getAttribute("data-path") || "";
         if (!basePath) return;
         const path = target.getAttribute("data-bob-path") || "";
@@ -394,8 +399,8 @@
     });
   }
 
-  hydrateObjectManager(document);
-  if (window.Dieter) {
-    window.Dieter.hydrateObjectManager = hydrateObjectManager;
-  }
+  window.Dieter = {
+    ...(window.Dieter || {}),
+    hydrateObjectManager,
+  };
 })();

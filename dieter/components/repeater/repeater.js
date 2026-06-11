@@ -68,12 +68,28 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
   }
 
+  function labelWithIndex(label, index) {
+    return String(label || "")
+      .replace(/\{index\}/g, String(index + 1))
+      .replace(/\{position\}/g, String(index + 1));
+  }
+
   function syncLimitControls(state) {
     const count = Array.isArray(state.value) ? state.value.length : 0;
     state.addBtn.disabled = state.maxItems != null && count >= state.maxItems;
     state.list.querySelectorAll(".diet-repeater__item-remove").forEach((button) => {
       button.disabled = state.minItems != null && count <= state.minItems;
     });
+  }
+
+  function dispatchControlsRendered(root, source) {
+    if (!root || typeof CustomEvent === "undefined") return;
+    root.dispatchEvent(
+      new CustomEvent("dieter-controls-rendered", {
+        bubbles: true,
+        detail: { source },
+      }),
+    );
   }
 
   function diffArrays(prev, next) {
@@ -226,10 +242,6 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       const addBtn = root.querySelector(".diet-repeater__add");
       const reorderBtn = root.querySelector(".diet-repeater__reorder");
       if (!hidden || !list || !templateEl || !addBtn || !reorderBtn) return;
-      const labelWithIndex = (label, index) =>
-        String(label || "")
-          .replace(/\{index\}/g, String(index + 1))
-          .replace(/\{position\}/g, String(index + 1));
       const syncReorderControls = () => {
         root.dataset.reorder = state.reorder ? "on" : "off";
         reorderBtn.setAttribute("aria-pressed", state.reorder ? "true" : "false");
@@ -301,6 +313,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
           nextValue = target.value;
         }
         setAt(item, parts.join("."), nextValue);
+        writeHidden(state);
       };
 
       root.addEventListener("input", handleFieldChange, true);
@@ -485,6 +498,7 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
       });
     }
     syncLimitControls(state);
+    dispatchControlsRendered(root, "repeater");
   }
 
   function updateItemFields(state, itemEl, itemValue, index) {
@@ -545,10 +559,16 @@ var __prevDieter = window.Dieter ? { ...window.Dieter } : {};
   }
 
   function commit(state) {
-    state.hidden.value = stringify(state.value);
+    writeHidden(state);
+    render(state);
+  }
+
+  function writeHidden(state) {
+    const json = stringify(state.value);
+    state.hidden.value = json;
+    state.hidden.setAttribute("data-bob-json", json);
     const evt = new Event("input", { bubbles: true });
     state.hidden.dispatchEvent(evt);
-    render(state);
   }
 
   function isInteractive(target) {

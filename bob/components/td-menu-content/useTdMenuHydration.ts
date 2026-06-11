@@ -54,6 +54,18 @@ export function useTdMenuHydration(args: {
     const cleanupCollapse = installClusterCollapseBehavior(container);
     showIfEntriesRef.current = buildShowIfEntries(container);
     applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
+    let controlsRenderedFrame: number | null = null;
+    const refreshDynamicControls = () => {
+      controlsRenderedFrame = null;
+      showIfEntriesRef.current = buildShowIfEntries(container);
+      applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
+      setRenderKey((current) => current + 1);
+    };
+    const handleControlsRendered = () => {
+      if (controlsRenderedFrame != null) return;
+      controlsRenderedFrame = window.requestAnimationFrame(refreshDynamicControls);
+    };
+    container.addEventListener('dieter-controls-rendered', handleControlsRendered);
 
     ensureMedia(dieterMedia)
       .then(() => {
@@ -74,6 +86,10 @@ export function useTdMenuHydration(args: {
       });
 
     return () => {
+      container.removeEventListener('dieter-controls-rendered', handleControlsRendered);
+      if (controlsRenderedFrame != null) {
+        window.cancelAnimationFrame(controlsRenderedFrame);
+      }
       cleanupCollapse();
     };
   }, [
