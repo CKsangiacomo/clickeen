@@ -11,24 +11,16 @@ const tokyoWorkerRoot = path.join(repoRoot, 'tokyo-worker');
 
 const args = new Set(process.argv.slice(2));
 const publishRemote = args.has('--remote');
-const publishLocal = args.has('--local');
-const dryRun = args.has('--dry-run') || (!publishRemote && !publishLocal);
+const dryRun = args.has('--dry-run') || !publishRemote;
 const jsonOutput = args.has('--json');
 
-if (publishRemote && publishLocal) {
-  console.error('[tokyo-r2-deploy-sync] Use only one of --remote or --local.');
+if (args.has('--local')) {
+  console.error('[tokyo-r2-deploy-sync] Local R2 sync has been retired. Use --dry-run or --remote.');
   process.exit(1);
 }
 
 const bucket = process.env.TOKYO_R2_BUCKET || 'tokyo-assets-dev';
 const concurrency = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_CONCURRENCY || '20', 10);
-const persistToArgIndex = process.argv.indexOf('--persist-to');
-const persistToArgValue =
-  persistToArgIndex >= 0 && persistToArgIndex + 1 < process.argv.length
-    ? String(process.argv[persistToArgIndex + 1] || '').trim()
-    : '';
-const persistTo =
-  persistToArgValue || process.env.TOKYO_R2_DEPLOY_SYNC_PERSIST_TO || path.join(repoRoot, '.wrangler', 'state');
 
 const mappings = [
   { source: 'tokyo/product/widgets', target: 'product/widgets' },
@@ -106,7 +98,7 @@ function summarize(entries, skipped) {
   }
   return {
     bucket,
-    mode: dryRun ? 'dry-run' : publishRemote ? 'remote' : 'local',
+    mode: dryRun ? 'dry-run' : 'remote',
     files: entries.length,
     roots: Object.fromEntries([...roots.entries()].sort(([a], [b]) => a.localeCompare(b))),
     skipped,
@@ -114,7 +106,6 @@ function summarize(entries, skipped) {
 }
 
 function runWranglerBulkUpload(bulkFilePath) {
-  const modeFlag = publishRemote ? '--remote' : '--local';
   const wranglerArgs = [
     '-C',
     'tokyo-worker',
@@ -126,13 +117,10 @@ function runWranglerBulkUpload(bulkFilePath) {
     bucket,
     '--filename',
     bulkFilePath,
-    modeFlag,
+    '--remote',
     '--concurrency',
     String(Number.isFinite(concurrency) && concurrency > 0 ? concurrency : 20),
   ];
-  if (!publishRemote && persistTo) {
-    wranglerArgs.push('--persist-to', persistTo);
-  }
 
   const result = spawnSync('pnpm', wranglerArgs, {
     cwd: repoRoot,

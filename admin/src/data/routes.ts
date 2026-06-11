@@ -1,4 +1,5 @@
 import { dieterComponentCssByName } from './dieterComponents';
+import { staticShowcaseModules } from './showcase.generated';
 
 export type NavItemKind = 'home' | 'showcase';
 
@@ -22,13 +23,6 @@ export interface ShowcasePage {
   htmlPath: string;
   css: string[];
 }
-
-// Auto-discover HTML files from all folders
-const staticShowcaseModules = import.meta.glob('../html/**/*.html', {
-  eager: true,
-  query: '?raw',
-  import: 'default',
-}) as Record<string, string>;
 
 export const showcaseModules = staticShowcaseModules;
 

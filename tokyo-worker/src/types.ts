@@ -2,7 +2,6 @@ import type { InstanceTranslationJob } from '@clickeen/ck-contracts/instance-tra
 
 export type Env = {
   ENV_STAGE?: string;
-  TOKYO_DEV_JWT: string;
   TOKYO_PUBLIC_BASE_URL?: string;
   PUBLIC_SERVING_BASE_URL?: string;
   TOKYO_R2: R2Bucket;

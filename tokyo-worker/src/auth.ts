@@ -4,7 +4,6 @@ import {
   verifyRomaAccountAuthzCapsule,
   type RomaAccountAuthzCapsulePayload,
 } from '@clickeen/ck-policy';
-import { timingSafeEqualString } from '@clickeen/ck-contracts/security';
 import { json } from './http';
 import type { Env } from './types';
 
@@ -17,20 +16,11 @@ type ProductAccountAuthResult =
   | { ok: false; response: Response };
 
 export const INTERNAL_SERVICE_HEADER = 'x-ck-internal-service';
-export const TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL = 'devstudio.local';
 export const TOKYO_INTERNAL_SERVICE_ROMA_EDGE = 'roma.edge';
 export const TOKYO_INTERNAL_SERVICE_SANFRANCISCO_TRANSLATION = 'sanfrancisco.translation';
 
 const BERLIN_ACCOUNT_CAPSULE_JWKS_CACHE_KEY = '__CK_TOKYO_ACCOUNT_CAPSULE_JWKS_V2__';
 const DEFAULT_BERLIN_BASE_URL = 'https://berlin-dev.clickeen.workers.dev';
-
-function asBearerToken(header: string | null): string | null {
-  if (!header) return null;
-  const [scheme, token] = header.split(' ');
-  if (!scheme || scheme.toLowerCase() !== 'bearer') return null;
-  if (!token) return null;
-  return token.trim() || null;
-}
 
 function normalizeInternalServiceId(value: string | null): string | null {
   if (typeof value !== 'string') return null;
@@ -116,26 +106,4 @@ export async function assertRomaAccountCapsuleAuth(
       accountAuthz: capsule.payload,
     },
   };
-}
-
-export function requireDevAuth(
-  req: Request,
-  env: Env,
-  options?: { allowTrustedInternalServices?: readonly string[] },
-): Response | null {
-  const expected = (env.TOKYO_DEV_JWT || '').trim();
-  if (!expected) {
-    return json({ error: { kind: 'INTERNAL', reasonKey: 'tokyo.errors.misconfigured' } }, { status: 500 });
-  }
-  const token = asBearerToken(req.headers.get('authorization'));
-  if (!token) return json({ error: { kind: 'DENY', reasonKey: 'AUTH_REQUIRED' } }, { status: 401 });
-  const internalServiceId = normalizeInternalServiceId(req.headers.get(INTERNAL_SERVICE_HEADER));
-  if (
-    !timingSafeEqualString(token, expected) ||
-    !internalServiceId ||
-    !(options?.allowTrustedInternalServices ?? []).includes(internalServiceId)
-  ) {
-    return json({ error: { kind: 'DENY', reasonKey: 'AUTH_INVALID' } }, { status: 403 });
-  }
-  return null;
 }

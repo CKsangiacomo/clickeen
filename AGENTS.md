@@ -67,18 +67,18 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 ### Project Structure & Module Organization
 - `bob/` – Next.js account Builder editor UI; shared Bob code must model the real authoring path, not a multi-product container.
 - `roma/` – Next.js current-account product shell and Builder host orchestration; the real authoring path begins here.
-- `admin/` – Vite-based DevStudio showcase; docs generated via `scripts/`.
+- `admin/` – static Cloudflare Pages DevStudio showcase; docs generated via `scripts/`.
 - `dieter/` – Design system source (tokens, CSS, web components, `*.spec.json` fixtures).
 - `venice/` – Next.js Edge embed runtime (Cloudflare Pages).
 - `prague/` – Astro marketing + SEO + demo/funnel surface (Cloudflare Pages); not account authoring truth.
-- `documentation/` stores product/architecture context; `scripts/` has build helpers; `tokyo/` serves built Dieter assets for local use.
+- `documentation/` stores product/architecture context; `scripts/` has build helpers; `tokyo/` stores built Dieter/widget/Prague deploy assets.
 
 ### Build, Test, and Development Commands
 - Install: `pnpm install` (workspace root).
-- Dev: canonical local support stack is `scripts/dev-up.sh` (Bob, Berlin, Tokyo stub, Tokyo-worker). App-specific dev commands include `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:venice`, and `pnpm dev:prague`; DevStudio runtime evidence is Cloudflare Pages, not local Vite.
+- Dev: local Bob/Berlin/Tokyo support-stack emulation is retired. App-specific local commands are for isolated debugging only; product runtime evidence comes from cloud-dev Cloudflare surfaces. DevStudio runtime evidence is Cloudflare Pages, not a local dev server.
 - Build: `pnpm build:dieter` first, then `pnpm build` (Turbo fan-out).
 - Lint/Typecheck: `pnpm lint`, `pnpm typecheck`; per-app linting with `pnpm --filter @clickeen/bob lint` or `.../devstudio lint`.
-- Tests: `pnpm test` (Turbo) or targeted `pnpm --filter @clickeen/devstudio test`.
+- Tests: `pnpm test` (Turbo) or targeted package tests.
 
 ### Coding Style & Naming Conventions
 - TypeScript-first; React function components in PascalCase; hooks/utilities in camelCase.
@@ -87,7 +87,7 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 - Keep env-dependent URLs configurable (e.g., `NEXT_PUBLIC_TOKYO_URL` for Dieter assets).
 
 ### Testing Guidelines
-- Admin uses Vitest/Testing Library; co-locate `*.test.ts(x)` near sources and cover accessibility.
+- Admin currently uses build/typecheck/Pages Functions checks; add package-local tests when introducing behavior with meaningful runtime risk.
 - Dieter specs live in `dieter/components/*/*.spec.json`; update fixtures when components change.
 - For Next apps, add smoke or integration coverage around new logic; at minimum, exercise data fetchers and critical hooks.
 - Run `pnpm test` plus `pnpm lint && pnpm typecheck` before PRs; note any missing coverage.

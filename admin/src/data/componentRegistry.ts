@@ -1,20 +1,5 @@
-import type { ComponentSource, ComponentSpec } from './componentTypes';
-
-const specModules = import.meta.glob('../../../dieter/components/*/*.spec.json', {
-  eager: true,
-}) as Record<string, ComponentSpec>;
-
-const templateModules = import.meta.glob('../../../dieter/components/*/*.html', {
-  eager: true,
-  query: '?raw',
-  import: 'default',
-}) as Record<string, string>;
-
-const cssModules = import.meta.glob('../../../dieter/components/*/*.css', {
-  eager: true,
-  query: '?raw',
-  import: 'default',
-}) as Record<string, string>;
+import type { ComponentSource } from './componentTypes';
+import { cssModules, specModules, templateModules } from './componentRegistry.generated';
 
 const toTitle = (slug: string): string => slug.replace(/[-_]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 

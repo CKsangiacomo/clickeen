@@ -231,6 +231,5 @@ Assets domain behavior:
 
 ## Operational notes
 
-- Canonical startup script is `bash scripts/dev-up.sh`.
-- Roma is **cloud-only** for supported product behavior. Local is for building blocks only (Bob/Berlin/Tokyo/Tokyo-worker/DevStudio).
-- If services appear down after a successful start, verify the parent shell/session that launched `dev-up` is still alive.
+- Roma is **cloud-only** for supported product behavior.
+- Local package work is for isolated build/debug only and is not product runtime evidence.

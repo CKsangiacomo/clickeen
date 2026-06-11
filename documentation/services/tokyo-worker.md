@@ -142,7 +142,7 @@ The following are not surviving public product contracts:
 - `PUT /__internal/instances/{instanceId}/translations/{locale}`
 - `PUT /__internal/instances/{instanceId}/translations/{locale}/complete`
 
-These routes require Roma internal service auth plus a valid Roma account authz capsule. The account coordinate from the capsule must match the storage path Tokyo-worker reads or writes. Local `TOKYO_DEV_JWT` is only for explicit internal tooling and never a product browser path.
+These routes require Roma internal service auth plus a valid Roma account authz capsule. The account coordinate from the capsule must match the storage path Tokyo-worker reads or writes.
 
 Internal route names must use product-operation vocabulary. The old `renders/widgets/*.json` route family is no longer a product-control surface.
 

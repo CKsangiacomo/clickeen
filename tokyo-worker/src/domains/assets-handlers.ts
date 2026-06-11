@@ -10,9 +10,6 @@ import {
 import { json } from '../http';
 import {
   assertRomaAccountCapsuleAuth,
-  INTERNAL_SERVICE_HEADER,
-  requireDevAuth,
-  TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
   TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
 } from '../auth';
 import type { Env } from '../types';
@@ -63,16 +60,6 @@ async function resolveAccountAssetAuthorization(args: {
   accountId: string;
   minRole: MemberRole;
 }): Promise<AccountAssetAuthorizationResult> {
-  const internalServiceId = String(args.req.headers.get(INTERNAL_SERVICE_HEADER) || '')
-    .trim()
-    .toLowerCase();
-  if (internalServiceId === TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL) {
-    const authErr = requireDevAuth(args.req, args.env, {
-      allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
-    });
-    return authErr ? { ok: false, response: authErr } : { ok: true, accountAuthz: null };
-  }
-
   const auth = await assertRomaAccountCapsuleAuth(args.req, args.env, {
     requiredInternalServiceId: TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
   });

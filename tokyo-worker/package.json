@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --local --port 4001",
     "deploy": "node ../scripts/infra/ensure-queues.mjs --write --queues instance-translation-jobs-dev && wrangler deploy --routes \"\"",
     "test": "echo \"tokyo-worker: no committed test.ts files\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"

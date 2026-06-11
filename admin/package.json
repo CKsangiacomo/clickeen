@@ -5,15 +5,12 @@
   "description": "Clickeen DevStudio - AI-native integrated development environment",
   "type": "module",
   "scripts": {
-    "predev": "node scripts/generate-typography-json.cjs && tsx scripts/generate-component-pages.ts",
-    "prebuild": "node scripts/generate-typography-json.cjs && tsx scripts/generate-component-pages.ts",
-    "dev": "node --import tsx ./node_modules/vite/bin/vite.js",
-    "build": "node --import tsx ./node_modules/vite/bin/vite.js build",
+    "generate": "node scripts/generate-typography-json.cjs && tsx scripts/generate-component-pages.ts && node scripts/generate-static-registries.mjs",
+    "build": "pnpm generate && node scripts/build-static.mjs",
     "check:functions": "find functions -name '*.js' -print0 | xargs -0 -n 1 node --check",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint src --ext .ts",
-    "preview": "node --import tsx ./node_modules/vite/bin/vite.js preview",
-    "test": "vitest run --config vitest.config.ts --passWithNoTests",
-    "typecheck": "tsc --noEmit"
+    "lint": "pnpm generate && ESLINT_USE_FLAT_CONFIG=false eslint src --ext .ts",
+    "test": "echo \"devstudio: no committed test.ts files\"",
+    "typecheck": "pnpm generate && tsc --noEmit"
   },
   "keywords": [],
   "author": "Codex AI",
@@ -23,12 +20,10 @@
     "@types/node": "^20.19.19",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
+    "esbuild": "^0.21.5",
     "eslint": "^9.36.0",
-    "jsdom": "^26.0.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.9.3",
-    "vite": "^7.1.7",
-    "vitest": "^3.2.4"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

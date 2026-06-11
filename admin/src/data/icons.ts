@@ -1,8 +1,4 @@
-const iconModules = import.meta.glob('@dieter/icons/svg/*.svg', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
+import { iconModules } from './icons.generated';
 
 const icons: Record<string, string> = {};
 

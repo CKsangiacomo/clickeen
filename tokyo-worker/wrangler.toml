@@ -37,24 +37,3 @@ bucket_name = "tokyo-assets-dev"
 [[queues.producers]]
 binding = "INSTANCE_TRANSLATION_JOBS"
 queue = "instance-translation-jobs-dev"
-
-[env.local]
-name = "tokyo-assets-local"
-vars = { BERLIN_BASE_URL = "http://localhost:3005", TOKYO_PUBLIC_BASE_URL = "http://localhost:4000", PUBLIC_SERVING_BASE_URL = "http://localhost:8791" }
-
-[env.local.observability]
-enabled = true
-head_sampling_rate = 1
-
-[[env.local.kv_namespaces]]
-binding = "USAGE_KV"
-id = "00000000000000000000000000000000"
-preview_id = "00000000000000000000000000000000"
-
-[[env.local.r2_buckets]]
-binding = "TOKYO_R2"
-bucket_name = "tokyo-assets-dev"
-
-[[env.local.queues.producers]]
-binding = "INSTANCE_TRANSLATION_JOBS"
-queue = "instance-translation-jobs-local"

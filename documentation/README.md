@@ -120,45 +120,41 @@ Do not introduce root `widgets/`, `public/`, `published/`, or `l10n/` storage. F
 
 ---
 
-## End-to-End Journey (widget folder → Roma, Bob, Prague)
+## End-to-End Journey (widget folder -> Roma, Bob, Prague)
 
-Local runtime:
+Runtime profile:
 
-- `bash scripts/dev-up.sh` starts the canonical local support stack.
+- Cloud-dev surfaces are the supported product/runtime evidence.
 - See `documentation/architecture/RuntimeProfiles.md`.
 
-### A) Widget definition path (local)
+### A) Widget definition path
 
 Source of truth: `tokyo/product/widgets/{widget}/` (spec + runtime + widget contract). Deployed R2 storage home: `product/widgets/{widget}/`.
 
-1. **Local Tokyo CDN stub** serves the widget folder (optional local debug path):
-   - `tokyo/dev-server.mjs` -> `http://localhost:4000`
-   - Serves friendly `/widgets/**` and `/dieter/**` routes directly from the repo. These are route aliases, not root R2 storage folders.
+1. **Tokyo R2/Tokyo-worker** serves the widget deploy roots:
+   - canonical widget software path is `product/widgets/{widget}/`
+   - canonical Dieter path is `dieter/`
+   - Cloud-dev host is `https://tokyo.dev.clickeen.com`
 2. **Bob runtime** reads widget definitions/assets from Tokyo:
    - `bob/lib/env/tokyo.ts` resolves `NEXT_PUBLIC_TOKYO_URL` -> `https://tokyo.dev.clickeen.com` by default.
 3. **DevStudio** is the cloud internal toolbench:
    - canonical host is `https://devstudio.clickeen.com`
    - it no longer hosts the local widget-authoring workspace
-   - local Bob/Tokyo debugging happens through direct local services, not through DevStudio widget-authoring routes
+   - it does not provide widget-authoring routes
 4. **Cloud-dev Roma** is the supported product/account host surface:
    - `roma/app/api/bootstrap/route.ts` proxies to Berlin `GET /v1/session/bootstrap`
    - `roma/components/builder-domain.tsx` sends `ck:open-editor` to Bob after `bob:session-ready`
-   - local code changes only appear there after deploy
-Result: the supported local topology is one boring stack: local Bob + local Tokyo + local Tokyo-worker + local Berlin. Roma remains the customer account shell; DevStudio remains the Berlin-authenticated internal toolbench on Cloudflare Pages.
+   - code changes only appear there after deploy
+Result: Roma remains the customer account shell; DevStudio remains the Berlin-authenticated internal toolbench on Cloudflare Pages.
 
-### A.1) Local auth issuer alignment (critical)
-
-Local app servers use the explicitly configured Supabase target loaded by `bash scripts/dev-up.sh` from `.env.local` or the shell:
-
-- Required: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_ANON_KEY`
-- `dev-up` does not start, migrate, reset, seed, or switch Supabase targets. Local Supabase is disposable validation only, not product-state evidence.
+### A.1) Auth issuer alignment (critical)
 
 Invariant:
 
-- The Supabase JWT used against local Bob/Roma helper surfaces must be issued by the **same** Supabase project the local support stack is configured to use.
-- If you use a token from a different Supabase project, local auth surfaces return `403 coreui.errors.auth.forbidden` with `issuer_mismatch` by design.
+- The Supabase JWT used against product helper surfaces must be issued by the **same** Supabase project the active Berlin/Roma surface is configured to use.
+- If you use a token from a different Supabase project, auth surfaces return `403 coreui.errors.auth.forbidden` with `issuer_mismatch` by design.
 
-### B) Instance + asset path (local)
+### B) Instance + asset path
 
 Instances are account-owned data, not code. Tokyo/R2 stores them under `accounts/{accountPublicId}/instances/{instanceId}/`; Michael/Berlin hold account relational truth, not a parallel widget-instance storage lane. Account assets live under `accounts/{accountPublicId}/assets/`.
 
@@ -169,7 +165,7 @@ Instances are account-owned data, not code. Tokyo/R2 stores them under `accounts
 2. **DevStudio does not host widget authoring**.
    - Internal verification remains a toolbench concern only.
    - Widget editing belongs to Roma-hosted Builder, not hidden DevStudio routes.
-3. **Assets** referenced in configs point at local Tokyo in canonical local development (`http://localhost:4000`).
+3. **Assets** referenced in configs point at canonical Tokyo for the active environment.
 
 ### C) Cloud-dev propagation (explicit)
 

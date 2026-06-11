@@ -429,8 +429,8 @@ pnpm build:dieter               # Build Dieter media first
 pnpm build                      # Build all packages
 
 # Development
-bash scripts/dev-up.sh          # Canonical local support stack (Tokyo/Tokyo-worker/Berlin/Bob)
-pnpm dev:bob                    # Bob only
+pnpm dev:roma                   # Isolated Roma package debug
+pnpm dev:prague                 # Isolated Prague package debug
 
 # Quality
 pnpm lint && pnpm typecheck
@@ -439,11 +439,10 @@ pnpm test
 
 Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 
-**Agent-run terminal limitation (important):**
+**Runtime evidence (important):**
 
-- Long-lived local servers started by an AI agent through a managed command session may be reaped when that session ends.
-- This is a limitation of the agent execution environment, not of a normal VS Code terminal.
-- If you need the full local stack to stay up for real browser use, run `bash scripts/dev-up.sh --reset` yourself in your own terminal.
+- The local Bob/Berlin/Tokyo support-stack emulation is retired.
+- Product/account behavior is verified through cloud-dev surfaces and package-level build/typecheck/test commands.
 
 **Local instance data (important):**
 
@@ -451,18 +450,15 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 - Supported product/account instance create/edit flows run in **cloud-dev Roma** (`https://roma.dev.clickeen.com`) per PRD 54.
 - DevStudio policy editing and showcase evidence comes from the Berlin-authenticated Cloudflare Pages surface.
 
-**Local auth target (important):**
+**Auth target (important):**
 
-- `bash scripts/dev-up.sh` uses the explicitly configured `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_ANON_KEY` from `.env.local` or the shell.
-- `dev-up` does not start, migrate, reset, seed, or switch Supabase targets. Local Supabase is disposable validation only, not product-state evidence.
-- Berlin runs locally at `http://localhost:3005` for parity/unit work, but supported product auth happens in cloud Roma.
+- Supported product auth happens through cloud-dev Roma/Berlin.
 - Berlin session token issuer must match the Berlin issuer configured for the active auth surface; mismatched issuers are rejected with `coreui.errors.auth.forbidden` and `issuer_mismatch`.
 
 ### Environments (Canonical)
 
 | Environment                 | Bob                            | Roma                            | Tokyo                            | Public serving              | San Francisco                           | DevStudio                |
 | --------------------------- | ------------------------------ | ------------------------------- | -------------------------------- | --------------------------- | --------------------------------------- | ------------------------ |
-| **Local**                   | `http://localhost:3000`        | `https://roma.dev.clickeen.com` | `http://localhost:4000`          | local Tokyo-worker host     | `—`                                     | `https://devstudio.clickeen.com` |
 | **Cloud-dev (from `main`)** | `https://bob.dev.clickeen.com` | `https://roma.dev.clickeen.com` | `https://tokyo.dev.clickeen.com` | `https://dev.clk.live`      | `https://sanfrancisco.dev.clickeen.com` | `https://devstudio.clickeen.com` |
 | **UAT**                     | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://clk.live`          | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |
 | **Limited GA**              | `https://app.clickeen.com`     | `https://app.clickeen.com`      | `https://tokyo.clickeen.com`     | `https://clk.live`          | `https://sanfrancisco.clickeen.com`     | (optional) internal-only |

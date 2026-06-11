@@ -1,8 +1,5 @@
 import {
   assertRomaAccountCapsuleAuth,
-  INTERNAL_SERVICE_HEADER,
-  requireDevAuth,
-  TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL,
   TOKYO_INTERNAL_SERVICE_ROMA_EDGE,
 } from './auth';
 import { prettyStableJson, sha256Hex } from './asset-utils';
@@ -92,13 +89,5 @@ export async function authorizeAccountInstanceControlRequest(args: {
   accountId: string;
   minRole: MemberRole;
 }): Promise<Response | null> {
-  const internalServiceId = String(args.req.headers.get(INTERNAL_SERVICE_HEADER) || '')
-    .trim()
-    .toLowerCase();
-  if (internalServiceId === TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL) {
-    return requireDevAuth(args.req, args.env, {
-      allowTrustedInternalServices: [TOKYO_INTERNAL_SERVICE_DEVSTUDIO_LOCAL],
-    });
-  }
   return authorizeRomaAccountScopedRequest(args);
 }

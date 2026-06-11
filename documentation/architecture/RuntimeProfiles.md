@@ -1,34 +1,27 @@
-# Local Runtime
+# Runtime Profiles
 
-`bash scripts/dev-up.sh` is the canonical local support-stack boot.
+The local Bob/Berlin/Tokyo support-stack emulation has been retired. Product
+runtime evidence comes from the deployed cloud-dev surfaces:
 
-It does one thing:
-- start Bob, Berlin, Tokyo CDN stub, and Tokyo-worker
-- verify the local stack before finishing
+- Bob: `https://bob.dev.clickeen.com`
+- Berlin: `https://berlin.dev.clickeen.com`
+- Roma: `https://roma.dev.clickeen.com`
+- Tokyo: `https://tokyo.dev.clickeen.com`
+- Public serving: `https://dev.clk.live`
+- DevStudio: `https://devstudio.clickeen.com`
 
-Local boot topology:
-- Bob: `http://localhost:3000`
-- Berlin: `http://localhost:3005`
-- Tokyo CDN stub: `http://localhost:4000`
-- Tokyo-worker: `http://localhost:8791`
+There is no supported local Tokyo CDN stub, local Berlin worker fork, local
+Tokyo-worker fork, or one-command local stack script. Local package commands are
+for isolated build/debug work only and are not product runtime evidence.
 
-DevStudio is not part of `dev-up`. Its canonical internal runtime is
-`https://devstudio.clickeen.com` on Cloudflare Pages behind Berlin/Google auth.
-Local DevStudio is not part of the supported local runtime profile and must not
-own hidden local write lanes.
+Tokyo-worker keeps the same PBX boundary in deployed runtime. It may validate
+service auth, account capsule to path match, method/path/ID shape, widget
+codebook, object schema, R2 existence, and technical request bounds; it does not
+decide product policy, billing/tier state, publication eligibility, l10n version
+caps, upload entitlements, or account storage caps. Product state and policy come
+from the real Roma -> Bob -> Tokyo account path.
 
-There are no alternate local runtime modes behind `dev-up`. Local development
-should not require developers to reason about multiple boot topologies behind one
-script.
-
-Tokyo-worker keeps the same PBX boundary locally that it has in deployed runtime.
-It may validate auth/dev tooling credentials, account capsule to path match,
-method/path/ID shape, widget codebook, object schema, R2 existence, and technical
-request bounds; it does not decide product policy, billing/tier state, publication
-eligibility, l10n version caps, upload entitlements, or account storage caps.
-Product state and policy still come from the real Roma -> Bob -> Tokyo account path.
-
-Local Tokyo storage follows the PRD 099 root model:
+Tokyo storage follows the PRD 099 root model:
 
 ```txt
 accounts/
@@ -44,16 +37,11 @@ Account-owned runtime bytes live under
 `product/widgets/`. Public instance serving uses the environment public-serving
 host plus `/{accountPublicId}/{instanceId}` and maps to generated browser files in
 the instance folder. Cloud-dev uses `https://dev.clk.live`; production release
-stages use `https://clk.live`. Local routes must not rely on root published, root
+stages use `https://clk.live`. Routes must not rely on root published, root
 widgets, or account widgets storage.
 
-Friendly local asset routes are URL conveniences only: `/widgets/{widgetType}/...`
-maps to `product/widgets/{widgetType}/...`; `/dieter/...` maps to `dieter/...`;
-`/fonts/...` maps to `fonts/...`; `/themes/...` maps to the canonical Dieter/theme
-asset root; Prague-friendly paths map to `prague/...`. Friendly route shape must
-not create a matching R2 root.
-
 Rules:
-- `dev-up` is one-command local support-stack boot.
-- `dev-up` does not seed a fake platform/account lane.
+
+- Do not reintroduce `scripts/dev-up.sh`, local Tokyo stub serving, or local
+  Wrangler `env.local` forks as runtime authority.
 - Product state must come from the real Roma -> Bob -> Tokyo account path.

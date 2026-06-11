@@ -3,9 +3,9 @@
 This repo contains the full Clickeen widget platform:
 
 - **bob/** — Widget editor (Next.js). Consumes precompiled widget panels and hydrates Dieter components.
-- **admin/** — DevStudio tooling and component showcase (Vite build for Cloudflare Pages). Internal toolbench for remote verification and internal tools.
+- **admin/** — DevStudio tooling and component showcase (static Cloudflare Pages bundle). Internal toolbench for remote verification and internal tools.
 - **dieter/** — Design system (tokens, CSS, web components). Built assets are served from **tokyo/**.
-- **tokyo/** — Local CDN stub serving Dieter assets and built widgets.
+- **tokyo/** — Built Dieter/widget/Prague deploy assets for Tokyo R2.
 - **roma/** — Product shell app (workspace domains + Builder orchestration into Bob).
 - **documentation/** — Platform and architecture notes.
 
@@ -31,17 +31,12 @@ This repo contains the full Clickeen widget platform:
 ```bash
 pnpm install
 pnpm build:dieter       # builds Dieter into tokyo/product/dieter
-./scripts/dev-up.sh     # starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), Bob (3000), (+ SF 3002 when enabled)
-```
-
-To force a full workspace rebuild before starting dev servers:
-
-```bash
-./scripts/dev-up.sh --full
+pnpm build              # builds workspace packages
 ```
 
 Useful scripts:
-- `pnpm dev:bob`, `pnpm dev:roma`, `pnpm dev:prague`
+- `pnpm dev:roma`, `pnpm dev:prague`
+- `pnpm build:bob`, `pnpm build:roma`, `pnpm build:devstudio`
 - `pnpm build` (after `pnpm build:dieter`)
 - `pnpm lint`, `pnpm typecheck`, `pnpm test`
 

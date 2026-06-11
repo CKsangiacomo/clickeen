@@ -32,17 +32,13 @@ Optional:
 
 Prague widget pages embed explicit Clickeen-owned account instances by `accountInstanceRef.accountPublicId` and `accountInstanceRef.instanceId`. Locale-specific embeds use the same canonical public instance URL with `?locale={locale}`; Prague does not select per-locale generated artifacts, discover widget locale availability, or read translation internals.
 
-Local defaults (when running `scripts/dev-up.sh`):
-
-- `PUBLIC_TOKYO_URL=http://localhost:4000`
-- `PUBLIC_CLK_LIVE_URL=https://clk.live`
-
 Cloudflare (dev):
 
 - `PUBLIC_TOKYO_URL=https://tokyo.dev.clickeen.com`
 - `PUBLIC_CLK_LIVE_URL=https://clk.live`
 
-If you're not using `scripts/dev-up.sh`, create `prague/.env.local` with the values you want.
+For isolated local Prague debugging, create `prague/.env.local` with explicit
+cloud-dev Tokyo/public-serving values.
 
 Dev:
 - `pnpm dev:prague` (serves on `http://localhost:4321`)

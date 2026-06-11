@@ -114,7 +114,7 @@ Together they:
 - Never auto-picks a different instance when `accountPublicId` or `instanceId` is missing.
 - Replies with terminal `bob:open-editor-applied` or `bob:open-editor-failed` for the current host request.
 - In cloud, relies on shared httpOnly session cookies set by Roma (no tokens bridged through browser JS).
-- Local Bob may run as an editor runtime for debugging, but it is not a product account shell. Hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma account routes. When Bob uses Tokyo local internal routes, it must identify itself explicitly as `x-ck-internal-service: bob.local`; a bare `TOKYO_DEV_JWT` is not valid account-route authority.
+- Local Bob may run as an editor runtime for isolated debugging, but it is not a product account shell. Hosted account product requests still require the Berlin-issued bootstrap account capsule on the Roma account routes.
 - Bob must not auto-upgrade any local end-user token into Michael service-role access inside shared helpers or normal product routes.
 
 ### Builder boot (current)
@@ -497,7 +497,7 @@ Reference:
 
 ### Required
 
-- `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; local `product` profile defaults to `https://tokyo.dev.clickeen.com`, local `source` profile defaults to `http://localhost:4000`)
+- `NEXT_PUBLIC_TOKYO_URL` (required in deployed environments; cloud-dev defaults to `https://tokyo.dev.clickeen.com`)
 - `BERLIN_BASE_URL` (required for authenticated account-scoped editor routes so Bob can verify Roma account capsules against Berlin JWKS)
 
 ### Optional
@@ -524,24 +524,12 @@ Bob does not own account language policy/settings. Enabled languages, base local
 - Bob does not own customer account product routes. Hosted account-mode reads/writes delegate through the Roma host message channel and use the Roma current-account contract.
 - Local Prague string translation uses HMAC-signed San Francisco requests; Bob Pages config must not carry internal AI tooling secrets.
 
-### Dev-up
+### Runtime Evidence
 
-Run:
-
-```bash
-bash scripts/dev-up.sh
-```
-
-It:
-
-- Builds Dieter into `tokyo/product/dieter`
-- Builds i18n bundles from `tokyo/roma/i18n/source` into `tokyo/roma/i18n/public`
-- Clears stale Next chunks (`bob/.next`)
-- Starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), and Bob (3000)
-- DB Pivot blocks `dev-up` from managing Supabase lifecycle or switching between local and remote Supabase targets. Supabase schema changes must go through reviewed migrations and the approved deploy path.
-- Local Bob uses Berlin/Roma/Tokyo product boundaries; it must not depend on a script-selected Supabase target.
-- Bob resolves product auth bearer through local Berlin by default (`BERLIN_BASE_URL=http://localhost:3005`).
-- Verifies Roma account capsules against Berlin JWKS; there is no separate account-capsule secret in local dev.
+The local Bob/Berlin/Tokyo support-stack emulation is retired. Bob product
+behavior is verified through cloud-dev Roma/Bob/Berlin/Tokyo surfaces and
+package-level build/typecheck tests. Supabase schema changes must go through
+reviewed migrations and the approved deploy path.
 
 ### Deterministic compilation contract (executed)
 

@@ -214,17 +214,9 @@ Actions:
 - Set `DEEPSEEK_API_KEY` in the San Francisco environment.
 - Note: many deterministic “clarify/explain/guard” paths work without provider keys.
 
-## 7) Local development
-
-SanFrancisco only:
-- `pnpm dev:sanfrancisco`
-- or `pnpm --filter @clickeen/sanfrancisco dev`
-
-Full stack (recommended):
-- `bash scripts/dev-up.sh`
-  - starts Tokyo (4000), Tokyo Worker (8791), Berlin (3005), and Bob (3000)
+## 7) Development
 
 Useful checks:
-- `curl http://localhost:3002/healthz`
-- `curl http://localhost:3001/api/healthz`
+- Use cloud-dev San Francisco for runtime evidence.
+- Use `pnpm --filter @clickeen/sanfrancisco typecheck` for package-level checks.
 - For Prague strings translation, `AI_GRANT_HMAC_SECRET` + `OPENAI_API_KEY` must be set locally.

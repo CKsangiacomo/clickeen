@@ -60,14 +60,28 @@ const ensureCleanOutput = () => {
   const files = fs.readdirSync(outputDir);
   files.forEach((file) => {
     if (file.endsWith('.html')) {
-      fs.unlinkSync(path.join(outputDir, file));
+      try {
+        fs.unlinkSync(path.join(outputDir, file));
+      } catch (error) {
+        const code =
+          typeof error === 'object' && error !== null && 'code' in error
+            ? (error as { code?: unknown }).code
+            : undefined;
+        if (code !== 'ENOENT') {
+          throw error;
+        }
+      }
     }
   });
 };
 
 const writeComponentPage = (name: string, html: string) => {
   const outFile = path.join(outputDir, `${name}.html`);
-  fs.writeFileSync(outFile, html, 'utf8');
+  const normalized = html
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .join('\n');
+  fs.writeFileSync(outFile, normalized, 'utf8');
 };
 
 const main = () => {

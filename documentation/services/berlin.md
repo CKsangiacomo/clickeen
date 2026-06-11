@@ -246,14 +246,14 @@ Optional key rotation:
 - `BERLIN_ACCESS_PREVIOUS_PUBLIC_KEY_PEM`
 - `BERLIN_ACCESS_PREVIOUS_KID`
 
-Berlin requires explicit signing key PEMs. Local `dev-up` materializes them into `berlin/.dev.vars`, and cloud environments must provide them directly.
+Berlin requires explicit signing key PEMs. Cloud environments provide them
+directly; the old local `dev-up` key materialization path is retired.
 
-## Local Development
+## Runtime
 
-- Local URL: `http://localhost:3005`
-- Canonical startup: `bash scripts/dev-up.sh`
-- Local direct Google callback: `http://localhost:3005/auth/login/google/callback`
-- `dev-up` reuses the Berlin access signing keypair for account capsules. There is no separate capsule secret to distribute.
+- Cloud-dev URL: `https://berlin.dev.clickeen.com`
+- Cloud-dev Google callback: `https://berlin.dev.clickeen.com/auth/login/google/callback`
+- Berlin reuses the access signing keypair for account capsules. There is no separate capsule secret to distribute.
 
 ## Operational Floor
 

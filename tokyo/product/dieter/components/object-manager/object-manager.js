@@ -147,7 +147,6 @@
       const rowTpl = root.querySelector("template[data-objects-row]");
       const saveBtn = root.querySelector("[data-objects-save]");
       const cancelBtn = root.querySelector("[data-objects-cancel]");
-      const footer = root.querySelector(".diet-object-manager__footer");
       if (
         !hidden ||
         !list ||
@@ -161,12 +160,6 @@
         !cancelBtn
       ) {
         return;
-      }
-      const allowStructure = root.getAttribute("data-allow-structure") !== "false";
-      if (!allowStructure) {
-        if (footer) footer.hidden = true;
-        addBtn.hidden = true;
-        manageBtn.hidden = true;
       }
       const indexToken = (root.getAttribute("data-index-token") || "__INDEX__").trim();
       const labelPath = root.getAttribute("data-label-path") || "";
@@ -251,7 +244,7 @@
         });
         // Hydrate any nested components (e.g., repeaters) inside new items.
         runChildHydrators(list, options);
-        const canManage = allowStructure && items.length > 1;
+        const canManage = items.length > 1;
         manageBtn.hidden = !canManage;
         manageBtn.style.display = canManage ? "" : "none";
       };
@@ -327,21 +320,18 @@
       root.addEventListener("input", handleNestedChange, true);
       root.addEventListener("change", handleNestedChange, true);
 
-      if (allowStructure) {
-        addBtn.addEventListener("click", () => {
-          const next = read();
-          let item = defaultItem ? deepClone(defaultItem) : {};
-          if (!item || typeof item !== "object" || Array.isArray(item)) item = {};
-          if (!item.id) item.id = createId();
-          ensureIdsDeep(item);
-          next.push(item);
-          write(next);
-          render();
-        });
-      }
+      addBtn.addEventListener("click", () => {
+        const next = read();
+        let item = defaultItem ? deepClone(defaultItem) : {};
+        if (!item || typeof item !== "object" || Array.isArray(item)) item = {};
+        if (!item.id) item.id = createId();
+        ensureIdsDeep(item);
+        next.push(item);
+        write(next);
+        render();
+      });
 
       manageBtn.addEventListener("click", () => {
-        if (!allowStructure) return;
         const items = read();
         modalList.innerHTML = "";
         const rowTemplate = rowTpl.content.firstElementChild;

@@ -60,8 +60,8 @@ below**. The original draft described the intended architecture, but it missed
 current code topology that changes blast radius:
 
 - Component pages are not purely hand-authored today. `admin/package.json`
-  already runs `generate-component-pages.ts` before dev/build, and `routes.ts`
-  discovers static HTML with `import.meta.glob('../html/**/*.html')`.
+  already runs `generate-component-pages.ts` before build, and `routes.ts`
+  reads the generated `showcase.generated.ts` registry for static HTML.
 - Therefore "delete `admin/src/html/components/`" is not literal. The surviving
   artifact model is: **generated static HTML remains under `admin/src/html/**`,
   carries a generated-file header, and is guarded against manual edits**. The
@@ -78,8 +78,8 @@ current code topology that changes blast radius:
   sync Tokyo R2.
 - Guards must land before token writes. A commit-to-main editor without guards is
   a product-wide footgun.
-- DevStudio is moving to remote-only. No local-only Vite middleware, local token
-  mutation route, or fake local runtime can survive this PRD.
+- DevStudio is remote-only. No local dev-server middleware, local token mutation
+  route, or fake local runtime can survive this PRD.
 
 ## 1. Why (product truth)
 
@@ -150,7 +150,7 @@ before continuing.
 | Icons | `dieter/icons/**` source and one served DevStudio icons page | Reintroducing wrong-target `dieter/dieteradmin/**` generation or manual regeneration lanes |
 | Typography | Generated role data + generated page sections | Hand-frozen section arrays; missing `body`, `body-small`, `body-large` |
 | Colors | Generated page from governed color tokens | Hand-authored chip list; ghost refs `--neutral-base` and `--radius-4`; page-local helper tokens masquerading as source truth |
-| Local APIs | Pages Functions from Migration PRD, remote-only | Vite local token/theme/rebuild routes, `/api/rebuild-icons`, `/api/themes/*`, local-only write routes, local Tokyo static conveniences if Migration PRD removes them |
+| Local APIs | Pages Functions from Migration PRD, remote-only | Local dev-server token/theme/rebuild routes, `/api/rebuild-icons`, `/api/themes/*`, local-only write routes, local Tokyo static conveniences |
 | Bob-native tool | Whatever survives Migration PRD by explicit evidence | `bob-ui-native` route and `BobNativeCatalog` after Migration PRD says they are deleted |
 | Build output | Source-controlled Dieter source; CI-generated Tokyo deploy artifacts for R2 sync | Treating `tokyo/product/dieter/**` as token source truth |
 
@@ -269,7 +269,7 @@ A `scripts/dieter/governance-guards.mjs` (or equivalent) wired into CI:
 | 3 | **Icons generation wired into the served DevStudio page;** page derived every build from source icons. | Page shows 157/157 (or current count); a test icon added to `dieter/icons/icons.json` appears without manual steps; no wrong-target `dieter/dieteradmin/**` output is reintroduced. | Manual regeneration lanes; writing generated icons to an unserved artifact. |
 | 4 | **Component page generator hardened:** spec+stencil enumeration through the frozen layout template for all governed components; hydration wired uniformly; generated files carry headers. | Coverage guard green per component (every governed spec attribute/variant rendered — including `min-items`, `allow-structure`, `data-axis`, `data-databinding`, repeater's full surface); no unresolved `{{...}}`; visual parity vs frozen baselines; `textedit`/`textrename` treatment proven. | New visual language; per-component generator forks; keeping hand pages "as backup"; deleting the static artifact folder without replacing `routes.ts`. |
 | 5 | **CI guards live before writes:** tokenization (incl. inline TSX styles with explicit exemptions), coverage, ghost, no-hand-authoring, generated-output validity. | Guards run in CI; a seeded violation of each class fails the build (negative fixtures); current tree passes; `admin/**` is included in relevant PR/verify gates. | Warn-only guards; scoping guards down to pass dirty code; enabling token writes first. |
-| 6 | **Reusable DevStudio write path:** extract/reuse Migration PRD §3.5 GitHub commit mechanics for token routes; no local Vite write path. | Berlin session/account identity -> server-side GitHub commit; no client secrets; path allowlist to token files; typed 401/403/409/422; conflict and rollback SOP documented. | New auth model; dashboard-only manual commits; local-only mutation APIs. |
+| 6 | **Reusable DevStudio write path:** extract/reuse Migration PRD §3.5 GitHub commit mechanics for token routes; no local dev-server write path. | Berlin session/account identity -> server-side GitHub commit; no client secrets; path allowlist to token files; typed 401/403/409/422; conflict and rollback SOP documented. | New auth model; dashboard-only manual commits; local-only mutation APIs. |
 | 7 | **Token editor (values-only):** edit affordances on Typography + Colors pages; full round-trip proven. | On `devstudio.clickeen.com`: edit `--fs-*` → source token commit on `main` with correct diff → CI `build:dieter` → Tokyo R2 updated → Bob/Roma/Admin computed styles reflect it; invalid value → typed 422, no commit; conflict → typed 409. | Add/remove/rename tokens; client-side tokens/secrets; auto-save-on-blur; new editor styling beyond Policy Editor patterns. |
 | 8 | Docs sync: `devstudio.md` gains the remote-only governance model (derived pages, token editor, guards); Dieter docs note generation as the only showcase path and token deploy graph. | Docs diff in same PR as final code step. | Deferring docs; leaving `devstudio.md` describing local-only DevStudio as canonical. |
 
@@ -301,8 +301,8 @@ A `scripts/dieter/governance-guards.mjs` (or equivalent) wired into CI:
   pages + no-hand-authoring guard make showcase tampering fail CI.
 - Visual parity: every generated page matches its hash-frozen migrated baseline
   (the product owner's design, untouched).
-- Remote-only proof: no DevStudio local write lane, stale Vite mutation API, or
-  unserved generated artifact remains in the live execution path.
+- Remote-only proof: no DevStudio local write lane, stale dev-server mutation API,
+  or unserved generated artifact remains in the live execution path.
 - Security proof: token writes are Berlin-session/account-authenticated,
   path-allowlisted, server-side only, conflict-safe, rollback-documented, and
   never expose GitHub or Cloudflare secrets to the client.

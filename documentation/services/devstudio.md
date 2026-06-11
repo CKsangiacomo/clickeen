@@ -45,9 +45,9 @@ DevStudio deploys as the `devstudio` Cloudflare Pages project. Its Pages fallbac
 host is `devstudio-dev.pages.dev`; that host is not canonical and must redirect or
 be blocked unless Cloudflare project health checks require otherwise.
 
-The Vite build remains the static app bundle. The policy API is implemented as
-Pages Functions in `admin/functions/`; local Vite middleware must not own policy,
-theme, or icon rebuild write APIs.
+The static app bundle is produced by `admin/scripts/build-static.mjs`. The policy
+API is implemented as Pages Functions in `admin/functions/`; local dev-server
+middleware must not own policy, theme, or icon rebuild write APIs.
 
 Policy routes:
 
@@ -84,9 +84,9 @@ required Pages secrets from root `.env.local`.
 
 ## Local Runtime
 
-`scripts/dev-up.sh` does not start DevStudio. DevStudio product evidence comes
-from the Berlin-authenticated Cloudflare Pages surface, not from local Vite.
-Local runtime work must not reintroduce hidden local write lanes.
+DevStudio product evidence comes from the Berlin-authenticated Cloudflare Pages
+surface, not from a local dev server. Local runtime work must not reintroduce
+hidden local write lanes.
 
 Use package-level checks for build and Pages Functions verification:
 
@@ -101,6 +101,7 @@ DevStudio generates Dieter/component showcase pages before build:
 
 - `scripts/generate-component-pages.ts`
 - `scripts/generate-typography-json.cjs`
+- `scripts/generate-static-registries.mjs`
 
 Generated showcase pages mirror Dieter source. They do not define component
 behavior.

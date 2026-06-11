@@ -34,23 +34,6 @@ queue = "instance-render-snapshot-cloud-dev"
 name = "BERLIN_AUTH_TICKETS"
 class_name = "BerlinAuthTicketDO"
 
-[env.local]
-name = "berlin-local"
-vars = { BERLIN_ISSUER = "http://localhost:3005", BERLIN_AUDIENCE = "clickeen.product", BERLIN_GOOGLE_CALLBACK_URL = "http://localhost:3005/auth/login/google/callback", BERLIN_FINISH_REDIRECT_URL = "http://localhost:3000/api/session/finish", BERLIN_ALLOWED_PROVIDERS = "google", ENV_STAGE = "local" }
-
-[env.local.observability]
-enabled = true
-head_sampling_rate = 1
-
-[[env.local.kv_namespaces]]
-binding = "BERLIN_SESSION_KV"
-id = "00000000000000000000000000000000"
-preview_id = "00000000000000000000000000000000"
-
-[[env.local.queues.producers]]
-binding = "RENDER_SNAPSHOT_QUEUE"
-queue = "instance-render-snapshot-local"
-
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["BerlinAuthTicketDO"]

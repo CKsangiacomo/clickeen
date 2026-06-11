@@ -12,23 +12,14 @@ const tokyoWorkerRoot = path.join(repoRoot, 'tokyo-worker');
 
 const args = new Set(process.argv.slice(2));
 const publishRemote = args.has('--remote');
-const publishLocal = args.has('--local');
-const persistToArgIndex = process.argv.indexOf('--persist-to');
-const persistToArgValue =
-  persistToArgIndex >= 0 && persistToArgIndex + 1 < process.argv.length
-    ? String(process.argv[persistToArgIndex + 1] || '').trim()
-    : '';
 
-if (publishRemote && publishLocal) {
-  console.error('[tokyo-fonts-sync] Use only one of --remote or --local.');
+if (!publishRemote) {
+  console.error('[tokyo-fonts-sync] Local R2 sync has been retired. Use --remote.');
   process.exit(1);
 }
 
-const modeFlag = publishRemote ? '--remote' : '--local';
 const bucket = process.env.TOKYO_R2_BUCKET || 'tokyo-assets-dev';
 const concurrency = Number.parseInt(process.env.TOKYO_FONTS_SYNC_CONCURRENCY || '12', 10);
-const persistTo =
-  persistToArgValue || process.env.TOKYO_FONTS_SYNC_PERSIST_TO || path.join(repoRoot, '.wrangler', 'state');
 
 async function walkFiles(root) {
   const out = [];
@@ -65,13 +56,10 @@ function runWranglerBulkUpload(bulkFilePath) {
     bucket,
     '--filename',
     bulkFilePath,
-    modeFlag,
+    '--remote',
     '--concurrency',
     String(Number.isFinite(concurrency) && concurrency > 0 ? concurrency : 12),
   ];
-  if (!publishRemote && persistTo) {
-    wranglerArgs.push('--persist-to', persistTo);
-  }
 
   const result = spawnSync('pnpm', wranglerArgs, {
     cwd: repoRoot,
@@ -106,9 +94,7 @@ async function main() {
   const bulkFilePath = path.join(tokyoWorkerRoot, `.tokyo-fonts-bulk-${Date.now()}.json`);
   await fs.writeFile(bulkFilePath, `${JSON.stringify(bulkEntries, null, 2)}\n`, 'utf8');
   try {
-    console.log(
-      `[tokyo-fonts-sync] Uploading ${bulkEntries.length} files to ${bucket} (${publishRemote ? 'remote' : 'local'})${publishRemote ? '' : ` via persist ${persistTo}`}.`,
-    );
+    console.log(`[tokyo-fonts-sync] Uploading ${bulkEntries.length} files to ${bucket} (remote).`);
     runWranglerBulkUpload(bulkFilePath);
   } finally {
     await fs.rm(bulkFilePath, { force: true });
