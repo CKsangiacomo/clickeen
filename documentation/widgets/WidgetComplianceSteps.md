@@ -554,11 +554,10 @@ PRD 101 will define generated static SEO/GEO payloads for `clk.live` output when
 
 ---
 
-## Step 8 - Verification (local)
+## Step 8 - Verification
 
 Required checks
 
-- Start stack: `bash scripts/dev-up.sh`
 - Repo validation:
   - `pnpm typecheck`
   - `pnpm build:dieter`
@@ -571,6 +570,10 @@ Required checks
   generated account packages:
   - `pnpm cf:preflight`
   - `pnpm audit:106`
+- Cloud-dev Builder closure when touching Bob controls or preview hydration:
+  - source `e2e/.auth/e2e.env`
+  - run the targeted authenticated Playwright certification for the changed
+    widgets against the Cloudflare surfaces
 - Defaults safety:
   - Defaults must not ship `data:` or `blob:` URLs (allowed only as user-edited/runtime values, never in `spec.json` defaults).
 - Prague pages verification (if pages changed):

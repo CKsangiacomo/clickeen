@@ -563,6 +563,12 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
     openActiveInstanceInBobRef.current = openActiveInstanceInBob;
   }, [openActiveInstanceInBob]);
 
+  const handleBobIframeLoad = useCallback(() => {
+    bobReadyRef.current = true;
+    if (!activeInstanceIdRef.current) return;
+    void openActiveInstanceInBobRef.current();
+  }, []);
+
   useEffect(() => {
     const listener = (event: MessageEvent) => {
       if (event.origin !== bobBaseUrl) return;
@@ -703,7 +709,13 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           </div>
         </div>
       ) : null}
-      <iframe ref={iframeRef} src={bobSrc || 'about:blank'} className="roma-builder__iframe" title="Bob Builder" />
+      <iframe
+        ref={iframeRef}
+        src={bobSrc || 'about:blank'}
+        className="roma-builder__iframe"
+        title="Bob Builder"
+        onLoad={handleBobIframeLoad}
+      />
     </>
   );
 }

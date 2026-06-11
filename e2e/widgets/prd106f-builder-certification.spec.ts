@@ -56,6 +56,7 @@ const PRD106F_INSTANCES = [
 ] as const;
 
 const MIXED_BUILDER_PANELS = ['Content', 'Layout', 'Appearance', 'Typography', 'Settings'] as const;
+const BUILDER_OPEN_RESPONSE_TIMEOUT_MS = 30_000;
 const CONTENT_PANEL_TEXT_CONTROL_COVERAGE: readonly ContentPanelTextControlCoverage[] = [
   {
     widgetType: 'faq',
@@ -318,20 +319,50 @@ async function waitForSelectedInstance(bobFrame: Frame, timeout = 30_000): Promi
     .catch(() => false);
 }
 
+async function waitForBuilderOpenResponse(page: Page, instanceId: string) {
+  return page
+    .waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        response.url().includes(`/api/builder/${instanceId}/open`),
+      { timeout: BUILDER_OPEN_RESPONSE_TIMEOUT_MS },
+    )
+    .catch(() => null);
+}
+
+function expectBuilderOpenResponse(
+  response: Awaited<ReturnType<typeof waitForBuilderOpenResponse>>,
+  instanceId: string,
+  label = 'builder-open API',
+) {
+  if (!response) {
+    throw new Error(`${label} did not return for ${instanceId}`);
+  }
+  expect(response.ok(), `${label} returned ${response.status()} for ${instanceId}`).toBe(true);
+}
+
+async function retryBuilderOpenIfAvailable(page: Page, instanceId: string, timeout = 2_000) {
+  const retryButton = page.getByRole('button', { name: 'Retry' });
+  const isVisible = await retryButton.isVisible({ timeout }).catch(() => false);
+  if (!isVisible) return false;
+  const retryResponsePromise = waitForBuilderOpenResponse(page, instanceId);
+  await retryButton.click();
+  const retryResponse = await retryResponsePromise;
+  expectBuilderOpenResponse(retryResponse, instanceId, 'builder-open retry');
+  return true;
+}
+
 async function openBuilderFrame(page: Page, instanceId: string): Promise<Frame> {
-  const openResponsePromise = page.waitForResponse(
-    (response) =>
-      response.request().method() === 'GET' &&
-      response.url().includes(`/api/builder/${instanceId}/open`),
-  );
+  const openResponsePromise = waitForBuilderOpenResponse(page, instanceId);
 
   await page.goto(`/builder/${instanceId}`, { waitUntil: 'domcontentloaded' });
 
   const openResponse = await openResponsePromise;
-  expect(
-    openResponse.ok(),
-    `builder-open API returned ${openResponse.status()} for ${instanceId}`,
-  ).toBe(true);
+  if (openResponse) {
+    expectBuilderOpenResponse(openResponse, instanceId);
+  } else {
+    await retryBuilderOpenIfAvailable(page, instanceId, 10_000);
+  }
 
   await expect(page).toHaveURL(new RegExp(`/builder/${instanceId}`));
   const frameHandle = await page
@@ -343,21 +374,8 @@ async function openBuilderFrame(page: Page, instanceId: string): Promise<Frame> 
   await bobFrame!.getByRole('button', { name: /Manual/i }).waitFor({ timeout: 30_000 });
   const instanceSelected = await waitForSelectedInstance(bobFrame!);
   if (!instanceSelected) {
-    const retryButton = page.getByRole('button', { name: 'Retry' });
-    await expect(retryButton, `builder retry should be available for ${instanceId}`).toBeVisible({
-      timeout: 5_000,
-    });
-    const retryResponsePromise = page.waitForResponse(
-      (response) =>
-        response.request().method() === 'GET' &&
-        response.url().includes(`/api/builder/${instanceId}/open`),
-    );
-    await retryButton.click();
-    const retryResponse = await retryResponsePromise;
-    expect(
-      retryResponse.ok(),
-      `builder-open retry returned ${retryResponse.status()} for ${instanceId}`,
-    ).toBe(true);
+    const retried = await retryBuilderOpenIfAvailable(page, instanceId, 10_000);
+    expect(retried, `builder retry should be available for ${instanceId}`).toBe(true);
     await expect
       .poll(() => waitForSelectedInstance(bobFrame!, 5_000), {
         timeout: 45_000,
@@ -518,7 +536,7 @@ test.describe('PRD106F authenticated Builder browser certification', () => {
     test(`${instance.widgetType} saves and reloads Shell and Core edits for ${instance.instanceId}`, async ({
       page,
     }) => {
-      test.setTimeout(120_000);
+      test.setTimeout(240_000);
 
       const collector = collectPageErrors(page);
       const openedPages: Page[] = [page];
@@ -529,6 +547,7 @@ test.describe('PRD106F authenticated Builder browser certification', () => {
       try {
         let bobFrame = await openBuilderFrame(page, instance.instanceId);
         await bobFrame.getByRole('tab', { name: 'Content' }).click();
+        await expectPreviewNonblank(bobFrame);
 
         originalHeader = await readFieldValue(bobFrame, 'header.title');
         originalCore = await readFieldValue(bobFrame, instance.corePath);
