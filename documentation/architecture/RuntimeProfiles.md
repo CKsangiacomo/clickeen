@@ -21,6 +21,10 @@ decide product policy, billing/tier state, publication eligibility, l10n version
 caps, upload entitlements, or account storage caps. Product state and policy come
 from the real Roma -> Bob -> Tokyo account path.
 
+DevStudio's canonical internal runtime is `https://devstudio.clickeen.com` on
+Cloudflare Pages behind Berlin/Google auth. Local DevStudio is not part of the
+supported runtime profile and must not own hidden local write lanes.
+
 Tokyo storage follows the PRD 099 root model:
 
 ```txt
