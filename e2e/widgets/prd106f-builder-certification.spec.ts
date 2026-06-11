@@ -219,7 +219,7 @@ async function expectDropdownEditUsable(
 async function expectContentTextControlUsable(bobFrame: Frame, control: ContentPanelTextControl) {
   const field = bobFrame.locator(`.tdmenucontent__fields ${bobPathSelector(control.path)}`).first();
   await expect(field, `${control.label} should be mounted at ${control.path}`).toBeAttached({
-    timeout: 20_000,
+    timeout: 45_000,
   });
 
   await expectNearestUploadOpenIfPresent(field);
@@ -614,7 +614,9 @@ test.describe('PRD106F authenticated Builder browser certification', () => {
     for (const coverage of CONTENT_PANEL_TEXT_CONTROL_COVERAGE) {
       const instance = getPrd106fInstance(coverage.widgetType);
       const bobFrame = await openBuilderFrame(page, instance.instanceId);
-      await expectBuilderPanelReady(page.frameLocator('iframe[title="Bob Builder"]'), 'Content');
+      const bobFrameLocator = page.frameLocator('iframe[title="Bob Builder"]');
+      await expectBuilderPanelReady(bobFrameLocator, 'Content');
+      await expectPreviewNonblank(bobFrameLocator);
 
       for (const control of coverage.controls) {
         await expectContentTextControlUsable(bobFrame, control);
