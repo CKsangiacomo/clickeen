@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sha256Hex } from '@clickeen/ck-contracts/security';
 import { readWidgetEditableFieldsContract, type WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import { parseLimitsSpec } from '@clickeen/ck-policy';
-import { WIDGET_SHELL_OPTIONAL_SUPPORT_FILE_KEYS } from '@clickeen/widget-shell';
 import { compileWidgetServer } from '../compiler.server';
 import type { RawWidget } from '../compiler.shared';
 import { requireTokyoUrl } from '../compiler/media';
@@ -14,29 +12,6 @@ type CompiledWidgetPayload = Awaited<ReturnType<typeof compileWidgetServer>> & {
   editableFields?: WidgetEditableFieldsContract;
   widgetPackage?: WidgetPackageContext;
 };
-
-type CachedCompiledWidget = {
-  freshnessKey: string;
-  cachedAt: number;
-  payload: CompiledWidgetPayload;
-};
-
-const compiledWidgetCache = new Map<string, CachedCompiledWidget>();
-
-function getFreshnessValidator(res: Response) {
-  return {
-    etag: (res.headers.get('etag') || '').trim(),
-    lastModified: (res.headers.get('last-modified') || '').trim(),
-  };
-}
-
-function hasStrongFreshnessSignal(validator: { etag: string; lastModified: string }) {
-  return validator.etag.length > 0 || validator.lastModified.length > 0;
-}
-
-function buildSourceSignal(label: string, status: number, validator: { etag: string; lastModified: string }) {
-  return `${label}:status=${status};etag=${validator.etag || '-'};lm=${validator.lastModified || '-'}`;
-}
 
 function buildWidgetSourceUrl(args: { tokyoRoot: string; widgetname: string; fileName: string }): string {
   return `${args.tokyoRoot}/widgets/${encodeURIComponent(args.widgetname)}/${args.fileName}`;
@@ -64,6 +39,12 @@ function extractScriptSources(html: string): string[] {
     .filter(Boolean);
 }
 
+function extractSupportSources(source: string): string[] {
+  return [...source.matchAll(/["']([^"']+\.(?:css|js))(?:\?[^"']*)?["']/gi)]
+    .map((match) => String(match[1] || '').trim())
+    .filter(Boolean);
+}
+
 function resolveProductPath(widgetType: string, src: string): string | null {
   const withoutQuery = src.split('?')[0] || '';
   if (!withoutQuery || withoutQuery.startsWith('/') || /^https?:\/\//i.test(withoutQuery)) return null;
@@ -85,22 +66,22 @@ async function fetchWidgetPackageSupportFiles(args: {
   tokyoRoot: string;
   widgetname: string;
   htmlText: string;
+  cssText: string;
+  jsText: string;
   knownFiles: Map<string, WidgetPackageFileContext>;
 }): Promise<Map<string, WidgetPackageFileContext>> {
   const next = new Map(args.knownFiles);
   const productPaths = new Set<string>();
-  for (const src of [...extractStylesheetSources(args.htmlText), ...extractScriptSources(args.htmlText)]) {
+  for (const src of [...extractStylesheetSources(args.htmlText), ...extractScriptSources(args.htmlText), ...extractSupportSources(args.cssText), ...extractSupportSources(args.jsText)]) {
     const key = resolveProductPath(args.widgetname, src);
     if (key) productPaths.add(key);
   }
-  WIDGET_SHELL_OPTIONAL_SUPPORT_FILE_KEYS.forEach((key) => productPaths.add(key));
-
   await Promise.all(
     [...productPaths]
       .filter((key) => !next.has(key))
       .map(async (key) => {
         const response = await fetch(buildWidgetProductSourceUrl({ tokyoRoot: args.tokyoRoot, productPath: key }));
-        if (!response.ok) return;
+        if (!response.ok) throw new Error(`[Bob] Failed to fetch widget support file ${key} (${response.status} ${response.statusText})`);
         const source = await response.text();
         next.set(key, {
           mediaType: key.endsWith('.css') ? 'text/css' : 'text/javascript',
@@ -172,10 +153,8 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     const htmlUrl = buildWidgetSourceUrl({ tokyoRoot, widgetname, fileName: 'widget.html' });
     const cssUrl = buildWidgetSourceUrl({ tokyoRoot, widgetname, fileName: 'widget.css' });
     const jsUrl = buildWidgetSourceUrl({ tokyoRoot, widgetname, fileName: 'widget.client.js' });
-    const cacheBust = req.nextUrl.searchParams.has('ts') || req.nextUrl.searchParams.has('_t');
-
     const fetchInit: RequestInit = {};
-    if (cacheBust) fetchInit.cache = 'no-store';
+    if (req.nextUrl.searchParams.has('ts') || req.nextUrl.searchParams.has('_t')) fetchInit.cache = 'no-store';
     const [specRes, editableFieldsRes, limitsRes, htmlRes, cssRes, jsRes] = await Promise.all([
       fetch(specUrl, fetchInit),
       fetch(editableFieldsUrl, fetchInit),
@@ -225,12 +204,6 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       }
     }
 
-    const specValidator = getFreshnessValidator(specRes);
-    const editableFieldsValidator = getFreshnessValidator(editableFieldsRes);
-    const limitsValidator = getFreshnessValidator(limitsRes);
-    const htmlValidator = getFreshnessValidator(htmlRes);
-    const cssValidator = getFreshnessValidator(cssRes);
-    const jsValidator = getFreshnessValidator(jsRes);
     const specText = await specRes.text();
     const editableFieldsContractBody = editableFieldsRes.ok ? await editableFieldsRes.text() : '';
     const limitsText = limitsRes.ok ? await limitsRes.text() : '';
@@ -247,65 +220,6 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       );
     }
 
-    let freshnessKey = [
-      `widget=${widgetname}`,
-      buildSourceSignal('spec', specRes.status, specValidator),
-      buildSourceSignal('editableFields', editableFieldsRes.status, editableFieldsValidator),
-      buildSourceSignal('limits', limitsRes.status, limitsValidator),
-      buildSourceSignal('html', htmlRes.status, htmlValidator),
-      buildSourceSignal('css', cssRes.status, cssValidator),
-      buildSourceSignal('js', jsRes.status, jsValidator),
-    ].join('|');
-
-    if (!cacheBust) {
-      const cached = compiledWidgetCache.get(widgetname);
-      if (
-        cached &&
-        hasStrongFreshnessSignal(specValidator) &&
-        (editableFieldsRes.status === 404 || hasStrongFreshnessSignal(editableFieldsValidator)) &&
-        (limitsRes.status === 404 || hasStrongFreshnessSignal(limitsValidator)) &&
-        hasStrongFreshnessSignal(htmlValidator) &&
-        hasStrongFreshnessSignal(cssValidator) &&
-        hasStrongFreshnessSignal(jsValidator) &&
-        cached.freshnessKey === freshnessKey
-      ) {
-        compiledWidgetCache.set(widgetname, {
-          ...cached,
-          cachedAt: Date.now(),
-        });
-        return NextResponse.json(cached.payload, {
-          headers: {
-            ...corsHeaders,
-            'X-Bob-Compiled-Cache': 'hit',
-          },
-        });
-      }
-    }
-
-    if (!hasStrongFreshnessSignal(specValidator)) {
-      const specHash = await sha256Hex(specText);
-      freshnessKey = `${freshnessKey}|specHash=${specHash}`;
-    }
-    if (limitsRes.ok && !hasStrongFreshnessSignal(limitsValidator)) {
-      const limitsHash = await sha256Hex(limitsText);
-      freshnessKey = `${freshnessKey}|limitsHash=${limitsHash}`;
-    }
-    if (editableFieldsRes.ok && !hasStrongFreshnessSignal(editableFieldsValidator)) {
-      const editableFieldsHash = await sha256Hex(editableFieldsContractBody);
-      freshnessKey = `${freshnessKey}|editableFieldsHash=${editableFieldsHash}`;
-    }
-    if (!hasStrongFreshnessSignal(htmlValidator)) {
-      const htmlHash = await sha256Hex(htmlText);
-      freshnessKey = `${freshnessKey}|htmlHash=${htmlHash}`;
-    }
-    if (!hasStrongFreshnessSignal(cssValidator)) {
-      const cssHash = await sha256Hex(cssText);
-      freshnessKey = `${freshnessKey}|cssHash=${cssHash}`;
-    }
-    if (!hasStrongFreshnessSignal(jsValidator)) {
-      const jsHash = await sha256Hex(jsText);
-      freshnessKey = `${freshnessKey}|jsHash=${jsHash}`;
-    }
     const initialPackageFiles = new Map<string, WidgetPackageFileContext>([
       ['product/widgets/' + widgetname + '/widget.css', { mediaType: 'text/css', source: cssText }],
       ['product/widgets/' + widgetname + '/widget.client.js', { mediaType: 'text/javascript', source: jsText }],
@@ -314,24 +228,10 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       tokyoRoot,
       widgetname,
       htmlText,
+      cssText,
+      jsText,
       knownFiles: initialPackageFiles,
     });
-
-    if (!cacheBust) {
-      const cached = compiledWidgetCache.get(widgetname);
-      if (cached && cached.freshnessKey === freshnessKey) {
-        compiledWidgetCache.set(widgetname, {
-          ...cached,
-          cachedAt: Date.now(),
-        });
-        return NextResponse.json(cached.payload, {
-          headers: {
-            ...corsHeaders,
-            'X-Bob-Compiled-Cache': 'hit',
-          },
-        });
-      }
-    }
 
     const compiled = await compileWidgetServer(widgetJson);
     const editableFields = editableFieldsRes.ok && editableFieldsContractBody.trim()
@@ -352,18 +252,10 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       supportFiles,
     });
     const payload: CompiledWidgetPayload = { ...compiled, limits, widgetPackage, ...(editableFields ? { editableFields } : {}) };
-    if (!cacheBust) {
-      compiledWidgetCache.set(widgetname, {
-        freshnessKey,
-        cachedAt: Date.now(),
-        payload,
-      });
-    }
 
     return NextResponse.json(payload, {
       headers: {
         ...corsHeaders,
-        'X-Bob-Compiled-Cache': cacheBust ? 'bypass' : 'miss',
       },
     });
   } catch (err) {

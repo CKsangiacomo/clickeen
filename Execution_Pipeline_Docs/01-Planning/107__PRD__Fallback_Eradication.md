@@ -309,6 +309,7 @@ No evidence may be recorded until Step 0 is complete.
 | 107-AB2-2026-06-12 | 2 | AB-2 | Bob edit-op set boundary | `Value must be a number`, `Value must be a boolean`, `Value must be one of: list, grid`, `Value must be JSON data, not a string`, `Value must be an array` | Coercion-shaped edit values returned `ok: false`; accepted string/color values were written exactly as submitted. | `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; focused coerce/transform `rg`; `git diff --shortstat` = `2 files changed, 24 insertions(+), 92 deletions(-)`; local Playwright browser proof against `http://127.0.0.1:3017/bob` showed valid open -> `bob:open-editor-applied` and edit ops reject coercion/write accepted values exactly. | this commit |
 | 107-AB3-2026-06-12 | 2 | AB-3 | Dieter dropdown-fill gradient hydration/commit | visible invalid state on unsupported radial/conic/CSS gradients | Unsupported gradient truth did not reach a rewritten successful commit; linear gradient still committed as `kind: "linear"`. | `pnpm --filter @ck/dieter typecheck`; `pnpm --filter @ck/dieter build`; focused gradient fallback `rg`; `git diff --shortstat` = `7 files changed, 36 insertions(+), 136 deletions(-)`; local Playwright proof against built `tokyo/product/dieter/components/dropdown-fill/dropdown-fill.js` showed radial/conic/CSS gradients set `data-invalid="true"` and valid linear angle edit committed as linear. | this commit |
 | 107-AB4-2026-06-12 | 2 | AB-4 | Bob TD menu media/hydrator boundary | `Builder controls failed to load.` | Failed Dieter media cleared the control container; no field remained available for edit/save continuation. | `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; focused warning-only hydration `rg`; `git diff --shortstat` = `5 files changed, 13 insertions(+), 46 deletions(-)`; local Playwright proof against `http://127.0.0.1:3017/bob` showed valid hydrator runs and missing Dieter script clears controls with visible failure. | this commit |
+| 107-AB5-2026-06-12 | 2 | AB-5 | Bob compiled widget route | `[Bob] Failed to fetch widget support file product/widgets/shared/header.css (404 Not Found)` | Missing referenced support file returned 500; no compiled payload or partial `widgetPackage` success was returned. | `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; focused cache/omission `rg`; `git diff --shortstat` = `2 files changed, 14 insertions(+), 121 deletions(-)`; local Playwright API proof against `http://127.0.0.1:3027/api/widgets/calltoaction/compiled` showed complete support files -> 200 with package files, missing `shared/header.css` -> failed closed with typed support-file error. | this commit |
 
 ## Masquerade Audit
 
@@ -320,6 +321,7 @@ Every completed row must pass this checklist.
 | AB-2 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-3 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-4 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
+| AB-5 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 
 Any `YES` in the first eight columns means the row is not complete and a new V7
 violation must be recorded.
