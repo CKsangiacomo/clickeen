@@ -9,12 +9,8 @@ export function normalizeProvider(value: unknown): string | null {
 }
 
 export function parseAllowedProviders(env: Env): Set<string> {
-  const configured = (typeof env.BERLIN_ALLOWED_PROVIDERS === 'string' ? env.BERLIN_ALLOWED_PROVIDERS.trim() : '') ||
-    'google';
-  const values = configured
-    .split(',')
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
+  const values = (typeof env.BERLIN_ALLOWED_PROVIDERS === 'string' ? env.BERLIN_ALLOWED_PROVIDERS.trim() : '').split(',').map((item) => item.trim().toLowerCase()).filter(Boolean);
+  if (!values.length) throw new Error('berlin.errors.auth.config_missing');
   return new Set(values);
 }
 

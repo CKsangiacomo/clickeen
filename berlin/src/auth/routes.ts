@@ -298,6 +298,7 @@ async function handleProviderLoginCallback(
   providerFromPath?: string,
 ): Promise<Response> {
   const url = new URL(request.url);
+  const allowed = parseAllowedProviders(env);
   const error = claimAsString(url.searchParams.get('error'));
   const errorDescription = claimAsString(url.searchParams.get('error_description'));
   const stateForError = claimAsString(url.searchParams.get('state'));
@@ -330,13 +331,6 @@ async function handleProviderLoginCallback(
     stateValid: true,
   });
 
-  if (!env.BERLIN_AUTH_TICKETS) {
-    logAuthFlow(request, 'error', 'auth.provider.callback.failed', {
-      reasonKey: 'berlin.errors.auth.config_missing',
-      detailCode: 'missing_oauth_state_store',
-    });
-    return authError('berlin.errors.auth.config_missing', 503, 'missing_oauth_state_store');
-  }
   const consumedState = await consumeOauthTransaction(env, stateId);
   if (consumedState.outcome === 'storeUnavailable') {
     logAuthFlow(request, 'error', 'auth.provider.callback.failed', {
@@ -364,7 +358,6 @@ async function handleProviderLoginCallback(
     return validationError('coreui.errors.auth.provider.invalidCallback');
   }
 
-  const allowed = parseAllowedProviders(env);
   if (!allowed.has(transaction.provider)) {
     logAuthFlow(request, 'warn', 'auth.provider.callback.rejected', {
       provider: transaction.provider,
