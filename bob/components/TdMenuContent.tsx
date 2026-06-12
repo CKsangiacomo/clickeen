@@ -12,7 +12,6 @@ import { useTdMenuHydration } from './td-menu-content/useTdMenuHydration';
 type TdMenuContentProps = {
   panelId: PanelId | null;
   panelHtml: string;
-  widgetKey?: string;
   instanceData: Record<string, unknown>;
   applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
   lastUpdate?: { source: 'field' | 'load' | 'external' | 'ops' | 'unknown'; path: string; ts: number } | null;
@@ -24,7 +23,6 @@ type TdMenuContentProps = {
 export function TdMenuContent({
   panelId,
   panelHtml,
-  widgetKey,
   instanceData,
   applyOps,
   dieterMedia,
@@ -75,7 +73,6 @@ export function TdMenuContent({
   useTdMenuHydration({
     containerRef,
     panelHtml,
-    widgetKey,
     widgetName: session.compiled?.widgetname ?? null,
     accountAssets: session.accountAssets,
     dieterMedia,

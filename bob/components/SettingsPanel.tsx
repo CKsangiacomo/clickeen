@@ -184,7 +184,6 @@ export function SettingsPanel() {
       <TdMenuContent
         panelId="settings"
         panelHtml={settingsHtml}
-        widgetKey={compiled.widgetname}
         instanceData={session.instanceData}
         applyOps={session.applyOps}
         lastUpdate={session.lastUpdate}

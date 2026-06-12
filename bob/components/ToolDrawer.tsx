@@ -203,7 +203,6 @@ export function ToolDrawer({
     <TdMenuContent
       panelId={activePanel}
       panelHtml={activePanelHtml ?? ''}
-      widgetKey={compiled.widgetname}
       instanceData={session.instanceData}
       applyOps={session.applyOps}
       lastUpdate={session.lastUpdate}

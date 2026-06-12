@@ -70,32 +70,13 @@ function labelForGroup(key: string | null): string {
   return GROUP_LABELS[key] || key.replace(/-/g, ' ');
 }
 
-export function resetDieterMediaCaches() {
-  loadedStyles.clear();
-  loadedScripts.clear();
-}
-
 export async function ensureMedia(dieterMedia: DieterMedia | undefined): Promise<void> {
-  const styleLoads = (dieterMedia?.styles || []).map((href) => loadStyle(href));
-  const scriptList = dieterMedia?.scripts || [];
-
-  const scriptsPromise = scriptList.reduce<Promise<void>>(async (chain, src) => {
-    await chain;
-    await loadScript(src);
-  }, Promise.resolve());
-
-  const settled = await Promise.allSettled([...styleLoads, scriptsPromise]);
-  const failures = settled.filter((entry): entry is PromiseRejectedResult => entry.status === 'rejected');
-
-  if (failures.length > 0 && process.env.NODE_ENV === 'development') {
-    failures.forEach((failure) => {
-      console.warn('[TdMenuContent] Dieter media load warning', failure.reason);
-    });
-  }
+  for (const href of dieterMedia?.styles || []) await loadStyle(href);
+  for (const src of dieterMedia?.scripts || []) await loadScript(src);
 }
 
 export function runHydrators(scope: HTMLElement, deps?: DieterHydratorDeps) {
-  if (typeof window === 'undefined' || !window.Dieter) return;
+  if (typeof window === 'undefined' || !window.Dieter) throw new Error('coreui.errors.builder.controls.runtimeMissing');
   const entries = Object.entries(window.Dieter).filter(
     ([name, fn]) =>
       typeof fn === 'function' &&
@@ -103,13 +84,7 @@ export function runHydrators(scope: HTMLElement, deps?: DieterHydratorDeps) {
       name.toLowerCase() !== 'hydrateall',
   );
   for (const [, fn] of entries) {
-    try {
-      (fn as (el?: HTMLElement, deps?: DieterHydratorDeps) => void)(scope, deps);
-    } catch (err) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[TdMenuContent] Hydrator error', err);
-      }
-    }
+    (fn as (el?: HTMLElement, deps?: DieterHydratorDeps) => void)(scope, deps);
   }
 }
 

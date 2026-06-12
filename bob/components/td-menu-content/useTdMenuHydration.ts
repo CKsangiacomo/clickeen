@@ -7,7 +7,6 @@ import {
   ensureMedia,
   getClusterBody,
   installClusterCollapseBehavior,
-  resetDieterMediaCaches,
   runHydrators,
   type DieterMedia,
 } from './dom';
@@ -17,7 +16,6 @@ import { applyShowIfVisibility, buildShowIfEntries, type ShowIfEntry } from './s
 export function useTdMenuHydration(args: {
   containerRef: MutableRefObject<HTMLDivElement | null>;
   panelHtml: string;
-  widgetKey?: string;
   widgetName: string | null;
   accountAssets: AccountAssetsClient;
   dieterMedia?: DieterMedia;
@@ -33,18 +31,14 @@ export function useTdMenuHydration(args: {
     panelHtml,
     setRenderKey,
     showIfEntriesRef,
-    widgetKey,
     widgetName,
   } = args;
-
-  useEffect(() => {
-    resetDieterMediaCaches();
-  }, [widgetKey]);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    let cancelled = false;
     container.innerHTML = panelHtml || '';
     applyGroupHeaders(container);
     container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
@@ -69,7 +63,7 @@ export function useTdMenuHydration(args: {
 
     ensureMedia(dieterMedia)
       .then(() => {
-        if (!container) return;
+        if (cancelled) return;
         runHydrators(container, { accountAssets });
         applyI18nToDom(container, widgetName).catch((err) => {
           if (process.env.NODE_ENV === 'development') {
@@ -77,15 +71,18 @@ export function useTdMenuHydration(args: {
           }
         });
         showIfEntriesRef.current = buildShowIfEntries(container);
+        applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
         setRenderKey((current) => current + 1);
       })
-      .catch((err) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('[TdMenuContent] Failed to load Dieter media', err);
-        }
+      .catch(() => {
+        if (cancelled) return;
+        container.innerHTML = '<div class="settings-panel__error" role="alert">Builder controls failed to load.</div>';
+        showIfEntriesRef.current = [];
+        setRenderKey((current) => current + 1);
       });
 
     return () => {
+      cancelled = true;
       container.removeEventListener('dieter-controls-rendered', handleControlsRendered);
       if (controlsRenderedFrame != null) {
         window.cancelAnimationFrame(controlsRenderedFrame);
