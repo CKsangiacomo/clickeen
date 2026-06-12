@@ -19,7 +19,6 @@ type RomaRequestContext = {
   requestId: string;
   method: string;
   path: string;
-  clientIp: string | null;
   cfRay: string | null;
   startedAt: number;
   accountId?: string;
@@ -75,16 +74,6 @@ function resolveStage(request: NextRequest): string {
   return 'unknown';
 }
 
-function resolveClientIp(request: NextRequest): string | null {
-  const cfConnectingIp = String(request.headers.get('cf-connecting-ip') || '').trim();
-  if (cfConnectingIp) return cfConnectingIp;
-  const forwardedFor = String(request.headers.get('x-forwarded-for') || '').trim();
-  if (!forwardedFor) return null;
-  const [first] = forwardedFor.split(',');
-  const candidate = String(first || '').trim();
-  return candidate || null;
-}
-
 function resolveCfRay(request: NextRequest): string | null {
   const raw = String(request.headers.get('cf-ray') || '').trim();
   return raw || null;
@@ -101,7 +90,6 @@ function getOrCreateRequestContext(request: NextRequest): RomaRequestContext {
     requestId: fromHeader || crypto.randomUUID(),
     method: request.method.toUpperCase(),
     path: request.nextUrl.pathname.replace(/\/+$/, '') || '/',
-    clientIp: resolveClientIp(request),
     cfRay: resolveCfRay(request),
     startedAt: Date.now(),
     rateLimit: null,
@@ -185,7 +173,7 @@ export async function enforceRomaRateLimitForAccountRequest(
   if (!policy) return null;
 
   const kv = usageKv ?? null;
-  if (!kv) return null;
+  if (!kv) return NextResponse.json({ error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'roma.errors.rateLimit.kv_missing', detail: policy.bucket } }, { status: 503 });
 
   const decision = await consumeRateLimit(kv, rateLimitKey(policy, accountId), policy, Date.now());
   requestContext.rateLimit = decision;

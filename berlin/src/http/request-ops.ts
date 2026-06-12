@@ -26,7 +26,6 @@ type RateLimitPolicy = {
   bucket: string;
   max: number;
   windowSec: number;
-  vary: 'ip';
 };
 
 export type RateLimitDecision =
@@ -83,43 +82,31 @@ export function createBerlinRequestContext(request: Request, env: Env): BerlinRe
 
 function resolveRateLimitPolicy(method: string, path: string): RateLimitPolicy | null {
   if (method === 'GET' && /^\/auth\/login\/[^/]+\/start$/.test(path)) {
-    return { bucket: 'auth.login.provider.start', max: 12, windowSec: 60, vary: 'ip' };
+    return { bucket: 'auth.login.provider.start', max: 12, windowSec: 60 };
   }
   if (method === 'POST' && path === '/auth/finish') {
-    return { bucket: 'auth.finish', max: 20, windowSec: 60, vary: 'ip' };
+    return { bucket: 'auth.finish', max: 20, windowSec: 60 };
   }
   if (method === 'POST' && path === '/auth/refresh') {
-    return { bucket: 'auth.refresh', max: 60, windowSec: 60, vary: 'ip' };
+    return { bucket: 'auth.refresh', max: 60, windowSec: 60 };
   }
   if (method === 'POST' && path === '/auth/logout') {
-    return { bucket: 'auth.logout', max: 60, windowSec: 60, vary: 'ip' };
+    return { bucket: 'auth.logout', max: 60, windowSec: 60 };
   }
   return null;
 }
 
-function rateLimitKey(policy: RateLimitPolicy, context: BerlinRequestContext): string | null {
-  if (policy.vary !== 'ip') return null;
-  if (!context.clientIp) return null;
+function rateLimitKey(policy: RateLimitPolicy, context: BerlinRequestContext): string {
+  if (!context.clientIp) throw new Error('berlin.request.client_ip_missing');
   return `${RATE_LIMIT_PREFIX}:${policy.bucket}:ip:${context.clientIp}`;
 }
 
 async function consumeRateLimit(
-  env: Env,
+  kv: NonNullable<Env['BERLIN_SESSION_KV']>,
   key: string,
   policy: RateLimitPolicy,
   now: number,
 ): Promise<RateLimitDecision> {
-  const kv = env.BERLIN_SESSION_KV;
-  if (!kv) {
-    return {
-      allowed: true,
-      bucket: policy.bucket,
-      limit: policy.max,
-      remaining: policy.max,
-      resetAt: now + policy.windowSec * 1000,
-    };
-  }
-
   const existingRaw = await kv.get(key, 'json').catch(() => null);
   const existing = parseRateLimitRecord(existingRaw);
   const active =
@@ -189,9 +176,10 @@ export async function enforceBerlinRateLimit(
   const policy = resolveRateLimitPolicy(context.method, context.path);
   if (!policy) return null;
   const key = rateLimitKey(policy, context);
-  if (!key) return null;
+  const kv = env.BERLIN_SESSION_KV;
+  if (!kv) throw new Error('berlin.session.kv_missing');
 
-  const decision = await consumeRateLimit(env, key, policy, Date.now());
+  const decision = await consumeRateLimit(kv, key, policy, Date.now());
   if (decision.allowed) return null;
 
   return {

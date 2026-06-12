@@ -275,4 +275,5 @@ The current rate-limit floor is intentionally narrow:
 - key = per-IP bucket
 - storage = `BERLIN_SESSION_KV` under a dedicated prefix
 - protected routes = auth/session mutation routes only
+- missing `BERLIN_SESSION_KV` or missing client IP is service/request-contract failure before protected route dispatch
 - limited responses return `429 coreui.errors.rateLimit.exceeded` plus `retry-after` and `x-rate-limit-*` headers

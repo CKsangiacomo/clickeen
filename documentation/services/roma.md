@@ -122,7 +122,7 @@ Roma talks to upstream systems only through same-origin API routes:
 - Normal customer product routes are explicit and owned in Roma (`/api/account/**`, `/api/session/**`).
 - Those routes call the real owners directly: Berlin for auth/account truth, Tokyo/Tokyo-worker for account instance operations, translated locale values, assets, and public artifacts, and San Francisco for AI execution. Product decisions about account lifecycle, tiers, caps, publish eligibility, and downgrade/suspension correctness stay in Roma/system account operations.
 - There is no generic cross-service proxy in the active Roma product path.
-- Account-scoped same-origin responses now stamp `x-request-id`, emit one structured completion log per request, and apply a first per-account KV-backed rate-limit floor on normal `/api/account/**` mutation routes (asset upload/delete included; AI copilot routes excluded from this floor).
+- Account-scoped same-origin responses now stamp `x-request-id`, emit one structured completion log per request, and apply a first per-account KV-backed rate-limit floor on normal `/api/account/**` mutation routes (asset upload/delete included; AI copilot routes excluded from this floor). Missing `USAGE_KV` is service misconfiguration and returns a boundary failure before the mutation handler receives account context.
 - Roma emits structured server-side logs and failures for Cloudflare ingestion. Pages-specific observability toggles are dashboard-owned; Worker-only `wrangler.toml` observability blocks are not valid for the Roma Pages project.
 
 Client fetch behavior:
