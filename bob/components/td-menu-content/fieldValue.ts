@@ -19,16 +19,16 @@ function expectsJsonArrayField(input: HTMLElement): boolean {
   );
 }
 
-export function parseBobJsonValue(input: HTMLInputElement, rawValue: string): unknown | null {
-  if (input.dataset.bobJson == null) return null;
+export function parseBobJsonValue(input: HTMLInputElement, rawValue: string): { ok: true; value: unknown } | { ok: false } {
+  if (input.dataset.bobJson == null) return { ok: false };
   const trimmed = rawValue.trim();
-  if (!trimmed) return null;
+  if (!trimmed) return { ok: false };
   try {
     const parsed = JSON.parse(trimmed) as unknown;
-    if (expectsJsonArrayField(input) && !Array.isArray(parsed)) return null;
-    return parsed;
+    if (expectsJsonArrayField(input) && !Array.isArray(parsed)) return { ok: false };
+    return { ok: true, value: parsed };
   } catch {
-    return null;
+    return { ok: false };
   }
 }
 

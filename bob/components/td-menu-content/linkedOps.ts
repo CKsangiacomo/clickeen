@@ -25,24 +25,8 @@ export function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-export function coerceFiniteNumber(value: unknown): number | null {
-  if (isFiniteNumber(value)) return value;
-  if (typeof value === 'string') {
-    const numberValue = Number(value);
-    return Number.isFinite(numberValue) ? numberValue : null;
-  }
-  return null;
-}
-
-export function coercePxNumber(value: unknown): number | null {
-  if (isFiniteNumber(value)) return value;
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const match = trimmed.match(/^(-?\d+(?:\.\d+)?)(?:px)?$/);
-  if (!match) return null;
-  const numberValue = Number(match[1]);
-  return Number.isFinite(numberValue) ? numberValue : null;
+function finiteNumber(value: unknown): number | null {
+  return isFiniteNumber(value) ? value : null;
 }
 
 function buildPresetEntries(raw: unknown): PresetEntry[] {
@@ -244,7 +228,7 @@ export function expandLinkedOps(args: {
 
         const pickAxis = (value: unknown, axisKey: 'x' | 'y'): number | null => {
           if (!isPlainRecord(value)) return null;
-          return coerceFiniteNumber((value as Record<string, unknown>)[axisKey]);
+          return finiteNumber((value as Record<string, unknown>)[axisKey]);
         };
 
         const makeShadowFrom = (sourceShadow: Record<string, unknown>) => () => ({ ...sourceShadow });
@@ -313,7 +297,7 @@ export function expandLinkedOps(args: {
         const linkedValue = getAt<unknown>(args.instanceData, allPath);
         const topValue = getAt<unknown>(args.instanceData, topPath);
         const source = nextLinked ? topValue : linkedValue;
-        const numberValue = coerceFiniteNumber(source);
+        const numberValue = finiteNumber(source);
         if (numberValue == null) {
           expanded.push(op);
           continue;
@@ -335,7 +319,7 @@ export function expandLinkedOps(args: {
         const linkedValue = getAt<unknown>(args.instanceData, 'layout.itemPadding');
         const topValue = getAt<unknown>(args.instanceData, 'layout.itemPaddingTop');
         const source = nextLinked ? topValue : linkedValue;
-        const numberValue = coerceFiniteNumber(source);
+        const numberValue = finiteNumber(source);
         if (numberValue == null) {
           expanded.push(op);
           continue;
@@ -356,7 +340,7 @@ export function expandLinkedOps(args: {
         const nextLinked = op.value;
         if (nextLinked === true) {
           const inlineValue = getAt<unknown>(args.instanceData, 'appearance.headerCta.paddingInline');
-          const numberValue = coerceFiniteNumber(inlineValue);
+          const numberValue = finiteNumber(inlineValue);
           if (numberValue == null) {
             expanded.push(op);
             continue;
@@ -374,7 +358,7 @@ export function expandLinkedOps(args: {
       const base = `${rootKey}.padding.${deviceKey}`;
       const linkedValue = getAt<unknown>(args.instanceData, `${base}.linked`);
       const linked = linkedValue !== false;
-      const numberValue = coerceFiniteNumber(op.value);
+      const numberValue = finiteNumber(op.value);
       if (linked && numberValue != null) {
         expanded.push(
           setOp(op.path, numberValue),
@@ -427,7 +411,7 @@ export function expandLinkedOps(args: {
     if (op.path === 'layout.itemPadding') {
       const linkedValue = getAt<unknown>(args.instanceData, 'layout.itemPaddingLinked');
       const linked = linkedValue !== false;
-      const numberValue = coerceFiniteNumber(op.value);
+      const numberValue = finiteNumber(op.value);
       if (linked && numberValue != null) {
         expanded.push(
           setOp(op.path, numberValue),
@@ -443,7 +427,7 @@ export function expandLinkedOps(args: {
     if (op.path === 'appearance.headerCta.paddingInline') {
       const linkedValue = getAt<unknown>(args.instanceData, 'appearance.headerCta.paddingLinked');
       const linked = linkedValue === true;
-      const numberValue = coerceFiniteNumber(op.value);
+      const numberValue = finiteNumber(op.value);
       if (linked && numberValue != null) {
         expanded.push(setOp(op.path, numberValue), setOp('appearance.headerCta.paddingBlock', numberValue));
         continue;

@@ -1,5 +1,5 @@
 import type { CompiledControl } from '../types';
-import { buildControlMatchers, coerceValueStrict, findBestControlForPath } from './controls';
+import { buildControlMatchers, findBestControlForPath, validateValueStrict } from './controls';
 import { getAt, setAt } from '../utils/paths';
 
 export type WidgetOp =
@@ -111,11 +111,11 @@ export function applyWidgetOps(args: {
       if (raw.value === undefined) {
         return { ok: false, errors: [{ opIndex: idx, path, message: 'Value cannot be undefined' }] };
       }
-      const coerced = coerceValueStrict(control, raw.value);
-      if (!coerced.ok) {
-        return { ok: false, errors: [{ opIndex: idx, path, message: coerced.message }] };
+      const validation = validateValueStrict(control, raw.value);
+      if (!validation.ok) {
+        return { ok: false, errors: [{ opIndex: idx, path, message: validation.message }] };
       }
-      const next = setAt(working, path, coerced.value) as Record<string, unknown>;
+      const next = setAt(working, path, raw.value) as Record<string, unknown>;
       working = next;
       continue;
     }

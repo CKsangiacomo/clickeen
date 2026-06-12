@@ -6,8 +6,6 @@ import type { CompiledWidget } from '../../lib/types';
 import { getAt } from '../../lib/utils/paths';
 import { syncSegmentedPressedState } from './dom';
 import {
-  coerceFiniteNumber,
-  coercePxNumber,
   expandLinkedOps,
   isFiniteNumber,
 } from './linkedOps';
@@ -126,13 +124,7 @@ export function useTdMenuBindings(args: {
 
       if (target instanceof HTMLInputElement && target.dataset.bobJson != null) {
         const parsed = parseBobJsonValue(target, rawValue);
-        if (parsed == null) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('[TdMenuContent] Ignoring invalid JSON input for path', path);
-          }
-          return;
-        }
-        const applied = applyExpandedOps([{ op: 'set', path, value: parsed }]);
+        const applied = applyExpandedOps([{ op: 'set', path, value: parsed.ok ? parsed.value : rawValue }]);
         if (!applied.ok) {
           const previousValue = getAt<unknown>(readInstanceData(), path);
           const nextValue = serializeBobJsonFieldValue(target, previousValue);
@@ -151,35 +143,12 @@ export function useTdMenuBindings(args: {
 
       const sizeCustomMatch = path.match(/^typography\.roles\.([^.]+)\.sizeCustom$/);
       if (sizeCustomMatch) {
-        const trimmed = rawValue.trim();
-        if (!trimmed) return;
-        const parsed = Number(trimmed);
-        if (!Number.isFinite(parsed)) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('[TdMenuContent] Ignoring invalid typography sizeCustom input for path', path);
-          }
-          return;
-        }
-        applySet(path, parsed);
+        applySet(path, target instanceof HTMLInputElement && Number.isFinite(target.valueAsNumber) ? target.valueAsNumber : rawValue);
         return;
       }
 
       if (isFiniteNumber(currentValue)) {
-        const trimmed = rawValue.trim();
-        if (!trimmed) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('[TdMenuContent] Ignoring empty numeric input for path', path);
-          }
-          return;
-        }
-        const parsed = Number(trimmed);
-        if (!Number.isFinite(parsed)) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('[TdMenuContent] Ignoring invalid numeric input for path', path);
-          }
-          return;
-        }
-        applySet(path, parsed);
+        applySet(path, target instanceof HTMLInputElement && Number.isFinite(target.valueAsNumber) ? target.valueAsNumber : rawValue);
         return;
       }
 
@@ -189,7 +158,7 @@ export function useTdMenuBindings(args: {
         const currentPreset = getAt<unknown>(readInstanceData(), path);
         if (typeof currentPreset === 'string' && currentPreset.trim() && currentPreset !== 'custom') {
           const scaleValue = getAt<unknown>(readInstanceData(), `typography.roleScales.${roleKey}.${currentPreset}`);
-          const scalePx = coercePxNumber(scaleValue);
+          const scalePx = isFiniteNumber(scaleValue) ? scaleValue : null;
           if (scalePx != null) {
             const applied = applyOps([
               { op: 'set', path: `typography.roles.${roleKey}.sizeCustom`, value: scalePx },
@@ -246,7 +215,7 @@ export function useTdMenuBindings(args: {
       if (field instanceof HTMLInputElement && field.type === 'range') {
         if (isActive) return;
         const fallback = field.min?.trim() || '0';
-        const resolvedNumber = coerceFiniteNumber(value);
+        const resolvedNumber = isFiniteNumber(value) ? value : null;
         const resolvedValue = resolvedNumber == null ? fallback : String(resolvedNumber);
         if (field.value !== resolvedValue) {
           field.value = resolvedValue;
@@ -270,7 +239,7 @@ export function useTdMenuBindings(args: {
 
       const sizeCustomMatch = path.match(/^typography\.roles\.([^.]+)\.sizeCustom$/);
       if (sizeCustomMatch && field instanceof HTMLInputElement && field.type === 'number') {
-        const numberValue = coercePxNumber(value);
+        const numberValue = isFiniteNumber(value) ? value : null;
         nextValue = numberValue == null ? '' : String(numberValue);
       }
 
