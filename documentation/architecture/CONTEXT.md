@@ -95,7 +95,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
 
 - Complete functional software for a widget type (e.g. FAQ)
 - Surviving repo source lives in `tokyo/product/widgets/{widgetType}/`
-- Core runtime files: `spec.json`, `widget.html`, `widget.css`, `widget.client.js`, and optional widget-local `widget.*.js` helpers.
+- Core runtime files: `spec.json`, `widget.html`, `widget.css`, and `widget.client.js`.
 - Contract/metadata in the same folder (consumed by Bob/Roma/Tokyo-worker/Prague as appropriate): `spec.json`, `editable-fields.json` where present, `limits.json`, and widget-owned runtime assets. `agent.md` and `catalog.json` are deleted widget source; do not use them as schema, guidance, display metadata, or publish input.
 - Platform-controlled; **not stored in Michael**
 
@@ -476,13 +476,6 @@ Pages deploy rule:
 - GitHub Actions may verify Pages build contracts, but are not the Pages deploy plane and must not create Pages projects, sync Pages secrets, or deploy Pages artifacts.
 - The manual Pages project/env/host contract is documented in `documentation/architecture/CloudflarePagesCloudDevChecklist.md`.
 - Bob and Roma must use custom `*.dev.clickeen.com` hosts in cloud-dev; `*.pages.dev` is not a valid authenticated Builder runtime host.
-
-### Deterministic compilation contract (anti-drift)
-
-- **Dieter bundling manifest (authoritative)**: `tokyo/product/dieter/manifest.json` after PRD 79 Phase 1 (public `/dieter/**` can remain a serving route)
-- **Widget definition source**: widget-owned `spec.json`, `editable-fields.json`, runtime assets, and policy-linked limit metadata under `tokyo/product/widgets/{widgetType}/`. `catalog.json` is deleted widget source. `scripts/generate-widget-definition-sources.mjs` creates the checked Tokyo-worker source index used only for bundling imports; it is not product state, not a catalog artifact, and must stay in sync through `pnpm validate:widgets`. Tokyo-worker resolves widget definitions through `listWidgetDefinitions` and `getWidgetDefinition` from widget type/code plus edit contracts.
-- **Rule**: ToolDrawer `type="..."` drives required bundles; CSS classnames never add bundles.
-- **Verification plane**: compilation discipline is enforced through repo typecheck/build and Cloudflare verification, not a localhost Bob HTTP gate.
 
 **Key Discipline:**
 

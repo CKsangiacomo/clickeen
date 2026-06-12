@@ -31,9 +31,6 @@ export type WidgetPackageForPage = {
   indexHtml: string;
   stylesCss: string;
   runtimeJs: string;
-  dependencies?: {
-    instanceIds: string[];
-  };
 };
 
 export type ComposedPagePublicPackage = {
@@ -51,6 +48,8 @@ type WidgetContribution = {
   runtimePayload: string;
   runtimeModules: string[];
 };
+
+type PagePackageBuildError = { kind: 'PAGE_PACKAGE_BUILD_ERROR'; reasonKey: string; detail: string };
 
 const FORBIDDEN_SINGLETON_RUNTIME_RE = /\bwindow\.CK_WIDGET\b/;
 const STYLE_MODULE_RE = new RegExp(
@@ -108,10 +107,14 @@ function extractMarkedChunks(args: {
   args.pattern.lastIndex = 0;
   const chunks = [...args.body.matchAll(args.pattern)].map((match) => String(match[1] ?? '').trim()).filter(Boolean);
   if (!chunks.length) {
-    throw new Error(`${args.reasonKey}:${args.instanceId}`);
+    pagePackageBuildError(args.reasonKey, args.instanceId);
   }
   return chunks;
 }
+
+function pagePackageBuildError(reasonKey: string, detail: string): never { throw { kind: 'PAGE_PACKAGE_BUILD_ERROR', reasonKey, detail } satisfies PagePackageBuildError; }
+
+export function isPagePackageBuildError(value: unknown): value is PagePackageBuildError { return Boolean(value) && typeof value === 'object' && !Array.isArray(value) && (value as PagePackageBuildError).kind === 'PAGE_PACKAGE_BUILD_ERROR'; }
 
 function splitRuntimeContribution(args: {
   runtime: string;
@@ -120,7 +123,7 @@ function splitRuntimeContribution(args: {
   const startIndex = args.runtime.indexOf(RUNTIME_PAYLOAD_START);
   const endIndex = args.runtime.indexOf(RUNTIME_PAYLOAD_END);
   if (startIndex < 0 || endIndex < startIndex) {
-    throw new Error(`page.package.runtimePayloadMissing:${args.instanceId}`);
+    pagePackageBuildError('page.package.runtimePayloadMissing', args.instanceId);
   }
   const payload = args.runtime.slice(startIndex, endIndex + RUNTIME_PAYLOAD_END.length).trim();
   const modulesSource = `${args.runtime.slice(0, startIndex)}\n${args.runtime.slice(endIndex + RUNTIME_PAYLOAD_END.length)}`;
@@ -198,7 +201,7 @@ function extractSingleWidgetRoot(args: {
 function pageLocale(packages: WidgetContribution[]): string {
   const locales = uniqueChunks(packages.map((pkg) => pkg.locale).filter(Boolean));
   if (locales.length > 1) {
-    throw new Error(`page.package.localeMismatch:${locales.join(',')}`);
+    pagePackageBuildError('page.package.localeMismatch', locales.join(','));
   }
   return locales[0] ?? 'und';
 }
@@ -218,20 +221,20 @@ function assertConfiguredLocalesAvailable(args: {
   const configuredLocales = pageConfiguredLocales(args.source);
   const unavailableLocales = configuredLocales.filter((locale) => locale !== availableLocale);
   if (unavailableLocales.length > 0) {
-    throw new Error(`page.package.localeUnavailable:${unavailableLocales.join(',')}`);
+    pagePackageBuildError('page.package.localeUnavailable', unavailableLocales.join(','));
   }
 }
 
 function toContribution(pkg: WidgetPackageForPage): WidgetContribution {
   if (FORBIDDEN_SINGLETON_RUNTIME_RE.test(pkg.runtimeJs)) {
-    throw new Error(`page.package.singletonRuntime:${pkg.instanceId}`);
+    pagePackageBuildError('page.package.singletonRuntime', pkg.instanceId);
   }
   const extracted = extractSingleWidgetRoot({
     html: pkg.indexHtml,
     instanceId: pkg.instanceId,
   });
   if (!extracted.ok) {
-    throw new Error(`${extracted.reasonKey}:${extracted.detail}`);
+    pagePackageBuildError(extracted.reasonKey, extracted.detail);
   }
   const runtimeContribution = splitRuntimeContribution({
     runtime: pkg.runtimeJs,
@@ -338,12 +341,12 @@ export function buildPagePublicPackage(args: {
   const byInstanceId = new Map(args.widgetPackages.map((pkg) => [pkg.instanceId, pkg]));
   const contributions = args.source.placements.map((placement) => {
     const widgetPackage = byInstanceId.get(placement.instanceId);
-    if (!widgetPackage) throw new Error(`page.package.widgetPackageMissing:${placement.instanceId}`);
+    if (!widgetPackage) pagePackageBuildError('page.package.widgetPackageMissing', placement.instanceId);
     return toContribution(widgetPackage);
   });
   const runtimeJs = composePageRuntime(contributions);
   if (FORBIDDEN_SINGLETON_RUNTIME_RE.test(runtimeJs)) {
-    throw new Error('page.package.singletonRuntime:Page runtime contains forbidden window.CK_WIDGET singleton state.');
+    pagePackageBuildError('page.package.singletonRuntime', 'Page runtime contains forbidden window.CK_WIDGET singleton state.');
   }
   const locale = pageLocale(contributions);
   assertConfiguredLocalesAvailable({

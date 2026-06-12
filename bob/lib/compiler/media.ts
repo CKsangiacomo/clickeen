@@ -78,7 +78,6 @@ function expandBundleDeps(manifest: DieterManifest, roots: Set<string>): Set<str
 export async function buildWidgetMedia(args: {
   widgetname: string;
   requiredUsages: Set<string>;
-  optionalUsages: Set<string>;
 }): Promise<CompiledWidget['media']> {
   const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
   // Serve widget + Dieter media through Bob so the preview iframe runs same-origin.
@@ -98,13 +97,6 @@ export async function buildWidgetMedia(args: {
   }
 
   const bundlesWithDeps = expandBundleDeps(manifest, requiredBundles);
-
-  // Optional hints (derived from markup classnames) are constrained by the manifest; they cannot invent new bundles.
-  // Prefer explicit `deps` in the manifest over expanding this.
-  for (const usage of args.optionalUsages) {
-    const resolved = resolveUsageToBundleName(manifest, usage);
-    if (resolved) bundlesWithDeps.add(resolved);
-  }
 
   const orderedNames = Array.from(bundlesWithDeps).sort();
   const jsSet = new Set(manifest.componentsWithJs ?? []);

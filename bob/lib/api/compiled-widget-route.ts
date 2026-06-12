@@ -12,37 +12,22 @@ type CompiledWidgetPayload = Awaited<ReturnType<typeof compileWidgetServer>> & {
   editableFields?: WidgetEditableFieldsContract;
   widgetPackage?: WidgetPackageContext;
 };
-
-function buildWidgetSourceUrl(args: { tokyoRoot: string; widgetname: string; fileName: string }): string {
-  return `${args.tokyoRoot}/widgets/${encodeURIComponent(args.widgetname)}/${args.fileName}`;
-}
+type WidgetPackageSupportError = { kind: 'WIDGET_PUBLIC_PACKAGE_ERROR'; reasonKey: string; paths: string[] };
 
 function buildWidgetProductSourceUrl(args: { tokyoRoot: string; productPath: string }): string {
   const relative = args.productPath.replace(/^product\/widgets\//, '');
   return `${args.tokyoRoot}/widgets/${relative.split('/').map(encodeURIComponent).join('/')}`;
 }
 
-async function readRequiredWidgetSource(res: Response): Promise<string> {
-  if (res.ok) return res.text();
-  return '';
-}
+function packageSupportError(reasonKey: string, path: string): never { throw { kind: 'WIDGET_PUBLIC_PACKAGE_ERROR', reasonKey, paths: [path] } satisfies WidgetPackageSupportError; }
 
-function extractStylesheetSources(html: string): string[] {
-  return [...html.matchAll(/<link\b[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi)]
-    .map((match) => String(match[1] || '').trim())
-    .filter(Boolean);
-}
+function isWidgetPackageSupportError(value: unknown): value is WidgetPackageSupportError { return Boolean(value) && typeof value === 'object' && !Array.isArray(value) && (value as WidgetPackageSupportError).kind === 'WIDGET_PUBLIC_PACKAGE_ERROR'; }
 
-function extractScriptSources(html: string): string[] {
-  return [...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi)]
-    .map((match) => String(match[1] || '').trim())
-    .filter(Boolean);
-}
-
-function extractSupportSources(source: string): string[] {
-  return [...source.matchAll(/["']([^"']+\.(?:css|js))(?:\?[^"']*)?["']/gi)]
-    .map((match) => String(match[1] || '').trim())
-    .filter(Boolean);
+function extractDeclaredPackageSources(html: string): string[] {
+  return [
+    ...[...html.matchAll(/<link\b[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi)].map((match) => String(match[1] || '').trim()),
+    ...[...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)].map((match) => String(match[1] || '').trim()),
+  ].filter(Boolean);
 }
 
 function resolveProductPath(widgetType: string, src: string): string | null {
@@ -66,22 +51,22 @@ async function fetchWidgetPackageSupportFiles(args: {
   tokyoRoot: string;
   widgetname: string;
   htmlText: string;
-  cssText: string;
-  jsText: string;
   knownFiles: Map<string, WidgetPackageFileContext>;
 }): Promise<Map<string, WidgetPackageFileContext>> {
   const next = new Map(args.knownFiles);
   const productPaths = new Set<string>();
-  for (const src of [...extractStylesheetSources(args.htmlText), ...extractScriptSources(args.htmlText), ...extractSupportSources(args.cssText), ...extractSupportSources(args.jsText)]) {
+  for (const src of extractDeclaredPackageSources(args.htmlText)) {
+    if (src.startsWith('/dieter/')) continue;
     const key = resolveProductPath(args.widgetname, src);
-    if (key) productPaths.add(key);
+    if (!key) packageSupportError('coreui.errors.widget.packageReferenceInvalid', src);
+    productPaths.add(key);
   }
   await Promise.all(
     [...productPaths]
       .filter((key) => !next.has(key))
       .map(async (key) => {
         const response = await fetch(buildWidgetProductSourceUrl({ tokyoRoot: args.tokyoRoot, productPath: key }));
-        if (!response.ok) throw new Error(`[Bob] Failed to fetch widget support file ${key} (${response.status} ${response.statusText})`);
+        if (!response.ok) packageSupportError('coreui.errors.widget.packageMissing', key);
         const source = await response.text();
         next.set(key, {
           mediaType: key.endsWith('.css') ? 'text/css' : 'text/javascript',
@@ -150,9 +135,9 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     const specUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/spec.json`;
     const editableFieldsUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/editable-fields.json`;
     const limitsUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/limits.json`;
-    const htmlUrl = buildWidgetSourceUrl({ tokyoRoot, widgetname, fileName: 'widget.html' });
-    const cssUrl = buildWidgetSourceUrl({ tokyoRoot, widgetname, fileName: 'widget.css' });
-    const jsUrl = buildWidgetSourceUrl({ tokyoRoot, widgetname, fileName: 'widget.client.js' });
+    const htmlUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/widget.html`;
+    const cssUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/widget.css`;
+    const jsUrl = `${tokyoRoot}/widgets/${encodeURIComponent(widgetname)}/widget.client.js`;
     const fetchInit: RequestInit = {};
     if (req.nextUrl.searchParams.has('ts') || req.nextUrl.searchParams.has('_t')) fetchInit.cache = 'no-store';
     const [specRes, editableFieldsRes, limitsRes, htmlRes, cssRes, jsRes] = await Promise.all([
@@ -196,22 +181,13 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       ['widget.css', cssRes],
       ['widget.client.js', jsRes],
     ] as const) {
-      if (!res.ok) {
-        return NextResponse.json(
-          { error: `[Bob] Failed to fetch ${label} from Tokyo (${res.status} ${res.statusText})` },
-          { status: 502, headers: corsHeaders },
-        );
-      }
+      if (!res.ok) packageSupportError('coreui.errors.widget.packageMissing', `product/widgets/${widgetname}/${label}`);
     }
 
     const specText = await specRes.text();
     const editableFieldsContractBody = editableFieldsRes.ok ? await editableFieldsRes.text() : '';
     const limitsText = limitsRes.ok ? await limitsRes.text() : '';
-    const [htmlText, cssText, jsText] = await Promise.all([
-      readRequiredWidgetSource(htmlRes),
-      readRequiredWidgetSource(cssRes),
-      readRequiredWidgetSource(jsRes),
-    ]);
+    const [htmlText, cssText, jsText] = await Promise.all([htmlRes.text(), cssRes.text(), jsRes.text()]);
     const widgetJson = JSON.parse(specText) as RawWidget;
     if (widgetJson.v !== 1) {
       return NextResponse.json(
@@ -228,8 +204,6 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       tokyoRoot,
       widgetname,
       htmlText,
-      cssText,
-      jsText,
       knownFiles: initialPackageFiles,
     });
 
@@ -259,6 +233,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       },
     });
   } catch (err) {
+    if (isWidgetPackageSupportError(err)) return NextResponse.json({ error: err }, { status: 422, headers: corsHeaders });
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
       { error: `[Bob] Failed to compile widget ${widgetname}: ${message}` },

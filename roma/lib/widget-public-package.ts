@@ -3,8 +3,6 @@ import {
   WIDGET_SHELL_RUNTIME_MODULE_END,
   WIDGET_SHELL_RUNTIME_PAYLOAD_END,
   WIDGET_SHELL_RUNTIME_PAYLOAD_START,
-  WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY,
-  WIDGET_SHELL_SOCIAL_SHARE_RUNTIME_MODULE_KEY,
   WIDGET_SHELL_STYLE_CHUNK_END,
 } from '@clickeen/widget-shell';
 
@@ -13,9 +11,6 @@ export type SavedWidgetPublicPackage = {
   indexHtml: string;
   stylesCss: string;
   runtimeJs: string;
-  dependencies: {
-    instanceIds: string[];
-  };
 };
 
 type WidgetPackageFileContext = {
@@ -86,19 +81,12 @@ function readHtmlAttribute(openingTag: string, attrName: string): string {
 }
 
 function extractStylesheetSources(html: string): string[] {
-  return [...html.matchAll(/<link\b[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi)]
-    .map((match) => String(match[1] || '').trim())
-    .filter(Boolean);
+  return [...html.matchAll(/<link\b[^>]*>/gi)].filter((match) => readHtmlAttribute(match[0], 'rel').toLowerCase() === 'stylesheet').map((match) => readHtmlAttribute(match[0], 'href')).filter(Boolean);
 }
 
-function stripScripts(body: string): { body: string; scriptSources: string[] } {
-  const scriptSources: string[] = [];
-  const nextBody = body.replace(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi, (_full, src) => {
-    scriptSources.push(String(src));
-    return '';
-  });
-  return { body: nextBody, scriptSources };
-}
+function stripScripts(body: string): string { return body.replace(/<script\b[^>]*\bsrc=["'][^"']+["'][^>]*>\s*<\/script>/gi, ''); }
+
+function extractScriptSources(html: string): string[] { return [...html.matchAll(/<script\b[^>]*>/gi)].map((match) => readHtmlAttribute(match[0], 'src')).filter(Boolean); }
 
 function resolveProductPath(widgetType: string, src: string): string | null {
   const withoutQuery = src.split('?')[0] || '';
@@ -134,9 +122,9 @@ function runtimeModuleChunk(id: string, body: string): string {
   return `/* ck-runtime-module:${chunkMarkerId(id)} */\n${body}\n${RUNTIME_MODULE_END}`;
 }
 
-function packageSource(args: { compiled: CompiledWidgetForPublicPackage; key: string; fallback?: string }): string {
-  return fileSource(args.compiled.widgetPackage?.files[args.key] ?? (args.fallback ? args.compiled.widgetPackage?.files[args.fallback] : undefined));
-}
+function widgetPackageBuildError(reasonKey: string, path: string): never { throw { kind: 'WIDGET_PUBLIC_PACKAGE_ERROR', reasonKey, paths: [path] }; }
+
+export function isWidgetPublicPackageBuildError(value: unknown): value is { reasonKey: string; paths: string[] } { return isRecord(value) && value.kind === 'WIDGET_PUBLIC_PACKAGE_ERROR' && typeof value.reasonKey === 'string' && Array.isArray(value.paths); }
 
 function stampPackageRoot(args: {
   html: string;
@@ -183,40 +171,22 @@ function stampPackageRoot(args: {
   return `${args.html.slice(0, root.start)}${stampedTag}${args.html.slice(root.end)}`;
 }
 
-function socialShareEnabled(state: Record<string, unknown>): boolean {
-  const behavior = isRecord(state.behavior) ? state.behavior : {};
-  const socialShare = isRecord(behavior.socialShare) ? behavior.socialShare : {};
-  return socialShare.enabled === true;
-}
-
-function buildStyles(args: PackageBuildArgs, widgetHtml: string, includeSocialShare: boolean): string {
+function buildStyles(args: PackageBuildArgs, widgetHtml: string): string {
   const chunks: string[] = [];
-  const includedStyleKeys = new Set<string>();
   for (const href of extractStylesheetSources(widgetHtml)) {
     if (href.startsWith('/dieter/')) {
       chunks.push(styleChunk(href, `@import "${href}";`));
-      includedStyleKeys.add(href);
       continue;
     }
     const key = resolveProductPath(args.compiled.widgetname, href);
-    if (!key || !key.endsWith('.css')) continue;
-    const source = packageSource({
-      compiled: args.compiled,
-      key,
-      fallback: key.endsWith('/widget.css') ? 'widget.css' : undefined,
-    });
-    if (!source) throw new Error(`coreui.errors.widget.packageMissing:${key}`);
+    if (!key || !key.endsWith('.css')) widgetPackageBuildError('coreui.errors.widget.packageReferenceInvalid', href);
+    const source = fileSource(args.compiled.widgetPackage?.files[key]) || widgetPackageBuildError('coreui.errors.widget.packageMissing', key);
     chunks.push(styleChunk(key, source));
-    includedStyleKeys.add(key);
-  }
-  if (includeSocialShare && !includedStyleKeys.has(WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY)) {
-    const source = packageSource({ compiled: args.compiled, key: WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY });
-    if (source) chunks.push(styleChunk('shared/socialShare.css', source));
   }
   return `${chunks.join('\n\n')}\n`;
 }
 
-function buildRuntime(args: PackageBuildArgs, scriptSources: string[], includeSocialShare: boolean): string {
+function buildRuntime(args: PackageBuildArgs, scriptSources: string[]): string {
   const locales = { [args.baseLocale]: args.state };
   const localePolicy = {
     baseLocale: args.baseLocale,
@@ -248,27 +218,16 @@ ${RUNTIME_PAYLOAD_END}`;
 
   const chunks = [payload];
   let widgetClientChunk: string | null = null;
-  const includedRuntimeKeys = new Set<string>();
   for (const src of scriptSources) {
     const key = resolveProductPath(args.compiled.widgetname, src);
-    if (!key || !key.endsWith('.js')) continue;
-    const source = packageSource({
-      compiled: args.compiled,
-      key,
-      fallback: key.endsWith('/widget.client.js') ? 'widget.client.js' : undefined,
-    });
-    if (!source) throw new Error(`coreui.errors.widget.packageMissing:${key}`);
+    if (!key || !key.endsWith('.js')) widgetPackageBuildError('coreui.errors.widget.packageReferenceInvalid', src);
+    const source = fileSource(args.compiled.widgetPackage?.files[key]) || widgetPackageBuildError('coreui.errors.widget.packageMissing', key);
     const chunk = runtimeModuleChunk(key, source);
-    includedRuntimeKeys.add(key);
     if (key.endsWith('/widget.client.js')) {
       widgetClientChunk = chunk;
       continue;
     }
     chunks.push(chunk);
-  }
-  if (includeSocialShare && !includedRuntimeKeys.has(WIDGET_SHELL_SOCIAL_SHARE_RUNTIME_MODULE_KEY)) {
-    const source = packageSource({ compiled: args.compiled, key: WIDGET_SHELL_SOCIAL_SHARE_RUNTIME_MODULE_KEY });
-    if (source) chunks.push(runtimeModuleChunk('shared/socialShare.js', source));
   }
   if (widgetClientChunk) chunks.push(widgetClientChunk);
   return `${chunks.join('\n\n')}\n`;
@@ -292,22 +251,18 @@ ${body}
 }
 
 export function buildSavedWidgetPublicPackage(args: PackageBuildArgs): SavedWidgetPublicPackage {
-  const widgetHtml = packageSource({ compiled: args.compiled, key: 'widget.html' });
-  if (!args.compiled.widgetPackage || !widgetHtml) {
-    throw new Error('coreui.errors.widget.packageMissing');
-  }
-  const includeSocialShare = socialShareEnabled(args.state);
+  const widgetHtml = fileSource(args.compiled.widgetPackage?.files['widget.html']) || widgetPackageBuildError('coreui.errors.widget.packageMissing', 'widget.html');
   const stamped = stampPackageRoot({
     html: extractBody(widgetHtml),
     widgetType: args.compiled.widgetname,
     instanceId: args.instanceId,
   });
   const stripped = stripScripts(stamped);
+  const scriptSources = extractScriptSources(widgetHtml);
   return {
     v: 1,
-    indexHtml: buildIndexHtml(args, stripped.body),
-    stylesCss: buildStyles(args, widgetHtml, includeSocialShare),
-    runtimeJs: buildRuntime(args, stripped.scriptSources, includeSocialShare),
-    dependencies: { instanceIds: [] },
+    indexHtml: buildIndexHtml(args, stripped),
+    stylesCss: buildStyles(args, widgetHtml),
+    runtimeJs: buildRuntime(args, scriptSources),
   };
 }

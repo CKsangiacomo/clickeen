@@ -495,9 +495,6 @@ export async function saveAccountInstanceInTokyo(args: {
     indexHtml: string;
     stylesCss: string;
     runtimeJs: string;
-    dependencies?: {
-      instanceIds: string[];
-    };
   };
   displayName?: string | null;
   meta?: Record<string, unknown> | null;
@@ -518,10 +515,7 @@ export async function saveAccountInstanceInTokyo(args: {
     body: {
       widgetType: args.widgetType,
       config: args.config,
-      publicPackage: {
-        ...args.publicPackage,
-        dependencies: args.publicPackage.dependencies ?? { instanceIds: [] },
-      },
+      publicPackage: args.publicPackage,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.meta !== undefined ? { meta: args.meta } : {}),
     },

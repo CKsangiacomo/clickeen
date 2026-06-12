@@ -23,14 +23,6 @@ export const WIDGET_SHELL_RUNTIME_MODULE_KEYS = [
   'product/widgets/shared/socialShare.js',
 ] as const;
 
-export const WIDGET_SHELL_OPTIONAL_SUPPORT_FILE_KEYS = [
-  'product/widgets/shared/socialShare.css',
-  'product/widgets/shared/socialShare.js',
-] as const;
-
-export const WIDGET_SHELL_SOCIAL_SHARE_CSS_MODULE_KEY = 'product/widgets/shared/socialShare.css';
-export const WIDGET_SHELL_SOCIAL_SHARE_RUNTIME_MODULE_KEY = 'product/widgets/shared/socialShare.js';
-
 export const WIDGET_SHELL_STYLE_CHUNK_END = '/* ck-style-module:end */';
 export const WIDGET_SHELL_RUNTIME_PAYLOAD_START = '/* ck-runtime-payload:start */';
 export const WIDGET_SHELL_RUNTIME_PAYLOAD_END = '/* ck-runtime-payload:end */';

@@ -281,7 +281,7 @@ export async function tryHandleInternalInstanceRoutes(
           {
             error: {
               kind: 'VALIDATION',
-              reasonKey: detail.startsWith('artifact.') ? detail : 'coreui.errors.instance.embedNotReady',
+              reasonKey: 'coreui.errors.instance.embedNotReady',
               detail,
             },
           },

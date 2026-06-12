@@ -2,6 +2,7 @@ import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 import {
   buildPagePublicPackage,
+  isPagePackageBuildError,
   type ComposedPagePublicPackage,
   type WidgetPackageForPage,
 } from './page-package-composer';
@@ -81,9 +82,6 @@ type TokyoStoredWidgetPackage = {
   indexHtml: string;
   stylesCss: string;
   runtimeJs: string;
-  dependencies: {
-    instanceIds: string[];
-  };
 };
 
 function tokyoCallContext(args: {
@@ -267,31 +265,23 @@ function normalizeStoredWidgetPackage(raw: unknown): TokyoStoredWidgetPackage | 
   if (typeof raw.indexHtml !== 'string' || typeof raw.stylesCss !== 'string' || typeof raw.runtimeJs !== 'string') {
     return null;
   }
-  const dependencies = isRecord(raw.dependencies) && Array.isArray(raw.dependencies.instanceIds)
-    ? {
-        instanceIds: Array.from(new Set(raw.dependencies.instanceIds
-          .map((entry) => (typeof entry === 'string' ? entry.trim().toUpperCase() : ''))
-          .filter(Boolean))).sort((left, right) => left.localeCompare(right)),
-      }
-    : { instanceIds: [] };
   return {
     v: 1,
     indexHtml: raw.indexHtml,
     stylesCss: raw.stylesCss,
     runtimeJs: raw.runtimeJs,
-    dependencies,
   };
 }
 
 function pagePackageBuildFailure(error: unknown): RouteFailure {
-  const detail = error instanceof Error ? error.message : String(error);
-  const reasonKey = detail.includes(':') ? detail.split(':')[0] || 'page.package.buildFailed' : 'page.package.buildFailed';
+  const pageError = isPagePackageBuildError(error) ? error : null;
+  const detail = pageError?.detail ?? (error instanceof Error ? error.message : String(error));
   return {
     ok: false,
     status: 409,
     error: {
       kind: 'VALIDATION',
-      reasonKey,
+      reasonKey: pageError?.reasonKey ?? 'page.package.buildFailed',
       detail,
     },
   };
@@ -341,7 +331,6 @@ async function buildPagePackageForTokyo(args: {
       indexHtml: read.value.indexHtml,
       stylesCss: read.value.stylesCss,
       runtimeJs: read.value.runtimeJs,
-      dependencies: read.value.dependencies,
     });
   }
   try {

@@ -33,30 +33,17 @@ export function parseTooldrawerAttributes(tag: string): TooldrawerAttrs {
   return attrs;
 }
 
-export type WidgetUsageSets = {
-  required: Set<string>;
-  optional: Set<string>;
-};
-
-export function collectTooldrawerTypes(markup: string, usages: WidgetUsageSets) {
+export function collectTooldrawerTypes(markup: string, usages: Set<string>) {
   // Allow '>' inside quoted attribute values (e.g., template strings) and match both self-closing and open/close.
   const tdRegex =
     /<tooldrawer-field(?:-[a-z0-9-]+)?((?:[^>"']|"[^"]*"|'[^']*')*)(?:\/>|>([\s\S]*?)<\/tooldrawer-field>)/gi;
   let m: RegExpExecArray | null;
   while ((m = tdRegex.exec(markup)) !== null) {
     const attrs = parseTooldrawerAttributes(m[1]);
-    if (attrs.type) usages.required.add(attrs.type);
+    if (attrs.type) usages.add(attrs.type);
     if (attrs.template) {
       const decoded = decodeHtmlEntities(attrs.template);
       collectTooldrawerTypes(decoded, usages);
-      // Pull in class-based hints referenced inside templates.
-      const classRegex = /\bdiet-([a-z0-9-_]+)\b/gi;
-      let classMatch: RegExpExecArray | null;
-      while ((classMatch = classRegex.exec(decoded)) !== null) {
-        const raw = classMatch[1];
-        const base = raw.replace(/(--|__).*/, '');
-        if (base) usages.optional.add(base);
-      }
     }
   }
 }
@@ -68,7 +55,7 @@ export function formatPanelLabel(id: string): string {
 
 export function parsePanels(htmlLines: unknown): {
   panels: CompiledPanel[];
-  usages: WidgetUsageSets;
+  usages: Set<string>;
 } {
   if (!Array.isArray(htmlLines)) {
     throw new Error('[BobCompiler] compiler expected generated editor HTML lines');
@@ -77,7 +64,7 @@ export function parsePanels(htmlLines: unknown): {
   const html = htmlLines.join('\n');
   const panelRegex = /<bob-panel\s+id='([^']+)'[^>]*>([\s\S]*?)<\/bob-panel>/gi;
   const panels: CompiledPanel[] = [];
-  const usages: WidgetUsageSets = { required: new Set<string>(), optional: new Set<string>() };
+  const usages = new Set<string>();
   let match: RegExpExecArray | null;
 
   while ((match = panelRegex.exec(html)) !== null) {
@@ -85,14 +72,6 @@ export function parsePanels(htmlLines: unknown): {
     const panelMarkup = match[2];
 
     collectTooldrawerTypes(panelMarkup, usages);
-
-    const classRegex = /\bdiet-([a-z0-9-_]+)\b/gi;
-    let classMatch: RegExpExecArray | null;
-    while ((classMatch = classRegex.exec(panelMarkup)) !== null) {
-      const raw = classMatch[1];
-      const base = raw.replace(/(--|__).*/, '');
-      if (base) usages.optional.add(base);
-    }
 
     panels.push({
       id,

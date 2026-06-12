@@ -381,8 +381,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
 
   const media = await buildWidgetMedia({
     widgetname,
-    requiredUsages: parsed.usages.required,
-    optionalUsages: parsed.usages.optional,
+    requiredUsages: parsed.usages,
   });
 
   return {

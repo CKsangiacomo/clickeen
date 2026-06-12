@@ -28,28 +28,7 @@ Authoring boundary (current, explicit):
 - Missing/not-missing truth for account assets in Builder controls comes only from the shared resolve path. Asset upsell denial for those controls uses one shared `bob-upsell` emitter path. Local preview render failures are UI-only errors; Dieter controls must not re-probe resolved URLs or reinterpret preview media failures as asset deletion/missing truth.
 - Dieter does **not** own account policy, persistence, or product routing; it owns the primitive behavior that runs inside the authoring surface.
 
-### Bundling manifest (executed)
-
-Dieter’s build produces an explicit bundling contract at:
-- `tokyo/product/dieter/manifest.json`
-
-This exists to keep compilation deterministic (no heuristics based on incidental CSS classnames).
-
-**Manifest fields (as implemented today):**
-- `v`: schema version
-- `gitSha`: build fingerprint
-- `components[]`: valid component bundles
-- `componentsWithJs[]`: bundles that ship JS (others are CSS-only)
-- `aliases{}`: optional hint mapping (temporary bridge)
-- `helpers[]`: classnames that must never be treated as bundles
-- `deps{}`: explicit component dependencies (transitive closure allowed)
-
-**Non‑negotiable rules:**
-- ToolDrawer `type="..."` drives required bundles.
-- CSS classnames never add bundles.
-- Helpers are never treated as bundles.
-
-If you add a new component or a new dependency, you must update the manifest emitter in `scripts/build-dieter.js` accordingly.
+Dieter emits `tokyo/product/dieter/manifest.json`. ToolDrawer `type="..."` drives required bundles; CSS classnames and optional hints never add bundles. New components or dependencies must update `scripts/build-dieter.js`.
 
 ### 🔑 CRITICAL: Dieter is the Mama Library (NEW ARCHITECTURE)
 

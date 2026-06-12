@@ -2,9 +2,9 @@ import { validateWidgetLocaleSwitcherSettings } from '@clickeen/ck-contracts';
 import { createCompactInstanceId, isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import {
-  type SubmittedInstancePublicPackage,
   verifyInstancePublicPackageReady,
   writeInstancePublicPackage,
+  type SubmittedInstancePublicPackage,
 } from './package-files';
 import { PUBLIC_INDEX_FILE, PUBLIC_RUNTIME_FILE, PUBLIC_STYLES_FILE } from './package-file-names';
 import {
@@ -220,7 +220,7 @@ export async function saveAccountInstanceTransition(args: {
     throw new AccountInstanceTransitionError({
       status: 409,
       kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.embedNotReady',
+      reasonKey: packaged.reasonKey,
       detail: packaged.detail,
     });
   }
@@ -288,7 +288,7 @@ export async function publishAccountInstanceTransition(args: {
     throw new AccountInstanceTransitionError({
       status: 409,
       kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.embedNotReady',
+      reasonKey: packageReady.reasonKey,
       detail: packageReady.detail,
     });
   }

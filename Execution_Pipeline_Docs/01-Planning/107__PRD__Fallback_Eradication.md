@@ -1,17 +1,22 @@
 # PRD 107 - Workflow Removal: Fallback Eradication
 
-Status: PLANNING / LOCKED
+Status: EXECUTABLE - DELETION PRD
 Owner: Product + Architecture
 Date: 2026-06-10
 
-Executable: NO. No code execution is authorized by this PRD until Step 0 is
-completed in this file.
+Executable: YES for rows with a deletion-target record and action-item record.
+Rows with unresolved product decisions remain individually blocked.
 
 This is a workflow-removal PRD. It does not ask executors to tidy fallback
 expressions, add stricter-looking helpers, rename errors, maintain caller
 continuity, or redress the same behavior under a new product name. A PRD 107
 violation is a toxic product workflow: bad product truth reaches successful
 product behavior. The workflow is the deletion target.
+
+Clickeen is a closed system. Named product services trust each other's
+contracts. A service does not probe, sanitize, normalize, reconstruct, or
+second-guess another service's truth. If truth is invalid, it fails at the
+owning boundary.
 
 Redressing or masquerading a violation under a different name is itself a PRD
 107 violation.
@@ -22,6 +27,67 @@ the product path running with alternate behavior. The desired change is to remov
 every path that lets bad product truth reach success. If deletion exposes broken
 callers, those callers are part of the deletion target until they honor the named
 boundary failure.
+
+## PRD 107 Execution Override
+
+PRD 107 supersedes normal caller-preservation instincts.
+
+For this PRD, active callers, existing tests, existing UI flows, and current
+build topology are not evidence that a workflow must survive. If a caller
+depends on a PRD 107 violation, that caller is part of the deletion target until
+it either:
+
+- reaches the named typed failure boundary;
+- is deleted as fake, dead, placeholder, or duplicate workflow;
+- or is covered by a declared non-violation record.
+
+Do not add compatibility shims, fallback adapters, legacy modes, warning-only
+paths, retry-to-success behavior, generic relabeling, or helper-only throws to
+keep old callers working.
+
+A successful PRD 107 change may delete LOCs, remove workflows, break stale
+callers, and update or delete tests that asserted toxic continuity. The required
+outcome is not continuity. The required outcome is that bad product truth cannot
+reach success or mutation.
+
+If removal breaks callers, follow the breakage outward. Do not restore the
+deleted workflow to make callers green.
+
+## PRD 107 Slice Process
+
+Execute one slice only. For the active slice, name product truth first:
+
+- what owns source truth;
+- what owns package truth;
+- what owns publish/serve truth;
+- where failure must happen.
+
+Then identify the toxic workflow and delete or collapse it. Active callers do
+not justify preserving it. Do not add product-runtime prove/check/validate/
+finalize/preflight/probe/self-test ceremonies to keep the old workflow alive.
+
+Documentation edits and PRD evidence edits do not count toward LOC reduction.
+Before validators, source/runtime/product-code deletions inside the slice blast
+radius must be at least 3x additions. If not, keep deleting or collapsing source
+workflow. Run focused stale-symbol scans for old fallbacks, renamed fallbacks,
+optional inference, string-prefix error transport, partial mutation paths, and
+new ceremony helpers.
+
+After self-audit is clean, run relevant local gates and external Playwright/API
+proof from outside product runtime. The proof must show the valid path succeeds,
+invalid or missing truth fails visibly at the owning boundary, and downstream
+success/mutation does not happen.
+
+Only then run exactly two validators:
+
+- Validator 1: skipped blast radius.
+- Validator 2: V1-V8 violations still present or newly introduced.
+
+If either validator is RED, stop, delete or collapse the exact remaining toxic
+workflow, and repeat from self-audit. Do not argue the RED away, add ceremonies,
+or pad documentation. If both validators are GREEN, update PRD evidence
+truthfully, commit the slice, push, reread this process, then move to the next
+slice.
 
 ## Violation Types
 
@@ -37,6 +103,7 @@ finding must be classified against this table before any action item is written.
 | V5 | Corruption-as-absence | Corrupt stored state is treated as missing/new/empty and later overwritten or ignored. | Return a typed corrupt/invalid failure; do not mutate. |
 | V6 | Partial-success masquerade | Some requested work is rejected, filtered, dropped, or ignored while the product claims the full operation succeeded. | All requested work succeeds or the boundary fails visibly. |
 | V7 | Masquerade/redress | The same toxic workflow is moved to a helper, wrapped, renamed, hidden in `detail`, converted to a generic error, retried into success, logged-and-continued, warning-only, legacy-continuity-gated, or otherwise made to look compliant while still reaching success or mutation. | Treat as a new P0 PRD 107 violation. |
+| V8 | Ceremony preservation | A toxic workflow is kept alive through product-runtime prove/check/validate/finalize/preflight/probe/self-test ceremonies, placeholder tests, lint-as-test aliases, fake harnesses, or verification rituals that make preservation look disciplined while the workflow or its callers still reach success. | Delete the ceremony and the preserved workflow; proof must exercise the named product boundary and blocked downstream operation from outside the product runtime. |
 
 ### Finding Outcomes
 
@@ -46,7 +113,7 @@ non-violation, the workflow remains a violation and is a deletion target.
 
 | Outcome | Meaning | Execution rule |
 | --- | --- | --- |
-| VIOLATION | A workflow matches V1-V7. | P0 deletion target. |
+| VIOLATION | A workflow matches V1-V8. | P0 deletion target. |
 | DECLARED NON-VIOLATION | A workflow is covered by a named visible-failure, creation-time-default, or declared-contract record. | Keep only while that record remains true and tested. |
 
 ## Tenets
@@ -107,26 +174,30 @@ Only these patterns can survive a PRD 107 audit.
 | Creation-time default | A default is written once as durable state during creation of a new product object. | Creation fixture proving the value was persisted as initial state, not invented during read/save/render. |
 | Declared contract | The alternate behavior is product-owned, named, documented, and tested as intentional. | Contract doc plus regression proof. |
 
-## Step 0 Lock
+## Step 0 Execution Gate
 
-No action after this section is executable until every required Step 0 decision is
-filled.
+Step 0 records global product decisions and row-specific blockers. A pending
+Step 0 decision blocks only rows that depend on that decision. All rows with a
+ratified deletion target, named boundary, downstream-block requirement, and
+proof requirement are executable.
 
 | Decision ID | Decision required | PO decision | Date | Owner | Notes |
 | --- | --- | --- | --- | --- | --- |
-| D-107a | Ratify this rewrite as a workflow-removal PRD replacing the prior fix-column PRD. | PENDING |  |  |  |
-| D-107b | Ratify violation taxonomy V1-V7. | PENDING |  |  |  |
-| D-107c | Ratify every listed violation as a deletion target, or create a declared-non-violation record for individual rows. | PENDING |  |  |  |
-| D-107d | Ratify the fresh cross-service violation inventory, or create declared-non-violation records for individual rows. | PENDING |  |  |  |
-| D-107e | Define the permitted typed-failure channel for Roma/Bob/San Francisco paths that lack one. | PENDING |  |  |  |
-| D-107f | Define the runtime proof requirement after package-level placeholder `test` scripts are deleted. | PENDING |  |  |  |
-| D-107g | Resolve ownership overlap with PRDs 108A1 and 108B1. | PENDING |  |  |  |
-| D-107h | Decide whether current uncommitted PRD 107 implementation diffs are deleted, rebuilt under this PRD, or moved to a separate branch. | PENDING |  |  |  |
-| D-107i | Decide whether `packageSource fallback:` alias is a declared non-violation contract or a deletion target. | PENDING |  |  |  |
+| D-107a | Ratify this rewrite as a workflow-removal PRD replacing the prior fix-column PRD. | Ratified | 2026-06-12 | Product + Architecture | This is a deletion/removal PRD, not a fix-column PRD. |
+| D-107b | Ratify violation taxonomy V1-V8. | Ratified | 2026-06-12 | Product + Architecture | V1-V8 are the controlling taxonomy for audit and execution. |
+| D-107c | Ratify every listed violation as a deletion target, or create a declared-non-violation record for individual rows. | Ratified | 2026-06-12 | Product + Architecture | Listed rows are deletion targets unless this file contains an individual declared-non-violation record. |
+| D-107d | Ratify the fresh cross-service violation inventory, or create declared-non-violation records for individual rows. | Ratified | 2026-06-12 | Product + Architecture | Fresh inventory rows are deletion targets unless this file contains an individual declared-non-violation record. |
+| D-107e | Define the permitted typed-failure channel for Roma/Bob/San Francisco paths that lack one. | Boundary-specific visible typed failure | 2026-06-12 | Product + Architecture | The reason must be visible/asserted at the named boundary and must not be hidden in generic `detail`, string-prefix transport, warning-only UI, or relabeled success. |
+| D-107f | Define the runtime proof requirement after package-level placeholder `test` scripts are deleted. | Focused proof allowed | 2026-06-12 | Product + Architecture | Runtime proof may be a focused harness, Playwright/API proof, or package type/lint/build evidence plus a boundary fixture that proves visible failure and blocked downstream work. |
+| D-107g | Resolve ownership overlap with PRDs 108A1 and 108B1. | Row-scoped block only | 2026-06-12 | Product + Architecture | Rows explicitly marked as owned by PRD 108A1 or 108B1 remain blocked only where this file says so. Other rows remain executable. |
+| D-107h | Decide whether current uncommitted PRD 107 implementation diffs are deleted, rebuilt under this PRD, or moved to a separate branch. | Part of this execution | 2026-06-12 | Product + Architecture | Current uncommitted PRD 107 diffs remain in scope unless a later PO note moves or deletes them. |
+| D-107i | Decide whether `packageSource fallback:` alias is a declared non-violation contract or a deletion target. | Deletion target | 2026-06-12 | Codex | Removed from Roma package builder; no alias accepted. |
 | D-107j | Decide pages-index absence rule: creation-time index materialization or missing-at-read typed failure. | PENDING |  |  |  |
 | D-107k | Decide whether cache purge failure/stale public serving is deleted in PRD 107 or split to a publish-integrity PRD. | PENDING |  |  |  |
 
-If any decision remains PENDING, execution stops.
+If a decision remains PENDING, only rows depending on that exact decision are
+blocked. Do not use a pending unrelated decision as a global excuse to preserve
+or defer deletion of executable rows.
 
 ## Required Records Before Code
 
@@ -134,11 +205,17 @@ If any decision remains PENDING, execution stops.
 
 Every violation row requires this record before any file edit.
 
+The violation inventory tables below are the PO deletion-target records for
+listed rows. The row fields provide Row ID, violation type, deletion target,
+surviving authority, named boundary, and downstream operations blocked. Missing
+typed reasons or proof details may be added during execution without reopening
+the deletion decision.
+
 | Field | Required value |
 | --- | --- |
 | Row ID |  |
 | Outcome | VIOLATION |
-| Violation type | V1-V7 |
+| Violation type | V1-V8 |
 | Product-owner decision | Delete / blocked pending prerequisite |
 | Deletion target | Exact toxic workflow to remove, not a code recipe |
 | Surviving authority | Product owner of the real truth |
@@ -204,7 +281,7 @@ There is intentionally no `Fix` column.
 
 ## Fresh Cross-Service Violation Inventory
 
-These rows come from the 2026-06-11 V1-V7 audit pass. They are violations unless
+These rows come from the 2026-06-11 V1-V8 audit pass. They are violations unless
 Step 0 creates a declared-non-violation record for the exact row.
 
 | Row | Type | Area | Evidence | Toxic workflow to remove | Surviving authority | Named boundary | Downstream operations blocked |
@@ -277,7 +354,7 @@ items define outcomes, not implementation recipes.
 | AI-107-AB-12-13 | AB-12, AB-13 | coordination-with-other-prd | Copilot cannot apply/drop partial work while claiming full success. | Ownership decision with PRD 108B1; zero partial-success proof. | LOCKED |
 | AI-107-AB-14 | AB-14 | workflow-removal | Invalid locale-switcher placement cannot render/save as invented placement. | Typed validation failure and no render/save success. | LOCKED |
 | AI-107-AB-15-16 | AB-15, AB-16 | workflow-removal | Publish containment cannot fail open on instance or page publish. | Roma route evidence for malformed and active containment; no Tokyo instance/page publish call. | LOCKED |
-| AI-107-AB-17-18 | AB-17, AB-18 | workflow-removal | Widget package cannot save/publish with missing declared CSS/JS. String-prefix `Error.message` transport is forbidden. | Save/package boundary evidence, missing file in structured paths, no Tokyo save/page refresh/publish call, D-107i resolved. | LOCKED |
+| AI-107-AB-17-18 | AB-17, AB-18 | workflow-removal | Widget package cannot save/publish with missing real declared CSS/JS product references. `packageSource fallback:` aliases, optional support/module inference, duplicate dependency reconstruction, and string-prefix `Error.message` package transport are forbidden. | Bob/Roma package-boundary evidence, missing file in structured paths, no `saveAccountInstanceInTokyo` call, D-107i resolved. Generic Tokyo R2 write atomicity, source/package commit architecture, page source/package storage atomicity, and empty `href`/`src` parser hardening are not AB-17/18 requirements. | COMPLETE |
 | AI-107-AB-19-20 | AB-19, AB-20 | workflow-removal | Page localization/robots payload cannot be silently changed. | Route/boundary failure with structured path and no page package/write/create. | LOCKED |
 | AI-107-AB-21 | AB-21 | workflow-removal | Missing rate-limit/session KV cannot disable enforcement silently. | Boundary failure and no protected operation continues under missing binding. | LOCKED |
 | AI-107-AB-22-23 | AB-22, AB-23 | workflow-removal | Account defaults corruption cannot seed or persist healed defaults. | Typed failure and no `putJson`, R2 write, registry write, package generation, or instance creation. | LOCKED |
@@ -320,6 +397,7 @@ No evidence may be recorded until Step 0 is complete.
 | 107-AB13-2026-06-12 | 2 | AB-13 | Builder Copilot product edit finalization | n/a - deletion of prompt-wording discard gate | Link-like valid ops are no longer discarded based on prompt wording; downstream Bob receives the complete validated op set. | `pnpm --filter @clickeen/sanfrancisco typecheck`; focused link-discard `rg`; `git diff --shortstat` = `1 file changed, 14 deletions(-)`; blast-radius validator GREEN; V1-V8 validator GREEN; local Playwright request proof against TS wrapper showed `cta.text` and `cta.url` both survive and response reports `ops_applied` with two ops. | this commit |
 | 107-AB14-2026-06-12 | 2 | AB-14 / CKC-107-01 | Locale switcher config contract across Roma/Tokyo/render | `coreui.errors.localeSwitcher.positionInvalid`; `[CKLocaleSwitcher] ck_locale_switcher_placement_invalid` | Invalid/missing locale switcher truth fails before Roma create/save, Tokyo create/save/duplicate writes, composed-page render omission, and widget DOM mutation. | `pnpm --filter @clickeen/roma typecheck`; `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/ck-contracts typecheck`; `pnpm --filter @clickeen/tokyo-worker typecheck`; widget runtime `node --check`; focused stale fallback `rg`; `git diff --shortstat` = `8 files changed, 18 insertions(+), 58 deletions(-)`; blast-radius validator GREEN; V1-V8 validator GREEN; direct Playwright browser proof showed malformed placement -> no switcher render, composed-page malformed placement -> failure before omission, valid placement -> exact `pod` / `bottom-left` render. | this commit |
 | 107-AB15-16-2026-06-12 | 1 | AB-15 / AB-16 | Berlin/Roma publish containment gate for instance and page publish | `berlin_publish_containment_invalid_payload`; `coreui.errors.account.publishingPaused` | Malformed DB/Berlin containment, unavailable Berlin, and active containment fail before `publishAccountInstanceInTokyo` or `publishAccountPageInTokyo`; page publish uses the same containment gate as instance publish. | `pnpm --filter @clickeen/roma typecheck`; `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/berlin typecheck`; focused containment/V8 `rg`; Roma placeholder `test` script removed; blast-radius validator GREEN; direct Playwright API proof showed malformed containment -> `ok:false`, `status:502`, active -> exact active result, inactive -> exact inactive result. | this commit |
+| 107-AB17-18-2026-06-12 | 1 | AB-17 / AB-18 | Bob/Roma package-build boundary before Tokyo save | `coreui.errors.widget.packageMissing`; structured `paths` including `product/widgets/proof/widget.css` and `product/widgets/proof/widget.client.js` | Missing real declared CSS/JS fails before `saveAccountInstanceInTokyo`; valid package path still reaches the Tokyo-save stub once. Tokyo stores the submitted package files without widget-internal diagnosis, reconstruction, dependency defaults, or duplicate package truth. | Source/runtime self-audit `13 files changed, 85 insertions(+), 304 deletions(-)` excluding docs; focused stale-symbol scan clean except unchanged generic Roma HTTP `fallback` parameter outside widget package truth; `git diff --check`; `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; `pnpm --filter @clickeen/roma typecheck`; `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/tokyo-worker typecheck`; `pnpm --filter @clickeen/widget-shell typecheck`; `pnpm --filter @clickeen/widget-shell validate`; temporary external Playwright proof showed valid declared package succeeds, Roma missing declared CSS/JS fails before Tokyo-save stub, and Bob missing core `widget.css` returns structured `WIDGET_PUBLIC_PACKAGE_ERROR`; blast-radius validator GREEN; V1-V8 validator GREEN. | this commit |
 | 107-V8-package-scripts-2026-06-12 | H | V8 package-script cleanup | Package/workflow/doc verification ritual cleanup | n/a - deleted no-op test rituals | Fake package `test` scripts, root/Turbo test callers, DevStudio CI test no-op, exact lint-as-typecheck aliases, and active docs preserving those rituals were deleted. | `git diff --shortstat` = `23 files changed, 14 insertions(+), 49 deletions(-)`; focused stale-script/doc `rg`; `pnpm --filter @clickeen/devstudio typecheck`; `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; `pnpm --filter @ck/dieter typecheck`; shared package/San Francisco/Tokyo typechecks; Playwright proof `/tmp/prd107-v8-package-proof.cjs`; blast-radius validator GREEN; V1-V8 validator GREEN. | this commit |
 
 ## Masquerade Audit
@@ -344,6 +422,8 @@ Every completed row must pass this checklist.
 | AB-14 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-15 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-16 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
+| AB-17 / AB-18 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
+| WS-107 optional shell modules | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | V8 package scripts | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 
 Any `YES` in the first eight columns means the row is not complete and a new V7

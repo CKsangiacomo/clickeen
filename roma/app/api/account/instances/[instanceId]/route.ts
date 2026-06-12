@@ -16,6 +16,7 @@ import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-sa
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   buildSavedWidgetPublicPackage,
+  isWidgetPublicPackageBuildError,
   type CompiledWidgetForPublicPackage,
   type SavedWidgetPublicPackage,
 } from '@roma/lib/widget-public-package';
@@ -44,8 +45,6 @@ type RouteFailureLike = {
   };
 };
 
-const WIDGET_PACKAGE_MISSING_PREFIX = 'coreui.errors.widget.packageMissing:';
-
 function isCompiledWidgetForPublicPackage(value: unknown): value is CompiledWidgetForPublicPackage {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const record = value as Record<string, unknown>;
@@ -64,6 +63,8 @@ async function compileWidgetForSave(request: NextRequest, widgetType: string): P
   );
   const payload = await response.json().catch(() => null);
   if (response.ok && isCompiledWidgetForPublicPackage(payload)) return payload;
+  const packageError = payload && typeof payload === 'object' && !Array.isArray(payload) ? (payload as { error?: unknown }).error : null;
+  if (isWidgetPublicPackageBuildError(packageError)) throw packageError;
   throw new Error(
     payload && typeof payload === 'object' && typeof (payload as { error?: unknown }).error === 'string'
       ? String((payload as { error?: unknown }).error)
@@ -309,17 +310,17 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       state: materializedMedia.state,
     });
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    if (detail.startsWith(WIDGET_PACKAGE_MISSING_PREFIX)) {
+    if (isWidgetPublicPackageBuildError(error)) {
       return withSession(
         request,
         NextResponse.json(
-          { error: { kind: 'VALIDATION', reasonKey: detail } },
+          { error: { kind: 'VALIDATION', reasonKey: error.reasonKey, paths: error.paths } },
           { status: 422 },
         ),
         current.value.setCookies,
       );
     }
+    const detail = error instanceof Error ? error.message : String(error);
     return withSession(
       request,
       NextResponse.json(
