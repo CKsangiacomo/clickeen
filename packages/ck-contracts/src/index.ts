@@ -180,17 +180,9 @@ export function encodeAssetRefPath(assetRef: string): string {
 }
 
 export function parseRateLimitRecord(value: unknown): RateLimitRecord | null {
-  if (!isRecord(value)) return null;
-  const count =
-    typeof value.count === 'number' && Number.isFinite(value.count)
-      ? Math.max(0, Math.trunc(value.count))
-      : null;
-  const resetAt =
-    typeof value.resetAt === 'number' && Number.isFinite(value.resetAt)
-      ? Math.max(0, Math.trunc(value.resetAt))
-      : null;
-  if (count == null || resetAt == null) return null;
-  return { count, resetAt };
+  if (value == null) return null;
+  if (!isRecord(value) || !Number.isInteger(value.count) || value.count < 0 || !Number.isInteger(value.resetAt) || value.resetAt < 0) throw new Error('ck.rateLimit.recordInvalid');
+  return { count: value.count, resetAt: value.resetAt };
 }
 
 export function looksLikeHtmlErrorPage(text: string): boolean {

@@ -107,8 +107,7 @@ async function consumeRateLimit(
   policy: RateLimitPolicy,
   now: number,
 ): Promise<RateLimitDecision> {
-  const existingRaw = await kv.get(key, 'json').catch(() => null);
-  const existing = parseRateLimitRecord(existingRaw);
+  const existing = parseRateLimitRecord(await kv.get(key, 'json'));
   const active =
     existing && existing.resetAt > now
       ? existing
