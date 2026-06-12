@@ -225,22 +225,6 @@
     };
   }
 
-  function resolveBackgroundFill(raw) {
-    if (window.CKAppearance && typeof window.CKAppearance.toCssBackground === 'function') {
-      return window.CKAppearance.toCssBackground(raw);
-    }
-    const v = typeof raw === 'string' ? raw.trim() : '';
-    if (!v) return 'transparent';
-    if (/^url\(\s*/i.test(v)) {
-      if (v.includes(',')) return v;
-      return `${v}, linear-gradient(var(--color-system-white), var(--color-system-white))`;
-    }
-    if (/^(?:https?:\/\/|\/)/i.test(v)) {
-      return `url("${v}") center center / cover no-repeat, linear-gradient(var(--color-system-white), var(--color-system-white))`;
-    }
-    return v;
-  }
-
   function isEditorPreview() {
     if (window.parent === window) return false;
     try {
@@ -397,10 +381,8 @@
     const appearance = resolveAppearance();
     const podBorder = resolvePodBorder(appearanceCfg);
 
-    if (window.CKFill && typeof window.CKFill.applyMediaLayer === 'function') {
-      window.CKFill.applyMediaLayer(stageEl, stageCfg.background, { contentEl: podEl });
-    }
-    stageEl.style.setProperty('--stage-bg', resolveBackgroundFill(stageCfg.background));
+    stageEl.style.setProperty('--stage-bg', appearance.toCssBackground(stageCfg.background));
+    window.CKFill.applyMediaLayer(stageEl, stageCfg.background, { contentEl: podEl });
     stageEl.style.setProperty('--stage-shadow', appearance.shadowToBoxShadow(appearance.forceInset(stageCfg.shadow, false)));
     applyInsideShadowLayer(stageEl, computeInsideFadeBackground(stageCfg.insideShadow), {
       contentEl: podEl,
@@ -433,10 +415,8 @@
       floatingEnabled: floating.enabled,
     });
 
-    podEl.style.setProperty('--pod-bg', resolveBackgroundFill(podCfg.background));
-    if (window.CKFill && typeof window.CKFill.applyMediaLayer === 'function') {
-      window.CKFill.applyMediaLayer(podEl, podCfg.background, { contentEl: scopeEl });
-    }
+    podEl.style.setProperty('--pod-bg', appearance.toCssBackground(podCfg.background));
+    window.CKFill.applyMediaLayer(podEl, podCfg.background, { contentEl: scopeEl });
     const podBorderEnabled = podBorder.enabled === true && podBorder.width > 0;
     podEl.style.setProperty('--pod-border-width', podBorderEnabled ? `${podBorder.width}px` : '0px');
     podEl.style.setProperty('--pod-border-color', podBorderEnabled ? podBorder.color : 'transparent');

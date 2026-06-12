@@ -683,10 +683,7 @@
       const weight = role.weight;
       const fontStyle = role.fontStyle;
       const rawColor = role.color;
-      const color =
-        window.CKAppearance && typeof window.CKAppearance.toCssColor === 'function'
-          ? window.CKAppearance.toCssColor(rawColor)
-          : rawColor;
+      const color = window.CKAppearance.toCssColor(rawColor);
 
       if (typeof family !== 'string' || !family.trim()) {
         throw new Error(`[CKTypography] Role "${roleKey}" is missing family`);

@@ -114,8 +114,9 @@
   }
 
   function normalizeVideo(raw) {
-    if (!isRecord(raw)) return { src: '', poster: '', fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true };
+    if (!isRecord(raw)) throw new Error('[CKFill] video fill requires src');
     var src = readAssetSrc(raw);
+    if (!src) throw new Error('[CKFill] video fill requires src');
     var poster = typeof raw.poster === 'string' && raw.poster.trim() ? raw.poster.trim() : '';
     var fit = raw.fit === 'contain' ? 'contain' : 'cover';
     var position = typeof raw.position === 'string' && raw.position.trim() ? raw.position.trim() : 'center';
@@ -165,7 +166,6 @@
       return 'url(\"' + fill.image.src + '\") ' + position + ' / ' + fit + ' ' + repeat;
     }
     if (fill.type === 'video') return 'transparent';
-    return 'transparent';
   }
 
   function toCssColor(raw) {
@@ -195,19 +195,13 @@
     return layer;
   }
 
-  function clearLayer(container) {
-    var existing = container.querySelector('.ck-fill-layer');
-    if (existing && existing.parentElement === container) {
-      existing.remove();
-    }
-  }
-
   function applyMediaLayer(container, raw, opts) {
     var fill = normalizeFill(raw);
     if (!fill) throw new Error('[CKFill] Invalid fill');
     var wantsVideo = fill.type === 'video' && fill.video && fill.video.src;
     if (!wantsVideo) {
-      clearLayer(container);
+      var existing = container.querySelector('.ck-fill-layer');
+      if (existing && existing.parentElement === container) existing.remove();
       return fill;
     }
 

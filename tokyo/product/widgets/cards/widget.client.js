@@ -116,16 +116,9 @@
     throw new Error('[Cards] ' + path + ' must be empty, #, root-relative, http(s), mailto, or tel');
   }
 
-  function cssFill(value, fallback) {
-    if (typeof value === 'string' && value.trim()) return value.trim();
-    if (
-      isRecord(value) &&
-      window.CKAppearance &&
-      typeof window.CKAppearance.toCssBackground === 'function'
-    ) {
-      return window.CKAppearance.toCssBackground(value);
-    }
-    return fallback || '';
+  function cssFill(value) {
+    if (!window.CKAppearance || typeof window.CKAppearance.toCssBackground !== 'function') throw new Error('[Cards] Missing CKAppearance fill helpers');
+    return window.CKAppearance.toCssBackground(value);
   }
 
   function mediaSource(fill, path) {
@@ -257,9 +250,9 @@
 
   function applyCustomCardStyles(card, item, enabled) {
     if (!enabled || !isRecord(item.style)) return;
-    const background = cssFill(item.style.background, '');
-    const borderColor = cssFill(item.style.borderColor, '');
-    const accentColor = cssFill(item.style.accentColor, '');
+    const background = cssFill(item.style.background);
+    const borderColor = cssFill(item.style.borderColor);
+    const accentColor = cssFill(item.style.accentColor);
     const textTone = item.style.textTone;
     if (background) card.style.setProperty('background', background);
     if (borderColor) card.style.setProperty('border-color', borderColor);
@@ -348,13 +341,13 @@
       between.style.setProperty('--ck-cards-between-size', cards.betweenCards.icon.sizePt + 'pt');
       between.style.setProperty(
         '--ck-cards-between-color',
-        cssFill(cards.betweenCards.icon.color, '#222222'),
+        cssFill(cards.betweenCards.icon.color),
       );
     } else {
       between.style.setProperty('--ck-cards-between-width', cards.betweenCards.line.widthPt + 'pt');
       between.style.setProperty(
         '--ck-cards-between-color',
-        cssFill(cards.betweenCards.line.color, '#D7D7DA'),
+        cssFill(cards.betweenCards.line.color),
       );
     }
     return between;

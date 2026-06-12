@@ -31,19 +31,13 @@
   }
 
   function toCssBackground(value) {
-    if (window.CKFill && typeof window.CKFill.toCssBackground === 'function') {
-      return window.CKFill.toCssBackground(value);
-    }
-    if (isRecord(value)) throw new Error('[CKAppearance] Missing CKFill');
-    return String(value ?? '');
+    if (!window.CKFill || typeof window.CKFill.toCssBackground !== 'function') throw new Error('[CKAppearance] Missing CKFill');
+    return window.CKFill.toCssBackground(value);
   }
 
   function toCssColor(value) {
-    if (window.CKFill && typeof window.CKFill.toCssColor === 'function') {
-      return window.CKFill.toCssColor(value);
-    }
-    if (isRecord(value)) throw new Error('[CKAppearance] Missing CKFill');
-    return String(value ?? '');
+    if (!window.CKFill || typeof window.CKFill.toCssColor !== 'function') throw new Error('[CKAppearance] Missing CKFill');
+    return window.CKFill.toCssColor(value);
   }
 
   function forceInset(shadow, inset) {
