@@ -46,7 +46,7 @@ function resolveSettingsErrorCopy(reason: string, fallback: string): string {
 }
 
 export function SettingsDomain() {
-  const { activeAccount, accountContext, accountPolicy, data, reload } = useRomaAccountContext();
+  const { activeAccount, accountContext, data, reload } = useRomaAccountContext();
   const accountApi = useRomaAccountApi();
   const activeAccountId = accountContext.accountId;
 
@@ -178,7 +178,7 @@ export function SettingsDomain() {
         <p className="body-s">Plan changes are handled outside Roma until the billing provider integration is connected.</p>
       </section>
 
-      <AccountLocaleSettingsCard accountId={activeAccountId} canEdit={canEditLocales} policyProfile={accountPolicy.profile} onSaved={() => reload()} />
+      <AccountLocaleSettingsCard accountId={activeAccountId} canEdit={canEditLocales} onSaved={() => reload()} />
 
       <section className="rd-canvas-module">
         <h2 className="heading-6">Ownership</h2>

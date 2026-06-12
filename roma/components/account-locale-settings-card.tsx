@@ -3,14 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
-import type { PolicyProfile } from '@clickeen/ck-policy';
 import { useRomaAccountApi } from './account-api';
-import {
-  normalizeSelectedTargetLocales,
-  resolveSelectedTargetLocales,
-  resolveSystemChosenTargetLocale,
-  usesSystemChosenTargetLocale,
-} from '@roma/lib/account-locales';
 
 type AccountLocalesPayload = {
   selectedTargetLocales: string[];
@@ -107,7 +100,6 @@ function resolveAccountLocalesErrorCopy(reason: unknown, fallback: string): stri
 export function AccountLocaleSettingsCard(args: {
   accountId: string;
   canEdit: boolean;
-  policyProfile: PolicyProfile;
   onSaved?: (() => Promise<void> | void) | undefined;
 }) {
   const accountApi = useRomaAccountApi();
@@ -119,8 +111,6 @@ export function AccountLocaleSettingsCard(args: {
   const [baseLocaleLocked, setBaseLocaleLocked] = useState(false);
   const [draftBaseLocale, setDraftBaseLocale] = useState('en');
   const [draftSelectedTargetLocales, setDraftSelectedTargetLocales] = useState<string[]>([]);
-  const policyProfile = args.policyProfile;
-  const usesSystemLocale = usesSystemChosenTargetLocale(policyProfile);
 
   const loadSettings = useCallback(async () => {
     if (!args.accountId) return;
@@ -128,7 +118,7 @@ export function AccountLocaleSettingsCard(args: {
     setError(null);
     try {
       const payload = await accountApi.fetchJson<{
-        selectedTargetLocales?: unknown;
+        selectedTargetLocales: string[];
         baseLocaleLocked?: unknown;
         localePolicy?: {
           baseLocale?: unknown;
@@ -138,10 +128,9 @@ export function AccountLocaleSettingsCard(args: {
 
       const baseLocale = normalizeLocaleToken(payload.localePolicy?.baseLocale);
       if (!baseLocale) throw new Error('coreui.errors.account.locales.invalidBaseLocale');
-      const selectedTargetLocales = normalizeSelectedTargetLocales(payload.selectedTargetLocales, baseLocale);
       setBaseLocaleLocked(payload.baseLocaleLocked === true);
       setDraftBaseLocale(baseLocale);
-      setDraftSelectedTargetLocales(selectedTargetLocales);
+      setDraftSelectedTargetLocales(payload.selectedTargetLocales);
       setSuccess(null);
       setSettingsReady(true);
     } catch (nextError) {
@@ -159,18 +148,7 @@ export function AccountLocaleSettingsCard(args: {
   }, [loadSettings]);
 
   const baseLocale = normalizeLocaleToken(draftBaseLocale) ?? '';
-  const effectiveSelectedTargetLocales = useMemo(
-    () => {
-      if (!baseLocale) return [];
-      return resolveSelectedTargetLocales({
-        profile: policyProfile,
-        baseLocale,
-        requestedLocales: draftSelectedTargetLocales,
-      });
-    },
-    [baseLocale, draftSelectedTargetLocales, policyProfile],
-  );
-  const systemChosenLocale = useMemo(() => (usesSystemLocale && baseLocale ? resolveSystemChosenTargetLocale({ baseLocale }) : null), [baseLocale, usesSystemLocale]);
+  const effectiveSelectedTargetLocales = draftSelectedTargetLocales;
   const localeOptions = useMemo(
     () =>
       CANONICAL_LOCALES.filter((entry) => entry.code !== baseLocale).map((entry) => ({
@@ -189,11 +167,7 @@ export function AccountLocaleSettingsCard(args: {
     try {
       const normalizedBase = normalizeLocaleToken(draftBaseLocale);
       if (!normalizedBase) throw new Error('coreui.errors.account.locales.invalidBaseLocale');
-      const selectedTargetLocales = resolveSelectedTargetLocales({
-        profile: policyProfile,
-        baseLocale: normalizedBase,
-        requestedLocales: draftSelectedTargetLocales,
-      });
+      const selectedTargetLocales = draftSelectedTargetLocales;
 
       const enabledLocales = [normalizedBase, ...selectedTargetLocales];
       const payload: AccountLocalesPayload = {
@@ -225,7 +199,7 @@ export function AccountLocaleSettingsCard(args: {
     } finally {
       setSaving(false);
     }
-  }, [args, accountApi, draftSelectedTargetLocales, draftBaseLocale, loadSettings, policyProfile]);
+  }, [args, accountApi, draftSelectedTargetLocales, draftBaseLocale, loadSettings]);
 
   return (
     <section className="rd-canvas-module">
@@ -282,9 +256,7 @@ export function AccountLocaleSettingsCard(args: {
           <div className="roma-inline-stack">
             <div className="label-s">Selected target languages</div>
             <p className="body-s">
-              {usesSystemLocale
-                ? `Base language is always enabled. Free includes one system-selected target language${systemChosenLocale ? `: ${resolveLocaleUiLabel(systemChosenLocale)}` : ''}.`
-                : 'Base language is always enabled. Add the other languages that should update automatically after Save.'}
+              Base language is always enabled. Add the other languages that should update automatically after Save.
             </p>
             <div className="roma-locale-settings__list">
               {localeOptions.map((entry) => (
@@ -292,7 +264,7 @@ export function AccountLocaleSettingsCard(args: {
                   <input
                     type="checkbox"
                     checked={entry.enabled}
-                    disabled={loading || saving || !args.canEdit || usesSystemLocale}
+                    disabled={loading || saving || !args.canEdit}
                     onChange={(event) => {
                       const nextChecked = event.target.checked;
                       setDraftSelectedTargetLocales((current) => {

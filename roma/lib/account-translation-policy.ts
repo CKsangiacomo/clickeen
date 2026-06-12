@@ -1,4 +1,3 @@
-import { resolveDesiredServingLocales } from './account-locales';
 import { loadCurrentAccountLocalesState } from './account-locales-state';
 
 export type AccountTranslationLanguagePolicy = {
@@ -51,10 +50,7 @@ export async function loadAccountTranslationLanguagePolicy(args: {
     ok: true,
     value: {
       baseLocale: state.localePolicy.baseLocale,
-      desiredLocales: resolveDesiredServingLocales({
-        baseLocale: state.localePolicy.baseLocale,
-        selectedTargetLocales: state.selectedTargetLocales,
-      }),
+      desiredLocales: [state.localePolicy.baseLocale, ...state.selectedTargetLocales],
       countryToLocale: state.localePolicy.ip.countryToLocale,
     },
   };

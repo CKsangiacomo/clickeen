@@ -3,7 +3,6 @@ import { isRecord } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
-import { resolveSelectedTargetLocales } from '@roma/lib/account-locales';
 import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
@@ -215,11 +214,7 @@ export async function PUT(request: NextRequest) {
 
     const nextPayload: Required<AccountLocalesWritePayload> = {
       localePolicy: body.localePolicy,
-      selectedTargetLocales: resolveSelectedTargetLocales({
-        profile: current.value.authzPayload.profile,
-        baseLocale,
-        requestedLocales: body.selectedTargetLocales,
-      }),
+      selectedTargetLocales: body.selectedTargetLocales,
     };
 
     const upstream = await fetch(
