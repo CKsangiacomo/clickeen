@@ -18,7 +18,6 @@ import {
 import { handleAccountLocalesUpdate } from './locales';
 import {
   findAccountContext,
-  findAccountMember,
   listAccountMembers,
 } from '../bootstrap/state';
 import { denyResponse, normalizeAccountPublicId, normalizeUuid, resolvePrincipalState } from '../bootstrap/route-context';
@@ -202,7 +201,7 @@ async function handleAccountMemberById(
   const members = await listAccountMembers(env, accountId);
   if (!members.ok) return members.response;
 
-  const member = findAccountMember(members.value, memberId);
+  const member = members.value.find((entry) => entry.userId === memberId) ?? null;
   if (!member) return denyResponse();
 
   return json({

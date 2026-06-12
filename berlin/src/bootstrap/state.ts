@@ -408,33 +408,14 @@ export async function listAccountMembers(
   });
   if (!rows.ok) return rows;
 
-  const userIds = rows.value
-    .map((row) => asTrimmedString(row.user_id))
-    .filter((userId): userId is string => isUuid(userId ?? null));
-  const profiles = await loadUsersByIds(env, userIds);
-  if (!profiles.ok) return profiles;
+  const members: BerlinAccountMember[] = []; for (const row of rows.value) { const userId = asTrimmedString(row.user_id), role = normalizeRole(row.role);
+    if (!userId || !isUuid(userId) || !role) return { ok: false, response: invalidPersistedStateResponse('members.row_invalid') };
+    members.push({ userId, role, createdAt: asTrimmedString(row.created_at), profile: null });
+  }
+  const profiles = await loadUsersByIds(env, members.map((member) => member.userId)); if (!profiles.ok) return profiles;
 
   return {
     ok: true,
-    value: rows.value.flatMap((row) => {
-      const userId = asTrimmedString(row.user_id);
-      const role = normalizeRole(row.role);
-      if (!userId || !role) return [];
-      return [
-        {
-          userId,
-          role,
-          createdAt: asTrimmedString(row.created_at),
-          profile: profiles.value.get(userId) ?? null,
-        } satisfies BerlinAccountMember,
-      ];
-    }),
+    value: members.map((member) => ({ ...member, profile: profiles.value.get(member.userId) ?? null })),
   };
-}
-
-export function findAccountMember(
-  members: BerlinAccountMember[],
-  userId: string,
-): BerlinAccountMember | null {
-  return members.find((entry) => entry.userId === userId) ?? null;
 }

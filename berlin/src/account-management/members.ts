@@ -1,5 +1,5 @@
 import type { BerlinAccountContext, BerlinAccountMember } from '../bootstrap/types';
-import { findAccountMember, listAccountMembers } from '../bootstrap/state';
+import { listAccountMembers } from '../bootstrap/state';
 import { json, validationError } from '../http';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
 import { type Env } from '../types';
@@ -49,7 +49,7 @@ function parseRolePayload(
 async function loadAccountMember(env: Env, accountId: string, memberId: string): Promise<Result> {
   const members = await listAccountMembers(env, accountId);
   if (!members.ok) return members;
-  const member = findAccountMember(members.value, memberId);
+  const member = members.value.find((entry) => entry.userId === memberId) ?? null;
   if (!member) {
     return {
       ok: false,
