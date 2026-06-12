@@ -307,6 +307,7 @@ No evidence may be recorded until Step 0 is complete.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 107-AB1-2026-06-12 | 2 | AB-1 | Bob `ck:open-editor` session boot | `coreui.errors.instance.config.invalid:content.title` | Invalid stored config returned `bob:open-editor-failed`; clean editor open was not applied for malformed config. | `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; focused stale-symbol `rg`; `git diff --shortstat` = `10 files changed, 112 insertions(+), 338 deletions(-)`; local Playwright browser proof against `http://127.0.0.1:3017/bob` showed valid open -> `bob:open-editor-applied`, invalid open -> `bob:open-editor-failed`. | `518a83d4` |
 | 107-AB2-2026-06-12 | 2 | AB-2 | Bob edit-op set boundary | `Value must be a number`, `Value must be a boolean`, `Value must be one of: list, grid`, `Value must be JSON data, not a string`, `Value must be an array` | Coercion-shaped edit values returned `ok: false`; accepted string/color values were written exactly as submitted. | `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; focused coerce/transform `rg`; `git diff --shortstat` = `2 files changed, 24 insertions(+), 92 deletions(-)`; local Playwright browser proof against `http://127.0.0.1:3017/bob` showed valid open -> `bob:open-editor-applied` and edit ops reject coercion/write accepted values exactly. | this commit |
+| 107-AB3-2026-06-12 | 2 | AB-3 | Dieter dropdown-fill gradient hydration/commit | visible invalid state on unsupported radial/conic/CSS gradients | Unsupported gradient truth did not reach a rewritten successful commit; linear gradient still committed as `kind: "linear"`. | `pnpm --filter @ck/dieter typecheck`; `pnpm --filter @ck/dieter build`; focused gradient fallback `rg`; `git diff --shortstat` = `7 files changed, 36 insertions(+), 136 deletions(-)`; local Playwright proof against built `tokyo/product/dieter/components/dropdown-fill/dropdown-fill.js` showed radial/conic/CSS gradients set `data-invalid="true"` and valid linear angle edit committed as linear. | this commit |
 
 ## Masquerade Audit
 
@@ -316,6 +317,7 @@ Every completed row must pass this checklist.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | AB-1 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-2 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
+| AB-3 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 
 Any `YES` in the first eight columns means the row is not complete and a new V7
 violation must be recorded.

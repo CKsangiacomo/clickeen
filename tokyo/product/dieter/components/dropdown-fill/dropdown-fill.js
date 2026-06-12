@@ -1914,27 +1914,19 @@ var Dieter = (() => {
     };
   }
   function normalizeGradientValue(raw) {
-    if (typeof raw === "string") {
-      const css2 = raw.trim();
-      return css2 ? { css: css2 } : void 0;
-    }
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return void 0;
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
     const value = raw;
-    const css = typeof value.css === "string" ? value.css.trim() : "";
-    if (css) return { css };
-    const kindRaw = typeof value.kind === "string" ? value.kind.trim() : "";
-    const kind = kindRaw === "radial" || kindRaw === "conic" ? kindRaw : "linear";
-    const angle = clampNumber(typeof value.angle === "number" ? value.angle : 0, 0, 360);
+    if (value.kind !== "linear" || typeof value.angle !== "number" || !Number.isFinite(value.angle) || value.angle < 0 || value.angle > 360) return null;
     const stopsRaw = Array.isArray(value.stops) ? value.stops : [];
     const stops = stopsRaw.map((stop) => {
       if (!stop || typeof stop !== "object" || Array.isArray(stop)) return null;
       const entry = stop;
-      const color = typeof entry.color === "string" ? entry.color.trim() : "";
+      const color = typeof entry.color === "string" ? entry.color : "";
       if (!color) return null;
-      const position = clampNumber(typeof entry.position === "number" ? entry.position : 0, 0, 100);
-      return { color, position };
+      if (typeof entry.position !== "number" || !Number.isFinite(entry.position) || entry.position < 0 || entry.position > 100) return null;
+      return { color, position: entry.position };
     }).filter((stop) => Boolean(stop));
-    return { kind, angle, stops };
+    return stops.length === stopsRaw.length && stops.length >= 2 ? { kind: "linear", angle: value.angle, stops } : null;
   }
   function coerceFillValue(raw) {
     const typeRaw = typeof raw.type === "string" ? raw.type.trim().toLowerCase() : "";
@@ -1947,7 +1939,8 @@ var Dieter = (() => {
       return { type: "color", color: color || value || "transparent" };
     }
     if (typeRaw === "gradient") {
-      return { type: "gradient", gradient: normalizeGradientValue(raw.gradient) };
+      const gradient = normalizeGradientValue(raw.gradient);
+      return gradient ? { type: "gradient", gradient } : null;
     }
     if (typeRaw === "image") {
       return { type: "image", image: normalizeImageValue(raw.image) };
@@ -1959,11 +1952,6 @@ var Dieter = (() => {
   }
   function parseFillString(value, root) {
     if (!value) return { type: "none" };
-    if (/url\(\s*(['"]?)([^'")]+)\1\s*\)/i.test(value)) return null;
-    if (/^https?:\/\//i.test(value) || value.startsWith("/")) return null;
-    if (/-gradient\(/i.test(value)) {
-      return { type: "gradient", gradient: { css: value } };
-    }
     const parsed = parseColor(value, root);
     if (!parsed) return null;
     return { type: "color", color: value };
@@ -2029,7 +2017,6 @@ var Dieter = (() => {
     if (state.gradientAngleInput) {
       state.gradientAngleInput.addEventListener("input", () => {
         const angle = clampNumber(Number(state.gradientAngleInput?.value), 0, 360);
-        state.gradientCss = null;
         state.gradient.angle = angle;
         syncGradientUI(state, { commit: true }, deps);
       });
@@ -2049,23 +2036,10 @@ var Dieter = (() => {
     state.gradient = { angle: DEFAULT_GRADIENT.angle };
     state.gradientStops = createDefaultGradientStops(state.root);
     state.gradientActiveStopId = state.gradientStops[0]?.id ?? "";
-    state.gradientCss = null;
-    if (!gradient || typeof gradient !== "object" || Array.isArray(gradient)) return;
-    if ("css" in gradient) {
-      const css = typeof gradient.css === "string" ? gradient.css.trim() : "";
-      state.gradientCss = css || null;
-      return;
-    }
-    if (!("kind" in gradient)) return;
-    const angle = typeof gradient.angle === "number" ? gradient.angle : DEFAULT_GRADIENT.angle;
-    state.gradient.angle = clampNumber(angle, 0, 360);
+    if (!gradient || typeof gradient !== "object" || Array.isArray(gradient) || !("kind" in gradient) || gradient.kind !== "linear") return;
+    state.gradient.angle = clampNumber(gradient.angle, 0, 360);
     if (Array.isArray(gradient.stops) && gradient.stops.length >= 2) {
-      state.gradientStops = gradient.stops.map(
-        (stop) => createGradientStopState(state.root, {
-          color: typeof stop?.color === "string" ? stop.color : DEFAULT_GRADIENT.stops[0].color,
-          position: typeof stop?.position === "number" ? stop.position : 0
-        })
-      );
+      state.gradientStops = gradient.stops.map((stop) => createGradientStopState(state.root, stop));
       state.gradientActiveStopId = state.gradientStops[0]?.id ?? "";
     }
   }
@@ -2233,7 +2207,7 @@ var Dieter = (() => {
   function updateGradientPreview(state, opts, deps) {
     const shouldUpdateHeader = opts.updateHeader !== false;
     const shouldUpdateRemove = opts.updateRemove !== false;
-    const css = state.gradientCss || buildGradientCss(state);
+    const css = buildGradientCss(state);
     if (state.gradientPreview) state.gradientPreview.style.backgroundImage = css;
     if (opts.commit) {
       deps.setInputValue(state, buildGradientFill(state), true);
@@ -2259,7 +2233,6 @@ var Dieter = (() => {
     stop.hsv = { ...active.hsv };
     state.gradientStops.push(stop);
     state.gradientActiveStopId = stop.id;
-    state.gradientCss = null;
     syncGradientUI(state, { commit: true }, deps);
   }
   function removeGradientStop(state, stopId, deps) {
@@ -2281,7 +2254,6 @@ var Dieter = (() => {
       });
       state.gradientActiveStopId = nearest?.id ?? "";
     }
-    state.gradientCss = null;
     syncGradientUI(state, { commit: true }, deps);
   }
   function bindGradientStopButton(state, button, stopId) {
@@ -2293,7 +2265,6 @@ var Dieter = (() => {
   function commitGradientStopFromHsv(state, deps) {
     const stop = getActiveGradientStop(state);
     stop.color = colorStringFromHsv(stop.hsv);
-    state.gradientCss = null;
     syncGradientUI(state, { commit: true }, deps);
   }
   function handleGradientStopHexInput(state, deps) {
@@ -2374,7 +2345,6 @@ var Dieter = (() => {
       const stop = state.gradientStops.find((entry) => entry.id === stopId);
       if (!stop) return;
       stop.position = gradientPxToPercent(state, event.clientX);
-      state.gradientCss = null;
       syncGradientStopButtons(state);
       updateGradientPreview(state, { commit: true, updateHeader: true, updateRemove: false }, deps);
     };
@@ -2471,26 +2441,11 @@ var Dieter = (() => {
       state.gradientStopAlphaField.addEventListener("blur", handler);
     }
   }
-  function normalizeGradientColor(state, raw, fallback) {
-    let value = raw.trim();
-    if (!value) return fallback;
-    if (!value.startsWith("#") && /^[0-9a-f]{3,8}$/i.test(value)) {
-      value = `#${value}`;
-    }
-    const parsed = parseColor(value, state.root);
-    return parsed ? value : fallback;
-  }
   function normalizeGradientStopsForOutput(state) {
-    const fallbackStops = DEFAULT_GRADIENT.stops;
-    const sourceStops = state.gradientStops.length >= 2 ? getSortedGradientStops(state.gradientStops) : null;
-    const stopsToUse = sourceStops ?? fallbackStops.map((stop) => ({ ...stop }));
-    return stopsToUse.map((stop, index) => {
-      const fallback = fallbackStops[Math.min(index, fallbackStops.length - 1)]?.color || fallbackStops[0].color;
-      return {
-        color: normalizeGradientColor(state, stop.color, fallback),
-        position: clampNumber(stop.position, 0, 100)
-      };
-    });
+    return getSortedGradientStops(state.gradientStops).map((stop) => ({
+      color: stop.color,
+      position: clampNumber(stop.position, 0, 100)
+    }));
   }
   function buildGradientFill(state) {
     const angle = clampNumber(state.gradient.angle, 0, 360);
@@ -3115,7 +3070,6 @@ var Dieter = (() => {
       gradientActiveStopId,
       gradientStops,
       gradient: { angle: DEFAULT_GRADIENT.angle },
-      gradientCss: null,
       imagePanel,
       imagePreview,
       imageBrowser,
@@ -3364,7 +3318,6 @@ var Dieter = (() => {
         state.gradient = { angle: DEFAULT_GRADIENT.angle };
         state.gradientStops = createDefaultGradientStops(state.root);
         state.gradientActiveStopId = state.gradientStops[0]?.id ?? "";
-        state.gradientCss = null;
         syncGradientUI(state, { commit: false }, mediaDeps());
         return;
       }

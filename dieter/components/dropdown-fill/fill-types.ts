@@ -30,7 +30,7 @@ export type VideoValue = {
 export type FillValue = {
   type: 'none' | FillMode;
   color?: string;
-  gradient?: GradientValue | { css?: string };
+  gradient?: GradientValue;
   image?: ImageValue;
   video?: VideoValue;
 };

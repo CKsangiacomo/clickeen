@@ -9,7 +9,7 @@ import {
   type ImageValue,
   type VideoValue,
 } from './fill-types';
-import { clampNumber, parseColor } from './color-utils';
+import { parseColor } from './color-utils';
 
 function normalizeAssetRef(raw: unknown): string {
   return normalizeAccountAssetRef(raw) ?? '';
@@ -59,30 +59,22 @@ function normalizeVideoValue(raw: unknown): VideoValue {
   };
 }
 
-function normalizeGradientValue(raw: unknown): GradientValue | { css?: string } | undefined {
-  if (typeof raw === 'string') {
-    const css = raw.trim();
-    return css ? { css } : undefined;
-  }
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+function normalizeGradientValue(raw: unknown): GradientValue | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const value = raw as Record<string, unknown>;
-  const css = typeof value.css === 'string' ? value.css.trim() : '';
-  if (css) return { css };
-  const kindRaw = typeof value.kind === 'string' ? value.kind.trim() : '';
-  const kind: GradientValue['kind'] = kindRaw === 'radial' || kindRaw === 'conic' ? kindRaw : 'linear';
-  const angle = clampNumber(typeof value.angle === 'number' ? value.angle : 0, 0, 360);
+  if (value.kind !== 'linear' || typeof value.angle !== 'number' || !Number.isFinite(value.angle) || value.angle < 0 || value.angle > 360) return null;
   const stopsRaw = Array.isArray(value.stops) ? value.stops : [];
   const stops = stopsRaw
     .map((stop) => {
       if (!stop || typeof stop !== 'object' || Array.isArray(stop)) return null;
       const entry = stop as Record<string, unknown>;
-      const color = typeof entry.color === 'string' ? entry.color.trim() : '';
+      const color = typeof entry.color === 'string' ? entry.color : '';
       if (!color) return null;
-      const position = clampNumber(typeof entry.position === 'number' ? entry.position : 0, 0, 100);
-      return { color, position };
+      if (typeof entry.position !== 'number' || !Number.isFinite(entry.position) || entry.position < 0 || entry.position > 100) return null;
+      return { color, position: entry.position };
     })
     .filter((stop): stop is GradientStop => Boolean(stop));
-  return { kind, angle, stops };
+  return stops.length === stopsRaw.length && stops.length >= 2 ? { kind: 'linear', angle: value.angle, stops } : null;
 }
 
 function coerceFillValue(raw: Record<string, unknown>): FillValue | null {
@@ -97,7 +89,8 @@ function coerceFillValue(raw: Record<string, unknown>): FillValue | null {
     return { type: 'color', color: color || value || 'transparent' };
   }
   if (typeRaw === 'gradient') {
-    return { type: 'gradient', gradient: normalizeGradientValue(raw.gradient) };
+    const gradient = normalizeGradientValue(raw.gradient);
+    return gradient ? { type: 'gradient', gradient } : null;
   }
   if (typeRaw === 'image') {
     return { type: 'image', image: normalizeImageValue(raw.image) };
@@ -110,11 +103,6 @@ function coerceFillValue(raw: Record<string, unknown>): FillValue | null {
 
 function parseFillString(value: string, root: HTMLElement): FillValue | null {
   if (!value) return { type: 'none' };
-  if (/url\(\s*(['"]?)([^'")]+)\1\s*\)/i.test(value)) return null;
-  if (/^https?:\/\//i.test(value) || value.startsWith('/')) return null;
-  if (/-gradient\(/i.test(value)) {
-    return { type: 'gradient', gradient: { css: value } };
-  }
   const parsed = parseColor(value, root);
   if (!parsed) return null;
   return { type: 'color', color: value };
@@ -165,8 +153,4 @@ export function readVideoAssetRef(fill: FillValue): string | null {
 
 export function readVideoPosterAssetRef(fill: FillValue): string | null {
   return normalizeAccountAssetRef(fill.video?.posterAssetRef);
-}
-
-export function defaultGradientAngle(): number {
-  return DEFAULT_GRADIENT.angle;
 }

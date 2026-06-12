@@ -205,7 +205,6 @@ function createState(root: HTMLElement, accountAssets: AccountAssetsClient): Dro
     gradientActiveStopId,
     gradientStops,
     gradient: { angle: DEFAULT_GRADIENT.angle },
-    gradientCss: null,
     imagePanel,
     imagePreview,
     imageBrowser,
@@ -485,7 +484,6 @@ function syncFromValue(state: DropdownFillState, raw: string) {
       state.gradient = { angle: DEFAULT_GRADIENT.angle };
       state.gradientStops = createDefaultGradientStops(state.root);
       state.gradientActiveStopId = state.gradientStops[0]?.id ?? '';
-      state.gradientCss = null;
       syncGradientUI(state, { commit: false }, mediaDeps());
       return;
     }

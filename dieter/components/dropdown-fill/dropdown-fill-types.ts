@@ -44,7 +44,6 @@ export type DropdownFillState = {
   gradientActiveStopId: string;
   gradientStops: GradientStopState[];
   gradient: { angle: number };
-  gradientCss: string | null;
   gradientDrag?: { id: string; pointerId: number };
   imagePanel: HTMLElement | null;
   imagePreview: HTMLElement | null;
