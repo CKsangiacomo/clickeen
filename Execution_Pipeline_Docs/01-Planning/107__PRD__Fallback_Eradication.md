@@ -312,6 +312,7 @@ No evidence may be recorded until Step 0 is complete.
 | 107-AB5-2026-06-12 | 2 | AB-5 | Bob compiled widget route | `[Bob] Failed to fetch widget support file product/widgets/shared/header.css (404 Not Found)` | Missing referenced support file returned 500; no compiled payload or partial `widgetPackage` success was returned. | `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; focused cache/omission `rg`; `git diff --shortstat` = `2 files changed, 14 insertions(+), 121 deletions(-)`; local Playwright API proof against `http://127.0.0.1:3027/api/widgets/calltoaction/compiled` showed complete support files -> 200 with package files, missing `shared/header.css` -> failed closed with typed support-file error. | this commit |
 | 107-AB6-2026-06-12 | 2 | AB-6 | San Francisco translation parse/usage boundary | `Expected JSON array response`; `Invalid JSON response`; `Translation usage missing provider` | Provider output without exact array contract failed before translation success; direct non-model translation returned without fabricated usage. | `pnpm --filter @clickeen/sanfrancisco typecheck`; focused provider/default/schema/audit `rg`; `git diff --shortstat` = `5 files changed, 14 insertions(+), 107 deletions(-)`; validators GREEN; local Playwright request proof against TS wrapper showed array output -> 200 with provider `deepseek`, object wrapper -> 502, fenced JSON -> 502, direct values -> 200 with no `usage`. | this commit |
 | 107-AB7-2026-06-12 | 2 | AB-7 | San Francisco translation usage boundary | `Missing upstream usage`; `Translation usage invalid` | Missing/malformed provider model or token usage failed before translation success; cross-batch usage identity mismatch fails before aggregate usage success. | `pnpm --filter @clickeen/sanfrancisco typecheck`; focused usage/default `rg`; `git diff --shortstat` = `7 files changed, 12 insertions(+), 43 deletions(-)`; validators GREEN; local Playwright request proof against TS wrapper showed valid Deepseek/Prague usage -> 200, missing model/tokens and negative/fractional tokens -> typed failure. | this commit |
+| 107-AB8-2026-06-12 | 2 | AB-8 | San Francisco translation completion/error attribution | `Invalid JSON response`; `Expected JSON array response`; provider-required parser errors | Completion/error-path provider attribution uses only caller-supplied provider truth; no `deepseek` default remains. | `pnpm --filter @clickeen/sanfrancisco typecheck`; focused provider-default `rg`; git status clean before evidence; validators GREEN; Playwright proof inherited from AB-6/AB-7 covered malformed provider output and missing provider/usage failure before success. | this commit |
 
 ## Masquerade Audit
 
@@ -326,6 +327,7 @@ Every completed row must pass this checklist.
 | AB-5 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-6 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-7 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
+| AB-8 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 
 Any `YES` in the first eight columns means the row is not complete and a new V7
 violation must be recorded.
