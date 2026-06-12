@@ -19,28 +19,10 @@ export function looksLikeCloudflareErrorPage(text: string): { status?: number; r
 
 export function parseJsonFromModel(raw: string): ModelJsonParseResult {
   const trimmed = raw.trim();
-  let cleaned = trimmed;
-
-  if (cleaned.startsWith('```')) {
-    const lines = cleaned.split('\n');
-    lines.shift();
-    while (lines.length && lines[lines.length - 1]?.trim() === '```') lines.pop();
-    cleaned = lines.join('\n').trim();
-  }
 
   try {
-    return { ok: true, value: JSON.parse(cleaned) };
+    return { ok: true, value: JSON.parse(trimmed) };
   } catch {
-    const firstObj = cleaned.indexOf('{');
-    const lastObj = cleaned.lastIndexOf('}');
-    if (firstObj >= 0 && lastObj > firstObj) {
-      const slice = cleaned.slice(firstObj, lastObj + 1);
-      try {
-        return { ok: true, value: JSON.parse(slice) };
-      } catch {
-        // continue
-      }
-    }
-    return { ok: false, cleaned };
+    return { ok: false, cleaned: trimmed };
   }
 }

@@ -62,7 +62,7 @@ type WidgetCopilotResult = {
   };
   meta?: {
     intent?: "edit" | "explain" | "clarify";
-    outcome?: "ops_applied" | "no_ops" | "invalid_ops";
+    outcome?: "ops_applied" | "no_ops";
     promptVersion?: string;
     promptProfileVersion?: string;
     promptRole?: WidgetCopilotRole;
@@ -557,8 +557,7 @@ export async function executeWidgetCopilotWithRuntime(
   let parsed =
     parseResult.ok && isRecord(parseResult.value) ? parseResult.value : null;
   let message = parsed ? (asString(parsed.message) ?? "").trim() : "";
-  let opsRaw = parsed?.ops;
-  let ops = Array.isArray(opsRaw) ? opsRaw.filter(isWidgetOp) : undefined;
+  const ops = ((raw: unknown) => raw === undefined ? undefined : Array.isArray(raw) && raw.every(isWidgetOp) ? (raw.length ? raw : undefined) : (() => { throw invalidStructuredEditError(lastUsage.provider, "Model output includes invalid ops."); })())(parsed?.ops);
 
   if (!parseResult.ok) throw invalidStructuredEditError(lastUsage.provider);
   if (!parsed)
