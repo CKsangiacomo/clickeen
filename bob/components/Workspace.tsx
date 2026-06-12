@@ -35,9 +35,9 @@ export function Workspace({
   const theme = preview.theme;
   const host = preview.host;
   const hasWidget = Boolean(compiled);
-  const stageMode = String((instanceData as any)?.stage?.canvas?.mode || 'viewport');
-  const stageFixedWidth = Number((instanceData as any)?.stage?.canvas?.width || 0);
-  const stageFixedHeight = Number((instanceData as any)?.stage?.canvas?.height || 0);
+  const stageCanvas = (instanceData as { stage?: { canvas?: { mode?: unknown; width?: unknown; height?: unknown } } }).stage?.canvas;
+  const stageMode = stageCanvas?.mode === 'wrap' || stageCanvas?.mode === 'fixed' ? stageCanvas.mode : null;
+  const [stageFixedWidth, stageFixedHeight] = [stageCanvas?.width, stageCanvas?.height].map((value) => typeof value === 'number' && Number.isFinite(value) ? value : Number.NaN);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeHasState, setIframeHasState] = useState(false);

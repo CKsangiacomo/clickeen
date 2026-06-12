@@ -6,14 +6,11 @@
     "idRules": [
       {
         "arrayPath": "logoshowcase.strips",
-        "idKey": "id",
-        "fallbackPrefix": "strip"
+        "idKey": "id"
       },
       {
         "arrayPath": "logoshowcase.strips[].logos",
-        "idKey": "id",
-        "seedKey": "name",
-        "fallbackPrefix": "logo"
+        "idKey": "id"
       }
     ]
   },

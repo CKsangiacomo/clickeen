@@ -305,7 +305,7 @@ No evidence may be recorded until Step 0 is complete.
 
 | Ledger ID | Step | Rows/actions | Boundary exercised | Typed reason observed | Downstream operation blocked | Command/fixture evidence | Commit |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |  |
+| 107-AB1-2026-06-12 | 2 | AB-1 | Bob `ck:open-editor` session boot | `coreui.errors.instance.config.invalid:content.title` | Invalid stored config returned `bob:open-editor-failed`; clean editor open was not applied for malformed config. | `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; focused stale-symbol `rg`; `git diff --shortstat` = `10 files changed, 112 insertions(+), 338 deletions(-)`; local Playwright browser proof against `http://127.0.0.1:3017/bob` showed valid open -> `bob:open-editor-applied`, invalid open -> `bob:open-editor-failed`. | pending |
 
 ## Masquerade Audit
 
@@ -313,7 +313,7 @@ Every completed row must pass this checklist.
 
 | Row | Helper-only throw hidden by caller? | Generic relabel? | Warning-only? | Log-and-continue? | Retry-to-success? | Hidden in `detail`? | Legacy-continuity mode? | Mutation before failure? | Pass |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |  |  |  |
+| AB-1 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 
 Any `YES` in the first eight columns means the row is not complete and a new V7
 violation must be recorded.

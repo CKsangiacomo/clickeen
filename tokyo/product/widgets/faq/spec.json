@@ -6,27 +6,11 @@
     "idRules": [
       {
         "arrayPath": "faq.sections",
-        "idKey": "id",
-        "seedKey": "title",
-        "fallbackPrefix": "section"
+        "idKey": "id"
       },
       {
         "arrayPath": "faq.sections[].faqs",
-        "idKey": "id",
-        "seedKey": "question",
-        "fallbackPrefix": "faq"
-      }
-    ],
-    "coerceRules": [
-      {
-        "path": "faq.sections[].faqs[].defaultOpen",
-        "type": "boolean",
-        "default": false
-      },
-      {
-        "path": "faq.displayCategoryTitles",
-        "type": "boolean",
-        "default": true
+        "idKey": "id"
       }
     ]
   },

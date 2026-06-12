@@ -8,6 +8,7 @@ import {
   type SessionUpsell,
 } from './sessionTypes';
 import type { ExecuteAccountCommand } from './sessionTransport';
+import { assertSessionConfigContract } from './sessionConfig';
 
 function normalizeTranslationFollowup(payload: unknown):
   | { ok: true }
@@ -82,7 +83,9 @@ export function useSessionSaving(args: {
     setState(savingState);
 
     try {
+      if (!snapshot.compiled) throw new Error('coreui.errors.builder.save.missingContract');
       const config = snapshot.instanceData;
+      assertSessionConfigContract(config, snapshot.compiled);
       const submittedInstanceDataSignature = serializeInstanceDataSignature(config);
       const { ok, json } = await executeAccountCommand({
         command: 'update-instance',

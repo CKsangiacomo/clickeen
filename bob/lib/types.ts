@@ -56,24 +56,13 @@ export type WidgetPresetSpec = {
 
 export type WidgetPresets = Record<string, WidgetPresetSpec>;
 
-export type WidgetNormalizationScalarType = 'string' | 'number' | 'boolean';
-
 export interface WidgetNormalizationIdRule {
   arrayPath: string;
   idKey: string;
-  seedKey?: string;
-  fallbackPrefix?: string;
-}
-
-export interface WidgetNormalizationCoerceRule {
-  path: string;
-  type: WidgetNormalizationScalarType;
-  default?: unknown;
 }
 
 export interface WidgetNormalizationSpec {
   idRules?: WidgetNormalizationIdRule[];
-  coerceRules?: WidgetNormalizationCoerceRule[];
 }
 
 export type WidgetPackageFileName =

@@ -3,7 +3,7 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../ops';
 import { applyWidgetOps } from '../ops';
-import { normalizeSessionConfig } from './sessionConfig';
+import { assertSessionConfigContract } from './sessionConfig';
 import { serializeInstanceDataSignature, type SessionMeta, type SessionState } from './sessionTypes';
 
 export function useSessionEditing(args: {
@@ -45,13 +45,21 @@ export function useSessionEditing(args: {
         setState(nextState);
         return applied;
       }
+      try {
+        assertSessionConfigContract(applied.data, compiled);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const result: ApplyWidgetOpsResult = { ok: false, errors: [{ opIndex: 0, message }] };
+        stateRef.current = { ...stateRef.current, error: { source: 'ops', errors: result.errors } };
+        setState(stateRef.current);
+        return result;
+      }
 
-      const normalizedData = normalizeSessionConfig(applied.data, compiled);
       const latest = stateRef.current;
       const nextState: SessionState = {
         ...latest,
-        instanceData: normalizedData,
-        isDirty: serializeInstanceDataSignature(normalizedData) !== latest.savedInstanceDataSignature,
+        instanceData: applied.data,
+        isDirty: serializeInstanceDataSignature(applied.data) !== latest.savedInstanceDataSignature,
         error: null,
         lastUpdate: {
           source: 'ops',
@@ -62,7 +70,7 @@ export function useSessionEditing(args: {
       stateRef.current = nextState;
       setState(nextState);
 
-      return { ok: true, data: normalizedData };
+      return { ok: true, data: applied.data };
     },
     [setState, stateRef],
   );
