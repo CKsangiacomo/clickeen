@@ -1,6 +1,6 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import {
-  readOrSeedAccountWidgetDefaults,
+  readAccountWidgetDefaults,
   writeAccountWidgetDefaults,
   type AccountWidgetDefaultsDocument,
 } from '../domains/account-widget-defaults';
@@ -52,7 +52,7 @@ export async function tryHandleInternalWidgetDefaultRoutes(args: TokyoRouteArgs)
     if (authErr) return respond(authErr);
 
     try {
-      const widgetDefaults = await readOrSeedAccountWidgetDefaults({ env, accountId });
+      const widgetDefaults = await readAccountWidgetDefaults({ env, accountId });
       return respond(json({ ok: true, accountId, widgetDefaults }));
     } catch (error) {
       return respond(widgetDefaultsErrorResponse(error));
