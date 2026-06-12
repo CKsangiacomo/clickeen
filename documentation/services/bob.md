@@ -527,9 +527,8 @@ Bob does not own account language policy/settings. Enabled languages, base local
 ### Runtime Evidence
 
 The local Bob/Berlin/Tokyo support-stack emulation is retired. Bob product
-behavior is verified through cloud-dev Roma/Bob/Berlin/Tokyo surfaces and
-package-level build/typecheck tests. Supabase schema changes must go through
-reviewed migrations and the approved deploy path.
+behavior is verified through cloud-dev Roma/Bob/Berlin/Tokyo surfaces. Supabase
+schema changes must go through reviewed migrations and the approved deploy path.
 
 ### Deterministic compilation contract (executed)
 

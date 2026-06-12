@@ -13,8 +13,7 @@
     "build:cf": "node ../scripts/build-bob-cf.mjs",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "echo \"bob: no committed test.ts files\""
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@clickeen/ck-contracts": "workspace:*",

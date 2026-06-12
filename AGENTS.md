@@ -73,24 +73,17 @@ If you’re tempted to add special cases, workarounds, or one-off parameters, re
 - `prague/` – Astro marketing + SEO + demo/funnel surface (Cloudflare Pages); not account authoring truth.
 - `documentation/` stores product/architecture context; `scripts/` has build helpers; `tokyo/` stores built Dieter/widget/Prague deploy assets.
 
-### Build, Test, and Development Commands
+### Build, Typecheck, and Development Commands
 - Install: `pnpm install` (workspace root).
 - Dev: local Bob/Berlin/Tokyo support-stack emulation is retired. App-specific local commands are for isolated debugging only; product runtime evidence comes from cloud-dev Cloudflare surfaces. DevStudio runtime evidence is Cloudflare Pages, not a local dev server.
 - Build: `pnpm build:dieter` first, then `pnpm build` (Turbo fan-out).
 - Lint/Typecheck: `pnpm lint`, `pnpm typecheck`; per-app linting with `pnpm --filter @clickeen/bob lint` or `.../devstudio lint`.
-- Tests: `pnpm test` (Turbo) or targeted package tests.
 
 ### Coding Style & Naming Conventions
 - TypeScript-first; React function components in PascalCase; hooks/utilities in camelCase.
 - Use 2-space indentation, Prettier defaults, and ESLint (`@typescript-eslint` in `admin`, `next lint` in Next apps); fix warnings before commit.
 - Dieter components use kebab-case folders and `diet-` CSS class prefixes; reuse tokens from `dieter/tokens` instead of ad-hoc styles.
 - Keep env-dependent URLs configurable (e.g., `NEXT_PUBLIC_TOKYO_URL` for Dieter assets).
-
-### Testing Guidelines
-- Admin currently uses build/typecheck/Pages Functions checks; add package-local tests when introducing behavior with meaningful runtime risk.
-- Dieter specs live in `dieter/components/*/*.spec.json`; update fixtures when components change.
-- For Next apps, add smoke or integration coverage around new logic; at minimum, exercise data fetchers and critical hooks.
-- Run `pnpm test` plus `pnpm lint && pnpm typecheck` before PRs; note any missing coverage.
 
 ### Commit & Pull Request Guidelines
 - Use conventional-style messages seen in history (`feat: ...`, `chore: ...`, `fix: ...`); include scope when helpful (e.g., `feat(bob): add widget toolbar`).

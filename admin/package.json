@@ -9,7 +9,6 @@
     "build": "pnpm generate && node scripts/build-static.mjs",
     "check:functions": "find functions -name '*.js' -print0 | xargs -0 -n 1 node --check",
     "lint": "pnpm generate && ESLINT_USE_FLAT_CONFIG=false eslint src --ext .ts",
-    "test": "echo \"devstudio: no committed test.ts files\"",
     "typecheck": "pnpm generate && tsc --noEmit"
   },
   "keywords": [],

@@ -24,8 +24,6 @@ jobs:
             command: pnpm --filter @clickeen/devstudio typecheck
           - name: Lint DevStudio
             command: pnpm --filter @clickeen/devstudio lint
-          - name: Test DevStudio
-            command: pnpm --filter @clickeen/devstudio test
           - name: Build DevStudio
             command: pnpm --filter @clickeen/devstudio build
           - name: Check DevStudio Functions

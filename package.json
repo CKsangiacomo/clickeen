@@ -11,7 +11,6 @@
     "build:l10n": "node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs",
     "build": "pnpm validate:widgets && pnpm build:i18n && pnpm build:l10n && turbo build",
     "lint": "pnpm validate:widgets && turbo lint",
-    "test": "turbo test",
     "typecheck": "pnpm validate:widgets && turbo typecheck",
     "tokyo:fonts:sync:remote": "node scripts/tokyo-fonts-sync.mjs --remote",
     "tokyo:r2:sync:check": "node scripts/tokyo-r2-deploy-sync.mjs --dry-run --json",

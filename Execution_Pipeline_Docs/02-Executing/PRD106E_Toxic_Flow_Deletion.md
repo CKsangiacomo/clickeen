@@ -418,7 +418,6 @@ Minimum commands:
 ```sh
 pnpm lint
 pnpm typecheck
-pnpm test
 ```
 
 Targeted gates:

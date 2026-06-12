@@ -6,8 +6,7 @@
   "scripts": {
     "makeSymbols": "node ./scripts/makeSymbols.js",
     "makeTypes": "node ./scripts/makeTypes.js",
-    "make": "pnpm run makeSymbols && pnpm run makeTypes",
-    "test": "echo \"sf-symbols: no tests (dev tool)\""
+    "make": "pnpm run makeSymbols && pnpm run makeTypes"
   },
   "keywords": [],
   "author": "",

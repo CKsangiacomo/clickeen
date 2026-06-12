@@ -119,7 +119,7 @@ filled.
 | D-107c | Ratify every listed violation as a deletion target, or create a declared-non-violation record for individual rows. | PENDING |  |  |  |
 | D-107d | Ratify the fresh cross-service violation inventory, or create declared-non-violation records for individual rows. | PENDING |  |  |  |
 | D-107e | Define the permitted typed-failure channel for Roma/Bob/San Francisco paths that lack one. | PENDING |  |  |  |
-| D-107f | Define the regression harness requirement for packages whose `test` script is currently placeholder-only. | PENDING |  |  |  |
+| D-107f | Define the runtime proof requirement after package-level placeholder `test` scripts are deleted. | PENDING |  |  |  |
 | D-107g | Resolve ownership overlap with PRDs 108A1 and 108B1. | PENDING |  |  |  |
 | D-107h | Decide whether current uncommitted PRD 107 implementation diffs are deleted, rebuilt under this PRD, or moved to a separate branch. | PENDING |  |  |  |
 | D-107i | Decide whether `packageSource fallback:` alias is a declared non-violation contract or a deletion target. | PENDING |  |  |  |
@@ -320,6 +320,7 @@ No evidence may be recorded until Step 0 is complete.
 | 107-AB13-2026-06-12 | 2 | AB-13 | Builder Copilot product edit finalization | n/a - deletion of prompt-wording discard gate | Link-like valid ops are no longer discarded based on prompt wording; downstream Bob receives the complete validated op set. | `pnpm --filter @clickeen/sanfrancisco typecheck`; focused link-discard `rg`; `git diff --shortstat` = `1 file changed, 14 deletions(-)`; blast-radius validator GREEN; V1-V8 validator GREEN; local Playwright request proof against TS wrapper showed `cta.text` and `cta.url` both survive and response reports `ops_applied` with two ops. | this commit |
 | 107-AB14-2026-06-12 | 2 | AB-14 / CKC-107-01 | Locale switcher config contract across Roma/Tokyo/render | `coreui.errors.localeSwitcher.positionInvalid`; `[CKLocaleSwitcher] ck_locale_switcher_placement_invalid` | Invalid/missing locale switcher truth fails before Roma create/save, Tokyo create/save/duplicate writes, composed-page render omission, and widget DOM mutation. | `pnpm --filter @clickeen/roma typecheck`; `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/ck-contracts typecheck`; `pnpm --filter @clickeen/tokyo-worker typecheck`; widget runtime `node --check`; focused stale fallback `rg`; `git diff --shortstat` = `8 files changed, 18 insertions(+), 58 deletions(-)`; blast-radius validator GREEN; V1-V8 validator GREEN; direct Playwright browser proof showed malformed placement -> no switcher render, composed-page malformed placement -> failure before omission, valid placement -> exact `pod` / `bottom-left` render. | this commit |
 | 107-AB15-16-2026-06-12 | 1 | AB-15 / AB-16 | Berlin/Roma publish containment gate for instance and page publish | `berlin_publish_containment_invalid_payload`; `coreui.errors.account.publishingPaused` | Malformed DB/Berlin containment, unavailable Berlin, and active containment fail before `publishAccountInstanceInTokyo` or `publishAccountPageInTokyo`; page publish uses the same containment gate as instance publish. | `pnpm --filter @clickeen/roma typecheck`; `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/berlin typecheck`; focused containment/V8 `rg`; Roma placeholder `test` script removed; blast-radius validator GREEN; direct Playwright API proof showed malformed containment -> `ok:false`, `status:502`, active -> exact active result, inactive -> exact inactive result. | this commit |
+| 107-V8-package-scripts-2026-06-12 | H | V8 package-script cleanup | Package/workflow/doc verification ritual cleanup | n/a - deleted no-op test rituals | Fake package `test` scripts, root/Turbo test callers, DevStudio CI test no-op, exact lint-as-typecheck aliases, and active docs preserving those rituals were deleted. | `git diff --shortstat` = `23 files changed, 14 insertions(+), 49 deletions(-)`; focused stale-script/doc `rg`; `pnpm --filter @clickeen/devstudio typecheck`; `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; `pnpm --filter @ck/dieter typecheck`; shared package/San Francisco/Tokyo typechecks; Playwright proof `/tmp/prd107-v8-package-proof.cjs`; blast-radius validator GREEN; V1-V8 validator GREEN. | this commit |
 
 ## Masquerade Audit
 
@@ -343,6 +344,7 @@ Every completed row must pass this checklist.
 | AB-14 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-15 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-16 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
+| V8 package scripts | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 
 Any `YES` in the first eight columns means the row is not complete and a new V7
 violation must be recorded.

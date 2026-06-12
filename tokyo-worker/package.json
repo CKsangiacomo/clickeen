@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "deploy": "node ../scripts/infra/ensure-queues.mjs --write --queues instance-translation-jobs-dev && wrangler deploy --routes \"\"",
-    "test": "echo \"tokyo-worker: no committed test.ts files\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

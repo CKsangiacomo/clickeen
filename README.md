@@ -38,7 +38,6 @@ Useful scripts:
 - `pnpm dev:roma`, `pnpm dev:prague`
 - `pnpm build:bob`, `pnpm build:roma`, `pnpm build:devstudio`
 - `pnpm build` (after `pnpm build:dieter`)
-- `pnpm lint`, `pnpm typecheck`, `pnpm test`
 
 ## Notes
 

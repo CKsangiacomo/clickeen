@@ -1,6 +1,5 @@
 import { normalizeAccountAssetRef } from '@clickeen/ck-contracts';
 import {
-  DEFAULT_GRADIENT,
   MODE_ORDER,
   type FillMode,
   type FillValue,

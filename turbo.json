@@ -7,9 +7,7 @@
     },
     "dev": { "cache": false, "persistent": true },
     "lint": { "outputs": [] },
-    "test": { "outputs": [] },
     "typecheck": { "outputs": [] },
     "e2e": { "cache": false }
   }
 }
-

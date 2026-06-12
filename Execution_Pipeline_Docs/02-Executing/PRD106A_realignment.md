@@ -1245,7 +1245,6 @@ Minimum verification after each implementation pass:
 ```text
 pnpm lint
 pnpm typecheck
-pnpm test
 ```
 
 Targeted verification must be added for changed boundaries:

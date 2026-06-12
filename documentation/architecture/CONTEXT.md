@@ -432,9 +432,6 @@ pnpm build                      # Build all packages
 pnpm dev:roma                   # Isolated Roma package debug
 pnpm dev:prague                 # Isolated Prague package debug
 
-# Quality
-pnpm lint && pnpm typecheck
-pnpm test
 ```
 
 Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
@@ -442,7 +439,7 @@ Runtime profile contract: `documentation/architecture/RuntimeProfiles.md`
 **Runtime evidence (important):**
 
 - The local Bob/Berlin/Tokyo support-stack emulation is retired.
-- Product/account behavior is verified through cloud-dev surfaces and package-level build/typecheck/test commands.
+- Product/account behavior is verified through cloud-dev surfaces and package-level build/typecheck commands.
 
 **Local instance data (important):**
 
