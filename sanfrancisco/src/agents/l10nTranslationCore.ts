@@ -285,18 +285,6 @@ export function chunkTranslationEntries(entries: TranslationItem[]): Translation
   return batches;
 }
 
-export function mergeUsage(base: Usage | undefined, next: Usage): Usage {
-  if (!base) return { ...next };
-  const out: Usage = {
-    provider: base.provider || next.provider,
-    model: base.model || next.model,
-    promptTokens: (base.promptTokens ?? 0) + (next.promptTokens ?? 0),
-    completionTokens: (base.completionTokens ?? 0) + (next.completionTokens ?? 0),
-    latencyMs: (base.latencyMs ?? 0) + (next.latencyMs ?? 0),
-  };
-  return out;
-}
-
 export function parseTranslationResult(
   raw: string,
   expected: TranslationItem[],

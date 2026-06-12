@@ -114,7 +114,7 @@ function extractOutputText(data: OpenAIResponse): string | null {
 
 async function openaiTranslate(args: { env: Env; system: string; user: string }): Promise<{ items: TranslationItem[]; usage: Usage }> {
   const apiKey = requireEnvVar(args.env.OPENAI_API_KEY, 'OPENAI_API_KEY');
-  const model = args.env.OPENAI_MODEL ?? 'gpt-5.2';
+  const model = requireEnvVar(args.env.OPENAI_MODEL, 'OPENAI_MODEL');
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -199,15 +199,9 @@ async function openaiTranslate(args: { env: Env; system: string; user: string })
     throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: 'Expected JSON items array' });
   }
 
-  const usage: Usage = {
-    provider: 'openai',
-    model,
-    promptTokens: responseJson.usage?.input_tokens ?? 0,
-    completionTokens: responseJson.usage?.output_tokens ?? 0,
-    latencyMs,
-  };
+  const { input_tokens: promptTokens, output_tokens: completionTokens } = responseJson.usage ?? {}; if (!responseJson.model?.trim() || typeof promptTokens !== 'number' || !Number.isInteger(promptTokens) || promptTokens < 0 || typeof completionTokens !== 'number' || !Number.isInteger(completionTokens) || completionTokens < 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: 'Missing upstream usage' });
 
-  return { items: parsed.items, usage };
+  return { items: parsed.items, usage: { provider: 'openai', model: responseJson.model.trim(), promptTokens, completionTokens, latencyMs } };
 }
 
 async function writeLog(env: Env, requestPayload: PragueStringsTranslationRequest, payload: Record<string, unknown>) {

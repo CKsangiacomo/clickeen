@@ -17,7 +17,6 @@ import {
   chunkTranslationEntries,
   executeTranslationModel,
   isLikelyNonTranslatableLiteral,
-  mergeUsage,
   parseTranslationResult,
   restoreStructuredTranslationResults,
   type TranslationItem,
@@ -267,8 +266,8 @@ export async function produceCurrentLanguageValues(args: {
         user: buildUserPrompt(batch),
       });
       provider = result.usage.provider;
-      if (!provider) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Translation usage missing provider' });
-      usage = mergeUsage(usage, result.usage);
+      if (!provider || !result.usage.model.trim() || !Number.isInteger(result.usage.promptTokens) || result.usage.promptTokens < 0 || !Number.isInteger(result.usage.completionTokens) || result.usage.completionTokens < 0 || (usage && (usage.provider !== result.usage.provider || usage.model !== result.usage.model))) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Translation usage invalid' });
+      usage = usage ? { ...usage, promptTokens: usage.promptTokens + result.usage.promptTokens, completionTokens: usage.completionTokens + result.usage.completionTokens, latencyMs: usage.latencyMs + result.usage.latencyMs } : result.usage;
       translatedItems.push(
         ...parseTranslationResult(result.content, batch, provider),
       );

@@ -44,7 +44,7 @@ Worker vars/secrets:
 - `DEEPSEEK_BASE_URL` (optional): defaults to `https://api.deepseek.com`
 - `DEEPSEEK_MODEL` (optional): defaults to `deepseek-chat`
 - `OPENAI_API_KEY` (secret, optional): required for Paid Standard/Premium tiers and L10n
-- `OPENAI_MODEL` (optional): defaults to `gpt-5.2`
+- `OPENAI_MODEL`: required for Prague strings L10n; no runtime default is allowed
 
 Provider/model policy:
 - `@clickeen/ck-contracts` owns the model catalog.

@@ -161,16 +161,9 @@ export async function callOpenAiChat(args: {
         message: describeEmptyResponse({ model: args.model, response: responseJson }),
       });
     }
+    const { prompt_tokens: promptTokens, completion_tokens: completionTokens } = responseJson.usage ?? {}; if (!responseJson.model?.trim() || typeof promptTokens !== 'number' || !Number.isInteger(promptTokens) || promptTokens < 0 || typeof completionTokens !== 'number' || !Number.isInteger(completionTokens) || completionTokens < 0) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'openai', message: 'Missing upstream usage' });
 
-    const usage: Usage = {
-      provider: 'openai',
-      model: responseJson.model || args.model,
-      promptTokens: responseJson.usage?.prompt_tokens ?? 0,
-      completionTokens: responseJson.usage?.completion_tokens ?? 0,
-      latencyMs,
-    };
-
-    return { content, usage };
+    return { content, usage: { provider: 'openai', model: responseJson.model.trim(), promptTokens, completionTokens, latencyMs } };
   } finally {
     clearTimeout(timeout);
   }
