@@ -6,19 +6,11 @@ export async function onRequest(context) {
 
   const { request, env } = context;
   const url = new URL(request.url);
-  const nextPath = resolveSafeNextPath(url.searchParams.get('next'), '/');
+  const nextPath = resolveSafeNextPath(url.searchParams.get('next'));
+  if (!nextPath) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.auth.continuationInvalid' } }, 422);
 
-  let berlinBase;
-  let devstudioOrigin;
-  try {
-    berlinBase = resolveBerlinBaseUrl(env);
-    devstudioOrigin = resolveDevstudioOrigin(env);
-  } catch {
-    return json(
-      { error: { kind: 'INTERNAL', reasonKey: 'devstudio.errors.auth.config_missing' } },
-      503,
-    );
-  }
+  const berlinBase = resolveBerlinBaseUrl(env);
+  const devstudioOrigin = resolveDevstudioOrigin(env);
 
   const loginUrl = new URL('/auth/login/google/start', berlinBase);
   loginUrl.searchParams.set('next', nextPath);

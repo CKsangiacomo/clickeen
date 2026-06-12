@@ -44,13 +44,7 @@ export function resolveRequestOrigin(request) {
   return `${resolveRequestProtocol(request)}//${host}`;
 }
 
-export function resolveSafeNextPath(value, fallback = '/') {
-  const normalized = String(value || '').trim();
-  if (!normalized.startsWith('/')) return fallback;
-  if (normalized.startsWith('//')) return fallback;
-  if (normalized.length > 2048) return fallback;
-  return normalized || fallback;
-}
+export function resolveSafeNextPath(value) { const normalized = String(value || '').trim(); return normalized.startsWith('/') && !normalized.startsWith('//') && normalized.length <= 2048 ? normalized : null; }
 
 export function cloneResponseWithCookies(response, cookies) {
   if (!cookies?.length) return response;

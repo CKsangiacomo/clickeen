@@ -17,11 +17,6 @@ function stringValue(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function parseContinuationNext(payload) {
-  const continuation = payload && typeof payload === 'object' ? payload.continuation : null;
-  return resolveSafeNextPath(continuation?.next, '/');
-}
-
 export async function onRequest(context) {
   if (context.request.method.toUpperCase() !== 'GET') return methodNotAllowed();
 
@@ -35,15 +30,13 @@ export async function onRequest(context) {
     );
   }
 
-  const finished = await finishBerlinSession(env, finishId).catch((error) => ({
-    ok: false,
-    status: 503,
-    reasonKey: 'devstudio.errors.auth.config_missing',
-    error,
-  }));
+  const finished = await finishBerlinSession(env, finishId);
   if (!finished.ok) {
     return json({ error: { kind: 'AUTH', reasonKey: finished.reasonKey } }, finished.status || 401);
   }
+  const continuation = finished.payload && typeof finished.payload === 'object' ? finished.payload.continuation : null;
+  const nextPath = resolveSafeNextPath(continuation?.next);
+  if (!nextPath) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.auth.continuationInvalid' } }, 422);
 
   const accessToken = stringValue(finished.payload.accessToken);
   const refreshToken = stringValue(finished.payload.refreshToken);
@@ -51,12 +44,7 @@ export async function onRequest(context) {
     return json({ error: { kind: 'AUTH', reasonKey: 'coreui.errors.auth.login_failed' } }, 502);
   }
 
-  const bootstrap = await fetchBootstrap(env, accessToken).catch((error) => ({
-    ok: false,
-    status: 503,
-    reasonKey: 'devstudio.errors.auth.config_missing',
-    error,
-  }));
+  const bootstrap = await fetchBootstrap(env, accessToken);
   if (!bootstrap.ok) {
     return json(
       {
@@ -69,7 +57,7 @@ export async function onRequest(context) {
     );
   }
 
-  const destination = new URL(parseContinuationNext(finished.payload), resolveDevstudioOrigin(env));
+  const destination = new URL(nextPath, resolveDevstudioOrigin(env));
   const response = redirect(destination.toString(), 302);
   return cloneResponseWithCookies(
     response,
