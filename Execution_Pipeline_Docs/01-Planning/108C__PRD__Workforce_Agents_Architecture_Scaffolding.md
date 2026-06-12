@@ -101,9 +101,8 @@ move to `02-Executing` only after:
 ### 3.1 Already shipped or partially shipped
 
 - Widget Instance Translator
-- Prague Copy Translator
 
-These prove that system-agent work already exists, but the pattern is not yet formalized
+This proves that system-agent work already exists, but the pattern is not yet formalized
 as a reusable workforce-agent scaffold.
 
 ### 3.2 Future durable/service agents

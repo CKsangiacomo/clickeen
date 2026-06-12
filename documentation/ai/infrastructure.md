@@ -51,7 +51,7 @@ Provider/model policy:
 - `@clickeen/ck-policy` owns the tier + agent runtime policy matrix.
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, token ceiling, turn ceiling, and timeout ceiling.
-- **Prague strings L10n**: `website.prague.copy.translator`, OpenAI via the Prague tooling route.
+- **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
 - **Account-widget Instance Translation Agent**: `widget.instance.translator`. Roma accepts translation work after a successful Tokyo save by building concrete per-locale jobs and enqueueing them on `INSTANCE_TRANSLATION_JOBS`. San Francisco consumes those jobs, enforces the embedded `AgentRuntimePolicy`, produces exact changed-field values, merges complete current-language values, and writes the complete overlay through Tokyo-worker.
 
 ## 3) HTTP endpoints
@@ -178,7 +178,6 @@ Canonical runtime budget source:
 |---|---|---|---|---|
 | `cs.widget.copilot.v1` | `650 / 45s / 2` | `900 / 45s / 3` | `1400 / 60s / 3` | `1600 / 60s / 3` |
 | `widget.instance.translator` | `900 / 20s / 1` | `1200 / 30s / 1` | `1800 / 45s / 1` | `2200 / 60s / 1` |
-| `website.prague.copy.translator` | `2200 / 60s / 1` | `2200 / 60s / 1` | `2200 / 60s / 1` | `2200 / 60s / 1` |
 
 Model policy is canonical in `packages/ck-policy/src/ai-runtime.ts` and surfaced in DevStudio from the same source. Tier 2 and Tier 3 can expose a single combined model dropdown for supported customer-facing agents; the underlying signed policy still keeps provider and model separate for enforcement.
 
@@ -219,4 +218,4 @@ Actions:
 Useful checks:
 - Use cloud-dev San Francisco for runtime evidence.
 - Use `pnpm --filter @clickeen/sanfrancisco typecheck` for package-level checks.
-- For Prague strings translation, `AI_GRANT_HMAC_SECRET` + `OPENAI_API_KEY` must be set locally.
+- For Prague strings translation, `AI_GRANT_HMAC_SECRET`, `OPENAI_API_KEY`, and `OPENAI_MODEL` must be set locally.

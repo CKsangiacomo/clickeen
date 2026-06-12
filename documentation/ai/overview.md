@@ -14,7 +14,6 @@ Traditional SaaS companies need full teams to operate at scale—sales, support,
 |-------|------|----------|
 | Builder Copilot | Help account users customize widgets | Product specialists |
 | Widget Instance Translator | Translate saved widget instances into enabled locales | Localization team |
-| Prague Copy Translator | Translate Prague website copy | Marketing localization |
 
 **Every agent learns automatically** from outcomes—improving prompts, accumulating golden examples, and evolving over time. Day 1 agents are mediocre. Day 100 agents are excellent.
 
@@ -142,7 +141,6 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
 - AI surfaces currently recognized by the worker:
   - `cs.widget.copilot.v1`
   - `widget.instance.translator`
-  - `website.prague.copy.translator`
   - `POST /v1/execute` currently wires executors for: `cs.widget.copilot.v1`.
 
 This matters because the “learning loop” is not theoretical: every `/v1/execute` call enqueues an `InteractionEvent`, and the queue consumer writes raw payloads to R2 + indexes a small subset into D1.

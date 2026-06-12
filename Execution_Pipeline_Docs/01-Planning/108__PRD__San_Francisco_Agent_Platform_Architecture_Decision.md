@@ -170,8 +170,7 @@ already owns the AI plane:
 - **Grants:** HMAC-signed `AIGrant` from trusted issuers (`roma`, `sanfrancisco`),
   short-lived, capability-scoped, carrying a signed `AgentRuntimePolicy` (`grants.ts`).
 - **Capability + boundary model:** `assertCap(grant, 'agent:<id>')`; registry declares
-  `boundary` per agent (`editor_ops_only`, `account_widget_translated_values`,
-  `prague_copy_tooling_output`).
+  `boundary` per agent (`editor_ops_only`, `account_widget_translated_values`).
 - **Model/provider routing:** `modelRouter.ts` resolves provider+model strictly from the
   signed policy; no silent cross-switching.
 - **Budgets, concurrency, timeouts:** per-grant token/turn/timeout ceilings; per-isolate
@@ -221,7 +220,6 @@ shape, and a one-size design would be wrong.
 |---|---|---|---|---|
 | Builder Copilot | `cs.widget.copilot.v1` | **Shipped** | Roma account Builder | overview, ai.ts |
 | Widget Instance Translator | `widget.instance.translator` | **Shipped (queue)** | Tokyo-worker → SF queue | overview, ai.ts |
-| Prague Copy Translator | `website.prague.copy.translator` | **Shipped (endpoint)** | Prague l10n tooling | overview, ai.ts |
 | GTM Agent ("AI VP of Marketing") | `ops.gtm.*` (proposed) | **Spec'd, not built** | internal/ops cron | `agents/gtm.md` |
 | UX Writer | `ops.uxwriter.*` (proposed) | **Spec'd, not built** | internal/ops cron | `agents/ux-writer.md` |
 | Support Reply | `support.reply` (named) | Future | (TBD) | overview "Terms" |
@@ -238,7 +236,6 @@ Dispositions for the shipped roster (PR-14/D9, ratified 2026-06-09):
 |---|---|
 | Builder Copilot | **Rebuild** per 108B (earth tests as proof) |
 | Widget Instance Translator | **Keep + protect** (29-locale regression gate on any plane change), then **re-base** onto the durable scaffold as the 108C reference agent (D5) |
-| Prague Copy Translator | **Freeze now, delete on 106D** — no 108 investment; SF-side deletion inventory lives in the 106E ledger |
 
 ### 2.2 Classification (the dimensions that matter for platform shape)
 
@@ -258,13 +255,12 @@ Dispositions for the shipped roster (PR-14/D9, ratified 2026-06-09):
 - **Account-scoped** (acts for a user/account under a Roma-minted grant): Builder Copilot,
   Support Reply, Instance Translator.
 - **Service-scoped** (acts for Clickeen itself under a service grant): GTM, UX Writer,
-  Community Moderation, Prague Copy.
+  Community Moderation.
 
 **Dimension C — Output target / boundary:**
 
 - `editor_ops_only` (returns `ops[]` into a widget): Builder Copilot.
 - `account_widget_translated_values`: Instance Translator.
-- `prague_copy_tooling_output`: Prague Copy.
 - **New boundaries the roster implies:** ops/marketing artifacts (GTM JSON, audit
   reports) written to a service-owned store for human review — not account truth, not
   product persistence.

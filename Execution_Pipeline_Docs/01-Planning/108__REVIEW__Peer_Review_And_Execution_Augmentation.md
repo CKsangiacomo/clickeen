@@ -107,7 +107,7 @@ table as the certified bridge between the PRDs and the source tree.
 | 8 | SF keyword-ranks controls / pads prompt with widget source | scorer at `sanfrancisco/src/agents/widgetCopilotCore.ts:273-296`; `csPromptPayload.ts` summarizes `widget.html` / `spec.json` / `editable-fields.json` | **TRUE** |
 | 9 | `EditorContract` tree exists but is not projected into `CompiledWidget` | tree in `bob/lib/compiler/editor-contract.ts`; no `editorContract` member in `bob/lib/types.ts` / `compiler.server.ts` | **TRUE** |
 | 10 | Grant issuers are `roma`, `sanfrancisco`; `assertCap` enforces capability | `sanfrancisco/src/grants.ts:6,208` | **TRUE** |
-| 11 | Three registered agents with declared boundaries | `ck-contracts/src/ai.ts:101-124` (`editor_ops_only`, `account_widget_translated_values`, `prague_copy_tooling_output`) | **TRUE** |
+| 11 | Two registered agents with declared boundaries | `ck-contracts/src/ai.ts:101-124` (`editor_ops_only`, `account_widget_translated_values`) | **TRUE** |
 | 12 | EB-007 exists and describes the `role`-flag flattening | `EVERGREEN_BACKLOG.md:44`; `role` flag live in `widgetCopilotCore.ts:95-111` | **TRUE** |
 | 13 | Instance translation runs Tokyo-worker → SF via queue | `INSTANCE_TRANSLATION_JOBS` in `tokyo-worker/wrangler.toml:38` and `sanfrancisco/wrangler.toml:31` | **TRUE** |
 | 14 | "…exactly like Tokyo-worker → `SANFRANCISCO_L10N` already does" (108 §3 Option C, Recommendation #2) | `SANFRANCISCO_L10N` appears in **zero** code or wrangler files; only in docs (`documentation/architecture/Overview.md`, `documentation/ai/overview.md`, `CloudflarePagesCloudDevChecklist.md`, executed PRDs 080/098/098C) | **FALSE — phantom binding; see PR-1** |
@@ -120,7 +120,6 @@ Shipped model policy, extracted from `packages/ck-policy/ai-runtime.matrix.json`
 |---|---|---|---|---|
 | `cs.widget.copilot.v1` | deepseek-chat | gpt-5-mini | gpt-5.2 default; gpt-5-mini/gpt-5/gpt-5.2 allowed | tier2+ |
 | `widget.instance.translator` | deepseek-chat | deepseek-chat | gpt-5-mini default | never |
-| `website.prague.copy.translator` | gpt-5.2 | gpt-5.2 | gpt-5.2 | never |
 
 Provider adapters that exist: `sanfrancisco/src/providers/openai.ts`, `deepseek.ts`.
 No Google/Gemini, Mistral, or Llama adapter exists.
@@ -503,9 +502,8 @@ lineup."
 
 ### PR-14 — BLOCKER (disposition gap): the series never disposes of the three shipped AI uses — keep, rebuild, or delete
 
-(Added in review round 2 after product-owner feedback. Clickeen has exactly three AI
-uses in production: widget instance translation, Prague copy translation, and Builder
-Copilot. A platform series that re-architects the plane must say, per shipped use,
+(Added in review round 2 after product-owner feedback. Clickeen has two surviving AI
+uses in production: widget instance translation and Builder Copilot. A platform series that re-architects the plane must say, per shipped use,
 exactly what is deleted, what is replaced, what is rebuilt, and when. The 108 series
 does this for none of them completely.)
 
@@ -514,7 +512,6 @@ does this for none of them completely.)
 | Use | Shipped code | Status per product owner |
 |---|---|---|
 | a) Widget instance translation (29-locale overlays) | `sanfrancisco/src/instance-translation-queue.ts`, `agents/l10nTranslationCore.ts`, `agents/translationSafety.ts`, `tokyo-worker/src/domains/account-translations/operations.ts`, `INSTANCE_TRANSLATION_JOBS` queue, matrix rows (deepseek-chat free/tier1, gpt-5-mini tier2+) | **Works-ish** after long breakage — the only working AI feature |
-| b) Prague copy translation | `sanfrancisco/src/agents/l10nPragueStrings.ts`, registry entry `website.prague.copy.translator` (`ck-contracts/src/ai.ts`), matrix rows (gpt-5.2 all tiers), HMAC endpoint path, boundary `prague_copy_tooling_output` | Works, but **obsolete by design**: PRD 106C/106D turn Prague into widgets/pages; migrated Prague content translates through the instance-translation substrate, so a separate Prague copy translator has no future |
 | c) Builder Copilot | `bob/components/CopilotPane.tsx`, `roma/.../copilot/route.ts`, `roma/lib/ai/account-copilot.ts`, `sanfrancisco/src/agents/{csWidgetCopilot, widgetCopilotCore, csPromptPayload, widgetCopilotCsProduct, widgetCopilotLanguage, widgetCopilotParsing, widgetCopilotPromptProfiles}.ts` | **Completely broken** across tiers |
 
 **What the series actually says, per use:**
@@ -534,20 +531,12 @@ does this for none of them completely.)
   profile, a routing row (the brief proposes Gemini Flash-Lite for translation), or a
   re-base onto the 108A-2/108C formalized scaffold (108C §3.1 admits the pattern "is
   not yet formalized" — but no step formalizes *this agent*).
-- **(b) Prague copy translation — covered in the wrong direction.** Every 108 doc
-  carries `website.prague.copy.translator` forward as a live roster member. Per PRD
-  106, it is a walking-dead surface. 106E targets the Prague-side translation sidecars
-  for deletion "after their routes migrate," but **nobody owns the SF-side deletion**:
-  the agent file, registry entry, matrix rows, HMAC endpoint, and boundary value. A
-  cross-series ownership gap — 106E deletes the consumer, no PRD deletes the producer.
-
 **Required amendment — add a disposition table to 108 (and gates to the execution
 specs):**
 
 | Use | Disposition | Owner | Gate |
 |---|---|---|---|
 | Widget instance translation | **Keep + protect, then re-base.** 108A-1 must carry an explicit translator regression gate: after matrix/adapter rewrite, the 29-locale overlay generation runs green on a fixture instance before merge. Lineup decision (D1) must include a translator routing row. Re-base onto the durable scaffold happens in 108A-2/108C, not before. | 108A-1 (protection), 108A-2/108C (re-base) | Overlay regression fixture green |
-| Prague copy translation | **Freeze now, delete on 106D.** No 108 investment (no capability profile beyond what the shared plane gives for free, no routing work, no picker). Deletion inventory: `l10nPragueStrings.ts`, registry entry, matrix rows, endpoint route, `prague_copy_tooling_output` boundary. Deletion executes when 106D cuts Prague routes over; add this inventory to 106E's ledger so one PRD owns both sides. | 106E (executes), 108 roster (marks deprecated) | 106D green |
 | Builder Copilot | **Rebuild per 108B.** The 108B-1 execution spec adds a per-file disposition over the seven SF copilot files + Bob/Roma surfaces (survives / rewritten / deleted), with `rg` guards for the deleted ones. | 108B-1 | Earth tests green, deletion guards green |
 
 108's §2.1 roster table should gain a `Disposition` column reflecting the above —
@@ -568,7 +557,7 @@ conformance run + matrix row, zero TypeScript changes.)
 | # | Flavor | Locations | Covered by 108? |
 |---|---|---|---|
 | 1 | Call mechanics from model-id strings | `sanfrancisco/src/providers/openai.ts:60,65,70` (`startsWith('gpt-5')` → token param, temperature, reasoning effort) | **Yes** — dies with the capability registry (108A-1 Step 4) |
-| 2 | Model/provider defaults hardcoded in agent code, bypassing policy | `agents/l10nPragueStrings.ts:117` (`env.OPENAI_MODEL ?? 'gpt-5.2'` — the matrix rows for the Prague agent are decorative; code wins); `agents/l10nTranslationCore.ts:209,253,324` + `l10n-account-routes.ts:279` (`?? 'deepseek'` silent fallbacks **inside the one working AI feature**) | **No.** Prague instance dies via PR-14, but the translator fallbacks violate the no-fallbacks tenet and no 108 doc names them |
+| 2 | Model/provider defaults hardcoded in agent code, bypassing policy | `agents/l10nTranslationCore.ts:209,253,324` + `l10n-account-routes.ts:279` (`?? 'deepseek'` silent fallbacks **inside the one working AI feature**) | **No.** The translator fallbacks violate the no-fallbacks tenet and no 108 doc names them |
 | 3 | The provider universe duplicated across services | `ck-contracts/src/ai.ts:1` and `sanfrancisco/src/ai/modelRouter.ts:5` (duplicate type unions); `grants.ts:7` (Set); `roma/.../copilot/route.ts:16` (second Set); `ai/chat.ts` provider `if`-dispatch. Onboarding one provider = 5+ files across 3 services | **No** — never named anywhere in the series |
 | 4 | Model catalog + UI labels in compiled code | `ck-contracts/src/ai.ts:136-141` (`AI_MODEL_CATALOG` — relabeling a model requires a redeploy) | **Implicitly** — the registry supersedes it, but no doc orders its deletion |
 | 5 | Model names baked into PRD acceptance criteria | 108A §6 ("`gpt-5.2` is never called with…") | **PR-2** — criteria must be lineup-agnostic |

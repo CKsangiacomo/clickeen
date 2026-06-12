@@ -26,7 +26,7 @@ type OpenAIResponse = {
   model?: string;
 };
 
-const PROMPT_VERSION = 'website.prague.copy.translator@2026-05-06.1';
+const PROMPT_VERSION = 'prague.strings.l10n@2026-05-06.1';
 const POLICY_VERSION = 'l10n.ops.v1';
 
 const MAX_ITEMS = 250;

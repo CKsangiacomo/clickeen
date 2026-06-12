@@ -314,6 +314,7 @@ No evidence may be recorded until Step 0 is complete.
 | 107-AB7-2026-06-12 | 2 | AB-7 | San Francisco translation usage boundary | `Missing upstream usage`; `Translation usage invalid` | Missing/malformed provider model or token usage failed before translation success; cross-batch usage identity mismatch fails before aggregate usage success. | `pnpm --filter @clickeen/sanfrancisco typecheck`; focused usage/default `rg`; `git diff --shortstat` = `7 files changed, 12 insertions(+), 43 deletions(-)`; validators GREEN; local Playwright request proof against TS wrapper showed valid Deepseek/Prague usage -> 200, missing model/tokens and negative/fractional tokens -> typed failure. | this commit |
 | 107-AB8-2026-06-12 | 2 | AB-8 | San Francisco translation completion/error attribution | `Invalid JSON response`; `Expected JSON array response`; provider-required parser errors | Completion/error-path provider attribution uses only caller-supplied provider truth; no `deepseek` default remains. | `pnpm --filter @clickeen/sanfrancisco typecheck`; focused provider-default `rg`; git status clean before evidence; validators GREEN; Playwright proof inherited from AB-6/AB-7 covered malformed provider output and missing provider/usage failure before success. | this commit |
 | 107-AB9-2026-06-12 | 2 | AB-9 | San Francisco account translation result attribution | `Translation usage invalid`; `Missing upstream usage` | Account/job-visible translation attribution only carries real validated provider usage; missing provider cannot become `deepseek`. | `pnpm --filter @clickeen/sanfrancisco typecheck`; focused account-route provider `rg`; git status clean before evidence; validators GREEN; Playwright proof inherited from AB-6/AB-7 covered valid usage success and missing/malformed provider usage failure before account-visible success. | this commit |
+| 107-AB10-2026-06-12 | 2 | AB-10 | San Francisco Prague strings model boundary | `Missing OPENAI_MODEL` | Missing Prague model env returned typed failure before OpenAI `fetch`; fake `website.prague.copy.translator` registry/matrix/policy surface was removed so no model call can run under invented `gpt-5.2`. | `pnpm --filter @clickeen/sanfrancisco typecheck`; `pnpm --filter @clickeen/ck-contracts typecheck`; `pnpm --filter @clickeen/ck-policy typecheck`; `node` JSON parse for `packages/ck-policy/ai-runtime.matrix.json`; focused Prague policy/default `rg`; `git diff --shortstat` = `9 files changed, 12 insertions(+), 170 deletions(-)`; blast-radius validator GREEN; V1-V8 validator GREEN; local Playwright request proof against TS wrapper showed missing `OPENAI_MODEL` -> 500 with `fetchCalls:0`, valid `OPENAI_MODEL` -> 200 with `fetchCalls:1`. | this commit |
 
 ## Masquerade Audit
 
@@ -330,6 +331,7 @@ Every completed row must pass this checklist.
 | AB-7 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-8 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-9 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
+| AB-10 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 
 Any `YES` in the first eight columns means the row is not complete and a new V7
 violation must be recorded.

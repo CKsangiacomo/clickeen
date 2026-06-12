@@ -4,8 +4,7 @@ export type AiExecutionSurface = 'execute' | 'endpoint';
 export type AiAgentCategory = 'copilot' | 'system_agent';
 export type AiRegistryBoundary =
   | 'editor_ops_only'
-  | 'account_widget_translated_values'
-  | 'prague_copy_tooling_output';
+  | 'account_widget_translated_values';
 
 export type AiBudget = {
   maxTokens: number;
@@ -113,17 +112,6 @@ const AI_AGENT_REGISTRY: AiRegistryEntry[] = [
     boundary: 'account_widget_translated_values',
     supportedProviders: ['deepseek', 'openai'],
     defaultProvider: 'deepseek',
-    executionSurface: 'endpoint',
-  },
-  {
-    agentId: 'website.prague.copy.translator',
-    category: 'system_agent',
-    taskClass: 'l10n.prague.systemStrings',
-    description: 'Prague Copy Translator.',
-    owner: 'prague.l10n',
-    boundary: 'prague_copy_tooling_output',
-    supportedProviders: ['openai'],
-    defaultProvider: 'openai',
     executionSurface: 'endpoint',
   },
 ];
