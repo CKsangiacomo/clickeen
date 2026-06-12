@@ -166,22 +166,6 @@ function asTranslationItem(item: SavedTextGraphItem): TranslationItem {
   };
 }
 
-function usageForTranslationAudit(args: {
-  grant: AIGrant;
-  startedAtMs: number;
-  usage?: Usage;
-}): Usage {
-  if (args.usage) return args.usage;
-  const modelRef = args.grant.ai?.selectedModel ?? args.grant.ai?.defaultModel;
-  return {
-    provider: modelRef?.provider ?? 'unknown',
-    model: modelRef?.model ?? 'unknown',
-    promptTokens: 0,
-    completionTokens: 0,
-    latencyMs: Math.max(0, Date.now() - args.startedAtMs),
-  };
-}
-
 async function sendInstanceTranslationAudit(args: {
   env: Env;
   ctx?: WaitUntilContext;
@@ -214,11 +198,7 @@ async function sendInstanceTranslationAudit(args: {
         operation: args.result.operation,
       },
     },
-    usage: usageForTranslationAudit({
-      grant: args.grant,
-      startedAtMs: args.startedAtMs,
-      usage: args.result.usage,
-    }),
+    ...(args.result.usage ? { usage: args.result.usage } : {}),
   };
 
   const sendPromise = args.env.SF_EVENTS.send(event).catch((err: unknown) => {
@@ -276,7 +256,7 @@ export async function produceCurrentLanguageValues(args: {
     });
     const batches = chunkTranslationEntries(modelEntries);
     const translatedItems: Array<{ path: string; value: string }> = [];
-    let provider: string = args.grant.ai?.selectedModel?.provider ?? args.grant.ai?.defaultModel?.provider ?? 'deepseek';
+    let provider = '';
 
     for (const batch of batches) {
       const result = await executeTranslationModel({
@@ -286,10 +266,11 @@ export async function produceCurrentLanguageValues(args: {
         system,
         user: buildUserPrompt(batch),
       });
+      provider = result.usage.provider;
+      if (!provider) throw new HttpError(502, { code: 'PROVIDER_ERROR', provider: 'sanfrancisco', message: 'Translation usage missing provider' });
       usage = mergeUsage(usage, result.usage);
-      provider = result.usage.provider || provider;
       translatedItems.push(
-        ...parseTranslationResult(result.content, batch, result.usage.provider || provider),
+        ...parseTranslationResult(result.content, batch, provider),
       );
     }
 

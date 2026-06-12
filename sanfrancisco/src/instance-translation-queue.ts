@@ -14,7 +14,7 @@ import {
   completeLocaleTranslationInTokyo,
   failLocaleTranslationInTokyo,
 } from './tokyo-translation-client';
-import type { AIGrant, Env, Usage } from './types';
+import type { AIGrant, Env } from './types';
 
 type QueueMessage = Message<unknown>;
 const INSTANCE_TRANSLATION_CONCURRENCY = 4;
@@ -45,17 +45,6 @@ function buildGrant(job: InstanceTranslationJob): AIGrant {
       instancePublicId: job.instanceId,
       envStage: job.ai.policyProfile,
     },
-  };
-}
-
-function usageForFailure(job: InstanceTranslationJob, startedAtMs: number): Usage {
-  const model = job.ai.selectedModel ?? job.ai.defaultModel;
-  return {
-    provider: model.provider,
-    model: model.model,
-    promptTokens: 0,
-    completionTokens: 0,
-    latencyMs: Math.max(0, Date.now() - startedAtMs),
   };
 }
 
@@ -135,7 +124,7 @@ async function executeInstanceTranslationJob(env: Env, job: InstanceTranslationJ
         ...(completion.reasonKey ? { reasonKey: completion.reasonKey } : {}),
         ...(completion.detail ? { detail: completion.detail } : {}),
       },
-      usage: produced.usage ?? usageForFailure(job, startedAtMs),
+      ...(produced.usage ? { usage: produced.usage } : {}),
     });
   }
 }
@@ -239,7 +228,6 @@ async function reportTerminalFailureToTokyo(args: {
         reasonKey: failure.reasonKey ?? reasonKey,
         detail: failure.detail ?? detail,
       },
-      usage: usageForFailure(args.job, startedAtMs),
     });
   }
 }

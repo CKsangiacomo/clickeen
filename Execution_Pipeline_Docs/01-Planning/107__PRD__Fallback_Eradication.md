@@ -310,6 +310,7 @@ No evidence may be recorded until Step 0 is complete.
 | 107-AB3-2026-06-12 | 2 | AB-3 | Dieter dropdown-fill gradient hydration/commit | visible invalid state on unsupported radial/conic/CSS gradients | Unsupported gradient truth did not reach a rewritten successful commit; linear gradient still committed as `kind: "linear"`. | `pnpm --filter @ck/dieter typecheck`; `pnpm --filter @ck/dieter build`; focused gradient fallback `rg`; `git diff --shortstat` = `7 files changed, 36 insertions(+), 136 deletions(-)`; local Playwright proof against built `tokyo/product/dieter/components/dropdown-fill/dropdown-fill.js` showed radial/conic/CSS gradients set `data-invalid="true"` and valid linear angle edit committed as linear. | this commit |
 | 107-AB4-2026-06-12 | 2 | AB-4 | Bob TD menu media/hydrator boundary | `Builder controls failed to load.` | Failed Dieter media cleared the control container; no field remained available for edit/save continuation. | `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; focused warning-only hydration `rg`; `git diff --shortstat` = `5 files changed, 13 insertions(+), 46 deletions(-)`; local Playwright proof against `http://127.0.0.1:3017/bob` showed valid hydrator runs and missing Dieter script clears controls with visible failure. | this commit |
 | 107-AB5-2026-06-12 | 2 | AB-5 | Bob compiled widget route | `[Bob] Failed to fetch widget support file product/widgets/shared/header.css (404 Not Found)` | Missing referenced support file returned 500; no compiled payload or partial `widgetPackage` success was returned. | `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter @clickeen/bob lint`; focused cache/omission `rg`; `git diff --shortstat` = `2 files changed, 14 insertions(+), 121 deletions(-)`; local Playwright API proof against `http://127.0.0.1:3027/api/widgets/calltoaction/compiled` showed complete support files -> 200 with package files, missing `shared/header.css` -> failed closed with typed support-file error. | this commit |
+| 107-AB6-2026-06-12 | 2 | AB-6 | San Francisco translation parse/usage boundary | `Expected JSON array response`; `Invalid JSON response`; `Translation usage missing provider` | Provider output without exact array contract failed before translation success; direct non-model translation returned without fabricated usage. | `pnpm --filter @clickeen/sanfrancisco typecheck`; focused provider/default/schema/audit `rg`; `git diff --shortstat` = `5 files changed, 14 insertions(+), 107 deletions(-)`; validators GREEN; local Playwright request proof against TS wrapper showed array output -> 200 with provider `deepseek`, object wrapper -> 502, fenced JSON -> 502, direct values -> 200 with no `usage`. | this commit |
 
 ## Masquerade Audit
 
@@ -322,6 +323,7 @@ Every completed row must pass this checklist.
 | AB-3 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-4 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 | AB-5 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
+| AB-6 | NO | NO | NO | NO | NO | NO | NO | NO | YES |
 
 Any `YES` in the first eight columns means the row is not complete and a new V7
 violation must be recorded.

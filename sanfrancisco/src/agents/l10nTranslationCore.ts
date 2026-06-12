@@ -107,27 +107,6 @@ export async function executeTranslationModel(args: {
   });
 }
 
-function extractJsonPayload(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) return trimmed;
-  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
-  if (fenced) return fenced[1].trim();
-
-  const arrayStart = trimmed.indexOf('[');
-  const arrayEnd = trimmed.lastIndexOf(']');
-  if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
-    return trimmed.slice(arrayStart, arrayEnd + 1);
-  }
-
-  const objStart = trimmed.indexOf('{');
-  const objEnd = trimmed.lastIndexOf('}');
-  if (objStart !== -1 && objEnd !== -1 && objEnd > objStart) {
-    return trimmed.slice(objStart, objEnd + 1);
-  }
-
-  return trimmed;
-}
-
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -206,7 +185,7 @@ function buildRichtextSegmentPlan(entry: TranslationItem): RichtextSegmentPlan {
 function rebuildRichtextFromSegments(
   plan: RichtextSegmentPlan,
   translatedSegments: Map<string, string>,
-  provider = 'deepseek',
+  provider: string,
 ): string {
   return plan.parts
     .map((part) => {
@@ -248,9 +227,9 @@ export function restoreStructuredTranslationResults(args: {
   entries: TranslationItem[];
   plan: StructuredTranslationPlan;
   translatedItems: Array<{ path: string; value: string }>;
-  provider?: string;
+  provider: string;
 }): Array<{ path: string; value: string }> {
-  const provider = args.provider || 'deepseek';
+  const provider = args.provider;
   const translatedByPath = new Map(args.translatedItems.map((item) => [item.path, item.value]));
 
   return args.entries
@@ -321,29 +300,16 @@ export function mergeUsage(base: Usage | undefined, next: Usage): Usage {
 export function parseTranslationResult(
   raw: string,
   expected: TranslationItem[],
-  provider = 'deepseek',
+  provider: string,
 ): Array<{ path: string; value: string }> {
   let json: unknown;
   try {
     json = JSON.parse(raw);
   } catch {
-    const candidate = extractJsonPayload(raw);
-    try {
-      json = JSON.parse(candidate);
-    } catch {
-      throw new HttpError(502, {
-        code: 'PROVIDER_ERROR',
-        provider,
-        message: 'Invalid JSON response',
-      });
-    }
+    throw new HttpError(502, { code: 'PROVIDER_ERROR', provider, message: 'Invalid JSON response' });
   }
 
-  const items = Array.isArray(json)
-    ? json
-    : isRecord(json) && Array.isArray((json as any).items)
-      ? (json as any).items
-      : null;
+  const items = Array.isArray(json) ? json : null;
   if (!items) {
     throw new HttpError(502, {
       code: 'PROVIDER_ERROR',

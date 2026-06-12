@@ -108,7 +108,7 @@ export type InteractionEvent = {
   };
   input: unknown;
   result: unknown;
-  usage: Usage;
+  usage?: Usage;
 };
 
 export type Env = {

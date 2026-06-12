@@ -70,33 +70,6 @@ function reasoningEffortForModel(model: string): 'minimal' | null {
   return normalized.startsWith('gpt-5') ? 'minimal' : null;
 }
 
-const TRANSLATION_RESPONSE_FORMAT = {
-  type: 'json_schema',
-  json_schema: {
-    name: 'translation_items',
-    strict: true,
-    schema: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        items: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              path: { type: 'string' },
-              value: { type: 'string' },
-            },
-            required: ['path', 'value'],
-          },
-        },
-      },
-      required: ['items'],
-    },
-  },
-};
-
 function describeEmptyResponse(args: { model: string; response: OpenAIChatResponse }): string {
   const choice = args.response.choices?.[0];
   const finishReason = choice?.finish_reason || 'unknown';
@@ -149,7 +122,6 @@ export async function callOpenAiChat(args: {
           ...(usesMaxCompletionTokens(args.model)
             ? { max_completion_tokens: args.maxTokens }
             : { max_tokens: args.maxTokens }),
-          response_format: TRANSLATION_RESPONSE_FORMAT,
         }),
       });
     } catch (err: unknown) {
