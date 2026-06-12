@@ -1,8 +1,5 @@
 import { HttpError } from '../http';
-import {
-  getGrantMaxTokens,
-  getGrantTimeoutMs,
-} from '../grants';
+import { resolveGrantBudgets } from '../grants';
 import type { AIGrant, Env, Usage } from '../types';
 import { resolveModelSelection, type ModelSelection } from './modelRouter';
 import { callDeepseekChat } from '../providers/deepseek';
@@ -74,15 +71,10 @@ export async function callChatCompletion(args: {
   agentId: string;
   messages: ChatMessage[];
   temperature?: number;
-  maxTokens?: number;
-  timeoutMs?: number;
 }): Promise<{ content: string; usage: Usage }> {
   const selection = resolveModelSelection({ grant: args.grant, agentId: args.agentId });
 
-  const grantMaxTokens = getGrantMaxTokens(args.grant);
-  const grantTimeoutMs = getGrantTimeoutMs(args.grant);
-  const maxTokens = args.maxTokens ? Math.min(args.maxTokens, grantMaxTokens) : grantMaxTokens;
-  const timeoutMs = args.timeoutMs ? Math.min(args.timeoutMs, grantTimeoutMs) : grantTimeoutMs;
+  const budget = resolveGrantBudgets(args.grant);
   const temperature = typeof args.temperature === 'number' ? args.temperature : 0.2;
 
   let result: { content: string; usage: Usage } | null = null;
@@ -93,8 +85,8 @@ export async function callChatCompletion(args: {
         env: args.env,
         messages: args.messages,
         temperature,
-        maxTokens,
-        timeoutMs,
+        maxTokens: budget.maxTokens,
+        timeoutMs: budget.timeoutMs,
         selection,
       });
       break;

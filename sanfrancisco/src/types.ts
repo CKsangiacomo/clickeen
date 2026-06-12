@@ -13,7 +13,7 @@ export type AIGrant = {
   caps: string[];
   budgets: {
     maxTokens: number;
-    timeoutMs?: number;
+    timeoutMs: number;
   };
   mode: 'editor' | 'ops';
   ai?: AiGrantPolicy;

@@ -24,10 +24,10 @@ type AIGrant = {
   sub: { kind: 'user'; userId: string; accountId: string };
   exp: number;
   caps: string[];
-    budgets: {
-      maxTokens: number;
-      timeoutMs?: number;
-    };
+  budgets: {
+    maxTokens: number;
+    timeoutMs: number;
+  };
   mode: 'editor' | 'ops';
   ai?: AiGrantPolicy;
   trace?: {

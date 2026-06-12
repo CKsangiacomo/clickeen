@@ -17,7 +17,7 @@ type AIGrant = {
   caps: string[];
   budgets: {
     maxTokens: number;
-    timeoutMs?: number;
+    timeoutMs: number;
   };
   mode: 'ops';
   ai: AiGrantPolicy;

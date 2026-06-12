@@ -1,6 +1,5 @@
 import type { AIGrant, Env, Usage } from "../types";
 import { HttpError, asString, isRecord } from "../http";
-import { getGrantMaxTokens, getGrantTimeoutMs } from "../grants";
 import { callChatCompletion, type ChatMessage } from "../ai/chat";
 import globalDictionary from "../lexicon/global_dictionary.json";
 import {
@@ -527,9 +526,6 @@ export async function executeWidgetCopilotWithRuntime(
     });
   }
 
-  const maxTokens = getGrantMaxTokens(params.grant);
-  const timeoutMs = getGrantTimeoutMs(params.grant);
-
   const user = buildCsPromptPayload(input);
   const systemPrompt = buildCsSystemPrompt({
     language: conversationLanguage,
@@ -550,8 +546,6 @@ export async function executeWidgetCopilotWithRuntime(
     agentId: runtime.agentId,
     messages,
     temperature: 0.2,
-    maxTokens,
-    timeoutMs,
   });
 
   let content = first.content;

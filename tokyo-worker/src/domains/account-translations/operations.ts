@@ -148,7 +148,7 @@ function resolveTranslationRuntime(args: {
     ai,
     budgets: {
       maxTokens: budget.maxTokens,
-      ...(budget.timeoutMs ? { timeoutMs: budget.timeoutMs } : {}),
+      timeoutMs: budget.timeoutMs,
     },
   };
 }

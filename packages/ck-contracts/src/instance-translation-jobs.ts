@@ -30,7 +30,7 @@ export type InstanceTranslationJob = {
   ai: AiGrantPolicy;
   budgets: {
     maxTokens: number;
-    timeoutMs?: number;
+    timeoutMs: number;
   };
   changedFields: SavedTextField[];
   deletedIdentityKeys: string[];
@@ -160,6 +160,7 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     !ai ||
     !budgets ||
     maxTokens == null ||
+    timeoutMs == null ||
     !changedFields ||
     !deletedIdentityKeys ||
     !basis
@@ -187,7 +188,7 @@ export function normalizeInstanceTranslationJob(raw: unknown): InstanceTranslati
     ai,
     budgets: {
       maxTokens,
-      ...(timeoutMs != null ? { timeoutMs } : {}),
+      timeoutMs,
     },
     changedFields,
     deletedIdentityKeys,

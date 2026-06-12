@@ -100,6 +100,7 @@ export async function verifyGrant(grant: string, secret: string): Promise<AIGran
   if (ai) {
     (payload as any).ai = ai;
   }
+  resolveGrantBudgets(payload as AIGrant);
 
   return payload as AIGrant;
 }
@@ -226,19 +227,14 @@ export function assertProviderAllowed(grant: AIGrant, provider: string): void {
   }
 }
 
-export function getGrantMaxTokens(grant: AIGrant): number {
+export function resolveGrantBudgets(grant: AIGrant): { maxTokens: number; timeoutMs: number } {
   const maxTokens = (grant.budgets as any).maxTokens;
   if (typeof maxTokens !== 'number' || !Number.isFinite(maxTokens) || maxTokens <= 0) {
     throw new HttpError(400, { code: 'GRANT_INVALID', message: 'Grant budgets.maxTokens must be a positive number' });
   }
-  return maxTokens;
-}
-
-export function getGrantTimeoutMs(grant: AIGrant): number {
   const timeoutMs = (grant.budgets as any).timeoutMs;
-  if (timeoutMs === undefined) return 20_000;
   if (typeof timeoutMs !== 'number' || !Number.isFinite(timeoutMs) || timeoutMs <= 0) {
     throw new HttpError(400, { code: 'GRANT_INVALID', message: 'Grant budgets.timeoutMs must be a positive number' });
   }
-  return timeoutMs;
+  return { maxTokens, timeoutMs };
 }

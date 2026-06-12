@@ -168,7 +168,7 @@ type AIGrant = {
   caps: string[]; // allowed capabilities, e.g. ['agent:cs.widget.copilot.v1']
   budgets: {
     maxTokens: number;
-    timeoutMs?: number;
+    timeoutMs: number;
   };
   mode: 'editor' | 'ops'; // editor copilots vs operational agents
   ai?: {

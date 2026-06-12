@@ -165,7 +165,7 @@ San Francisco applies a per-isolate in-flight cap through `sanfrancisco/src/conc
 ### Grant budgets
 Agent executions are constrained by the grant:
 - `budgets.maxTokens`
-- `budgets.timeoutMs` (default 20s if omitted)
+- `budgets.timeoutMs`
 
 The owning backend surface is expected to cap these budgets server-side so the client can’t request arbitrarily large execution windows.
 

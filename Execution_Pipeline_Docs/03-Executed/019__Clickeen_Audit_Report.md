@@ -37,7 +37,7 @@ Why: Returning 200 for failures hides outages and makes monitoring/automation br
 Fix: Return appropriate status codes (4xx/5xx) and centralize error formatting for UI-friendly messages.
 
 ### B) Usage Risk
-Files: `sanfrancisco/src/grants.ts` getGrantMaxTokens/getGrantTimeoutMs, `sanfrancisco/src/agents/sdrWidgetCopilot.ts`
+Files: `sanfrancisco/src/grants.ts` resolveGrantBudgets, `sanfrancisco/src/agents/sdrWidgetCopilot.ts`
 
 #### B2. Copilot usage caps are client-side only (P0)
 Files: `bob/components/CopilotPane.tsx` consumeBudget, `paris/src/index.ts` handleAiGrant
