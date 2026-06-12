@@ -58,10 +58,6 @@ function filesFromSubmittedPackage(pkg: SubmittedPagePublicPackage): PagePublicF
   ];
 }
 
-function assertNonEmptyPackageFile(file: PagePublicFilePayload): void {
-  if (!file.body.trim()) throw new Error(`page.package.empty:${file.name}`);
-}
-
 async function readRequiredText(args: {
   env: Env;
   key: string;
@@ -84,7 +80,6 @@ export async function writeAccountPagePublicPackage(args: {
 }): Promise<PagePublicPackageWriteResult> {
   try {
     const files = filesFromSubmittedPackage(args.pagePackage);
-    files.forEach(assertNonEmptyPackageFile);
     for (const file of files) {
       await args.env.TOKYO_R2.put(accountPagePublishFileKey(args.accountId, args.pageId, file.name), file.body, {
         httpMetadata: { contentType: file.contentType },
@@ -124,7 +119,6 @@ export async function verifyAccountPagePublicPackageReady(args: {
         reasonKey: 'page.package.runtimeMissing',
       }),
     ]);
-    filesFromSubmittedPackage({ v: 1, indexHtml, stylesCss, runtimeJs }).forEach(assertNonEmptyPackageFile);
     return { ok: true };
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
