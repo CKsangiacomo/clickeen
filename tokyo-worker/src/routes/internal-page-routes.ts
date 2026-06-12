@@ -6,6 +6,7 @@ import {
   PageOperationError,
   purgeAccountPagePublicCache,
   readSubmittedPagePublicPackage,
+  createAccountPageServeState,
   readAccountPageServeState,
   readAccountPageSource,
   saveAccountPageSource,
@@ -111,7 +112,8 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
         source: body.source,
         summary: body.summary,
       });
-      return respond(json({ ok: true, accountId, pageId, ...created }, { status: 201 }));
+      const publishStatus = await createAccountPageServeState({ env, accountId, pageId });
+      return respond(json({ ok: true, accountId, pageId, ...created, publishStatus }, { status: 201 }));
     } catch (error) {
       return respond(pageErrorResponse(error));
     }

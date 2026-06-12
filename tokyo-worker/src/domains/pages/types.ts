@@ -2,15 +2,6 @@ export type PageRobots = 'index,follow' | 'noindex,nofollow';
 
 export type PageServeState = 'published' | 'unpublished';
 
-export type AccountPageServeState = {
-  v: 1;
-  accountId: string;
-  pageId: string;
-  status: PageServeState;
-  publishedAt?: string;
-  updatedAt: string;
-};
-
 export type AccountPageSummary = {
   pageId: string;
   title: string;

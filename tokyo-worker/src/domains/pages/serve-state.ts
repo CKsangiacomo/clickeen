@@ -1,106 +1,43 @@
 import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
-import { loadJson, putJson } from '../storage';
+import { putJson } from '../storage';
 import { accountPageServeStateKey } from './keys';
-import { normalizePageId, readAccountPageSource } from './source';
-import type { AccountPageServeState, PageServeState } from './types';
+import { normalizePageId } from './source';
+import type { PageServeState } from './types';
 import { PageOperationError } from './types';
-
-function assertPageCoordinate(args: {
-  accountId: string;
-  pageId: string;
-}): { accountId: string; pageId: string } {
+type PageCoordinate = { accountId: string; pageId: string };
+function fail(kind: 'VALIDATION' | 'NOT_FOUND', reasonKey: string): never {
+  throw new PageOperationError({ kind, reasonKey });
+}
+function assertPageCoordinate(args: { accountId: string; pageId: string }): PageCoordinate {
   const accountId = String(args.accountId || '').trim().toUpperCase();
   const pageId = normalizePageId(args.pageId);
-  if (!isCompactAccountPublicId(accountId)) {
-    throw new PageOperationError({
-      kind: 'VALIDATION',
-      reasonKey: 'tokyo.errors.page.invalidAccount',
-    });
-  }
-  if (!pageId) {
-    throw new PageOperationError({
-      kind: 'VALIDATION',
-      reasonKey: 'tokyo.errors.page.invalidPageId',
-    });
-  }
+  if (!isCompactAccountPublicId(accountId)) fail('VALIDATION', 'tokyo.errors.page.invalidAccount');
+  if (!pageId) fail('VALIDATION', 'tokyo.errors.page.invalidPageId');
   return { accountId, pageId };
 }
-
-function normalizeServeState(raw: unknown, args: {
-  accountId: string;
-  pageId: string;
-}): AccountPageServeState | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const record = raw as Record<string, unknown>;
-  if (record.v !== 1 || record.accountId !== args.accountId || record.pageId !== args.pageId) return null;
-  if (record.status !== 'published' && record.status !== 'unpublished') return null;
-  const updatedAt = typeof record.updatedAt === 'string' ? record.updatedAt : '';
-  const publishedAt = typeof record.publishedAt === 'string' ? record.publishedAt : undefined;
-  if (!updatedAt) return null;
-  return {
-    v: 1,
-    accountId: args.accountId,
-    pageId: args.pageId,
-    status: record.status,
-    ...(publishedAt ? { publishedAt } : {}),
-    updatedAt,
-  };
+function serveStatePayload(coordinate: PageCoordinate, status: PageServeState, now = new Date().toISOString()) {
+  return { v: 1, accountId: coordinate.accountId, pageId: coordinate.pageId, status, ...(status === 'published' ? { publishedAt: now } : {}), updatedAt: now };
 }
-
-export async function readAccountPageServeState(args: {
-  env: Env;
-  accountId: string;
-  pageId: string;
-}): Promise<PageServeState> {
-  const coordinate = assertPageCoordinate(args);
-  const stored = await loadJson<AccountPageServeState>(
-    args.env,
-    accountPageServeStateKey(coordinate.accountId, coordinate.pageId),
-  );
-  const state = normalizeServeState(stored, coordinate);
-  return state?.status ?? 'unpublished';
+async function readStoredServeState(env: Env, coordinate: PageCoordinate): Promise<PageServeState> {
+  const obj = await env.TOKYO_R2.get(accountPageServeStateKey(coordinate.accountId, coordinate.pageId));
+  if (!obj) fail('NOT_FOUND', 'tokyo.errors.page.serveStateMissing');
+  const record = await obj.json().catch(() => null) as Record<string, unknown> | null;
+  if (!record || Array.isArray(record) || record.v !== 1 || record.accountId !== coordinate.accountId || record.pageId !== coordinate.pageId || (record.status !== 'published' && record.status !== 'unpublished') || typeof record.updatedAt !== 'string' || !record.updatedAt) fail('VALIDATION', 'tokyo.errors.page.serveStateInvalid');
+  return record.status;
 }
-
-export async function writeAccountPageServeState(args: {
-  env: Env;
-  accountId: string;
-  pageId: string;
-  status: PageServeState;
-  now?: string;
-}): Promise<{ status: PageServeState; changed: boolean }> {
+export async function readAccountPageServeState(args: { env: Env; accountId: string; pageId: string }): Promise<PageServeState> {
+  return readStoredServeState(args.env, assertPageCoordinate(args));
+}
+export async function writeAccountPageServeState(args: { env: Env; accountId: string; pageId: string; status: PageServeState; now?: string }): Promise<{ status: PageServeState; changed: boolean }> {
   const coordinate = assertPageCoordinate(args);
-  if (args.status !== 'published' && args.status !== 'unpublished') {
-    throw new PageOperationError({
-      kind: 'VALIDATION',
-      reasonKey: 'tokyo.errors.page.serveStateInvalid',
-    });
-  }
-  const source = await readAccountPageSource({
-    env: args.env,
-    accountId: coordinate.accountId,
-    pageId: coordinate.pageId,
-  });
-  if (!source) {
-    throw new PageOperationError({
-      kind: 'NOT_FOUND',
-      reasonKey: 'tokyo.errors.page.notFound',
-    });
-  }
-  const previous = await readAccountPageServeState({
-    env: args.env,
-    accountId: coordinate.accountId,
-    pageId: coordinate.pageId,
-  });
-  const now = args.now ?? new Date().toISOString();
-  const payload: AccountPageServeState = {
-    v: 1,
-    accountId: coordinate.accountId,
-    pageId: coordinate.pageId,
-    status: args.status,
-    ...(args.status === 'published' ? { publishedAt: now } : {}),
-    updatedAt: now,
-  };
-  await putJson(args.env, accountPageServeStateKey(coordinate.accountId, coordinate.pageId), payload);
+  if (args.status !== 'published' && args.status !== 'unpublished') fail('VALIDATION', 'tokyo.errors.page.serveStateInvalid');
+  const previous = await readStoredServeState(args.env, coordinate);
+  await putJson(args.env, accountPageServeStateKey(coordinate.accountId, coordinate.pageId), serveStatePayload(coordinate, args.status, args.now));
   return { status: args.status, changed: previous !== args.status };
+}
+export async function createAccountPageServeState(args: { env: Env; accountId: string; pageId: string; now?: string }): Promise<PageServeState> {
+  const coordinate = assertPageCoordinate(args);
+  await putJson(args.env, accountPageServeStateKey(coordinate.accountId, coordinate.pageId), serveStatePayload(coordinate, 'unpublished', args.now));
+  return 'unpublished';
 }
