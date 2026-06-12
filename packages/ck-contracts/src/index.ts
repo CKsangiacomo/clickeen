@@ -60,22 +60,6 @@ export type AccountLocalePolicy = {
   };
 };
 
-export type WidgetLocaleSwitcherSettings = {
-  enabled: boolean;
-  byIp: boolean;
-  alwaysShowLocale: string | null;
-  attachTo: 'pod' | 'stage';
-  position:
-    | 'top-left'
-    | 'top-center'
-    | 'top-right'
-    | 'right-middle'
-    | 'bottom-right'
-    | 'bottom-center'
-    | 'bottom-left'
-    | 'left-middle';
-};
-
 export type AccountLocaleValidationIssue = {
   path: string;
   message: string;
@@ -98,18 +82,6 @@ export const RENDER_SNAPSHOT_ACTION = Object.freeze({
   DELETE: 'delete',
 });
 const SUPPORTED_LOCALES = new Set(normalizeCanonicalLocalesFile(localesJson).map((entry) => entry.code));
-const WIDGET_LOCALE_SWITCHER_ATTACH = new Set(['pod', 'stage']);
-const WIDGET_LOCALE_SWITCHER_POSITION = new Set([
-  'top-left',
-  'top-center',
-  'top-right',
-  'right-middle',
-  'bottom-right',
-  'bottom-center',
-  'bottom-left',
-  'left-middle',
-]);
-
 function failAccountLocaleContract(reason: string): never {
   throw new Error(`account_locale_contract_invalid:${reason}`);
 }
@@ -426,22 +398,7 @@ export function validateAccountLocalePolicy(raw: unknown, path = 'policy'): Acco
   return issues;
 }
 
-export function normalizeWidgetLocaleSwitcherSettings(raw: unknown): WidgetLocaleSwitcherSettings {
-  const payload = isRecord(raw) ? raw : {};
-  const attachTo = (asTrimmedString(payload.attachTo) ?? '').toLowerCase();
-  const position = (asTrimmedString(payload.position) ?? '').toLowerCase();
-  const alwaysShowLocale = normalizeSupportedLocaleToken(payload.alwaysShowLocale);
-
-  return {
-    enabled: payload.enabled === true,
-    byIp: payload.byIp === true,
-    alwaysShowLocale: alwaysShowLocale || null,
-    attachTo: WIDGET_LOCALE_SWITCHER_ATTACH.has(attachTo) ? (attachTo as WidgetLocaleSwitcherSettings['attachTo']) : 'stage',
-    position: WIDGET_LOCALE_SWITCHER_POSITION.has(position)
-      ? (position as WidgetLocaleSwitcherSettings['position'])
-      : 'top-right',
-  };
-}
+export function validateWidgetLocaleSwitcherSettings(raw: unknown) { const v = isRecord(raw) ? raw : null, issue = !v ? ['settingsInvalid', 'localeSwitcher'] : typeof v.enabled !== 'boolean' ? ['enabledInvalid', 'localeSwitcher.enabled'] : typeof v.byIp !== 'boolean' ? ['byIpInvalid', 'localeSwitcher.byIp'] : typeof v.alwaysShowLocale !== 'string' ? ['alwaysShowLocaleInvalid', 'localeSwitcher.alwaysShowLocale'] : v.attachTo !== 'stage' && v.attachTo !== 'pod' ? ['attachToInvalid', 'localeSwitcher.attachTo'] : typeof v.position !== 'string' || !['top-left', 'top-center', 'top-right', 'right-middle', 'bottom-right', 'bottom-center', 'bottom-left', 'left-middle'].includes(v.position) ? ['positionInvalid', 'localeSwitcher.position'] : null; return issue ? { reasonKey: `coreui.errors.localeSwitcher.${issue[0]}`, detail: `coreui.errors.localeSwitcher.${issue[0]}`, path: issue[1] } : null; }
 
 function normalizeResolvedAssetSource(entry: unknown, expectedAssetRef: string): ResolvedAccountAsset | null {
   const normalized = normalizeResolvedAccountAsset(entry);

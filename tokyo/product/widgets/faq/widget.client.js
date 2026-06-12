@@ -209,7 +209,7 @@
     assertRecord(state.coreSize, 'state.coreSize');
     assertRecord(state.appearance, 'state.appearance');
     assertRecord(state.typography, 'state.typography');
-    assertRecord(state.localeSwitcher, 'state.localeSwitcher');
+    const localeSwitcher = assertRecord(state.localeSwitcher, 'state.localeSwitcher'); assertBoolean(localeSwitcher.enabled, 'state.localeSwitcher.enabled'); assertBoolean(localeSwitcher.byIp, 'state.localeSwitcher.byIp'); assertString(localeSwitcher.alwaysShowLocale, 'state.localeSwitcher.alwaysShowLocale'); assertEnum(localeSwitcher.attachTo, 'state.localeSwitcher.attachTo', ['stage', 'pod']); assertEnum(localeSwitcher.position, 'state.localeSwitcher.position', ['top-left', 'top-center', 'top-right', 'right-middle', 'bottom-right', 'bottom-center', 'bottom-left', 'left-middle']);
     assertRecord(state.behavior, 'state.behavior');
 
     assertString(state.headerCta.openMode, 'state.headerCta.openMode');

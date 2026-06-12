@@ -1,3 +1,4 @@
+import { validateWidgetLocaleSwitcherSettings } from '@clickeen/ck-contracts';
 import { createCompactInstanceId, isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import {
@@ -132,6 +133,8 @@ function normalizeDisplayName(value: unknown): string | null {
   return trimmed.length > 0 && trimmed.length <= 120 ? trimmed : null;
 }
 
+function assertLocaleSwitcherConfig(config: Record<string, unknown>): void { const issue = validateWidgetLocaleSwitcherSettings(config.localeSwitcher); if (issue) throw new AccountInstanceTransitionError({ status: 422, kind: 'VALIDATION', reasonKey: issue.reasonKey, detail: issue.detail, issues: [{ path: issue.path }] }); }
+
 export async function createAccountInstanceFromSubmittedSource(args: {
   env: Env;
   accountId: string;
@@ -145,6 +148,7 @@ export async function createAccountInstanceFromSubmittedSource(args: {
   if (!accountId || !widgetType) {
     throw new Error('coreui.errors.instance.invalidPayload');
   }
+  assertLocaleSwitcherConfig(args.config);
 
   const saved = await writeAccountInstanceSource({
     env: args.env,
@@ -196,6 +200,7 @@ export async function saveAccountInstanceTransition(args: {
       detail: `submitted widgetType "${submittedWidgetType}" does not match Tokyo instance widgetType "${existingWidgetType}"`,
     });
   }
+  assertLocaleSwitcherConfig(args.config);
   const saved = await writeAccountInstanceSource({
     env: args.env,
     accountId,
@@ -247,6 +252,7 @@ export async function duplicateAccountInstanceTransition(args: {
     instanceId: sourceInstanceId,
   });
   if (!source.ok) transitionFailureFromSavedRead(source);
+  assertLocaleSwitcherConfig(source.value.config);
 
   const instanceId = await mintAccountInstanceId({
     env: args.env,

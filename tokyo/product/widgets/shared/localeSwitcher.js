@@ -60,17 +60,6 @@
     return instanceKey;
   }
 
-  function resolveSwitcherConfig(raw) {
-    const payload = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
-    const attachTo = payload.attachTo === 'pod' ? 'pod' : 'stage';
-    const position = POSITION_SET.has(payload.position) ? payload.position : 'top-right';
-    return {
-      enabled: payload.enabled === true,
-      attachTo,
-      position,
-    };
-  }
-
   function resolveAppearance(raw) {
     const appearance = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
     const helpers = resolveAppearanceHelpers();
@@ -186,12 +175,14 @@
       throw new Error('[CKLocaleSwitcher] widgetRoot must be an HTMLElement');
     }
 
+    const config = state && state.localeSwitcher && typeof state.localeSwitcher === 'object' && !Array.isArray(state.localeSwitcher) ? state.localeSwitcher : null;
+    if (!config || typeof config.enabled !== 'boolean' || typeof config.byIp !== 'boolean' || typeof config.alwaysShowLocale !== 'string' || (config.attachTo !== 'pod' && config.attachTo !== 'stage') || !POSITION_SET.has(config.position)) {
+      throw new Error('[CKLocaleSwitcher] ck_locale_switcher_placement_invalid');
+    }
     if (runtimeContext && runtimeContext.composedPage === true) {
       removeExisting(widgetRoot);
       return;
     }
-
-    const config = resolveSwitcherConfig(state && state.localeSwitcher);
     const policy =
       window.CK_LOCALE_POLICY && typeof window.CK_LOCALE_POLICY === 'object' ? window.CK_LOCALE_POLICY : {};
     const policyLanguages = Array.isArray(policy.languages)

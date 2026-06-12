@@ -7,6 +7,7 @@ import {
   type PolicyEntitlementsSnapshot,
   type PolicyProfile,
 } from '@clickeen/ck-policy';
+import { validateWidgetLocaleSwitcherSettings } from '@clickeen/ck-contracts';
 
 const SOCIAL_SHARE_ENTITLEMENT = 'widget.socialShare.enabled';
 const SOCIAL_SHARE_PATH = 'behavior.socialShare.enabled';
@@ -360,6 +361,8 @@ export function validateAccountInstanceConfigStructure(args: {
   widgetType: string;
   config: Record<string, unknown>;
 }): SavePolicyValidationResult {
+  const localeSwitcherIssue = validateWidgetLocaleSwitcherSettings(args.config.localeSwitcher);
+  if (localeSwitcherIssue) return structureViolation({ reasonKey: localeSwitcherIssue.reasonKey, detail: localeSwitcherIssue.detail, paths: [localeSwitcherIssue.path] });
   if (args.widgetType === 'split-carousel-media') {
     return validateSplitCarouselMediaStructure(args.config);
   }
