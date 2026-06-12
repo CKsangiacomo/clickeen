@@ -194,6 +194,7 @@ proof requirement are executable.
 | D-107i | Decide whether `packageSource fallback:` alias is a declared non-violation contract or a deletion target. | Deletion target | 2026-06-12 | Codex | Removed from Roma package builder; no alias accepted. |
 | D-107j | Decide pages-index absence rule: creation-time index materialization or missing-at-read typed failure. | PENDING |  |  |  |
 | D-107k | Decide whether cache purge failure/stale public serving is deleted in PRD 107 or split to a publish-integrity PRD. | PENDING |  |  |  |
+| D-107l | Decide whether generic Tokyo source/package R2 write ordering is a PRD 107 product-truth violation. | Declared non-violation for instance save | 2026-06-12 | Product + Architecture | `TW-107-INSTANCE-SAVE-SOURCE-BEFORE-PACKAGE` is covered by declared contract `DNV-107-TW-INSTANCE-SAVE-R2-ORDER`. Swapping write order would create the opposite partial plane and is not PRD 107 deletion work. |
 
 If a decision remains PENDING, only rows depending on that exact decision are
 blocked. Do not use a pending unrelated decision as a global excuse to preserve
@@ -362,6 +363,12 @@ items define outcomes, not implementation recipes.
 | AI-107-AB-25-26 | AB-25, AB-26 | workflow-removal | Runtime visual dependency/config failure cannot paint substituted state. | Runtime fixture proves named error and no successful DOM/style mutation. | COMPLETE |
 | AI-107-FAMILIES | F1..F7 | contract-documentation | Every former family bucket is converted into concrete violation rows or declared-non-violation records. | Completed conversion records. | LOCKED |
 | AI-107-M | ALL completed rows | masquerade-audit | No row is completed by helper-only throw, generic relabel, warning, retry, hidden detail, legacy-continuity mode, or mutation-before-failure. | Completed masquerade audit checklist. | LOCKED |
+
+### Declared Non-Violation Records
+
+| Record ID | Row | Contract | Required evidence | Status |
+| --- | --- | --- | --- | --- |
+| DNV-107-TW-INSTANCE-SAVE-R2-ORDER | TW-107-INSTANCE-SAVE-SOURCE-BEFORE-PACKAGE | Roma builds and submits package truth before Tokyo instance save. Tokyo route rejects malformed `publicPackage` before `saveAccountInstanceTransition`; after that boundary, `writeInstancePublicPackage` can fail only as a Cloudflare R2 write failure, not as bad product truth being accepted, omitted, healed, or turned into success. Generic cross-object R2 atomicity is not a PRD 107 product fallback, and write-order swapping is forbidden redress because it creates the opposite partial plane. | Focused source read: `readSubmittedInstancePublicPackage` is consumed before transition; `writeInstancePublicPackage` only catches `TOKYO_R2.put` failures; no caller turns package write failure into save success. | COMPLETE |
 
 ## Execution Plan
 
