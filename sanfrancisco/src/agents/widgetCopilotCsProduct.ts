@@ -21,16 +21,6 @@ export function looksLikeExplainIntent(prompt: string): boolean {
   );
 }
 
-export function pathLooksLinkLike(path: string): boolean {
-  return /\b(url|href|link|domain)\b/i.test(path);
-}
-
-export function promptAsksForLinkChange(prompt: string): boolean {
-  return /\b(url|href|link|website|domain|open in new tab|new tab|target)\b/i.test(
-    prompt || "",
-  );
-}
-
 export function messageAsksForInternalControlDump(message: string): boolean {
   const text = String(message || "").toLowerCase();
   if (!text.trim()) return false;
@@ -169,10 +159,6 @@ export function finalizeCsOps(args: {
   let message = args.message;
   let ops = args.ops && args.ops.length ? args.ops : undefined;
   let overrideToClarify = false;
-
-  if (ops && !promptAsksForLinkChange(args.prompt)) {
-    ops = ops.filter((op) => !pathLooksLinkLike(op.path));
-  }
 
   if (
     args.forbidInternalControlDumpPromptLine &&
