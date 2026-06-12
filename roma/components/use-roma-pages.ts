@@ -86,83 +86,6 @@ function normalizePageSummary(raw: unknown): AccountPageSummary | null {
   return { pageId, title, description, robots, placementCount, createdAt, updatedAt };
 }
 
-function normalizePlacement(raw: unknown): PagePlacement | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const record = raw as Record<string, unknown>;
-  const placementId = typeof record.placementId === 'string' ? record.placementId.trim() : '';
-  const instanceId = typeof record.instanceId === 'string' ? record.instanceId.trim() : '';
-  if (!placementId || !instanceId) return null;
-  return { placementId, instanceId };
-}
-
-function normalizePageSource(raw: unknown): AccountPageSource | null {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const record = raw as Record<string, unknown>;
-  if (record.schemaVersion !== 1) return null;
-  const pageId = typeof record.pageId === 'string' ? record.pageId.trim() : '';
-  const accountPublicId = typeof record.accountPublicId === 'string' ? record.accountPublicId.trim() : '';
-  const displayName = typeof record.displayName === 'string' ? record.displayName.trim() : '';
-  const metadataRaw = record.metadata;
-  if (!metadataRaw || typeof metadataRaw !== 'object' || Array.isArray(metadataRaw)) return null;
-  const metadataRecord = metadataRaw as Record<string, unknown>;
-  const title = typeof metadataRecord.title === 'string' ? metadataRecord.title.trim() : '';
-  const description = typeof metadataRecord.description === 'string' ? metadataRecord.description.trim() : '';
-  const robots = normalizeRobots(metadataRecord.robots);
-  const canonicalUrl = typeof metadataRecord.canonicalUrl === 'string' && metadataRecord.canonicalUrl.trim()
-    ? metadataRecord.canonicalUrl.trim()
-    : undefined;
-  const localizationRaw = record.localization;
-  if (!localizationRaw || typeof localizationRaw !== 'object' || Array.isArray(localizationRaw)) return null;
-  const localizationRecord = localizationRaw as Record<string, unknown>;
-  const defaultLocale = typeof localizationRecord.defaultLocale === 'string' ? localizationRecord.defaultLocale.trim().toLowerCase() : '';
-  const countryLocaleRules = Array.isArray(localizationRecord.countryLocaleRules)
-    ? localizationRecord.countryLocaleRules.flatMap((entry) => {
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return [];
-        const rule = entry as Record<string, unknown>;
-        const country = typeof rule.country === 'string' ? rule.country.trim().toUpperCase() : '';
-        const locale = typeof rule.locale === 'string' ? rule.locale.trim().toLowerCase() : '';
-        return country && locale ? [{ country, locale }] : [];
-      })
-    : null;
-  const placements = Array.isArray(record.placements)
-    ? record.placements.map(normalizePlacement)
-    : null;
-  const version = typeof record.version === 'number' && Number.isFinite(record.version) ? Math.max(1, Math.floor(record.version)) : null;
-  const updatedAt = typeof record.updatedAt === 'string' ? record.updatedAt.trim() : '';
-  if (
-    !pageId ||
-    !accountPublicId ||
-    !displayName ||
-    !title ||
-    !robots ||
-    !defaultLocale ||
-    !countryLocaleRules ||
-    !placements ||
-    placements.some((placement) => placement === null) ||
-    version == null ||
-    !updatedAt
-  ) {
-    return null;
-  }
-  return {
-    schemaVersion: 1,
-    pageId,
-    accountPublicId,
-    displayName,
-    metadata: { title, description, robots, ...(canonicalUrl ? { canonicalUrl } : {}) },
-    localization: {
-      defaultLocale,
-      ipLocalizationEnabled: localizationRecord.ipLocalizationEnabled === true,
-      countryLocaleRules,
-      languageSwitcherEnabled: localizationRecord.languageSwitcherEnabled === true,
-      missingLocaleBehavior: 'block_publish',
-    },
-    placements: placements as PagePlacement[],
-    version,
-    updatedAt,
-  };
-}
-
 export function normalizeRomaPagesResponse(raw: unknown): RomaPagesResponse | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
@@ -179,7 +102,9 @@ export function normalizeRomaPagesResponse(raw: unknown): RomaPagesResponse | nu
 export function normalizeRomaPageOpenResponse(raw: unknown): RomaPageOpenResponse | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
-  const source = normalizePageSource(record.source);
+  const source = record.source && typeof record.source === 'object' && !Array.isArray(record.source)
+    ? record.source as AccountPageSource
+    : null;
   const publishStatus = normalizePublishStatus(record.publishStatus);
   if (!source || !publishStatus) return null;
   return { source, publishStatus };

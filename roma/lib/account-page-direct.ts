@@ -125,23 +125,22 @@ function normalizePageMetadata(raw: unknown): AccountPageMetadata | null {
 }
 
 function normalizeLocale(value: unknown): string | null {
-  const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-  return /^[a-z]{2}(?:-[a-z0-9]{2,8})?$/.test(normalized) ? normalized : null;
+  return typeof value === 'string' && /^[a-z]{2}(?:-[a-z0-9]{2,8})?$/.test(value) ? value : null;
 }
 
 function normalizePageLocalization(raw: unknown): AccountPageLocalization | null {
   if (!isRecord(raw)) return null;
   const defaultLocale = normalizeLocale(raw.defaultLocale);
   if (!defaultLocale) return null;
-  const countryLocaleRules = Array.isArray(raw.countryLocaleRules)
-    ? raw.countryLocaleRules.flatMap((entry) => {
-        if (!isRecord(entry)) return [];
-        const country = typeof entry.country === 'string' ? entry.country.trim().toUpperCase() : '';
-        const locale = normalizeLocale(entry.locale);
-        return /^[A-Z]{2}$/.test(country) && locale ? [{ country, locale }] : [];
-      })
-    : null;
-  if (!countryLocaleRules) return null;
+  if (!Array.isArray(raw.countryLocaleRules)) return null;
+  const countryLocaleRules: AccountPageLocalization['countryLocaleRules'] = [];
+  for (const entry of raw.countryLocaleRules) {
+    if (!isRecord(entry)) return null;
+    const country = typeof entry.country === 'string' ? entry.country : '';
+    const locale = normalizeLocale(entry.locale);
+    if (!/^[A-Z]{2}$/.test(country) || !locale) return null;
+    countryLocaleRules.push({ country, locale });
+  }
   return {
     defaultLocale,
     ipLocalizationEnabled: raw.ipLocalizationEnabled === true,
@@ -149,6 +148,15 @@ function normalizePageLocalization(raw: unknown): AccountPageLocalization | null
     languageSwitcherEnabled: raw.languageSwitcherEnabled === true,
     missingLocaleBehavior: 'block_publish',
   };
+}
+
+function countryLocaleRulesValid(raw: unknown): boolean {
+  if (!isRecord(raw) || !Array.isArray(raw.countryLocaleRules)) return false;
+  return raw.countryLocaleRules.every((entry) => {
+    if (!isRecord(entry)) return false;
+    const country = typeof entry.country === 'string' ? entry.country : '';
+    return /^[A-Z]{2}$/.test(country) && Boolean(normalizeLocale(entry.locale));
+  });
 }
 
 function normalizePlacement(raw: unknown): AccountPagePlacement | null {
@@ -421,6 +429,7 @@ export async function saveAccountPageInTokyo(args: {
   internalServiceName?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: { source: AccountPageSource; summary: AccountPageSummary } } | RouteFailure> {
+  if (!normalizeRobots(args.source.metadata?.robots) || !countryLocaleRulesValid(args.source.localization)) return { ok: false, status: 422, error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } };
   const source = stampPageSourceForSave(args.source);
   const pagePackage = await buildPagePackageForTokyo({
     accountId: args.accountId,

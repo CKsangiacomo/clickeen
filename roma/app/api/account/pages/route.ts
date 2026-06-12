@@ -25,15 +25,15 @@ function createPlacementId(index: number): string {
   return `P${String(index + 1).padStart(3, '0')}`;
 }
 
-function normalizeCreatePageMetadata(raw: unknown): AccountPageMetadata {
-  if (!isRecord(raw)) {
+function normalizeCreatePageMetadata(raw: unknown): AccountPageMetadata | null {
+  if (raw == null) {
     return { title: 'Untitled page', description: '', robots: 'noindex,nofollow' };
   }
+  if (!isRecord(raw)) return null;
   const title = typeof raw.title === 'string' && raw.title.trim() ? raw.title.trim() : 'Untitled page';
   const description = typeof raw.description === 'string' ? raw.description.trim() : '';
-  const robots = raw.robots === 'index,follow' || raw.robots === 'noindex,nofollow'
-    ? raw.robots
-    : 'noindex,nofollow';
+  const robots = Object.prototype.hasOwnProperty.call(raw, 'robots') ? raw.robots : 'noindex,nofollow';
+  if (robots !== 'index,follow' && robots !== 'noindex,nofollow') return null;
   const canonicalUrl = typeof raw.canonicalUrl === 'string' && raw.canonicalUrl.trim() ? raw.canonicalUrl.trim() : undefined;
   return { title, description, robots, ...(canonicalUrl ? { canonicalUrl } : {}) };
 }
@@ -61,6 +61,7 @@ function createPageSourceFromRequestBody(raw: unknown, accountId: string): Accou
   const pageId = createCompactPageId();
   const now = new Date().toISOString();
   const metadata = normalizeCreatePageMetadata(body.metadata);
+  if (!metadata) return null;
   return {
     schemaVersion: 1,
     pageId,
