@@ -82,17 +82,14 @@ function normalizeSubmittedPageSummary(value: unknown, args: {
   previous: AccountPageSummary | null;
 }): AccountPageSummary | null {
   if (!isRecord(value)) return null;
-  const pageId = normalizePageId(value.pageId);
+  const pageId = typeof value.pageId === 'string' ? value.pageId : '';
   const title = typeof value.title === 'string' ? value.title.trim() : '';
   const description = typeof value.description === 'string' ? value.description.trim() : '';
   const robots = normalizeRobots(value.robots);
-  const placementCount =
-    typeof value.placementCount === 'number' && Number.isFinite(value.placementCount)
-      ? Math.max(0, Math.floor(value.placementCount))
-      : null;
+  const placementCount = typeof value.placementCount === 'number' && Number.isInteger(value.placementCount) && value.placementCount >= 0 ? value.placementCount : null;
   const updatedAt = typeof value.updatedAt === 'string' && value.updatedAt.trim() ? value.updatedAt.trim() : '';
   const submittedCreatedAt = typeof value.createdAt === 'string' && value.createdAt.trim() ? value.createdAt.trim() : '';
-  if (pageId !== args.pageId || !title || description == null || !robots || placementCount == null || !updatedAt) return null;
+  if (pageId !== args.pageId || !title || !robots || placementCount == null || !updatedAt) return null;
   return {
     pageId,
     title,
@@ -106,9 +103,7 @@ function normalizeSubmittedPageSummary(value: unknown, args: {
 
 async function readPagesIndex(env: Env, accountId: string): Promise<AccountPagesIndex> {
   const obj = await env.TOKYO_R2.get(accountPagesIndexKey(accountId));
-  if (!obj) {
-    return { v: 1, accountId, pages: [] };
-  }
+  if (!obj) throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.indexMissing' });
   let stored: unknown;
   try {
     stored = await obj.json();
@@ -124,38 +119,12 @@ async function readPagesIndex(env: Env, accountId: string): Promise<AccountPages
       reasonKey: 'tokyo.errors.page.indexInvalid',
     });
   }
-  return {
-    v: 1,
-    accountId,
-    pages: stored.pages.map((page, index): AccountPageSummary => {
-      if (
-        !isRecord(page) ||
-        typeof page.pageId !== 'string' ||
-        typeof page.title !== 'string' ||
-        typeof page.description !== 'string' ||
-        normalizeRobots(page.robots) == null ||
-        typeof page.placementCount !== 'number' ||
-        !Number.isFinite(page.placementCount) ||
-        typeof page.createdAt !== 'string' ||
-        typeof page.updatedAt !== 'string'
-      ) {
-        throw new PageOperationError({
-          kind: 'VALIDATION',
-          reasonKey: 'tokyo.errors.page.indexInvalid',
-          paths: [`pages.${index}`],
-        });
-      }
-      return {
-        pageId: page.pageId,
-        title: page.title,
-        description: page.description,
-        robots: page.robots,
-        placementCount: page.placementCount,
-        createdAt: page.createdAt,
-        updatedAt: page.updatedAt,
-      };
-    }),
-  };
+  stored.pages.forEach((page, index) => {
+    if (!isRecord(page) || normalizePageId(page.pageId) !== page.pageId || typeof page.title !== 'string' || typeof page.description !== 'string' || normalizeRobots(page.robots) == null || typeof page.placementCount !== 'number' || !Number.isInteger(page.placementCount) || page.placementCount < 0 || typeof page.createdAt !== 'string' || typeof page.updatedAt !== 'string') {
+      throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.indexInvalid', paths: [`pages.${index}`] });
+    }
+  });
+  return stored as AccountPagesIndex;
 }
 
 async function preparePageSummaryForIndex(args: {
@@ -189,19 +158,6 @@ async function writePagesIndex(args: {
   ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.pageId.localeCompare(right.pageId));
   await putJson(args.env, accountPagesIndexKey(args.accountId), { v: 1, accountId: args.accountId, pages });
   return args.summary;
-}
-
-async function removePageFromPagesIndex(args: {
-  env: Env;
-  accountId: string;
-  pageId: string;
-}): Promise<void> {
-  const index = await readPagesIndex(args.env, args.accountId);
-  await putJson(args.env, accountPagesIndexKey(args.accountId), {
-    v: 1,
-    accountId: args.accountId,
-    pages: index.pages.filter((page) => page.pageId !== args.pageId),
-  });
 }
 
 export async function listAccountPages(args: {
@@ -249,7 +205,6 @@ export async function deleteAccountPageSource(args: {
   env: Env;
   accountId: string;
   pageId: string;
-  now?: string;
 }): Promise<{ existed: boolean }> {
   const accountId = assertAccountId(args.accountId);
   const pageId = normalizePageId(args.pageId);
@@ -259,9 +214,11 @@ export async function deleteAccountPageSource(args: {
       reasonKey: 'tokyo.errors.page.invalidPageId',
     });
   }
+  const index = await readPagesIndex(args.env, accountId);
+  if (!index.pages.some((page) => page.pageId === pageId)) throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.indexInvalid' });
   const previous = await readAccountPageSource({ env: args.env, accountId, pageId });
   if (!previous) return { existed: false };
   await deletePrefix(args.env, `${accountPageRoot(accountId, pageId)}/`);
-  await removePageFromPagesIndex({ env: args.env, accountId, pageId });
+  await putJson(args.env, accountPagesIndexKey(accountId), { v: 1, accountId, pages: index.pages.filter((page) => page.pageId !== pageId) });
   return { existed: true };
 }

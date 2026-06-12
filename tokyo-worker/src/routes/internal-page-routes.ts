@@ -135,6 +135,7 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
     if (authErr) return respond(authErr);
 
     try {
+      if (!(await listAccountPages({ env, accountId })).pages.some((page) => page.pageId === pageId)) throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.indexInvalid' });
       if (action === 'publish') {
         const source = await readAccountPageSource({ env, accountId, pageId });
         if (!source) {
