@@ -40,7 +40,7 @@
     "build:roma": "pnpm --filter @clickeen/roma build",
     "prague:l10n:translate": "node scripts/prague-l10n/translate.mjs",
     "prague:l10n:verify": "node scripts/prague-l10n/verify.mjs",
-    "build:prague:global": "pnpm prague:l10n:translate && pnpm prague:l10n:verify && pnpm build:prague",
+    "build:prague:global": "pnpm prague:l10n:verify && pnpm build:prague",
     "prague:blocks:validate": "node scripts/prague-blocks/validate.mjs"
   },
   "devDependencies": {

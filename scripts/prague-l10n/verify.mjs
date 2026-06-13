@@ -17,9 +17,6 @@ const REPO_ROOT = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..
 const TOKYO_PRAGUE_PAGES_ROOT = path.join(REPO_ROOT, 'tokyo', 'prague', 'pages');
 const LOCALES_PATH = path.join(REPO_ROOT, 'packages', 'l10n', 'locales.json');
 
-const cliArgs = new Set(process.argv.slice(2));
-const STRICT_LATEST = cliArgs.has('--strict-latest') || String(process.env.PRAGUE_L10N_VERIFY_STRICT || '').trim() === '1';
-
 function isPlainObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -117,9 +114,7 @@ function validateOverlay(overlay, overlayPath, expectedFingerprint) {
     throw new Error(`[prague-l10n] Invalid translation file: ${overlayPath}`);
   }
   if (overlay.baseFingerprint !== expectedFingerprint) {
-    const msg = `[prague-l10n] NOT TRANSLATED: translation fingerprint mismatch: ${overlayPath}`;
-    if (STRICT_LATEST) throw new Error(msg);
-    console.warn(msg);
+    throw new Error(`[prague-l10n] NOT TRANSLATED: translation fingerprint mismatch: ${overlayPath}`);
   }
   if (!Array.isArray(overlay.ops)) {
     throw new Error(`[prague-l10n] ${overlayPath}: ops must be an array`);
@@ -151,10 +146,7 @@ async function verifyPageTranslations({ filePath, widget, page, pageId, overlayL
   for (const locale of overlayLocales) {
     const translationPath = path.join(translationsDir, `${locale}.json`);
     if (!(await fileExists(translationPath))) {
-      const msg = `[prague-l10n] NOT TRANSLATED: missing ${translationPath}`;
-      if (STRICT_LATEST) throw new Error(msg);
-      console.warn(msg);
-      continue;
+      throw new Error(`[prague-l10n] NOT TRANSLATED: missing ${translationPath}`);
     }
     validateOverlay(await readJson(translationPath), translationPath, fingerprint);
   }

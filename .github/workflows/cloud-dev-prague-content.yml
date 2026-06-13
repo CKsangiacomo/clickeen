@@ -48,11 +48,8 @@ jobs:
       - name: Validate Prague blocks
         run: node scripts/prague-blocks/validate.mjs
 
-      - name: Translate Prague page sidecars
-        run: pnpm prague:l10n:translate
-
       - name: Verify Prague page sidecars
         run: pnpm prague:l10n:verify
 
-      - name: Build Prague (includes overlay verify)
+      - name: Build Prague
         run: pnpm -C prague build
