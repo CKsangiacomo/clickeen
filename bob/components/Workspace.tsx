@@ -45,7 +45,6 @@ export function Workspace({
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
   const [resolvedAssets, setResolvedAssets] = useState<Map<string, ResolvedAccountAsset>>(() => new Map());
-  const lastMaterializedPreviewRef = useRef<Record<string, unknown> | null>(null);
   const mediaAssetRefs = useMemo(
     () => collectConfigMediaAssetRefs(instanceData),
     [instanceData],
@@ -56,15 +55,13 @@ export function Workspace({
   );
   const previewInstanceData = useMemo(() => {
     if (!mediaAssetRefs.length) return instanceData;
-    if (unresolvedMediaAssetRefs.length && lastMaterializedPreviewRef.current) {
-      return lastMaterializedPreviewRef.current;
-    }
+    if (unresolvedMediaAssetRefs.length) return instanceData;
     const materialized = materializeConfigMedia(instanceData, resolvedAssets);
     return materialized && typeof materialized === 'object' && !Array.isArray(materialized)
       ? (materialized as Record<string, unknown>)
       : instanceData;
   }, [instanceData, mediaAssetRefs, resolvedAssets, unresolvedMediaAssetRefs]);
-  const previewStateReady = !unresolvedMediaAssetRefs.length || lastMaterializedPreviewRef.current != null;
+  const previewStateReady = !unresolvedMediaAssetRefs.length;
   const effectivePreviewableLocales = useMemo(() => {
     const previewableLocales = Array.from(
       new Set(
@@ -94,10 +91,6 @@ export function Workspace({
     return resolveTranslatedValues(previewInstanceData, selectedTranslationValues);
   }, [previewInstanceData, selectedTranslationValues]);
 
-  useEffect(() => {
-    if (!previewStateReady) return;
-    lastMaterializedPreviewRef.current = previewInstanceData;
-  }, [previewInstanceData, previewStateReady]);
   const latestRef = useRef({
     compiled,
     instanceData: resolvedPreviewInstanceData,
@@ -164,8 +157,7 @@ export function Workspace({
         });
       })
       .catch(() => {
-        // Asset resolve failure is already surfaced through the account route.
-        // Keep the previous materialized preview state instead of flashing unresolved media.
+        if (!cancelled) setIframeLoadError('Failed to resolve preview media assets');
       });
 
     return () => {
@@ -229,12 +221,12 @@ export function Workspace({
     let readyTimeout: number | null = null;
     const handleLoad = () => {
       setIframeLoaded(true);
-      setIframeLoadError(null);
       const snapshot = latestRef.current;
       const nextCompiled = snapshot.compiled;
       const iframeWindow = iframe.contentWindow;
       if (!iframeWindow || !nextCompiled) return;
       if (!previewStateReady) return;
+      setIframeLoadError(null);
       iframeWindow.postMessage(
         {
           type: 'ck:state-update',
