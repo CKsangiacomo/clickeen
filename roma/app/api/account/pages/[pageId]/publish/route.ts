@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
 import {
   loadAccountPageFromTokyo,
   publishAccountPageInTokyo,
@@ -18,8 +19,7 @@ type RouteContext = { params: Promise<{ pageId: string }> };
 
 async function requirePageIdParam(context: RouteContext) {
   const { pageId: rawPageId } = await context.params;
-  const pageId = typeof rawPageId === 'string' ? rawPageId.trim().toUpperCase() : '';
-  if (pageId) return pageId;
+  if (isCompactPageId(rawPageId)) return rawPageId;
   return {
     ok: false as const,
     status: 422,

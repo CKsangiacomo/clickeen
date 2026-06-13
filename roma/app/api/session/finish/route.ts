@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createInitialAccountWidgetDefaultsInTokyo } from '../../../../lib/account-widget-defaults-direct';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import {
   applySessionCookies,
@@ -22,6 +23,7 @@ type BerlinFinishPayload = {
   refreshToken?: unknown;
   accessTokenMaxAge?: unknown;
   refreshTokenMaxAge?: unknown;
+  createdAccount?: unknown;
   continuation?: unknown;
   error?: unknown;
 };
@@ -206,6 +208,12 @@ export async function GET(request: NextRequest) {
 
   const accessMaxAge = parsePositiveInt(payload.accessTokenMaxAge, 15 * 60);
   const refreshMaxAge = parsePositiveInt(payload.refreshTokenMaxAge, 60 * 60 * 24 * 30);
+  if (typeof payload.createdAccount !== 'boolean') {
+    return NextResponse.redirect(buildRecoveryUrl(request, 'coreui.errors.auth.contextUnavailable'), {
+      headers: CACHE_HEADERS,
+    });
+  }
+  const createdAccount = payload.createdAccount;
 
   const continuation = extractContinuation(payload as BerlinFinishPayload);
   let accountCapsule: string | null = null;
@@ -247,6 +255,20 @@ export async function GET(request: NextRequest) {
     );
   }
   accountCapsule = bootstrap.accountCapsule;
+
+  if (createdAccount) {
+    const initialized = await createInitialAccountWidgetDefaultsInTokyo({
+      accountId: bootstrap.accountId,
+      accountCapsule,
+    });
+    if (!initialized.ok) {
+      return applySession(
+        NextResponse.redirect(buildRecoveryUrl(request, initialized.error.reasonKey), {
+          headers: CACHE_HEADERS,
+        }),
+      );
+    }
+  }
 
   const destination = new URL(continuation.next, resolveRequestOrigin(request));
   const response = NextResponse.redirect(destination, { headers: CACHE_HEADERS });

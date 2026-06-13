@@ -7,55 +7,18 @@ type R2TextObject = {
 
 type PagePublicFile = 'index.html' | 'styles.css' | 'runtime.js';
 
-type PagePublicFilePayload = {
-  name: PagePublicFile;
-  body: string;
-  contentType: string;
-};
-
-export type SubmittedPagePublicPackage = {
-  v: 1;
-  indexHtml: string;
-  stylesCss: string;
-  runtimeJs: string;
-};
-
-export type PagePublicPackageWriteResult =
-  | { ok: true }
-  | { ok: false; reasonKey: string; detail: string };
-
 export type PagePublicPackageReadinessResult =
   | { ok: true }
   | { ok: false; reasonKey: string; detail: string };
 
-function textContentType(name: PagePublicFile): string {
-  if (name === 'styles.css') return 'text/css; charset=utf-8';
-  if (name === 'runtime.js') return 'text/javascript; charset=utf-8';
-  return 'text/html; charset=utf-8';
-}
+class PagePackageOperationError extends Error {
+  reasonKey: string;
 
-function normalizeSubmittedPackage(value: unknown): SubmittedPagePublicPackage | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  const raw = value as Record<string, unknown>;
-  if (raw.v !== 1) return null;
-  if (typeof raw.indexHtml !== 'string' || typeof raw.stylesCss !== 'string' || typeof raw.runtimeJs !== 'string') {
-    return null;
+  constructor(reasonKey: string, detail: string) {
+    super(detail);
+    this.name = 'PagePackageOperationError';
+    this.reasonKey = reasonKey;
   }
-  if (!raw.indexHtml.trim() || !raw.stylesCss.trim() || !raw.runtimeJs.trim()) return null;
-  return {
-    v: 1,
-    indexHtml: raw.indexHtml,
-    stylesCss: raw.stylesCss,
-    runtimeJs: raw.runtimeJs,
-  };
-}
-
-function filesFromSubmittedPackage(pkg: SubmittedPagePublicPackage): PagePublicFilePayload[] {
-  return [
-    { name: 'index.html', body: pkg.indexHtml, contentType: textContentType('index.html') },
-    { name: 'styles.css', body: pkg.stylesCss, contentType: textContentType('styles.css') },
-    { name: 'runtime.js', body: pkg.runtimeJs, contentType: textContentType('runtime.js') },
-  ];
 }
 
 async function readRequiredText(args: {
@@ -64,36 +27,8 @@ async function readRequiredText(args: {
   reasonKey: string;
 }): Promise<string> {
   const object = await args.env.TOKYO_R2.get(args.key) as R2TextObject | null;
-  if (!object) throw new Error(`${args.reasonKey}:${args.key}`);
+  if (!object) throw new PagePackageOperationError(args.reasonKey, args.key);
   return object.text();
-}
-
-export function readSubmittedPagePublicPackage(value: unknown): SubmittedPagePublicPackage | null {
-  return normalizeSubmittedPackage(value);
-}
-
-export async function writeAccountPagePublicPackage(args: {
-  env: Env;
-  accountId: string;
-  pageId: string;
-  pagePackage: SubmittedPagePublicPackage;
-}): Promise<PagePublicPackageWriteResult> {
-  try {
-    const files = filesFromSubmittedPackage(args.pagePackage);
-    for (const file of files) {
-      await args.env.TOKYO_R2.put(accountPagePublishFileKey(args.accountId, args.pageId, file.name), file.body, {
-        httpMetadata: { contentType: file.contentType },
-      });
-    }
-    return { ok: true };
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return {
-      ok: false,
-      reasonKey: detail.startsWith('page.') ? detail : 'page.package.writeFailed',
-      detail,
-    };
-  }
 }
 
 export async function verifyAccountPagePublicPackageReady(args: {
@@ -124,7 +59,7 @@ export async function verifyAccountPagePublicPackageReady(args: {
     const detail = error instanceof Error ? error.message : String(error);
     return {
       ok: false,
-      reasonKey: detail.startsWith('page.') ? detail : 'page.package.notReady',
+      reasonKey: error instanceof PagePackageOperationError ? error.reasonKey : 'page.package.notReady',
       detail,
     };
   }

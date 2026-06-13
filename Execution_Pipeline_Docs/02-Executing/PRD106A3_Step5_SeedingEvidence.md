@@ -1,9 +1,11 @@
 # PRD106A3 Step 5 Seeding Evidence
 
-Status: Green
+Status: Superseded by PRD 107
 Date: 2026-06-07
 
-Existing accounts are seeded through the Tokyo account-default boundary.
+PRD 107 deleted the read-or-seed account-default workflow. Existing accounts
+must already have account widget defaults before instance creation; missing or
+invalid defaults fail visibly at the account defaults boundary.
 
 Canonical key:
 
@@ -11,23 +13,15 @@ Canonical key:
 accounts/{accountPublicId}/widget-defaults.json
 ```
 
-Implemented boundary:
+Strict read boundary:
 
 ```text
 GET /__internal/accounts/{accountPublicId}/widget-defaults
 ```
 
-The route calls `readOrSeedAccountWidgetDefaults`. If the account document is
-missing, Tokyo writes a new account defaults document seeded from:
-
-```text
-packages/widget-shell WIDGET_SHELL_FACTORY_DEFAULTS
-+ tokyo product widget Core factory defaults
-```
-
-This is not a runtime factory fallback. Seeding happens at the account defaults
-boundary. New instance creation will later require account defaults before it
-creates source.
+The route calls `readAccountWidgetDefaults`. If the account document is missing
+or malformed, Tokyo returns `tokyo.widgetDefaults.missing` or
+`tokyo.widgetDefaults.invalid` and does not write repaired defaults.
 
 Verification:
 

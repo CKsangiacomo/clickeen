@@ -615,8 +615,9 @@ Manual smoke (fast)
 
 Account defaults smoke:
 
-- `accounts/{accountPublicId}/widget-defaults.json` exists or is seeded before
-  creating a new instance.
+- `accounts/{accountPublicId}/widget-defaults.json` already exists before
+  creating a new instance; missing or invalid account defaults fail the create
+  boundary.
 - Creating a new instance submits resolved `source.config` from Roma to Tokyo.
   Tokyo derives `instance.content.json` from that config and must not call
   widget factory defaults during product create.

@@ -107,8 +107,8 @@ Evidence:
 - Tokyo reverse placement index keys, type, source maintenance, and internal
   route were deleted.
 - Tokyo page source handling is storage-only for page meaning: Roma submits the
-  page source and page summary projection; Tokyo validates only account/path
-  coordinates and stores the submitted bytes/projection.
+  page source; Tokyo validates the page source contract, stores the submitted
+  source bytes, and derives page-list summaries from stored source files.
 
 Committed evidence:
 
@@ -243,8 +243,8 @@ Evidence:
 - Remaining matches for those terms are PRD deletion/history references, not
   active product paths.
 - Tokyo page code keeps only storage-boundary responsibilities: account/page
-  coordinate validation, submitted `source.json` storage, Roma-submitted
-  `pages/index.json` summary storage, submitted public file storage, serve-state
+  coordinate validation, submitted `source.json` storage, derived page-list
+  summaries from source files, submitted public file storage, serve-state
   storage, public file serving, and cache purge.
 - Tokyo does not derive page metadata, placements, localization, dependencies,
   recomposition, copy output, or composed HTML/CSS/runtime.
@@ -395,10 +395,10 @@ Step 1 is not green while architecture/service docs teach the old
 `accounts/{accountPublicId}/website/publishes/**`, or placement-index paths as
 current product truth.
 
-Roma may use Tokyo to store dumb page-related objects only when Tokyo treats
-them as opaque bytes. Tokyo may store page source and serve-state files, but it
-must not create, interpret, validate, update, summarize, or derive product
-meaning from them.
+Roma may use Tokyo to store page-related objects only through named boundaries.
+Tokyo validates page source before storage and derives account page list
+summaries from stored source files. It must not compose pages, infer dependency
+graphs, update source meaning, or derive product readiness from page source.
 
 ### Tokyo Payload Contract
 
@@ -411,6 +411,8 @@ Roma submits:
 Tokyo may validate only:
 
 - Account/path authorization.
+- Page source contract shape before source storage and page-list summary
+  derivation.
 - Object names and content types are allowlisted.
 - Object size limits.
 - Required generated files exist for public serving.
@@ -608,7 +610,8 @@ country routing may be implemented only in the public serving boundary as a
 storage selection from already-materialized locale files using Roma-authored
 opaque config; it must not parse page `source.json`, validate selected
 instances, generate localized output, or decide product readiness at request
-time. If that serving-boundary selection cannot be implemented without product
+time. Tokyo validates page source at the private storage boundary, not at public
+serve time. If that serving-boundary selection cannot be implemented without product
 logic, IP localization is fenced and Step 7 ships default-locale plus optional
 top language switcher only.
 
@@ -1102,8 +1105,8 @@ widget instance package contract that Page Composer consumes.
   - Tier 3: 6 pages; instances/widgets allowed by that tier.
   - Tier 4: unlimited pages and unlimited instances/widgets.
   - Views are unlimited for all pages across all tiers.
-- Tokyo never receives product composition state beyond opaque `source.json`,
-  final files, and explicit `serve-state.json` bytes.
+- Tokyo receives validated page `source.json`, final files, and explicit
+  `serve-state.json` bytes; it does not receive composition dependency state.
 - Old Tokyo page source, reverse-index, readiness, and generated-embed behavior
   is removed from the product path or fenced with tests proving it is not the
   authority.
@@ -1173,7 +1176,7 @@ widget instance package contract that Page Composer consumes.
   instances, but publish is blocked until every included instance is published.
 - Public serving test: same page URL serves updated content after included
   instance save.
-- Tokyo negative tests proving product-shaped page source/index/readiness routes
+- Tokyo negative tests proving product-shaped page source/package/readiness routes
   are not the authority.
 - SEO/GEO tests inspecting generated initial HTML for title, description,
   robots, canonical, and ordered semantic content. Structured-data merging is

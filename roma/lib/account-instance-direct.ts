@@ -9,7 +9,6 @@ import { callTokyo, type TokyoCallContext } from './tokyo-client';
 import {
   listAccountPagesInTokyo,
   loadAccountPageFromTokyo,
-  saveAccountPageInTokyo,
   type DirectPageRouteError,
 } from './account-page-direct';
 
@@ -326,50 +325,6 @@ export async function listPageIdsPlacingInstanceForAccount(args: {
   return { ok: true, value: placedPageIds };
 }
 
-async function refreshPagesPlacingInstanceForAccount(args: {
-  accountId: string;
-  instanceId: string;
-  accountCapsule?: string | null;
-  internalServiceName?: string | null;
-  requestId?: string | null;
-}): Promise<{ ok: true } | RouteFailure> {
-  const placedPages = await listPageIdsPlacingInstanceForAccount(args);
-  if (!placedPages.ok) return placedPages;
-  for (const pageId of placedPages.value) {
-    const opened = await loadAccountPageFromTokyo({
-      accountId: args.accountId,
-      pageId,
-      accountCapsule: args.accountCapsule,
-      internalServiceName: args.internalServiceName,
-      requestId: args.requestId,
-    });
-    if (!opened.ok) return pageRouteFailureToInstanceFailure(opened);
-    if (!opened.value) {
-      return {
-        ok: false,
-        status: 404,
-        error: {
-          kind: 'NOT_FOUND',
-          reasonKey: 'coreui.errors.page.notFound',
-          detail: `placed page not found: ${pageId}`,
-        },
-      };
-    }
-    const saved = await saveAccountPageInTokyo({
-      accountId: args.accountId,
-      pageId,
-      source: opened.value.source,
-      accountCapsule: args.accountCapsule,
-      internalServiceName: args.internalServiceName,
-      requestId: args.requestId,
-    });
-    if (!saved.ok) return pageRouteFailureToInstanceFailure(saved);
-  }
-  return { ok: true };
-}
-
-export { refreshPagesPlacingInstanceForAccount };
-
 function normalizeAccountInstancePayload(payload: unknown):
   | { row: AccountInstanceCoreRow; config: Record<string, unknown> }
   | null {
@@ -490,12 +445,6 @@ export async function saveAccountInstanceInTokyo(args: {
   accountCapsule?: string | null;
   widgetType: string;
   config: Record<string, unknown>;
-  publicPackage: {
-    v: 1;
-    indexHtml: string;
-    stylesCss: string;
-    runtimeJs: string;
-  };
   displayName?: string | null;
   meta?: Record<string, unknown> | null;
   internalServiceName?: string | null;
@@ -515,7 +464,6 @@ export async function saveAccountInstanceInTokyo(args: {
     body: {
       widgetType: args.widgetType,
       config: args.config,
-      publicPackage: args.publicPackage,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.meta !== undefined ? { meta: args.meta } : {}),
     },

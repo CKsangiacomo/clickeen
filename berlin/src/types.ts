@@ -92,6 +92,7 @@ export type OAuthFinishTransaction = {
   v: 1;
   provider: string;
   userId: string;
+  createdAccount: boolean;
   sessionId: string;
   accessToken: string;
   refreshToken: string;

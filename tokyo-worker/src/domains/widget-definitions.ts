@@ -227,16 +227,6 @@ export function resolveWidgetDefaults(widgetType: string): Record<string, unknow
   return entry && isRecord(entry.defaults) ? cloneRecord(entry.defaults) : null;
 }
 
-export function listWidgetCoreFactoryDefaults(): Array<{
-  widgetType: string;
-  core: Record<string, unknown>;
-}> {
-  return WIDGET_DEFINITIONS.map((entry) => ({
-    widgetType: entry.widgetType,
-    core: isRecord(entry.defaults) ? cloneRecord(entry.defaults) : {},
-  }));
-}
-
 export function listWidgetAccountDefaultContracts(): Array<{
   widgetType: string;
   coreFactoryDefaults: Record<string, unknown>;

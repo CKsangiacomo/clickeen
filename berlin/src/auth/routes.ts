@@ -72,7 +72,7 @@ async function issueProductSessionFromProviderIdentity(
   identity: ProviderIdentity,
   failureReasonKey: string,
   options: { invitationId?: string | null } = {},
-): Promise<{ ok: true; session: Awaited<ReturnType<typeof issueSession>>; userId: string } | { ok: false; response: Response }> {
+): Promise<{ ok: true; session: Awaited<ReturnType<typeof issueSession>>; userId: string; createdAccount: boolean } | { ok: false; response: Response }> {
   try {
     const resolved = await ensureProductAccountStateForIdentity(env, identity, options);
     if (!resolved.ok) {
@@ -84,7 +84,7 @@ async function issueProductSessionFromProviderIdentity(
       authMode: 'direct_provider',
     });
 
-    return { ok: true, session, userId: resolved.userId };
+    return { ok: true, session, userId: resolved.userId, createdAccount: resolved.createdAccount };
   } catch (error) {
     console.error(
       JSON.stringify({
@@ -391,7 +391,7 @@ async function handleProviderLoginCallback(
     });
     return issued.response;
   }
-  const { session, userId } = issued;
+  const { session, userId, createdAccount } = issued;
   const nowSec = Math.floor(Date.now() / 1000);
 
   const intent = transaction.intent || 'signin';
@@ -412,6 +412,7 @@ async function handleProviderLoginCallback(
     provider: transaction.provider,
     sessionId: session.sid,
     userId,
+    createdAccount,
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
     accessTokenMaxAge: session.accessTokenMaxAge,
@@ -514,6 +515,7 @@ async function handleFinish(request: Request, env: Env): Promise<Response> {
     provider: transaction.provider,
     sessionId: transaction.sessionId,
     userId: transaction.userId,
+    createdAccount: transaction.createdAccount,
     accessToken: transaction.accessToken,
     refreshToken: transaction.refreshToken,
     accessTokenMaxAge: transaction.accessTokenMaxAge,

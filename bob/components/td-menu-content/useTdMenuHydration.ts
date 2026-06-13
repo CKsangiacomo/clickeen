@@ -62,14 +62,11 @@ export function useTdMenuHydration(args: {
     container.addEventListener('dieter-controls-rendered', handleControlsRendered);
 
     ensureMedia(dieterMedia)
-      .then(() => {
+      .then(async () => {
         if (cancelled) return;
         runHydrators(container, { accountAssets });
-        applyI18nToDom(container, widgetName).catch((err) => {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('[TdMenuContent] i18n apply failed', err);
-          }
-        });
+        await applyI18nToDom(container, widgetName);
+        if (cancelled) return;
         showIfEntriesRef.current = buildShowIfEntries(container);
         applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
         setRenderKey((current) => current + 1);

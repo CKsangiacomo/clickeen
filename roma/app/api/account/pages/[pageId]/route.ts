@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
 import {
   deleteAccountPageFromTokyo,
   loadAccountPageFromTokyo,
@@ -17,8 +18,7 @@ type RouteContext = { params: Promise<{ pageId: string }> };
 
 async function requirePageIdParam(context: RouteContext) {
   const { pageId: rawPageId } = await context.params;
-  const pageId = typeof rawPageId === 'string' ? rawPageId.trim().toUpperCase() : '';
-  if (pageId) return pageId;
+  if (isCompactPageId(rawPageId)) return rawPageId;
   return {
     ok: false as const,
     status: 422,
@@ -101,8 +101,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
-  const sourceId = typeof bodyResult.payload.source.pageId === 'string' ? bodyResult.payload.source.pageId.trim().toUpperCase() : '';
-  if (sourceId !== pageId) {
+  if (bodyResult.payload.source.pageId !== pageId) {
     return withSession(
       request,
       NextResponse.json(

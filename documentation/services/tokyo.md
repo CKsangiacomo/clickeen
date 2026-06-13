@@ -78,11 +78,11 @@ Rules:
 - Widget codes (`FAQ`, `CTD`, `LGS`, etc.) are codebook metadata used by overlay identity and contracts. They are not storage folders and are never required to locate an instance.
 - Instance locale values are addressed by Tokyo operations using `{instanceId, locale}` and persist under `overlays/locales/{locale}.json`. Overlay paths are not product identity.
 - Instance listing comes from Tokyo operations backed by the `instances` DB row, not `instances/index.json`.
-- Browser package files `index.html`, `styles.css`, and `runtime.js` are submitted by the Builder save path and stored by Tokyo-worker. They must not be treated as identity, ownership, saved config, or product publish truth.
+- Browser package files `index.html`, `styles.css`, and `runtime.js` are public artifacts, not identity, ownership, saved config, or product publish truth. Source save does not write those package files in PRD 107.
 - Those files can exist for composition before public standalone serving. `clk.live` serving still requires Tokyo serve state to be `published` and account serving policy to allow the instance.
 - `accounts/{accountPublicId}/website/serving-policy.json` is the named account-level standalone serving gate for lower-tier caps. It disables public delivery without deleting generated package files.
-- Generated page packages live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`.
-- Page source is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/source.json`.
+- Page package files, when present, live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`.
+- Page source is stored at `accounts/{accountPublicId}/pages/{pageId}/source.json`; Tokyo validates the page source contract before storage and derives account page list summaries from stored source files.
 - Page serve state is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/serve-state.json`.
 - Prague page translations are not account-instance overlays.
 

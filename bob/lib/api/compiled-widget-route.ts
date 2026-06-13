@@ -15,6 +15,11 @@ type CompiledWidgetPayload = Awaited<ReturnType<typeof compileWidgetServer>> & {
 };
 type WidgetPackageSupportError = { kind: 'WIDGET_PUBLIC_PACKAGE_ERROR'; reasonKey: string; paths: string[] };
 
+function compiledWidgetError(args: { reasonKey: string; status: number; paths?: string[] }, headers: HeadersInit) {
+  const error = { kind: 'VALIDATION', reasonKey: args.reasonKey, ...(args.paths?.length ? { paths: args.paths } : {}) };
+  return NextResponse.json({ error }, { status: args.status, headers });
+}
+
 function buildWidgetProductSourceUrl(args: { tokyoRoot: string; productPath: string }): string {
   const relative = args.productPath.replace(/^product\/widgets\//, '');
   return `${args.tokyoRoot}/widgets/${relative.split('/').map(encodeURIComponent).join('/')}`;
@@ -24,15 +29,41 @@ function packageSupportError(reasonKey: string, path: string): never { throw { k
 
 function isWidgetPackageSupportError(value: unknown): value is WidgetPackageSupportError { return Boolean(value) && typeof value === 'object' && !Array.isArray(value) && (value as WidgetPackageSupportError).kind === 'WIDGET_PUBLIC_PACKAGE_ERROR'; }
 
+function tagAttr(tag: string, name: string): string {
+  const match = tag.match(new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i'));
+  return match?.[1] ?? match?.[2] ?? match?.[3] ?? '';
+}
+
+function readDeclaredWidgetProductFiles(args: { widgetname: string; htmlText: string }): string[] {
+  const productPaths = new Set<string>();
+  const add = (ref: string, extension: '.css' | '.js') => {
+    if (!ref || ref.startsWith('#')) return;
+    const url = new URL(ref, `https://clickeen.local/product/widgets/${encodeURIComponent(args.widgetname)}/widget.html`);
+    if (url.origin !== 'https://clickeen.local') return;
+    const path = decodeURIComponent(url.pathname.replace(/^\/+/, ''));
+    if (path.startsWith('product/widgets/') && path.endsWith(extension)) productPaths.add(path);
+  };
+  for (const tag of args.htmlText.match(/<link\b[^>]*>/gi) ?? []) {
+    if (!/\bstylesheet\b/i.test(tagAttr(tag, 'rel'))) continue;
+    add(tagAttr(tag, 'href'), '.css');
+  }
+  for (const tag of args.htmlText.match(/<script\b[^>]*>/gi) ?? []) {
+    add(tagAttr(tag, 'src'), '.js');
+  }
+  return [...productPaths];
+}
+
 async function fetchWidgetPackageSupportFiles(args: {
   tokyoRoot: string;
   widgetname: string;
+  declaredProductFiles: readonly string[];
   knownFiles: Map<string, WidgetPackageFileContext>;
 }): Promise<Map<string, WidgetPackageFileContext>> {
   const next = new Map(args.knownFiles);
   const productPaths = new Set<string>([
     ...WIDGET_SHELL_CSS_MODULE_KEYS,
     ...WIDGET_SHELL_RUNTIME_MODULE_KEYS,
+    ...args.declaredProductFiles,
   ]);
   await Promise.all(
     [...productPaths]
@@ -97,10 +128,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
   const { widgetname } = await ctx.params;
   const corsHeaders = resolveCorsHeaders(req, 'GET,OPTIONS');
   if (!widgetname) {
-    return NextResponse.json(
-      { error: 'Missing widgetname' },
-      { status: 400, headers: corsHeaders },
-    );
+    return compiledWidgetError({ reasonKey: 'coreui.errors.widgetType.invalid', status: 400 }, corsHeaders);
   }
 
   try {
@@ -124,29 +152,17 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
 
     if (!specRes.ok) {
       if (specRes.status === 404) {
-        return NextResponse.json(
-          { error: `[Bob] Widget not found in Tokyo: ${widgetname}` },
-          { status: 404, headers: corsHeaders },
-        );
+        return compiledWidgetError({ reasonKey: 'coreui.errors.widgetType.invalid', status: 404 }, corsHeaders);
       }
-      return NextResponse.json(
-        { error: `[Bob] Failed to fetch widget spec from Tokyo (${specRes.status} ${specRes.statusText})` },
-        { status: 502, headers: corsHeaders },
-      );
+      return compiledWidgetError({ reasonKey: 'coreui.errors.widget.compiled.invalid', status: 502 }, corsHeaders);
     }
 
     if (!limitsRes.ok) {
-      return NextResponse.json(
-        { error: `[Bob] Failed to fetch widget limits from Tokyo (${limitsRes.status} ${limitsRes.statusText})` },
-        { status: 502, headers: corsHeaders },
-      );
+      return compiledWidgetError({ reasonKey: 'coreui.errors.widget.compiled.invalid', status: 502 }, corsHeaders);
     }
 
     if (!editableFieldsRes.ok && editableFieldsRes.status !== 404) {
-      return NextResponse.json(
-        { error: `[Bob] Failed to fetch widget editable-fields contract from Tokyo (${editableFieldsRes.status} ${editableFieldsRes.statusText})` },
-        { status: 502, headers: corsHeaders },
-      );
+      return compiledWidgetError({ reasonKey: 'coreui.errors.widget.compiled.invalid', status: 502 }, corsHeaders);
     }
 
     for (const [label, res] of [
@@ -163,10 +179,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     const [htmlText, cssText, jsText] = await Promise.all([htmlRes.text(), cssRes.text(), jsRes.text()]);
     const widgetJson = JSON.parse(specText) as RawWidget;
     if (widgetJson.v !== 1) {
-      return NextResponse.json(
-        { error: `[Bob] Unsupported widget spec version for ${widgetname}` },
-        { status: 503, headers: corsHeaders },
-      );
+      return compiledWidgetError({ reasonKey: 'coreui.errors.widget.compiled.invalid', status: 503 }, corsHeaders);
     }
 
     const initialPackageFiles = new Map<string, WidgetPackageFileContext>([
@@ -176,6 +189,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     const supportFiles = await fetchWidgetPackageSupportFiles({
       tokyoRoot,
       widgetname,
+      declaredProductFiles: readDeclaredWidgetProductFiles({ widgetname, htmlText }),
       knownFiles: initialPackageFiles,
     });
 
@@ -202,11 +216,9 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       },
     });
   } catch (err) {
-    if (isWidgetPackageSupportError(err)) return NextResponse.json({ error: err }, { status: 422, headers: corsHeaders });
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json(
-      { error: `[Bob] Failed to compile widget ${widgetname}: ${message}` },
-      { status: 500, headers: corsHeaders },
-    );
+    if (isWidgetPackageSupportError(err)) {
+      return compiledWidgetError({ reasonKey: err.reasonKey, status: 422, paths: err.paths }, corsHeaders);
+    }
+    return compiledWidgetError({ reasonKey: 'coreui.errors.widget.compiled.invalid', status: 500 }, corsHeaders);
   }
 }

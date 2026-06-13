@@ -32,6 +32,7 @@ export type AccountPageSource = {
   localization: PageLocalization;
   placements: PagePlacement[];
   version: number;
+  createdAt: string;
   updatedAt: string;
 };
 
@@ -72,16 +73,16 @@ function normalizePublishStatus(value: unknown): PagePublishStatus | null {
 function normalizePageSummary(raw: unknown): AccountPageSummary | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
-  const pageId = typeof record.pageId === 'string' ? record.pageId.trim() : '';
-  const title = typeof record.title === 'string' ? record.title.trim() : '';
-  const description = typeof record.description === 'string' ? record.description.trim() : '';
+  const pageId = typeof record.pageId === 'string' && record.pageId ? record.pageId : '';
+  const title = typeof record.title === 'string' && record.title ? record.title : '';
+  const description = typeof record.description === 'string' ? record.description : '';
   const robots = normalizeRobots(record.robots);
   const placementCount =
-    typeof record.placementCount === 'number' && Number.isFinite(record.placementCount)
-      ? Math.max(0, Math.floor(record.placementCount))
+    typeof record.placementCount === 'number' && Number.isInteger(record.placementCount) && record.placementCount >= 0
+      ? record.placementCount
       : null;
-  const createdAt = typeof record.createdAt === 'string' ? record.createdAt.trim() : '';
-  const updatedAt = typeof record.updatedAt === 'string' ? record.updatedAt.trim() : '';
+  const createdAt = typeof record.createdAt === 'string' && record.createdAt ? record.createdAt : '';
+  const updatedAt = typeof record.updatedAt === 'string' && record.updatedAt ? record.updatedAt : '';
   if (!pageId || !title || !robots || placementCount == null || !createdAt || !updatedAt) return null;
   return { pageId, title, description, robots, placementCount, createdAt, updatedAt };
 }
@@ -89,7 +90,7 @@ function normalizePageSummary(raw: unknown): AccountPageSummary | null {
 export function normalizeRomaPagesResponse(raw: unknown): RomaPagesResponse | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const record = raw as Record<string, unknown>;
-  const accountId = typeof record.accountId === 'string' ? record.accountId.trim() : '';
+  const accountId = typeof record.accountId === 'string' && record.accountId ? record.accountId : '';
   if (!accountId || !Array.isArray(record.pages)) return null;
   const pages = record.pages.map(normalizePageSummary);
   if (pages.some((page) => page === null)) return null;
@@ -111,9 +112,8 @@ export function normalizeRomaPageOpenResponse(raw: unknown): RomaPageOpenRespons
 }
 
 export function readRomaPagesCache(accountId: string): { data: RomaPagesResponse; fetchedAt: number } | null {
-  const normalizedAccountId = String(accountId || '').trim();
-  if (!normalizedAccountId) return null;
-  return romaPagesCache.get(normalizedAccountId) ?? null;
+  if (!accountId) return null;
+  return romaPagesCache.get(accountId) ?? null;
 }
 
 export function isRomaPagesCacheFresh(entry: { fetchedAt: number } | null): boolean {
@@ -132,7 +132,7 @@ export async function loadRomaPagesForAccount(args: {
   fetchJson: RomaPagesFetchJson;
   force?: boolean;
 }): Promise<RomaPagesResponse> {
-  const accountId = String(args.accountId || '').trim();
+  const accountId = args.accountId;
   if (!accountId) throw new Error('coreui.errors.auth.contextUnavailable');
 
   const cached = readRomaPagesCache(accountId);
@@ -156,6 +156,5 @@ export async function loadRomaPagesForAccount(args: {
 }
 
 export function buildPagesRoute(pageId?: string | null): string {
-  const normalizedPageId = String(pageId || '').trim();
-  return normalizedPageId ? `/pages?page=${encodeURIComponent(normalizedPageId)}` : '/pages';
+  return pageId ? `/pages?page=${encodeURIComponent(pageId)}` : '/pages';
 }

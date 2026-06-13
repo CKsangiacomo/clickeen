@@ -29,15 +29,15 @@ async function readStoredServeState(env: Env, coordinate: PageCoordinate): Promi
 export async function readAccountPageServeState(args: { env: Env; accountId: string; pageId: string }): Promise<PageServeState> {
   return readStoredServeState(args.env, assertPageCoordinate(args));
 }
+export async function createAccountPageServeState(args: { env: Env; accountId: string; pageId: string; now?: string }): Promise<PageServeState> {
+  const coordinate = assertPageCoordinate(args);
+  await putJson(args.env, accountPageServeStateKey(coordinate.accountId, coordinate.pageId), serveStatePayload(coordinate, 'unpublished', args.now));
+  return 'unpublished';
+}
 export async function writeAccountPageServeState(args: { env: Env; accountId: string; pageId: string; status: PageServeState; now?: string }): Promise<{ status: PageServeState; changed: boolean }> {
   const coordinate = assertPageCoordinate(args);
   if (args.status !== 'published' && args.status !== 'unpublished') fail('VALIDATION', 'tokyo.errors.page.serveStateInvalid');
   const previous = await readStoredServeState(args.env, coordinate);
   await putJson(args.env, accountPageServeStateKey(coordinate.accountId, coordinate.pageId), serveStatePayload(coordinate, args.status, args.now));
   return { status: args.status, changed: previous !== args.status };
-}
-export async function createAccountPageServeState(args: { env: Env; accountId: string; pageId: string; now?: string }): Promise<PageServeState> {
-  const coordinate = assertPageCoordinate(args);
-  await putJson(args.env, accountPageServeStateKey(coordinate.accountId, coordinate.pageId), serveStatePayload(coordinate, 'unpublished', args.now));
-  return 'unpublished';
 }

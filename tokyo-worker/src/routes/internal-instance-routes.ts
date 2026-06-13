@@ -10,7 +10,6 @@ import {
 import { deleteAccountInstanceSubtree } from '../domains/account-instances/delete';
 import {
   readInstancePublicPackage,
-  readSubmittedInstancePublicPackage,
 } from '../domains/account-instances/package-files';
 import {
   listAccountInstances,
@@ -344,8 +343,7 @@ export async function tryHandleInternalInstanceRoutes(
         instanceId,
         accountId,
       })) as Record<string, unknown> | null;
-      const publicPackage = isRecord(body) ? readSubmittedInstancePublicPackage(body.publicPackage) : null;
-      if (!isRecord(body) || !isRecord(body.config) || !publicPackage) {
+      if (!isRecord(body) || !isRecord(body.config)) {
         return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
       }
       try {
@@ -355,7 +353,6 @@ export async function tryHandleInternalInstanceRoutes(
           instanceId,
           submittedWidgetType: body.widgetType as string,
           config: body.config,
-          publicPackage,
           displayName: body.displayName,
           hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
           meta: body.meta,

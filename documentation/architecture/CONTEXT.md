@@ -108,7 +108,7 @@ See: `documentation/ai/overview.md`, `documentation/ai/learning.md`, `documentat
   - `instance.content.json` carries user-visible base text in the same editable paths Bob exposes. It is not the durable translated-locale value store.
 - `instance.json` is not a product source authority and is not written or read by active runtime code.
 - Translated locale values are addressed by `instanceId + locale` at product boundaries and persist under `overlays/locales/{locale}.json`. Bob, Roma, Prague, and San Francisco must not use overlay paths as product identity.
-- Public browser files `index.html`, `styles.css`, and `runtime.js` are saved package output submitted through the Builder save path. They are not authoring truth and not product publish state.
+- Public browser files `index.html`, `styles.css`, and `runtime.js` are package output artifacts. They are not authoring truth and not product publish state; source save does not write them in PRD 107.
 - Bob/Roma build the current widget package on save from the active Builder state and widget source package. Tokyo-worker validates, stamps, stores, and later verifies those three files; it does not render widget internals from `instance.config.json`, `instance.content.json`, overlays, or widget source files.
 - Create and duplicate write instance source only. A Builder save writes the package files. Raw package file existence is composition availability, not public availability.
 - Publish status is Tokyo-owned product state. Public standalone widget serving requires published serve state, generated package files, and account serving policy that allows the instance to be served.
@@ -140,7 +140,6 @@ accounts/{accountPublicId}/
   website/
     serving-policy.json          # account-level standalone serving gates; never package bytes
   pages/
-    index.json                   # account page list projection
     {pageId}/
       source.json                # page metadata + ordered widget placements
       serve-state.json           # page public delivery gate

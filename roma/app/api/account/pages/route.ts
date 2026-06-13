@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isRecord } from '@clickeen/ck-contracts';
-import {
-  createCompactPageId,
-  isCompactInstanceId,
-} from '@clickeen/ck-contracts/overlay-identity';
+import { createCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
 import {
   createAccountPageInTokyo,
   listAccountPagesInTokyo,
 } from '@roma/lib/account-page-direct';
 import type {
   AccountPageMetadata,
-  AccountPagePlacement,
   AccountPageSource,
 } from '@roma/lib/account-page-direct';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
@@ -21,52 +17,35 @@ import {
 
 export const runtime = 'edge';
 
-function createPlacementId(index: number): string {
-  return `P${String(index + 1).padStart(3, '0')}`;
+function exactString(value: unknown): string | null {
+  return typeof value === 'string' && value === value.trim() ? value : null;
 }
 
-function normalizeCreatePageMetadata(raw: unknown): AccountPageMetadata | null {
-  if (raw == null) {
-    return { title: 'Untitled page', description: '', robots: 'noindex,nofollow' };
-  }
-  if (!isRecord(raw)) return null;
-  const title = typeof raw.title === 'string' && raw.title.trim() ? raw.title.trim() : 'Untitled page';
-  const description = typeof raw.description === 'string' ? raw.description.trim() : '';
-  const robots = Object.prototype.hasOwnProperty.call(raw, 'robots') ? raw.robots : 'noindex,nofollow';
-  if (robots !== 'index,follow' && robots !== 'noindex,nofollow') return null;
-  const canonicalUrl = typeof raw.canonicalUrl === 'string' && raw.canonicalUrl.trim() ? raw.canonicalUrl.trim() : undefined;
+function pageMetadataFromCreatePayload(raw: unknown): AccountPageMetadata | null {
+  if (!isRecord(raw)) return { title: 'Untitled page', description: '', robots: 'index,follow' };
+  const title = Object.prototype.hasOwnProperty.call(raw, 'title') ? exactString(raw.title) : 'Untitled page';
+  const description = Object.prototype.hasOwnProperty.call(raw, 'description') ? exactString(raw.description) : '';
+  const robots = Object.prototype.hasOwnProperty.call(raw, 'robots') ? raw.robots : 'index,follow';
+  if (!title || description == null || (robots !== 'index,follow' && robots !== 'noindex,nofollow')) return null;
+  const canonicalUrl = Object.prototype.hasOwnProperty.call(raw, 'canonicalUrl') ? exactString(raw.canonicalUrl) : null;
+  if (Object.prototype.hasOwnProperty.call(raw, 'canonicalUrl') && !canonicalUrl) return null;
   return { title, description, robots, ...(canonicalUrl ? { canonicalUrl } : {}) };
 }
 
-function normalizeCreatePagePlacements(raw: unknown): AccountPagePlacement[] | null {
-  if (raw == null) return [];
-  if (!Array.isArray(raw)) return null;
-  const placements: AccountPagePlacement[] = [];
-  for (const [index, value] of raw.entries()) {
-    if (!isRecord(value)) return null;
-    const placementId = typeof value.placementId === 'string' && value.placementId.trim()
-      ? value.placementId.trim().toUpperCase()
-      : createPlacementId(index);
-    const instanceId = typeof value.instanceId === 'string' ? value.instanceId.trim().toUpperCase() : '';
-    if (!isCompactInstanceId(instanceId)) return null;
-    placements.push({ placementId, instanceId });
-  }
-  return placements;
-}
-
-function createPageSourceFromRequestBody(raw: unknown, accountId: string): AccountPageSource | null {
+function createPageSourceFromPayload(raw: unknown, accountId: string): AccountPageSource | null {
   const body = isRecord(raw) ? raw : {};
-  const placements = normalizeCreatePagePlacements(body.placements);
-  if (!placements) return null;
-  const pageId = createCompactPageId();
-  const now = new Date().toISOString();
-  const metadata = normalizeCreatePageMetadata(body.metadata);
+  const metadata = pageMetadataFromCreatePayload(body.metadata);
   if (!metadata) return null;
+  const displayName = Object.prototype.hasOwnProperty.call(body, 'displayName')
+    ? exactString(body.displayName)
+    : metadata.title;
+  if (!displayName) return null;
+  const now = new Date().toISOString();
   return {
     schemaVersion: 1,
-    pageId,
+    pageId: createCompactPageId(),
     accountPublicId: accountId,
-    displayName: typeof body.displayName === 'string' && body.displayName.trim() ? body.displayName.trim() : metadata.title,
+    displayName,
     metadata,
     localization: {
       defaultLocale: 'en',
@@ -75,8 +54,9 @@ function createPageSourceFromRequestBody(raw: unknown, accountId: string): Accou
       languageSwitcherEnabled: false,
       missingLocaleBehavior: 'block_publish',
     },
-    placements,
+    placements: [],
     version: 1,
+    createdAt: now,
     updatedAt: now,
   };
 }
@@ -109,7 +89,7 @@ export async function POST(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
   if (!current.ok) return current.response;
 
-  const bodyResult = await readJsonPayloadOrValidation<{ metadata?: unknown; placements?: unknown; displayName?: unknown } | null>(request);
+  const bodyResult = await readJsonPayloadOrValidation<unknown>(request);
   if (!bodyResult.ok) {
     return withSession(
       request,
@@ -119,7 +99,7 @@ export async function POST(request: NextRequest) {
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
-  const source = createPageSourceFromRequestBody(bodyResult.payload, accountId);
+  const source = createPageSourceFromPayload(bodyResult.payload, accountId);
   if (!source) {
     return withSession(
       request,
@@ -152,6 +132,7 @@ export async function POST(request: NextRequest) {
         pageId: result.value.source.pageId,
         source: result.value.source,
         summary: result.value.summary,
+        publishStatus: result.value.publishStatus,
       },
       { status: 201 },
     ),

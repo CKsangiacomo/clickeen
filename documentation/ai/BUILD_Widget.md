@@ -116,8 +116,6 @@ Read these first:
 - Target widget folder: `tokyo/product/widgets/{widgetType}/`
 - Bob shared compiler nodes only when proving editor behavior:
   `bob/lib/compiler/editor-contract.ts` and `bob/lib/compiler/modules/*`.
-- Roma package assembly only when proving materialized output:
-  `roma/lib/widget-public-package.ts`.
 - Entitlement matrix only when binding `limits.json`:
   `packages/ck-policy/entitlements.matrix.json`.
 

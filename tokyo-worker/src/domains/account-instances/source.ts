@@ -529,6 +529,10 @@ export async function writeAccountInstanceSource(args: {
     createdAt: existingConfig?.createdAt ?? now,
     updatedAt: now,
   };
+  if (previousContent) {
+    await buildCurrentLocaleOverlayMetadata({ configDoc, content });
+  }
+  const registry = await readInstanceRegistryRow({ env: args.env, accountId, instanceId });
   await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), configDoc);
   await putJson(args.env, accountInstanceContentKey(accountId, widgetCode, instanceId), content);
   await remapLocaleOverlaysForSavedContent({
@@ -540,7 +544,6 @@ export async function writeAccountInstanceSource(args: {
     previous: previousContent,
     next: content,
   });
-  const registry = await readInstanceRegistryRow({ env: args.env, accountId, instanceId });
   if (registry) {
     await updateInstanceRegistryEditedAt({
       env: args.env,

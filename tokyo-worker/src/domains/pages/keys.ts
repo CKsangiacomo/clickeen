@@ -14,10 +14,6 @@ export function accountPageServeStateKey(accountId: string, pageId: string): str
   return `${accountPageRoot(accountId, pageId)}/serve-state.json`;
 }
 
-export function accountPagesIndexKey(accountId: string): string {
-  return `${accountPagesRoot(accountId)}/index.json`;
-}
-
 export function accountPagePublishRoot(accountId: string, pageId: string): string {
   return accountPageRoot(accountId, pageId);
 }

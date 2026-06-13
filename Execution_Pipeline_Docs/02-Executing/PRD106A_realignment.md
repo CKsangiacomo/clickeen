@@ -401,10 +401,10 @@ source lives beside widget output. `source.json` stores page identity, allowed
 metadata, and ordered instance references. `index.html`, `styles.css`, and
 `runtime.js` are generated browser-readable output.
 
-Tokyo may store `source.json` only as an opaque allowlisted file submitted by
-Roma. Tokyo must not parse, normalize, summarize, index, validate, or derive
-placement/dependency/product state from that file. Roma owns the meaning of page
-source and any derived affected-page lookup.
+Tokyo stores `source.json` only after validating the page source contract. Tokyo
+derives account page list summaries from stored source files, but must not
+compose pages or derive placement dependency/product state from that file. Roma
+owns page composition meaning and any affected-page lookup.
 
 Roma widget materialization must use the same system widget software inputs as
 Bob preview: the shared Widget Shell package, the Widget Core definition, and
@@ -619,8 +619,9 @@ Pollution to remove:
 Surviving authority:
 
 - Tokyo receives exact storage payloads from Roma.
-- Tokyo validates storage safety only: account coordinate, allowed path, file
-  shape, allowlisted browser files, content type, and object existence.
+- Tokyo validates Tokyo-owned product source and package contracts at its
+  boundaries: account coordinate, page source shape, package file shape,
+  allowlisted browser files, content type, and object existence.
 - Tokyo writes/reads/deletes R2 objects and serves already-stored public files.
 - Tokyo may enforce mechanical file-serving gates such as "is this object allowed
   to be public?" only when Roma has submitted that state explicitly. It must not
@@ -801,9 +802,9 @@ Evidence:
   create, save, delete, publish, and unpublish page verbs.
 - `tokyo-worker/src/domains/pages/types.ts` defines page product schema in
   Tokyo.
-- `tokyo-worker/src/domains/pages/source.ts` normalizes product fields, derives
-  summaries, maintains `pages/index.json`, and maintains reverse placement
-  indexes. That dependency graph belongs to Roma Page Composer, not Tokyo.
+- `tokyo-worker/src/domains/pages/source.ts` stores validated page source and
+  derives list summaries from source files. It does not maintain
+  `pages/index.json` or reverse placement indexes.
 - `tokyo-worker/src/domains/pages/package-files.ts` decides package readiness
   for publish. Page readiness is a Roma Page Composer/product concern, not a
   Tokyo storage concern.
@@ -1131,10 +1132,11 @@ Targets:
   recomposition reasons, CSS/runtime dedupe plans, SEO/GEO intent, or page
   readiness semantics.
 - Define exact Roma-to-Tokyo storage contracts before implementation. Tokyo
-  accepts allowlisted file writes/reads/deletes and explicit serve-state writes
-  only. It may receive `source.json` only as an opaque allowlisted file. It must
-  not receive typed `placements`, dependency indexes, readiness, SEO intent, or
-  recomposition reason, and must not parse page source to derive them.
+  accepts page source writes/reads/deletes, submitted package files, and explicit
+  serve-state writes. It validates `source.json` and derives page-list summaries
+  from stored source files. It must not receive dependency indexes, readiness,
+  SEO intent, or recomposition reason, and must not parse page source to derive
+  composition dependencies.
 
 Acceptance:
 
@@ -1207,8 +1209,8 @@ Acceptance:
 ## Product Owner Decisions Applied
 
 - Page source lives at `accounts/{accountPublicId}/pages/{pageId}/source.json`, beside the
-  generated page files. Roma owns its meaning; Tokyo stores it only as an opaque
-  allowlisted file.
+  generated page files. Tokyo validates its contract and derives list summaries;
+  Roma owns composition meaning.
 - Page public output lives at `accounts/{accountPublicId}/pages/{pageId}/index.html`,
   `styles.css`, and `runtime.js`.
 - Page serve-state works like widget serve-state: `published` or `unpublished`.

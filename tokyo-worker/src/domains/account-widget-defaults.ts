@@ -5,10 +5,9 @@ import {
   listWidgetShellControlPaths,
 } from '@clickeen/widget-shell';
 import type { Env } from '../types';
-import { loadJson, putJson } from './storage';
+import { putJson } from './storage';
 import {
   listWidgetAccountDefaultContracts,
-  listWidgetCoreFactoryDefaults,
 } from './widget-definitions';
 
 export type AccountWidgetDefaultsDocument = {
@@ -33,8 +32,17 @@ function cloneRecord(value: Record<string, unknown>): Record<string, unknown> {
   return JSON.parse(JSON.stringify(value)) as Record<string, unknown>;
 }
 
-function nowIso(): string {
-  return new Date().toISOString();
+async function loadStoredAccountWidgetDefaults(args: {
+  env: Env;
+  accountId: string;
+}): Promise<{ exists: true; value: unknown } | { exists: false }> {
+  const obj = await args.env.TOKYO_R2.get(accountWidgetDefaultsKey(args.accountId));
+  if (!obj) return { exists: false };
+  try {
+    return { exists: true, value: await obj.json() };
+  } catch {
+    throw new Error('tokyo.widgetDefaults.invalid');
+  }
 }
 
 function collectDefaultPaths(value: unknown, prefix = ''): string[] {
@@ -74,24 +82,26 @@ export function createAccountWidgetDefaultsSeed(args: {
   accountId: string;
   now?: string;
 }): AccountWidgetDefaultsDocument {
-  const now = args.now ?? nowIso();
+  const now = args.now ?? new Date().toISOString();
   const widgets: AccountWidgetDefaultsDocument['widgets'] = {};
-  for (const entry of listWidgetCoreFactoryDefaults()) {
+  for (const entry of listWidgetAccountDefaultContracts()) {
     widgets[entry.widgetType] = {
-      core: cloneRecord(entry.core),
+      core: cloneRecord(entry.coreFactoryDefaults),
     };
   }
-  const seeded: AccountWidgetDefaultsDocument = {
-    v: 1,
-    accountId: args.accountId,
-    shell: cloneRecord(WIDGET_SHELL_FACTORY_DEFAULTS as unknown as Record<string, unknown>),
-    widgets,
-    seededAt: now,
-    updatedAt: now,
-  };
-  const normalized = normalizeAccountWidgetDefaultsDocument(seeded, args.accountId);
-  if (!normalized) throw new Error('tokyo.widgetDefaults.invalid');
-  return normalized;
+  const seeded = normalizeAccountWidgetDefaultsDocument(
+    {
+      v: 1,
+      accountId: args.accountId,
+      shell: cloneRecord(WIDGET_SHELL_FACTORY_DEFAULTS as unknown as Record<string, unknown>),
+      widgets,
+      seededAt: now,
+      updatedAt: now,
+    },
+    args.accountId,
+  );
+  if (!seeded) throw new Error('tokyo.widgetDefaults.invalid');
+  return seeded;
 }
 
 export function normalizeAccountWidgetDefaultsDocument(
@@ -159,11 +169,25 @@ export async function readAccountWidgetDefaults(args: {
   env: Env;
   accountId: string;
 }): Promise<AccountWidgetDefaultsDocument | null> {
-  const loaded = await loadJson<unknown>(args.env, accountWidgetDefaultsKey(args.accountId));
-  if (loaded == null) throw new Error('tokyo.widgetDefaults.missing');
-  const normalized = normalizeAccountWidgetDefaultsDocument(loaded, args.accountId);
+  const loaded = await loadStoredAccountWidgetDefaults(args);
+  if (!loaded.exists) throw new Error('tokyo.widgetDefaults.missing');
+  const normalized = normalizeAccountWidgetDefaultsDocument(loaded.value, args.accountId);
   if (!normalized) throw new Error('tokyo.widgetDefaults.invalid');
   return normalized;
+}
+
+export async function createInitialAccountWidgetDefaults(args: {
+  env: Env;
+  accountId: string;
+}): Promise<AccountWidgetDefaultsDocument> {
+  const existing = await loadStoredAccountWidgetDefaults(args);
+  if (existing.exists) {
+    const normalized = normalizeAccountWidgetDefaultsDocument(existing.value, args.accountId);
+    throw new Error(normalized ? 'tokyo.widgetDefaults.exists' : 'tokyo.widgetDefaults.invalid');
+  }
+  const seeded = createAccountWidgetDefaultsSeed({ accountId: args.accountId });
+  await putJson(args.env, accountWidgetDefaultsKey(args.accountId), seeded);
+  return seeded;
 }
 
 export async function writeAccountWidgetDefaults(args: {
@@ -175,7 +199,7 @@ export async function writeAccountWidgetDefaults(args: {
   if (!normalized) throw new Error('tokyo.widgetDefaults.invalid');
   const next: AccountWidgetDefaultsDocument = {
     ...normalized,
-    updatedAt: nowIso(),
+    updatedAt: new Date().toISOString(),
   };
   await putJson(args.env, accountWidgetDefaultsKey(args.accountId), next);
   return next;

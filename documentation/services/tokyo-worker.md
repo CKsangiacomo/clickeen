@@ -6,7 +6,7 @@ PRD 103_00 NOTE: this doc now uses the product-operation vocabulary required bef
 
 PRD 105 NOTE: active account instance shape is `instance.config.json`, `instance.content.json`, `overlays/locales/{locale}.json`, `index.html`, `styles.css`, and `runtime.js`. Tokyo-worker must not preserve operation-controller JSON in instance folders, per-locale HTML/JS files, versioned script/style artifacts, or translated-locale inventory folders as current architecture.
 
-Tokyo-worker is the Tokyo object PBX for account-owned assets, account widget instances, translated locale value storage, submitted public package bytes, submitted page package bytes, and friendly asset serving.
+Tokyo-worker is the Tokyo object PBX for account-owned assets, account widget instances, translated locale value storage, public package readiness/serving, page source, and friendly asset serving.
 
 It is not an account authority, product-policy owner, or orchestrator. Roma and system account operations decide account/product policy, publication eligibility, cap enforcement, downgrade consequences, and correctness of published state. Roma carries verified account context to Tokyo-worker through private service bindings. Tokyo-worker validates the named boundary, routes the operation to the exact storage object, and returns the result.
 
@@ -37,7 +37,7 @@ Tokyo-worker resolves widget definitions through the `listWidgetDefinitions` and
 1. Account assets: route and mutate account-owned asset objects under `accounts/{accountPublicId}/assets/`.
 2. Account instances: route product open, save, list, create, rename, delete, publish, and unpublish operations for `accountPublicId + instanceId`.
 3. Account-instance translated locale values: store/read exact locale overlay value maps by `instanceId + locale`.
-4. Public package storage: save stores submitted widget and page package files under the owning account folders; publish verifies those files before the instance or page becomes public.
+4. Public package readiness: publish verifies the required widget/page package files before the instance or page becomes public. Source save is not a package write plane.
 5. Friendly asset routes: serve public asset URLs from canonical R2 roots without creating route-shaped storage roots.
 
 ## Account Storage
@@ -109,11 +109,11 @@ Generated package files and public availability are separate:
 - the environment public-serving URL serves only if Tokyo serve state is `published`, the generated artifact exists, and account serving policy allows standalone delivery.
 - generated `index.html`, `styles.css`, and `runtime.js` can exist for Roma page composition while the standalone widget URL remains unpublished.
 - lower-tier serving caps write `accounts/{accountPublicId}/website/serving-policy.json`; they do not delete generated package files because Roma page composition may still use those files.
-- generated page packages live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`.
-- page source is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/source.json`.
+- page package files, when present, live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`.
+- page source is stored at `accounts/{accountPublicId}/pages/{pageId}/source.json`; Tokyo validates the page source contract before storage and derives account page list summaries from stored source files.
 - page serve state is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/serve-state.json`.
 - if a requested generated file is missing, that request returns 404.
-- instance save writes the package files that standalone serving and Roma page composition both consume. Page save stores the Roma-submitted page package files. Publish/unpublish changes serve state, verifies package readiness before public delivery, and purges cache.
+- Instance and page source saves are source-only. Publish/unpublish changes serve state, verifies package readiness before public delivery, and purges cache.
 - Support files only serve from the generated-browser-file allowlist: `styles.css` and `runtime.js`.
 - Private source and state files are not public artifacts. `instance.config.json`, `instance.content.json`, `instance.json`, `config.json`, `publish.json`, `embed.json`, `translations.json`, `overlays/`, `published/`, source maps, hidden files, directories, and unknown files return 404 even if the object physically exists.
 

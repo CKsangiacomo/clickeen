@@ -12,12 +12,6 @@ export type AccountPageSummary = {
   updatedAt: string;
 };
 
-export type AccountPagesIndex = {
-  v: 1;
-  accountId: string;
-  pages: AccountPageSummary[];
-};
-
 export type PageOperationErrorKind =
   | 'VALIDATION'
   | 'NOT_FOUND'

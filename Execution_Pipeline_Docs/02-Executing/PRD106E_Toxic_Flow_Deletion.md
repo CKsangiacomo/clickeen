@@ -428,7 +428,7 @@ Targeted gates:
   config/content, HTML snapshots, forks, overrides, or missing ownership.
 - Roma tests show affected pages recompose or become stale/failed after included
   instance save.
-- Tokyo negative tests prove old product-shaped page source/index/readiness
+- Tokyo negative tests prove old product-shaped page source/package/readiness
   routes are gone or fenced.
 - Tokyo tests prove old `website/pages`, `website/publishes`, reverse placement
   indexes, and route-generated `embed.js` are gone or fenced.

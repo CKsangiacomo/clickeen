@@ -1,11 +1,9 @@
-import { asTrimmedString, isRecord } from '@clickeen/ck-contracts';
-import { callTokyo, type TokyoCallContext } from './tokyo-client';
+import { isRecord } from '@clickeen/ck-contracts';
 import {
-  buildPagePublicPackage,
-  isPagePackageBuildError,
-  type ComposedPagePublicPackage,
-  type WidgetPackageForPage,
-} from './page-package-composer';
+  isCompactAccountPublicId,
+  isCompactPageId,
+} from '@clickeen/ck-contracts/overlay-identity';
+import { callTokyo, type TokyoCallContext } from './tokyo-client';
 
 export type DirectPageRouteError = {
   kind: 'VALIDATION' | 'AUTH' | 'DENY' | 'NOT_FOUND' | 'UPSTREAM_UNAVAILABLE';
@@ -52,6 +50,7 @@ export type AccountPageSource = {
   localization: AccountPageLocalization;
   placements: AccountPagePlacement[];
   version: number;
+  createdAt: string;
   updatedAt: string;
 };
 
@@ -75,13 +74,6 @@ export type AccountPagePublishResult = {
   pageId: string;
   publishStatus: PagePublishStatus;
   changed: boolean;
-};
-
-type TokyoStoredWidgetPackage = {
-  v: 1;
-  indexHtml: string;
-  stylesCss: string;
-  runtimeJs: string;
 };
 
 function tokyoCallContext(args: {
@@ -116,11 +108,11 @@ function normalizeRobots(value: unknown): PageRobots | null {
 
 function normalizePageMetadata(raw: unknown): AccountPageMetadata | null {
   if (!isRecord(raw)) return null;
-  const title = asTrimmedString(raw.title);
-  const description = typeof raw.description === 'string' ? raw.description.trim() : null;
+  const title = typeof raw.title === 'string' && raw.title ? raw.title : null;
+  const description = typeof raw.description === 'string' ? raw.description : null;
   const robots = normalizeRobots(raw.robots);
   if (!title || description == null || !robots) return null;
-  const canonicalUrl = typeof raw.canonicalUrl === 'string' && raw.canonicalUrl.trim() ? raw.canonicalUrl.trim() : undefined;
+  const canonicalUrl = typeof raw.canonicalUrl === 'string' && raw.canonicalUrl ? raw.canonicalUrl : undefined;
   return { title, description, robots, ...(canonicalUrl ? { canonicalUrl } : {}) };
 }
 
@@ -161,8 +153,8 @@ function countryLocaleRulesValid(raw: unknown): boolean {
 
 function normalizePlacement(raw: unknown): AccountPagePlacement | null {
   if (!isRecord(raw)) return null;
-  const placementId = asTrimmedString(raw.placementId);
-  const instanceId = asTrimmedString(raw.instanceId);
+  const placementId = typeof raw.placementId === 'string' && raw.placementId ? raw.placementId : null;
+  const instanceId = typeof raw.instanceId === 'string' && raw.instanceId ? raw.instanceId : null;
   if (!placementId || !instanceId) return null;
   return { placementId, instanceId };
 }
@@ -176,32 +168,33 @@ function normalizePlacements(raw: unknown): AccountPagePlacement[] | null {
 
 function normalizePageSource(raw: unknown): AccountPageSource | null {
   if (!isRecord(raw) || raw.schemaVersion !== 1) return null;
-  const pageId = asTrimmedString(raw.pageId);
-  const accountPublicId = asTrimmedString(raw.accountPublicId);
-  const displayName = asTrimmedString(raw.displayName);
+  const pageId = isCompactPageId(raw.pageId) ? raw.pageId : null;
+  const accountPublicId = isCompactAccountPublicId(raw.accountPublicId) ? raw.accountPublicId : null;
+  const displayName = typeof raw.displayName === 'string' && raw.displayName ? raw.displayName : null;
   const metadata = normalizePageMetadata(raw.metadata);
   const localization = normalizePageLocalization(raw.localization);
   const placements = normalizePlacements(raw.placements);
-  const version = typeof raw.version === 'number' && Number.isFinite(raw.version) ? Math.max(1, Math.floor(raw.version)) : null;
-  const updatedAt = asTrimmedString(raw.updatedAt);
-  if (!pageId || !accountPublicId || !displayName || !metadata || !localization || !placements || version == null || !updatedAt) {
+  const version = typeof raw.version === 'number' && Number.isInteger(raw.version) && raw.version >= 1 ? raw.version : null;
+  const createdAt = typeof raw.createdAt === 'string' && raw.createdAt ? raw.createdAt : null;
+  const updatedAt = typeof raw.updatedAt === 'string' && raw.updatedAt ? raw.updatedAt : null;
+  if (!pageId || !accountPublicId || !displayName || !metadata || !localization || !placements || version == null || !createdAt || !updatedAt) {
     return null;
   }
-  return { schemaVersion: 1, pageId, accountPublicId, displayName, metadata, localization, placements, version, updatedAt };
+  return { schemaVersion: 1, pageId, accountPublicId, displayName, metadata, localization, placements, version, createdAt, updatedAt };
 }
 
 function normalizePageSummary(raw: unknown): AccountPageSummary | null {
   if (!isRecord(raw)) return null;
-  const pageId = asTrimmedString(raw.pageId);
-  const title = asTrimmedString(raw.title);
-  const description = typeof raw.description === 'string' ? raw.description.trim() : null;
+  const pageId = isCompactPageId(raw.pageId) ? raw.pageId : null;
+  const title = typeof raw.title === 'string' && raw.title ? raw.title : null;
+  const description = typeof raw.description === 'string' ? raw.description : null;
   const robots = normalizeRobots(raw.robots);
   const placementCount =
-    typeof raw.placementCount === 'number' && Number.isFinite(raw.placementCount)
-      ? Math.max(0, Math.floor(raw.placementCount))
+    typeof raw.placementCount === 'number' && Number.isInteger(raw.placementCount) && raw.placementCount >= 0
+      ? raw.placementCount
       : null;
-  const createdAt = asTrimmedString(raw.createdAt);
-  const updatedAt = asTrimmedString(raw.updatedAt);
+  const createdAt = typeof raw.createdAt === 'string' && raw.createdAt ? raw.createdAt : null;
+  const updatedAt = typeof raw.updatedAt === 'string' && raw.updatedAt ? raw.updatedAt : null;
   if (!pageId || !title || description == null || !robots || placementCount == null || !createdAt || !updatedAt) {
     return null;
   }
@@ -222,8 +215,8 @@ function normalizePageOpenPayload(raw: unknown): AccountPageOpen | null {
 
 function normalizePagePublishPayload(raw: unknown): AccountPagePublishResult | null {
   if (!isRecord(raw)) return null;
-  const accountId = asTrimmedString(raw.accountId);
-  const pageId = asTrimmedString(raw.pageId);
+  const accountId = isCompactAccountPublicId(raw.accountId) ? raw.accountId : null;
+  const pageId = isCompactPageId(raw.pageId) ? raw.pageId : null;
   const publishStatus = normalizePublishStatus(raw.publishStatus);
   const changed = typeof raw.changed === 'boolean' ? raw.changed : null;
   if (!accountId || !pageId || !publishStatus || changed == null) return null;
@@ -251,108 +244,9 @@ function normalizePageMutationPayload(raw: unknown): {
 function stampPageSourceForSave(source: AccountPageSource): AccountPageSource {
   return {
     ...source,
-    version: Math.max(1, Math.floor(source.version)) + 1,
+    version: source.version + 1,
     updatedAt: new Date().toISOString(),
   };
-}
-
-function pageSummaryFromSource(source: AccountPageSource): AccountPageSummary {
-  return {
-    pageId: source.pageId,
-    title: source.metadata.title,
-    description: source.metadata.description,
-    robots: source.metadata.robots,
-    placementCount: source.placements.length,
-    createdAt: source.updatedAt,
-    updatedAt: source.updatedAt,
-  };
-}
-
-function normalizeStoredWidgetPackage(raw: unknown): TokyoStoredWidgetPackage | null {
-  if (!isRecord(raw) || raw.v !== 1) return null;
-  if (typeof raw.indexHtml !== 'string' || typeof raw.stylesCss !== 'string' || typeof raw.runtimeJs !== 'string') {
-    return null;
-  }
-  return {
-    v: 1,
-    indexHtml: raw.indexHtml,
-    stylesCss: raw.stylesCss,
-    runtimeJs: raw.runtimeJs,
-  };
-}
-
-function pagePackageBuildFailure(error: unknown): RouteFailure {
-  const pageError = isPagePackageBuildError(error) ? error : null;
-  const detail = pageError?.detail ?? (error instanceof Error ? error.message : String(error));
-  return {
-    ok: false,
-    status: 409,
-    error: {
-      kind: 'VALIDATION',
-      reasonKey: pageError?.reasonKey ?? 'page.package.buildFailed',
-      detail,
-    },
-  };
-}
-
-async function readAccountInstancePackageFromTokyo(args: {
-  accountId: string;
-  instanceId: string;
-  accountCapsule?: string | null;
-  internalServiceName?: string | null;
-  requestId?: string | null;
-}): Promise<{ ok: true; value: TokyoStoredWidgetPackage } | RouteFailure> {
-  const result = await callTokyo(tokyoCallContext(args), {
-    path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/package`,
-    method: 'GET',
-    decode: (payload) => payload,
-    errorDetail: 'tokyo_account_instance_package_http_error',
-    errorKey: 'coreui.errors.db.readFailed',
-  });
-  if (!result.ok) return result;
-  const payload = isRecord(result.value) ? result.value : null;
-  const publicPackage = normalizeStoredWidgetPackage(payload?.publicPackage);
-  if (!publicPackage) return invalidTokyoPayload('invalid Tokyo instance package payload');
-  return { ok: true, value: publicPackage };
-}
-
-async function buildPagePackageForTokyo(args: {
-  accountId: string;
-  source: AccountPageSource;
-  accountCapsule?: string | null;
-  internalServiceName?: string | null;
-  requestId?: string | null;
-}): Promise<{ ok: true; value: ComposedPagePublicPackage } | RouteFailure> {
-  const uniqueInstanceIds = Array.from(new Set(args.source.placements.map((placement) => placement.instanceId)));
-  const widgetPackages: WidgetPackageForPage[] = [];
-  for (const instanceId of uniqueInstanceIds) {
-    const read = await readAccountInstancePackageFromTokyo({
-      accountId: args.accountId,
-      instanceId,
-      accountCapsule: args.accountCapsule,
-      internalServiceName: args.internalServiceName,
-      requestId: args.requestId,
-    });
-    if (!read.ok) return read;
-    widgetPackages.push({
-      instanceId,
-      indexHtml: read.value.indexHtml,
-      stylesCss: read.value.stylesCss,
-      runtimeJs: read.value.runtimeJs,
-    });
-  }
-  try {
-    return {
-      ok: true,
-      value: buildPagePublicPackage({
-        accountId: args.accountId,
-        source: args.source,
-        widgetPackages,
-      }),
-    };
-  } catch (error) {
-    return pagePackageBuildFailure(error);
-  }
 }
 
 export async function listAccountPagesInTokyo(args: {
@@ -370,7 +264,7 @@ export async function listAccountPagesInTokyo(args: {
   });
   if (!result.ok) return result;
   const payload = isRecord(result.value) ? result.value : null;
-  const accountId = asTrimmedString(payload?.accountId);
+  const accountId = isCompactAccountPublicId(payload?.accountId) ? payload.accountId : null;
   const pages = normalizePageSummaries(payload?.pages);
   if (!accountId || !pages) return invalidTokyoPayload('invalid Tokyo account pages list payload');
   return { ok: true, value: { accountId, pages } };
@@ -378,24 +272,39 @@ export async function listAccountPagesInTokyo(args: {
 
 export async function createAccountPageInTokyo(args: {
   accountId: string;
-  accountCapsule?: string | null;
   source: AccountPageSource;
+  accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; value: { source: AccountPageSource; summary: AccountPageSummary } } | RouteFailure> {
-  const summary = pageSummaryFromSource(args.source);
+}): Promise<{ ok: true; value: { source: AccountPageSource; summary: AccountPageSummary; publishStatus: PagePublishStatus } } | RouteFailure> {
+  if (!normalizeRobots(args.source.metadata?.robots) || !countryLocaleRulesValid(args.source.localization)) return { ok: false, status: 422, error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } };
   const result = await callTokyo(tokyoCallContext(args), {
     path: '/__internal/pages',
     method: 'POST',
-    body: { source: args.source, summary },
+    body: { source: args.source },
     decode: (payload) => payload,
     errorDetail: 'tokyo_account_page_create_http_error',
     errorKey: 'coreui.errors.db.writeFailed',
   });
   if (!result.ok) return result;
-  const payload = normalizePageMutationPayload(result.value);
+  const payload = normalizePageOpenPayload(result.value);
   if (!payload) return invalidTokyoPayload('invalid Tokyo create page payload');
-  return { ok: true, value: payload };
+  return {
+    ok: true,
+    value: {
+      source: payload.source,
+      summary: {
+        pageId: payload.source.pageId,
+        title: payload.source.metadata.title,
+        description: payload.source.metadata.description,
+        robots: payload.source.metadata.robots,
+        placementCount: payload.source.placements.length,
+        createdAt: payload.source.createdAt,
+        updatedAt: payload.source.updatedAt,
+      },
+      publishStatus: payload.publishStatus,
+    },
+  };
 }
 
 export async function loadAccountPageFromTokyo(args: {
@@ -431,20 +340,11 @@ export async function saveAccountPageInTokyo(args: {
 }): Promise<{ ok: true; value: { source: AccountPageSource; summary: AccountPageSummary } } | RouteFailure> {
   if (!normalizeRobots(args.source.metadata?.robots) || !countryLocaleRulesValid(args.source.localization)) return { ok: false, status: 422, error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } };
   const source = stampPageSourceForSave(args.source);
-  const pagePackage = await buildPagePackageForTokyo({
-    accountId: args.accountId,
-    source,
-    accountCapsule: args.accountCapsule,
-    internalServiceName: args.internalServiceName,
-    requestId: args.requestId,
-  });
-  if (!pagePackage.ok) return pagePackage;
-  const summary = pageSummaryFromSource(source);
 
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/pages/${encodeURIComponent(args.pageId)}`,
     method: 'PUT',
-    body: { source, summary, pagePackage: pagePackage.value },
+    body: { source },
     decode: (payload) => payload,
     errorDetail: 'tokyo_account_page_save_http_error',
     errorKey: 'coreui.errors.db.writeFailed',

@@ -5,13 +5,12 @@ import {
   normalizePageId,
   PageOperationError,
   purgeAccountPagePublicCache,
-  readSubmittedPagePublicPackage,
   createAccountPageServeState,
+  createAccountPageSource,
   readAccountPageServeState,
   readAccountPageSource,
-  saveAccountPageSource,
   verifyAccountPagePublicPackageReady,
-  writeAccountPagePublicPackage,
+  saveAccountPageSource,
   writeAccountPageServeState,
 } from '../domains/pages';
 import { json } from '../http';
@@ -98,19 +97,18 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
       boundary: 'internal.page.create.body',
       accountId,
     });
-    if (!isRecord(body) || !isRecord(body.source) || !isRecord(body.summary)) {
+    if (!isRecord(body) || !isRecord(body.source)) {
       return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
     }
     const pageId = normalizePageId(body.source.pageId);
     if (!pageId) return respondValidation(respond, 'tokyo.errors.page.invalidPageId');
 
     try {
-      const created = await saveAccountPageSource({
+      const created = await createAccountPageSource({
         env,
         accountId,
         pageId,
         source: body.source,
-        summary: body.summary,
       });
       const publishStatus = await createAccountPageServeState({ env, accountId, pageId });
       return respond(json({ ok: true, accountId, pageId, ...created, publishStatus }, { status: 201 }));
@@ -137,17 +135,16 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
     if (authErr) return respond(authErr);
 
     try {
-      if (!(await listAccountPages({ env, accountId })).pages.some((page) => page.pageId === pageId)) throw new PageOperationError({ kind: 'VALIDATION', reasonKey: 'tokyo.errors.page.indexInvalid' });
+      const source = await readAccountPageSource({ env, accountId, pageId });
+      if (!source) {
+        return respond(
+          json(
+            { error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' } },
+            { status: 404 },
+          ),
+        );
+      }
       if (action === 'publish') {
-        const source = await readAccountPageSource({ env, accountId, pageId });
-        if (!source) {
-          return respond(
-            json(
-              { error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.errors.page.notFound' } },
-              { status: 404 },
-            ),
-          );
-        }
         const ready = await verifyAccountPagePublicPackageReady({ env, accountId, pageId });
         if (!ready.ok) {
           return respond(
@@ -233,12 +230,8 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
         boundary: 'internal.page.save.body',
         accountId,
       });
-      if (!isRecord(body) || !isRecord(body.source) || !isRecord(body.summary)) {
+      if (!isRecord(body) || !isRecord(body.source)) {
         return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
-      }
-      const submittedPagePackage = readSubmittedPagePublicPackage(body.pagePackage);
-      if (!submittedPagePackage) {
-        return respondValidation(respond, 'tokyo.errors.page.packageInvalid', 409);
       }
       try {
         const saved = await saveAccountPageSource({
@@ -246,32 +239,11 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
           accountId,
           pageId,
           source: body.source,
-          summary: body.summary,
         });
-        const packaged = await writeAccountPagePublicPackage({
-          env,
-          accountId,
-          pageId,
-          pagePackage: submittedPagePackage,
-        });
-        if (!packaged.ok) {
-          return respond(
-            json(
-              {
-                error: {
-                  kind: 'VALIDATION',
-                  reasonKey: packaged.reasonKey,
-                  detail: packaged.detail,
-                },
-              },
-              { status: 409 },
-            ),
-          );
-        }
         if (await readAccountPageServeState({ env, accountId, pageId }) === 'published') {
           await purgeAccountPagePublicCache({ env, accountId, pageId });
         }
-        return respond(json({ ok: true, accountId, pageId, ...saved }));
+        return respond(json({ ok: true, accountId, pageId, source: saved.source, summary: saved.summary }));
       } catch (error) {
         return respond(pageErrorResponse(error));
       }

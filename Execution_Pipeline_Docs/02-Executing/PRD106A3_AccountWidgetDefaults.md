@@ -107,13 +107,23 @@ New widgets should therefore be smaller and more deterministic:
 - they appear in Bob through the same mixed panel model;
 - they create new instances from account defaults.
 
-Status: Ready for controlled execution
+Status: SUPERSEDED IN PART BY PRD 107
 Owner: Roma + Widget Shell
 Date: 2026-06-07
 Parent: `106__Umbrella__Composition_Vision.md`
 Depends on: `PRD106A2_WidgetShellExtraction.md`
 Unlocks: account-owned widget defaults, smaller widget specs, deterministic new widget instance creation.
-Authority owned by this PRD: account default seeding, account-editable widget defaults, global Shell factory defaults, widget Core factory default extraction, and the Roma navigation/page needed to edit account defaults.
+PRD 107 update: the live read-or-seed account-default workflow is deleted.
+Current instance creation requires an existing valid
+`accounts/{accountPublicId}/widget-defaults.json` document and fails if it is
+missing or invalid. Account creation is the owning initialization boundary:
+Berlin finish reports `createdAccount`, Roma calls Tokyo once with the account
+capsule, and Tokyo writes the durable defaults document only if it does not
+already exist.
+
+Authority owned by this PRD: account-editable widget defaults, global Shell
+factory defaults, widget Core factory default extraction, and the Roma
+navigation/page needed to edit account defaults.
 Authority explicitly not owned by this PRD: themes, applying new defaults to existing saved instances, public runtime behavior, Page Composer behavior, or Bob editor behavior.
 
 ## Execution Readiness
@@ -201,18 +211,18 @@ Roma account -> Bob edits one widget instance -> Roma saves -> Tokyo stores file
 This PRD changes only the source used before Bob opens a brand-new instance:
 
 ```text
-factory defaults seed account defaults
-account defaults create instance source
+existing account defaults create instance source
 Bob edits one resolved instance state
 save stores instance source
 ```
 
 The current Tokyo widget folder defaults are not the live source for new
-instances after the account has defaults. They are factory seed material.
+instances. Missing account defaults fail the create boundary.
 
 ## Factory Versus Account Defaults
 
-Factory defaults exist so accounts can be seeded.
+Factory defaults are software-owned authoring material, not a runtime fallback
+for missing account defaults.
 
 ```text
 packages/widget-shell
@@ -225,16 +235,14 @@ tokyo account folder
   owns live account widget defaults
 ```
 
-After an account is seeded, the system works off account defaults.
+The system works off account defaults.
 
 ```text
-factory defaults -> account defaults -> new instance -> Bob memory -> saved instance
+account defaults -> new instance -> Bob memory -> saved instance
 ```
 
 Factory defaults are not a runtime fallback ladder. If an account is missing
-defaults, the account must be seeded before new instance creation proceeds. For
-existing accounts, this PRD needs one explicit seeding/migration step before the
-new create path depends on account defaults.
+defaults, new instance creation fails.
 
 ## Reconciliation With Tokyo Widget Folders
 

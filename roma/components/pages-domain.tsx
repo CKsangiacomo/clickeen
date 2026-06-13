@@ -141,7 +141,7 @@ export function PagesDomain() {
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
-  const selectedPageId = useMemo(() => (searchParams.get('page') || '').trim(), [searchParams]);
+  const selectedPageId = useMemo(() => searchParams.get('page') || '', [searchParams]);
   const activePageId = selectedPageId || pages[0]?.pageId || '';
   const hostedPageUrl = pageSource ? buildPagePublicUrl(productAccountId, pageSource.pageId) : '';
   const pageIframeSnippet = hostedPageUrl ? buildPageIframeSnippet(hostedPageUrl) : '';
@@ -347,6 +347,8 @@ export function PagesDomain() {
       const payload = await accountApi.fetchJson<{
         pageId?: string;
         source?: AccountPageSource;
+        summary?: AccountPageSummary;
+        publishStatus?: PagePublishStatus;
       }>('/api/account/pages', {
         method: 'POST',
         headers: accountApi.buildHeaders({ contentType: 'application/json' }),
@@ -359,12 +361,13 @@ export function PagesDomain() {
           displayName: 'Untitled page',
         }),
       });
-      const pageId = typeof payload.pageId === 'string' ? payload.pageId.trim() : '';
-      if (!pageId || !payload.source) throw new Error('coreui.errors.payload.invalid');
+      if (!payload.pageId || !payload.source || !payload.summary || !payload.publishStatus) {
+        throw new Error('coreui.errors.payload.invalid');
+      }
       await refreshPages({ force: true });
       setPageSource(payload.source);
-      setPagePublishStatus('unpublished');
-      router.push(buildPagesRoute(pageId));
+      setPagePublishStatus(payload.publishStatus);
+      router.push(buildPagesRoute(payload.pageId));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       setMutationError(resolveAccountShellErrorCopy(message, 'Creating the page failed. Please try again.'));

@@ -1,5 +1,6 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import {
+  createInitialAccountWidgetDefaults,
   readAccountWidgetDefaults,
   writeAccountWidgetDefaults,
   type AccountWidgetDefaultsDocument,
@@ -54,6 +55,23 @@ export async function tryHandleInternalWidgetDefaultRoutes(args: TokyoRouteArgs)
     try {
       const widgetDefaults = await readAccountWidgetDefaults({ env, accountId });
       return respond(json({ ok: true, accountId, widgetDefaults }));
+    } catch (error) {
+      return respond(widgetDefaultsErrorResponse(error));
+    }
+  }
+
+  if (req.method === 'POST') {
+    const authErr = await authorizeRomaAccountScopedRequest({
+      req,
+      env,
+      accountId,
+      minRole: 'owner',
+    });
+    if (authErr) return respond(authErr);
+
+    try {
+      const widgetDefaults = await createInitialAccountWidgetDefaults({ env, accountId });
+      return respond(json({ ok: true, accountId, widgetDefaults }, { status: 201 }));
     } catch (error) {
       return respond(widgetDefaultsErrorResponse(error));
     }

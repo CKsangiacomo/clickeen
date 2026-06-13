@@ -1,11 +1,7 @@
 import { validateWidgetLocaleSwitcherSettings } from '@clickeen/ck-contracts';
 import { createCompactInstanceId, isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
-import {
-  verifyInstancePublicPackageReady,
-  writeInstancePublicPackage,
-  type SubmittedInstancePublicPackage,
-} from './package-files';
+import { verifyInstancePublicPackageReady } from './package-files';
 import { PUBLIC_INDEX_FILE, PUBLIC_RUNTIME_FILE, PUBLIC_STYLES_FILE } from './package-file-names';
 import {
   readAccountInstanceSource,
@@ -168,7 +164,6 @@ export async function saveAccountInstanceTransition(args: {
   instanceId: string;
   submittedWidgetType: string;
   config: Record<string, unknown>;
-  publicPackage: SubmittedInstancePublicPackage;
   displayName?: unknown;
   hasDisplayName: boolean;
   meta?: unknown;
@@ -210,20 +205,6 @@ export async function saveAccountInstanceTransition(args: {
     displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
     meta: args.hasMeta ? args.meta : existing.value.pointer.meta ?? null,
   });
-  const packaged = await writeInstancePublicPackage({
-    env: args.env,
-    accountId,
-    instanceId,
-    publicPackage: args.publicPackage,
-  });
-  if (!packaged.ok) {
-    throw new AccountInstanceTransitionError({
-      status: 409,
-      kind: 'VALIDATION',
-      reasonKey: packaged.reasonKey,
-      detail: packaged.detail,
-    });
-  }
   const live = (await readInstanceServeState({ env: args.env, accountId, instanceId })) === 'published';
 
   return {

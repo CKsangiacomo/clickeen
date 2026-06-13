@@ -76,6 +76,7 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
   const version = claimAsNumber(record.v);
   const provider = normalizeProvider(record.provider);
   const userId = claimAsString(record.userId);
+  const createdAccount = typeof record.createdAccount === 'boolean' ? record.createdAccount : null;
   const sessionId = claimAsString(record.sessionId);
   const accessToken = claimAsString(record.accessToken);
   const refreshToken = claimAsString(record.refreshToken);
@@ -89,7 +90,7 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
   const finishRedirectUrl = normalizeFinishRedirectUrl(record.finishRedirectUrl) || undefined;
 
   if (version !== 1) return null;
-  if (!provider || !userId || !sessionId) return null;
+  if (!provider || !userId || !sessionId || createdAccount == null) return null;
   if (!accessToken || !refreshToken || !expiresAt) return null;
   if (!accessTokenMaxAge || accessTokenMaxAge <= 0) return null;
   if (!refreshTokenMaxAge || refreshTokenMaxAge <= 0) return null;
@@ -101,6 +102,7 @@ function toOauthFinishTransaction(value: unknown): OAuthFinishTransaction | null
     v: 1,
     provider,
     userId,
+    createdAccount,
     sessionId,
     accessToken,
     refreshToken,

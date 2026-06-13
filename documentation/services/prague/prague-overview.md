@@ -153,7 +153,7 @@ Notes:
 - Prague page JSON and page-owned translation sidecars deploy under R2 `prague/pages/**`.
 - Root `l10n/**` is not a Prague storage or deploy target.
 
-Prague merges page-owned translation sidecars for localized marketing pages. Account-widget translated values stay on the Tokyo account-widget path; public widget package files served from `clk.live` are stored by Tokyo-worker from the Builder/Roma save path.
+Prague merges page-owned translation sidecars for localized marketing pages. Account-widget translated values stay on the Tokyo account-widget path; public widget package files served from `clk.live` are public artifacts, not Prague translation truth.
 
 Validation:
 - Marketing-section meta + copy are validated via `prague/src/lib/blockRegistry.ts` during page load.

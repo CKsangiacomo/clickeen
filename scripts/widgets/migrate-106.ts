@@ -5,14 +5,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { NextRequest } from 'next/server';
-import { getCompiledWidgetRouteResponse } from '../../bob/lib/api/compiled-widget-route';
 import { resolveWidgetOverlayCode, toAccountAssetPublicPath } from '../../packages/ck-contracts/src';
 import {
   extractSavedTextFieldsForEditableFields,
   readWidgetEditableFieldsContract,
 } from '../../packages/ck-contracts/src/translated-value-primitives';
-import { buildSavedWidgetPublicPackage } from '../../roma/lib/widget-public-package';
 import { normalizeAccountWidgetDefaultsDocument } from '../../tokyo-worker/src/domains/account-widget-defaults';
 
 type JsonRecord = Record<string, unknown>;
@@ -821,30 +818,6 @@ function contentFromFullConfig(args: {
   };
 }
 
-async function buildPackage(args: {
-  widgetType: string;
-  instanceId: string;
-  baseLocale: string;
-  displayName: string | null;
-  state: JsonRecord;
-}) {
-  const response = await getCompiledWidgetRouteResponse(
-    new NextRequest(new URL(`http://migration.local/api/widgets/${encodeURIComponent(args.widgetType)}/compiled?ts=${Date.now()}`)),
-    { params: Promise.resolve({ widgetname: args.widgetType }) },
-  );
-  const compiled = await response.json().catch(() => null);
-  if (!response.ok || !isRecord(compiled) || !isRecord(compiled.widgetPackage)) {
-    throw new Error(`compiled_widget_invalid:${args.widgetType}:${response.status}`);
-  }
-  return buildSavedWidgetPublicPackage({
-    compiled: compiled as any,
-    instanceId: args.instanceId,
-    baseLocale: args.baseLocale,
-    displayName: args.displayName,
-    state: args.state,
-  });
-}
-
 function migrateAccountDefaults(accountDefaults: JsonRecord, shellDefaults: JsonRecord): JsonRecord {
   const next = clone(accountDefaults);
   next.shell = shellDefaults;
@@ -903,21 +876,9 @@ async function migrateInstance(widget: WidgetEntry, shellDefaults: JsonRecord, n
     config: stripContent(fullConfig, widget.widgetType),
     updatedAt: now,
   };
-  const publicPackage = await buildPackage({
-    widgetType: widget.widgetType,
-    instanceId: widget.instanceId,
-    baseLocale: typeof configDoc.baseLocale === 'string' ? configDoc.baseLocale : 'en',
-    displayName: typeof configDoc.displayName === 'string' ? configDoc.displayName : null,
-    state: fullConfig,
-  });
-
   const writes = [
     [`${root}/instance.config.json`, JSON.stringify(nextConfig, null, 2), 'application/json'],
     [`${root}/instance.content.json`, JSON.stringify(nextContent, null, 2), 'application/json'],
-    [`${root}/index.html`, publicPackage.indexHtml, 'text/html; charset=utf-8'],
-    [`${root}/styles.css`, publicPackage.stylesCss, 'text/css; charset=utf-8'],
-    [`${root}/runtime.js`, publicPackage.runtimeJs, 'text/javascript; charset=utf-8'],
-    [`${root}/package.json`, JSON.stringify({ v: 1, dependencies: publicPackage.dependencies }, null, 2), 'application/json'],
   ] as const;
 
   for (const [key, body, contentType] of writes) {

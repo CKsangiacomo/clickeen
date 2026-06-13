@@ -76,6 +76,21 @@ export async function loadAccountWidgetDefaultsInTokyo(args: {
   });
 }
 
+export async function createInitialAccountWidgetDefaultsInTokyo(args: {
+  accountId: string;
+  accountCapsule?: string | null;
+  requestId?: string | null;
+  internalServiceName?: string | null;
+}) {
+  return callTokyo(tokyoCallContext(args), {
+    path: `/__internal/accounts/${encodeURIComponent(args.accountId)}/widget-defaults`,
+    method: 'POST',
+    decode: decodeWidgetDefaultsPayload,
+    errorKey: 'roma.errors.widgetDefaults.createFailed',
+    errorDetail: 'Tokyo account widget defaults create failed',
+  });
+}
+
 export async function saveAccountWidgetDefaultsInTokyo(args: {
   accountId: string;
   accountCapsule?: string | null;

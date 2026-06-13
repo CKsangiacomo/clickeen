@@ -48,7 +48,9 @@ runtime, save/materialization, public runtime, and policy when policy applies.
   `spec.json.defaults` owns only widget-specific Core factory defaults.
 - Tokyo stores account widget defaults at
   `accounts/{accountPublicId}/widget-defaults.json`. New instances are created
-  from those account defaults, not from widget product folder defaults.
+  from existing account defaults and fail if that document is missing or
+  invalid; instance creation does not seed, infer, or reconstruct defaults from
+  widget product folders.
 - Account-owned instance source and generated public files live under
   `accounts/{accountPublicId}/instances/{instanceId}/`.
 - Roma lists live account instances from the instance registry, not by scanning
