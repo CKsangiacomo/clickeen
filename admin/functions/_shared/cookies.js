@@ -31,36 +31,10 @@ export function serializeHostCookie(request, name, value, maxAge) {
     'Path=/',
     'HttpOnly',
     'SameSite=Lax',
-    `Max-Age=${Math.max(1, Math.floor(maxAge))}`,
   ];
+  if (maxAge != null) parts.push(`Max-Age=${Math.max(1, Math.floor(maxAge))}`);
   if (isSecureRequest(request)) parts.push('Secure');
   return parts.join('; ');
-}
-
-function decodeJwtPayload(token) {
-  const segment = String(token || '').split('.')[1];
-  if (!segment) return null;
-  try {
-    const normalized = segment.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-    return JSON.parse(atob(padded));
-  } catch {
-    return null;
-  }
-}
-
-export function resolveJwtCookieMaxAge(token, fallbackSeconds) {
-  const payload = decodeJwtPayload(token);
-  const expClaim = payload?.exp;
-  const exp =
-    typeof expClaim === 'number'
-      ? expClaim
-      : typeof expClaim === 'string'
-        ? Number.parseInt(expClaim, 10)
-        : Number.NaN;
-  if (!Number.isFinite(exp)) return fallbackSeconds;
-  const now = Math.floor(Date.now() / 1000);
-  return Math.max(1, Math.floor(exp - now));
 }
 
 function positiveInt(value, fallback) {
@@ -104,7 +78,6 @@ export function sessionCookieHeaders(request, session) {
         request,
         AUTHZ_CAPSULE_COOKIE,
         accountCapsule,
-        resolveJwtCookieMaxAge(accountCapsule, 30 * 60),
       ),
     );
   }

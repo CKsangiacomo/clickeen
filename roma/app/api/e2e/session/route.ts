@@ -3,7 +3,6 @@ import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import {
   applySessionCookies,
   resolveAccountAuthzCookieName,
-  resolveJwtCookieMaxAge,
   resolveSessionCookieNames,
 } from '../../../../lib/auth/session';
 
@@ -206,7 +205,6 @@ export async function POST(request: NextRequest) {
     {
       name: resolveAccountAuthzCookieName(),
       value: bootstrap.accountCapsule,
-      maxAge: resolveJwtCookieMaxAge(bootstrap.accountCapsule, 30 * 60),
     },
   ]);
 

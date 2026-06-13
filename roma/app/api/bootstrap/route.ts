@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   resolveAccountAuthzCookieName,
-  resolveJwtCookieMaxAge,
   resolveSessionBearer,
 } from '../../../lib/auth/session';
 import { withSession } from '../../../lib/current-account-route';
@@ -76,7 +75,6 @@ export async function GET(request: NextRequest) {
               {
                 name: resolveAccountAuthzCookieName(),
                 value: sanitized.accountCapsule,
-                maxAge: resolveJwtCookieMaxAge(sanitized.accountCapsule, 30 * 60),
               },
             ]
           : []),

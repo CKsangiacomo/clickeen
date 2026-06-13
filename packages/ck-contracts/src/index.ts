@@ -120,15 +120,9 @@ export function decodeJwtPayload(token: string): Record<string, unknown> | null 
 export function tokenIsExpired(token: string, leewaySeconds = 30): boolean {
   const payload = decodeJwtPayload(token);
   const expClaim = payload?.exp;
-  const exp =
-    typeof expClaim === 'number'
-      ? expClaim
-      : typeof expClaim === 'string'
-        ? Number.parseInt(expClaim, 10)
-        : Number.NaN;
-  if (!Number.isFinite(exp)) return false;
+  if (typeof expClaim !== 'number' || !Number.isFinite(expClaim)) throw new Error('ck.jwt.expInvalid');
   const now = Math.floor(Date.now() / 1000);
-  return exp <= now + leewaySeconds;
+  return expClaim <= now + leewaySeconds;
 }
 
 export function normalizeInstanceId(raw: unknown): string | null {

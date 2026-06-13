@@ -3,7 +3,6 @@ import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import {
   applySessionCookies,
   resolveAccountAuthzCookieName,
-  resolveJwtCookieMaxAge,
   resolveRequestOrigin,
   resolveSessionCookieNames,
 } from '../../../../lib/auth/session';
@@ -156,7 +155,6 @@ function applyFinishSessionCookies(args: {
           {
             name: resolveAccountAuthzCookieName(),
             value: args.accountCapsule,
-            maxAge: resolveJwtCookieMaxAge(args.accountCapsule, 30 * 60),
           },
         ]
       : []),

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decodeJwtPayload, tokenIsExpired } from '@clickeen/ck-contracts';
+import { tokenIsExpired } from '@clickeen/ck-contracts';
 import { resolveBerlinBaseUrl } from '../env/berlin';
 
 export type SessionCookieSpec = {
   name: string;
   value: string;
-  maxAge: number;
+  maxAge?: number;
 };
 
 type SessionResolution =
@@ -82,20 +82,6 @@ export function resolveAccountAuthzCookieName(): string {
   return SHARED_AUTHZ_CAPSULE_COOKIE;
 }
 
-export function resolveJwtCookieMaxAge(token: string, fallbackSeconds: number): number {
-  const payload = decodeJwtPayload(token);
-  const expClaim = payload?.exp;
-  const exp =
-    typeof expClaim === 'number'
-      ? expClaim
-      : typeof expClaim === 'string'
-        ? Number.parseInt(expClaim, 10)
-        : Number.NaN;
-  if (!Number.isFinite(exp)) return fallbackSeconds;
-  const now = Math.floor(Date.now() / 1000);
-  return Math.max(1, Math.floor(exp - now));
-}
-
 export function resolveSessionCookieDomain(request: NextRequest): string | undefined {
   const hostname = resolveRequestHostname(request);
   if (!hostname || isLocalHostname(hostname)) return undefined;
@@ -125,7 +111,7 @@ export function applySessionCookies(
       secure,
       sameSite: 'lax',
       path: '/',
-      maxAge: cookie.maxAge,
+      ...(cookie.maxAge != null ? { maxAge: cookie.maxAge } : {}),
       ...(domain ? { domain } : {}),
     });
   }
@@ -225,13 +211,21 @@ async function refreshSession(refreshToken: string): Promise<BerlinRefreshResult
 export async function resolveSessionBearer(request: NextRequest): Promise<SessionResolution> {
   const headerToken = asBearerToken(request.headers.get('Authorization'));
   if (headerToken) {
+    try {
+      if (tokenIsExpired(headerToken)) return { ok: false, response: unauthorized('coreui.errors.auth.required', 401) };
+    } catch {
+      return { ok: false, response: unauthorized('coreui.errors.auth.required', 401) };
+    }
     return { ok: true, accessToken: headerToken };
   }
 
   const tokens = extractSessionTokens(request);
-  const hasUsableAccessToken = Boolean(tokens.accessToken && !tokenIsExpired(tokens.accessToken));
-  if (hasUsableAccessToken) {
-    return { ok: true, accessToken: tokens.accessToken as string };
+  if (tokens.accessToken) {
+    try {
+      if (!tokenIsExpired(tokens.accessToken)) return { ok: true, accessToken: tokens.accessToken };
+    } catch {
+      return { ok: false, response: unauthorized('coreui.errors.auth.required', 401) };
+    }
   }
 
   if (!tokens.refreshToken) {

@@ -7,7 +7,6 @@ import {
 import type { NextRequest } from 'next/server';
 import {
   resolveAccountAuthzCookieName,
-  resolveJwtCookieMaxAge,
   type SessionCookieSpec,
 } from './auth/session';
 import { resolveBerlinBaseUrl } from './env/berlin';
@@ -31,8 +30,6 @@ export type AccountCapsuleAuthzResult =
     };
 
 const BERLIN_ACCOUNT_CAPSULE_JWKS_CACHE_KEY = '__CK_ROMA_ACCOUNT_CAPSULE_JWKS_V1__';
-const ACCOUNT_AUTHZ_CAPSULE_FALLBACK_MAX_AGE_SECONDS = 30 * 60;
-
 function roleRank(value: MemberRole): number {
   switch (value) {
     case 'owner':
@@ -112,7 +109,6 @@ function buildAuthzCookie(token: string): SessionCookieSpec {
   return {
     name: resolveAccountAuthzCookieName(),
     value: token,
-    maxAge: resolveJwtCookieMaxAge(token, ACCOUNT_AUTHZ_CAPSULE_FALLBACK_MAX_AGE_SECONDS),
   };
 }
 
