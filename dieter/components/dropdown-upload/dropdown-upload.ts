@@ -1,5 +1,4 @@
 import { createDropdownHydrator } from '../shared/dropdownToggle';
-import { normalizeAccountAssetRef } from '@clickeen/ck-contracts';
 import { dispatchAccountAssetUpsell, type AccountAssetsClient } from '../shared/account-assets';
 import { resolveSingleAccountAsset } from '../shared/account-asset-resolve';
 
@@ -338,7 +337,7 @@ function readMeta(state: DropdownUploadState): UploadMeta | null {
 }
 
 function readMetaAssetRef(meta: UploadMeta | null): string {
-  return normalizeAccountAssetRef(meta?.assetRef) ?? '';
+  return typeof meta?.assetRef === 'string' ? meta.assetRef : '';
 }
 
 function invalidateResolve(state: DropdownUploadState): void {

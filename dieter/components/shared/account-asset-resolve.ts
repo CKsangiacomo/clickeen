@@ -13,21 +13,19 @@ type ResolveSingleAccountAssetArgs = {
 };
 
 export async function resolveSingleAccountAsset(args: ResolveSingleAccountAssetArgs): Promise<void> {
-  const assetRef = String(args.getAssetRef() || '').trim();
+  const assetRef = args.getAssetRef();
   const requestId = args.beginRequest();
   args.onStart?.();
   if (!assetRef) return;
 
   try {
     const resolved = await args.accountAssets.resolveAssets([assetRef]);
-    const assetsByRef = resolved?.assetsByRef instanceof Map ? resolved.assetsByRef : new Map<string, ResolvedAccountAsset>();
-    const missingAssetRefs = Array.isArray(resolved?.missingAssetRefs) ? resolved.missingAssetRefs : [];
     if (!args.isCurrent(requestId, assetRef)) return;
-    if (missingAssetRefs.includes(assetRef)) {
+    if (resolved.missingAssetRefs.includes(assetRef)) {
       args.onMissing();
       return;
     }
-    const asset = assetsByRef.get(assetRef);
+    const asset = resolved.assetsByRef.get(assetRef);
     if (!asset) {
       args.onMissing();
       return;

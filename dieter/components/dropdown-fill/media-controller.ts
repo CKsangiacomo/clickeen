@@ -147,7 +147,7 @@ export function setImageSrc(
   }
   state.imageSrc = src;
   if (opts.commit) {
-    const assetRef = String(state.imageAssetRef || '').trim();
+    const assetRef = state.imageAssetRef || '';
     const fill: FillValue = assetRef
       ? {
           type: 'image',
@@ -180,7 +180,7 @@ export function setVideoSrc(
   }
   state.videoSrc = src;
   if (opts.commit) {
-    const assetRef = String(state.videoAssetRef || '').trim();
+    const assetRef = state.videoAssetRef || '';
     const fill: FillValue = assetRef
       ? {
           type: 'video',
@@ -368,13 +368,13 @@ function commitVideoAssetSelection(
 export async function resolveImageAsset(state: DropdownFillState, deps: MediaControllerDeps): Promise<void> {
   return resolveSingleAccountAsset({
     accountAssets: state.accountAssets,
-    getAssetRef: () => String(state.imageAssetRef || '').trim(),
+    getAssetRef: () => state.imageAssetRef || '',
     beginRequest: () => {
       state.imageResolveRequestId += 1;
       return state.imageResolveRequestId;
     },
     isCurrent: (requestId, assetRef) =>
-      state.imageResolveRequestId === requestId && String(state.imageAssetRef || '').trim() === assetRef,
+      state.imageResolveRequestId === requestId && state.imageAssetRef === assetRef,
     onStart: () => setAssetPanelMessage(state.imageMessage, ''),
     onMissing: () => {
       setAssetPanelMessage(state.imageMessage, 'Asset unavailable.');
@@ -392,13 +392,13 @@ export async function resolveImageAsset(state: DropdownFillState, deps: MediaCon
 export async function resolveVideoAsset(state: DropdownFillState, deps: MediaControllerDeps): Promise<void> {
   return resolveSingleAccountAsset({
     accountAssets: state.accountAssets,
-    getAssetRef: () => String(state.videoAssetRef || '').trim(),
+    getAssetRef: () => state.videoAssetRef || '',
     beginRequest: () => {
       state.videoResolveRequestId += 1;
       return state.videoResolveRequestId;
     },
     isCurrent: (requestId, assetRef) =>
-      state.videoResolveRequestId === requestId && String(state.videoAssetRef || '').trim() === assetRef,
+      state.videoResolveRequestId === requestId && state.videoAssetRef === assetRef,
     onStart: () => setAssetPanelMessage(state.videoMessage, ''),
     onMissing: () => {
       setAssetPanelMessage(state.videoMessage, 'Asset unavailable.');

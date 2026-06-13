@@ -1,4 +1,3 @@
-import { normalizeAccountAssetRef } from '@clickeen/ck-contracts';
 import {
   MODE_ORDER,
   type FillMode,
@@ -10,16 +9,14 @@ import {
 } from './fill-types';
 import { parseColor } from './color-utils';
 
-function normalizeAssetRef(raw: unknown): string {
-  return normalizeAccountAssetRef(raw) ?? '';
-}
+function readAssetRef(raw: unknown): string { return typeof raw === 'string' ? raw : ''; }
 
 function normalizeImageValue(raw: unknown): ImageValue {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
     return { fit: 'cover', position: 'center', repeat: 'no-repeat' };
   }
   const value = raw as Record<string, unknown>;
-  const assetRef = normalizeAssetRef(value.assetRef);
+  const assetRef = readAssetRef(value.assetRef);
   const name = typeof value.name === 'string' ? value.name.trim() : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
@@ -38,8 +35,8 @@ function normalizeVideoValue(raw: unknown): VideoValue {
     return { fit: 'cover', position: 'center', loop: true, muted: true, autoplay: true };
   }
   const value = raw as Record<string, unknown>;
-  const assetRef = normalizeAssetRef(value.assetRef);
-  const posterAssetRef = normalizeAssetRef(value.posterAssetRef);
+  const assetRef = readAssetRef(value.assetRef);
+  const posterAssetRef = readAssetRef(value.posterAssetRef);
   const name = typeof value.name === 'string' ? value.name.trim() : '';
   const fit = value.fit === 'contain' ? 'contain' : 'cover';
   const position = typeof value.position === 'string' && value.position.trim() ? value.position.trim() : 'center';
@@ -143,13 +140,13 @@ export function readVideoName(fill: FillValue): string | null {
 }
 
 export function readImageAssetRef(fill: FillValue): string | null {
-  return normalizeAccountAssetRef(fill.image?.assetRef);
+  return typeof fill.image?.assetRef === 'string' && fill.image.assetRef ? fill.image.assetRef : null;
 }
 
 export function readVideoAssetRef(fill: FillValue): string | null {
-  return normalizeAccountAssetRef(fill.video?.assetRef);
+  return typeof fill.video?.assetRef === 'string' && fill.video.assetRef ? fill.video.assetRef : null;
 }
 
 export function readVideoPosterAssetRef(fill: FillValue): string | null {
-  return normalizeAccountAssetRef(fill.video?.posterAssetRef);
+  return typeof fill.video?.posterAssetRef === 'string' && fill.video.posterAssetRef ? fill.video.posterAssetRef : null;
 }
