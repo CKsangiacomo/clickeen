@@ -212,7 +212,7 @@ Evidence:
 
 ### PF-107-2 - Builder Copilot Boundary
 
-Status: OPEN
+Status: COMPLETE
 Original rows: AB-12, AB-13
 Likely files:
 
@@ -255,6 +255,35 @@ Done when:
 - Mixed valid/invalid model ops fail visibly.
 - Roma returns a failure status for copilot boundary failure, not assistant
   success copy.
+
+Evidence:
+
+- Implementation commit: `5fec74c5`.
+- Product truth: Roma/Bob own the control catalog contract before grant/usage
+  reservation. San Francisco owns model-output interpretation before session
+  mutation or `ops_applied` success. Bob remains the downstream edit-apply
+  guard and must not manufacture missing indexed structures.
+- Source/runtime LOC exception: `303 insertions(+), 36 deletions(-)`. This slice
+  could not be deletion-led by ratio because the prior violating paths were
+  small filter/relabel branches, while the fix required explicit all-or-nothing
+  boundary rejection before grant reservation, SF session mutation, and Bob
+  downstream mutation. No added code preserves the old survivor-filter or
+  HTTP-200 redress workflow.
+- Local gates: `git diff --check`; `pnpm --filter @clickeen/roma typecheck`;
+  `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/sanfrancisco
+  typecheck`; `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter
+  @clickeen/bob lint`.
+- External proof: temporary outside-runtime harness showed malformed controls
+  fail before continuation; invalid numeric, array, and tokenized model ops fail
+  before San Francisco session mutation; Bob rejects an out-of-range indexed set
+  path before mutation; valid model op succeeds; Roma preserves San Francisco
+  failure status as non-2xx.
+- Validator 1: multiple RED passes on skipped pre-grant control validation,
+  model-op target validation, numeric/array bounds, tokenized set bounds, and
+  downstream Bob set behavior, then GREEN after fixes.
+- Validator 2: multiple RED passes on shallow kind/path validation, path healing,
+  numeric range omission, and tokenized set bounds, then GREEN after fixes. No
+  V1-V8 remains or was introduced for this slice.
 
 ### PF-107-3 - Berlin Auth Provider Config Boundary
 
