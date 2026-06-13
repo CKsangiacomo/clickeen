@@ -57,7 +57,7 @@ export async function tryHandleAssetRoutes(
     new RegExp(`^/__internal/assets/account/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}$`),
   );
   if (accountAssetsListMatch) {
-    const accountId = decodeURIComponent(accountAssetsListMatch[1] || '');
+    const accountId = accountAssetsListMatch[1] || '';
     if (req.method === 'GET') {
       return respond(await handleListAccountAssetMetadata(req, env, accountId));
     }
@@ -68,7 +68,7 @@ export async function tryHandleAssetRoutes(
     new RegExp(`^/__internal/assets/account/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}/usage$`),
   );
   if (accountAssetsUsageMatch) {
-    const accountId = decodeURIComponent(accountAssetsUsageMatch[1] || '');
+    const accountId = accountAssetsUsageMatch[1] || '';
     if (req.method === 'GET') {
       return respond(await handleGetAccountAssetUsage(req, env, accountId));
     }
@@ -79,7 +79,7 @@ export async function tryHandleAssetRoutes(
     new RegExp(`^/__internal/assets/account/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}/resolve$`),
   );
   if (accountAssetsResolveMatch) {
-    const accountId = decodeURIComponent(accountAssetsResolveMatch[1] || '');
+    const accountId = accountAssetsResolveMatch[1] || '';
     if (req.method === 'POST') {
       return respond(await handleResolveAccountAssetMetadata(req, env, accountId));
     }
@@ -90,8 +90,8 @@ export async function tryHandleAssetRoutes(
     new RegExp(`^/__internal/assets/account/${ACCOUNT_PUBLIC_ID_ROUTE_SEGMENT}/asset/${ASSET_REF_ROUTE_SEGMENT}$`, 'i'),
   );
   if (accountAssetMatch) {
-    const accountId = decodeURIComponent(accountAssetMatch[1] || '');
-    const assetRef = decodeURIComponent(accountAssetMatch[2] || '');
+    const accountId = accountAssetMatch[1] || '';
+    const assetRef = accountAssetMatch[2] || '';
     if (req.method === 'DELETE') {
       return respond(await handleDeleteAccountAsset(req, env, accountId, assetRef));
     }

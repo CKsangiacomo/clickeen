@@ -1,7 +1,5 @@
 import {
   normalizeInstanceId,
-  parseAccountAssetKey,
-  parseAccountAssetRef,
   toAccountAssetPublicPath,
 } from '@clickeen/ck-contracts';
 import { sha256Hex as computeSha256Hex } from '@clickeen/ck-contracts/security';
@@ -45,33 +43,19 @@ export function pickExtension(filename: string | null, contentType: string | nul
   if (fromName && /^[a-z0-9]{1,8}$/.test(fromName)) return fromName;
   const fromMime = extFromMime(String(contentType || '').trim());
   if (fromMime) return fromMime;
-  return 'bin';
+  return '';
 }
 
 export function validateUploadFilename(
   filename: string | null,
 ): { ok: true; filename: string } | { ok: false; detail: string } {
-  const raw = String(filename || '').trim();
-  if (!raw) return { ok: false, detail: 'filename required' };
-  if (raw === '.' || raw === '..') return { ok: false, detail: 'filename reserved' };
-  if (raw.includes('/') || raw.includes('\\')) return { ok: false, detail: 'path separators are not allowed' };
-
-  const ascii = raw.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
-  const safe = ascii
-    .replace(/[^A-Za-z0-9._-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^\.+/, '')
-    .replace(/^[._-]+|[._-]+$/g, '');
-  if (!safe || safe === '.' || safe === '..') return { ok: true, filename: 'asset.bin' };
-
-  const extMatch = safe.match(/(\.[A-Za-z0-9]{1,8})$/);
-  const ext = extMatch ? extMatch[1] : '';
-  const candidateStem = (ext ? safe.slice(0, -ext.length) : safe).replace(/[._-]+$/g, '') || 'asset';
-  const candidate = `${candidateStem}${ext}`;
-  if (candidate.length <= 180) return { ok: true, filename: candidate };
-
-  const maxStemLength = Math.max(1, 180 - ext.length);
-  return { ok: true, filename: `${candidateStem.slice(0, maxStemLength)}${ext}` };
+  if (typeof filename !== 'string' || !filename || filename.trim() !== filename) return { ok: false, detail: 'filename required' };
+  if (filename === '.' || filename === '..') return { ok: false, detail: 'filename reserved' };
+  if (filename.includes('/') || filename.includes('\\')) return { ok: false, detail: 'path separators are not allowed' };
+  if (filename.length > 180 || !/^[A-Za-z0-9][A-Za-z0-9._-]*[A-Za-z0-9]$/.test(filename)) {
+    return { ok: false, detail: 'filename invalid' };
+  }
+  return { ok: true, filename };
 }
 
 const ACCOUNT_ASSET_CANONICAL_PREFIX = 'accounts/';
@@ -80,71 +64,13 @@ export function buildAccountAssetKey(
   accountId: string,
   assetRef: string,
 ): string {
-  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/assets/${assetRef.replace(/^\/+/, '')}`;
+  return `${ACCOUNT_ASSET_CANONICAL_PREFIX}${accountId}/assets/${assetRef}`;
 }
-
-export function normalizeAccountAssetReadKey(pathname: string): string | null {
-  const raw = String(pathname || '').trim();
-  if (!raw) return null;
-  const publicRef = parseAccountAssetRef(raw);
-  if (publicRef) return publicRef.key;
-  const keyRef = parseAccountAssetKey(raw.replace(/^\/+/, ''));
-  return keyRef ? keyRef.key : null;
-}
-
-type AccountAssetIdentity = { accountId: string; assetRef: string };
 
 export function buildAccountAssetPublicPath(assetKey: string): string {
   const publicPath = toAccountAssetPublicPath(assetKey);
   if (!publicPath) throw new Error('[tokyo] invalid account asset key');
   return publicPath;
-}
-
-export function parseAccountAssetIdentityFromKey(key: string): AccountAssetIdentity | null {
-  const normalized = normalizeAccountAssetReadKey(key);
-  if (!normalized) return null;
-  const parsed = parseAccountAssetKey(normalized);
-  return parsed ? { accountId: parsed.accountId, assetRef: parsed.assetRef } : null;
-}
-
-export function guessContentTypeFromExt(ext: string): string {
-  switch (ext.toLowerCase()) {
-    case 'css':
-      return 'text/css; charset=utf-8';
-    case 'js':
-      return 'text/javascript; charset=utf-8';
-    case 'html':
-      return 'text/html; charset=utf-8';
-    case 'json':
-      return 'application/json; charset=utf-8';
-    case 'svg':
-      return 'image/svg+xml; charset=utf-8';
-    case 'png':
-      return 'image/png';
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg';
-    case 'webp':
-      return 'image/webp';
-    case 'gif':
-      return 'image/gif';
-    case 'mp4':
-      return 'video/mp4';
-    case 'webm':
-      return 'video/webm';
-    case 'pdf':
-      return 'application/pdf';
-    case 'woff2':
-      return 'font/woff2';
-    case 'woff':
-      return 'font/woff';
-    case 'otf':
-      return 'font/otf';
-    case 'ttf':
-      return 'font/ttf';
-    default:
-      return 'application/octet-stream';
-  }
 }
 
 function normalizeTokyoFontKey(pathname: string): string | null {
@@ -202,8 +128,8 @@ export async function handleGetTokyoDeployAsset(env: Env, pathname: string): Pro
   const obj = await env.TOKYO_R2.get(key);
   if (!obj) return new Response('Not found', { status: 404 });
 
-  const ext = key.split('.').pop() || '';
-  const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
+  const contentType = obj.httpMetadata?.contentType;
+  if (!contentType) return new Response('Invalid asset metadata', { status: 500 });
   const cacheControl = cacheControlForDeployAssetKey(key);
   const headers = new Headers();
   headers.set('content-type', contentType);
@@ -219,8 +145,8 @@ export async function handleGetTokyoFontAsset(env: Env, pathname: string): Promi
   const obj = await env.TOKYO_R2.get(key);
   if (!obj) return new Response('Not found', { status: 404 });
 
-  const ext = key.split('.').pop() || '';
-  const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
+  const contentType = obj.httpMetadata?.contentType;
+  if (!contentType) return new Response('Invalid asset metadata', { status: 500 });
   const headers = new Headers();
   headers.set('content-type', contentType);
   headers.set('cache-control', 'public, max-age=3600, stale-while-revalidate=86400');

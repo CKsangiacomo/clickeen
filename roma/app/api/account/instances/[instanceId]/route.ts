@@ -2,7 +2,6 @@ import { getCompiledWidgetRouteResponse } from '@clickeen/bob/compiled-widget-ro
 import {
   collectConfigMediaAssetRefs,
   materializeConfigMedia,
-  normalizeResolvedAccountAsset,
 } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { NextRequest, NextResponse } from 'next/server';
@@ -44,6 +43,17 @@ type RouteFailureLike = {
     paths?: string[];
   };
 };
+
+function accountAssetResolveFailed() {
+  return {
+    ok: false as const,
+    status: 502 as const,
+    error: {
+      kind: 'UPSTREAM_UNAVAILABLE' as const,
+      reasonKey: 'coreui.errors.assets.resolve.failed' as const,
+    },
+  };
+}
 
 function isCompiledWidgetForPublicPackage(value: unknown): value is CompiledWidgetForPublicPackage {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -103,7 +113,20 @@ async function materializePublicPackageMedia(args: {
       };
     }
 > {
-  const assetRefs = collectConfigMediaAssetRefs(args.config);
+  let assetRefs: string[];
+  try {
+    assetRefs = collectConfigMediaAssetRefs(args.config);
+  } catch (error) {
+    return {
+      ok: false,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.assets.resolve.invalidAssetRefs',
+        detail: error instanceof Error ? error.message : String(error),
+      },
+    };
+  }
   if (!assetRefs.length) return { ok: true, state: args.config };
 
   let upstream: Response;
@@ -143,33 +166,60 @@ async function materializePublicPackageMedia(args: {
     };
   }
 
+  const requestedAssetRefs = new Set(assetRefs);
+  if (Object.keys(payload as Record<string, unknown>).join(',') !== 'assets') return accountAssetResolveFailed();
   const assetsByRef: Record<string, unknown> = {};
   const assets = Array.isArray((payload as { assets?: unknown }).assets)
     ? ((payload as { assets: unknown[] }).assets)
-    : [];
-  for (const raw of assets) {
-    const asset = normalizeResolvedAccountAsset(raw);
-    if (asset) assetsByRef[asset.assetRef] = asset;
+    : null;
+  if (!assets || assets.length !== assetRefs.length) {
+    return accountAssetResolveFailed();
   }
-  const missingAssetRefs = Array.isArray((payload as { missingAssetRefs?: unknown }).missingAssetRefs)
-    ? (payload as { missingAssetRefs: unknown[] }).missingAssetRefs.map((entry) => String(entry || '').trim()).filter(Boolean)
-    : [];
+  for (const raw of assets) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      return accountAssetResolveFailed();
+    }
+    const keys = Object.keys(raw);
+    if (keys.length !== 2 || !keys.includes('assetRef') || !keys.includes('url')) {
+      return accountAssetResolveFailed();
+    }
+    const asset = raw as { assetRef?: unknown; url?: unknown };
+    if (typeof asset.assetRef !== 'string' || typeof asset.url !== 'string' || !asset.url) {
+      return accountAssetResolveFailed();
+    }
+    if (!requestedAssetRefs.has(asset.assetRef) || Object.prototype.hasOwnProperty.call(assetsByRef, asset.assetRef)) {
+      return accountAssetResolveFailed();
+    }
+    assetsByRef[asset.assetRef] = asset;
+  }
   const unresolved = assetRefs.filter((assetRef) => !assetsByRef[assetRef]);
-  const missing = Array.from(new Set([...missingAssetRefs, ...unresolved]));
-  if (missing.length) {
+  if (unresolved.length) {
     return {
       ok: false,
       status: 422,
       error: {
         kind: 'VALIDATION',
         reasonKey: 'coreui.errors.assets.resolve.missing',
-        detail: missing.join(', '),
-        paths: missing.map((assetRef) => `assetRef:${assetRef}`),
+        detail: unresolved.join(', '),
+        paths: unresolved.map((assetRef) => `assetRef:${assetRef}`),
       },
     };
   }
 
-  const materialized = materializeConfigMedia(args.config, assetsByRef);
+  let materialized: unknown;
+  try {
+    materialized = materializeConfigMedia(args.config, assetsByRef);
+  } catch (error) {
+    return {
+      ok: false,
+      status: 422,
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.assets.resolve.invalidMaterialization',
+        detail: error instanceof Error ? error.message : String(error),
+      },
+    };
+  }
   if (!materialized || typeof materialized !== 'object' || Array.isArray(materialized)) {
     return {
       ok: false,

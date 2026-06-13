@@ -21,7 +21,6 @@ export type AssetRef = {
   accountId: string;
   assetRef: string;
   kind: AssetRefKind;
-  filename: string;
   key: string;
   pathname: string;
 };
@@ -135,38 +134,12 @@ export function isInstanceId(raw: unknown): raw is string {
   return normalizeInstanceId(raw) != null;
 }
 
-function decodePathPart(raw: unknown): string {
-  try {
-    return decodeURIComponent(String(raw || '')).trim();
-  } catch {
-    return '';
-  }
-}
-
-function pathnameFromRawAssetRef(raw: unknown): string | null {
-  const value = String(raw || '').trim();
-  if (!value) return null;
-  if (value.startsWith('/')) return value;
-  if (!/^https?:\/\//i.test(value)) return null;
-  try {
-    return new URL(value).pathname || '/';
-  } catch {
-    return null;
-  }
-}
-
-export function normalizeAccountAssetRef(raw: unknown): string | null {
-  const value = typeof raw === 'string' ? raw.trim().replace(/^\/+/, '') : '';
-  if (!value || value.length > 240) return null;
-  if (value.includes('\\') || /[\u0000-\u001f\u007f]/.test(value)) return null;
-  const segments = value.split('/');
-  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return null;
-  if (segments.some((segment) => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(segment))) return null;
-  return segments.join('/');
-}
-
-export function filenameFromAssetRef(assetRef: string): string {
-  return assetRef.split('/').pop() || assetRef;
+function isExactAccountAssetRef(raw: unknown): raw is string {
+  if (typeof raw !== 'string' || !raw || raw.length > 240) return false;
+  if (raw.trim() !== raw || raw.startsWith('/') || raw.includes('\\') || /[\u0000-\u001f\u007f]/.test(raw)) return false;
+  const segments = raw.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return false;
+  return !segments.some((segment) => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(segment));
 }
 
 export function encodeAssetRefPath(assetRef: string): string {
@@ -192,53 +165,20 @@ export function looksLikeHtmlErrorPage(text: string): boolean {
   );
 }
 
-export function normalizeAccountAssetRecord(raw: unknown): AccountAssetRecord | null {
-  if (!isRecord(raw)) return null;
-  const assetRef = normalizeAccountAssetRef(raw.assetRef);
-  const assetType = asTrimmedString(raw.assetType) ?? '';
-  const filename = asTrimmedString(raw.filename) ?? (assetRef ? filenameFromAssetRef(assetRef) : '');
-  const contentType = asTrimmedString(raw.contentType) ?? '';
-  const createdAt = asTrimmedString(raw.createdAt) ?? '';
-  const sizeBytes = Number(raw.sizeBytes);
-  if (!assetRef || !filename) return null;
-  return {
-    assetRef,
-    assetType: assetType || 'other',
-    filename,
-    contentType: contentType || 'application/octet-stream',
-    sizeBytes: Number.isFinite(sizeBytes) ? Math.max(0, Math.trunc(sizeBytes)) : 0,
-    createdAt: createdAt || new Date().toISOString(),
-  };
-}
-
-export function normalizeResolvedAccountAsset(raw: unknown): ResolvedAccountAsset | null {
-  if (!isRecord(raw)) return null;
-  const assetRef = normalizeAccountAssetRef(raw.assetRef);
-  const url = asTrimmedString(raw.url) ?? '';
-  if (!assetRef || !url) return null;
-  return { assetRef, url };
-}
-
 export function parseAccountAssetRef(raw: unknown): AssetRef | null {
-  const pathname = pathnameFromRawAssetRef(raw);
+  const pathname = typeof raw === 'string' ? raw : '';
   if (!pathname) return null;
 
   const publicMatch = pathname.match(ACCOUNT_ASSET_PATH_RE);
   if (!publicMatch) return null;
-  const accountId = decodePathPart(publicMatch[1]);
-  const assetRef = normalizeAccountAssetRef(
-    String(publicMatch[2] || '')
-      .split('/')
-      .map((segment) => decodePathPart(segment))
-      .join('/'),
-  );
+  const accountId = publicMatch[1] || '';
+  const assetRef = publicMatch[2] || '';
   if (!isCompactAccountPublicId(accountId) || !assetRef) return null;
-  const filename = filenameFromAssetRef(assetRef);
+  if (!isExactAccountAssetRef(assetRef)) return null;
 
   return {
     accountId,
     assetRef,
-    filename,
     key: `accounts/${accountId}/assets/${assetRef}`,
     kind: 'account',
     pathname: `/assets/account/${encodeURIComponent(accountId)}/${encodeAssetRefPath(assetRef)}`,
@@ -246,35 +186,21 @@ export function parseAccountAssetRef(raw: unknown): AssetRef | null {
 }
 
 export function parseAccountAssetKey(raw: unknown): AssetRef | null {
-  const key = typeof raw === 'string' ? raw.trim().replace(/^\/+/, '') : '';
+  const key = typeof raw === 'string' ? raw : '';
   if (!key || key.includes('..')) return null;
   const match = key.match(ACCOUNT_ASSET_KEY_RE);
   if (!match) return null;
-  const accountId = decodePathPart(match[1]);
-  const assetRef = normalizeAccountAssetRef(
-    String(match[2] || '')
-      .split('/')
-      .map((segment) => decodePathPart(segment))
-      .join('/'),
-  );
+  const accountId = match[1] || '';
+  const assetRef = match[2] || '';
   if (!isCompactAccountPublicId(accountId) || !assetRef) return null;
-  const filename = filenameFromAssetRef(assetRef);
+  if (!isExactAccountAssetRef(assetRef)) return null;
   return {
     accountId,
     assetRef,
-    filename,
     key: `accounts/${accountId}/assets/${assetRef}`,
     kind: 'account',
     pathname: `/assets/account/${encodeURIComponent(accountId)}/${encodeAssetRefPath(assetRef)}`,
   };
-}
-
-export function isAccountAssetRef(raw: unknown): boolean {
-  return parseAccountAssetRef(raw) != null;
-}
-
-export function isAccountAssetKey(raw: unknown): boolean {
-  return parseAccountAssetKey(raw) != null;
 }
 
 export function toAccountAssetPublicPath(assetKey: unknown): string | null {
@@ -386,47 +312,46 @@ export function validateAccountLocalePolicy(raw: unknown, path = 'policy'): Acco
 
 export function validateWidgetLocaleSwitcherSettings(raw: unknown) { const v = isRecord(raw) ? raw : null, issue = !v ? ['settingsInvalid', 'localeSwitcher'] : typeof v.enabled !== 'boolean' ? ['enabledInvalid', 'localeSwitcher.enabled'] : typeof v.byIp !== 'boolean' ? ['byIpInvalid', 'localeSwitcher.byIp'] : typeof v.alwaysShowLocale !== 'string' ? ['alwaysShowLocaleInvalid', 'localeSwitcher.alwaysShowLocale'] : v.attachTo !== 'stage' && v.attachTo !== 'pod' ? ['attachToInvalid', 'localeSwitcher.attachTo'] : typeof v.position !== 'string' || !['top-left', 'top-center', 'top-right', 'right-middle', 'bottom-right', 'bottom-center', 'bottom-left', 'left-middle'].includes(v.position) ? ['positionInvalid', 'localeSwitcher.position'] : null; return issue ? { reasonKey: `coreui.errors.localeSwitcher.${issue[0]}`, detail: `coreui.errors.localeSwitcher.${issue[0]}`, path: issue[1] } : null; }
 
-function normalizeResolvedAssetSource(entry: unknown, expectedAssetRef: string): ResolvedAccountAsset | null {
-  const normalized = normalizeResolvedAccountAsset(entry);
-  if (!normalized || normalized.assetRef !== expectedAssetRef) return null;
-  return normalized;
-}
-
-function readResolvedAssetByRef(resolvedAssets: unknown, assetRefRaw: unknown): ResolvedAccountAsset | null {
-  const assetRef = normalizeAccountAssetRef(assetRefRaw);
-  if (!assetRef) return null;
-  if (resolvedAssets instanceof Map) {
-    return normalizeResolvedAssetSource(resolvedAssets.get(assetRef), assetRef);
+function readResolvedAssetByRef(resolvedAssets: unknown, assetRefRaw: unknown): ResolvedAccountAsset {
+  if (typeof assetRefRaw !== 'string') throw new Error('ck.account_asset_ref_invalid');
+  const entry = resolvedAssets instanceof Map
+    ? resolvedAssets.get(assetRefRaw)
+    : isRecord(resolvedAssets)
+      ? resolvedAssets[assetRefRaw]
+      : null;
+  if (!isRecord(entry) || entry.assetRef !== assetRefRaw || typeof entry.url !== 'string' || !entry.url) {
+    throw new Error('ck.account_asset_resolved_invalid');
   }
-  if (isRecord(resolvedAssets)) {
-    return normalizeResolvedAssetSource(resolvedAssets[assetRef], assetRef);
-  }
-  return null;
+  return entry as ResolvedAccountAsset;
 }
 
 function collectMaterializedFillAssetRefs(node: unknown, out: Set<string>): void {
   if (!isRecord(node)) return;
-  const type = typeof node.type === 'string' ? node.type.trim().toLowerCase() : '';
+  const type = typeof node.type === 'string' ? node.type : '';
 
-  if (type === 'image' && isRecord(node.image)) {
-    const assetRef = normalizeAccountAssetRef(node.image.assetRef);
-    if (assetRef) out.add(assetRef);
+  if (type === 'image') {
+    if (!isRecord(node.image)) throw new Error('ck.account_asset_ref_invalid');
+    if (typeof node.image.assetRef !== 'string') throw new Error('ck.account_asset_ref_invalid');
+    out.add(node.image.assetRef);
   }
 
-  if (type === 'video' && isRecord(node.video)) {
-    const assetRef = normalizeAccountAssetRef(node.video.assetRef);
-    const posterAssetRef = normalizeAccountAssetRef(node.video.posterAssetRef);
-    if (assetRef) out.add(assetRef);
-    if (posterAssetRef) out.add(posterAssetRef);
+  if (type === 'video') {
+    if (!isRecord(node.video)) throw new Error('ck.account_asset_ref_invalid');
+    if (typeof node.video.assetRef !== 'string') throw new Error('ck.account_asset_ref_invalid');
+    out.add(node.video.assetRef);
+    if (Object.prototype.hasOwnProperty.call(node.video, 'posterAssetRef')) {
+      if (typeof node.video.posterAssetRef !== 'string') throw new Error('ck.account_asset_ref_invalid');
+      out.add(node.video.posterAssetRef);
+    }
   }
 }
 
 function collectMaterializedLogoAssetRefs(node: unknown, out: Set<string>): void {
   if (!isRecord(node)) return;
   if (!Object.prototype.hasOwnProperty.call(node, 'logoFill')) return;
-  if (!isRecord(node.asset)) return;
-  const assetRef = normalizeAccountAssetRef(node.asset.assetRef);
-  if (assetRef) out.add(assetRef);
+  if (!isRecord(node.asset)) throw new Error('ck.account_asset_ref_invalid');
+  if (typeof node.asset.assetRef !== 'string') throw new Error('ck.account_asset_ref_invalid');
+  out.add(node.asset.assetRef);
 }
 
 export function collectConfigMediaAssetRefs(config: unknown): string[] {
@@ -451,27 +376,27 @@ export function collectConfigMediaAssetRefs(config: unknown): string[] {
 }
 
 function materializeImageFill(fill: JsonRecord, resolvedAssets: unknown): JsonRecord {
-  if (!isRecord(fill.image)) return fill;
+  if (!isRecord(fill.image)) throw new Error('ck.account_asset_ref_invalid');
   const nextImage = { ...fill.image };
   const resolvedByRef = readResolvedAssetByRef(resolvedAssets, nextImage.assetRef);
-  if (resolvedByRef?.url) nextImage.src = resolvedByRef.url;
+  nextImage.src = resolvedByRef.url;
   return { ...fill, image: nextImage };
 }
 
 function materializeVideoFill(fill: JsonRecord, resolvedAssets: unknown): JsonRecord {
-  if (!isRecord(fill.video)) return fill;
+  if (!isRecord(fill.video)) throw new Error('ck.account_asset_ref_invalid');
   const nextVideo = { ...fill.video };
   const resolvedByRef = readResolvedAssetByRef(resolvedAssets, nextVideo.assetRef);
-  const resolvedPosterByRef = readResolvedAssetByRef(resolvedAssets, nextVideo.posterAssetRef);
-  if (resolvedByRef?.url) nextVideo.src = resolvedByRef.url;
-  if (resolvedPosterByRef?.url) nextVideo.poster = resolvedPosterByRef.url;
+  nextVideo.src = resolvedByRef.url;
+  if (Object.prototype.hasOwnProperty.call(nextVideo, 'posterAssetRef')) {
+    nextVideo.poster = readResolvedAssetByRef(resolvedAssets, nextVideo.posterAssetRef).url;
+  }
   return { ...fill, video: nextVideo };
 }
 
 function materializeLogoAssetNode(node: JsonRecord, resolvedAssets: unknown): JsonRecord {
-  if (!isRecord(node.asset)) return node;
+  if (!isRecord(node.asset)) throw new Error('ck.account_asset_ref_invalid');
   const resolvedByRef = readResolvedAssetByRef(resolvedAssets, node.asset.assetRef);
-  if (!resolvedByRef?.url) return node;
   const safeUrl = String(resolvedByRef.url).replace(/"/g, '%22');
   return {
     ...node,
@@ -488,7 +413,7 @@ export function materializeConfigMedia(config: unknown, resolvedAssets: unknown)
       next[key] = visit(value);
     }
 
-    const type = typeof next.type === 'string' ? next.type.trim().toLowerCase() : '';
+    const type = typeof next.type === 'string' ? next.type : '';
     if (type === 'image') {
       return materializeImageFill(next, resolvedAssets);
     }

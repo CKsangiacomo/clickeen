@@ -1,5 +1,4 @@
 import { isCompactAccountPublicId, isCompactInstanceId, isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
-import { guessContentTypeFromExt } from '../asset-utils';
 import { readInstanceServeState } from '../domains/account-instances/serve-state';
 import { accountPagePublishFileKey, readAccountPageServeState } from '../domains/pages';
 import {
@@ -74,10 +73,11 @@ function responseForObject(
   obj: { body: ReadableStream | null; httpMetadata?: { contentType?: string | null } | null },
   headOnly: boolean,
 ): Response {
-  const ext = key.split('.').pop() || '';
+  const contentType = obj.httpMetadata?.contentType;
+  if (!contentType) return new Response('Invalid asset metadata', { status: 500 });
   const cacheControl = cacheControlForGeneratedFile(file);
   const headers = new Headers();
-  headers.set('content-type', obj.httpMetadata?.contentType || guessContentTypeFromExt(ext));
+  headers.set('content-type', contentType);
   headers.set('cache-control', cacheControl);
   headers.set('cdn-cache-control', cacheControl);
   headers.set('cloudflare-cdn-cache-control', cacheControl);

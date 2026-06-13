@@ -1,15 +1,9 @@
-import { normalizeAccountAssetRef } from '@clickeen/ck-contracts';
+import { parseAccountAssetKey } from '@clickeen/ck-contracts';
 import {
   classifyAccountAssetType,
   type AccountAssetType,
-  guessContentTypeFromExt,
 } from '../asset-utils';
 import type { Env } from '../types';
-
-function normalizeNonNegativeInt(value: number): number {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  return Math.max(0, Math.floor(value));
-}
 
 export type MemberRole = 'viewer' | 'editor' | 'admin' | 'owner';
 
@@ -30,13 +24,8 @@ export function roleRank(role: MemberRole): number {
 
 export type AccountAssetSource = 'bob.publish' | 'bob.export' | 'devstudio' | 'promotion' | 'api';
 
-export function normalizeAccountAssetSource(raw: string | null): AccountAssetSource | null {
-  const value = String(raw || '').trim();
-  if (!value) return 'api';
-  if (value === 'bob.publish' || value === 'bob.export' || value === 'devstudio' || value === 'promotion' || value === 'api') {
-    return value;
-  }
-  return null;
+export function isAccountAssetSource(raw: unknown): raw is AccountAssetSource {
+  return raw === 'bob.publish' || raw === 'bob.export' || raw === 'devstudio' || raw === 'promotion' || raw === 'api';
 }
 
 export type AccountAssetFile = {
@@ -54,32 +43,26 @@ export type AccountAssetFile = {
 };
 
 export function sumAccountAssetFileSizeBytes(files: AccountAssetFile[]): number {
-  return files.reduce((total, file) => total + normalizeNonNegativeInt(file.sizeBytes), 0);
+  return files.reduce((total, file) => total + file.sizeBytes, 0);
 }
 
-function filenameFromAssetRef(assetRef: string): string {
-  return assetRef.split('/').pop() || assetRef;
+function isStoredAssetMetadataString(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value.trim() === value;
 }
 
 function accountAssetKey(accountId: string, assetRef: string): string {
-  return `accounts/${accountId}/assets/${assetRef.replace(/^\/+/, '')}`;
+  return `accounts/${accountId}/assets/${assetRef}`;
 }
 
 function accountAssetPrefix(accountId: string): string {
   return `accounts/${accountId}/assets/`;
 }
 
-function assetRefFromKey(accountId: string, key: string): string | null {
-  const prefix = accountAssetPrefix(accountId);
-  return key.startsWith(prefix) ? key.slice(prefix.length) || null : null;
-}
-
 function listedAccountAssetRefFromKey(accountId: string, key: string): string | null {
-  const assetRef = assetRefFromKey(accountId, key);
-  const normalized = normalizeAccountAssetRef(assetRef);
-  if (!normalized || normalized !== assetRef) return null;
+  const parsed = parseAccountAssetKey(key);
+  if (!parsed || parsed.accountId !== accountId) return null;
 
-  const segments = normalized.split('/');
+  const segments = parsed.assetRef.split('/');
   const filename = segments[segments.length - 1]?.toLowerCase() || '';
 
   if (filename === 'manifest.json') return null;
@@ -89,47 +72,47 @@ function listedAccountAssetRefFromKey(accountId: string, key: string): string | 
   // account-owned files. Folder UX can evolve later as an explicit contract.
   if (segments.length !== 1) return null;
 
-  return normalized;
-}
-
-function normalizeCustomMetadata(value: unknown): Record<string, string> {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? Object.fromEntries(
-        Object.entries(value as Record<string, unknown>)
-          .filter(([, entry]) => typeof entry === 'string')
-          .map(([key, entry]) => [key, String(entry)]),
-      )
-    : {};
+  return parsed.assetRef;
 }
 
 function fileFromObject(args: {
   accountId: string;
   assetRef: string;
-  size?: number;
+  size: number;
   uploaded?: Date | string;
   httpMetadata?: { contentType?: string | null } | null;
   customMetadata?: Record<string, string> | null;
 }): AccountAssetFile {
-  const custom = normalizeCustomMetadata(args.customMetadata);
-  const normalizedFilename = custom.filename || filenameFromAssetRef(args.assetRef);
-  const contentType = args.httpMetadata?.contentType || guessContentTypeFromExt(normalizedFilename.split('.').pop() || '');
+  const custom = args.customMetadata ?? {};
+  const normalizedFilename = custom.filename;
+  const contentType = args.httpMetadata?.contentType;
+  const createdAt = custom.createdAt;
+  const source = custom.source;
+  const updatedAt = args.uploaded instanceof Date ? args.uploaded.toISOString() : args.uploaded;
+  const sizeBytes = args.size;
+  if (
+    !isStoredAssetMetadataString(normalizedFilename) ||
+    !isStoredAssetMetadataString(contentType) ||
+    !isStoredAssetMetadataString(createdAt) ||
+    !isAccountAssetSource(source) ||
+    !isStoredAssetMetadataString(updatedAt) ||
+    !Number.isInteger(sizeBytes) ||
+    sizeBytes < 0
+  ) {
+    throw new Error('tokyo.errors.assets.metadataInvalid');
+  }
   const assetType = classifyAccountAssetType(contentType, normalizedFilename.split('.').pop() || '');
-  const uploaded = args.uploaded instanceof Date
-    ? args.uploaded.toISOString()
-    : typeof args.uploaded === 'string' && args.uploaded
-      ? args.uploaded
-      : new Date().toISOString();
   return {
     accountId: args.accountId,
     assetRef: args.assetRef,
-    source: normalizeAccountAssetSource(custom.source ?? null) ?? 'api',
-    originalFilename: custom.originalFilename || normalizedFilename,
+    source,
+    originalFilename: normalizedFilename,
     normalizedFilename,
     contentType,
     assetType,
-    sizeBytes: normalizeNonNegativeInt(Number(args.size ?? custom.sizeBytes ?? 0)),
-    createdAt: custom.createdAt || uploaded,
-    updatedAt: uploaded,
+    sizeBytes,
+    createdAt,
+    updatedAt,
     key: accountAssetKey(args.accountId, args.assetRef),
   };
 }
@@ -167,9 +150,9 @@ export async function listAccountAssetFilesByAccount(
       include: ['httpMetadata', 'customMetadata'],
     } as R2ListOptions & { include: ('httpMetadata' | 'customMetadata')[] });
     for (const object of listed.objects) {
-      const key = typeof object.key === 'string' ? object.key.trim() : '';
+      const key = typeof object.key === 'string' ? object.key : '';
       const assetRef = key ? listedAccountAssetRefFromKey(accountId, key) : null;
-      if (!assetRef) continue;
+      if (!assetRef) throw new Error('tokyo.errors.assets.keyInvalid');
       files.push(fileFromObject({
         accountId,
         assetRef,

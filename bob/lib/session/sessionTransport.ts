@@ -244,11 +244,11 @@ export function useSessionTransport(args: {
           body,
         });
       },
-      uploadAsset: async (file: File, source = 'api') => {
+      uploadAsset: async (file: File, source: string) => {
         const headers = {
           accept: 'application/json',
-          'content-type': file.type || 'application/octet-stream',
-          'x-filename': file.name || 'upload.bin',
+          'content-type': file.type,
+          'x-filename': file.name,
           'x-source': source,
         };
         return dispatchHostedAssetCommand({

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { normalizeAccountAssetRecord } from '@clickeen/ck-contracts';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   accountAssetUploadOptionsResponse,
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
   });
   if (!gateway.ok) return gateway.response;
 
-  const filename = (request.headers.get('x-filename') || '').trim() || 'upload.bin';
+  const filename = request.headers.get('x-filename');
   const contentLengthHeader = request.headers.get('content-length');
   const contentLength = contentLengthHeader ? Number(contentLengthHeader) : null;
   if (contentLength !== null && Number.isFinite(contentLength) && contentLength <= 0) {
@@ -169,9 +168,11 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const contentType = (request.headers.get('content-type') || '').trim() || 'application/octet-stream';
-  headers.set('content-type', contentType);
-  headers.set('x-filename', filename);
+  const contentType = request.headers.get('content-type');
+  const source = request.headers.get('x-source');
+  if (contentType) headers.set('content-type', contentType);
+  if (filename) headers.set('x-filename', filename);
+  if (source) headers.set('x-source', source);
 
   try {
     const upstream = await fetchTokyoAssetControl({
@@ -184,7 +185,9 @@ export async function POST(request: NextRequest) {
     const text = await upstream.text().catch(() => '');
     const payload = parseJsonOrNull(text);
     const body = upstream.ok
-      ? normalizeAccountAssetRecord(payload)
+      ? payload && typeof payload === 'object'
+        ? payload
+        : null
       : payload && typeof payload === 'object'
         ? payload
         : {

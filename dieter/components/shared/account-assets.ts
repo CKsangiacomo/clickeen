@@ -5,7 +5,7 @@ export type { AccountAssetRecord, ResolvedAccountAsset } from '@clickeen/ck-cont
 export type AccountAssetsTransport = {
   listAssets: () => Promise<Response>;
   resolveAssets: (assetRefs: string[]) => Promise<Response>;
-  uploadAsset: (file: File, source?: string) => Promise<Response>;
+  uploadAsset: (file: File, source: string) => Promise<Response>;
 };
 
 const ACCOUNT_ASSET_UPSELL_REASONS = new Set([
@@ -17,9 +17,8 @@ export type AccountAssetsClient = {
   listAssets: () => Promise<AccountAssetRecord[]>;
   resolveAssets: (assetRefsRaw: string[]) => Promise<{
     assetsByRef: Map<string, ResolvedAccountAsset>;
-    missingAssetRefs: string[];
   }>;
-  uploadAsset: (file: File, source?: string) => Promise<AccountAssetRecord>;
+  uploadAsset: (file: File, source: string) => Promise<AccountAssetRecord>;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -27,6 +26,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isExactString(value: unknown): value is string { return typeof value === 'string' && value.length > 0 && value === value.trim(); }
+
+function hasOnlyKeys(value: Record<string, unknown>, keys: string[]): boolean { const actual = Object.keys(value); return actual.length === keys.length && keys.every((key) => actual.includes(key)); }
 
 function resolveApiErrorReason(payload: unknown, status: number, fallback: string): string {
   if (isRecord(payload) && isRecord(payload.error)) {
@@ -64,19 +65,20 @@ export function createAccountAssetsClient(transport: AccountAssetsTransport): Ac
 
     async resolveAssets(assetRefsRaw: string[]): Promise<{
       assetsByRef: Map<string, ResolvedAccountAsset>;
-      missingAssetRefs: string[];
     }> {
+      const requested = new Set(assetRefsRaw);
+      if (requested.size !== assetRefsRaw.length) throw new Error('coreui.errors.assets.payloadInvalid');
       const response = await transport.resolveAssets(assetRefsRaw);
       const payload = (await response.json().catch(() => null)) as any;
       if (!response.ok) {
         throw new Error(resolveApiErrorReason(payload, response.status, 'coreui.errors.db.readFailed'));
       }
 
-      if (!Array.isArray(payload?.assets) || !Array.isArray(payload?.missingAssetRefs) || (payload.assets as unknown[]).some((asset) => !isRecord(asset) || !isExactString(asset.assetRef) || !isExactString(asset.url)) || (payload.missingAssetRefs as unknown[]).some((entry) => !isExactString(entry))) throw new Error('coreui.errors.assets.payloadInvalid');
-      return { assetsByRef: new Map((payload.assets as ResolvedAccountAsset[]).map((asset) => [asset.assetRef, asset])), missingAssetRefs: payload.missingAssetRefs };
+      if (!isRecord(payload) || !hasOnlyKeys(payload, ['assets']) || !Array.isArray(payload.assets) || payload.assets.length !== assetRefsRaw.length || (payload.assets as unknown[]).some((asset) => !isRecord(asset) || !hasOnlyKeys(asset, ['assetRef', 'url']) || !isExactString(asset.assetRef) || !isExactString(asset.url) || !requested.delete(asset.assetRef))) throw new Error('coreui.errors.assets.payloadInvalid');
+      return { assetsByRef: new Map((payload.assets as ResolvedAccountAsset[]).map((asset) => [asset.assetRef, asset])) };
     },
 
-    async uploadAsset(file: File, source = 'api'): Promise<AccountAssetRecord> {
+    async uploadAsset(file: File, source: string): Promise<AccountAssetRecord> {
       if (!(file instanceof File) || file.size <= 0) {
         throw new Error('coreui.errors.payload.empty');
       }

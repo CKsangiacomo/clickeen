@@ -32,7 +32,7 @@ Use `media` for Clickeen-owned product files used by Prague, Roma, Bob, Dieter, 
 
 ## Authority
 
-Roma is the account asset library surface.
+Builder is the account asset management surface.
 
 Bob is an upload/use entry point while a user edits a widget.
 
@@ -40,7 +40,7 @@ Tokyo-worker stores and serves accepted account assets.
 
 There must be one account asset truth shared by Bob and Roma.
 
-If a user uploads an asset in Bob, Roma must show it in the account asset library. If a user replaces or deletes an asset in Roma, Bob must see the same account asset truth.
+If a user uploads an asset in Bob, Tokyo-worker stores the accepted account asset and Roma/Bob read that same account asset truth. There is no standalone Roma asset-library mutation workflow.
 
 ## Minimum Operations
 
@@ -49,11 +49,10 @@ PRD 100 requires these account asset library operations:
 - upload
 - list
 - resolve for authoring/build consumption
-- replace bytes in place while preserving the account asset reference
-- delete
+- delete by exact account asset reference through the route/API boundary
 - reuse from Bob controls
 
-Folder organization, bulk library management, and richer file-management UX can evolve later without changing the asset authority.
+Folder organization, bulk library management, replace-in-place, and richer file-management UX can evolve later only as explicit product contracts.
 
 The active PRD 100 implementation stores accepted uploads as direct files under the account asset folder:
 
@@ -69,7 +68,7 @@ Validation happens before a file becomes an account asset.
 
 Minimum validation:
 
-- normalize unsafe names into product-safe names
+- reject unsafe names
 - reject path traversal and absolute paths
 - reject control characters and invalid folder/file names
 - enforce allowed file extensions and MIME/type checks

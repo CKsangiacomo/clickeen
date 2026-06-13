@@ -7,7 +7,6 @@ type ResolveSingleAccountAssetArgs = {
   beginRequest: () => number;
   isCurrent: (requestId: number, assetRef: string) => boolean;
   onStart?: () => void;
-  onMissing: () => void;
   onResolved: (asset: ResolvedAccountAsset) => void;
   onError: (message: string) => void;
 };
@@ -21,15 +20,8 @@ export async function resolveSingleAccountAsset(args: ResolveSingleAccountAssetA
   try {
     const resolved = await args.accountAssets.resolveAssets([assetRef]);
     if (!args.isCurrent(requestId, assetRef)) return;
-    if (resolved.missingAssetRefs.includes(assetRef)) {
-      args.onMissing();
-      return;
-    }
     const asset = resolved.assetsByRef.get(assetRef);
-    if (!asset) {
-      args.onMissing();
-      return;
-    }
+    if (!asset) throw new Error('coreui.errors.assets.payloadInvalid');
     args.onResolved(asset);
   } catch (error) {
     if (!args.isCurrent(requestId, assetRef)) return;

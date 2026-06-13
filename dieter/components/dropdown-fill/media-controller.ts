@@ -376,10 +376,6 @@ export async function resolveImageAsset(state: DropdownFillState, deps: MediaCon
     isCurrent: (requestId, assetRef) =>
       state.imageResolveRequestId === requestId && state.imageAssetRef === assetRef,
     onStart: () => setAssetPanelMessage(state.imageMessage, ''),
-    onMissing: () => {
-      setAssetPanelMessage(state.imageMessage, 'Asset unavailable.');
-      setImageSrc(state, null, { commit: false }, deps);
-    },
     onResolved: (asset) => {
       setImageSrc(state, asset.url, { commit: false }, deps);
     },
@@ -400,10 +396,6 @@ export async function resolveVideoAsset(state: DropdownFillState, deps: MediaCon
     isCurrent: (requestId, assetRef) =>
       state.videoResolveRequestId === requestId && state.videoAssetRef === assetRef,
     onStart: () => setAssetPanelMessage(state.videoMessage, ''),
-    onMissing: () => {
-      setAssetPanelMessage(state.videoMessage, 'Asset unavailable.');
-      setVideoSrc(state, null, { commit: false }, deps);
-    },
     onResolved: (asset) => {
       setVideoSrc(state, asset.url, { commit: false }, deps);
     },

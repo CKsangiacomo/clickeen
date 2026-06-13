@@ -1,4 +1,3 @@
-import { normalizeAccountAssetRecord } from '@clickeen/ck-contracts';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   finalizeAccountAssetResponse,
@@ -57,18 +56,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const accountId = typeof payload?.accountId === 'string' ? payload.accountId.trim() : '';
-    const storageBytesUsed = Number(payload?.storageBytesUsed);
-    const assets = Array.isArray(payload?.assets)
-      ? payload.assets.map(normalizeAccountAssetRecord)
-      : null;
-    if (
-      accountId !== gateway.value.accountId ||
-      !Number.isFinite(storageBytesUsed) ||
-      storageBytesUsed < 0 ||
-      !assets ||
-      assets.some((asset) => !asset)
-    ) {
+    if (!payload || typeof payload !== 'object') {
       return finalizeAccountAssetResponse({
         request,
         response: NextResponse.json(
@@ -83,14 +71,9 @@ export async function GET(request: NextRequest) {
         setCookies: gateway.value.sessionSetCookies,
       });
     }
-    const body = {
-      accountId,
-      storageBytesUsed: Math.trunc(storageBytesUsed),
-      assets: assets as NonNullable<ReturnType<typeof normalizeAccountAssetRecord>>[],
-    };
     return finalizeAccountAssetResponse({
       request,
-      response: NextResponse.json(body, { status: 200 }),
+      response: NextResponse.json(payload, { status: 200 }),
       setCookies: gateway.value.sessionSetCookies,
     });
   } catch (error) {

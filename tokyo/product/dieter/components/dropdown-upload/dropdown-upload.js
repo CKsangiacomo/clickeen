@@ -122,15 +122,8 @@ var Dieter = (() => {
     try {
       const resolved = await args.accountAssets.resolveAssets([assetRef]);
       if (!args.isCurrent(requestId, assetRef)) return;
-      if (resolved.missingAssetRefs.includes(assetRef)) {
-        args.onMissing();
-        return;
-      }
       const asset = resolved.assetsByRef.get(assetRef);
-      if (!asset) {
-        args.onMissing();
-        return;
-      }
+      if (!asset) throw new Error("coreui.errors.assets.payloadInvalid");
       args.onResolved(asset);
     } catch (error) {
       if (!args.isCurrent(requestId, assetRef)) return;
@@ -140,7 +133,6 @@ var Dieter = (() => {
 
   // components/dropdown-upload/dropdown-upload.ts
   var states = /* @__PURE__ */ new Map();
-  var MISSING_ASSET_MESSAGE = "Asset unavailable. Upload a new file to restore it.";
   var PREVIEW_FAILED_MESSAGE = "Preview failed to load.";
   var META_PATH_REQUIRED_MESSAGE = "Asset-backed dropdown-upload requires meta-path.";
   var hydrateHost = createDropdownHydrator({
@@ -470,10 +462,6 @@ var Dieter = (() => {
       isCurrent: (requestId, currentAssetRef) => {
         if (state.resolveRequestId !== requestId) return false;
         return readMetaAssetRef(readMeta(state)) === currentAssetRef;
-      },
-      onMissing: () => {
-        setError(state, MISSING_ASSET_MESSAGE);
-        setHeaderWithFile(state, displayName || "Asset unavailable", true);
       },
       onResolved: (resolved) => {
         clearError(state);

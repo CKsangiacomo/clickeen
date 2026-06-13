@@ -1,9 +1,9 @@
 import type { RomaAccountAuthzCapsulePayload } from '@clickeen/ck-policy';
+import { parseAccountAssetKey } from '@clickeen/ck-contracts';
 import {
   buildAccountAssetKey,
   buildAccountAssetPublicPath,
   classifyAccountAssetType,
-  guessContentTypeFromExt,
   pickExtension,
   validateUploadFilename,
 } from '../asset-utils';
@@ -18,10 +18,10 @@ import {
   type AccountAssetFile,
   type MemberRole,
   deleteAccountAssetByRef,
+  isAccountAssetSource,
   listAccountAssetFilesByAccount,
   loadAccountAssetByRef,
   loadAccountStoredBytesUsage,
-  normalizeAccountAssetSource,
   roleRank,
   sumAccountAssetFileSizeBytes,
 } from './assets';
@@ -89,14 +89,12 @@ function resolveTokyoAssetPublicBaseUrl(env: Env, req: Request): string {
   return new URL(req.url).origin.replace(/\/+$/, '');
 }
 
-function normalizeAssetRef(raw: unknown): string | null {
-  const value = String(raw || '').trim().replace(/^\/+/, '');
-  if (!value || value.length > 240) return null;
-  if (value.includes('\\') || /[\u0000-\u001f\u007f]/.test(value)) return null;
-  const segments = value.split('/');
-  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return null;
-  if (segments.some((segment) => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(segment))) return null;
-  return segments.join('/');
+function isAssetRef(raw: unknown): raw is string {
+  if (typeof raw !== 'string' || !raw || raw.length > 240) return false;
+  if (raw.includes('\\') || /[\u0000-\u001f\u007f]/.test(raw)) return false;
+  const segments = raw.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) return false;
+  return !segments.some((segment) => !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(segment));
 }
 
 function assertAcceptedUpload(args: {
@@ -111,7 +109,14 @@ function assertAcceptedUpload(args: {
       detail: 'scriptable_or_executable_upload_rejected',
     };
   }
-  const mime = args.contentType.split(';')[0]?.trim().toLowerCase() || 'application/octet-stream';
+  const mime = args.contentType.split(';')[0]?.trim().toLowerCase();
+  if (!mime) {
+    return {
+      ok: false,
+      reasonKey: 'coreui.errors.assets.typeRejected',
+      detail: 'mime_missing',
+    };
+  }
   const allowedMime = ALLOWED_EXACT_MIME_TYPES.has(mime) || ALLOWED_MIME_PREFIXES.some((prefix) => mime.startsWith(prefix));
   if (!allowedMime) {
     return {
@@ -139,7 +144,7 @@ function serializeResolvedAccountAsset(
   origin: string,
 ): Record<string, unknown> {
   return {
-    ...serializeAccountAssetRecord(file),
+    assetRef: file.assetRef,
     url: `${origin}${buildAccountAssetPublicPath(file.key)}`,
   };
 }
@@ -149,8 +154,9 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
   if (!accountId || !isCompactAccountPublicId(accountId)) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.accountId.invalid' } }, { status: 422 });
   }
-  const source = normalizeAccountAssetSource(req.headers.get('x-source'));
+  const source = req.headers.get('x-source');
   if (!source) return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.source.invalid' } }, { status: 422 });
+  if (!isAccountAssetSource(source)) return json({ error: { kind: 'VALIDATION', reasonKey: 'tokyo.errors.source.invalid' } }, { status: 422 });
 
   const authorized = await resolveAccountAssetAuthorization({ req, env, accountId, minRole: 'editor' });
   if (!authorized.ok) return authorized.response;
@@ -158,13 +164,15 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
     return json({ error: { kind: 'DENY', reasonKey: 'coreui.errors.account.disabled' } }, { status: 403 });
   }
 
-  const filenameRaw = (req.headers.get('x-filename') || '').trim() || 'upload.bin';
-  const filenameValidation = validateUploadFilename(filenameRaw);
+  const filenameValidation = validateUploadFilename(req.headers.get('x-filename'));
   if (!filenameValidation.ok) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.filename.invalid', detail: filenameValidation.detail } }, { status: 422 });
   }
   const filename = filenameValidation.filename;
-  const contentType = (req.headers.get('content-type') || '').trim() || 'application/octet-stream';
+  const contentType = req.headers.get('content-type');
+  if (!contentType || contentType.trim() !== contentType) {
+    return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.invalid' } }, { status: 422 });
+  }
   const accepted = assertAcceptedUpload({ filename, contentType });
   if (!accepted.ok) {
     return json({ error: { kind: 'VALIDATION', reasonKey: accepted.reasonKey, detail: accepted.detail } }, { status: 422 });
@@ -178,13 +186,14 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
   const assetRef = filename;
   const key = buildAccountAssetKey(accountId, assetRef);
   const existing = await loadAccountAssetByRef(env, accountId, assetRef);
+  const createdAt = existing?.createdAt ?? new Date().toISOString();
   await env.TOKYO_R2.put(key, body, {
     httpMetadata: { contentType },
     customMetadata: {
       filename,
-      originalFilename: filenameRaw,
+      originalFilename: filename,
       source,
-      createdAt: existing?.createdAt ?? new Date().toISOString(),
+      createdAt,
       sizeBytes: String(body.byteLength),
     },
   });
@@ -196,20 +205,19 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
       assetType: classifyAccountAssetType(contentType, pickExtension(filename, contentType)),
       contentType,
       sizeBytes: body.byteLength,
-      createdAt: existing?.createdAt ?? new Date().toISOString(),
+      createdAt,
     },
     { status: 200 },
   );
 }
 
-function respondAccountAsset(
-  key: string,
-  obj: { body: ReadableStream | null; httpMetadata?: { contentType?: string | null } | null },
-): Response {
-  const ext = key.split('.').pop() || '';
-  const contentType = obj.httpMetadata?.contentType || guessContentTypeFromExt(ext);
+async function respondAccountAsset(env: Env, key: string, obj: { body: ReadableStream | null; httpMetadata?: { contentType?: string | null } | null }): Promise<Response> {
+  const parsed = parseAccountAssetKey(key);
+  if (!parsed) return new Response('Not found', { status: 404 });
+  const file = await loadAccountAssetByRef(env, parsed.accountId, parsed.assetRef);
+  if (!file) return new Response('Not found', { status: 404 });
   const headers = new Headers();
-  headers.set('content-type', contentType);
+  headers.set('content-type', file.contentType);
   headers.set('cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
   headers.set('cdn-cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
   headers.set('cloudflare-cdn-cache-control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
@@ -224,7 +232,7 @@ export async function handleGetAccountAsset(env: Env, key: string): Promise<Resp
   const directKey = parsed?.key ?? null;
   if (!directKey) return new Response('Not found', { status: 404 });
   const obj = await env.TOKYO_R2.get(directKey);
-  return obj ? respondAccountAsset(directKey, obj) : new Response('Not found', { status: 404 });
+  return obj ? respondAccountAsset(env, directKey, obj) : new Response('Not found', { status: 404 });
 }
 
 export async function handleListAccountAssetMetadata(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
@@ -265,26 +273,20 @@ export async function handleResolveAccountAssetMetadata(req: Request, env: Env, 
   if (!rawAssetRefs) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidPayload' } }, { status: 422 });
   }
-  const seen = new Set<string>();
-  const assetRefs = rawAssetRefs
-    .map((entry) => normalizeAssetRef(entry))
-    .filter((assetRef): assetRef is string => {
-      if (!assetRef || seen.has(assetRef)) return false;
-      seen.add(assetRef);
-      return true;
-    });
-  if (assetRefs.length !== rawAssetRefs.length) {
+  if (rawAssetRefs.some((assetRef) => !isAssetRef(assetRef))) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidAssetRefs' } }, { status: 422 });
   }
+  if (new Set(rawAssetRefs).size !== rawAssetRefs.length) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.invalidAssetRefs' } }, { status: 422 });
+  const assetRefs = rawAssetRefs as string[];
 
   const publicBaseUrl = resolveTokyoAssetPublicBaseUrl(env, req);
   const resolved = await Promise.all(
     assetRefs.map(async (assetRef) => ({ assetRef, file: await loadAccountAssetByRef(env, accountId, assetRef) })),
   );
+  const missing = resolved.filter((entry) => !entry.file).map((entry) => entry.assetRef);
+  if (missing.length) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.missing', detail: missing.join(', ') } }, { status: 422 });
   return json({
-    accountId,
-    assets: resolved.filter((entry) => entry.file).map((entry) => serializeResolvedAccountAsset(entry.file!, publicBaseUrl)),
-    missingAssetRefs: resolved.filter((entry) => !entry.file).map((entry) => entry.assetRef),
+    assets: resolved.map((entry) => serializeResolvedAccountAsset(entry.file!, publicBaseUrl)),
   });
 }
 
@@ -295,8 +297,8 @@ export async function handleDeleteAccountAsset(req: Request, env: Env, accountId
   }
   const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'editor' });
   if (authErr) return authErr;
-  const assetRef = normalizeAssetRef(assetRefRaw);
-  if (!assetRef) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetRef.invalid' } }, { status: 422 });
+  if (!isAssetRef(assetRefRaw)) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetRef.invalid' } }, { status: 422 });
+  const assetRef = assetRefRaw;
   const existing = await loadAccountAssetByRef(env, accountId, assetRef);
   if (!existing) return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
   await deleteAccountAssetByRef(env, accountId, assetRef);

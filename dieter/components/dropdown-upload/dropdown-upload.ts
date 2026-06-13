@@ -41,7 +41,6 @@ type DropdownUploadState = {
 };
 
 const states = new Map<HTMLElement, DropdownUploadState>();
-const MISSING_ASSET_MESSAGE = 'Asset unavailable. Upload a new file to restore it.';
 const PREVIEW_FAILED_MESSAGE = 'Preview failed to load.';
 const META_PATH_REQUIRED_MESSAGE = 'Asset-backed dropdown-upload requires meta-path.';
 // IMPORTANT: keep this at module scope.
@@ -435,10 +434,6 @@ async function resolveStoredAssetPreview(state: DropdownUploadState, assetRef: s
     isCurrent: (requestId, currentAssetRef) => {
       if (state.resolveRequestId !== requestId) return false;
       return readMetaAssetRef(readMeta(state)) === currentAssetRef;
-    },
-    onMissing: () => {
-      setError(state, MISSING_ASSET_MESSAGE);
-      setHeaderWithFile(state, displayName || 'Asset unavailable', true);
     },
     onResolved: (resolved) => {
       clearError(state);

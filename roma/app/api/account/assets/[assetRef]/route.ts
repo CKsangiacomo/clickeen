@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { normalizeAccountAssetRef } from '@clickeen/ck-contracts';
 import {
   finalizeAccountAssetResponse,
   proxyAccountAssetJson,
@@ -12,8 +11,15 @@ type RouteContext = { params: Promise<{ assetRef: string }> };
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
   const { assetRef: rawAssetRef } = await context.params;
-  const assetRef = normalizeAccountAssetRef(rawAssetRef);
-  if (!assetRef || assetRef.includes('/')) {
+  if (
+    typeof rawAssetRef !== 'string' ||
+    !rawAssetRef ||
+    rawAssetRef.trim() !== rawAssetRef ||
+    rawAssetRef.includes('/') ||
+    rawAssetRef.includes('\\') ||
+    rawAssetRef.includes('..') ||
+    !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$/.test(rawAssetRef)
+  ) {
     return finalizeAccountAssetResponse({
       request,
       response: NextResponse.json(
@@ -22,6 +28,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       ),
     });
   }
+  const assetRef = rawAssetRef;
 
   const gateway = await resolveCurrentAccountAssetGatewayContext({
     request,

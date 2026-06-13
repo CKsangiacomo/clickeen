@@ -999,15 +999,8 @@ var Dieter = (() => {
     try {
       const resolved = await args.accountAssets.resolveAssets([assetRef]);
       if (!args.isCurrent(requestId, assetRef)) return;
-      if (resolved.missingAssetRefs.includes(assetRef)) {
-        args.onMissing();
-        return;
-      }
       const asset = resolved.assetsByRef.get(assetRef);
-      if (!asset) {
-        args.onMissing();
-        return;
-      }
+      if (!asset) throw new Error("coreui.errors.assets.payloadInvalid");
       args.onResolved(asset);
     } catch (error) {
       if (!args.isCurrent(requestId, assetRef)) return;
@@ -1292,10 +1285,6 @@ var Dieter = (() => {
       },
       isCurrent: (requestId, assetRef) => state.imageResolveRequestId === requestId && state.imageAssetRef === assetRef,
       onStart: () => setAssetPanelMessage(state.imageMessage, ""),
-      onMissing: () => {
-        setAssetPanelMessage(state.imageMessage, "Asset unavailable.");
-        setImageSrc(state, null, { commit: false }, deps);
-      },
       onResolved: (asset) => {
         setImageSrc(state, asset.url, { commit: false }, deps);
       },
@@ -1314,10 +1303,6 @@ var Dieter = (() => {
       },
       isCurrent: (requestId, assetRef) => state.videoResolveRequestId === requestId && state.videoAssetRef === assetRef,
       onStart: () => setAssetPanelMessage(state.videoMessage, ""),
-      onMissing: () => {
-        setAssetPanelMessage(state.videoMessage, "Asset unavailable.");
-        setVideoSrc(state, null, { commit: false }, deps);
-      },
       onResolved: (asset) => {
         setVideoSrc(state, asset.url, { commit: false }, deps);
       },

@@ -45,10 +45,14 @@ export function Workspace({
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const [switcherNotice, setSwitcherNotice] = useState<string | null>(null);
   const [resolvedAssets, setResolvedAssets] = useState<Map<string, ResolvedAccountAsset>>(() => new Map());
-  const mediaAssetRefs = useMemo(
-    () => collectConfigMediaAssetRefs(instanceData),
-    [instanceData],
-  );
+  const mediaAssets = useMemo(() => {
+    try {
+      return { ok: true as const, refs: collectConfigMediaAssetRefs(instanceData) };
+    } catch (error) {
+      return { ok: false as const, error: error instanceof Error ? error.message : String(error) };
+    }
+  }, [instanceData]);
+  const mediaAssetRefs = useMemo(() => mediaAssets.ok ? mediaAssets.refs : [], [mediaAssets]);
   const unresolvedMediaAssetRefs = useMemo(
     () => mediaAssetRefs.filter((assetRef) => !resolvedAssets.has(assetRef)),
     [mediaAssetRefs, resolvedAssets],
@@ -61,7 +65,7 @@ export function Workspace({
       ? (materialized as Record<string, unknown>)
       : instanceData;
   }, [instanceData, mediaAssetRefs, resolvedAssets, unresolvedMediaAssetRefs]);
-  const previewStateReady = !unresolvedMediaAssetRefs.length;
+  const previewStateReady = mediaAssets.ok && !unresolvedMediaAssetRefs.length;
   const effectivePreviewableLocales = useMemo(() => {
     const previewableLocales = Array.from(
       new Set(
@@ -128,6 +132,10 @@ export function Workspace({
   ]);
 
   useEffect(() => {
+    if (!mediaAssets.ok) {
+      setIframeLoadError('Failed to resolve preview media assets');
+      return;
+    }
     let cancelled = false;
     if (!mediaAssetRefs.length) {
       return () => {
@@ -163,7 +171,7 @@ export function Workspace({
     return () => {
       cancelled = true;
     };
-  }, [accountAssets, mediaAssetRefs, resolvedAssets, unresolvedMediaAssetRefs]);
+  }, [accountAssets, mediaAssets, mediaAssetRefs, resolvedAssets, unresolvedMediaAssetRefs]);
 
   useEffect(() => {
     if (previewStateReady) return;

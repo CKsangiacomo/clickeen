@@ -54,6 +54,7 @@ type BobAccountCommandMessage = {
   requestId?: string | null;
   command?: BobAccountCommand | null;
   instanceId?: string | null;
+  headers?: Record<string, string>;
   body?: unknown;
 };
 
@@ -320,7 +321,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
   }, [activeInstanceId, initialInstanceId, pathInstanceId]);
 
   const runBobAccountCommand = useCallback(
-    async (args: { source: Window; requestId: string; command: BobAccountCommand; instanceId?: string; body?: unknown }) => {
+    async (args: { source: Window; requestId: string; command: BobAccountCommand; instanceId?: string; headers?: Record<string, string>; body?: unknown }) => {
       const reply = (payload: Omit<HostAccountCommandResultMessage, 'type'>) => {
         const message: HostAccountCommandResultMessage = {
           type: 'host:account-command-result',
@@ -368,6 +369,9 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           method: route.method,
         };
         const headers = new Headers(accountApi.buildHeaders());
+        for (const [key, value] of Object.entries(args.headers ?? {})) {
+          headers.set(key, value);
+        }
         if (typeof args.body !== 'undefined' && route.method !== 'GET') {
           if (!headers.has('content-type')) {
             headers.set('content-type', 'application/json');
@@ -600,6 +604,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
           requestId,
           command,
           ...(instanceId ? { instanceId } : {}),
+          ...(message.headers ? { headers: message.headers } : {}),
           ...(typeof message.body === 'undefined' ? {} : { body: message.body }),
         });
         return;

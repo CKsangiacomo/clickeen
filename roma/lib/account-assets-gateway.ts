@@ -93,6 +93,7 @@ export async function proxyAccountAssetJson(args: {
   body?: BodyInit;
   contentType?: string;
   passthroughSearchParams?: URLSearchParams;
+  validateSuccessPayload?: (payload: unknown) => boolean;
 }): Promise<NextResponse> {
   let headers: Headers;
   try {
@@ -126,6 +127,7 @@ export async function proxyAccountAssetJson(args: {
     });
     const text = await upstream.text().catch(() => '');
     const payload = parseJsonOrNull(text);
+    if (upstream.ok && args.validateSuccessPayload && !args.validateSuccessPayload(payload)) return buildErrorResponse(args.request, args.context.sessionSetCookies, 502, { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.assets.payloadInvalid' });
     const body =
       payload && typeof payload === 'object'
         ? payload
