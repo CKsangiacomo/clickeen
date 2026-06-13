@@ -579,7 +579,7 @@ Evidence:
 
 ### PF-107-7 - Package Readiness Metadata Mismatch
 
-Status: OPEN
+Status: COMPLETE
 Original row family: AB-17/18 and page publish/package readiness follow-up
 Likely files:
 
@@ -616,6 +616,37 @@ Done when:
 - Valid package files with required metadata publish and serve.
 - Missing/malformed required serve metadata fails before publish success.
 - No duplicate package-truth reconciliation path is added.
+
+Evidence:
+
+- Implementation commit:
+  `529d3c29a40c694c008c973efa796082a59348a7`.
+- Product truth: Tokyo public package files and their R2
+  `httpMetadata.contentType` own public package truth. Publish readiness and
+  `clk-live` serve now use `publicPackageContentType` as one content-type
+  metadata authority.
+- Source/runtime LOC: `25 insertions(+), 2 deletions(-)` across PF-107-7
+  product files. This uses the post-fix LOC exception because the false-done
+  defect was a small missing metadata boundary and the fix is minimal contract
+  collapse, not preservation code.
+- Local gates: `git diff --check`; `pnpm --filter @clickeen/tokyo-worker
+  typecheck`.
+- Focused stale-symbol scan: no content-type fallback, guessing,
+  reconstruction, warning-only continuation, runtime probe, preflight, validate,
+  or self-test ceremony was introduced.
+- External proof: temporary outside-runtime TS harness showed valid instance
+  and page package metadata makes readiness succeed and `clk-live` serve return
+  `200` with the same content type; missing or whitespace
+  `httpMetadata.contentType` makes instance/page readiness fail and live serve
+  return `500`; instance publish with missing metadata fails at
+  `artifact.package.metadata_invalid` before Supabase reads, Supabase PATCHes,
+  or cache purge calls.
+- Validator 1: GREEN. No skipped blast radius remains; instance readiness,
+  page readiness, and `clk-live` serve all use the shared metadata contract, and
+  no probe/preflight/self-test ceremony was added.
+- Validator 2: GREEN. No V1-V8 remains or was introduced; existence/text-only
+  readiness success is gone, and no fallback, guessing, sanitization, metadata
+  reconstruction, partial-success path, or runtime ceremony was added.
 
 ### PF-107-8 - Tokyo Page Create Partial Mutation Plane
 
