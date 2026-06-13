@@ -292,9 +292,9 @@ function composeTranslatedValues(args: {
   return values;
 }
 
-function normalizeFailureText(value: unknown, fallback: string): string {
+function normalizeFailureText(value: unknown): string {
   const normalized = typeof value === 'string' ? value.trim() : '';
-  return normalized || fallback;
+  return normalized;
 }
 
 function registryStatusForGenerationStatus(
@@ -1200,9 +1200,25 @@ export async function failLocaleTranslation(args: {
 }): Promise<LocaleTranslationFailureResult> {
   const locale = normalizeLocale(args.locale) ?? '';
   const job = normalizeInstanceTranslationJob(args.job);
-  const reasonKey = normalizeFailureText(args.reasonKey, 'instance.translation.failed');
-  const detail = normalizeFailureText(args.detail, reasonKey);
-  if (!locale || !job || job.accountPublicId !== args.accountId || job.instanceId !== args.instanceId || job.targetLocale !== locale) {
+  const rawJob =
+    !job && args.job && typeof args.job === 'object' && !Array.isArray(args.job)
+      ? (args.job as Record<string, unknown>)
+      : null;
+  const jobId = job?.jobId ?? normalizeFailureText(rawJob?.jobId);
+  const accountPublicId = job?.accountPublicId ?? normalizeFailureText(rawJob?.accountPublicId);
+  const instanceId = job?.instanceId ?? normalizeFailureText(rawJob?.instanceId);
+  const targetLocale = job?.targetLocale ?? (normalizeLocale(rawJob?.targetLocale) ?? '');
+  const reasonKey = normalizeFailureText(args.reasonKey);
+  const detail = normalizeFailureText(args.detail);
+  if (
+    !locale ||
+    !reasonKey ||
+    !detail ||
+    (!job && (!rawJob || rawJob.kind !== INSTANCE_TRANSLATION_JOB_KIND)) ||
+    accountPublicId !== args.accountId ||
+    instanceId !== args.instanceId ||
+    targetLocale !== locale
+  ) {
     return {
       ok: false,
       locale,
@@ -1224,7 +1240,7 @@ export async function failLocaleTranslation(args: {
       detail: instance.reasonKey,
     };
   }
-  const jobBaseContentMarker = await baseContentMarkerForJob(job);
+  const jobBaseContentMarker = job ? await baseContentMarkerForJob(job) : null;
 
   const currentJob = await readLatestTranslationGenerationOperation({
     env: args.env,
@@ -1233,7 +1249,12 @@ export async function failLocaleTranslation(args: {
     widgetType: instance.value.widgetType,
   });
 
-  if (!currentJob || !currentOperationMatchesCompletionJob(currentJob, job, jobBaseContentMarker) || !currentJob.locales[locale]) {
+  if (
+    !currentJob ||
+    (jobId && currentJob.jobId !== jobId) ||
+    (job ? jobBaseContentMarker == null || !currentOperationMatchesCompletionJob(currentJob, job, jobBaseContentMarker) : false) ||
+    !currentJob.locales[locale]
+  ) {
     return {
       ok: true,
       recorded: false,

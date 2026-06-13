@@ -30,9 +30,7 @@ import {
 } from './telemetry';
 import {
   handleInstanceTranslationQueueBatch,
-  isInstanceTranslationQueueMessage,
-  isInstanceTranslationShapedQueueMessage,
-  summarizeInstanceTranslationQueuePayload,
+  isInstanceTranslationQueuePayload,
 } from './instance-translation-queue';
 import type {
   AIGrant,
@@ -283,11 +281,9 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
   async queue(batch: MessageBatch<unknown>): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
     const nonTranslationMessages: Message<unknown>[] = [];
-    const invalidTranslationMessages: Message<unknown>[] = [];
     const translationMessages: Message<unknown>[] = [];
     for (const msg of batch.messages) {
-      if (isInstanceTranslationQueueMessage(msg.body)) translationMessages.push(msg);
-      else if (isInstanceTranslationShapedQueueMessage(msg.body)) invalidTranslationMessages.push(msg);
+      if (isInstanceTranslationQueuePayload(msg.body)) translationMessages.push(msg);
       else nonTranslationMessages.push(msg);
     }
 
@@ -297,22 +293,10 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
       stage: this.env.ENVIRONMENT ?? 'unknown',
       totalMessages: batch.messages.length,
       translationMessages: translationMessages.length,
-      invalidTranslationMessages: invalidTranslationMessages.length,
       nonTranslationMessages: nonTranslationMessages.length,
     }));
 
     await handleInstanceTranslationQueueBatch(this.env, translationMessages);
-
-    for (const msg of invalidTranslationMessages) {
-      console.error(JSON.stringify({
-        event: 'instance_translation.queue.invalid_message',
-        service: 'sanfrancisco',
-        stage: this.env.ENVIRONMENT ?? 'unknown',
-        attempts: typeof msg.attempts === 'number' ? msg.attempts : null,
-        payload: summarizeInstanceTranslationQueuePayload(msg.body),
-      }));
-      msg.retry({ delaySeconds: 60 });
-    }
 
     for (const msg of nonTranslationMessages) {
       const e = msg.body;

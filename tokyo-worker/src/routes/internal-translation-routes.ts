@@ -25,7 +25,6 @@ import {
   authorizeTranslatedLocaleWriteTransition,
   authorizeTranslationCompletionTransition,
   normalizeAccountPublicId,
-  normalizeReasonText,
   normalizeTranslatedValues,
   readInternalProductJsonBody,
 } from './internal-product-route-utils';
@@ -225,8 +224,8 @@ export async function tryHandleInternalTranslationRoutes(
       instanceId,
       locale,
       job: body?.job,
-      reasonKey: normalizeReasonText(body?.reasonKey, 'instance.translation.failed'),
-      detail: normalizeReasonText(body?.detail, 'Translation generation failed.'),
+      reasonKey: body?.reasonKey,
+      detail: body?.detail,
     });
     if (!failure.ok) {
       return respond(

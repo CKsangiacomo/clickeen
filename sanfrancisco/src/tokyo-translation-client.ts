@@ -19,17 +19,6 @@ function resolveTokyoProductControlBinding(env: Env): TokyoProductControlBinding
   });
 }
 
-function resolveTokyoErrorDetail(payload: unknown, fallback: string): string {
-  if (isRecord(payload) && isRecord(payload.error)) {
-    return (
-      asTrimmedString(payload.error.detail) ??
-      asTrimmedString(payload.error.reasonKey) ??
-      fallback
-    );
-  }
-  return fallback;
-}
-
 async function sendTokyoJson(args: {
   env: Env;
   accountPublicId: string;
@@ -57,7 +46,7 @@ async function sendTokyoJson(args: {
     throw new HttpError(response.status >= 500 ? 502 : response.status, {
       code: 'PROVIDER_ERROR',
       provider: 'tokyo',
-      message: resolveTokyoErrorDetail(payload, `tokyo_http_${response.status}`),
+      message: `tokyo_http_${response.status}`,
     });
   }
   return payload;
