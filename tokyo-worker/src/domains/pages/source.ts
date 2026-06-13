@@ -224,9 +224,14 @@ export async function saveAccountPageSource(args: {
     });
   }
   assertPageSourceContract({ source: args.source, accountId, pageId });
-  const summary = pageSummaryFromSource(args.source, pageId);
-  await putJson(args.env, accountPageSourceKey(accountId, pageId), args.source);
-  return { source: args.source, summary };
+  const nextSource = {
+    ...(args.source as Record<string, unknown>),
+    version: (previous as { version: number }).version + 1,
+    updatedAt: new Date().toISOString(),
+  };
+  const summary = pageSummaryFromSource(nextSource, pageId);
+  await putJson(args.env, accountPageSourceKey(accountId, pageId), nextSource);
+  return { source: nextSource, summary };
 }
 
 export async function createAccountPageSource(args: {

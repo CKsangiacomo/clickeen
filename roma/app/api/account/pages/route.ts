@@ -21,23 +21,39 @@ function exactString(value: unknown): string | null {
   return typeof value === 'string' && value === value.trim() ? value : null;
 }
 
-function pageMetadataFromCreatePayload(raw: unknown): AccountPageMetadata | null {
-  if (!isRecord(raw)) return { title: 'Untitled page', description: '', robots: 'index,follow' };
+function isValidCanonicalUrl(value: string): boolean {
+  if (value !== value.trim()) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+function defaultPageMetadata(): AccountPageMetadata {
+  return { title: 'Untitled page', description: '', robots: 'index,follow' };
+}
+
+function pageMetadataFromCreatePayload(body: Record<string, unknown>): AccountPageMetadata | null {
+  if (!Object.prototype.hasOwnProperty.call(body, 'metadata')) return defaultPageMetadata();
+  const raw = body.metadata;
+  if (!isRecord(raw)) return null;
   const title = Object.prototype.hasOwnProperty.call(raw, 'title') ? exactString(raw.title) : 'Untitled page';
   const description = Object.prototype.hasOwnProperty.call(raw, 'description') ? exactString(raw.description) : '';
   const robots = Object.prototype.hasOwnProperty.call(raw, 'robots') ? raw.robots : 'index,follow';
   if (!title || description == null || (robots !== 'index,follow' && robots !== 'noindex,nofollow')) return null;
   const canonicalUrl = Object.prototype.hasOwnProperty.call(raw, 'canonicalUrl') ? exactString(raw.canonicalUrl) : null;
-  if (Object.prototype.hasOwnProperty.call(raw, 'canonicalUrl') && !canonicalUrl) return null;
+  if (Object.prototype.hasOwnProperty.call(raw, 'canonicalUrl') && (!canonicalUrl || !isValidCanonicalUrl(canonicalUrl))) return null;
   return { title, description, robots, ...(canonicalUrl ? { canonicalUrl } : {}) };
 }
 
 function createPageSourceFromPayload(raw: unknown, accountId: string): AccountPageSource | null {
-  const body = isRecord(raw) ? raw : {};
-  const metadata = pageMetadataFromCreatePayload(body.metadata);
+  if (!isRecord(raw)) return null;
+  const metadata = pageMetadataFromCreatePayload(raw);
   if (!metadata) return null;
-  const displayName = Object.prototype.hasOwnProperty.call(body, 'displayName')
-    ? exactString(body.displayName)
+  const displayName = Object.prototype.hasOwnProperty.call(raw, 'displayName')
+    ? exactString(raw.displayName)
     : metadata.title;
   if (!displayName) return null;
   const now = new Date().toISOString();

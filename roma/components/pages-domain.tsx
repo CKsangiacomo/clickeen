@@ -406,9 +406,6 @@ export function PagesDomain() {
       localization: {
         ...current.localization,
         ...patch,
-        ipLocalizationEnabled: false,
-        countryLocaleRules: current.localization.countryLocaleRules,
-        missingLocaleBehavior: 'block_publish',
       },
     } : current);
   }, []);
@@ -419,17 +416,15 @@ export function PagesDomain() {
       const countryLocaleRules = current.localization.countryLocaleRules.map((rule, ruleIndex) => {
         if (ruleIndex !== index) return rule;
         return {
-          country: typeof patch.country === 'string' ? patch.country.trim().toUpperCase().slice(0, 2) : rule.country,
-          locale: typeof patch.locale === 'string' ? normalizeLocaleToken(patch.locale) ?? rule.locale : rule.locale,
+          country: typeof patch.country === 'string' ? patch.country : rule.country,
+          locale: typeof patch.locale === 'string' ? patch.locale : rule.locale,
         };
       });
       return {
         ...current,
         localization: {
           ...current.localization,
-          ipLocalizationEnabled: false,
           countryLocaleRules,
-          missingLocaleBehavior: 'block_publish',
         },
       };
     });
@@ -440,12 +435,10 @@ export function PagesDomain() {
       ...current,
       localization: {
         ...current.localization,
-        ipLocalizationEnabled: false,
         countryLocaleRules: [
           ...current.localization.countryLocaleRules,
           { country: 'US', locale: current.localization.defaultLocale },
         ],
-        missingLocaleBehavior: 'block_publish',
       },
     } : current);
   }, []);
@@ -455,9 +448,7 @@ export function PagesDomain() {
       ...current,
       localization: {
         ...current.localization,
-        ipLocalizationEnabled: false,
         countryLocaleRules: current.localization.countryLocaleRules.filter((_, ruleIndex) => ruleIndex !== index),
-        missingLocaleBehavior: 'block_publish',
       },
     } : current);
   }, []);
@@ -469,15 +460,7 @@ export function PagesDomain() {
 
   const handleSavePageSettings = useCallback(async () => {
     if (!pageSource) return;
-    await saveSource({
-      ...pageSource,
-      localization: {
-        ...pageSource.localization,
-        ipLocalizationEnabled: false,
-        countryLocaleRules: pageSource.localization.countryLocaleRules,
-        missingLocaleBehavior: 'block_publish',
-      },
-    }, `save-settings:${pageSource.pageId}`);
+    await saveSource(pageSource, `save-settings:${pageSource.pageId}`);
   }, [pageSource, saveSource]);
 
   const handlePagePublishState = useCallback(async (nextStatus: PagePublishStatus) => {
