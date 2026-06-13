@@ -287,7 +287,7 @@ Evidence:
 
 ### PF-107-3 - Berlin Auth Provider Config Boundary
 
-Status: OPEN
+Status: COMPLETE
 Original row: R107-BERLIN-008
 Likely files:
 
@@ -323,6 +323,34 @@ Done when:
   mutation.
 - The response exposes the named provider-policy reason.
 - Declared valid provider still succeeds.
+
+Evidence:
+
+- Implementation commit: `19102993`.
+- Product truth: Berlin owns auth provider policy. Missing provider policy is a
+  Berlin auth-boundary failure and must surface as
+  `berlin.errors.auth.config_missing`, not as generic unexpected failure.
+- Source/runtime LOC exception: `17 insertions(+), 2 deletions(-)`. This slice is
+  a small boundary propagation fix: the old violation was generic top-level
+  error redress, and the fix adds only typed boundary routing for that owning
+  failure. No fallback provider, warning-only path, compatibility wrapper, or
+  runtime ceremony was added.
+- Local gates: `git diff --check`; `pnpm --filter @clickeen/berlin typecheck`.
+  Berlin has no lint script.
+- External proof: temporary outside-runtime harness invoked the real Berlin
+  worker entry. Missing `BERLIN_ALLOWED_PROVIDERS` returned HTTP 503 with
+  `reasonKey: berlin.errors.auth.config_missing` and
+  `detail: provider_policy_missing` for both `/auth/login/google/start` and
+  `/auth/login/google/callback`, with zero fake auth-ticket store calls. With
+  `BERLIN_ALLOWED_PROVIDERS=google`, `/auth/login/google/start` returned a
+  normal Google OAuth redirect and made one auth-ticket store call.
+- Validator 1: GREEN. No skipped blast radius remains; start and callback call
+  `parseAllowedProviders` before OAuth ticket/session mutation, and valid
+  declared providers still reach normal auth start.
+- Validator 2: GREEN. No V1-V8 remains or was introduced for this slice; the
+  diff preserves the typed provider-policy failure and does not add fallback,
+  warning-only success, retry, compatibility wrapper, or runtime probe/check
+  ceremony.
 
 ### PF-107-4 - Session Max-Age Truth
 
