@@ -83,7 +83,7 @@ if (!marketConfig) {
     page: pageKey,
     locale: localeKey,
   });
-  blocks = Array.isArray((pageJson as any).blocks) ? (pageJson as any).blocks : [];
+  blocks = (pageJson as any).blocks;
   hasHero = blocks.some((b: any) => b && b.type === 'hero');
   const pageMetaBlock = blocks.find((b: any) => b && b.type === 'page-meta');
   const pageMeta = pageMetaBlock && typeof pageMetaBlock === 'object' ? (pageMetaBlock as any).copy : null;

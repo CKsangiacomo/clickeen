@@ -45,8 +45,8 @@ const widgetCards = await Promise.all(
       page: 'overview',
       locale: localeKey,
     });
-    const blocks = Array.isArray((overview as any)?.blocks) ? (overview as any).blocks : null;
-    const hero = blocks ? blocks.find((b: any) => b && b.id === 'hero' && b.type === 'hero') : null;
+    const blocks = (overview as any).blocks;
+    const hero = blocks.find((b: any) => b && b.id === 'hero' && b.type === 'hero');
     const copy = hero && typeof hero === 'object' ? (hero as any).copy : null;
     const headline = copy && typeof copy === 'object' ? String((copy as any).headline ?? '') : '';
     const subheadline = copy && typeof copy === 'object' ? String((copy as any).subheadline ?? '') : '';

@@ -14,8 +14,8 @@ export async function resolveWidgetsMegaMenu(params: { market: string; locale: s
   const items: WidgetsMegaMenuItem[] = [];
   for (const widget of widgets) {
     const overview = await loadRequiredWidgetPageJsonForLocale({ widget, page: 'overview', locale });
-    const blocks = Array.isArray((overview as any)?.blocks) ? (overview as any).blocks : null;
-    const navmeta = blocks ? blocks.find((b: any) => b && b.id === 'navmeta' && b.type === 'navmeta') : null;
+    const blocks = (overview as any).blocks;
+    const navmeta = blocks.find((b: any) => b && b.id === 'navmeta' && b.type === 'navmeta');
     const copy = navmeta && typeof navmeta === 'object' ? (navmeta as any).copy : null;
     const title = copy && typeof copy === 'object' ? String((copy as any).title ?? '') : '';
     const description = copy && typeof copy === 'object' ? String((copy as any).description ?? '') : '';

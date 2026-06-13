@@ -2,45 +2,11 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { globSync } from 'glob';
 
-const REPO_ROOT = path.resolve(new URL('../..', import.meta.url).pathname);
-const DEFAULT_INPUT = path.join(REPO_ROOT, 'tokyo', 'prague', 'pages');
-
-const args = process.argv.slice(2);
-const getArg = (name, fallback) => {
-  const match = args.find((arg) => arg.startsWith(`${name}=`));
-  if (!match) return fallback;
-  return match.split('=').slice(1).join('=');
-};
-
-const inputRoot = getArg('--input', DEFAULT_INPUT);
-const pageFiles = globSync(path.join(inputRoot, '**/*.json'), { nodir: true });
-
-const VALID_SPLIT_LAYOUTS = new Set(['visual-left', 'visual-right', 'stacked']);
-
-if (!pageFiles.length) {
-  console.error(`[prague-blocks] No page JSON files found under ${inputRoot}`);
-  process.exit(1);
+const root = path.join(path.resolve(new URL('../..', import.meta.url).pathname), 'tokyo', 'prague', 'pages');
+const files = globSync(path.join(root, '*/*.json'), { nodir: true }), layouts = new Set(['visual-left', 'visual-right', 'stacked']), errors = files.length ? [] : [`No page JSON files found under ${root}`];
+for (const file of files) {
+  const rel = path.relative(root, file), page = JSON.parse(await fs.readFile(file, 'utf8')), blocks = page && typeof page === 'object' && !Array.isArray(page) ? page.blocks : undefined;
+  if (!Array.isArray(blocks)) errors.push(`${rel}: blocks[] missing`); else for (const [i, block] of blocks.entries()) if (!block || typeof block !== 'object' || Array.isArray(block)) errors.push(`${rel}: blocks[${i}] malformed`); else if (block.type === 'split' && block.layout && !layouts.has(block.layout)) errors.push(`${rel}: split layout "${block.layout}" invalid`);
 }
-
-const violations = [];
-
-for (const filePath of pageFiles) {
-  const raw = await fs.readFile(filePath, 'utf8');
-  const json = JSON.parse(raw);
-  if (!json || typeof json !== 'object' || !Array.isArray(json.blocks)) continue;
-  json.blocks.forEach((block) => {
-    if (!block || typeof block !== 'object') return;
-    if (block.type === 'split' && block.layout && !VALID_SPLIT_LAYOUTS.has(block.layout)) {
-      violations.push(`${path.relative(inputRoot, filePath)}: split layout "${block.layout}" invalid`);
-    }
-  });
-}
-
-if (!violations.length) {
-  console.log('[prague-blocks] Validation passed.');
-  process.exit(0);
-}
-
-console.error('[prague-blocks] Validation failed:');
-violations.forEach((line) => console.error(`- ${line}`));
-process.exit(1);
+if (errors.length) { console.error('[prague-blocks] Validation failed:'); errors.forEach((line) => console.error(`- ${line}`)); process.exit(1); }
+console.log('[prague-blocks] Validation passed.');

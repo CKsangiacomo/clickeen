@@ -51,7 +51,7 @@ const overviewJson = await loadRequiredWidgetPageJsonForLocale({
   page: 'overview',
   locale: localeKey,
 });
-blocks = Array.isArray((overviewJson as any).blocks) ? (overviewJson as any).blocks : [];
+blocks = (overviewJson as any).blocks;
 hasHero = blocks.some((b: any) => b && b.type === 'hero');
 const pageMetaBlock = blocks.find((b: any) => b && b.type === 'page-meta');
 const pageMeta = pageMetaBlock && typeof pageMetaBlock === 'object' ? (pageMetaBlock as any).copy : null;
