@@ -77,9 +77,14 @@ async function purgeClkLiveEntryCache(args: {
   void args.locales;
   const zoneId = String(args.env.CLOUDFLARE_ZONE_ID || '').trim();
   const token = String(args.env.CLOUDFLARE_API_TOKEN || '').trim();
-  if (!zoneId || !token) return;
-  const publicServingBase =
-    String(args.env.PUBLIC_SERVING_BASE_URL || '').trim().replace(/\/+$/, '') || 'https://clk.live';
+  const publicServingBase = String(args.env.PUBLIC_SERVING_BASE_URL || '').trim().replace(/\/+$/, '');
+  if (!zoneId || !token || !publicServingBase) {
+    throw new AccountInstanceTransitionError({
+      status: 503,
+      kind: 'UPSTREAM_UNAVAILABLE',
+      reasonKey: 'tokyo.errors.publicCache.purgeConfigMissing',
+    });
+  }
   const base = `${publicServingBase}/${args.accountId}/${args.instanceId}`;
   const files = new Set([
     base,
@@ -88,14 +93,23 @@ async function purgeClkLiveEntryCache(args: {
     `${base}/${PUBLIC_STYLES_FILE}`,
     `${base}/${PUBLIC_RUNTIME_FILE}`,
   ]);
-  await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
+  const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${encodeURIComponent(zoneId)}/purge_cache`, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${token}`,
       'content-type': 'application/json',
     },
     body: JSON.stringify({ files: [...files] }),
-  }).catch(() => undefined);
+  });
+  const payload = await response.json().catch(() => null) as { success?: unknown } | null;
+  if (!response.ok || payload?.success !== true) {
+    throw new AccountInstanceTransitionError({
+      status: 502,
+      kind: 'UPSTREAM_UNAVAILABLE',
+      reasonKey: 'tokyo.errors.publicCache.purgeFailed',
+      detail: `cloudflare_purge_status_${response.status}`,
+    });
+  }
 }
 
 async function mintAccountInstanceId(args: {
@@ -277,6 +291,7 @@ export async function publishAccountInstanceTransition(args: {
   if (!existing.ok) transitionFailureFromSavedRead(existing);
 
   const liveStatus = await readInstanceServeState({ env: args.env, accountId, instanceId });
+  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
   await writeInstanceServeState({
     env: args.env,
     accountId,
@@ -284,7 +299,6 @@ export async function publishAccountInstanceTransition(args: {
     widgetType: existing.value.pointer.widgetType,
     status: 'published',
   });
-  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
   return { instanceId, status: 'published', changed: liveStatus !== 'published' };
 }
 
@@ -297,6 +311,7 @@ export async function unpublishAccountInstanceTransition(args: {
   const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
   if (!existing.ok) transitionFailureFromSavedRead(existing);
   const liveStatus = await readInstanceServeState({ env: args.env, accountId, instanceId });
+  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
   if (liveStatus !== 'unpublished') {
     await writeInstanceServeState({
       env: args.env,
@@ -306,6 +321,5 @@ export async function unpublishAccountInstanceTransition(args: {
       status: 'unpublished',
     });
   }
-  await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
   return { instanceId, status: 'unpublished', changed: liveStatus !== 'unpublished' };
 }

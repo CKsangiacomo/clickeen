@@ -160,23 +160,23 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
             ),
           );
         }
+        await purgeAccountPagePublicCache({ env, accountId, pageId });
         const serveState = await writeAccountPageServeState({
           env,
           accountId,
           pageId,
           status: 'published',
         });
-        await purgeAccountPagePublicCache({ env, accountId, pageId });
         return respond(json({ ok: true, accountId, pageId, publishStatus: serveState.status, changed: serveState.changed }));
       }
 
+      await purgeAccountPagePublicCache({ env, accountId, pageId });
       const serveState = await writeAccountPageServeState({
         env,
         accountId,
         pageId,
         status: 'unpublished',
       });
-      await purgeAccountPagePublicCache({ env, accountId, pageId });
       return respond(json({ ok: true, accountId, pageId, publishStatus: serveState.status, changed: serveState.changed }));
     } catch (error) {
       return respond(pageErrorResponse(error));
@@ -234,15 +234,16 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
         return respondValidation(respond, 'tokyo.errors.page.sourceInvalid');
       }
       try {
+        const live = await readAccountPageServeState({ env, accountId, pageId }) === 'published';
+        if (live) {
+          await purgeAccountPagePublicCache({ env, accountId, pageId });
+        }
         const saved = await saveAccountPageSource({
           env,
           accountId,
           pageId,
           source: body.source,
         });
-        if (await readAccountPageServeState({ env, accountId, pageId }) === 'published') {
-          await purgeAccountPagePublicCache({ env, accountId, pageId });
-        }
         return respond(json({ ok: true, accountId, pageId, source: saved.source, summary: saved.summary }));
       } catch (error) {
         return respond(pageErrorResponse(error));
