@@ -721,7 +721,7 @@ Evidence:
 
 ### PF-107-9 - Evidence Durability, Traceability, and PRD State Repair
 
-Status: OPEN
+Status: COMPLETE
 Original area: PRD evidence/status tables
 Likely file:
 
@@ -773,6 +773,26 @@ Done when:
   covered-by mapping.
 - Proof retention is durable enough to audit and does not become runtime
   ceremony.
+
+Evidence:
+
+- Implementation commit: `5ce17426`.
+- Product truth: PRD evidence is documentation truth only. It does not own
+  product/runtime behavior and does not count toward source LOC reduction.
+- Documentation LOC: `74 insertions(+), 60 deletions(-)` in
+  `107__PRD__Fallback_Eradication.md`; no source/runtime/product code changed.
+- Local gates: `git diff --check`; focused stale-symbol scans for
+  `this commit`, `LOCKED`, unresolved `D-107k`, WSH/SF coverage, and changed
+  file scope.
+- External proof: documentation self-audit showed only
+  `107__PRD__Fallback_Eradication.md` changed, all `this commit` placeholders
+  removed, `D-107k` resolved to deletion in PRD 107, `AI-107-0`,
+  `AI-107-H`, and `AI-107-M` set to `COMPLETE`, `WSH-107-01` marked
+  `OPEN/SPLIT`, `SF-107-06` mapped to `107-AB6-2026-06-12` / `d7aeee62`, and
+  `SF-107-07` mapped to `107-AB12-2026-06-12` / `d330458c`.
+- Validator 1: GREEN. No skipped documentation blast radius remains.
+- Validator 2: GREEN. No V1-V8 documentation masquerade or runtime ceremony was
+  introduced.
 
 ## Required Validator Prompts
 
