@@ -17,7 +17,6 @@ on:
       - "packages/widget-shell/**"
       - "scripts/infra/**"
       - "scripts/verify/**"
-      - "scripts/tokyo-fonts-sync.mjs"
       - "scripts/tokyo-r2-deploy-sync.mjs"
       - ".github/workflows/cloud-dev-workers.yml"
   workflow_dispatch: {}
@@ -102,7 +101,7 @@ jobs:
             tokyo=true
           fi
 
-          if path_changed '^(tokyo/product/widgets/|tokyo/product/fonts/|tokyo/product/themes/|tokyo/product/dieter/|scripts/tokyo-fonts-sync\.mjs|scripts/tokyo-r2-deploy-sync\.mjs)'; then
+          if path_changed '^(tokyo/product/widgets/|tokyo/product/fonts/|tokyo/product/themes/|tokyo/product/dieter/|scripts/tokyo-r2-deploy-sync\.mjs)'; then
             tokyo_assets=true
           fi
 

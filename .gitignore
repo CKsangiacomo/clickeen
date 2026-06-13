@@ -48,6 +48,8 @@ BACKUP/
 *.ttf
 *.woff
 *.woff2
+!tokyo/product/fonts/**/*.woff
+!tokyo/product/fonts/**/*.woff2
 
 # Large sources
 tooling/sf-symbols/sources/

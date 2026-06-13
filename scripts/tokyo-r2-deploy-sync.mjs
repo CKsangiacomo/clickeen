@@ -24,11 +24,11 @@ const concurrency = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_CONCURRENCY
 
 const mappings = [
   { source: 'tokyo/product/widgets', target: 'product/widgets' },
-  { source: 'tokyo/product/media', target: 'product/media', optional: true },
-  { source: 'tokyo/product/themes', target: 'product/themes', optional: true },
+  { source: 'tokyo/product/media', target: 'product/media' },
+  { source: 'tokyo/product/themes', target: 'product/themes' },
   { source: 'tokyo/product/dieter', target: 'dieter' },
-  { source: 'tokyo/product/fonts', target: 'fonts', optional: true },
-  { source: 'tokyo/roma', target: 'product/roma', optional: true },
+  { source: 'tokyo/product/fonts', target: 'fonts' },
+  { source: 'tokyo/roma', target: 'product/roma' },
   { source: 'tokyo/prague', target: 'prague' },
 ];
 
@@ -63,20 +63,10 @@ function assertCanonicalKey(key) {
 
 async function buildBulkEntries() {
   const entries = [];
-  const skipped = [];
 
   for (const mapping of mappings) {
     const sourceRoot = path.join(repoRoot, mapping.source);
-    let files = [];
-    try {
-      files = await walkFiles(sourceRoot);
-    } catch (error) {
-      if (mapping.optional) {
-        skipped.push(mapping.source);
-        continue;
-      }
-      throw error;
-    }
+    const files = await walkFiles(sourceRoot);
 
     for (const file of files) {
       const rel = path.relative(sourceRoot, file).replace(/\\/g, '/');
@@ -87,10 +77,10 @@ async function buildBulkEntries() {
   }
 
   entries.sort((a, b) => a.key.localeCompare(b.key));
-  return { entries, skipped };
+  return entries;
 }
 
-function summarize(entries, skipped) {
+function summarize(entries) {
   const roots = new Map();
   for (const entry of entries) {
     const [root] = entry.key.split('/');
@@ -101,7 +91,6 @@ function summarize(entries, skipped) {
     mode: dryRun ? 'dry-run' : 'remote',
     files: entries.length,
     roots: Object.fromEntries([...roots.entries()].sort(([a], [b]) => a.localeCompare(b))),
-    skipped,
   };
 }
 
@@ -138,8 +127,8 @@ function runWranglerBulkUpload(bulkFilePath) {
 }
 
 async function main() {
-  const { entries, skipped } = await buildBulkEntries();
-  const summary = summarize(entries, skipped);
+  const entries = await buildBulkEntries();
+  const summary = summarize(entries);
 
   if (jsonOutput) {
     console.log(JSON.stringify(summary, null, 2));
@@ -148,7 +137,6 @@ async function main() {
       `[tokyo-r2-deploy-sync] ${dryRun ? 'Would upload' : 'Uploading'} ${entries.length} files to ${bucket} (${summary.mode}).`,
     );
     console.log(`[tokyo-r2-deploy-sync] Roots: ${Object.entries(summary.roots).map(([root, count]) => `${root}/=${count}`).join(', ')}`);
-    if (skipped.length) console.log(`[tokyo-r2-deploy-sync] Skipped optional roots: ${skipped.join(', ')}`);
   }
 
   if (dryRun) return;
