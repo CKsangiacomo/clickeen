@@ -1,11 +1,12 @@
 import { BerlinAuthTicketDO } from '../auth/ticket-store';
 import { AUTH_ROUTES } from '../auth/routes';
+import { BerlinAuthConfigError } from '../auth/config';
 import { ACCOUNT_MANAGEMENT_ROUTES } from '../account-management/routes';
 import { BOOTSTRAP_ROUTES } from '../bootstrap/routes';
 import { E2E_ROUTES } from '../e2e/routes';
 import { PUBLISH_CONTAINMENT_ROUTES } from '../publish-containment/routes';
 import { SESSION_ROUTES } from '../session/routes';
-import { internalError, json, methodNotAllowed } from './response';
+import { authError, internalError, json, methodNotAllowed } from './response';
 import { type BerlinRoute } from './routing';
 import { type Env } from '../types';
 
@@ -36,6 +37,9 @@ export async function dispatchBerlinRequest(request: Request, env: Env): Promise
 }
 
 export function unexpectedBerlinErrorResponse(error: unknown): Response {
+  if (error instanceof BerlinAuthConfigError) {
+    return authError(error.reasonKey, 503, error.detail);
+  }
   const detail = error instanceof Error ? error.message : String(error);
   return internalError('berlin.errors.unexpected', detail);
 }

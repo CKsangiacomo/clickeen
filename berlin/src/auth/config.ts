@@ -2,6 +2,17 @@ import { DEFAULT_AUDIENCE, DEFAULT_ISSUER, type Env, type LoginIntent } from '..
 
 const FINISH_REDIRECT_URL_MAX_LENGTH = 2048;
 
+export class BerlinAuthConfigError extends Error {
+  readonly reasonKey = 'berlin.errors.auth.config_missing';
+  readonly detail: string;
+
+  constructor(detail: string) {
+    super('berlin auth config missing');
+    this.name = 'BerlinAuthConfigError';
+    this.detail = detail;
+  }
+}
+
 export function normalizeProvider(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const normalized = value.trim().toLowerCase();
@@ -10,7 +21,7 @@ export function normalizeProvider(value: unknown): string | null {
 
 export function parseAllowedProviders(env: Env): Set<string> {
   const values = (typeof env.BERLIN_ALLOWED_PROVIDERS === 'string' ? env.BERLIN_ALLOWED_PROVIDERS.trim() : '').split(',').map((item) => item.trim().toLowerCase()).filter(Boolean);
-  if (!values.length) throw new Error('berlin.errors.auth.config_missing');
+  if (!values.length) throw new BerlinAuthConfigError('provider_policy_missing');
   return new Set(values);
 }
 
