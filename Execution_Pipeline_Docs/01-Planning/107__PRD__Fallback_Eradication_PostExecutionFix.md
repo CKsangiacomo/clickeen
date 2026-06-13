@@ -354,7 +354,7 @@ Evidence:
 
 ### PF-107-4 - Session Max-Age Truth
 
-Status: OPEN
+Status: COMPLETE
 Original row family: auth/session cleanup from CKC-107-03 evidence
 Likely files:
 
@@ -390,6 +390,33 @@ Done when:
 - Missing/malformed max-age fails visibly before cookie issuance.
 - No local `15 * 60` or `30 days` session max-age fallback remains in consuming
   code.
+
+Evidence:
+
+- Implementation commit: `0af97f99`.
+- Product truth: Berlin owns session token max-age truth in finish, refresh, and
+  e2e session payloads. Roma/Admin consume that truth only to set cookies; they
+  do not invent expiry.
+- Source/runtime LOC exception: `82 insertions(+), 68 deletions(-)`. The old
+  fallback TTLs were compact local parse/default branches, while the fix had to
+  fail every cookie-issuing consumer path before `Set-Cookie` when Berlin TTL
+  truth is missing or malformed. No addition preserves the old 15-minute/30-day
+  fallback, string parsing fallback, floor/max healing, or success-without-cookie
+  workflow.
+- Local gates: `git diff --check`; `pnpm --filter @clickeen/roma typecheck`;
+  `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/devstudio
+  check:functions`.
+- External proof: temporary outside-runtime harness with mocked Berlin responses
+  showed malformed/missing TTLs fail before cookies for Roma refresh, Roma
+  finish, Roma e2e session, Admin refresh, Admin finish, and Admin e2e session.
+  Valid Berlin integer TTLs set cookies using Berlin values (`111/222`,
+  `333/444`, `555/666`, `777/888`) with no local fallback.
+- Validator 1: GREEN. No skipped blast radius remains across Roma/Admin finish,
+  refresh, and e2e cookie issuance paths; Berlin remains producer/authority.
+- Validator 2: GREEN. No V1-V8 remains or was introduced; local fallback
+  durations, string parsing fallback, `Math.floor`/`Math.max(1)` healing,
+  warning-only continuation, compatibility wrapper, and runtime ceremony are
+  absent.
 
 ### PF-107-5 - Fill Truth in Dieter and Widget Runtime
 
