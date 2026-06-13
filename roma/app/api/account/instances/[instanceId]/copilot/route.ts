@@ -14,6 +14,7 @@ export const runtime = 'edge';
 type RouteContext = { params: Promise<{ instanceId: string }> };
 
 const AI_PROVIDERS: ReadonlySet<AiProvider> = new Set(['deepseek', 'openai']);
+const CONTROL_KINDS: ReadonlySet<string> = new Set(['string', 'number', 'boolean', 'enum', 'color', 'json', 'array', 'object']);
 
 function isAiProvider(value: string): value is AiProvider {
   return AI_PROVIDERS.has(value as AiProvider);
@@ -37,6 +38,71 @@ function parseSelectedModel(value: unknown): SelectedModelParseResult {
     return { ok: false, message: `selectedModel.provider is not supported: ${provider}` };
   }
   return { ok: true, value: { provider, model } };
+}
+
+function isExactNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value === value.trim();
+}
+
+function isControlPath(value: unknown): value is string {
+  return isExactNonEmptyString(value) &&
+    !value.split('.').some((segment) => !segment || segment === '__proto__' || segment === 'prototype' || segment === 'constructor');
+}
+
+function controlIssue(index: number, field: string, message: string): { path: string; message: string } {
+  return { path: `controls[${index}].${field}`, message };
+}
+
+function controlEnumValues(control: Record<string, unknown>): string[] {
+  if (Array.isArray(control.enumValues)) return control.enumValues.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0);
+  if (Array.isArray(control.options)) {
+    return control.options
+      .filter((option): option is { value: string } => isRecord(option) && typeof option.value === 'string' && option.value.length > 0)
+      .map((option) => option.value);
+  }
+  return [];
+}
+
+function validateControlCatalog(controls: unknown): Array<{ path: string; message: string }> {
+  if (!Array.isArray(controls)) return [];
+  const issues: Array<{ path: string; message: string }> = [];
+  controls.forEach((control, index) => {
+    if (!isRecord(control)) {
+      issues.push({ path: `controls[${index}]`, message: 'control must be an object' });
+      return;
+    }
+    if (!isControlPath(control.path)) {
+      issues.push(controlIssue(index, 'path', 'path must be an exact dot path without empty or prohibited segments'));
+    }
+    for (const field of ['panelId', 'groupId', 'groupLabel', 'type', 'kind', 'label', 'itemIdPath']) {
+      if (control[field] !== undefined && typeof control[field] !== 'string') {
+        issues.push(controlIssue(index, field, `${field} must be a string`));
+      }
+    }
+    if (
+      control.options !== undefined &&
+      (!Array.isArray(control.options) ||
+        !control.options.every((option) => isRecord(option) && typeof option.label === 'string' && typeof option.value === 'string'))
+    ) {
+      issues.push(controlIssue(index, 'options', 'options must be label/value string objects'));
+    }
+    if (control.enumValues !== undefined && (!Array.isArray(control.enumValues) || !control.enumValues.every((entry) => typeof entry === 'string'))) {
+      issues.push(controlIssue(index, 'enumValues', 'enumValues must be strings'));
+    }
+    if (control.min !== undefined && (typeof control.min !== 'number' || !Number.isFinite(control.min))) {
+      issues.push(controlIssue(index, 'min', 'min must be a finite number'));
+    }
+    if (control.max !== undefined && (typeof control.max !== 'number' || !Number.isFinite(control.max))) {
+      issues.push(controlIssue(index, 'max', 'max must be a finite number'));
+    }
+    if (!CONTROL_KINDS.has(String(control.kind || ''))) {
+      issues.push(controlIssue(index, 'kind', 'kind must be a supported control kind'));
+    }
+    if (control.kind === 'enum' && controlEnumValues(control).length === 0) {
+      issues.push(controlIssue(index, 'enumValues', 'enum controls must declare values'));
+    }
+  });
+  return issues;
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
@@ -70,6 +136,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (!Array.isArray(controls)) issues.push({ path: 'controls', message: 'controls must be an array' });
     if (!isRecord(widgetPackage)) issues.push({ path: 'widgetPackage', message: 'widgetPackage must be an object' });
     if (!selectedModelResult.ok) issues.push({ path: 'selectedModel', message: selectedModelResult.message });
+    issues.push(...validateControlCatalog(controls));
     if (issues.length) {
       return withSession(request, NextResponse.json({ error: 'VALIDATION', issues }, { status: 422 }), current.value.setCookies);
     }
@@ -137,8 +204,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return withSession(
         request,
         NextResponse.json(
-          { message: executed.message || 'Copilot is temporarily unavailable. Please try again.' },
-          { status: 200 },
+          {
+            error: {
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.copilot.failed',
+              detail: executed.message,
+            },
+          },
+          { status: executed.status },
         ),
         current.value.setCookies,
       );
@@ -159,7 +232,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const detail = error instanceof Error ? error.message : String(error);
     return withSession(
       request,
-      NextResponse.json({ message: detail || 'Copilot failed unexpectedly. Please try again.' }, { status: 200 }),
+      NextResponse.json(
+        {
+          error: {
+            kind: 'UPSTREAM_UNAVAILABLE',
+            reasonKey: 'coreui.errors.copilot.failed',
+            detail,
+          },
+        },
+        { status: 502 },
+      ),
       current.value.setCookies,
     );
   }

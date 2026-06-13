@@ -244,7 +244,7 @@ export async function executeCopilotOnSanFrancisco(args: {
   requestId?: string | null;
 }): Promise<
   | { ok: true; requestId: string; result: unknown }
-  | { ok: false; message: string }
+  | { ok: false; status: number; message: string }
 > {
   const baseUrl = resolveSanfranciscoBaseUrl().replace(/\/+$/, '');
   let res: Response;
@@ -265,7 +265,7 @@ export async function executeCopilotOnSanFrancisco(args: {
     });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    return { ok: false, message: `SanFrancisco request failed: ${detail}` };
+    return { ok: false, status: 502, message: `SanFrancisco request failed: ${detail}` };
   }
 
   const text = await res.text().catch(() => '');
@@ -277,7 +277,7 @@ export async function executeCopilotOnSanFrancisco(args: {
         : typeof payload?.message === 'string'
           ? payload.message
           : summarizeUpstreamError({ serviceName: 'SanFrancisco', baseUrl, status: res.status, bodyText: text });
-    return { ok: false, message };
+    return { ok: false, status: res.status, message };
   }
 
   return {

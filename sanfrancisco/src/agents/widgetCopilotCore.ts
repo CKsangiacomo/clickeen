@@ -163,6 +163,189 @@ function isWidgetOp(value: unknown): value is WidgetOp {
   return false;
 }
 
+function controlIssue(index: number, field: string, message: string): {
+  path: string;
+  message: string;
+} {
+  return { path: `input.controls[${index}].${field}`, message };
+}
+
+function isExactNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0 && value === value.trim();
+}
+
+const TOKEN_SEGMENT_RE = /^__[^.]+__$/;
+const CONTROL_KINDS = new Set(["string", "number", "boolean", "enum", "color", "json", "array", "object"]);
+const PROHIBITED_PATH_SEGMENTS = new Set(["__proto__", "prototype", "constructor"]);
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function controlPathPattern(pathPattern: string): RegExp {
+  return new RegExp(
+    `^${pathPattern
+      .split(".")
+      .map((segment) => (TOKEN_SEGMENT_RE.test(segment) ? "\\d+" : escapeRegex(segment)))
+      .join("\\.")}$`,
+  );
+}
+
+function isControlPath(value: unknown): value is string {
+  return isExactNonEmptyString(value) &&
+    !value.split(".").some((segment) => !segment || PROHIBITED_PATH_SEGMENTS.has(segment));
+}
+
+function validateControlSummary(value: unknown, index: number): {
+  ok: true;
+} | {
+  ok: false;
+  issue: { path: string; message: string };
+} {
+  if (!isRecord(value)) {
+    return { ok: false, issue: { path: `input.controls[${index}]`, message: "control must be an object" } };
+  }
+  if (!isControlPath(value.path)) {
+    return { ok: false, issue: controlIssue(index, "path", "path must be an exact dot path without empty or prohibited segments") };
+  }
+  for (const field of ["panelId", "groupId", "groupLabel", "type", "kind", "label", "itemIdPath"]) {
+    if (value[field] !== undefined && typeof value[field] !== "string") {
+      return { ok: false, issue: controlIssue(index, field, `${field} must be a string`) };
+    }
+  }
+  if (
+    value.options !== undefined &&
+    (!Array.isArray(value.options) ||
+      !value.options.every((option) => isRecord(option) && typeof option.label === "string" && typeof option.value === "string"))
+  ) {
+    return { ok: false, issue: controlIssue(index, "options", "options must be label/value string objects") };
+  }
+  if (value.enumValues !== undefined && (!Array.isArray(value.enumValues) || !value.enumValues.every((entry) => typeof entry === "string"))) {
+    return { ok: false, issue: controlIssue(index, "enumValues", "enumValues must be strings") };
+  }
+  if (value.min !== undefined && (typeof value.min !== "number" || !Number.isFinite(value.min))) {
+    return { ok: false, issue: controlIssue(index, "min", "min must be a finite number") };
+  }
+  if (value.max !== undefined && (typeof value.max !== "number" || !Number.isFinite(value.max))) {
+    return { ok: false, issue: controlIssue(index, "max", "max must be a finite number") };
+  }
+  if (!CONTROL_KINDS.has(String(value.kind || ""))) {
+    return { ok: false, issue: controlIssue(index, "kind", "kind must be a supported control kind") };
+  }
+  if (value.kind === "enum" && !enumValuesForControl(value as ControlSummary)?.length) {
+    return { ok: false, issue: controlIssue(index, "enumValues", "enum controls must declare values") };
+  }
+  return { ok: true };
+}
+
+function controlForOpPath(controls: ControlSummary[], path: string): ControlSummary | null {
+  for (const control of controls) {
+    if (controlPathPattern(control.path).test(path)) return control;
+  }
+  return null;
+}
+
+function enumValuesForControl(control: ControlSummary): string[] | null {
+  if (control.enumValues?.length) return control.enumValues;
+  const options = control.options?.map((option) => option.value).filter(Boolean);
+  return options?.length ? options : null;
+}
+
+function valueFitsControl(control: ControlSummary, value: unknown): boolean {
+  const kind = control.kind;
+  if (!kind || kind === "unknown") return false;
+  if (kind === "boolean") return typeof value === "boolean";
+  if (kind === "number") {
+    if (typeof value !== "number" || !Number.isFinite(value)) return false;
+    if (typeof control.min === "number" && value < control.min) return false;
+    if (typeof control.max === "number" && value > control.max) return false;
+    return true;
+  }
+  if (kind === "enum") return typeof value === "string" && Boolean(value) && Boolean(enumValuesForControl(control)?.includes(value));
+  if (kind === "json") return value != null && typeof value !== "string";
+  if (kind === "array") return Array.isArray(value);
+  if (kind === "object") return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  if (kind === "color") return typeof value === "string" && Boolean(value);
+  return typeof value === "string";
+}
+
+function getAtPath(data: Record<string, unknown>, path: string): unknown {
+  let current: unknown = data;
+  for (const segment of path.split(".")) {
+    if (!isRecord(current)) return undefined;
+    current = current[segment];
+  }
+  return current;
+}
+
+function pathIndexesExist(data: Record<string, unknown>, path: string): boolean {
+  let current: unknown = data;
+  for (const segment of path.split(".")) {
+    if (/^\d+$/.test(segment)) {
+      if (!Array.isArray(current)) return false;
+      const index = Number(segment);
+      if (index < 0 || index >= current.length) return false;
+      current = current[index];
+      continue;
+    }
+    if (!isRecord(current) && !Array.isArray(current)) return false;
+    current = (current as Record<string, unknown>)[segment];
+  }
+  return true;
+}
+
+function validateModelOpsAgainstControls(
+  ops: WidgetOp[] | undefined,
+  controls: ControlSummary[],
+  currentConfig: Record<string, unknown>,
+  provider: string,
+): void {
+  if (!ops?.length) return;
+  for (const [index, op] of ops.entries()) {
+    if (!isExactNonEmptyString(op.path)) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} has invalid path.`);
+    }
+    const control = controlForOpPath(controls, op.path);
+    if (!control) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} targets a path outside editable controls.`);
+    }
+    if (!pathIndexesExist(currentConfig, op.path)) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} targets an index outside current config.`);
+    }
+    if (op.op === "set") {
+      if (!valueFitsControl(control, op.value)) {
+        throw invalidStructuredEditError(provider, `Model output op ${index} has invalid value for ${op.path}.`);
+      }
+      continue;
+    }
+    if (control.kind !== "array") {
+      throw invalidStructuredEditError(provider, `Model output op ${index} uses an array operation on a non-array control.`);
+    }
+    const currentValue = getAtPath(currentConfig, op.path);
+    if (!Array.isArray(currentValue)) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} targets a non-array value.`);
+    }
+    if (op.op === "insert" && (!Number.isInteger(op.index) || op.index < 0 || op.value === undefined)) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} has invalid insert fields.`);
+    }
+    if (op.op === "insert" && op.index > currentValue.length) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} insert index is out of range.`);
+    }
+    if (op.op === "remove" && (!Number.isInteger(op.index) || op.index < 0)) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} has invalid remove index.`);
+    }
+    if (op.op === "remove" && op.index >= currentValue.length) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} remove index is out of range.`);
+    }
+    if (op.op === "move" && (!Number.isInteger(op.from) || op.from < 0 || !Number.isInteger(op.to) || op.to < 0)) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} has invalid move indexes.`);
+    }
+    if (op.op === "move" && (op.from >= currentValue.length || op.to >= currentValue.length)) {
+      throw invalidStructuredEditError(provider, `Model output op ${index} move indexes are out of range.`);
+    }
+  }
+}
+
 function parseWidgetCopilotInput(input: unknown): WidgetCopilotInput {
   if (!isRecord(input))
     throw new HttpError(400, {
@@ -213,42 +396,23 @@ function parseWidgetCopilotInput(input: unknown): WidgetCopilotInput {
       issues,
     });
 
-  const safeControls: ControlSummary[] = (controls as any[])
-    .filter((c) => isRecord(c) && typeof c.path === "string" && c.path.trim())
-    .map((c) => ({
-      path: String(c.path),
-      panelId: typeof c.panelId === "string" ? c.panelId : undefined,
-      groupId: typeof c.groupId === "string" ? c.groupId : undefined,
-      groupLabel: typeof c.groupLabel === "string" ? c.groupLabel : undefined,
-      type: typeof c.type === "string" ? c.type : undefined,
-      kind: typeof c.kind === "string" ? c.kind : undefined,
-      label: typeof c.label === "string" ? c.label : undefined,
-      options:
-        Array.isArray(c.options) &&
-        c.options.every(
-          (o: any) =>
-            isRecord(o) &&
-            typeof o.label === "string" &&
-            typeof o.value === "string",
-        )
-          ? (c.options as Array<{ label: string; value: string }>)
-          : undefined,
-      enumValues:
-        Array.isArray(c.enumValues) &&
-        c.enumValues.every((v: unknown) => typeof v === "string")
-          ? c.enumValues
-          : undefined,
-      min: typeof c.min === "number" ? c.min : undefined,
-      max: typeof c.max === "number" ? c.max : undefined,
-      itemIdPath: typeof c.itemIdPath === "string" ? c.itemIdPath : undefined,
-    }));
+  const controlIssues = (controls as unknown[])
+    .map((control, index) => validateControlSummary(control, index))
+    .filter((result): result is { ok: false; issue: { path: string; message: string } } => !result.ok)
+    .map((result) => result.issue);
+  if (controlIssues.length)
+    throw new HttpError(400, {
+      code: "BAD_REQUEST",
+      message: "Invalid input",
+      issues: controlIssues,
+    });
 
   return {
     sessionId,
     prompt,
     widgetType,
     currentConfig: currentConfig as Record<string, unknown>,
-    controls: safeControls,
+    controls: controls as ControlSummary[],
     widgetPackage: widgetPackage as Record<string, unknown>,
   };
 }
@@ -570,6 +734,7 @@ export async function executeWidgetCopilotWithRuntime(
       lastUsage.provider,
       "Model output is missing a message.",
     );
+  validateModelOpsAgainstControls(ops, input.controls, input.currentConfig, lastUsage.provider);
 
   const latencyMs = Date.now() - overallStartedAt;
 

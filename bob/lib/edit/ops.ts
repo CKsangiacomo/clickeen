@@ -30,6 +30,22 @@ function isInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value);
 }
 
+function pathIndexesExist(data: Record<string, unknown>, path: string): boolean {
+  let current: unknown = data;
+  for (const segment of path.split('.')) {
+    if (/^\d+$/.test(segment)) {
+      if (!Array.isArray(current)) return false;
+      const index = Number(segment);
+      if (index < 0 || index >= current.length) return false;
+      current = current[index];
+      continue;
+    }
+    if (!current || typeof current !== 'object') return false;
+    current = (current as Record<string, unknown>)[segment];
+  }
+  return true;
+}
+
 function insertAtPath(data: Record<string, unknown>, path: string, index: number, value: unknown) {
   const current = getAt<any[]>(data, path);
   if (!Array.isArray(current)) {
@@ -105,6 +121,10 @@ export function applyWidgetOps(args: {
     const control = findBestControlForPath(matchers, path);
     if (!control) {
       return { ok: false, errors: [{ opIndex: idx, path, message: 'Path is not allowlisted by compiled controls' }] };
+    }
+
+    if (!pathIndexesExist(working, path)) {
+      return { ok: false, errors: [{ opIndex: idx, path, message: 'Path indexes are out of range' }] };
     }
 
     if (opType === 'set') {
