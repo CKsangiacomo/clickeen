@@ -5,7 +5,6 @@ import { spawnSync } from 'node:child_process';
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const srcRoot = path.join(repoRoot, 'tokyo', 'roma', 'i18n', 'source');
-const canonicalLocalesPath = path.join(repoRoot, 'packages', 'l10n', 'locales.json');
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -17,34 +16,10 @@ function loadCatalog(locale, bundle) {
   return readJson(p);
 }
 
-function readCanonicalLocales() {
-  if (!fs.existsSync(canonicalLocalesPath)) {
-    throw new Error(`[i18n] Missing canonical locales file: ${canonicalLocalesPath}`);
-  }
-  const raw = fs.readFileSync(canonicalLocalesPath, 'utf8');
-  const parsed = JSON.parse(raw);
-  if (!Array.isArray(parsed)) {
-    throw new Error(`[i18n] Invalid canonical locales file (expected array): ${canonicalLocalesPath}`);
-  }
-  const locales = parsed
-    .map((entry) => {
-      if (typeof entry === 'string') return entry.trim().toLowerCase();
-      if (entry && typeof entry === 'object' && typeof entry.code === 'string') return entry.code.trim().toLowerCase();
-      return '';
-    })
-    .filter(Boolean);
-  if (!locales.includes('en')) {
-    throw new Error(`[i18n] Canonical locales must include "en": ${canonicalLocalesPath}`);
-  }
-  // Dedupe while preserving order.
-  const seen = new Set();
-  const unique = [];
-  for (const l of locales) {
-    if (seen.has(l)) continue;
-    seen.add(l);
-    unique.push(l);
-  }
-  return unique;
+function readSourceLocales() {
+  const locales = fs.readdirSync(srcRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
+  if (!locales.includes('en')) throw new Error(`[i18n] Roma i18n source must include en: ${srcRoot}`);
+  return locales;
 }
 
 function main() {
@@ -61,15 +36,8 @@ function main() {
     .map((k) => k.trim())
     .filter(Boolean);
 
-  const canonicalLocales = readCanonicalLocales();
-  const supportedLocales = canonicalLocales.filter((locale) => {
-    const corePath = path.join(srcRoot, locale, 'coreui.json');
-    if (fs.existsSync(corePath)) return true;
-    console.warn(`[i18n] Skipping locale "${locale}" (missing ${locale}/coreui.json)`);
-    return false;
-  });
-
-  for (const locale of supportedLocales) {
+  const sourceLocales = readSourceLocales();
+  for (const locale of sourceLocales) {
     const coreui = loadCatalog(locale, 'coreui');
     if (!coreui) throw new Error(`[i18n] Missing ${locale}/coreui.json`);
 
@@ -101,7 +69,7 @@ function main() {
     }
   }
 
-  console.log(`[i18n] OK: ${keys.length} referenced key(s) validated across ${supportedLocales.length} locale(s)`);
+  console.log(`[i18n] OK: ${keys.length} referenced key(s) validated across ${sourceLocales.length} locale(s)`);
 }
 
 main();

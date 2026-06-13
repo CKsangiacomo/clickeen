@@ -7,7 +7,6 @@ import { spawnSync } from 'node:child_process';
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
 const srcRoot = path.join(repoRoot, 'tokyo', 'roma', 'i18n', 'source');
 const outRoot = path.join(repoRoot, 'tokyo', 'roma', 'i18n', 'public');
-const canonicalLocalesPath = path.join(repoRoot, 'packages', 'l10n', 'locales.json');
 
 function stableStringify(value) {
   if (value == null || typeof value !== 'object') return JSON.stringify(value);
@@ -36,7 +35,7 @@ function tryGetGitSha() {
   if (fromEnv && String(fromEnv).trim()) return String(fromEnv).trim();
 
   try {
-    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'tokyo/roma/i18n/source', 'packages/l10n/locales.json', 'scripts/i18n/build.mjs'], {
+    const res = spawnSync('git', ['rev-list', '-1', 'HEAD', '--', 'tokyo/roma/i18n/source', 'scripts/i18n/build.mjs'], {
       cwd: repoRoot,
       encoding: 'utf8',
     });
@@ -48,34 +47,10 @@ function tryGetGitSha() {
   return 'unknown';
 }
 
-function readCanonicalLocales() {
-  if (!fs.existsSync(canonicalLocalesPath)) {
-    throw new Error(`[i18n] Missing canonical locales file: ${canonicalLocalesPath}`);
-  }
-  const raw = fs.readFileSync(canonicalLocalesPath, 'utf8');
-  const parsed = JSON.parse(raw);
-  if (!Array.isArray(parsed)) {
-    throw new Error(`[i18n] Invalid canonical locales file (expected array): ${canonicalLocalesPath}`);
-  }
-  const locales = parsed
-    .map((entry) => {
-      if (typeof entry === 'string') return entry.trim().toLowerCase();
-      if (entry && typeof entry === 'object' && typeof entry.code === 'string') return entry.code.trim().toLowerCase();
-      return '';
-    })
-    .filter(Boolean);
-  if (!locales.includes('en')) {
-    throw new Error(`[i18n] Canonical locales must include "en": ${canonicalLocalesPath}`);
-  }
-  // Dedupe while preserving order.
-  const seen = new Set();
-  const unique = [];
-  for (const l of locales) {
-    if (seen.has(l)) continue;
-    seen.add(l);
-    unique.push(l);
-  }
-  return unique;
+function readSourceLocales() {
+  const locales = fs.readdirSync(srcRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
+  if (!locales.includes('en')) throw new Error(`[i18n] Roma i18n source must include en: ${srcRoot}`);
+  return locales;
 }
 
 function isRtlLocale(locale) {
@@ -133,13 +108,10 @@ function main() {
     throw new Error(`[i18n] Missing source dir: ${srcRoot}`);
   }
 
-  const canonicalLocales = readCanonicalLocales();
-  const supportedLocales = canonicalLocales.filter((locale) => {
-    const corePath = path.join(srcRoot, locale, 'coreui.json');
-    if (fs.existsSync(corePath)) return true;
-    console.warn(`[i18n] Skipping locale "${locale}" (missing ${locale}/coreui.json)`);
-    return false;
-  });
+  const sourceLocales = readSourceLocales();
+  for (const locale of sourceLocales) {
+    if (!fs.existsSync(path.join(srcRoot, locale, 'coreui.json'))) throw new Error(`[i18n] Missing ${locale}/coreui.json`);
+  }
 
   const manifest = {
     v: 1,
@@ -150,7 +122,7 @@ function main() {
 
   ensureDir(outRoot);
 
-  for (const locale of supportedLocales) {
+  for (const locale of sourceLocales) {
     const localeSrcDir = path.join(srcRoot, locale);
     const localeOutDir = path.join(outRoot, locale);
     ensureDir(localeOutDir);
@@ -160,8 +132,6 @@ function main() {
       .filter((d) => d.isFile() && d.name.endsWith('.json'))
       .map((d) => d.name)
       .sort();
-
-    // Note: supportedLocales already guarantees coreui.json exists.
 
     const bundlesForLocale = {};
 
@@ -184,7 +154,7 @@ function main() {
   }
 
   fs.writeFileSync(path.join(outRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-  console.log(`[i18n] Built ${supportedLocales.length} locale(s) -> tokyo/roma/i18n/public (gitSha=${manifest.gitSha})`);
+  console.log(`[i18n] Built ${sourceLocales.length} locale(s) -> tokyo/roma/i18n/public (gitSha=${manifest.gitSha})`);
 }
 
 main();
