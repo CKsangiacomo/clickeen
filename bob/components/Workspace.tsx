@@ -215,10 +215,6 @@ export function Workspace({
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    const visibilityFallbackTimeout = previewStateReady
-      ? window.setTimeout(() => setIframeHasState(true), 1500)
-      : null;
-    let readyTimeout: number | null = null;
     const handleLoad = () => {
       setIframeLoaded(true);
       const snapshot = latestRef.current;
@@ -241,10 +237,6 @@ export function Workspace({
         },
         '*',
       );
-
-      // Fail-safe: if the widget runtime doesn't emit `ck:ready`, don't stay hidden forever.
-      if (readyTimeout != null) window.clearTimeout(readyTimeout);
-      readyTimeout = window.setTimeout(() => setIframeHasState(true), 1000);
     };
     const handleError = () => {
       setIframeLoadError('Failed to load preview runtime');
@@ -261,8 +253,6 @@ export function Workspace({
     return () => {
       iframe.removeEventListener('load', handleLoad);
       iframe.removeEventListener('error', handleError);
-      if (visibilityFallbackTimeout != null) window.clearTimeout(visibilityFallbackTimeout);
-      if (readyTimeout != null) window.clearTimeout(readyTimeout);
     };
   }, [iframeSrc, previewStateReady]);
 
