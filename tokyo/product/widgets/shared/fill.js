@@ -19,11 +19,6 @@
     return Boolean(value && typeof value === 'object' && !Array.isArray(value));
   }
 
-  function clampNumber(value, min, max) {
-    if (typeof value !== 'number' || !Number.isFinite(value)) return min;
-    return Math.min(Math.max(value, min), max);
-  }
-
   function readAssetSrc(raw) {
     if (!isRecord(raw)) return '';
     var direct = typeof raw.src === 'string' ? raw.src.trim() : '';
@@ -31,76 +26,38 @@
     return /^https?:\/\//i.test(direct) || direct.indexOf('/') === 0 ? direct : '';
   }
 
-  function normalizeStringFill(raw) {
-    var v = String(raw || '').trim();
-    if (!v || v === 'transparent') return { type: 'none' };
-    var looksLikeUrl = /^https?:\/\//i.test(v) || /^\/\//.test(v) || v.indexOf('/') === 0;
-    if (/url\(\s*/i.test(v)) return null;
-    if (looksLikeUrl) return null;
-    if (/-gradient\(/i.test(v)) {
-      return { type: 'gradient', gradient: { css: v } };
-    }
-    return { type: 'color', color: v };
-  }
-
   function normalizeGradient(raw) {
-    if (typeof raw === 'string') {
-      var css = raw.trim();
-      return css ? { css: css } : null;
-    }
     if (!isRecord(raw)) return null;
-    if (typeof raw.css === 'string') {
-      var rawCss = raw.css.trim();
-      if (rawCss) {
-        return { css: rawCss };
-      }
-    }
-    var kind = typeof raw.kind === 'string' && GRADIENT_KINDS[raw.kind] ? raw.kind : 'linear';
-    var angle = clampNumber(raw.angle, 0, 360);
-    var rawStops = Array.isArray(raw.stops) ? raw.stops : [];
-    var stops = rawStops
-      .map(function (stop) {
-        if (!isRecord(stop)) return null;
-        var color = typeof stop.color === 'string' ? stop.color.trim() : '';
-        if (!color) return null;
-        var position = clampNumber(stop.position, 0, 100);
-        return { color: color, position: position };
-      })
-      .filter(Boolean);
-    return { kind: kind, angle: angle, stops: stops };
+    if (typeof raw.kind !== 'string' || !GRADIENT_KINDS[raw.kind] || typeof raw.angle !== 'number' || !Number.isFinite(raw.angle) || raw.angle < 0 || raw.angle > 360 || !Array.isArray(raw.stops)) return null;
+    if (raw.stops.some(function (stop) { return !isRecord(stop) || typeof stop.color !== 'string' || !stop.color.trim() || typeof stop.position !== 'number' || !Number.isFinite(stop.position) || stop.position < 0 || stop.position > 100; })) return null;
+    return { kind: raw.kind, angle: raw.angle, stops: raw.stops.map(function (stop) { return { color: stop.color.trim(), position: stop.position }; }) };
   }
 
   function normalizeFill(raw) {
     if (raw == null) return { type: 'none' };
-    if (typeof raw === 'string') return normalizeStringFill(raw);
+    if (typeof raw === 'string') return raw.trim() === 'transparent' ? { type: 'none' } : null;
     if (!isRecord(raw)) return null;
 
     var type = typeof raw.type === 'string' ? raw.type.trim() : '';
     if (!type) {
-      if (typeof raw.color === 'string') return { type: 'color', color: raw.color.trim() };
-      if (raw.gradient != null) return { type: 'gradient', gradient: normalizeGradient(raw.gradient) || undefined };
+      if (typeof raw.color === 'string') return raw.color.trim() ? { type: 'color', color: raw.color.trim() } : null;
+      if (raw.gradient != null) return normalizeGradient(raw.gradient) ? { type: 'gradient', gradient: normalizeGradient(raw.gradient) } : null;
       if (raw.image != null) return { type: 'image', image: normalizeImage(raw.image) };
       if (raw.video != null) return { type: 'video', video: normalizeVideo(raw.video) };
-      return { type: 'none' };
+      return null;
     }
     if (!VALID_TYPES[type]) return null;
 
     if (type === 'none') return { type: 'none' };
-    if (type === 'color') {
-      var color = typeof raw.color === 'string' ? raw.color.trim() : '';
-      return { type: 'color', color: color || 'transparent' };
-    }
-    if (type === 'gradient') {
-      var gradient = normalizeGradient(raw.gradient);
-      return { type: 'gradient', gradient: gradient || undefined };
-    }
+    if (type === 'color') return typeof raw.color === 'string' && raw.color.trim() ? { type: 'color', color: raw.color.trim() } : null;
+    if (type === 'gradient') return normalizeGradient(raw.gradient) ? { type: 'gradient', gradient: normalizeGradient(raw.gradient) } : null;
     if (type === 'image') {
       return { type: 'image', image: normalizeImage(raw.image) };
     }
     if (type === 'video') {
       return { type: 'video', video: normalizeVideo(raw.video) };
     }
-    return { type: 'none' };
+    return null;
   }
 
   function normalizeImage(raw) {
@@ -135,29 +92,27 @@
   }
 
   function buildGradientCss(gradient) {
-    if (!gradient) return 'transparent';
-    if (gradient.css) return gradient.css;
     var stops = Array.isArray(gradient.stops) ? gradient.stops : [];
-    if (stops.length < 2) return 'transparent';
+    if (stops.length < 2) throw new Error('[CKFill] Invalid gradient fill');
     var stopList = stops
       .map(function (stop) {
-        return stop.color + ' ' + clampNumber(stop.position, 0, 100) + '%';
+        return stop.color + ' ' + stop.position + '%';
       })
       .join(', ');
     if (gradient.kind === 'radial') {
       return 'radial-gradient(circle, ' + stopList + ')';
     }
     if (gradient.kind === 'conic') {
-      return 'conic-gradient(from ' + clampNumber(gradient.angle, 0, 360) + 'deg, ' + stopList + ')';
+      return 'conic-gradient(from ' + gradient.angle + 'deg, ' + stopList + ')';
     }
-    return 'linear-gradient(' + clampNumber(gradient.angle, 0, 360) + 'deg, ' + stopList + ')';
+    return 'linear-gradient(' + gradient.angle + 'deg, ' + stopList + ')';
   }
 
   function toCssBackground(raw) {
     var fill = normalizeFill(raw);
     if (!fill) throw new Error('[CKFill] Invalid fill');
     if (fill.type === 'none') return 'transparent';
-    if (fill.type === 'color') return fill.color || 'transparent';
+    if (fill.type === 'color') return fill.color;
     if (fill.type === 'gradient') return buildGradientCss(fill.gradient);
     if (fill.type === 'image') {
       var fit = fill.image.fit === 'contain' ? 'contain' : 'cover';
@@ -169,14 +124,13 @@
   }
 
   function toCssColor(raw) {
-    if (typeof raw === 'string') return raw.trim();
     var fill = normalizeFill(raw);
     if (!fill) throw new Error('[CKFill] Invalid fill');
     if (fill.type === 'none') return 'transparent';
     if (fill.type !== 'color') {
       throw new Error('[CKFill] Fill is not a color');
     }
-    return fill.color || 'transparent';
+    return fill.color;
   }
 
   function ensureLayer(container) {
@@ -198,6 +152,7 @@
   function applyMediaLayer(container, raw, opts) {
     var fill = normalizeFill(raw);
     if (!fill) throw new Error('[CKFill] Invalid fill');
+    if (fill.type === 'gradient') buildGradientCss(fill.gradient);
     var wantsVideo = fill.type === 'video' && fill.video && fill.video.src;
     if (!wantsVideo) {
       var existing = container.querySelector('.ck-fill-layer');
