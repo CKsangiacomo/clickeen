@@ -420,7 +420,7 @@ Evidence:
 
 ### PF-107-5 - Fill Truth in Dieter and Widget Runtime
 
-Status: OPEN
+Status: COMPLETE
 Original rows: WRT-107-FILL-BAD-STATE-TO-TRANSPARENT, PRD107-DIETER-002 overlap
 Likely files:
 
@@ -463,6 +463,35 @@ Done when:
 - Invalid/malformed fill fails before background/media-layer mutation.
 - Existing media layer is not cleared on invalid fill.
 - No renamed fill normalizer preserves the old behavior.
+
+Evidence:
+
+- Implementation commit: `c9699bed`.
+- Product truth: authored `CKFill` object owns fill truth. Dieter emits declared
+  fill objects; the widget runtime consumes declared fill truth and mutates DOM
+  only after accepted truth.
+- Source/runtime LOC: `147 insertions(+), 163 deletions(-)` across Dieter fill
+  parser, generated Dieter fill artifact, widget shared fill runtime, and Dieter
+  manifest SHA.
+- Local gates: `git diff --check`; `pnpm --filter @ck/dieter typecheck`; `pnpm
+  build:dieter`.
+- External proof: temporary outside-runtime harness showed Dieter rejects empty,
+  null, string color, missing `type`, whitespace/case-repaired `type`,
+  whitespace-repaired color/media fields, malformed media buckets, and
+  whitespace-repaired gradient stop colors. Valid explicit none/color/gradient/
+  image/video fill succeeds. Runtime `window.CKFill` rejects null/string/
+  transparent-string/missing-type and malformed media before DOM mutation;
+  invalid media proof recorded zero media-layer queries/removals.
+- Validator history: Validator 2 initially RED on trim/lowercase healing for
+  declared fill strings, then RED on gradient stop color healing. Both exact
+  workflows were fixed by requiring declared strings with no whitespace/case
+  repair and regenerating Dieter output from source.
+- Validator 1: GREEN. No skipped blast radius remains; generated Dieter output
+  mirrors source and runtime `applyMediaLayer` fails before media-layer mutation.
+- Validator 2: GREEN. No V1-V8 remains or was introduced; null/string/empty/
+  missing-type success, sibling inference, media defaults, trim/lowercase repair,
+  compatibility wrapper, warning-only continuation, and runtime ceremony are
+  absent.
 
 ### PF-107-6 - Tokyo Public Cache Purge Success Masquerade
 
