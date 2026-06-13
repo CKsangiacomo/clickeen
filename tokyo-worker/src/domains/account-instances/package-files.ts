@@ -4,11 +4,13 @@ import {
   PUBLIC_RUNTIME_FILE,
   PUBLIC_STYLES_FILE,
 } from './package-file-names';
+import { publicPackageContentType } from '../public-package-serve-metadata';
 
 export { isPublicPackageFile } from './package-file-names';
 
 type R2TextObject = {
   text(): Promise<string>;
+  httpMetadata?: { contentType?: string | null } | null;
 };
 
 type PublicPackageFile = typeof PUBLIC_INDEX_FILE | typeof PUBLIC_STYLES_FILE | typeof PUBLIC_RUNTIME_FILE;
@@ -46,6 +48,9 @@ export async function readInstancePublicPackage(args: {
     args.env.TOKYO_R2.get(`${root}/${PUBLIC_RUNTIME_FILE}`) as Promise<R2TextObject | null>,
   ]);
   if (!indexObject || !stylesObject || !runtimeObject) return null;
+  for (const object of [indexObject, stylesObject, runtimeObject]) {
+    if (!publicPackageContentType(object)) throw new Error('artifact.package.metadata_invalid');
+  }
   return {
     v: 1 as const,
     indexHtml: await indexObject.text(),
@@ -60,7 +65,11 @@ async function requireStoredPackageFile(args: {
   reasonKey: string;
 }): Promise<InstancePublicPackageReadinessResult> {
   const object = await args.env.TOKYO_R2.get(args.key) as R2TextObject | null;
-  return object ? { ok: true } : { ok: false, reasonKey: args.reasonKey, detail: args.key };
+  if (!object) return { ok: false, reasonKey: args.reasonKey, detail: args.key };
+  if (!publicPackageContentType(object)) {
+    return { ok: false, reasonKey: 'artifact.package.metadata_invalid', detail: args.key };
+  }
+  return { ok: true };
 }
 
 export async function verifyInstancePublicPackageReady(args: {

@@ -1,6 +1,7 @@
 import { isCompactAccountPublicId, isCompactInstanceId, isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
 import { readInstanceServeState } from '../domains/account-instances/serve-state';
 import { accountPagePublishFileKey, readAccountPageServeState } from '../domains/pages';
+import { publicPackageContentType } from '../domains/public-package-serve-metadata';
 import {
   isPublicPackageFile,
   PUBLIC_INDEX_FILE,
@@ -73,7 +74,7 @@ function responseForObject(
   obj: { body: ReadableStream | null; httpMetadata?: { contentType?: string | null } | null },
   headOnly: boolean,
 ): Response {
-  const contentType = obj.httpMetadata?.contentType;
+  const contentType = publicPackageContentType(obj);
   if (!contentType) return new Response('Invalid asset metadata', { status: 500 });
   const cacheControl = cacheControlForGeneratedFile(file);
   const headers = new Headers();

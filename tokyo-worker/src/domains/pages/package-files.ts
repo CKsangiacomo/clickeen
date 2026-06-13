@@ -1,9 +1,11 @@
 import type { Env } from '../../types';
+import { publicPackageContentType } from '../public-package-serve-metadata';
 import { accountPagePublishFileKey } from './keys';
 import { PageOperationError } from './types';
 
 type R2TextObject = {
   text(): Promise<string>;
+  httpMetadata?: { contentType?: string | null } | null;
 };
 
 type PagePublicFile = 'index.html' | 'styles.css' | 'runtime.js';
@@ -29,6 +31,7 @@ async function readRequiredText(args: {
 }): Promise<string> {
   const object = await args.env.TOKYO_R2.get(args.key) as R2TextObject | null;
   if (!object) throw new PagePackageOperationError(args.reasonKey, args.key);
+  if (!publicPackageContentType(object)) throw new PagePackageOperationError('page.package.metadataInvalid', args.key);
   return object.text();
 }
 
