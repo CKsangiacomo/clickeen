@@ -1,5 +1,7 @@
 import type { LimitsSpec } from '@clickeen/ck-policy';
 import {
+  WIDGET_SHELL_CSS_MODULE_KEYS,
+  WIDGET_SHELL_RUNTIME_MODULE_KEYS,
   WIDGET_SHELL_RUNTIME_MODULE_END,
   WIDGET_SHELL_RUNTIME_PAYLOAD_END,
   WIDGET_SHELL_RUNTIME_PAYLOAD_START,
@@ -80,30 +82,11 @@ function readHtmlAttribute(openingTag: string, attrName: string): string {
   return String(match?.[1] ?? match?.[2] ?? match?.[3] ?? '').trim();
 }
 
-function extractStylesheetSources(html: string): string[] {
+function extractDieterStylesheetSources(html: string): string[] {
   return [...html.matchAll(/<link\b[^>]*>/gi)].filter((match) => readHtmlAttribute(match[0], 'rel').toLowerCase() === 'stylesheet').map((match) => readHtmlAttribute(match[0], 'href')).filter(Boolean);
 }
 
 function stripScripts(body: string): string { return body.replace(/<script\b[^>]*\bsrc=["'][^"']+["'][^>]*>\s*<\/script>/gi, ''); }
-
-function extractScriptSources(html: string): string[] { return [...html.matchAll(/<script\b[^>]*>/gi)].map((match) => readHtmlAttribute(match[0], 'src')).filter(Boolean); }
-
-function resolveProductPath(widgetType: string, src: string): string | null {
-  const withoutQuery = src.split('?')[0] || '';
-  if (!withoutQuery || withoutQuery.startsWith('/') || /^https?:\/\//i.test(withoutQuery)) return null;
-  const base = `product/widgets/${widgetType}/`;
-  const stack = base.split('/').filter(Boolean);
-  for (const part of withoutQuery.split('/')) {
-    if (!part || part === '.') continue;
-    if (part === '..') {
-      stack.pop();
-      continue;
-    }
-    stack.push(part);
-  }
-  const normalized = stack.join('/');
-  return normalized.startsWith('product/widgets/') ? normalized : null;
-}
 
 function chunkMarkerId(value: string): string {
   const sourceNeutral = value
@@ -173,20 +156,17 @@ function stampPackageRoot(args: {
 
 function buildStyles(args: PackageBuildArgs, widgetHtml: string): string {
   const chunks: string[] = [];
-  for (const href of extractStylesheetSources(widgetHtml)) {
-    if (href.startsWith('/dieter/')) {
-      chunks.push(styleChunk(href, `@import "${href}";`));
-      continue;
-    }
-    const key = resolveProductPath(args.compiled.widgetname, href);
-    if (!key || !key.endsWith('.css')) widgetPackageBuildError('coreui.errors.widget.packageReferenceInvalid', href);
+  for (const href of extractDieterStylesheetSources(widgetHtml).filter((href) => href.startsWith('/dieter/'))) {
+    chunks.push(styleChunk(href, `@import "${href}";`));
+  }
+  for (const key of [...WIDGET_SHELL_CSS_MODULE_KEYS, `product/widgets/${args.compiled.widgetname}/widget.css`]) {
     const source = fileSource(args.compiled.widgetPackage?.files[key]) || widgetPackageBuildError('coreui.errors.widget.packageMissing', key);
     chunks.push(styleChunk(key, source));
   }
   return `${chunks.join('\n\n')}\n`;
 }
 
-function buildRuntime(args: PackageBuildArgs, scriptSources: string[]): string {
+function buildRuntime(args: PackageBuildArgs): string {
   const locales = { [args.baseLocale]: args.state };
   const localePolicy = {
     baseLocale: args.baseLocale,
@@ -217,19 +197,10 @@ function buildRuntime(args: PackageBuildArgs, scriptSources: string[]): string {
 ${RUNTIME_PAYLOAD_END}`;
 
   const chunks = [payload];
-  let widgetClientChunk: string | null = null;
-  for (const src of scriptSources) {
-    const key = resolveProductPath(args.compiled.widgetname, src);
-    if (!key || !key.endsWith('.js')) widgetPackageBuildError('coreui.errors.widget.packageReferenceInvalid', src);
+  for (const key of [...WIDGET_SHELL_RUNTIME_MODULE_KEYS, `product/widgets/${args.compiled.widgetname}/widget.client.js`]) {
     const source = fileSource(args.compiled.widgetPackage?.files[key]) || widgetPackageBuildError('coreui.errors.widget.packageMissing', key);
-    const chunk = runtimeModuleChunk(key, source);
-    if (key.endsWith('/widget.client.js')) {
-      widgetClientChunk = chunk;
-      continue;
-    }
-    chunks.push(chunk);
+    chunks.push(runtimeModuleChunk(key, source));
   }
-  if (widgetClientChunk) chunks.push(widgetClientChunk);
   return `${chunks.join('\n\n')}\n`;
 }
 
@@ -258,11 +229,10 @@ export function buildSavedWidgetPublicPackage(args: PackageBuildArgs): SavedWidg
     instanceId: args.instanceId,
   });
   const stripped = stripScripts(stamped);
-  const scriptSources = extractScriptSources(widgetHtml);
   return {
     v: 1,
     indexHtml: buildIndexHtml(args, stripped),
     stylesCss: buildStyles(args, widgetHtml),
-    runtimeJs: buildRuntime(args, scriptSources),
+    runtimeJs: buildRuntime(args),
   };
 }

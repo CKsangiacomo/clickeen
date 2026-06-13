@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readWidgetEditableFieldsContract, type WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
 import { parseLimitsSpec } from '@clickeen/ck-policy';
+import { WIDGET_SHELL_CSS_MODULE_KEYS, WIDGET_SHELL_RUNTIME_MODULE_KEYS } from '@clickeen/widget-shell';
 import { compileWidgetServer } from '../compiler.server';
 import type { RawWidget } from '../compiler.shared';
 import { requireTokyoUrl } from '../compiler/media';
@@ -23,44 +24,16 @@ function packageSupportError(reasonKey: string, path: string): never { throw { k
 
 function isWidgetPackageSupportError(value: unknown): value is WidgetPackageSupportError { return Boolean(value) && typeof value === 'object' && !Array.isArray(value) && (value as WidgetPackageSupportError).kind === 'WIDGET_PUBLIC_PACKAGE_ERROR'; }
 
-function extractDeclaredPackageSources(html: string): string[] {
-  return [
-    ...[...html.matchAll(/<link\b[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi)].map((match) => String(match[1] || '').trim()),
-    ...[...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)].map((match) => String(match[1] || '').trim()),
-  ].filter(Boolean);
-}
-
-function resolveProductPath(widgetType: string, src: string): string | null {
-  const withoutQuery = src.split('?')[0] || '';
-  if (!withoutQuery || withoutQuery.startsWith('/') || /^https?:\/\//i.test(withoutQuery)) return null;
-  const base = `product/widgets/${widgetType}/`;
-  const stack = base.split('/').filter(Boolean);
-  for (const part of withoutQuery.split('/')) {
-    if (!part || part === '.') continue;
-    if (part === '..') {
-      stack.pop();
-      continue;
-    }
-    stack.push(part);
-  }
-  const normalized = stack.join('/');
-  return normalized.startsWith('product/widgets/') ? normalized : null;
-}
-
 async function fetchWidgetPackageSupportFiles(args: {
   tokyoRoot: string;
   widgetname: string;
-  htmlText: string;
   knownFiles: Map<string, WidgetPackageFileContext>;
 }): Promise<Map<string, WidgetPackageFileContext>> {
   const next = new Map(args.knownFiles);
-  const productPaths = new Set<string>();
-  for (const src of extractDeclaredPackageSources(args.htmlText)) {
-    if (src.startsWith('/dieter/')) continue;
-    const key = resolveProductPath(args.widgetname, src);
-    if (!key) packageSupportError('coreui.errors.widget.packageReferenceInvalid', src);
-    productPaths.add(key);
-  }
+  const productPaths = new Set<string>([
+    ...WIDGET_SHELL_CSS_MODULE_KEYS,
+    ...WIDGET_SHELL_RUNTIME_MODULE_KEYS,
+  ]);
   await Promise.all(
     [...productPaths]
       .filter((key) => !next.has(key))
@@ -203,7 +176,6 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     const supportFiles = await fetchWidgetPackageSupportFiles({
       tokyoRoot,
       widgetname,
-      htmlText,
       knownFiles: initialPackageFiles,
     });
 
