@@ -4,13 +4,6 @@ const PROHIBITED_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
 
 export type WidgetTextPrimitiveType = 'string' | 'richtext';
 
-export type WidgetTextPrimitiveDeclaration = {
-  path: string;
-  label: string;
-  type: WidgetTextPrimitiveType;
-  role?: string;
-};
-
 export type WidgetEditableField = {
   path: string;
   type: WidgetTextPrimitiveType;
@@ -24,10 +17,6 @@ export type WidgetEditableFieldsContract = {
   v: 1;
   widgetType: string;
   fields: WidgetEditableField[];
-};
-
-export type ExtractedTextPrimitiveValue = WidgetTextPrimitiveDeclaration & {
-  value: string;
 };
 
 export type SavedTextField = {
@@ -123,8 +112,9 @@ function asNonEmptyString(value: unknown): string | null {
   return normalized || null;
 }
 
-export function readEditableTextPrimitiveValue(value: unknown): string {
-  return typeof value === 'string' ? value : '';
+function readEditableTextPrimitiveValue(value: unknown, path: string): string {
+  if (typeof value !== 'string') throw new Error(`translated_value_text_invalid:${path}`);
+  return value;
 }
 
 function parseStringArray(value: unknown, label: string): string[] {
@@ -270,62 +260,6 @@ export function readWidgetEditableFieldsContract(content: unknown): WidgetEditab
   return { v: 1, widgetType, fields };
 }
 
-export function widgetEditableFieldsToTextPrimitives(contract: WidgetEditableFieldsContract): WidgetTextPrimitiveDeclaration[] {
-  return contract.fields.map((field) => ({
-    path: field.path,
-    label: field.label,
-    type: field.type,
-    role: field.role,
-  }));
-}
-
-function extractForDeclaration(args: {
-  root: unknown;
-  declaration: WidgetTextPrimitiveDeclaration;
-  steps: ParsedPathStep[];
-  stepIndex: number;
-  pathParts: string[];
-  out: ExtractedTextPrimitiveValue[];
-}): void {
-  if (args.stepIndex >= args.steps.length) {
-    const path = concretePath(args.pathParts);
-    args.out.push({
-      ...args.declaration,
-      path,
-      value: readEditableTextPrimitiveValue(args.root),
-    });
-    return;
-  }
-
-  const step = args.steps[args.stepIndex]!;
-  if (!isRecord(args.root)) return;
-  const nextValue = args.root[step.key];
-
-  if (step.repeat) {
-    if (!Array.isArray(nextValue)) return;
-    nextValue.forEach((item, index) => {
-      extractForDeclaration({
-        root: item,
-        declaration: args.declaration,
-        steps: args.steps,
-        stepIndex: args.stepIndex + 1,
-        pathParts: [...args.pathParts, step.key, String(index)],
-        out: args.out,
-      });
-    });
-    return;
-  }
-
-  extractForDeclaration({
-    root: nextValue,
-    declaration: args.declaration,
-    steps: args.steps,
-    stepIndex: args.stepIndex + 1,
-    pathParts: [...args.pathParts, step.key],
-    out: args.out,
-  });
-}
-
 function extractSavedTextFieldsForField(args: {
   contract: WidgetEditableFieldsContract;
   root: Record<string, unknown>;
@@ -351,18 +285,18 @@ function extractSavedTextFieldsForField(args: {
       type: args.field.type,
       label: args.field.label,
       role: args.field.role,
-      baseText: readEditableTextPrimitiveValue(getValueAtConcretePath(args.root, args.pathParts)),
+      baseText: readEditableTextPrimitiveValue(getValueAtConcretePath(args.root, args.pathParts), path),
     });
     return;
   }
 
   const step = args.steps[args.stepIndex]!;
   const currentValue = getValueAtConcretePath(args.root, args.pathParts);
-  if (!isRecord(currentValue)) return;
+  if (!isRecord(currentValue)) throw new Error(`saved_text_field_path_invalid:${args.field.path}`);
   const nextValue = currentValue[step.key];
 
   if (step.repeat) {
-    if (!Array.isArray(nextValue)) return;
+    if (!Array.isArray(nextValue)) throw new Error(`saved_text_field_path_invalid:${args.field.path}`);
     nextValue.forEach((_item, index) => {
       const patternParts = [...args.patternParts, step];
       const pathParts = [...args.pathParts, step.key, String(index)];
@@ -388,24 +322,6 @@ function extractSavedTextFieldsForField(args: {
     stepIndex: args.stepIndex + 1,
     pathParts: [...args.pathParts, step.key],
     patternParts: [...args.patternParts, step],
-  });
-}
-
-export function extractTextPrimitiveValuesForEditableFields(args: {
-  contract: WidgetEditableFieldsContract;
-  config: Record<string, unknown>;
-}): ExtractedTextPrimitiveValue[] {
-  return widgetEditableFieldsToTextPrimitives(args.contract).flatMap((declaration) => {
-    const out: ExtractedTextPrimitiveValue[] = [];
-    extractForDeclaration({
-      root: args.config,
-      declaration,
-      steps: parsePrimitivePath(declaration.path),
-      stepIndex: 0,
-      pathParts: [],
-      out,
-    });
-    return out;
   });
 }
 
@@ -549,32 +465,6 @@ export function widgetEditableFieldsContractHash(contract: WidgetEditableFieldsC
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
   return hash.toString(16).padStart(8, '0');
-}
-
-export function buildTranslatedTextValueMap(items: ExtractedTextPrimitiveValue[]): TranslatedValueMap {
-  return Object.fromEntries(items.map((item) => [item.path, item.value]));
-}
-
-export function validateTranslatedValuesForTextPrimitives(
-  requiredItems: ExtractedTextPrimitiveValue[],
-  values: unknown,
-): TranslatedValueValidationResult {
-  if (!isRecord(values)) {
-    return { ok: false, reason: 'invalid_value', path: '<root>' };
-  }
-  const required = new Set(requiredItems.map((item) => item.path));
-  const actual = new Set(Object.keys(values));
-
-  for (const path of actual) {
-    if (!required.has(path)) return { ok: false, reason: 'extra_path', path };
-    if (typeof values[path] !== 'string') return { ok: false, reason: 'invalid_value', path };
-  }
-
-  for (const path of required) {
-    if (!actual.has(path)) return { ok: false, reason: 'missing_path', path };
-  }
-
-  return { ok: true };
 }
 
 export function validateTranslatedValuesForProducerItems(

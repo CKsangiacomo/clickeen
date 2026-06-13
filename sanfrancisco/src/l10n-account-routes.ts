@@ -101,23 +101,23 @@ function assertProviderConfigured(env: Env, provider: string): void {
 
 function normalizeSavedTextItems(raw: unknown): SavedTextGraphItem[] | null {
   if (!Array.isArray(raw)) return null;
-  const items = raw
-    .filter((entry) => isRecord(entry))
-    .map((entry) => ({
-      path: asTrimmedString(entry.path) ?? '',
-      type: entry.type === 'richtext' ? ('richtext' as const) : ('string' as const),
+  const items: SavedTextGraphItem[] = [];
+  const seen = new Set<string>();
+  for (const entry of raw) {
+    if (!isRecord(entry) || typeof entry.value !== 'string') return null;
+    const path = asTrimmedString(entry.path);
+    if (!path || seen.has(path) || path.includes('*') || path.includes('[]')) return null;
+    if (entry.type !== 'string' && entry.type !== 'richtext') return null;
+    seen.add(path);
+    items.push({
+      path,
+      type: entry.type,
       ...(asTrimmedString(entry.label) ? { label: asTrimmedString(entry.label) as string } : {}),
       ...(asTrimmedString(entry.role) ? { role: asTrimmedString(entry.role) as string } : {}),
-      value: typeof entry.value === 'string' ? entry.value : null,
-    }));
-  if (items.some((entry) => !entry.path || entry.value == null)) return null;
-  const seen = new Set<string>();
-  for (const item of items) {
-    if (seen.has(item.path)) return null;
-    if (item.path.includes('*') || item.path.includes('[]')) return null;
-    seen.add(item.path);
+      value: entry.value,
+    });
   }
-  return items as SavedTextGraphItem[];
+  return items;
 }
 
 export function normalizeInstanceTranslationAgentRequest(raw: unknown): InstanceTranslationAgentRequest | null {

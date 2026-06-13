@@ -10,7 +10,6 @@ import { getCompiledWidgetRouteResponse } from '../../bob/lib/api/compiled-widge
 import { resolveWidgetOverlayCode, toAccountAssetPublicPath } from '../../packages/ck-contracts/src';
 import {
   extractSavedTextFieldsForEditableFields,
-  extractTextPrimitiveValuesForEditableFields,
   readWidgetEditableFieldsContract,
 } from '../../packages/ck-contracts/src/translated-value-primitives';
 import { buildSavedWidgetPublicPackage } from '../../roma/lib/widget-public-package';
@@ -781,7 +780,7 @@ function composeConfigWithContent(config: JsonRecord, content: JsonRecord): Json
 function stripContent(config: JsonRecord, widgetType: string): JsonRecord {
   const next = clone(config);
   const contract = loadEditableFields(widgetType);
-  for (const item of extractTextPrimitiveValuesForEditableFields({ contract, config })) {
+  for (const item of extractSavedTextFieldsForEditableFields({ contract, config })) {
     deletePath(next, item.path);
   }
   return next;

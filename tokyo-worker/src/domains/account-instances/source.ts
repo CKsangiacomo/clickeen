@@ -20,16 +20,15 @@ import { loadJson, loadJsonObject, putJson, putJsonIfUnchanged } from '../storag
 import { getWidgetDefinition, resolveWidgetCode } from '../widget-definitions';
 import {
   extractSavedTextFieldsForEditableFields,
-  extractTextPrimitiveValuesForEditableFields,
+  type SavedTextField,
 } from '@clickeen/ck-contracts/translated-value-primitives';
 import {
-  assertLocaleOverlayValuesMatchContent,
   listLocaleOverlays,
-  localeOverlayHasCompleteValues,
+  localeOverlayHasCompleteSavedTextValues,
   readLocaleOverlay,
   writeLocaleOverlay,
 } from '../account-translations/overlays';
-import { buildBaseContentMarkerForContent, buildWidgetContractMarker } from '../account-translations/markers';
+import { buildBaseContentMarker, buildWidgetContractMarker } from '../account-translations/markers';
 import type {
   AccountInstanceConfigDocument,
   AccountInstanceContentDocument,
@@ -68,30 +67,45 @@ function displayNameFromConfigDocument(configDoc: AccountInstanceConfigDocument)
   );
 }
 
-async function resolveWidgetContractHash(widgetType: string): Promise<string> {
-  const widgetDefinition = getWidgetDefinition(widgetType);
-  if (!widgetDefinition?.editableFields || widgetDefinition.editableFields.widgetType !== widgetType) {
-    throw new Error(`tokyo.translation.widget_unsupported:${widgetType}`);
-  }
-  return buildWidgetContractMarker(widgetDefinition.editableFields);
-}
-
 export async function buildCurrentLocaleOverlayMetadata(args: {
   configDoc: AccountInstanceConfigDocument;
   content: AccountInstanceContentDocument;
 }): Promise<{
   baseContentMarker: string;
   widgetContractHash: string;
+  fields: SavedTextField[];
 }> {
-  const widgetContractHash = await resolveWidgetContractHash(args.configDoc.widgetType);
+  const widgetDefinition = getWidgetDefinition(args.configDoc.widgetType);
+  if (!widgetDefinition?.editableFields || widgetDefinition.editableFields.widgetType !== args.configDoc.widgetType) {
+    throw new Error(`tokyo.translation.widget_unsupported:${args.configDoc.widgetType}`);
+  }
+  const widgetContractHash = await buildWidgetContractMarker(widgetDefinition.editableFields);
+  const fields = extractSavedTextFieldsForEditableFields({
+    contract: widgetDefinition.editableFields,
+    config: composeConfigWithContent({
+      config: args.configDoc.config,
+      content: args.content,
+    }),
+  });
+  const expectedPaths = new Set(fields.map((field) => field.path));
+  for (const field of fields) {
+    const saved = args.content.fields[field.path];
+    if (!saved || saved.value !== field.baseText || saved.identityKey !== field.identityKey || saved.fieldPattern !== field.fieldPattern) {
+      throw new Error(`coreui.errors.instance.content.invalid:${field.path}`);
+    }
+  }
+  for (const path of Object.keys(args.content.fields)) {
+    if (!expectedPaths.has(path)) throw new Error(`coreui.errors.instance.content.invalid:${path}`);
+  }
   return {
-    baseContentMarker: await buildBaseContentMarkerForContent({
+    baseContentMarker: await buildBaseContentMarker({
       baseLocale: args.configDoc.baseLocale,
       widgetType: args.configDoc.widgetType,
       widgetContractHash,
-      content: args.content,
+      fields,
     }),
     widgetContractHash,
+    fields,
   };
 }
 
@@ -218,7 +232,7 @@ function stripContentFromConfig(args: {
   const widgetDefinition = getWidgetDefinition(args.widgetType);
   if (!widgetDefinition?.editableFields) return structuredClone(args.config);
   const next = structuredClone(args.config);
-  for (const item of extractTextPrimitiveValuesForEditableFields({
+  for (const item of extractSavedTextFieldsForEditableFields({
     contract: widgetDefinition.editableFields,
     config: args.config,
   })) {

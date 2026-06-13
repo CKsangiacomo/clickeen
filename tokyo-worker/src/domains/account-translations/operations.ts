@@ -24,7 +24,6 @@ import {
 } from '../account-instances/source';
 import {
   completeAccountInstanceTranslatedLocaleValues,
-  readAccountInstanceCurrentTranslatedLocaleValues,
 } from './values';
 import {
   readInstanceRegistryRow,
@@ -490,9 +489,12 @@ export async function readInstanceTranslationGeneration(args: {
         baseContentMarker: currentBaseContentMarker,
         targetLocales,
       });
-    } catch {
-      currentBaseContentMarker = undefined;
-      currentGenerationRequestMarker = undefined;
+    } catch (error) {
+      return {
+        ok: false,
+        reasonKey: 'instance.translation.contract_invalid',
+        detail: error instanceof Error ? error.message : String(error),
+      };
     }
   }
   const currentReadyLocales = readyLocalesForOverlays(content.value, targetLocales, overlays, currentBaseContentMarker);
@@ -1102,19 +1104,24 @@ export async function completeLocaleTranslation(args: {
     };
   }
 
-  const existing = await readAccountInstanceCurrentTranslatedLocaleValues({
+  const existingOverlay = localeOverlayByLocale(await listLocaleOverlays({
     env: args.env,
     accountId: args.accountId,
+    widgetCode: instance.value.widgetCode,
     instanceId: args.instanceId,
-    locale,
-  });
+  })).get(locale);
+  const existingValues: Record<string, string> = {};
+  for (const field of currentSavedTextFields) {
+    const translated = existingOverlay?.values[field.path];
+    if (typeof translated === 'string') existingValues[field.path] = translated;
+  }
 
   let nextValues: Record<string, string>;
   try {
     nextValues = composeTranslatedValues({
       fields: currentSavedTextFields,
       changedFields: job.changedFields,
-      existingValues: existing.ok ? existing.value.values : {},
+      existingValues,
       completedValues: args.values,
     });
   } catch (error) {

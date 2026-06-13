@@ -7,9 +7,9 @@ import {
   readInstanceTranslationGeneration,
 } from '../domains/account-translations/operations';
 import {
-  listTranslatedLocales,
-  readTranslatedLocaleValues,
-  writeTranslatedLocaleValues,
+  listAccountInstanceTranslatedLocaleValues,
+  readAccountInstanceTranslatedLocaleValues,
+  writeAccountInstanceTranslatedLocaleValues,
 } from '../domains/account-translations/values';
 import { readAccountInstanceDocument } from '../domains/account-instances/source';
 import { json } from '../http';
@@ -141,7 +141,7 @@ export async function tryHandleInternalTranslationRoutes(
         ),
       );
     }
-    const translations = await listTranslatedLocales({ env, accountId, instanceId });
+    const translations = await listAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId });
     return respond(json({
       ok: true,
       v: 1,
@@ -264,11 +264,11 @@ export async function tryHandleInternalTranslationRoutes(
       });
       if (authErr) return respond(authErr);
 
-      const translation = await readTranslatedLocaleValues({ env, accountId, instanceId, locale });
-      if (!translation) {
+      const translation = await readAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale });
+      if (!translation.ok) {
         return respond(json({ error: { kind: 'NOT_FOUND', reasonKey: 'tokyo.translation.notFound' } }, { status: 404 }));
       }
-      return respond(json({ ok: true, v: 1, ...translation }));
+      return respond(json({ ok: true, v: 1, ...translation.value }));
     }
 
     if (req.method === 'PUT') {
@@ -285,7 +285,7 @@ export async function tryHandleInternalTranslationRoutes(
       if (!values) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
 
       try {
-        const translation = await writeTranslatedLocaleValues({ env, accountId, instanceId, locale, values });
+        const translation = await writeAccountInstanceTranslatedLocaleValues({ env, accountId, instanceId, locale, values });
         return respond(json({ ok: true, v: 1, locale: translation.locale }));
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);

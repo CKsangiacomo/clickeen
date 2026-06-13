@@ -6,10 +6,10 @@ import {
 } from '../account-instances/keys';
 import { loadJson, putJson } from '../storage';
 import type {
-  AccountInstanceContentDocument,
   LocaleOverlayDocument,
   LocaleOverlayStatus,
 } from '../account-instances/types';
+import type { SavedTextField } from '@clickeen/ck-contracts/translated-value-primitives';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -52,27 +52,27 @@ export function normalizeLocaleOverlayDocument(raw: unknown): LocaleOverlayDocum
   };
 }
 
-export function localeOverlayHasCompleteValues(args: {
-  content: AccountInstanceContentDocument;
+export function localeOverlayHasCompleteSavedTextValues(args: {
+  fields: SavedTextField[];
   overlay: LocaleOverlayDocument | null;
 }): boolean {
   if (!args.overlay) return false;
-  const paths = Object.keys(args.content.fields);
+  const paths = args.fields.map((field) => field.path);
   return paths.length > 0 && paths.every((path) => typeof args.overlay?.values[path] === 'string');
 }
 
-export function assertLocaleOverlayValuesMatchContent(args: {
-  content: AccountInstanceContentDocument;
+export function assertLocaleOverlayValuesMatchSavedTextFields(args: {
+  fields: SavedTextField[];
   values: Record<string, string>;
 }): void {
-  const contentPaths = new Set(Object.keys(args.content.fields));
-  for (const path of contentPaths) {
+  const fieldPaths = new Set(args.fields.map((field) => field.path));
+  for (const path of fieldPaths) {
     if (typeof args.values[path] !== 'string') {
       throw new Error(`tokyo.translation.value_missing:${path}`);
     }
   }
   for (const path of Object.keys(args.values)) {
-    if (!contentPaths.has(path)) {
+    if (!fieldPaths.has(path)) {
       throw new Error(`tokyo.translation.value_unexpected:${path}`);
     }
   }

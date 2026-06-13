@@ -1,5 +1,4 @@
 import type { SavedTextField } from '@clickeen/ck-contracts/translated-value-primitives';
-import type { AccountInstanceContentDocument } from '../account-instances/types';
 
 function stableJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map((entry) => stableJson(entry)).join(',')}]`;
@@ -39,15 +38,6 @@ function markerFieldsFromSavedText(fields: SavedTextField[]): MarkerField[] {
   }));
 }
 
-function markerFieldsFromContent(content: AccountInstanceContentDocument): MarkerField[] {
-  return Object.entries(content.fields).map(([path, field]) => ({
-    ...(field.identityKey ? { identityKey: field.identityKey } : {}),
-    ...(field.fieldPattern ? { fieldPattern: field.fieldPattern } : {}),
-    path,
-    baseText: field.value,
-  }));
-}
-
 export function buildWidgetContractMarker(contract: unknown): Promise<string> {
   return sha256V1({
     v: 1,
@@ -67,20 +57,6 @@ export function buildBaseContentMarker(args: {
     widgetType: args.widgetType,
     widgetContractHash: args.widgetContractHash,
     fields: markerFieldsFromSavedText(args.fields),
-  });
-}
-
-export function buildBaseContentMarkerForContent(args: {
-  baseLocale: string;
-  widgetType: string;
-  widgetContractHash: string;
-  content: AccountInstanceContentDocument;
-}): Promise<string> {
-  return buildBaseContentMarkerForFields({
-    baseLocale: args.baseLocale,
-    widgetType: args.widgetType,
-    widgetContractHash: args.widgetContractHash,
-    fields: markerFieldsFromContent(args.content),
   });
 }
 
