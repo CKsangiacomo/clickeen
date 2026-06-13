@@ -650,7 +650,7 @@ Evidence:
 
 ### PF-107-8 - Tokyo Page Create Partial Mutation Plane
 
-Status: OPEN
+Status: COMPLETE
 Original row family: AB-24 / page source-create boundary
 Likely files:
 
@@ -687,6 +687,37 @@ Done when:
 - Valid create produces the declared page truth.
 - Serve-state write failure does not produce page create success.
 - List/open/publish cannot observe a half-created valid page.
+
+Evidence:
+
+- Implementation commit:
+  `8215d79d47b509e71f5577e354c45ca57c57c7d2`.
+- Product truth: Tokyo owns page source truth and page serve-state truth. Page
+  create accepts a page only when submitted source is valid and the durable
+  source plus serve-state contract can be created without leaving a
+  product-visible source-only page.
+- Source/runtime LOC: `25 insertions(+), 12 deletions(-)` across PF-107-8
+  product files. This uses the post-fix LOC exception because the old violation
+  was a compact mutation-order bug and the fix is minimal boundary collapse,
+  not preservation code.
+- Local gates: `git diff --check`; `pnpm --filter @clickeen/tokyo-worker
+  typecheck`.
+- Focused stale-symbol scan: no rollback path, catch-and-continue,
+  warning-only continuation, compatibility wrapper, runtime probe, preflight,
+  validate, or self-test ceremony was introduced.
+- External proof: temporary outside-runtime TS harness showed valid create
+  writes serve-state then source and list/open succeed; forced serve-state write
+  failure fails visibly and writes no source; invalid submitted source fails
+  before mutation with zero puts; existing source-only stored state fails open
+  and list with `tokyo.errors.page.serveStateMissing`.
+- Validator 1: GREEN. No skipped blast radius remains; create validates source
+  and checks existing source before mutation, writes serve-state before source,
+  and read/list require matching serve-state, with no runtime ceremony.
+- Validator 2: GREEN. No V1-V8 remains or was introduced; source-before-
+  serve-state partial create is gone, source-only stored state is not accepted
+  as valid, and no rollback ceremony, compatibility wrapper, warning-only
+  continuation, runtime probe/check/validate/preflight/self-test, or fallback
+  reconstruction was added.
 
 ### PF-107-9 - Evidence Durability, Traceability, and PRD State Repair
 
