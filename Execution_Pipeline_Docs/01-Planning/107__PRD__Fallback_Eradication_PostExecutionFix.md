@@ -143,7 +143,7 @@ SHAs, commit the slice, push, reread this process, then move to the next slice.
 
 ### PF-107-1 - Roma Page Create and Stored Page Source
 
-Status: OPEN
+Status: COMPLETE
 Original rows: AB-19, AB-20, R107-ROMA-001, R107-ROMA-002
 Likely files:
 
@@ -190,6 +190,25 @@ Done when:
 - Invalid stored Tokyo page source fails before page open/list/composition/
   publish/package success.
 - No replacement normalizer preserves the old behavior.
+
+Evidence:
+
+- Implementation commit: `eac372ed`.
+- Product truth: Roma owns page create request defaults only for absent declared
+  create fields. Tokyo owns stored page source truth and source save stamping.
+- Source/runtime LOC: `36 insertions(+), 117 deletions(-)` across PF-107-1
+  product files.
+- Local gates: `git diff --check`; `pnpm --filter @clickeen/roma typecheck`;
+  `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/tokyo-worker
+  typecheck`. Tokyo-worker has no lint script.
+- External proof: temporary outside-runtime harness showed invalid supplied
+  metadata and non-object create payload make zero Tokyo create calls; page
+  settings caller no longer forces localization repair; invalid submitted source
+  fails at Tokyo with zero R2 puts; valid create/save succeeds and Tokyo stamps
+  version/updatedAt after validation.
+- Validator 1: initial RED on `roma/components/pages-domain.tsx` settings
+  caller forcing localization fields, then GREEN after deletion.
+- Validator 2: GREEN. No V1-V8 remains or was introduced for this slice.
 
 ### PF-107-2 - Builder Copilot Boundary
 
