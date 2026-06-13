@@ -91,21 +91,21 @@ GATE
 
 OUTPUT
 
-- PRD includes an entitlements mapping for this widget (what is tier-gated, capped, or sanitized).
+- PRD includes an entitlements mapping for this widget (what is tier-gated, capped, or rejected).
 - Mapping format (fixed-width table in code block):
 
 ```text
 Key                     | Kind | Path(s)                | Metric/Mode          | Enforcement              | Notes
 ----------------------- | ---- | ---------------------- | -------------------- | ------------------------ | ----------------
-branding.remove         | flag | behavior.showBacklink  | boolean (deny false) | load=sanitize ops=reject | sanitize on load
-widget.socialShare.enabled | flag | behavior.socialShare.enabled | boolean (deny true) | load=sanitize ops=reject | sanitize disabled on load
+branding.remove         | flag | behavior.showBacklink  | boolean (deny false) | load=ignore ops=reject publish=reject | reject gated edits/saves
+widget.socialShare.enabled | flag | behavior.socialShare.enabled | boolean (deny true) | load=ignore ops=reject publish=reject | reject gated edits/saves
 items.group.small.max | limit | sections[]          | count                | ops+publish reject       | limit binding
 items.group.large.max | limit | sections[].faqs[]   | count-total          | ops+publish reject       | limit binding
 ```
 
 NOTES
 
-- Every row must correspond to an entry in `tokyo/product/widgets/{widgetType}/limits.json`; shared policy evaluation consumes that mapping. Current proven widget enforcement is Bob editor ops unless a server boundary is explicitly implemented and tested.
+- Every row must correspond to an entry in `tokyo/product/widgets/{widgetType}/limits.json`; shared policy evaluation consumes that mapping. Bob editor ops and Roma save policy consume widget limits before save reaches Tokyo.
 - Use active global entitlement keys from `packages/ck-policy/entitlements.matrix.json`. If a limit is product truth but enforcement is missing, mark that enforcement gap in `packages/ck-policy/src/registry.ts` instead of deleting the limit.
 - If the PRD expects UI gating (e.g. disabling a control), it must be explicit; otherwise keep UI generic and rely on shared policy plus owner-correct server enforcement.
 

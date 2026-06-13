@@ -1,6 +1,6 @@
 import { isRecord as isPlainObject } from '@clickeen/ck-contracts';
 import { WIDGET_SHELL_FACTORY_DEFAULTS, assertValidWidgetShellSource } from '@clickeen/widget-shell';
-import type { CompiledPanel, CompiledWidget, WidgetPresets } from './types';
+import type { CompiledPanel, CompiledWidgetCore, WidgetPresets } from './types';
 import { RawWidget, decodeHtmlEntities, parseTooldrawerAttributes, parsePanels } from './compiler.shared';
 import { buildWidgetMedia } from './compiler/media';
 import { compileControlsFromPanels, expandTooldrawerClusters, groupKeyToLabel } from './compiler/controls';
@@ -232,7 +232,7 @@ function buildThemePresets(themes: ThemeRegistry['themes']): WidgetPresets {
   };
 }
 
-export async function compileWidgetServer(widgetJson: RawWidget): Promise<CompiledWidget> {
+export async function compileWidgetServer(widgetJson: RawWidget): Promise<CompiledWidgetCore> {
   if (!widgetJson || typeof widgetJson !== 'object') {
     throw new Error('[BobCompiler] Invalid widget JSON payload');
   }

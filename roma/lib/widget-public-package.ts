@@ -23,7 +23,7 @@ type WidgetPackageFileContext = {
 export type CompiledWidgetForPublicPackage = {
   widgetname: string;
   displayName?: string;
-  limits?: LimitsSpec | null;
+  limits: LimitsSpec;
   widgetPackage?: {
     files: Partial<Record<string, WidgetPackageFileContext>>;
   };

@@ -49,13 +49,13 @@ Entitlements mapping (must match `tokyo/product/widgets/faq/limits.json`):
 ```text
 Key                        | Kind | Path(s)                    | Metric/Mode          | Enforcement        | Notes
 -------------------------- | ---- | -------------------------- | -------------------- | ------------------ | ----------------------------
-branding.remove            | flag | behavior.showBacklink      | boolean (deny false) | load sanitize; ops | Bob gates/rejects editor ops; server save/publish is a named gap
+branding.remove            | flag | behavior.showBacklink      | boolean (deny false) | load ignore; ops+publish reject | Bob gates/rejects editor ops; Roma rejects save before Tokyo
 items.group.small.max  | limit | faq.sections[]             | count                | ops+publish        | section count limit group
 items.group.medium.max | limit | faq.sections[].faqs[]      | count                | ops+publish        | per-section Q/A count limit group
 items.group.large.max  | limit | faq.sections[].faqs[]      | count-total          | ops+publish        | total Q/A count limit group
 ```
 
-Current implementation note: `limits.json` maps FAQ state paths to real `ck-policy` keys. Bob enforces the mapping during editor operations today. Server save/publish enforcement is a named `ck-policy` gap and must not be implied until implemented.
+Current implementation note: `limits.json` maps FAQ state paths to real `ck-policy` keys. Bob enforces the mapping during editor operations, and Roma save policy rejects non-entitled or over-limit saves before Tokyo receives submitted package bytes.
 
 ## 1) Where the widget lives
 
@@ -329,8 +329,8 @@ Controls:
 Entitlements enforcement:
 
 - `tokyo/product/widgets/faq/limits.json` maps FAQ paths to `ck-policy` keys.
-- Bob uses policy/limits for editor UX gating and operation rejection today.
-- Tokyo/Roma save/publish server enforcement is not currently proven; it remains a named `ck-policy` enforcement gap.
+- Bob uses policy/limits for editor UX gating and operation rejection.
+- Roma save policy rejects non-entitled or over-limit saves before Tokyo receives submitted package bytes.
 
 ### Panel: Typography (`typography`, explicitly declared shared panel)
 

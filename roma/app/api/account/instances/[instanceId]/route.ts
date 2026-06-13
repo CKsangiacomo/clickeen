@@ -52,6 +52,7 @@ function isCompiledWidgetForPublicPackage(value: unknown): value is CompiledWidg
   return (
     typeof record.widgetname === 'string' &&
     (typeof record.displayName === 'undefined' || typeof record.displayName === 'string') &&
+    Boolean(record.limits && typeof record.limits === 'object' && !Array.isArray(record.limits)) &&
     Boolean(widgetPackage && typeof widgetPackage === 'object' && !Array.isArray(widgetPackage))
   );
 }
@@ -279,7 +280,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       widgetType,
       config,
       authz: current.value.authzPayload,
-      limits: compiled.limits ?? null,
+      limits: compiled.limits,
       context: 'publish',
     });
     if (!policyGate.ok) {

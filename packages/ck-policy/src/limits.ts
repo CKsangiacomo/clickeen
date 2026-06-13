@@ -3,7 +3,7 @@ import { getEntitlementsMatrix } from './matrix';
 import type { Policy } from './types';
 
 export type LimitContext = 'ops' | 'load' | 'publish';
-export type LimitEnforcement = 'reject' | 'sanitize' | 'ignore';
+export type LimitEnforcement = 'reject' | 'ignore';
 
 export type FlagLimit = {
   kind: 'flag';
@@ -11,7 +11,6 @@ export type FlagLimit = {
   paths: string[];
   mode: 'boolean' | 'nonempty-string';
   deny: boolean | 'nonempty';
-  sanitizeTo?: unknown;
   enforce?: Partial<Record<LimitContext, LimitEnforcement>>;
 };
 
@@ -20,7 +19,7 @@ export type NumericLimit = {
   key: string;
   path: string;
   metric: 'count' | 'count-total' | 'chars';
-  enforce?: Partial<Record<LimitContext, Exclude<LimitEnforcement, 'sanitize'>>>;
+  enforce?: Partial<Record<LimitContext, LimitEnforcement>>;
 };
 
 export type LimitEntry = FlagLimit | NumericLimit;
@@ -37,7 +36,7 @@ export type LimitViolation = {
   detail?: string;
 };
 
-const DEFAULT_LIMIT_ENFORCE: Record<LimitContext, Exclude<LimitEnforcement, 'sanitize'>> = {
+const DEFAULT_LIMIT_ENFORCE: Record<LimitContext, LimitEnforcement> = {
   ops: 'reject',
   publish: 'reject',
   load: 'ignore',
@@ -49,17 +48,26 @@ const DEFAULT_FLAG_ENFORCE: Record<LimitContext, LimitEnforcement> = {
   load: 'ignore',
 };
 
-function normalizePaths(entry: { path?: string; paths?: unknown }): string[] {
-  if (typeof entry.path === 'string' && entry.path.trim()) {
-    return [entry.path.trim()];
+function readPath(value: unknown, key: string): string {
+  if (typeof value !== 'string' || !value.trim()) throw new Error(`[ck-policy] Limit ${key} path must be a non-empty string`);
+  if (/\s/.test(value)) throw new Error(`[ck-policy] Limit ${key} has invalid path`);
+  const parts = value.split('.');
+  for (const part of parts) {
+    if (!part || !part.trim() || part === '[]' || (part.includes('[]') && !part.endsWith('[]'))) throw new Error(`[ck-policy] Limit ${key} has invalid path`);
   }
-  if (Array.isArray(entry.paths)) {
-    const paths = entry.paths
-      .map((p) => (typeof p === 'string' ? p.trim() : ''))
-      .filter(Boolean);
-    if (paths.length > 0) return paths;
+  return value;
+}
+
+function readPaths(entry: { path?: unknown; paths?: unknown; key?: string }): string[] {
+  const hasPath = Object.prototype.hasOwnProperty.call(entry, 'path');
+  const hasPaths = Object.prototype.hasOwnProperty.call(entry, 'paths');
+  if (hasPath && hasPaths) throw new Error(`[ck-policy] Flag limit ${entry.key ?? ''} must specify path or paths`);
+  if (hasPath) {
+    return [readPath(entry.path, entry.key ?? '')];
   }
-  return [];
+  if (!hasPaths) return [];
+  if (!Array.isArray(entry.paths)) throw new Error(`[ck-policy] Flag limit ${entry.key ?? ''} paths must be an array`);
+  return entry.paths.map((path) => readPath(path, entry.key ?? ''));
 }
 
 function requireMatrixKind(key: string, expected: LimitEntry['kind']) {
@@ -73,15 +81,21 @@ function requireMatrixKind(key: string, expected: LimitEntry['kind']) {
   }
 }
 
-function defaultSanitizeValue(limit: FlagLimit): unknown {
-  if (limit.mode === 'nonempty-string') return '';
-  if (limit.deny === true) return false;
-  if (limit.deny === false) return true;
-  return '';
+function assertEnforce(enforce: Record<string, unknown>, key: string): void {
+  for (const [context, value] of Object.entries(enforce)) {
+    if (!['ops', 'load', 'publish'].includes(context) || (value !== 'reject' && value !== 'ignore')) throw new Error(`[ck-policy] Limit ${key} has invalid enforce`);
+  }
+}
+
+function readEnforce(enforce: unknown, key: string): Partial<Record<LimitContext, LimitEnforcement>> | undefined {
+  if (enforce === undefined) return undefined;
+  if (!isRecord(enforce)) throw new Error(`[ck-policy] Limit ${key} has invalid enforce`);
+  assertEnforce(enforce, key);
+  return enforce as Partial<Record<LimitContext, LimitEnforcement>>;
 }
 
 function normalizeFlag(limit: FlagLimit): FlagLimit {
-  const paths = limit.paths.length ? limit.paths : normalizePaths(limit);
+  const paths = limit.paths.length ? limit.paths : readPaths(limit);
   if (paths.length === 0) {
     throw new Error(`[ck-policy] Flag limit ${limit.key} must specify paths`);
   }
@@ -95,19 +109,17 @@ function normalizeFlag(limit: FlagLimit): FlagLimit {
     throw new Error(`[ck-policy] Flag limit ${limit.key} deny must be "nonempty"`);
   }
 
-  const enforce = { ...DEFAULT_FLAG_ENFORCE, ...(limit.enforce ?? {}) };
-  const sanitizeTo = limit.sanitizeTo ?? (enforce.load === 'sanitize' ? defaultSanitizeValue(limit) : limit.sanitizeTo);
+  const enforce = { ...DEFAULT_FLAG_ENFORCE, ...readEnforce(limit.enforce, limit.key) };
 
   return {
     ...limit,
     paths,
     enforce,
-    sanitizeTo,
   };
 }
 
 function normalizeNumericLimit(limit: NumericLimit): NumericLimit {
-  const path = typeof limit.path === 'string' ? limit.path.trim() : '';
+  const path = readPath(limit.path, limit.key);
   if (!path) {
     throw new Error(`[ck-policy] Numeric limit ${limit.key} must specify path`);
   }
@@ -117,12 +129,11 @@ function normalizeNumericLimit(limit: NumericLimit): NumericLimit {
   if ((limit.metric === 'count' || limit.metric === 'count-total') && !path.includes('[]')) {
     throw new Error(`[ck-policy] Numeric limit ${limit.key} metric ${limit.metric} requires [] in path`);
   }
-  const enforce = { ...DEFAULT_LIMIT_ENFORCE, ...(limit.enforce ?? {}) };
+  const enforce = { ...DEFAULT_LIMIT_ENFORCE, ...readEnforce(limit.enforce, limit.key) };
   return { ...limit, path, enforce };
 }
 
-export function parseLimitsSpec(raw: unknown): LimitsSpec | null {
-  if (raw == null) return null;
+export function parseLimitsSpec(raw: unknown): LimitsSpec {
   if (!isRecord(raw)) {
     throw new Error('[ck-policy] limits.json must be an object');
   }
@@ -131,6 +142,9 @@ export function parseLimitsSpec(raw: unknown): LimitsSpec | null {
   }
   if (!Array.isArray(raw.limits)) {
     throw new Error('[ck-policy] limits.json limits must be an array');
+  }
+  if (raw.limits.length === 0) {
+    throw new Error('[ck-policy] limits.json limits must not be empty');
   }
 
   const limits: LimitEntry[] = raw.limits.map((entry: unknown) => {
@@ -146,21 +160,26 @@ export function parseLimitsSpec(raw: unknown): LimitsSpec | null {
       throw new Error(`[ck-policy] limits.json entry ${key} has invalid kind`);
     }
     requireMatrixKind(key, kind);
+    if (Object.prototype.hasOwnProperty.call(entry, 'sanitizeTo')) {
+      throw new Error(`[ck-policy] Limit ${key} has deleted sanitizeTo`);
+    }
     if (kind === 'flag') {
       return normalizeFlag({
         kind: 'flag',
         key,
-        paths: normalizePaths(entry),
+        paths: readPaths(entry),
         mode: entry.mode as FlagLimit['mode'],
         deny: entry.deny as FlagLimit['deny'],
-        sanitizeTo: entry.sanitizeTo,
         enforce: entry.enforce as FlagLimit['enforce'],
       });
+    }
+    if (Object.prototype.hasOwnProperty.call(entry, 'path') && Object.prototype.hasOwnProperty.call(entry, 'paths')) {
+      throw new Error(`[ck-policy] Limit ${key} must specify path or paths`);
     }
     return normalizeNumericLimit({
       kind: 'limit',
       key,
-      path: typeof entry.path === 'string' ? entry.path : '',
+      path: entry.path as string,
       metric: entry.metric as NumericLimit['metric'],
       enforce: entry.enforce as NumericLimit['enforce'],
     });
@@ -173,10 +192,10 @@ function parseSegments(path: string): string[] {
   const segments: string[] = [];
   const parts = path.split('.');
   for (const part of parts) {
-    if (!part) continue;
+    if (!part) throw new Error('[ck-policy] Limit has invalid path');
     if (part.endsWith('[]')) {
       const base = part.slice(0, -2);
-      if (base) segments.push(base);
+      if (!base) throw new Error('[ck-policy] Limit has invalid path');
       segments.push('[]');
     } else {
       segments.push(part);
@@ -208,43 +227,6 @@ function collectValues(root: unknown, segments: string[], idx = 0): unknown[] {
   return collectValues(root[seg], segments, idx + 1);
 }
 
-function collectPaths(root: unknown, segments: string[], idx = 0, prefix = ''): string[] {
-  if (idx >= segments.length) return [prefix];
-  const seg = segments[idx];
-  if (seg === '[]') {
-    if (!Array.isArray(root)) return [];
-    return root.flatMap((item, i) => collectPaths(item, segments, idx + 1, joinPath(prefix, String(i))));
-  }
-  if (!isRecord(root)) return [];
-  return collectPaths(root[seg], segments, idx + 1, joinPath(prefix, seg));
-}
-
-function joinPath(base: string, next: string): string {
-  return base ? `${base}.${next}` : next;
-}
-
-function setAt(obj: unknown, path: string, value: unknown): unknown {
-  if (!path) return value;
-  const parts = path.split('.');
-  const root = Array.isArray(obj) ? [...obj] : { ...(obj as Record<string, unknown>) };
-  let cur: any = root;
-  for (let i = 0; i < parts.length; i += 1) {
-    const key = parts[i];
-    const isLast = i === parts.length - 1;
-    const index = /^\d+$/.test(key) ? Number(key) : null;
-    const nextKey = index != null ? index : key;
-    if (isLast) {
-      cur[nextKey] = value;
-      break;
-    }
-    const next = cur[nextKey];
-    const clone = Array.isArray(next) ? [...next] : isRecord(next) ? { ...next } : {};
-    cur[nextKey] = clone;
-    cur = clone;
-  }
-  return root;
-}
-
 function reasonKeyForLimit(limit: LimitEntry): string {
   if (limit.kind === 'limit') return 'coreui.upsell.reason.limitReached';
   return 'coreui.upsell.reason.flagBlocked';
@@ -252,12 +234,11 @@ function reasonKeyForLimit(limit: LimitEntry): string {
 
 export function evaluateLimits(args: {
   config: Record<string, unknown>;
-  limits: LimitsSpec | null | undefined;
+  limits: LimitsSpec;
   policy: Policy;
   context: LimitContext;
 }): LimitViolation[] {
   const { config, limits, policy, context } = args;
-  if (!limits) return [];
 
   const violations: LimitViolation[] = [];
   for (const limit of limits.limits) {
@@ -344,33 +325,4 @@ export function evaluateLimits(args: {
   }
 
   return violations;
-}
-
-export function sanitizeConfig(args: {
-  config: Record<string, unknown>;
-  limits: LimitsSpec | null | undefined;
-  policy: Policy;
-  context: LimitContext;
-}): Record<string, unknown> {
-  const { config, limits, policy, context } = args;
-  if (!limits) return config;
-  let next = config;
-
-  for (const limit of limits.limits) {
-    if (limit.kind !== 'flag') continue;
-    const enforcement = limit.enforce?.[context] ?? DEFAULT_FLAG_ENFORCE[context];
-    if (enforcement !== 'sanitize') continue;
-    if (policy.flags[limit.key] === true) continue;
-
-    const sanitizeValue = limit.sanitizeTo ?? defaultSanitizeValue(limit);
-    for (const path of limit.paths) {
-      const segments = parseSegments(path);
-      const concretePaths = collectPaths(next, segments);
-      for (const concrete of concretePaths) {
-        next = setAt(next, concrete, sanitizeValue) as Record<string, unknown>;
-      }
-    }
-  }
-
-  return next;
 }

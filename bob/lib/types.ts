@@ -84,7 +84,7 @@ export interface WidgetPackageContext {
   files: Partial<Record<WidgetPackageFileName, WidgetPackageFileContext>>;
 }
 
-export interface CompiledWidget {
+export interface CompiledWidgetCore {
   widgetname: string;
   displayName: string;
   defaults: Record<string, unknown>;
@@ -94,7 +94,6 @@ export interface CompiledWidget {
   normalization?: WidgetNormalizationSpec;
   editableFields?: WidgetEditableFieldsContract;
   widgetPackage?: WidgetPackageContext;
-  limits?: LimitsSpec | null;
   media: {
     htmlUrl: string;
     cssUrl: string;
@@ -104,4 +103,8 @@ export interface CompiledWidget {
       scripts: string[];
     };
   };
+}
+
+export interface CompiledWidget extends CompiledWidgetCore {
+  limits: LimitsSpec;
 }

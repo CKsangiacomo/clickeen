@@ -13,9 +13,7 @@
       "path": "behavior.showBacklink",
       "mode": "boolean",
       "deny": false,
-      "sanitizeTo": true,
       "enforce": {
-        "load": "sanitize",
         "ops": "reject",
         "publish": "reject"
       }
@@ -26,9 +24,7 @@
       "path": "behavior.socialShare.enabled",
       "mode": "boolean",
       "deny": true,
-      "sanitizeTo": false,
       "enforce": {
-        "load": "sanitize",
         "ops": "reject",
         "publish": "reject"
       }

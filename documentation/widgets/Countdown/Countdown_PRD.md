@@ -22,7 +22,7 @@ Renders a configurable countdown / personal countdown / number counter with opti
 ```text
 key                 | kind | path(s)                        | metric/mode         | enforce                    | notes
 ------------------- | ---- | ------------------------------ | ------------------- | -------------------------- | -----------------------------
-branding.remove     | flag | behavior.showBacklink          | boolean (deny false)| load sanitize; ops+publish | Remove branding
+branding.remove     | flag | behavior.showBacklink          | boolean (deny false)| load ignore; ops+publish reject | Remove branding
 ```
 
 Plan limits are global usage counters (no per-widget matrices):

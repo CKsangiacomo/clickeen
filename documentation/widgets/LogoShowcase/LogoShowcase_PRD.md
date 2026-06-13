@@ -19,13 +19,13 @@ Entitlements mapping (must match `tokyo/product/widgets/logoshowcase/limits.json
 ```text
 Key                    | Kind  | Path(s)                 | Metric/Mode          | Enforcement        | Notes
 ---------------------- | ----- | ----------------------- | -------------------- | ------------------ | -----------------------------
-branding.remove        | flag  | behavior.showBacklink   | boolean (deny false) | load sanitize; ops | Bob gates/rejects editor ops; server save/publish is a named gap
-items.group.small.max  | limit | strips[]                | count                | ops                | strip count limit group
-items.group.medium.max | limit | strips[].logos[]        | count                | ops                | per-strip logo count limit group
-items.group.large.max  | limit | strips[].logos[]        | count-total          | ops                | total logo count limit group
+branding.remove        | flag  | behavior.showBacklink   | boolean (deny false) | load ignore; ops+publish reject | Bob gates/rejects editor ops; Roma rejects save before Tokyo
+items.group.small.max  | limit | strips[]                | count                | ops+publish        | strip count limit group
+items.group.medium.max | limit | strips[].logos[]        | count                | ops+publish        | per-strip logo count limit group
+items.group.large.max  | limit | strips[].logos[]        | count-total          | ops+publish        | total logo count limit group
 ```
 
-Current implementation note: `limits.json` maps Logo Showcase state paths to real `ck-policy` keys. Bob enforces the mapping during editor operations today. Server save/publish enforcement is a named `ck-policy` gap and must not be implied until implemented.
+Current implementation note: `limits.json` maps Logo Showcase state paths to real `ck-policy` keys. Bob enforces the mapping during editor operations, and Roma save policy rejects non-entitled or over-limit saves before Tokyo receives submitted package bytes.
 
 ### Non-negotiable widget implementation patterns (LogoShowcase-specific; do not copy another widget)
 These are required patterns to keep editor UX deterministic and prevent dead controls:

@@ -413,7 +413,6 @@ Expected implementation areas:
 ```text
 scripts/tokyo-r2-deploy-sync.mjs
 scripts/ops/**
-scripts/validate-widget-source.mjs
 tokyo/product/widgets/**
 tokyo/product/media/**
 tokyo/product/themes/**

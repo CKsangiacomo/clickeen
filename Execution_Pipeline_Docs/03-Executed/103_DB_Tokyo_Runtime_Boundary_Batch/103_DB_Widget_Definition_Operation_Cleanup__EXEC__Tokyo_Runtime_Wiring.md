@@ -25,7 +25,7 @@ The approved V1 model is:
 - Tokyo-worker imports widget source through the generated source index `tokyo-worker/src/generated/widget-definition-sources.ts`.
 - Tokyo-worker validates and exposes public widget definition entries through `listWidgetDefinitions()`.
 - Roma loads definitions through `roma/lib/account-instance-direct.ts` using `GET /__internal/widgets/definitions`.
-- Widget source validation is non-mutating through `scripts/validate-widget-source.mjs`, and `scripts/generate-widget-definition-sources.mjs --check` fails if a widget folder exists without the checked-in source index being regenerated.
+- Widget definition source indexing is checked through `scripts/generate-widget-definition-sources.mjs --check` if a widget folder exists without the checked-in source index being regenerated. The former standalone `scripts/validate-widget-source.mjs` guard was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 
 ## Cleanup Proof
 

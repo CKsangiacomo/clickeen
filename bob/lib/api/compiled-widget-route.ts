@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readWidgetEditableFieldsContract, type WidgetEditableFieldsContract } from '@clickeen/ck-contracts/translated-value-primitives';
-import { parseLimitsSpec } from '@clickeen/ck-policy';
+import { parseLimitsSpec, type LimitsSpec } from '@clickeen/ck-policy';
 import { WIDGET_SHELL_CSS_MODULE_KEYS, WIDGET_SHELL_RUNTIME_MODULE_KEYS } from '@clickeen/widget-shell';
 import { compileWidgetServer } from '../compiler.server';
 import type { RawWidget } from '../compiler.shared';
@@ -9,7 +9,7 @@ import type { WidgetPackageContext, WidgetPackageFileContext } from '../types';
 import { resolveCorsHeaders } from './cors';
 
 type CompiledWidgetPayload = Awaited<ReturnType<typeof compileWidgetServer>> & {
-  limits: unknown;
+  limits: LimitsSpec;
   editableFields?: WidgetEditableFieldsContract;
   widgetPackage?: WidgetPackageContext;
 };
@@ -135,7 +135,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
       );
     }
 
-    if (!limitsRes.ok && limitsRes.status !== 404) {
+    if (!limitsRes.ok) {
       return NextResponse.json(
         { error: `[Bob] Failed to fetch widget limits from Tokyo (${limitsRes.status} ${limitsRes.statusText})` },
         { status: 502, headers: corsHeaders },
@@ -183,10 +183,7 @@ export async function getCompiledWidgetRouteResponse(req: NextRequest, ctx: { pa
     const editableFields = editableFieldsRes.ok && editableFieldsContractBody.trim()
       ? readWidgetEditableFieldsContract(JSON.parse(editableFieldsContractBody))
       : undefined;
-    let limits = null;
-    if (limitsRes.ok && limitsText.trim()) {
-      limits = parseLimitsSpec(JSON.parse(limitsText));
-    }
+    const limits = parseLimitsSpec(JSON.parse(limitsText));
 
     const widgetPackage = buildWidgetPackage({
       widgetname,

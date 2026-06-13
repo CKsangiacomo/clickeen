@@ -376,7 +376,7 @@ export function validateAccountInstanceSavePolicy(args: {
   widgetType?: string;
   config: Record<string, unknown>;
   authz: SavePolicyContext;
-  limits?: LimitsSpec | null;
+  limits: LimitsSpec;
   context?: LimitContext;
 }): SavePolicyValidationResult {
   if (args.widgetType) {
@@ -408,7 +408,7 @@ export function validateAccountInstanceSavePolicy(args: {
 
   const violations = evaluateLimits({
     config: args.config,
-    limits: args.limits ?? null,
+    limits: args.limits,
     policy,
     context: args.context ?? 'publish',
   });

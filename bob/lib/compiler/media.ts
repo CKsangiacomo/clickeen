@@ -1,4 +1,4 @@
-import type { CompiledWidget } from '../types';
+import type { CompiledWidgetCore } from '../types';
 import { resolveTokyoBaseUrl } from '../env/tokyo';
 
 export function requireTokyoUrl(): string {
@@ -78,7 +78,7 @@ function expandBundleDeps(manifest: DieterManifest, roots: Set<string>): Set<str
 export async function buildWidgetMedia(args: {
   widgetname: string;
   requiredUsages: Set<string>;
-}): Promise<CompiledWidget['media']> {
+}): Promise<CompiledWidgetCore['media']> {
   const tokyoRoot = requireTokyoUrl().replace(/\/+$/, '');
   // Serve widget + Dieter media through Bob so the preview iframe runs same-origin.
   const dieterBase = `/dieter`;

@@ -72,9 +72,9 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     label: 'Remove branding',
     description: 'Allow removing Clickeen branding.',
     enforcement: {
-      status: 'gap',
-      owner: 'Bob widget editor ops; save/publish boundary pending',
-      note: 'Widget limits map the backlink path to this policy key and Bob rejects editor ops when the account cannot remove branding. Server save/publish enforcement remains a named gap.',
+      status: 'enforced',
+      owner: 'Bob widget editor ops and Roma save policy',
+      note: 'Widget limits map the backlink path to this policy key. Bob rejects editor ops when the account cannot remove branding, and Roma rejects non-entitled saves before submitted package bytes reach Tokyo-worker.',
     },
   },
   'embed.seoGeo.enabled': {
@@ -153,27 +153,27 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     label: 'Items group (small)',
     description: 'Shared max items limit for small list-style widgets.',
     enforcement: {
-      status: 'gap',
-      owner: 'Bob widget editor ops; save/publish boundary pending',
-      note: 'Widget limits map widget paths to this policy key and Bob rejects editor ops above the plan limit. Server save/publish enforcement remains a named gap.',
+      status: 'enforced',
+      owner: 'Bob widget editor ops and Roma save policy',
+      note: 'Widget limits map widget paths to this policy key. Bob rejects editor ops above the plan limit, and Roma rejects over-limit saves before submitted package bytes reach Tokyo-worker.',
     },
   },
   'items.group.medium.max': {
     label: 'Items group (medium)',
     description: 'Shared max items limit for medium list-style widgets.',
     enforcement: {
-      status: 'gap',
-      owner: 'Bob widget editor ops; save/publish boundary pending',
-      note: 'Widget limits map widget paths to this policy key and Bob rejects editor ops above the plan limit. Server save/publish enforcement remains a named gap.',
+      status: 'enforced',
+      owner: 'Bob widget editor ops and Roma save policy',
+      note: 'Widget limits map widget paths to this policy key. Bob rejects editor ops above the plan limit, and Roma rejects over-limit saves before submitted package bytes reach Tokyo-worker.',
     },
   },
   'items.group.large.max': {
     label: 'Items group (large)',
     description: 'Shared max items limit for large list-style widgets.',
     enforcement: {
-      status: 'gap',
-      owner: 'Bob widget editor ops; save/publish boundary pending',
-      note: 'Widget limits map aggregate widget paths to this policy key and Bob rejects editor ops above the plan limit. Server save/publish enforcement remains a named gap.',
+      status: 'enforced',
+      owner: 'Bob widget editor ops and Roma save policy',
+      note: 'Widget limits map aggregate widget paths to this policy key. Bob rejects editor ops above the plan limit, and Roma rejects over-limit saves before submitted package bytes reach Tokyo-worker.',
     },
   },
 };

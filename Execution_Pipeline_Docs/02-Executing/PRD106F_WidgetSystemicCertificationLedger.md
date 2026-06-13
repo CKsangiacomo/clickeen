@@ -1221,7 +1221,7 @@ Account defaults cleanup:
 
 Final widget certification:
 
-- Source validation: `node scripts/validate-widget-source.mjs` passed.
+- Source index validation: `pnpm validate:widgets` passed. The former standalone widget-source validator was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - Generated source validation:
   `node scripts/generate-widget-definition-sources.mjs --check` passed.
 - Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
@@ -1270,7 +1270,7 @@ Shell Content:
   - `FAQ-SH-001` [fixed 2026-06-09]: add canonical Header CTA icon and label
     spans in `widget.html`.
 - Verification: source grep confirms canonical `data-role="header-cta"`
-  children; `node scripts/validate-widget-source.mjs` passed.
+  children; current source index validation is `pnpm validate:widgets`.
 - Status: Source green; browser QA pending.
 
 Shell Layout:
@@ -1425,7 +1425,7 @@ Account defaults cleanup:
 
 Final widget certification:
 
-- Source validation: `node scripts/validate-widget-source.mjs` passed.
+- Source index validation: `pnpm validate:widgets` passed. The former standalone widget-source validator was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - Generated source validation:
   `node scripts/generate-widget-definition-sources.mjs --check` passed.
 - Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
@@ -1626,7 +1626,7 @@ Core Settings/Runtime Behavior:
 
 Final widget certification:
 
-- Source validation: `node scripts/validate-widget-source.mjs` passed.
+- Source index validation: `pnpm validate:widgets` passed. The former standalone widget-source validator was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - Generated source validation:
   `node scripts/generate-widget-definition-sources.mjs --check` passed.
 - Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
@@ -1820,7 +1820,7 @@ Core Settings/Runtime Behavior:
 
 Final widget certification:
 
-- Source validation: `node scripts/validate-widget-source.mjs` passed.
+- Source index validation: `pnpm validate:widgets` passed. The former standalone widget-source validator was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - Generated source validation:
   `node scripts/generate-widget-definition-sources.mjs --check` passed.
 - Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
@@ -2035,7 +2035,7 @@ Core Settings/Runtime Behavior:
 
 Final widget certification:
 
-- Source validation: `node scripts/validate-widget-source.mjs` passed.
+- Source index validation: `pnpm validate:widgets` passed. The former standalone widget-source validator was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - Generated source validation:
   `node scripts/generate-widget-definition-sources.mjs --check` passed.
 - Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
@@ -2071,7 +2071,7 @@ Roma -> Bob -> Tokyo browser session.
 
 Validation proof:
 
-- `node scripts/validate-widget-source.mjs` passed.
+- `pnpm validate:widgets` passed; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - `node scripts/generate-widget-definition-sources.mjs --check` passed.
 - `node packages/widget-shell/scripts/validate.mjs` passed.
 - `pnpm audit:106` passed against source, account defaults, and live instances.
