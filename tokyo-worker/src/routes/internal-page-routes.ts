@@ -7,6 +7,7 @@ import {
   purgeAccountPagePublicCache,
   createAccountPageServeState,
   createAccountPageSource,
+  assertPageSourceContract,
   readAccountPageServeState,
   readAccountPageSource,
   verifyAccountPagePublicPackageReady,
@@ -104,13 +105,20 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
     if (!pageId) return respondValidation(respond, 'tokyo.errors.page.invalidPageId');
 
     try {
+      assertPageSourceContract({ source: body.source, accountId, pageId });
+      if (await readAccountPageSource({ env, accountId, pageId })) {
+        throw new PageOperationError({
+          kind: 'VALIDATION',
+          reasonKey: 'tokyo.errors.page.alreadyExists',
+        });
+      }
+      const publishStatus = await createAccountPageServeState({ env, accountId, pageId });
       const created = await createAccountPageSource({
         env,
         accountId,
         pageId,
         source: body.source,
       });
-      const publishStatus = await createAccountPageServeState({ env, accountId, pageId });
       return respond(json({ ok: true, accountId, pageId, ...created, publishStatus }, { status: 201 }));
     } catch (error) {
       return respond(pageErrorResponse(error));

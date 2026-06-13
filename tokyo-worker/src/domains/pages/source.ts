@@ -2,7 +2,6 @@ import { isRecord } from '@clickeen/ck-contracts';
 import {
   isCompactAccountPublicId,
   isCompactInstanceId,
-  isCompactPageId,
 } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import { deletePrefix, putJson } from '../storage';
@@ -11,8 +10,12 @@ import {
   accountPageRoot,
   accountPageSourceKey,
 } from './keys';
+import { normalizePageId } from './ids';
+import { readAccountPageServeState } from './serve-state';
 import type { AccountPageSummary } from './types';
 import { PageOperationError } from './types';
+
+export { normalizePageId } from './ids';
 
 function assertAccountId(accountId: string): string {
   const normalized = String(accountId || '').trim().toUpperCase();
@@ -23,10 +26,6 @@ function assertAccountId(accountId: string): string {
     });
   }
   return normalized;
-}
-
-export function normalizePageId(value: unknown): string | null {
-  return isCompactPageId(value) ? value : null;
 }
 
 function normalizeRobots(value: unknown): AccountPageSummary['robots'] | null {
@@ -88,7 +87,7 @@ async function loadStoredPageSource(args: {
   }
 }
 
-function assertPageSourceContract(args: {
+export function assertPageSourceContract(args: {
   source: unknown;
   accountId: string;
   pageId: string;
@@ -152,6 +151,7 @@ export async function readAccountPageSource(args: {
     key: accountPageSourceKey(accountId, pageId),
   });
   if (!source.exists) return null;
+  await readAccountPageServeState({ env: args.env, accountId, pageId });
   assertPageSourceContract({ source: source.value, accountId, pageId });
   return source.value;
 }
@@ -188,13 +188,13 @@ export async function listAccountPages(args: {
     });
     for (const object of listed.objects) {
       if (!object.key.endsWith('/source.json')) continue;
-      const source = await loadStoredPageSource({ env: args.env, key: object.key });
       const pageId = normalizePageId(object.key.split('/').at(-2));
-      if (!source.exists || !pageId) {
+      if (!pageId) {
         failSourceInvalid([object.key]);
       }
-      assertPageSourceContract({ source: source.value, accountId, pageId });
-      pages.push(pageSummaryFromSource(source.value, pageId));
+      const source = await readAccountPageSource({ env: args.env, accountId, pageId });
+      if (!source) failSourceInvalid([object.key]);
+      pages.push(pageSummaryFromSource(source, pageId));
     }
     cursor = listed.truncated ? listed.cursor : undefined;
   } while (cursor);

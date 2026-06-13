@@ -2,7 +2,7 @@ import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identit
 import type { Env } from '../../types';
 import { putJson } from '../storage';
 import { accountPageServeStateKey } from './keys';
-import { normalizePageId } from './source';
+import { normalizePageId } from './ids';
 import type { PageServeState } from './types';
 import { PageOperationError } from './types';
 type PageCoordinate = { accountId: string; pageId: string };
