@@ -495,7 +495,7 @@ Evidence:
 
 ### PF-107-6 - Tokyo Public Cache Purge Success Masquerade
 
-Status: OPEN
+Status: COMPLETE
 Original row: TW-107-CACHE-PURGE-IGNORED
 Related decision: D-107k
 Likely files:
@@ -539,6 +539,43 @@ Done when:
 - The PRD no longer claims cache purge as complete while code skips it.
 - If implemented here, invalid/missing purge truth fails before publish/save
   success.
+
+Evidence:
+
+- Implementation commit:
+  `efe77007b35a18219c865a8ed18b9ace98c54db6`.
+- Product truth: Tokyo owns public publish/serve truth. Cache purge is part of
+  publish/save integrity for live public paths after D-107k; missing purge
+  config, missing public serving base, failed purge request, malformed purge
+  response, or unsuccessful purge response fails at the Tokyo boundary before
+  publish/save success.
+- Source/runtime LOC: `47 insertions(+), 17 deletions(-)` across PF-107-6
+  product files. This uses the post-fix LOC exception because the old violation
+  was a compact skip/catch-and-success branch and the fix is minimal typed
+  boundary failure propagation plus moving purge before mutation.
+- Local gates: `git diff --check`; `pnpm --filter @clickeen/tokyo-worker
+  typecheck`.
+- Focused stale-symbol scan: no `https://clk.live` fallback default, purge
+  `catch(() => undefined)`, missing-config skip-success, warning-only purge
+  continuation, retry-to-success path, or runtime proof/probe/self-test ceremony
+  remains in the slice surface. The only purge JSON parse catch converts
+  malformed Cloudflare response into typed failure.
+- External proof: temporary outside-runtime TS harness showed page purge missing
+  config fails with `tokyo.errors.publicCache.purgeConfigMissing`, malformed and
+  unsuccessful Cloudflare responses fail with
+  `tokyo.errors.publicCache.purgeFailed`, published page save and page publish
+  perform zero downstream R2 puts after purge failure, and valid purge then
+  unpublish succeeds. A second temporary outside-runtime TS harness showed
+  instance publish missing config, failed purge, and malformed purge fail visibly
+  with zero Supabase publish-status PATCHes, while valid instance publish
+  succeeds with exactly one publish-status PATCH after successful purge.
+- Validator 1: GREEN. No skipped blast radius remains; D-107k is resolved,
+  instance/page publish and unpublish purge before serve-state writes, published
+  page save purges before source save, `clk-live-routes.ts` has no skipped
+  mutation path, and no runtime ceremony was added.
+- Validator 2: GREEN. No V1-V8 remains or was introduced; fallback serving base,
+  missing-config skip, purge catch-ignore, malformed/unsuccessful response
+  success, mutation-after-failure, and runtime ceremony are absent.
 
 ### PF-107-7 - Package Readiness Metadata Mismatch
 
