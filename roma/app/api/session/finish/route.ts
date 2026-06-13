@@ -3,6 +3,7 @@ import { createInitialAccountWidgetDefaultsInTokyo } from '../../../../lib/accou
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import {
   applySessionCookies,
+  readSessionMaxAge,
   resolveAccountAuthzCookieName,
   resolveRequestOrigin,
   resolveSessionCookieNames,
@@ -51,15 +52,6 @@ function resolveLoginUrl(request: NextRequest, params: Record<string, string>): 
     if (value) url.searchParams.set(key, value);
   }
   return url;
-}
-
-function parsePositiveInt(value: unknown, fallback: number): number {
-  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.floor(value);
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10);
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
-  }
-  return fallback;
 }
 
 function extractReasonKey(payload: Record<string, unknown> | null, fallback: string): string {
@@ -206,8 +198,13 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const accessMaxAge = parsePositiveInt(payload.accessTokenMaxAge, 15 * 60);
-  const refreshMaxAge = parsePositiveInt(payload.refreshTokenMaxAge, 60 * 60 * 24 * 30);
+  const accessMaxAge = readSessionMaxAge(payload.accessTokenMaxAge);
+  const refreshMaxAge = readSessionMaxAge(payload.refreshTokenMaxAge);
+  if (!accessMaxAge || !refreshMaxAge) {
+    return NextResponse.redirect(resolveLoginUrl(request, { error: 'coreui.errors.auth.login_failed' }), {
+      headers: CACHE_HEADERS,
+    });
+  }
   if (typeof payload.createdAccount !== 'boolean') {
     return NextResponse.redirect(buildRecoveryUrl(request, 'coreui.errors.auth.contextUnavailable'), {
       headers: CACHE_HEADERS,

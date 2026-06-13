@@ -153,13 +153,8 @@ function extractSessionTokens(request: NextRequest): TokenBundle {
   };
 }
 
-function parsePositiveInt(value: unknown, fallback: number): number {
-  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.floor(value);
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10);
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
-  }
-  return fallback;
+export function readSessionMaxAge(value: unknown): number | null {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
 }
 
 async function refreshSession(refreshToken: string): Promise<BerlinRefreshResult> {
@@ -199,12 +194,22 @@ async function refreshSession(refreshToken: string): Promise<BerlinRefreshResult
     };
   }
 
+  const accessTokenMaxAge = readSessionMaxAge(payload.accessTokenMaxAge);
+  const refreshTokenMaxAge = readSessionMaxAge(payload.refreshTokenMaxAge);
+  if (!accessTokenMaxAge || !refreshTokenMaxAge) {
+    return {
+      ok: false,
+      status: 502,
+      reason: 'coreui.errors.auth.required',
+    };
+  }
+
   return {
     ok: true,
     accessToken: nextAccessToken,
     refreshToken: nextRefreshToken,
-    accessTokenMaxAge: parsePositiveInt(payload.accessTokenMaxAge, 15 * 60),
-    refreshTokenMaxAge: parsePositiveInt(payload.refreshTokenMaxAge, 60 * 60 * 24 * 30),
+    accessTokenMaxAge,
+    refreshTokenMaxAge,
   };
 }
 

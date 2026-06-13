@@ -32,18 +32,13 @@ export function serializeHostCookie(request, name, value, maxAge) {
     'HttpOnly',
     'SameSite=Lax',
   ];
-  if (maxAge != null) parts.push(`Max-Age=${Math.max(1, Math.floor(maxAge))}`);
+  if (maxAge != null) parts.push(`Max-Age=${maxAge}`);
   if (isSecureRequest(request)) parts.push('Secure');
   return parts.join('; ');
 }
 
-function positiveInt(value, fallback) {
-  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.floor(value);
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10);
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
-  }
-  return fallback;
+function sessionMaxAge(value) {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : null;
 }
 
 export function sessionCookieHeaders(request, session) {
@@ -53,22 +48,26 @@ export function sessionCookieHeaders(request, session) {
   const headers = [];
 
   if (accessToken) {
+    const accessTokenMaxAge = sessionMaxAge(session.accessTokenMaxAge);
+    if (!accessTokenMaxAge) return null;
     headers.push(
       serializeHostCookie(
         request,
         ACCESS_COOKIE,
         accessToken,
-        positiveInt(session.accessTokenMaxAge, 15 * 60),
+        accessTokenMaxAge,
       ),
     );
   }
   if (refreshToken) {
+    const refreshTokenMaxAge = sessionMaxAge(session.refreshTokenMaxAge);
+    if (!refreshTokenMaxAge) return null;
     headers.push(
       serializeHostCookie(
         request,
         REFRESH_COOKIE,
         refreshToken,
-        positiveInt(session.refreshTokenMaxAge, 60 * 60 * 24 * 30),
+        refreshTokenMaxAge,
       ),
     );
   }

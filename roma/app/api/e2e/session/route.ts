@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resolveBerlinBaseUrl } from '../../../../lib/env/berlin';
 import {
   applySessionCookies,
+  readSessionMaxAge,
   resolveAccountAuthzCookieName,
   resolveSessionCookieNames,
 } from '../../../../lib/auth/session';
@@ -49,15 +50,6 @@ function normalizeEmail(value: unknown): string | null {
   if (!email || email.length > 254) return null;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
   return email;
-}
-
-function parsePositiveInt(value: unknown, fallback: number): number {
-  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return Math.floor(value);
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10);
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
-  }
-  return fallback;
 }
 
 function extractReasonKey(payload: Record<string, unknown> | null, fallback: string): string {
@@ -194,14 +186,20 @@ export async function POST(request: NextRequest) {
   }
 
   const cookieNames = resolveSessionCookieNames();
+  const accessTokenMaxAge = readSessionMaxAge(payload.accessTokenMaxAge);
+  const refreshTokenMaxAge = readSessionMaxAge(payload.refreshTokenMaxAge);
+  if (!accessTokenMaxAge || !refreshTokenMaxAge) {
+    return json({ error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.auth.login_failed' } }, 502);
+  }
+
   const response = json({
     ok: true,
     accountId: bootstrap.accountId,
   });
 
   applySessionCookies(response, request, [
-    { name: cookieNames.access, value: accessToken, maxAge: parsePositiveInt(payload.accessTokenMaxAge, 15 * 60) },
-    { name: cookieNames.refresh, value: refreshToken, maxAge: parsePositiveInt(payload.refreshTokenMaxAge, 60 * 60 * 24 * 30) },
+    { name: cookieNames.access, value: accessToken, maxAge: accessTokenMaxAge },
+    { name: cookieNames.refresh, value: refreshToken, maxAge: refreshTokenMaxAge },
     {
       name: resolveAccountAuthzCookieName(),
       value: bootstrap.accountCapsule,

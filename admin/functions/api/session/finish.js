@@ -59,14 +59,15 @@ export async function onRequest(context) {
 
   const destination = new URL(nextPath, resolveDevstudioOrigin(env));
   const response = redirect(destination.toString(), 302);
-  return cloneResponseWithCookies(
-    response,
-    sessionCookieHeaders(request, {
-      accessToken,
-      refreshToken,
-      accessTokenMaxAge: finished.payload.accessTokenMaxAge,
-      refreshTokenMaxAge: finished.payload.refreshTokenMaxAge,
-      accountCapsule: bootstrap.accountCapsule,
-    }),
-  );
+  const cookies = sessionCookieHeaders(request, {
+    accessToken,
+    refreshToken,
+    accessTokenMaxAge: finished.payload.accessTokenMaxAge,
+    refreshTokenMaxAge: finished.payload.refreshTokenMaxAge,
+    accountCapsule: bootstrap.accountCapsule,
+  });
+  if (!cookies) {
+    return json({ error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.auth.login_failed' } }, 502);
+  }
+  return cloneResponseWithCookies(response, cookies);
 }

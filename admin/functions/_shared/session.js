@@ -56,15 +56,24 @@ export async function resolveDevstudioSession(request, env) {
     };
   }
 
+  const setCookies = sessionCookieHeaders(request, {
+    accessToken: refreshed.accessToken,
+    refreshToken: refreshed.refreshToken,
+    accessTokenMaxAge: refreshed.accessTokenMaxAge,
+    refreshTokenMaxAge: refreshed.refreshTokenMaxAge,
+    accountCapsule: bootstrap.accountCapsule,
+  });
+  if (!setCookies) {
+    return {
+      ok: false,
+      status: 502,
+      reasonKey: 'coreui.errors.auth.required',
+    };
+  }
+
   return {
     ok: true,
     accountId: bootstrap.accountId,
-    setCookies: sessionCookieHeaders(request, {
-      accessToken: refreshed.accessToken,
-      refreshToken: refreshed.refreshToken,
-      accessTokenMaxAge: refreshed.accessTokenMaxAge,
-      refreshTokenMaxAge: refreshed.refreshTokenMaxAge,
-      accountCapsule: bootstrap.accountCapsule,
-    }),
+    setCookies,
   };
 }

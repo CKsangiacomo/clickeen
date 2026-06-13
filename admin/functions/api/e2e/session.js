@@ -111,15 +111,20 @@ export async function onRequest(context) {
     );
   }
 
+  const cookies = sessionCookieHeaders(request, {
+    accessToken,
+    refreshToken,
+    accessTokenMaxAge: upstream.payload.accessTokenMaxAge,
+    refreshTokenMaxAge: upstream.payload.refreshTokenMaxAge,
+    accountCapsule: bootstrap.accountCapsule,
+  });
+  if (!cookies) {
+    return json(
+      { error: { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.auth.login_failed' } },
+      502,
+    );
+  }
+
   const response = json({ ok: true, accountId: bootstrap.accountId });
-  return cloneResponseWithCookies(
-    response,
-    sessionCookieHeaders(request, {
-      accessToken,
-      refreshToken,
-      accessTokenMaxAge: upstream.payload.accessTokenMaxAge,
-      refreshTokenMaxAge: upstream.payload.refreshTokenMaxAge,
-      accountCapsule: bootstrap.accountCapsule,
-    }),
-  );
+  return cloneResponseWithCookies(response, cookies);
 }
