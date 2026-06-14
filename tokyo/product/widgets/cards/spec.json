@@ -13,7 +13,10 @@
     "typography": {
       "roles": {
         "cardTitle": {
-          "color": "var(--color-system-black)",
+          "color": {
+            "type": "color",
+            "color": "var(--color-system-black)"
+          },
           "family": "Inter",
           "weight": "700",
           "fontStyle": "normal",
@@ -25,7 +28,10 @@
           "lineHeightPreset": "tight"
         },
         "cardCopy": {
-          "color": "color-mix(in oklab, var(--color-system-black), transparent 28%)",
+          "color": {
+            "type": "color",
+            "color": "color-mix(in oklab, var(--color-system-black), transparent 28%)"
+          },
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
@@ -89,13 +95,7 @@
             "kind": "icon",
             "iconName": "globe",
             "image": {
-              "type": "image",
-              "image": {
-                "src": "/dieter/icons/svg/photo.svg",
-                "fit": "cover",
-                "position": "center",
-                "repeat": "no-repeat"
-              }
+              "type": "none"
             },
             "imageAlt": ""
           },
@@ -105,9 +105,15 @@
             "label": "See details"
           },
           "style": {
-            "background": "",
-            "borderColor": "",
-            "accentColor": "",
+            "background": {
+              "type": "none"
+            },
+            "borderColor": {
+              "type": "none"
+            },
+            "accentColor": {
+              "type": "none"
+            },
             "textTone": "inherit"
           }
         },
@@ -119,13 +125,7 @@
             "kind": "icon",
             "iconName": "square.stack.3d.up",
             "image": {
-              "type": "image",
-              "image": {
-                "src": "/dieter/icons/svg/photo.svg",
-                "fit": "cover",
-                "position": "center",
-                "repeat": "no-repeat"
-              }
+              "type": "none"
             },
             "imageAlt": ""
           },
@@ -135,9 +135,15 @@
             "label": "See details"
           },
           "style": {
-            "background": "",
-            "borderColor": "",
-            "accentColor": "",
+            "background": {
+              "type": "none"
+            },
+            "borderColor": {
+              "type": "none"
+            },
+            "accentColor": {
+              "type": "none"
+            },
             "textTone": "inherit"
           }
         },
@@ -149,13 +155,7 @@
             "kind": "icon",
             "iconName": "checkmark",
             "image": {
-              "type": "image",
-              "image": {
-                "src": "/dieter/icons/svg/photo.svg",
-                "fit": "cover",
-                "position": "center",
-                "repeat": "no-repeat"
-              }
+              "type": "none"
             },
             "imageAlt": ""
           },
@@ -165,9 +165,15 @@
             "label": "See details"
           },
           "style": {
-            "background": "",
-            "borderColor": "",
-            "accentColor": "",
+            "background": {
+              "type": "none"
+            },
+            "borderColor": {
+              "type": "none"
+            },
+            "accentColor": {
+              "type": "none"
+            },
             "textTone": "inherit"
           }
         }
@@ -184,12 +190,18 @@
         "kind": "line",
         "line": {
           "widthPt": 2,
-          "color": "#D7D7DA"
+          "color": {
+            "type": "color",
+            "color": "#D7D7DA"
+          }
         },
         "icon": {
           "name": "chevron.right",
           "sizePt": 28,
-          "color": "#222222"
+          "color": {
+            "type": "color",
+            "color": "#222222"
+          }
         }
       }
     }
@@ -396,9 +408,15 @@
                       "label": "Learn more"
                     },
                     "style": {
-                      "background": "",
-                      "borderColor": "",
-                      "accentColor": "",
+                      "background": {
+                        "type": "none"
+                      },
+                      "borderColor": {
+                        "type": "none"
+                      },
+                      "accentColor": {
+                        "type": "none"
+                      },
                       "textTone": "inherit"
                     }
                   }

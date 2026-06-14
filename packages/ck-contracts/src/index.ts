@@ -328,19 +328,27 @@ function readResolvedAssetByRef(resolvedAssets: unknown, assetRefRaw: unknown): 
 function collectMaterializedFillAssetRefs(node: unknown, out: Set<string>): void {
   if (!isRecord(node)) return;
   const type = typeof node.type === 'string' ? node.type : '';
+  const isDeclaredString = (value: unknown): value is string =>
+    typeof value === 'string' && value.length > 0 && value === value.trim();
 
   if (type === 'image') {
     if (!isRecord(node.image)) throw new Error('ck.account_asset_ref_invalid');
-    if (typeof node.image.assetRef !== 'string') throw new Error('ck.account_asset_ref_invalid');
-    out.add(node.image.assetRef);
+    if (isDeclaredString(node.image.assetRef)) {
+      out.add(node.image.assetRef);
+    } else if (!isDeclaredString(node.image.src)) {
+      throw new Error('ck.account_asset_ref_invalid');
+    }
   }
 
   if (type === 'video') {
     if (!isRecord(node.video)) throw new Error('ck.account_asset_ref_invalid');
-    if (typeof node.video.assetRef !== 'string') throw new Error('ck.account_asset_ref_invalid');
-    out.add(node.video.assetRef);
+    if (isDeclaredString(node.video.assetRef)) {
+      out.add(node.video.assetRef);
+    } else if (!isDeclaredString(node.video.src)) {
+      throw new Error('ck.account_asset_ref_invalid');
+    }
     if (Object.prototype.hasOwnProperty.call(node.video, 'posterAssetRef')) {
-      if (typeof node.video.posterAssetRef !== 'string') throw new Error('ck.account_asset_ref_invalid');
+      if (!isDeclaredString(node.video.posterAssetRef)) throw new Error('ck.account_asset_ref_invalid');
       out.add(node.video.posterAssetRef);
     }
   }
@@ -378,6 +386,7 @@ export function collectConfigMediaAssetRefs(config: unknown): string[] {
 function materializeImageFill(fill: JsonRecord, resolvedAssets: unknown): JsonRecord {
   if (!isRecord(fill.image)) throw new Error('ck.account_asset_ref_invalid');
   const nextImage = { ...fill.image };
+  if (typeof nextImage.assetRef !== 'string' && typeof nextImage.src === 'string' && nextImage.src && nextImage.src === nextImage.src.trim()) return fill;
   const resolvedByRef = readResolvedAssetByRef(resolvedAssets, nextImage.assetRef);
   nextImage.src = resolvedByRef.url;
   return { ...fill, image: nextImage };
@@ -386,6 +395,7 @@ function materializeImageFill(fill: JsonRecord, resolvedAssets: unknown): JsonRe
 function materializeVideoFill(fill: JsonRecord, resolvedAssets: unknown): JsonRecord {
   if (!isRecord(fill.video)) throw new Error('ck.account_asset_ref_invalid');
   const nextVideo = { ...fill.video };
+  if (typeof nextVideo.assetRef !== 'string' && typeof nextVideo.src === 'string' && nextVideo.src && nextVideo.src === nextVideo.src.trim()) return fill;
   const resolvedByRef = readResolvedAssetByRef(resolvedAssets, nextVideo.assetRef);
   nextVideo.src = resolvedByRef.url;
   if (Object.prototype.hasOwnProperty.call(nextVideo, 'posterAssetRef')) {

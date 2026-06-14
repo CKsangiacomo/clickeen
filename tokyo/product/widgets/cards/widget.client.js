@@ -90,11 +90,7 @@
     return iconName;
   }
 
-  function assertFillValue(value, path, allowEmpty) {
-    if (typeof value === 'string') {
-      if (!allowEmpty && !value.trim()) throw new Error('[Cards] ' + path + ' must not be empty');
-      return value;
-    }
+  function assertFillValue(value, path) {
     if (isRecord(value)) return value;
     throw new Error('[Cards] ' + path + ' must be a fill value');
   }
@@ -191,9 +187,9 @@
         throw new Error('[Cards] ' + itemPath + '.link.href must not be empty when card link is enabled');
       }
       const style = assertRecord(raw.style, itemPath + '.style');
-      assertFillValue(style.background, itemPath + '.style.background', true);
-      assertFillValue(style.borderColor, itemPath + '.style.borderColor', true);
-      assertFillValue(style.accentColor, itemPath + '.style.accentColor', true);
+      assertFillValue(style.background, itemPath + '.style.background');
+      assertFillValue(style.borderColor, itemPath + '.style.borderColor');
+      assertFillValue(style.accentColor, itemPath + '.style.accentColor');
       assertEnum(style.textTone, itemPath + '.style.textTone', ['inherit', 'default', 'muted', 'inverse']);
       return {
         id: id,
@@ -236,12 +232,12 @@
         kind: assertEnum(between.kind, 'state.cards.betweenCards.kind', ['line', 'icon']),
         line: {
           widthPt: assertNumber(line.widthPt, 'state.cards.betweenCards.line.widthPt', 1, 24),
-          color: assertFillValue(line.color, 'state.cards.betweenCards.line.color', false),
+          color: assertFillValue(line.color, 'state.cards.betweenCards.line.color'),
         },
         icon: {
           name: assertIconName(icon.name, 'state.cards.betweenCards.icon.name'),
           sizePt: assertNumber(icon.sizePt, 'state.cards.betweenCards.icon.sizePt', 8, 96),
-          color: assertFillValue(icon.color, 'state.cards.betweenCards.icon.color', false),
+          color: assertFillValue(icon.color, 'state.cards.betweenCards.icon.color'),
         },
       },
       items: validateItems(cards, treatment),

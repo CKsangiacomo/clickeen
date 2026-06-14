@@ -35,6 +35,13 @@ function resolveBuilderErrorCopy(reason: string, fallback: string): string {
   if (!normalized) return fallback;
   const mapped = BUILDER_ERROR_COPY[normalized];
   if (mapped) return mapped;
+  const invalidConfigPrefix = 'coreui.errors.instance.config.invalid:';
+  if (normalized.startsWith(invalidConfigPrefix)) {
+    const path = normalized.slice(invalidConfigPrefix.length).trim();
+    return path
+      ? `This widget has invalid saved data at ${path} and cannot load right now.`
+      : 'This widget has invalid saved data and cannot load right now.';
+  }
   if (normalized.startsWith('coreui.') || normalized.startsWith('HTTP_') || normalized.startsWith('[useWidgetSession]')) {
     return fallback;
   }

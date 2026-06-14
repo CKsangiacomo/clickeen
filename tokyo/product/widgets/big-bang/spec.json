@@ -13,7 +13,10 @@
     "typography": {
       "roles": {
         "bigBang": {
-          "color": "var(--color-system-black)",
+          "color": {
+            "type": "color",
+            "color": "var(--color-system-black)"
+          },
           "family": "Inter",
           "weight": "800",
           "fontStyle": "normal",

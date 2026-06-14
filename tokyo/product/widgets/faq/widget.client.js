@@ -164,7 +164,6 @@
   }
 
   function assertFillValue(value, path) {
-    if (typeof value === 'string') return value;
     if (isRecord(value)) return value;
     throw new Error(`[FAQ] ${path} must be a fill value`);
   }

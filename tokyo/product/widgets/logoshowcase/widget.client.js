@@ -60,7 +60,6 @@
   }
 
   function assertFill(value, path) {
-    if (typeof value === 'string') return;
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       throw new Error(`[LogoShowcase] ${path} must be a fill`);
     }

@@ -52,7 +52,7 @@
   }
 
   function assertFillValue(value, path) {
-    if (typeof value === 'string' || isRecord(value)) return value;
+    if (isRecord(value)) return value;
     throw new Error('[CallToAction] ' + path + ' must be a fill value');
   }
 

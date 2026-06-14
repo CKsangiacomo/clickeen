@@ -79,7 +79,6 @@
   }
 
   function assertFill(value, path) {
-    if (typeof value === 'string') return;
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       throw new Error(`[Countdown] ${path} must be a fill`);
     }

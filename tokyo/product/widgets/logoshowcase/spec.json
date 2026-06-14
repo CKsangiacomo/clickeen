@@ -292,7 +292,9 @@
         },
         "logoLook": "original",
         "logoOpacity": 0.9,
-        "itemBackground": "transparent"
+        "itemBackground": {
+          "type": "none"
+        }
       },
       "typeConfig": {
         "carousel": {

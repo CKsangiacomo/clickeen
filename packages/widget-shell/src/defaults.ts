@@ -269,7 +269,10 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
   },
   appearance: {
     headerCta: {
-      background: 'var(--color-system-blue)',
+      background: {
+        color: 'var(--color-system-blue)',
+        type: 'color',
+      },
       border: {
         color: 'transparent',
         enabled: false,
@@ -282,7 +285,10 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
       paddingLinked: true,
       radius: 'lg',
       sizePreset: 'custom',
-      textColor: 'var(--color-system-white)',
+      textColor: {
+        color: 'var(--color-system-white)',
+        type: 'color',
+      },
     },
     localeSwitcherBackground: {
       color: 'var(--color-system-white)',
@@ -310,7 +316,10 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
     globalFamily: 'Inter',
     roles: {
       title: {
-        color: 'var(--color-system-black)',
+        color: {
+          color: 'var(--color-system-black)',
+          type: 'color',
+        },
         family: 'Inter',
         fontStyle: 'normal',
         lineHeightCustom: 1,
@@ -322,7 +331,10 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
         weight: '700',
       },
       body: {
-        color: 'var(--color-system-gray)',
+        color: {
+          color: 'var(--color-system-gray)',
+          type: 'color',
+        },
         family: 'Inter',
         fontStyle: 'normal',
         lineHeightCustom: 1.45,
@@ -334,7 +346,10 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
         weight: '400',
       },
       button: {
-        color: 'var(--color-system-white)',
+        color: {
+          color: 'var(--color-system-white)',
+          type: 'color',
+        },
         family: 'Inter',
         fontStyle: 'normal',
         lineHeightCustom: 1.2,
@@ -346,7 +361,10 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
         weight: '500',
       },
       localeSwitcher: {
-        color: 'var(--color-system-black)',
+        color: {
+          color: 'var(--color-system-black)',
+          type: 'color',
+        },
         family: 'Inter',
         fontStyle: 'normal',
         lineHeightCustom: 1.2,

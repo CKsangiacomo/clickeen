@@ -1113,6 +1113,9 @@ MUST
 - Store account-owned asset bytes under `accounts/{accountPublicId}/assets/`.
 - Materialize runtime asset references as root-relative
   `/assets/account/{accountPublicId}/{assetRef}` paths.
+- Authoring media fills use `assetRef` for account-owned assets. Product-owned
+  widget defaults may use an already-materialized declared `src` only when the
+  source belongs to the widget/runtime asset contract.
 
 MUST NOT
 

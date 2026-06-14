@@ -179,7 +179,12 @@ function inferControlMetadata(control: CompiledControl, defaults: Record<string,
   enumValues?: string[];
   itemIdPath?: string;
 } {
+  const samplePath = samplePathForDefaults(control.path);
+  const sample = getAt<unknown>(defaults, samplePath);
+
   if (control.options && control.options.length > 0) {
+    if (typeof sample === 'number') return { kind: 'number' };
+    if (typeof sample === 'boolean') return { kind: 'boolean' };
     const enumValues = Array.from(new Set(control.options.map((o) => o.value).filter(Boolean)));
     return { kind: 'enum', enumValues: enumValues.length ? enumValues : undefined };
   }
@@ -194,8 +199,6 @@ function inferControlMetadata(control: CompiledControl, defaults: Record<string,
     return { kind: 'string' };
   if (control.type === 'slider' || control.type === 'valuefield') return { kind: 'number' };
   if (control.type === 'dropdown-fill') return { kind: 'json' };
-  const samplePath = samplePathForDefaults(control.path);
-  const sample = getAt<unknown>(defaults, samplePath);
 
   if (control.type === 'repeater' || control.type === 'object-manager') {
     const itemIdPath =

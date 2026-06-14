@@ -32,7 +32,7 @@
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
-          "sizeCustom": "15px",
+          "sizeCustom": 15,
           "sizePreset": "s",
           "trackingCustom": 0,
           "trackingPreset": "normal",
@@ -47,7 +47,7 @@
           "family": "Inter",
           "weight": "400",
           "fontStyle": "normal",
-          "sizeCustom": "14px",
+          "sizeCustom": 14,
           "sizePreset": "s",
           "trackingCustom": 0,
           "trackingPreset": "normal",
@@ -62,7 +62,7 @@
           "family": "Inter",
           "weight": "600",
           "fontStyle": "normal",
-          "sizeCustom": "16px",
+          "sizeCustom": 16,
           "sizePreset": "s",
           "trackingCustom": 0,
           "trackingPreset": "normal",
@@ -153,7 +153,10 @@
         }
       ],
       "appearance": {
-        "iconColor": "var(--typo-question-color)",
+        "iconColor": {
+          "type": "color",
+          "color": "var(--typo-question-color)"
+        },
         "iconStyle": "plus",
         "linkStyle": "underline",
         "cardwrapper": {
@@ -233,13 +236,22 @@
           },
           "radiusLinked": true
         },
-        "linkTextColor": "var(--color-system-blue)",
+        "linkTextColor": {
+          "type": "color",
+          "color": "var(--color-system-blue)"
+        },
         "itemBackground": {
           "type": "color",
           "color": "var(--color-system-white)"
         },
-        "linkHighlightColor": "color-mix(in oklab, var(--color-system-blue), transparent 82%)",
-        "linkUnderlineColor": "var(--color-system-blue)"
+        "linkHighlightColor": {
+          "type": "color",
+          "color": "color-mix(in oklab, var(--color-system-blue), transparent 82%)"
+        },
+        "linkUnderlineColor": {
+          "type": "color",
+          "color": "var(--color-system-blue)"
+        }
       },
       "displayCategoryTitles": true
     }
