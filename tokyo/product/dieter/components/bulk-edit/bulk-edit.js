@@ -343,7 +343,6 @@ var Dieter = (() => {
     root.className = "diet-dropdown-upload diet-popover-host";
     root.dataset.size = "md";
     root.dataset.state = "closed";
-    root.dataset.hasFile = "false";
     const label = escapeAttr(args.label || "Logo");
     const placeholder = escapeAttr(args.placeholder || "Upload");
     const id = escapeAttr(args.id);
@@ -376,7 +375,6 @@ var Dieter = (() => {
       aria-expanded="false"
       aria-labelledby="${id}-label"
     >
-      <span class="diet-dropdown-upload__header-icon" aria-hidden="true"></span>
       <span class="diet-dropdown-header-label label-s" id="${id}-label">${label}</span>
       <span class="diet-dropdown-header-value body-s" data-muted="true" data-placeholder="${placeholder}">
         <span class="diet-dropdown-upload__label">${placeholder}</span>

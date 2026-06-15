@@ -418,11 +418,6 @@
     window.CKSurface.applyCardWrapper(state.logoshowcase.appearance.cardwrapper, lsRoot);
   }
 
-  function isEmptyLogoFill(value) {
-    const fill = String(value || '').trim();
-    return !fill || fill === 'transparent' || fill === 'none';
-  }
-
   function renderLogoTile(logo) {
     const href = normalizeHttpUrl(logo.href);
     const isClickable = Boolean(href);
@@ -455,16 +450,10 @@
     if (aria) visualEl.setAttribute('aria-label', aria);
 
     const logoFill = String(logo.logoFill || '').trim();
-    if (isEmptyLogoFill(logoFill)) {
-      visualEl.dataset.empty = 'true';
-      visualEl.style.background = 'transparent';
-      const emptyIconEl = document.createElement('span');
-      emptyIconEl.className = 'ck-logoshowcase__logo-empty-icon';
-      emptyIconEl.setAttribute('aria-hidden', 'true');
-      visualEl.appendChild(emptyIconEl);
-    } else {
-      delete visualEl.dataset.empty;
+    if (logoFill) {
       visualEl.style.background = logoFill;
+    } else {
+      visualEl.style.background = 'transparent';
     }
 
     const captionEl = document.createElement('div');

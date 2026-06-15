@@ -40,25 +40,6 @@
 
 .diet-dropdown-upload .diet-dropdown-header-label {
   flex: 0 0 auto;
-  min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.diet-dropdown-upload__header-icon {
-  inline-size: 14px;
-  block-size: 14px;
-  flex: 0 0 14px;
-  color: color-mix(in oklab, var(--color-system-black), transparent 45%);
-  background-color: currentColor;
-  opacity: 0.72;
-  -webkit-mask: url('/dieter/icons/svg/photo.svg') center / contain no-repeat;
-  mask: url('/dieter/icons/svg/photo.svg') center / contain no-repeat;
-}
-
-.diet-dropdown-upload[data-has-file='true'] .diet-dropdown-upload__header-icon {
-  display: none;
 }
 
 .diet-dropdown-upload .diet-dropdown-header-value {
