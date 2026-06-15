@@ -102,6 +102,8 @@ export const REASON_KEY_VALUES = [
   'roma.errors.auth.refresh_unavailable',
   'roma.errors.proxy.berlin_unavailable',
   'roma.errors.proxy.tokyo_unavailable',
+  'tokyo.errors.assets.keyInvalid',
+  'tokyo.errors.assets.metadataInvalid',
   'tokyo.errors.assets.metadataWriteFailed',
   'tokyo.errors.instance.documentInvalid',
   'tokyo.errors.instance.indexInvalid',

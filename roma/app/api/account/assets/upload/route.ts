@@ -6,7 +6,7 @@ import {
   parseJsonOrNull,
   resolveCurrentAccountAssetGatewayContext,
 } from '@roma/lib/account-assets-gateway';
-import { readAccountStorageBytesUsed } from '@roma/lib/account-storage-usage';
+import { isTokyoAssetUsageError, readAccountStorageBytesUsed } from '@roma/lib/account-storage-usage';
 import {
   buildTokyoAssetControlHeaders,
   fetchTokyoAssetControl,
@@ -113,6 +113,22 @@ export async function POST(request: NextRequest) {
         });
       }
     } catch (error) {
+      if (isTokyoAssetUsageError(error)) {
+        return finalizeAccountAssetResponse({
+          request,
+          response: NextResponse.json(
+            {
+              error: {
+                kind: error.kind,
+                reasonKey: error.reasonKey,
+                ...(error.detail ? { detail: error.detail } : {}),
+              },
+            },
+            { status: error.status },
+          ),
+          setCookies: gateway.value.sessionSetCookies,
+        });
+      }
       const detail = error instanceof Error ? error.message : String(error);
       return finalizeAccountAssetResponse({
         request,

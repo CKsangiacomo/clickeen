@@ -19,13 +19,13 @@ Values live in root `.env.local` and are not committed.
 ```text
 CLOUDFLARE_ACCOUNT_ID=a8528ec394ae2da9e5521d2ddd3aeb87
 TOKYO_R2_BUCKET=tokyo-assets-dev
-CLOUDFLARE_R2_ACCESS_KEY_ID=<R2 S3 access key id>
-CLOUDFLARE_R2_SECRET_ACCESS_KEY=<R2 S3 secret access key>
+CLOUDFLARE_R2_ACCESS_KEY_ID=<R2 signed access key id>
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=<R2 signed secret access key>
 CLOUDFLARE_R2_ENDPOINT=https://a8528ec394ae2da9e5521d2ddd3aeb87.r2.cloudflarestorage.com
 CLOUDFLARE_REST_API_TOKEN=<Cloudflare REST token for Pages/DNS/config>
 ```
 
-For R2 object operations, use the S3 credentials shown by Cloudflare's R2
+For R2 object operations, use the signed credentials shown by Cloudflare's R2
 Account Token flow. They are the right credentials for listing and reading
 objects in the Tokyo bucket.
 
@@ -33,12 +33,12 @@ Do not use `CLOUDFLARE_API_TOKEN` for repo Cloudflare helpers. That name is too
 ambiguous and has historically mixed R2 credentials, Wrangler credentials, and
 REST API tokens. Repo helpers use typed variables:
 
-- `CLOUDFLARE_R2_ACCESS_KEY_ID` + `CLOUDFLARE_R2_SECRET_ACCESS_KEY` for R2 object
-  work through the S3 API.
+- `CLOUDFLARE_R2_ACCESS_KEY_ID` + `CLOUDFLARE_R2_SECRET_ACCESS_KEY` for R2 signed
+  object work.
 - `CLOUDFLARE_REST_API_TOKEN` for Pages, custom domains, DNS records, and
   Worker/Page configuration.
-- `CLOUDFLARE_R2_REST_API_TOKEN` only for the rare R2 REST fallback when S3
-  credentials are unavailable.
+- `CLOUDFLARE_R2_REST_API_TOKEN` only for the rare R2 REST fallback when signed
+  R2 credentials are unavailable.
 
 For Pages/DNS operations, `CLOUDFLARE_REST_API_TOKEN` must be a Cloudflare REST API
 token for account `a8528ec394ae2da9e5521d2ddd3aeb87` with the permissions needed
@@ -60,8 +60,8 @@ pnpm cf:r2:get accounts/CLICKEEN/instances/SZBSB5HHFJ/instance.config.json
 `pnpm cf:preflight` is mandatory before Cloudflare-dependent execution. It:
 
 - loads root `.env.local`;
-- verifies S3 access to the configured R2 bucket, or verifies the REST token
-  when S3 credentials are not configured;
+- verifies signed access to the configured R2 bucket, or verifies the REST token
+  when signed credentials are not configured;
 - lists a small sample from `accounts/`;
 - reads `product/widgets/faq/spec.json` from R2.
 

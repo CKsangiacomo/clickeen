@@ -42,6 +42,32 @@ export type AccountAssetFile = {
   key: string;
 };
 
+export class AccountAssetMetadataError extends Error {
+  readonly reasonKey = 'tokyo.errors.assets.metadataInvalid';
+  readonly accountId: string;
+  readonly assetRef: string;
+  readonly key: string;
+
+  constructor(args: { accountId: string; assetRef: string }) {
+    super('tokyo.errors.assets.metadataInvalid');
+    this.name = 'AccountAssetMetadataError';
+    this.accountId = args.accountId;
+    this.assetRef = args.assetRef;
+    this.key = accountAssetKey(args.accountId, args.assetRef);
+  }
+}
+
+export class AccountAssetKeyError extends Error {
+  readonly reasonKey = 'tokyo.errors.assets.keyInvalid';
+  readonly key: string;
+
+  constructor(key: string) {
+    super('tokyo.errors.assets.keyInvalid');
+    this.name = 'AccountAssetKeyError';
+    this.key = key;
+  }
+}
+
 export function sumAccountAssetFileSizeBytes(files: AccountAssetFile[]): number {
   return files.reduce((total, file) => total + file.sizeBytes, 0);
 }
@@ -58,7 +84,7 @@ function accountAssetPrefix(accountId: string): string {
   return `accounts/${accountId}/assets/`;
 }
 
-function listedAccountAssetRefFromKey(accountId: string, key: string): string | null {
+export function directAccountAssetRefFromKey(accountId: string, key: string): string | null {
   const parsed = parseAccountAssetKey(key);
   if (!parsed || parsed.accountId !== accountId) return null;
 
@@ -99,7 +125,7 @@ function fileFromObject(args: {
     !Number.isInteger(sizeBytes) ||
     sizeBytes < 0
   ) {
-    throw new Error('tokyo.errors.assets.metadataInvalid');
+    throw new AccountAssetMetadataError({ accountId: args.accountId, assetRef: args.assetRef });
   }
   const assetType = classifyAccountAssetType(contentType, normalizedFilename.split('.').pop() || '');
   return {
@@ -123,6 +149,9 @@ export async function loadAccountAssetByRef(
   assetRef: string,
 ): Promise<AccountAssetFile | null> {
   const key = accountAssetKey(accountId, assetRef);
+  if (directAccountAssetRefFromKey(accountId, key) !== assetRef) {
+    throw new AccountAssetKeyError(key);
+  }
   const obj = await env.TOKYO_R2.head(key);
   if (!obj) return null;
   return fileFromObject({
@@ -151,8 +180,8 @@ export async function listAccountAssetFilesByAccount(
     } as R2ListOptions & { include: ('httpMetadata' | 'customMetadata')[] });
     for (const object of listed.objects) {
       const key = typeof object.key === 'string' ? object.key : '';
-      const assetRef = key ? listedAccountAssetRefFromKey(accountId, key) : null;
-      if (!assetRef) throw new Error('tokyo.errors.assets.keyInvalid');
+      const assetRef = key ? directAccountAssetRefFromKey(accountId, key) : null;
+      if (!assetRef) throw new AccountAssetKeyError(key);
       files.push(fileFromObject({
         accountId,
         assetRef,
@@ -172,5 +201,9 @@ export async function loadAccountStoredBytesUsage(env: Env, accountId: string): 
 }
 
 export async function deleteAccountAssetByRef(env: Env, accountId: string, assetRef: string): Promise<void> {
-  await env.TOKYO_R2.delete(accountAssetKey(accountId, assetRef));
+  const key = accountAssetKey(accountId, assetRef);
+  if (directAccountAssetRefFromKey(accountId, key) !== assetRef) {
+    throw new AccountAssetKeyError(key);
+  }
+  await env.TOKYO_R2.delete(key);
 }

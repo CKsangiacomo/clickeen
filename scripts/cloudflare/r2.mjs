@@ -99,11 +99,13 @@ function hmac(key, value, encoding) {
   return crypto.createHmac('sha256', key).update(value).digest(encoding);
 }
 
-function formatAmzDate(date) {
+function formatR2SigningDate(date) {
   return date.toISOString().replace(/[:-]|\.\d{3}/g, '');
 }
 
 function getSigningKey(secretAccessKey, dateStamp) {
+  // Cloudflare R2 signed requests require these wire-compatible signing strings.
+  // This is protocol signing, not a product storage dependency.
   const kDate = hmac(`AWS4${secretAccessKey}`, dateStamp);
   const kRegion = hmac(kDate, 'auto');
   const kService = hmac(kRegion, 's3');
@@ -141,9 +143,9 @@ function parseListObjectsXml(xml) {
   };
 }
 
-async function s3Request(config, method, key, searchParams = new URLSearchParams(), body = '', contentType = '') {
+async function r2SignedRequest(config, method, key, searchParams = new URLSearchParams(), body = '', contentType = '') {
   if (!config.accessKeyId || !config.secretAccessKey) {
-    throw new Error('Missing CLOUDFLARE_R2_ACCESS_KEY_ID or CLOUDFLARE_R2_SECRET_ACCESS_KEY for R2 S3 access.');
+    throw new Error('Missing CLOUDFLARE_R2_ACCESS_KEY_ID or CLOUDFLARE_R2_SECRET_ACCESS_KEY for R2 signed access.');
   }
 
   const endpoint = new URL(config.endpoint);
@@ -151,16 +153,16 @@ async function s3Request(config, method, key, searchParams = new URLSearchParams
   const canonicalQuery = new URLSearchParams([...searchParams.entries()].sort(([left], [right]) => left.localeCompare(right))).toString();
   const url = `${endpoint.origin}${pathname}${canonicalQuery ? `?${canonicalQuery}` : ''}`;
   const now = new Date();
-  const amzDate = formatAmzDate(now);
-  const dateStamp = amzDate.slice(0, 8);
+  const signingDate = formatR2SigningDate(now);
+  const dateStamp = signingDate.slice(0, 8);
   const payload = typeof body === 'string' ? body : '';
   const payloadHash = hashHex(payload);
   const contentTypeHeader = contentType ? `content-type:${contentType}\n` : '';
-  const canonicalHeaders = `${contentTypeHeader}host:${endpoint.host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
+  const canonicalHeaders = `${contentTypeHeader}host:${endpoint.host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${signingDate}\n`;
   const signedHeaders = `${contentType ? 'content-type;' : ''}host;x-amz-content-sha256;x-amz-date`;
   const canonicalRequest = [method, pathname, canonicalQuery, canonicalHeaders, signedHeaders, payloadHash].join('\n');
   const credentialScope = `${dateStamp}/auto/s3/aws4_request`;
-  const stringToSign = ['AWS4-HMAC-SHA256', amzDate, credentialScope, hashHex(canonicalRequest)].join('\n');
+  const stringToSign = ['AWS4-HMAC-SHA256', signingDate, credentialScope, hashHex(canonicalRequest)].join('\n');
   const signingKey = getSigningKey(config.secretAccessKey, dateStamp);
   const signature = hmac(signingKey, stringToSign, 'hex');
 
@@ -170,18 +172,18 @@ async function s3Request(config, method, key, searchParams = new URLSearchParams
       Authorization: `AWS4-HMAC-SHA256 Credential=${config.accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
       ...(contentType ? { 'content-type': contentType } : {}),
       'x-amz-content-sha256': payloadHash,
-      'x-amz-date': amzDate,
+      'x-amz-date': signingDate,
     },
     ...(method === 'PUT' ? { body: payload } : {}),
   });
   const text = await response.text();
   if (!response.ok) {
-    throw new Error(`Cloudflare R2 S3 failed ${response.status}: ${text || response.statusText}`);
+    throw new Error(`Cloudflare R2 signed request failed ${response.status}: ${text || response.statusText}`);
   }
   return text;
 }
 
-async function listObjectsS3(config, prefix, limit) {
+async function listObjectsSigned(config, prefix, limit) {
   const objects = [];
   let continuationToken = '';
   do {
@@ -190,7 +192,7 @@ async function listObjectsS3(config, prefix, limit) {
     params.set('max-keys', String(Math.min(Math.max(limit || 1000, 1), 1000)));
     if (prefix) params.set('prefix', prefix);
     if (continuationToken) params.set('continuation-token', continuationToken);
-    const xml = await s3Request(config, 'GET', '', params);
+    const xml = await r2SignedRequest(config, 'GET', '', params);
     const parsed = parseListObjectsXml(xml);
     objects.push(...parsed.objects);
     continuationToken = parsed.nextContinuationToken;
@@ -198,12 +200,16 @@ async function listObjectsS3(config, prefix, limit) {
   return objects.slice(0, limit);
 }
 
-async function getObjectS3(config, key) {
-  return s3Request(config, 'GET', key);
+async function getObjectSigned(config, key) {
+  return r2SignedRequest(config, 'GET', key);
 }
 
-async function putObjectS3(config, key, body, contentType) {
-  await s3Request(config, 'PUT', key, new URLSearchParams(), body, contentType);
+async function putObjectSigned(config, key, body, contentType) {
+  await r2SignedRequest(config, 'PUT', key, new URLSearchParams(), body, contentType);
+}
+
+async function deleteObjectSigned(config, key) {
+  await r2SignedRequest(config, 'DELETE', key);
 }
 
 async function listObjectsRest(config, prefix, limit) {
@@ -247,6 +253,10 @@ async function putObjectRest() {
   throw new Error('R2 REST put is not supported by this helper. Add CLOUDFLARE_R2_ACCESS_KEY_ID and CLOUDFLARE_R2_SECRET_ACCESS_KEY.');
 }
 
+async function deleteObjectRest() {
+  throw new Error('R2 REST delete is not supported by this helper. Add CLOUDFLARE_R2_ACCESS_KEY_ID and CLOUDFLARE_R2_SECRET_ACCESS_KEY.');
+}
+
 function putObjectWrangler(config, key, body, contentType) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ck-r2-wrangler-put-'));
   const file = path.join(dir, 'body');
@@ -275,38 +285,80 @@ function putObjectWrangler(config, key, body, contentType) {
   }
 }
 
-function isS3WriteDenied(error) {
-  const message = error instanceof Error ? error.message : String(error);
-  return message.includes('AccessDenied') || message.includes('Cloudflare R2 S3 failed 403');
+function deleteObjectWrangler(config, key) {
+  const args = [
+    '--filter',
+    '@clickeen/tokyo-worker',
+    'exec',
+    'wrangler',
+    'r2',
+    'object',
+    'delete',
+    `${config.bucket}/${key}`,
+    '--remote',
+  ];
+  const env = { ...process.env };
+  delete env.CLOUDFLARE_API_TOKEN;
+  delete env.CF_API_TOKEN;
+  execFileSync('pnpm', args, { cwd: repoRoot, stdio: 'pipe', env });
 }
 
-function hasS3Credentials(config) {
+function isR2SignedWriteDenied(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('AccessDenied') || message.includes('Cloudflare R2 signed request failed 403');
+}
+
+function isR2SignedDeleteDenied(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('AccessDenied') || message.includes('Cloudflare R2 signed request failed 403');
+}
+
+function hasR2SignedCredentials(config) {
   return Boolean(config.accessKeyId && config.secretAccessKey);
 }
 
 async function listObjects(config, prefix, limit) {
-  return hasS3Credentials(config) ? listObjectsS3(config, prefix, limit) : listObjectsRest(config, prefix, limit);
+  return hasR2SignedCredentials(config) ? listObjectsSigned(config, prefix, limit) : listObjectsRest(config, prefix, limit);
 }
 
 async function getObject(config, key) {
-  return hasS3Credentials(config) ? getObjectS3(config, key) : getObjectRest(config, key);
+  return hasR2SignedCredentials(config) ? getObjectSigned(config, key) : getObjectRest(config, key);
 }
 
 async function putObject(config, key, body, contentType) {
-  if (hasS3Credentials(config)) {
+  if (hasR2SignedCredentials(config)) {
     try {
-      await putObjectS3(config, key, body, contentType);
+      await putObjectSigned(config, key, body, contentType);
       return;
     } catch (error) {
-      if (!isS3WriteDenied(error)) throw error;
-      console.error('[cf:r2] S3 put denied; falling back to remote Wrangler R2 object put.');
+      if (!isR2SignedWriteDenied(error)) throw error;
+      console.error('[cf:r2] R2 signed put denied; falling back to remote Wrangler R2 object put.');
     }
   }
-  if (config.token || !hasS3Credentials(config)) {
+  if (config.token || !hasR2SignedCredentials(config)) {
     putObjectWrangler(config, key, body, contentType);
     return;
   }
   await putObjectRest(config, key, body, contentType);
+}
+
+async function deleteObject(config, key) {
+  if (hasR2SignedCredentials(config)) {
+    try {
+      await deleteObjectSigned(config, key);
+      return;
+    } catch (error) {
+      if (!isR2SignedDeleteDenied(error)) throw error;
+      console.error('[cf:r2] R2 signed delete denied; falling back to remote Wrangler R2 object delete.');
+      deleteObjectWrangler(config, key);
+      return;
+    }
+  }
+  if (config.token || !hasR2SignedCredentials(config)) {
+    deleteObjectWrangler(config, key);
+    return;
+  }
+  await deleteObjectRest(config, key);
 }
 
 function parseLimit(args, fallback = 100) {
@@ -329,6 +381,7 @@ function printUsage() {
 	  pnpm cf:r2:ls <prefix> [--limit 100]
 	  pnpm cf:r2:get <key>
 	  pnpm cf:r2:put <key> <local-file> [--content-type application/json]
+	  node scripts/cloudflare/r2.mjs delete <key>
 
 Required env, loaded from .env.local if not exported:
   CLOUDFLARE_ACCOUNT_ID
@@ -355,8 +408,8 @@ async function main() {
   if (command === 'preflight') {
     console.log(`[cf:preflight] account=${config.accountId}`);
     console.log(`[cf:preflight] bucket=${config.bucket}`);
-    if (hasS3Credentials(config)) {
-      console.log(`[cf:preflight] r2 s3 credentials=present accessKeyLength=${config.accessKeyId.length}`);
+    if (hasR2SignedCredentials(config)) {
+      console.log(`[cf:preflight] r2 signed credentials=present accessKeyLength=${config.accessKeyId.length}`);
     } else {
       console.log(`[cf:preflight] rest token=present length=${config.token.length}`);
       await verifyToken(config);
@@ -399,6 +452,14 @@ async function main() {
     const body = fs.readFileSync(path.resolve(process.cwd(), localFile), 'utf8');
     await putObject(config, key, body, parseContentType(args));
     console.log(`[cf:r2] wrote ${key}`);
+    return;
+  }
+
+  if (command === 'delete') {
+    const key = args.find((arg) => !arg.startsWith('--')) || '';
+    if (!key) throw new Error('Missing object key.');
+    await deleteObject(config, key);
+    console.log(`[cf:r2] deleted ${key}`);
     return;
   }
 

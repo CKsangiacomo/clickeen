@@ -157,30 +157,32 @@ function hmac(key, value, encoding) {
   return crypto.createHmac('sha256', key).update(value).digest(encoding);
 }
 
-function formatAmzDate(date) {
+function formatR2SigningDate(date) {
   return date.toISOString().replace(/[:-]|\.\d{3}/g, '');
 }
 
 function getSigningKey(secretAccessKey, dateStamp) {
+  // Cloudflare R2 signed requests require these wire-compatible signing strings.
+  // This is protocol signing, not a product storage dependency.
   const kDate = hmac(`AWS4${secretAccessKey}`, dateStamp);
   const kRegion = hmac(kDate, 'auto');
   const kService = hmac(kRegion, 's3');
   return hmac(kService, 'aws4_request');
 }
 
-async function putObjectS3(entry, config) {
+async function putObjectViaR2SignedApi(entry, config) {
   const body = await fs.readFile(entry.file);
   const endpoint = new URL(config.endpoint);
   const pathname = `/${encodeURIComponent(config.bucket)}/${encodeKeyPath(entry.key)}`;
   const now = new Date();
-  const amzDate = formatAmzDate(now);
-  const dateStamp = amzDate.slice(0, 8);
+  const signingDate = formatR2SigningDate(now);
+  const dateStamp = signingDate.slice(0, 8);
   const payloadHash = hashHex(body);
-  const canonicalHeaders = `content-type:${entry.contentType}\nhost:${endpoint.host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
+  const canonicalHeaders = `content-type:${entry.contentType}\nhost:${endpoint.host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${signingDate}\n`;
   const signedHeaders = 'content-type;host;x-amz-content-sha256;x-amz-date';
   const canonicalRequest = ['PUT', pathname, '', canonicalHeaders, signedHeaders, payloadHash].join('\n');
   const credentialScope = `${dateStamp}/auto/s3/aws4_request`;
-  const stringToSign = ['AWS4-HMAC-SHA256', amzDate, credentialScope, hashHex(canonicalRequest)].join('\n');
+  const stringToSign = ['AWS4-HMAC-SHA256', signingDate, credentialScope, hashHex(canonicalRequest)].join('\n');
   const signingKey = getSigningKey(config.secretAccessKey, dateStamp);
   const signature = hmac(signingKey, stringToSign, 'hex');
 
@@ -190,19 +192,19 @@ async function putObjectS3(entry, config) {
       Authorization: `AWS4-HMAC-SHA256 Credential=${config.accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
       'content-type': entry.contentType,
       'x-amz-content-sha256': payloadHash,
-      'x-amz-date': amzDate,
+      'x-amz-date': signingDate,
     },
     body,
   });
   const text = await response.text();
   if (!response.ok) {
-    throw new Error(`S3 put failed for ${entry.key}: ${response.status} ${text || response.statusText}`);
+    throw new Error(`R2 signed put failed for ${entry.key}: ${response.status} ${text || response.statusText}`);
   }
 }
 
-function isS3WriteDenied(error) {
+function isR2SignedWriteDenied(error) {
   const message = error instanceof Error ? error.message : String(error);
-  return message.includes('AccessDenied') || (message.includes('S3 put failed for') && message.includes(': 403 '));
+  return message.includes('AccessDenied') || (message.includes('R2 signed put failed for') && message.includes(': 403 '));
 }
 
 function sleep(ms) {
@@ -291,22 +293,22 @@ async function buildUploader(entries) {
 
   if (!entries[0]) {
     return {
-      mode: 'r2-s3',
+      mode: 'r2-signed-api',
       uploaded: 0,
-      upload: (entry) => putObjectS3(entry, config),
+      upload: (entry) => putObjectViaR2SignedApi(entry, config),
     };
   }
 
   try {
-    await putObjectS3(entries[0], config);
+    await putObjectViaR2SignedApi(entries[0], config);
     return {
-      mode: 'r2-s3',
+      mode: 'r2-signed-api',
       uploaded: 1,
-      upload: (entry) => putObjectS3(entry, config),
+      upload: (entry) => putObjectViaR2SignedApi(entry, config),
     };
   } catch (error) {
-    if (!isS3WriteDenied(error)) throw error;
-    console.log('[tokyo-r2-deploy-sync] S3 write denied; using Wrangler object put with explicit content type.');
+    if (!isR2SignedWriteDenied(error)) throw error;
+    console.log('[tokyo-r2-deploy-sync] R2 signed write denied; using Wrangler object put with explicit content type.');
     await uploadWithRetry(entries[0], runWranglerPut);
     return {
       mode: 'wrangler-object-put',

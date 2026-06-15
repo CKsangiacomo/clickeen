@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readAccountStorageBytesUsed } from '@roma/lib/account-storage-usage';
+import { isTokyoAssetUsageError, readAccountStorageBytesUsed } from '@roma/lib/account-storage-usage';
 import { withSession } from '../_lib/current-account-route';
 import { resolveCurrentAccountRouteContext } from '../_lib/current-account-route';
 
@@ -27,6 +27,22 @@ export async function GET(request: NextRequest) {
       current.value.setCookies,
     );
   } catch (error) {
+    if (isTokyoAssetUsageError(error)) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: error.kind,
+              reasonKey: error.reasonKey,
+              ...(error.detail ? { detail: error.detail } : {}),
+            },
+          },
+          { status: error.status },
+        ),
+        current.value.setCookies,
+      );
+    }
     const detail = error instanceof Error ? error.message : String(error);
     return withSession(
       request,

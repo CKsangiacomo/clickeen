@@ -391,15 +391,6 @@
                     "media": {
                       "kind": "none",
                       "iconName": "checkmark",
-                      "image": {
-                        "type": "image",
-                        "image": {
-                          "src": "/dieter/icons/svg/photo.svg",
-                          "fit": "cover",
-                          "position": "center",
-                          "repeat": "no-repeat"
-                        }
-                      },
                       "imageAlt": ""
                     },
                     "link": {

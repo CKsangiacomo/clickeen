@@ -15,9 +15,12 @@ import {
 import type { Env } from '../types';
 import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import {
+  AccountAssetKeyError,
+  AccountAssetMetadataError,
   type AccountAssetFile,
   type MemberRole,
   deleteAccountAssetByRef,
+  directAccountAssetRefFromKey,
   isAccountAssetSource,
   listAccountAssetFilesByAccount,
   loadAccountAssetByRef,
@@ -149,6 +152,32 @@ function serializeResolvedAccountAsset(
   };
 }
 
+function accountAssetMetadataInvalidResponse(error: AccountAssetMetadataError): Response {
+  return json(
+    {
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: error.reasonKey,
+        detail: error.key,
+      },
+    },
+    { status: 422 },
+  );
+}
+
+function accountAssetKeyInvalidResponse(error: AccountAssetKeyError): Response {
+  return json(
+    {
+      error: {
+        kind: 'VALIDATION',
+        reasonKey: error.reasonKey,
+        detail: error.key,
+      },
+    },
+    { status: 422 },
+  );
+}
+
 export async function handleUploadAccountAsset(req: Request, env: Env): Promise<Response> {
   const accountId = (req.headers.get('x-account-id') || '').trim();
   if (!accountId || !isCompactAccountPublicId(accountId)) {
@@ -185,7 +214,13 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
 
   const assetRef = filename;
   const key = buildAccountAssetKey(accountId, assetRef);
-  const existing = await loadAccountAssetByRef(env, accountId, assetRef);
+  const existing = await loadAccountAssetByRef(env, accountId, assetRef).catch((error) => {
+    if (error instanceof AccountAssetMetadataError) return error;
+    if (error instanceof AccountAssetKeyError) return error;
+    throw error;
+  });
+  if (existing instanceof AccountAssetMetadataError) return accountAssetMetadataInvalidResponse(existing);
+  if (existing instanceof AccountAssetKeyError) return accountAssetKeyInvalidResponse(existing);
   const createdAt = existing?.createdAt ?? new Date().toISOString();
   await env.TOKYO_R2.put(key, body, {
     httpMetadata: { contentType },
@@ -214,7 +249,13 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
 async function respondAccountAsset(env: Env, key: string, obj: { body: ReadableStream | null; httpMetadata?: { contentType?: string | null } | null }): Promise<Response> {
   const parsed = parseAccountAssetKey(key);
   if (!parsed) return new Response('Not found', { status: 404 });
-  const file = await loadAccountAssetByRef(env, parsed.accountId, parsed.assetRef);
+  const file = await loadAccountAssetByRef(env, parsed.accountId, parsed.assetRef).catch((error) => {
+    if (error instanceof AccountAssetMetadataError) return error;
+    if (error instanceof AccountAssetKeyError) return error;
+    throw error;
+  });
+  if (file instanceof AccountAssetMetadataError) return accountAssetMetadataInvalidResponse(file);
+  if (file instanceof AccountAssetKeyError) return accountAssetKeyInvalidResponse(file);
   if (!file) return new Response('Not found', { status: 404 });
   const headers = new Headers();
   headers.set('content-type', file.contentType);
@@ -226,11 +267,15 @@ async function respondAccountAsset(env: Env, key: string, obj: { body: ReadableS
 
 export async function handleGetAccountAsset(env: Env, key: string): Promise<Response> {
   const normalized = key.startsWith('/') ? key : `/${key}`;
-  const parsed = normalized.match(/^\/?accounts\/([0-9A-Z]{8})\/assets\/(.+)$/)
-    ? { key: normalized.replace(/^\/+/, '') }
+  const directKey = normalized.match(/^\/?accounts\/([0-9A-Z]{8})\/assets\/(.+)$/)
+    ? normalized.replace(/^\/+/, '')
     : null;
-  const directKey = parsed?.key ?? null;
   if (!directKey) return new Response('Not found', { status: 404 });
+  const parsed = parseAccountAssetKey(directKey);
+  if (!parsed) return new Response('Not found', { status: 404 });
+  if (!directAccountAssetRefFromKey(parsed.accountId, directKey)) {
+    return accountAssetKeyInvalidResponse(new AccountAssetKeyError(directKey));
+  }
   const obj = await env.TOKYO_R2.get(directKey);
   return obj ? respondAccountAsset(env, directKey, obj) : new Response('Not found', { status: 404 });
 }
@@ -242,7 +287,13 @@ export async function handleListAccountAssetMetadata(req: Request, env: Env, acc
   }
   const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'viewer' });
   if (authErr) return authErr;
-  const files = await listAccountAssetFilesByAccount(env, accountId);
+  const files = await listAccountAssetFilesByAccount(env, accountId).catch((error) => {
+    if (error instanceof AccountAssetMetadataError) return error;
+    if (error instanceof AccountAssetKeyError) return error;
+    throw error;
+  });
+  if (files instanceof AccountAssetMetadataError) return accountAssetMetadataInvalidResponse(files);
+  if (files instanceof AccountAssetKeyError) return accountAssetKeyInvalidResponse(files);
   files.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
   return json({
     accountId,
@@ -258,7 +309,14 @@ export async function handleGetAccountAssetUsage(req: Request, env: Env, account
   }
   const authErr = await authorizeAccountAssetAccess({ req, env, accountId, minRole: 'viewer' });
   if (authErr) return authErr;
-  return json({ accountId, storageBytesUsed: await loadAccountStoredBytesUsage(env, accountId) });
+  const storageBytesUsed = await loadAccountStoredBytesUsage(env, accountId).catch((error) => {
+    if (error instanceof AccountAssetMetadataError) return error;
+    if (error instanceof AccountAssetKeyError) return error;
+    throw error;
+  });
+  if (storageBytesUsed instanceof AccountAssetMetadataError) return accountAssetMetadataInvalidResponse(storageBytesUsed);
+  if (storageBytesUsed instanceof AccountAssetKeyError) return accountAssetKeyInvalidResponse(storageBytesUsed);
+  return json({ accountId, storageBytesUsed });
 }
 
 export async function handleResolveAccountAssetMetadata(req: Request, env: Env, accountIdRaw: string): Promise<Response> {
@@ -282,7 +340,13 @@ export async function handleResolveAccountAssetMetadata(req: Request, env: Env, 
   const publicBaseUrl = resolveTokyoAssetPublicBaseUrl(env, req);
   const resolved = await Promise.all(
     assetRefs.map(async (assetRef) => ({ assetRef, file: await loadAccountAssetByRef(env, accountId, assetRef) })),
-  );
+  ).catch((error) => {
+    if (error instanceof AccountAssetMetadataError) return error;
+    if (error instanceof AccountAssetKeyError) return error;
+    throw error;
+  });
+  if (resolved instanceof AccountAssetMetadataError) return accountAssetMetadataInvalidResponse(resolved);
+  if (resolved instanceof AccountAssetKeyError) return accountAssetKeyInvalidResponse(resolved);
   const missing = resolved.filter((entry) => !entry.file).map((entry) => entry.assetRef);
   if (missing.length) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.resolve.missing', detail: missing.join(', ') } }, { status: 422 });
   return json({
@@ -299,7 +363,13 @@ export async function handleDeleteAccountAsset(req: Request, env: Env, accountId
   if (authErr) return authErr;
   if (!isAssetRef(assetRefRaw)) return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assetRef.invalid' } }, { status: 422 });
   const assetRef = assetRefRaw;
-  const existing = await loadAccountAssetByRef(env, accountId, assetRef);
+  const existing = await loadAccountAssetByRef(env, accountId, assetRef).catch((error) => {
+    if (error instanceof AccountAssetMetadataError) return error;
+    if (error instanceof AccountAssetKeyError) return error;
+    throw error;
+  });
+  if (existing instanceof AccountAssetMetadataError) return accountAssetMetadataInvalidResponse(existing);
+  if (existing instanceof AccountAssetKeyError) return accountAssetKeyInvalidResponse(existing);
   if (!existing) return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.asset.notFound' } }, { status: 404 });
   await deleteAccountAssetByRef(env, accountId, assetRef);
   return json({ accountId, assetRef, deleted: true }, { status: 200 });

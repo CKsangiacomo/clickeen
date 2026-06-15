@@ -6,15 +6,39 @@ import {
 
 type TokyoAccountAssetUsagePayload = {
   storageBytesUsed?: unknown;
-  error?: { reasonKey?: unknown; detail?: unknown };
+  error?: { kind?: unknown; reasonKey?: unknown; detail?: unknown };
 };
 
-function resolveTokyoAssetUsageError(payload: TokyoAccountAssetUsagePayload | null, status: number): string {
+export class TokyoAssetUsageError extends Error {
+  readonly status: number;
+  readonly kind: string;
+  readonly reasonKey: string;
+  readonly detail?: string;
+
+  constructor(args: { status: number; kind: string; reasonKey: string; detail?: string }) {
+    super(args.reasonKey);
+    this.name = 'TokyoAssetUsageError';
+    this.status = args.status;
+    this.kind = args.kind;
+    this.reasonKey = args.reasonKey;
+    this.detail = args.detail;
+  }
+}
+
+export function isTokyoAssetUsageError(error: unknown): error is TokyoAssetUsageError {
+  return error instanceof TokyoAssetUsageError;
+}
+
+function resolveTokyoAssetUsageError(payload: TokyoAccountAssetUsagePayload | null, status: number): TokyoAssetUsageError {
+  const kind = asTrimmedString(payload?.error?.kind) || 'UPSTREAM_UNAVAILABLE';
   const reasonKey = asTrimmedString(payload?.error?.reasonKey);
-  if (reasonKey) return reasonKey;
   const detail = asTrimmedString(payload?.error?.detail);
-  if (detail) return detail;
-  return `HTTP_${status}`;
+  return new TokyoAssetUsageError({
+    status,
+    kind,
+    reasonKey: reasonKey || `HTTP_${status}`,
+    ...(detail ? { detail } : {}),
+  });
 }
 
 export async function readAccountStorageBytesUsed(args: {
@@ -33,7 +57,7 @@ export async function readAccountStorageBytesUsed(args: {
   });
   const payload = (await response.json().catch(() => null)) as TokyoAccountAssetUsagePayload | null;
   if (!response.ok) {
-    throw new Error(resolveTokyoAssetUsageError(payload, response.status));
+    throw resolveTokyoAssetUsageError(payload, response.status);
   }
   const storageBytesUsed = Number(payload?.storageBytesUsed);
   if (!Number.isFinite(storageBytesUsed) || storageBytesUsed < 0) {
