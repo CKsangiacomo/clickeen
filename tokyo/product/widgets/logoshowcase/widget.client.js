@@ -88,22 +88,35 @@
     }
   }
 
-  function assertLogoFill(value, path) {
-    assertString(value, path);
-    const v = value.trim();
-    if (!v) return;
-
-    const match = v.match(/^url\((["']?)([^"')]+)\1\)\s+center\s*\/\s*contain\s+no-repeat$/i);
-    if (!match) {
-      throw new Error(`[LogoShowcase] ${path} must be empty or a materialized logo image fill`);
-    }
-
-    const url = match[2].trim();
-    if (!url || /[\n\r;]/.test(url) || /^javascript:/i.test(url)) {
+  function assertFillSource(src, path) {
+    assertString(src, path);
+    const value = src.trim();
+    if (!value) throw new Error(`[LogoShowcase] ${path} must be a non-empty asset URL`);
+    if (/[\n\r;]/.test(value) || /^javascript:/i.test(value)) {
       throw new Error(`[LogoShowcase] ${path} contains an invalid URL`);
     }
-    if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../') || /^https?:\/\//i.test(url)) return;
+    if (value.startsWith('/') || value.startsWith('./') || value.startsWith('../') || /^https?:\/\//i.test(value)) return value;
     throw new Error(`[LogoShowcase] ${path} must use a relative, absolute-path, or http(s) URL`);
+  }
+
+  function assertLogoFill(value, path) {
+    assertObject(value, path);
+    if (value.type === 'none') {
+      if (Object.keys(value).length !== 1) {
+        throw new Error(`[LogoShowcase] ${path} empty state must not include media buckets`);
+      }
+      return;
+    }
+    if (value.type !== 'image') {
+      throw new Error(`[LogoShowcase] ${path}.type must be none|image`);
+    }
+    assertObject(value.image, `${path}.image`);
+    assertFillSource(value.image.src, `${path}.image.src`);
+    if (value.image.fit !== 'cover' && value.image.fit !== 'contain') {
+      throw new Error(`[LogoShowcase] ${path}.image.fit must be cover|contain`);
+    }
+    assertString(value.image.position, `${path}.image.position`);
+    assertString(value.image.repeat, `${path}.image.repeat`);
   }
 
   function assertCoreSize(value, path) {
@@ -219,13 +232,6 @@
         logoIds.add(logo.id);
         assertString(logo.name, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].name`);
         assertLogoFill(logo.logoFill, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].logoFill`);
-        if (Object.prototype.hasOwnProperty.call(logo, 'asset')) {
-          assertObject(logo.asset, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].asset`);
-          assertNonEmptyString(
-            logo.asset.assetRef,
-            `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].asset.assetRef`,
-          );
-        }
         assertString(logo.href, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].href`);
         assertBoolean(logo.targetBlank, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].targetBlank`);
         assertBoolean(logo.nofollow, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].nofollow`);
@@ -449,9 +455,12 @@
     visualEl.setAttribute('role', 'img');
     if (aria) visualEl.setAttribute('aria-label', aria);
 
-    const logoFill = String(logo.logoFill || '').trim();
-    if (logoFill) {
-      visualEl.style.background = logoFill;
+    const logoFill = logo.logoFill;
+    if (logoFill.type === 'image') {
+      visualEl.style.backgroundImage = `url("${String(logoFill.image.src).replace(/"/g, '%22')}")`;
+      visualEl.style.backgroundPosition = logoFill.image.position;
+      visualEl.style.backgroundSize = logoFill.image.fit;
+      visualEl.style.backgroundRepeat = logoFill.image.repeat;
     } else {
       visualEl.style.background = 'transparent';
     }

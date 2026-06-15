@@ -234,46 +234,6 @@ function validateCardWrapper(args: {
   return { ok: true };
 }
 
-function validateLogoAssetMetadata(args: {
-  asset: unknown;
-  path: string;
-}): SavePolicyValidationResult {
-  if (!isRecord(args.asset)) {
-    return structureViolation({
-      detail: 'Logo asset metadata must be an object.',
-      paths: [args.path],
-    });
-  }
-  const allowed = new Set(['assetRef', 'name', 'source']);
-  const extra = Object.keys(args.asset).find((key) => !allowed.has(key));
-  if (extra) {
-    return structureViolation({
-      detail: 'Logo asset metadata contains unsupported fields.',
-      paths: [`${args.path}.${extra}`],
-    });
-  }
-  const assetRef = typeof args.asset.assetRef === 'string' ? args.asset.assetRef : '';
-  if (!assetRef || assetRef !== assetRef.trim()) {
-    return structureViolation({
-      detail: 'Logo asset metadata requires an asset reference.',
-      paths: [`${args.path}.assetRef`],
-    });
-  }
-  if (args.asset.name != null && typeof args.asset.name !== 'string') {
-    return structureViolation({
-      detail: 'Logo asset metadata name must be a string.',
-      paths: [`${args.path}.name`],
-    });
-  }
-  if (args.asset.source != null && typeof args.asset.source !== 'string') {
-    return structureViolation({
-      detail: 'Logo asset metadata source must be a string.',
-      paths: [`${args.path}.source`],
-    });
-  }
-  return { ok: true };
-}
-
 function validateLogoShowcaseStructure(config: Record<string, unknown>): SavePolicyValidationResult {
   const logoshowcase = isRecord(config.logoshowcase) ? config.logoshowcase : null;
   const strips = Array.isArray(logoshowcase?.strips) ? logoshowcase.strips : [];
@@ -282,12 +242,25 @@ function validateLogoShowcaseStructure(config: Record<string, unknown>): SavePol
     const logos = isRecord(strip) && Array.isArray(strip.logos) ? strip.logos : [];
     for (let logoIndex = 0; logoIndex < logos.length; logoIndex += 1) {
       const logo = logos[logoIndex];
-      if (!isRecord(logo) || !Object.prototype.hasOwnProperty.call(logo, 'asset')) continue;
-      const gate = validateLogoAssetMetadata({
-        asset: logo.asset,
-        path: `logoshowcase.strips.${stripIndex}.logos.${logoIndex}.asset`,
+      if (isRecord(logo) && Object.prototype.hasOwnProperty.call(logo, 'asset')) {
+        return structureViolation({
+          detail: 'logoshowcase logo media must be stored in logoFill, not a separate asset sidecar.',
+          paths: [`logoshowcase.strips.${stripIndex}.logos.${logoIndex}.asset`],
+        });
+      }
+      const logoPath = `logoshowcase.strips.${stripIndex}.logos.${logoIndex}.logoFill`;
+      const gate = validateMediaFill({
+        widgetLabel: 'logoshowcase',
+        media: isRecord(logo) ? logo.logoFill : null,
+        path: logoPath,
       });
       if (!gate.ok) return gate;
+      if (isRecord(logo) && isRecord(logo.logoFill) && logo.logoFill.type === 'video') {
+        return structureViolation({
+          detail: 'logoshowcase logo fill requires none or image media fill.',
+          paths: [`${logoPath}.type`],
+        });
+      }
     }
   }
   return { ok: true };

@@ -354,17 +354,6 @@ function collectMaterializedFillAssetRefs(node: unknown, out: Set<string>): void
   }
 }
 
-function collectMaterializedLogoAssetRefs(node: unknown, out: Set<string>): void {
-  if (!isRecord(node)) return;
-  if (!Object.prototype.hasOwnProperty.call(node, 'logoFill')) return;
-  if (!Object.prototype.hasOwnProperty.call(node, 'asset')) return;
-  if (!isRecord(node.asset)) throw new Error('ck.account_asset_ref_invalid');
-  if (typeof node.asset.assetRef !== 'string' || !node.asset.assetRef || node.asset.assetRef !== node.asset.assetRef.trim()) {
-    throw new Error('ck.account_asset_ref_invalid');
-  }
-  out.add(node.asset.assetRef);
-}
-
 export function collectConfigMediaAssetRefs(config: unknown): string[] {
   const assetRefs = new Set<string>();
 
@@ -376,7 +365,6 @@ export function collectConfigMediaAssetRefs(config: unknown): string[] {
     }
 
     collectMaterializedFillAssetRefs(node, assetRefs);
-    collectMaterializedLogoAssetRefs(node, assetRefs);
     for (const value of Object.values(node)) {
       visit(value);
     }
@@ -407,20 +395,6 @@ function materializeVideoFill(fill: JsonRecord, resolvedAssets: unknown): JsonRe
   return { ...fill, video: nextVideo };
 }
 
-function materializeLogoAssetNode(node: JsonRecord, resolvedAssets: unknown): JsonRecord {
-  if (!Object.prototype.hasOwnProperty.call(node, 'asset')) return node;
-  if (!isRecord(node.asset)) throw new Error('ck.account_asset_ref_invalid');
-  if (typeof node.asset.assetRef !== 'string' || !node.asset.assetRef || node.asset.assetRef !== node.asset.assetRef.trim()) {
-    throw new Error('ck.account_asset_ref_invalid');
-  }
-  const resolvedByRef = readResolvedAssetByRef(resolvedAssets, node.asset.assetRef);
-  const safeUrl = String(resolvedByRef.url).replace(/"/g, '%22');
-  return {
-    ...node,
-    logoFill: `url("${safeUrl}") center / contain no-repeat`,
-  };
-}
-
 export function materializeConfigMedia(config: unknown, resolvedAssets: unknown): unknown {
   const visit = (node: unknown): unknown => {
     if (!node || typeof node !== 'object') return node;
@@ -436,9 +410,6 @@ export function materializeConfigMedia(config: unknown, resolvedAssets: unknown)
     }
     if (type === 'video') {
       return materializeVideoFill(next, resolvedAssets);
-    }
-    if (Object.prototype.hasOwnProperty.call(next, 'logoFill')) {
-      return materializeLogoAssetNode(next, resolvedAssets);
     }
     return next;
   };

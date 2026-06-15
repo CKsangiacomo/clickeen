@@ -276,7 +276,7 @@ Publishing semantics: `published` / `unpublished` is Tokyo-owned instance produc
 
 - Full canonical contract: [AssetManagement.md](./AssetManagement.md)
 - Fill/media authoring config now stores account asset references (`assetRef`, optional `posterAssetRef`) while runtime/materialized config packs resolve those refs to canonical root-relative paths: `/assets/account/{accountPublicId}/{assetRef}`. The backing R2 object lives under `accounts/{accountPublicId}/assets/{assetRef}`.
-- Logo/media authoring surfaces use the same split: uploaded logos persist `asset.assetRef` plus editor metadata, while runtime consumes only the materialized `logoFill`.
+- Logo/media authoring surfaces use the same fill/media split: authoring config stores structured media fill references under the declared field, while runtime/materialized config consumes resolved `src` paths inside that same fill object.
 - Persisted legacy media URL fields (`fill.image.src`, `fill.video.src`, `fill.video.posterSrc`, string `fill.video.poster`, and persisted account-asset URL backed `logoFill` strings) are outside contract and rejected on write.
 - Legacy non-account media paths are outside the runtime contract and are rejected on new writes.
 - `DELETE` on an account asset is synchronous in the delete path with no instance rebuild/healing side effects; subsequent `/assets/account/**` reads return unavailable.

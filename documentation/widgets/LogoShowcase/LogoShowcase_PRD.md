@@ -184,13 +184,11 @@ This section lists **only controls that apply to every Type**. Type-specific con
     - `object-manager` uses `min=1`; the user cannot delete the final strip.
 
 - **Logos list inside each strip (CRUD + reorder)**: `strips[i].logos[]`
-  - **changes**: which logos are rendered inside that strip, the selected image (in-memory while editing), link behavior, and hover caption text
+  - **changes**: which logos are rendered inside that strip, the selected image fill, link behavior, and hover caption text
   - **how**:
     - runtime renders children under the strip’s `[data-role="logos"]`
     - nested `repeater` uses `min=1`; the user cannot delete the final logo in a strip.
-- `logoshowcase.strips[i].logos[j].asset.assetRef` → account uploaded-logo reference used for materialization
-- `logoshowcase.strips[i].logos[j].logoFill` → static/base logo fill or runtime-materialized uploaded logo background
-    - `logoshowcase.strips[i].logos[j].asset` → file metadata for editor display (object with `name`, optional `mime`, optional `source`, optional `assetRef`)
+- `logoshowcase.strips[i].logos[j].logoFill` → media-only logo image fill; `{ "type": "none" }` means no logo selected
     - `logoshowcase.strips[i].logos[j].name` → human label (and optional caption fallback if caption empty)
 - `logoshowcase.strips[i].logos[j].href` → wrap logo in `<a>` if valid http(s)
 - `logoshowcase.strips[i].logos[j].targetBlank=true` → set `target="_blank"`
@@ -199,14 +197,14 @@ This section lists **only controls that apply to every Type**. Type-specific con
 - `logoshowcase.strips[i].logos[j].title` → optional tooltip/title attribute on the logo surface
     - `logoshowcase.strips[i].logos[j].caption` → hover caption rendering (must be consistent across Types)
 
-Note: Links + media metadata are baseline product behavior (not tier-gated). Invalid URLs should render as non-clickable logos.
+Note: Links and logo media fill are baseline product behavior (not tier-gated). Invalid URLs should render as non-clickable logos.
 
   - **Editor control**:
-    - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-upload` (image accept)
-      - uploaded logos persist `strips[i].logos[j].asset.assetRef`
-      - static/base logos keep `logoFill` directly
+    - `strips[i].logos[j].logoFill` is edited using the global Dieter component `dropdown-fill` with `fill-modes="image"`
+      - empty logo slots persist `{ "type": "none" }`
+      - selected logos persist structured image fill truth under `logoFill`
     - the popover template stays minimal (caption/name only; see Section 4)
-      - selecting an image updates asset metadata immediately through upload (no replace-in-place flow)
+      - selecting an image updates `logoFill` through the shared media fill flow
 
 - **Header (shared primitive)**: `header.*` + `headerCta.*`
   - **changes**: title/subtitle/CTA copy + placement/alignment + CTA styling
@@ -303,10 +301,11 @@ Below the Type picker, always show:
   - `min=1`
 
 #### Logo item editor (required, global pattern)
-Each logo item must use `dropdown-upload` for the logo image, and keep the per-item UI minimal.
-- **Logo image**: `dropdown-upload` bound to `logoshowcase.strips[i].logos[j].logoFill`
-  - uploaded logos persist `logoshowcase.strips[i].logos[j].asset.assetRef`
-  - runtime image source is the materialized `logoshowcase.strips[i].logos[j].logoFill`
+Each logo item must use media-only `dropdown-fill` for the logo image, and keep the per-item UI minimal.
+- **Logo image**: `dropdown-fill` bound to `logoshowcase.strips[i].logos[j].logoFill`
+  - configured with `fill-modes="image"`
+  - `{ "type": "none" }` means no logo selected
+  - runtime image source is `logoshowcase.strips[i].logos[j].logoFill`
   - `template="..."` includes (allowed in all subjects):
     - `textfield` for `strips[i].logos[j].caption`
     - (optional) `textfield` for `strips[i].logos[j].name`
@@ -400,10 +399,9 @@ If any item below is undecided, the implementer must stop and ask; do not guess.
 We intentionally ship **no custom tint** in v1. `appearance.logoLook` is limited to `original | grayscale` (no `customColor` mode).
 
 ### Asset Handling
-- **Upload path**: `dropdown-upload` uploads immediately through the Roma account asset gateway (`POST /api/account/assets/upload`), which forwards to Tokyo-worker over the private asset-control binding.
-- **Persistence**: uploaded logos are account assets. Widget instance config stores a reference to the account asset.
-- **Runtime**: generated widget output references account assets. If an asset cannot be resolved, the logo is missing at the named boundary.
-- **Replace flow**: replacing the account asset bytes keeps the same account asset reference and must not require rebuilding every instance that references it.
+- **Selection path**: logo images use the shared media-only `dropdown-fill` flow.
+- **Persistence**: Logo Showcase stores structured image fill truth under `logoshowcase.strips[i].logos[j].logoFill`.
+- **Runtime**: generated widget output renders the materialized `logoFill.image.src`. If the image source cannot be resolved, the logo fails at the named media boundary.
 
 ### Global defaults (apply to all types)
 
