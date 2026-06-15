@@ -22,7 +22,8 @@ if (args.has('--local')) {
 }
 
 const bucket = process.env.TOKYO_R2_BUCKET || 'tokyo-assets-dev';
-const concurrency = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_CONCURRENCY || '6', 10);
+const concurrency = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_CONCURRENCY || '3', 10);
+const maxUploadAttempts = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_ATTEMPTS || '4', 10);
 
 const mappings = [
   { source: 'tokyo/product/widgets', target: 'product/widgets' },
@@ -204,6 +205,28 @@ function isS3WriteDenied(error) {
   return message.includes('AccessDenied') || (message.includes('S3 put failed for') && message.includes(': 403 '));
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function uploadWithRetry(entry, upload) {
+  const attempts = Number.isFinite(maxUploadAttempts) && maxUploadAttempts > 0 ? maxUploadAttempts : 4;
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await upload(entry);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) break;
+      const delayMs = 500 * attempt;
+      console.log(`[tokyo-r2-deploy-sync] Retry ${attempt}/${attempts - 1} for ${entry.key} after ${delayMs}ms`);
+      await sleep(delayMs);
+    }
+  }
+  throw lastError;
+}
+
 function runWranglerPut(entry) {
   return new Promise((resolve, reject) => {
     const wranglerArgs = [
@@ -284,7 +307,7 @@ async function buildUploader(entries) {
   } catch (error) {
     if (!isS3WriteDenied(error)) throw error;
     console.log('[tokyo-r2-deploy-sync] S3 write denied; using Wrangler object put with explicit content type.');
-    await runWranglerPut(entries[0]);
+    await uploadWithRetry(entries[0], runWranglerPut);
     return {
       mode: 'wrangler-object-put',
       uploaded: 1,
@@ -304,7 +327,7 @@ async function uploadEntries(entries) {
     while (index < entries.length) {
       const current = entries[index];
       index += 1;
-      await uploader.upload(current);
+      await uploadWithRetry(current, uploader.upload);
       uploaded += 1;
       if (uploaded === entries.length || uploaded % 50 === 0) {
         console.log(`[tokyo-r2-deploy-sync] Uploaded ${uploaded}/${entries.length}`);
