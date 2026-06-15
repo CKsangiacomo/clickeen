@@ -32,223 +32,10 @@
               "id": "l1",
               "alt": "",
               "href": "",
-              "name": "Audi",
-              "asset": {
-                "name": "Audi.svg"
-              },
+              "name": "",
               "title": "",
               "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Audi.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l2",
-              "alt": "",
-              "href": "",
-              "name": "BMW",
-              "asset": {
-                "name": "BMW.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/BMW.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l3",
-              "alt": "",
-              "href": "",
-              "name": "Chana",
-              "asset": {
-                "name": "Chana.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Chana.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l4",
-              "alt": "",
-              "href": "",
-              "name": "Daihatsu",
-              "asset": {
-                "name": "Daihatsu.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Daihatsu.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l5",
-              "alt": "",
-              "href": "",
-              "name": "Ford",
-              "asset": {
-                "name": "Ford.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Ford.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l6",
-              "alt": "",
-              "href": "",
-              "name": "Honda",
-              "asset": {
-                "name": "Honda.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Honda.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l7",
-              "alt": "",
-              "href": "",
-              "name": "Isuzu",
-              "asset": {
-                "name": "Isuzu.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Isuzu.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l8",
-              "alt": "",
-              "href": "",
-              "name": "Lambo",
-              "asset": {
-                "name": "Lambo.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Lambo.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l9",
-              "alt": "",
-              "href": "",
-              "name": "Perodua",
-              "asset": {
-                "name": "Perodua.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Perodua.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l10",
-              "alt": "",
-              "href": "",
-              "name": "Peugeot",
-              "asset": {
-                "name": "Peugeot.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Peugeot.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l11",
-              "alt": "",
-              "href": "",
-              "name": "Proton",
-              "asset": {
-                "name": "Proton.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Proton.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l12",
-              "alt": "",
-              "href": "",
-              "name": "Suzuki",
-              "asset": {
-                "name": "Suzuki.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Suzuki.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l13",
-              "alt": "",
-              "href": "",
-              "name": "Tesla",
-              "asset": {
-                "name": "Tesla.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Tesla.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l14",
-              "alt": "",
-              "href": "",
-              "name": "Toyota",
-              "asset": {
-                "name": "Toyota.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Toyota.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l15",
-              "alt": "",
-              "href": "",
-              "name": "VW",
-              "asset": {
-                "name": "VW.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/VW.svg) center / contain no-repeat",
-              "nofollow": false,
-              "targetBlank": false
-            },
-            {
-              "id": "l16",
-              "alt": "",
-              "href": "",
-              "name": "Volvo",
-              "asset": {
-                "name": "Volvo.svg"
-              },
-              "title": "",
-              "caption": "",
-              "logoFill": "url(/widgets/logoshowcase/media/Volvo.svg) center / contain no-repeat",
+              "logoFill": "transparent",
               "nofollow": false,
               "targetBlank": false
             }
@@ -405,9 +192,6 @@
                       "min": "1",
                       "default-item": {
                         "name": "New logo",
-                        "asset": {
-                          "name": ""
-                        },
                         "logoFill": "transparent",
                         "href": "",
                         "targetBlank": false,
@@ -432,9 +216,6 @@
                     "logos": [
                       {
                         "name": "New logo",
-                        "asset": {
-                          "name": ""
-                        },
                         "logoFill": "transparent",
                         "href": "",
                         "targetBlank": false,

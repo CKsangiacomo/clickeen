@@ -75,9 +75,18 @@ function validateMediaFill(args: {
       paths: [`${args.path}.kind`],
     });
   }
+  if (args.media.type === 'none') {
+    if (Object.prototype.hasOwnProperty.call(args.media, 'image') || Object.prototype.hasOwnProperty.call(args.media, 'video')) {
+      return structureViolation({
+        detail: `${args.widgetLabel} empty media fill must not include image or video data.`,
+        paths: [`${args.path}.image`, `${args.path}.video`],
+      });
+    }
+    return { ok: true };
+  }
   if (args.media.type !== 'image' && args.media.type !== 'video') {
     return structureViolation({
-      detail: `${args.widgetLabel} requires image or video media fill.`,
+      detail: `${args.widgetLabel} requires none, image, or video media fill.`,
       paths: [`${args.path}.type`],
     });
   }
@@ -225,6 +234,65 @@ function validateCardWrapper(args: {
   return { ok: true };
 }
 
+function validateLogoAssetMetadata(args: {
+  asset: unknown;
+  path: string;
+}): SavePolicyValidationResult {
+  if (!isRecord(args.asset)) {
+    return structureViolation({
+      detail: 'Logo asset metadata must be an object.',
+      paths: [args.path],
+    });
+  }
+  const allowed = new Set(['assetRef', 'name', 'source']);
+  const extra = Object.keys(args.asset).find((key) => !allowed.has(key));
+  if (extra) {
+    return structureViolation({
+      detail: 'Logo asset metadata contains unsupported fields.',
+      paths: [`${args.path}.${extra}`],
+    });
+  }
+  const assetRef = typeof args.asset.assetRef === 'string' ? args.asset.assetRef : '';
+  if (!assetRef || assetRef !== assetRef.trim()) {
+    return structureViolation({
+      detail: 'Logo asset metadata requires an asset reference.',
+      paths: [`${args.path}.assetRef`],
+    });
+  }
+  if (args.asset.name != null && typeof args.asset.name !== 'string') {
+    return structureViolation({
+      detail: 'Logo asset metadata name must be a string.',
+      paths: [`${args.path}.name`],
+    });
+  }
+  if (args.asset.source != null && typeof args.asset.source !== 'string') {
+    return structureViolation({
+      detail: 'Logo asset metadata source must be a string.',
+      paths: [`${args.path}.source`],
+    });
+  }
+  return { ok: true };
+}
+
+function validateLogoShowcaseStructure(config: Record<string, unknown>): SavePolicyValidationResult {
+  const logoshowcase = isRecord(config.logoshowcase) ? config.logoshowcase : null;
+  const strips = Array.isArray(logoshowcase?.strips) ? logoshowcase.strips : [];
+  for (let stripIndex = 0; stripIndex < strips.length; stripIndex += 1) {
+    const strip = strips[stripIndex];
+    const logos = isRecord(strip) && Array.isArray(strip.logos) ? strip.logos : [];
+    for (let logoIndex = 0; logoIndex < logos.length; logoIndex += 1) {
+      const logo = logos[logoIndex];
+      if (!isRecord(logo) || !Object.prototype.hasOwnProperty.call(logo, 'asset')) continue;
+      const gate = validateLogoAssetMetadata({
+        asset: logo.asset,
+        path: `logoshowcase.strips.${stripIndex}.logos.${logoIndex}.asset`,
+      });
+      if (!gate.ok) return gate;
+    }
+  }
+  return { ok: true };
+}
+
 function validateSplitCarouselMediaStructure(config: Record<string, unknown>): SavePolicyValidationResult {
   const splitCarouselMedia = isRecord(config.splitCarouselMedia) ? config.splitCarouselMedia : null;
   const items = Array.isArray(splitCarouselMedia?.items) ? splitCarouselMedia.items : null;
@@ -368,6 +436,9 @@ export function validateAccountInstanceConfigStructure(args: {
   }
   if (args.widgetType === 'split-media') {
     return validateSplitMediaStructure(args.config);
+  }
+  if (args.widgetType === 'logoshowcase') {
+    return validateLogoShowcaseStructure(args.config);
   }
   return { ok: true };
 }

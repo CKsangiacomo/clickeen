@@ -15,28 +15,16 @@
         {
           "id": "visual-1",
           "media": {
-            "type": "image",
-            "image": {
-              "src": "/dieter/icons/svg/photo.svg",
-              "fit": "contain",
-              "position": "center",
-              "repeat": "no-repeat"
-            }
+            "type": "none"
           },
-          "alt": "First visual"
+          "alt": ""
         },
         {
           "id": "visual-2",
           "media": {
-            "type": "image",
-            "image": {
-              "src": "/dieter/icons/svg/photo.svg",
-              "fit": "contain",
-              "position": "center",
-              "repeat": "no-repeat"
-            }
+            "type": "none"
           },
-          "alt": "Second visual"
+          "alt": ""
         }
       ],
       "media": {
@@ -128,13 +116,7 @@
                   "default-item": {
                     "id": "",
                     "media": {
-                      "type": "image",
-                      "image": {
-                        "src": "/dieter/icons/svg/photo.svg",
-                        "fit": "contain",
-                        "position": "center",
-                        "repeat": "no-repeat"
-                      }
+                      "type": "none"
                     },
                     "alt": ""
                   }

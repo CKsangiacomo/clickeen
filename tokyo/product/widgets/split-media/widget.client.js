@@ -165,7 +165,10 @@
 
     const splitMedia = assertRecord(state.splitMedia, 'state.splitMedia');
     const media = assertRecord(splitMedia.media, 'state.splitMedia.media');
-    const kind = assertEnum(media.type, 'state.splitMedia.media.type', ['image', 'video']);
+    const kind = assertEnum(media.type, 'state.splitMedia.media.type', ['none', 'image', 'video']);
+    if (kind === 'none' && Object.keys(media).some((key) => key !== 'type')) {
+      throw new Error('[SplitMedia] state.splitMedia.media empty state must not include media buckets');
+    }
     assertCardWrapper(splitMedia.appearance?.cardwrapper, 'state.splitMedia.appearance.cardwrapper');
     return {
       kind,
@@ -180,6 +183,12 @@
   function renderMedia(normalized) {
     const media = document.createElement('div');
     media.className = 'ck-split-media__media';
+
+    if (normalized.kind === 'none') {
+      media.dataset.empty = 'true';
+      media.setAttribute('aria-label', 'No media selected');
+      return media;
+    }
 
     if (normalized.kind === 'image') {
       const image = document.createElement('img');

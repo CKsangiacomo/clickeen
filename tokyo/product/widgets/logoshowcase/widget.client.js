@@ -1,5 +1,4 @@
 // LogoShowcase widget runtime (strict, deterministic).
-// Assumes canonical, typed state from the editor; no runtime fallbacks/merges.
 
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -220,14 +219,12 @@
         logoIds.add(logo.id);
         assertString(logo.name, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].name`);
         assertLogoFill(logo.logoFill, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].logoFill`);
-        if (logo.asset != null) {
+        if (Object.prototype.hasOwnProperty.call(logo, 'asset')) {
           assertObject(logo.asset, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].asset`);
-          if (logo.asset.assetRef != null) {
-            assertNonEmptyString(
-              logo.asset.assetRef,
-              `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].asset.assetRef`,
-            );
-          }
+          assertNonEmptyString(
+            logo.asset.assetRef,
+            `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].asset.assetRef`,
+          );
         }
         assertString(logo.href, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].href`);
         assertBoolean(logo.targetBlank, `state.logoshowcase.strips[${stripIdx}].logos[${logoIdx}].targetBlank`);

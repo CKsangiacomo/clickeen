@@ -45,6 +45,10 @@
   height: 100%;
 }
 
+.ck-split-media__media[data-empty='true'] {
+  background: color-mix(in oklab, var(--color-system-black), transparent 94%);
+}
+
 .ck-split-media__media > img,
 .ck-split-media__media > video {
   display: block;

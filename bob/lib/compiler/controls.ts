@@ -198,6 +198,7 @@ function inferControlMetadata(control: CompiledControl, defaults: Record<string,
   )
     return { kind: 'string' };
   if (control.type === 'slider' || control.type === 'valuefield') return { kind: 'number' };
+  if (control.type === 'dropdown-upload-meta') return { kind: 'json' };
   if (control.type === 'dropdown-fill') return { kind: 'json' };
 
   if (control.type === 'repeater' || control.type === 'object-manager') {
@@ -301,6 +302,16 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
         step,
         required,
       });
+      const metaPath = attrs.metaPath || attrs['meta-path'];
+      if (type === 'dropdown-upload' && typeof metaPath === 'string' && metaPath.trim()) {
+        controls.push({
+          panelId,
+          groupId,
+          groupLabel: groupId ? groupKeyToLabel(groupId) : undefined,
+          type: 'dropdown-upload-meta',
+          path: metaPath.trim(),
+        });
+      }
       addDerivedPath(attrs.labelPath);
       addDerivedPath(attrs.reorderLabelPath || attrs['reorder-label-path']);
     }
@@ -314,7 +325,7 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
     }
   }
 
-  const bobPathRegex = /data-bob-path=(?:"([^"]+)"|'([^']+)')/gi;
+  const bobPathRegex = /<[^>]*data-bob-path=(?:"([^"]+)"|'([^']+)')[^>]*>/gi;
   let bobMatch: RegExpExecArray | null;
   while ((bobMatch = bobPathRegex.exec(markup)) !== null) {
     const pathValue = bobMatch[1] || bobMatch[2];

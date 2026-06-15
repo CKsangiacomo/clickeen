@@ -12,15 +12,9 @@
     },
     "splitMedia": {
       "media": {
-        "type": "image",
-        "image": {
-          "src": "/dieter/icons/svg/photo.svg",
-          "fit": "contain",
-          "position": "center",
-          "repeat": "no-repeat"
-        }
+        "type": "none"
       },
-      "alt": "Product visual",
+      "alt": "",
       "fit": "cover",
       "position": "center",
       "appearance": {

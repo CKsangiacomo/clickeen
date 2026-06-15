@@ -44,6 +44,10 @@
   height: 100%;
 }
 
+.ck-split-carousel-media__media[data-empty='true'] {
+  background: color-mix(in oklab, var(--color-system-black), transparent 94%);
+}
+
 .ck-split-carousel-media__media {
   position: absolute;
   inset: 0;

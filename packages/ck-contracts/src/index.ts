@@ -357,8 +357,11 @@ function collectMaterializedFillAssetRefs(node: unknown, out: Set<string>): void
 function collectMaterializedLogoAssetRefs(node: unknown, out: Set<string>): void {
   if (!isRecord(node)) return;
   if (!Object.prototype.hasOwnProperty.call(node, 'logoFill')) return;
+  if (!Object.prototype.hasOwnProperty.call(node, 'asset')) return;
   if (!isRecord(node.asset)) throw new Error('ck.account_asset_ref_invalid');
-  if (typeof node.asset.assetRef !== 'string') throw new Error('ck.account_asset_ref_invalid');
+  if (typeof node.asset.assetRef !== 'string' || !node.asset.assetRef || node.asset.assetRef !== node.asset.assetRef.trim()) {
+    throw new Error('ck.account_asset_ref_invalid');
+  }
   out.add(node.asset.assetRef);
 }
 
@@ -405,7 +408,11 @@ function materializeVideoFill(fill: JsonRecord, resolvedAssets: unknown): JsonRe
 }
 
 function materializeLogoAssetNode(node: JsonRecord, resolvedAssets: unknown): JsonRecord {
+  if (!Object.prototype.hasOwnProperty.call(node, 'asset')) return node;
   if (!isRecord(node.asset)) throw new Error('ck.account_asset_ref_invalid');
+  if (typeof node.asset.assetRef !== 'string' || !node.asset.assetRef || node.asset.assetRef !== node.asset.assetRef.trim()) {
+    throw new Error('ck.account_asset_ref_invalid');
+  }
   const resolvedByRef = readResolvedAssetByRef(resolvedAssets, node.asset.assetRef);
   const safeUrl = String(resolvedByRef.url).replace(/"/g, '%22');
   return {

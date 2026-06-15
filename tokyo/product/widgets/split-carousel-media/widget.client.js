@@ -168,9 +168,15 @@
     if (!id) throw new Error('[SplitCarouselMedia] state.splitCarouselMedia.items[' + index + '].id is required');
     const media = assertRecord(item.media, 'state.splitCarouselMedia.items[' + index + '].media');
     const kind = assertEnum(media.type, 'state.splitCarouselMedia.items[' + index + '].media.type', [
+      'none',
       'image',
       'video',
     ]);
+    if (kind === 'none' && Object.keys(media).some((key) => key !== 'type')) {
+      throw new Error(
+        '[SplitCarouselMedia] state.splitCarouselMedia.items[' + index + '].media empty state must not include media buckets',
+      );
+    }
     return {
       id,
       kind,
@@ -232,6 +238,12 @@
     const media = document.createElement('div');
     media.className = 'ck-split-carousel-media__media';
     media.dataset.itemId = item.id;
+
+    if (item.kind === 'none') {
+      media.dataset.empty = 'true';
+      media.setAttribute('aria-label', 'No media selected');
+      return media;
+    }
 
     if (item.kind === 'image') {
       const image = document.createElement('img');
