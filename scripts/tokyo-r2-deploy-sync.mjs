@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import fs from 'node:fs/promises';
+import fsSync from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import crypto from 'node:crypto';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const scriptPath = fileURLToPath(import.meta.url);
 const repoRoot = path.resolve(path.dirname(scriptPath), '..');
-const tokyoWorkerRoot = path.join(repoRoot, 'tokyo-worker');
+const envPath = path.join(repoRoot, '.env.local');
 
 const args = new Set(process.argv.slice(2));
 const publishRemote = args.has('--remote');
@@ -20,7 +22,7 @@ if (args.has('--local')) {
 }
 
 const bucket = process.env.TOKYO_R2_BUCKET || 'tokyo-assets-dev';
-const concurrency = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_CONCURRENCY || '20', 10);
+const concurrency = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_CONCURRENCY || '6', 10);
 
 const mappings = [
   { source: 'tokyo/product/widgets', target: 'product/widgets' },
@@ -33,6 +35,49 @@ const mappings = [
 ];
 
 const allowedRoots = new Set(['dieter', 'fonts', 'product', 'prague']);
+const contentTypes = new Map([
+  ['.css', 'text/css; charset=utf-8'],
+  ['.html', 'text/html; charset=utf-8'],
+  ['.js', 'application/javascript; charset=utf-8'],
+  ['.json', 'application/json; charset=utf-8'],
+  ['.md', 'text/markdown; charset=utf-8'],
+  ['.jpg', 'image/jpeg'],
+  ['.png', 'image/png'],
+  ['.svg', 'image/svg+xml'],
+  ['.woff', 'font/woff'],
+  ['.woff2', 'font/woff2'],
+]);
+
+function loadLocalEnv() {
+  if (!fsSync.existsSync(envPath)) return;
+  const text = fsSync.readFileSync(envPath, 'utf8');
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq <= 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
+function optionalEnv(name) {
+  const value = process.env[name]?.trim();
+  return value || '';
+}
+
+function deployContentType(file) {
+  const ext = path.extname(file).toLowerCase();
+  const contentType = contentTypes.get(ext);
+  if (!contentType) {
+    throw new Error(`[tokyo-r2-deploy-sync] Missing content type for "${file}" (${ext || 'no extension'})`);
+  }
+  return contentType;
+}
 
 async function walkFiles(root) {
   const out = [];
@@ -72,7 +117,7 @@ async function buildBulkEntries() {
       const rel = path.relative(sourceRoot, file).replace(/\\/g, '/');
       const key = path.posix.join(mapping.target, rel);
       assertCanonicalKey(key);
-      entries.push({ key, file });
+      entries.push({ key, file, contentType: deployContentType(file) });
     }
   }
 
@@ -86,44 +131,188 @@ function summarize(entries) {
     const [root] = entry.key.split('/');
     roots.set(root, (roots.get(root) || 0) + 1);
   }
+  const contentTypes = new Map();
+  for (const entry of entries) {
+    contentTypes.set(entry.contentType, (contentTypes.get(entry.contentType) || 0) + 1);
+  }
   return {
     bucket,
     mode: dryRun ? 'dry-run' : 'remote',
     files: entries.length,
     roots: Object.fromEntries([...roots.entries()].sort(([a], [b]) => a.localeCompare(b))),
+    contentTypes: Object.fromEntries([...contentTypes.entries()].sort(([a], [b]) => a.localeCompare(b))),
   };
 }
 
-function runWranglerBulkUpload(bulkFilePath) {
-  const wranglerArgs = [
-    '-C',
-    'tokyo-worker',
-    'exec',
-    'wrangler',
-    'r2',
-    'bulk',
-    'put',
-    bucket,
-    '--filename',
-    bulkFilePath,
-    '--remote',
-    '--concurrency',
-    String(Number.isFinite(concurrency) && concurrency > 0 ? concurrency : 20),
-  ];
+function encodeKeyPath(key) {
+  return key.split('/').map((part) => encodeURIComponent(part)).join('/');
+}
 
-  const result = spawnSync('pnpm', wranglerArgs, {
-    cwd: repoRoot,
-    stdio: 'inherit',
-    env: process.env,
+function hashHex(value) {
+  return crypto.createHash('sha256').update(value).digest('hex');
+}
+
+function hmac(key, value, encoding) {
+  return crypto.createHmac('sha256', key).update(value).digest(encoding);
+}
+
+function formatAmzDate(date) {
+  return date.toISOString().replace(/[:-]|\.\d{3}/g, '');
+}
+
+function getSigningKey(secretAccessKey, dateStamp) {
+  const kDate = hmac(`AWS4${secretAccessKey}`, dateStamp);
+  const kRegion = hmac(kDate, 'auto');
+  const kService = hmac(kRegion, 's3');
+  return hmac(kService, 'aws4_request');
+}
+
+async function putObjectS3(entry, config) {
+  const body = await fs.readFile(entry.file);
+  const endpoint = new URL(config.endpoint);
+  const pathname = `/${encodeURIComponent(config.bucket)}/${encodeKeyPath(entry.key)}`;
+  const now = new Date();
+  const amzDate = formatAmzDate(now);
+  const dateStamp = amzDate.slice(0, 8);
+  const payloadHash = hashHex(body);
+  const canonicalHeaders = `content-type:${entry.contentType}\nhost:${endpoint.host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
+  const signedHeaders = 'content-type;host;x-amz-content-sha256;x-amz-date';
+  const canonicalRequest = ['PUT', pathname, '', canonicalHeaders, signedHeaders, payloadHash].join('\n');
+  const credentialScope = `${dateStamp}/auto/s3/aws4_request`;
+  const stringToSign = ['AWS4-HMAC-SHA256', amzDate, credentialScope, hashHex(canonicalRequest)].join('\n');
+  const signingKey = getSigningKey(config.secretAccessKey, dateStamp);
+  const signature = hmac(signingKey, stringToSign, 'hex');
+
+  const response = await fetch(`${endpoint.origin}${pathname}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `AWS4-HMAC-SHA256 Credential=${config.accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
+      'content-type': entry.contentType,
+      'x-amz-content-sha256': payloadHash,
+      'x-amz-date': amzDate,
+    },
+    body,
   });
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(`S3 put failed for ${entry.key}: ${response.status} ${text || response.statusText}`);
+  }
+}
 
-  if (result.error) {
-    console.error('[tokyo-r2-deploy-sync] Failed to run wrangler.', result.error);
-    process.exit(1);
+function isS3WriteDenied(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('AccessDenied') || (message.includes('S3 put failed for') && message.includes(': 403 '));
+}
+
+function runWranglerPut(entry) {
+  return new Promise((resolve, reject) => {
+    const wranglerArgs = [
+      '-C',
+      'tokyo-worker',
+      'exec',
+      'wrangler',
+      'r2',
+      'object',
+      'put',
+      `${bucket}/${entry.key}`,
+      '--file',
+      entry.file,
+      '--remote',
+      '--content-type',
+      entry.contentType,
+    ];
+
+    const child = spawn('pnpm', wranglerArgs, {
+      cwd: repoRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: process.env,
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => {
+      stdout += String(chunk);
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += String(chunk);
+    });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      reject(new Error(`Wrangler put failed for ${entry.key} (exit ${code}): ${stderr || stdout}`));
+    });
+  });
+}
+
+function getR2Config() {
+  loadLocalEnv();
+  const accountId = optionalEnv('CLOUDFLARE_ACCOUNT_ID');
+  const endpoint = optionalEnv('CLOUDFLARE_R2_ENDPOINT') || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : '');
+  const accessKeyId = optionalEnv('CLOUDFLARE_R2_ACCESS_KEY_ID');
+  const secretAccessKey = optionalEnv('CLOUDFLARE_R2_SECRET_ACCESS_KEY');
+  if (!endpoint || !accessKeyId || !secretAccessKey) return null;
+  return { endpoint, accessKeyId, secretAccessKey, bucket };
+}
+
+async function buildUploader(entries) {
+  const config = getR2Config();
+  if (!config) {
+    return {
+      mode: 'wrangler-object-put',
+      uploaded: 0,
+      upload: runWranglerPut,
+    };
   }
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1);
+
+  if (!entries[0]) {
+    return {
+      mode: 'r2-s3',
+      uploaded: 0,
+      upload: (entry) => putObjectS3(entry, config),
+    };
   }
+
+  try {
+    await putObjectS3(entries[0], config);
+    return {
+      mode: 'r2-s3',
+      uploaded: 1,
+      upload: (entry) => putObjectS3(entry, config),
+    };
+  } catch (error) {
+    if (!isS3WriteDenied(error)) throw error;
+    console.log('[tokyo-r2-deploy-sync] S3 write denied; using Wrangler object put with explicit content type.');
+    await runWranglerPut(entries[0]);
+    return {
+      mode: 'wrangler-object-put',
+      uploaded: 1,
+      upload: runWranglerPut,
+    };
+  }
+}
+
+async function uploadEntries(entries) {
+  const width = Number.isFinite(concurrency) && concurrency > 0 ? concurrency : 20;
+  const uploader = await buildUploader(entries);
+  console.log(`[tokyo-r2-deploy-sync] Writer: ${uploader.mode} content-type=explicit concurrency=${width}`);
+  let index = uploader.uploaded;
+  let uploaded = uploader.uploaded;
+
+  async function worker() {
+    while (index < entries.length) {
+      const current = entries[index];
+      index += 1;
+      await uploader.upload(current);
+      uploaded += 1;
+      if (uploaded === entries.length || uploaded % 50 === 0) {
+        console.log(`[tokyo-r2-deploy-sync] Uploaded ${uploaded}/${entries.length}`);
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(width, entries.length) }, () => worker()));
 }
 
 async function main() {
@@ -137,17 +326,11 @@ async function main() {
       `[tokyo-r2-deploy-sync] ${dryRun ? 'Would upload' : 'Uploading'} ${entries.length} files to ${bucket} (${summary.mode}).`,
     );
     console.log(`[tokyo-r2-deploy-sync] Roots: ${Object.entries(summary.roots).map(([root, count]) => `${root}/=${count}`).join(', ')}`);
+    console.log(`[tokyo-r2-deploy-sync] Content types: ${Object.entries(summary.contentTypes).map(([type, count]) => `${type}=${count}`).join(', ')}`);
   }
 
   if (dryRun) return;
-
-  const bulkFilePath = path.join(tokyoWorkerRoot, `.tokyo-r2-deploy-bulk-${Date.now()}.json`);
-  await fs.writeFile(bulkFilePath, `${JSON.stringify(entries, null, 2)}\n`, 'utf8');
-  try {
-    runWranglerBulkUpload(bulkFilePath);
-  } finally {
-    await fs.rm(bulkFilePath, { force: true });
-  }
+  await uploadEntries(entries);
 }
 
 main().catch((err) => {
