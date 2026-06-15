@@ -1,4 +1,4 @@
-<div class="diet-dropdown-upload diet-popover-host" data-size="{{size}}" data-state="closed">
+<div class="diet-dropdown-upload diet-popover-host" data-size="{{size}}" data-state="closed" data-has-file="false">
   <input
     id="{{id}}"
     type="hidden"
@@ -26,6 +26,7 @@
     aria-expanded="false"
     aria-labelledby="{{id}}-label"
   >
+    <span class="diet-dropdown-upload__header-icon" aria-hidden="true"></span>
     <span class="diet-dropdown-header-label {{labelClass}}" id="{{id}}-label">
       {{#if label}}{{label}}{{else}}{{placeholder}}{{/if}}
     </span>
