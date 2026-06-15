@@ -423,16 +423,7 @@ var Dieter = (() => {
                 <div class="diet-dropdown-upload__preview-doc-ext label-s" data-role="ext"></div>
               </div>
               <div class="diet-dropdown-upload__preview-empty" data-role="empty">
-                <button
-                  type="button"
-                  class="diet-btn-ic diet-dropdown-upload__preview-empty-icon"
-                  data-size="xl"
-                  data-variant="neutral"
-                  aria-hidden="true"
-                  tabindex="-1"
-                >
-                  <span class="diet-btn-ic__icon" data-icon="square.dashed"></span>
-                </button>
+                <span class="diet-dropdown-upload__preview-empty-icon" data-icon="photo"></span>
               </div>
             </div>
             <div class="diet-dropdown-upload__preview-meta">

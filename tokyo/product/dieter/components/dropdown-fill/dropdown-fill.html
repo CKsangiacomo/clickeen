@@ -102,7 +102,7 @@
           aria-label="Video fill"
           aria-pressed="false"
         >
-          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="play.rectangle"></span>
+          <span class="diet-btn-ic__icon" aria-hidden="true" data-icon="play.square"></span>
         </button>
       </div>
 
@@ -422,7 +422,9 @@
       </div>
 
       <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--image body-xs" data-panel="image" data-has-image="false">
-        <div class="diet-dropdown-fill__image-preview" aria-hidden="true"></div>
+        <div class="diet-dropdown-fill__image-preview" aria-hidden="true">
+          <span class="diet-dropdown-fill__empty-media-icon" data-icon="photo"></span>
+        </div>
         <div class="diet-dropdown-fill__image-actions">
           <div class="diet-dropdown-fill__image-controls-left">
             <button
@@ -470,7 +472,9 @@
       <div class="diet-dropdown-fill__panel diet-dropdown-fill__panel--video body-xs" data-panel="video" data-has-video="false">
         <div class="diet-dropdown-fill__video-frame" aria-hidden="true">
           <video class="diet-dropdown-fill__video-preview" muted playsinline preload="metadata"></video>
-          <div class="diet-dropdown-fill__video-placeholder label-s">No video uploaded</div>
+          <div class="diet-dropdown-fill__video-placeholder">
+            <span class="diet-dropdown-fill__empty-media-icon" data-icon="play.square"></span>
+          </div>
         </div>
         <div class="diet-dropdown-fill__video-actions">
           <div class="diet-dropdown-fill__video-controls-left">

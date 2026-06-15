@@ -46,6 +46,17 @@
 
 .ck-split-carousel-media__media[data-empty='true'] {
   background: color-mix(in oklab, var(--color-system-black), transparent 94%);
+  display: grid;
+  place-items: center;
+}
+
+.ck-split-carousel-media__media[data-empty='true']::before {
+  content: '';
+  inline-size: min(18%, 64px);
+  aspect-ratio: 1;
+  background: color-mix(in oklab, var(--color-system-black), transparent 72%);
+  -webkit-mask: url('/dieter/icons/svg/photo.svg') center / contain no-repeat;
+  mask: url('/dieter/icons/svg/photo.svg') center / contain no-repeat;
 }
 
 .ck-split-carousel-media__media {

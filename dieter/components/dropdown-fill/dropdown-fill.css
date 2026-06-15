@@ -380,6 +380,9 @@
 .diet-dropdown-fill__video-frame {
   background-size: cover;
   background-position: center;
+  display: grid;
+  place-items: center;
+  color: color-mix(in oklab, var(--color-system-black), transparent 68%);
 }
 
 .diet-dropdown-fill__image-preview::after,
@@ -401,11 +404,25 @@
   opacity: 0.2;
 }
 
-.diet-dropdown-fill__video-frame {
-  display: grid;
-  place-items: center;
-  text-align: center;
-  color: color-mix(in oklab, var(--color-system-black), transparent 45%);
+.diet-dropdown-fill__empty-media-icon {
+  inline-size: 42px;
+  block-size: 42px;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.72;
+}
+
+.diet-dropdown-fill__empty-media-icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.diet-dropdown-fill__panel[data-has-image='true'] .diet-dropdown-fill__empty-media-icon,
+.diet-dropdown-fill__panel[data-has-video='true'] .diet-dropdown-fill__empty-media-icon {
+  display: none;
 }
 
 .diet-dropdown-fill__video-preview {
@@ -425,6 +442,7 @@
   justify-content: center;
   padding: var(--space-2, 0.5rem);
   z-index: 2;
+  color: inherit;
 }
 
 .diet-dropdown-fill__panel[data-has-video='true'] .diet-dropdown-fill__video-placeholder {
