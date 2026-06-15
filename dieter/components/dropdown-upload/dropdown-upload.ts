@@ -234,7 +234,7 @@ function installHandlers(state: DropdownUploadState) {
         },
         true,
       );
-      setFileKey(state, 'transparent', true);
+      setFileKey(state, '', true);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'coreui.errors.assets.uploadFailed';
       if (dispatchAccountAssetUpsell(state.root, message)) {
@@ -265,7 +265,7 @@ function installHandlers(state: DropdownUploadState) {
       state.localObjectUrl = null;
     }
     setMetaValue(state, null, true);
-    setFileKey(state, 'transparent', true);
+    setFileKey(state, '', true);
   });
 }
 
@@ -378,8 +378,7 @@ function syncFromValue(state: DropdownUploadState, raw: string, meta: UploadMeta
     return;
   }
 
-  let key = String(raw ?? '').trim();
-  if (key === 'transparent') key = '';
+  const key = String(raw ?? '').trim();
   const placeholder = state.headerValue?.dataset.placeholder ?? '';
   const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
   const assetRef = readMetaAssetRef(meta);

@@ -35,7 +35,7 @@
               "name": "",
               "title": "",
               "caption": "",
-              "logoFill": "transparent",
+              "logoFill": "",
               "nofollow": false,
               "targetBlank": false
             }
@@ -192,7 +192,7 @@
                       "min": "1",
                       "default-item": {
                         "name": "New logo",
-                        "logoFill": "transparent",
+                        "logoFill": "",
                         "href": "",
                         "targetBlank": false,
                         "nofollow": false,
@@ -216,7 +216,7 @@
                     "logos": [
                       {
                         "name": "New logo",
-                        "logoFill": "transparent",
+                        "logoFill": "",
                         "href": "",
                         "targetBlank": false,
                         "nofollow": false,

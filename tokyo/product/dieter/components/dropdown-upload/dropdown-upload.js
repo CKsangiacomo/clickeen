@@ -290,7 +290,7 @@ var Dieter = (() => {
           },
           true
         );
-        setFileKey(state, "transparent", true);
+        setFileKey(state, "", true);
       } catch (error) {
         const message = error instanceof Error ? error.message : "coreui.errors.assets.uploadFailed";
         if (dispatchAccountAssetUpsell(state.root, message)) {
@@ -320,7 +320,7 @@ var Dieter = (() => {
         state.localObjectUrl = null;
       }
       setMetaValue(state, null, true);
-      setFileKey(state, "transparent", true);
+      setFileKey(state, "", true);
     });
   }
   function setUploadingState(state, uploading) {
@@ -410,8 +410,7 @@ var Dieter = (() => {
       setPreview(state, { kind: "empty", previewUrl: void 0, name: "", ext: "", hasFile: false });
       return;
     }
-    let key = String(raw ?? "").trim();
-    if (key === "transparent") key = "";
+    const key = String(raw ?? "").trim();
     const placeholder = state.headerValue?.dataset.placeholder ?? "";
     const metaName = typeof meta?.name === "string" ? meta.name.trim() : "";
     const assetRef = readMetaAssetRef(meta);

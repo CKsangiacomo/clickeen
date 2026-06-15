@@ -91,11 +91,11 @@
   function assertLogoFill(value, path) {
     assertString(value, path);
     const v = value.trim();
-    if (v === 'transparent' || v === 'none') return;
+    if (!v) return;
 
     const match = v.match(/^url\((["']?)([^"')]+)\1\)\s+center\s*\/\s*contain\s+no-repeat$/i);
     if (!match) {
-      throw new Error(`[LogoShowcase] ${path} must be transparent or a materialized logo image fill`);
+      throw new Error(`[LogoShowcase] ${path} must be empty or a materialized logo image fill`);
     }
 
     const url = match[2].trim();

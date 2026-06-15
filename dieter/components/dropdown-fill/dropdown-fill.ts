@@ -452,7 +452,8 @@ function handleAlphaField(state: DropdownFillState) {
 }
 
 function syncFromValue(state: DropdownFillState, raw: string) {
-  const fill = parseFillValue(raw, state.root);
+  const rawValue = String(raw ?? '');
+  const fill = rawValue === '' ? { type: 'none' as const } : parseFillValue(rawValue, state.root);
   if (!fill) {
     state.root.dataset.invalid = 'true';
     updateHeader(state, { text: 'Invalid', muted: false, chipColor: null, noneChip: true });

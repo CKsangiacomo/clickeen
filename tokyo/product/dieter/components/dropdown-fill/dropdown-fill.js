@@ -1761,7 +1761,8 @@ var Dieter = (() => {
     syncColorUI(state, { commit: true });
   }
   function syncFromValue(state, raw) {
-    const fill = parseFillValue(raw, state.root);
+    const rawValue = String(raw ?? "");
+    const fill = rawValue === "" ? { type: "none" } : parseFillValue(rawValue, state.root);
     if (!fill) {
       state.root.dataset.invalid = "true";
       updateHeader(state, { text: "Invalid", muted: false, chipColor: null, noneChip: true });
