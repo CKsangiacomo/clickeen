@@ -1,6 +1,6 @@
 # DevStudio PRD Execution Ledger
 
-Status: migration complete through Step 7; post-108 policy follow-up deferred
+Status: migration complete through Step 7; post-120 policy follow-up deferred
 Started: 2026-06-09
 Completed: 2026-06-10
 
@@ -484,7 +484,7 @@ Evidence recorded 2026-06-10:
 ## Step 7 — Local Emulation Teardown Ledger
 
 Status: green; Step 7 complete. DevStudio Cloudflare migration complete through
-the migration scope. The post-108 policy-page extension is deferred until 108A-1
+the migration scope. The post-120 policy-page extension is deferred until 120A1
 defines the new schema authority.
 
 Evidence recorded 2026-06-10:
@@ -510,15 +510,15 @@ Evidence recorded 2026-06-10:
   config, env file, generated local state, Cloudflare setting, or product code
   was changed in Step 7.
 
-## Closure Realignment — Migration Complete, Post-108 Follow-Up Deferred
+## Closure Realignment — Migration Complete, Post-120 Follow-Up Deferred
 
 Status: green; DevStudio Cloudflare migration complete through Step 7.
 
 Evidence recorded 2026-06-10:
 
-- Product-owner clarification: 108 is not a blocker for DevStudio migration
-  closure. 108 is a higher-priority standalone AI-plane PRD. When 108A-1 is green,
-  DevStudio can update the Policy section against 108's surviving schema authority.
+- Product-owner clarification: 120 is not a blocker for DevStudio migration
+  closure. 120 is a higher-priority standalone AI-plane PRD. When 120A1 is green,
+  DevStudio can update the Policy section against 120's surviving schema authority.
 - Migration acceptance is satisfied by the shipped Cloudflare Pages DevStudio,
   Berlin/Google auth boundary, route contract, policy read/write lanes,
   local-DevStudio decommission, docs sync, and local-emulation teardown ledger.

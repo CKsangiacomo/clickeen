@@ -18,18 +18,18 @@ Source: follow-up to `Execution_Pipeline_Docs/03-Executed/PRD__DevStudio_Cloudfl
 
 ## Executed Deletions
 
-| Target | Result |
-| --- | --- |
-| `scripts/dev-up.sh` | Deleted. The one-command local Bob/Berlin/Tokyo support stack is retired. |
-| `tokyo/dev-server.mjs` | Deleted. The local Tokyo CDN stub and its local mutable upload route are retired. |
-| `scripts/dev/generate-berlin-keys.mjs` | Deleted. Local Berlin `.dev.vars` generation is retired. |
-| `berlin/wrangler.toml` `[env.local]` | Deleted. Cloud Berlin top-level config remains. |
-| `tokyo-worker/wrangler.toml` `[env.local]` | Deleted. Cloud Tokyo-worker top-level config remains. |
-| `sanfrancisco/wrangler.toml` `[env.local]` | Deleted. Cloud San Francisco top-level config remains. |
-| Root `tokyo:*:local` scripts | Deleted. Tokyo sync scripts keep check/remote paths only. |
-| Local R2 `--local`/`--persist-to` sync support | Deleted from Tokyo font/R2 sync helpers. |
-| `TOKYO_DEV_JWT` / `devstudio.local` bypass | Deleted from Tokyo-worker account/asset authorization. Roma `roma.edge` account capsules remain required. |
-| Ignored local state | Removed from the working tree: `Logs/`, `.wrangler/`, service `.wrangler/`, and `berlin/.dev.vars`. |
+| Target                                         | Result                                                                                                    |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `scripts/dev-up.sh`                            | Deleted. The one-command local Bob/Berlin/Tokyo support stack is retired.                                 |
+| `tokyo/dev-server.mjs`                         | Deleted. The local Tokyo CDN stub and its local mutable upload route are retired.                         |
+| `scripts/dev/generate-berlin-keys.mjs`         | Deleted. Local Berlin `.dev.vars` generation is retired.                                                  |
+| `berlin/wrangler.toml` `[env.local]`           | Deleted. Cloud Berlin top-level config remains.                                                           |
+| `tokyo-worker/wrangler.toml` `[env.local]`     | Deleted. Cloud Tokyo-worker top-level config remains.                                                     |
+| `sanfrancisco/wrangler.toml` `[env.local]`     | Deleted. Cloud San Francisco top-level config remains.                                                    |
+| Root `tokyo:*:local` scripts                   | Deleted. Tokyo sync scripts keep check/remote paths only.                                                 |
+| Local R2 `--local`/`--persist-to` sync support | Deleted from Tokyo font/R2 sync helpers.                                                                  |
+| `TOKYO_DEV_JWT` / `devstudio.local` bypass     | Deleted from Tokyo-worker account/asset authorization. Roma `roma.edge` account capsules remain required. |
+| Ignored local state                            | Removed from the working tree: `Logs/`, `.wrangler/`, service `.wrangler/`, and `berlin/.dev.vars`.       |
 
 ## Vite Removal
 
@@ -54,5 +54,5 @@ DevStudio no longer uses Vite or Vitest:
 ## Deferred
 
 - PRD 106D remains deferred by product decision.
-- PRD 108 remains the next major policy-authority work; DevStudio Policy UI
-  extensions happen after 108 defines schema authority.
+- PRD 120 remains the next major policy-authority work; DevStudio Policy UI
+  extensions happen after 120 defines schema authority.

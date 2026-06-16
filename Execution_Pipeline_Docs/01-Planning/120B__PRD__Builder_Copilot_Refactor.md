@@ -5,10 +5,10 @@ Owner: Product + Architecture (Bob, Roma, San Francisco)
 Priority: P0
 Date: 2026-06-08
 Stage: 01-Planning
-Type: Sub-PRD from PRD 108
-Ship-gate: PRD 108A-1 (model capability + typed provider-error hardening) must be green
+Type: Sub-PRD from PRD 120
+Ship-gate: PRD 120A1 (model capability + typed provider-error hardening) must be green
 before release. The `EditorContract` projection and deterministic Builder Guide work are
-not blocked by 108A-1.
+not blocked by 120A1.
 
 Parent:
 
@@ -38,7 +38,7 @@ editor assistant for one account-owned widget instance currently open in Bob.
 
 This PRD refactors Builder Copilot so it becomes contract-driven, useful, and safe.
 It is the immediate user-facing rescue. It must not wait for the full durable-agent
-platform work in 108A-2/108C.
+platform work in 120A-2/120C.
 
 The product definition is simple: **Builder Copilot is a Builder control operator first.**
 It operates the same controls the user sees in Builder. It does not "understand widgets"
@@ -79,14 +79,14 @@ translation.
 
 Execution is therefore split:
 
-- **108B-1 Operator** - grounding, visible-control resolver, deterministic capability
+- **120B1 Operator** - grounding, visible-control resolver, deterministic capability
   answers, structured ops, Bob validation/apply/undo, and the earth-test edits.
-- **108B-2 Guide** - whole-widget/panel/workflow understanding: panel map, control map,
+- **120B-2 Guide** - whole-widget/panel/workflow understanding: panel map, control map,
   repeatable structures, conditional controls, add/remove/reorder workflows, and
   explanation-to-op apply where appropriate.
 
-108B-1 and 108B-2 both start with the same concrete code move: project the existing
-`EditorContract` into Copilot instead of flattening it into scraps. 108A-1 can run in
+120B1 and 120B-2 both start with the same concrete code move: project the existing
+`EditorContract` into Copilot instead of flattening it into scraps. 120A1 can run in
 parallel as a provider/model safety ship gate, but it does not block Bob from fixing the
 payload.
 
@@ -427,7 +427,7 @@ validated Bob ops.
 
 ### 3.2.4 Guide substrate
 
-108B-2 must define and build the Guide substrate explicitly. It is not implied by schema
+120B-2 must define and build the Guide substrate explicitly. It is not implied by schema
 access, and it is not a design-judgment layer.
 
 Required substrate:
@@ -478,8 +478,8 @@ The first slice is a focused refactor, not a platform project:
 8. **Bob apply/undo/conflict safety** - ops still apply through Bob validation; stale
    Copilot responses reject when the relevant working-copy snapshot changed.
 
-108A-1 runs in parallel and is a release gate for picker/model/raw-provider-error safety.
-108A-2 and 108C remain deferred.
+120A1 runs in parallel and is a release gate for picker/model/raw-provider-error safety.
+120A-2 and 120C remain deferred.
 
 ### 3.3 Bob validates every op before applying
 
@@ -621,12 +621,12 @@ when policy and model capability allow it.
 - Build the deterministic resolver that maps natural-language user phrases to visible
   Builder controls before model planning.
 - Add deterministic answer for "what can you edit?"
-- Add 108B-2 whole-widget Guide answers for "how do I do X?", "where is X?", "what do I
+- Add 120B-2 whole-widget Guide answers for "how do I do X?", "where is X?", "what do I
   do in the panels?", and "why is X missing?"
 - Validate structured ops before applying.
 - Map AI/provider failures to product-safe messages.
 - Remove `role`-flag flattening from Copilot core where EB-007 requires it.
-- Ensure model picker respects the San Francisco model capability contract from PRD 108A.
+- Ensure model picker respects the San Francisco model capability contract from PRD 120A.
 - Add day-one intent coverage and fixture/eval scenarios for each shipped widget.
 
 ---
@@ -642,7 +642,7 @@ when policy and model capability allow it.
 - Any direct San Francisco write to account instance persistence.
 - Replacing Builder controls.
 - Building a second whole-widget Guide schema parallel to `EditorContract`.
-- Blocking the Bob `EditorContract` projection on 108A-1 model/provider work.
+- Blocking the Bob `EditorContract` projection on 120A1 model/provider work.
 - Rebuilding widget schema or adding per-widget prompt glue to compensate for missing
   grounding.
 - Letting the model choose edit targets from raw metadata without deterministic visible
@@ -651,7 +651,7 @@ when policy and model capability allow it.
   product/design heuristics, or Builder-control grounding.
 - Treating repository/source-code access as a substitute for whole-widget panel/workflow
   context.
-- Abstract design critique as the 108B-2 deliverable. Users need practical Builder
+- Abstract design critique as the 120B-2 deliverable. Users need practical Builder
   guidance first.
 
 ---

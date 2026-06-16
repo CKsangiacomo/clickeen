@@ -1,12 +1,12 @@
 # PRD — DevStudio Cloudflare Migration
 
-Status: MIGRATION COMPLETE through Step 7; post-108 policy extension deferred
+Status: MIGRATION COMPLETE through Step 7; post-120 policy extension deferred
 Owner: Internal platform (DevStudio)
 Date: 2026-06-09 (revised same day after full page-by-page inspection)
 Stage: 03-Executed / migration record
 Numbering: deliberately unnumbered per product owner — this PRD is not part of the
-106 or 108 series. It executes in the window while the 108 D1–D9 decisions are being
-ratified and 106F lands, and runs parallel to (never ahead of) the 108 P0 slices.
+106 or 120 series. It executes in the window while the 120 D1–D9 decisions are being
+ratified and 106F lands, and runs parallel to (never ahead of) the 120 P0 slices.
 
 Decision record:
 
@@ -15,10 +15,10 @@ Decision record:
 - 2026-06-09 (Pietro): **DevStudio canonical host is `https://devstudio.clickeen.com`,
   not a `*.dev.clickeen.com` surface. Auth is Berlin/Google using the existing
   Clickeen admin account. Cloudflare Access is not the DevStudio auth boundary.**
-- 2026-06-10 (Pietro): **108 is not a blocker for DevStudio migration closure.**
+- 2026-06-10 (Pietro): **120 is not a blocker for DevStudio migration closure.**
   The Cloudflare migration is complete through Step 7. The former Step 8 policy-page
   extension is post-migration follow-up after the San Francisco AI-plane routing,
-  capability, conformance, and schema truth is settled through the 108 planning
+  capability, conformance, and schema truth is settled through the 120 planning
   series.
 
 Related:
@@ -44,12 +44,12 @@ Related:
 
 ## Authority
 
-| Concern                                        | Authority                                                                                                    |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| DevStudio product boundary (what it is/is not) | `documentation/services/devstudio.md` tenets, carried over unchanged                                         |
-| Pages deploy mechanics                         | `CloudflarePagesCloudDevChecklist.md`                                                                        |
-| Policy/AI matrix schemas and validation        | `packages/ck-policy` for today's matrices; 108A-1 owns future AI routing/capability/conformance schema truth |
-| Local-emulation teardown execution             | **Not this PRD** — this PRD produces the ledger; teardown is a separate follow-up PRD                        |
+| Concern                                        | Authority                                                                                                   |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| DevStudio product boundary (what it is/is not) | `documentation/services/devstudio.md` tenets, carried over unchanged                                        |
+| Pages deploy mechanics                         | `CloudflarePagesCloudDevChecklist.md`                                                                       |
+| Policy/AI matrix schemas and validation        | `packages/ck-policy` for today's matrices; 120A1 owns future AI routing/capability/conformance schema truth |
+| Local-emulation teardown execution             | **Not this PRD** — this PRD produces the ledger; teardown is a separate follow-up PRD                       |
 
 ---
 
@@ -79,7 +79,7 @@ owner's machine (`localhost:5173`). Three reasons it must move to Cloudflare:
 
 Scope in one sentence: lift the design-system showcase as-is, keep the Policy Editor
 **including its editing capability** by giving it a cloud write path (§3.5), delete
-the dead weight found during review, and stop the migration there. The 108A-1-gated
+the dead weight found during review, and stop the migration there. The 120A1-gated
 Policy extension is a later DevStudio update, not a migration blocker.
 
 ## 2. What DevStudio actually is today (verified page-by-page, 2026-06-09)
@@ -136,7 +136,7 @@ Foundations          Colors, Typography, Icons
 Dieter Components    the 20 showcase pages
 Policy               the Policy Editor (entitlements + AI runtime, editable
                      per today's editability rules) +
-                     [post-108A-1 extension] routing tables, capability
+                     [post-120A1 extension] routing tables, capability
                      registry, conformance status (read-only views)
 ```
 
@@ -216,16 +216,16 @@ Decision (Pietro, 2026-06-09): in-UI policy editing is kept. Design:
   commit**; upstream GitHub failures return typed errors; the page never silently
   loses an edit (it refetches after every save, as it already does today).
 - **Editability scope is unchanged from today:** entitlement flags/limits editable;
-  copilot AI-runtime rows editable; system agents display-only. The post-108 views
+  copilot AI-runtime rows editable; system agents display-only. The post-120 views
   (routing/capabilities) are **read-only** — extending editing to them is out of
-  scope until decided after 108A-1.
+  scope until decided after 120A1.
 - **Side effect, accepted:** each policy commit to `main` triggers a DevStudio
   redeploy (Pages Git build). Pre-GA this is acceptable and even desirable — policy
   state and deployed state cannot drift.
 
-Known coupling: the AI-runtime _editor_ edits today's matrix schema, which 108A-1
+Known coupling: the AI-runtime _editor_ edits today's matrix schema, which 120A1
 rewrites. The editor ports as-is now (it must keep working through the migration)
-and is **adapted in the post-108 follow-up** together with the new read-only views. Build-once does
+and is **adapted in the post-120 follow-up** together with the new read-only views. Build-once does
 not apply here because the editor already exists and is in use.
 
 ### 3.6 Design freeze (binding, product-owner mandate)
@@ -250,7 +250,7 @@ Mechanical enforcement:
 - **The shell changes exactly two things:** nav group titles/order (`tools` retired,
   `Policy` added) and the entitlements route. No CSS, class, spacing, or markup
   changes beyond those two.
-- **Post-108 new views (routing/capabilities) invent nothing visually.** They compose
+- **Post-120 new views (routing/capabilities) invent nothing visually.** They compose
   the existing `entitlements-table` styles and Dieter tokens verbatim. Zero new
   color values, font sizes, spacing values, border treatments, or component
   patterns. If a new view genuinely needs a style that does not exist, that style
@@ -258,32 +258,32 @@ Mechanical enforcement:
 - **No styling dependencies.** No CSS frameworks, resets, utility libraries, or
   design-token additions enter `admin/` in this PRD.
 
-## 4. Relationship to PRD 108 (sequencing contract)
+## 4. Relationship to PRD 120 (sequencing contract)
 
-- This PRD executes **now**, in the window while 108's D1–D9 decisions are ratified
-  and 106F lands. It must not delay 108A-1/108B-1; if contention arises, 108 P0 wins.
-- 108 is **not** a blocker for DevStudio Cloudflare migration completion. Migration
+- This PRD executes **now**, in the window while 120's D1–D9 decisions are ratified
+  and 106F lands. It must not delay 120A1/120B1; if contention arises, 120 P0 wins.
+- 120 is **not** a blocker for DevStudio Cloudflare migration completion. Migration
   closure is Steps 0-7: cloud host, Berlin auth, route contract, policy read/write
   path, local DevStudio decommission, docs sync, and teardown ledger.
-- 108A-1 is the authority for the future AI routing/capability/conformance schema.
+- 120A1 is the authority for the future AI routing/capability/conformance schema.
   DevStudio must not invent that schema or duplicate its logic.
 - The former Step 8 is therefore reclassified as a **post-migration follow-up**:
-  update the DevStudio Policy section after 108A-1 is green, using 108's surviving
+  update the DevStudio Policy section after 120A1 is green, using 120's surviving
   authority and existing DevStudio/Dieter visual patterns.
 
 ## 5. Steps
 
-| Step      | Action                                                                                                                                                                                                                                                                                                                                                      | Completion evidence                                                                                                                                                                                                                                                                                                                                                                          | NOT_ALLOWED                                                                                                                                                                                                                                    |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| 0         | Product owner ratifies: canonical domain `devstudio.clickeen.com`, Berlin/Google auth with the existing Clickeen admin account, host-scoped DevStudio cookies, and the write-path design (§3.5 — **ratified 2026-06-09**: commit-to-main, Berlin-session/account-verified, ck-policy validators reused).                                                    | This PRD updated with the decision record.                                                                                                                                                                                                                                                                                                                                                   | Starting Step 1 with the old Access/dev-subdomain model.                                                                                                                                                                                       |
-| 1         | Create the Pages project (Git build) for `admin/`; wire `devstudio.clickeen.com`; configure Berlin login/finish for DevStudio; block or redirect the Pages fallback.                                                                                                                                                                                        | Unauthenticated request → Berlin login flow; authenticated Clickeen admin account → app; authenticated non-admin account → forbidden; fallback host blocked/redirected.                                                                                                                                                                                                                      | Public exposure window; deploying via GitHub Actions; any non-Berlin auth boundary; `devstudio.dev.clickeen.com` as canonical.                                                                                                                 |
-| 2         | Execute the page-by-page contract in **Appendix A**: carry the 24 surviving pages, regroup nav to three sections, move the Policy Editor to `#/policy/entitlements`. Delete the husk and dead code: `bob-ui-native.html`, `BobNativeCatalog.ts`, the dead `'dieter'` routes branch. Remove committed `admin/dist/`.                                         | Appendix A checklist fully ticked; **design-freeze hash check (§3.6): `git hash-object` of all 24 carried HTML fragments + shell/page CSS matches pre-migration**; cloud nav shows exactly three sections; `rg "BobNativeCatalog                                                                                                                                                             | bob-ui-native"`→ 0 in`admin/`; lint/typecheck green.                                                                                                                                                                                           | Renaming/redesigning showcase content; **any layout/style/color/markup change to carried pages or shell CSS (§3.6)**; adding pages not in Appendix A; touching `bob/bob_native_ui/`. |
-| 3         | Verify the showcase sections and the Policy Editor's **read** lane on `devstudio.clickeen.com` (matrices render from `main`; tiers/limits/flags/AI-runtime values correct).                                                                                                                                                                                 | Screenshot set; spot-check of three entitlement values against `entitlements.matrix.json`.                                                                                                                                                                                                                                                                                                   | Wiring writes in this step (that is Step 4).                                                                                                                                                                                                   |
-| 4         | Build the **cloud write path** (§3.5): Pages Functions for the four routes; GitHub contents-API backend with sha conflict handling; `ck-policy` validators reused; Berlin session/account verification; typed failures. Page fetch contract unchanged.                                                                                                      | On `devstudio.clickeen.com`: edit a flag → commit appears on `main` with correct diff and message → page refetch shows the new value. Invalid edit → typed 422, **no commit**. Stale sha → typed conflict. Unauthenticated/cross-origin POST → blocked. Non-admin account → 403. **`entitlements.html` hash unchanged (§3.6), or its diff enumerated and product-owner-approved pre-merge.** | Client-side GitHub tokens; bypassing ck-policy validators; silent retries/merges; widening editability beyond today's rules; **any visual change to the editor (§3.6)**.                                                                       |
-| 5         | Docs sync: rewrite `documentation/services/devstudio.md` (cloud model, three-section IA, Berlin auth boundary, cookie rule, write-path description, removed-husk note); update the `Overview.md` system map row (DevStudio: Local Vite → Cloudflare Pages, internal Berlin-authenticated).                                                                  | Docs diff in the same PR as Steps 2–4 code.                                                                                                                                                                                                                                                                                                                                                  | Deferring docs; leaving the husk listed as a tool.                                                                                                                                                                                             |
-| 6         | Decommission local DevStudio: remove it from `scripts/dev-up.sh` and local workflow docs; delete the entire policy/themes/rebuild-icons middleware from `vite.config.ts` (superseded by Step 4; themes/rebuild-icons lanes are dead today).                                                                                                                 | dev-up diff; `rg "api/entitlements                                                                                                                                                                                                                                                                                                                                                           | api/ai-runtime                                                                                                                                                                                                                                 | api/themes                                                                                                                                                                           | rebuild-icons" admin/vite.config.ts`→ 0;`rg "5173"` in scripts/docs → 0 (excluding historical PRDs). | Tearing down any non-DevStudio local infrastructure in this step. |
-| 7         | Produce the **local-emulation teardown ledger** as a planning artifact for a follow-up PRD: enumerate `scripts/dev-up.sh`, `[env.local]` forks (berlin/tokyo-worker/sanfrancisco wrangler.tomls), the Tokyo local CDN stub, `.dev.vars` + `generate-berlin-keys.mjs`, `Logs/`, `.wrangler/state` — each with a delete/keep/fence proposal and blast radius. | Ledger document committed to `01-Planning`.                                                                                                                                                                                                                                                                                                                                                  | Executing any teardown item inside this PRD.                                                                                                                                                                                                   |
-| Follow-up | After 108A-1 is green, extend the Policy section: read-only routing tables and capability/conformance views from the post-108A-1 schema; adapt the AI-runtime **editor** to the new schema (routing-table cells per D8 editability rules, if 108A-1's D8 decision allows; otherwise display-only).                                                          | Views render the new schema; one conformance-status value spot-checked against its report file; editor round-trip green against the new schema; **new views use only existing `entitlements-table` styles + Dieter tokens — `rg` for new hex/rgb/oklch literals in `admin/` → 0 (§3.6)**.                                                                                                    | Treating this as a blocker for migration closure; starting before 108A-1 is green; inventing editability rules not decided in D8; duplicating plane logic in the viewer; **any new visual style without named product-owner approval (§3.6)**. |
+| Step      | Action                                                                                                                                                                                                                                                                                                                                                      | Completion evidence                                                                                                                                                                                                                                                                                                                                                                          | NOT_ALLOWED                                                                                                                                                                                                                                   |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 0         | Product owner ratifies: canonical domain `devstudio.clickeen.com`, Berlin/Google auth with the existing Clickeen admin account, host-scoped DevStudio cookies, and the write-path design (§3.5 — **ratified 2026-06-09**: commit-to-main, Berlin-session/account-verified, ck-policy validators reused).                                                    | This PRD updated with the decision record.                                                                                                                                                                                                                                                                                                                                                   | Starting Step 1 with the old Access/dev-subdomain model.                                                                                                                                                                                      |
+| 1         | Create the Pages project (Git build) for `admin/`; wire `devstudio.clickeen.com`; configure Berlin login/finish for DevStudio; block or redirect the Pages fallback.                                                                                                                                                                                        | Unauthenticated request → Berlin login flow; authenticated Clickeen admin account → app; authenticated non-admin account → forbidden; fallback host blocked/redirected.                                                                                                                                                                                                                      | Public exposure window; deploying via GitHub Actions; any non-Berlin auth boundary; `devstudio.dev.clickeen.com` as canonical.                                                                                                                |
+| 2         | Execute the page-by-page contract in **Appendix A**: carry the 24 surviving pages, regroup nav to three sections, move the Policy Editor to `#/policy/entitlements`. Delete the husk and dead code: `bob-ui-native.html`, `BobNativeCatalog.ts`, the dead `'dieter'` routes branch. Remove committed `admin/dist/`.                                         | Appendix A checklist fully ticked; **design-freeze hash check (§3.6): `git hash-object` of all 24 carried HTML fragments + shell/page CSS matches pre-migration**; cloud nav shows exactly three sections; `rg "BobNativeCatalog                                                                                                                                                             | bob-ui-native"`→ 0 in`admin/`; lint/typecheck green.                                                                                                                                                                                          | Renaming/redesigning showcase content; **any layout/style/color/markup change to carried pages or shell CSS (§3.6)**; adding pages not in Appendix A; touching `bob/bob_native_ui/`. |
+| 3         | Verify the showcase sections and the Policy Editor's **read** lane on `devstudio.clickeen.com` (matrices render from `main`; tiers/limits/flags/AI-runtime values correct).                                                                                                                                                                                 | Screenshot set; spot-check of three entitlement values against `entitlements.matrix.json`.                                                                                                                                                                                                                                                                                                   | Wiring writes in this step (that is Step 4).                                                                                                                                                                                                  |
+| 4         | Build the **cloud write path** (§3.5): Pages Functions for the four routes; GitHub contents-API backend with sha conflict handling; `ck-policy` validators reused; Berlin session/account verification; typed failures. Page fetch contract unchanged.                                                                                                      | On `devstudio.clickeen.com`: edit a flag → commit appears on `main` with correct diff and message → page refetch shows the new value. Invalid edit → typed 422, **no commit**. Stale sha → typed conflict. Unauthenticated/cross-origin POST → blocked. Non-admin account → 403. **`entitlements.html` hash unchanged (§3.6), or its diff enumerated and product-owner-approved pre-merge.** | Client-side GitHub tokens; bypassing ck-policy validators; silent retries/merges; widening editability beyond today's rules; **any visual change to the editor (§3.6)**.                                                                      |
+| 5         | Docs sync: rewrite `documentation/services/devstudio.md` (cloud model, three-section IA, Berlin auth boundary, cookie rule, write-path description, removed-husk note); update the `Overview.md` system map row (DevStudio: Local Vite → Cloudflare Pages, internal Berlin-authenticated).                                                                  | Docs diff in the same PR as Steps 2–4 code.                                                                                                                                                                                                                                                                                                                                                  | Deferring docs; leaving the husk listed as a tool.                                                                                                                                                                                            |
+| 6         | Decommission local DevStudio: remove it from `scripts/dev-up.sh` and local workflow docs; delete the entire policy/themes/rebuild-icons middleware from `vite.config.ts` (superseded by Step 4; themes/rebuild-icons lanes are dead today).                                                                                                                 | dev-up diff; `rg "api/entitlements                                                                                                                                                                                                                                                                                                                                                           | api/ai-runtime                                                                                                                                                                                                                                | api/themes                                                                                                                                                                           | rebuild-icons" admin/vite.config.ts`→ 0;`rg "5173"` in scripts/docs → 0 (excluding historical PRDs). | Tearing down any non-DevStudio local infrastructure in this step. |
+| 7         | Produce the **local-emulation teardown ledger** as a planning artifact for a follow-up PRD: enumerate `scripts/dev-up.sh`, `[env.local]` forks (berlin/tokyo-worker/sanfrancisco wrangler.tomls), the Tokyo local CDN stub, `.dev.vars` + `generate-berlin-keys.mjs`, `Logs/`, `.wrangler/state` — each with a delete/keep/fence proposal and blast radius. | Ledger document committed to `01-Planning`.                                                                                                                                                                                                                                                                                                                                                  | Executing any teardown item inside this PRD.                                                                                                                                                                                                  |
+| Follow-up | After 120A1 is green, extend the Policy section: read-only routing tables and capability/conformance views from the post-120A1 schema; adapt the AI-runtime **editor** to the new schema (routing-table cells per D8 editability rules, if 120A1's D8 decision allows; otherwise display-only).                                                             | Views render the new schema; one conformance-status value spot-checked against its report file; editor round-trip green against the new schema; **new views use only existing `entitlements-table` styles + Dieter tokens — `rg` for new hex/rgb/oklch literals in `admin/` → 0 (§3.6)**.                                                                                                    | Treating this as a blocker for migration closure; starting before 120A1 is green; inventing editability rules not decided in D8; duplicating plane logic in the viewer; **any new visual style without named product-owner approval (§3.6)**. |
 
 ## 6. Out of scope
 
@@ -291,10 +291,10 @@ Mechanical enforcement:
   a follow-up PRD executes it).
 - PR-based review mode for policy edits (named future hardening; v1 is
   commit-to-main per §3.5).
-- Editing affordances on the post-108 routing/capability views beyond what D8 decides.
+- Editing affordances on the post-120 routing/capability views beyond what D8 decides.
 - Widget verification or QA surfaces (106-series QA belongs to product surfaces and
   the Playwright harness, not DevStudio).
-- Workforce-agent review UI (future, 108C-era; cloud DevStudio is the candidate host
+- Workforce-agent review UI (future, 120C-era; cloud DevStudio is the candidate host
   — one forward note, no build).
 - Hydrating the seven static-preview component pages (button, toggle, slider,
   popover, object-manager, repeater, bulk-edit) — nice-to-have, separate change.
@@ -321,8 +321,8 @@ Mechanical enforcement:
   its pre-migration source; the shell diff is exactly the two permitted changes; no
   new color/style literals or styling dependencies entered `admin/`.**
 - Teardown ledger exists with per-item delete/keep/fence proposals.
-- Post-108A-1 Policy section work is excluded from migration acceptance. It is a
-  follow-up DevStudio update after 108A-1 defines the new schema authority.
+- Post-120A1 Policy section work is excluded from migration acceptance. It is a
+  follow-up DevStudio update after 120A1 defines the new schema authority.
 
 ## 8. Planning review (per pipeline README)
 
@@ -335,12 +335,12 @@ Mechanical enforcement:
    silent local disk writes).
 3. **Avoids over-architecture?** Yes — the review shrank this PRD twice (husk
    deleted, future sections cut); the write path is commit-to-main v1 with PR-mode
-   explicitly deferred; the 108-coupled work is a post-migration follow-up so it is
-   built once against 108's surviving authority.
+   explicitly deferred; the 120-coupled work is a post-migration follow-up so it is
+   built once against 120's surviving authority.
 4. **Moves toward intended architecture?** Yes — agent-reachable internal surface
    (the company thesis), policy changes as attributed commits, and the local
    emulation plane unblocked for teardown (the 10x simplification), while feeding
-   108 an observation deck for the AI plane rebuild.
+   120 an observation deck for the AI plane rebuild.
 
 ---
 
@@ -417,13 +417,13 @@ is ticked. No page may ship that is not in this table.
 | Default route | Unknown/empty hash → first item of first group (today's behavior, kept).                                                            |
 | Brand header  | "DevStudio" (unchanged).                                                                                                            |
 
-### Post-108 Policy Additions (follow-up, not migration closure)
+### Post-120 Policy Additions (follow-up, not migration closure)
 
 | Page          | New route               | Contract                                                                                                                                                                                                             |
 | ------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Routing       | `#/policy/routing`      | Per agent: turn-class → model table, escalation rule, failover entries, from the post-108A-1 policy schema. Read-only unless D8 decides otherwise.                                                                   |
+| Routing       | `#/policy/routing`      | Per agent: turn-class → model table, escalation rule, failover entries, from the post-120A1 policy schema. Read-only unless D8 decides otherwise.                                                                    |
 | Capabilities  | `#/policy/capabilities` | One row per `ModelCapabilityProfile`: provider, model, endpoint family, token param, reasoning values, structured-output support, picker/durable eligibility, conformance status + `lastRunAt` freshness. Read-only. |
-| Policy Editor | (existing)              | AI-runtime editor adapted to the post-108A-1 schema; `inputBudget`/`residency` columns appear if the schema adds them.                                                                                               |
+| Policy Editor | (existing)              | AI-runtime editor adapted to the post-120A1 schema; `inputBudget`/`residency` columns appear if the schema adds them.                                                                                                |
 
 Exact column layouts are execution detail; data sources, editability rules, and the
 read/write contracts are binding.

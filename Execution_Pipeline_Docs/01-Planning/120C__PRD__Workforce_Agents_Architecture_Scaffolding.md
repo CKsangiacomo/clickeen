@@ -2,18 +2,18 @@
 
 Status: PLANNING
 Owner: Product + Architecture (San Francisco)
-Priority: P2 / Deferred until 108B is green
+Priority: P2 / Deferred until 120B is green
 Date: 2026-06-08
 Stage: 01-Planning
-Type: Sub-PRD from PRD 108
-Blocked-by: PRD 108B, PRD 108A-2, and design-level decisions on 108 OQ6/OQ7
+Type: Sub-PRD from PRD 120
+Blocked-by: PRD 120B, PRD 120A-2, and design-level decisions on 120 OQ6/OQ7
 (outbound layer shape; external credential custody) recorded before this PRD enters
 execution review.
 
 Blocker meanings:
 
-- 108B = Builder Copilot control-operator proof.
-- 108A-2 = durable/service plane contract.
+- 120B = Builder Copilot control-operator proof.
+- 120A-2 = durable/service plane contract.
 
 Parent:
 
@@ -42,8 +42,8 @@ theory by requiring one low-risk reference agent to run through the scaffold.
 
 Copilot-first correction: this PRD is intentionally deferred until Builder Copilot proves
 the shipped AI system can operate the product editor. Workforce agents are strategically
-important, but they are not the first proof. If 108B cannot make Copilot understand
-visible Builder controls and change a button from blue to green in preview, 108C must not
+important, but they are not the first proof. If 120B cannot make Copilot understand
+visible Builder controls and change a button from blue to green in preview, 120C must not
 consume execution focus.
 
 Workforce agents are different from user Copilots. They are company-operating agents:
@@ -73,7 +73,7 @@ They must still route all AI execution through San Francisco's shared plane.
 
 ## 2. Architecture Direction
 
-The architecture follows PRD 108 Option C:
+The architecture follows PRD 120 Option C:
 
 **San Francisco is the singular AI control/execution plane. Durable agents may have
 isolated governed orchestrators, but all model calls, policy, grants, budgets, telemetry,
@@ -90,12 +90,12 @@ This means:
 
 Orchestration can be per-agent. The AI plane is not.
 
-This direction remains correct, but it was not the immediate execution priority. 108C
+This direction remains correct, but it was not the immediate execution priority. 120C
 execution was gated by:
 
-- 108A-1 has hardened model capability, picker eligibility, and typed provider errors.
-- 108B has passed its Builder Copilot earth-test scenarios across shipped widgets.
-- 108A-2 has defined the durable/service execution contract that 108C will consume.
+- 120A1 has hardened model capability, picker eligibility, and typed provider errors.
+- 120B has passed its Builder Copilot earth-test scenarios across shipped widgets.
+- 120A-2 has defined the durable/service execution contract that 120C will consume.
 
 ---
 
@@ -252,7 +252,7 @@ Reason:
 
 - it is the shipped internal agent — production-real, not speculative
 - it already runs the Option C pattern (orchestration in Tokyo-worker, execution
-  through San Francisco via the `INSTANCE_TRANSLATION_JOBS` queue); 108C formalizes
+  through San Francisco via the `INSTANCE_TRANSLATION_JOBS` queue); 120C formalizes
   and improves what production already proves
 - the D9 regression gate (29-locale overlay fixture) bounds the risk better than any
   greenfield agent could
@@ -293,7 +293,7 @@ as architecture scaffolding, not active build work.
 
 ## 7. Out of Scope
 
-- Builder Copilot. That is PRD 108B.
+- Builder Copilot. That is PRD 120B.
 - Fixing user-facing Copilot UX.
 - Building GTM.
 - Building a full UX Writer product beyond the thin reference implementation.
@@ -307,10 +307,10 @@ as architecture scaffolding, not active build work.
 
 ## 8. Acceptance Criteria
 
-This PRD is execution-ready only when 108B is green and the next execution spec can
+This PRD is execution-ready only when 120B is green and the next execution spec can
 answer:
 
-- Which 108B Builder Copilot earth-test scenarios passed across shipped widgets?
+- Which 120B Builder Copilot earth-test scenarios passed across shipped widgets?
 - What is the service-binding request/response contract?
 - How does a service-scoped agent get an AI grant or equivalent signed policy?
 - Where do review artifacts live?

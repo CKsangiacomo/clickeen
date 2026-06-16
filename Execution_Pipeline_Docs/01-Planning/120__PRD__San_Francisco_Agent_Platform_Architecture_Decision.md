@@ -37,7 +37,7 @@ agree or push back before any code moves.
 
 Movement gate honored: per the pipeline README, a doc reaches `01-Planning` only when we
 intend to make it real. This PRD's deliverable is an agreed architecture direction and a
-phased path — not merged code. Execution PRDs (108A, 108B, …) follow once the direction
+phased path — not merged code. Execution PRDs (120A, 120B, …) follow once the direction
 is locked.
 
 Peer-review correction applied on 2026-06-08: earlier drafts leaned on a stale
@@ -51,7 +51,7 @@ the AI plane works.** If the shipped Copilot cannot understand visible Builder c
 and perform simple in-memory edits like "change the button from blue to green," Clickeen
 does not yet have an AI-native Builder, no matter how elegant the future workforce-agent
 architecture sounds. The durable workforce-agent platform remains the correct long-term
-architecture, but it is secondary until PRD 108B proves that San Francisco + Bob can
+architecture, but it is secondary until PRD 120B proves that San Francisco + Bob can
 operate the actual editor.
 
 ---
@@ -60,7 +60,7 @@ operate the actual editor.
 
 ### 1.0 The immediate product proof
 
-The immediate product proof for PRD 108 is not GTM, UX Writer, MCP, or a durable
+The immediate product proof for PRD 120 is not GTM, UX Writer, MCP, or a durable
 orchestrator.
 
 The proof is Builder Copilot operating Builder correctly.
@@ -80,7 +80,7 @@ platform showcase:
 This is not a foundation rewrite. The addressable Builder contract is the reason this can
 be fixed cleanly: controls already have labels, paths, groups, value types, allowed values,
 and current values. The failure is that Copilot has not been wired to resolve user
-language against that contract before model planning. PRD 108B must fix that grounding
+language against that contract before model planning. PRD 120B must fix that grounding
 layer; it must not turn this into schema redesign, per-widget prompt glue, or more
 workforce-agent theory.
 
@@ -118,7 +118,7 @@ That means agents are not a feature bolted onto the product. They are how the co
 operates and how the product self-improves. The platform that runs them is core
 infrastructure, not a side service.
 
-**Why PRD 108 is load-bearing for the company thesis, not just the codebase.** Builder
+**Why PRD 120 is load-bearing for the company thesis, not just the codebase.** Builder
 Copilot is the first user-facing proof that AI can operate the product, not merely talk
 about it. GTM, UX Writer, Support, Localization, and Moderation remain the long-term AI
 workforce thesis, but they are not allowed to distract from the shipped editor failure.
@@ -128,7 +128,7 @@ one plane, while product truth remains owned by Bob/Roma/Tokyo or the specific
 orchestrator/review boundary. One agent that mints its own grants, holds its own provider
 keys, calls providers directly, or writes product state directly breaks the guarantee for
 the whole system, not just itself. One Copilot that cannot operate Builder controls breaks
-the product proof today. So PRD 108 is both: (1) fix the shipped Builder Copilot as a
+the product proof today. So PRD 120 is both: (1) fix the shipped Builder Copilot as a
 control operator, and (2) preserve the single AI plane for the workforce that follows.
 
 ### 1.1.1 The Clickeen-specific constraint
@@ -157,7 +157,7 @@ owner, a second policy owner, or a second provider-key owner.
 | ------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Model-swappability as table stakes for every agent                                    | **Already ahead**                               | `AgentRuntimePolicy` already carries `allowModelPicker` + a pinned `selectedModel`, enforced by `modelRouter.ts`. User-facing copilot can swap from a catalogue; internal/durable agents pin an eval-locked default. This is a _policy setting per agent_, not a feature to build. |
 | Do the deterministic part deterministically; use the model only for judgment (OpenAI) | **Transfers**                                   | Restates AGENTS.md §3 ("no fake generic layers") at the per-task level. Fixed transforms (formatting an audit report) are code, not model calls.                                                                                                                                   |
-| Single-agent-first; split only when forced (OpenAI)                                   | **Transfers**                                   | Confirms the 108C guardrail (one real durable agent before any generalization).                                                                                                                                                                                                    |
+| Single-agent-first; split only when forced (OpenAI)                                   | **Transfers**                                   | Confirms the 120C guardrail (one real durable agent before any generalization).                                                                                                                                                                                                    |
 | Layered guardrails + risk-rated human-in-the-loop gate (OpenAI)                       | **Transfers, but keep authority clean**         | Risk belongs in agent registry/policy. San Francisco can enforce risk/policy before AI execution or before returning an actionable result, but review state and product commits belong to the owning orchestrator/product boundary.                                                |
 | M×N integration / intent-shaped tools / one credential custody (Anthropic MCP)        | **Applies only at the genuinely external edge** | Inside the company, agents should use native product-operation contracts owned by Roma/Tokyo/orchestrators. MCP-style mediation is warranted only for truly external, human-built systems (competitor pages, keyword APIs, Search Console).                                        |
 | Wrap fragile human-shaped SaaS APIs so agents can drive them (general SaaS canon)     | **Does not apply**                              | Premised on opaque, non-addressable state. Clickeen's state is atom-addressable, so the wrapping problem the canon solves largely does not exist internally.                                                                                                                       |
@@ -235,8 +235,8 @@ Dispositions for the shipped roster (PR-14/D9, ratified 2026-06-09):
 
 | Shipped agent              | Disposition                                                                                                                                     |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Builder Copilot            | **Rebuild** per 108B (earth tests as proof)                                                                                                     |
-| Widget Instance Translator | **Keep + protect** (29-locale regression gate on any plane change), then **re-base** onto the durable scaffold as the 108C reference agent (D5) |
+| Builder Copilot            | **Rebuild** per 120B (earth tests as proof)                                                                                                     |
+| Widget Instance Translator | **Keep + protect** (29-locale regression gate on any plane change), then **re-base** onto the durable scaffold as the 120C reference agent (D5) |
 
 ### 2.2 Classification (the dimensions that matter for platform shape)
 
@@ -417,7 +417,7 @@ lessons translate cleanly to Clickeen without importing a generic framework:
 server for _third parties_ to drive our agents, nor consuming arbitrary external MCP
 servers as a product feature. SF's interactive surface stays an internal `/v1/execute`
 plane. MCP enters as the **outbound integration discipline for durable agents**, and only
-when the first durable agent (108C/108D) actually needs an external system. We adopt the
+when the first durable agent (120C/120D) actually needs an external system. We adopt the
 principle now so we don't paint ourselves into per-agent bespoke clients; we defer the
 implementation to the agent that first needs it. (No speculative framework — AGENTS.md §3.)
 
@@ -432,7 +432,7 @@ plane. The OpenAI practical guide is about that interior — and per §1.1.1 we 
 recommendation; it gives us four checkpoints to hold Clickeen against, and on each the
 honest verdict (per the §1.1.2 table) is either "transfers," "already ahead," or "build it
 from the atoms we already have" — never "import the framework." Stated here as _direction_,
-not as a build — the mechanics belong to the execution PRDs (108A onward), per §0.
+not as a build — the mechanics belong to the execution PRDs (120A onward), per §0.
 
 **(a) Most work should stay deterministic; the model is for judgment, not plumbing.**
 The guide's first test is when an agent is even the right tool: genuine judgment, unwieldy/
@@ -470,7 +470,7 @@ the registry already has the lever, it just needs pulling per agent.
 **(c) Single-agent-first — which is the discipline this doc already adopts.** The guide is
 explicit that teams succeed by maximizing one agent before adding multi-agent complexity,
 and split only when one agent provably can't follow its instructions or its tools overlap.
-This simply confirms the **108C guardrail already in this doc** (one real durable agent
+This simply confirms the **120C guardrail already in this doc** (one real durable agent
 before any generalization). If a durable agent later outgrows a single prompt, the guide's
 **manager pattern** (a coordinator calling sub-agents as tools) is the sanctioned next
 step, and it would compose with Option C rather than fork the plane — but we don't build
@@ -503,9 +503,9 @@ execution surfaces — interactive (`/v1/execute`) and durable (governed orchest
 workers that route all model/policy/budget/learning through San Francisco).**
 
 Execution priority correction: the interactive surface is not just "one of the surfaces."
-Builder Copilot is the P0 proof gate. The concrete 108B Builder-contract projection work is
-not blocked by 108A-1; Bob can start projecting `EditorContract` into Copilot immediately.
-108A-1 runs in parallel as the release gate for model capability, picker eligibility, and
+Builder Copilot is the P0 proof gate. The concrete 120B Builder-contract projection work is
+not blocked by 120A1; Bob can start projecting `EditorContract` into Copilot immediately.
+120A1 runs in parallel as the release gate for model capability, picker eligibility, and
 typed provider errors. Durable workforce scaffolding is sequenced after the Copilot proof.
 
 Why this is the right fit for _Clickeen specifically_:
@@ -585,7 +585,7 @@ breaks the product-truth guarantee. There is no partial compliance.
 This decision doc proposed the sequence; each phase was intended to become an
 execution slice.
 
-- **108B-1 — P0 Interactive Builder Copilot Operator rescue (resolves EB-007).** Use Bob's
+- **120B1 — P0 Interactive Builder Copilot Operator rescue (resolves EB-007).** Use Bob's
   compiled Builder control contract as Copilot's action surface; build the visible-control
   vocabulary; answer capability questions deterministically; validate structured ops
   against current editable paths; apply only to Bob's in-memory working copy; preserve
@@ -594,31 +594,31 @@ execution slice.
   keyword-ranked `controls[]`. The first green bar is not abstract: button green, button
   label, hide button, background, title, share, and branding edits must work or clarify
   correctly in preview.
-- **108B-2 — Builder Copilot Guide layer.** After the Operator slice is green, add
+- **120B-2 — Builder Copilot Guide layer.** After the Operator slice is green, add
   whole-widget/panel/workflow guidance for prompts like "what do I do in the panels?",
   "how do I add/remove/reorder this?", and "why don't I see that setting?" This is not
   grounding alone and not abstract advice. It requires a full current-widget capability
   map, panel/workflow map, repeatable structure map, conditional control map, and a
   Guide-to-op bridge so practical guidance can become validated Builder edits.
-- **108A-1 — Parallel release gate for user-facing plane hardening.** Define model
+- **120A1 — Parallel release gate for user-facing plane hardening.** Define model
   capability metadata, provider-conformance checks, typed provider errors, and picker
   eligibility so Builder Copilot cannot select or call an unsupported model shape. This
-  runs alongside 108B-1/108B-2 and must be green before release, but it must not block the
+  runs alongside 120B1/120B-2 and must be green before release, but it must not block the
   Bob `EditorContract` projection work.
-- **108A-2 — Durable/service plane contract.** Define the service-binding execution
+- **120A-2 — Durable/service plane contract.** Define the service-binding execution
   interface San Francisco exposes to durable orchestrators: service-scoped policy/grant
   model, budget split, shared execution core, structured result + usage, telemetry,
   eval/observability fields, and learning-event capture. Extend the registry so
   durable/service agents are first-class (not just `execute` vs `endpoint`).
-- **108C — Durable agent scaffold proven on the shipped reference agent.** Stand up the
+- **120C — Durable agent scaffold proven on the shipped reference agent.** Stand up the
   governed durable-agent pattern by **re-basing the Widget Instance Translator** — the
   internal agent already running in production — onto the formalized scaffold, guarded
   by the D9 29-locale regression gate. (SUPERSEDED per D5, 2026-06-09: an earlier
   draft recommended a greenfield UX Writer; building a speculative agent to validate a
   pattern production already runs was rejected. UX Writer waits for a real need.)
-  Scaffold-only platform work remains explicitly rejected. 108C does not enter
-  execution until 108B has proven the user-facing Builder Copilot.
-- **108D — GTM Agent on the pattern.** Re-base the existing GTM spec onto the governed
+  Scaffold-only platform work remains explicitly rejected. 120C does not enter
+  execution until 120B has proven the user-facing Builder Copilot.
+- **120D — GTM Agent on the pattern.** Re-base the existing GTM spec onto the governed
   plane (drop its standalone grant/model/telemetry; reuse SF's). GTM is the **first agent
   that needs external reach**, so this is where §3.5's outbound layer gets built for real:
   intent-shaped tools for competitor/keyword/Search-Console access, centralized external
@@ -626,29 +626,29 @@ execution slice.
   search+execute code-orchestration shape. Pair the agent with a **skill** (a written
   playbook for _how_ to use those tools well): per the MCP article, tools grant access
   while skills supply procedural know-how, and the most capable agents carry both.
-  - **Design-before-build note:** 108D's _implementation_ follows 108C, but its
-    _architecture_ must be decided before 108C ships. The outbound-layer shape (§3.5 —
+  - **Design-before-build note:** 120D's _implementation_ follows 120C, but its
+    _architecture_ must be decided before 120C ships. The outbound-layer shape (§3.5 —
     intent-shaped tools, one credential custodian, code-orchestration for large API
     surfaces) and the external credential-custody model (vault-style store in the AI
     plane; OAuth/payment flows via browser handoff, never inline tool calls) constrain
     what the SF plane contract can assume about any durable agent's outbound reach. The
-    design dependency runs earlier than the build dependency: before 108C execution
+    design dependency runs earlier than the build dependency: before 120C execution
     continues, the team needs Open Questions 6 and 7 decided at the design level — not
-    built, but decided — so 108D implements against a known contract instead of arriving
+    built, but decided — so 120D implements against a known contract instead of arriving
     as a retrofit.
-- **108E+ — Support Reply, Community Moderation** onto whichever surface fits (Support
+- **120E+ — Support Reply, Community Moderation** onto whichever surface fits (Support
   Reply likely interactive; Moderation likely durable). These carry the roster's
   **highest-risk actions** (live customer-facing replies; acting on user content), so they
   are where §3.6's human-in-the-loop checkpoint matters most — sequenced after the plane's
-  safety capability (designed in 108A) exists.
+  safety capability (designed in 120A) exists.
 
 Each phase ships docs-in-sync with code before moving to `03-Executed`, per the pipeline.
 
-- **108F — Learning loop (named direction, execution deferred).** Outcome capture and
-  observability are first-class from 108A onward, but policy/prompt/model self-improvement
-  is not built in 108A–108E. 108A must persist queryable metadata for
+- **120F — Learning loop (named direction, execution deferred).** Outcome capture and
+  observability are first-class from 120A onward, but policy/prompt/model self-improvement
+  is not built in 120A–120E. 120A must persist queryable metadata for
   `(agent_id, phase, model, capability_profile_version, prompt_version, policy_version)`
-  and 108B/108C must ship eval scenarios/gates. The future 108F loop may use those records
+  and 120B/120C must ship eval scenarios/gates. The future 120F loop may use those records
   to propose policy, prompt, risk, or model changes, subject to human promotion. The closed
   loop itself remains separate execution work.
 
@@ -667,10 +667,10 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
 
 3. **Avoids over-architecture / unnecessary complexity?**
    Yes, and this is the live risk to police in execution: the durable surface must reuse
-   the SF plane, not grow a parallel framework. Guardrail — 108C ships exactly one real
+   the SF plane, not grow a parallel framework. Guardrail — 120C ships exactly one real
    durable agent before any "platform" generalization is allowed to harden. The same
    guardrail applies to the outbound/MCP layer (§3.5): we adopt the _principles_ now
-   (intent tools, one credential custodian) but defer building the layer until GTM (108D)
+   (intent tools, one credential custodian) but defer building the layer until GTM (120D)
    actually needs an external system — no MCP server or outbound framework gets built
    speculatively (AGENTS.md §3).
 
@@ -680,14 +680,14 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
 
 5. **Safe, predictable, effective in production (per the OpenAI guide's deployment test)?**
    The direction is set up to be only if execution adds evals and observability early, not
-   as a future flourish. 108A owns provider conformance and typed failures; 108B owns
-   Builder fixture/eval scenarios; 108C owns reference-agent eval and review artifacts.
+   as a future flourish. 120A owns provider conformance and typed failures; 120B owns
+   Builder fixture/eval scenarios; 120C owns reference-agent eval and review artifacts.
    No autonomous-write or customer-facing workforce action ships without risk policy,
    human review where required, and measurable pass/fail gates.
 
 ---
 
-## 7. Open questions (resolve before 108A execution)
+## 7. Open questions (resolve before 120A execution)
 
 1. **Service-scoped execution transport:** RESOLVED (D5 dispositions, 2026-06-09):
    request/response durable calls → private service binding; fire-and-forget jobs →
@@ -703,14 +703,14 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
 4. **Billing/usage aggregation** for service-scoped autonomous runs (the overview already
    flags "where AI usage is recorded for billing" as open).
 5. **First durable agent:** SUPERSEDED (D5, 2026-06-09): the **Widget Instance
-   Translator re-base** is the 108C reference — it is the shipped internal agent, and
+   Translator re-base** is the 120C reference — it is the shipped internal agent, and
    formalizing a production workload under the D9 regression gate beats building a
    speculative one. UX Writer waits until a real need exists.
-6. **Outbound layer shape (§3.5):** when GTM (108D) first needs external systems, is the
+6. **Outbound layer shape (§3.5):** when GTM (120D) first needs external systems, is the
    common outbound layer an internal MCP-style server SF/orchestrators consume, or a
    thinner shared client module? (Lean: adopt the _principles_ — intent tools, one
    credential custodian, code-orchestration for big surfaces — and pick the concrete
-   mechanism at 108D, not before an agent needs it.)
+   mechanism at 120D, not before an agent needs it.)
 7. **External credential custody (§3.5):** where do Search Console OAuth tokens and
    keyword-API keys live, and what refreshes them? (Lean: a vault-style store owned by the
    AI plane, parallel to provider-key custody; OAuth/payment flows use browser handoff,
@@ -722,9 +722,9 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
    state and product commits stay outside San Francisco.)
 9. **Per-phase model selection (§3.6):** SUPERSEDED by PR-13/D8 (2026-06-09): routing
    is a first-class plane contract (`AgentRoutingPolicy`), not schema room. Interactive
-   turn-class routing ships in 108A-1; the durable phase-class dimension ships in
-   108A-2 and is mandatory for multi-phase durable agents.
-10. **Concurrency model for the durable-agent calling pattern (resolve in 108A).** The
+   turn-class routing ships in 120A1; the durable phase-class dimension ships in
+   120A-2 and is mandatory for multi-phase durable agents.
+10. **Concurrency model for the durable-agent calling pattern (resolve in 120A).** The
     current guard in `sanfrancisco/src/concurrency.ts` — `MAX_INFLIGHT_PER_ISOLATE = 8`, an
     in-isolate counter that throws 429 on overflow — is a _copilot_ guard: it protects the
     interactive `/v1/execute` path from concurrent user turns, and is the right primitive
@@ -732,7 +732,7 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
     (Open Question 1), they introduce a second workload class: long-running, multi-step,
     non-interactive calls that may run for hours and make many sequential model requests.
     These classes must **not** share a ceiling — a saturated GTM run should not 429 a real
-    user's copilot turn, and vice versa. _Design direction for 108A:_ distinguish the two
+    user's copilot turn, and vice versa. _Design direction for 120A:_ distinguish the two
     surfaces at the binding layer (HTTP `/v1/execute` = interactive; service-binding RPC =
     durable-agent) and apply separate concurrency budgets. The interactive ceiling stays
     tight (latency-sensitive, user-facing); the durable-agent budget is governed
@@ -740,7 +740,7 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
     fits the async nature of durable orchestration and aligns with Cloudflare Workflows V2's
     raised limits (50,000 concurrent running instances; 2M queued; waiting/sleeping
     instances don't count against concurrency — [Cloudflare Workflows limits](https://developers.cloudflare.com/workflows/reference/limits/)).
-    This is a 108A design requirement, not a 108C discovery. (Lean: separate budgets keyed
+    This is a 120A design requirement, not a 120C discovery. (Lean: separate budgets keyed
     on calling surface; durable side queued at the orchestration layer.)
 
 ---
@@ -754,6 +754,6 @@ where possible; treat model/tools/instructions as the unit with model choice own
 plane; single-agent-first; and make risk policy/evals/review gates explicit before
 autonomous or customer-facing actions ship). These are stated as direction; their
 mechanisms are for the execution PRDs to design. On approval, this doc graduates the
-phased path (108B-1, 108B-2, parallel 108A-1 release gate, 108A-2, 108C, 108D, 108E+, with
-108F named as a deferred direction) into the pipeline. EB-007 is marked
-`promoted → PRD 108B`.
+phased path (120B1, 120B-2, parallel 120A1 release gate, 120A-2, 120C, 120D, 120E+, with
+120F named as a deferred direction) into the pipeline. EB-007 is marked
+`promoted → PRD 120B`.

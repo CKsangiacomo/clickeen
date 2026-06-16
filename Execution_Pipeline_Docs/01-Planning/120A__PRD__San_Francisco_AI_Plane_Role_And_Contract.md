@@ -2,10 +2,10 @@
 
 Status: PLANNING
 Owner: Product + Architecture (San Francisco)
-Priority: P0 for 108A-1; P1 for 108A-2
+Priority: P0 for 120A1; P1 for 120A-2
 Date: 2026-06-08
 Stage: 01-Planning
-Type: Sub-PRD from PRD 108
+Type: Sub-PRD from PRD 120
 
 Parent:
 
@@ -33,10 +33,10 @@ the **single AI control and execution plane** for Clickeen.
 
 Copilot-first correction: the first execution slice of this PRD is a release gate for
 Builder Copilot model/provider safety, not a blocker for Bob's `EditorContract` projection
-work. 108A-1 is successful only when Builder can no longer select or call unsupported model
+work. 120A1 is successful only when Builder can no longer select or call unsupported model
 shapes and raw provider payloads no longer leak into Copilot. Anything durable,
-service-scoped, autonomous, or workforce-agent specific belongs to 108A-2/108C and must not
-delay the 108B control-operator proof.
+service-scoped, autonomous, or workforce-agent specific belongs to 120A-2/120C and must not
+delay the 120B control-operator proof.
 
 Two different AI classes consume that plane:
 
@@ -50,13 +50,13 @@ typed errors, eval signals, and risk/policy enforcement.
 
 Execution sequencing:
 
-- **108A-1** is the urgent Builder Copilot hardening slice: model capability metadata,
+- **120A1** is the urgent Builder Copilot hardening slice: model capability metadata,
   provider conformance, typed provider errors, and picker eligibility.
-- **108A-2** is the durable/service-plane slice: service-binding execution,
+- **120A-2** is the durable/service-plane slice: service-binding execution,
   service-scoped policy/grants, durable budget separation, and workforce-agent telemetry.
 
-Execution order: 108B-1/108B-2 may start immediately. 108A-1 runs in parallel and must be
-green before release. 108A-2 and 108C remain deferred until the shipped Builder Copilot is
+Execution order: 120B1/120B-2 may start immediately. 120A1 runs in parallel and must be
+green before release. 120A-2 and 120C remain deferred until the shipped Builder Copilot is
 green.
 
 ---
@@ -144,7 +144,7 @@ knowing the model's call contract, then leaked the provider's raw JSON into Buil
 correct San Francisco plane rejects, hides, or normalizes that before the user sees it.
 
 This PRD does **not** by itself make Copilot smart enough to edit Builder controls. That
-is 108B. This PRD makes the plane safe and callable enough that 108B can focus on the
+is 120B. This PRD makes the plane safe and callable enough that 120B can focus on the
 real editor problem: resolving user intent to visible Builder controls and returning valid
 ops.
 
@@ -266,16 +266,16 @@ The outcome/learning record must be queryable by:
 (agent_id, phase, model, capability_profile_version, prompt_version, policy_version)
 ```
 
-This does not implement the learning loop. It ensures the substrate exists and keeps 108F
+This does not implement the learning loop. It ensures the substrate exists and keeps 120F
 from requiring a schema migration just to ask which model/prompt/policy combination works.
 
 ### 3.6 Eval and observability gates
 
 Every agent surface must have explicit eval or smoke scenarios before it ships:
 
-- 108A-1: provider conformance and typed-error mapping tests
-- 108B: Builder Copilot contract/op/e2e scenarios for shipped widgets
-- 108C: reference workforce-agent quality and review-artifact scenarios
+- 120A1: provider conformance and typed-error mapping tests
+- 120B: Builder Copilot contract/op/e2e scenarios for shipped widgets
+- 120C: reference workforce-agent quality and review-artifact scenarios
 
 No customer-facing or autonomous workforce action ships only because it can run. It ships
 when it passes the scenarios that prove it produces valid, reviewable, reversible, and
@@ -286,38 +286,39 @@ product-boundary-safe output.
 ## 4. In Scope
 
 - Define San Francisco's role as the single AI plane.
-- For 108A-1, add or design model capability metadata needed by Builder Copilot.
-- For 108A-1, add provider-conformance checks for picker-eligible Copilot models.
-- For 108A-1, remove hardcoded model string heuristics from provider request
+- For 120A1, add or design model capability metadata needed by Builder Copilot.
+- For 120A1, add provider-conformance checks for picker-eligible Copilot models.
+- For 120A1, remove hardcoded model string heuristics from provider request
   construction.
-- For 108A-1, define product-safe error envelopes and prevent raw provider JSON from
+- For 120A1, define product-safe error envelopes and prevent raw provider JSON from
   reaching Builder.
-- For 108A-1, make model picker eligibility depend on provider conformance and policy.
-- For 108A-1, ship the routing contract (PR-13/D8): `AgentRoutingPolicy` in the signed
+- For 120A1, make model picker eligibility depend on provider conformance and policy.
+- For 120A1, ship the routing contract (PR-13/D8): `AgentRoutingPolicy` in the signed
   policy (turn-class → model within the allowed set, single-step escalation on invalid
   structured output, declared failover on typed provider errors, every decision
   recorded in the learning event; pinned user picks exempt from automatic switching).
-- For 108A-1, enforce Q6 conversion mode in the plane: the signed policy carries
+- For 120A1, enforce Q6 conversion mode in the plane: the signed policy carries
   `copilotMode: 'full' | 'conversion'` (derived by Roma at grant mint from tier ∧
   useful-turn usage); a conversion-mode grant can never obtain a full model
   execution — the plane returns only the validated conversion template.
-- For 108A-2, define the shared execution core contract used by Copilots and workforce
+- For 120A-2, define the shared execution core contract used by Copilots and workforce
   agents.
-- For 108A-2, separate interactive and durable workload budget concepts.
-- For 108A-2, define required eval/observability metadata for durable/service agents.
+- For 120A-2, separate interactive and durable workload budget concepts.
+- For 120A-2, define required eval/observability metadata for durable/service agents.
 - Update canonical San Francisco docs when execution ships.
 
 ---
 
 ## 5. Out of Scope
 
-- Refactoring Builder Copilot behavior. That is PRD 108B.
+- Refactoring Builder Copilot behavior. That is PRD 120B.
 - Building GTM, UX Writer, support, or moderation agents. That is future execution off
-  PRD 108C and later agent PRDs.
-- Building durable/service-scoped workforce infrastructure before 108B proves the shipped
+  PRD 120C and later agent PRDs.
+- Building durable/service-scoped workforce infrastructure before 120B proves the shipped
   Builder Copilot can operate visible controls.
 - Building external outbound tools or MCP-style integrations.
-- Building the closed-loop learning/policy self-improvement system. That is PRD 108F.
+- Building the closed-loop learning/policy self-improvement system. That is a deferred
+  PRD 120-series direction.
 - Changing account/product persistence authority.
 - Letting San Francisco write product truth directly.
 - Owning human-review artifacts, approval state, or commit/publish actions.
@@ -326,7 +327,7 @@ product-boundary-safe output.
 
 ## 6. Acceptance Criteria
 
-108A-1 is execution-ready only when the next execution spec can answer:
+120A1 is execution-ready only when the next execution spec can answer:
 
 - What is the exact model capability schema?
 - Where does that schema live?
@@ -338,7 +339,7 @@ product-boundary-safe output.
 - What eval/smoke scenarios prove the Copilot model-call contract cannot silently drift?
 - Which docs must be updated when code ships?
 
-108A-1 execution is complete only when (criteria are lineup-agnostic per PR-2/D1 —
+120A1 execution is complete only when (criteria are lineup-agnostic per PR-2/D1 —
 the gpt-5.2 incident is the motivating example, never the definition of done):
 
 - no model is callable without a fresh passing conformance profile.
@@ -353,14 +354,14 @@ the gpt-5.2 incident is the motivating example, never the definition of done):
 
 Authoritative execution contract: `120A1__EXEC__AI_Plane_Capability_Conformance_Routing.md`.
 
-108A-2 is execution-ready only after 108B is green and can answer:
+120A-2 is execution-ready only after 120B is green and can answer:
 
 - Which execution paths call the shared plane core?
 - Which concurrency/budget rules apply to interactive vs durable calls?
 - What service-binding request/response shape supports durable orchestrators?
 - Which eval/smoke scenarios prove durable plane behavior cannot silently drift?
 
-108A-2 execution is complete only when:
+120A-2 execution is complete only when:
 
 - outcome records include `agent_id`, phase, model, capability profile version, prompt
   version, and policy version.
