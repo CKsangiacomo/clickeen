@@ -98,12 +98,17 @@ function validateMediaFill(args: {
   }
   const bucket = args.media[args.media.type];
   if (isRecord(bucket)) {
-    const src = typeof bucket.src === 'string' ? bucket.src.trim() : '';
     const assetRef = typeof bucket.assetRef === 'string' ? bucket.assetRef.trim() : '';
-    if (!src && !assetRef) {
+    if (!assetRef) {
       return structureViolation({
-        detail: `${args.widgetLabel} media fill requires a source or asset reference.`,
-        paths: [`${args.path}.${args.media.type}.src`, `${args.path}.${args.media.type}.assetRef`],
+        detail: `${args.widgetLabel} media fill requires an account asset reference.`,
+        paths: [`${args.path}.${args.media.type}.assetRef`],
+      });
+    }
+    if (Object.prototype.hasOwnProperty.call(bucket, 'src') || Object.prototype.hasOwnProperty.call(bucket, 'poster')) {
+      return structureViolation({
+        detail: `${args.widgetLabel} source must store account asset references, not resolved URLs.`,
+        paths: [`${args.path}.${args.media.type}.src`, `${args.path}.${args.media.type}.poster`],
       });
     }
   }

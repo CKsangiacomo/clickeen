@@ -95,6 +95,9 @@
     if (/[\n\r;]/.test(value) || /^javascript:/i.test(value)) {
       throw new Error(`[LogoShowcase] ${path} contains an invalid URL`);
     }
+    if (value.startsWith('/widgets/logoshowcase/media/')) {
+      throw new Error(`[LogoShowcase] ${path} must use resolved account asset media`);
+    }
     if (value.startsWith('/') || value.startsWith('./') || value.startsWith('../') || /^https?:\/\//i.test(value)) return value;
     throw new Error(`[LogoShowcase] ${path} must use a relative, absolute-path, or http(s) URL`);
   }

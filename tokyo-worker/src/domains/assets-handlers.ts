@@ -130,6 +130,29 @@ function assertAcceptedUpload(args: {
   return { ok: true };
 }
 
+function isSvgUpload(args: { filename: string; contentType: string }): boolean {
+  const ext = (args.filename.split('.').pop() || '').trim().toLowerCase();
+  const mime = args.contentType.split(';')[0]?.trim().toLowerCase();
+  return ext === 'svg' || mime === 'image/svg+xml';
+}
+
+function assertSafeSvgUpload(body: ArrayBuffer): { ok: true } | { ok: false; detail: string } {
+  let text = '';
+  try {
+    text = new TextDecoder('utf-8', { fatal: true }).decode(body);
+  } catch {
+    return { ok: false, detail: 'svg_utf8_invalid' };
+  }
+  const source = text.toLowerCase();
+  if (!source.includes('<svg')) return { ok: false, detail: 'svg_root_missing' };
+  if (/<script[\s>]/i.test(text)) return { ok: false, detail: 'svg_script_rejected' };
+  if (/<foreignobject[\s>]/i.test(text)) return { ok: false, detail: 'svg_foreign_object_rejected' };
+  if (/\son[a-z]+\s*=/i.test(text)) return { ok: false, detail: 'svg_event_handler_rejected' };
+  if (/(?:href|xlink:href)\s*=\s*["']?\s*javascript:/i.test(text)) return { ok: false, detail: 'svg_javascript_href_rejected' };
+  if (/data:text\/html/i.test(text)) return { ok: false, detail: 'svg_html_data_url_rejected' };
+  return { ok: true };
+}
+
 function serializeAccountAssetRecord(file: AccountAssetFile): Record<string, unknown> {
   return {
     assetRef: file.assetRef,
@@ -209,6 +232,12 @@ export async function handleUploadAccountAsset(req: Request, env: Env): Promise<
   const body = await req.arrayBuffer();
   if (!body || body.byteLength === 0) {
     return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.payload.empty' } }, { status: 422 });
+  }
+  if (isSvgUpload({ filename, contentType })) {
+    const safeSvg = assertSafeSvgUpload(body);
+    if (!safeSvg.ok) {
+      return json({ error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.assets.typeRejected', detail: safeSvg.detail } }, { status: 422 });
+    }
   }
 
   const assetRef = filename;

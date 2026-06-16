@@ -333,6 +333,8 @@ async function putObject(config, key, body, contentType) {
     } catch (error) {
       if (!isR2SignedWriteDenied(error)) throw error;
       console.error('[cf:r2] R2 signed put denied; falling back to remote Wrangler R2 object put.');
+      putObjectWrangler(config, key, body, contentType);
+      return;
     }
   }
   if (config.token || !hasR2SignedCredentials(config)) {

@@ -77,7 +77,8 @@ Minimum validation:
 - scan or quarantine files before acceptance when scanner infrastructure is available
 
 SVG is valid account media. It is accepted as `image/svg+xml` and classified as
-a vector asset; it must not be rejected as an executable file.
+a vector asset; it must not be rejected as an executable file. Scriptable SVG
+content is still rejected before the file becomes an account asset.
 
 Only accepted files are written into the account `assets/` folder.
 

@@ -410,6 +410,14 @@ Logo Showcase factory defaults are **Core only**. Shared Shell defaults
 share, locale switcher, and `coreSize`) come from account Shell defaults and are
 resolved into the instance before Bob opens it.
 
+The Core factory default starts with one strip containing six logo slots. Each
+slot persists `logoFill: { "type": "none" }`, so new instances open with real
+empty `dropdown-fill` controls instead of product-owned fallback logos, CSS
+string fills, or sidecar asset metadata.
+Logo Showcase does not keep product-owned logo files under its widget source
+folder; Clickeen-authored example logos are normal account assets owned by the
+admin account.
+
 Core factory defaults live under:
 
 ```text
