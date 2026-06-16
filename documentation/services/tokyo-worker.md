@@ -100,6 +100,12 @@ target locale.
 `index.html`, `styles.css`, and `runtime.js` are the generated browser package
 saved with the instance.
 
+Newly saved generated package files carry R2 metadata matching the saved source
+package fingerprint. Package reads, publish, and public serving require source
+and package agreement. Existing unmarked source and unmarked package files remain
+readable until the instance is saved again; any marked/unmarked mix fails closed.
+Tokyo-worker does not rebuild or restore package bytes.
+
 The stable public coordinate is:
 
 ```text

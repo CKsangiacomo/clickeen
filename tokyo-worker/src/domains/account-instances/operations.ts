@@ -2,9 +2,6 @@ import { validateWidgetLocaleSwitcherSettings } from '@clickeen/ck-contracts';
 import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import {
-  readStoredInstancePublicPackageSnapshot,
-  restoreInstancePublicPackageSnapshot,
-  type StoredInstancePublicPackageSnapshot,
   type SubmittedInstancePublicPackage,
   verifyInstancePublicPackageReady,
   writeInstancePublicPackage,
@@ -14,8 +11,6 @@ import { deleteAccountInstanceSubtree } from './delete';
 import { accountInstanceRoot } from './keys';
 import {
   readAccountInstanceSource,
-  readConfigDocumentByLocation,
-  readContentDocumentByLocation,
   writeAccountInstanceSource,
 } from './source';
 import {
@@ -23,16 +18,8 @@ import {
   writeInstanceServeState,
 } from './serve-state';
 import type { AccountInstanceSourcePointer } from './types';
-import type {
-  AccountInstanceConfigDocument,
-  AccountInstanceContentDocument,
-  LocaleOverlayDocument,
-} from './types';
 import { normalizeStorageId } from './utils';
-import { accountInstanceConfigKey, accountInstanceContentKey } from './keys';
-import { listLocaleOverlaysStrict, writeLocaleOverlay } from '../account-translations/overlays';
-import { deletePrefix, putJson } from '../storage';
-import { updateInstanceRegistryEditedAt } from './registry';
+import { deletePrefix } from '../storage';
 
 export class AccountInstanceTransitionError extends Error {
   status: number;
@@ -150,7 +137,7 @@ function assertLocaleSwitcherConfig(config: Record<string, unknown>): void {
   });
 }
 
-async function deleteCreatedInstanceOrThrow(args: {
+async function cleanupCreatedInstanceOrThrow(args: {
   env: Env;
   accountId: string;
   instanceId: string;
@@ -163,116 +150,8 @@ async function deleteCreatedInstanceOrThrow(args: {
     throw new AccountInstanceTransitionError({
       status: 500,
       kind: 'UPSTREAM_UNAVAILABLE',
-      reasonKey: 'coreui.errors.instance.rollbackFailed',
+      reasonKey: 'coreui.errors.instance.cleanupFailed',
       detail: `${args.detail}; cleanup:${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`,
-    });
-  }
-  throw new AccountInstanceTransitionError({
-    status: 409,
-    kind: 'VALIDATION',
-    reasonKey: 'coreui.errors.instance.embedNotReady',
-    detail: args.detail,
-  });
-}
-
-type StoredInstanceSourceSnapshot = {
-  configDoc: AccountInstanceConfigDocument;
-  contentDoc: AccountInstanceContentDocument;
-  overlays: LocaleOverlayDocument[];
-  editedAt: string;
-};
-
-async function readStoredInstanceSourceSnapshot(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-  widgetCode: string;
-  editedAt: string;
-}): Promise<StoredInstanceSourceSnapshot> {
-  const configDoc = await readConfigDocumentByLocation(args);
-  if (!configDoc) throw new Error('coreui.errors.instance.config.invalid');
-  const contentDoc = await readContentDocumentByLocation({ ...args, configDoc });
-  if (!contentDoc) throw new Error('coreui.errors.instance.content.invalid');
-  const overlays = await listLocaleOverlaysStrict(args);
-  return {
-    configDoc,
-    contentDoc,
-    overlays,
-    editedAt: args.editedAt,
-  };
-}
-
-async function restoreStoredInstanceSourceSnapshot(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-  widgetCode: string;
-  snapshot: StoredInstanceSourceSnapshot;
-}): Promise<void> {
-  await putJson(
-    args.env,
-    accountInstanceConfigKey(args.accountId, args.widgetCode, args.instanceId),
-    args.snapshot.configDoc,
-  );
-  await putJson(
-    args.env,
-    accountInstanceContentKey(args.accountId, args.widgetCode, args.instanceId),
-    args.snapshot.contentDoc,
-  );
-  for (const overlay of args.snapshot.overlays) {
-    await writeLocaleOverlay({
-      env: args.env,
-      accountId: args.accountId,
-      widgetCode: args.widgetCode,
-      instanceId: args.instanceId,
-      overlay,
-    });
-  }
-  await updateInstanceRegistryEditedAt({
-    env: args.env,
-    accountId: args.accountId,
-    instanceId: args.instanceId,
-    editedAt: args.snapshot.editedAt,
-  });
-}
-
-async function restorePreviousSaveStateOrThrow(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-  widgetCode: string;
-  sourceSnapshot: StoredInstanceSourceSnapshot;
-  packageSnapshot: StoredInstancePublicPackageSnapshot;
-  detail: string;
-}): Promise<never> {
-  const failures: string[] = [];
-  try {
-    await restoreInstancePublicPackageSnapshot({
-      env: args.env,
-      accountId: args.accountId,
-      instanceId: args.instanceId,
-      snapshot: args.packageSnapshot,
-    });
-  } catch (error) {
-    failures.push(`package:${error instanceof Error ? error.message : String(error)}`);
-  }
-  try {
-    await restoreStoredInstanceSourceSnapshot({
-      env: args.env,
-      accountId: args.accountId,
-      instanceId: args.instanceId,
-      widgetCode: args.widgetCode,
-      snapshot: args.sourceSnapshot,
-    });
-  } catch (error) {
-    failures.push(`source:${error instanceof Error ? error.message : String(error)}`);
-  }
-  if (failures.length) {
-    throw new AccountInstanceTransitionError({
-      status: 500,
-      kind: 'UPSTREAM_UNAVAILABLE',
-      reasonKey: 'coreui.errors.instance.rollbackFailed',
-      detail: `${args.detail}; rollback:${failures.join(';')}`,
     });
   }
   throw new AccountInstanceTransitionError({
@@ -340,9 +219,10 @@ export async function createAccountInstanceFromSubmittedSource(args: {
       config: args.config,
       displayName: normalizeDisplayName(args.displayName),
       meta: args.meta,
+      publicPackageFingerprint: packaged.fingerprint,
     });
   } catch (error) {
-    return deleteCreatedInstanceOrThrow({
+    return cleanupCreatedInstanceOrThrow({
       env: args.env,
       accountId,
       instanceId,
@@ -366,7 +246,6 @@ export async function saveAccountInstanceTransition(args: {
 }): Promise<{
   ok: true;
   pointer: AccountInstanceSourcePointer;
-  previousConfig: Record<string, unknown>;
   live: boolean;
 }> {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
@@ -391,25 +270,6 @@ export async function saveAccountInstanceTransition(args: {
     });
   }
   assertLocaleSwitcherConfig(args.config);
-  let packageSnapshot: StoredInstancePublicPackageSnapshot;
-  let sourceSnapshot: StoredInstanceSourceSnapshot;
-  try {
-    packageSnapshot = await readStoredInstancePublicPackageSnapshot({ env: args.env, accountId, instanceId });
-    sourceSnapshot = await readStoredInstanceSourceSnapshot({
-      env: args.env,
-      accountId,
-      instanceId,
-      widgetCode: existing.value.pointer.widgetCode,
-      editedAt: existing.value.pointer.updatedAt,
-    });
-  } catch (error) {
-    throw new AccountInstanceTransitionError({
-      status: 409,
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.embedNotReady',
-      detail: error instanceof Error ? error.message : String(error),
-    });
-  }
   const packaged = await writeInstancePublicPackage({
     env: args.env,
     accountId,
@@ -424,34 +284,21 @@ export async function saveAccountInstanceTransition(args: {
       detail: packaged.detail,
     });
   }
-  let saved: { pointer: AccountInstanceSourcePointer };
-  try {
-    saved = await writeAccountInstanceSource({
-      env: args.env,
-      accountId,
-      instanceId,
-      widgetType: existingWidgetType,
-      config: args.config,
-      displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
-      meta: args.hasMeta ? args.meta : existing.value.pointer.meta ?? null,
-    });
-  } catch (error) {
-    return restorePreviousSaveStateOrThrow({
-      env: args.env,
-      accountId,
-      instanceId,
-      widgetCode: existing.value.pointer.widgetCode,
-      sourceSnapshot,
-      packageSnapshot,
-      detail: error instanceof Error ? error.message : String(error),
-    });
-  }
+  const saved = await writeAccountInstanceSource({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetType: existingWidgetType,
+    config: args.config,
+    displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
+    meta: args.hasMeta ? args.meta : existing.value.pointer.meta ?? null,
+    publicPackageFingerprint: packaged.fingerprint,
+  });
   const live = (await readInstanceServeState({ env: args.env, accountId, instanceId })) === 'published';
 
   return {
     ok: true,
     pointer: saved.pointer,
-    previousConfig: existing.value.config,
     live,
   };
 }
@@ -462,7 +309,14 @@ export async function publishAccountInstanceTransition(args: {
   instanceId: string;
 }): Promise<{ instanceId: string; status: 'published'; changed: boolean }> {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
-  const packageReady = await verifyInstancePublicPackageReady({ env: args.env, accountId, instanceId });
+  const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
+  if (!existing.ok) transitionFailureFromSavedRead(existing);
+  const packageReady = await verifyInstancePublicPackageReady({
+    env: args.env,
+    accountId,
+    instanceId,
+    expectedFingerprint: existing.value.pointer.publicPackageFingerprint ?? null,
+  });
   if (!packageReady.ok) {
     throw new AccountInstanceTransitionError({
       status: 409,
@@ -471,8 +325,6 @@ export async function publishAccountInstanceTransition(args: {
       detail: packageReady.detail,
     });
   }
-  const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
-  if (!existing.ok) transitionFailureFromSavedRead(existing);
 
   const liveStatus = await readInstanceServeState({ env: args.env, accountId, instanceId });
   await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });

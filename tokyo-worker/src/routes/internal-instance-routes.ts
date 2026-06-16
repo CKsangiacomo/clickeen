@@ -10,10 +10,12 @@ import { deleteAccountInstanceSubtree } from '../domains/account-instances/delet
 import {
   readInstancePublicPackage,
   readSubmittedInstancePublicPackage,
+  verifyInstancePublicPackageReady,
 } from '../domains/account-instances/package-files';
 import {
   listAccountInstances,
   readAccountInstanceDocument,
+  readAccountInstanceSourcePointer,
   renameAccountInstanceDisplay,
 } from '../domains/account-instances/source';
 import { json } from '../http';
@@ -254,7 +256,41 @@ export async function tryHandleInternalInstanceRoutes(
     if (authErr) return respond(authErr);
 
     try {
-      const publicPackage = await readInstancePublicPackage({ env, accountId, instanceId });
+      const pointer = await readAccountInstanceSourcePointer({ env, accountId, instanceId });
+      if (!pointer.ok) {
+        return respond(
+          json(
+            { error: { kind: pointer.kind, reasonKey: pointer.reasonKey } },
+            { status: pointer.kind === 'NOT_FOUND' ? 404 : 422 },
+          ),
+        );
+      }
+      const packageReady = await verifyInstancePublicPackageReady({
+        env,
+        accountId,
+        instanceId,
+        expectedFingerprint: pointer.value.publicPackageFingerprint ?? null,
+      });
+      if (!packageReady.ok) {
+        return respond(
+          json(
+            {
+              error: {
+                kind: 'VALIDATION',
+                reasonKey: 'coreui.errors.instance.embedNotReady',
+                detail: packageReady.detail,
+              },
+            },
+            { status: 409 },
+          ),
+        );
+      }
+      const publicPackage = await readInstancePublicPackage({
+        env,
+        accountId,
+        instanceId,
+        expectedFingerprint: pointer.value.publicPackageFingerprint ?? null,
+      });
       if (!publicPackage) {
         return respond(
           json(

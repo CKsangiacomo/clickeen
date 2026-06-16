@@ -27,6 +27,14 @@ export function normalizeAccountInstanceConfigDocument(raw: unknown): AccountIns
   const targetLocales = normalizeLocaleList(payload.targetLocales);
   if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || !isWidgetOverlayCode(widgetCode) || !widgetType || !config || !baseLocale || !targetLocales || !createdAt || !updatedAt) return null;
   const meta = asRecord(payload.meta) ?? (payload.meta === null || payload.meta === undefined ? null : null);
+  const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
+  if (
+    Object.prototype.hasOwnProperty.call(payload, 'publicPackageFingerprint') &&
+    payload.publicPackageFingerprint != null &&
+    !publicPackageFingerprint
+  ) {
+    return null;
+  }
   return {
     id,
     accountId,
@@ -37,6 +45,7 @@ export function normalizeAccountInstanceConfigDocument(raw: unknown): AccountIns
     config,
     baseLocale,
     targetLocales,
+    ...(publicPackageFingerprint ? { publicPackageFingerprint } : {}),
     createdAt,
     updatedAt,
   };

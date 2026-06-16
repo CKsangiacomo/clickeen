@@ -1,5 +1,5 @@
 import { isCompactAccountPublicId, isCompactInstanceId, isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
-import { readInstanceServeState } from '../domains/account-instances/serve-state';
+import { readAccountInstanceSourcePointer } from '../domains/account-instances/source';
 import { accountPagePublishFileKey, readAccountPageServeState } from '../domains/pages';
 import { publicPackageContentType } from '../domains/public-package-serve-metadata';
 import {
@@ -8,6 +8,10 @@ import {
   PUBLIC_RUNTIME_FILE,
   PUBLIC_STYLES_FILE,
 } from '../domains/account-instances/package-file-names';
+import {
+  publicPackageObjectMatchesExpectedFingerprint,
+  verifyInstancePublicPackageReady,
+} from '../domains/account-instances/package-files';
 import { respondMethodNotAllowed, type TokyoRouteArgs } from '../route-helpers';
 
 function notFound(): Response {
@@ -118,14 +122,25 @@ export async function tryHandleClkLiveStaticRoutes(
     return respond(obj ? responseForObject(key, parsed.file, obj, req.method === 'HEAD') : notFound());
   }
 
-  const serveState = await readInstanceServeState({
+  const pointer = await readAccountInstanceSourcePointer({
     env,
     accountId: parsed.accountId,
     instanceId: parsed.instanceId,
   });
-  if (serveState !== 'published') return respond(notFound());
+  if (!pointer.ok || pointer.value.publishStatus !== 'published') return respond(notFound());
+
+  const ready = await verifyInstancePublicPackageReady({
+    env,
+    accountId: parsed.accountId,
+    instanceId: parsed.instanceId,
+    expectedFingerprint: pointer.value.publicPackageFingerprint ?? null,
+  });
+  if (!ready.ok) return respond(notFound());
 
   const key = instanceObjectKey(parsed.accountId, parsed.instanceId, parsed.file);
   const obj = await env.TOKYO_R2.get(key);
+  if (obj && !publicPackageObjectMatchesExpectedFingerprint(obj, pointer.value.publicPackageFingerprint ?? null)) {
+    return respond(notFound());
+  }
   return respond(obj ? responseForObject(key, parsed.file, obj, req.method === 'HEAD') : notFound());
 }

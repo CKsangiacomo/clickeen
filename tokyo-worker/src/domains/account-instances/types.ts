@@ -30,6 +30,7 @@ export type AccountInstanceConfigDocument = {
   config: Record<string, unknown>;
   baseLocale: string;
   targetLocales: string[];
+  publicPackageFingerprint?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -142,6 +143,7 @@ export type AccountInstanceSourcePointer = {
   displayName: string | null;
   meta?: Record<string, unknown> | null;
   publishStatus: InstanceServeState;
+  publicPackageFingerprint?: string;
   updatedAt: string;
 };
 
