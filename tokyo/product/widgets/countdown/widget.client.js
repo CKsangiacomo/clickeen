@@ -444,11 +444,21 @@
     return map[value] || 0;
   }
 
-  function resolveStorageKey(state) {
-    const instanceId = typeof state.instanceId === 'string' ? state.instanceId.trim() : '';
-    if (instanceId) return instanceId;
-    if (resolvedInstanceId) return resolvedInstanceId;
-    return null;
+  function resolveRuntimeInstanceId(instanceId) {
+    return typeof instanceId === 'string' ? instanceId.trim() : '';
+  }
+
+  function resolveStorageKey(runtimeInstanceId) {
+    const instanceId = resolveRuntimeInstanceId(runtimeInstanceId);
+    return instanceId || null;
+  }
+
+  function requirePersonalStorageKey(runtimeInstanceId) {
+    const storageKey = resolveStorageKey(runtimeInstanceId);
+    if (!storageKey) {
+      throw new Error('[Countdown] personal timer requires an instance id');
+    }
+    return storageKey;
   }
 
   let currentState = null;
@@ -482,7 +492,10 @@
         button: { varKey: 'button' },
         localeSwitcher: { varKey: 'localeSwitcher' },
       },
-      { locale: runtimeContext && runtimeContext.locale, instanceId: resolvedInstanceId },
+      {
+        locale: runtimeContext && runtimeContext.locale,
+        instanceId: runtimeContext && runtimeContext.instanceId || resolvedInstanceId,
+      },
     );
 
     if (!window.CKHeader?.applyHeader) {
@@ -661,12 +674,12 @@
     afterMsgEl.hidden = !hasAfterLink;
   }
 
-  function resolveTimerKey(state) {
+  function resolveTimerKey(state, runtimeInstanceId) {
     if (state.countdown.timer.mode === 'date') {
       return `date|${state.countdown.timer.targetDate}|${state.countdown.timer.timezone}`;
     }
     if (state.countdown.timer.mode === 'personal') {
-      const storageKey = resolveStorageKey(state) || '';
+      const storageKey = requirePersonalStorageKey(runtimeInstanceId);
       return `personal|${storageKey}|${state.countdown.timer.timeAmount}|${state.countdown.timer.timeUnit}|${state.countdown.timer.repeat}`;
     }
     if (state.countdown.timer.mode === 'number') {
@@ -675,116 +688,142 @@
     return String(state.countdown.timer.mode || '');
   }
 
-  function syncTimerScheduler(state) {
-    const nextKey = resolveTimerKey(state);
-    if (nextKey === timerKey) {
-      renderPhase(currentState || state, currentPhase);
-      return;
-    }
-    timerKey = nextKey;
-
+  function stopTimerScheduler() {
     if (currentAnimationFrame) cancelAnimationFrame(currentAnimationFrame);
     if (timerInterval) clearInterval(timerInterval);
     currentAnimationFrame = null;
     timerInterval = null;
+    timerKey = '';
+  }
+
+  function resolveStoredPersonalStartMs(storageKey) {
+    let stored;
+    try {
+      stored = localStorage.getItem(`countdown_${storageKey}`);
+    } catch {
+      throw new Error('[Countdown] personal timer storage is unavailable');
+    }
+    if (stored) {
+      const startMs = Number(stored);
+      if (!Number.isFinite(startMs)) {
+        throw new Error('[Countdown] personal timer stored start is invalid');
+      }
+      return startMs;
+    }
+
+    return null;
+  }
+
+  function createPersonalStartMs(storageKey) {
+    const startMs = Date.now();
+    try {
+      localStorage.setItem(`countdown_${storageKey}`, String(startMs));
+    } catch {
+      throw new Error('[Countdown] personal timer storage is unavailable');
+    }
+    return startMs;
+  }
+
+  function prepareTimerScheduler(state, runtimeInstanceId) {
+    assertCountdownState(state);
+    const nextKey = resolveTimerKey(state, runtimeInstanceId);
+    if (nextKey === timerKey) {
+      return () => renderPhase(currentState || state, currentPhase);
+    }
 
     if (state.countdown.timer.mode === 'date') {
       const targetParts = parseTargetDate(state.countdown.timer.targetDate);
       const targetTimeMs = resolveTargetTimestamp(targetParts, state.countdown.timer.timezone);
 
-      const tick = () => {
-        const totalSeconds = Math.max(0, Math.floor((targetTimeMs - Date.now()) / 1000));
-        updateUnits(totalSeconds);
-        currentPhase = totalSeconds === 0 ? 'ended' : 'active';
-        renderPhase(currentState || state, currentPhase);
-      };
+      return () => {
+        stopTimerScheduler();
+        const tick = () => {
+          const totalSeconds = Math.max(0, Math.floor((targetTimeMs - Date.now()) / 1000));
+          updateUnits(totalSeconds);
+          currentPhase = totalSeconds === 0 ? 'ended' : 'active';
+          renderPhase(currentState || state, currentPhase);
+        };
 
-      tick();
-      timerInterval = setInterval(tick, 1000);
-      return;
+        tick();
+        timerInterval = setInterval(tick, 1000);
+        timerKey = nextKey;
+      };
     }
 
     if (state.countdown.timer.mode === 'personal') {
-      const storageKey = resolveStorageKey(state);
-      if (!storageKey) {
-        throw new Error('[Countdown] personal timer requires an instance id');
-      }
-      let startMs;
-      let stored;
-      try {
-        stored = localStorage.getItem(`countdown_${storageKey}`);
-      } catch {
-        throw new Error('[Countdown] personal timer storage is unavailable');
-      }
-      if (stored) {
-        startMs = Number(stored);
-        if (!Number.isFinite(startMs)) {
-          throw new Error('[Countdown] personal timer stored start is invalid');
-        }
-      } else {
-        startMs = Date.now();
-        try {
-          localStorage.setItem(`countdown_${storageKey}`, String(startMs));
-        } catch {
-          throw new Error('[Countdown] personal timer storage is unavailable');
-        }
-      }
-
+      const storageKey = requirePersonalStorageKey(runtimeInstanceId);
       const durationSeconds = getDurationSeconds(state.countdown.timer.timeAmount, state.countdown.timer.timeUnit);
       const repeatSeconds = getRepeatSeconds(state.countdown.timer.repeat);
       const cycleSeconds = repeatSeconds > 0 ? durationSeconds + repeatSeconds : durationSeconds;
 
-      const tick = () => {
-        const elapsedSeconds = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
-        if (repeatSeconds > 0) {
-          const cycleElapsed = elapsedSeconds % cycleSeconds;
-          if (cycleElapsed < durationSeconds) {
-            const remaining = Math.max(0, durationSeconds - cycleElapsed);
-            updateUnits(remaining);
-            currentPhase = 'active';
+      return () => {
+        stopTimerScheduler();
+        const storedStartMs = resolveStoredPersonalStartMs(storageKey);
+        const startMs = storedStartMs === null ? createPersonalStartMs(storageKey) : storedStartMs;
+        const tick = () => {
+          const elapsedSeconds = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+          if (repeatSeconds > 0) {
+            const cycleElapsed = elapsedSeconds % cycleSeconds;
+            if (cycleElapsed < durationSeconds) {
+              const remaining = Math.max(0, durationSeconds - cycleElapsed);
+              updateUnits(remaining);
+              currentPhase = 'active';
+              renderPhase(currentState || state, currentPhase);
+              return;
+            }
+            updateUnits(0);
+            currentPhase = 'ended';
             renderPhase(currentState || state, currentPhase);
             return;
           }
-          updateUnits(0);
-          currentPhase = 'ended';
+
+          const remaining = Math.max(0, durationSeconds - elapsedSeconds);
+          updateUnits(remaining);
+          currentPhase = remaining === 0 ? 'ended' : 'active';
           renderPhase(currentState || state, currentPhase);
-          return;
-        }
+        };
 
-        const remaining = Math.max(0, durationSeconds - elapsedSeconds);
-        updateUnits(remaining);
-        currentPhase = remaining === 0 ? 'ended' : 'active';
-        renderPhase(currentState || state, currentPhase);
+        tick();
+        timerInterval = setInterval(tick, 1000);
+        timerKey = nextKey;
       };
-
-      tick();
-      timerInterval = setInterval(tick, 1000);
-      return;
     }
 
     if (state.countdown.timer.mode === 'number') {
       const start = state.countdown.timer.startingNumber;
       const end = state.countdown.timer.targetNumber;
       const durationMs = state.countdown.timer.countDuration * 1000;
-      const startTime = Date.now();
 
-      const animate = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / durationMs, 1);
-        const current = start + (end - start) * progress;
-        updateNumber(current);
-        if (progress < 1) {
-          currentAnimationFrame = requestAnimationFrame(animate);
-        } else {
-          currentPhase = 'ended';
-          renderPhase(currentState || state, currentPhase);
-        }
+      return () => {
+        stopTimerScheduler();
+        const startTime = Date.now();
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / durationMs, 1);
+          const current = start + (end - start) * progress;
+          updateNumber(current);
+          if (progress < 1) {
+            currentAnimationFrame = requestAnimationFrame(animate);
+          } else {
+            currentPhase = 'ended';
+            renderPhase(currentState || state, currentPhase);
+          }
+        };
+
+        currentPhase = 'active';
+        renderPhase(currentState || state, currentPhase);
+        animate();
+        timerKey = nextKey;
       };
-
-      currentPhase = 'active';
-      renderPhase(currentState || state, currentPhase);
-      animate();
     }
+
+    return () => {};
+  }
+
+  function applyStateAndTimer(state, runtimeContext) {
+    const startTimer = prepareTimerScheduler(state, runtimeContext && runtimeContext.instanceId);
+    applyState(state, runtimeContext);
+    startTimer();
   }
 
   function updateUnits(totalSeconds) {
@@ -825,6 +864,10 @@
 
   async function applyPreviewState(state, locale, instanceId, previewMode, baseLocale) {
     const requestId = ++previewLocaleRequest;
+    const effectiveInstanceId =
+      typeof instanceId === 'string' && instanceId.trim()
+        ? instanceId.trim()
+        : resolvedInstanceId;
     const helper =
       window.CK_PREVIEW_L10N &&
       typeof window.CK_PREVIEW_L10N === 'object' &&
@@ -835,7 +878,7 @@
     if (helper) {
       try {
         localizedState = await helper.loadLocalizedState({
-          instanceId: typeof instanceId === 'string' ? instanceId : resolvedInstanceId,
+          instanceId: effectiveInstanceId,
           locale,
           baseLocale,
           previewMode,
@@ -849,8 +892,7 @@
       }
     }
     if (requestId !== previewLocaleRequest) return;
-    applyState(localizedState, { locale, previewMode });
-    syncTimerScheduler(localizedState);
+    applyStateAndTimer(localizedState, { locale, previewMode, instanceId: effectiveInstanceId });
   }
 
   runtime.bindStateUpdates('countdown', resolvedInstanceId, (data) => {
@@ -865,8 +907,7 @@
 
   if (runtimeContext.payload) {
     const initialLocale = runtimeContext.locale || '';
-    applyState(runtimeContext.state, { locale: initialLocale });
-    syncTimerScheduler(runtimeContext.state);
+    applyStateAndTimer(runtimeContext.state, { ...runtimeContext, locale: initialLocale, instanceId: resolvedInstanceId });
   }
   }
 
