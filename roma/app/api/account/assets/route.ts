@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { parseAccountAssetRecord } from '@roma/lib/account-asset-record';
 import {
   finalizeAccountAssetResponse,
   parseJsonOrNull,
@@ -56,7 +57,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    if (!payload || typeof payload !== 'object') {
+    const accountId = typeof payload?.accountId === 'string' ? payload.accountId : '';
+    const storageBytesUsed = typeof payload?.storageBytesUsed === 'number' ? payload.storageBytesUsed : NaN;
+    const assets = Array.isArray(payload?.assets)
+      ? payload.assets.map(parseAccountAssetRecord)
+      : null;
+    if (
+      accountId !== gateway.value.accountId ||
+      !Number.isFinite(storageBytesUsed) ||
+      storageBytesUsed < 0 ||
+      !assets ||
+      assets.some((asset) => !asset)
+    ) {
       return finalizeAccountAssetResponse({
         request,
         response: NextResponse.json(
@@ -71,9 +83,14 @@ export async function GET(request: NextRequest) {
         setCookies: gateway.value.sessionSetCookies,
       });
     }
+    const body = {
+      accountId,
+      storageBytesUsed: Math.trunc(storageBytesUsed),
+      assets: assets as NonNullable<ReturnType<typeof parseAccountAssetRecord>>[],
+    };
     return finalizeAccountAssetResponse({
       request,
-      response: NextResponse.json(payload, { status: 200 }),
+      response: NextResponse.json(body, { status: 200 }),
       setCookies: gateway.value.sessionSetCookies,
     });
   } catch (error) {

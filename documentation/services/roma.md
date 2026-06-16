@@ -202,7 +202,7 @@ Usage, billing, and AI domain behavior:
 
 Assets domain behavior:
 
-- `AssetsDomain` is no longer a standalone mutation surface. Account assets are managed from Builder.
+- `AssetsDomain` is the current-account asset library surface. It reads the account inventory and `storageBytesUsed` from `/api/account/assets`, uploads through `/api/account/assets/upload`, and deletes by exact `assetRef` through `/api/account/assets/:assetRef`.
 - Roma exposes account-level asset routes (`/api/account/assets`, `/api/account/assets/resolve`, `/api/account/assets/:assetRef`, `/api/account/assets/upload`) and forwards them to Tokyo-worker through the `TOKYO_ASSET_CONTROL` Cloudflare service binding plus the Roma account authz capsule and `accountPublicId` storage coordinate.
 - On the active Builder path, Bob delegates asset list/resolve/upload back to these same Roma routes through the normal host account-command seam. Bob owns the explicit asset transport; Roma owns the direct current-account route handling for those commands.
 - `/api/account/usage` remains the Usage domain surface, but it now reads storage bytes from the same Tokyo-worker asset authority as `/api/account/assets`. Assets does not double-read storage truth from both routes on the same screen.
@@ -215,7 +215,7 @@ Assets domain behavior:
 - When account locale settings change, Roma updates Berlin account language policy. New language values are produced by a later explicit translation generation operation.
 - Localization freshness is tracked on saved content fields as `ok` or `changed` for translation pickup. It is not a generic sourceVersion/generation lane.
 - Roma-side non-storage account-budget reads now take `USAGE_KV` explicitly from the request boundary instead of reaching through ambient global context in the hot product path. Storage bytes are no longer read from `USAGE_KV`.
-- Assets supports Builder upload, list, resolve, and exact-ref delete through route/API calls. There is no standalone Roma asset manager for bulk or library mutation.
+- Assets supports Roma library upload, bulk upload, list, resolve, and exact-ref delete through the same account route/API calls Bob uses from Builder.
 - Assets are immutable. Upload creates a new asset identity, canonical delivery URLs stay aggressively cacheable, and there is no product workflow for refresh-in-place, recache, or replace-in-place mutation.
 - Account is the ownership boundary.
 

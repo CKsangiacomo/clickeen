@@ -32,7 +32,7 @@ Use `media` for Clickeen-owned product files used by Prague, Roma, Bob, Dieter, 
 
 ## Authority
 
-Builder is the account asset management surface.
+Roma Assets is the account asset library surface.
 
 Bob is an upload/use entry point while a user edits a widget.
 
@@ -40,7 +40,7 @@ Tokyo-worker stores and serves accepted account assets.
 
 There must be one account asset truth shared by Bob and Roma.
 
-If a user uploads an asset in Bob, Tokyo-worker stores the accepted account asset and Roma/Bob read that same account asset truth. There is no standalone Roma asset-library mutation workflow.
+If a user uploads an asset in Bob, Tokyo-worker stores the accepted account asset and Roma/Bob read that same account asset truth. If a user uploads or deletes an asset from Roma Assets, Bob reads the same account asset truth through the same Roma/Tokyo account routes.
 
 ## Minimum Operations
 

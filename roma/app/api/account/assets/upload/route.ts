@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
+import { parseAccountAssetRecord } from '@roma/lib/account-asset-record';
 import {
   accountAssetUploadOptionsResponse,
   finalizeAccountAssetResponse,
@@ -200,10 +201,9 @@ export async function POST(request: NextRequest) {
 
     const text = await upstream.text().catch(() => '');
     const payload = parseJsonOrNull(text);
+    const assetRecord = upstream.ok ? parseAccountAssetRecord(payload) : null;
     const body = upstream.ok
-      ? payload && typeof payload === 'object'
-        ? payload
-        : null
+      ? assetRecord
       : payload && typeof payload === 'object'
         ? payload
         : {
