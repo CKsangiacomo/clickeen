@@ -42,7 +42,6 @@ const SCRIPTABLE_OR_EXECUTABLE_EXTENSIONS = new Set([
   'ts',
   'tsx',
   'jsx',
-  'svg',
   'xml',
   'xhtml',
   'wasm',
