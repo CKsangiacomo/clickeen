@@ -50,9 +50,9 @@ function normalizeDisplayName(value: unknown): string | null {
 }
 
 function normalizeMeta(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null;
+  if (value == null) return null;
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, unknown>;
+  throw new Error('coreui.errors.instance.invalidPayload');
 }
 
 function displayNameFromConfigDocument(configDoc: AccountInstanceConfigDocument): string {
@@ -126,9 +126,19 @@ function summaryFromConfigDocument(args: {
   };
 }
 
-function normalizeLocaleArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return Array.from(new Set(value.map((entry) => normalizeLocale(entry)).filter((entry): entry is string => Boolean(entry))));
+function hasOwnRecordValue(record: Record<string, unknown> | null, key: string): boolean {
+  return Boolean(record && Object.prototype.hasOwnProperty.call(record, key));
+}
+
+function normalizeLocaleArrayStrict(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const locales: string[] = [];
+  for (const entry of value) {
+    const locale = normalizeLocale(entry);
+    if (!locale) return null;
+    if (!locales.includes(locale)) locales.push(locale);
+  }
+  return locales;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -254,13 +264,21 @@ function composeConfigWithContent(args: {
 }
 
 function resolveBaseLocale(meta: Record<string, unknown> | null, existing?: AccountInstanceConfigDocument | null): string {
-  const fromMeta = normalizeLocale(meta?.baseLocale);
-  return fromMeta ?? existing?.baseLocale ?? 'en';
+  if (hasOwnRecordValue(meta, 'baseLocale')) {
+    const fromMeta = normalizeLocale(meta?.baseLocale);
+    if (!fromMeta) throw new Error('coreui.errors.instance.invalidPayload');
+    return fromMeta;
+  }
+  return existing?.baseLocale ?? 'en';
 }
 
 function resolveTargetLocales(meta: Record<string, unknown> | null, existing?: AccountInstanceConfigDocument | null): string[] {
-  const fromMeta = normalizeLocaleArray(meta?.targetLocales);
-  return fromMeta.length > 0 ? fromMeta : existing?.targetLocales ?? [];
+  if (hasOwnRecordValue(meta, 'targetLocales')) {
+    const fromMeta = normalizeLocaleArrayStrict(meta?.targetLocales);
+    if (!fromMeta) throw new Error('coreui.errors.instance.invalidPayload');
+    return fromMeta;
+  }
+  return existing?.targetLocales ?? [];
 }
 
 function toAccountInstanceSourcePointer(args: {

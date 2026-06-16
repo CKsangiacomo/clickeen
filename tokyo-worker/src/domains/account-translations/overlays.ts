@@ -128,6 +128,28 @@ export async function listLocaleOverlays(args: {
   return overlays.sort((left, right) => left.locale.localeCompare(right.locale));
 }
 
+export async function listLocaleOverlaysStrict(args: {
+  env: Env;
+  accountId: string;
+  widgetCode: string;
+  instanceId: string;
+}): Promise<LocaleOverlayDocument[]> {
+  const prefix = accountInstanceLocaleOverlaysPrefix(args.accountId, args.widgetCode, args.instanceId);
+  const overlays: LocaleOverlayDocument[] = [];
+  let cursor: string | undefined;
+  do {
+    const listed = await args.env.TOKYO_R2.list({ prefix, cursor } as R2ListOptions);
+    for (const object of listed.objects) {
+      if (!object.key.endsWith('.json')) continue;
+      const overlay = normalizeLocaleOverlayDocument(await loadJson(args.env, object.key));
+      if (!overlay) throw new Error(`coreui.errors.instance.overlay.invalid:${object.key}`);
+      overlays.push(overlay);
+    }
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+  return overlays.sort((left, right) => left.locale.localeCompare(right.locale));
+}
+
 export function localeOverlayByLocale(overlays: LocaleOverlayDocument[]): Map<string, LocaleOverlayDocument> {
   return new Map(overlays.map((overlay) => [overlay.locale, overlay]));
 }

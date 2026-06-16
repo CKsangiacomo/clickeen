@@ -61,7 +61,7 @@ const staleAliasPatterns = [
   /^showTitle$/,
   /^title$/,
 ];
-const packageFiles = ['instance.config.json', 'instance.content.json', 'index.html', 'styles.css', 'runtime.js', 'package.json'];
+const packageFiles = ['instance.config.json', 'instance.content.json', 'index.html', 'styles.css', 'runtime.js'];
 
 function loadLocalEnv() {
   const envPath = path.join(repoRoot, '.env.local');

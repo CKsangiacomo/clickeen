@@ -1,5 +1,3 @@
-import { getCompiledWidgetRouteResponse } from '@clickeen/bob/compiled-widget-route';
-import { isRecord } from '@clickeen/ck-contracts';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -7,6 +5,10 @@ import {
   listPageIdsPlacingInstanceForAccount,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
+import {
+  compileWidgetForInstancePackage,
+  materializeAccountInstancePublicPackage,
+} from '@roma/lib/account-instance-public-package';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
@@ -29,53 +31,6 @@ type RouteFailureLike = {
     paths?: string[];
   };
 };
-
-type CompiledWidgetForSave = {
-  widgetname: string;
-  limits: Parameters<typeof validateAccountInstanceSavePolicy>[0]['limits'];
-  widgetPackage: Record<string, unknown>;
-};
-type CompileWidgetForSaveResult =
-  | { ok: true; value: CompiledWidgetForSave }
-  | { ok: false; status: number; error: { kind: 'VALIDATION'; reasonKey: string; paths?: string[] } };
-
-function isCompiledWidgetForSave(value: unknown): value is CompiledWidgetForSave {
-  if (!isRecord(value)) return false;
-  return typeof value.widgetname === 'string' && isRecord(value.limits) && isRecord(value.widgetPackage);
-}
-
-function compileFailureFromPayload(payload: unknown): CompileWidgetForSaveResult {
-  const error = isRecord(payload) ? payload.error : null;
-  if (isRecord(error) && typeof error.reasonKey === 'string') {
-    const paths = Array.isArray(error.paths)
-      ? error.paths.filter((path): path is string => typeof path === 'string')
-      : undefined;
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: error.reasonKey,
-        ...(paths?.length ? { paths } : {}),
-      },
-    };
-  }
-  return {
-    ok: false,
-    status: 422,
-    error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.widget.compiled.invalid' },
-  };
-}
-
-async function compileWidgetForSave(request: NextRequest, widgetType: string): Promise<CompileWidgetForSaveResult> {
-  const response = await getCompiledWidgetRouteResponse(
-    new NextRequest(new URL(`/api/widgets/${encodeURIComponent(widgetType)}/compiled`, request.url)),
-    { params: Promise.resolve({ widgetname: widgetType }) },
-  );
-  const payload = await response.json().catch(() => null);
-  if (response.ok && isCompiledWidgetForSave(payload)) return { ok: true, value: payload };
-  return compileFailureFromPayload(payload);
-}
 
 function routeFailureResponse(
   request: NextRequest,
@@ -179,7 +134,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     );
   }
 
-  const compiled = await compileWidgetForSave(request, widgetType);
+  const compiled = await compileWidgetForInstancePackage(request, widgetType);
   if (!compiled.ok) {
     return withSession(
       request,
@@ -201,12 +156,30 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  const publicPackage = await materializeAccountInstancePublicPackage({
+    compiled: compiled.value,
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+    instanceId,
+    baseLocale,
+    displayName: displayName ?? null,
+    config,
+  });
+  if (!publicPackage.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: publicPackage.error }, { status: publicPackage.status }),
+      current.value.setCookies,
+    );
+  }
 
   const result = await saveAccountInstanceInTokyo({
     accountId,
     instanceId,
     widgetType,
     config,
+    publicPackage: publicPackage.value,
     ...(displayName !== undefined ? { displayName } : {}),
     ...(meta !== undefined ? { meta } : {}),
     accountCapsule: current.value.authzToken,

@@ -158,7 +158,7 @@ and the account public id.
 Product-control routes cover:
 
 - widget definition reads
-- account instance list/open/create/save/rename/duplicate/delete
+- account instance list/open/create/save/rename/delete
 - publish and unpublish
 - translated locale reads and writes
 - translation generation handoff

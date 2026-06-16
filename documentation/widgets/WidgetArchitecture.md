@@ -373,11 +373,11 @@ typography roles, role scales, or appearance objects.
 
 Generated public files are stored artifacts, not live views of widget source.
 Changing `spec.json`, `widget.client.js`, shared Shell code, or account defaults
-does not update existing `index.html`, `styles.css`, `runtime.js`, or
-`package.json`. Any live widget refactor must include a package regeneration or
-recomposition plan for affected account instances and Page Composer pages, or it
-must stop with a named blocker. Stale generated artifacts are a data migration
-problem, not proof that the source change failed.
+does not update existing `index.html`, `styles.css`, or `runtime.js`. Any live
+widget refactor must include a package regeneration or recomposition plan for
+affected account instances and Page Composer pages, or it must stop with a named
+blocker. Stale generated artifacts are a data migration problem, not proof that
+the source change failed.
 
 Bob session normalization deep-merges compiled widget defaults into loaded
 instance state before Builder preview receives it, then applies declared

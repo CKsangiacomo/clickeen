@@ -108,6 +108,12 @@ saved source plus generated package under:
 accounts/{accountPublicId}/instances/{instanceId}/
 ```
 
+Create, save, and duplicate all use the same package contract: Roma compiles the
+widget software, materializes the current account config into `index.html`,
+`styles.css`, and `runtime.js`, then submits those exact files with the source
+to Tokyo-worker. Tokyo-worker stores the submitted files; it does not render,
+compile, infer, or repair widget package bytes.
+
 Translation generation is a separate explicit operation from the Translations
 panel.
 
@@ -124,6 +130,10 @@ It owns:
 - publish
 - unpublish
 - delete
+
+Create and duplicate mint the new instance id in Roma before calling
+Tokyo-worker so the generated browser package and the saved source use the same
+account instance identity from the start.
 
 Publish and unpublish are account product actions. Roma applies account policy
 and sends the exact product transition to Tokyo-worker for R2 state mutation.

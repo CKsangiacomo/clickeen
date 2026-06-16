@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isRecord } from '@clickeen/ck-contracts';
+import { createCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import { resolvePolicyFromEntitlementsSnapshot } from '@clickeen/ck-policy';
 import {
   createAccountInstanceInTokyo,
@@ -9,6 +10,10 @@ import {
 import { validateAccountInstanceConfigStructure } from '@roma/lib/account-instance-save-policy';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { loadAccountWidgetDefaultsInTokyo } from '@roma/lib/account-widget-defaults-direct';
+import {
+  compileWidgetForInstancePackage,
+  materializeAccountInstancePublicPackage,
+} from '@roma/lib/account-instance-public-package';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -236,12 +241,40 @@ export async function POST(request: NextRequest) {
   }
   const baseLocale = accountLocales.localePolicy.baseLocale;
   const targetLocales = accountLocales.selectedTargetLocales;
+  const instanceId = createCompactInstanceId();
+  const compiled = await compileWidgetForInstancePackage(request, widgetType);
+  if (!compiled.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: compiled.error }, { status: compiled.status }),
+      current.value.setCookies,
+    );
+  }
+  const publicPackage = await materializeAccountInstancePublicPackage({
+    compiled: compiled.value,
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+    instanceId,
+    baseLocale,
+    displayName: displayName ?? null,
+    config: materialized.config,
+  });
+  if (!publicPackage.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: publicPackage.error }, { status: publicPackage.status }),
+      current.value.setCookies,
+    );
+  }
   const created = await createAccountInstanceInTokyo({
     accountId,
     accountCapsule: current.value.authzToken,
+    instanceId,
     widgetType,
     displayName,
     config: materialized.config,
+    publicPackage: publicPackage.value,
     baseLocale,
     targetLocales,
     meta: {

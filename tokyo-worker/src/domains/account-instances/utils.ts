@@ -24,13 +24,13 @@ export function normalizeFingerprint(value: unknown): string | null {
   return normalizeSha256Hex(value);
 }
 
-export function normalizeLocaleList(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return Array.from(
-    new Set(
-      value
-        .map((entry) => normalizeLocale(entry))
-        .filter((entry): entry is string => Boolean(entry)),
-    ),
-  );
+export function normalizeLocaleList(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const locales: string[] = [];
+  for (const entry of value) {
+    const locale = normalizeLocale(entry);
+    if (!locale) return null;
+    if (!locales.includes(locale)) locales.push(locale);
+  }
+  return locales;
 }

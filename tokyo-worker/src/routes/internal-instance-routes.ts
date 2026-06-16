@@ -2,7 +2,6 @@ import { isRecord } from '@clickeen/ck-contracts';
 import { normalizeLocale, normalizeStorageId } from '../asset-utils';
 import {
   createAccountInstanceFromSubmittedSource,
-  duplicateAccountInstanceTransition,
   publishAccountInstanceTransition,
   saveAccountInstanceTransition,
   unpublishAccountInstanceTransition,
@@ -10,6 +9,7 @@ import {
 import { deleteAccountInstanceSubtree } from '../domains/account-instances/delete';
 import {
   readInstancePublicPackage,
+  readSubmittedInstancePublicPackage,
 } from '../domains/account-instances/package-files';
 import {
   listAccountInstances,
@@ -31,13 +31,20 @@ import {
   transitionErrorResponse,
 } from './internal-product-route-utils';
 
-function normalizeSubmittedMeta(value: unknown): Record<string, unknown> {
-  return isRecord(value) ? { ...value } : {};
+function normalizeSubmittedMeta(value: unknown): Record<string, unknown> | null {
+  if (value == null) return {};
+  return isRecord(value) ? { ...value } : null;
 }
 
 function normalizeSubmittedTargetLocales(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
-  return Array.from(new Set(value.map((entry) => normalizeLocale(entry)).filter((entry): entry is string => Boolean(entry))));
+  const locales: string[] = [];
+  for (const entry of value) {
+    const locale = normalizeLocale(entry);
+    if (!locale) return null;
+    if (!locales.includes(locale)) locales.push(locale);
+  }
+  return locales;
 }
 
 export async function tryHandleInternalInstanceRoutes(
@@ -96,14 +103,17 @@ export async function tryHandleInternalInstanceRoutes(
     if (!widgetType) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const source = isRecord(rawBody.source) ? rawBody.source : null;
     const config = isRecord(source?.config) ? source.config : null;
+    const instanceId = normalizeStorageId(rawBody.instanceId);
+    const publicPackage = readSubmittedInstancePublicPackage(rawBody.publicPackage);
     const submittedMeta = normalizeSubmittedMeta(rawBody.meta);
+    if (!submittedMeta) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const baseLocale = normalizeLocale(rawBody.baseLocale ?? submittedMeta.baseLocale);
     const targetLocales = normalizeSubmittedTargetLocales(
       Object.prototype.hasOwnProperty.call(rawBody, 'targetLocales')
         ? rawBody.targetLocales
         : submittedMeta.targetLocales,
     );
-    if (!config || !baseLocale || !targetLocales) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+    if (!instanceId || !config || !publicPackage || !baseLocale || !targetLocales) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const meta = {
       ...submittedMeta,
       baseLocale,
@@ -114,10 +124,12 @@ export async function tryHandleInternalInstanceRoutes(
       const created = await createAccountInstanceFromSubmittedSource({
         env,
         accountId,
+        instanceId,
         widgetType,
         displayName: rawBody.displayName,
         config,
         meta,
+        publicPackage,
       });
       return respond(
         json(
@@ -136,19 +148,7 @@ export async function tryHandleInternalInstanceRoutes(
         ),
       );
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      return respond(
-        json(
-          {
-            error: {
-              kind: detail === 'tokyo.errors.widget.unsupported' ? 'VALIDATION' : 'UPSTREAM_UNAVAILABLE',
-              reasonKey: detail,
-              detail,
-            },
-          },
-          { status: detail === 'tokyo.errors.widget.unsupported' ? 422 : 502 },
-        ),
-      );
+      return respond(transitionErrorResponse(error));
     }
   }
 
@@ -208,16 +208,7 @@ export async function tryHandleInternalInstanceRoutes(
     const auth = await authorizeRomaEditorTransition({ req, env, accountId });
     if (!auth.ok) return respond(auth.response);
 
-    try {
-      const duplicated = await duplicateAccountInstanceTransition({
-        env,
-        accountId,
-        sourceInstanceId,
-      });
-      return respond(json({ ok: true, ...duplicated }, { status: 201 }));
-    } catch (error) {
-      return respond(transitionErrorResponse(error));
-    }
+    return respondValidation(respond, 'coreui.errors.instance.duplicateUnsupported', 410);
   }
 
   const internalInstancePublishMatch = pathname.match(/^\/__internal\/instances\/([^/]+)\/(publish|unpublish)$/);
@@ -326,6 +317,7 @@ export async function tryHandleInternalInstanceRoutes(
           publishStatus: instance.value.publishStatus,
           updatedAt: instance.value.updatedAt,
           baseLocale: instance.value.baseLocale,
+          targetLocales: instance.value.targetLocales,
           meta: instance.value.meta ?? null,
           config: instance.value.config,
         }),
@@ -343,7 +335,8 @@ export async function tryHandleInternalInstanceRoutes(
         instanceId,
         accountId,
       })) as Record<string, unknown> | null;
-      if (!isRecord(body) || !isRecord(body.config)) {
+      const publicPackage = isRecord(body) ? readSubmittedInstancePublicPackage(body.publicPackage) : null;
+      if (!isRecord(body) || !isRecord(body.config) || !publicPackage) {
         return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
       }
       try {
@@ -353,6 +346,7 @@ export async function tryHandleInternalInstanceRoutes(
           instanceId,
           submittedWidgetType: body.widgetType as string,
           config: body.config,
+          publicPackage,
           displayName: body.displayName,
           hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
           meta: body.meta,

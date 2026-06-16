@@ -177,8 +177,8 @@ NOTES
 - Publishing/materializing old saved source still needs an explicit matching
   compatibility path when the server/public boundary can receive the old shape.
 - Generated package files are stored artifacts. Existing account
-  `index.html`, `styles.css`, `runtime.js`, and `package.json` do not change
-  just because widget source, shared Shell code, or account defaults changed.
+  `index.html`, `styles.css`, and `runtime.js` do not change just because
+  widget source, shared Shell code, or account defaults changed.
   Any refactor that changes saved state language, package assembly, public
   runtime, or Page Composer output must include package regeneration or
   recomposition for affected live instances/pages, or stop with a named blocker.

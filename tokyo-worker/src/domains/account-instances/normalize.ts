@@ -25,7 +25,7 @@ export function normalizeAccountInstanceConfigDocument(raw: unknown): AccountIns
   const config = asRecord(payload.config);
   const baseLocale = normalizeLocale(payload.baseLocale) ?? '';
   const targetLocales = normalizeLocaleList(payload.targetLocales);
-  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || !isWidgetOverlayCode(widgetCode) || !widgetType || !config || !baseLocale || !createdAt || !updatedAt) return null;
+  if (!isCompactInstanceId(id) || !isCompactAccountPublicId(accountId) || !isWidgetOverlayCode(widgetCode) || !widgetType || !config || !baseLocale || !targetLocales || !createdAt || !updatedAt) return null;
   const meta = asRecord(payload.meta) ?? (payload.meta === null || payload.meta === undefined ? null : null);
   return {
     id,

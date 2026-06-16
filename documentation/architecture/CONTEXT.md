@@ -155,8 +155,8 @@ route. They are classified as vector assets by Tokyo-worker.
 3. Roma hosts Bob and sends one editor-open payload.
 4. Bob edits the active instance in browser memory.
 5. Roma saves the submitted instance package to Tokyo-worker.
-6. Tokyo-worker validates and stores the account instance source and package
-   files.
+6. Tokyo-worker stores the account instance source and exact package files that
+   Roma submitted.
 
 ### Assets
 

@@ -36,6 +36,7 @@ export type AccountInstanceCoreRow = {
   accountId: string;
   widgetType: string;
   baseLocale?: string;
+  targetLocales?: string[];
   publishStatus?: AccountInstanceLiveStatus;
   meta?: Record<string, unknown> | null;
 };
@@ -281,6 +282,17 @@ function normalizeTokyoWidgetDefinitions(raw: unknown): TokyoWidgetDefinition[] 
   return entries as TokyoWidgetDefinition[];
 }
 
+function normalizeTokyoLocaleList(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const locales: string[] = [];
+  for (const entry of raw) {
+    const locale = asTrimmedString(entry);
+    if (!locale) return undefined;
+    locales.push(locale);
+  }
+  return locales;
+}
+
 export async function listPageIdsPlacingInstanceForAccount(args: {
   accountId: string;
   instanceId: string;
@@ -344,6 +356,7 @@ function normalizeAccountInstancePayload(payload: unknown):
       accountId,
       widgetType,
       baseLocale: asTrimmedString(payload.baseLocale) ?? undefined,
+      targetLocales: normalizeTokyoLocaleList(payload.targetLocales),
       publishStatus: payload.publishStatus === 'published' ? 'published' : payload.publishStatus === 'unpublished' ? 'unpublished' : undefined,
       meta: isRecord(payload.meta) ? payload.meta : null,
     },
@@ -383,9 +396,16 @@ async function openAccountInstanceFromTokyo(args: {
 export async function createAccountInstanceInTokyo(args: {
   accountId: string;
   accountCapsule?: string | null;
+  instanceId: string;
   widgetType: string;
   displayName?: string | null;
   config: Record<string, unknown>;
+  publicPackage: {
+    v: 1;
+    indexHtml: string;
+    stylesCss: string;
+    runtimeJs: string;
+  };
   baseLocale: string;
   targetLocales: string[];
   meta?: Record<string, unknown> | null;
@@ -416,11 +436,13 @@ export async function createAccountInstanceInTokyo(args: {
     path: '/__internal/instances',
     method: 'POST',
     body: {
+      instanceId: args.instanceId,
       widgetType: requestedWidgetType,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       source: {
         config: args.config,
       },
+      publicPackage: args.publicPackage,
       baseLocale: args.baseLocale,
       targetLocales: args.targetLocales,
       meta: {
@@ -445,6 +467,12 @@ export async function saveAccountInstanceInTokyo(args: {
   accountCapsule?: string | null;
   widgetType: string;
   config: Record<string, unknown>;
+  publicPackage: {
+    v: 1;
+    indexHtml: string;
+    stylesCss: string;
+    runtimeJs: string;
+  };
   displayName?: string | null;
   meta?: Record<string, unknown> | null;
   internalServiceName?: string | null;
@@ -464,6 +492,7 @@ export async function saveAccountInstanceInTokyo(args: {
     body: {
       widgetType: args.widgetType,
       config: args.config,
+      publicPackage: args.publicPackage,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
       ...(args.meta !== undefined ? { meta: args.meta } : {}),
     },
@@ -477,73 +506,6 @@ export async function saveAccountInstanceInTokyo(args: {
     ok: true,
     value: {
       live: payload.live === true,
-    },
-  };
-}
-
-export async function duplicateAccountInstanceInTokyo(args: {
-  accountId: string;
-  sourceInstanceId: string;
-  accountCapsule?: string | null;
-  internalServiceName?: string | null;
-  requestId?: string | null;
-}): Promise<
-  | {
-      ok: true;
-      value: {
-        accountId: string;
-        sourceInstanceId: string;
-        instanceId: string;
-        widgetType: string;
-        status: AccountInstanceLiveStatus;
-      };
-    }
-  | RouteFailure
-> {
-  const source = await openAccountInstanceFromTokyo({
-    accountId: args.accountId,
-    instanceId: args.sourceInstanceId,
-    accountCapsule: args.accountCapsule,
-    internalServiceName: args.internalServiceName,
-    requestId: args.requestId,
-  });
-  if (!source.ok) return source;
-  if (!source.value) {
-    return {
-      ok: false,
-      status: 404,
-      error: {
-        kind: 'NOT_FOUND',
-        reasonKey: 'coreui.errors.instance.notFound',
-        detail: `source instance not found: ${args.sourceInstanceId}`,
-      },
-    };
-  }
-  const result = await callTokyo(tokyoCallContext(args), {
-    path: `/__internal/instances/${encodeURIComponent(args.sourceInstanceId)}/duplicate`,
-    method: 'POST',
-    body: {},
-    decode: (payload) => payload,
-    errorDetail: 'tokyo_instance_duplicate_http_error',
-    errorKey: 'coreui.errors.db.writeFailed',
-  });
-  if (!result.ok) return result;
-  const payload = isRecord(result.value) ? result.value : null;
-  const accountId = asTrimmedString(payload?.accountId);
-  const sourceInstanceId = asTrimmedString(payload?.sourceInstanceId);
-  const instanceId = asTrimmedString(payload?.instanceId);
-  const widgetType = asTrimmedString(payload?.widgetType);
-  if (!accountId || !sourceInstanceId || !instanceId || !widgetType) {
-    return invalidTokyoPayload('invalid Tokyo duplicate payload');
-  }
-  return {
-    ok: true,
-    value: {
-      accountId,
-      sourceInstanceId,
-      instanceId,
-      widgetType,
-      status: payload?.status === 'published' ? 'published' : 'unpublished',
     },
   };
 }

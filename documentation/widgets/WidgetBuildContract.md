@@ -495,11 +495,11 @@ automatically appear in old saved state just because widget
 `spec.json.defaults` changed.
 
 Generated account package files are stored artifacts. Existing `index.html`,
-`styles.css`, `runtime.js`, and `package.json` do not update when widget source,
-shared Shell code, or account defaults change. Any refactor that changes saved
-state language, package assembly, public runtime, or Page Composer output MUST
-include one explicit package regeneration/recomposition path for affected live
-instances and pages, or stop with a named blocker.
+`styles.css`, and `runtime.js` do not update when widget source, shared Shell
+code, or account defaults change. Any refactor that changes saved state
+language, package assembly, public runtime, or Page Composer output MUST include
+one explicit package regeneration/recomposition path for affected live instances
+and pages, or stop with a named blocker.
 
 Builder session load deep-merges compiled widget defaults (Shell factory
 defaults plus widget Core `spec.json.defaults`) into the saved instance state
