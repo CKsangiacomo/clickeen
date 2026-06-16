@@ -1,97 +1,220 @@
 # Clickeen Agent Guidelines
 
-This repo is an AI-native build: agents (AI or human) write the code. We win on clear architecture, disciplined execution, and documentation that stays true.
+This repo is an AI-native build. Agents win here by following current product
+truth, executing through named authorities, and leaving documentation sharper
+than they found it.
 
-## Agent Operating Principles
+## Read Order
 
-### 1) Understand the System First
-Before touching code, read the relevant context:
-- `documentation/architecture/CONTEXT.md` (what we're building)
-- `documentation/strategy/WhyClickeen.md` (why it matters)
-- The relevant PRD/architecture doc for the area you’re changing
+Before touching product-path code or data, read:
 
-### 1A) Product Truth Before Code Topology
-- Start from what the user is actually doing in the product, not from which files call which files.
-- Active callers are **not** proof that a concept belongs in the product.
-- If a branch, file, type, or workflow exists only to preserve a fake product mode, a placeholder, dead scaffolding, or duplicate truth, treat it as a deletion target by default.
-- Before changing a product-path concern, name the surviving authority for that concern.
+1. `documentation/architecture/CONTEXT.md`
+2. `documentation/strategy/WhyClickeen.md`
+3. The detail doc for the surface being changed
+4. The runtime code that owns the behavior
 
-### 1B) Non-Negotiable Product Boundaries
-- The real authoring product is: account opens widget in Roma, Bob edits, Roma saves to Tokyo.
-- Builder is the only real authoring surface.
-- Minibob/demo/funnel surfaces are **not** users, accounts, editor identities, policy profiles, or save-capable product modes.
-- Editing always happens on **one widget in one active locale at a time**. Translation is async follow-up work after save.
-- Preview is not a second widget truth.
-- Entitlements/upsell truth comes from real account policy only.
-- Invalid state must fail at the named boundary; do not silently heal product truth into a new normal.
+Examples:
 
-### 2) No Smoke and Mirrors
-- Don’t ship “works for now” patches that create silent downstream breakage.
-- If impact is unclear, stop and ask a targeted yes/no question.
-- If an audit or PRD identifies a toxic mechanism, do not clean around it. Delete it, isolate it behind an explicit surviving boundary, or mark it blocked.
+| Work Area                | Required Detail Doc                                        |
+| ------------------------ | ---------------------------------------------------------- |
+| Account assets           | `documentation/architecture/AssetManagement.md`            |
+| Roma routes or shell     | `documentation/services/roma.md`                           |
+| Bob Builder              | `documentation/services/bob.md`                            |
+| Tokyo-worker operations  | `documentation/services/tokyo-worker.md`                   |
+| Cloudflare/R2 operations | `documentation/architecture/CloudflareOperations.md`       |
+| Widget behavior          | relevant `documentation/widgets/**` doc plus widget source |
 
-### 3) Elegant Engineering Only
-If you’re tempted to add special cases, workarounds, or one-off parameters, redesign for an elegant solution that fits the real current product and current widget model. Do not answer local mess with speculative frameworks, fake generic layers, or platform theory the product does not need.
+## Authority Gate
 
-### 4) Design & UX Is the Moat
-- Dieter and tokens are not optional: reuse tokens, don’t invent ad-hoc styling.
-- New UI primitives belong in Dieter and must work consistently across contexts.
+Before making a product-path change, name the active authority for:
 
-### 5) Propose Before Executing (When It Matters)
-- For architectural/cross-cutting changes: propose a plan, declare scope, and confirm direction before implementing.
-- For small, clearly scoped fixes: proceed, but keep diffs minimal and explain trade-offs.
+- Product surface
+- Account/session coordinate
+- Storage coordinate
+- Route/API boundary
+- Runtime/deploy surface
+- Verification surface
 
-### 6) Preserve What Works
-- No speculative refactors, “modernization”, or churn.
-- Change only what’s necessary to solve the problem correctly.
-- Preserve real product behavior; do **not** preserve fake product identities, placeholders, dead scaffolding, or duplicate truths just because they already have callers.
+For account assets, the current authority chain is:
 
-### 7) Documentation Is Truth
-- Update docs when behavior changes.
-- Documentation drift is a P0 bug.
+```text
+Roma current account -> accountPublicId -> Roma account asset route -> Tokyo-worker -> accounts/{accountPublicId}/assets/{filename}
+```
 
-### 8) Cloudflare Operations Are Preflight-Gated
-- Before any Cloudflare-dependent execution, run the preflight for the Cloudflare
-  surface being touched:
-  - R2/Tokyo artifact operations: `pnpm cf:preflight`
-  - Pages, custom domains, DNS, Worker/Page config: `pnpm cf:api:preflight`
-- If preflight fails, stop. Do not use dashboard scraping, random Wrangler
-  commands, guessed R2 paths, or partial evidence.
-- Cloudflare/R2 read evidence must come from the repo Cloudflare commands in
-  `documentation/architecture/CloudflareOperations.md`.
-- In this Cloudflare account, DNS is under `Domains -> clickeen.com -> DNS
-  records`; do not refer to it as "Websites".
+The cloud-dev admin account coordinate is:
 
-## Repository Guidelines
+```text
+CLICKEEN
+```
 
-### Project Structure & Module Organization
-- `bob/` – Next.js account Builder editor UI; shared Bob code must model the real authoring path, not a multi-product container.
-- `roma/` – Next.js current-account product shell and Builder host orchestration; the real authoring path begins here.
-- `admin/` – static Cloudflare Pages DevStudio showcase; docs generated via `scripts/`.
-- `dieter/` – Design system source (tokens, CSS, web components, `*.spec.json` fixtures).
-- `venice/` – Next.js Edge embed runtime (Cloudflare Pages).
-- `prague/` – Astro marketing + SEO + demo/funnel surface (Cloudflare Pages); not account authoring truth.
-- `documentation/` stores product/architecture context; `scripts/` has build helpers; `tokyo/` stores built Dieter/widget/Prague deploy assets.
+## Plan Gate
 
-### Build, Typecheck, and Development Commands
-- Install: `pnpm install` (workspace root).
-- Dev: local Bob/Berlin/Tokyo support-stack emulation is retired. App-specific local commands are for isolated debugging only; product runtime evidence comes from cloud-dev Cloudflare surfaces. DevStudio runtime evidence is Cloudflare Pages, not a local dev server.
-- Build: `pnpm build:dieter` first, then `pnpm build` (Turbo fan-out).
-- Lint/Typecheck: `pnpm lint`, `pnpm typecheck`; per-app linting with `pnpm --filter @clickeen/bob lint` or `.../devstudio lint`.
+Use a written checklist for cross-system changes, Cloudflare operations, remote
+product data repair, or anything that touches shared product contracts.
 
-### Coding Style & Naming Conventions
-- TypeScript-first; React function components in PascalCase; hooks/utilities in camelCase.
-- Use 2-space indentation, Prettier defaults, and ESLint (`@typescript-eslint` in `admin`, `next lint` in Next apps); fix warnings before commit.
-- Dieter components use kebab-case folders and `diet-` CSS class prefixes; reuse tokens from `dieter/tokens` instead of ad-hoc styles.
-- Keep env-dependent URLs configurable (e.g., `NEXT_PUBLIC_TOKYO_URL` for Dieter assets).
+The checklist must separate:
 
-### Commit & Pull Request Guidelines
-- Use conventional-style messages seen in history (`feat: ...`, `chore: ...`, `fix: ...`); include scope when helpful (e.g., `feat(bob): add widget toolbar`).
-- PRs need a concise summary, linked issue/PRD, screenshots or recordings for UI changes, and notes on env or migration steps.
-- Call out Dieter token changes and downstream impact (Bob/Admin/Roma/Venice) in the description.
-- Update relevant docs (`documentation/architecture/CONTEXT.md`, feature PRDs) when behavior shifts.
+- Code changes
+- Product data changes
+- Deploy/runtime verification
+- Documentation changes
 
-### Security & Configuration Tips
-- Store secrets in per-app `.env.local` files; keep keys out of version control (Supabase/Redis, Edge Config, etc.).
-- Keep Dieter asset paths in sync with `tokyo/dieter`; prefer configurable base URLs over hard-coded absolute URLs.
-- When touching networked services, note rate limits and production endpoints; prefer feature flags or config toggles for risky changes.
+If investigation changes any named authority, stop execution, restate the plan
+with the corrected authority, then continue from the updated checklist.
+
+## Execution Gate
+
+Use product routes for product mutations.
+
+- Account assets move through Roma account asset routes and Tokyo-worker.
+- Account instances move through Roma account instance routes and Tokyo-worker.
+- Account pages move through Roma account page routes and Tokyo-worker.
+- Auth/account context comes from Berlin/Roma session bootstrap.
+
+Remote Cloudflare operations use the repo command path from
+`documentation/architecture/CloudflareOperations.md`.
+
+Required preflight:
+
+```bash
+pnpm cf:preflight       # R2/Tokyo artifact operations
+pnpm cf:api:preflight   # Pages, domains, DNS, Worker/Page config
+```
+
+If preflight fails, stop at that boundary and report the failed gate.
+
+## DevOps Gate
+
+Before claiming deploy or operating on managed services, identify the deploy or
+operation path:
+
+| Surface                           | Operation path                                                                    |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| Bob/Roma/Prague Pages             | Cloudflare Pages Git-connected build from `main`                                  |
+| DevStudio Pages                   | Cloudflare Pages project plus repo Cloudflare API commands for project/env checks |
+| Berlin/San Francisco/Tokyo-worker | GitHub Actions `cloud-dev workers deploy`                                         |
+| Tokyo product roots in R2         | `cloud-dev workers deploy` R2 sync step                                           |
+| R2 object reads/writes            | repo Cloudflare R2 commands after `pnpm cf:preflight`                             |
+| Pages/DNS/config reads/writes     | repo Cloudflare API commands after `pnpm cf:api:preflight`                        |
+| Supabase schema                   | reviewed SQL migration plus `supabase migrations deploy` workflow                 |
+
+Use GitHub Actions run status for Worker/R2 deploy evidence. Use Cloudflare
+Pages project state and cloud-dev surface checks for Pages runtime evidence.
+Use the Supabase migration workflow run for schema deployment evidence.
+
+## Code/Data Separation
+
+Treat source code and remote product data as different authorities.
+
+Code change means:
+
+- local diff
+- tests/checks
+- commit
+- push
+- deploy or build/runtime verification
+
+Product data repair means:
+
+- named product route or approved Cloudflare operation
+- preflight when Cloudflare is involved
+- API/R2 verification from the owning surface
+- explicit final statement that the git repo changed or did not change
+
+## Verification Gate
+
+Verify through the owner of the truth:
+
+| Concern                         | Verification                                                  |
+| ------------------------------- | ------------------------------------------------------------- |
+| Account assets visible to users | Roma `/api/account/assets` or Roma Assets UI                  |
+| Account asset bytes/metadata    | repo R2 commands after `pnpm cf:preflight`                    |
+| Account instances               | Roma account routes and Tokyo-worker evidence                 |
+| Pages                           | Roma page routes and Tokyo-worker evidence                    |
+| Pages app runtime               | Cloudflare Pages Git build state and cloud-dev surface checks |
+| Worker/R2 deploy                | GitHub Actions worker deploy runs and R2 evidence             |
+| Git state                       | local branch, tracking branch, remote branch                  |
+
+Final verification must reconcile each authority touched by the task.
+
+## Core Violation Audit
+
+After every execution task, verify the result against these eight core
+violations:
+
+| ID  | Violation                  | Audit question                                                                                     |
+| --- | -------------------------- | -------------------------------------------------------------------------------------------------- |
+| V1  | Silent substitution        | Did the change replace missing, invalid, stale, or malformed truth with an invented value?         |
+| V2  | Silent healing             | Did the change normalize, coerce, repair, or rewrite invalid persisted/user state without failure? |
+| V3  | Silent omission            | Did the change drop a required input, artifact, operation, edit, module, event, or policy?         |
+| V4  | Fail-open control          | Did enforcement turn off when a dependency was missing, malformed, or unavailable?                 |
+| V5  | Corruption-as-absence      | Did corrupt stored state become treated as missing, new, empty, ignored, or overwritten?           |
+| V6  | Partial-success masquerade | Did the product claim full success after some requested work was dropped, rejected, or filtered?   |
+| V7  | Masquerade/redress         | Did the same failing workflow continue under a different wrapper, name, path, retry, or log?       |
+| V8  | Runtime test dependency    | Did normal product work start depending on tests, probes, helper checks, or validation rituals?    |
+
+For product-path, cross-system, managed-service, deploy, or remote-data tasks,
+use at least one subagent for an independent V1-V8 audit after implementation
+and before final response. If subagent tools are unavailable, run the audit
+locally and state that no independent subagent audit was available.
+
+The final response must include the V1-V8 result when the task changed product
+behavior, product data, deploy state, managed-service state, or shared
+architecture docs.
+
+## Documentation Discipline
+
+Docs are part of done.
+
+- `CONTEXT.md` stays short and current-system only.
+- Detail docs own surface-specific behavior.
+- PRDs, migrations, and service docs own history and execution detail.
+- Confirmed doc/runtime mismatch is fixed with the behavior change that exposed it.
+
+## Engineering Discipline
+
+- Start from product behavior, then inspect file topology.
+- Preserve working product behavior.
+- Keep diffs scoped to the named authority and surface.
+- Use existing local patterns and helpers before introducing new abstractions.
+- Reuse Dieter tokens and primitives for UI work.
+- Run focused checks for the changed surface; broaden checks when the blast
+  radius crosses systems.
+
+## Build And Check Commands
+
+Install:
+
+```bash
+pnpm install
+```
+
+Build:
+
+```bash
+pnpm build:dieter
+pnpm build
+```
+
+Checks:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm --filter @clickeen/bob lint
+pnpm --filter @clickeen/roma lint
+```
+
+Product runtime evidence comes from cloud-dev Cloudflare surfaces. Local app
+commands are for isolated debugging.
+
+## Final Response
+
+End every execution task with a compact reconciliation:
+
+- Files changed
+- Checks run
+- Commit/push/deploy state when code changed
+- Product data state when remote data changed
+- Verification result from the owning surface
+- Remaining work, only when proven

@@ -3,7 +3,7 @@
 Status: Superseded
 Owner: Product + Architecture
 Date: 2026-06-04
-Surviving authority: `../02-Executing/106__Umbrella__Composition_Vision.md`
+Surviving authority: `./106__Umbrella__Composition_Vision.md`
 
 This planning file used to carry the PRD 106 doctrine, but it grew stale after
 the 2026-06-04 tenets correction. It is no longer active truth.

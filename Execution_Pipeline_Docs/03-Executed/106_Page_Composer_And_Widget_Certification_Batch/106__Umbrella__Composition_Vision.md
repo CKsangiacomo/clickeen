@@ -3,7 +3,7 @@
 Status: Umbrella / vision lens (not a spec)
 Scope: PRD 106 page composition authority.
 Relationship: Sits under `strategy/ClickeenVision.md` and the PRD 105 tenets; it
-explains the *intent* and *mental model* behind page composition and delivery so
+explains the _intent_ and _mental model_ behind page composition and delivery so
 implementation work stays grounded.
 
 Execution split:
@@ -16,12 +16,12 @@ Execution split:
   Astro block work into real widgets and widget instances.
 - `PRD106C3` through `PRD106C6` define the new Prague-absorbing widgets as
   Widget Shell plus Widget Core deltas.
-- `PRD106D_Prague migration from astro blocks to Page composer.md` moves Prague
-  pages from Astro block assembly to composed Clickeen page output after the
-  widget-instance ports are real.
-- `PRD106E_Toxic_Flow_Deletion.md` owns the deletion/fencing campaign for active
-  fake flows, duplicate truths, toxic functions, files, routes, tests, and LOCs
-  that contradict this umbrella.
+- `../../01-Planning/112__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
+  moves Prague pages from Astro block assembly to composed Clickeen page output
+  after the widget-instance ports are real.
+- `../../01-Planning/110__PRD__Toxic_Flow_Deletion.md` owns the deletion/fencing
+  campaign for active fake flows, duplicate truths, toxic functions, files,
+  routes, tests, and LOCs that contradict this umbrella.
 
 ## PRD106 Execution Tenets
 
@@ -49,20 +49,20 @@ umbrella is the source of truth for the contract language.
 
 ## Authority Table
 
-| Concern | Authority |
-| --- | --- |
-| Product mental model and non-negotiable tenets | This umbrella |
-| Realignment/deletion map against current drift | `PRD106A_realignment.md` |
-| Shared Widget Shell extraction | `PRD106A2_WidgetShellExtraction.md` |
-| Page Composer product/build path | `PRD106B_PageComposer.md` |
-| Prague block migration map | `PRD106C_Prague astro blocks migration to widget instances.md` |
-| Prague factual block inventory | `PRD106C2_Prague astro blocks audit.md` |
-| Split-family Cores | `PRD106C3_Split_Widget.md` |
-| Cards Core | `PRD106C4_Cards_Widget.md` |
-| Big Bang Core | `PRD106C5_BigBang_Widget.md` |
-| CTA Core | `PRD106C6_CTA_Widget.md` |
-| Prague route cutover to composed pages | `PRD106D_Prague migration from astro blocks to Page composer.md` |
-| Toxic-flow deletion/fencing | `PRD106E_Toxic_Flow_Deletion.md` |
+| Concern                                        | Authority                                                                            |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Product mental model and non-negotiable tenets | This umbrella                                                                        |
+| Realignment/deletion map against current drift | `PRD106A_realignment.md`                                                             |
+| Shared Widget Shell extraction                 | `PRD106A2_WidgetShellExtraction.md`                                                  |
+| Page Composer product/build path               | `PRD106B_PageComposer.md`                                                            |
+| Prague block migration map                     | `PRD106C_Prague astro blocks migration to widget instances.md`                       |
+| Prague factual block inventory                 | `PRD106C2_Prague astro blocks audit.md`                                              |
+| Split-family Cores                             | `PRD106C3_Split_Widget.md`                                                           |
+| Cards Core                                     | `PRD106C4_Cards_Widget.md`                                                           |
+| Big Bang Core                                  | `PRD106C5_BigBang_Widget.md`                                                         |
+| CTA Core                                       | `PRD106C6_CTA_Widget.md`                                                             |
+| Prague route cutover to composed pages         | `../../01-Planning/112__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md` |
+| Toxic-flow deletion/fencing                    | `../../01-Planning/110__PRD__Toxic_Flow_Deletion.md`                                 |
 
 ## Series Step Order
 
@@ -75,8 +75,8 @@ Execute in this order unless Pietro explicitly changes the order.
 5. Execute `PRD106C2_Prague astro blocks audit.md`.
 6. Execute `PRD106C_Prague astro blocks migration to widget instances.md`.
 7. Execute widget Core PRDs one at a time: Split, Cards, Big Bang, CTA.
-8. Execute `PRD106D_Prague migration from astro blocks to Page composer.md`.
-9. Execute `PRD106E_Toxic_Flow_Deletion.md`.
+8. Execute `../../01-Planning/112__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`.
+9. Execute `../../01-Planning/110__PRD__Toxic_Flow_Deletion.md`.
 
 Do not merge steps across PRDs. A PRD may reference another PRD, but it may not
 silently execute another PRD's authority.
@@ -84,7 +84,7 @@ silently execute another PRD's authority.
 ## What this doc is for
 
 PRD 106 is precise but narrow: add pages as account-owned composed output from
-saved widget instances. This doc says *why the shape is what it is*, so you
+saved widget instances. This doc says _why the shape is what it is_, so you
 don't reinvent it, over-build it, or misread its restraint as missing scope. If
 a decision seems oddly minimal, this doc is where the reason lives.
 
@@ -178,7 +178,7 @@ site            -> collection of pages + nav/domain/routes - not PRD 106
 
 A widget is **not** a molecule. It's an organism — a whole section made of many
 parts. The atom/molecule layers beneath it are Dieter and the shared editor
-controls. Nothing is missing from the ladder; the design system *is* the bottom
+controls. Nothing is missing from the ladder; the design system _is_ the bottom
 of it.
 
 The difference from classic atomic design: in Brad Frost's world, and in every
@@ -287,7 +287,7 @@ A page is not a new engine. It is the same browser-readable output model as a
 single widget instance, but with X widget instances composed together before the
 files are served.
 
-## Why this is a moat (the composed unit is a *product*)
+## Why this is a moat (the composed unit is a _product_)
 
 The novelty is not composition — composition is everywhere. The novelty is that
 Clickeen's composable unit is, simultaneously, all four of these at once:
@@ -382,7 +382,7 @@ content-addressed, edge-served, fail-visibly (no silent healing)
 ```
 
 A page does not get a second editor, a second translation model, or a second
-renderer. It *activates* this substrate at a higher level of composition. New
+renderer. It _activates_ this substrate at a higher level of composition. New
 output formats (pages today, sites in a separate approved PRD) inherit
 translation, materialization, and serving for free. This is the multiplicative
 ("100⁵"), not additive, model.
@@ -501,7 +501,7 @@ PRD 106 adds the **page** noun and the Roma-owned workflow that composes it.
   edit instance config/content inline.
 - Output is **crawlable HTML first** for the Clickeen-hosted page URL (content
   in the initial response, head metadata/canonical/JSON-LD server-side when
-  valid) so hosted pages are legible to search engines *and* AI answer systems
+  valid) so hosted pages are legible to search engines _and_ AI answer systems
   (SEO + GEO). JS only enhances.
 - Pages live physically beside instances in account R2 storage. The page source
   follows the same source/output split as widget instances:
@@ -609,17 +609,17 @@ them is agent-approved scope inside PRD 106.
    edge-served browser files. No app-shell-only pages, no stacked iframes, no
    request-time composition of public output.
 10. All Page Composer intelligence lives in Roma. Tokyo has no page-composition
-   business: no dependencies, no recomposition decisions, no CSS/runtime dedupe,
-   no SEO/GEO generation, no readiness semantics, and no product-shaped page
-   source.
+    business: no dependencies, no recomposition decisions, no CSS/runtime dedupe,
+    no SEO/GEO generation, no readiness semantics, and no product-shaped page
+    source.
 11. Tokyo does not own widget architecture. Widget Shell authority belongs in
-   `packages/widget-shell`; widget folders contribute Core software; Tokyo
-   stores and serves account files.
+    `packages/widget-shell`; widget folders contribute Core software; Tokyo
+    stores and serves account files.
 12. Localization is a property of every unit at every level, at near-zero marginal
-   cost. Locale is a runtime parameter, never baked into identity.
+    cost. Locale is a runtime parameter, never baked into identity.
 13. Add depth only when a concrete need proves it and Pietro approves it (the
-   nesting/container decision is the canonical example). Blocked is the default;
-   objectify is the exception.
+    nesting/container decision is the canonical example). Blocked is the default;
+    objectify is the exception.
 
 ## How to read PRD 106 with this lens
 

@@ -7,7 +7,7 @@ Parent: `106__Umbrella__Composition_Vision.md`
 Audit: `PRD106C2_Prague astro blocks audit.md`
 Series step: 6
 Depends on: `PRD106A2_WidgetShellExtraction.md`, `PRD106C2_Prague astro blocks audit.md`
-Unlocks: `PRD106C3_Split_Widget.md`, `PRD106C4_Cards_Widget.md`, `PRD106C5_BigBang_Widget.md`, `PRD106C6_CTA_Widget.md`, `PRD106D_Prague migration from astro blocks to Page composer.md`
+Unlocks: `PRD106C3_Split_Widget.md`, `PRD106C4_Cards_Widget.md`, `PRD106C5_BigBang_Widget.md`, `PRD106C6_CTA_Widget.md`, `../../01-Planning/112__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
 Authority owned by this PRD: Prague block-to-widget migration map and child PRD scope.
 Authority explicitly not owned by this PRD: shared Shell extraction, Page Composer implementation, individual Widget Core implementation, Prague route cutover.
 
@@ -40,10 +40,10 @@ is evidence to stop, not evidence to proceed.
 
 ## Dependency Gate
 
-| Dependency | Required green evidence | Status |
-| --- | --- | --- |
-| PRD106A2 | `packages/widget-shell/` contract accepted or fenced. | REQUIRED |
-| PRD106C2 | Current Prague block inventory and classifications accepted. | REQUIRED |
+| Dependency | Required green evidence                                      | Status   |
+| ---------- | ------------------------------------------------------------ | -------- |
+| PRD106A2   | `packages/widget-shell/` contract accepted or fenced.        | REQUIRED |
+| PRD106C2   | Current Prague block inventory and classifications accepted. | REQUIRED |
 
 ## Current Step Gate
 
@@ -86,13 +86,13 @@ Stop conditions:
 
 ## Execution Steps
 
-| Step | Action | Required evidence | Green criteria | Stop condition |
-| ---: | --- | --- | --- | --- |
-| 1 | Confirm surviving widget target set. | Target table from C2. | Only Split-family, Cards, Big Bang, CTA are customer targets. | New target widget needed. |
-| 2 | Confirm shared Shell dependency. | A2 green/fence evidence. | Child PRDs consume Shell package. | Shell contract missing. |
-| 3 | Assign Prague blocks to child PRDs. | Mapping table. | Every migrated block maps to one child PRD. | Block spans multiple PRDs without owner. |
-| 4 | Confirm per-child scope. | Child PRD links and scope bullets. | Each child owns Core-only controls/content. | Child owns Header/CTA/Stage/Pod/Page Composer. |
-| 5 | Confirm migration readiness. | Acceptance checklist. | C3-C6 can execute one at a time. | Any block lacks source evidence or decision. |
+| Step | Action                               | Required evidence                  | Green criteria                                                | Stop condition                                 |
+| ---: | ------------------------------------ | ---------------------------------- | ------------------------------------------------------------- | ---------------------------------------------- |
+|    1 | Confirm surviving widget target set. | Target table from C2.              | Only Split-family, Cards, Big Bang, CTA are customer targets. | New target widget needed.                      |
+|    2 | Confirm shared Shell dependency.     | A2 green/fence evidence.           | Child PRDs consume Shell package.                             | Shell contract missing.                        |
+|    3 | Assign Prague blocks to child PRDs.  | Mapping table.                     | Every migrated block maps to one child PRD.                   | Block spans multiple PRDs without owner.       |
+|    4 | Confirm per-child scope.             | Child PRD links and scope bullets. | Each child owns Core-only controls/content.                   | Child owns Header/CTA/Stage/Pod/Page Composer. |
+|    5 | Confirm migration readiness.         | Acceptance checklist.              | C3-C6 can execute one at a time.                              | Any block lacks source evidence or decision.   |
 
 ## Purpose
 
@@ -104,12 +104,12 @@ the Prague widget migration series.
 
 The executable widget work is split into child PRDs:
 
-| PRD | Widget | Absorbs Prague blocks |
-| --- | --- | --- |
-| `PRD106C3_Split_Widget.md` | `split-media`, `split-carousel-media`; reserves `split-instance` and `split-carousel-instance` for later selector-gated work | `hero`, `split`, `split-carousel`; `embed-carousel` is deferred |
-| `PRD106C4_Cards_Widget.md` | `cards` | `subpage-cards`, `steps`, `global-moat`, `platform-strip`, `control-moat` |
-| `PRD106C5_BigBang_Widget.md` | `big-bang` | `big-bang` |
-| `PRD106C6_CTA_Widget.md` | `cta` | `cta-bottom-block` |
+| PRD                          | Widget                                                                                                                       | Absorbs Prague blocks                                                     |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `PRD106C3_Split_Widget.md`   | `split-media`, `split-carousel-media`; reserves `split-instance` and `split-carousel-instance` for later selector-gated work | `hero`, `split`, `split-carousel`; `embed-carousel` is deferred           |
+| `PRD106C4_Cards_Widget.md`   | `cards`                                                                                                                      | `subpage-cards`, `steps`, `global-moat`, `platform-strip`, `control-moat` |
+| `PRD106C5_BigBang_Widget.md` | `big-bang`                                                                                                                   | `big-bang`                                                                |
+| `PRD106C6_CTA_Widget.md`     | `cta`                                                                                                                        | `cta-bottom-block`                                                        |
 
 Do not execute a widget port from this umbrella alone. Execute the relevant
 child PRD.
@@ -132,20 +132,20 @@ Reserved, not executable in the current pass:
 
 These are not widgets:
 
-| Prague block | Decision |
-| --- | --- |
-| `page-meta` | Dies as a Prague block. Page SEO/GEO belongs to Page Composer and a dedicated SEO/GEO PRD for instances and pages. |
-| `navmeta` | Stays Prague navigation metadata. |
-| `minibob` | Excluded from customer widget migration. May remain only as Prague admin/site-owned demo/funnel behavior, not save-capable product mode. |
+| Prague block | Decision                                                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `page-meta`  | Dies as a Prague block. Page SEO/GEO belongs to Page Composer and a dedicated SEO/GEO PRD for instances and pages.                       |
+| `navmeta`    | Stays Prague navigation metadata.                                                                                                        |
+| `minibob`    | Excluded from customer widget migration. May remain only as Prague admin/site-owned demo/funnel behavior, not save-capable product mode. |
 
 Existing drift widget folders must not remain customer widget targets:
 
-| Current folder | PRD106C decision |
-| --- | --- |
-| `tokyo/product/widgets/hero` | Deleted from customer widgets. Media hero visuals are absorbed by `split-media`; embedded-widget hero visuals are deferred until selector-gated `split-instance` exists. |
-| `tokyo/product/widgets/steps` | Deleted from customer widgets. `steps` is a `cards` treatment. |
-| `tokyo/product/widgets/cardgrid` | Deleted from customer widgets. `cards` is the surviving widget. |
-| `tokyo/product/widgets/split` | Deleted as a customer widget source/exposure. Existing account data that still names `split` is controlled cleanup input, not a reason to preserve source or aliases. |
+| Current folder                   | PRD106C decision                                                                                                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tokyo/product/widgets/hero`     | Deleted from customer widgets. Media hero visuals are absorbed by `split-media`; embedded-widget hero visuals are deferred until selector-gated `split-instance` exists. |
+| `tokyo/product/widgets/steps`    | Deleted from customer widgets. `steps` is a `cards` treatment.                                                                                                           |
+| `tokyo/product/widgets/cardgrid` | Deleted from customer widgets. `cards` is the surviving widget.                                                                                                          |
+| `tokyo/product/widgets/split`    | Deleted as a customer widget source/exposure. Existing account data that still names `split` is controlled cleanup input, not a reason to preserve source or aliases.    |
 
 Current Prague `accountInstanceRef` dies. It must not be copied into migrated
 widget state.
@@ -210,18 +210,18 @@ FAQ is the proof and extraction source. `PRD106A2_WidgetShellExtraction.md`
 owns the extraction. `packages/widget-shell/` is the surviving authority for the
 shared systems:
 
-| Shared system | Source of truth |
-| --- | --- |
-| Header content | Widget Shell package |
-| Header layout | Widget Shell package |
-| Header CTA appearance | Widget Shell package |
-| Stage/Pod layout | Widget Shell package |
-| Stage/Pod appearance | Widget Shell package |
-| Typography | Widget Shell package |
-| Locale selector | Widget Shell package |
-| Branding/settings | Widget Shell package |
-| Translation shell | Widget Shell editable-field conventions |
-| Runtime shell | Widget Shell renderer/runtime helpers |
+| Shared system         | Source of truth                         |
+| --------------------- | --------------------------------------- |
+| Header content        | Widget Shell package                    |
+| Header layout         | Widget Shell package                    |
+| Header CTA appearance | Widget Shell package                    |
+| Stage/Pod layout      | Widget Shell package                    |
+| Stage/Pod appearance  | Widget Shell package                    |
+| Typography            | Widget Shell package                    |
+| Locale selector       | Widget Shell package                    |
+| Branding/settings     | Widget Shell package                    |
+| Translation shell     | Widget Shell editable-field conventions |
+| Runtime shell         | Widget Shell renderer/runtime helpers   |
 
 Header has one meaning:
 

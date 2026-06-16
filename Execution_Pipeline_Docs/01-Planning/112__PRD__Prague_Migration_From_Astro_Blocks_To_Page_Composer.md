@@ -1,4 +1,4 @@
-# PRD106D_Prague Migration From Astro Blocks To Page Composer
+# PRD 112 - Prague Migration From Astro Blocks To Page Composer
 
 Status: Draft execution PRD
 Owner: Prague + Roma
@@ -39,11 +39,11 @@ is evidence to stop, not evidence to proceed.
 
 ## Dependency Gate
 
-| Dependency | Required green evidence | Status |
-| --- | --- | --- |
-| PRD106A2 | Shared Widget Shell package accepted. | REQUIRED |
-| PRD106B | Page Composer save/publish/public model accepted. | REQUIRED |
-| PRD106C | Prague block target map accepted. | REQUIRED |
+| Dependency  | Required green evidence                                       | Status   |
+| ----------- | ------------------------------------------------------------- | -------- |
+| PRD106A2    | Shared Widget Shell package accepted.                         | REQUIRED |
+| PRD106B     | Page Composer save/publish/public model accepted.             | REQUIRED |
+| PRD106C     | Prague block target map accepted.                             | REQUIRED |
 | PRD106C3-C6 | Required migrated widgets produce composition-ready packages. | REQUIRED |
 
 ## Current Step Gate
@@ -67,14 +67,14 @@ Stop conditions:
 
 ## Execution Steps
 
-| Step | Action | Required evidence | Green criteria | Stop condition |
-| ---: | --- | --- | --- | --- |
-| 1 | Select one Prague route for cutover readiness. | Route stack and widget target evidence. | Every migrated visual/content section is representable as instances. | Unmapped block required. |
-| 2 | Create account-owned widget instances for route content. | Instance source/package evidence. | Instances are normal account-owned widgets. | Prague stores account truth. |
-| 3 | Create composed page through Page Composer. | Page source/output evidence. | Page stack matches route content order. | Page needs block/page-specific instance edits. |
-| 4 | Integrate Prague route to composed output. | Route diff/screenshot. | Prague chrome survives; content comes from composed page output. | Route recreates Page Composer locally. |
-| 5 | Verify localization/SEO behavior. | Locale screenshots/HTML evidence. | Approved route metadata and page content render. | Host-nav/customer integration is invented. |
-| 6 | Delete/fence old block assembly for route. | Diff/`rg` evidence. | Route no longer depends on migrated Astro blocks. | Old block path remains active. |
+| Step | Action                                                   | Required evidence                       | Green criteria                                                       | Stop condition                                 |
+| ---: | -------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------- |
+|    1 | Select one Prague route for cutover readiness.           | Route stack and widget target evidence. | Every migrated visual/content section is representable as instances. | Unmapped block required.                       |
+|    2 | Create account-owned widget instances for route content. | Instance source/package evidence.       | Instances are normal account-owned widgets.                          | Prague stores account truth.                   |
+|    3 | Create composed page through Page Composer.              | Page source/output evidence.            | Page stack matches route content order.                              | Page needs block/page-specific instance edits. |
+|    4 | Integrate Prague route to composed output.               | Route diff/screenshot.                  | Prague chrome survives; content comes from composed page output.     | Route recreates Page Composer locally.         |
+|    5 | Verify localization/SEO behavior.                        | Locale screenshots/HTML evidence.       | Approved route metadata and page content render.                     | Host-nav/customer integration is invented.     |
+|    6 | Delete/fence old block assembly for route.               | Diff/`rg` evidence.                     | Route no longer depends on migrated Astro blocks.                    | Old block path remains active.                 |
 
 ## Purpose
 
@@ -177,10 +177,10 @@ be blindly placed inside Prague `Base.astro` without duplicating `<html>` and
 
 Before migration, create a table for every route in scope:
 
-| Prague route | Current source | Target Roma page | Delivery mode | Prague-owned chrome | Blocked/unmigrated content | Delete gate |
-| --- | --- | --- | --- | --- | --- | --- |
-| `/{market}/{locale}/widgets/{widget}/` | `overview.json` + `WidgetBlocks` | page id | mode | Nav/Footer/etc. | list | parity + tests |
-| `/{market}/{locale}/widgets/{widget}/{examples|features|pricing}/` | subpage JSON + `WidgetBlocks` | page id | mode | Nav/Footer/etc. | list | parity + tests |
+| Prague route                                   | Current source                   | Target Roma page | Delivery mode                 | Prague-owned chrome | Blocked/unmigrated content | Delete gate     |
+| ---------------------------------------------- | -------------------------------- | ---------------- | ----------------------------- | ------------------- | -------------------------- | --------------- | ---- | -------------- |
+| `/{market}/{locale}/widgets/{widget}/`         | `overview.json` + `WidgetBlocks` | page id          | mode                          | Nav/Footer/etc.     | list                       | parity + tests  |
+| `/{market}/{locale}/widgets/{widget}/{examples | features                         | pricing}/`       | subpage JSON + `WidgetBlocks` | page id             | mode                       | Nav/Footer/etc. | list | parity + tests |
 
 The matrix must also capture:
 
@@ -238,17 +238,17 @@ locale URLs. It must not become account page truth.
 
 Every migrated route must name one authority for each field:
 
-| Field | Candidate authority | Rule |
-| --- | --- | --- |
-| `<html lang>` | Prague route shell or composed page | Must match route locale |
-| `dir` | Prague route shell or composed page | Must match locale text direction |
-| Title | PRD106B page metadata or Prague route shell | No duplicate conflicting titles |
-| Description | PRD106B page metadata or Prague route shell | No duplicate conflicting descriptions |
-| Robots | Prague route shell or PRD106B page metadata | Dev noindex behavior preserved |
-| Canonical | Prague route shell or PRD106B page metadata | Must preserve canonical marketing URL if Prague route remains public |
-| Hreflang alternates | Prague route shell | Must preserve market/locale alternates |
-| Structured data | PRD106B page metadata unless explicitly Prague-owned | Must be valid and non-duplicated |
-| OG/Twitter metadata | Blocking decision | Decide before implementation if route SEO/GEO parity depends on it |
+| Field               | Candidate authority                                  | Rule                                                                 |
+| ------------------- | ---------------------------------------------------- | -------------------------------------------------------------------- |
+| `<html lang>`       | Prague route shell or composed page                  | Must match route locale                                              |
+| `dir`               | Prague route shell or composed page                  | Must match locale text direction                                     |
+| Title               | PRD106B page metadata or Prague route shell          | No duplicate conflicting titles                                      |
+| Description         | PRD106B page metadata or Prague route shell          | No duplicate conflicting descriptions                                |
+| Robots              | Prague route shell or PRD106B page metadata          | Dev noindex behavior preserved                                       |
+| Canonical           | Prague route shell or PRD106B page metadata          | Must preserve canonical marketing URL if Prague route remains public |
+| Hreflang alternates | Prague route shell                                   | Must preserve market/locale alternates                               |
+| Structured data     | PRD106B page metadata unless explicitly Prague-owned | Must be valid and non-duplicated                                     |
+| OG/Twitter metadata | Blocking decision                                    | Decide before implementation if route SEO/GEO parity depends on it   |
 
 SEO/GEO acceptance requires primary migrated content to be present in initial
 HTML at the public Prague route or approved public destination. Client-only
@@ -368,8 +368,8 @@ The peer review's Prague cutover feedback is accepted:
 
 The accepted migration posture is: seed normal account-owned instances and pages
 for a route, publish through normal Page Composer, integrate the route, verify
-  SEO/GEO/locale/update propagation, then delete or temporarily fence the old
-  block path for that route with owner, tests, and delete gate.
+SEO/GEO/locale/update propagation, then delete or temporarily fence the old
+block path for that route with owner, tests, and delete gate.
 
 ## Acceptance
 

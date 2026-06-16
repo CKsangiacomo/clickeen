@@ -1,12 +1,12 @@
 # PRD106A_realignment
 
-Status: Active realignment PRD
+Status: Executed archive
 Owner: Codex execution agent
 Date: 2026-06-05
-Surviving authority: `Execution_Pipeline_Docs/02-Executing/106__Umbrella__Composition_Vision.md`
+Surviving authority: `./106__Umbrella__Composition_Vision.md`
 Series step: 2
 Depends on: `106__Umbrella__Composition_Vision.md`
-Unlocks: `PRD106A2_WidgetShellExtraction.md`, `PRD106B_PageComposer.md`, `PRD106C_Prague astro blocks migration to widget instances.md`, `PRD106E_Toxic_Flow_Deletion.md`
+Unlocks: `PRD106A2_WidgetShellExtraction.md`, `PRD106B_PageComposer.md`, `PRD106C_Prague astro blocks migration to widget instances.md`, `../../01-Planning/110__PRD__Toxic_Flow_Deletion.md`
 Authority owned by this PRD: drift audit, realignment plan, surviving authority map.
 Authority explicitly not owned by this PRD: implementing Page Composer, extracting Widget Shell, building Widget Cores, cutting over Prague routes.
 
@@ -28,12 +28,12 @@ Sibling PRDs:
 - `PRD106B_PageComposer.md` owns the Page Composer implementation boundary.
 - `PRD106C_Prague astro blocks migration to widget instances.md` owns the
   Prague block-to-widget migration.
-- `PRD106D_Prague migration from astro blocks to Page composer.md` owns the
-  Prague site migration from Astro block assembly to composed page output after
-  Page Composer and migrated widget instances exist.
-- `PRD106E_Toxic_Flow_Deletion.md` owns the executable deletion/fencing ledger
-  for toxic active flows, functions, files, routes, tests, and LOCs found during
-  this realignment.
+- `../../01-Planning/112__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
+  owns the Prague site migration from Astro block assembly to composed page
+  output after Page Composer and migrated widget instances exist.
+- `../../01-Planning/110__PRD__Toxic_Flow_Deletion.md` owns the executable
+  deletion/fencing ledger for toxic active flows, functions, files, routes,
+  tests, and LOCs found during this realignment.
 
 ## PRD Tenets
 
@@ -55,9 +55,9 @@ Sibling PRDs:
 
 ## Dependency Gate
 
-| Dependency | Required green evidence | Status |
-| --- | --- | --- |
-| Umbrella | Product tenets and authority table are current. | REQUIRED |
+| Dependency | Required green evidence                         | Status   |
+| ---------- | ----------------------------------------------- | -------- |
+| Umbrella   | Product tenets and authority table are current. | REQUIRED |
 
 ## Current Step Gate
 
@@ -1078,15 +1078,15 @@ Status: required before code execution.
 
 Build a cutover table before changing live service boundaries:
 
-| Concern | Current authority | Surviving authority | Caller migration | Deletion gate |
-| --- | --- | --- | --- | --- |
-| Widget browser-file materialization | Bob `publicPackage` path | Roma save/materialization | Roma uses same widget package inputs; Bob submits state only | Bob save payload parity tests pass and `publicPackage` is absent |
-| Page input acceptance | Old page source/Tokyo page routes | Roma Page Composer | Roma validates ordered instance refs + allowed metadata | Tokyo no longer receives page source/placements |
-| Page file storage | Tokyo `website/pages` / `website/publishes` | Tokyo storage-only page files | Roma submits `source.json`, `index.html`, `styles.css`, `runtime.js`, and `serve-state.json` | old `website/*` paths are unused and rejected |
-| Page public serving | Tokyo product-shaped publish/readiness | Roma-submitted `serve-state.json` + stored files | `clk.live` checks serve-state and serves stored files | `clk.live` does not generate page output or `embed.js` |
-| Affected-page recomposition | old reverse placement/index ideas | Roma Page Composer dependency knowledge | instance save asks Roma to find/recompose affected pages | recomposition failure is visible and retryable |
-| Instance registry / `public.instances` | Supabase/Tokyo registry | unresolved follow-up scope | do not change until replacement listing/open/publish truth exists | named follow-up PRD or approval |
-| Translation liveness | Tokyo PRD105 machinery | unresolved follow-up scope | do not change under PRD106A unless approved | named follow-up PRD or approval |
+| Concern                                | Current authority                           | Surviving authority                              | Caller migration                                                                             | Deletion gate                                                    |
+| -------------------------------------- | ------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Widget browser-file materialization    | Bob `publicPackage` path                    | Roma save/materialization                        | Roma uses same widget package inputs; Bob submits state only                                 | Bob save payload parity tests pass and `publicPackage` is absent |
+| Page input acceptance                  | Old page source/Tokyo page routes           | Roma Page Composer                               | Roma validates ordered instance refs + allowed metadata                                      | Tokyo no longer receives page source/placements                  |
+| Page file storage                      | Tokyo `website/pages` / `website/publishes` | Tokyo storage-only page files                    | Roma submits `source.json`, `index.html`, `styles.css`, `runtime.js`, and `serve-state.json` | old `website/*` paths are unused and rejected                    |
+| Page public serving                    | Tokyo product-shaped publish/readiness      | Roma-submitted `serve-state.json` + stored files | `clk.live` checks serve-state and serves stored files                                        | `clk.live` does not generate page output or `embed.js`           |
+| Affected-page recomposition            | old reverse placement/index ideas           | Roma Page Composer dependency knowledge          | instance save asks Roma to find/recompose affected pages                                     | recomposition failure is visible and retryable                   |
+| Instance registry / `public.instances` | Supabase/Tokyo registry                     | unresolved follow-up scope                       | do not change until replacement listing/open/publish truth exists                            | named follow-up PRD or approval                                  |
+| Translation liveness                   | Tokyo PRD105 machinery                      | unresolved follow-up scope                       | do not change under PRD106A unless approved                                                  | named follow-up PRD or approval                                  |
 
 Execution must respect dependency order:
 

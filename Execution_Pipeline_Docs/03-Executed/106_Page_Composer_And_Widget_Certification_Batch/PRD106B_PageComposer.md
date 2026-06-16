@@ -6,7 +6,7 @@ Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
 Series step: 4
 Depends on: `PRD106A_realignment.md`, `PRD106A2_WidgetShellExtraction.md`
-Unlocks: `PRD106D_Prague migration from astro blocks to Page composer.md`
+Unlocks: `../../01-Planning/112__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
 Authority owned by this PRD: Roma Page Composer, page source, page publish/serve-state intent, affected-page recomposition, page UX.
 Authority explicitly not owned by this PRD: Widget Shell extraction, Widget Core design, Prague block inventory, Tokyo product logic.
 
@@ -42,10 +42,10 @@ If this PRD conflicts with a sibling PRD, the umbrella authority table decides.
 
 ## Dependency Gate
 
-| Dependency | Required green evidence | Status |
-| --- | --- | --- |
-| PRD106A | Service-boundary drift affecting pages is audited/fenced. | REQUIRED |
-| PRD106A2 | Shared Widget Shell package contribution shape is accepted or fenced. | REQUIRED |
+| Dependency | Required green evidence                                               | Status   |
+| ---------- | --------------------------------------------------------------------- | -------- |
+| PRD106A    | Service-boundary drift affecting pages is audited/fenced.             | REQUIRED |
+| PRD106A2   | Shared Widget Shell package contribution shape is accepted or fenced. | REQUIRED |
 
 ## Current Step Gate
 
@@ -76,16 +76,16 @@ Closed-gate stop conditions checked:
 
 ## Execution Steps
 
-| Step | Action | Required evidence | Green criteria | Stop condition |
-| ---: | --- | --- | --- | --- |
-| 1 | Define page storage, source, and serve-state contracts. | Schema/coordinate diff or doc evidence. | Page source/output/serve-state are explicit and storage-only in Tokyo. | Tokyo interprets page source. |
-| 2 | Implement Roma Page Composer UX skeleton. | UI diff/screenshot. | User can create/open page composer without editing instances. | UI edits instance content. |
-| 3 | Implement Add Instances bulk flow. | UI diff/screenshot. | Large account can bulk-select saved instances and add them. | Dropdown-only picker or hidden search dependency. |
-| 4 | Implement save/draft composition. | Code diff/tests. | Page draft saves ordered instance refs and materialized output. | Missing instance package is silently healed. |
-| 5 | Implement publish/unpublish/copy. | Code diff/tests. | Publish gates match widget publish model; Copy uses existing embed/public model. | New page `embed.js` is generated. |
-| 6 | Implement affected-page recomposition on instance save. | Tests/log evidence. | Editing an included instance updates affected pages. | Dependency truth lives in Tokyo. |
-| 7 | Add SEO/GEO and localization controls specified here. | Tests/screenshot. | Crawlable initial HTML and page localization rules exist. | Host-nav integration is invented. |
-| 8 | Run deletion/search guards. | `rg` output/tests. | No Tokyo composition/readiness/page `embed.js` authority remains. | Any forbidden authority remains active. |
+| Step | Action                                                  | Required evidence                       | Green criteria                                                                   | Stop condition                                    |
+| ---: | ------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------- |
+|    1 | Define page storage, source, and serve-state contracts. | Schema/coordinate diff or doc evidence. | Page source/output/serve-state are explicit and storage-only in Tokyo.           | Tokyo interprets page source.                     |
+|    2 | Implement Roma Page Composer UX skeleton.               | UI diff/screenshot.                     | User can create/open page composer without editing instances.                    | UI edits instance content.                        |
+|    3 | Implement Add Instances bulk flow.                      | UI diff/screenshot.                     | Large account can bulk-select saved instances and add them.                      | Dropdown-only picker or hidden search dependency. |
+|    4 | Implement save/draft composition.                       | Code diff/tests.                        | Page draft saves ordered instance refs and materialized output.                  | Missing instance package is silently healed.      |
+|    5 | Implement publish/unpublish/copy.                       | Code diff/tests.                        | Publish gates match widget publish model; Copy uses existing embed/public model. | New page `embed.js` is generated.                 |
+|    6 | Implement affected-page recomposition on instance save. | Tests/log evidence.                     | Editing an included instance updates affected pages.                             | Dependency truth lives in Tokyo.                  |
+|    7 | Add SEO/GEO and localization controls specified here.   | Tests/screenshot.                       | Crawlable initial HTML and page localization rules exist.                        | Host-nav integration is invented.                 |
+|    8 | Run deletion/search guards.                             | `rg` output/tests.                      | No Tokyo composition/readiness/page `embed.js` authority remains.                | Any forbidden authority remains active.           |
 
 ## Execution Checkpoint: Steps 1-8 Green
 
@@ -214,7 +214,7 @@ artifacts without Tokyo interpreting page source.
 Evidence:
 
 - Page Composer exposes `Default locale`, `Language switcher`, `IP
-  localization`, and `Country rules` in Roma Page settings.
+localization`, and `Country rules` in Roma Page settings.
 - Page Composer writes localization settings into the Roma-owned `source.json`.
 - Generated page HTML remains initial crawlable HTML with title, description,
   canonical, robots, and ordered instance sections.
@@ -1044,8 +1044,8 @@ The accepted implementation shape remains boring:
    of product paths.
 9. Implement Roma Page Composer save/publish/unpublish/delete flows.
 10. Implement affected-page recomposition after instance save for every page that
-   includes the instance. Unpublished pages may update draft package/status
-   without enabling public serving.
+    includes the instance. Unpublished pages may update draft package/status
+    without enabling public serving.
 11. Implement public serving from generated files only, including locale-file
     selection only if it can remain storage selection rather than product
     interpretation.

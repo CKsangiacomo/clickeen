@@ -180,14 +180,14 @@ Cloudflare verification run after REST-token repair:
   values in output. `--apply` remains subject to the Cloudflare REST token's Pages
   project edit permission.
 - `pnpm --filter @clickeen/berlin exec wrangler pages functions build
-  /Users/piero_macpro/code/VS/clickeen/admin/functions --project-directory
-  /Users/piero_macpro/code/VS/clickeen/admin --outdir
-  /tmp/clickeen-devstudio-functions-build --compatibility-date 2025-12-28` —
+/Users/piero_macpro/code/VS/clickeen/admin/functions --project-directory
+/Users/piero_macpro/code/VS/clickeen/admin --outdir
+/tmp/clickeen-devstudio-functions-build --compatibility-date 2025-12-28` —
   pass. Wrangler 4.54.0 compiled the DevStudio Pages Functions worker
   successfully without deploying.
 - Out-of-scope correction: a temporary generated component-page whitespace cleanup
   was reverted because generator/showcase hygiene belongs to
-  `PRD__DevStudio_Design_Governance.md`, not this Migration PRD. The generated
+  `111__PRD__DevStudio_Design_Governance.md`, not this Migration PRD. The generated
   component output remains governed by the existing generator until Design
   Governance Step 0 opens.
 - `git diff --check` currently reports trailing whitespace in generated

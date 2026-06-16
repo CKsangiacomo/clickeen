@@ -1,4 +1,4 @@
-# PRD 107 - Post-Execution Fix: False-Done Fallback Eradication
+# PRD 108 - Post-Execution Fix: False-Done Fallback Eradication
 
 Status: EXECUTABLE - DELETION PRD
 Owner: Product + Architecture
@@ -128,16 +128,16 @@ SHAs, commit the slice, push, reread this process, then move to the next slice.
 
 ## Violation Language
 
-| Type | Name | Definition | Required action |
-| --- | --- | --- | --- |
-| V1 | Silent substitution | Missing, invalid, stale, or malformed product truth is replaced with an invented value. | Delete the workflow or fail visibly at the named boundary. |
-| V2 | Silent healing | Invalid persisted/user/product state is normalized, coerced, repaired, or rewritten without visible failure. | Delete the workflow or make the corruption fail visibly. |
-| V3 | Silent omission | Required product input, artifact, operation, edit, module, event, or policy is dropped while the caller sees success. | Delete the success path. |
-| V4 | Fail-open control | Security, policy, entitlement, rate-limit, containment, or budget enforcement turns off when a dependency is missing, malformed, or unavailable. | Fail closed with typed visible failure. |
-| V5 | Corruption-as-absence | Corrupt stored state is treated as missing/new/empty and later overwritten or ignored. | Return a typed corrupt/invalid failure; do not mutate. |
-| V6 | Partial-success masquerade | Some requested work is rejected, filtered, dropped, or ignored while the product claims the full operation succeeded. | All requested work succeeds or the boundary fails visibly. |
-| V7 | Masquerade/redress | The same toxic workflow is moved, wrapped, renamed, hidden in detail, genericized, retried, logged-and-continued, warning-only, or legacy-continuity-gated while still reaching success or mutation. | Treat as a new P0 PRD 107 violation. |
-| V8 | Runtime test dependency | The running product depends on tests, synthetic probes, self-validation, helper checks, source-order checks, or internal validation rituals to decide whether normal product work can proceed. | Delete the ceremony and the preserved workflow. |
+| Type | Name                       | Definition                                                                                                                                                                                           | Required action                                            |
+| ---- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| V1   | Silent substitution        | Missing, invalid, stale, or malformed product truth is replaced with an invented value.                                                                                                              | Delete the workflow or fail visibly at the named boundary. |
+| V2   | Silent healing             | Invalid persisted/user/product state is normalized, coerced, repaired, or rewritten without visible failure.                                                                                         | Delete the workflow or make the corruption fail visibly.   |
+| V3   | Silent omission            | Required product input, artifact, operation, edit, module, event, or policy is dropped while the caller sees success.                                                                                | Delete the success path.                                   |
+| V4   | Fail-open control          | Security, policy, entitlement, rate-limit, containment, or budget enforcement turns off when a dependency is missing, malformed, or unavailable.                                                     | Fail closed with typed visible failure.                    |
+| V5   | Corruption-as-absence      | Corrupt stored state is treated as missing/new/empty and later overwritten or ignored.                                                                                                               | Return a typed corrupt/invalid failure; do not mutate.     |
+| V6   | Partial-success masquerade | Some requested work is rejected, filtered, dropped, or ignored while the product claims the full operation succeeded.                                                                                | All requested work succeeds or the boundary fails visibly. |
+| V7   | Masquerade/redress         | The same toxic workflow is moved, wrapped, renamed, hidden in detail, genericized, retried, logged-and-continued, warning-only, or legacy-continuity-gated while still reaching success or mutation. | Treat as a new P0 PRD 107 violation.                       |
+| V8   | Runtime test dependency    | The running product depends on tests, synthetic probes, self-validation, helper checks, source-order checks, or internal validation rituals to decide whether normal product work can proceed.       | Delete the ceremony and the preserved workflow.            |
 
 ## Fix Ledger
 
@@ -200,7 +200,7 @@ Evidence:
   product files.
 - Local gates: `git diff --check`; `pnpm --filter @clickeen/roma typecheck`;
   `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/tokyo-worker
-  typecheck`. Tokyo-worker has no lint script.
+typecheck`. Tokyo-worker has no lint script.
 - External proof: temporary outside-runtime harness showed invalid supplied
   metadata and non-object create payload make zero Tokyo create calls; page
   settings caller no longer forces localization repair; invalid submitted source
@@ -271,8 +271,8 @@ Evidence:
   HTTP-200 redress workflow.
 - Local gates: `git diff --check`; `pnpm --filter @clickeen/roma typecheck`;
   `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/sanfrancisco
-  typecheck`; `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter
-  @clickeen/bob lint`.
+typecheck`; `pnpm --filter @clickeen/bob typecheck`; `pnpm --filter
+@clickeen/bob lint`.
 - External proof: temporary outside-runtime harness showed malformed controls
   fail before continuation; invalid numeric, array, and tokenized model ops fail
   before San Francisco session mutation; Bob rejects an out-of-range indexed set
@@ -405,7 +405,7 @@ Evidence:
   workflow.
 - Local gates: `git diff --check`; `pnpm --filter @clickeen/roma typecheck`;
   `pnpm --filter @clickeen/roma lint`; `pnpm --filter @clickeen/devstudio
-  check:functions`.
+check:functions`.
 - External proof: temporary outside-runtime harness with mocked Berlin responses
   showed malformed/missing TTLs fail before cookies for Roma refresh, Roma
   finish, Roma e2e session, Admin refresh, Admin finish, and Admin e2e session.
@@ -474,7 +474,7 @@ Evidence:
   parser, generated Dieter fill artifact, widget shared fill runtime, and Dieter
   manifest SHA.
 - Local gates: `git diff --check`; `pnpm --filter @ck/dieter typecheck`; `pnpm
-  build:dieter`.
+build:dieter`.
 - External proof: temporary outside-runtime harness showed Dieter rejects empty,
   null, string color, missing `type`, whitespace/case-repaired `type`,
   whitespace-repaired color/media fields, malformed media buckets, and
@@ -554,7 +554,7 @@ Evidence:
   was a compact skip/catch-and-success branch and the fix is minimal typed
   boundary failure propagation plus moving purge before mutation.
 - Local gates: `git diff --check`; `pnpm --filter @clickeen/tokyo-worker
-  typecheck`.
+typecheck`.
 - Focused stale-symbol scan: no `https://clk.live` fallback default, purge
   `catch(() => undefined)`, missing-config skip-success, warning-only purge
   continuation, retry-to-success path, or runtime proof/probe/self-test ceremony
@@ -630,7 +630,7 @@ Evidence:
   defect was a small missing metadata boundary and the fix is minimal contract
   collapse, not preservation code.
 - Local gates: `git diff --check`; `pnpm --filter @clickeen/tokyo-worker
-  typecheck`.
+typecheck`.
 - Focused stale-symbol scan: no content-type fallback, guessing,
   reconstruction, warning-only continuation, runtime probe, preflight, validate,
   or self-test ceremony was introduced.
@@ -701,7 +701,7 @@ Evidence:
   was a compact mutation-order bug and the fix is minimal boundary collapse,
   not preservation code.
 - Local gates: `git diff --check`; `pnpm --filter @clickeen/tokyo-worker
-  typecheck`.
+typecheck`.
 - Focused stale-symbol scan: no rollback path, catch-and-continue,
   warning-only continuation, compatibility wrapper, runtime probe, preflight,
   validate, or self-test ceremony was introduced.
@@ -725,7 +725,7 @@ Status: COMPLETE
 Original area: PRD evidence/status tables
 Likely file:
 
-- `Execution_Pipeline_Docs/01-Planning/107__PRD__Fallback_Eradication.md`
+- `./109__PRD__Fallback_Eradication.md`
 
 False done claim:
 
@@ -780,12 +780,12 @@ Evidence:
 - Product truth: PRD evidence is documentation truth only. It does not own
   product/runtime behavior and does not count toward source LOC reduction.
 - Documentation LOC: `74 insertions(+), 60 deletions(-)` in
-  `107__PRD__Fallback_Eradication.md`; no source/runtime/product code changed.
+  `109__PRD__Fallback_Eradication.md`; no source/runtime/product code changed.
 - Local gates: `git diff --check`; focused stale-symbol scans for
   `this commit`, `LOCKED`, unresolved `D-107k`, WSH/SF coverage, and changed
   file scope.
 - External proof: documentation self-audit showed only
-  `107__PRD__Fallback_Eradication.md` changed, all `this commit` placeholders
+  `109__PRD__Fallback_Eradication.md` changed, all `this commit` placeholders
   removed, `D-107k` resolved to deletion in PRD 107, `AI-107-0`,
   `AI-107-H`, and `AI-107-M` set to `COMPLETE`, `WSH-107-01` marked
   `OPEN/SPLIT`, `SF-107-06` mapped to `107-AB6-2026-06-12` / `d7aeee62`, and

@@ -23,17 +23,17 @@ No slice is green because files moved, docs changed, or a local patch hid the sy
 
 Use this phase order for the active 105 series:
 
-| Phase | Docs | Role | Green Gate |
-| --- | --- | --- | --- |
-| 0 | `105`, `105H` | Authority lock | All execution uses PRD 105 vocabulary and names legacy concepts being deleted. |
-| 1 | `105A`, `105B`, `105C` | Foundation verification | Supabase/R2/Tokyo boundaries are verified; old listing/source/widget authorities are not active truth. |
-| 2 | `105D`, `105E`, `105F`, `105G` | Translation contracts | Backend operation, editable-field, manual edit, and Bob/Roma state contracts are clear before runtime refactor. |
-| 3 | `105I`, `105J` | Admin/Prague boundary | `CLICKEEN` and Prague public-coordinate behavior are verified without internals. |
-| 4 | `105K` | Audit/backlog reconciliation | Broad cleanup findings are closed, dropped, or promoted to focused PRDs. |
-| 5A | `105L` Phase A | Product deploy/widget package cleanup | R2/product-root manifests and widget package source are clean enough for runtime refactor. |
-| 5B | `105M` | Tokyo-worker runtime refactor | Old artifact names and R2 operation-controller JSON are no longer created by code. |
-| 5C | `105L` Phase B | R2 stale account/runtime deletion | Stale remote objects are deleted only after 105M proves they will not be recreated. |
-| 6 | `../01-Planning/107__PRD__SEO_GEO_Static_Build_And_Page_Block_Strategy.md` | Withdrawn SEO/GEO page/block strategy | Superseded by PRD 106 page/instance tenets. Future SEO/GEO planning must not reintroduce blocks as account authoring truth. |
+| Phase | Docs                                                                                | Role                                  | Green Gate                                                                                                                  |
+| ----- | ----------------------------------------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 0     | `105`, `105H`                                                                       | Authority lock                        | All execution uses PRD 105 vocabulary and names legacy concepts being deleted.                                              |
+| 1     | `105A`, `105B`, `105C`                                                              | Foundation verification               | Supabase/R2/Tokyo boundaries are verified; old listing/source/widget authorities are not active truth.                      |
+| 2     | `105D`, `105E`, `105F`, `105G`                                                      | Translation contracts                 | Backend operation, editable-field, manual edit, and Bob/Roma state contracts are clear before runtime refactor.             |
+| 3     | `105I`, `105J`                                                                      | Admin/Prague boundary                 | `CLICKEEN` and Prague public-coordinate behavior are verified without internals.                                            |
+| 4     | `105K`                                                                              | Audit/backlog reconciliation          | Broad cleanup findings are closed, dropped, or promoted to focused PRDs.                                                    |
+| 5A    | `105L` Phase A                                                                      | Product deploy/widget package cleanup | R2/product-root manifests and widget package source are clean enough for runtime refactor.                                  |
+| 5B    | `105M`                                                                              | Tokyo-worker runtime refactor         | Old artifact names and R2 operation-controller JSON are no longer created by code.                                          |
+| 5C    | `105L` Phase B                                                                      | R2 stale account/runtime deletion     | Stale remote objects are deleted only after 105M proves they will not be recreated.                                         |
+| 6     | `../../01-Planning/113__WITHDRAWN__SEO_GEO_Static_Build_And_Page_Block_Strategy.md` | Withdrawn SEO/GEO page/block strategy | Superseded by account page/instance tenets. Future SEO/GEO planning must not reintroduce blocks as account authoring truth. |
 
 The `105L`/`105M` relationship is a handoff, not a simple one-way dependency:
 

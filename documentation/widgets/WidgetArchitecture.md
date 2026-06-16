@@ -9,8 +9,8 @@ Related:
 - `documentation/widgets/WidgetBuildContract.md`
 - `documentation/ai/BUILD_Widget.md`
 - `documentation/architecture/CONTEXT.md`
-- `Execution_Pipeline_Docs/02-Executing/PRD106A2_WidgetShellExtraction.md`
-- `Execution_Pipeline_Docs/02-Executing/PRD106A3_AccountWidgetDefaults.md`
+- `Execution_Pipeline_Docs/03-Executed/106_Page_Composer_And_Widget_Certification_Batch/PRD106A2_WidgetShellExtraction.md`
+- `Execution_Pipeline_Docs/03-Executed/106_Page_Composer_And_Widget_Certification_Batch/PRD106A3_AccountWidgetDefaults.md`
 
 ---
 
@@ -273,6 +273,7 @@ As of PRD106C3 execution, `split-media` and `split-carousel-media` are the
 shipped Split-family widgets. `split-instance` and
 `split-carousel-instance` are future gated targets and must not be built with a
 fake `instance-picker` or Bob-only selector.
+
 - Cards Core: cards, card media/link/style options, and between-card graphics.
 - Big Bang Core: large typographic statement content.
 - Call to Action Core: action eyebrow/headline/supporting text/action content,
@@ -345,17 +346,17 @@ body control can say "Action label". Never show users internal labels like
 Use this table before changing an existing widget. Active callers do not prove
 that an old body namespace is correct product architecture.
 
-| Widget | Current model | Body state authority | What to copy |
-| --- | --- | --- | --- |
-| `calltoaction` | New widget-specific Core model | `calltoaction.*` | Copy for Shell/Header CTA separation, widget-specific body action naming, mixed panels, and Core DOM bindings. |
-| `big-bang` | Widget-specific Core model | `bigBang.*` | Copy for simple statement/copy Core paths and Shell composition. |
-| `cards` | Widget-specific Core model | `cards.*` plus Core cardwrapper appearance where declared | Copy for repeated-item Core paths and stable item identity. |
-| `countdown` | Widget-specific Core model | `countdown.*` | Copy for widget-owned timing/action/SEO metadata under one namespace. |
-| `faq` | Widget-specific Core model | `faq.*` | Copy for repeated sections/questions and Shell runtime behavior. |
-| `logoshowcase` | Widget-specific Core model | `logoshowcase.*` | Copy for nested repeated logo collections. |
-| `split-media` | Widget-specific Core model | `splitMedia.*` plus Core cardwrapper appearance where declared | Copy for one media slot edited by one real media `dropdown-fill` control. |
-| `split-carousel-media` | Widget-specific Core model | `splitCarouselMedia.*` plus Core cardwrapper appearance where declared | Copy for flat carousel media repeaters with stable item identity and one real media `dropdown-fill` per item. |
-| `split` | Legacy deletion target | none | Do not copy. Delete source/exposure and migrate or invalidate existing account data through controlled cleanup. |
+| Widget                 | Current model                  | Body state authority                                                   | What to copy                                                                                                    |
+| ---------------------- | ------------------------------ | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `calltoaction`         | New widget-specific Core model | `calltoaction.*`                                                       | Copy for Shell/Header CTA separation, widget-specific body action naming, mixed panels, and Core DOM bindings.  |
+| `big-bang`             | Widget-specific Core model     | `bigBang.*`                                                            | Copy for simple statement/copy Core paths and Shell composition.                                                |
+| `cards`                | Widget-specific Core model     | `cards.*` plus Core cardwrapper appearance where declared              | Copy for repeated-item Core paths and stable item identity.                                                     |
+| `countdown`            | Widget-specific Core model     | `countdown.*`                                                          | Copy for widget-owned timing/action/SEO metadata under one namespace.                                           |
+| `faq`                  | Widget-specific Core model     | `faq.*`                                                                | Copy for repeated sections/questions and Shell runtime behavior.                                                |
+| `logoshowcase`         | Widget-specific Core model     | `logoshowcase.*`                                                       | Copy for nested repeated logo collections.                                                                      |
+| `split-media`          | Widget-specific Core model     | `splitMedia.*` plus Core cardwrapper appearance where declared         | Copy for one media slot edited by one real media `dropdown-fill` control.                                       |
+| `split-carousel-media` | Widget-specific Core model     | `splitCarouselMedia.*` plus Core cardwrapper appearance where declared | Copy for flat carousel media repeaters with stable item identity and one real media `dropdown-fill` per item.   |
+| `split`                | Legacy deletion target         | none                                                                   | Do not copy. Delete source/exposure and migrate or invalidate existing account data through controlled cleanup. |
 
 New widgets and refactored widgets must use a widget-specific body namespace.
 Legacy generic Core paths, legacy Header CTA paths, private CTA paths, root
@@ -546,10 +547,10 @@ Use existing field types for the matching job:
 - flat primary repeated item lists: `repeater`
 - grouped containers, nested lists, or secondary per-object settings:
   `object-manager`
-Account-instance selection is not a generic field type. It requires a
-product-owner-approved Dieter/Bob component and a Roma-provided account instance
-data source. Do not use or document `instance-picker` as an approved widget
-control.
+  Account-instance selection is not a generic field type. It requires a
+  product-owner-approved Dieter/Bob component and a Roma-provided account instance
+  data source. Do not use or document `instance-picker` as an approved widget
+  control.
 
 For PRD106C3 Split-family media widgets, real media control means one
 `dropdown-fill` field with `fill-modes: "image,video"` for each media slot.
@@ -588,19 +589,19 @@ Shell shared modules are named by `packages/widget-shell/src/modules.ts`.
 
 Important shared runtime/style files include:
 
-| Module | Purpose |
-| --- | --- |
-| `shared/runtime.js` | Runtime registration and Bob preview state binding |
-| `shared/stagePod.js` / `shared/stagePod.css` | Stage/Pod layout and appearance |
-| `shared/header.js` / `shared/header.css` | Header title/subtitle/CTA layout and behavior |
-| `shared/typography.js` / `shared/typography-data.js` | Typography roles and locale/script-aware stacks |
-| `shared/fill.js` / `shared/appearance.js` | Fill and appearance helpers |
-| `shared/localeSwitcher.js` / `shared/localeSwitcher.css` | Locale switcher behavior and styling |
-| `shared/coreSize.js` | Core sizing behavior |
-| `shared/surface.js` | Shared surface/card-wrapper vars |
-| `shared/previewL10n.js` | Bob translated-preview value application |
-| `shared/branding.js` | Backlink behavior; owns badge creation/removal through `behavior.showBacklink` |
-| `shared/socialShare.js` / `shared/socialShare.css` | Social-share shell utility; owns trigger/menu creation/removal through `behavior.socialShare.enabled` and channel filtering through `behavior.socialShare.channels.*` |
+| Module                                                   | Purpose                                                                                                                                                               |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared/runtime.js`                                      | Runtime registration and Bob preview state binding                                                                                                                    |
+| `shared/stagePod.js` / `shared/stagePod.css`             | Stage/Pod layout and appearance                                                                                                                                       |
+| `shared/header.js` / `shared/header.css`                 | Header title/subtitle/CTA layout and behavior                                                                                                                         |
+| `shared/typography.js` / `shared/typography-data.js`     | Typography roles and locale/script-aware stacks                                                                                                                       |
+| `shared/fill.js` / `shared/appearance.js`                | Fill and appearance helpers                                                                                                                                           |
+| `shared/localeSwitcher.js` / `shared/localeSwitcher.css` | Locale switcher behavior and styling                                                                                                                                  |
+| `shared/coreSize.js`                                     | Core sizing behavior                                                                                                                                                  |
+| `shared/surface.js`                                      | Shared surface/card-wrapper vars                                                                                                                                      |
+| `shared/previewL10n.js`                                  | Bob translated-preview value application                                                                                                                              |
+| `shared/branding.js`                                     | Backlink behavior; owns badge creation/removal through `behavior.showBacklink`                                                                                        |
+| `shared/socialShare.js` / `shared/socialShare.css`       | Social-share shell utility; owns trigger/menu creation/removal through `behavior.socialShare.enabled` and channel filtering through `behavior.socialShare.channels.*` |
 
 Widget Core runtime must not replace these modules.
 
@@ -709,14 +710,14 @@ Runtime must not depend on `window.CK_ASSET_ORIGIN`.
 
 ## System Responsibilities
 
-| System | Does | Does NOT |
-| --- | --- | --- |
-| `packages/widget-shell` | Own Shell contract/defaults/helpers/module lists/validators | Own widget-specific Core behavior |
-| Tokyo | Store widget software and account runtime objects | Own Shell architecture, compose pages, or use `widgetCode` as storage locator |
-| Bob | Compile specs, render ToolDrawer, hold working state, preview via postMessage | Apply widget-specific defaults at runtime or invent Shell controls |
-| Roma | Open/save account editor state and build saved widget public packages | Transform product meaning or compose via Tokyo |
-| `clk.live` | Serve stored static public package files | Modify widget state or fetch authoring data at request time |
-| Michael | Persist account/registry metadata and relational state | Validate per-widget runtime or assemble embeds |
+| System                  | Does                                                                          | Does NOT                                                                      |
+| ----------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `packages/widget-shell` | Own Shell contract/defaults/helpers/module lists/validators                   | Own widget-specific Core behavior                                             |
+| Tokyo                   | Store widget software and account runtime objects                             | Own Shell architecture, compose pages, or use `widgetCode` as storage locator |
+| Bob                     | Compile specs, render ToolDrawer, hold working state, preview via postMessage | Apply widget-specific defaults at runtime or invent Shell controls            |
+| Roma                    | Open/save account editor state and build saved widget public packages         | Transform product meaning or compose via Tokyo                                |
+| `clk.live`              | Serve stored static public package files                                      | Modify widget state or fetch authoring data at request time                   |
+| Michael                 | Persist account/registry metadata and relational state                        | Validate per-widget runtime or assemble embeds                                |
 
 ---
 

@@ -61,23 +61,23 @@ PRD 105 is the taxonomy authority. The sub-PRDs are not equal alternate architec
 
 Use this map when deciding which document owns a question:
 
-| Area | Authority |
-| --- | --- |
-| Instance folder taxonomy | `105__PRD__Instance_Folder_Tenets.md` |
-| DB/R2 authority split | `105A__PRD__DB_R2_Operation_Authority.md` |
-| Core DB model verification | `105B__PRD__Core_DB_Model_Verification.md` |
-| Tokyo runtime boundary verification | `105C__PRD__Tokyo_Runtime_Boundary_Verification.md` |
-| Backend translation operation contract | `105D__PRD__Translation_Operation_State_And_Smoke_Verification.md` |
-| Generic editable-field and San Francisco contract | `105E__PRD__Generic_Translation_Field_And_Agent_Contract_Verification.md` |
-| Manual translated-locale edit contract | `105F__PRD__Manual_Translation_Edit_And_Public_Materialization_Verification.md` |
-| Bob/Roma translation panel state contract | `105G__PRD__Translation_Workflow_State_And_Sync_Verification.md` |
-| Execution gate discipline | `105H__PRD__Execution_Verification_Protocol.md` |
-| Admin account coordinate/context | `105I__PRD__Admin_Account_Coordinate_And_Context_Verification.md` |
-| Prague public dogfood boundary | `105J__PRD__Prague_Public_Dogfood_Boundary_Verification.md` |
-| Broad pre-GA cleanup audit | `105K__PRD__Pre_GA_Codebase_And_Documentation_Cleanup_Verification.md` |
-| R2 bucket and widget package cleanup | `105L__PRD__R2_Bucket_And_Widget_Package_Source_Cleanup.md` |
-| Tokyo-worker implementation refactor | `105M__PRD__Tokyo_Worker_Instance_Runtime_Refactor.md` |
-| Withdrawn SEO/GEO page/block strategy note | `../01-Planning/107__PRD__SEO_GEO_Static_Build_And_Page_Block_Strategy.md` |
+| Area                                              | Authority                                                                           |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Instance folder taxonomy                          | `105__PRD__Instance_Folder_Tenets.md`                                               |
+| DB/R2 authority split                             | `105A__PRD__DB_R2_Operation_Authority.md`                                           |
+| Core DB model verification                        | `105B__PRD__Core_DB_Model_Verification.md`                                          |
+| Tokyo runtime boundary verification               | `105C__PRD__Tokyo_Runtime_Boundary_Verification.md`                                 |
+| Backend translation operation contract            | `105D__PRD__Translation_Operation_State_And_Smoke_Verification.md`                  |
+| Generic editable-field and San Francisco contract | `105E__PRD__Generic_Translation_Field_And_Agent_Contract_Verification.md`           |
+| Manual translated-locale edit contract            | `105F__PRD__Manual_Translation_Edit_And_Public_Materialization_Verification.md`     |
+| Bob/Roma translation panel state contract         | `105G__PRD__Translation_Workflow_State_And_Sync_Verification.md`                    |
+| Execution gate discipline                         | `105H__PRD__Execution_Verification_Protocol.md`                                     |
+| Admin account coordinate/context                  | `105I__PRD__Admin_Account_Coordinate_And_Context_Verification.md`                   |
+| Prague public dogfood boundary                    | `105J__PRD__Prague_Public_Dogfood_Boundary_Verification.md`                         |
+| Broad pre-GA cleanup audit                        | `105K__PRD__Pre_GA_Codebase_And_Documentation_Cleanup_Verification.md`              |
+| R2 bucket and widget package cleanup              | `105L__PRD__R2_Bucket_And_Widget_Package_Source_Cleanup.md`                         |
+| Tokyo-worker implementation refactor              | `105M__PRD__Tokyo_Worker_Instance_Runtime_Refactor.md`                              |
+| Withdrawn SEO/GEO page/block strategy note        | `../../01-Planning/113__WITHDRAWN__SEO_GEO_Static_Build_And_Page_Block_Strategy.md` |
 
 If two sub-PRDs appear to conflict, the more specific implementation PRD wins only inside its declared scope and only if it still obeys this master PRD. For example, `105M` owns Tokyo-worker artifact/runtime implementation; it does not get to change the instance folder taxonomy.
 
@@ -394,14 +394,14 @@ The instance folder should remain readable as product source and derived public 
 
 ## System Responsibilities
 
-| System | Responsibility |
-| --- | --- |
-| Bob | Edits one instance's config/content in memory and previews the same instance. |
-| Roma | Hosts authenticated Builder, saves through Tokyo, and passes product state back to Bob. |
-| Tokyo | Owns account instance source, overlays, publish/materialization, and product operations. |
-| San Francisco | Produces translated value maps from concrete editable fields and reports outcomes to Tokyo. |
+| System                    | Responsibility                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Bob                       | Edits one instance's config/content in memory and previews the same instance.                                                   |
+| Roma                      | Hosts authenticated Builder, saves through Tokyo, and passes product state back to Bob.                                         |
+| Tokyo                     | Owns account instance source, overlays, publish/materialization, and product operations.                                        |
+| San Francisco             | Produces translated value maps from concrete editable fields and reports outcomes to Tokyo.                                     |
 | `clk.live` public serving | Serves generated browser files and public-safe assets. Current owner must be verified in `105M` Slice 0 before runtime changes. |
-| Prague | Embeds published widgets by public coordinates only. It must not know instance folder internals. |
+| Prague                    | Embeds published widgets by public coordinates only. It must not know instance folder internals.                                |
 
 ## Required Invariants
 

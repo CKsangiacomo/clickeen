@@ -1,8 +1,9 @@
 # Multi-Tenancy — The Figma Model
 
-Canonical account-management architecture now lives in `documentation/architecture/AccountManagement.md`.
-DB Pivot note: older sections in this file that describe account membership tables or customer account switching are historical/target packaging notes, not active DB Pivot truth. Active V1 truth is one user, one account, role on `users`.
-This file focuses on tenancy, collaboration, roles, and packaging semantics.
+Canonical account-management architecture lives in `documentation/architecture/AccountManagement.md`.
+Active V1 truth is one user, one account, and role on `users`.
+This file records product packaging semantics for tenancy, collaboration, roles,
+and tiers.
 
 ## Core Principle
 
@@ -10,33 +11,36 @@ Clickeen is multi-tenant from day 1 with no artificial limits on collaboration. 
 
 ---
 
-## Status (shipped vs target)
+## Status
 
-This doc mixes shipped behavior with target packaging. Shipped enforcement today is limited to:
+Active enforcement is:
+
 - Global entitlements matrix: `packages/ck-policy/entitlements.matrix.json`
 - Per-widget limits mapping: `tokyo/product/widgets/{widget}/limits.json` for editor/runtime capability context; account-level publish, upload/storage, tier, and downgrade enforcement belongs to Roma/system account operations
-- Comments collaboration is target packaging only right now (comment APIs/UI are not shipped in this repo snapshot).
-- Cloud-dev is intentionally collapsed to the seeded Clickeen/admin account after PRD 60. The schema remains account-scoped, but Roma does not expose cross-account switching there.
+- Comments collaboration is product packaging without shipped comment APIs/UI in this repo snapshot.
+- Cloud-dev uses the seeded Clickeen/admin account. The schema remains account-scoped, and Roma presents the current account only.
 
-Anything else in this doc (seats, instance counts, widget type counts) is directional until implemented.
+Seat, instance-count, and widget-type packaging in this file becomes enforcement
+only through explicit Roma/system account operations.
 
 Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tier4`. There are no commercial tier names in the product contract. `free`, `tier1`, `tier2`, and `tier3` are widget-only tiers. `tier4` is the first tier that includes customer-owned pages built from widget instances.
 
 ---
 
-## The Model (target packaging)
+## Tier Packaging
 
-| Tier | Viewers | Editors | Widget Types | Instances | Content | Features |
-|------|---------|---------|--------------|-----------|---------|----------|
-| **Free** | ∞ | 1 | 1 | 1 | Limited | Limited |
-| **Tier 1** | ∞ | 3-5 | 1 | 1 | higher limits | branding removed |
-| **Tier 2** | ∞ | ∞ | 3 | 5 | higher limits | + SEO/GEO, auto-translate |
-| **Tier 3** | ∞ | ∞ | All | ∞ | ∞ | + Supernova |
-| **Tier 4** | ∞ | ∞ | All | ∞ | ∞ | + pages |
+| Tier       | Viewers | Editors | Widget Types | Instances | Content       | Features                  |
+| ---------- | ------- | ------- | ------------ | --------- | ------------- | ------------------------- |
+| **Free**   | ∞       | 1       | 1            | 1         | Limited       | Limited                   |
+| **Tier 1** | ∞       | 3-5     | 1            | 1         | higher limits | branding removed          |
+| **Tier 2** | ∞       | ∞       | 3            | 5         | higher limits | + SEO/GEO, auto-translate |
+| **Tier 3** | ∞       | ∞       | All          | ∞         | ∞             | + Supernova               |
+| **Tier 4** | ∞       | ∞       | All          | ∞         | ∞             | + pages                   |
 
 ### Tier Details
 
 **Free:**
+
 - 1 editor (solo use)
 - 1 widget type (e.g., only FAQ)
 - 1 instance (can't embed on multiple pages)
@@ -47,6 +51,7 @@ Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tie
 - "Made with Clickeen" branding
 
 **Tier 1:**
+
 - 3-5 editors
 - 1 widget type
 - 1 published instance
@@ -56,6 +61,7 @@ Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tie
 - Branding optional
 
 **Tier 2:**
+
 - Unlimited editors
 - Up to 3 widget types
 - Up to 5 published instances
@@ -66,6 +72,7 @@ Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tie
 - No branding
 
 **Tier 3:**
+
 - Everything in Tier 2
 - Unlimited widget types and published instances
 - Unlimited auto-translate locales within the supported locale set
@@ -73,12 +80,14 @@ Runtime policy uses stable ids only: `free`, `tier1`, `tier2`, `tier3`, and `tie
 - Priority support
 
 **Tier 4:**
+
 - Everything in Tier 3
 - Customer-owned pages built from widget instance stacks
-- Intended commercial home for the PRD 106 page composition product
+- Commercial home for account pages built from widget instance stacks
 - Availability is controlled by account policy/profile, not by a separate product mode
 
 **Key rules:**
+
 - **Viewers are always unlimited** at every tier (including Free)
 - **Viewers can comment** (feedback loop, collaboration without editing)
 - **Upgrade drivers:** SEO/GEO and translation → Tier 2, effects → Tier 3, pages/sites → Tier 4
@@ -103,20 +112,23 @@ Every viewer is a potential editor. Every editor is a potential account owner.
 ### 2) No Friction for Adoption
 
 **Bad model:**
+
 > "You've hit 3 viewers. Upgrade to add more."
 
-User: *finds a different tool*
+User: _finds a different tool_
 
 **Good model (Clickeen):**
+
 > "Invite anyone to view and comment. Upgrade when you need more editors."
 
-User: *invites whole team, becomes dependent on Clickeen*
+User: _invites whole team, becomes dependent on Clickeen_
 
 ### 3) Switching Costs Compound
 
 More people in the account = harder to leave.
 
 If 20 people are viewing and commenting on widgets, switching means:
+
 - Re-training everyone
 - Losing all comment history
 - Breaking embedded widgets
@@ -127,20 +139,22 @@ If 20 people are viewing and commenting on widgets, switching means:
 
 ## Roles
 
-| Role | View | Comment | Edit | Create | Manage Team | Billing |
-|------|------|---------|------|--------|-------------|---------|
-| **Viewer** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Editor** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **Admin** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Owner** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Role       | View | Comment | Edit | Create | Manage Team | Billing |
+| ---------- | ---- | ------- | ---- | ------ | ----------- | ------- |
+| **Viewer** | ✅   | ✅      | ❌   | ❌     | ❌          | ❌      |
+| **Editor** | ✅   | ✅      | ✅   | ✅     | ❌          | ❌      |
+| **Admin**  | ✅   | ✅      | ✅   | ✅     | ✅          | ❌      |
+| **Owner**  | ✅   | ✅      | ✅   | ✅     | ✅          | ✅      |
 
 **Viewers:**
+
 - Can see all widgets in the account
 - Can leave comments (feedback, suggestions, approvals)
 - Cannot edit or create widgets
-- Do not count toward seat limits
+- Are outside editor seat limits
 
 **Editors:**
+
 - Can create and edit widgets
 - Count toward seat limits (Free/Tier 1)
 - Unlimited in Tier 2/3
@@ -167,6 +181,7 @@ Account
 ## Account-Only Tenancy (Shipped)
 
 Accounts are the primary tenant boundary:
+
 - Collaboration boundary (roles, comments, instance ownership)
 - Ownership/metering boundary for uploads (Tokyo asset authority uses the account's `accountPublicId`; browser path is Roma account routes only)
 - Policy/entitlement context for editor surfaces (Roma/Bob)
@@ -182,17 +197,19 @@ account
 ```
 
 Key boundary rules:
+
 - Instances, assets, locales, and membership are all account-scoped.
 - Roma asset reads are account-canonical (`/api/account/assets`).
 - Roma injects a short-lived authz capsule (`x-ck-authz-capsule`) for account-scoped product-control calls.
-- Curated platform content uses the normal Clickeen/admin account `CLICKEEN`; references carry `accountPublicId + instanceId` and do not get a special admin storage lane.
-- Tokyo-worker and Venice are PBX layers, not policy engines. They do not decide billing tier, cap eligibility, downgrade correctness, or whether an account may keep a published projection.
+- Curated platform content uses the normal Clickeen/admin account `CLICKEEN`; references carry `accountPublicId + instanceId`.
+- Tokyo-worker and Venice are PBX layers. Roma/system account operations decide billing tier, cap eligibility, downgrade correctness, and published projection eligibility.
 
 ---
 
 ## Commenting System (target; not shipped)
 
 Viewers need a way to provide feedback without editing. Comments are:
+
 - Tied to a widget instance
 - Optionally tied to a specific field/element (like Figma's comment pins)
 - Resolvable (mark as done)
@@ -208,7 +225,7 @@ type Comment = {
   userId: string;
   text: string;
   target?: {
-    path: string;      // e.g., "sections[0].faqs[2].answer"
+    path: string; // e.g., "sections[0].faqs[2].answer"
     elementId?: string; // DOM element reference
   };
   resolved: boolean;
@@ -227,22 +244,23 @@ type Comment = {
 
 ## Tier Gating (target packaging)
 
-| Product area | Free | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
-|------------|------|--------|--------|--------|--------|
-| **Viewers** | ∞ | ∞ | ∞ | ∞ | ∞ |
-| **Editors** | 1 | 3-5 | ∞ | ∞ | ∞ |
-| **Widget types** | 1 | 1 | 3 | ∞ | ∞ |
-| **Published instances** | 1 | 1 | 5 | ∞ | ∞ |
-| **Content** | Limited | Higher | Higher | ∞ | ∞ |
-| **SEO/GEO** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Website URL (AI context)** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **AI Model Quality** | Basic (Fast) | Standard | Premium | Premium (SOTA) | Premium (SOTA) |
-| **Auto-translate** | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Supernova** | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Pages** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Branding** | Required | Optional | None | None | None |
+| Product area                 | Free         | Tier 1   | Tier 2  | Tier 3         | Tier 4         |
+| ---------------------------- | ------------ | -------- | ------- | -------------- | -------------- |
+| **Viewers**                  | ∞            | ∞        | ∞       | ∞              | ∞              |
+| **Editors**                  | 1            | 3-5      | ∞       | ∞              | ∞              |
+| **Widget types**             | 1            | 1        | 3       | ∞              | ∞              |
+| **Published instances**      | 1            | 1        | 5       | ∞              | ∞              |
+| **Content**                  | Limited      | Higher   | Higher  | ∞              | ∞              |
+| **SEO/GEO**                  | ❌           | ❌       | ✅      | ✅             | ✅             |
+| **Website URL (AI context)** | ✅           | ✅       | ✅      | ✅             | ✅             |
+| **AI Model Quality**         | Basic (Fast) | Standard | Premium | Premium (SOTA) | Premium (SOTA) |
+| **Auto-translate**           | ❌           | ❌       | ✅      | ✅             | ✅             |
+| **Supernova**                | ❌           | ❌       | ❌      | ✅             | ✅             |
+| **Pages**                    | ❌           | ❌       | ❌      | ❌             | ✅             |
+| **Branding**                 | Required     | Optional | None    | None           | None           |
 
 **Upgrade triggers:**
+
 - "I need more widget types" → Tier 2
 - "I need more published instances" → Tier 2
 - "I want SEO/GEO" → Tier 2
@@ -256,12 +274,12 @@ type Comment = {
 
 ## Why This Is The Figma Model
 
-| Figma | Clickeen |
-|-------|----------|
-| Unlimited viewers on any file | Unlimited viewers on any widget |
-| Pay per editor seat | Upgrade tiers unlock more editors |
-| Comments on designs | Comments on widgets |
-| Workspace = organizing unit | Account = organizing unit |
+| Figma                             | Clickeen                                         |
+| --------------------------------- | ------------------------------------------------ |
+| Unlimited viewers on any file     | Unlimited viewers on any widget                  |
+| Pay per editor seat               | Upgrade tiers unlock more editors                |
+| Comments on designs               | Comments on widgets                              |
+| Workspace = organizing unit       | Account = organizing unit                        |
 | Switching cost = team is embedded | Switching cost = widgets are embedded everywhere |
 
 ---
@@ -300,25 +318,29 @@ Free user → invites team as viewers → viewers comment
 
 ## Runtime Subjects — current truth
 
-The shared Builder core no longer models runtime `subjectMode` or boot-mode switching.
+The shared Builder core models the Roma-hosted account Builder path.
 
 **Current architecture:**
+
 - Builder authoring is the Roma-hosted account path only.
 - Bob receives one open payload and one policy object from Roma.
-- MiniBob/demo surfaces are not shared Builder subjects and should not shape shared Bob architecture.
+- MiniBob/demo surfaces are Prague/funnel surfaces outside shared Bob account authoring.
 
 **Plan limits:**
+
 - Plan limits are **usage counters** for cost drivers we want bounded in demo/free usage (ex: uploads, Copilot turns, crawls).
-- Plan limits are **decided and enforced by the account management plane** (Roma/system account operations) before or during the product mutation that would exceed policy. Storage/serve systems may return usage facts or perform technical safety checks, but Tokyo-worker and Venice do not own product policy decisions; Bob uses the resolved policy for UX gating + upsell messaging.
+- Plan limits are **decided and enforced by the account management plane** (Roma/system account operations) before or during the product mutation that would exceed policy. Storage/serve systems return usage facts and perform technical safety checks. Bob uses the resolved policy for UX gating + upsell messaging.
 - Plan limits are defined by the real account policy plus explicit demo-surface gates, not by a fake `minibob` subject profile and not by individual widgets.
 
 **How this appears in widget PRDs (required):**
+
 - PRDs list **which entitlement keys** a widget uses and **how they map** to widget state (paths + metrics).
 - Tier values live only in the global matrix: `packages/ck-policy/entitlements.matrix.json`.
 - Widget capability metadata lives in `tokyo/product/widgets/{widget}/limits.json` (flags/limits). Plan limits are global and enforced by Roma/system account operations.
 - Template: `documentation/widgets/_templates/SubjectPolicyMatrices.md` (no per-widget tier matrices).
 
 **Upsell popup standard (durable):**
+
 - Every rejected plan limit uses the same **Upsell** popup (no per-row copy).
 - The system chooses the destination and CTA deterministically:
   - If the viewer has no account/session (Prague demo / anonymous): upsell takes them to **Create Free Account**
@@ -326,31 +348,36 @@ The shared Builder core no longer models runtime `subjectMode` or boot-mode swit
 - PRDs do **not** encode "free vs paid" in per-row copy; it is derived from the matrix deltas and current viewer profile.
 
 **Builder boot today:**
+
 - Roma opens Bob through one message payload: `postMessage { type:'ck:open-editor', ... }`.
 - Shared Builder core does not accept or switch on `subjectMode`.
 - Shared Builder core does not URL-bootstrap account sessions.
 
 **What still matters:**
+
 - Uploads and Copilot remain bounded by server-side policy limit enforcement.
 - Widget type creation is bounded by the account policy system-widget path: Roma filters unavailable system widget options and rejects direct create requests that would exceed `widgets.types.max`.
-- Monthly public view limits remain a named pre-GA enforcement gap, not a customer-facing active claim. Before GA, public view usage may be observed from the serving plane, but over-limit policy and published-projection correctness must be driven by Roma/system account operations; Venice must not become a tier/cap policy engine.
-- Shared Builder should not carry `if (minibob)` checks or other fake editor identities.
+- Monthly public view limits remain a named pre-GA enforcement gap, not a customer-facing active claim. Before GA, public view usage is observed from the serving plane, and over-limit policy plus published-projection correctness is driven by Roma/system account operations.
+- Shared Builder carries the Roma account Builder identity.
 
 **Why this scales:**
+
 - The editor stays one product path: account opens widget, Bob edits, Roma saves.
 - Demo/funnel surfaces can evolve separately without contaminating the shared Builder core.
 
 ### Server-Side Enforcement
 
 Current shipped behavior:
+
 - Account member listing is read-only via `GET /api/account/team` and `GET /api/account/team/members/:memberId` for authorized users.
 - Publish and editor behavior use policy/entitlement enforcement already wired in runtime.
 - System widget creation uses `widgets.types.max` to hide unavailable create options and reject direct create requests.
 - There is no shipped seat-limit write-path enforcement yet.
 - There is no shipped `SEAT_LIMIT_EXCEEDED` runtime error yet.
-- There is no shipped `views.monthly.max` public embed enforcement yet; do not advertise it as an active runtime limit until telemetry, management-plane enforcement, and public miss/deny behavior are specified.
+- `views.monthly.max` public embed enforcement is not active runtime behavior until telemetry, management-plane enforcement, and public miss/deny behavior are specified.
 
 Planned behavior (not shipped):
+
 - Add member management write endpoints.
 - Enforce `maxEditors` on add/update editor-role operations.
 - Keep viewer invites uncapped.
@@ -358,15 +385,17 @@ Planned behavior (not shipped):
 ### Bob UX
 
 Current shipped behavior:
+
 - Role/policy-aware editing gates are enforced by resolved account policy.
 
 Planned behavior (not shipped):
+
 - Explicit seat-remaining UI and editor seat warning states.
 - Invite modal enforcing seat caps at submission time.
 
-### DB Pivot Schema Note
+### Active Account Schema
 
-The old comments table and old account-membership schema notes are historical. Active DB Pivot truth is:
+Active account truth is:
 
 ```text
 accounts own account/billing/status truth
@@ -374,7 +403,7 @@ users own one account association and role
 Tokyo owns account instance operations
 ```
 
-Do not reintroduce `account_members` as core role truth from this historical packaging document.
+Role truth for active V1 lives on `users`.
 
 ---
 

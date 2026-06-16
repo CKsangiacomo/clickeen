@@ -1,4 +1,4 @@
-# PRD 108B - Builder Copilot Refactor
+# PRD 120B - Builder Copilot Refactor
 
 Status: PLANNING
 Owner: Product + Architecture (Bob, Roma, San Francisco)
@@ -11,9 +11,11 @@ before release. The `EditorContract` projection and deterministic Builder Guide 
 not blocked by 108A-1.
 
 Parent:
-- `Execution_Pipeline_Docs/01-Planning/108__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
+
+- `Execution_Pipeline_Docs/01-Planning/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
 
 Related:
+
 - `bob/components/CopilotPane.tsx`
 - `bob/lib/compiler/editor-contract.ts`
 - `bob/lib/session/sessionTypes.ts`
@@ -334,7 +336,7 @@ requests must fail — superseded by Q3 round 5, 2026-06-09.) On free accounts, 
 Q6 conversion model applies after the useful-turn quota (see the authoritative
 execution contract). No request may guess or write private paths.
 
-Authoritative execution contract: `108B1__EXEC__Builder_Copilot_Operator.md` (where
+Authoritative execution contract: `120B1__EXEC__Builder_Copilot_Operator.md` (where
 this PRD and the EXEC spec differ, the EXEC spec governs).
 
 ### 3.2.2 Earth-test scenarios
@@ -360,21 +362,21 @@ preview must reflect the change.
 
 Required scenario tracking:
 
-| User prompt | Required behavior |
-|---|---|
-| `What can you edit?` | Answer deterministically from visible controls; no model call. |
-| `Change the button from blue to green.` | Resolve to the visible button background if unambiguous; otherwise ask Header CTA vs Action button. |
-| `Change the button label to Book a demo.` | Resolve label path if unambiguous; otherwise ask Header CTA vs Action button. |
-| `Hide the button.` | Hide the resolved button; never delete a scalar path. |
-| `Make the title shorter.` | Ask Header title vs widget-specific title/headline unless context resolves it. |
-| `Make the title bigger.` | Ask whether the user means text content or typography, and which title if multiple are visible. |
-| `Change the background to white.` | Ask stage, pod/container, button, or card background when multiple are visible. |
-| `Make the card/pod shadow softer.` | Target card shadow only where card controls exist; otherwise ask whether pod shadow is intended. |
-| `Show Made with Clickeen off.` | Set the shared Shell behavior control when visible/available. |
-| `Enable social share.` | Set the shared Shell social-share control when visible/available. |
-| `Turn off Facebook sharing.` | Edit only the Facebook channel, not the whole social-share feature. |
-| `Save it` / `Publish it` | Explain that Copilot edits in Builder; Save/Publish use Builder controls. |
-| `Translate this widget to French.` | Explain that translations run from the Translations panel after save; do not rewrite base content. |
+| User prompt                               | Required behavior                                                                                   |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `What can you edit?`                      | Answer deterministically from visible controls; no model call.                                      |
+| `Change the button from blue to green.`   | Resolve to the visible button background if unambiguous; otherwise ask Header CTA vs Action button. |
+| `Change the button label to Book a demo.` | Resolve label path if unambiguous; otherwise ask Header CTA vs Action button.                       |
+| `Hide the button.`                        | Hide the resolved button; never delete a scalar path.                                               |
+| `Make the title shorter.`                 | Ask Header title vs widget-specific title/headline unless context resolves it.                      |
+| `Make the title bigger.`                  | Ask whether the user means text content or typography, and which title if multiple are visible.     |
+| `Change the background to white.`         | Ask stage, pod/container, button, or card background when multiple are visible.                     |
+| `Make the card/pod shadow softer.`        | Target card shadow only where card controls exist; otherwise ask whether pod shadow is intended.    |
+| `Show Made with Clickeen off.`            | Set the shared Shell behavior control when visible/available.                                       |
+| `Enable social share.`                    | Set the shared Shell social-share control when visible/available.                                   |
+| `Turn off Facebook sharing.`              | Edit only the Facebook channel, not the whole social-share feature.                                 |
+| `Save it` / `Publish it`                  | Explain that Copilot edits in Builder; Save/Publish use Builder controls.                           |
+| `Translate this widget to French.`        | Explain that translations run from the Translations panel after save; do not rewrite base content.  |
 
 ### 3.2.3 Guide scenarios
 

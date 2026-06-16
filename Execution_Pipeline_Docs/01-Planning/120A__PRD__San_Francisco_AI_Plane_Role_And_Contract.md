@@ -1,4 +1,4 @@
-# PRD 108A - San Francisco AI Plane Role and Contract
+# PRD 120A - San Francisco AI Plane Role and Contract
 
 Status: PLANNING
 Owner: Product + Architecture (San Francisco)
@@ -8,9 +8,11 @@ Stage: 01-Planning
 Type: Sub-PRD from PRD 108
 
 Parent:
-- `Execution_Pipeline_Docs/01-Planning/108__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
+
+- `Execution_Pipeline_Docs/01-Planning/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
 
 Related:
+
 - `documentation/ai/overview.md`
 - `documentation/ai/infrastructure.md`
 - `documentation/services/sanfrancisco.md`
@@ -349,7 +351,7 @@ the gpt-5.2 incident is the motivating example, never the definition of done):
   recorded failover are enforced by the plane; pinned user picks are never silently
   overridden.
 
-Authoritative execution contract: `108A1__EXEC__AI_Plane_Capability_Conformance_Routing.md`.
+Authoritative execution contract: `120A1__EXEC__AI_Plane_Capability_Conformance_Routing.md`.
 
 108A-2 is execution-ready only after 108B is green and can answer:
 

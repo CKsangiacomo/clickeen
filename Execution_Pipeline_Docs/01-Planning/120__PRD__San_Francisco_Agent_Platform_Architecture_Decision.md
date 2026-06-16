@@ -1,4 +1,4 @@
-# PRD 108 - San Francisco Agent Platform: Architecture Decision
+# PRD 120 - San Francisco Agent Platform: Architecture Decision
 
 Status: PLANNING
 Owner: Product + Architecture (San Francisco)
@@ -8,6 +8,7 @@ Stage: 01-Planning
 Type: Architecture decision (understand → survey → recommend)
 
 Related:
+
 - `documentation/ai/overview.md` (San Francisco = AI Workforce OS)
 - `documentation/ai/infrastructure.md` (bindings, budgets, endpoints)
 - `documentation/services/sanfrancisco.md` (shipped runtime truth)
@@ -152,14 +153,14 @@ owner, a second policy owner, or a second provider-key owner.
 
 ### 1.1.2 Where the agent literature does and does not apply
 
-| External idea | Verdict for Clickeen | Why (grounded in the codebase) |
-|---|---|---|
-| Model-swappability as table stakes for every agent | **Already ahead** | `AgentRuntimePolicy` already carries `allowModelPicker` + a pinned `selectedModel`, enforced by `modelRouter.ts`. User-facing copilot can swap from a catalogue; internal/durable agents pin an eval-locked default. This is a *policy setting per agent*, not a feature to build. |
-| Do the deterministic part deterministically; use the model only for judgment (OpenAI) | **Transfers** | Restates AGENTS.md §3 ("no fake generic layers") at the per-task level. Fixed transforms (formatting an audit report) are code, not model calls. |
-| Single-agent-first; split only when forced (OpenAI) | **Transfers** | Confirms the 108C guardrail (one real durable agent before any generalization). |
-| Layered guardrails + risk-rated human-in-the-loop gate (OpenAI) | **Transfers, but keep authority clean** | Risk belongs in agent registry/policy. San Francisco can enforce risk/policy before AI execution or before returning an actionable result, but review state and product commits belong to the owning orchestrator/product boundary. |
-| M×N integration / intent-shaped tools / one credential custody (Anthropic MCP) | **Applies only at the genuinely external edge** | Inside the company, agents should use native product-operation contracts owned by Roma/Tokyo/orchestrators. MCP-style mediation is warranted only for truly external, human-built systems (competitor pages, keyword APIs, Search Console). |
-| Wrap fragile human-shaped SaaS APIs so agents can drive them (general SaaS canon) | **Does not apply** | Premised on opaque, non-addressable state. Clickeen's state is atom-addressable, so the wrapping problem the canon solves largely does not exist internally. |
+| External idea                                                                         | Verdict for Clickeen                            | Why (grounded in the codebase)                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Model-swappability as table stakes for every agent                                    | **Already ahead**                               | `AgentRuntimePolicy` already carries `allowModelPicker` + a pinned `selectedModel`, enforced by `modelRouter.ts`. User-facing copilot can swap from a catalogue; internal/durable agents pin an eval-locked default. This is a _policy setting per agent_, not a feature to build. |
+| Do the deterministic part deterministically; use the model only for judgment (OpenAI) | **Transfers**                                   | Restates AGENTS.md §3 ("no fake generic layers") at the per-task level. Fixed transforms (formatting an audit report) are code, not model calls.                                                                                                                                   |
+| Single-agent-first; split only when forced (OpenAI)                                   | **Transfers**                                   | Confirms the 108C guardrail (one real durable agent before any generalization).                                                                                                                                                                                                    |
+| Layered guardrails + risk-rated human-in-the-loop gate (OpenAI)                       | **Transfers, but keep authority clean**         | Risk belongs in agent registry/policy. San Francisco can enforce risk/policy before AI execution or before returning an actionable result, but review state and product commits belong to the owning orchestrator/product boundary.                                                |
+| M×N integration / intent-shaped tools / one credential custody (Anthropic MCP)        | **Applies only at the genuinely external edge** | Inside the company, agents should use native product-operation contracts owned by Roma/Tokyo/orchestrators. MCP-style mediation is warranted only for truly external, human-built systems (competitor pages, keyword APIs, Search Console).                                        |
+| Wrap fragile human-shaped SaaS APIs so agents can drive them (general SaaS canon)     | **Does not apply**                              | Premised on opaque, non-addressable state. Clickeen's state is atom-addressable, so the wrapping problem the canon solves largely does not exist internally.                                                                                                                       |
 
 ### 1.2 What San Francisco already is
 
@@ -216,14 +217,14 @@ shape, and a one-size design would be wrong.
 
 ### 2.1 The roster
 
-| Agent | Canonical / proposed id | Status | Owner surface | Source |
-|---|---|---|---|---|
-| Builder Copilot | `cs.widget.copilot.v1` | **Shipped** | Roma account Builder | overview, ai.ts |
-| Widget Instance Translator | `widget.instance.translator` | **Shipped (queue)** | Tokyo-worker → SF queue | overview, ai.ts |
-| GTM Agent ("AI VP of Marketing") | `ops.gtm.*` (proposed) | **Spec'd, not built** | internal/ops cron | `agents/gtm.md` |
-| UX Writer | `ops.uxwriter.*` (proposed) | **Spec'd, not built** | internal/ops cron | `agents/ux-writer.md` |
-| Support Reply | `support.reply` (named) | Future | (TBD) | overview "Terms" |
-| Community Moderation | `ops.communityModeration` (named) | Future | (TBD) | overview "Terms" |
+| Agent                            | Canonical / proposed id           | Status                | Owner surface           | Source                |
+| -------------------------------- | --------------------------------- | --------------------- | ----------------------- | --------------------- |
+| Builder Copilot                  | `cs.widget.copilot.v1`            | **Shipped**           | Roma account Builder    | overview, ai.ts       |
+| Widget Instance Translator       | `widget.instance.translator`      | **Shipped (queue)**   | Tokyo-worker → SF queue | overview, ai.ts       |
+| GTM Agent ("AI VP of Marketing") | `ops.gtm.*` (proposed)            | **Spec'd, not built** | internal/ops cron       | `agents/gtm.md`       |
+| UX Writer                        | `ops.uxwriter.*` (proposed)       | **Spec'd, not built** | internal/ops cron       | `agents/ux-writer.md` |
+| Support Reply                    | `support.reply` (named)           | Future                | (TBD)                   | overview "Terms"      |
+| Community Moderation             | `ops.communityModeration` (named) | Future                | (TBD)                   | overview "Terms"      |
 
 The overview's roster table ("replaces product specialists / localization team / marketing
 org") and its Terms section naming `support.reply` and `ops.communityModeration` make the
@@ -232,9 +233,9 @@ marketing, support, and ops moderation.**
 
 Dispositions for the shipped roster (PR-14/D9, ratified 2026-06-09):
 
-| Shipped agent | Disposition |
-|---|---|
-| Builder Copilot | **Rebuild** per 108B (earth tests as proof) |
+| Shipped agent              | Disposition                                                                                                                                     |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Builder Copilot            | **Rebuild** per 108B (earth tests as proof)                                                                                                     |
 | Widget Instance Translator | **Keep + protect** (29-locale regression gate on any plane change), then **re-base** onto the durable scaffold as the 108C reference agent (D5) |
 
 ### 2.2 Classification (the dimensions that matter for platform shape)
@@ -273,7 +274,7 @@ agents are autonomous-with-human-review (propose → human accepts → committed
 The roster is **bimodal**. Half of it (copilots, live support) is synchronous and already
 fits San Francisco's execute path. The other half (GTM, UX Writer, moderation sweeps) is
 **durable, long-running, orchestrated** — and the existing specs for those two were
-written as *separate Cloudflare Worker services* with their own Durable Objects, queues,
+written as _separate Cloudflare Worker services_ with their own Durable Objects, queues,
 D1, and R2.
 
 So the central decision is not "what's the agent contract." It is:
@@ -351,7 +352,7 @@ every model call regardless of which worker orchestrated it.
 
 - **Pros:** keeps isolation (durable runs can't degrade the copilot path; independent
   deploys); keeps a single AI plane (one provider-key home, one policy authority, one
-  learning loop — the OS framing survives); matches what's *already shipped* (instance
+  learning loop — the OS framing survives); matches what's _already shipped_ (instance
   translation already orchestrates outside SF and routes execution through SF's binding);
   no speculative framework — it generalizes an existing, working pattern.
 - **Cons:** requires a clean internal contract between orchestrators and the SF plane
@@ -369,14 +370,14 @@ every model call regardless of which worker orchestrated it.
 ### 3.5 The external-reach question (where MCP belongs)
 
 The options above settle the **internal** plane: how agents get governed model access,
-grants, budgets, and learning. They do not settle how the *durable* agents reach the
+grants, budgets, and learning. They do not settle how the _durable_ agents reach the
 **external** systems they must operate on. GTM alone must read competitor sites, pull
 keyword/volume data (e.g. DataForSEO), and query Search Console; UX Writer is largely
 internal but will grow outward. This is a different problem from model routing, and it is
 the **one place** where the Anthropic MCP guidance is directly relevant — because it is the
 one place Clickeen genuinely meets the substrate that literature assumes. Per §1.1.1–1.1.2,
 MCP-style mediation does **not** apply to internal reach (which is native, addressable, and
-atom-shaped); it applies only at the *genuinely external* edge — third-party, human-built
+atom-shaped); it applies only at the _genuinely external_ edge — third-party, human-built
 systems Clickeen does not control. We therefore treat it as a sub-decision of Option C,
 scoped strictly to that outbound edge, rather than fold it in silently.
 
@@ -413,7 +414,7 @@ lessons translate cleanly to Clickeen without importing a generic framework:
   URL-elicitation flow, never inline in a tool call.
 
 **What we deliberately do NOT adopt yet:** Clickeen is not, today, publishing an MCP
-server for *third parties* to drive our agents, nor consuming arbitrary external MCP
+server for _third parties_ to drive our agents, nor consuming arbitrary external MCP
 servers as a product feature. SF's interactive surface stays an internal `/v1/execute`
 plane. MCP enters as the **outbound integration discipline for durable agents**, and only
 when the first durable agent (108C/108D) actually needs an external system. We adopt the
@@ -430,7 +431,7 @@ plane. The OpenAI practical guide is about that interior — and per §1.1.1 we 
 **literature to test against, not a playbook to adopt.** It does not change the
 recommendation; it gives us four checkpoints to hold Clickeen against, and on each the
 honest verdict (per the §1.1.2 table) is either "transfers," "already ahead," or "build it
-from the atoms we already have" — never "import the framework." Stated here as *direction*,
+from the atoms we already have" — never "import the framework." Stated here as _direction_,
 not as a build — the mechanics belong to the execution PRDs (108A onward), per §0.
 
 **(a) Most work should stay deterministic; the model is for judgment, not plumbing.**
@@ -438,7 +439,7 @@ The guide's first test is when an agent is even the right tool: genuine judgment
 changing rulesets, or unstructured-data interpretation — everything else is better as plain
 code. This is just AGENTS.md §3 ("no fake generic layers") at the per-task level: phases of
 GTM or UX Writer that are fixed transforms (formatting an audit report) are code, not model
-calls. *What this means for SF's evolution:* the plane should make the cheap, deterministic
+calls. _What this means for SF's evolution:_ the plane should make the cheap, deterministic
 path the default, so agents reach for the model only where judgment is actually required.
 
 **(b) The model/tools/instructions triad is the unit of an agent — and SF already owns the
@@ -446,14 +447,14 @@ model side.** The guide frames every agent as three parts: model (reasoning), to
 (action), instructions (behavior). Clickeen already separates these — `modelRouter.ts`,
 boundaries/outputs, prompts/persona — which is a strong sign Option C is the right shape.
 The guide's sharpening: don't pin everything to the most capable model; use the cheapest
-model that still passes evals. *What this means for SF's evolution:* the mechanism for
+model that still passes evals. _What this means for SF's evolution:_ the mechanism for
 per-agent model policy **already exists and should simply be set deliberately, not grown
 over time.** `AgentRuntimePolicy` already carries `allowModelPicker` and a pinned
 `selectedModel`, enforced by `modelRouter.ts`. The correct posture is therefore a fixed
 rule, not a future feature: the **user-facing copilot** runs `allowModelPicker: true` (a
 swappable catalogue is genuinely table stakes for an end-user assistant), while every
 **internal/durable agent** ships `allowModelPicker: false` with an eval-locked
-`defaultModel` (for an internal agent, swapping the model is *not* table stakes — its
+`defaultModel` (for an internal agent, swapping the model is _not_ table stakes — its
 output is validated against a pinned model, and silent model drift would break that
 guarantee). All three registered agents technically share the same picker pathway today;
 the registry already has the lever, it just needs pulling per agent.
@@ -463,7 +464,7 @@ the registry already has the lever, it just needs pulling per agent.
 > routing (turn-class → model tables, single-step escalation on invalid structured
 > output, declared recorded failover, pinned user picks never overridden). The
 > mechanism is `AgentRoutingPolicy` in the signed policy; `modelRouter.ts` becomes a
-> real router. See `108A1__EXEC__…` Step 6. "No silent cross-switching" remains true:
+> real router. See `120A1__EXEC__...` Step 6. "No silent cross-switching" remains true:
 > switching is declared, bounded, and recorded — never silent.
 
 **(c) Single-agent-first — which is the discipline this doc already adopts.** The guide is
@@ -480,17 +481,17 @@ where impact requires it.** The guide treats guardrails as a layered defense (re
 safety/jailbreak, PII, harmful-content, brand) and rates each action by risk (read-only
 vs. write, reversibility, impact), escalating high-risk actions to a human. Clickeen
 already has the first layer (signed grants, capability/boundary enforcement, budgets,
-timeouts). The durable *autonomous* agents — GTM publishing, Community Moderation acting
+timeouts). The durable _autonomous_ agents — GTM publishing, Community Moderation acting
 on user content — force the next layer: declared risk in registry/policy, product-safe
-review artifacts, and approval before high-impact actions commit. *What this means for
-SF's evolution:* San Francisco should enforce risk/policy so it cannot be skipped, but it
+review artifacts, and approval before high-impact actions commit. _What this means for
+SF's evolution:_ San Francisco should enforce risk/policy so it cannot be skipped, but it
 must not own review-state or product commits. The owning product/orchestrator boundary
 keeps those authorities.
 
 **What this is not:** we are not adopting the guide's SDK or runtime (its Agents SDK,
 declarative-vs-code-first framing, optimistic-execution machinery) — those are vendor
 tooling, and SF is its own runtime. We take the principles. And nothing here mandates new
-frameworks now; (a)–(d) describe capabilities SF should be *able* to grow into as the
+frameworks now; (a)–(d) describe capabilities SF should be _able_ to grow into as the
 durable, autonomous agents actually arrive.
 
 ---
@@ -507,7 +508,7 @@ not blocked by 108A-1; Bob can start projecting `EditorContract` into Copilot im
 108A-1 runs in parallel as the release gate for model capability, picker eligibility, and
 typed provider errors. Durable workforce scaffolding is sequenced after the Copilot proof.
 
-Why this is the right fit for *Clickeen specifically*:
+Why this is the right fit for _Clickeen specifically_:
 
 0. **It preserves named authority boundaries** (§1.1.1). Option B gives provider calls,
    grants, model routing, budgets, and telemetry N copies. Option A collapses two
@@ -532,7 +533,7 @@ Why this is the right fit for *Clickeen specifically*:
 6. **It matches the standard agent anatomy** (§3.6): the plane already separates model /
    tools / instructions and owns model resolution, so as the roster grows the capabilities
    the autonomous agents will need — finer model selection, layered guardrails, a human-in-
-   the-loop gate — can mature *once, in the plane* and be inherited, rather than re-invented
+   the-loop gate — can mature _once, in the plane_ and be inherited, rather than re-invented
    per agent. (How those mature is execution work, not decided here.)
 
 This also resolves **EB-007** as a consequence, not as the goal: once the plane defines a
@@ -552,6 +553,7 @@ guarantee. An agent that bypasses Bob/Roma/Tokyo/orchestrator boundaries for per
 breaks the product-truth guarantee. There is no partial compliance.
 
 ### What stays fixed (non-negotiable, regardless of agent)
+
 - Provider keys live only in San Francisco.
 - Grant verification, capability + boundary enforcement, model routing, budget/timeout
   ceilings, and learning-event emission are San Francisco's, used by every agent.
@@ -569,6 +571,7 @@ breaks the product-truth guarantee. There is no partial compliance.
   per-phase) choice to grow over time.
 
 ### What is per-agent (owned, isolated)
+
 - Orchestration shape (synchronous vs. Durable Object + queue + cron).
 - Prompts/persona, phase logic, task fanout.
 - The agent's declared boundary and its output target (ops, translated values, ops
@@ -579,7 +582,8 @@ breaks the product-truth guarantee. There is no partial compliance.
 
 ## 5. Proposed evolution path (phased — execution PRDs follow)
 
-This decision doc proposes the sequence; each phase becomes its own `02-Executing` PRD.
+This decision doc proposed the sequence; each phase was intended to become an
+execution slice.
 
 - **108B-1 — P0 Interactive Builder Copilot Operator rescue (resolves EB-007).** Use Bob's
   compiled Builder control contract as Copilot's action surface; build the visible-control
@@ -620,18 +624,18 @@ This decision doc proposes the sequence; each phase becomes its own `02-Executin
   intent-shaped tools for competitor/keyword/Search-Console access, centralized external
   credential custody, and — if any single API surface is large enough to warrant it — the
   search+execute code-orchestration shape. Pair the agent with a **skill** (a written
-  playbook for *how* to use those tools well): per the MCP article, tools grant access
+  playbook for _how_ to use those tools well): per the MCP article, tools grant access
   while skills supply procedural know-how, and the most capable agents carry both.
-  - **Design-before-build note:** 108D's *implementation* follows 108C, but its
-    *architecture* must be decided before 108C ships. The outbound-layer shape (§3.5 —
+  - **Design-before-build note:** 108D's _implementation_ follows 108C, but its
+    _architecture_ must be decided before 108C ships. The outbound-layer shape (§3.5 —
     intent-shaped tools, one credential custodian, code-orchestration for large API
     surfaces) and the external credential-custody model (vault-style store in the AI
     plane; OAuth/payment flows via browser handoff, never inline tool calls) constrain
     what the SF plane contract can assume about any durable agent's outbound reach. The
-    design dependency runs earlier than the build dependency: before 108C enters
-    `02-Executing`, the team should have decided Open Questions 6 and 7 at the design
-    level — not built, but decided — so 108D implements against a known contract instead
-    of arriving as a retrofit.
+    design dependency runs earlier than the build dependency: before 108C execution
+    continues, the team needs Open Questions 6 and 7 decided at the design level — not
+    built, but decided — so 108D implements against a known contract instead of arriving
+    as a retrofit.
 - **108E+ — Support Reply, Community Moderation** onto whichever surface fits (Support
   Reply likely interactive; Moderation likely durable). These carry the roster's
   **highest-risk actions** (live customer-facing replies; acting on user content), so they
@@ -657,7 +661,7 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
    It generalizes a shipped pattern rather than inventing one.
 
 2. **Compliant with architecture and tenets?**
-   Yes — it is selected *because* it satisfies isolation, single-AI-plane, structured
+   Yes — it is selected _because_ it satisfies isolation, single-AI-plane, structured
    output, and "no provider keys outside SF" simultaneously. Options A, B, D were rejected
    precisely where they break a tenet.
 
@@ -665,7 +669,7 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
    Yes, and this is the live risk to police in execution: the durable surface must reuse
    the SF plane, not grow a parallel framework. Guardrail — 108C ships exactly one real
    durable agent before any "platform" generalization is allowed to harden. The same
-   guardrail applies to the outbound/MCP layer (§3.5): we adopt the *principles* now
+   guardrail applies to the outbound/MCP layer (§3.5): we adopt the _principles_ now
    (intent tools, one credential custodian) but defer building the layer until GTM (108D)
    actually needs an external system — no MCP server or outbound framework gets built
    speculatively (AGENTS.md §3).
@@ -704,7 +708,7 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
    speculative one. UX Writer waits until a real need exists.
 6. **Outbound layer shape (§3.5):** when GTM (108D) first needs external systems, is the
    common outbound layer an internal MCP-style server SF/orchestrators consume, or a
-   thinner shared client module? (Lean: adopt the *principles* — intent tools, one
+   thinner shared client module? (Lean: adopt the _principles_ — intent tools, one
    credential custodian, code-orchestration for big surfaces — and pick the concrete
    mechanism at 108D, not before an agent needs it.)
 7. **External credential custody (§3.5):** where do Search Console OAuth tokens and
@@ -721,23 +725,23 @@ Each phase ships docs-in-sync with code before moving to `03-Executed`, per the 
    turn-class routing ships in 108A-1; the durable phase-class dimension ships in
    108A-2 and is mandatory for multi-phase durable agents.
 10. **Concurrency model for the durable-agent calling pattern (resolve in 108A).** The
-   current guard in `sanfrancisco/src/concurrency.ts` — `MAX_INFLIGHT_PER_ISOLATE = 8`, an
-   in-isolate counter that throws 429 on overflow — is a *copilot* guard: it protects the
-   interactive `/v1/execute` path from concurrent user turns, and is the right primitive
-   for that workload. When durable orchestrators begin calling SF via service binding
-   (Open Question 1), they introduce a second workload class: long-running, multi-step,
-   non-interactive calls that may run for hours and make many sequential model requests.
-   These classes must **not** share a ceiling — a saturated GTM run should not 429 a real
-   user's copilot turn, and vice versa. *Design direction for 108A:* distinguish the two
-   surfaces at the binding layer (HTTP `/v1/execute` = interactive; service-binding RPC =
-   durable-agent) and apply separate concurrency budgets. The interactive ceiling stays
-   tight (latency-sensitive, user-facing); the durable-agent budget is governed
-   differently — likely a Workflow-level queue rather than an in-isolate counter, which
-   fits the async nature of durable orchestration and aligns with Cloudflare Workflows V2's
-   raised limits (50,000 concurrent running instances; 2M queued; waiting/sleeping
-   instances don't count against concurrency — [Cloudflare Workflows limits](https://developers.cloudflare.com/workflows/reference/limits/)).
-   This is a 108A design requirement, not a 108C discovery. (Lean: separate budgets keyed
-   on calling surface; durable side queued at the orchestration layer.)
+    current guard in `sanfrancisco/src/concurrency.ts` — `MAX_INFLIGHT_PER_ISOLATE = 8`, an
+    in-isolate counter that throws 429 on overflow — is a _copilot_ guard: it protects the
+    interactive `/v1/execute` path from concurrent user turns, and is the right primitive
+    for that workload. When durable orchestrators begin calling SF via service binding
+    (Open Question 1), they introduce a second workload class: long-running, multi-step,
+    non-interactive calls that may run for hours and make many sequential model requests.
+    These classes must **not** share a ceiling — a saturated GTM run should not 429 a real
+    user's copilot turn, and vice versa. _Design direction for 108A:_ distinguish the two
+    surfaces at the binding layer (HTTP `/v1/execute` = interactive; service-binding RPC =
+    durable-agent) and apply separate concurrency budgets. The interactive ceiling stays
+    tight (latency-sensitive, user-facing); the durable-agent budget is governed
+    differently — likely a Workflow-level queue rather than an in-isolate counter, which
+    fits the async nature of durable orchestration and aligns with Cloudflare Workflows V2's
+    raised limits (50,000 concurrent running instances; 2M queued; waiting/sleeping
+    instances don't count against concurrency — [Cloudflare Workflows limits](https://developers.cloudflare.com/workflows/reference/limits/)).
+    This is a 108A design requirement, not a 108C discovery. (Lean: separate budgets keyed
+    on calling surface; durable side queued at the orchestration layer.)
 
 ---
 

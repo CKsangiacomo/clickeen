@@ -1,4 +1,4 @@
-# PRD 108C - Workforce Agents Architecture Scaffolding
+# PRD 120C - Workforce Agents Architecture Scaffolding
 
 Status: PLANNING
 Owner: Product + Architecture (San Francisco)
@@ -8,16 +8,19 @@ Stage: 01-Planning
 Type: Sub-PRD from PRD 108
 Blocked-by: PRD 108B, PRD 108A-2, and design-level decisions on 108 OQ6/OQ7
 (outbound layer shape; external credential custody) recorded before this PRD enters
-`02-Executing` (per review IV.4)
+execution review.
 
 Blocker meanings:
+
 - 108B = Builder Copilot control-operator proof.
 - 108A-2 = durable/service plane contract.
 
 Parent:
-- `Execution_Pipeline_Docs/01-Planning/108__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
+
+- `Execution_Pipeline_Docs/01-Planning/120__PRD__San_Francisco_Agent_Platform_Architecture_Decision.md`
 
 Related:
+
 - `documentation/ai/overview.md`
 - `documentation/ai/infrastructure.md`
 - `documentation/ai/agents/gtm.md`
@@ -87,8 +90,8 @@ This means:
 
 Orchestration can be per-agent. The AI plane is not.
 
-This direction remains correct, but it is not the immediate execution priority. 108C may
-move to `02-Executing` only after:
+This direction remains correct, but it was not the immediate execution priority. 108C
+execution was gated by:
 
 - 108A-1 has hardened model capability, picker eligibility, and typed provider errors.
 - 108B has passed its Builder Copilot earth-test scenarios across shipped widgets.
