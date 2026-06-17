@@ -78,6 +78,7 @@ service:
 | `/api/session/**`           | Berlin                                                 |
 | `/api/me/**`                | Berlin                                                 |
 | `/api/account/team/**`      | Berlin                                                 |
+| `/api/account/locales`      | Roma account settings mutation; Berlin bootstrap read context |
 | `/api/account/widgets/**`   | Tokyo-worker through product control                   |
 | `/api/account/instances/**` | Tokyo-worker through product control                   |
 | `/api/account/assets/**`    | Tokyo-worker through asset control                     |

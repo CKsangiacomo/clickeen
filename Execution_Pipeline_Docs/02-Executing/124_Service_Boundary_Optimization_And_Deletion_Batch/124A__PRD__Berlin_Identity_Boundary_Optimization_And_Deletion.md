@@ -60,6 +60,14 @@ Berlin does not own:
 - BER-01: invite creation rejects any existing `users.primary_email`; signed-in invitation accept no longer patches an existing user into another account.
 - BER-02: Berlin and Roma account deletion return explicit conflict with no DB/R2 mutation; Roma settings no longer offers the delete-account action.
 
+2026-06-17 BER-03 code-complete blocked slice:
+
+- BER-03: removed Berlin `PUT /v1/accounts/:id/locales` registration and deleted `berlin/src/account-management/locales.ts`.
+- BER-03: moved account locale settings mutation into Roma `/api/account/locales`, preserving strict locale/policy validation, owner/admin authorization, `l10n.locales.max` entitlement enforcement, base-locale lock, and persisted-row verification.
+- BER-03: updated active ownership docs and policy metadata so Roma account locale settings are the mutation owner and Berlin bootstrap remains read-only account context.
+- Blocker: live Cloudflare Pages project `roma-dev` lacks `SUPABASE_SERVICE_ROLE_KEY`. `pnpm cf:api:preflight` passed and `pnpm cf:pages:put-secret roma-dev SUPABASE_SERVICE_ROLE_KEY` dry-run proved the secret is absent, but `--apply` failed with Cloudflare `403 Authentication error` using the configured `CLOUDFLARE_REST_API_TOKEN`.
+- Closure rule: BER-03 must not be marked complete or pushed to autodeploy until the Pages secret is applied with a Pages-edit-capable token and verified on `roma-dev`.
+
 ## Completion Gates
 
 - Berlin runtime still logs in and bootstraps a one-account session.

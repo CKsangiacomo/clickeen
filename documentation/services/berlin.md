@@ -63,7 +63,6 @@ Berlin still hosts account-management surfaces from the PRD 65 account-boundary 
 These surfaces must not be expanded in Berlin without a PRD:
 
 - team/user CRUD currently backed by old account-member residue
-- account locales management
 - contact-method verification and profile mutation endpoints
 - account governance and lifecycle operations
 - post-login invitation listing, issuance, revocation, and team/user-management workflows
@@ -96,7 +95,6 @@ Residual public account-management routes:
 - `GET /v1/me/identities`
 - `GET /v1/accounts/:id`
 - `DELETE /v1/accounts/:id` (disabled; explicit conflict, no mutation)
-- `PUT /v1/accounts/:id/locales`
 - `GET /v1/accounts/:id/members`
 - `GET /v1/accounts/:id/members/:memberId`
 - `PATCH /v1/accounts/:id/members/:memberId`

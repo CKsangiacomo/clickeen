@@ -55,8 +55,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Maximum translated languages the account can add. The base language is implied and not counted.',
     enforcement: {
       status: 'enforced',
-      owner: 'Berlin account locale routes',
-      note: 'Berlin rejects selected translated locales above the plan limit. Base language is not counted.',
+      owner: 'Roma account locale settings',
+      note: 'Roma rejects selected translated locales above the plan limit before saving account locale settings. Base language is not counted.',
     },
   },
   'l10n.versions.max': {

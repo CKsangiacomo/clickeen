@@ -23,6 +23,7 @@
     "cf:pages:devstudio-env": "node scripts/cloudflare/api.mjs pages:devstudio-env",
     "cf:pages:sync-devstudio-env": "node scripts/cloudflare/api.mjs pages:sync-devstudio-env",
     "cf:pages:sync-devstudio-project": "node scripts/cloudflare/api.mjs pages:sync-devstudio-project",
+    "cf:pages:put-secret": "node scripts/cloudflare/api.mjs pages:put-secret",
     "cf:pages:domains": "node scripts/cloudflare/api.mjs pages:domains",
     "cf:dns:records": "node scripts/cloudflare/api.mjs dns:records",
     "cf:dns:upsert-cname": "node scripts/cloudflare/api.mjs dns:upsert-cname",

@@ -15,7 +15,6 @@ import {
   handleAccountMemberDelete,
   handleAccountMemberUpdate,
 } from './members';
-import { handleAccountLocalesUpdate } from './locales';
 import {
   findAccountContext,
   listAccountMembers,
@@ -157,27 +156,6 @@ async function handleAccountInvitations(
   }
 
   return validationError('coreui.errors.payload.invalid');
-}
-
-async function handleAccountLocales(
-  request: Request,
-  env: Env,
-  accountIdRaw: string,
-): Promise<Response> {
-  const accountId = normalizeAccountPublicId(accountIdRaw);
-  if (!accountId) return validationError('coreui.errors.accountId.invalid');
-
-  const resolved = await resolvePrincipalState(request, env);
-  if (!resolved.ok) return resolved.response;
-
-  const account = findAccountContext(resolved.state, accountId);
-  if (!account) return denyResponse();
-
-  return handleAccountLocalesUpdate({
-    request,
-    env,
-    account,
-  });
 }
 
 async function handleAccountMemberById(
@@ -393,12 +371,6 @@ export const ACCOUNT_MANAGEMENT_ROUTES: BerlinRoute[] = [
     methods: {
       GET: ({ request, env, match }) => handleAccountInvitations(request, env, capture(match, 1)),
       POST: ({ request, env, match }) => handleAccountInvitations(request, env, capture(match, 1)),
-    },
-  },
-  {
-    pattern: /^\/v1\/accounts\/([^/]+)\/locales$/,
-    methods: {
-      PUT: ({ request, env, match }) => handleAccountLocales(request, env, capture(match, 1)),
     },
   },
   {

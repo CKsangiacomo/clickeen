@@ -76,6 +76,8 @@ pnpm cf:pages:sync-devstudio-env
 pnpm cf:pages:sync-devstudio-env --apply
 pnpm cf:pages:sync-devstudio-project
 pnpm cf:pages:sync-devstudio-project --apply
+pnpm cf:pages:put-secret roma-dev SUPABASE_SERVICE_ROLE_KEY
+pnpm cf:pages:put-secret roma-dev SUPABASE_SERVICE_ROLE_KEY --apply
 pnpm cf:pages:domains devstudio
 pnpm cf:dns:records clickeen.com devstudio.clickeen.com
 pnpm cf:dns:upsert-cname clickeen.com devstudio.clickeen.com devstudio-dev.pages.dev
@@ -104,6 +106,8 @@ pnpm cf:pages:sync-devstudio-env
 pnpm cf:pages:sync-devstudio-env --apply
 pnpm cf:pages:sync-devstudio-project
 pnpm cf:pages:sync-devstudio-project --apply
+pnpm cf:pages:put-secret <project-name> <secret-name>
+pnpm cf:pages:put-secret <project-name> <secret-name> --apply
 ```
 
 `pnpm cf:pages:devstudio-env` is read-only. It compares the live DevStudio Pages
@@ -119,6 +123,10 @@ If the dry-run passes and `--apply` returns Cloudflare `403`, the token is valid
 but lacks Pages project edit authorization for that mutation. Do not rename the
 credential or switch to R2 credentials; fix that token's Pages edit permission or
 make the exact project-settings change in Cloudflare.
+
+`pnpm cf:pages:put-secret` writes one live-only Pages secret from root
+`.env.local`, redacts the value in output, and preserves the current Pages
+deployment config hash. Use it only after `pnpm cf:api:preflight`.
 
 ## Hard Stop Rule
 

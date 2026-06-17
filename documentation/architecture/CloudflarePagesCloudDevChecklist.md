@@ -80,9 +80,10 @@ Env contract:
 | `NEXT_PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | `roma/wrangler.toml` |
 | `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |
 | `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | Cloudflare Pages dashboard + GitHub Actions env |
+| `SUPABASE_SERVICE_ROLE_KEY` | yes | cloud-dev service-role key for account settings writes | Cloudflare Pages secret |
 
 Dashboard action:
-- Keep `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the Cloudflare Pages dashboard for the live Roma app.
+- Keep `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in the Cloudflare Pages dashboard for the live Roma app.
 - Keep the host/base-URL vars in `roma/wrangler.toml`.
 - Configure the `TOKYO_ASSET_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
 - Configure the `TOKYO_PRODUCT_CONTROL` service binding on Roma Pages to target the `tokyo-assets-dev` worker.
@@ -208,7 +209,7 @@ Worker secrets:
 - San Francisco: `AI_GRANT_HMAC_SECRET`
 
 Pages secrets:
-- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing. Roma -> Tokyo/Tokyo-worker product control uses service bindings and account-widget l10n generation runs through Tokyo-worker -> San Francisco `SANFRANCISCO_L10N`.
+- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker product control uses service bindings and account-widget l10n generation runs through Tokyo-worker -> San Francisco `SANFRANCISCO_L10N`.
 - DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes; `E2E_AUTH_SECRET` is required for the dev-only remote Playwright bootstrap.
 
 CI secrets/vars:

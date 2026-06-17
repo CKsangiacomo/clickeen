@@ -52,7 +52,7 @@ already moved after PRD 120.
 | --- | --- |
 | Supported locale tokens | `packages/l10n/locales.json` |
 | Locale capacity | Tier policy key `l10n.locales.max` |
-| Account selected locales | Account settings / Berlin account locale state surfaced through Roma |
+| Account selected locales | Account settings through Roma `/api/account/locales` |
 | Account base locale | Account settings, locked once account widget content exists |
 | Builder edit locale | Bob preview/editor memory for one active widget and one active locale |
 | Translation generation scope | Roma current account settings, not request body values |
@@ -64,10 +64,10 @@ already moved after PRD 120.
 
 - Tier capacity exists in policy:
   `packages/ck-policy/entitlements.matrix.json`
-- Policy registry names Berlin account locale routes as the enforcement owner:
+- Policy registry names Roma account locale settings as the enforcement owner:
   `packages/ck-policy/src/registry.ts`
-- Berlin account locale writes enforce `l10n.locales.max`:
-  `berlin/src/account-management/locales.ts`
+- Roma account locale writes enforce `l10n.locales.max`:
+  `roma/app/api/account/locales/route.ts`
 - Berlin bootstrap fails invalid persisted account locale state instead of
   silently normalizing it:
   `berlin/src/bootstrap/state.ts`
@@ -627,4 +627,3 @@ PRD 123 can move to `03-Executed` only when all are true:
 
 Append execution notes below during implementation. Keep this section factual:
 what changed, what checked green, and what remains deferred.
-

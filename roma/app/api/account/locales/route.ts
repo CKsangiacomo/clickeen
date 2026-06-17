@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isRecord } from '@clickeen/ck-contracts';
+import {
+  isRecord,
+  parseAccountLocaleListStrict,
+  parseAccountLocalePolicyStrict,
+  validateAccountLocaleList,
+  validateAccountLocalePolicy,
+} from '@clickeen/ck-contracts';
+import { resolvePolicy } from '@clickeen/ck-policy';
 import { normalizeLocaleToken } from '@clickeen/l10n';
 import { loadAccountBaseLocaleLockState } from '@roma/lib/account-base-locale-lock';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
-import { resolveBerlinBaseUrl } from '@roma/lib/env/berlin';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { resolveCurrentAccountRouteContext, withSession } from '../_lib/current-account-route';
 
@@ -14,15 +20,74 @@ type AccountLocalesWritePayload = {
   localePolicy?: unknown;
 };
 
-function normalizeWarnings(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return Array.from(
-    new Set(
-      value
-        .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
-        .filter((entry): entry is string => Boolean(entry)),
-    ),
-  );
+type AccountLocalePatchRow = {
+  id?: unknown;
+  selected_target_locales?: unknown;
+  locale_policy?: unknown;
+};
+
+function resolveSupabaseAdminConfig(): { baseUrl: string; serviceRoleKey: string } {
+  const baseUrl = String(process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  if (!baseUrl || !serviceRoleKey) {
+    throw new Error('roma.errors.account.locales.supabase_admin_config_missing');
+  }
+  return { baseUrl, serviceRoleKey };
+}
+
+async function supabaseAdminFetch(pathnameWithQuery: string, init?: RequestInit): Promise<Response> {
+  const config = resolveSupabaseAdminConfig();
+  const headers = new Headers(init?.headers);
+  headers.set('apikey', config.serviceRoleKey);
+  headers.set('authorization', `Bearer ${config.serviceRoleKey}`);
+  headers.set('accept', 'application/json');
+  if (!headers.has('content-type') && init?.body) headers.set('content-type', 'application/json');
+
+  return fetch(`${config.baseUrl}${pathnameWithQuery}`, {
+    ...init,
+    headers,
+    cache: 'no-store',
+  });
+}
+
+async function readJson(response: Response): Promise<unknown> {
+  const text = await response.text().catch(() => '');
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function resolveDbErrorDetail(payload: unknown, fallback: string): string {
+  if (!isRecord(payload)) return fallback;
+  const message = payload.message ?? payload.error_description ?? payload.error;
+  return typeof message === 'string' && message.trim() ? message.trim() : fallback;
+}
+
+function resolveTranslatedLocaleEntitlementMax(policy: ReturnType<typeof resolvePolicy>): number | null {
+  const raw = policy.limits['l10n.locales.max'];
+  return raw == null ? null : Math.max(0, Math.floor(raw));
+}
+
+function enforceLocaleSelection(policy: ReturnType<typeof resolvePolicy>, locales: string[]): NextResponse | null {
+  const maxTranslatedLocales = resolveTranslatedLocaleEntitlementMax(policy);
+  if (maxTranslatedLocales != null && locales.length > maxTranslatedLocales) {
+    return NextResponse.json(
+      {
+        error: {
+          kind: 'DENY',
+          reasonKey: 'coreui.upsell.reason.limitReached',
+          upsell: 'UP',
+          detail: `l10n.locales.max=${maxTranslatedLocales}`,
+        },
+      },
+      { status: 403 },
+    );
+  }
+
+  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -109,10 +174,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const current = await resolveCurrentAccountRouteContext({ request, minRole: 'editor' });
+  const current = await resolveCurrentAccountRouteContext({ request, minRole: 'admin' });
   if (!current.ok) return current.response;
-
-  const berlinBase = resolveBerlinBaseUrl().replace(/\/+$/, '');
 
   try {
     const bodyResult = await readJsonPayloadOrValidation<AccountLocalesWritePayload | null>(request);
@@ -136,7 +199,19 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const baseLocale = normalizeLocaleToken((body.localePolicy as Record<string, unknown> | null | undefined)?.baseLocale);
+    const localeIssues = validateAccountLocaleList(body.selectedTargetLocales, 'selectedTargetLocales');
+    if (localeIssues.length) {
+      return withSession(request, NextResponse.json(localeIssues, { status: 422 }), current.value.setCookies);
+    }
+
+    const policyIssues = validateAccountLocalePolicy(body.localePolicy, 'localePolicy');
+    if (policyIssues.length) {
+      return withSession(request, NextResponse.json(policyIssues, { status: 422 }), current.value.setCookies);
+    }
+
+    const selectedTargetLocales = parseAccountLocaleListStrict(body.selectedTargetLocales);
+    const localePolicy = parseAccountLocalePolicyStrict(body.localePolicy);
+    const baseLocale = normalizeLocaleToken(localePolicy.baseLocale);
     if (!baseLocale) {
       return withSession(
         request,
@@ -147,6 +222,13 @@ export async function PUT(request: NextRequest) {
         current.value.setCookies,
       );
     }
+
+    const policy = resolvePolicy({
+      profile: current.value.authzPayload.profile,
+      role: current.value.authzPayload.role,
+    });
+    const entitlementGate = enforceLocaleSelection(policy, selectedTargetLocales);
+    if (entitlementGate) return withSession(request, entitlementGate, current.value.setCookies);
 
     const accountState = await loadCurrentAccountLocalesState({
       accessToken: current.value.accessToken,
@@ -212,77 +294,71 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const nextPayload: Required<AccountLocalesWritePayload> = {
-      localePolicy: body.localePolicy,
-      selectedTargetLocales: body.selectedTargetLocales,
-    };
-
-    const upstream = await fetch(
-      `${berlinBase}/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}/locales`,
-      {
-        method: 'PUT',
-        headers: {
-          authorization: `Bearer ${current.value.accessToken}`,
-          'content-type': 'application/json',
-          accept: 'application/json',
-        },
-        cache: 'no-store',
-        body: JSON.stringify(nextPayload),
-      },
-    );
-    const payloadText = (await upstream.text().catch(() => '')) || '';
+    const params = new URLSearchParams({
+      id: `eq.${current.value.authzPayload.accountId}`,
+      select: 'id,selected_target_locales,locale_policy',
+    });
+    const upstream = await supabaseAdminFetch(`/rest/v1/accounts?${params.toString()}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        selected_target_locales: selectedTargetLocales,
+        locale_policy: localePolicy,
+      }),
+    });
+    const upstreamPayload = await readJson(upstream);
     if (!upstream.ok) {
       return withSession(
         request,
-        new NextResponse(payloadText, {
-          status: upstream.status,
-          headers: {
-            'content-type': upstream.headers.get('content-type') || 'application/json; charset=utf-8',
-          },
-        }),
-        current.value.setCookies,
-      );
-    }
-
-    const upstreamPayload = payloadText ? (JSON.parse(payloadText) as unknown) : null;
-    const warnings = isRecord(upstreamPayload) ? normalizeWarnings(upstreamPayload.warnings) : [];
-    const refreshedAccountState = await loadCurrentAccountLocalesState({
-      accessToken: current.value.accessToken,
-      accountId: current.value.authzPayload.accountId,
-      requestId: current.value.requestId,
-    });
-    if (!refreshedAccountState.ok) {
-      return withSession(
-        request,
         NextResponse.json(
-          refreshedAccountState.payload ?? {
+          {
             error: {
-              kind: refreshedAccountState.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
-              reasonKey:
-                refreshedAccountState.status === 401
-                  ? 'coreui.errors.auth.required'
-                  : 'coreui.errors.auth.contextUnavailable',
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.db.writeFailed',
+              detail: resolveDbErrorDetail(upstreamPayload, `supabase_status_${upstream.status}`),
             },
           },
-          { status: refreshedAccountState.status },
+          { status: 502 },
         ),
         current.value.setCookies,
       );
     }
-    const mergedWarnings = Array.from(new Set(warnings));
+    if (!Array.isArray(upstreamPayload)) {
+      return withSession(
+        request,
+        NextResponse.json(
+          {
+            error: {
+              kind: 'UPSTREAM_UNAVAILABLE',
+              reasonKey: 'coreui.errors.db.writeFailed',
+              detail: 'account_locale_patch_payload_invalid',
+            },
+          },
+          { status: 502 },
+        ),
+        current.value.setCookies,
+      );
+    }
 
-    const responsePayload = isRecord(upstreamPayload)
-      ? {
-          ...upstreamPayload,
-          ...(mergedWarnings.length ? { warnings: mergedWarnings } : {}),
-        }
-      : {
-          ...(mergedWarnings.length ? { warnings: mergedWarnings } : {}),
-        };
+    const patchedRow = upstreamPayload[0] as AccountLocalePatchRow | undefined;
+    if (!isRecord(patchedRow) || patchedRow.id !== current.value.authzPayload.accountId) {
+      return withSession(
+        request,
+        NextResponse.json(
+          { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' } },
+          { status: 404 },
+        ),
+        current.value.setCookies,
+      );
+    }
 
     return withSession(
       request,
-      NextResponse.json(responsePayload, { status: 200 }),
+      NextResponse.json({
+        accountId: current.value.authzPayload.accountId,
+        selectedTargetLocales: parseAccountLocaleListStrict(patchedRow.selected_target_locales),
+        localePolicy: parseAccountLocalePolicyStrict(patchedRow.locale_policy),
+      }),
       current.value.setCookies,
     );
   } catch (error) {
@@ -293,7 +369,7 @@ export async function PUT(request: NextRequest) {
         {
           error: {
             kind: 'UPSTREAM_UNAVAILABLE',
-            reasonKey: 'coreui.errors.auth.contextUnavailable',
+            reasonKey: 'coreui.errors.db.writeFailed',
             detail,
           },
         },

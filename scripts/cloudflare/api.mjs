@@ -380,6 +380,38 @@ function summarizeDevstudioEnvPatchPayload(payload) {
   );
 }
 
+function pagesSecretPatchPayload(project, envName, secretName) {
+  const deploymentConfig = project.deployment_configs?.[envName] ?? {};
+  return {
+    deployment_configs: {
+      [envName]: {
+        env_vars: {
+          [secretName]: {
+            type: 'secret_text',
+            value: requireEnv(secretName),
+          },
+        },
+        ...(deploymentConfig.wrangler_config_hash
+          ? { wrangler_config_hash: deploymentConfig.wrangler_config_hash }
+          : {}),
+      },
+    },
+  };
+}
+
+function summarizePagesSecretPatchPayload(payload, envName) {
+  const envVars = payload.deployment_configs?.[envName]?.env_vars ?? {};
+  return Object.fromEntries(
+    Object.entries(envVars).map(([name, variable]) => [
+      name,
+      {
+        type: variable.type,
+        value: '[redacted]',
+      },
+    ]),
+  );
+}
+
 function omitNullish(record = {}) {
   return Object.fromEntries(
     Object.entries(record).filter(([, value]) => value !== null && typeof value !== 'undefined'),
@@ -449,6 +481,57 @@ async function syncDevstudioEnv(config, args) {
   };
 }
 
+async function putPagesSecret(config, args) {
+  const apply = args.includes('--apply');
+  const envIndex = args.indexOf('--env');
+  const envName = envIndex >= 0 ? args[envIndex + 1] : 'production';
+  const positional = args.filter((arg, index) => {
+    if (arg === '--apply' || arg === '--env') return false;
+    if (envIndex >= 0 && index === envIndex + 1) return false;
+    return true;
+  });
+  const [projectName, secretName] = positional;
+  if (!projectName || !secretName) throw new Error('Missing project name or secret name.');
+  if (envName !== 'production' && envName !== 'preview') {
+    throw new Error('Pages secret env must be production or preview.');
+  }
+
+  const before = await getPagesProject(config, projectName);
+  const currentEnv = before.deployment_configs?.[envName]?.env_vars ?? {};
+  const payload = pagesSecretPatchPayload(before, envName, secretName);
+  if (!apply) {
+    return {
+      apply: false,
+      project: projectName,
+      env: envName,
+      secret: secretName,
+      before: {
+        present: Boolean(currentEnv[secretName]),
+        type: currentEnv[secretName]?.type ?? null,
+      },
+      payload: summarizePagesSecretPatchPayload(payload, envName),
+      note: 'Dry run only. Re-run with --apply to patch the Cloudflare Pages secret.',
+    };
+  }
+  await patchPagesProject(config, projectName, payload);
+  const after = await getPagesProject(config, projectName);
+  const afterEnv = after.deployment_configs?.[envName]?.env_vars ?? {};
+  return {
+    apply: true,
+    project: projectName,
+    env: envName,
+    secret: secretName,
+    before: {
+      present: Boolean(currentEnv[secretName]),
+      type: currentEnv[secretName]?.type ?? null,
+    },
+    after: {
+      present: Boolean(afterEnv[secretName]),
+      type: afterEnv[secretName]?.type ?? null,
+    },
+  };
+}
+
 async function preflight(config) {
   const result = {
     token: null,
@@ -485,6 +568,7 @@ function usage() {
   pnpm cf:pages:devstudio-env
   pnpm cf:pages:sync-devstudio-env [--apply]
   pnpm cf:pages:sync-devstudio-project [--apply]
+  pnpm cf:pages:put-secret <project-name> <secret-name> [--env production|preview] [--apply]
   pnpm cf:pages:domains <project-name>
   pnpm cf:dns:records <zone-name> [record-name]
   pnpm cf:dns:upsert-cname <zone-name> <record-name> <target>
@@ -533,6 +617,11 @@ async function main() {
 
   if (command === 'pages:sync-devstudio-project') {
     printJson(await syncDevstudioProject(config, args));
+    return;
+  }
+
+  if (command === 'pages:put-secret') {
+    printJson(await putPagesSecret(config, args));
     return;
   }
 
