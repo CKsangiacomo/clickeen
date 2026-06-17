@@ -97,7 +97,7 @@ Recent execution commits:
 | `b2d399a5` | PRD 124B Bob authority cleanup. |
 | `1092a023` | Over-scoped Bob strictness pass; superseded by correction. |
 | `4d9c52d0` | Corrected PRD 124B strictness drift, moved 124B back to executing, and left BOB-06 open. |
-| `336479ab` | Executed PRD 124B BOB-06 compiler/control strictness and moved 124B to executed. |
+| `0d4fcf79` | Executed PRD 124B BOB-06 compiler/control strictness and moved 124B to executed. |
 
 Execution tenet:
 
