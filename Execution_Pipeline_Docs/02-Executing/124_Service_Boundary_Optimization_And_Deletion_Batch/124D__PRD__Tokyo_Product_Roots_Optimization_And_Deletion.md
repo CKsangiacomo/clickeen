@@ -64,6 +64,12 @@ Tokyo product roots do not own:
 - TOKYO-R2-004: added the required refusal in the existing Tokyo R2 deploy sync path so `.locales` metadata cannot be synced back into the Prague R2 product root.
 - TOKYO-R2-004: after `pnpm cf:preflight`, deleted the five matching stale R2 keys under `prague/pages/*/.locales/**` through `scripts/cloudflare/r2.mjs delete` and verified both exact prefixes list empty.
 
+2026-06-17 Prague duplicate share-icons cleanup slice:
+
+- TOKYO-R2-005: deleted duplicate deployable `tokyo/prague/assets/share-icons/**` design-iteration assets. Prague share UI runtime icon truth remains `prague/src/components/Icon.astro` and the inlined brand SVGs in `prague/src/components/InstanceEmbed.astro`.
+- TOKYO-R2-005: removed the stale `InstanceEmbed.astro` comment that named `tokyo/prague/assets/share-icons/*.svg` as the source.
+- TOKYO-R2-005: after `pnpm cf:preflight`, deleted the 21 matching stale R2 keys under `prague/assets/share-icons/` through `scripts/cloudflare/r2.mjs delete` and verified the prefix lists empty.
+
 ## Completion Gates
 
 - Every synced Tokyo root has a matching deploy trigger or explicit workflow.
