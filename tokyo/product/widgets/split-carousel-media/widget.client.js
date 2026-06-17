@@ -110,8 +110,6 @@
   function assertLocaleSwitcher(value, path) {
     assertRecord(value, path);
     assertBoolean(value.enabled, path + '.enabled');
-    assertBoolean(value.byIp, path + '.byIp');
-    assertString(value.alwaysShowLocale, path + '.alwaysShowLocale');
     assertEnum(value.attachTo, path + '.attachTo', ['stage', 'pod']);
     assertEnum(value.position, path + '.position', [
       'top-left',

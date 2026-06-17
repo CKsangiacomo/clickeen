@@ -8,6 +8,7 @@ import {
   compileWidgetForInstancePackage,
   materializeAccountInstancePublicPackage,
 } from '@roma/lib/account-instance-public-package';
+import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
 import { requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -66,6 +67,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return withSession(
       request,
       NextResponse.json({ error: compiled.error }, { status: compiled.status }),
+      current.value.setCookies,
+    );
+  }
+  const policyGate = validateAccountInstanceSavePolicy({
+    widgetType,
+    config: source.value.config,
+    authz: current.value.authzPayload,
+    limits: compiled.value.limits,
+    context: 'publish',
+  });
+  if (!policyGate.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: policyGate.error }, { status: policyGate.status }),
       current.value.setCookies,
     );
   }

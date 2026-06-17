@@ -10,7 +10,7 @@ Depends on:
 - `PRD106A2_WidgetShellExtraction.md`
 - `PRD106B_PageComposer.md`
 - `PRD106C_Prague astro blocks migration to widget instances.md`
-- `112__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
+- `121__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
   Series step: 9
   Unlocks: clean PRD106 execution slate.
   Authority owned by this PRD: deletion/fencing of toxic flows, functions, files, routes, tests, storage shapes, docs, and LOCs.

@@ -43,6 +43,19 @@
     ['tiktok', 'TikTok', 'share']
   ];
 
+  var POSITION_SET = {
+    'top-left': true,
+    'top-center': true,
+    'top-right': true,
+    'right-middle': true,
+    'bottom-right': true,
+    'bottom-center': true,
+    'bottom-left': true,
+    'left-middle': true
+  };
+  var ROOT_SHARE_IDS = new WeakMap();
+  var shareSequence = 0;
+
   function normalizeLocale(value) {
     return String(value || 'en').toLowerCase().split('-')[0] || 'en';
   }
@@ -59,8 +72,28 @@
     return null;
   }
 
+  function shareKeyForWidget(root, options) {
+    var instanceId = String(options && options.instanceId || root.getAttribute('data-ck-instance-id') || '').trim();
+    var widgetType = String(options && options.widgetType || root.getAttribute('data-ck-widget') || 'widget').trim();
+    if (instanceId) return instanceId;
+    var existing = ROOT_SHARE_IDS.get(root) || root.getAttribute('data-ck-social-share-key');
+    if (existing) return existing;
+    shareSequence += 1;
+    var key = (widgetType || 'widget') + '__' + String(shareSequence);
+    ROOT_SHARE_IDS.set(root, key);
+    return key;
+  }
+
   function shareRootForWidget(root) {
-    var candidates = root.querySelectorAll('[data-ck-social-share-root]');
+    var key = root.getAttribute('data-ck-social-share-key') || root.getAttribute('data-ck-instance-id') || root.getAttribute('data-ck-widget') || '';
+    if (key) {
+      var escaped = window.CSS && typeof window.CSS.escape === 'function'
+        ? window.CSS.escape(key)
+        : key.replace(/["\\]/g, '\\$&');
+      var keyed = document.querySelector('[data-ck-social-share-root][data-ck-social-share-for="' + escaped + '"]');
+      if (keyed instanceof HTMLElement) return keyed;
+    }
+    var candidates = document.querySelectorAll('[data-ck-social-share-root]');
     for (var i = 0; i < candidates.length; i += 1) {
       var candidate = candidates[i];
       if (candidate instanceof HTMLElement && closestWidgetRoot(candidate) === root) return candidate;
@@ -167,10 +200,34 @@
     return String(value || '').replace(/[^a-z0-9_-]+/gi, '-');
   }
 
+  function resolvePlacement(socialShare) {
+    var attachTo = socialShare && socialShare.attachTo;
+    var position = socialShare && socialShare.position;
+    if (attachTo !== 'pod' && attachTo !== 'stage') {
+      throw new Error('[CKSocialShare] state.behavior.socialShare.attachTo must be pod|stage');
+    }
+    if (!POSITION_SET[position]) {
+      throw new Error('[CKSocialShare] state.behavior.socialShare.position is invalid');
+    }
+    return { attachTo: attachTo, position: position };
+  }
+
+  function ensureHost(root, attachTo) {
+    var selector = attachTo === 'pod' ? '.pod' : '.stage';
+    var host = root.closest(selector);
+    if (!(host instanceof HTMLElement)) {
+      throw new Error('[CKSocialShare] Missing ' + selector);
+    }
+    if (!host.style.position) host.style.position = 'relative';
+    return host;
+  }
+
   function ensureShareRoot(root, options) {
     var existing = shareRootForWidget(root);
+    var host = ensureHost(root, options.attachTo);
     if (existing) {
       applyCards(existing, options.messageCards || [], options.socialCards || []);
+      if (existing.parentElement !== host) host.appendChild(existing);
       return existing;
     }
 
@@ -190,12 +247,17 @@
     var shareRoot = holder.firstElementChild;
     if (!(shareRoot instanceof HTMLElement)) return null;
     applyCards(shareRoot, options.messageCards || [], options.socialCards || []);
-    root.appendChild(shareRoot);
+    var key = shareKeyForWidget(root, options);
+    root.setAttribute('data-ck-social-share-key', key);
+    shareRoot.setAttribute('data-ck-social-share-for', key);
+    host.appendChild(shareRoot);
     return shareRoot;
   }
 
   function applyShareRootContext(shareRoot, options) {
     if (!(shareRoot instanceof HTMLElement)) return;
+    if (options && options.attachTo) shareRoot.setAttribute('data-host', options.attachTo);
+    if (options && options.position) shareRoot.setAttribute('data-position', options.position);
     if (options && options.widgetLabel) {
       shareRoot.setAttribute('data-ck-widget-label', String(options.widgetLabel));
     }
@@ -239,18 +301,22 @@
       removeShareRoot(root);
       return;
     }
+    var placement = resolvePlacement(socialShare);
     var messageCards = enabledCardsFor(socialShare, MESSAGE_CARDS);
     var socialCards = enabledCardsFor(socialShare, SOCIAL_CARDS);
     if (messageCards.length === 0 && socialCards.length === 0) {
       removeShareRoot(root);
       return;
     }
-    var shareRoot = ensureShareRoot(root, Object.assign({}, options || {}, {
+    var shareOptions = Object.assign({}, options || {}, {
+      attachTo: placement.attachTo,
       messageCards: messageCards,
+      position: placement.position,
       socialCards: socialCards
-    }));
+    });
+    var shareRoot = ensureShareRoot(root, shareOptions);
     if (!shareRoot) return;
-    applyShareRootContext(shareRoot, options || {});
+    applyShareRootContext(shareRoot, shareOptions);
     shareRoot.hidden = false;
     bindRoot(root);
   }
@@ -423,7 +489,6 @@
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape') close();
     });
-    root.addEventListener('pointerleave', close);
 
     menu.addEventListener('click', async function (event) {
       var target = event.target;

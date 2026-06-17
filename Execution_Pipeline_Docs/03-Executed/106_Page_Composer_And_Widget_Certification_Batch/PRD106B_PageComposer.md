@@ -6,7 +6,7 @@ Date: 2026-06-05
 Parent: `106__Umbrella__Composition_Vision.md`
 Series step: 4
 Depends on: `PRD106A_realignment.md`, `PRD106A2_WidgetShellExtraction.md`
-Unlocks: `../../01-Planning/112__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
+Unlocks: `../../01-Planning/121__PRD__Prague_Migration_From_Astro_Blocks_To_Page_Composer.md`
 Authority owned by this PRD: Roma Page Composer, page source, page publish/serve-state intent, affected-page recomposition, page UX.
 Authority explicitly not owned by this PRD: Widget Shell extraction, Widget Core design, Prague block inventory, Tokyo product logic.
 

@@ -168,6 +168,8 @@ Shell state families:
 - `behavior.showBacklink`
 - `behavior.socialShare.*`
   - `behavior.socialShare.enabled`
+  - `behavior.socialShare.attachTo`
+  - `behavior.socialShare.position`
   - `behavior.socialShare.channels.*`
 - `coreSize.*`
 
@@ -224,10 +226,16 @@ widget Shell loads `shared/socialShare.css` and `shared/socialShare.js` in
 Builder preview, and Roma public package assembly chunks the same shared
 modules. `shared/socialShare.js` owns the share trigger/menu DOM: it creates the
 shared social-share root when `behavior.socialShare.enabled === true` and
-removes it when false.
+removes it when false. Social share is floating Shell chrome. It attaches to
+the selected Stage or Pod host through `behavior.socialShare.attachTo` and is
+positioned through `behavior.socialShare.position`; it is not child content in
+the widget Core and must not be affected by Core or Pod padding as body
+content.
 
 Social-share channel settings are also Shell state:
 
+- `behavior.socialShare.attachTo`
+- `behavior.socialShare.position`
 - `behavior.socialShare.channels.copy`
 - `behavior.socialShare.channels.sms`
 - `behavior.socialShare.channels.email`
@@ -254,6 +262,22 @@ channel off removes the shared social-share root. Builder preview must not
 attempt real popup or clipboard actions; public embeds must include iframe
 clipboard and popup permissions so the same Shell utility works outside
 Builder.
+
+Locale ownership is split across product authorities:
+
+- Tier policy decides locale capacity through `l10n.locales.max`.
+- Account Settings decides the selected locales the account uses:
+  `baseLocale`, `selectedTargetLocales`, and `localePolicy`.
+- Translation readiness comes from current saved translated overlay values for
+  the specific account instance.
+- The Widget Shell locale switcher only decides whether and where a specific
+  widget exposes already-ready locales.
+
+`localeSwitcher.enabled`, `localeSwitcher.attachTo`, and
+`localeSwitcher.position` are Shell display state. Widget source must not carry
+fake locale policy such as IP behavior or pinned-locale selection. The Shell
+locale switcher reads the locale list delivered by the runtime package; it must
+not infer public language options from Account Settings target-locale intent.
 
 ### Core
 

@@ -66,7 +66,7 @@
   function validateBigBangState(state) {
     assertRecord(state, 'state');
     assertRecord(state.coreSize, 'state.coreSize');
-    const localeSwitcher = assertRecord(state.localeSwitcher, 'state.localeSwitcher'); assertBoolean(localeSwitcher.enabled, 'state.localeSwitcher.enabled'); assertBoolean(localeSwitcher.byIp, 'state.localeSwitcher.byIp'); assertString(localeSwitcher.alwaysShowLocale, 'state.localeSwitcher.alwaysShowLocale'); assertEnum(localeSwitcher.attachTo, 'state.localeSwitcher.attachTo', ['stage', 'pod']); assertEnum(localeSwitcher.position, 'state.localeSwitcher.position', ['top-left', 'top-center', 'top-right', 'right-middle', 'bottom-right', 'bottom-center', 'bottom-left', 'left-middle']);
+    const localeSwitcher = assertRecord(state.localeSwitcher, 'state.localeSwitcher'); assertBoolean(localeSwitcher.enabled, 'state.localeSwitcher.enabled'); assertEnum(localeSwitcher.attachTo, 'state.localeSwitcher.attachTo', ['stage', 'pod']); assertEnum(localeSwitcher.position, 'state.localeSwitcher.position', ['top-left', 'top-center', 'top-right', 'right-middle', 'bottom-right', 'bottom-center', 'bottom-left', 'left-middle']);
     const bigBang = assertRecord(state.bigBang, 'state.bigBang');
     const statement = assertString(bigBang.statement, 'state.bigBang.statement').trim();
     if (!statement) throw new Error('[BigBang] state.bigBang.statement is required');

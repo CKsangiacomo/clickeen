@@ -210,7 +210,7 @@
 
   function validateCardsState(state) {
     assertRecord(state, 'state');
-    const localeSwitcher = assertRecord(state.localeSwitcher, 'state.localeSwitcher'); assertBoolean(localeSwitcher.enabled, 'state.localeSwitcher.enabled'); assertBoolean(localeSwitcher.byIp, 'state.localeSwitcher.byIp'); assertString(localeSwitcher.alwaysShowLocale, 'state.localeSwitcher.alwaysShowLocale'); assertEnum(localeSwitcher.attachTo, 'state.localeSwitcher.attachTo', ['stage', 'pod']); assertEnum(localeSwitcher.position, 'state.localeSwitcher.position', ['top-left', 'top-center', 'top-right', 'right-middle', 'bottom-right', 'bottom-center', 'bottom-left', 'left-middle']);
+    const localeSwitcher = assertRecord(state.localeSwitcher, 'state.localeSwitcher'); assertBoolean(localeSwitcher.enabled, 'state.localeSwitcher.enabled'); assertEnum(localeSwitcher.attachTo, 'state.localeSwitcher.attachTo', ['stage', 'pod']); assertEnum(localeSwitcher.position, 'state.localeSwitcher.position', ['top-left', 'top-center', 'top-right', 'right-middle', 'bottom-right', 'bottom-center', 'bottom-left', 'left-middle']);
     const cards = assertRecord(state.cards, 'state.cards');
     const treatment = assertEnum(cards.treatment, 'state.cards.treatment', ['cards', 'linked-cards', 'steps']);
     const between = assertRecord(cards.betweenCards, 'state.cards.betweenCards');

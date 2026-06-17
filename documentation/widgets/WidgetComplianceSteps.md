@@ -331,6 +331,11 @@ OUTPUT
   - `shared/socialShare.js` owns the shared social-share root/markup. It must
     create the trigger/menu when `behavior.socialShare.enabled === true` and
     remove it when false in both Builder preview and public output.
+  - The shared social-share root must attach to the selected Stage or Pod host
+    through `behavior.socialShare.attachTo`; it must not be appended to widget
+    Core content.
+  - `behavior.socialShare.position` places the floating Shell control from the
+    selected host.
   - `shared/socialShare.js` filters the menu from
     `behavior.socialShare.channels.*`. Missing channel leaves are treated as
     enabled for compatibility; all channels false removes the share root.
@@ -413,6 +418,9 @@ GATE
   a blocker before shipping.
 - `behavior.socialShare.channels.*` visibly filters the shared social-share
   menu without console errors.
+- Locale switcher options come from the runtime package locale list. Tier
+  decides locale capacity, Account Settings decides selected locales, and the
+  Shell utility must not invent options from selected target locales alone.
 
 ---
 

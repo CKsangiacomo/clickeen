@@ -235,9 +235,7 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
     preferredVw: 32,
   },
   localeSwitcher: {
-    alwaysShowLocale: '',
     attachTo: 'stage',
-    byIp: false,
     enabled: false,
     position: 'top-right',
   },
@@ -264,7 +262,9 @@ export const WIDGET_SHELL_FACTORY_DEFAULTS = {
         whatsapp: true,
         x: true,
       },
+      attachTo: 'stage',
       enabled: false,
+      position: 'top-right',
     },
   },
   appearance: {

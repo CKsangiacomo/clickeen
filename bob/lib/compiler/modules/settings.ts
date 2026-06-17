@@ -34,11 +34,15 @@ const localeSwitcherAttachOptions =
     '&quot;',
   );
 
+const shellUtilityAttachOptions = localeSwitcherAttachOptions;
+
 const localeSwitcherPositionOptions =
   '[{\"label\":\"Top left\",\"value\":\"top-left\"},{\"label\":\"Top center\",\"value\":\"top-center\"},{\"label\":\"Top right\",\"value\":\"top-right\"},{\"label\":\"Right middle\",\"value\":\"right-middle\"},{\"label\":\"Bottom right\",\"value\":\"bottom-right\"},{\"label\":\"Bottom center\",\"value\":\"bottom-center\"},{\"label\":\"Bottom left\",\"value\":\"bottom-left\"},{\"label\":\"Left middle\",\"value\":\"left-middle\"}]'.replace(
     /"/g,
     '&quot;',
   );
+
+const shellUtilityPositionOptions = localeSwitcherPositionOptions;
 
 function channelField(channel: SocialShareChannel): string {
   return `    <tooldrawer-field-settingsbehavior group-label='${channel.groupLabel}' type='toggle' size='md' path='behavior.socialShare.channels.${channel.key}' label='${channel.label}' show-if="behavior.socialShare.enabled == true" />`;
@@ -54,14 +58,6 @@ export function buildLocaleSwitcherSettingsPanelFields(
   push(
     'localeSwitcher.enabled',
     "    <tooldrawer-field-settingsbehavior group-label='' type='toggle' size='md' path='localeSwitcher.enabled' label='Enable locale switcher' />",
-  );
-  push(
-    'localeSwitcher.byIp',
-    "    <tooldrawer-field-settingsbehavior group-label='' type='toggle' size='md' path='localeSwitcher.byIp' label='Use visitor locale' show-if=\"localeSwitcher.enabled == true\" />",
-  );
-  push(
-    'localeSwitcher.alwaysShowLocale',
-    "    <tooldrawer-field-settingsbehavior group-label='' type='textfield' size='md' path='localeSwitcher.alwaysShowLocale' label='Pinned locale' placeholder='e.g. en' show-if=\"localeSwitcher.enabled == true\" />",
   );
   push(
     'localeSwitcher.attachTo',
@@ -83,6 +79,8 @@ export function buildSettingsBehaviorPanelFields(): string[] {
     '  </tooldrawer-cluster>',
     "  <tooldrawer-cluster label='Social share'>",
     "    <tooldrawer-field-settingsbehavior group-label='' type='toggle' size='md' path='behavior.socialShare.enabled' label='Enable social share' />",
+    `    <tooldrawer-field-settingsbehavior group-label='' type='dropdown-actions' size='md' path='behavior.socialShare.attachTo' label='Stick to' value='{{behavior.socialShare.attachTo}}' options='${shellUtilityAttachOptions}' show-if=\"behavior.socialShare.enabled == true\" />`,
+    `    <tooldrawer-field-settingsbehavior group-label='' type='dropdown-actions' size='md' path='behavior.socialShare.position' label='Position' value='{{behavior.socialShare.position}}' options='${shellUtilityPositionOptions}' show-if=\"behavior.socialShare.enabled == true\" />`,
     ...socialShareChannels.map(channelField),
     '  </tooldrawer-cluster>',
   ];

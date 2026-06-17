@@ -409,6 +409,9 @@ Shared shell invariants:
 - behavior.showBacklink is a boolean and is bound to shared branding runtime
 - behavior.socialShare.enabled is a boolean and is bound to the shared
   social-share shell runtime
+- behavior.socialShare.attachTo is "stage" or "pod"; social share is floating
+  Shell chrome and must attach to that host, not to widget Core content
+- behavior.socialShare.position is one shared Shell position token
 - behavior.socialShare.channels.* booleans are shared Shell channel settings;
   they default on for compatibility and filter the shared social-share menu
 - Settings uses the shared `settings-behavior` editor node; widgets do not
@@ -623,10 +626,19 @@ Shared Settings defaults must be executable:
   `shared/socialShare.js` and `shared/socialShare.css`; enabling it is gated by
   `widget.socialShare.enabled`. The shared runtime creates/removes the share
   trigger/menu DOM from this state path in both Builder preview and public
-  output.
+  output. The trigger/menu floats from the selected Stage or Pod host through
+  `behavior.socialShare.attachTo` and `behavior.socialShare.position`; widgets
+  do not attach social-share DOM to Core content.
 - `behavior.socialShare.channels.*`: controls which shared share actions appear
   once social share is enabled. These are Shell settings, not Core behavior,
   and they are rendered by the shared `settings-behavior` editor node.
+
+Locale switcher display state is Shell-owned, but locale availability is not.
+Tier policy decides locale capacity, Account Settings decides
+`baseLocale`/`selectedTargetLocales`/`localePolicy`, and the runtime package
+delivers the locale list available to a rendered widget. The Shell locale
+switcher may show only the locales delivered by that runtime package; selected
+target locales are not readiness.
 
 Supported social-share channel leaves are `copy`, `sms`, `email`, `whatsapp`,
 `telegram`, `signal`, `messenger`, `wechat`, `line`, `slack`, `teams`,

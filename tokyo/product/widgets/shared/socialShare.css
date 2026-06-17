@@ -2,21 +2,114 @@
   box-sizing: border-box;
 }
 
-[data-ck-widget][data-role="root"] {
-  position: relative;
-}
-
 .ck-socialShare {
   position: absolute;
-  top: var(--space-4, 16px);
-  right: var(--space-4, 16px);
   z-index: 80;
   color: var(--color-system-black, #111);
   font-family: var(--font-ui, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
 }
 
-[data-ck-widget][data-role="root"]:hover > .ck-socialShare .ck-socialShare__topbar,
-[data-ck-widget][data-role="root"]:focus-within > .ck-socialShare .ck-socialShare__topbar,
+.ck-socialShare[data-host='pod'] {
+  --ck-social-share-gap: var(--space-3, 12px);
+}
+
+.ck-socialShare[data-host='stage'] {
+  --ck-social-share-gap: var(--space-4, 16px);
+}
+
+.ck-socialShare[data-host='pod'][data-position='top-left'] {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  transform: translate(0, calc(-100% - var(--ck-social-share-gap)));
+}
+
+.ck-socialShare[data-host='pod'][data-position='top-center'] {
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  transform: translate(-50%, calc(-100% - var(--ck-social-share-gap)));
+}
+
+.ck-socialShare[data-host='pod'][data-position='top-right'] {
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  transform: translate(0, calc(-100% - var(--ck-social-share-gap)));
+}
+
+.ck-socialShare[data-host='pod'][data-position='right-middle'] {
+  inset-block-start: 50%;
+  inset-inline-end: 0;
+  transform: translate(calc(100% + var(--ck-social-share-gap)), -50%);
+}
+
+.ck-socialShare[data-host='pod'][data-position='bottom-right'] {
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  transform: translate(0, calc(100% + var(--ck-social-share-gap)));
+}
+
+.ck-socialShare[data-host='pod'][data-position='bottom-center'] {
+  inset-block-end: 0;
+  inset-inline-start: 50%;
+  transform: translate(-50%, calc(100% + var(--ck-social-share-gap)));
+}
+
+.ck-socialShare[data-host='pod'][data-position='bottom-left'] {
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  transform: translate(0, calc(100% + var(--ck-social-share-gap)));
+}
+
+.ck-socialShare[data-host='pod'][data-position='left-middle'] {
+  inset-block-start: 50%;
+  inset-inline-start: 0;
+  transform: translate(calc(-100% - var(--ck-social-share-gap)), -50%);
+}
+
+.ck-socialShare[data-host='stage'][data-position='top-left'] {
+  inset-block-start: var(--ck-social-share-gap);
+  inset-inline-start: var(--ck-social-share-gap);
+}
+
+.ck-socialShare[data-host='stage'][data-position='top-center'] {
+  inset-block-start: var(--ck-social-share-gap);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+}
+
+.ck-socialShare[data-host='stage'][data-position='top-right'] {
+  inset-block-start: var(--ck-social-share-gap);
+  inset-inline-end: var(--ck-social-share-gap);
+}
+
+.ck-socialShare[data-host='stage'][data-position='right-middle'] {
+  inset-block-start: 50%;
+  inset-inline-end: var(--ck-social-share-gap);
+  transform: translateY(-50%);
+}
+
+.ck-socialShare[data-host='stage'][data-position='bottom-right'] {
+  inset-block-end: var(--ck-social-share-gap);
+  inset-inline-end: var(--ck-social-share-gap);
+}
+
+.ck-socialShare[data-host='stage'][data-position='bottom-center'] {
+  inset-block-end: var(--ck-social-share-gap);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+}
+
+.ck-socialShare[data-host='stage'][data-position='bottom-left'] {
+  inset-block-end: var(--ck-social-share-gap);
+  inset-inline-start: var(--ck-social-share-gap);
+}
+
+.ck-socialShare[data-host='stage'][data-position='left-middle'] {
+  inset-block-start: 50%;
+  inset-inline-start: var(--ck-social-share-gap);
+  transform: translateY(-50%);
+}
+
+.ck-socialShare:hover .ck-socialShare__topbar,
 .ck-socialShare[data-ck-preview="true"] .ck-socialShare__topbar,
 .ck-socialShare:focus-within .ck-socialShare__topbar {
   opacity: 1;
@@ -201,9 +294,8 @@
 }
 
 @media (max-width: 720px) {
-  .ck-socialShare {
-    top: var(--space-3, 12px);
-    right: var(--space-3, 12px);
+  .ck-socialShare[data-host='stage'] {
+    --ck-social-share-gap: var(--space-3, 12px);
   }
 
   .ck-socialShare__menu {

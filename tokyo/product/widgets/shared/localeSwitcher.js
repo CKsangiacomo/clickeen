@@ -176,7 +176,7 @@
     }
 
     const config = state && state.localeSwitcher && typeof state.localeSwitcher === 'object' && !Array.isArray(state.localeSwitcher) ? state.localeSwitcher : null;
-    if (!config || typeof config.enabled !== 'boolean' || typeof config.byIp !== 'boolean' || typeof config.alwaysShowLocale !== 'string' || (config.attachTo !== 'pod' && config.attachTo !== 'stage') || !POSITION_SET.has(config.position)) {
+    if (!config || typeof config.enabled !== 'boolean' || (config.attachTo !== 'pod' && config.attachTo !== 'stage') || !POSITION_SET.has(config.position)) {
       throw new Error('[CKLocaleSwitcher] ck_locale_switcher_placement_invalid');
     }
     if (runtimeContext && runtimeContext.composedPage === true) {
