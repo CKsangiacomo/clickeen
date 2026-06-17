@@ -84,7 +84,7 @@ This ledger is the current execution truth for PRD 124. A subPRD stays in
 | PRD | Status | Done | Open |
 | --- | --- | --- | --- |
 | 124A Berlin | Executing | BER-01 invitation/login identity critical slice; BER-02 account deletion disabled instead of returning DB-only success. | BER-03 through BER-12 remain open. BER-01 and BER-02 still require final subPRD closure verification before 124A can move to executed. |
-| 124B Bob | Executing | BOB-01, BOB-02, BOB-03, BOB-04, BOB-05, and BOB-08 have execution notes. BOB-07 has the narrow dirty/save `{}` substitution deletion. | BOB-06 remains open after the strictness-drift correction. 124B must not move to executed until BOB-06 and all completion gates are satisfied. |
+| 124B Bob | Executed | BOB-01 through BOB-08 are complete. BOB-06 closure made malformed widget software fail in existing Bob compiler/control paths for presets, JSON attrs/options, show-if, and linked ops. | Final V1-V8 closure audit passed. |
 | 124C Roma | Executing | RMA-004 asset delete response truth; RMA-005 explicit Bob origin; BER-02 overlap for account deletion conflict/removal from settings. | RMA-001, RMA-002, RMA-003, and RMA-006 through RMA-013 remain open. |
 | 124D Tokyo product roots | Executed | TOKYO-R2-001 aligned non-Prague R2 sync triggers for `tokyo/roma/**`; TOKYO-R2-002 deleted dead `tokyo/_redirects`; TOKYO-R2-003 deleted dead `tokyo/accounts` fixture root and added the existing PR architecture gate check against reintroduction; TOKYO-R2-004, TOKYO-R2-005, and TOKYO-R2-006 are recorded as completed historical Prague cleanup before the scope correction; TOKYO-R2-007 deleted dormant `tokyo/product/media/brand/**` and removed the `product/media` sync root; TOKYO-R2-008 deleted legacy PRD 106/107 direct account R2 repair/audit scripts and removed the exposed `audit:106` closure ritual. | Final V1-V8 closure audits passed. TOKYO-R2-009 and remaining Prague/page work are deferred to the planned Prague/page-composer sequence. |
 | 124E Tokyo-worker | Executing | TW-01 critical slice removed public `__internal/*` write route exposure and public CORS advertisement for the internal header. | TW-02 through TW-15 remain open. TW-01 still requires final subPRD closure verification before 124E can move to executed. |
@@ -97,6 +97,7 @@ Recent execution commits:
 | `b2d399a5` | PRD 124B Bob authority cleanup. |
 | `1092a023` | Over-scoped Bob strictness pass; superseded by correction. |
 | `4d9c52d0` | Corrected PRD 124B strictness drift, moved 124B back to executing, and left BOB-06 open. |
+| `336479ab` | Executed PRD 124B BOB-06 compiler/control strictness and moved 124B to executed. |
 
 Execution tenet:
 

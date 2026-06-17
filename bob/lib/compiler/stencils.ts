@@ -3,6 +3,7 @@ import { parseTooldrawerAttributes } from '../compiler.shared';
 import { getIcon } from '../icons';
 import { requireTokyoUrl } from './media';
 import { interpolateStencilContext, renderStencil } from './stencil-renderer';
+import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
 
 type ComponentSpec = {
   defaults?: Array<{
@@ -43,14 +44,8 @@ function normalizeJsonAttrValue(raw: string): string {
 
   // Support inputs that are already entity-encoded or even double-encoded (e.g. &amp;quot;).
   const decodedTwice = decodeHtmlEntities(decodeHtmlEntities(trimmed));
-
-  try {
-    const parsed = JSON.parse(decodedTwice) as unknown;
-    return encodeHtmlEntities(JSON.stringify(parsed));
-  } catch {
-    // Still ensure the attribute remains valid HTML even if the payload isn't valid JSON.
-    return encodeHtmlEntities(decodedTwice);
-  }
+  const parsed = JSON.parse(decodedTwice) as unknown;
+  return encodeHtmlEntities(JSON.stringify(parsed));
 }
 
 function parseBooleanAttr(value: string | undefined): boolean | undefined {
@@ -172,6 +167,7 @@ async function renderNestedTooldrawerFields(
     }
 
     const showIf = attrsInner['show-if'] ? decodeHtmlEntities(attrsInner['show-if']) : '';
+    if (showIf) validateShowIfExpression(showIf);
     out += showIf ? `<div data-bob-showif="${encodeHtmlEntities(showIf)}">${rendered}</div>` : rendered;
     cursor = tdRegex.lastIndex;
   }
@@ -252,9 +248,10 @@ export async function buildContext(
   if (attrs.options) {
     const decoded = decodeHtmlEntities(attrs.options);
     const parsed = JSON.parse(decoded);
-    if (Array.isArray(parsed)) {
-      options = parsed;
+    if (!Array.isArray(parsed)) {
+      throw new Error(`[BobCompiler] options for component "${component}" must be a JSON array`);
     }
+    options = parsed;
   }
   const themeSourcePath = widgetContext?.themeSourcePath || '';
   const themeOptions = widgetContext?.themeOptions;

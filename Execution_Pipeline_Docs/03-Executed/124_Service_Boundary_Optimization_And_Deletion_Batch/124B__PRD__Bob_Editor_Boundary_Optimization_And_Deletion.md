@@ -1,6 +1,6 @@
 # PRD 124B - Bob Editor Boundary Optimization And Deletion
 
-Status: EXECUTING
+Status: EXECUTED
 Parent: PRD 124
 Owner: Bob editor boundary
 Date: 2026-06-17
@@ -64,6 +64,13 @@ Bob does not own:
 
 - Reopened PRD 124B after removing the over-scoped compiler/session strictness pass. The remaining BOB-06 work stays open.
 - Retained only narrow fallback deletion: ToolDrawer `show-if` no longer swallows parse/eval errors, and dirty/save signature no longer substitutes `{}` when config serialization fails.
+
+2026-06-17 BOB-06 closure slice:
+
+- BOB-06: made malformed widget software fail in existing Bob compile/control paths instead of silently skipping or substituting malformed presets, JSON attrs/options, show-if expressions, or linked-op state.
+- BOB-06: kept the fix inside existing Bob compiler, show-if, and linked-op code. No new validator service, runtime probe, warning gate, compatibility wrapper, or alternate product mode was added.
+- Verification: `git diff --check`, `pnpm --filter @clickeen/bob lint`, `pnpm --filter @clickeen/bob typecheck`, `pnpm validate:widgets && pnpm lint && pnpm typecheck`.
+- Subagent closure audit passed for BOB-06 scope and V1-V8. The scoped diff was limited to `compiler.server.ts`, `stencils.ts`, `controls.ts`, `showIf.ts`, and `linkedOps.ts`.
 
 ## Completion Gates
 

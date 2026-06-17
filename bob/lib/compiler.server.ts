@@ -9,6 +9,7 @@ import { buildContext, loadComponentStencil, renderComponentStencil } from './co
 import { normalizeWidgetNormalizationSpec } from './compiler/modules/normalization';
 import { buildHeaderPresets } from './compiler/modules/header';
 import { resolveTokyoBaseUrl } from './env/tokyo';
+import { validateShowIfExpression } from '../components/td-menu-content/showIf';
 import themesJson from '../../tokyo/product/themes/themes.json';
 
 function findTagEnd(source: string, startIndex: number): number {
@@ -150,24 +151,35 @@ function composeWidgetFactoryDefaults(coreDefaults: Record<string, unknown>): Re
 }
 
 function normalizePresets(raw: unknown): WidgetPresets | undefined {
-  if (!isPlainObject(raw)) return undefined;
+  if (raw == null) return undefined;
+  if (!isPlainObject(raw)) throw new Error('[BobCompiler] widget presets must be an object');
   const normalized: WidgetPresets = {};
 
   for (const [sourcePath, specRaw] of Object.entries(raw)) {
-    if (!sourcePath || !isPlainObject(specRaw)) continue;
+    if (!sourcePath.trim()) throw new Error('[BobCompiler] widget preset source path is missing');
+    if (!isPlainObject(specRaw)) throw new Error(`[BobCompiler] preset "${sourcePath}" must be an object`);
     const valuesRaw = (specRaw as { values?: unknown }).values;
-    if (!isPlainObject(valuesRaw)) continue;
+    if (!isPlainObject(valuesRaw)) throw new Error(`[BobCompiler] preset "${sourcePath}" values must be an object`);
 
     const values: Record<string, Record<string, unknown>> = {};
     for (const [presetKey, presetValuesRaw] of Object.entries(valuesRaw)) {
-      if (!presetKey || !isPlainObject(presetValuesRaw)) continue;
+      if (!presetKey.trim()) throw new Error(`[BobCompiler] preset "${sourcePath}" has an empty preset key`);
+      if (!isPlainObject(presetValuesRaw)) {
+        throw new Error(`[BobCompiler] preset "${sourcePath}.${presetKey}" values must be an object`);
+      }
+      if (Object.keys(presetValuesRaw).length === 0) {
+        throw new Error(`[BobCompiler] preset "${sourcePath}.${presetKey}" values cannot be empty`);
+      }
       values[presetKey] = presetValuesRaw;
     }
 
-    if (Object.keys(values).length === 0) continue;
+    if (Object.keys(values).length === 0) throw new Error(`[BobCompiler] preset "${sourcePath}" values cannot be empty`);
     const customValue = (specRaw as { customValue?: unknown }).customValue;
+    if (customValue != null && (typeof customValue !== 'string' || !customValue.trim())) {
+      throw new Error(`[BobCompiler] preset "${sourcePath}" customValue must be a non-empty string`);
+    }
     normalized[sourcePath] = {
-      ...(typeof customValue === 'string' && customValue.trim() ? { customValue: customValue.trim() } : {}),
+      ...(typeof customValue === 'string' ? { customValue: customValue.trim() } : {}),
       values,
     };
   }
@@ -328,6 +340,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
         }
 
         const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : '';
+        if (showIf) validateShowIfExpression(showIf);
         const wrappers: string[] = [];
         const shouldWrapGroup = Boolean(groupKey);
         if (shouldWrapGroup && groupKey) {

@@ -2,6 +2,7 @@ import type { CompiledControl, CompiledControlOption, CompiledPanel, ControlKind
 import { decodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.shared';
 import { getIcon } from '../icons';
 import { getAt } from '../utils/paths';
+import { validateShowIfExpression } from '../../components/td-menu-content/showIf';
 
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 
@@ -89,6 +90,7 @@ export function expandTooldrawerClusters(html: string): string {
       if (depth === 0) {
         const inner = html.slice(openEnd + 1, nextClose);
         const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : '';
+        if (showIf) validateShowIfExpression(showIf);
 
         if (attrs.gap || attrs['space-after'] || attrs.spaceAfter) {
           throw new Error(
@@ -156,16 +158,22 @@ function parseControlOptions(args: {
     throw new Error(`[BobCompiler] options for control "${args.controlPath}" must be a JSON array`);
   }
 
-  const options = parsed
-    .map((opt) => {
-      if (!opt || typeof opt !== 'object') return null;
-      if ('isGroupHeader' in opt && (opt as any).isGroupHeader === true) return null;
-      const label = 'label' in opt ? String((opt as any).label) : '';
-      const value = 'value' in opt ? String((opt as any).value) : '';
-      if (!label && !value) return null;
-      return { label, value };
-    })
-    .filter((opt): opt is CompiledControlOption => Boolean(opt));
+  const options: CompiledControlOption[] = [];
+  parsed.forEach((opt, index) => {
+    if (!opt || typeof opt !== 'object' || Array.isArray(opt)) {
+      throw new Error(`[BobCompiler] options[${index}] for control "${args.controlPath}" must be an object`);
+    }
+    if ('isGroupHeader' in opt && (opt as any).isGroupHeader === true) return;
+    const label = (opt as any).label;
+    const value = (opt as any).value;
+    if (typeof label !== 'string' || !label.trim()) {
+      throw new Error(`[BobCompiler] options[${index}] for control "${args.controlPath}" requires label`);
+    }
+    if (typeof value !== 'string' || !value.trim()) {
+      throw new Error(`[BobCompiler] options[${index}] for control "${args.controlPath}" requires value`);
+    }
+    options.push({ label, value });
+  });
   return options.length ? options : undefined;
 }
 
@@ -286,6 +294,8 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
       const allowImageFromModes = fillModes ? fillModes.some((mode) => mode === 'image' || mode === 'video') : undefined;
       const allowImage =
         type === 'dropdown-fill' ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage) : undefined;
+      const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : undefined;
+      if (showIf) validateShowIfExpression(showIf);
       controls.push({
         panelId,
         groupId,
@@ -293,7 +303,7 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
         type,
         path,
         label: attrs.label ? decodeHtmlEntities(attrs.label) : undefined,
-        showIf: attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : undefined,
+        showIf,
         options: attrs.options ? parseControlOptions({ controlPath: path, optionsRaw: attrs.options }) : undefined,
         allowImage,
         enumValues: fillModes ?? undefined,

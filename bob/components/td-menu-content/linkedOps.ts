@@ -12,7 +12,7 @@ type PresetSpec = {
 
 type PresetEntry = {
   sourcePath: string;
-  customValue: string;
+  customValue?: string;
   values: Record<string, Record<string, unknown>>;
   targetPaths: string[];
 };
@@ -30,33 +30,43 @@ function finiteNumber(value: unknown): number | null {
 }
 
 function buildPresetEntries(raw: unknown): PresetEntry[] {
-  if (!isPlainRecord(raw)) return [];
+  if (raw == null) return [];
+  if (!isPlainRecord(raw)) throw new Error('[BobLinkedOps] compiled presets must be an object');
   const entries: PresetEntry[] = [];
 
   for (const [sourcePath, specRaw] of Object.entries(raw)) {
-    if (!sourcePath || !isPlainRecord(specRaw)) continue;
+    if (!sourcePath.trim()) throw new Error('[BobLinkedOps] compiled preset source path is missing');
+    if (!isPlainRecord(specRaw)) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" must be an object`);
     const valuesRaw = (specRaw as PresetSpec).values;
-    if (!isPlainRecord(valuesRaw)) continue;
+    if (!isPlainRecord(valuesRaw)) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" values must be an object`);
 
     const values: Record<string, Record<string, unknown>> = {};
     const targetSet = new Set<string>();
     for (const [presetKey, mappingRaw] of Object.entries(valuesRaw)) {
-      if (!presetKey || !isPlainRecord(mappingRaw)) continue;
+      if (!presetKey.trim()) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" has an empty preset key`);
+      if (!isPlainRecord(mappingRaw)) {
+        throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}.${presetKey}" values must be an object`);
+      }
+      if (Object.keys(mappingRaw).length === 0) {
+        throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}.${presetKey}" values cannot be empty`);
+      }
       values[presetKey] = mappingRaw;
       Object.keys(mappingRaw).forEach((path) => {
-        if (path) targetSet.add(path);
+        if (!path.trim()) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}.${presetKey}" has an empty target path`);
+        targetSet.add(path);
       });
     }
 
-    if (Object.keys(values).length === 0 || targetSet.size === 0) continue;
-    const customValue =
-      typeof (specRaw as PresetSpec).customValue === 'string' && (specRaw as PresetSpec).customValue?.trim()
-        ? (specRaw as PresetSpec).customValue!.trim()
-        : 'custom';
+    if (Object.keys(values).length === 0) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" values cannot be empty`);
+    if (targetSet.size === 0) throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" has no target paths`);
+    const customValue = (specRaw as PresetSpec).customValue;
+    if (customValue != null && (typeof customValue !== 'string' || !customValue.trim())) {
+      throw new Error(`[BobLinkedOps] compiled preset "${sourcePath}" customValue must be a non-empty string`);
+    }
 
     entries.push({
       sourcePath,
-      customValue,
+      ...(typeof customValue === 'string' ? { customValue: customValue.trim() } : {}),
       values,
       targetPaths: Array.from(targetSet),
     });
@@ -69,11 +79,36 @@ function pathMatchesTarget(path: string, target: string): boolean {
   return path === target || path.startsWith(`${target}.`);
 }
 
-function pickAllowedValue(current: unknown, allowed: string[], preferred: string): string {
+function pickAllowedValue(current: unknown, allowed: string[], path: string): string {
   const trimmed = typeof current === 'string' ? current.trim() : '';
   if (trimmed && allowed.includes(trimmed)) return trimmed;
-  if (allowed.includes(preferred)) return preferred;
-  return allowed[0] ?? '';
+  throw new Error(`[BobLinkedOps] current value for "${path}" is not allowed by the selected typography family`);
+}
+
+function requireBoolean(value: unknown, path: string): boolean {
+  if (typeof value === 'boolean') return value;
+  throw new Error(`[BobLinkedOps] "${path}" must be a boolean`);
+}
+
+function requireShadowRecord(value: unknown, path: string): Record<string, unknown> {
+  if (!isPlainRecord(value)) throw new Error(`[BobLinkedOps] "${path}" must be an object`);
+  if (finiteNumber((value as Record<string, unknown>).x) == null) {
+    throw new Error(`[BobLinkedOps] "${path}.x" must be a number`);
+  }
+  if (finiteNumber((value as Record<string, unknown>).y) == null) {
+    throw new Error(`[BobLinkedOps] "${path}.y" must be a number`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function isLinkedTogglePath(path: string): boolean {
+  return (
+    new RegExp(`^((?:pod|(?:[a-zA-Z0-9_-]+\\.)?appearance\\.cardwrapper))\\.radiusLinked$`).test(path) ||
+    new RegExp(`^(${surfaceOwnerPattern})\\.insideShadow\\.linked$`).test(path) ||
+    /^(pod|stage)\.padding\.(desktop|mobile)\.linked$/.test(path) ||
+    path === 'layout.itemPaddingLinked' ||
+    path === 'appearance.headerCta.paddingLinked'
+  );
 }
 
 export function expandLinkedOps(args: {
@@ -98,6 +133,21 @@ export function expandLinkedOps(args: {
   const presetOps = new Map<string, WidgetOp>();
   const themeScopePrefixes = ['stage.', 'pod.', 'appearance.', 'typography.'];
   const insideShadowLinkedOverrides = new Map<string, boolean>();
+  const requireAllowedPath = (path: string) => {
+    if (!isAllowedPath(path)) throw new Error(`[BobLinkedOps] preset target path "${path}" has no compiled control`);
+  };
+
+  presetEntries.forEach((entry) => {
+    entry.targetPaths.forEach((targetPath) => {
+      if (targetPath === 'typography.globalFamily') {
+        if (typographyFamilyPaths.length === 0) {
+          throw new Error('[BobLinkedOps] typography.globalFamily preset has no typography family controls');
+        }
+        return;
+      }
+      requireAllowedPath(targetPath);
+    });
+  });
 
   for (const op of args.ops) {
     if (op.op === 'set' && typeof op.path === 'string' && presetByPath.has(op.path)) {
@@ -116,6 +166,7 @@ export function expandLinkedOps(args: {
     const currentValue = getAt<unknown>(args.instanceData, entry.sourcePath);
     const shouldResetPreset =
       !presetOps.has(entry.sourcePath) &&
+      typeof entry.customValue === 'string' &&
       typeof currentValue === 'string' &&
       currentValue !== entry.customValue &&
       args.ops.some((op) => {
@@ -137,44 +188,46 @@ export function expandLinkedOps(args: {
       expanded.push(op);
       continue;
     }
+    if (isLinkedTogglePath(op.path) && typeof op.value !== 'boolean') requireBoolean(op.value, op.path);
 
     const presetEntry = presetByPath.get(op.path);
     if (presetEntry && typeof op.value === 'string') {
       expanded.push(op);
-      const presetValues = op.value !== presetEntry.customValue ? presetEntry.values[op.value] : null;
+      const isCustomValue = typeof presetEntry.customValue === 'string' && op.value === presetEntry.customValue;
+      const presetValues = isCustomValue ? null : presetEntry.values[op.value];
+      if (!isCustomValue && !presetValues) {
+        throw new Error(`[BobLinkedOps] preset "${op.value}" is not defined for "${op.path}"`);
+      }
       if (presetValues) {
         for (const [presetPath, presetValue] of Object.entries(presetValues)) {
           if (presetPath === 'typography.globalFamily') {
             const familyValue = typeof presetValue === 'string' ? presetValue : '';
-            if (familyValue) {
-              const allowedWeights = getCkTypographyAllowedWeights(familyValue);
-              const allowedStyles = getCkTypographyAllowedStyles(familyValue);
-              typographyFamilyPaths.forEach((familyPath) => {
-                if (isAllowedPath(familyPath)) {
-                  expanded.push(setOp(familyPath, familyValue));
-                }
+            if (!familyValue) throw new Error(`[BobLinkedOps] preset "${op.value}" has an invalid typography.globalFamily value`);
+            const allowedWeights = getCkTypographyAllowedWeights(familyValue);
+            const allowedStyles = getCkTypographyAllowedStyles(familyValue);
+            typographyFamilyPaths.forEach((familyPath) => {
+              if (isAllowedPath(familyPath)) {
+                expanded.push(setOp(familyPath, familyValue));
+              }
 
-                const roleBase = familyPath.replace(/\.family$/, '');
-                const weightPath = `${roleBase}.weight`;
-                const stylePath = `${roleBase}.fontStyle`;
+              const roleBase = familyPath.replace(/\.family$/, '');
+              const weightPath = `${roleBase}.weight`;
+              const stylePath = `${roleBase}.fontStyle`;
 
-                if (allowedWeights.length > 0 && isAllowedPath(weightPath)) {
-                  const currentWeight = getAt<unknown>(args.instanceData, weightPath);
-                  const nextWeight = pickAllowedValue(currentWeight, allowedWeights, '400');
-                  if (nextWeight) expanded.push(setOp(weightPath, nextWeight));
-                }
+              if (allowedWeights.length > 0 && isAllowedPath(weightPath)) {
+                const currentWeight = getAt<unknown>(args.instanceData, weightPath);
+                expanded.push(setOp(weightPath, pickAllowedValue(currentWeight, allowedWeights, weightPath)));
+              }
 
-                if (allowedStyles.length > 0 && isAllowedPath(stylePath)) {
-                  const currentStyle = getAt<unknown>(args.instanceData, stylePath);
-                  const nextStyle = pickAllowedValue(currentStyle, allowedStyles, 'normal');
-                  if (nextStyle) expanded.push(setOp(stylePath, nextStyle));
-                }
-              });
-            }
+              if (allowedStyles.length > 0 && isAllowedPath(stylePath)) {
+                const currentStyle = getAt<unknown>(args.instanceData, stylePath);
+                expanded.push(setOp(stylePath, pickAllowedValue(currentStyle, allowedStyles, stylePath)));
+              }
+            });
+            continue;
           }
-          if (isAllowedPath(presetPath)) {
-            expanded.push(setOp(presetPath, presetValue));
-          }
+          requireAllowedPath(presetPath);
+          expanded.push(setOp(presetPath, presetValue));
         }
       }
       continue;
@@ -195,8 +248,7 @@ export function expandLinkedOps(args: {
         const tlValue = getAt<unknown>(args.instanceData, tlPath);
         const source = nextLinked ? tlValue : linkedValue;
         if (typeof source !== 'string' || !source.trim()) {
-          expanded.push(op);
-          continue;
+          throw new Error(`[BobLinkedOps] "${op.path}" cannot link radius from malformed source value`);
         }
 
         expanded.push(
@@ -226,20 +278,10 @@ export function expandLinkedOps(args: {
         const bottomValue = getAt<unknown>(args.instanceData, bottomPath);
         const leftValue = getAt<unknown>(args.instanceData, leftPath);
 
-        const pickAxis = (value: unknown, axisKey: 'x' | 'y'): number | null => {
-          if (!isPlainRecord(value)) return null;
-          return finiteNumber((value as Record<string, unknown>)[axisKey]);
-        };
-
         const makeShadowFrom = (sourceShadow: Record<string, unknown>) => () => ({ ...sourceShadow });
 
         if (!nextLinked) {
-          if (!isPlainRecord(allValue)) {
-            expanded.push(op);
-            continue;
-          }
-
-          const makeShadow = makeShadowFrom(allValue as Record<string, unknown>);
+          const makeShadow = makeShadowFrom(requireShadowRecord(allValue, allPath));
           expanded.push(
             setOp(op.path, nextLinked),
             setOp(topPath, makeShadow()),
@@ -250,24 +292,16 @@ export function expandLinkedOps(args: {
           continue;
         }
 
-        const baseShadowRaw =
-          (isPlainRecord(topValue) ? topValue : null) ??
-          (isPlainRecord(allValue) ? allValue : null) ??
-          (isPlainRecord(leftValue) ? leftValue : null) ??
-          (isPlainRecord(rightValue) ? rightValue : null) ??
-          (isPlainRecord(bottomValue) ? bottomValue : null);
-
-        if (!baseShadowRaw) {
-          expanded.push(op);
-          continue;
-        }
-
-        const baseShadow = baseShadowRaw as Record<string, unknown>;
+        const topShadow = requireShadowRecord(topValue, topPath);
+        requireShadowRecord(rightValue, rightPath);
+        requireShadowRecord(bottomValue, bottomPath);
+        const leftShadow = requireShadowRecord(leftValue, leftPath);
+        const baseShadow = topShadow;
         const mergedShadow: Record<string, unknown> = { ...baseShadow };
-        const xFromSides = pickAxis(leftValue, 'x') ?? pickAxis(rightValue, 'x');
-        const yFromSides = pickAxis(topValue, 'y') ?? pickAxis(bottomValue, 'y');
-        if (xFromSides != null) mergedShadow.x = xFromSides;
-        if (yFromSides != null) mergedShadow.y = yFromSides;
+        const xFromLeft = leftShadow.x as number;
+        const yFromTop = topShadow.y as number;
+        mergedShadow.x = xFromLeft;
+        mergedShadow.y = yFromTop;
 
         const makeShadow = makeShadowFrom(mergedShadow);
 
@@ -299,8 +333,7 @@ export function expandLinkedOps(args: {
         const source = nextLinked ? topValue : linkedValue;
         const numberValue = finiteNumber(source);
         if (numberValue == null) {
-          expanded.push(op);
-          continue;
+          throw new Error(`[BobLinkedOps] "${op.path}" cannot link padding from malformed source value`);
         }
 
         expanded.push(
@@ -321,8 +354,7 @@ export function expandLinkedOps(args: {
         const source = nextLinked ? topValue : linkedValue;
         const numberValue = finiteNumber(source);
         if (numberValue == null) {
-          expanded.push(op);
-          continue;
+          throw new Error(`[BobLinkedOps] "${op.path}" cannot link item padding from malformed source value`);
         }
 
         expanded.push(
@@ -342,8 +374,7 @@ export function expandLinkedOps(args: {
           const inlineValue = getAt<unknown>(args.instanceData, 'appearance.headerCta.paddingInline');
           const numberValue = finiteNumber(inlineValue);
           if (numberValue == null) {
-            expanded.push(op);
-            continue;
+            throw new Error(`[BobLinkedOps] "${op.path}" cannot link header CTA padding from malformed source value`);
           }
           expanded.push(setOp(op.path, true), setOp('appearance.headerCta.paddingBlock', numberValue));
           continue;
@@ -357,8 +388,11 @@ export function expandLinkedOps(args: {
       const deviceKey = v2PaddingAllMatch[2];
       const base = `${rootKey}.padding.${deviceKey}`;
       const linkedValue = getAt<unknown>(args.instanceData, `${base}.linked`);
-      const linked = linkedValue !== false;
+      const linked = requireBoolean(linkedValue, `${base}.linked`);
       const numberValue = finiteNumber(op.value);
+      if (linked && numberValue == null) {
+        throw new Error(`[BobLinkedOps] "${op.path}" cannot update linked padding from malformed value`);
+      }
       if (linked && numberValue != null) {
         expanded.push(
           setOp(op.path, numberValue),
@@ -376,9 +410,9 @@ export function expandLinkedOps(args: {
       const base = insideShadowAllMatch[1];
       const linkedOverride = insideShadowLinkedOverrides.get(base);
       const linkedValue = linkedOverride != null ? linkedOverride : getAt<unknown>(args.instanceData, `${base}.insideShadow.linked`);
-      const linked = linkedValue !== false;
-      if (linked && isPlainRecord(op.value)) {
-        const sourceShadow = op.value as Record<string, unknown>;
+      const linked = requireBoolean(linkedValue, `${base}.insideShadow.linked`);
+      if (linked) {
+        const sourceShadow = requireShadowRecord(op.value, op.path);
         const makeShadow = () => ({ ...sourceShadow });
         expanded.push(
           setOp(op.path, makeShadow()),
@@ -395,7 +429,10 @@ export function expandLinkedOps(args: {
     if (radiusValueMatch) {
       const base = radiusValueMatch[1];
       const linkedValue = getAt<unknown>(args.instanceData, `${base}.radiusLinked`);
-      const linked = linkedValue !== false;
+      const linked = requireBoolean(linkedValue, `${base}.radiusLinked`);
+      if (linked && (typeof op.value !== 'string' || !op.value.trim())) {
+        throw new Error(`[BobLinkedOps] "${op.path}" cannot update linked radius from malformed value`);
+      }
       if (linked && typeof op.value === 'string' && op.value.trim()) {
         expanded.push(
           op,
@@ -410,8 +447,11 @@ export function expandLinkedOps(args: {
 
     if (op.path === 'layout.itemPadding') {
       const linkedValue = getAt<unknown>(args.instanceData, 'layout.itemPaddingLinked');
-      const linked = linkedValue !== false;
+      const linked = requireBoolean(linkedValue, 'layout.itemPaddingLinked');
       const numberValue = finiteNumber(op.value);
+      if (linked && numberValue == null) {
+        throw new Error(`[BobLinkedOps] "${op.path}" cannot update linked item padding from malformed value`);
+      }
       if (linked && numberValue != null) {
         expanded.push(
           setOp(op.path, numberValue),
@@ -426,8 +466,11 @@ export function expandLinkedOps(args: {
 
     if (op.path === 'appearance.headerCta.paddingInline') {
       const linkedValue = getAt<unknown>(args.instanceData, 'appearance.headerCta.paddingLinked');
-      const linked = linkedValue === true;
+      const linked = requireBoolean(linkedValue, 'appearance.headerCta.paddingLinked');
       const numberValue = finiteNumber(op.value);
+      if (linked && numberValue == null) {
+        throw new Error(`[BobLinkedOps] "${op.path}" cannot update linked header CTA padding from malformed value`);
+      }
       if (linked && numberValue != null) {
         expanded.push(setOp(op.path, numberValue), setOp('appearance.headerCta.paddingBlock', numberValue));
         continue;

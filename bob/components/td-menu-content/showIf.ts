@@ -79,6 +79,7 @@ function tokenizeShowIf(input: string): Token[] {
         val += src[j];
         j += 1;
       }
+      if (j >= src.length) throw new Error('Unclosed string in show-if expression');
       tokens.push({ t: 'string', v: val });
       i = j + 1;
       continue;
@@ -90,7 +91,9 @@ function tokenizeShowIf(input: string): Token[] {
         raw += src[j];
         j += 1;
       }
-      tokens.push({ t: 'number', v: Number(raw) });
+      const num = Number(raw);
+      if (!Number.isFinite(num)) throw new Error(`Invalid number "${raw}" in show-if expression`);
+      tokens.push({ t: 'number', v: num });
       i = j;
       continue;
     }
@@ -213,7 +216,33 @@ function parseShowIf(raw: string): ShowIfAst | null {
   }
 
   if (tokens.length === 0) return null;
-  return parseOr();
+  const ast = parseOr();
+  if (idx < tokens.length) {
+    const tok = tokens[idx];
+    throw new Error(`Unexpected trailing token "${'v' in tok ? tok.v : tok.t}" in show-if expression`);
+  }
+  return ast;
+}
+
+export function validateShowIfExpression(raw: string): void {
+  const ast = parseShowIf(raw);
+  const visit = (node: ShowIfAst | null): void => {
+    if (!node) return;
+    if (node.type === 'call') {
+      if (node.name !== 'hasLinks') throw new Error(`Unknown show-if function "${node.name}"`);
+      node.args.forEach(visit);
+      return;
+    }
+    if (node.type === 'not') {
+      visit(node.child);
+      return;
+    }
+    if (node.type === 'and' || node.type === 'or' || node.type === 'eq' || node.type === 'neq') {
+      visit(node.left);
+      visit(node.right);
+    }
+  };
+  visit(ast);
 }
 
 function resolveValue(node: ShowIfAst, data: Record<string, unknown>): unknown {
