@@ -196,7 +196,8 @@ Meaning: the caller cannot reach the explicitly configured San Francisco base UR
 
 Actions:
 - Ensure the worker is deployed and the route is correct.
-- Ensure `SANFRANCISCO_BASE_URL` is set where the caller runs (Bob, and any Roma server route that calls SF directly).
+- Ensure `SANFRANCISCO_BASE_URL` is set where the caller runs. Current account
+  Builder AI calls run through Roma server routes, not Bob.
 - In local dev, set `SANFRANCISCO_BASE_URL=http://localhost:3002` explicitly if you are running San Francisco locally.
 
 ### “Missing AI_GRANT_HMAC_SECRET”

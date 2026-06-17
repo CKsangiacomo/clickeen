@@ -123,6 +123,12 @@ and public serving can reject mixed package state deterministically.
 Translation generation is a separate explicit operation from the Translations
 panel.
 
+Roma Builder owns public widget copy actions for the current account and opened
+instance. It builds the public URL and iframe/script snippets from the current
+account public id, the concrete instance id, the configured public-serving
+origin, and the publish status returned by the Builder-open envelope.
+Unpublished instances do not expose copyable public code.
+
 ## Widgets Domain
 
 Roma `/widgets` is the account widget management surface.

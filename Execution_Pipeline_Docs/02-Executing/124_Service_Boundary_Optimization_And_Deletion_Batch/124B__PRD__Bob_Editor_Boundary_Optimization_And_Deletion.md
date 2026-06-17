@@ -52,6 +52,14 @@ Bob does not own:
 - BOB-01: deleted Bob `/assets/account/[accountId]/[...assetRef]` route and `proxyTokyoAccountAsset`.
 - BOB-01: account asset list/upload/resolve/delete remains through Roma hosted Builder commands and Roma current-account asset routes.
 
+2026-06-17 editor authority slice:
+
+- BOB-02: deleted tracked `bob/public/dieter/**` icon mirror. Bob `/dieter/**` remains the same-origin Tokyo proxy route for preview/runtime media.
+- BOB-03: deleted unused Bob Berlin env helper and removed stale Bob `BERLIN_BASE_URL`, `SANFRANCISCO_BASE_URL`, and `NEXT_PUBLIC_CLK_LIVE_URL` vars. Bob Copilot/API stubs still fail closed and hosted Builder calls still route through Roma.
+- BOB-04: removed Bob embed modal/snippet generation. Roma Builder now owns widget public URL, iframe embed, and script embed copy actions using the current account, opened instance id, configured public-serving origin, and Builder-open publish status.
+- BOB-05: removed Bob website URL modal and the `context.websiteUrl` write path from Settings. Website context remains outside widget instance config and belongs to account/Roma settings when implemented.
+- BOB-08: deleted unused `bob/bob_native_ui/textrename/**` native UI copy and removed unused `@clickeen/bob` exports for `./builder` and `./bob-app.css`; kept `./compiled-widget-route` because Roma imports it.
+
 ## Completion Gates
 
 - Bob has no direct account asset route.

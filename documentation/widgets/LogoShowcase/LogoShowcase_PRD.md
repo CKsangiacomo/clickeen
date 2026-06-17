@@ -335,6 +335,8 @@ We keep `object-manager` + nested `repeater` for strips/logos. The modal is **ad
 
 #### AI behavior (Copilot, uses `websiteUrl`)
 `websiteUrl` is a workspace setting (persistent on the workspace). It is not part of widget instance config.
+Current Bob runtime does not edit or persist `websiteUrl`; that setting belongs
+to the account/Roma settings surface when implemented.
 
 If `websiteUrl` is present, Copilot may:
 - Propose or rewrite LogoShowcase copy (header/CTA) based on the website URL.

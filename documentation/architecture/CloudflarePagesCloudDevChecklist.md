@@ -46,15 +46,9 @@ Env contract:
 | Variable | Required | Cloud-dev value | Source-of-truth owner |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `bob/wrangler.toml` |
-| `NEXT_PUBLIC_CLK_LIVE_URL` | optional | `https://dev.clk.live` | `bob/wrangler.toml` |
-| `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `bob/wrangler.toml` |
-| `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |
-| `SUPABASE_ANON_KEY` | yes | cloud-dev anon key for project `ebmqwqdexmemhrdhkmwn` | Cloudflare Pages dashboard + GitHub Actions env |
-| `SANFRANCISCO_BASE_URL` | yes | `https://sanfrancisco.dev.clickeen.com` | `bob/wrangler.toml` |
 
 Dashboard action:
-- Keep `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the Cloudflare Pages dashboard for the live Bob app.
-- Keep the host/base-URL vars in `bob/wrangler.toml`.
+- Keep `NEXT_PUBLIC_TOKYO_URL` in `bob/wrangler.toml`.
 - Runtime flags: `nodejs_compat`, `nodejs_compat_populate_process_env`
 
 ## Roma
@@ -81,6 +75,7 @@ Env contract:
 | Variable | Required | Cloud-dev value | Source-of-truth owner |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_TOKYO_URL` | yes | `https://tokyo.dev.clickeen.com` | `roma/wrangler.toml` |
+| `NEXT_PUBLIC_CLK_LIVE_URL` | yes | `https://dev.clk.live` | `roma/wrangler.toml` |
 | `BERLIN_BASE_URL` | yes | `https://berlin-dev.clickeen.workers.dev` | `roma/wrangler.toml` |
 | `NEXT_PUBLIC_BOB_URL` | yes | `https://bob.dev.clickeen.com` | `roma/wrangler.toml` |
 | `SUPABASE_URL` | yes | `https://ebmqwqdexmemhrdhkmwn.supabase.co` | Cloudflare Pages dashboard + GitHub Actions env |

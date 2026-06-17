@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { normalizeCanonicalLocalesFile, normalizeLocaleToken, resolveLocaleLabel } from '@clickeen/l10n';
 import localesJson from '@clickeen/l10n/locales.json';
 import { resolveAccountShellErrorCopy } from '../lib/account-shell-copy';
+import { resolvePublicServingBaseUrl } from '../lib/env/public-serving';
 import { useRomaAccountApi } from './account-api';
 import { useRomaAccountContext } from './roma-account-context';
 import {
@@ -73,7 +74,7 @@ function pageSavePayload(source: AccountPageSource) {
 }
 
 function resolveClkLiveBaseUrl(): string {
-  return String(process.env.NEXT_PUBLIC_CLK_LIVE_URL || process.env.PUBLIC_CLK_LIVE_URL || 'https://clk.live').replace(/\/+$/, '');
+  return resolvePublicServingBaseUrl();
 }
 
 function buildPagePublicUrl(accountPublicId: string, pageId: string): string {

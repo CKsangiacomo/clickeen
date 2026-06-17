@@ -264,7 +264,8 @@ Whenever tokens or component CSS changes:
    `https://devstudio.clickeen.com`.
 4. Commit changes; consuming apps should use `/dieter/**`, backed by rebuilt `tokyo/product/dieter` deploy artifacts synced to R2 `dieter/**`.
 
-Never hand-edit `/bob/public/dieter/**`; treat it as a generated artifact.
+Bob does not track a `public/dieter` mirror. Its preview media path
+`/dieter/**` is a same-origin proxy to the Tokyo/R2 Dieter artifacts.
 
 ---
 

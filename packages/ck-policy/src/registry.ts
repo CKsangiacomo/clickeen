@@ -82,8 +82,8 @@ export const ENTITLEMENT_META: Record<EntitlementKey, EntitlementMeta> = {
     description: 'Allow generating and serving SEO/GEO optimized embed artifacts (Iframe++).',
     enforcement: {
       status: 'enforced',
-      owner: 'Bob embed UI and Roma product save/publish flow',
-      note: 'Bob gates the embed option. Product policy belongs to Roma/account flow; Tokyo stores and serves submitted artifact files.',
+      owner: 'Roma product save/publish and public code flow',
+      note: 'Product policy belongs to Roma/account flow; Tokyo stores and serves submitted artifact files.',
     },
   },
   'widget.socialShare.enabled': {

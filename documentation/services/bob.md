@@ -202,7 +202,9 @@ published static URL:
 https://clk.live/{accountPublicId}/{instanceId}
 ```
 
-Unpublished instances expose no live snippets.
+Roma Builder owns public widget copy actions for the current account and opened
+instance. Bob does not construct public URLs, iframe snippets, or script embed
+snippets from editor state. Unpublished instances expose no live snippets.
 
 ## Account Assets
 
