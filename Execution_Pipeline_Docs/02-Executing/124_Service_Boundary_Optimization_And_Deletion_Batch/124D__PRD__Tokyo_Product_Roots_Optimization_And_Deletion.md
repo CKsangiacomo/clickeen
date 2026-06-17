@@ -46,6 +46,13 @@ Tokyo product roots do not own:
 3. Legacy widget repair authority cleanup.
 4. Prague block-page migration remains a separate later PRD, not an implicit completion here.
 
+## Execution Notes
+
+2026-06-17 redirects cleanup slice:
+
+- TOKYO-R2-002: deleted dead `tokyo/_redirects`; Tokyo R2 deploy sync does not publish this file.
+- TOKYO-R2-002: removed stale `tokyo/_redirects` workflow path triggers from Roma app verify and PR architecture gates.
+
 ## Completion Gates
 
 - Every synced Tokyo root has a matching deploy trigger or explicit workflow.
@@ -54,4 +61,3 @@ Tokyo product roots do not own:
 - No direct account R2 write repair scripts remain executable as product paths.
 - Prague block pages are either migrated by their own PRD or explicitly listed as open, not fixed.
 - V1-V8 subagent audit is clean before moving to executed.
-

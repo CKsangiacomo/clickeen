@@ -6,7 +6,6 @@ on:
     paths:
       - "roma/**"
       - "bob/**"
-      - "tokyo/_redirects"
       - "tokyo/product/**"
       - "tokyo/roma/**"
       - "tokyo/prague/**"
