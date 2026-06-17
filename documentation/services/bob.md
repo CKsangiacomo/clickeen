@@ -112,9 +112,8 @@ accounts/{accountPublicId}/instances/{instanceId}/
 Save is separate from translation generation, publish, unpublish, rename,
 duplicate, and delete.
 
-Dirty/save state is based on serializable editor data only. Unsupported
-in-memory values block open, edit, or save comparison visibly; Bob does not
-substitute an empty signature for invalid editor state.
+Dirty/save comparison uses the current editor config directly; Bob does not
+substitute an empty config when serialization fails.
 
 ## Widget Software
 
@@ -156,11 +155,6 @@ Bob compiles widget `spec.json` into:
 - editor binding metadata
 - AI context metadata
 
-Malformed widget editor software fails the compile/open path. Bob does not skip
-malformed presets, invalid ToolDrawer JSON attributes, invalid `show-if`
-expressions, invalid control attrs, or missing field types while continuing with
-a partial editor.
-
 Compiler source lives under `bob/lib/compile`.
 
 The compile API is:
@@ -184,10 +178,6 @@ Common primitives include:
 
 Controls emit edit operations. The edit engine applies those operations to the
 current in-memory instance state.
-
-Linked controls are atomic at the Bob edit boundary: when a control requires
-companion operations, Bob rejects the edit if those companion operations cannot
-be derived. Bob does not apply only the initiating edit and report success.
 
 ## Preview
 

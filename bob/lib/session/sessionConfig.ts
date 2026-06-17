@@ -2,12 +2,6 @@ import type { CompiledControl, CompiledWidget } from '../types';
 const TOKEN_SEGMENT = /^__[^.]+__$/;
 function isPlainRecord(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function invalid(path: string): never { throw new Error(`coreui.errors.instance.config.invalid:${path}`); }
-function invalidCompiled(path: string): never { throw new Error(path ? `coreui.errors.widget.compiled.invalid:${path}` : 'coreui.errors.widget.compiled.invalid'); }
-function assertDenseArray(value: unknown[], path: string): void {
-  for (let index = 0; index < value.length; index += 1) {
-    if (!Object.prototype.hasOwnProperty.call(value, index)) invalid(path ? `${path}.${index}` : String(index));
-  }
-}
 function pathMatchesPattern(pattern: string, path: string): boolean {
   const patternParts = pattern.split('.').filter(Boolean);
   const pathParts = path.split('.').filter(Boolean);
@@ -41,12 +35,7 @@ function assertShape(
   }
   if (Array.isArray(expected)) {
     if (!Array.isArray(value)) invalid(path);
-    assertDenseArray(value, path);
-    if (expected.length) {
-      for (let index = 0; index < value.length; index += 1) {
-        assertShape(value[index], expected[0], `${path}.${index}`, fillPaths, optionalUploadMetaPaths);
-      }
-    }
+    if (expected.length) value.forEach((entry, index) => assertShape(entry, expected[0], `${path}.${index}`, fillPaths, optionalUploadMetaPaths));
     return;
   } else if (isPlainRecord(expected)) {
     if (!isPlainRecord(value)) invalid(path);
@@ -72,26 +61,12 @@ function collectValues(root: Record<string, unknown>, path: string): Array<{ pat
     const arraySuffix = segment.endsWith('[]');
     const key = arraySuffix ? segment.slice(0, -2) : segment;
     if (!key) invalid(path);
-    if (TOKEN_SEGMENT.test(segment)) {
-      if (!Array.isArray(value)) invalid(concretePath || segment);
-      assertDenseArray(value, concretePath || segment);
-      for (let itemIndex = 0; itemIndex < value.length; itemIndex += 1) {
-        visit(value[itemIndex], index + 1, concretePath ? `${concretePath}.${itemIndex}` : String(itemIndex));
-      }
-      return;
-    }
+    if (TOKEN_SEGMENT.test(segment)) { if (!Array.isArray(value)) invalid(concretePath || segment); return void value.forEach((entry, itemIndex) => visit(entry, index + 1, concretePath ? `${concretePath}.${itemIndex}` : String(itemIndex))); }
     if (!isPlainRecord(value)) invalid(concretePath ? `${concretePath}.${key}` : key);
     if (!Object.prototype.hasOwnProperty.call(value, key)) return;
     const nextPath = concretePath ? `${concretePath}.${key}` : key;
     const next = value[key];
-    if (arraySuffix) {
-      if (!Array.isArray(next)) invalid(nextPath);
-      assertDenseArray(next, nextPath);
-      for (let itemIndex = 0; itemIndex < next.length; itemIndex += 1) {
-        visit(next[itemIndex], index + 1, `${nextPath}.${itemIndex}`);
-      }
-      return;
-    }
+    if (arraySuffix) { if (!Array.isArray(next)) invalid(nextPath); return void next.forEach((entry, itemIndex) => visit(entry, index + 1, `${nextPath}.${itemIndex}`)); }
     visit(next, index + 1, nextPath);
   };
   visit(root, 0, '');
@@ -105,16 +80,7 @@ function assertControl(control: CompiledControl, value: unknown, path: string): 
   if (control.kind === 'number' && (typeof value !== 'number' || !Number.isFinite(value) || (typeof control.min === 'number' && value < control.min) || (typeof control.max === 'number' && value > control.max))) invalid(path);
   if ((control.kind === 'object' && !isPlainRecord(value)) || (control.kind === 'array' && !Array.isArray(value)) || (control.kind === 'json' && (value == null || typeof value === 'string'))) invalid(path);
   if (control.kind === 'json' && control.type === 'dropdown-upload-meta') assertUploadAssetMetadata(value, path);
-  if (control.kind === 'array' && control.itemIdPath) {
-    const items = value as unknown[];
-    assertDenseArray(items, path);
-    for (let index = 0; index < items.length; index += 1) {
-      const item = items[index];
-      if (!isPlainRecord(item)) invalid(`${path}.${index}`);
-      const id = item[control.itemIdPath!];
-      if (typeof id !== 'string' || !id) invalid(`${path}.${index}.${control.itemIdPath}`);
-    }
-  }
+  if (control.kind === 'array' && control.itemIdPath) (value as unknown[]).forEach((item, index) => { if (!isPlainRecord(item)) invalid(`${path}.${index}`); const id = item[control.itemIdPath!]; if (typeof id !== 'string' || !id) invalid(`${path}.${index}.${control.itemIdPath}`); });
   if (control.type === 'dropdown-fill') assertFillValue(control, value, path);
 }
 
@@ -163,44 +129,11 @@ export function assertSessionConfigContract(config: Record<string, unknown>, com
   compiled.normalization?.idRules?.forEach((rule) => collectValues(config, rule.arrayPath).forEach((entry) => {
     if (!Array.isArray(entry.value)) invalid(entry.path);
     const seen = new Set<string>();
-    assertDenseArray(entry.value, entry.path);
-    for (let index = 0; index < entry.value.length; index += 1) {
-      const item = entry.value[index];
+    entry.value.forEach((item, index) => {
       if (!isPlainRecord(item)) invalid(`${entry.path}.${index}`);
       const id = item[rule.idKey];
       if (typeof id !== 'string' || !id || seen.has(id)) invalid(`${entry.path}.${index}.${rule.idKey}`);
       seen.add(id);
-    }
-  }));
-}
-
-export function assertCompiledWidgetSessionContract(compiled: CompiledWidget): void {
-  if (!isPlainRecord(compiled)) invalidCompiled('');
-  if (typeof compiled.widgetname !== 'string' || !compiled.widgetname.trim()) invalidCompiled('widgetname');
-  if (!isPlainRecord(compiled.defaults)) invalidCompiled('defaults');
-  if (!Array.isArray(compiled.controls)) invalidCompiled('controls');
-  if (!Array.isArray(compiled.panels)) invalidCompiled('panels');
-
-  const presets = compiled.presets;
-  if (presets == null) return;
-  if (!isPlainRecord(presets)) invalidCompiled('presets');
-  Object.entries(presets).forEach(([sourcePath, specRaw]) => {
-    if (!sourcePath.trim()) invalidCompiled('presets');
-    if (!isPlainRecord(specRaw)) invalidCompiled(`presets.${sourcePath}`);
-    const customValue = specRaw.customValue;
-    if (customValue != null && (typeof customValue !== 'string' || !customValue.trim())) {
-      invalidCompiled(`presets.${sourcePath}.customValue`);
-    }
-    if (!isPlainRecord(specRaw.values) || Object.keys(specRaw.values).length === 0) {
-      invalidCompiled(`presets.${sourcePath}.values`);
-    }
-    Object.entries(specRaw.values).forEach(([presetKey, mappingRaw]) => {
-      if (!presetKey.trim() || !isPlainRecord(mappingRaw) || Object.keys(mappingRaw).length === 0) {
-        invalidCompiled(`presets.${sourcePath}.values.${presetKey}`);
-      }
-      Object.keys(mappingRaw).forEach((targetPath) => {
-        if (!targetPath.trim()) invalidCompiled(`presets.${sourcePath}.values.${presetKey}`);
-      });
     });
-  });
+  }));
 }

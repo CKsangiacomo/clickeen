@@ -9,7 +9,6 @@ import { buildContext, loadComponentStencil, renderComponentStencil } from './co
 import { normalizeWidgetNormalizationSpec } from './compiler/modules/normalization';
 import { buildHeaderPresets } from './compiler/modules/header';
 import { resolveTokyoBaseUrl } from './env/tokyo';
-import { validateShowIfExpression } from './show-if-expression';
 import themesJson from '../../tokyo/product/themes/themes.json';
 
 function findTagEnd(source: string, startIndex: number): number {
@@ -103,7 +102,7 @@ function rewriteAssetUrlsInDefaults(defaults: Record<string, unknown>, tokyoBase
             return replacePrimaryUrl(node, `${base}${parsed.pathname}`);
           }
         } catch {
-          throw new Error(`[BobCompiler] Invalid asset URL: ${primaryUrl}`);
+          return;
         }
       }
 
@@ -151,41 +150,23 @@ function composeWidgetFactoryDefaults(coreDefaults: Record<string, unknown>): Re
 }
 
 function normalizePresets(raw: unknown): WidgetPresets | undefined {
-  if (raw == null) return undefined;
-  if (!isPlainObject(raw)) throw new Error('[BobCompiler] widget presets must be an object');
+  if (!isPlainObject(raw)) return undefined;
   const normalized: WidgetPresets = {};
 
   for (const [sourcePath, specRaw] of Object.entries(raw)) {
-    const normalizedSourcePath = sourcePath.trim();
-    if (!normalizedSourcePath) throw new Error('[BobCompiler] widget preset source path is required');
-    if (!isPlainObject(specRaw)) throw new Error(`[BobCompiler] widget preset "${normalizedSourcePath}" must be an object`);
+    if (!sourcePath || !isPlainObject(specRaw)) continue;
     const valuesRaw = (specRaw as { values?: unknown }).values;
-    if (!isPlainObject(valuesRaw)) {
-      throw new Error(`[BobCompiler] widget preset "${normalizedSourcePath}" requires values`);
-    }
+    if (!isPlainObject(valuesRaw)) continue;
 
     const values: Record<string, Record<string, unknown>> = {};
     for (const [presetKey, presetValuesRaw] of Object.entries(valuesRaw)) {
-      const normalizedPresetKey = presetKey.trim();
-      if (!normalizedPresetKey) {
-        throw new Error(`[BobCompiler] widget preset "${normalizedSourcePath}" has an empty value key`);
-      }
-      if (!isPlainObject(presetValuesRaw)) {
-        throw new Error(
-          `[BobCompiler] widget preset "${normalizedSourcePath}" value "${normalizedPresetKey}" must be an object`,
-        );
-      }
+      if (!presetKey || !isPlainObject(presetValuesRaw)) continue;
       values[presetKey] = presetValuesRaw;
     }
 
-    if (Object.keys(values).length === 0) {
-      throw new Error(`[BobCompiler] widget preset "${normalizedSourcePath}" requires at least one value`);
-    }
+    if (Object.keys(values).length === 0) continue;
     const customValue = (specRaw as { customValue?: unknown }).customValue;
-    if (customValue != null && (typeof customValue !== 'string' || !customValue.trim())) {
-      throw new Error(`[BobCompiler] widget preset "${normalizedSourcePath}" customValue must be a non-empty string`);
-    }
-    normalized[normalizedSourcePath] = {
+    normalized[sourcePath] = {
       ...(typeof customValue === 'string' && customValue.trim() ? { customValue: customValue.trim() } : {}),
       values,
     };
@@ -328,12 +309,15 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
         const index = match.index ?? 0;
         out += html.slice(cursor, index);
 
+        const fullMatch = match[0];
         const groupKey = match[1];
         const attrsRaw = match[2] || '';
         const attrs = parseTooldrawerAttributes(attrsRaw);
         const type = attrs.type;
         if (!type) {
-          throw new Error('[BobCompiler] <tooldrawer-field> requires type');
+          out += fullMatch;
+          cursor = tdRegex.lastIndex;
+          continue;
         }
 
         const { stencil, spec } = await loadComponentStencil(type);
@@ -344,7 +328,6 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
         }
 
         const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : '';
-        if (showIf) validateShowIfExpression(showIf);
         const wrappers: string[] = [];
         const shouldWrapGroup = Boolean(groupKey);
         if (shouldWrapGroup && groupKey) {

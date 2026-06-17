@@ -42,24 +42,6 @@ function resolveBuilderErrorCopy(reason: string, fallback: string): string {
       ? `This widget has invalid saved data at ${path} and cannot load right now.`
       : 'This widget has invalid saved data and cannot load right now.';
   }
-  const unserializableConfigPrefix = 'coreui.errors.instance.config.unserializable:';
-  if (normalized === 'coreui.errors.instance.config.unserializable' || normalized.startsWith(unserializableConfigPrefix)) {
-    const path = normalized.startsWith(unserializableConfigPrefix)
-      ? normalized.slice(unserializableConfigPrefix.length).trim()
-      : '';
-    return path
-      ? `This widget has unsupported editor data at ${path} and cannot be saved.`
-      : 'This widget has unsupported editor data and cannot be saved.';
-  }
-  const invalidCompiledPrefix = 'coreui.errors.widget.compiled.invalid:';
-  if (normalized === 'coreui.errors.widget.compiled.invalid' || normalized.startsWith(invalidCompiledPrefix)) {
-    const path = normalized.startsWith(invalidCompiledPrefix)
-      ? normalized.slice(invalidCompiledPrefix.length).trim()
-      : '';
-    return path
-      ? `This widget has invalid editor software at ${path} and cannot load right now.`
-      : 'This widget has invalid editor software and cannot load right now.';
-  }
   if (normalized.startsWith('coreui.') || normalized.startsWith('HTTP_') || normalized.startsWith('[useWidgetSession]')) {
     return fallback;
   }

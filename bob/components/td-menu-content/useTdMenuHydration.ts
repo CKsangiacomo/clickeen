@@ -39,15 +39,6 @@ export function useTdMenuHydration(args: {
     if (!container) return;
 
     let cancelled = false;
-    const failControls = () => {
-      container.innerHTML = '<div class="settings-panel__error" role="alert">Builder controls failed to load.</div>';
-      showIfEntriesRef.current = [];
-      setRenderKey((current) => current + 1);
-    };
-    const refreshShowIf = () => {
-      showIfEntriesRef.current = buildShowIfEntries(container);
-      applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
-    };
     container.innerHTML = panelHtml || '';
     applyGroupHeaders(container);
     container.querySelectorAll<HTMLElement>('.tdmenucontent__cluster').forEach((cluster) => {
@@ -55,24 +46,13 @@ export function useTdMenuHydration(args: {
       applyGroupHeaders(body ?? cluster);
     });
     const cleanupCollapse = installClusterCollapseBehavior(container);
-    try {
-      refreshShowIf();
-    } catch {
-      failControls();
-      return () => {
-        cancelled = true;
-        cleanupCollapse();
-      };
-    }
+    showIfEntriesRef.current = buildShowIfEntries(container);
+    applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
     let controlsRenderedFrame: number | null = null;
     const refreshDynamicControls = () => {
       controlsRenderedFrame = null;
-      try {
-        refreshShowIf();
-      } catch {
-        failControls();
-        return;
-      }
+      showIfEntriesRef.current = buildShowIfEntries(container);
+      applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
       setRenderKey((current) => current + 1);
     };
     const handleControlsRendered = () => {
@@ -87,12 +67,15 @@ export function useTdMenuHydration(args: {
         runHydrators(container, { accountAssets });
         await applyI18nToDom(container, widgetName);
         if (cancelled) return;
-        refreshShowIf();
+        showIfEntriesRef.current = buildShowIfEntries(container);
+        applyShowIfVisibility(showIfEntriesRef.current, instanceDataRef.current);
         setRenderKey((current) => current + 1);
       })
       .catch(() => {
         if (cancelled) return;
-        failControls();
+        container.innerHTML = '<div class="settings-panel__error" role="alert">Builder controls failed to load.</div>';
+        showIfEntriesRef.current = [];
+        setRenderKey((current) => current + 1);
       });
 
     return () => {

@@ -88,6 +88,7 @@ export function TdMenuContent({
     applyOps,
     panelHtml,
     renderKey,
+    compiled: session.compiled,
     requestUpsell: chrome.requestUpsell,
     lastUpdateRef,
     activePathRef,

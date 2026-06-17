@@ -1,7 +1,6 @@
 import type { TooldrawerAttrs } from '../compiler.shared';
 import { parseTooldrawerAttributes } from '../compiler.shared';
 import { getIcon } from '../icons';
-import { validateShowIfExpression } from '../show-if-expression';
 import { requireTokyoUrl } from './media';
 import { interpolateStencilContext, renderStencil } from './stencil-renderer';
 
@@ -38,27 +37,29 @@ function encodeHtmlEntities(value: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function normalizeJsonAttrValue(raw: string, attrName = 'json'): string {
+function normalizeJsonAttrValue(raw: string): string {
   const trimmed = String(raw || '').trim();
   if (!trimmed) return '';
 
   // Support inputs that are already entity-encoded or even double-encoded (e.g. &amp;quot;).
   const decodedTwice = decodeHtmlEntities(decodeHtmlEntities(trimmed));
+
   try {
     const parsed = JSON.parse(decodedTwice) as unknown;
     return encodeHtmlEntities(JSON.stringify(parsed));
   } catch {
-    throw new Error(`[BobCompiler] Invalid JSON attribute "${attrName}"`);
+    // Still ensure the attribute remains valid HTML even if the payload isn't valid JSON.
+    return encodeHtmlEntities(decodedTwice);
   }
 }
 
-function parseBooleanAttr(value: string | undefined, attrName = 'boolean'): boolean | undefined {
+function parseBooleanAttr(value: string | undefined): boolean | undefined {
   if (!value) return undefined;
   const normalized = value.trim().toLowerCase();
   if (!normalized) return undefined;
   if (['true', '1', 'yes', 'on'].includes(normalized)) return true;
   if (['false', '0', 'no', 'off'].includes(normalized)) return false;
-  throw new Error(`[BobCompiler] Invalid boolean attribute "${attrName}"`);
+  return undefined;
 }
 
 function parseFillModes(value: string | undefined): string[] | null {
@@ -67,13 +68,7 @@ function parseFillModes(value: string | undefined): string[] | null {
     .split(',')
     .map((mode) => mode.trim().toLowerCase())
     .filter(Boolean);
-  if (!modes.length) throw new Error('[BobCompiler] fill-modes requires at least one mode');
-  modes.forEach((mode) => {
-    if (!['color', 'gradient', 'image', 'video'].includes(mode)) {
-      throw new Error(`[BobCompiler] Unsupported fill mode "${mode}"`);
-    }
-  });
-  return modes;
+  return modes.length ? modes : null;
 }
 
 const stencilCache = new Map<string, Promise<{ stencil: string; spec?: ComponentSpec }>>();
@@ -157,11 +152,14 @@ async function renderNestedTooldrawerFields(
     const index = match.index ?? 0;
     out += markup.slice(cursor, index);
 
+    const fullMatch = match[0];
     const attrsRaw = match[2] || '';
     const attrsInner = parseTooldrawerAttributes(attrsRaw);
     const typeInner = attrsInner.type;
     if (!typeInner) {
-      throw new Error('[BobCompiler] nested <tooldrawer-field> requires type');
+      out += fullMatch;
+      cursor = tdRegex.lastIndex;
+      continue;
     }
 
     const { stencil: nestedStencil, spec: nestedSpec } = await loadComponentStencil(typeInner);
@@ -174,7 +172,6 @@ async function renderNestedTooldrawerFields(
     }
 
     const showIf = attrsInner['show-if'] ? decodeHtmlEntities(attrsInner['show-if']) : '';
-    if (showIf) validateShowIfExpression(showIf);
     out += showIf ? `<div data-bob-showif="${encodeHtmlEntities(showIf)}">${rendered}</div>` : rendered;
     cursor = tdRegex.lastIndex;
   }
@@ -220,31 +217,31 @@ export async function buildContext(
   const reorderMode = attrs.reorderMode || attrs['reorder-mode'] || (merged.reorderMode as string) || 'inline';
   const reorderThreshold = attrs.reorderThreshold || attrs['reorder-threshold'] || (merged.reorderThreshold as string) || '';
   const defaultItemRaw = attrs.defaultItem || attrs['default-item'] || (merged.defaultItem as string) || '';
-  const defaultItem = normalizeJsonAttrValue(defaultItemRaw, 'default-item');
+  const defaultItem = normalizeJsonAttrValue(defaultItemRaw);
   let labelKey = attrs.labelKey || attrs['label-key'] || (merged.labelKey as string) || '';
   const labelParamsRaw = attrs.labelParams || attrs['label-params'] || (merged.labelParams as string) || '';
-  let labelParams = normalizeJsonAttrValue(labelParamsRaw, 'label-params');
+  let labelParams = normalizeJsonAttrValue(labelParamsRaw);
   const addLabel = attrs.addLabel || attrs['add-label'] || (merged.addLabel as string) || 'Add item';
   const removeLabel = attrs.removeLabel || attrs['remove-label'] || (merged.removeLabel as string) || 'Remove item {index}';
   const moveLabel = attrs.moveLabel || attrs['move-label'] || (merged.moveLabel as string) || 'Move item {index}';
   let addLabelKey = attrs.addLabelKey || attrs['add-label-key'] || (merged.addLabelKey as string) || '';
   const addLabelParamsRaw = attrs.addLabelParams || attrs['add-label-params'] || (merged.addLabelParams as string) || '';
-  let addLabelParams = normalizeJsonAttrValue(addLabelParamsRaw, 'add-label-params');
+  let addLabelParams = normalizeJsonAttrValue(addLabelParamsRaw);
   const addOpen = attrs.addOpen || attrs['add-open'] || (merged.addOpen as string) || '';
   let reorderLabelKey =
     attrs.reorderLabelKey || attrs['reorder-label-key'] || (merged.reorderLabelKey as string) || '';
   const reorderLabelParamsRaw =
     attrs.reorderLabelParams || attrs['reorder-label-params'] || (merged.reorderLabelParams as string) || '';
-  let reorderLabelParams = normalizeJsonAttrValue(reorderLabelParamsRaw, 'reorder-label-params');
+  let reorderLabelParams = normalizeJsonAttrValue(reorderLabelParamsRaw);
   let reorderTitleKey =
     attrs.reorderTitleKey || attrs['reorder-title-key'] || (merged.reorderTitleKey as string) || '';
   const reorderTitleParamsRaw =
     attrs.reorderTitleParams || attrs['reorder-title-params'] || (merged.reorderTitleParams as string) || '';
-  let reorderTitleParams = normalizeJsonAttrValue(reorderTitleParamsRaw, 'reorder-title-params');
+  let reorderTitleParams = normalizeJsonAttrValue(reorderTitleParamsRaw);
   const rowPath = attrs.rowPath || attrs['row-path'] || (merged.rowPath as string) || '';
   const metaPath = attrs.metaPath || attrs['meta-path'] || (merged.metaPath as string) || '';
   const columnsRaw = attrs.columns || (merged.columns as string) || '';
-  const columns = columnsRaw ? normalizeJsonAttrValue(columnsRaw, 'columns') : '';
+  const columns = columnsRaw ? normalizeJsonAttrValue(columnsRaw) : '';
   const title = attrs.title || (merged.title as string) || label;
   const emptyLabel = attrs.emptyLabel || attrs['empty-label'] || (merged.emptyLabel as string) || '';
   const idBase = pathAttr || label || `${component}-${size}`;
@@ -257,8 +254,6 @@ export async function buildContext(
     const parsed = JSON.parse(decoded);
     if (Array.isArray(parsed)) {
       options = parsed;
-    } else {
-      throw new Error(`[BobCompiler] options for "${pathAttr || component}" must be a JSON array`);
     }
   }
   const themeSourcePath = widgetContext?.themeSourcePath || '';
@@ -272,7 +267,7 @@ export async function buildContext(
     options = options.map((opt) => ({ bodyClass: merged.bodyClass, size, ...opt }));
   }
 
-  const allowImageOverride = parseBooleanAttr(attrs.allowImage || attrs['allow-image'], 'allow-image');
+  const allowImageOverride = parseBooleanAttr(attrs.allowImage || attrs['allow-image']);
   const inferredAllowsImage = (() => {
     const pathLower = pathAttr.toLowerCase();
     if (pathLower.includes('background')) return true;
@@ -308,7 +303,7 @@ export async function buildContext(
   const step = attrs.step || (merged.step as string) || '';
   const allowStructureRaw =
     attrs.allowStructure || attrs['allow-structure'] || (merged.allowStructure as string) || 'true';
-  const allowStructure = parseBooleanAttr(allowStructureRaw, 'allow-structure') === false ? 'false' : 'true';
+  const allowStructure = parseBooleanAttr(allowStructureRaw) === false ? 'false' : 'true';
 
   const accept = attrs.accept || (merged.accept as string) || 'image/*';
   const maxSizeMb = attrs.maxSizeMb || attrs['max-size-mb'] || (merged.maxSizeMb as string) || '';
@@ -344,16 +339,14 @@ export async function buildContext(
 
     const singularItemParam = normalizeJsonAttrValue(
       JSON.stringify({ item: { $t: itemKey, count: 1 } }),
-      'item-label-params',
     );
     const pluralItemParam = normalizeJsonAttrValue(
       JSON.stringify({ item: { $t: itemKey, count: 2 } }),
-      'item-label-params',
     );
 
     if (!labelKey && !hasLabelAttr && label === 'Items') {
       labelKey = itemKey;
-      labelParams = normalizeJsonAttrValue(JSON.stringify({ count: 2 }), 'label-params');
+      labelParams = normalizeJsonAttrValue(JSON.stringify({ count: 2 }));
     }
 
     if (!addLabelKey && !hasAddLabelAttr && (addLabel === 'Add item' || addLabel === 'Add object')) {

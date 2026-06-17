@@ -1,6 +1,6 @@
 # PRD 124B - Bob Editor Boundary Optimization And Deletion
 
-Status: EXECUTED
+Status: EXECUTING
 Parent: PRD 124
 Owner: Bob editor boundary
 Date: 2026-06-17
@@ -60,12 +60,10 @@ Bob does not own:
 - BOB-05: removed Bob website URL modal and the `context.websiteUrl` write path from Settings. Website context remains outside widget instance config and belongs to account/Roma settings when implemented.
 - BOB-08: deleted unused `bob/bob_native_ui/textrename/**` native UI copy and removed unused `@clickeen/bob` exports for `./builder` and `./bob-app.css`; kept `./compiled-widget-route` because Roma imports it.
 
-2026-06-17 compiler/session strictness slice:
+2026-06-17 correction slice:
 
-- BOB-06: removed permissive `show-if` parse/eval handling from ToolDrawer controls. Bob now uses one shared show-if parser for compile and runtime, validates expressions before writing `data-bob-showif`, and fails the controls surface instead of showing controls after malformed expressions.
-- BOB-06: made malformed widget presets, JSON attrs, options, boolean/number attrs, fill modes, and missing ToolDrawer field types fail the compile/open path instead of being skipped, encoded as strings, or defaulted.
-- BOB-06: made linked control operations reject the edit when required companion operations cannot be computed or preset targets are not editable; Bob no longer applies only the initiating op while dropping required linked updates.
-- BOB-07: removed the dirty/save signature fallback from failed `JSON.stringify`. Bob now rejects unsupported editor data at open/edit/save signature boundaries instead of substituting `{}`.
+- Reopened PRD 124B after removing the over-scoped compiler/session strictness pass. The remaining BOB-06 work stays open.
+- Retained only narrow fallback deletion: ToolDrawer `show-if` no longer swallows parse/eval errors, and dirty/save signature no longer substitutes `{}` when config serialization fails.
 
 ## Completion Gates
 

@@ -138,64 +138,9 @@ export const DEFAULT_PREVIEW: PreviewSettings = {
   host: 'canvas',
 };
 
-const UNSERIALIZABLE_CONFIG_REASON = 'coreui.errors.instance.config.unserializable';
-
-function invalidSerializableValue(path: string): never {
-  throw new Error(path ? `${UNSERIALIZABLE_CONFIG_REASON}:${path}` : UNSERIALIZABLE_CONFIG_REASON);
-}
-
-function assertSerializableInstanceData(value: unknown, path = '$', seen = new Set<unknown>()): void {
-  if (value == null) return;
-
-  const valueType = typeof value;
-  if (valueType === 'string' || valueType === 'boolean') return;
-  if (valueType === 'number') {
-    if (!Number.isFinite(value)) invalidSerializableValue(path);
-    return;
-  }
-  if (valueType === 'undefined' || valueType === 'function' || valueType === 'symbol' || valueType === 'bigint') {
-    invalidSerializableValue(path);
-  }
-
-  if (valueType !== 'object') return;
-  if (seen.has(value)) invalidSerializableValue(path);
-  seen.add(value);
-
-  if (Array.isArray(value)) {
-    Reflect.ownKeys(value).forEach((key) => {
-      if (typeof key === 'symbol') invalidSerializableValue(path);
-      if (key === 'length') return;
-      const descriptor = Object.getOwnPropertyDescriptor(value, key);
-      if (!descriptor?.enumerable) invalidSerializableValue(`${path}.${String(key)}`);
-      const index = Number(key);
-      if (!Number.isInteger(index) || index < 0 || index >= value.length || String(index) !== key) {
-        invalidSerializableValue(`${path}.${String(key)}`);
-      }
-    });
-    for (let index = 0; index < value.length; index += 1) {
-      if (!Object.prototype.hasOwnProperty.call(value, index)) invalidSerializableValue(`${path}.${index}`);
-      assertSerializableInstanceData(value[index], `${path}.${index}`, seen);
-    }
-    seen.delete(value);
-    return;
-  }
-
-  const prototype = Object.getPrototypeOf(value);
-  if (prototype !== Object.prototype && prototype !== null) invalidSerializableValue(path);
-
-  Reflect.ownKeys(value).forEach((key) => {
-    if (typeof key === 'symbol') invalidSerializableValue(path);
-    const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (!descriptor?.enumerable) invalidSerializableValue(path ? `${path}.${key}` : key);
-    assertSerializableInstanceData((value as Record<string, unknown>)[key], path ? `${path}.${key}` : key, seen);
-  });
-  seen.delete(value);
-}
-
 export function serializeInstanceDataSignature(value: Record<string, unknown>): string {
-  assertSerializableInstanceData(value);
   const serialized = JSON.stringify(value);
-  if (typeof serialized !== 'string') invalidSerializableValue('$');
+  if (typeof serialized !== 'string') throw new Error('coreui.errors.instance.config.unserializable');
   return serialized;
 }
 
