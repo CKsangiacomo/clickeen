@@ -379,6 +379,57 @@ export function buildSavedWidgetPublicPackage(args: PackageBuildArgs): SavedWidg
   };
 }
 
+function validationFailure(reasonKey: string, detail?: string, paths?: string[]): InstancePackageFailure {
+  return {
+    ok: false,
+    status: 422,
+    error: {
+      kind: 'VALIDATION',
+      reasonKey,
+      ...(detail ? { detail } : {}),
+      ...(paths?.length ? { paths } : {}),
+    },
+  };
+}
+
+function validationFailureFromPayload(payload: unknown, fallbackReasonKey: string): InstancePackageFailure {
+  const error = isRecord(payload) ? payload.error : null;
+  if (isRecord(error) && typeof error.reasonKey === 'string' && error.reasonKey) {
+    const detail = typeof error.detail === 'string' && error.detail ? error.detail : undefined;
+    const paths = Array.isArray(error.paths)
+      ? error.paths.filter((path): path is string => typeof path === 'string' && Boolean(path))
+      : undefined;
+    return validationFailure(error.reasonKey, detail, paths);
+  }
+  return validationFailure(fallbackReasonKey);
+}
+
+export function parseExactResolvedAssetPayload(args: {
+  payload: unknown;
+  requestedAssetRefs: string[];
+}):
+  | { ok: true; assetsByRef: Record<string, unknown> }
+  | InstancePackageFailure {
+  const invalid = () => validationFailure('coreui.errors.assets.resolve.invalidMaterialization');
+  if (!isRecord(args.payload)) return invalid();
+  const keys = Object.keys(args.payload);
+  if (keys.length !== 1 || keys[0] !== 'assets' || !Array.isArray(args.payload.assets)) return invalid();
+  if (args.payload.assets.length !== args.requestedAssetRefs.length) return invalid();
+
+  const requested = new Set(args.requestedAssetRefs);
+  const assetsByRef: Record<string, unknown> = {};
+  for (const raw of args.payload.assets) {
+    const asset = parseResolvedAccountAsset(raw);
+    if (!asset || !requested.has(asset.assetRef) || Object.prototype.hasOwnProperty.call(assetsByRef, asset.assetRef)) {
+      return invalid();
+    }
+    assetsByRef[asset.assetRef] = asset;
+  }
+
+  if (Object.keys(assetsByRef).length !== requested.size) return invalid();
+  return { ok: true, assetsByRef };
+}
+
 async function materializePublicPackageMedia(args: {
   accountId: string;
   accountCapsule: string;
@@ -417,7 +468,8 @@ async function materializePublicPackageMedia(args: {
   }
 
   const payload = await upstream.json().catch(() => null);
-  if (!upstream.ok || !isRecord(payload)) {
+  if (!upstream.ok) {
+    if (upstream.status === 422) return validationFailureFromPayload(payload, 'coreui.errors.assets.resolve.failed');
     return {
       ok: false,
       status: 502,
@@ -428,31 +480,10 @@ async function materializePublicPackageMedia(args: {
     };
   }
 
-  const assetsByRef: Record<string, unknown> = {};
-  const assets = Array.isArray(payload.assets) ? payload.assets : [];
-  for (const raw of assets) {
-    const asset = parseResolvedAccountAsset(raw);
-    if (asset) assetsByRef[asset.assetRef] = asset;
-  }
-  const missingAssetRefs = Array.isArray(payload.missingAssetRefs)
-    ? payload.missingAssetRefs.map((entry) => String(entry || '').trim()).filter(Boolean)
-    : [];
-  const unresolved = assetRefs.filter((assetRef) => !assetsByRef[assetRef]);
-  const missing = Array.from(new Set([...missingAssetRefs, ...unresolved]));
-  if (missing.length) {
-    return {
-      ok: false,
-      status: 422,
-      error: {
-        kind: 'VALIDATION',
-        reasonKey: 'coreui.errors.assets.resolve.missing',
-        detail: missing.join(', '),
-        paths: missing.map((assetRef) => `assetRef:${assetRef}`),
-      },
-    };
-  }
+  const resolved = parseExactResolvedAssetPayload({ payload, requestedAssetRefs: assetRefs });
+  if (!resolved.ok) return resolved;
 
-  const materialized = materializeConfigMedia(args.config, assetsByRef);
+  const materialized = materializeConfigMedia(args.config, resolved.assetsByRef);
   if (!isRecord(materialized)) {
     return {
       ok: false,

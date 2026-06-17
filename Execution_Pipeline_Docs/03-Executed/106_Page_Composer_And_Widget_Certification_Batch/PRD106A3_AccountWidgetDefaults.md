@@ -731,17 +731,16 @@ Required verification:
 
 ```text
 pnpm validate:widgets
-pnpm --filter @clickeen/widget-shell validate
 pnpm --filter @clickeen/widget-shell typecheck
 pnpm --filter @clickeen/roma typecheck
 pnpm --filter @clickeen/bob typecheck
 pnpm --filter @clickeen/tokyo-worker typecheck
 ```
 
-If `@clickeen/widget-shell validate` does not exist yet, this PRD must add the
-targeted validation command. It must scan all widget specs and fail when a
-Shell-owned path is still authored in widget defaults. This is the proof that
-new widgets cannot accidentally keep the old scattered Shell-default model.
+PRD 109 removed the widget-shell validation command. Shell is system-written
+source, not user/account/runtime truth. Current widget work uses
+`pnpm validate:widgets` and `pnpm --filter @clickeen/widget-shell typecheck`;
+do not recreate a Shell validator command.
 
 Manual checks:
 

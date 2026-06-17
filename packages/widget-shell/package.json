@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "validate": "node scripts/validate.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "exports": {

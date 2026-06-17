@@ -268,8 +268,9 @@ GATE
   `stage.canvas.mode: "viewport"` unless a named PRD exception is recorded in
   the Shell contract. Builder displays this as `Full`.
 - Composed factory defaults include explicit `pod.widthMode`.
-- `pnpm --filter @clickeen/widget-shell validate` passes, proving no Shell
-  default paths remain authored in widget specs.
+- `pnpm --filter @clickeen/widget-shell typecheck` and `pnpm validate:widgets`
+  pass. Shell defaults are system-owned factory source, not widget-authored
+  product truth.
 
 Widget specs must not contain these Shell default families:
 
@@ -561,8 +562,8 @@ Required checks
 - Repo validation:
   - `pnpm typecheck`
   - `pnpm build:dieter`
-- Shell/Core defaults validation:
-  - `pnpm --filter @clickeen/widget-shell validate`
+- Shell/Core source checks:
+  - `pnpm --filter @clickeen/widget-shell typecheck`
   - `pnpm validate:widgets`
   - `pnpm audit:106 -- --skip-r2` when touching the Shell/Core/default
     contract locally

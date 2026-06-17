@@ -27,5 +27,5 @@ Verification:
 
 ```text
 pnpm --filter @clickeen/tokyo-worker typecheck
-pnpm --filter @clickeen/widget-shell validate
+pnpm --filter @clickeen/widget-shell typecheck
 ```

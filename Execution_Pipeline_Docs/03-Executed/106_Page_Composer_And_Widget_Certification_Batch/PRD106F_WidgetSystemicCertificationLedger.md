@@ -969,7 +969,8 @@ Final widget certification:
 
 - Source validation: `pnpm validate:widgets` passed through `pnpm lint` and
   `pnpm typecheck` after fixes.
-- Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
+- Widget Shell source check: historical PRD 106 evidence; PRD 109 removed the
+  standalone Shell validator command.
   passed after fixes.
 - 106 audit: `pnpm audit:106` passed after fixes, including account defaults and
   live instance checks.
@@ -1224,7 +1225,8 @@ Final widget certification:
 - Source index validation: `pnpm validate:widgets` passed. The former standalone widget-source validator was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - Generated source validation:
   `node scripts/generate-widget-definition-sources.mjs --check` passed.
-- Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
+- Widget Shell source check: historical PRD 106 evidence; PRD 109 removed the
+  standalone Shell validator command.
   passed.
 - 106 audit: `pnpm audit:106` passed after source and R2 account-default fixes.
 - Typecheck: `pnpm typecheck` passed after fixes.
@@ -1428,8 +1430,8 @@ Final widget certification:
 - Source index validation: `pnpm validate:widgets` passed. The former standalone widget-source validator was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - Generated source validation:
   `node scripts/generate-widget-definition-sources.mjs --check` passed.
-- Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
-  passed.
+- Widget Shell source check: historical PRD 106 evidence; PRD 109 removed the
+  standalone Shell validator command.
 - 106 audit: `pnpm audit:106` passed after source and R2 account-default fixes.
 - Typecheck: `pnpm typecheck` passed after fixes.
 - Lint: `pnpm lint` passed after fixes.
@@ -1496,7 +1498,7 @@ Shell Layout:
   - `LOGO-RT-002` [fixed 2026-06-09]: add shared `coreSize.js` and call
     `CKCoreSize.applyCoreSize(state.coreSize, contentEl)` before Logo Core
     rendering.
-- Verification: widget source validation, Shell validation, and `audit:106`
+- Verification: widget source validation, Shell source checks, and `audit:106`
   pass.
 - Status: Source green.
 
@@ -1621,7 +1623,7 @@ Core Settings/Runtime Behavior:
     canonical order before Logo Core render and branding/social share after
     render.
 - Verification: `node --check` for Logo runtime passes; source validation,
-  Shell validation, `audit:106`, typecheck, and lint pass.
+  Shell source checks, `audit:106`, typecheck, and lint pass.
 - Status: Source green.
 
 Final widget certification:
@@ -1629,7 +1631,8 @@ Final widget certification:
 - Source index validation: `pnpm validate:widgets` passed. The former standalone widget-source validator was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - Generated source validation:
   `node scripts/generate-widget-definition-sources.mjs --check` passed.
-- Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
+- Widget Shell source check: historical PRD 106 evidence; PRD 109 removed the
+  standalone Shell validator command.
   passed.
 - 106 audit: `pnpm audit:106` passed after source and R2 account-default fixes.
 - Typecheck: `pnpm typecheck` passed after fixes.
@@ -1814,7 +1817,7 @@ Core Settings/Runtime Behavior:
   - `SPLITMEDIA-RT-005` [fixed 2026-06-09]: add strict Split Media runtime
     validation and remove Split-local silent no-op behavior.
 - Verification: `node --check tokyo/product/widgets/split-media/widget.client.js`
-  passes; source validation, Shell validation, `audit:106`, typecheck, and lint
+  passes; source validation, Shell source checks, `audit:106`, typecheck, and lint
   pass.
 - Status: Source green.
 
@@ -1823,8 +1826,8 @@ Final widget certification:
 - Source index validation: `pnpm validate:widgets` passed. The former standalone widget-source validator was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - Generated source validation:
   `node scripts/generate-widget-definition-sources.mjs --check` passed.
-- Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
-  passed.
+- Widget Shell source check: historical PRD 106 evidence; PRD 109 removed the
+  standalone Shell validator command.
 - 106 audit: `pnpm audit:106` passed.
 - Typecheck: `pnpm typecheck` passed after fixes.
 - Lint: `pnpm lint` passed after fixes.
@@ -1872,7 +1875,7 @@ Shell Content:
   - `SPLITCAROUSEL-RT-001` [fixed 2026-06-09]: make Split Carousel Media Header
     CTA DOM canonical in
     `tokyo/product/widgets/split-carousel-media/widget.html`.
-- Verification: source validation, generated-source check, Shell validation,
+- Verification: source validation, generated-source check, Shell source checks,
   and `audit:106` pass.
 - Status: Source green.
 
@@ -2029,7 +2032,7 @@ Core Settings/Runtime Behavior:
   - `SPLITCAROUSEL-ROMA-003` [fixed 2026-06-09]: validate carousel item `alt`
     strings at the Roma save boundary.
 - Verification: `node --check tokyo/product/widgets/split-carousel-media/widget.client.js`
-  passes; source validation, Shell validation, `audit:106`, typecheck, and lint
+  passes; source validation, Shell source checks, `audit:106`, typecheck, and lint
   pass.
 - Status: Source green.
 
@@ -2038,8 +2041,8 @@ Final widget certification:
 - Source index validation: `pnpm validate:widgets` passed. The former standalone widget-source validator was retired by PRD 107; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - Generated source validation:
   `node scripts/generate-widget-definition-sources.mjs --check` passed.
-- Widget Shell validation: `node packages/widget-shell/scripts/validate.mjs`
-  passed.
+- Widget Shell source check: historical PRD 106 evidence; PRD 109 removed the
+  standalone Shell validator command.
 - 106 audit: `pnpm audit:106` passed.
 - Typecheck: `pnpm typecheck` passed after fixes.
 - Lint: `pnpm lint` passed after fixes.
@@ -2073,7 +2076,8 @@ Validation proof:
 
 - `pnpm validate:widgets` passed; widget limits are parsed by `ck-policy` at the Bob compiled-widget boundary.
 - `node scripts/generate-widget-definition-sources.mjs --check` passed.
-- `node packages/widget-shell/scripts/validate.mjs` passed.
+- Historical PRD 106 Shell source check passed; PRD 109 removed the standalone
+  Shell validator command.
 - `pnpm audit:106` passed against source, account defaults, and live instances.
 - `pnpm typecheck` passed.
 - `pnpm lint` passed.
@@ -2143,14 +2147,14 @@ Required matrix:
 | Requirement | Status | Proof / Remaining Work |
 | --- | --- | --- |
 | Shell defaults identical across widgets | Green | Shell factory validation and live `audit:106` pass. |
-| Shell control paths identical across widgets | Green | Widget source validation, generated-source check, Shell validation, and browser panel open checks pass. |
+| Shell control paths identical across widgets | Green | Widget source validation, generated-source check, Shell source checks, and browser panel open checks pass. |
 | Mixed panel structure consistent across widgets | Green | Browser spec opens Content/Layout/Appearance/Typography/Settings for all eight widgets. |
 | Core namespaces isolated and widget-specific | Green | `audit:106` passes; browser spec edits one Core path per widget and restores it. |
 | Shared utility usage consistent | Green with carry-forward hardening | Certified widgets use shared Shell/Surface/Branding/Social utilities. Remaining cleanup items are shared-boundary hardening, not widget-local blockers. |
 | Shared control vocabulary consistent | Green at source and panel-open level | Shared labels and controls compile and render through Bob. Further copy polish can be separate UX work. |
 | Dieter/ToolDrawer primitives reused consistently | Green | Browser certifies repeater/object-manager aggregate paths and dropdown/media surfaces open without errors. |
 | Runtime apply order consistent | Green | Browser preview opens nonblank for every widget and save/reload emits no widget/page errors. |
-| New instance creation uses account Shell defaults + widget Core defaults | Green | `audit:106`, source validation, Shell validation, typecheck, lint, live account-default cleanup, Widget Defaults e2e, and fixed Worker deploy graph pass. |
+| New instance creation uses account Shell defaults + widget Core defaults | Green | `audit:106`, source validation, Shell source checks, typecheck, lint, live account-default cleanup, Widget Defaults e2e, and fixed Worker deploy graph pass. |
 | Existing starter/account instances compile and open | Green | Authenticated browser spec opens all eight live instances through Roma/Bob. |
 | Browser QA confirms controls change preview, save, reload, and restore | Green | PRD106F spec passes 16/16; targeted PRD106F + Widget Defaults passes 17/17; full `pnpm e2e` passes 19/19. |
 
