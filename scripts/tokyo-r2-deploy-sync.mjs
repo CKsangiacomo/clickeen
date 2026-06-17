@@ -116,6 +116,9 @@ async function buildBulkEntries() {
 
     for (const file of files) {
       const rel = path.relative(sourceRoot, file).replace(/\\/g, '/');
+      if (rel.split('/').includes('.locales')) {
+        throw new Error(`[tokyo-r2-deploy-sync] Refusing stale Prague .locales deploy metadata: ${file}`);
+      }
       const key = path.posix.join(mapping.target, rel);
       assertCanonicalKey(key);
       entries.push({ key, file, contentType: deployContentType(file) });

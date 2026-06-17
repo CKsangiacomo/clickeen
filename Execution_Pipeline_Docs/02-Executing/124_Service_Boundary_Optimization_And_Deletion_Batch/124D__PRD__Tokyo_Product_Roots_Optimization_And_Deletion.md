@@ -58,6 +58,12 @@ Tokyo product roots do not own:
 - TOKYO-R2-003: deleted dead `tokyo/accounts/README.md` fixture root. Account runtime data remains Tokyo-worker/R2-owned under `accounts/{accountPublicId}/`.
 - TOKYO-R2-003: added a PR architecture gate check against reintroducing tracked `tokyo/accounts/**` source roots.
 
+2026-06-17 Prague locales deploy-root cleanup slice:
+
+- TOKYO-R2-004: deleted stale Prague `.locales` metadata files from the Tokyo deploy root. Prague translation source remains the existing page translation JSON, not `.locales` runtime metadata.
+- TOKYO-R2-004: added the required refusal in the existing Tokyo R2 deploy sync path so `.locales` metadata cannot be synced back into the Prague R2 product root.
+- TOKYO-R2-004: after `pnpm cf:preflight`, deleted the five matching stale R2 keys under `prague/pages/*/.locales/**` through `scripts/cloudflare/r2.mjs delete` and verified both exact prefixes list empty.
+
 ## Completion Gates
 
 - Every synced Tokyo root has a matching deploy trigger or explicit workflow.
