@@ -6,7 +6,6 @@ workers_dev = false
 routes = [
   { pattern = "dev.clk.live/*", zone_name = "clk.live" },
   { pattern = "tokyo.dev.clickeen.com/healthz", zone_name = "clickeen.com" },
-  { pattern = "tokyo.dev.clickeen.com/__internal/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/widgets/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/dieter/*", zone_name = "clickeen.com" },
   { pattern = "tokyo.dev.clickeen.com/themes/*", zone_name = "clickeen.com" },

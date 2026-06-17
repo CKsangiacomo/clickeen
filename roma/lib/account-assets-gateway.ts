@@ -36,6 +36,16 @@ export function parseJsonOrNull(text: string): unknown | null {
   }
 }
 
+export function isAccountAssetDeleteSuccessPayload(
+  payload: unknown,
+  expected: { accountId: string; assetRef: string },
+): boolean {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
+  if (Object.prototype.hasOwnProperty.call(payload, 'error')) return false;
+  const record = payload as { accountId?: unknown; assetRef?: unknown; deleted?: unknown };
+  return record.accountId === expected.accountId && record.assetRef === expected.assetRef && record.deleted === true;
+}
+
 function buildErrorResponse(
   request: NextRequest,
   setCookies: CurrentAccountRouteContext['setCookies'],
@@ -127,7 +137,12 @@ export async function proxyAccountAssetJson(args: {
     });
     const text = await upstream.text().catch(() => '');
     const payload = parseJsonOrNull(text);
-    if (upstream.ok && args.validateSuccessPayload && !args.validateSuccessPayload(payload)) return buildErrorResponse(args.request, args.context.sessionSetCookies, 502, { kind: 'UPSTREAM_UNAVAILABLE', reasonKey: 'coreui.errors.assets.payloadInvalid' });
+    if (upstream.ok && args.validateSuccessPayload && !args.validateSuccessPayload(payload)) {
+      return buildErrorResponse(args.request, args.context.sessionSetCookies, 502, {
+        kind: 'UPSTREAM_UNAVAILABLE',
+        reasonKey: 'coreui.errors.assets.payloadInvalid',
+      });
+    }
     const body =
       payload && typeof payload === 'object'
         ? payload

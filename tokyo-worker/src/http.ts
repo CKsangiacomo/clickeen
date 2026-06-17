@@ -66,7 +66,7 @@ function applyPublicCors(headers: Headers): void {
   headers.set('access-control-allow-methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
   headers.set(
     'access-control-allow-headers',
-    `authorization, content-type, x-account-id, x-filename, x-source, idempotency-key, x-ck-internal-service, ${CK_REQUEST_ID_HEADER}`,
+    `authorization, content-type, x-account-id, x-filename, x-source, idempotency-key, ${CK_REQUEST_ID_HEADER}`,
   );
 }
 

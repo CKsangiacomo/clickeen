@@ -395,7 +395,7 @@ async function handleProviderLoginCallback(
   const nowSec = Math.floor(Date.now() / 1000);
 
   const intent = transaction.intent || 'signin';
-  const nextPath = transaction.next || '/home';
+  const nextPath = transaction.invitationId ? '/home' : transaction.next || '/home';
   const finishRedirectUrl = transaction.finishRedirectUrl || resolveFinishRedirectUrl(env);
   if (!finishRedirectUrl) {
     logAuthFlow(request, 'error', 'auth.provider.callback.failed', {

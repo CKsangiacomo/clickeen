@@ -37,6 +37,7 @@ const DELETE_REASON_COPY: Record<string, string> = {
   'coreui.errors.auth.forbidden': 'You do not have permission to manage this asset.',
   'coreui.errors.db.writeFailed': 'Asset delete failed on the server. Please try again.',
   'coreui.errors.assets.integrityUnavailable': 'Delete blocked: asset integrity check is unavailable right now. Try again.',
+  'coreui.errors.assets.payloadInvalid': 'Asset delete failed on the server. Please try again.',
 };
 
 const ASSET_REASON_COPY: Record<string, string> = {
@@ -80,7 +81,17 @@ async function requestDeleteAsset(
     const reason = parseApiErrorReason(payload, response.status);
     throw new Error(reason);
   }
-  return (payload as DeleteAssetPayload) ?? { accountId, assetRef, deleted: true };
+  if (
+    !payload ||
+    typeof payload !== 'object' ||
+    Array.isArray(payload) ||
+    (payload as { accountId?: unknown }).accountId !== accountId ||
+    (payload as { assetRef?: unknown }).assetRef !== assetRef ||
+    (payload as { deleted?: unknown }).deleted !== true
+  ) {
+    throw new Error('coreui.errors.assets.payloadInvalid');
+  }
+  return payload as DeleteAssetPayload;
 }
 
 async function requestUploadAsset(accountApi: Pick<RomaAccountApi, 'fetchRaw'>, file: File, source: string): Promise<AccountAssetRecord> {
@@ -109,6 +120,7 @@ export function AssetsDomain() {
   const bulkUploadInputRef = useRef<HTMLInputElement | null>(null);
 
   const accountId = accountContext.accountId;
+  const accountPublicId = accountContext.accountPublicId;
   const entitlements = data.authz?.entitlements ?? null;
   const uploadSizeLimitBytes = useMemo(() => {
     const raw = entitlements?.limits?.['uploads.size.max'];
@@ -181,7 +193,7 @@ export function AssetsDomain() {
       setDeletingAssetRef(asset.assetRef);
       setDeleteError(null);
       try {
-        await requestDeleteAsset(accountApi, accountId, asset.assetRef);
+        await requestDeleteAsset(accountApi, accountPublicId, asset.assetRef);
         await refreshAssets();
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
@@ -190,7 +202,7 @@ export function AssetsDomain() {
         setDeletingAssetRef(null);
       }
     },
-    [accountApi, accountId, refreshAssets],
+    [accountApi, accountId, accountPublicId, refreshAssets],
   );
 
   const handleDeleteAsset = useCallback(

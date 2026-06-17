@@ -31,7 +31,7 @@ Berlin permanently owns:
 - Provider login to Clickeen user mapping through the approved `users` login fields at Berlin's service-role boundary.
 - First-login account provisioning when no invitation or existing user/account applies.
 - Account id minting during account provisioning.
-- Invitation acceptance at login time when the login flow carries an invitation context.
+- Invitation acceptance at login time when the login flow carries an invitation context. Acceptance creates the invited user in the invited account and marks the invitation accepted in one database transaction.
 - Current account resolution for session landing. In the DB Pivot target there is exactly one account per user.
 - Berlin access-token and refresh-token issuance.
 - Refresh rotation and session revocation.
@@ -95,7 +95,7 @@ Residual public account-management routes:
 - `POST /v1/me/contact-methods/:channel/verify`
 - `GET /v1/me/identities`
 - `GET /v1/accounts/:id`
-- `DELETE /v1/accounts/:id`
+- `DELETE /v1/accounts/:id` (disabled; explicit conflict, no mutation)
 - `PUT /v1/accounts/:id/locales`
 - `GET /v1/accounts/:id/members`
 - `GET /v1/accounts/:id/members/:memberId`
@@ -105,13 +105,17 @@ Residual public account-management routes:
 - `POST /v1/accounts/:id/invitations`
 - `DELETE /v1/accounts/:id/invitations/:invitationId`
 - `POST /v1/accounts/:id/owner-transfer`
-- `POST /v1/invitations/:token/accept`
+- `POST /v1/invitations/:token/accept` (signed-in accept is disabled; invitation acceptance happens during login)
 - `POST /v1/accounts/:id/lifecycle/tier-drop/dismiss`
 - `GET /v1/accounts/:id/publish-containment`
 
 `GET /v1/accounts/:id/publish-containment` is a policy-only read used by Roma's publish action boundary. Berlin reads `account_publish_containment` for the account block state and reason only; Tokyo remains the owner of widget instance inventory, editable config, display metadata, localization overlays, and publish/live state.
 
 Berlin does not build, validate, migrate, or clean Tokyo/R2 account paths. Account-owned assets and instances use `accountPublicId` in Tokyo storage; private UUIDs stay relational and session-scoped. Product policy that affects asset storage, publication, downgrade, suspension, or stale-root cleanup belongs to Roma/system account operations, with Berlin only supplying the stable session/account truth and narrow account-governance reads named above.
+
+Berlin does not claim full account deletion. Account deletion remains disabled
+until a single account-root operation owns Berlin database cleanup and Tokyo/R2
+account storage cleanup.
 
 Internal routes:
 

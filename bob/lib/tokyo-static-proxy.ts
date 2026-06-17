@@ -81,21 +81,3 @@ export async function proxyTokyoStaticPath(
     return NextResponse.json({ error: 'MISCONFIGURED', message }, { status: 500 });
   }
 }
-
-export async function proxyTokyoAccountAsset(
-  request: NextRequest,
-  params: { accountId: string; assetRef: string[] },
-  method: ProxyMethod,
-) {
-  try {
-    const accountId = assertSafeSegment(params.accountId);
-    const assetRef = params.assetRef.map(assertSafeSegment).join('/');
-    if (!assetRef) throw new Error('Invalid path');
-    const url = appendSearch(request, buildTokyoUrl(`/assets/account/${accountId}/${assetRef}`));
-    return proxyTokyoUrl(request, url, method);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (message === 'Invalid path') return NextResponse.json({ error: 'INVALID_PATH' }, { status: 400 });
-    return NextResponse.json({ error: 'MISCONFIGURED', message }, { status: 500 });
-  }
-}

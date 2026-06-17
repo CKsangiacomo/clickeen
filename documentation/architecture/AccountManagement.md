@@ -52,7 +52,9 @@ The account row answers:
 
 Account context must not derive product capabilities, display names, or slugs from the compact account id. If account display metadata is needed, it must be real account data with a named product owner.
 
-Account deletion is an operation, not a retained `closed` status. If an account is deleted, account DB rows and account-owned storage are cleaned up.
+Account deletion is an operation, not a retained `closed` status. If an account is deleted, account DB rows and account-owned storage are cleaned up by the same account-root operation.
+
+Current runtime status: account deletion is disabled until that account-root operation exists. No service may return account deletion success after deleting only database rows or only storage objects.
 
 Agency later is account-to-account, not user-to-many-accounts:
 
@@ -107,7 +109,7 @@ Rules:
 - invitations target one account, one email, and one intended role;
 - invite creation checks whether that email already exists as a user;
 - existing email rejects instead of attaching the user to the account;
-- accepting an invitation creates or activates one user for the inviting account;
+- accepting an invitation happens during login and creates one user for the inviting account in the same transaction that marks the invitation accepted;
 - no `account_members` row is created;
 - removing a non-owner team member removes that user from the account model rather than creating an account-less or multi-account user.
 

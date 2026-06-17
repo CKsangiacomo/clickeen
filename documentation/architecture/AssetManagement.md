@@ -104,6 +104,11 @@ Delete addresses one exact account asset reference in the current account.
 Tokyo-worker removes the addressed object from the account asset folder and
 returns current account facts after the mutation.
 
+Roma accepts delete success only when Tokyo-worker returns the current account
+public id, the exact asset reference, and `deleted: true`. Missing, malformed,
+wrong-account, wrong-asset, or error-shaped `2xx` responses fail as upstream
+contract failures.
+
 References from existing widget instances remain saved widget data. A user can
 repair or replace those references by editing the instance in Bob and saving
 through Roma.

@@ -50,25 +50,6 @@ async function callTransferOwnerRpc(args: {
   return supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload);
 }
 
-async function deleteAccountRow(args: { env: Env; accountId: string }): Promise<Response | null> {
-  const params = new URLSearchParams({
-    id: `eq.${args.accountId}`,
-  });
-  const response = await supabaseAdminFetch(args.env, `/rest/v1/accounts?${params.toString()}`, {
-    method: 'DELETE',
-    headers: { Prefer: 'return=representation' },
-  });
-  const payload = await readSupabaseAdminJson<Array<{ id?: unknown }> | Record<string, unknown>>(response);
-  if (!response.ok) {
-    return supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload);
-  }
-  const rows = Array.isArray(payload) ? payload : [];
-  if (!rows[0]?.id) {
-    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.notFound' } }, { status: 404 });
-  }
-  return null;
-}
-
 async function patchAccount(
   env: Env,
   accountId: string,
@@ -116,23 +97,6 @@ function parseOwnerTransferPayload(
   return { ok: true, nextOwnerUserId };
 }
 
-function parseDeletePayload(
-  value: unknown,
-  accountId: string,
-): { ok: true } | { ok: false; response: Response } {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return { ok: false, response: validationError('coreui.errors.payload.invalid') };
-  }
-  const confirmAccountId = asTrimmedString((value as { confirmAccountId?: unknown }).confirmAccountId);
-  if (confirmAccountId !== accountId) {
-    return {
-      ok: false,
-      response: validationError('coreui.errors.payload.invalid', 'confirmAccountId must match the account being deleted'),
-    };
-  }
-  return { ok: true };
-}
-
 export async function handleOwnerTransfer(args: {
   request: Request;
   env: Env;
@@ -170,20 +134,7 @@ export async function handleAccountDelete(args: {
 }): Promise<Response> {
   if (args.account.role !== 'owner') return denyResponse();
 
-  const payload = await readJsonPayload(args.request);
-  const parsed = parseDeletePayload(payload, args.account.accountId);
-  if (!parsed.ok) return parsed.response;
-
-  const writeError = await deleteAccountRow({
-    env: args.env,
-    accountId: args.account.accountId,
-  });
-  if (writeError) return writeError;
-
-  return json({
-    ok: true,
-    deletedAccountId: args.account.accountId,
-  });
+  return conflictResponse('coreui.errors.account.deleteUnavailable', 'account_deletion_disabled');
 }
 
 export async function handleAccountTierDropDismiss(args: {

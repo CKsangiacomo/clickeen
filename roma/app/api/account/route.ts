@@ -1,6 +1,5 @@
-import { NextRequest } from 'next/server';
-import { proxyBerlinTextResponse } from '@roma/lib/berlin-proxy-route';
-import { resolveCurrentAccountRouteContext } from './_lib/current-account-route';
+import { NextRequest, NextResponse } from 'next/server';
+import { resolveCurrentAccountRouteContext, withSession } from './_lib/current-account-route';
 
 export const runtime = 'edge';
 
@@ -8,14 +7,15 @@ export async function DELETE(request: NextRequest) {
   const current = await resolveCurrentAccountRouteContext({ request, minRole: 'owner' });
   if (!current.ok) return current.response;
 
-  return proxyBerlinTextResponse({
-    request,
-    accessToken: current.value.accessToken,
-    setCookies: current.value.setCookies,
-    path: `/v1/accounts/${encodeURIComponent(current.value.authzPayload.accountId)}`,
-    method: 'DELETE',
-    accept: request.headers.get('accept'),
-    contentType: request.headers.get('content-type'),
-    body: await request.text(),
-  });
+  const response = NextResponse.json(
+    {
+      error: {
+        kind: 'CONFLICT',
+        reasonKey: 'coreui.errors.account.deleteUnavailable',
+        detail: 'account_deletion_disabled',
+      },
+    },
+    { status: 409 },
+  );
+  return withSession(request, response, current.value.setCookies);
 }

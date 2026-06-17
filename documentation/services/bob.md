@@ -224,6 +224,9 @@ accounts/{accountPublicId}/assets/{filename}
 Dropdown fill controls use this route chain to upload and assign files. SVG
 logos are accepted vector assets when Roma/Tokyo-worker accept the upload.
 
+Bob does not expose account asset proxy routes. Account asset list, upload,
+resolve, and delete operations stay behind Roma current-account routes.
+
 ## Localization
 
 Bob edits the base locale in the active session.

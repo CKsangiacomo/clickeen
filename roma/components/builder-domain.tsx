@@ -5,6 +5,7 @@ import type { AccountAssetHostCommand } from '@clickeen/ck-contracts';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { resolveBobBaseUrl } from '../lib/env/bob';
 import { useRomaAccountApi } from './account-api';
 import { getCompiledWidget } from './compiled-widget-cache';
 import { useRomaAccountContext } from './roma-account-context';
@@ -135,20 +136,6 @@ function resolveBuilderErrorCopy(reason: string, fallback: string): string {
     return fallback;
   }
   return normalized;
-}
-
-function resolveBobBaseUrl(): string {
-  const fromEnv = String(process.env.NEXT_PUBLIC_BOB_URL || '').trim();
-  if (fromEnv) {
-    try {
-      return new URL(fromEnv).origin;
-    } catch {
-      // Ignore invalid env and fall back.
-    }
-  }
-
-  // Keep server/client rendering deterministic to avoid iframe src hydration mismatch.
-  return 'https://bob.dev.clickeen.com';
 }
 
 function buildRomaBuilderRoute(args: { instanceId: string }): string {
@@ -744,7 +731,7 @@ export function BuilderDomain({ initialInstanceId = '' }: BuilderDomainProps) {
       ) : null}
       <iframe
         ref={iframeRef}
-        src={bobSrc || 'about:blank'}
+        src={bobSrc}
         className="roma-builder__iframe"
         title="Bob Builder"
         onLoad={handleBobIframeLoad}

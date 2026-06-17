@@ -1,0 +1,62 @@
+# PRD 124B - Bob Editor Boundary Optimization And Deletion
+
+Status: EXECUTING
+Parent: PRD 124
+Owner: Bob editor boundary
+Date: 2026-06-17
+
+## Boundary
+
+Bob owns browser-memory editing:
+
+- Open editor session state.
+- Compiled controls and local edit operations.
+- Sandboxed preview.
+- Copilot and translation UI intent.
+- Explicit save intent sent to Roma.
+
+Bob does not own:
+
+- Account identity.
+- Account policy.
+- Account asset storage routes.
+- Publish truth.
+- Public embed/package authority.
+- Direct AI/storage/runtime authority.
+
+## Findings And Required Actions
+
+| ID | Severity | Component | Category | Evidence | Required action | Blast radius | V-risk |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| BOB-01 | High | Account asset route | Dead/wrong-service authority | `bob/app/assets/account/[accountId]/[...assetRef]/route.ts`, `bob/lib/tokyo-static-proxy.ts`, `bob/lib/session/sessionTransport.ts` | Delete Bob account asset route and `proxyTokyoAccountAsset`. Hosted asset work stays through Roma host commands. If runtime evidence proves a caller, migrate caller to Roma `/api/account/assets/**`. | Bob asset URLs, stale external links | V4, V7, V1 |
+| BOB-02 | Medium | Dieter public artifacts | Legacy/generated mirror | `bob/public/dieter/**`, `bob/lib/icons.ts`, Dieter docs | Remove tracked `bob/public/dieter/**` or make it generated/ignored. Bob consumes Tokyo/R2 `/dieter/**` and icon registry only. | Static Bob public paths | V1, V3, V7 |
+| BOB-03 | Medium | Bob env/runtime docs | Legacy authority | `bob/wrangler.toml`, `bob/lib/env/berlin.ts`, AI/docs references | Remove dead Bob auth/AI env vars and unused env helpers. Docs must say Roma owns account and AI routes. Keep fail-closed stubs only when explicitly documented. | Deploy docs/env contracts | V7, V8, V4 |
+| BOB-04 | High | Embed/copy-code UI | Wrong authority | `bob/components/TopDrawer.tsx`, `bob/components/EmbedModal.tsx`, `bob/lib/embed-snippets.ts`, `packages/ck-policy/src/registry.ts` | Move embed state/snippet generation to Roma or add a Roma host command returning current embed info. Bob only renders returned values. | Copy-code modal, public embed UX | V1, V6, V7 |
+| BOB-05 | High | Website setting UI | Dead/legacy write path | `bob/components/SettingsPanel.tsx`, `bob/lib/edit/ops.ts`, widget docs | Remove Bob `context.websiteUrl` write path. Website context belongs to account/Roma settings and is passed read-only into editor/Copilot if needed. | Settings panel, Copilot context | V3, V6, V7 |
+| BOB-06 | Medium | Compiler/control soft parsing | Silent healing | `bob/lib/compiler.server.ts`, `bob/lib/compiler/stencils.ts`, `bob/components/td-menu-content/showIf.ts`, `linkedOps.ts` | Make malformed widget software fail compile or fail closed. Do not skip malformed presets, JSON attrs, show-if, or linked ops. | Widget compile/editor controls | V2, V3, V4 |
+| BOB-07 | Medium | Dirty/save signature | Silent substitution | `bob/lib/session/sessionTypes.ts`, `useSessionSaving.ts` | Replace `JSON.stringify` failure fallback `'{}'` with explicit invalid-state error that blocks save/dirty comparison. | Dirty tracking, save UX | V1, V5 |
+| BOB-08 | Low | Public package/native UI exports | Dead/legacy surface | `bob/package.json`, `bob/bob_native_ui/textrename/**`, architecture docs | Remove unused package exports and `textrename` native UI files, or prove a current external consumer before keeping them. | Package import surface | V7, V8 |
+
+## Execution Slices
+
+1. Account authority cleanup: delete direct asset proxy and stale account/env surfaces.
+2. Embed authority cleanup: Roma owns embed/publish snippet truth.
+3. Workspace setting cleanup: remove Bob-owned website context writes.
+4. Compiler strictness: malformed widget software fails instead of healing.
+5. Artifact/package cleanup: tracked Dieter mirror and unused native/export paths.
+
+## Execution Notes
+
+2026-06-17 critical slice:
+
+- BOB-01: deleted Bob `/assets/account/[accountId]/[...assetRef]` route and `proxyTokyoAccountAsset`.
+- BOB-01: account asset list/upload/resolve/delete remains through Roma hosted Builder commands and Roma current-account asset routes.
+
+## Completion Gates
+
+- Bob has no direct account asset route.
+- Bob no longer constructs public embed truth from iframe/client state.
+- Bob no longer writes account/workspace settings into instance config.
+- Malformed widget software does not partially render as success.
+- Generated artifacts are not tracked as Bob source unless explicitly owned.
+- V1-V8 subagent audit is clean before moving to executed.

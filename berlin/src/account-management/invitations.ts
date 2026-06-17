@@ -1,5 +1,4 @@
 import type { BerlinAccountContext } from '../bootstrap/types';
-import { listAccountMembers } from '../bootstrap/state';
 import { json, validationError } from '../http';
 import { readSupabaseAdminListAll } from '../supabase-admin';
 import { readSupabaseAdminJson, supabaseAdminErrorResponse, supabaseAdminFetch } from '../supabase-admin';
@@ -33,12 +32,6 @@ export type BerlinAccountInvitation = {
 };
 
 type Result<T> = { ok: true; value: T } | { ok: false; response: Response };
-
-export type InvitationAcceptOutcome = {
-  invitationId: string;
-  accountId: string;
-  role: AccountInvitationRole;
-};
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -309,17 +302,25 @@ async function updateInvitation(args: {
   return { ok: true, value: invitation };
 }
 
-async function ensureEmailNotAlreadyMember(args: {
+async function ensureEmailNotAlreadyUser(args: {
   env: Env;
-  accountId: string;
   email: string;
 }): Promise<Response | null> {
-  const members = await listAccountMembers(args.env, args.accountId);
-  if (!members.ok) return members.response;
-
-  const exists = members.value.some((member) => member.profile?.primaryEmail.toLowerCase() === args.email);
-  if (exists) {
-    return conflictResponse('coreui.errors.account.memberAlreadyExists', 'email_already_attached_to_account');
+  const params = new URLSearchParams({
+    select: 'user_id',
+    primary_email: `eq.${args.email}`,
+    limit: '1',
+  });
+  const response = await supabaseAdminFetch(args.env, `/rest/v1/users?${params.toString()}`, {
+    method: 'GET',
+  });
+  const payload = await readSupabaseAdminJson<Array<{ user_id?: unknown }> | Record<string, unknown>>(response);
+  if (!response.ok) {
+    return supabaseAdminErrorResponse('coreui.errors.db.readFailed', response.status, payload);
+  }
+  const rows = Array.isArray(payload) ? payload : [];
+  if (rows[0]?.user_id) {
+    return conflictResponse('coreui.errors.account.memberAlreadyExists', 'user_already_associated');
   }
   return null;
 }
@@ -353,9 +354,8 @@ export async function handleAccountInvitationsPost(args: {
   const parsed = parseInvitationIssuePayload(payload);
   if (!parsed.ok) return parsed.response;
 
-  const memberConflict = await ensureEmailNotAlreadyMember({
+  const memberConflict = await ensureEmailNotAlreadyUser({
     env: args.env,
-    accountId: args.account.accountId,
     email: parsed.email,
   });
   if (memberConflict) return memberConflict;
@@ -433,100 +433,38 @@ export async function handleAccountInvitationDelete(args: {
   });
 }
 
-async function attachUserToAcceptedInvitationAccount(args: {
-  env: Env;
-  invitation: BerlinAccountInvitation;
-  userId: string;
-}): Promise<Response | null> {
-  const params = new URLSearchParams({
-    select: 'account_id,user_id',
-    user_id: `eq.${args.userId}`,
-    limit: '1',
-  });
-  const response = await supabaseAdminFetch(args.env, `/rest/v1/users?${params.toString()}`, {
-    method: 'PATCH',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({
-      account_id: args.invitation.accountId,
-      role: args.invitation.role,
-    }),
-  });
-  const payload = await readSupabaseAdminJson<Array<{ account_id?: unknown; user_id?: unknown }> | Record<string, unknown>>(
-    response,
-  );
-  if (!response.ok) {
-    return supabaseAdminErrorResponse('coreui.errors.db.writeFailed', response.status, payload);
-  }
-
-  const rows = Array.isArray(payload) ? payload : [];
-  if (!rows[0]?.user_id) {
-    return json({ error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.memberNotFound' } }, { status: 404 });
-  }
-  return null;
-}
-
-export async function acceptInvitationForPrincipal(args: {
+async function rejectSignedInInvitationAccept(args: {
   env: Env;
   invitationId: string;
   principalUserId: string;
   principalEmail: string;
-}): Promise<Result<InvitationAcceptOutcome>> {
+}): Promise<Response> {
   const invitationResult = await loadInvitationById(args.env, args.invitationId);
-  if (!invitationResult.ok) return invitationResult;
+  if (!invitationResult.ok) return invitationResult.response;
 
   const invitation = invitationResult.value;
   if (!invitation) {
-    return {
-      ok: false,
-      response: json(
-        { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.invitationNotFound' } },
-        { status: 404 },
-      ),
-    };
+    return json(
+      { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.account.invitationNotFound' } },
+      { status: 404 },
+    );
   }
   if (invitation.status !== 'pending' || isInvitationExpired(invitation)) {
-    return {
-      ok: false,
-      response: json(
-        {
-          error: {
-            kind: 'AUTH',
-            reasonKey: 'coreui.errors.account.invitationInvalidOrExpired',
-          },
+    return json(
+      {
+        error: {
+          kind: 'AUTH',
+          reasonKey: 'coreui.errors.account.invitationInvalidOrExpired',
         },
-        { status: 410 },
-      ),
-    };
+      },
+      { status: 410 },
+    );
   }
   if (invitation.email !== args.principalEmail.toLowerCase()) {
-    return { ok: false, response: denyResponse() };
+    return denyResponse();
   }
 
-  const membershipError = await attachUserToAcceptedInvitationAccount({
-    env: args.env,
-    invitation,
-    userId: args.principalUserId,
-  });
-  if (membershipError) return { ok: false, response: membershipError };
-
-  const accepted = await updateInvitation({
-    env: args.env,
-    invitationId: args.invitationId,
-    patch: {
-      status: 'accepted',
-      accepted_at: new Date().toISOString(),
-    },
-  });
-  if (!accepted.ok) return accepted;
-
-  return {
-    ok: true,
-    value: {
-      invitationId: invitation.invitationId,
-      accountId: invitation.accountId,
-      role: invitation.role,
-    },
-  };
+  return conflictResponse('coreui.errors.account.memberAlreadyExists', 'invitation_accept_requires_login_flow');
 }
 
 export async function handleInvitationAccept(args: {
@@ -535,18 +473,10 @@ export async function handleInvitationAccept(args: {
   principalUserId: string;
   principalEmail: string;
 }): Promise<Response> {
-  const acceptedInvitation = await acceptInvitationForPrincipal({
+  return rejectSignedInInvitationAccept({
     env: args.env,
     invitationId: args.invitationId,
     principalUserId: args.principalUserId,
     principalEmail: args.principalEmail,
-  });
-  if (!acceptedInvitation.ok) return acceptedInvitation.response;
-
-  return json({
-    ok: true,
-    accountId: acceptedInvitation.value.accountId,
-    invitationId: acceptedInvitation.value.invitationId,
-    role: acceptedInvitation.value.role,
   });
 }

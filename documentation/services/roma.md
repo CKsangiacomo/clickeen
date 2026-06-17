@@ -100,6 +100,10 @@ Builder opens one saved widget instance:
    policy, account public id, instance id, label, source, and metadata.
 6. Receive `bob:open-editor-applied` or `bob:open-editor-failed`.
 
+`NEXT_PUBLIC_BOB_URL` is required and must be an `http` or `https` origin with
+no path, query, or hash. Missing or malformed Bob origin config fails Builder
+instead of falling back to another origin.
+
 Bob edits in browser memory. Save sends the current widget document back to
 Roma. Roma performs the current-account save command and Tokyo-worker writes the
 saved source plus generated package under:
@@ -168,6 +172,10 @@ Admin assets use the same path under:
 accounts/CLICKEEN/assets/{filename}
 ```
 
+Roma treats malformed successful Tokyo asset delete responses as upstream
+contract failures. A delete is success only when the response names the current
+account public id, the exact asset reference, and `deleted: true`.
+
 ## Pages Domain
 
 Roma owns the account page product surface. Account pages are stacks of saved
@@ -185,6 +193,11 @@ or write the named account page object.
 Berlin owns person identity, account membership, roles, invitations, ownership,
 and account lifecycle records. Roma renders those surfaces and sends mutations
 through same-origin routes backed by Berlin.
+
+Account deletion is disabled in the current runtime. Roma does not offer the
+delete-account settings action and `DELETE /api/account` returns an explicit
+conflict until one account-root deletion operation owns both Berlin DB cleanup
+and Tokyo/R2 account storage cleanup.
 
 ## AI
 

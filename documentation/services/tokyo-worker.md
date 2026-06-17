@@ -161,6 +161,10 @@ Roma reaches Tokyo-worker through private Cloudflare service bindings for
 product-control operations. The request carries the Roma account authz capsule
 and the account public id.
 
+`/__internal/**` is not a public Tokyo route. Internal product-control,
+asset-control, and translation completion calls must arrive through Cloudflare
+service bindings. Public CORS does not advertise the internal-service header.
+
 Product-control routes cover:
 
 - widget definition reads

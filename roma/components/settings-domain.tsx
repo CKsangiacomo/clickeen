@@ -58,10 +58,6 @@ export function SettingsDomain() {
   const [ownerTransferLoading, setOwnerTransferLoading] = useState(false);
   const [ownerTransferError, setOwnerTransferError] = useState<string | null>(null);
 
-  const [deleteConfirm, setDeleteConfirm] = useState('');
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
   const loadMembers = useCallback(async () => {
     setMembersLoading(true);
     setMembersError(null);
@@ -119,35 +115,9 @@ export function SettingsDomain() {
     }
   }, [accountApi, activeAccountId, nextOwnerUserId]);
 
-  const deleteAccount = useCallback(async () => {
-    if (!activeAccountId) return;
-    setDeleteLoading(true);
-    setDeleteError(null);
-    try {
-      const response = await accountApi.fetchRaw(`/api/account`, {
-        method: 'DELETE',
-        headers: accountApi.buildHeaders({ contentType: 'application/json' }),
-        body: JSON.stringify({ confirmAccountId: activeAccountId }),
-      });
-      const payload = (await response.json().catch(() => null)) as {
-        error?: unknown;
-      } | null;
-      if (!response.ok) {
-        throw new Error(resolveErrorReason(payload, `HTTP_${response.status}`));
-      }
-      window.location.assign('/home');
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      setDeleteError(resolveSettingsErrorCopy(reason, 'Account deletion failed. Please try again.'));
-    } finally {
-      setDeleteLoading(false);
-    }
-  }, [accountApi, activeAccountId]);
-
   const canManageAccount = activeAccount.role === 'owner';
   const canEditLocales = activeAccount.role === 'owner' || activeAccount.role === 'admin';
   const ownerCandidates = members?.members.filter((member) => member.userId !== data.user.id && member.role !== 'owner') ?? [];
-  const deleteGuardMatches = deleteConfirm.trim() === accountContext.accountPublicId;
 
   return (
     <>
@@ -215,33 +185,6 @@ export function SettingsDomain() {
         {ownerTransferError ? <p className="body-m">{ownerTransferError}</p> : null}
       </section>
 
-      <section className="rd-canvas-module">
-        <h2 className="heading-6">Delete account</h2>
-        <p className="body-m">This removes the account and all account-scoped data. It is owner-only final account control.</p>
-        {!canManageAccount ? <p className="body-s">Only the current owner can delete the account.</p> : null}
-        <label className="roma-field">
-          <span className="label-s">Type account ID to confirm</span>
-          <input
-            className="roma-input body-m"
-            value={deleteConfirm}
-            onChange={(event) => setDeleteConfirm(event.target.value)}
-            disabled={!canManageAccount || deleteLoading}
-          />
-        </label>
-        <div className="rd-canvas-module__actions" style={{ justifyContent: 'flex-start' }}>
-          <button
-            className="diet-btn-txt"
-            data-size="md"
-            data-variant="line2"
-            type="button"
-            onClick={() => void deleteAccount()}
-            disabled={!canManageAccount || deleteLoading || !deleteGuardMatches}
-          >
-            <span className="diet-btn-txt__label body-m">{deleteLoading ? 'Deleting…' : 'Delete account'}</span>
-          </button>
-        </div>
-        {deleteError ? <p className="body-m">{deleteError}</p> : null}
-      </section>
     </>
   );
 }
