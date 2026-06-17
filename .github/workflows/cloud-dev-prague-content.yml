@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "tokyo/prague/pages/**/*.json"
+      - "tokyo/prague/pages/**/assets/**"
       - "tokyo/prague/assets/**"
       - "prague/content/**"
       - "packages/l10n/locales.json"

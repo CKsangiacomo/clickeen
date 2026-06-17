@@ -70,6 +70,12 @@ Tokyo product roots do not own:
 - TOKYO-R2-005: removed the stale `InstanceEmbed.astro` comment that named `tokyo/prague/assets/share-icons/*.svg` as the source.
 - TOKYO-R2-005: after `pnpm cf:preflight`, deleted the 21 matching stale R2 keys under `prague/assets/share-icons/` through `scripts/cloudflare/r2.mjs delete` and verified the prefix lists empty.
 
+2026-06-17 FAQ orphan page-assets cleanup slice:
+
+- TOKYO-R2-006: deleted the six orphan FAQ page assets under `tokyo/prague/pages/faq/assets/**`; no FAQ page JSON references those filenames or asset paths.
+- TOKYO-R2-006: added the required orphan page-asset check to the existing Prague blocks validator so tracked `tokyo/prague/pages/{widget}/assets/**` files must have explicit page JSON asset-field references, and updated the existing Prague content workflow to run on page asset changes.
+- TOKYO-R2-006: after `pnpm cf:preflight`, deleted the six matching stale R2 keys under `prague/pages/faq/assets/` through `scripts/cloudflare/r2.mjs delete` and verified the prefix lists empty.
+
 ## Completion Gates
 
 - Every synced Tokyo root has a matching deploy trigger or explicit workflow.
