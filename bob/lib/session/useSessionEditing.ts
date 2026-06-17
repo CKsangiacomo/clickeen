@@ -3,6 +3,7 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../ops';
 import { applyWidgetOps } from '../ops';
+import { expandLinkedOps } from '../edit/linkedOps';
 import { assertSessionConfigContract } from './sessionConfig';
 import { serializeInstanceDataSignature, type SessionMeta, type SessionState } from './sessionTypes';
 
@@ -30,9 +31,24 @@ export function useSessionEditing(args: {
         setState(nextState);
         return result;
       }
+      let expandedOps: WidgetOp[];
+      try {
+        expandedOps = expandLinkedOps({ compiled, instanceData: current.instanceData, ops });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const result: ApplyWidgetOpsResult = { ok: false, errors: [{ opIndex: 0, message }] };
+        const nextState: SessionState = {
+          ...stateRef.current,
+          error: { source: 'ops', errors: result.errors },
+        };
+        stateRef.current = nextState;
+        setState(nextState);
+        return result;
+      }
+
       const applied = applyWidgetOps({
         data: current.instanceData,
-        ops,
+        ops: expandedOps,
         controls: compiled.controls,
       });
 
@@ -56,10 +72,25 @@ export function useSessionEditing(args: {
       }
 
       const latest = stateRef.current;
+      let nextSignature: string;
+      try {
+        nextSignature = serializeInstanceDataSignature(applied.data);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const result: ApplyWidgetOpsResult = { ok: false, errors: [{ opIndex: 0, message }] };
+        const nextState: SessionState = {
+          ...latest,
+          error: { source: 'ops', errors: result.errors },
+        };
+        stateRef.current = nextState;
+        setState(nextState);
+        return result;
+      }
+
       const nextState: SessionState = {
         ...latest,
         instanceData: applied.data,
-        isDirty: serializeInstanceDataSignature(applied.data) !== latest.savedInstanceDataSignature,
+        isDirty: nextSignature !== latest.savedInstanceDataSignature,
         error: null,
         lastUpdate: {
           source: 'ops',

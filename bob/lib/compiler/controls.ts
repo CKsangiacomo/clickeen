@@ -1,6 +1,7 @@
 import type { CompiledControl, CompiledControlOption, CompiledPanel, ControlKind } from '../types';
 import { decodeHtmlEntities, parseTooldrawerAttributes } from '../compiler.shared';
 import { getIcon } from '../icons';
+import { validateShowIfExpression } from '../show-if-expression';
 import { getAt } from '../utils/paths';
 
 const TOKEN_SEGMENT = /^__[^.]+__$/;
@@ -53,7 +54,7 @@ export function expandTooldrawerClusters(html: string): string {
     if (start === -1) break;
 
     const openEnd = findTagEnd(html, start + openTag.length);
-    if (openEnd === -1) break;
+    if (openEnd === -1) throw new Error('[BobCompiler] Malformed <tooldrawer-cluster>');
 
     const attrsRaw = html.slice(start + openTag.length, openEnd);
     const attrs = parseTooldrawerAttributes(attrsRaw);
@@ -70,17 +71,13 @@ export function expandTooldrawerClusters(html: string): string {
       const nextOpen = lowerSearch.indexOf(openTag, searchPos);
       const nextClose = lowerSearch.indexOf(closeTag, searchPos);
       if (nextClose === -1) {
-        depth = 0;
-        break;
+        throw new Error('[BobCompiler] Unclosed <tooldrawer-cluster>');
       }
 
       if (nextOpen !== -1 && nextOpen < nextClose) {
         depth += 1;
         const nextOpenEnd = findTagEnd(html, nextOpen + openTag.length);
-        if (nextOpenEnd === -1) {
-          depth = 0;
-          break;
-        }
+        if (nextOpenEnd === -1) throw new Error('[BobCompiler] Malformed <tooldrawer-cluster>');
         searchPos = nextOpenEnd + 1;
         continue;
       }
@@ -89,6 +86,7 @@ export function expandTooldrawerClusters(html: string): string {
       if (depth === 0) {
         const inner = html.slice(openEnd + 1, nextClose);
         const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : '';
+        if (showIf) validateShowIfExpression(showIf);
 
         if (attrs.gap || attrs['space-after'] || attrs.spaceAfter) {
           throw new Error(
@@ -133,7 +131,7 @@ export function expandTooldrawerClusters(html: string): string {
     }
 
     if (depth !== 0) {
-      cursor = openEnd + 1;
+      throw new Error('[BobCompiler] Unclosed <tooldrawer-cluster>');
     }
   }
 
@@ -157,12 +155,16 @@ function parseControlOptions(args: {
   }
 
   const options = parsed
-    .map((opt) => {
-      if (!opt || typeof opt !== 'object') return null;
+    .map((opt, index) => {
+      if (!opt || typeof opt !== 'object') {
+        throw new Error(`[BobCompiler] option ${index} for control "${args.controlPath}" must be an object`);
+      }
       if ('isGroupHeader' in opt && (opt as any).isGroupHeader === true) return null;
       const label = 'label' in opt ? String((opt as any).label) : '';
       const value = 'value' in opt ? String((opt as any).value) : '';
-      if (!label && !value) return null;
+      if (!label && !value) {
+        throw new Error(`[BobCompiler] option ${index} for control "${args.controlPath}" requires label or value`);
+      }
       return { label, value };
     })
     .filter((opt): opt is CompiledControlOption => Boolean(opt));
@@ -219,21 +221,22 @@ function inferControlMetadata(control: CompiledControl, defaults: Record<string,
   return { kind: 'unknown' };
 }
 
-function parseBooleanAttr(value: string | undefined): boolean | undefined {
+function parseBooleanAttr(value: string | undefined, attrName = 'boolean'): boolean | undefined {
   if (!value) return undefined;
   const normalized = value.trim().toLowerCase();
   if (!normalized) return undefined;
   if (['true', '1', 'yes', 'on'].includes(normalized)) return true;
   if (['false', '0', 'no', 'off'].includes(normalized)) return false;
-  return undefined;
+  throw new Error(`[BobCompiler] Invalid boolean attribute "${attrName}"`);
 }
 
-function parseNumberAttr(value: string | undefined): number | undefined {
+function parseNumberAttr(value: string | undefined, attrName = 'number'): number | undefined {
   if (value == null) return undefined;
   const trimmed = String(value).trim();
   if (!trimmed) return undefined;
   const num = Number(trimmed);
-  return Number.isFinite(num) ? num : undefined;
+  if (!Number.isFinite(num)) throw new Error(`[BobCompiler] Invalid number attribute "${attrName}"`);
+  return num;
 }
 
 function parseFillModes(value: string | undefined): string[] | null {
@@ -242,7 +245,13 @@ function parseFillModes(value: string | undefined): string[] | null {
     .split(',')
     .map((mode) => mode.trim().toLowerCase())
     .filter(Boolean);
-  return modes.length ? modes : null;
+  if (!modes.length) throw new Error('[BobCompiler] fill-modes requires at least one mode');
+  modes.forEach((mode) => {
+    if (!['color', 'gradient', 'image', 'video'].includes(mode)) {
+      throw new Error(`[BobCompiler] Unsupported fill mode "${mode}"`);
+    }
+  });
+  return modes;
 }
 
 function collectControlsFromMarkup(markup: string, panelId: string, controls: CompiledControl[]) {
@@ -258,6 +267,7 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
     const attrs = parseTooldrawerAttributes(attrsRaw);
     const type = attrs.type;
     const path = attrs.path;
+    if (!type) throw new Error('[BobCompiler] <tooldrawer-field> requires type');
     const addDerivedPath = (candidate: string | undefined) => {
       if (!candidate) return;
       const trimmed = candidate.trim();
@@ -270,13 +280,13 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
       });
     };
 
-    if (type && path) {
-      const min = parseNumberAttr(attrs.min);
-      const max = parseNumberAttr(attrs.max);
-      const step = parseNumberAttr(attrs.step);
-      const required = parseBooleanAttr(attrs.required);
+    if (path) {
+      const min = parseNumberAttr(attrs.min, 'min');
+      const max = parseNumberAttr(attrs.max, 'max');
+      const step = parseNumberAttr(attrs.step, 'step');
+      const required = parseBooleanAttr(attrs.required, 'required');
       const fillModes = type === 'dropdown-fill' ? parseFillModes(attrs.fillModes || attrs['fill-modes']) : null;
-      const allowImageOverride = parseBooleanAttr(attrs.allowImage || attrs['allow-image']);
+      const allowImageOverride = parseBooleanAttr(attrs.allowImage || attrs['allow-image'], 'allow-image');
       const inferredAllowsImage = (() => {
         const pathLower = path.toLowerCase();
         if (pathLower.includes('background')) return true;
@@ -286,6 +296,8 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
       const allowImageFromModes = fillModes ? fillModes.some((mode) => mode === 'image' || mode === 'video') : undefined;
       const allowImage =
         type === 'dropdown-fill' ? (allowImageOverride ?? allowImageFromModes ?? inferredAllowsImage) : undefined;
+      const showIf = attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : undefined;
+      if (showIf) validateShowIfExpression(showIf);
       controls.push({
         panelId,
         groupId,
@@ -293,7 +305,7 @@ function collectControlsFromMarkup(markup: string, panelId: string, controls: Co
         type,
         path,
         label: attrs.label ? decodeHtmlEntities(attrs.label) : undefined,
-        showIf: attrs['show-if'] ? decodeHtmlEntities(attrs['show-if']) : undefined,
+        showIf,
         options: attrs.options ? parseControlOptions({ controlPath: path, optionsRaw: attrs.options }) : undefined,
         allowImage,
         enumValues: fillModes ?? undefined,

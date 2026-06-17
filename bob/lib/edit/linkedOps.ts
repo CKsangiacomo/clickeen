@@ -1,9 +1,9 @@
 import { isRecord as isPlainRecord } from '@clickeen/ck-contracts';
-import type { CompiledWidget } from '../../lib/types';
-import type { WidgetOp } from '../../lib/ops';
-import { getAt } from '../../lib/utils/paths';
-import { buildControlMatchers, findBestControlForPath } from '../../lib/edit/controls';
-import { getCkTypographyAllowedStyles, getCkTypographyAllowedWeights } from '../../lib/edit/typography-fonts';
+import type { CompiledWidget } from '../types';
+import type { WidgetOp } from '../ops';
+import { getAt } from '../utils/paths';
+import { buildControlMatchers, findBestControlForPath } from './controls';
+import { getCkTypographyAllowedStyles, getCkTypographyAllowedWeights } from './typography-fonts';
 
 type PresetSpec = {
   customValue?: string;
@@ -18,6 +18,7 @@ type PresetEntry = {
 };
 
 const surfaceOwnerPattern = '(?:stage|pod|(?:[a-zA-Z0-9_-]+\\.)?appearance\\.cardwrapper)';
+const layoutOwnerPattern = '(?:(?:[a-zA-Z0-9_-]+\\.)?layout)';
 
 export { isPlainRecord };
 
@@ -30,32 +31,47 @@ function finiteNumber(value: unknown): number | null {
 }
 
 function buildPresetEntries(raw: unknown): PresetEntry[] {
-  if (!isPlainRecord(raw)) return [];
+  if (raw == null) return [];
+  if (!isPlainRecord(raw)) throw new Error('[BobEditor] compiled presets must be an object');
   const entries: PresetEntry[] = [];
 
   for (const [sourcePath, specRaw] of Object.entries(raw)) {
-    if (!sourcePath || !isPlainRecord(specRaw)) continue;
+    const normalizedSourcePath = sourcePath.trim();
+    if (!normalizedSourcePath) throw new Error('[BobEditor] compiled preset source path is required');
+    if (!isPlainRecord(specRaw)) throw new Error(`[BobEditor] compiled preset "${normalizedSourcePath}" must be an object`);
     const valuesRaw = (specRaw as PresetSpec).values;
-    if (!isPlainRecord(valuesRaw)) continue;
+    if (!isPlainRecord(valuesRaw)) throw new Error(`[BobEditor] compiled preset "${normalizedSourcePath}" requires values`);
 
     const values: Record<string, Record<string, unknown>> = {};
     const targetSet = new Set<string>();
     for (const [presetKey, mappingRaw] of Object.entries(valuesRaw)) {
-      if (!presetKey || !isPlainRecord(mappingRaw)) continue;
-      values[presetKey] = mappingRaw;
+      const normalizedPresetKey = presetKey.trim();
+      if (!normalizedPresetKey) throw new Error(`[BobEditor] compiled preset "${normalizedSourcePath}" has an empty value key`);
+      if (!isPlainRecord(mappingRaw)) {
+        throw new Error(
+          `[BobEditor] compiled preset "${normalizedSourcePath}" value "${normalizedPresetKey}" must be an object`,
+        );
+      }
+      values[normalizedPresetKey] = mappingRaw;
       Object.keys(mappingRaw).forEach((path) => {
         if (path) targetSet.add(path);
       });
     }
 
-    if (Object.keys(values).length === 0 || targetSet.size === 0) continue;
+    if (Object.keys(values).length === 0 || targetSet.size === 0) {
+      throw new Error(`[BobEditor] compiled preset "${normalizedSourcePath}" requires target values`);
+    }
+    const customValueRaw = (specRaw as PresetSpec).customValue;
+    if (customValueRaw != null && (typeof customValueRaw !== 'string' || !customValueRaw.trim())) {
+      throw new Error(`[BobEditor] compiled preset "${normalizedSourcePath}" customValue must be a non-empty string`);
+    }
     const customValue =
-      typeof (specRaw as PresetSpec).customValue === 'string' && (specRaw as PresetSpec).customValue?.trim()
-        ? (specRaw as PresetSpec).customValue!.trim()
+      typeof customValueRaw === 'string' && customValueRaw.trim()
+        ? customValueRaw.trim()
         : 'custom';
 
     entries.push({
-      sourcePath,
+      sourcePath: normalizedSourcePath,
       customValue,
       values,
       targetPaths: Array.from(targetSet),
@@ -63,6 +79,10 @@ function buildPresetEntries(raw: unknown): PresetEntry[] {
   }
 
   return entries;
+}
+
+function linkedOpError(path: string, detail: string): never {
+  throw new Error(`[BobEditor] Cannot apply linked operation "${path}": ${detail}`);
 }
 
 function pathMatchesTarget(path: string, target: string): boolean {
@@ -142,39 +162,44 @@ export function expandLinkedOps(args: {
     if (presetEntry && typeof op.value === 'string') {
       expanded.push(op);
       const presetValues = op.value !== presetEntry.customValue ? presetEntry.values[op.value] : null;
+      if (op.value !== presetEntry.customValue && !presetValues) {
+        linkedOpError(op.path, `unknown preset value "${op.value}"`);
+      }
       if (presetValues) {
         for (const [presetPath, presetValue] of Object.entries(presetValues)) {
           if (presetPath === 'typography.globalFamily') {
-            const familyValue = typeof presetValue === 'string' ? presetValue : '';
-            if (familyValue) {
-              const allowedWeights = getCkTypographyAllowedWeights(familyValue);
-              const allowedStyles = getCkTypographyAllowedStyles(familyValue);
-              typographyFamilyPaths.forEach((familyPath) => {
-                if (isAllowedPath(familyPath)) {
-                  expanded.push(setOp(familyPath, familyValue));
-                }
-
-                const roleBase = familyPath.replace(/\.family$/, '');
-                const weightPath = `${roleBase}.weight`;
-                const stylePath = `${roleBase}.fontStyle`;
-
-                if (allowedWeights.length > 0 && isAllowedPath(weightPath)) {
-                  const currentWeight = getAt<unknown>(args.instanceData, weightPath);
-                  const nextWeight = pickAllowedValue(currentWeight, allowedWeights, '400');
-                  if (nextWeight) expanded.push(setOp(weightPath, nextWeight));
-                }
-
-                if (allowedStyles.length > 0 && isAllowedPath(stylePath)) {
-                  const currentStyle = getAt<unknown>(args.instanceData, stylePath);
-                  const nextStyle = pickAllowedValue(currentStyle, allowedStyles, 'normal');
-                  if (nextStyle) expanded.push(setOp(stylePath, nextStyle));
-                }
-              });
+            if (typeof presetValue !== 'string' || !presetValue.trim()) {
+              linkedOpError(op.path, 'typography.globalFamily preset value must be a non-empty string');
             }
+            const familyValue = presetValue.trim();
+            const allowedWeights = getCkTypographyAllowedWeights(familyValue);
+            const allowedStyles = getCkTypographyAllowedStyles(familyValue);
+            typographyFamilyPaths.forEach((familyPath) => {
+              if (!isAllowedPath(familyPath)) linkedOpError(op.path, `preset target "${familyPath}" is not editable`);
+              expanded.push(setOp(familyPath, familyValue));
+
+              const roleBase = familyPath.replace(/\.family$/, '');
+              const weightPath = `${roleBase}.weight`;
+              const stylePath = `${roleBase}.fontStyle`;
+
+              if (allowedWeights.length > 0) {
+                if (!isAllowedPath(weightPath)) linkedOpError(op.path, `preset target "${weightPath}" is not editable`);
+                const currentWeight = getAt<unknown>(args.instanceData, weightPath);
+                const nextWeight = pickAllowedValue(currentWeight, allowedWeights, '400');
+                if (nextWeight) expanded.push(setOp(weightPath, nextWeight));
+              }
+
+              if (allowedStyles.length > 0) {
+                if (!isAllowedPath(stylePath)) linkedOpError(op.path, `preset target "${stylePath}" is not editable`);
+                const currentStyle = getAt<unknown>(args.instanceData, stylePath);
+                const nextStyle = pickAllowedValue(currentStyle, allowedStyles, 'normal');
+                if (nextStyle) expanded.push(setOp(stylePath, nextStyle));
+              }
+            });
+            continue;
           }
-          if (isAllowedPath(presetPath)) {
-            expanded.push(setOp(presetPath, presetValue));
-          }
+          if (!isAllowedPath(presetPath)) linkedOpError(op.path, `preset target "${presetPath}" is not editable`);
+          expanded.push(setOp(presetPath, presetValue));
         }
       }
       continue;
@@ -195,8 +220,7 @@ export function expandLinkedOps(args: {
         const tlValue = getAt<unknown>(args.instanceData, tlPath);
         const source = nextLinked ? tlValue : linkedValue;
         if (typeof source !== 'string' || !source.trim()) {
-          expanded.push(op);
-          continue;
+          linkedOpError(op.path, `missing source value for ${nextLinked ? tlPath : linkedPath}`);
         }
 
         expanded.push(
@@ -235,8 +259,7 @@ export function expandLinkedOps(args: {
 
         if (!nextLinked) {
           if (!isPlainRecord(allValue)) {
-            expanded.push(op);
-            continue;
+            linkedOpError(op.path, `missing source value for ${allPath}`);
           }
 
           const makeShadow = makeShadowFrom(allValue as Record<string, unknown>);
@@ -258,8 +281,7 @@ export function expandLinkedOps(args: {
           (isPlainRecord(bottomValue) ? bottomValue : null);
 
         if (!baseShadowRaw) {
-          expanded.push(op);
-          continue;
+          linkedOpError(op.path, 'missing source shadow value');
         }
 
         const baseShadow = baseShadowRaw as Record<string, unknown>;
@@ -299,8 +321,7 @@ export function expandLinkedOps(args: {
         const source = nextLinked ? topValue : linkedValue;
         const numberValue = finiteNumber(source);
         if (numberValue == null) {
-          expanded.push(op);
-          continue;
+          linkedOpError(op.path, `missing numeric source value for ${nextLinked ? topPath : allPath}`);
         }
 
         expanded.push(
@@ -314,24 +335,30 @@ export function expandLinkedOps(args: {
         continue;
       }
 
-      if (op.path === 'layout.itemPaddingLinked') {
+      const itemPaddingLinkedMatch = op.path.match(new RegExp(`^(${layoutOwnerPattern})\\.itemPaddingLinked$`));
+      if (itemPaddingLinkedMatch) {
         const nextLinked = op.value;
-        const linkedValue = getAt<unknown>(args.instanceData, 'layout.itemPadding');
-        const topValue = getAt<unknown>(args.instanceData, 'layout.itemPaddingTop');
+        const base = itemPaddingLinkedMatch[1];
+        const linkedPath = `${base}.itemPadding`;
+        const topPath = `${base}.itemPaddingTop`;
+        const rightPath = `${base}.itemPaddingRight`;
+        const bottomPath = `${base}.itemPaddingBottom`;
+        const leftPath = `${base}.itemPaddingLeft`;
+        const linkedValue = getAt<unknown>(args.instanceData, linkedPath);
+        const topValue = getAt<unknown>(args.instanceData, topPath);
         const source = nextLinked ? topValue : linkedValue;
         const numberValue = finiteNumber(source);
         if (numberValue == null) {
-          expanded.push(op);
-          continue;
+          linkedOpError(op.path, `missing numeric source value for ${nextLinked ? topPath : linkedPath}`);
         }
 
         expanded.push(
           setOp(op.path, nextLinked),
-          ...(nextLinked ? [setOp('layout.itemPadding', numberValue)] : []),
-          setOp('layout.itemPaddingTop', numberValue),
-          setOp('layout.itemPaddingRight', numberValue),
-          setOp('layout.itemPaddingBottom', numberValue),
-          setOp('layout.itemPaddingLeft', numberValue),
+          ...(nextLinked ? [setOp(linkedPath, numberValue)] : []),
+          setOp(topPath, numberValue),
+          setOp(rightPath, numberValue),
+          setOp(bottomPath, numberValue),
+          setOp(leftPath, numberValue),
         );
         continue;
       }
@@ -342,8 +369,7 @@ export function expandLinkedOps(args: {
           const inlineValue = getAt<unknown>(args.instanceData, 'appearance.headerCta.paddingInline');
           const numberValue = finiteNumber(inlineValue);
           if (numberValue == null) {
-            expanded.push(op);
-            continue;
+            linkedOpError(op.path, 'missing numeric source value for appearance.headerCta.paddingInline');
           }
           expanded.push(setOp(op.path, true), setOp('appearance.headerCta.paddingBlock', numberValue));
           continue;
@@ -408,17 +434,19 @@ export function expandLinkedOps(args: {
       }
     }
 
-    if (op.path === 'layout.itemPadding') {
-      const linkedValue = getAt<unknown>(args.instanceData, 'layout.itemPaddingLinked');
+    const itemPaddingMatch = op.path.match(new RegExp(`^(${layoutOwnerPattern})\\.itemPadding$`));
+    if (itemPaddingMatch) {
+      const base = itemPaddingMatch[1];
+      const linkedValue = getAt<unknown>(args.instanceData, `${base}.itemPaddingLinked`);
       const linked = linkedValue !== false;
       const numberValue = finiteNumber(op.value);
       if (linked && numberValue != null) {
         expanded.push(
           setOp(op.path, numberValue),
-          setOp('layout.itemPaddingTop', numberValue),
-          setOp('layout.itemPaddingRight', numberValue),
-          setOp('layout.itemPaddingBottom', numberValue),
-          setOp('layout.itemPaddingLeft', numberValue),
+          setOp(`${base}.itemPaddingTop`, numberValue),
+          setOp(`${base}.itemPaddingRight`, numberValue),
+          setOp(`${base}.itemPaddingBottom`, numberValue),
+          setOp(`${base}.itemPaddingLeft`, numberValue),
         );
         continue;
       }

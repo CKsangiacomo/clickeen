@@ -12,7 +12,7 @@ import {
   type CopilotRuntimeUi,
   serializeInstanceDataSignature,
 } from './sessionTypes';
-import { assertSessionConfigContract } from './sessionConfig';
+import { assertCompiledWidgetSessionContract, assertSessionConfigContract } from './sessionConfig';
 
 export function useSessionBoot(args: {
   stateRef: MutableRefObject<SessionState>;
@@ -54,6 +54,7 @@ export function useSessionBoot(args: {
           };
         }
         const instanceData = rawInstanceData as Record<string, unknown>;
+        assertCompiledWidgetSessionContract(compiled);
         assertSessionConfigContract(instanceData, compiled);
         const savedInstanceDataSignature = serializeInstanceDataSignature(instanceData);
         const nextPolicy = (message.policy as Policy | null | undefined) ?? null;

@@ -2,13 +2,11 @@
 
 import { useEffect, type MutableRefObject } from 'react';
 import type { ApplyWidgetOpsResult, WidgetOp } from '../../lib/ops';
-import type { CompiledWidget } from '../../lib/types';
 import { getAt } from '../../lib/utils/paths';
 import { syncSegmentedPressedState } from './dom';
 import {
-  expandLinkedOps,
   isFiniteNumber,
-} from './linkedOps';
+} from '../../lib/edit/linkedOps';
 import {
   parseBobJsonValue,
   resolvePathFromTarget,
@@ -29,7 +27,6 @@ export function useTdMenuBindings(args: {
   applyOps: (ops: WidgetOp[]) => ApplyWidgetOpsResult;
   panelHtml: string;
   renderKey: number;
-  compiled: CompiledWidget | null;
   requestUpsell: (reasonKey: string, detail?: string) => void;
   lastUpdateRef: MutableRefObject<LastUpdate>;
   activePathRef: MutableRefObject<string | null>;
@@ -38,7 +35,6 @@ export function useTdMenuBindings(args: {
   const {
     activePathRef,
     applyOps,
-    compiled,
     containerRef,
     instanceData,
     instanceDataRef,
@@ -55,7 +51,7 @@ export function useTdMenuBindings(args: {
 
     const readInstanceData = () => instanceDataRef.current;
     const applyExpandedOps = (ops: WidgetOp[]) => {
-      const applied = applyOps(expandLinkedOps({ compiled, instanceData: readInstanceData(), ops }));
+      const applied = applyOps(ops);
       if (applied.ok) {
         instanceDataRef.current = applied.data;
         applyShowIfVisibility(showIfEntriesRef.current, applied.data);
@@ -277,7 +273,6 @@ export function useTdMenuBindings(args: {
   }, [
     activePathRef,
     applyOps,
-    compiled,
     containerRef,
     instanceData,
     instanceDataRef,
