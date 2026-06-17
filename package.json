@@ -6,7 +6,6 @@
   "scripts": {
     "generate:widgets": "node scripts/generate-widget-definition-sources.mjs",
     "validate:widgets": "node scripts/generate-widget-definition-sources.mjs --check",
-    "audit:106": "node scripts/widgets/audit-106.mjs",
     "build:i18n": "node scripts/i18n/build.mjs && node scripts/i18n/validate.mjs",
     "build:l10n": "node scripts/l10n/build.mjs && node scripts/l10n/validate.mjs",
     "build": "pnpm validate:widgets && pnpm build:i18n && pnpm build:l10n && turbo build",

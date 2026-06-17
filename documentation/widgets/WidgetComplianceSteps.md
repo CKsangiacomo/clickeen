@@ -573,12 +573,9 @@ Required checks
 - Shell/Core source checks:
   - `pnpm --filter @clickeen/widget-shell typecheck`
   - `pnpm validate:widgets`
-  - `pnpm audit:106 -- --skip-r2` when touching the Shell/Core/default
-    contract locally
 - Live account/R2 closure when touching account defaults, saved instances, or
   generated account packages:
   - `pnpm cf:preflight`
-  - `pnpm audit:106`
 - Cloud-dev Builder closure when touching Bob controls or preview hydration:
   - source `e2e/.auth/e2e.env`
   - run the targeted authenticated Playwright certification for the changed

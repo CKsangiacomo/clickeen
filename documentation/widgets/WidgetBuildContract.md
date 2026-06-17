@@ -1198,11 +1198,7 @@ Required before final response:
 - No shared runtime/Bob/Roma/Tokyo-worker/Prague/Venice/Dieter edits were made
   unless the PRD explicitly owned that shared surface.
 - `pnpm validate:widgets` passes.
-- `pnpm audit:106 -- --skip-r2` passes for local source/default contract
-  closure when touching the Shell/Core model.
-- `pnpm cf:preflight` and `pnpm audit:106` pass for full live-account closure
-  when touching account defaults, saved instances, generated packages, or PRD
-  106 migration work.
+- `pnpm cf:preflight` passes before Cloudflare R2 operations.
 - Relevant workspace typecheck passes.
 - Bob compile/preview for the touched widget is verified on desktop and mobile,
   or the missing verification is reported as a blocker.

@@ -89,6 +89,11 @@ Tokyo product roots do not own:
 - TOKYO-R2-001: added missing `cloud-dev workers deploy` push paths for in-scope synced roots `tokyo/product/media/**` and `tokyo/roma/**`.
 - TOKYO-R2-001: added the same roots to the existing `tokyo_assets` detection expression so future changes run the existing Tokyo R2 deploy-root sync step.
 
+2026-06-17 legacy widget repair authority cleanup slice:
+
+- TOKYO-R2-008: deleted the legacy PRD 106/107 widget repair/audit scripts from `scripts/widgets/` so no direct account R2 repair path remains executable from that location.
+- TOKYO-R2-008: removed the root `audit:106` package script and live widget docs that required it as a closure ritual. No replacement diagnostic was added; future repairs use Roma/Tokyo-worker product routes.
+
 ## Completion Gates
 
 - Every in-scope synced Tokyo root has a matching deploy trigger or explicit workflow.
