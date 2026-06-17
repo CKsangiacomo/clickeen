@@ -15,7 +15,10 @@ Tokyo product roots own git-authored static R2 artifacts:
 - `tokyo/product/themes/**`
 - approved product media
 - `tokyo/roma/**`
-- `tokyo/prague/**`
+
+Prague/page files may physically deploy through Tokyo R2, but Prague and page
+composition work is not in the current PRD 124 execution scope. Remaining
+Prague/page findings are deferred to the planned Prague/page-composer sequence.
 
 Tokyo product roots do not own:
 
@@ -29,7 +32,7 @@ Tokyo product roots do not own:
 
 | ID | Severity | Component | Category | Evidence | Required action | Blast radius | V-risk |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| TOKYO-R2-001 | High | R2 sync triggers | Deploy omission | `scripts/tokyo-r2-deploy-sync.mjs`, `.github/workflows/cloud-dev-workers.yml` | Align workflow triggers with every sync root or split R2 sync per root with dry-run summary gates. `media`, `roma`, and `prague` changes must not pass CI without deploy/sync path. | Cloud-dev R2 product roots | V3, V6, V7 |
+| TOKYO-R2-001 | High | R2 sync triggers | Deploy omission | `scripts/tokyo-r2-deploy-sync.mjs`, `.github/workflows/cloud-dev-workers.yml` | Align workflow triggers for non-Prague sync roots in this PRD pass. Prague trigger alignment is deferred with Prague/page work. | Cloud-dev R2 product roots | V3, V6, V7 |
 | TOKYO-R2-002 | Medium | `_redirects` | Dead legacy file | `tokyo/_redirects` | Delete or move historical redirect notes to docs. Remove workflow path triggers for a file sync ignores. | Source/workflow cleanup | V1, V3, V7 |
 | TOKYO-R2-003 | Medium | `tokyo/accounts` fixture root | Dead/legacy root | `tokyo/accounts/README.md`, Tokyo forbidden root docs | Delete or move to service docs. Add guard against tracked `tokyo/accounts/**`. | Source cleanup | V1, V5, V7 |
 | TOKYO-R2-004 | Medium | Prague `.locales` metadata | Legacy runtime residue | `tokyo/prague/pages/*/.locales/**`, l10n verify/runtime loaders | Delete from deploy root or move to non-runtime evidence. Add sync guard for `.locales`. | Prague R2 content | V1, V3, V7 |
@@ -37,14 +40,14 @@ Tokyo product roots do not own:
 | TOKYO-R2-006 | Low | FAQ page assets | Orphan assets | `tokyo/prague/pages/faq/assets/**` | Remove or wire explicit page JSON references. Add orphan asset check for Prague page assets. | Prague FAQ assets | V3, V7 |
 | TOKYO-R2-007 | Medium | Product media root | Dormant deploy root | `tokyo/product/media/brand/**`, sync map | Decide owner. Remove root/assets or wire consumers plus deploy trigger. Dormant roots cannot drift. | Product media direct URLs | V3, V6 |
 | TOKYO-R2-008 | Medium | Legacy widget repair/audit scripts | Direct account repair path | `scripts/widgets/migrate-106.ts`, `repair-107-fill-contract.ts`, `audit-106.mjs` | Archive write scripts as historical PRD evidence or delete them. Future repairs use Roma/Tokyo-worker product routes. Diagnostics must be explicitly non-runtime. | Admin account artifacts, account defaults/instances | V2, V6, V7, V8 |
-| TOKYO-R2-009 | Planning | Prague block pages | Legacy marketing content model | `tokyo/prague/pages/**/*.json`, Prague overview docs | Keep recorded as active future migration, not green. Execute in the planned Prague/page-composer sequence after prerequisites. Do not mix into this cleanup unless product order changes. | Prague content, SEO, page model | V1, V3, V6 |
+| TOKYO-R2-009 | Deferred | Prague block pages | Legacy marketing content model | `tokyo/prague/pages/**/*.json`, Prague overview docs | Deferred to the planned Prague/page-composer sequence after prerequisites. Do not execute in this PRD 124 pass. | Prague content, SEO, page model | V1, V3, V6 |
 
 ## Execution Slices
 
-1. R2 deploy-root trigger alignment.
-2. Tokyo source root cleanup: `_redirects`, `tokyo/accounts`, `.locales`, unused Prague assets, product media.
+1. R2 deploy-root trigger alignment for non-Prague roots.
+2. Tokyo source root cleanup: `_redirects`, `tokyo/accounts`, product media.
 3. Legacy widget repair authority cleanup.
-4. Prague block-page migration remains a separate later PRD, not an implicit completion here.
+4. Prague/page cleanup remains deferred to the planned Prague/page-composer sequence, not an implicit completion here.
 
 ## Execution Notes
 
@@ -76,11 +79,15 @@ Tokyo product roots do not own:
 - TOKYO-R2-006: added the required orphan page-asset check to the existing Prague blocks validator so tracked `tokyo/prague/pages/{widget}/assets/**` files must have explicit page JSON asset-field references, and updated the existing Prague content workflow to run on page asset changes.
 - TOKYO-R2-006: after `pnpm cf:preflight`, deleted the six matching stale R2 keys under `prague/pages/faq/assets/` through `scripts/cloudflare/r2.mjs delete` and verified the prefix lists empty.
 
+2026-06-17 scope correction:
+
+- Prague/page work is no longer active scope for this PRD 124 pass. TOKYO-R2-004, TOKYO-R2-005, and TOKYO-R2-006 remain recorded as completed historical cleanup, but they do not authorize more Prague/page execution under 124D.
+- TOKYO-R2-009 is deferred to the planned Prague/page-composer sequence. Any remaining Prague trigger/path cleanup must be handled there or in a newer explicit Prague PRD.
+
 ## Completion Gates
 
-- Every synced Tokyo root has a matching deploy trigger or explicit workflow.
+- Every in-scope synced Tokyo root has a matching deploy trigger or explicit workflow.
 - No tracked `tokyo/accounts/**` exists as source.
-- No stale `.locales` runtime metadata deploys under `prague/**`.
 - No direct account R2 write repair scripts remain executable as product paths.
-- Prague block pages are either migrated by their own PRD or explicitly listed as open, not fixed.
+- Prague/page findings are explicitly deferred, not claimed green in this PRD 124 pass.
 - V1-V8 subagent audit is clean before moving to executed.
