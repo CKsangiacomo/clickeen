@@ -76,6 +76,35 @@ Every finding and execution step must be checked against:
 | 124D | Tokyo product roots | Keep Tokyo roots to git-authored deploy artifacts and delete stale roots/assets/scripts. |
 | 124E | Tokyo-worker | Keep Tokyo-worker to storage/serving and delete/move product-policy/composition authority. |
 
+## Execution Ledger
+
+This ledger is the current execution truth for PRD 124. A subPRD stays in
+`02-Executing` until every completion gate in that subPRD is satisfied.
+
+| PRD | Status | Done | Open |
+| --- | --- | --- | --- |
+| 124A Berlin | Executing | BER-01 invitation/login identity critical slice; BER-02 account deletion disabled instead of returning DB-only success. | BER-03 through BER-12 remain open. BER-01 and BER-02 still require final subPRD closure verification before 124A can move to executed. |
+| 124B Bob | Executing | BOB-01, BOB-02, BOB-03, BOB-04, BOB-05, and BOB-08 have execution notes. BOB-07 has the narrow dirty/save `{}` substitution deletion. | BOB-06 remains open after the strictness-drift correction. 124B must not move to executed until BOB-06 and all completion gates are satisfied. |
+| 124C Roma | Executing | RMA-004 asset delete response truth; RMA-005 explicit Bob origin; BER-02 overlap for account deletion conflict/removal from settings. | RMA-001, RMA-002, RMA-003, and RMA-006 through RMA-013 remain open. |
+| 124D Tokyo product roots | Executing | No execution slice recorded. | TOKYO-R2-001 through TOKYO-R2-009 remain open. |
+| 124E Tokyo-worker | Executing | TW-01 critical slice removed public `__internal/*` write route exposure and public CORS advertisement for the internal header. | TW-02 through TW-15 remain open. TW-01 still requires final subPRD closure verification before 124E can move to executed. |
+
+Recent execution commits:
+
+| Commit | Scope |
+| --- | --- |
+| `758bc5db` | PRD 124 critical boundary cleanup across Berlin/Roma/Tokyo-worker. |
+| `b2d399a5` | PRD 124B Bob authority cleanup. |
+| `1092a023` | Over-scoped Bob strictness pass; superseded by correction. |
+| `4d9c52d0` | Corrected PRD 124B strictness drift, moved 124B back to executing, and left BOB-06 open. |
+
+Execution tenet:
+
+It is prohibited to reinterpret a PRD finding into an ideal system and then add
+machinery to enforce that interpretation. PRD 124 execution is deletion first:
+remove dead paths, wrong-service authority, duplicate truth, and silent fallback
+behavior at the named product boundary.
+
 ## Service Boundary Matrix
 
 | Service | Owns | Must Not Own |
@@ -122,4 +151,3 @@ PRD 124 closes only when each subPRD is either:
 
 The parent cannot close while an active finding is merely renamed, hidden,
 warning-only, or left as "legacy continuity" in a product path.
-
