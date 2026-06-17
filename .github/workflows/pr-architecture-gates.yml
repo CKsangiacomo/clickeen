@@ -61,6 +61,10 @@ jobs:
 
       - name: Enforce Runtime Guards
         run: |
+          if test -e tokyo/accounts; then
+            echo "[gate] Reintroduced forbidden tokyo/accounts source root."
+            exit 1
+          fi
           if rg -n "TOKYO_BASE}/assets/upload|TOKYO_BASE}/widgets/upload|uploadTokyoAsset\\(" admin/src admin/functions; then
             echo "[gate] DevStudio workspace reintroduced direct Tokyo product-write path."
             exit 1

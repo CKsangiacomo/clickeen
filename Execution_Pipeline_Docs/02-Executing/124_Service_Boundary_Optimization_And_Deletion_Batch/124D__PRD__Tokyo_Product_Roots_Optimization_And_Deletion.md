@@ -53,6 +53,11 @@ Tokyo product roots do not own:
 - TOKYO-R2-002: deleted dead `tokyo/_redirects`; Tokyo R2 deploy sync does not publish this file.
 - TOKYO-R2-002: removed stale `tokyo/_redirects` workflow path triggers from Roma app verify and PR architecture gates.
 
+2026-06-17 account fixture root cleanup slice:
+
+- TOKYO-R2-003: deleted dead `tokyo/accounts/README.md` fixture root. Account runtime data remains Tokyo-worker/R2-owned under `accounts/{accountPublicId}/`.
+- TOKYO-R2-003: added a PR architecture gate check against reintroducing tracked `tokyo/accounts/**` source roots.
+
 ## Completion Gates
 
 - Every synced Tokyo root has a matching deploy trigger or explicit workflow.
