@@ -84,6 +84,11 @@ Tokyo product roots do not own:
 - Prague/page work is no longer active scope for this PRD 124 pass. TOKYO-R2-004, TOKYO-R2-005, and TOKYO-R2-006 remain recorded as completed historical cleanup, but they do not authorize more Prague/page execution under 124D.
 - TOKYO-R2-009 is deferred to the planned Prague/page-composer sequence. Any remaining Prague trigger/path cleanup must be handled there or in a newer explicit Prague PRD.
 
+2026-06-17 non-Prague R2 trigger alignment slice:
+
+- TOKYO-R2-001: added missing `cloud-dev workers deploy` push paths for in-scope synced roots `tokyo/product/media/**` and `tokyo/roma/**`.
+- TOKYO-R2-001: added the same roots to the existing `tokyo_assets` detection expression so future changes run the existing Tokyo R2 deploy-root sync step.
+
 ## Completion Gates
 
 - Every in-scope synced Tokyo root has a matching deploy trigger or explicit workflow.
