@@ -27,7 +27,6 @@ const maxUploadAttempts = Number.parseInt(process.env.TOKYO_R2_DEPLOY_SYNC_ATTEM
 
 const mappings = [
   { source: 'tokyo/product/widgets', target: 'product/widgets' },
-  { source: 'tokyo/product/media', target: 'product/media' },
   { source: 'tokyo/product/themes', target: 'product/themes' },
   { source: 'tokyo/product/dieter', target: 'dieter' },
   { source: 'tokyo/product/fonts', target: 'fonts' },

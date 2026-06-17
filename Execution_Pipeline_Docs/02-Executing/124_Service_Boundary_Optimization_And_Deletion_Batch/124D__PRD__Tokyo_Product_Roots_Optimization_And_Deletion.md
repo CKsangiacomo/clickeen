@@ -13,7 +13,6 @@ Tokyo product roots own git-authored static R2 artifacts:
 - `tokyo/product/dieter/**`
 - `tokyo/product/fonts/**`
 - `tokyo/product/themes/**`
-- approved product media
 - `tokyo/roma/**`
 
 Prague/page files may physically deploy through Tokyo R2, but Prague and page
@@ -86,13 +85,19 @@ Tokyo product roots do not own:
 
 2026-06-17 non-Prague R2 trigger alignment slice:
 
-- TOKYO-R2-001: added missing `cloud-dev workers deploy` push paths for in-scope synced roots `tokyo/product/media/**` and `tokyo/roma/**`.
-- TOKYO-R2-001: added the same roots to the existing `tokyo_assets` detection expression so future changes run the existing Tokyo R2 deploy-root sync step.
+- TOKYO-R2-001: added missing `cloud-dev workers deploy` push paths for then-in-scope synced roots `tokyo/product/media/**` and `tokyo/roma/**`.
+- TOKYO-R2-001: added the same roots to the existing `tokyo_assets` detection expression so future changes run the existing Tokyo R2 deploy-root sync step. The `tokyo/product/media/**` path was later removed by TOKYO-R2-007 after the root was proven dormant.
 
 2026-06-17 legacy widget repair authority cleanup slice:
 
 - TOKYO-R2-008: deleted the legacy PRD 106/107 widget repair/audit scripts from `scripts/widgets/` so no direct account R2 repair path remains executable from that location.
 - TOKYO-R2-008: removed the root `audit:106` package script and live widget docs that required it as a closure ritual. No replacement diagnostic was added; future repairs use Roma/Tokyo-worker product routes.
+
+2026-06-17 dormant product media root cleanup slice:
+
+- TOKYO-R2-007: deleted the dormant `tokyo/product/media/brand/**` source files. Roma and Prague use their own `/brand/clickeen-logo-full.svg` public assets, not `product/media/brand/**`.
+- TOKYO-R2-007: removed `tokyo/product/media -> product/media` from the existing Tokyo R2 deploy sync map, workflow triggers, and current deploy-root docs.
+- TOKYO-R2-007: after `pnpm cf:preflight`, deleted the two matching stale R2 keys under `product/media/brand/` through `scripts/cloudflare/r2.mjs delete` and verified `product/media/` lists empty.
 
 ## Completion Gates
 

@@ -187,7 +187,6 @@ These roots are deployed from git-authored repo sources into R2. They are not mu
 | `tokyo/product/dieter/**` | `dieter/**` | Built Dieter manifest, tokens, components, and icons. |
 | `tokyo/product/fonts/**` | `fonts/**` | Global Clickeen font CDN media. Account-uploaded fonts stay under `accounts/{accountPublicId}/...`. |
 | `tokyo/product/widgets/**` | `product/widgets/**` | Widget software. Friendly `/widgets/**` routes must serve these objects. |
-| `tokyo/product/media/**` | `product/media/**` | Product-owned media. |
 | `tokyo/product/themes/**` | `product/themes/**` | Product-owned theme media. |
 | `tokyo/roma/**` | `product/roma/**` | Product app/static support media. |
 | `tokyo/prague/**` | `prague/**` | Prague page/content/GTM media, including page-local translation sidecars. |

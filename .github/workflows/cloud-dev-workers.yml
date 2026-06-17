@@ -8,7 +8,6 @@ on:
       - "sanfrancisco/**"
       - "tokyo-worker/**"
       - "tokyo/product/widgets/**"
-      - "tokyo/product/media/**"
       - "tokyo/product/fonts/**"
       - "tokyo/product/themes/**"
       - "tokyo/product/dieter/**"
@@ -103,7 +102,7 @@ jobs:
             tokyo=true
           fi
 
-          if path_changed '^(tokyo/product/widgets/|tokyo/product/media/|tokyo/product/fonts/|tokyo/product/themes/|tokyo/product/dieter/|tokyo/roma/|scripts/tokyo-r2-deploy-sync\.mjs)'; then
+          if path_changed '^(tokyo/product/widgets/|tokyo/product/fonts/|tokyo/product/themes/|tokyo/product/dieter/|tokyo/roma/|scripts/tokyo-r2-deploy-sync\.mjs)'; then
             tokyo_assets=true
           fi
 

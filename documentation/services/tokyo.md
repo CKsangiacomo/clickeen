@@ -36,7 +36,6 @@ Git-authored deploy mapping:
 
 ```txt
 tokyo/product/widgets/**  -> product/widgets/**
-tokyo/product/media/**   -> product/media/**
 tokyo/product/themes/**   -> product/themes/**
 tokyo/product/dieter/**   -> dieter/**
 tokyo/product/fonts/**    -> fonts/**
