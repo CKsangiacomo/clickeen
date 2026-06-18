@@ -41,6 +41,7 @@
   });
   const FLUID_TYPOGRAPHY_REFERENCE_WIDTH = 960;
   const FLUID_TYPOGRAPHY_MIN_PRESET = 'xs';
+  const DISPLAY_FLUID_TYPOGRAPHY_ROLES = new Set(['title', 'bigBang', 'timer', 'cardTitle']);
 
   const SCRIPT_TYPOGRAPHY_PROFILES = Object.freeze({
     latin: Object.freeze({
@@ -286,12 +287,16 @@
     return `${formatCssNumber(value)}px`;
   }
 
-  function resolveFluidSizeValue(sizeValue, scale) {
+  function resolveFluidSizeValue(roleKey, sizeValue, scale) {
     const maxPx = parsePxLength(sizeValue);
     const minPx =
       scale && typeof scale === 'object' ? parsePxLength(scale[FLUID_TYPOGRAPHY_MIN_PRESET]) : null;
     if (maxPx === null || minPx === null || maxPx <= 0 || minPx <= 0 || minPx >= maxPx) {
       return sizeValue;
+    }
+    if (DISPLAY_FLUID_TYPOGRAPHY_ROLES.has(roleKey)) {
+      const growthCqi = ((maxPx - minPx) * 100) / FLUID_TYPOGRAPHY_REFERENCE_WIDTH;
+      return `clamp(${formatPxLength(minPx)}, calc(${formatPxLength(minPx)} + ${formatCssNumber(growthCqi)}cqi), ${formatPxLength(maxPx)})`;
     }
     const preferredCqi = (maxPx * 100) / FLUID_TYPOGRAPHY_REFERENCE_WIDTH;
     return `clamp(${formatPxLength(minPx)}, ${formatCssNumber(preferredCqi)}cqi, ${formatPxLength(maxPx)})`;
@@ -816,7 +821,7 @@
       if (scaleKind === 'number') {
         sizeValue = `${String(sizeValue).trim()}px`;
       }
-      sizeValue = resolveFluidSizeValue(sizeValue, scale);
+      sizeValue = resolveFluidSizeValue(roleKey, sizeValue, scale);
       const trackingValue = resolveTrackingValue(roleKey, role);
       const lineHeightValue = resolveLineHeightValue(roleKey, role, runtimeScript);
 
