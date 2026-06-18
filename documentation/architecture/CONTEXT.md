@@ -170,10 +170,11 @@ route. They are classified as vector assets by Tokyo-worker.
 
 1. Roma manages account page source.
 2. A page is an ordered stack of account instance placements.
-3. Tokyo-worker stores page source, serve-state, and generated page package
+3. Tokyo-worker stores page source, serve-state, and any submitted page package
    files under the account page folder.
-4. Public page serving depends on Tokyo-owned serve-state and stored package
-   files.
+4. Current account page publish and public page serving are unavailable until
+   Roma writes page packages.
+5. Published page source cannot be edited or deleted until Roma unpublishes it.
 
 ### Clickeen-Owned Examples
 

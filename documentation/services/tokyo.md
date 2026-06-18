@@ -14,7 +14,7 @@ Tokyo has three boring jobs:
 
 - Serve git-authored product software/static resources from canonical R2 roots: `dieter/`, `fonts/`, `product/`, and `prague/`.
 - Store account-owned data through Tokyo-worker: assets and widget instances.
-- Serve stored public widget and page package artifacts through `clk.live` public read paths.
+- Serve stored public widget package artifacts through `clk.live` public read paths.
 
 The ownership boundary is always the account. Admin is just the Clickeen account with broader permissions; admin-owned instances are stored exactly like customer-owned instances.
 
@@ -79,7 +79,7 @@ Rules:
 - Instance listing comes from Tokyo operations backed by the `instances` DB row, not `instances/index.json`.
 - Browser package files `index.html`, `styles.css`, and `runtime.js` are public artifacts, not identity, ownership, saved config, or product publish truth. Roma materializes them during create/save/duplicate and submits them to Tokyo-worker with the saved source. Tokyo-worker stores the exact submitted bytes.
 - Those files can exist for composition before public standalone serving. `clk.live` serving requires Tokyo serve state to be `published`; Roma/system account operations own account policy decisions that decide whether publish/unpublish should be allowed.
-- Page package files, when present, live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`.
+- Page package files, when present, live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`. Current account page publish and public page serving are unavailable until Roma writes page packages. Save/delete of published page source requires Roma to unpublish first.
 - Page source is stored at `accounts/{accountPublicId}/pages/{pageId}/source.json`; Tokyo validates the page source contract before storage and derives account page list summaries from stored source files.
 - Page serve state is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/serve-state.json`.
 - Prague page translations are not account-instance overlays.
@@ -90,17 +90,17 @@ Public serving uses direct account-scoped static URLs:
 
 ```txt
 https://clk.live/{accountPublicId}/{instanceId}
-https://clk.live/{accountPublicId}/pages/{pageId}
 ```
 
 `clk.live` is the production public-serving host. Cloud-dev uses the same path shape on:
 
 ```txt
 https://dev.clk.live/{accountPublicId}/{instanceId}
-https://dev.clk.live/{accountPublicId}/pages/{pageId}
 ```
 
 Cloud-dev must not bind the dev Tokyo-worker to `clk.live`.
+
+Account page public serving is unavailable until Roma writes page packages.
 
 Those routes map to generated `index.html`, `styles.css`, and `runtime.js` packages only after Tokyo serve state allows public delivery. Support files are served only when they are generated browser files on the public allowlist.
 

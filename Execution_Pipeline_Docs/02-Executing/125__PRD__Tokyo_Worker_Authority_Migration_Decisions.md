@@ -39,7 +39,7 @@ Roma, Bob, San Francisco, or shared product contracts.
 | Source                                        | Decision needed                                                                                                                        | Why PRD 124 did not finish it                                                                                             |
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | TW-02 registry/serve-state split truth        | Decide whether Supabase registry remains Tokyo-worker operational storage truth or moves to an R2 runtime record / another owner.      | Not a deletion. It changes runtime identity/status authority for instance listing, publish state, and public serving.     |
-| TW-04 page package/publish pipeline           | Decide the page package writer and package readiness authority.                                                                        | Tokyo-worker currently reads/checks page package files, but no current Roma page package writer exists in this PRD scope. |
+| TW-04 page package/publish pipeline           | Decision executed: current account page publish is unavailable until Roma writes page packages.                                         | No current Roma page package writer exists in this PRD scope.                                                            |
 | TW-05 page source authority                   | Decide how much page source contract validation/versioning/list summaries belong in Roma/shared contracts versus Tokyo-worker storage. | Moving this changes page create/save/list/open contracts and cannot be faked with local checks.                           |
 | TW-06 instance source/content composition     | Decision executed: active locales are Roma account settings; Roma materializes and composes source artifacts; Tokyo-worker stores exact files. | Active locales are account settings. Removing Tokyo extraction/remap required Roma/Bob save payload changes first.        |
 | TW-07 translation orchestration               | Decide whether translation orchestration moves to Roma/San Francisco and what storage artifacts Tokyo-worker keeps.                    | This changes policy, AI job creation, ledger ownership, and San Francisco contracts.                                      |
@@ -68,8 +68,7 @@ Roma, Bob, San Francisco, or shared product contracts.
    move seeding/materialization to Roma or a shared build contract, then make
    Tokyo-worker store/read exact defaults only.
 3. Page package authority from TW-04:
-   add/confirm the package writer or disable publish paths that depend on absent
-   page package files.
+   disable publish paths that depend on absent page package files.
 4. Page source contract ownership from TW-05.
 5. Registry/serve-state authority from TW-02.
 6. Translation orchestration from TW-07.
@@ -149,3 +148,27 @@ Open after this source/content artifact slice:
 Open after this account widget defaults slice:
 
 - TW-04, TW-05, TW-02, and TW-07 remain open.
+
+2026-06-17 TW-04 page package/publish pipeline slice:
+
+- No active Roma page package writer exists in this PRD scope, so account page
+  publish is explicitly unavailable.
+- Roma page publish UI now disables publish and explains that page package
+  generation is not enabled.
+- Roma page publish API now returns `coreui.errors.page.publishUnavailable`
+  without calling Tokyo-worker.
+- Tokyo-worker page publish route now returns
+  `coreui.errors.page.publishUnavailable` for direct internal calls.
+- Roma disables page source edits while a page is published. Tokyo-worker
+  rejects direct save/delete calls on a published page; users must unpublish
+  before changing or deleting page source until Roma writes page packages.
+- Roma disables public page copy/open actions, and Tokyo-worker returns not
+  found for public page URLs until Roma writes page packages.
+- Deleted Tokyo-worker page package readiness checks and the dead Roma direct
+  page publish wrapper. Tokyo-worker no longer pretends publish can proceed
+  based on incidental R2 files.
+- Unpublish remains storage behavior.
+
+Open after this page package/publish slice:
+
+- TW-05, TW-02, and TW-07 remain open.

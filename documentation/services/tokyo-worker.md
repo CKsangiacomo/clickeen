@@ -128,8 +128,11 @@ Generated page package files live beside the page source under:
 accounts/{accountPublicId}/pages/{pageId}/
 ```
 
-Roma owns page product decisions. Tokyo-worker stores the source, package, and
-serve state under the account path Roma names.
+Roma owns page product decisions. Tokyo-worker stores page source, any submitted
+page package files, and serve state under the account path Roma names. Current
+account page publish is unavailable until Roma writes page packages. Tokyo-worker
+rejects save/delete operations against published page source until Roma unpublishes
+the page.
 
 ## Public Serving
 
@@ -137,18 +140,18 @@ Production public serving uses:
 
 ```text
 https://clk.live/{accountPublicId}/{instanceId}
-https://clk.live/{accountPublicId}/pages/{pageId}
 ```
 
 Cloud-dev public serving uses:
 
 ```text
 https://dev.clk.live/{accountPublicId}/{instanceId}
-https://dev.clk.live/{accountPublicId}/pages/{pageId}
 ```
 
-Serving reads generated package files from the account folder after the serve
-state for that instance or page is published.
+Serving reads generated widget package files from the account folder after the
+serve state for that instance is published. Account page public serving is
+unavailable until Roma writes page packages. Tokyo-worker does not generate page
+package files.
 
 Public support files are:
 

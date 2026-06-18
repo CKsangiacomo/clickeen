@@ -186,14 +186,17 @@ account public id, the exact asset reference, and `deleted: true`.
 ## Pages Domain
 
 Roma owns the account page product surface. Account pages are stacks of saved
-widget instances. Page source and generated page packages live in Tokyo under:
+widget instances. Page source and any generated page packages live in Tokyo under:
 
 ```text
 accounts/{accountPublicId}/pages/{pageId}/
 ```
 
 Roma validates current-account access and policy, then asks Tokyo-worker to read
-or write the named account page object.
+or write the named account page object. Current account page publish is disabled
+until Roma has a real page package writer. Public page copy/open actions are
+disabled until that writer exists. While a page is published, Roma requires
+unpublish before page source edit or delete.
 
 ## Team, Profile, Settings
 

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
-import { publishAccountPageInTokyo } from '@roma/lib/account-page-direct';
 import {
   resolveCurrentAccountRouteContext,
   withSession,
@@ -34,22 +33,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
-  const result = await publishAccountPageInTokyo({
-    accountId,
-    pageId,
-    accountCapsule: current.value.authzToken,
-    requestId: current.value.requestId,
-  });
-  if (!result.ok) {
-    return withSession(
-      request,
-      NextResponse.json({ error: result.error }, { status: result.status }),
-      current.value.setCookies,
-    );
-  }
   return withSession(
     request,
-    NextResponse.json({ accountId, pageId, publishStatus: result.value.publishStatus, changed: result.value.changed }),
+    NextResponse.json(
+      {
+        accountId,
+        pageId,
+        error: {
+          kind: 'VALIDATION',
+          reasonKey: 'coreui.errors.page.publishUnavailable',
+          detail: 'Page publishing requires Roma page package generation before publish can be enabled.',
+        },
+      },
+      { status: 422 },
+    ),
     current.value.setCookies,
   );
 }

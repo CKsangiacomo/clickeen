@@ -315,26 +315,6 @@ export async function deleteAccountPageFromTokyo(args: {
   return { ok: true, value: { existed: true } };
 }
 
-export async function publishAccountPageInTokyo(args: {
-  accountId: string;
-  pageId: string;
-  accountCapsule?: string | null;
-  internalServiceName?: string | null;
-  requestId?: string | null;
-}): Promise<{ ok: true; value: AccountPagePublishResult } | RouteFailure> {
-  const result = await callTokyo(tokyoCallContext(args), {
-    path: `/__internal/pages/${encodeURIComponent(args.pageId)}/publish`,
-    method: 'POST',
-    decode: (payload) => payload,
-    errorDetail: 'tokyo_account_page_publish_http_error',
-    errorKey: 'coreui.errors.db.writeFailed',
-  });
-  if (!result.ok) return result;
-  const payload = normalizePagePublishPayload(result.value);
-  if (!payload) return invalidTokyoPayload('invalid Tokyo publish page payload');
-  return { ok: true, value: payload };
-}
-
 export async function unpublishAccountPageInTokyo(args: {
   accountId: string;
   pageId: string;

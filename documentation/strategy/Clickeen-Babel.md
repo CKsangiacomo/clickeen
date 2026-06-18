@@ -43,8 +43,9 @@ There are no commercial package names in the product contract.
 
 1. Widgets prove account-owned source, editor contracts, translation overlays, and public materialization.
 2. Pages become ordered stacks of saved widget instances.
-3. Roma composes page packages from those saved instance packages.
-4. Tokyo serves public widget/page package artifacts and fails publish/serve readiness when required package files are missing.
+3. Roma will compose page packages from those saved instance packages.
+4. Until that writer exists, account page publish and public page serving are
+   unavailable. Tokyo serves exact stored widget package artifacts.
 
 The important point is not that every surface is the same product object. It is that every surface uses the same boring substrate:
 

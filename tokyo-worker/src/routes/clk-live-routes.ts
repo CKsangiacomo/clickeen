@@ -1,6 +1,5 @@
 import { isCompactAccountPublicId, isCompactInstanceId, isCompactPageId } from '@clickeen/ck-contracts/overlay-identity';
 import { readAccountInstanceSourcePointer } from '../domains/account-instances/source';
-import { accountPagePublishFileKey, readAccountPageServeState } from '../domains/pages';
 import { publicPackageContentType } from '../domains/public-package-serve-metadata';
 import {
   isPublicPackageFile,
@@ -106,20 +105,7 @@ export async function tryHandleClkLiveStaticRoutes(
   if (req.method !== 'GET' && req.method !== 'HEAD') return respondMethodNotAllowed(respond);
 
   if (parsed.kind === 'page') {
-    const serveState = await readAccountPageServeState({
-      env,
-      accountId: parsed.accountId,
-      pageId: parsed.pageId,
-    });
-    if (serveState !== 'published') return respond(notFound());
-
-    const key = accountPagePublishFileKey(
-      parsed.accountId,
-      parsed.pageId,
-      parsed.file as 'index.html' | 'styles.css' | 'runtime.js',
-    );
-    const obj = await env.TOKYO_R2.get(key);
-    return respond(obj ? responseForObject(key, parsed.file, obj, req.method === 'HEAD') : notFound());
+    return respond(notFound());
   }
 
   const pointer = await readAccountInstanceSourcePointer({

@@ -313,11 +313,14 @@ export function PagesDomain() {
   }, [instanceById, pageSource]);
 
   const ipLocalizationBlocksPublish = pageSource?.localization.ipLocalizationEnabled === true;
+  const pagePublishingUnavailable = true;
+  const pageSourceLocked = pagePublishStatus === 'published';
   const canPublishPage = Boolean(
     pageSource &&
     pageSource.placements.length > 0 &&
     publishBlockers.length === 0 &&
-    !ipLocalizationBlocksPublish,
+    !ipLocalizationBlocksPublish &&
+    !pagePublishingUnavailable,
   );
   const pageLocaleOptions = useMemo(() => {
     return Array.from(new Set([
@@ -330,6 +333,10 @@ export function PagesDomain() {
   }, [accountLocaleOptions, pageSource]);
 
   const saveSource = useCallback(async (source: AccountPageSource, actionKey: string) => {
+    if (pageSourceLocked) {
+      setMutationError('Unpublish this page before editing source.');
+      return null;
+    }
     setActiveActionKey(actionKey);
     setMutationError(null);
     try {
@@ -353,7 +360,7 @@ export function PagesDomain() {
     } finally {
       setActiveActionKey((current) => (current === actionKey ? null : current));
     }
-  }, [accountApi, productAccountId, refreshPages]);
+  }, [accountApi, pageSourceLocked, productAccountId, refreshPages]);
 
   const handleCreatePage = useCallback(async () => {
     const actionKey = 'create-page';
@@ -393,6 +400,10 @@ export function PagesDomain() {
   }, [accountApi, refreshPages, router]);
 
   const handleDeletePage = useCallback(async (pageId: string) => {
+    if (pageSourceLocked && pageSource?.pageId === pageId) {
+      setMutationError('Unpublish this page before deleting source.');
+      return;
+    }
     const actionKey = `delete-page:${pageId}`;
     setActiveActionKey(actionKey);
     setMutationError(null);
@@ -410,7 +421,7 @@ export function PagesDomain() {
     } finally {
       setActiveActionKey((current) => (current === actionKey ? null : current));
     }
-  }, [accountApi, pageSource?.pageId, refreshPages, router]);
+  }, [accountApi, pageSource?.pageId, pageSourceLocked, refreshPages, router]);
 
   const updateMetadata = useCallback((patch: Partial<AccountPageSource['metadata']>) => {
     setPageSource((current) => current ? { ...current, metadata: { ...current.metadata, ...patch } } : current);
@@ -633,7 +644,7 @@ export function PagesDomain() {
                         data-variant="line2"
                         type="button"
                         onClick={() => void handleDeletePage(page.pageId)}
-                        disabled={Boolean(activeActionKey)}
+                        disabled={Boolean(activeActionKey) || (pageSourceLocked && page.pageId === pageSource?.pageId)}
                       >
                         <span className="diet-btn-txt__label body-m">{activeActionKey === deleteActionKey ? 'Deleting...' : 'Delete'}</span>
                       </button>
@@ -663,6 +674,7 @@ export function PagesDomain() {
                 type="text"
                 value={pageSource.metadata.title}
                 maxLength={160}
+                disabled={pageSourceLocked}
                 onChange={(event) => updateMetadata({ title: event.target.value })}
               />
             </label>
@@ -673,6 +685,7 @@ export function PagesDomain() {
                 type="text"
                 value={pageSource.metadata.description}
                 maxLength={300}
+                disabled={pageSourceLocked}
                 onChange={(event) => updateMetadata({ description: event.target.value })}
               />
             </label>
@@ -681,6 +694,7 @@ export function PagesDomain() {
               <select
                 className="roma-input"
                 value={pageSource.metadata.robots}
+                disabled={pageSourceLocked}
                 onChange={(event) => updateMetadata({ robots: event.target.value as PageRobots })}
               >
                 <option value="index,follow">index,follow</option>
@@ -704,7 +718,7 @@ export function PagesDomain() {
               data-variant="primary"
               type="button"
               onClick={() => void handleSaveMetadata()}
-              disabled={Boolean(activeActionKey)}
+              disabled={Boolean(activeActionKey) || pageSourceLocked}
             >
               <span className="diet-btn-txt__label body-m">{activeActionKey === `save-metadata:${pageSource.pageId}` ? 'Saving...' : 'Save metadata'}</span>
             </button>
@@ -734,7 +748,7 @@ export function PagesDomain() {
               data-variant="secondary"
               type="button"
               onClick={() => void handleCopyPageArtifact('page URL', hostedPageUrl)}
-              disabled={Boolean(activeActionKey) || pagePublishStatus !== 'published'}
+              disabled={Boolean(activeActionKey) || pagePublishStatus !== 'published' || pagePublishingUnavailable}
             >
               <span className="diet-btn-txt__label body-m">Copy URL</span>
             </button>
@@ -744,11 +758,11 @@ export function PagesDomain() {
               data-variant="secondary"
               type="button"
               onClick={() => void handleCopyPageArtifact('page embed', pageIframeSnippet)}
-              disabled={Boolean(activeActionKey) || pagePublishStatus !== 'published'}
+              disabled={Boolean(activeActionKey) || pagePublishStatus !== 'published' || pagePublishingUnavailable}
             >
               <span className="diet-btn-txt__label body-m">Copy embed</span>
             </button>
-            {pagePublishStatus === 'published' ? (
+            {pagePublishStatus === 'published' && !pagePublishingUnavailable ? (
               <a
                 className="diet-btn-txt"
                 data-size="md"
@@ -769,6 +783,8 @@ export function PagesDomain() {
             </p>
           ) : null}
           {ipLocalizationBlocksPublish ? <p className="body-s">Publish is blocked while IP localization is unavailable.</p> : null}
+          {pagePublishingUnavailable ? <p className="body-s">Page publishing is unavailable until page package generation is enabled.</p> : null}
+          {pageSourceLocked ? <p className="body-s">Unpublish this page before editing source.</p> : null}
           {pagePublishStatus !== 'published' ? <p className="body-s">Publish this page before copying public code.</p> : null}
         </section>
       ) : null}
@@ -784,6 +800,7 @@ export function PagesDomain() {
               <select
                 className="roma-input"
                 value={pageSource.localization.defaultLocale}
+                disabled={pageSourceLocked}
                 onChange={(event) => {
                   const locale = normalizeLocaleToken(event.target.value);
                   if (locale) updateLocalization({ defaultLocale: locale });
@@ -801,6 +818,7 @@ export function PagesDomain() {
               <input
                 type="checkbox"
                 checked={pageSource.localization.languageSwitcherEnabled}
+                disabled={pageSourceLocked}
                 onChange={(event) => updateLocalization({ languageSwitcherEnabled: event.target.checked })}
               />
             </label>
@@ -835,6 +853,7 @@ export function PagesDomain() {
                         type="text"
                         value={rule.country}
                         maxLength={2}
+                        disabled={pageSourceLocked}
                         onChange={(event) => updateCountryLocaleRule(index, { country: event.target.value })}
                       />
                     </td>
@@ -842,6 +861,7 @@ export function PagesDomain() {
                       <select
                         className="roma-input"
                         value={rule.locale}
+                        disabled={pageSourceLocked}
                         onChange={(event) => updateCountryLocaleRule(index, { locale: event.target.value })}
                       >
                         {pageLocaleOptions.map((locale) => (
@@ -858,7 +878,7 @@ export function PagesDomain() {
                         data-variant="line2"
                         type="button"
                         onClick={() => removeCountryLocaleRule(index)}
-                        disabled={Boolean(activeActionKey)}
+                        disabled={Boolean(activeActionKey) || pageSourceLocked}
                       >
                         <span className="diet-btn-txt__label body-m">Remove</span>
                       </button>
@@ -875,7 +895,7 @@ export function PagesDomain() {
               data-variant="line2"
               type="button"
               onClick={addCountryLocaleRule}
-              disabled={Boolean(activeActionKey)}
+              disabled={Boolean(activeActionKey) || pageSourceLocked}
             >
               <span className="diet-btn-txt__label body-m">Add country rule</span>
             </button>
@@ -887,7 +907,7 @@ export function PagesDomain() {
               data-variant="primary"
               type="button"
               onClick={() => void handleSavePageSettings()}
-              disabled={Boolean(activeActionKey)}
+              disabled={Boolean(activeActionKey) || pageSourceLocked}
             >
               <span className="diet-btn-txt__label body-m">{activeActionKey === `save-settings:${pageSource.pageId}` ? 'Saving...' : 'Save settings'}</span>
             </button>
@@ -911,7 +931,7 @@ export function PagesDomain() {
               data-variant="primary"
               type="button"
               onClick={openAddInstances}
-              disabled={Boolean(activeActionKey)}
+              disabled={Boolean(activeActionKey) || pageSourceLocked}
             >
               <span className="diet-btn-txt__label body-m">Add instances</span>
             </button>
@@ -946,7 +966,7 @@ export function PagesDomain() {
                               <input
                                 type="checkbox"
                                 checked={alreadyPlaced || checked}
-                                disabled={alreadyPlaced || Boolean(activeActionKey)}
+                                disabled={alreadyPlaced || Boolean(activeActionKey) || pageSourceLocked}
                                 aria-label={`Select ${instance.displayName || DEFAULT_INSTANCE_DISPLAY_NAME}`}
                                 onChange={() => toggleCheckedInstance(instance.instanceId)}
                               />
@@ -972,7 +992,7 @@ export function PagesDomain() {
                       data-variant="line2"
                       type="button"
                       onClick={() => setPickerVisibleLimit((current) => current + 50)}
-                      disabled={Boolean(activeActionKey)}
+                      disabled={Boolean(activeActionKey) || pageSourceLocked}
                     >
                       <span className="diet-btn-txt__label body-m">Show more</span>
                     </button>
@@ -995,7 +1015,7 @@ export function PagesDomain() {
                     data-variant="primary"
                     type="button"
                     onClick={() => void handleAddSelectedInstances()}
-                    disabled={Boolean(activeActionKey) || checkedInstanceIds.length === 0}
+                    disabled={Boolean(activeActionKey) || pageSourceLocked || checkedInstanceIds.length === 0}
                   >
                     <span className="diet-btn-txt__label body-m">
                       {activeActionKey === `bulk-place:${pageSource.pageId}` ? 'Adding...' : 'Add selected'}
@@ -1038,7 +1058,7 @@ export function PagesDomain() {
                           data-variant="line2"
                           type="button"
                           onClick={() => void handleMovePlacement(index, -1)}
-                          disabled={Boolean(activeActionKey) || index === 0}
+                          disabled={Boolean(activeActionKey) || pageSourceLocked || index === 0}
                         >
                           <span className="diet-btn-txt__label body-m">Up</span>
                         </button>
@@ -1048,7 +1068,7 @@ export function PagesDomain() {
                           data-variant="line2"
                           type="button"
                           onClick={() => void handleMovePlacement(index, 1)}
-                          disabled={Boolean(activeActionKey) || index === pageSource.placements.length - 1}
+                          disabled={Boolean(activeActionKey) || pageSourceLocked || index === pageSource.placements.length - 1}
                         >
                           <span className="diet-btn-txt__label body-m">Down</span>
                         </button>
@@ -1066,7 +1086,7 @@ export function PagesDomain() {
                           data-variant="line2"
                           type="button"
                           onClick={() => void handleRemovePlacement(index)}
-                          disabled={Boolean(activeActionKey)}
+                          disabled={Boolean(activeActionKey) || pageSourceLocked}
                         >
                           <span className="diet-btn-txt__label body-m">Remove</span>
                         </button>
