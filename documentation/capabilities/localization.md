@@ -65,15 +65,12 @@ Producers receive concrete paths and base values. No producer receives wildcard,
 1. User saves one widget instance in Bob/Roma.
 2. Roma submits approved instance config/content artifacts; Tokyo stores them.
 3. User opens the Translations panel and clicks Generate translations.
-4. Roma calls one Tokyo storage command with the current account active-locale
-   snapshot from account settings.
-5. Tokyo reads the saved widget files and existing overlays, then records the
-   exact operation locale snapshot it was given.
-6. Tokyo accepts async translation work for that marker and queues concrete
-   locale jobs for that operation snapshot.
-7. San Francisco translates concrete text primitive paths and values.
-8. San Francisco completes the work through Tokyo with the marker it translated.
-9. Tokyo applies translated locale values only if the marker still matches current saved base content.
+4. Roma reads the current account active locales from account settings.
+5. Roma returns `coreui.errors.translation.generationUnavailable` until San
+   Francisco owns a real async generation endpoint, queue production, and
+   operation state.
+6. Tokyo-worker remains the storage boundary for exact translated-locale overlay
+   files that Roma writes through the translated-values route.
 
 No step repairs values, drops paths, guesses paths, scans widget software to rediscover meaning, or exposes storage object identity to Bob/Roma.
 
@@ -89,7 +86,9 @@ If current saved base content does not match the marker for existing translated 
 The base content has changed. Regenerate translations.
 ```
 
-Generate is disabled while Tokyo reports active generation. Repeated Generate for the same active saved base content marker must not create competing jobs.
+Generate cannot start while no San Francisco generation owner exists. When a
+future generation owner is introduced, repeated Generate for the same active
+saved base content marker must not create competing jobs.
 
 When a translated locale is selected, Bob preview resolves:
 

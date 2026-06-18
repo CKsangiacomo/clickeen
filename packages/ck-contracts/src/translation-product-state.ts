@@ -26,14 +26,13 @@ export type TranslationGenerationSummaryWire = {
   v?: 2;
   instanceId: string;
   baseLocale: string;
-  targetLocales: string[];
+  activeLocales: string[];
   status: TranslationGenerationSummaryStatus;
   active?: boolean;
   requestedAt?: string | null;
   updatedAt?: string | null;
   totalLocales: number;
   baseContentMarker?: string;
-  generationRequestMarker?: string;
   isCurrentBaseContent?: boolean;
   reasonKey?: string;
   detail?: string;
@@ -44,14 +43,13 @@ export type TranslationGenerationSummary = {
   v?: 2;
   instanceId: string;
   baseLocale: string;
-  targetLocales: string[];
+  activeLocales: string[];
   status: TranslationGenerationSummaryStatus;
   active: boolean;
   requestedAt: string | null;
   updatedAt: string | null;
   totalLocales: number;
   baseContentMarker?: string;
-  generationRequestMarker?: string;
   isCurrentBaseContent: boolean;
   reasonKey?: string;
   detail?: string;
@@ -126,7 +124,7 @@ export function normalizeTranslationGenerationSummary(raw: unknown): Translation
   if (!isRecord(raw)) return null;
   const instanceId = asTrimmedString(raw.instanceId);
   const baseLocale = asTrimmedString(raw.baseLocale);
-  const targetLocales = normalizeStringArray(raw.targetLocales);
+  const activeLocales = normalizeStringArray(raw.activeLocales);
   const status = normalizeTranslationGenerationSummaryStatus(raw.status);
   const locales = normalizeTranslationProductLocaleStates(raw.locales);
   const totalLocales = typeof raw.totalLocales === 'number' && Number.isFinite(raw.totalLocales)
@@ -135,7 +133,7 @@ export function normalizeTranslationGenerationSummary(raw: unknown): Translation
   if (
     !instanceId ||
     !baseLocale ||
-    !targetLocales ||
+    !activeLocales ||
     !status ||
     totalLocales == null ||
     !locales
@@ -146,14 +144,13 @@ export function normalizeTranslationGenerationSummary(raw: unknown): Translation
     ...(raw.v === 2 ? { v: 2 } : {}),
     instanceId,
     baseLocale,
-    targetLocales,
+    activeLocales,
     status,
     active: typeof raw.active === 'boolean' ? raw.active : status === 'queued' || status === 'running',
     requestedAt: normalizeNullableString(raw.requestedAt),
     updatedAt: normalizeNullableString(raw.updatedAt),
     totalLocales,
     ...(asTrimmedString(raw.baseContentMarker) ? { baseContentMarker: asTrimmedString(raw.baseContentMarker) as string } : {}),
-    ...(asTrimmedString(raw.generationRequestMarker) ? { generationRequestMarker: asTrimmedString(raw.generationRequestMarker) as string } : {}),
     isCurrentBaseContent: raw.isCurrentBaseContent !== false,
     locales,
     ...(asTrimmedString(raw.reasonKey) ? { reasonKey: asTrimmedString(raw.reasonKey) as string } : {}),

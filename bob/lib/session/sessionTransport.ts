@@ -48,7 +48,7 @@ export type SaveTranslation = (
 export type GenerateTranslationsArgs = {
   instanceId: string;
   baseLocale: string;
-  targetLocales: string[];
+  activeLocales: string[];
 };
 
 export type GenerateTranslations = (
@@ -361,7 +361,7 @@ export function useSessionTransport(args: {
         instanceId,
         body: {
           baseLocale: commandArgs.baseLocale,
-          targetLocales: commandArgs.targetLocales,
+          activeLocales: commandArgs.activeLocales,
         },
         timeoutMs: 120_000,
       });

@@ -21,9 +21,8 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 function normalizeInstanceMeta(value: unknown): Record<string, unknown> | null {
   const meta = asRecord(value);
   if (!meta) return null;
-  const normalized = { ...meta };
-  delete normalized.targetLocales;
-  return normalized;
+  if (Object.prototype.hasOwnProperty.call(meta, 'targetLocales')) return null;
+  return { ...meta };
 }
 
 export function normalizeAccountInstanceConfigDocument(
@@ -52,6 +51,7 @@ export function normalizeAccountInstanceConfigDocument(
   )
     return null;
   const meta = normalizeInstanceMeta(payload.meta);
+  if (asRecord(payload.meta) && !meta) return null;
   const publicPackageFingerprint = asTrimmedString(payload.publicPackageFingerprint);
   if (
     Object.prototype.hasOwnProperty.call(payload, 'publicPackageFingerprint') &&

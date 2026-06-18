@@ -2,7 +2,6 @@ import { normalizeCanonicalLocalesFile, normalizeLocaleToken } from '@clickeen/l
 import localesJson from '@clickeen/l10n/locales.json';
 import { isCompactAccountPublicId } from './overlay-identity';
 export { UUID_RE, isUuid } from './ids';
-export * from './instance-translation-jobs';
 export * from './overlay-codebooks';
 export * from './overlay-identity';
 export * from './translated-value-primitives';
@@ -309,8 +308,6 @@ export function validateAccountLocalePolicy(raw: unknown, path = 'policy'): Acco
 
   return issues;
 }
-
-export function validateWidgetLocaleSwitcherSettings(raw: unknown) { const v = isRecord(raw) ? raw : null, issue = !v ? ['settingsInvalid', 'localeSwitcher'] : Object.prototype.hasOwnProperty.call(v, 'byIp') ? ['byIpRemoved', 'localeSwitcher.byIp'] : Object.prototype.hasOwnProperty.call(v, 'alwaysShowLocale') ? ['alwaysShowLocaleRemoved', 'localeSwitcher.alwaysShowLocale'] : typeof v.enabled !== 'boolean' ? ['enabledInvalid', 'localeSwitcher.enabled'] : v.attachTo !== 'stage' && v.attachTo !== 'pod' ? ['attachToInvalid', 'localeSwitcher.attachTo'] : typeof v.position !== 'string' || !['top-left', 'top-center', 'top-right', 'right-middle', 'bottom-right', 'bottom-center', 'bottom-left', 'left-middle'].includes(v.position) ? ['positionInvalid', 'localeSwitcher.position'] : null; return issue ? { reasonKey: `coreui.errors.localeSwitcher.${issue[0]}`, detail: `coreui.errors.localeSwitcher.${issue[0]}`, path: issue[1] } : null; }
 
 export function validateWidgetSocialShareSettings(raw: unknown) { const v = isRecord(raw) ? raw : null, issue = !v ? ['settingsInvalid', 'behavior.socialShare'] : typeof v.enabled !== 'boolean' ? ['enabledInvalid', 'behavior.socialShare.enabled'] : v.attachTo !== 'stage' && v.attachTo !== 'pod' ? ['attachToInvalid', 'behavior.socialShare.attachTo'] : typeof v.position !== 'string' || !['top-left', 'top-center', 'top-right', 'right-middle', 'bottom-right', 'bottom-center', 'bottom-left', 'left-middle'].includes(v.position) ? ['positionInvalid', 'behavior.socialShare.position'] : null; return issue ? { reasonKey: `coreui.errors.socialShare.${issue[0]}`, detail: `coreui.errors.socialShare.${issue[0]}`, path: issue[1] } : null; }
 

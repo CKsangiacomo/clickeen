@@ -36,7 +36,9 @@ import {
 
 function normalizeSubmittedMeta(value: unknown): Record<string, unknown> | null {
   if (value == null) return {};
-  return isRecord(value) ? { ...value } : null;
+  if (!isRecord(value)) return null;
+  if (Object.prototype.hasOwnProperty.call(value, 'targetLocales')) return null;
+  return { ...value };
 }
 
 export async function tryHandleInternalInstanceRoutes(
@@ -156,7 +158,7 @@ export async function tryHandleInternalInstanceRoutes(
     const publicPackage = readSubmittedInstancePublicPackage(rawBody.publicPackage);
     const submittedMeta = normalizeSubmittedMeta(rawBody.meta);
     if (!submittedMeta) return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
-    const baseLocale = normalizeLocale(rawBody.baseLocale ?? submittedMeta.baseLocale);
+    const baseLocale = normalizeLocale(rawBody.baseLocale);
     if (!instanceId || !config || !content || !publicPackage || !baseLocale)
       return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
     const meta = {
@@ -442,7 +444,17 @@ export async function tryHandleInternalInstanceRoutes(
       const publicPackage = isRecord(body)
         ? readSubmittedInstancePublicPackage(body.publicPackage)
         : null;
-      if (!isRecord(body) || !config || !content || !publicPackage) {
+      const baseLocale = normalizeLocale(body?.baseLocale);
+      const hasMeta = isRecord(body) && Object.prototype.hasOwnProperty.call(body, 'meta');
+      const submittedMeta = hasMeta ? normalizeSubmittedMeta(body.meta) : {};
+      if (
+        !isRecord(body) ||
+        !config ||
+        !content ||
+        !publicPackage ||
+        !baseLocale ||
+        !submittedMeta
+      ) {
         return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
       }
       try {
@@ -454,10 +466,11 @@ export async function tryHandleInternalInstanceRoutes(
           config,
           content,
           publicPackage,
+          baseLocale,
           displayName: body.displayName,
           hasDisplayName: Object.prototype.hasOwnProperty.call(body, 'displayName'),
-          meta: body.meta,
-          hasMeta: Object.prototype.hasOwnProperty.call(body, 'meta'),
+          meta: submittedMeta,
+          hasMeta,
         });
         return respond(
           json({

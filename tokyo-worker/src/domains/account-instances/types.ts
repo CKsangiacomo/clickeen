@@ -1,9 +1,3 @@
-export type {
-  TranslationGenerationSummaryStatus,
-  TranslationProductLocaleState,
-  TranslationGenerationSummary as TranslationGenerationOperationSummary,
-} from '@clickeen/ck-contracts/translation-product-state';
-
 export type AccountInstanceDocument = {
   v: 1;
   id: string;
@@ -73,62 +67,6 @@ export type AccountInstanceContentDocument = {
     }
   >;
   updatedAt: string;
-};
-
-export type TranslationGenerationOperationStatus =
-  | 'queued'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'superseded';
-
-export type TranslationGenerationLocaleStatus = 'queued' | 'completed' | 'failed' | 'superseded';
-
-export type TranslationGenerationOperationBasis = Array<{
-  locale: string;
-  widgetContract?: {
-    schemaVersion: 1;
-    hash: string;
-  };
-  fields: Array<{
-    identityKey?: string;
-    fieldPattern?: string;
-    path: string;
-    baseText: string;
-  }>;
-}>;
-
-export type TranslationGenerationOperationLocaleState = {
-  locale: string;
-  status: TranslationGenerationLocaleStatus;
-  paths: string[];
-  updatedAt: string;
-  reasonKey?: string;
-  detail?: string;
-};
-
-export type TranslationGenerationOperationDocument = {
-  jobId: string;
-  baseContentMarker?: string;
-  generationRequestMarker?: string;
-  accountId: string;
-  instanceId: string;
-  widgetType: string;
-  baseLocale: string;
-  targetLocales: string[];
-  status: TranslationGenerationOperationStatus;
-  requestedAt: string;
-  updatedAt: string;
-  totalLocales: number;
-  completedLocales: string[];
-  failedLocales: string[];
-  supersededLocales: string[];
-  pendingLocales: string[];
-  currentReadyLocales: string[];
-  locales: Record<string, TranslationGenerationOperationLocaleState>;
-  basis: TranslationGenerationOperationBasis;
-  reasonKey?: string;
-  detail?: string;
 };
 
 export type AccountInstanceSourcePointer = {

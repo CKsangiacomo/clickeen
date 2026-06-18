@@ -39,7 +39,7 @@ export type InstanceTranslationsGeneratePayload = {
     ok: true;
     accepted: boolean;
     baseLocale: string;
-    targetLocales: string[];
+    activeLocales: string[];
     skippedLocales: string[];
     generation: InstanceTranslationGenerationSummary | null;
   };
@@ -137,14 +137,14 @@ export async function generateAccountInstanceTranslations(args: {
   accountId: string;
   instanceId: string;
   baseLocale: string;
-  targetLocales: string[];
+  activeLocales: string[];
   accountCapsule?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: InstanceTranslationsGeneratePayload; status: number } | RouteFailure> {
   const baseLocale = asTrimmedString(args.baseLocale);
-  const targetLocales = normalizeStringArray(args.targetLocales);
+  const activeLocales = normalizeStringArray(args.activeLocales);
   if (!baseLocale) return invalidPayload('baseLocale_missing');
-  if (!targetLocales) return invalidPayload('targetLocales_invalid');
+  if (!activeLocales) return invalidPayload('activeLocales_invalid');
   void args.accountId;
   void args.instanceId;
   void args.accountCapsule;

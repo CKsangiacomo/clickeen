@@ -61,9 +61,9 @@ Roma, Bob, San Francisco, or shared product contracts.
 
 1. Instance locale/source fact contract subset from TW-06:
    remove per-instance `targetLocales` truth. Roma account settings remain the
-   active-locale authority; translation generation uses the current account
-   active locales at request time. Operation locale snapshots may remain inside
-   translation jobs/ledgers, but they are not widget instance state.
+   active-locale authority. Roma reads current account active locales at request
+   time. Tokyo-worker keeps no generation jobs, ledgers, or operation locale
+   snapshots.
 2. Account widget defaults materialization from TW-10:
    move seeding/materialization to Roma or a shared build contract, then make
    Tokyo-worker store/read exact defaults only.
@@ -87,17 +87,19 @@ Roma, Bob, San Francisco, or shared product contracts.
 - Removed per-instance `targetLocales` from the active account instance config
   document model, Tokyo-worker instance create/open payloads, Roma instance
   create payloads, and Roma duplicate flow.
-- Removed retired `targetLocales` from the instance `meta` surface so stale
-  metadata is not returned, copied, or persisted as per-instance locale truth.
+- Removed retired `targetLocales` from the instance `meta` surface. Stale
+  metadata is invalid persisted instance state; it is repaired as explicit data
+  cleanup, not silently omitted by runtime.
 - Roma translation generation now reads current account locale settings at
-  request time and sends that account active-locale snapshot for the operation.
-  Bob request-body locale lists are no longer authority for generation.
+  request time and returns generation unavailable until San Francisco owns the
+  operation. Bob request-body locale lists are no longer authority for
+  generation.
 - Tokyo-worker translation generation no longer falls back to stale instance
   locale state. A missing or malformed operation locale snapshot fails
   explicitly; an empty account active-locale snapshot remains a valid no-work
   result.
-- Translation job/ledger `targetLocales` remains only as an operation snapshot,
-  not widget instance state.
+- Tokyo-worker generation jobs, ledgers, and operation locale snapshots are not
+  active product truth.
 - Active docs now state that Roma account settings own active locales, active
   locales apply to all widgets immediately after settings save, and per-widget
   readiness comes from stored overlays/artifacts.
@@ -234,6 +236,21 @@ Open after this registry/serve-state authority slice, before the translation orc
 - San Francisco remains the AI execution surface and queue consumer. This slice
   did not invent a new San Francisco ledger or route to hide the removed Tokyo
   workflow.
+
+2026-06-18 closure cleanup:
+
+- Removed remaining Tokyo-worker widget product validation for locale-switcher
+  settings. Roma/Bob own product state; Tokyo-worker stores submitted instance
+  files and fails malformed storage input.
+- Removed the completed `migrate:instance-serve-state` command and one-time
+  migration script after R2 `serve-state.json` files existed.
+- Removed unused translation generation job contracts and Tokyo-worker
+  generation marker helpers. Overlay metadata helpers that are used for exact
+  overlay storage remain.
+- Roma save now submits `baseLocale` to Tokyo-worker on every save. Tokyo-worker
+  no longer reuses existing stored `baseLocale` as a save fallback.
+- Active generation command vocabulary now uses account active locales; per
+  instance `targetLocales` remains deleted product truth.
 
 Open after this translation orchestration deletion slice:
 

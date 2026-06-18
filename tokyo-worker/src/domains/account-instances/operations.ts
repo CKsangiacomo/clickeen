@@ -1,4 +1,3 @@
-import { validateWidgetLocaleSwitcherSettings } from '@clickeen/ck-contracts';
 import { isCompactAccountPublicId, isCompactInstanceId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import {
@@ -125,15 +124,23 @@ function normalizeDisplayName(value: unknown): string | null {
   return trimmed.length > 0 && trimmed.length <= 120 ? trimmed : null;
 }
 
-function assertLocaleSwitcherConfig(config: Record<string, unknown>): void {
-  const issue = validateWidgetLocaleSwitcherSettings(config.localeSwitcher);
-  if (!issue) return;
+function normalizeSubmittedMeta(value: unknown): Record<string, unknown> | null {
+  if (value == null) return null;
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    const meta = value as Record<string, unknown>;
+    if (Object.prototype.hasOwnProperty.call(meta, 'targetLocales')) {
+      throw new AccountInstanceTransitionError({
+        status: 422,
+        kind: 'VALIDATION',
+        reasonKey: 'coreui.errors.instance.targetLocalesRemoved',
+      });
+    }
+    return meta;
+  }
   throw new AccountInstanceTransitionError({
     status: 422,
     kind: 'VALIDATION',
-    reasonKey: issue.reasonKey,
-    detail: issue.detail,
-    issues: [{ path: issue.path }],
+    reasonKey: 'coreui.errors.instance.invalidPayload',
   });
 }
 
@@ -186,7 +193,6 @@ export async function createAccountInstanceFromSubmittedSource(args: {
       reasonKey: 'coreui.errors.instance.invalidPayload',
     });
   }
-  assertLocaleSwitcherConfig(args.config);
   const existing = await readAccountInstanceSource({
     env: args.env,
     accountId,
@@ -247,6 +253,7 @@ export async function saveAccountInstanceTransition(args: {
   content: AccountInstanceContentDocument;
   publicPackage: SubmittedInstancePublicPackage;
   displayName?: unknown;
+  baseLocale: string;
   hasDisplayName: boolean;
   meta?: unknown;
   hasMeta: boolean;
@@ -276,7 +283,10 @@ export async function saveAccountInstanceTransition(args: {
       detail: `submitted widgetType "${submittedWidgetType}" does not match Tokyo instance widgetType "${existingWidgetType}"`,
     });
   }
-  assertLocaleSwitcherConfig(args.config);
+  const nextMeta = {
+    ...(normalizeSubmittedMeta(args.hasMeta ? args.meta : existing.value.pointer.meta) ?? {}),
+    baseLocale: args.baseLocale,
+  };
   const packaged = await writeInstancePublicPackage({
     env: args.env,
     accountId,
@@ -299,7 +309,7 @@ export async function saveAccountInstanceTransition(args: {
     config: args.config,
     content: args.content,
     displayName: args.hasDisplayName ? args.displayName : existing.value.pointer.displayName,
-    meta: args.hasMeta ? args.meta : existing.value.pointer.meta ?? null,
+    meta: nextMeta,
     publicPackageFingerprint: packaged.fingerprint,
   });
   const live = (await readInstanceServeState({

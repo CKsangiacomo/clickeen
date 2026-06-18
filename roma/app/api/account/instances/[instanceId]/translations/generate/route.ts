@@ -58,7 +58,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     accountId,
     instanceId,
     baseLocale,
-    targetLocales: activeLocalesToGenerate,
+    activeLocales: activeLocalesToGenerate,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

@@ -78,38 +78,7 @@ export function buildBaseContentMarkerForFields(args: {
         identityKey: field.identityKey,
         fieldPattern: field.fieldPattern,
         baseText: field.baseText,
-      }))
+    }))
       .sort((left, right) => left.fieldKey.localeCompare(right.fieldKey)),
-  });
-}
-
-export function buildGenerationRequestMarker(args: {
-  baseContentMarker: string;
-  targetLocales: string[];
-}): Promise<string> {
-  return sha256V1({
-    v: 1,
-    kind: 'generationRequestMarker',
-    baseContentMarker: args.baseContentMarker,
-    targetLocales: [...args.targetLocales].sort((left, right) => left.localeCompare(right)),
-  });
-}
-
-export function baseContentMarkerForTranslationJob(args: {
-  baseLocale: string;
-  widgetType: string;
-  widgetContractHash: string;
-  fields: Array<{
-    identityKey?: string;
-    fieldPattern?: string;
-    path: string;
-    baseText: string;
-  }>;
-}): Promise<string> {
-  return buildBaseContentMarkerForFields({
-    baseLocale: args.baseLocale,
-    widgetType: args.widgetType,
-    widgetContractHash: args.widgetContractHash,
-    fields: args.fields,
   });
 }

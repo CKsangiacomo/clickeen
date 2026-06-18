@@ -1,4 +1,3 @@
-import { normalizeLocaleToken } from '@clickeen/l10n';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   deleteAccountInstanceFromTokyo,
@@ -11,6 +10,7 @@ import {
   materializeAccountInstancePublicPackage,
 } from '@roma/lib/account-instance-public-package';
 import { materializeAccountInstanceSourceArtifacts } from '@roma/lib/account-instance-source-artifacts';
+import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { validateAccountInstanceSavePolicy } from '@roma/lib/account-instance-save-policy';
 import { readJsonPayloadOrValidation, requireInstanceIdParam } from '@roma/lib/route-helpers';
 import {
@@ -62,7 +62,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   const bodyResult = await readJsonPayloadOrValidation<{
     widgetType?: string;
     config?: Record<string, unknown>;
-    baseLocale?: string | null;
     displayName?: string | null;
     meta?: Record<string, unknown> | null;
   } | null>(request);
@@ -77,7 +76,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
   const widgetType = typeof body?.widgetType === 'string' ? body.widgetType.trim() : '';
   const config = body?.config;
-  const baseLocale = normalizeLocaleToken(body?.baseLocale) ?? '';
   const displayName =
     body && Object.prototype.hasOwnProperty.call(body, 'displayName')
       ? typeof body.displayName === 'string'
@@ -98,8 +96,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     !widgetType ||
     !config ||
     typeof config !== 'object' ||
-    Array.isArray(config) ||
-    !baseLocale
+    Array.isArray(config)
   ) {
     return withSession(
       request,
@@ -120,6 +117,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+  if (meta && Object.prototype.hasOwnProperty.call(meta, 'targetLocales')) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.targetLocalesRemoved' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
   if (
     body &&
     Object.prototype.hasOwnProperty.call(body, 'displayName') &&
@@ -134,6 +141,32 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       current.value.setCookies,
     );
   }
+
+  const accountLocales = await loadCurrentAccountLocalesState({
+    accessToken: current.value.accessToken,
+    accountId: current.value.authzPayload.accountId,
+    requestId: current.value.requestId,
+  });
+  if (!accountLocales.ok) {
+    return withSession(
+      request,
+      NextResponse.json(
+        accountLocales.payload ?? {
+          error: {
+            kind: accountLocales.status === 401 ? 'AUTH' : 'UPSTREAM_UNAVAILABLE',
+            reasonKey:
+              accountLocales.status === 401
+                ? 'coreui.errors.auth.required'
+                : 'coreui.errors.auth.contextUnavailable',
+            detail: accountLocales.detail,
+          },
+        },
+        { status: accountLocales.status },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const baseLocale = accountLocales.localePolicy.baseLocale;
 
   const compiled = await compileWidgetForInstancePackage(request, widgetType);
   if (!compiled.ok) {
@@ -193,6 +226,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     accountId,
     instanceId,
     widgetType,
+    baseLocale,
     config: sourceArtifacts.value.config,
     content: sourceArtifacts.value.content,
     publicPackage: publicPackage.value,

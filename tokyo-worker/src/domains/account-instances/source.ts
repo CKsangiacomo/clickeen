@@ -43,9 +43,10 @@ function normalizeDisplayName(value: unknown): string | null {
 function normalizeMeta(value: unknown): Record<string, unknown> | null {
   if (value == null) return null;
   if (value && typeof value === 'object' && !Array.isArray(value)) {
-    const meta = { ...(value as Record<string, unknown>) };
-    delete meta.targetLocales;
-    return meta;
+    if (Object.prototype.hasOwnProperty.call(value, 'targetLocales')) {
+      throw new Error('coreui.errors.instance.targetLocalesRemoved');
+    }
+    return { ...(value as Record<string, unknown>) };
   }
   throw new Error('coreui.errors.instance.invalidPayload');
 }
@@ -143,14 +144,13 @@ export function savedTextFieldsFromContentDocument(
 
 function resolveBaseLocale(
   meta: Record<string, unknown> | null,
-  existing?: AccountInstanceConfigDocument | null,
 ): string {
   if (hasOwnRecordValue(meta, 'baseLocale')) {
     const fromMeta = normalizeLocale(meta?.baseLocale);
     if (!fromMeta) throw new Error('coreui.errors.instance.invalidPayload');
     return fromMeta;
   }
-  return existing?.baseLocale ?? 'en';
+  throw new Error('coreui.errors.instance.baseLocaleMissing');
 }
 
 function toAccountInstanceSourcePointer(args: {
@@ -322,7 +322,7 @@ export async function writeAccountInstanceSource(args: {
     instanceId,
   });
   const meta = normalizeMeta(args.meta);
-  const baseLocale = resolveBaseLocale(meta, existingConfig);
+  const baseLocale = resolveBaseLocale(meta);
   const content = args.content;
   if (
     content.id !== instanceId ||

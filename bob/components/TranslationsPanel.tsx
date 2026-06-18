@@ -321,7 +321,7 @@ export function buildTranslationGenerationPanelState(payload: unknown): {
   const isGenerating = isActiveTranslationGeneration(generation);
   const panelState = resolveTranslationPanelProductState({
     instanceId: generation.instanceId,
-    expectedTranslationsCount: generation.targetLocales.length,
+    expectedTranslationsCount: generation.activeLocales.length,
     hasTranslatableFields: true,
     isDirty: false,
     isSaving: false,
@@ -585,7 +585,7 @@ export function TranslationsPanel({
       const response = await generateTranslations({
         instanceId,
         baseLocale,
-        targetLocales: translationSetup?.selectedTargetLocales ?? [],
+        activeLocales: translationSetup?.selectedTargetLocales ?? [],
       });
       if (!response.ok) {
         throw new Error(resolveGenerateTranslationsError(response.json));

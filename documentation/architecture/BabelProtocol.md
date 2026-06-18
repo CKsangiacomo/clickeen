@@ -8,7 +8,12 @@ Babel is Clickeen's translated-locale value protocol for account widgets. It is 
 
 Builder edits one account-owned widget instance in the account base locale.
 
-After save, translation generation is explicit work from the Translations panel. Roma calls Tokyo with the current account active-locale snapshot. Tokyo reads the current saved instance content, widget editable-field contract, existing translated values, stable field identities, delta, and saved base content marker. San Francisco receives widget-generic saved text fields and returns translated text primitive values with that marker. Tokyo stores translated locale values only when the marker still matches current saved base content. Public widget package bytes are public artifacts, not source truth, and are not rebuilt from overlays during visitor serving or publish.
+After save, translated locale values are explicit account work from the
+Translations panel. Tokyo-worker currently stores, reads, and lists exact
+translated-locale overlay files only. Roma returns translation generation
+unavailable until San Francisco owns a real async generation endpoint and
+operation state. Public widget package bytes are public artifacts, not source
+truth, and are not rebuilt from overlays during visitor serving or publish.
 
 ## Source Of Text Truth
 
@@ -33,12 +38,10 @@ No producer receives wildcard, glob, template, or sidecar paths.
 For a given saved `instance.content.json` and widget editable-field contract:
 
 1. The saved instance content and widget editable-field contract provide the required concrete text primitive paths.
-2. Roma submits the current account active-locale snapshot for the operation; Tokyo-worker reads existing stored overlays for those locales.
-3. San Francisco receives exactly those paths and their current base values.
-4. San Francisco returns exactly those paths and translated values.
-5. Tokyo rejects the response if any required path is missing.
-6. Tokyo rejects the response if any undeclared path is present.
-7. The rejection names the concrete offending path.
+2. Roma owns the user-facing generation command and account active-locale lookup.
+3. Until San Francisco owns generation, Roma returns `coreui.errors.translation.generationUnavailable`.
+4. Tokyo-worker stores exact overlay value maps that Roma submits through the storage route.
+5. Tokyo-worker rejects malformed overlay value maps before writing them.
 
 The system does not normalize, drop, repair, coerce, or infer producer output.
 
@@ -79,13 +82,16 @@ Manual translation edits are temporary overrides of the current translated value
 
 ## Tokyo PBX Rule
 
-Tokyo-worker stores, reads, and completes translated locale value artifacts through named storage operations. San Francisco generates translated values.
+Tokyo-worker stores and reads translated locale value artifacts through named
+storage operations. San Francisco must own translated-value generation before
+generation is enabled again.
 
 Tokyo-worker must not:
 
 - Expose private storage object IDs as locale identity.
 - Orchestrate San Francisco work from Roma-side storage walks.
 - Repair values it accepted.
+- Maintain generation queues, ledgers, operation snapshots, or completion state.
 - Preserve old l10n route or path shapes.
 - Preserve old account/widget storage grouping shapes.
 

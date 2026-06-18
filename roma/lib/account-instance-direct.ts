@@ -95,9 +95,23 @@ function invalidTokyoPayload(detail: string): RouteFailure {
 
 function normalizeInstanceMeta(value: unknown): Record<string, unknown> | null {
   if (!isRecord(value)) return null;
-  const meta = { ...value };
-  delete meta.targetLocales;
-  return meta;
+  if (Object.prototype.hasOwnProperty.call(value, 'targetLocales')) return null;
+  return { ...value };
+}
+
+function hasRetiredTargetLocales(value: unknown): boolean {
+  return isRecord(value) && Object.prototype.hasOwnProperty.call(value, 'targetLocales');
+}
+
+function retiredTargetLocalesFailure(): RouteFailure {
+  return {
+    ok: false,
+    status: 422,
+    error: {
+      kind: 'VALIDATION',
+      reasonKey: 'coreui.errors.instance.targetLocalesRemoved',
+    },
+  };
 }
 
 function isAccountInstanceContentDocument(value: unknown): value is AccountInstanceContentDocument {
@@ -206,6 +220,7 @@ function normalizeAccountInstancePayload(payload: unknown): {
   const sourceConfig = isRecord(source?.config) ? source.config : null;
   const sourceContent = isAccountInstanceContentDocument(source?.content) ? source.content : null;
   if (!sourceConfig || !sourceContent) return null;
+  if (isRecord(payload.meta) && normalizeInstanceMeta(payload.meta) == null) return null;
   const instanceId = asTrimmedString(payload.instanceId ?? payload.id);
   const accountId = asTrimmedString(payload.accountId);
   const widgetType = asTrimmedString(payload.widgetType);
@@ -299,6 +314,7 @@ export async function createAccountInstanceInTokyo(args: {
       },
     };
   }
+  if (hasRetiredTargetLocales(args.meta)) return retiredTargetLocalesFailure();
 
   const result = await callTokyo(tokyoCallContext(args), {
     path: '/__internal/instances',
@@ -334,6 +350,7 @@ export async function saveAccountInstanceInTokyo(args: {
   instanceId: string;
   accountCapsule?: string | null;
   widgetType: string;
+  baseLocale: string;
   config: Record<string, unknown>;
   content: AccountInstanceContentDocument;
   publicPackage: {
@@ -355,18 +372,20 @@ export async function saveAccountInstanceInTokyo(args: {
     }
   | RouteFailure
 > {
+  if (hasRetiredTargetLocales(args.meta)) return retiredTargetLocalesFailure();
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/instances/${encodeURIComponent(args.instanceId)}`,
     method: 'PUT',
     body: {
       widgetType: args.widgetType,
+      baseLocale: args.baseLocale,
       source: {
         config: args.config,
         content: args.content,
       },
       publicPackage: args.publicPackage,
       ...(args.displayName !== undefined ? { displayName: args.displayName } : {}),
-      ...(args.meta !== undefined ? { meta: normalizeInstanceMeta(args.meta) } : {}),
+      ...(args.meta !== undefined ? { meta: args.meta } : {}),
     },
     decode: (payload) => payload,
     errorDetail: 'tokyo_instance_save_http_error',
