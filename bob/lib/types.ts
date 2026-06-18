@@ -16,7 +16,7 @@ export interface CompiledPanel {
 
 export interface CompiledControlOption {
   label: string;
-  value: string;
+  value: string | number | boolean;
 }
 
 export type ControlKind =

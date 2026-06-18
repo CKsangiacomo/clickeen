@@ -3,7 +3,7 @@ import type { CompiledControl } from '../types';
 export type ControlMatcher = {
   control: CompiledControl;
   regex: RegExp;
-  optionValues?: Set<string>;
+  optionValues?: Set<string | number | boolean>;
   score: number;
 };
 
@@ -59,7 +59,9 @@ export type ValidateValueResult =
 
 function toEnumValues(control: CompiledControl): string[] | null {
   if (control.enumValues && control.enumValues.length > 0) return control.enumValues;
-  const fromOptions = control.options?.map((opt) => opt.value).filter(Boolean);
+  const fromOptions = control.options
+    ?.map((opt) => opt.value)
+    .filter((value): value is string => typeof value === 'string' && Boolean(value));
   return fromOptions && fromOptions.length > 0 ? fromOptions : null;
 }
 

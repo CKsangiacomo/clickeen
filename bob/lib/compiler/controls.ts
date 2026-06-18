@@ -169,7 +169,11 @@ function parseControlOptions(args: {
     if (typeof label !== 'string' || !label.trim()) {
       throw new Error(`[BobCompiler] options[${index}] for control "${args.controlPath}" requires label`);
     }
-    if (typeof value !== 'string' || !value.trim()) {
+    if (
+      (typeof value !== 'string' || !value.trim()) &&
+      (typeof value !== 'number' || !Number.isFinite(value)) &&
+      typeof value !== 'boolean'
+    ) {
       throw new Error(`[BobCompiler] options[${index}] for control "${args.controlPath}" requires value`);
     }
     options.push({ label, value });
@@ -193,7 +197,13 @@ function inferControlMetadata(control: CompiledControl, defaults: Record<string,
   if (control.options && control.options.length > 0) {
     if (typeof sample === 'number') return { kind: 'number' };
     if (typeof sample === 'boolean') return { kind: 'boolean' };
-    const enumValues = Array.from(new Set(control.options.map((o) => o.value).filter(Boolean)));
+    const enumValues = Array.from(
+      new Set(
+        control.options
+          .map((o) => o.value)
+          .filter((value): value is string => typeof value === 'string' && Boolean(value)),
+      ),
+    );
     return { kind: 'enum', enumValues: enumValues.length ? enumValues : undefined };
   }
 
