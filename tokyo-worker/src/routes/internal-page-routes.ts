@@ -1,13 +1,12 @@
 import { isRecord } from '@clickeen/ck-contracts';
 import {
   deleteAccountPageSource,
-  listAccountPages,
+  listAccountPageSources,
   normalizePageId,
   PageOperationError,
   purgeAccountPagePublicCache,
   createAccountPageServeState,
   createAccountPageSource,
-  assertPageSourceContract,
   readAccountPageServeState,
   readAccountPageSource,
   saveAccountPageSource,
@@ -72,8 +71,8 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
     if (authErr) return respond(authErr);
 
     try {
-      const index = await listAccountPages({ env, accountId });
-      return respond(json({ ok: true, accountId, pages: index.pages }));
+      const index = await listAccountPageSources({ env, accountId });
+      return respond(json({ ok: true, accountId, sources: index.sources }));
     } catch (error) {
       return respond(pageErrorResponse(error));
     }
@@ -104,7 +103,6 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
     if (!pageId) return respondValidation(respond, 'tokyo.errors.page.invalidPageId');
 
     try {
-      assertPageSourceContract({ source: body.source, accountId, pageId });
       if (await readAccountPageSource({ env, accountId, pageId })) {
         throw new PageOperationError({
           kind: 'VALIDATION',
@@ -241,7 +239,7 @@ export async function tryHandleInternalPageRoutes(args: TokyoRouteArgs): Promise
           pageId,
           source: body.source,
         });
-        return respond(json({ ok: true, accountId, pageId, source: saved.source, summary: saved.summary }));
+        return respond(json({ ok: true, accountId, pageId, source: saved.source }));
       } catch (error) {
         return respond(pageErrorResponse(error));
       }

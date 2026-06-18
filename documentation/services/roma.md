@@ -192,10 +192,11 @@ widget instances. Page source and any generated page packages live in Tokyo unde
 accounts/{accountPublicId}/pages/{pageId}/
 ```
 
-Roma validates current-account access and policy, then asks Tokyo-worker to read
-or write the named account page object. Current account page publish is disabled
-until Roma has a real page package writer. Public page copy/open actions are
-disabled until that writer exists. While a page is published, Roma requires
+Roma validates current-account access, policy, page source shape, page source
+save stamps, list summaries, and placement product rules. It asks Tokyo-worker
+to read or write the named account page object. Current account page publish is
+disabled until Roma has a real page package writer. Public page copy/open actions
+are disabled until that writer exists. While a page is published, Roma requires
 unpublish before page source edit or delete.
 
 ## Team, Profile, Settings

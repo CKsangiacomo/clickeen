@@ -168,7 +168,8 @@ route. They are classified as vector assets by Tokyo-worker.
 
 ### Pages
 
-1. Roma manages account page source.
+1. Roma manages account page source, source save stamps, summaries, and
+   placement product rules.
 2. A page is an ordered stack of account instance placements.
 3. Tokyo-worker stores page source, serve-state, and any submitted page package
    files under the account page folder.

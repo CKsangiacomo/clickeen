@@ -40,7 +40,7 @@ Roma, Bob, San Francisco, or shared product contracts.
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | TW-02 registry/serve-state split truth        | Decide whether Supabase registry remains Tokyo-worker operational storage truth or moves to an R2 runtime record / another owner.      | Not a deletion. It changes runtime identity/status authority for instance listing, publish state, and public serving.     |
 | TW-04 page package/publish pipeline           | Decision executed: current account page publish is unavailable until Roma writes page packages.                                         | No current Roma page package writer exists in this PRD scope.                                                            |
-| TW-05 page source authority                   | Decide how much page source contract validation/versioning/list summaries belong in Roma/shared contracts versus Tokyo-worker storage. | Moving this changes page create/save/list/open contracts and cannot be faked with local checks.                           |
+| TW-05 page source authority                   | Decision executed: Roma owns page source validation, save shaping, version stamps, summaries, and placement checks.                   | Tokyo-worker now stores/reads/lists exact page source objects and keeps storage coordinate checks.                        |
 | TW-06 instance source/content composition     | Decision executed: active locales are Roma account settings; Roma materializes and composes source artifacts; Tokyo-worker stores exact files. | Active locales are account settings. Removing Tokyo extraction/remap required Roma/Bob save payload changes first.        |
 | TW-07 translation orchestration               | Decide whether translation orchestration moves to Roma/San Francisco and what storage artifacts Tokyo-worker keeps.                    | This changes policy, AI job creation, ledger ownership, and San Francisco contracts.                                      |
 | TW-10 account widget defaults materialization | Decision executed: Roma materializes and validates account widget defaults; Tokyo-worker stores exact submitted defaults.              | Tokyo-worker seeding from widget specs required a replacement Roma writer before deletion.                                |
@@ -169,6 +169,27 @@ Open after this account widget defaults slice:
   based on incidental R2 files.
 - Unpublish remains storage behavior.
 
-Open after this page package/publish slice:
+Open after this page package/publish slice, before the page source authority slice:
 
 - TW-05, TW-02, and TW-07 remain open.
+
+2026-06-17 TW-05 page source authority slice:
+
+- Roma now owns account page source validation and normalization through
+  `roma/lib/account-page-source.ts`.
+- Roma page save loads the current source, rejects published-page saves, stamps
+  the next `version` and `updatedAt`, preserves `createdAt`, and sends the exact
+  shaped source to Tokyo-worker.
+- Roma derives account page summaries from exact page sources returned by
+  Tokyo-worker; Tokyo-worker no longer returns page list summaries.
+- Roma performs the placed-on-page check before account instance delete.
+  Tokyo-worker no longer scans page placements to decide whether an instance can
+  be deleted.
+- Tokyo-worker page source operations now keep storage coordinate/existence
+  checks, JSON parse failure, serve-state integrity reads, and exact source
+  put/delete/list behavior. It no longer validates page product fields, mutates
+  page source version/timestamps, or derives summaries.
+
+Open after this page source authority slice:
+
+- TW-02 and TW-07 remain open.

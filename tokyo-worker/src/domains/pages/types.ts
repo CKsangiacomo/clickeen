@@ -1,16 +1,4 @@
-export type PageRobots = 'index,follow' | 'noindex,nofollow';
-
 export type PageServeState = 'published' | 'unpublished';
-
-export type AccountPageSummary = {
-  pageId: string;
-  title: string;
-  description: string;
-  robots: PageRobots;
-  placementCount: number;
-  createdAt: string;
-  updatedAt: string;
-};
 
 export type PageOperationErrorKind =
   | 'VALIDATION'

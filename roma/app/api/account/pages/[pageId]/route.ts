@@ -6,6 +6,7 @@ import {
   saveAccountPageInTokyo,
 } from '@roma/lib/account-page-direct';
 import type { AccountPageSource } from '@roma/lib/account-page-direct';
+import { materializeAccountPageSourceSave } from '@roma/lib/account-page-source';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -137,10 +138,65 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
+  const currentPage = await loadAccountPageFromTokyo({
+    accountId,
+    pageId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!currentPage.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: currentPage.error }, { status: currentPage.status }),
+      current.value.setCookies,
+    );
+  }
+  if (!currentPage.value) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'NOT_FOUND', reasonKey: 'coreui.errors.page.notFound' } },
+        { status: 404 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (currentPage.value.publishStatus === 'published') {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.page.saveRequiresUnpublish',
+            detail: 'Unpublish the page before saving source until Roma page package generation is enabled.',
+          },
+        },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  const source = materializeAccountPageSourceSave({
+    accountId,
+    pageId,
+    current: currentPage.value.source,
+    submitted: bodyResult.payload.source,
+  });
+  if (!source) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.page.sourceInvalid' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
   const result = await saveAccountPageInTokyo({
     accountId,
     pageId,
-    source: bodyResult.payload.source,
+    source,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
   });

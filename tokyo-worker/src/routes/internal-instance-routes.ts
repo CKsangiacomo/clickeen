@@ -19,7 +19,6 @@ import {
   renameAccountInstanceDisplay,
 } from '../domains/account-instances/source';
 import { normalizeAccountInstanceContentDocument } from '../domains/account-instances/normalize';
-import { listAccountPageIdsPlacingInstance, PageOperationError } from '../domains/pages';
 import { accountHasInstanceRegistryRows } from '../domains/account-instances/registry';
 import { json } from '../http';
 import {
@@ -39,20 +38,6 @@ import {
 function normalizeSubmittedMeta(value: unknown): Record<string, unknown> | null {
   if (value == null) return {};
   return isRecord(value) ? { ...value } : null;
-}
-
-function pageOperationErrorResponse(error: PageOperationError): Response {
-  return json(
-    {
-      error: {
-        kind: error.kind,
-        reasonKey: error.reasonKey,
-        detail: error.message,
-        ...(error.paths.length ? { paths: error.paths } : {}),
-      },
-    },
-    { status: error.status },
-  );
 }
 
 export async function tryHandleInternalInstanceRoutes(
@@ -495,26 +480,6 @@ export async function tryHandleInternalInstanceRoutes(
       const auth = await authorizeRomaEditorTransition({ req, env, accountId });
       if (!auth.ok) return respond(auth.response);
       try {
-        const placedPageIds = await listAccountPageIdsPlacingInstance({
-          env,
-          accountId,
-          instanceId,
-        });
-        if (placedPageIds.length) {
-          return respond(
-            json(
-              {
-                error: {
-                  kind: 'VALIDATION',
-                  reasonKey: 'coreui.errors.instance.placedOnPage',
-                  detail: 'Remove this widget from every page before deleting it.',
-                  pageIds: placedPageIds,
-                },
-              },
-              { status: 422 },
-            ),
-          );
-        }
         const deleted = await deleteAccountInstanceSubtree(env, instanceId, accountId);
         if (!deleted.existed) {
           return respond(
@@ -526,7 +491,6 @@ export async function tryHandleInternalInstanceRoutes(
         }
         return respond(json({ ok: true, deleted: deleted.existed, existed: deleted.existed }));
       } catch (error) {
-        if (error instanceof PageOperationError) return respond(pageOperationErrorResponse(error));
         const detail = error instanceof Error ? error.message : String(error);
         return respond(
           json(

@@ -80,7 +80,7 @@ Rules:
 - Browser package files `index.html`, `styles.css`, and `runtime.js` are public artifacts, not identity, ownership, saved config, or product publish truth. Roma materializes them during create/save/duplicate and submits them to Tokyo-worker with the saved source. Tokyo-worker stores the exact submitted bytes.
 - Those files can exist for composition before public standalone serving. `clk.live` serving requires Tokyo serve state to be `published`; Roma/system account operations own account policy decisions that decide whether publish/unpublish should be allowed.
 - Page package files, when present, live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`. Current account page publish and public page serving are unavailable until Roma writes page packages. Save/delete of published page source requires Roma to unpublish first.
-- Page source is stored at `accounts/{accountPublicId}/pages/{pageId}/source.json`; Tokyo validates the page source contract before storage and derives account page list summaries from stored source files.
+- Page source is stored at `accounts/{accountPublicId}/pages/{pageId}/source.json`; Roma validates page source, stamps page source saves, derives account page list summaries, and decides page placement product rules. Tokyo stores and reads the exact source document under the account path.
 - Page serve state is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/serve-state.json`.
 - Prague page translations are not account-instance overlays.
 

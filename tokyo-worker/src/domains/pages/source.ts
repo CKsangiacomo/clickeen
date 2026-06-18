@@ -1,8 +1,4 @@
-import { isRecord } from '@clickeen/ck-contracts';
-import {
-  isCompactAccountPublicId,
-  isCompactInstanceId,
-} from '@clickeen/ck-contracts/overlay-identity';
+import { isCompactAccountPublicId } from '@clickeen/ck-contracts/overlay-identity';
 import type { Env } from '../../types';
 import { deletePrefix, putJson } from '../storage';
 import {
@@ -12,7 +8,6 @@ import {
 } from './keys';
 import { normalizePageId } from './ids';
 import { readAccountPageServeState } from './serve-state';
-import type { AccountPageSummary } from './types';
 import { PageOperationError } from './types';
 
 export { normalizePageId } from './ids';
@@ -28,50 +23,12 @@ function assertAccountId(accountId: string): string {
   return normalized;
 }
 
-function normalizeRobots(value: unknown): AccountPageSummary['robots'] | null {
-  if (value === 'index,follow' || value === 'noindex,nofollow') return value;
-  return null;
-}
-
 function failSourceInvalid(paths?: string[]): never {
   throw new PageOperationError({
     kind: 'VALIDATION',
     reasonKey: 'tokyo.errors.page.sourceInvalid',
     ...(paths ? { paths } : {}),
   });
-}
-
-function normalizeLocale(value: unknown): string | null {
-  return typeof value === 'string' && /^[a-z]{2}(?:-[a-z0-9]{2,8})?$/.test(value) ? value : null;
-}
-
-function isExactNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0 && value === value.trim();
-}
-
-function isExactString(value: unknown): value is string {
-  return typeof value === 'string' && value === value.trim();
-}
-
-function isValidCanonicalUrl(value: string): boolean {
-  if (value !== value.trim()) return false;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:' || url.protocol === 'http:';
-  } catch {
-    return false;
-  }
-}
-
-function isCountryLocaleRule(value: unknown): boolean {
-  return isRecord(value) &&
-    typeof value.country === 'string' &&
-    /^[A-Z]{2}$/.test(value.country) &&
-    Boolean(normalizeLocale(value.locale));
-}
-
-function isPagePlacement(value: unknown): boolean {
-  return isRecord(value) && isExactNonEmptyString(value.placementId) && isCompactInstanceId(value.instanceId);
 }
 
 async function loadStoredPageSource(args: {
@@ -84,52 +41,6 @@ async function loadStoredPageSource(args: {
     return { exists: true, value: await obj.json() };
   } catch {
     failSourceInvalid([args.key]);
-  }
-}
-
-export function assertPageSourceContract(args: {
-  source: unknown;
-  accountId: string;
-  pageId: string;
-}): void {
-  const source = args.source;
-  if (!isRecord(source) || source.schemaVersion !== 1 || source.pageId !== args.pageId || source.accountPublicId !== args.accountId) {
-    failSourceInvalid();
-  }
-  const metadata = isRecord(source.metadata) ? source.metadata : null;
-  const hasCanonical = Boolean(metadata && Object.prototype.hasOwnProperty.call(metadata, 'canonicalUrl'));
-  if (
-    !metadata ||
-    !isExactNonEmptyString(metadata.title) ||
-    !isExactString(metadata.description) ||
-    normalizeRobots(metadata.robots) == null ||
-    (hasCanonical && (typeof metadata.canonicalUrl !== 'string' || !metadata.canonicalUrl.trim() || !isValidCanonicalUrl(metadata.canonicalUrl)))
-  ) {
-    failSourceInvalid();
-  }
-  const localization = isRecord(source.localization) ? source.localization : null;
-  if (
-    !localization ||
-    !normalizeLocale(localization.defaultLocale) ||
-    !Array.isArray(localization.countryLocaleRules) ||
-    !localization.countryLocaleRules.every(isCountryLocaleRule) ||
-    localization.ipLocalizationEnabled !== true && localization.ipLocalizationEnabled !== false ||
-    localization.languageSwitcherEnabled !== true && localization.languageSwitcherEnabled !== false ||
-    localization.missingLocaleBehavior !== 'block_publish'
-  ) {
-    failSourceInvalid();
-  }
-  if (
-    !Array.isArray(source.placements) ||
-    !source.placements.every(isPagePlacement) ||
-    !isExactNonEmptyString(source.displayName) ||
-    typeof source.version !== 'number' ||
-    !Number.isInteger(source.version) ||
-    source.version < 1 ||
-    !isExactNonEmptyString(source.createdAt) ||
-    !isExactNonEmptyString(source.updatedAt)
-  ) {
-    failSourceInvalid();
   }
 }
 
@@ -152,34 +63,15 @@ export async function readAccountPageSource(args: {
   });
   if (!source.exists) return null;
   await readAccountPageServeState({ env: args.env, accountId, pageId });
-  assertPageSourceContract({ source: source.value, accountId, pageId });
   return source.value;
 }
 
-function pageSummaryFromSource(source: unknown, pageId: string): AccountPageSummary {
-  const accepted = source as {
-    metadata: { title: string; description: string; robots: AccountPageSummary['robots'] };
-    placements: unknown[];
-    createdAt: string;
-    updatedAt: string;
-  };
-  return {
-    pageId,
-    title: accepted.metadata.title,
-    description: accepted.metadata.description,
-    robots: accepted.metadata.robots,
-    placementCount: accepted.placements.length,
-    createdAt: accepted.createdAt,
-    updatedAt: accepted.updatedAt,
-  };
-}
-
-export async function listAccountPages(args: {
+export async function listAccountPageSources(args: {
   env: Env;
   accountId: string;
-}): Promise<{ v: 1; accountId: string; pages: AccountPageSummary[] }> {
+}): Promise<{ v: 1; accountId: string; sources: unknown[] }> {
   const accountId = assertAccountId(args.accountId);
-  const pages: AccountPageSummary[] = [];
+  const sources: unknown[] = [];
   let cursor: string | undefined = undefined;
   do {
     const listed = await args.env.TOKYO_R2.list({
@@ -194,55 +86,11 @@ export async function listAccountPages(args: {
       }
       const source = await readAccountPageSource({ env: args.env, accountId, pageId });
       if (!source) failSourceInvalid([object.key]);
-      pages.push(pageSummaryFromSource(source, pageId));
+      sources.push(source);
     }
     cursor = listed.truncated ? listed.cursor : undefined;
   } while (cursor);
-  pages.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.pageId.localeCompare(right.pageId));
-  return { v: 1, accountId, pages };
-}
-
-export async function listAccountPageIdsPlacingInstance(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-}): Promise<string[]> {
-  const accountId = assertAccountId(args.accountId);
-  const instanceId = String(args.instanceId || '').trim();
-  if (!isCompactInstanceId(instanceId)) {
-    throw new PageOperationError({
-      kind: 'VALIDATION',
-      reasonKey: 'coreui.errors.instance.invalidPayload',
-    });
-  }
-
-  const pageIds: string[] = [];
-  let cursor: string | undefined = undefined;
-  do {
-    const listed = await args.env.TOKYO_R2.list({
-      prefix: `${accountPagesRoot(accountId)}/`,
-      cursor,
-    });
-    for (const object of listed.objects) {
-      if (!object.key.endsWith('/source.json')) continue;
-      const pageId = normalizePageId(object.key.split('/').at(-2));
-      if (!pageId) {
-        failSourceInvalid([object.key]);
-      }
-      const source = await loadStoredPageSource({
-        env: args.env,
-        key: accountPageSourceKey(accountId, pageId),
-      });
-      if (!source.exists) failSourceInvalid([object.key]);
-      assertPageSourceContract({ source: source.value, accountId, pageId });
-      const accepted = source.value as { placements: Array<{ instanceId: string }> };
-      if (accepted.placements.some((placement) => placement.instanceId === instanceId)) {
-        pageIds.push(pageId);
-      }
-    }
-    cursor = listed.truncated ? listed.cursor : undefined;
-  } while (cursor);
-  return pageIds;
+  return { v: 1, accountId, sources };
 }
 
 export async function saveAccountPageSource(args: {
@@ -250,7 +98,7 @@ export async function saveAccountPageSource(args: {
   accountId: string;
   pageId: string;
   source: unknown;
-}): Promise<{ source: unknown; summary: AccountPageSummary }> {
+}): Promise<{ source: unknown }> {
   const accountId = assertAccountId(args.accountId);
   const pageId = normalizePageId(args.pageId);
   if (!pageId) {
@@ -266,15 +114,8 @@ export async function saveAccountPageSource(args: {
       reasonKey: 'tokyo.errors.page.notFound',
     });
   }
-  assertPageSourceContract({ source: args.source, accountId, pageId });
-  const nextSource = {
-    ...(args.source as Record<string, unknown>),
-    version: (previous as { version: number }).version + 1,
-    updatedAt: new Date().toISOString(),
-  };
-  const summary = pageSummaryFromSource(nextSource, pageId);
-  await putJson(args.env, accountPageSourceKey(accountId, pageId), nextSource);
-  return { source: nextSource, summary };
+  await putJson(args.env, accountPageSourceKey(accountId, pageId), args.source);
+  return { source: args.source };
 }
 
 export async function createAccountPageSource(args: {
@@ -282,7 +123,7 @@ export async function createAccountPageSource(args: {
   accountId: string;
   pageId: string;
   source: unknown;
-}): Promise<{ source: unknown; summary: AccountPageSummary }> {
+}): Promise<{ source: unknown }> {
   const accountId = assertAccountId(args.accountId);
   const pageId = normalizePageId(args.pageId);
   if (!pageId) {
@@ -298,10 +139,8 @@ export async function createAccountPageSource(args: {
       reasonKey: 'tokyo.errors.page.alreadyExists',
     });
   }
-  assertPageSourceContract({ source: args.source, accountId, pageId });
-  const summary = pageSummaryFromSource(args.source, pageId);
   await putJson(args.env, accountPageSourceKey(accountId, pageId), args.source);
-  return { source: args.source, summary };
+  return { source: args.source };
 }
 
 export async function deleteAccountPageSource(args: {

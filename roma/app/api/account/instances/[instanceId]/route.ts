@@ -4,6 +4,8 @@ import {
   deleteAccountInstanceFromTokyo,
   saveAccountInstanceInTokyo,
 } from '@roma/lib/account-instance-direct';
+import { listAccountPageSourcesInTokyo } from '@roma/lib/account-page-direct';
+import { pageIdsPlacingInstance } from '@roma/lib/account-page-source';
 import {
   compileWidgetForInstancePackage,
   materializeAccountInstancePublicPackage,
@@ -222,6 +224,46 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     return withSession(
       request,
       NextResponse.json({ error: instanceId.error }, { status: instanceId.status }),
+      current.value.setCookies,
+    );
+  }
+
+  const pageSources = await listAccountPageSourcesInTokyo({
+    accountId,
+    accountCapsule: current.value.authzToken,
+    requestId: current.value.requestId,
+  });
+  if (!pageSources.ok) {
+    return routeFailureResponse(request, pageSources, current.value.setCookies);
+  }
+  const placedPageIds = pageIdsPlacingInstance({
+    sources: pageSources.value.sources,
+    instanceId,
+  });
+  if (!placedPageIds) {
+    return withSession(
+      request,
+      NextResponse.json(
+        { error: { kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.invalidPayload' } },
+        { status: 422 },
+      ),
+      current.value.setCookies,
+    );
+  }
+  if (placedPageIds.length) {
+    return withSession(
+      request,
+      NextResponse.json(
+        {
+          error: {
+            kind: 'VALIDATION',
+            reasonKey: 'coreui.errors.instance.placedOnPage',
+            detail: 'Remove this widget from every page before deleting it.',
+            pageIds: placedPageIds,
+          },
+        },
+        { status: 422 },
+      ),
       current.value.setCookies,
     );
   }

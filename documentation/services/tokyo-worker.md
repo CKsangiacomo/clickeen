@@ -128,11 +128,12 @@ Generated page package files live beside the page source under:
 accounts/{accountPublicId}/pages/{pageId}/
 ```
 
-Roma owns page product decisions. Tokyo-worker stores page source, any submitted
-page package files, and serve state under the account path Roma names. Current
-account page publish is unavailable until Roma writes page packages. Tokyo-worker
-rejects save/delete operations against published page source until Roma unpublishes
-the page.
+Roma owns page product decisions, page source validation, page source save
+stamps, list summaries, and placement rules. Tokyo-worker stores page source,
+any submitted page package files, and serve state under the account path Roma
+names. Current account page publish is unavailable until Roma writes page
+packages. Tokyo-worker rejects save/delete operations against published page
+source until Roma unpublishes the page.
 
 ## Public Serving
 

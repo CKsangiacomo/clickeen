@@ -3,6 +3,11 @@ import {
   isCompactAccountPublicId,
   isCompactPageId,
 } from '@clickeen/ck-contracts/overlay-identity';
+import {
+  accountPageSummaryFromSource,
+  normalizeAccountPageSource,
+  sortAccountPageSummaries,
+} from './account-page-source';
 import { callTokyo, type TokyoCallContext } from './tokyo-client';
 
 export type DirectPageRouteError = {
@@ -114,30 +119,8 @@ function notFoundFailure(args: { reasonKey: string; detail?: string }): RouteFai
   };
 }
 
-function normalizeRobots(value: unknown): PageRobots | null {
-  return value === 'index,follow' || value === 'noindex,nofollow' ? value : null;
-}
-
 function normalizePageSource(raw: unknown): AccountPageSource | null {
-  return isRecord(raw) ? raw as AccountPageSource : null;
-}
-
-function normalizePageSummary(raw: unknown): AccountPageSummary | null {
-  if (!isRecord(raw)) return null;
-  const pageId = isCompactPageId(raw.pageId) ? raw.pageId : null;
-  const title = typeof raw.title === 'string' && raw.title ? raw.title : null;
-  const description = typeof raw.description === 'string' ? raw.description : null;
-  const robots = normalizeRobots(raw.robots);
-  const placementCount =
-    typeof raw.placementCount === 'number' && Number.isInteger(raw.placementCount) && raw.placementCount >= 0
-      ? raw.placementCount
-      : null;
-  const createdAt = typeof raw.createdAt === 'string' && raw.createdAt ? raw.createdAt : null;
-  const updatedAt = typeof raw.updatedAt === 'string' && raw.updatedAt ? raw.updatedAt : null;
-  if (!pageId || !title || description == null || !robots || placementCount == null || !createdAt || !updatedAt) {
-    return null;
-  }
-  return { pageId, title, description, robots, placementCount, createdAt, updatedAt };
+  return normalizeAccountPageSource(raw);
 }
 
 function normalizePublishStatus(value: unknown): PagePublishStatus | null {
@@ -162,30 +145,28 @@ function normalizePagePublishPayload(raw: unknown): AccountPagePublishResult | n
   return { accountId, pageId, publishStatus, changed };
 }
 
-function normalizePageSummaries(raw: unknown): AccountPageSummary[] | null {
+function normalizePageSources(raw: unknown): AccountPageSource[] | null {
   if (!Array.isArray(raw)) return null;
-  const pages = raw.map(normalizePageSummary);
-  if (pages.some((page) => !page)) return null;
-  return pages as AccountPageSummary[];
+  const sources = raw.map((entry) => normalizeAccountPageSource(entry));
+  if (sources.some((source) => !source)) return null;
+  return sources as AccountPageSource[];
 }
 
 function normalizePageMutationPayload(raw: unknown): {
   source: AccountPageSource;
-  summary: AccountPageSummary;
 } | null {
   if (!isRecord(raw)) return null;
   const source = normalizePageSource(raw.source);
-  const summary = normalizePageSummary(raw.summary);
-  if (!source || !summary) return null;
-  return { source, summary };
+  if (!source) return null;
+  return { source };
 }
 
-export async function listAccountPagesInTokyo(args: {
+export async function listAccountPageSourcesInTokyo(args: {
   accountId: string;
   accountCapsule?: string | null;
   internalServiceName?: string | null;
   requestId?: string | null;
-}): Promise<{ ok: true; value: { accountId: string; pages: AccountPageSummary[] } } | RouteFailure> {
+}): Promise<{ ok: true; value: { accountId: string; sources: AccountPageSource[] } } | RouteFailure> {
   const result = await callTokyo(tokyoCallContext(args), {
     path: `/__internal/accounts/${encodeURIComponent(args.accountId)}/pages`,
     method: 'GET',
@@ -196,9 +177,26 @@ export async function listAccountPagesInTokyo(args: {
   if (!result.ok) return result;
   const payload = isRecord(result.value) ? result.value : null;
   const accountId = isCompactAccountPublicId(payload?.accountId) ? payload.accountId : null;
-  const pages = normalizePageSummaries(payload?.pages);
-  if (!accountId || !pages) return invalidTokyoPayload('invalid Tokyo account pages list payload');
-  return { ok: true, value: { accountId, pages } };
+  const sources = normalizePageSources(payload?.sources);
+  if (!accountId || !sources) return invalidTokyoPayload('invalid Tokyo account page sources list payload');
+  return { ok: true, value: { accountId, sources } };
+}
+
+export async function listAccountPagesInTokyo(args: {
+  accountId: string;
+  accountCapsule?: string | null;
+  internalServiceName?: string | null;
+  requestId?: string | null;
+}): Promise<{ ok: true; value: { accountId: string; pages: AccountPageSummary[] } } | RouteFailure> {
+  const result = await listAccountPageSourcesInTokyo(args);
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    value: {
+      accountId: result.value.accountId,
+      pages: sortAccountPageSummaries(result.value.sources.map(accountPageSummaryFromSource)),
+    },
+  };
 }
 
 export async function createAccountPageInTokyo(args: {
@@ -219,19 +217,12 @@ export async function createAccountPageInTokyo(args: {
   if (!result.ok) return result;
   const payload = normalizePageOpenPayload(result.value);
   if (!payload) return invalidTokyoPayload('invalid Tokyo create page payload');
+  const summary = accountPageSummaryFromSource(payload.source);
   return {
     ok: true,
     value: {
       source: payload.source,
-      summary: {
-        pageId: payload.source.pageId,
-        title: payload.source.metadata.title,
-        description: payload.source.metadata.description,
-        robots: payload.source.metadata.robots,
-        placementCount: payload.source.placements.length,
-        createdAt: payload.source.createdAt,
-        updatedAt: payload.source.updatedAt,
-      },
+      summary,
       publishStatus: payload.publishStatus,
     },
   };
@@ -279,7 +270,7 @@ export async function saveAccountPageInTokyo(args: {
   if (!result.ok) return result;
   const payload = normalizePageMutationPayload(result.value);
   if (!payload) return invalidTokyoPayload('invalid Tokyo save page payload');
-  return { ok: true, value: payload };
+  return { ok: true, value: { source: payload.source, summary: accountPageSummaryFromSource(payload.source) } };
 }
 
 export async function deleteAccountPageFromTokyo(args: {

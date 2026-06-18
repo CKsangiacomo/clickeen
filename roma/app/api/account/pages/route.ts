@@ -12,6 +12,10 @@ import type {
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import {
+  accountPageSummaryFromSource,
+  normalizeAccountPageSource,
+} from '@roma/lib/account-page-source';
+import {
   resolveCurrentAccountRouteContext,
   withSession,
 } from '../_lib/current-account-route';
@@ -158,7 +162,8 @@ export async function POST(request: NextRequest) {
   }
 
   const source = createPageSourceFromPayload(bodyResult.payload, accountId, accountLocales.localePolicy);
-  if (!source) {
+  const normalizedSource = normalizeAccountPageSource(source, { accountId, pageId: source?.pageId });
+  if (!source || !normalizedSource) {
     return withSession(
       request,
       NextResponse.json(
@@ -168,11 +173,12 @@ export async function POST(request: NextRequest) {
       current.value.setCookies,
     );
   }
+  const summary = accountPageSummaryFromSource(normalizedSource);
 
   const result = await createAccountPageInTokyo({
     accountId,
     accountCapsule: current.value.authzToken,
-    source,
+    source: normalizedSource,
     requestId: current.value.requestId,
   });
   if (!result.ok) {
@@ -189,7 +195,7 @@ export async function POST(request: NextRequest) {
         accountId,
         pageId: result.value.source.pageId,
         source: result.value.source,
-        summary: result.value.summary,
+        summary,
         publishStatus: result.value.publishStatus,
       },
       { status: 201 },
