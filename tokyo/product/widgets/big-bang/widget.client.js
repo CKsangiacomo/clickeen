@@ -110,7 +110,7 @@
           title: { varKey: 'title' },
           body: { varKey: 'body' },
           button: { varKey: 'button' },
-          localeSwitcher: { varKey: 'localeSwitcher' },
+          localeSwitcher: { varKey: 'locale-switcher' },
           bigBang: { varKey: 'bigBang' },
         },
         { locale: context && context.locale, instanceId: context && context.instanceId },

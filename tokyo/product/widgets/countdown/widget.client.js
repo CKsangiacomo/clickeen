@@ -488,7 +488,7 @@
         timer: { varKey: 'timer' },
         label: { varKey: 'label' },
         button: { varKey: 'button' },
-        localeSwitcher: { varKey: 'localeSwitcher' },
+        localeSwitcher: { varKey: 'locale-switcher' },
       },
       {
         locale: runtimeContext && runtimeContext.locale,

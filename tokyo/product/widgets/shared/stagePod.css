@@ -68,6 +68,7 @@ body {
 
 .pod {
   width: auto;
+  container-type: inline-size;
   background: var(--pod-bg, transparent);
   padding: var(--pod-pad-desktop-top, 0) var(--pod-pad-desktop-right, 0)
     var(--pod-pad-desktop-bottom, 0) var(--pod-pad-desktop-left, 0);
@@ -100,4 +101,54 @@ body {
 .pod[data-width-mode='full'] {
   width: 100%;
   max-width: 100%;
+}
+
+[data-ck-widget],
+.ck-headerLayout,
+.ck-headerLayout__body {
+  min-width: 0;
+  max-width: 100%;
+}
+
+[data-ck-widget]
+  :where(
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    [role='heading'],
+    [data-role$='title'],
+    [data-role$='headline'],
+    [data-role$='statement'],
+    [data-role$='question-text']
+  ) {
+  overflow-wrap: break-word;
+  word-break: normal;
+  text-wrap: balance;
+}
+
+[data-ck-widget]
+  :where(
+    [data-role$='subtitle'],
+    [data-role$='eyebrow'],
+    [data-role$='support'],
+    [data-role$='supporting-text'],
+    [data-role$='copy'],
+    [data-role$='answer'],
+    [data-role$='label'],
+    [data-role$='caption'],
+    [data-role$='section-title']
+  ) {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+[data-ck-widget] :where(a, button, [data-role$='cta'], [data-role$='action']) {
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: break-word;
 }

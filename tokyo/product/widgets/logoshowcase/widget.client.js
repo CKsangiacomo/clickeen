@@ -856,6 +856,7 @@
         title: { varKey: 'title' },
         body: { varKey: 'body' },
         button: { varKey: 'button' },
+        localeSwitcher: { varKey: 'locale-switcher' },
       },
       { locale: runtimeContext && runtimeContext.locale, instanceId: resolvedInstanceId },
     );

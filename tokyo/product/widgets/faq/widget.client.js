@@ -494,6 +494,7 @@
         question: { varKey: 'question' },
         answer: { varKey: 'answer' },
         button: { varKey: 'button' },
+        localeSwitcher: { varKey: 'locale-switcher' },
       },
       { locale: runtimeContext && runtimeContext.locale, instanceId: resolvedInstanceId },
     );

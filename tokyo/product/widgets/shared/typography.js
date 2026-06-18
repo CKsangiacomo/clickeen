@@ -39,6 +39,8 @@
     label: 'var(--lh-tight)',
     button: 'var(--lh-tight)',
   });
+  const FLUID_TYPOGRAPHY_REFERENCE_WIDTH = 960;
+  const FLUID_TYPOGRAPHY_MIN_PRESET = 'xs';
 
   const SCRIPT_TYPOGRAPHY_PROFILES = Object.freeze({
     latin: Object.freeze({
@@ -263,6 +265,36 @@
     if (/^var\(.+\)$/.test(trimmed)) return true;
     if (/^(?:calc|clamp|min|max)\(.+\)$/.test(trimmed)) return true;
     return /^-?\d+(?:\.\d+)?(px|rem|em|%|vh|vw|vmin|vmax|ch|ex|cm|mm|in|pt|pc)$/.test(trimmed);
+  }
+
+  function parsePxLength(value) {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    if (/^0(?:\.0+)?$/.test(trimmed)) return 0;
+    const match = trimmed.match(/^(-?\d+(?:\.\d+)?)px$/);
+    if (!match) return null;
+    const parsed = Number(match[1]);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  function formatCssNumber(value) {
+    const rounded = Math.round(value * 10000) / 10000;
+    return Number.isInteger(rounded) ? String(rounded) : String(rounded).replace(/0+$/, '').replace(/\.$/, '');
+  }
+
+  function formatPxLength(value) {
+    return `${formatCssNumber(value)}px`;
+  }
+
+  function resolveFluidSizeValue(sizeValue, scale) {
+    const maxPx = parsePxLength(sizeValue);
+    const minPx =
+      scale && typeof scale === 'object' ? parsePxLength(scale[FLUID_TYPOGRAPHY_MIN_PRESET]) : null;
+    if (maxPx === null || minPx === null || maxPx <= 0 || minPx <= 0 || minPx >= maxPx) {
+      return sizeValue;
+    }
+    const preferredCqi = (maxPx * 100) / FLUID_TYPOGRAPHY_REFERENCE_WIDTH;
+    return `clamp(${formatPxLength(minPx)}, ${formatCssNumber(preferredCqi)}cqi, ${formatPxLength(maxPx)})`;
   }
 
   function inferScaleKind(scale) {
@@ -784,6 +816,7 @@
       if (scaleKind === 'number') {
         sizeValue = `${String(sizeValue).trim()}px`;
       }
+      sizeValue = resolveFluidSizeValue(sizeValue, scale);
       const trackingValue = resolveTrackingValue(roleKey, role);
       const lineHeightValue = resolveLineHeightValue(roleKey, role, runtimeScript);
 

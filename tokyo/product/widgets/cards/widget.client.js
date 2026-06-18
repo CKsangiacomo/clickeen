@@ -372,7 +372,7 @@
           title: { varKey: 'title' },
           body: { varKey: 'body' },
           button: { varKey: 'button' },
-          localeSwitcher: { varKey: 'localeSwitcher' },
+          localeSwitcher: { varKey: 'locale-switcher' },
           cardTitle: { varKey: 'card-title' },
           cardCopy: { varKey: 'card-copy' },
         },

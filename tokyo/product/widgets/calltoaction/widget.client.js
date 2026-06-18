@@ -306,7 +306,7 @@
         title: { varKey: 'title' },
         body: { varKey: 'body' },
         button: { varKey: 'button' },
-        localeSwitcher: { varKey: 'localeSwitcher' },
+        localeSwitcher: { varKey: 'locale-switcher' },
       };
       if (hasTypographyRole(state, 'eyebrow')) {
         typographyRoles.eyebrow = { varKey: 'eyebrow' };
