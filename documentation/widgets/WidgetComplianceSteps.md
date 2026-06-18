@@ -477,9 +477,8 @@ OUTPUT
 - Vertical rhythm is **clusters + groups only**. No manual spacing, cluster
   `gap`/`space-after`, or ungrouped Core fields that visually drift from shared
   Shell controls.
-- Themes:
-  - Appearance includes a dropdown-actions control bound to `appearance.theme`.
-  - Any manual edits to theme-controlled fields must reset `appearance.theme` to `custom` (editor behavior; runtime reads only final state).
+- Appearance is controlled by explicit shared Shell controls and widget Core
+  controls.
 
 Compiler notes (current codebase behavior)
 
@@ -488,7 +487,8 @@ Compiler notes (current codebase behavior)
 - Bob renders shared Header fields only when `spec.json.editor` declares the matching shared node.
 - Bob renders widget Core controls only from explicit field nodes in the same panel contract.
 - Bob renders a standardized Typography panel only when `spec.json.editor` declares the `typography` shared panel and `defaults.typography.roles` exists.
-- Bob compiles theme controls from local `tokyo/product/themes/themes.json`; missing or malformed theme truth is a compiler error.
+- Bob compiles the shared and widget Core controls declared by the widget
+  editor contract.
 
 GATE
 

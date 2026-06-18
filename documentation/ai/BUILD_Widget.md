@@ -59,7 +59,7 @@ Shell-owned:
 - CTA state and editor controls.
 - Typography primitive, locale-aware typography context, and required role
   scale rules.
-- Theme hook/control. Runtime reads final state only.
+- Explicit shared appearance controls. Runtime reads final state only.
 - Locale switcher and preview localization plumbing.
 - Branding/backlink behavior.
 - Runtime registration, state-update binding, and message plumbing.
@@ -94,9 +94,10 @@ Stop before changing files if:
 - You cannot classify every requested behavior as Shell-owned or Core-owned.
 - You cannot produce the pre-code manifest listed below.
 - The request requires Shell changes, new shared controls, new shared runtime,
-  new theme behavior, locale-switcher behavior, preview-localization behavior,
-  branding behavior, runtime message behavior, or package assembly changes, and
-  the PRD does not explicitly own that shared surface.
+  new shared appearance behavior, locale-switcher behavior,
+  preview-localization behavior, branding behavior, runtime message behavior, or
+  package assembly changes, and the PRD does not explicitly own that shared
+  surface.
 - The request needs a new Dieter primitive/token.
 - Validation cannot be run or fails.
 
@@ -147,8 +148,8 @@ PRD step and green evidence.
 ## Forbidden Actions
 
 - Do not reimplement Stage/Pod, Header, Header CTA, Core sizing, Typography,
-  Locale switcher, Branding, themes, preview localization, or runtime binding per
-  widget.
+  Locale switcher, Branding, shared appearance controls, preview localization,
+  or runtime binding per widget.
 - Do not hand-author editor fields for `header.*`, `headerCta.*`, or
   `coreSize.*`; use shared nodes.
 - Do not add Shell aliases such as `headline`, `subheadline`, `copy`, `button`,
@@ -206,8 +207,8 @@ Rules:
   `localeSwitcher`.
 - Any typography role outside global roles must define
   `typography.roleScales.{role}`.
-- `appearance.theme` uses the existing theme hook only. Creating or changing
-  global themes is out of scope.
+- Appearance behavior uses explicit shared Shell controls and explicit Core
+  controls.
 - Defaults are product starter state, not placeholders. Every control path and
   every runtime-read path must exist in `defaults`.
 - Repeatable Core items must have stable identity and useful starter content

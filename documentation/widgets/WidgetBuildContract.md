@@ -173,10 +173,10 @@ Stop if:
 - Editable text paths cannot be mapped.
 - Limits cannot be mapped to existing entitlement keys.
 - The change requires Shell mutation, new shared controls, new shared runtime,
-  new theme behavior, locale-switcher behavior, preview-localization behavior,
-  branding behavior, runtime message behavior, Bob/Roma/Tokyo-worker/Venice/
-  Prague/Dieter edits, or package assembly changes, and the PRD does not
-  explicitly own that shared surface.
+  new shared appearance behavior, locale-switcher behavior,
+  preview-localization behavior, branding behavior, runtime message behavior,
+  Bob/Roma/Tokyo-worker/Venice/Prague/Dieter edits, or package assembly
+  changes, and the PRD does not explicitly own that shared surface.
 - The change alters social-share behavior, branding/backlink behavior, package
   assembly, or shared Settings semantics without PRD ownership of that shared
   surface.
@@ -213,7 +213,7 @@ Shell-owned UX/runtime:
 - Header title/subtitle and the optional Header CTA primitive.
 - Header CTA styling and behavior.
 - Typography primitive and locale-aware typography context.
-- Theme hook/control.
+- Explicit shared appearance controls.
 - Locale switcher and preview localization plumbing.
 - Branding/backlink behavior.
 - Social-share package/runtime behavior.
@@ -1049,18 +1049,15 @@ MUST NOT
 - Add separate text color controls outside typography unless PRD requires it.
 - Invent typography behavior per widget.
 
-### 12) Themes
+### 12) Appearance Controls
 
-Themes are global, editor-only, and already sourced from
-`tokyo/product/themes/themes.json`.
+Appearance behavior is controlled through explicit shared Shell controls and
+explicit Core controls.
 
-Widget work MUST include the existing theme hook/control through the shared
-appearance contract.
+Widget work MUST use explicit shared Shell controls and explicit Core controls
+for appearance behavior.
 
-Widget work MUST NOT create or change global themes unless the PRD explicitly
-owns theme changes.
-
-Runtime does not interpret themes. Runtime reads final state values.
+Runtime reads saved state values.
 
 ### 13) Preview And Runtime
 

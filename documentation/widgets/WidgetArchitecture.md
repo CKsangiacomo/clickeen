@@ -145,7 +145,7 @@ Shell is the reusable widget substrate:
 - Header placement/alignment.
 - Stage/Pod layout and appearance.
 - Typography.
-- Theme hook.
+- Explicit shared appearance controls.
 - Locale switcher.
 - Preview localization plumbing.
 - Branding/backlink.
@@ -691,17 +691,15 @@ Browser -> clk.live/{accountPublicId}/{instanceId}
 Public runtime reads generated artifacts. It does not fetch product databases or
 authoring source at request time.
 
-### Theme Flow
+### Appearance Flow
 
 ```text
-tokyo/product/themes/themes.json -> Bob compiles theme options
--> selection previews in editor
--> Apply theme writes final state values
--> runtime reads final state only
+widget spec shared Shell/Core controls -> Bob compiles explicit controls
+-> editor writes explicit instance values
+-> runtime reads saved state
 ```
 
-Widget work uses the existing theme hook. It does not create widget-specific
-theme systems.
+Widget work uses explicit shared Shell controls and explicit Core controls.
 
 ---
 

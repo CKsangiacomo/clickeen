@@ -86,7 +86,6 @@ const TOKYO_DEPLOY_ASSET_ROUTES: ReadonlyArray<{ prefix: string; keyPrefix: stri
   { prefix: '/widgets/', keyPrefix: 'product/widgets/' },
   { prefix: '/dieter/', keyPrefix: 'dieter/' },
   { prefix: '/i18n/', keyPrefix: 'product/roma/i18n/public/' },
-  { prefix: '/themes/', keyPrefix: 'product/themes/' },
   { prefix: '/prague/l10n/', keyPrefix: 'prague/l10n/' },
   { prefix: '/prague/assets/', keyPrefix: 'prague/assets/' },
 ];

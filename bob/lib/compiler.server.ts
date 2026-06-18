@@ -10,7 +10,6 @@ import { normalizeWidgetNormalizationSpec } from './compiler/modules/normalizati
 import { buildHeaderPresets } from './compiler/modules/header';
 import { resolveTokyoBaseUrl } from './env/tokyo';
 import { validateShowIfExpression } from '../components/td-menu-content/showIf';
-import themesJson from '../../tokyo/product/themes/themes.json';
 
 function findTagEnd(source: string, startIndex: number): number {
   let quote: '"' | "'" | null = null;
@@ -71,7 +70,6 @@ function isTokyoAssetPath(pathname: string): boolean {
   return (
     pathname.startsWith('/assets/account/') ||
     pathname.startsWith('/widgets/') ||
-    pathname.startsWith('/themes/') ||
     pathname.startsWith('/dieter/')
   );
 }
@@ -187,45 +185,6 @@ function normalizePresets(raw: unknown): WidgetPresets | undefined {
   return Object.keys(normalized).length ? normalized : undefined;
 }
 
-type ThemeRegistry = {
-  version?: number;
-  themes: Array<{
-    id: string;
-    label: string;
-    values: Record<string, unknown>;
-  }>;
-};
-
-function readThemeRegistry(raw: unknown): ThemeRegistry {
-  if (!isPlainObject(raw) || raw.version !== 1 || !Array.isArray(raw.themes) || raw.themes.length === 0) throw new Error('[BobCompiler] Local theme registry is missing or malformed');
-  const seen = new Set<string>();
-  const themes = raw.themes.map((theme: any): ThemeRegistry['themes'][number] => {
-    if (!isPlainObject(theme) || typeof theme.id !== 'string' || !theme.id || /\s/.test(theme.id) || typeof theme.label !== 'string' || !theme.label || !isPlainObject(theme.values) || Object.keys(theme.values).length === 0 || seen.has(theme.id)) throw new Error('[BobCompiler] Local theme registry is missing or malformed');
-    const unsupported = Object.keys(theme.values).find((path) => !/^(stage|pod|appearance|typography)\./.test(path));
-    if (unsupported) throw new Error(`[BobCompiler] Theme ${theme.id} has unsupported path ${unsupported}`);
-    seen.add(theme.id);
-    return { id: theme.id, label: theme.label, values: theme.values };
-  });
-  return { version: 1, themes };
-}
-
-function buildThemeOptions(themes: ThemeRegistry['themes']): Array<{ label: string; value: string }> {
-  return [{ label: 'Custom', value: 'custom' }, ...themes.map((theme) => ({ label: theme.label, value: theme.id }))];
-}
-
-function buildThemePresets(themes: ThemeRegistry['themes']): WidgetPresets {
-  const values: Record<string, Record<string, unknown>> = {};
-  themes.forEach((theme) => {
-    values[theme.id] = theme.values;
-  });
-  return {
-    'appearance.theme': {
-      customValue: 'custom',
-      values,
-    },
-  };
-}
-
 export async function compileWidgetServer(widgetJson: RawWidget): Promise<CompiledWidgetCore> {
   if (!widgetJson || typeof widgetJson !== 'object') {
     throw new Error('[BobCompiler] Invalid widget JSON payload');
@@ -257,11 +216,6 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
   const parsed = parsePanels(editorHtml);
   const defaultsWithAssets = rewriteAssetUrlsInDefaults(defaults, tokyoBase);
 
-  const themeRegistry = rewriteAssetUrlsInDefaults(readThemeRegistry(themesJson) as unknown as Record<string, unknown>, tokyoBase) as unknown as ThemeRegistry;
-
-  const themeOptions = buildThemeOptions(themeRegistry.themes);
-  const themePresets = buildThemePresets(themeRegistry.themes);
-
   const hasHeader = defaults.header != null;
   const hasCta = defaults.headerCta != null;
   const headerPresets = hasHeader && hasCta ? buildHeaderPresets() : undefined;
@@ -271,8 +225,7 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     ...(headerPresets ?? {}),
     ...(presetsRaw ?? {}),
   };
-  const presetsMerged = { ...presetsBase, ...themePresets };
-  const presetsFinal = Object.keys(presetsMerged).length > 0 ? presetsMerged : undefined;
+  const presetsFinal = Object.keys(presetsBase).length > 0 ? presetsBase : undefined;
   const presets = presetsFinal
     ? (rewriteAssetUrlsInDefaults(presetsFinal as Record<string, unknown>, tokyoBase) as WidgetPresets)
     : undefined;
@@ -281,7 +234,6 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
     ...compileControlsFromPanels({
       panels: parsed.panels,
       defaults: defaultsWithAssets,
-      optionsByPath: { 'appearance.theme': themeOptions },
     }),
   ];
 
@@ -291,10 +243,6 @@ export async function compileWidgetServer(widgetJson: RawWidget): Promise<Compil
 
   const widgetContext = {
     itemKey,
-    themeOptions,
-    themeSourcePath: 'appearance.theme',
-    themeApplyLabel: 'Apply theme',
-    themeCancelLabel: 'Cancel',
   };
 
   const renderedPanels: CompiledPanel[] = await Promise.all(

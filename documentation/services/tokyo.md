@@ -36,7 +36,6 @@ Git-authored deploy mapping:
 
 ```txt
 tokyo/product/widgets/**  -> product/widgets/**
-tokyo/product/themes/**   -> product/themes/**
 tokyo/product/dieter/**   -> dieter/**
 tokyo/product/fonts/**    -> fonts/**
 tokyo/roma/**             -> product/roma/**
@@ -123,7 +122,6 @@ Public static/read paths:
 
 - `/widgets/**` -> canonical R2 `product/widgets/**`
 - `/dieter/**`
-- `/themes/**`
 - `/fonts/**`
 - `/i18n/**`
 - `https://dev.clk.live/{accountPublicId}/{instanceId}` in cloud-dev

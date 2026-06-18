@@ -559,7 +559,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "groupId": "appearance-theme",
+                "groupId": "appearance-timer",
                 "path": "countdown.appearance.timerStyle",
                 "label": "Timer style",
                 "showIf": {
@@ -586,7 +586,7 @@
               {
                 "kind": "field",
                 "type": "dropdown-actions",
-                "groupId": "appearance-theme",
+                "groupId": "appearance-timer",
                 "path": "countdown.appearance.timeFormat",
                 "label": "Time format",
                 "showIf": {
@@ -617,7 +617,7 @@
               {
                 "kind": "field",
                 "type": "toggle",
-                "groupId": "appearance-theme",
+                "groupId": "appearance-timer",
                 "path": "countdown.appearance.showLabels",
                 "label": "Show unit labels",
                 "showIf": {

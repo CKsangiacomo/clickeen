@@ -229,7 +229,8 @@ Every control must consume the shared size ladder. Adjusting token mappings here
 
 - `--color-system-*` tokens provide accent colors; components reference them via variants (e.g., `data-variant="primary"`).
 - `color-mix` is used for hover/active states (e.g., mixing the base color with `--color-text` or transparent white).
-- Light/dark switching uses the aforementioned theme hooks; tokens degrade gracefully when custom themes are applied (override the base token values).
+- Light/dark switching uses Dieter token selectors. Product surfaces override
+  tokens explicitly when they need a different color treatment.
 
 ### 1.6 Icons
 

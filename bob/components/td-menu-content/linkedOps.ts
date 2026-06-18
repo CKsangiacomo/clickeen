@@ -131,7 +131,6 @@ export function expandLinkedOps(args: {
   const expanded: WidgetOp[] = [];
   const presetByPath = new Map(presetEntries.map((entry) => [entry.sourcePath, entry]));
   const presetOps = new Map<string, WidgetOp>();
-  const themeScopePrefixes = ['stage.', 'pod.', 'appearance.', 'typography.'];
   const insideShadowLinkedOverrides = new Map<string, boolean>();
   const requireAllowedPath = (path: string) => {
     if (!isAllowedPath(path)) throw new Error(`[BobLinkedOps] preset target path "${path}" has no compiled control`);
@@ -172,9 +171,6 @@ export function expandLinkedOps(args: {
       args.ops.some((op) => {
         if (typeof op.path !== 'string') return false;
         if (op.path === entry.sourcePath) return false;
-        if (entry.sourcePath === 'appearance.theme') {
-          return themeScopePrefixes.some((prefix) => op.path.startsWith(prefix));
-        }
         return targetPaths.some((target) => pathMatchesTarget(op.path, target));
       });
 
