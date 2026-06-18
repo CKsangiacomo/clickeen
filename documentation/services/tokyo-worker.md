@@ -168,9 +168,9 @@ Roma reaches Tokyo-worker through private Cloudflare service bindings for
 storage commands. The request carries the Roma account authz capsule
 and the account public id.
 
-`/__internal/**` is not a public Tokyo route. Internal storage commands,
-asset-control, and translation completion calls must arrive through Cloudflare
-service bindings. Public CORS does not advertise the internal-service header.
+`/__internal/**` is not a public Tokyo route. Internal storage commands and
+asset-control calls must arrive through Cloudflare service bindings. Public
+CORS does not advertise the internal-service header.
 
 Storage command routes cover:
 
@@ -178,7 +178,6 @@ Storage command routes cover:
 - account instance list/open/create/save/rename/delete
 - publish and unpublish
 - translated locale reads and writes
-- translation generation handoff
 - account asset list/upload/resolve/delete
 - page source/package/serve-state operations
 
@@ -199,16 +198,21 @@ product/widgets/{widgetType}/
 Account instances store references and user data. Widget software remains in
 the system product tree.
 
-## Translation Jobs
+## Translated Locale Values
 
-Tokyo-worker stores account-instance translation operation records and locale
-overlay artifacts. Roma submits the current account active-locale snapshot for a
-generation operation; Tokyo-worker reads saved base content, editable-field
-contract facts, locale overlays, and current markers, then records the exact jobs
-sent to San Francisco.
+Tokyo-worker stores translated locale values as exact overlay artifacts under:
 
-San Francisco completion writes durable translated values back through the
-Tokyo account-instance locale boundary.
+```text
+accounts/{accountPublicId}/instances/{instanceId}/overlays/locales/{locale}.json
+```
+
+Tokyo-worker lists, reads, and writes those overlay files for Roma and approved
+internal callers. It does not own translation generation, queue production,
+operation ledgers, AI runtime policy, or completion/failure state.
+
+Roma currently returns translation generation unavailable until San Francisco
+owns a real async generation endpoint. Tokyo-worker does not provide a fallback
+generation route.
 
 ## DevOps
 

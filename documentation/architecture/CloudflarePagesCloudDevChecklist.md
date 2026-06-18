@@ -208,7 +208,7 @@ Worker secrets:
 - San Francisco: `AI_GRANT_HMAC_SECRET`
 
 Pages secrets:
-- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings and account-widget l10n generation records jobs through Tokyo-worker -> San Francisco `SANFRANCISCO_L10N`.
+- Roma: `AI_GRANT_HMAC_SECRET` is required for account Copilot grant/outcome signing. `SUPABASE_SERVICE_ROLE_KEY` is required for Roma-owned account settings writes. Roma -> Tokyo/Tokyo-worker storage commands use service bindings. Account-widget l10n generation currently returns unavailable until San Francisco owns a real async generation endpoint.
 - DevStudio: `DEVSTUDIO_GITHUB_TOKEN` is required for GitHub-backed policy writes.
 
 CI secrets/vars:

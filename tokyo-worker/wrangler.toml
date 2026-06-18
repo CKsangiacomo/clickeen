@@ -27,7 +27,3 @@ PUBLIC_SERVING_BASE_URL = "https://dev.clk.live"
 [[r2_buckets]]
 binding = "TOKYO_R2"
 bucket_name = "tokyo-assets-dev"
-
-[[queues.producers]]
-binding = "INSTANCE_TRANSLATION_JOBS"
-queue = "instance-translation-jobs-dev"

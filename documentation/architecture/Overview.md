@@ -63,13 +63,13 @@ Generated/public artifacts are written only by artifact builders.
 | Widget definitions | Approved widget source under `tokyo/product/widgets/{widgetType}/` read by widget-definition operations | Generated manifests are not source authority. |
 | Account instance source | Tokyo account instance operations over `instance.config.json` and `instance.content.json` | `instance.json` is not written or read by active runtime code. |
 | Account instance listing | `listAccountInstances` | Any account index file is a private cache below the operation, not a Roma API. |
-| Translations | Translated locale value operations by `instanceId + locale` | Locale values live under `overlays/locales/{locale}.json`; operation liveness belongs to Tokyo/Supabase operation state. |
+| Translations | Roma account command boundary; San Francisco must own any future async generation endpoint | Locale values live under `overlays/locales/{locale}.json`; Tokyo-worker stores exact overlay files only. |
 | Publish state | Tokyo publish/unpublish operations and publish status | Generated files are output, not the state machine. |
 | Public serving | `clk.live/{accountPublicId}/{instanceId}` serving stored package artifacts from R2/CDN | Missing artifacts fail visibly; visitor requests do not read Supabase or compose widgets from authoring source. |
 
 ### Why this matters
 
-Product-operation boundaries keep the system fast and understandable. Roma must not make one product action by reading a catalog file, then an account index file, then overlay inventory, then several overlay objects. If a product action needs several pieces of Tokyo state, Tokyo owns the operation and reads those objects internally.
+Product-operation boundaries keep the system fast and understandable. Roma owns account product actions. Tokyo-worker owns exact account storage reads/writes and public file serving.
 
 This keeps customer actions close to one cross-service request, removes stale read windows, and stops storage layouts from becoming accidental architecture.
 
@@ -275,7 +275,7 @@ They may be served by Tokyo-worker through friendly public routes, but Roma, Tok
 
 **Hard security rule:**
 
-- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies, while account-widget translation generation uses the Tokyo-worker -> San Francisco `SANFRANCISCO_L10N` binding.
+- There is no shared-secret bearer lane for product or internal AI execution. Roma Copilot/outcomes and Prague string translation use HMAC-signed request bodies. Account-widget translation generation currently returns unavailable until San Francisco owns a real async generation endpoint.
 
 **DB Pivot Supabase rule:**
 
@@ -340,8 +340,13 @@ Non-negotiable:
 - **Dev surfaces protected**: shared `*.dev` surfaces may be protected behind Cloudflare Access. DevStudio uses Berlin/Google auth on `https://devstudio.clickeen.com`, not Cloudflare Access.
 - **Secrets isolation**:
   - Provider keys live only in San Francisco.
-  - Supabase service role lives only in Berlin/Tokyo-worker where explicitly required.
-  - Roma Copilot/outcome and Prague string-translation calls use HMAC body signatures. Roma -> Tokyo/Tokyo-worker account product control uses private Cloudflare service bindings; account-widget translation generation uses the private Tokyo-worker -> San Francisco service binding.
+  - Supabase service role lives only where explicitly required by the owning
+    backend surface.
+  - Roma Copilot/outcome and Prague string-translation calls use HMAC body
+    signatures. Roma -> Tokyo/Tokyo-worker account product control uses private
+    Cloudflare service bindings. Account-widget translation generation currently
+    returns unavailable until San Francisco owns a real async generation
+    endpoint.
 - **Caching**:
   - Tokyo deploy-managed media is long-cacheable when versioned; avoid cache on widget `spec.json` when iterating in dev.
   - Public embed serving returns generated static files from `clk.live/{accountPublicId}/{instanceId}`.

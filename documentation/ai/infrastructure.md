@@ -52,7 +52,7 @@ Provider/model policy:
 - Roma and San Francisco internal services mint signed grants with direct `AgentRuntimePolicy`.
 - San Francisco enforces the signed `modelsByProvider`, `defaultModel`, optional `selectedModel`, token ceiling, turn ceiling, and timeout ceiling.
 - **Prague strings L10n**: local/dev signed tooling route; OpenAI model comes only from required `OPENAI_MODEL`.
-- **Account-widget Instance Translation Agent**: `widget.instance.translator`. Roma accepts translation work after a successful Tokyo save by building concrete per-locale jobs and enqueueing them on `INSTANCE_TRANSLATION_JOBS`. San Francisco consumes those jobs, enforces the embedded `AgentRuntimePolicy`, produces exact changed-field values, merges complete current-language values, and writes the complete overlay through Tokyo-worker.
+- **Account-widget Instance Translation Agent**: `widget.instance.translator`. The diagnostic agent endpoint remains available, but active product generation currently returns unavailable until San Francisco owns a real async generation endpoint, queue production, and operation state. Tokyo-worker owns only exact translated locale overlay storage.
 
 ## 3) HTTP endpoints
 
@@ -86,15 +86,15 @@ Storage:
 - Persists to D1 table `copilot_outcomes_v1`.
 
 ### `POST /v1/agents/instance-translation/runtime-status`
-Purpose: fast readiness check before Roma accepts queued account-widget translation work.
+Purpose: fast readiness check for the account-widget translation model runtime.
 
 Boundary:
 - Roma calls this through the explicit `SANFRANCISCO_BASE_URL`.
 - The request requires `Authorization: Bearer <AI grant>` with `agent:widget.instance.translator`.
-- San Francisco verifies the selected/default provider is configured in the current worker environment. Missing provider secrets fail before Roma tells Bob that background translation was accepted.
+- San Francisco verifies the selected/default provider is configured in the current worker environment.
 
 ### `POST /v1/agents/instance-translation/translate-saved-instance`
-Purpose: run the account-widget Instance Translation Agent for direct diagnostics and legacy tests. The active save/generate product path uses `INSTANCE_TRANSLATION_JOBS`.
+Purpose: run the account-widget Instance Translation Agent for direct diagnostics and legacy tests. It is not the active product generation path.
 
 Boundary:
 - Roma calls this through the explicit `SANFRANCISCO_BASE_URL`.

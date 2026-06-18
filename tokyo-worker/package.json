@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "deploy": "node ../scripts/infra/ensure-queues.mjs --write --queues instance-translation-jobs-dev && wrangler deploy --routes \"\"",
+    "deploy": "wrangler deploy --routes \"\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

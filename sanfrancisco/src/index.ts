@@ -28,10 +28,6 @@ import {
   resolveLearningCaptureDecision,
   verifyOutcomeSignature,
 } from './telemetry';
-import {
-  handleInstanceTranslationQueueBatch,
-  isInstanceTranslationQueuePayload,
-} from './instance-translation-queue';
 import type {
   AIGrant,
   Env,
@@ -280,25 +276,15 @@ export default class SanFranciscoWorker extends WorkerEntrypoint<Env> {
 
   async queue(batch: MessageBatch<unknown>): Promise<void> {
     const today = new Date().toISOString().slice(0, 10);
-    const nonTranslationMessages: Message<unknown>[] = [];
-    const translationMessages: Message<unknown>[] = [];
-    for (const msg of batch.messages) {
-      if (isInstanceTranslationQueuePayload(msg.body)) translationMessages.push(msg);
-      else nonTranslationMessages.push(msg);
-    }
 
     console.log(JSON.stringify({
       event: 'queue.batch.received',
       service: 'sanfrancisco',
       stage: this.env.ENVIRONMENT ?? 'unknown',
       totalMessages: batch.messages.length,
-      translationMessages: translationMessages.length,
-      nonTranslationMessages: nonTranslationMessages.length,
     }));
 
-    await handleInstanceTranslationQueueBatch(this.env, translationMessages);
-
-    for (const msg of nonTranslationMessages) {
+    for (const msg of batch.messages) {
       const e = msg.body;
       if (!e || typeof e !== 'object' || Array.isArray(e)) {
         msg.ack();

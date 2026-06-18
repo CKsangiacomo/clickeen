@@ -3,7 +3,6 @@ import {
   isRecord,
 } from '@clickeen/ck-contracts';
 import {
-  normalizeTranslationGenerationSummary,
   type TranslationGenerationSummary as InstanceTranslationGenerationSummary,
 } from '@clickeen/ck-contracts/translation-product-state';
 import { callTokyo } from './tokyo-client';
@@ -108,45 +107,6 @@ function normalizeStringArray(raw: unknown): string[] | null {
   return values as string[];
 }
 
-function normalizeGeneratePayload(payload: unknown): InstanceTranslationsGeneratePayload | null {
-  if (!isRecord(payload) || payload.ok !== true || !isRecord(payload.translation)) return null;
-  const translation = payload.translation;
-  const baseLocale = asTrimmedString(translation.baseLocale);
-  const targetLocales = normalizeStringArray(translation.targetLocales);
-  const skippedLocales = normalizeStringArray(translation.skippedLocales);
-  const generation =
-    translation.generation == null
-      ? null
-      : normalizeTranslationGenerationSummary(translation.generation);
-  if (
-    translation.ok !== true ||
-    typeof translation.accepted !== 'boolean' ||
-    !baseLocale ||
-    !targetLocales ||
-    !skippedLocales ||
-    (generation === null && translation.generation != null)
-  ) {
-    return null;
-  }
-  return {
-    ok: true,
-    translation: {
-      ok: true,
-      accepted: translation.accepted,
-      baseLocale,
-      targetLocales,
-      skippedLocales,
-      generation,
-    },
-  };
-}
-
-function normalizeGenerationPayload(payload: unknown): InstanceTranslationGenerationPayload | null {
-  if (!isRecord(payload) || payload.ok !== true) return null;
-  const generation = normalizeTranslationGenerationSummary(payload.generation);
-  return generation ? { ok: true, generation } : null;
-}
-
 export async function loadAccountInstanceTranslations(args: {
   accountId: string;
   instanceId: string;
@@ -185,25 +145,19 @@ export async function generateAccountInstanceTranslations(args: {
   const targetLocales = normalizeStringArray(args.targetLocales);
   if (!baseLocale) return invalidPayload('baseLocale_missing');
   if (!targetLocales) return invalidPayload('targetLocales_invalid');
-  const result = await callTokyo<unknown>(
-    {
-      accountId: args.accountId,
-      accountCapsule: args.accountCapsule,
-      requestId: args.requestId,
+  void args.accountId;
+  void args.instanceId;
+  void args.accountCapsule;
+  void args.requestId;
+  return {
+    ok: false,
+    status: 503,
+    error: {
+      kind: 'UPSTREAM_UNAVAILABLE',
+      reasonKey: 'coreui.errors.translation.generationUnavailable',
+      detail: 'San Francisco translation generation owner is not enabled.',
     },
-    {
-      path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations/generate`,
-      method: 'POST',
-      body: { baseLocale, targetLocales },
-      decode: (payload) => payload,
-      errorKey: 'tokyo.errors.translation.generateFailed',
-      errorDetail: 'tokyo_instance_translation_generate_http_error',
-    },
-  );
-  if (!result.ok) return result;
-  const value = normalizeGeneratePayload(result.value);
-  if (!value) return invalidPayload('tokyo_instance_translation_generate_invalid_payload');
-  return { ok: true, value, status: result.status };
+  };
 }
 
 export async function readAccountInstanceTranslationGeneration(args: {
@@ -212,24 +166,19 @@ export async function readAccountInstanceTranslationGeneration(args: {
   accountCapsule?: string | null;
   requestId?: string | null;
 }): Promise<{ ok: true; value: InstanceTranslationGenerationPayload } | RouteFailure> {
-  const result = await callTokyo<unknown>(
-    {
-      accountId: args.accountId,
-      accountCapsule: args.accountCapsule,
-      requestId: args.requestId,
+  void args.accountId;
+  void args.instanceId;
+  void args.accountCapsule;
+  void args.requestId;
+  return {
+    ok: false,
+    status: 503,
+    error: {
+      kind: 'UPSTREAM_UNAVAILABLE',
+      reasonKey: 'coreui.errors.translation.generationUnavailable',
+      detail: 'San Francisco translation generation owner is not enabled.',
     },
-    {
-      path: `/__internal/instances/${encodeURIComponent(args.instanceId)}/translations/generation`,
-      method: 'GET',
-      decode: (payload) => payload,
-      errorKey: 'tokyo.errors.translation.generationInvalid',
-      errorDetail: 'tokyo_instance_translation_generation_http_error',
-    },
-  );
-  if (!result.ok) return result;
-  const value = normalizeGenerationPayload(result.value);
-  if (!value) return invalidPayload('tokyo_instance_translation_generation_invalid_payload');
-  return { ok: true, value };
+  };
 }
 
 export async function readAccountInstanceTranslationValues(args: {

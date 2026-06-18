@@ -151,15 +151,4 @@ export async function authorizeTranslatedLocaleWriteTransition(args: {
   return auth.ok ? { ok: true } : auth;
 }
 
-export function authorizeTranslationCompletionTransition(req: Request): Response | null {
-  const internalServiceId = String(req.headers.get(INTERNAL_SERVICE_HEADER) || '')
-    .trim()
-    .toLowerCase();
-  if (internalServiceId === TOKYO_INTERNAL_SERVICE_SANFRANCISCO_TRANSLATION) return null;
-  return json(
-    { error: { kind: 'DENY', reasonKey: 'coreui.errors.auth.forbidden' } },
-    { status: 403 },
-  );
-}
-
 export type InternalRouteHandler = (args: TokyoRouteArgs) => Promise<Response | null>;

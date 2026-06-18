@@ -131,8 +131,9 @@ San Francisco is deployed as a **Cloudflare Worker** and currently ships:
   - `GET /healthz`
 - `POST /v1/execute` (requires a Clickeen-signed AI Grant)
 - `POST /v1/outcome` (outcome attach, signed by the calling Clickeen backend surface)
-  - Account-widget l10n ops generation (Tokyo-worker calls San Francisco through the private `SANFRANCISCO_L10N` service binding; no public HTTP route and no shared-secret bearer)
-  - `POST /v1/l10n/translate` (local + cloud-dev only; HMAC body signature; `ENVIRONMENT in {local,dev}`)
+- Account-widget l10n generation currently returns unavailable until San
+  Francisco owns a real async generation endpoint.
+- `POST /v1/l10n/translate` (local + cloud-dev only; HMAC body signature; `ENVIRONMENT in {local,dev}`)
 - Cloudflare bindings:
   - `SF_KV` (agent sessions)
   - `SF_EVENTS` (queue for async event ingestion)

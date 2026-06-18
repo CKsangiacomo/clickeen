@@ -1,6 +1,6 @@
 # PRD 125 - Tokyo-worker Authority Migration Decisions
 
-Status: EXECUTING
+Status: EXECUTED
 Origin: PRD 124E split
 Owner: Product architecture
 Date: 2026-06-17
@@ -42,7 +42,7 @@ Roma, Bob, San Francisco, or shared product contracts.
 | TW-04 page package/publish pipeline           | Decision executed: current account page publish is unavailable until Roma writes page packages.                                         | No current Roma page package writer exists in this PRD scope.                                                            |
 | TW-05 page source authority                   | Decision executed: Roma owns page source validation, save shaping, version stamps, summaries, and placement checks.                   | Tokyo-worker now stores/reads/lists exact page source objects and keeps storage coordinate checks.                        |
 | TW-06 instance source/content composition     | Decision executed: active locales are Roma account settings; Roma materializes and composes source artifacts; Tokyo-worker stores exact files. | Active locales are account settings. Removing Tokyo extraction/remap required Roma/Bob save payload changes first.        |
-| TW-07 translation orchestration               | Decide whether translation orchestration moves to Roma/San Francisco and what storage artifacts Tokyo-worker keeps.                    | This changes policy, AI job creation, ledger ownership, and San Francisco contracts.                                      |
+| TW-07 translation orchestration               | Decision executed: Tokyo-worker translation orchestration, ledger, queue production, registry status, and completion/failure state are deleted. Tokyo-worker keeps exact overlay storage only. | No San Francisco async generation owner exists yet, so Roma returns generation unavailable visibly instead of redressing Tokyo through another wrapper. |
 | TW-10 account widget defaults materialization | Decision executed: Roma materializes and validates account widget defaults; Tokyo-worker stores exact submitted defaults.              | Tokyo-worker seeding from widget specs required a replacement Roma writer before deletion.                                |
 
 ## Execution Law
@@ -214,6 +214,27 @@ Open after this page source authority slice, before the registry/serve-state aut
   orchestration path until TW-07 removes translation ownership from
   Tokyo-worker.
 
-Open after this registry/serve-state authority slice:
+Open after this registry/serve-state authority slice, before the translation orchestration deletion slice:
 
 - TW-07 remains open.
+
+2026-06-17 TW-07 translation orchestration deletion slice:
+
+- Deleted Tokyo-worker translation generation orchestration, operation ledger,
+  queue producer dependency, Supabase instance registry dependency, and
+  completion/failure routes.
+- Removed Tokyo-worker `INSTANCE_TRANSLATION_JOBS`, `SUPABASE_URL`, and
+  `SUPABASE_SERVICE_ROLE_KEY` runtime bindings from active Tokyo-worker code.
+- Tokyo-worker translated-locale routes now only list, read, and write exact
+  `overlays/locales/{locale}.json` files under the account instance folder.
+- Roma still owns the user-facing translation generation command and current
+  account active-locale lookup, but the command now returns
+  `coreui.errors.translation.generationUnavailable` until San Francisco owns a
+  real async generation endpoint.
+- San Francisco remains the AI execution surface and queue consumer. This slice
+  did not invent a new San Francisco ledger or route to hide the removed Tokyo
+  workflow.
+
+Open after this translation orchestration deletion slice:
+
+- No PRD 125 Tokyo-worker authority slices remain open.

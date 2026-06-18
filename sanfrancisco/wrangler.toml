@@ -27,15 +27,8 @@ bucket_name = "sanfrancisco-logs-dev"
 binding = "SF_EVENTS"
 queue = "sanfrancisco-events-dev"
 
-[[queues.producers]]
-binding = "INSTANCE_TRANSLATION_JOBS"
-queue = "instance-translation-jobs-dev"
-
 [[queues.consumers]]
 queue = "sanfrancisco-events-dev"
-
-[[queues.consumers]]
-queue = "instance-translation-jobs-dev"
 
 [[services]]
 binding = "TOKYO_PRODUCT_CONTROL"

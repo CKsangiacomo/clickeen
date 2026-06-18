@@ -34,8 +34,4 @@ export default {
       });
     }
   },
-
-  async queue(): Promise<void> {
-    throw new Error('tokyo-worker is not a translation queue consumer; San Francisco owns INSTANCE_TRANSLATION_JOBS consumption');
-  },
 } satisfies ExportedHandler<Env>;

@@ -122,7 +122,10 @@ fingerprint on newly saved source and package objects so package reads, publish,
 and public serving can reject mixed package state deterministically.
 
 Translation generation is a separate explicit operation from the Translations
-panel.
+panel. Roma resolves the current account active locales for that command, but
+generation is currently unavailable until San Francisco owns a real async
+generation endpoint. Roma fails that command visibly instead of routing it
+through Tokyo-worker.
 
 Roma Builder owns public widget copy actions for the current account and opened
 instance. It builds the public URL and iframe/script snippets from the current
