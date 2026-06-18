@@ -69,9 +69,24 @@ export async function tryHandleInternalWidgetDefaultRoutes(args: TokyoRouteArgs)
     });
     if (authErr) return respond(authErr);
 
+    const body = await readInternalProductJsonBody({
+      req,
+      env,
+      boundary: 'internal.widgetDefaults.create.body',
+      accountId,
+    });
+    const widgetDefaults = isRecord(body) && isRecord(body.widgetDefaults) ? body.widgetDefaults : body;
+    if (!isRecord(widgetDefaults)) {
+      return respondValidation(respond, 'coreui.errors.instance.invalidPayload');
+    }
+
     try {
-      const widgetDefaults = await createInitialAccountWidgetDefaults({ env, accountId });
-      return respond(json({ ok: true, accountId, widgetDefaults }, { status: 201 }));
+      const saved = await createInitialAccountWidgetDefaults({
+        env,
+        accountId,
+        widgetDefaults: widgetDefaults as AccountWidgetDefaultsDocument,
+      });
+      return respond(json({ ok: true, accountId, widgetDefaults: saved }, { status: 201 }));
     } catch (error) {
       return respond(widgetDefaultsErrorResponse(error));
     }

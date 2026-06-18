@@ -93,9 +93,10 @@ account Shell defaults + account widget Core defaults -> new instance source
 Bob edits the new instance source in memory -> Roma/Tokyo save that instance
 ```
 
-Factory defaults seed accounts. After an account has widget defaults, new
-instance creation uses account defaults. Bob never fetches account defaults and
-does not maintain a live fallback ladder.
+Roma materializes account defaults from factory defaults at account creation.
+After an account has widget defaults, new instance creation uses account
+defaults. Bob never fetches account defaults and does not maintain a live
+fallback ladder.
 
 Source metadata travels with the instance source. `baseLocale` and `meta` are
 not account default policy and must not be dropped, silently defaulted, or

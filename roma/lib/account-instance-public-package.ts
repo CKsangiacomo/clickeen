@@ -38,6 +38,9 @@ export type CompiledWidgetForPublicPackage = {
   displayName?: string;
   limits: LimitsSpec;
   editableFields?: WidgetEditableFieldsContract;
+  controls?: Array<{
+    path?: string;
+  }>;
   widgetPackage?: {
     files: Partial<Record<string, WidgetPackageFileContext>>;
   };

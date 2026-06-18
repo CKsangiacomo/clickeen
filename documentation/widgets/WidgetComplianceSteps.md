@@ -54,7 +54,8 @@ Default authority is also non-negotiable:
 ```text
 packages/widget-shell owns Shell factory defaults
 widget spec.json owns widget Core factory defaults
-Tokyo account widget-defaults.json owns live account defaults for new instances
+Roma materializes account widget-defaults.json at account creation
+Tokyo stores account widget-defaults.json for new instance creation
 ```
 
 Widget specs must not author Shell defaults. New instances are created from

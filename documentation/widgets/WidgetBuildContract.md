@@ -19,10 +19,11 @@ tokyo/product/widgets/{widgetType}/spec.json -> widget Core factory defaults
 accounts/{accountPublicId}/widget-defaults.json -> account defaults used for new instances
 ```
 
-Factory defaults seed account defaults. New instances are created from account
-defaults. Bob edits one resolved instance state in browser memory and saves
-that state through Roma/Tokyo. Bob does not fetch account defaults and does not
-merge factory defaults as live account fallback.
+Roma materializes account defaults from factory defaults at account creation.
+New instances are created from account defaults. Bob edits one resolved instance
+state in browser memory and saves that state through Roma/Tokyo. Bob does not
+fetch account defaults and does not merge factory defaults as live account
+fallback.
 
 ## Non-Negotiable: Builder Panels Are Mixed
 
@@ -551,8 +552,9 @@ There are two factory default files:
 - Shell factory defaults in `packages/widget-shell/src/defaults.ts`.
 - Widget Core factory defaults in `tokyo/product/widgets/{widgetType}/spec.json`.
 
-Account widget defaults are seeded from those factories and are the only source
-used for new instance creation after the account exists.
+Roma materializes account widget defaults from those factories at account
+creation. Those account defaults are the only source used for new instance
+creation after the account exists.
 
 MUST
 

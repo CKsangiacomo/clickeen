@@ -43,7 +43,7 @@ Roma, Bob, San Francisco, or shared product contracts.
 | TW-05 page source authority                   | Decide how much page source contract validation/versioning/list summaries belong in Roma/shared contracts versus Tokyo-worker storage. | Moving this changes page create/save/list/open contracts and cannot be faked with local checks.                           |
 | TW-06 instance source/content composition     | Decision executed: active locales are Roma account settings; Roma materializes and composes source artifacts; Tokyo-worker stores exact files. | Active locales are account settings. Removing Tokyo extraction/remap required Roma/Bob save payload changes first.        |
 | TW-07 translation orchestration               | Decide whether translation orchestration moves to Roma/San Francisco and what storage artifacts Tokyo-worker keeps.                    | This changes policy, AI job creation, ledger ownership, and San Francisco contracts.                                      |
-| TW-10 account widget defaults materialization | Decide whether Roma or shared build contracts materialize account widget defaults and Tokyo-worker only stores exact bytes.            | Current Tokyo-worker seeding from widget specs is real product behavior and needs a replacement writer before deletion.   |
+| TW-10 account widget defaults materialization | Decision executed: Roma materializes and validates account widget defaults; Tokyo-worker stores exact submitted defaults.              | Tokyo-worker seeding from widget specs required a replacement Roma writer before deletion.                                |
 
 ## Execution Law
 
@@ -129,3 +129,23 @@ Open after this locale-authority slice, before the source/content artifact slice
 Open after this source/content artifact slice:
 
 - TW-10, TW-04, TW-05, TW-02, and TW-07 remain open.
+
+2026-06-17 TW-10 account widget defaults materialization slice:
+
+- Roma now materializes the initial `accounts/{accountPublicId}/widget-defaults.json`
+  document at account creation from Shell factory defaults and product widget
+  Core defaults.
+- Roma validates account widget defaults against compiled Builder controls and
+  explicit software metadata before account creation storage, Widget Defaults
+  GET/PUT, and new instance creation.
+- Roma owns the `updatedAt` stamp on Widget Defaults save. Tokyo-worker no
+  longer mutates widget-default timestamps.
+- Tokyo-worker no longer seeds account widget defaults from widget specs, no
+  longer imports Shell factory defaults for account defaults, and no longer
+  derives account-default control paths from widget definitions.
+- Tokyo-worker widget-default routes now require submitted `widgetDefaults` on
+  create and store/read/save the normalized storage-shape document only.
+
+Open after this account widget defaults slice:
+
+- TW-04, TW-05, TW-02, and TW-07 remain open.

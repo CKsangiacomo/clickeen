@@ -5,6 +5,7 @@ import {
   saveAccountWidgetDefaultsInTokyo,
   type AccountWidgetDefaultsDocument,
 } from '@roma/lib/account-widget-defaults-direct';
+import { validateAccountWidgetDefaultsContract } from '@roma/lib/account-widget-defaults-contract';
 import { readJsonPayloadOrValidation } from '@roma/lib/route-helpers';
 import {
   resolveCurrentAccountRouteContext,
@@ -18,6 +19,17 @@ function routeKind(status: number): 'AUTH' | 'DENY' | 'VALIDATION' | 'UPSTREAM_U
   if (status === 403) return 'DENY';
   if (status === 422) return 'VALIDATION';
   return 'UPSTREAM_UNAVAILABLE';
+}
+
+function stampWidgetDefaultsSave(args: {
+  accountId: string;
+  widgetDefaults: AccountWidgetDefaultsDocument;
+}): AccountWidgetDefaultsDocument {
+  return {
+    ...args.widgetDefaults,
+    accountId: args.accountId,
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -43,6 +55,18 @@ export async function GET(request: NextRequest) {
         },
         { status: result.status },
       ),
+      current.value.setCookies,
+    );
+  }
+
+  const contract = await validateAccountWidgetDefaultsContract({
+    request,
+    widgetDefaults: result.value.widgetDefaults,
+  });
+  if (!contract.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: contract.error }, { status: contract.status }),
       current.value.setCookies,
     );
   }
@@ -75,11 +99,27 @@ export async function PUT(request: NextRequest) {
   }
 
   const accountId = current.value.authzPayload.accountPublicId;
+  const stamped = stampWidgetDefaultsSave({
+    accountId,
+    widgetDefaults: widgetDefaults as AccountWidgetDefaultsDocument,
+  });
+  const contract = await validateAccountWidgetDefaultsContract({
+    request,
+    widgetDefaults: stamped,
+  });
+  if (!contract.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: contract.error }, { status: contract.status }),
+      current.value.setCookies,
+    );
+  }
+
   const result = await saveAccountWidgetDefaultsInTokyo({
     accountId,
     accountCapsule: current.value.authzToken,
     requestId: current.value.requestId,
-    widgetDefaults: widgetDefaults as AccountWidgetDefaultsDocument,
+    widgetDefaults: stamped,
   });
   if (!result.ok) {
     return withSession(

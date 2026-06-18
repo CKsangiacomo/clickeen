@@ -81,10 +81,14 @@ export async function createInitialAccountWidgetDefaultsInTokyo(args: {
   accountCapsule?: string | null;
   requestId?: string | null;
   internalServiceName?: string | null;
+  widgetDefaults: AccountWidgetDefaultsDocument;
 }) {
   return callTokyo(tokyoCallContext(args), {
     path: `/__internal/accounts/${encodeURIComponent(args.accountId)}/widget-defaults`,
     method: 'POST',
+    body: {
+      widgetDefaults: args.widgetDefaults,
+    },
     decode: decodeWidgetDefaultsPayload,
     errorKey: 'roma.errors.widgetDefaults.createFailed',
     errorDetail: 'Tokyo account widget defaults create failed',

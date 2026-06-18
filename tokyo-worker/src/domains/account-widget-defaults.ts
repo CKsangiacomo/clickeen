@@ -1,14 +1,6 @@
 import { isRecord } from '@clickeen/ck-contracts';
-import {
-  WIDGET_SHELL_FACTORY_DEFAULTS,
-  listWidgetShellAccountDefaultMetadataPaths,
-  listWidgetShellControlPaths,
-} from '@clickeen/widget-shell';
 import type { Env } from '../types';
 import { putJson } from './storage';
-import {
-  listWidgetAccountDefaultContracts,
-} from './widget-definitions';
 
 export type AccountWidgetDefaultsDocument = {
   v: 1;
@@ -45,65 +37,6 @@ async function loadStoredAccountWidgetDefaults(args: {
   }
 }
 
-function collectDefaultPaths(value: unknown, prefix = ''): string[] {
-  if (Array.isArray(value)) return prefix ? [prefix] : [];
-  if (!isRecord(value)) return prefix ? [prefix] : [];
-  const paths = Object.entries(value).flatMap(([key, child]) =>
-    collectDefaultPaths(child, prefix ? `${prefix}.${key}` : key),
-  );
-  return paths.length > 0 ? paths : prefix ? [prefix] : [];
-}
-
-function pathIsCovered(path: string, allowedRoots: readonly string[]): boolean {
-  return allowedRoots.some((allowed) => path === allowed || path.startsWith(`${allowed}.`));
-}
-
-function validateDefaultPaths(args: {
-  owner: string;
-  value: Record<string, unknown>;
-  controlPaths: readonly string[];
-  metadataPaths: readonly string[];
-}): string[] {
-  return collectDefaultPaths(args.value)
-    .filter((path) => !pathIsCovered(path, args.controlPaths))
-    .filter((path) => !pathIsCovered(path, args.metadataPaths))
-    .map((path) => `${args.owner}:${path}`);
-}
-
-function assertNoUnmappedDefaultPaths(paths: string[]): void {
-  if (paths.length > 0) {
-    throw new Error(
-      `tokyo.widgetDefaults.unmappedPaths:${paths.sort((left, right) => left.localeCompare(right)).join(',')}`,
-    );
-  }
-}
-
-export function createAccountWidgetDefaultsSeed(args: {
-  accountId: string;
-  now?: string;
-}): AccountWidgetDefaultsDocument {
-  const now = args.now ?? new Date().toISOString();
-  const widgets: AccountWidgetDefaultsDocument['widgets'] = {};
-  for (const entry of listWidgetAccountDefaultContracts()) {
-    widgets[entry.widgetType] = {
-      core: cloneRecord(entry.coreFactoryDefaults),
-    };
-  }
-  const seeded = normalizeAccountWidgetDefaultsDocument(
-    {
-      v: 1,
-      accountId: args.accountId,
-      shell: cloneRecord(WIDGET_SHELL_FACTORY_DEFAULTS as unknown as Record<string, unknown>),
-      widgets,
-      seededAt: now,
-      updatedAt: now,
-    },
-    args.accountId,
-  );
-  if (!seeded) throw new Error('tokyo.widgetDefaults.invalid');
-  return seeded;
-}
-
 export function normalizeAccountWidgetDefaultsDocument(
   value: unknown,
   accountId: string,
@@ -114,46 +47,14 @@ export function normalizeAccountWidgetDefaultsDocument(
   if (typeof value.updatedAt !== 'string' || !value.updatedAt.trim()) return null;
 
   const shell = cloneRecord(value.shell);
-  const shellMetadataPaths = listWidgetShellAccountDefaultMetadataPaths();
-
-  const contracts = listWidgetAccountDefaultContracts();
-  const contractByWidgetType = new Map(
-    contracts.map((contract) => [contract.widgetType, contract]),
-  );
-  const unknownWidgetTypes = Object.keys(value.widgets).filter(
-    (widgetType) => !contractByWidgetType.has(widgetType),
-  );
-  if (unknownWidgetTypes.length > 0) {
-    throw new Error(
-      `tokyo.widgetDefaults.unknownWidget:${unknownWidgetTypes.sort((left, right) => left.localeCompare(right)).join(',')}`,
-    );
-  }
-
   const widgets: AccountWidgetDefaultsDocument['widgets'] = {};
-  const unmappedPaths: string[] = validateDefaultPaths({
-    owner: 'shell',
-    value: shell,
-    controlPaths: listWidgetShellControlPaths(),
-    metadataPaths: shellMetadataPaths,
-  });
-
-  for (const contract of contracts) {
-    const widgetDefaults = value.widgets[contract.widgetType];
+  for (const [widgetType, widgetDefaults] of Object.entries(value.widgets)) {
     if (!isRecord(widgetDefaults) || !isRecord(widgetDefaults.core)) return null;
-    const core = cloneRecord(widgetDefaults.core);
-    unmappedPaths.push(
-      ...validateDefaultPaths({
-        owner: contract.widgetType,
-        value: core,
-        controlPaths: contract.coreControlPaths,
-        metadataPaths: contract.coreMetadataPaths,
-      }),
-    );
-    widgets[contract.widgetType] = {
-      core,
+    if (!widgetType.trim()) return null;
+    widgets[widgetType] = {
+      core: cloneRecord(widgetDefaults.core),
     };
   }
-  assertNoUnmappedDefaultPaths(unmappedPaths);
 
   return {
     v: 1,
@@ -179,15 +80,17 @@ export async function readAccountWidgetDefaults(args: {
 export async function createInitialAccountWidgetDefaults(args: {
   env: Env;
   accountId: string;
+  widgetDefaults: AccountWidgetDefaultsDocument;
 }): Promise<AccountWidgetDefaultsDocument> {
   const existing = await loadStoredAccountWidgetDefaults(args);
   if (existing.exists) {
     const normalized = normalizeAccountWidgetDefaultsDocument(existing.value, args.accountId);
     throw new Error(normalized ? 'tokyo.widgetDefaults.exists' : 'tokyo.widgetDefaults.invalid');
   }
-  const seeded = createAccountWidgetDefaultsSeed({ accountId: args.accountId });
-  await putJson(args.env, accountWidgetDefaultsKey(args.accountId), seeded);
-  return seeded;
+  const normalized = normalizeAccountWidgetDefaultsDocument(args.widgetDefaults, args.accountId);
+  if (!normalized) throw new Error('tokyo.widgetDefaults.invalid');
+  await putJson(args.env, accountWidgetDefaultsKey(args.accountId), normalized);
+  return normalized;
 }
 
 export async function writeAccountWidgetDefaults(args: {
@@ -197,10 +100,6 @@ export async function writeAccountWidgetDefaults(args: {
 }): Promise<AccountWidgetDefaultsDocument> {
   const normalized = normalizeAccountWidgetDefaultsDocument(args.widgetDefaults, args.accountId);
   if (!normalized) throw new Error('tokyo.widgetDefaults.invalid');
-  const next: AccountWidgetDefaultsDocument = {
-    ...normalized,
-    updatedAt: new Date().toISOString(),
-  };
-  await putJson(args.env, accountWidgetDefaultsKey(args.accountId), next);
-  return next;
+  await putJson(args.env, accountWidgetDefaultsKey(args.accountId), normalized);
+  return normalized;
 }

@@ -9,6 +9,7 @@ import {
 } from '@roma/lib/account-instance-direct';
 import { loadCurrentAccountLocalesState } from '@roma/lib/account-locales-state';
 import { loadAccountWidgetDefaultsInTokyo } from '@roma/lib/account-widget-defaults-direct';
+import { validateAccountWidgetDefaultsContract } from '@roma/lib/account-widget-defaults-contract';
 import {
   compileWidgetForInstancePackage,
   materializeAccountInstancePublicPackage,
@@ -173,6 +174,18 @@ export async function POST(request: NextRequest) {
         { error: accountWidgetDefaults.error },
         { status: accountWidgetDefaults.status },
       ),
+      current.value.setCookies,
+    );
+  }
+  const defaultsContract = await validateAccountWidgetDefaultsContract({
+    request,
+    widgetDefaults: accountWidgetDefaults.value.widgetDefaults,
+    widgetTypes: [widgetType],
+  });
+  if (!defaultsContract.ok) {
+    return withSession(
+      request,
+      NextResponse.json({ error: defaultsContract.error }, { status: defaultsContract.status }),
       current.value.setCookies,
     );
   }
