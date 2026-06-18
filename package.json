@@ -17,6 +17,7 @@
     "cf:r2:ls": "node scripts/cloudflare/r2.mjs ls",
     "cf:r2:get": "node scripts/cloudflare/r2.mjs get",
     "cf:r2:put": "node scripts/cloudflare/r2.mjs put",
+    "migrate:instance-serve-state": "node scripts/migrate-instance-serve-state.mjs",
     "cf:api:preflight": "node scripts/cloudflare/api.mjs preflight",
     "cf:pages:list": "node scripts/cloudflare/api.mjs pages:list",
     "cf:pages:project": "node scripts/cloudflare/api.mjs pages:project",

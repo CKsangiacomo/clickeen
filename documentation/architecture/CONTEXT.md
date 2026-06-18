@@ -113,6 +113,7 @@ accounts/{accountPublicId}/
       overlays/
         locales/
           {locale}.json
+      serve-state.json
       index.html
       styles.css
       runtime.js

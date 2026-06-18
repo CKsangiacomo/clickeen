@@ -64,6 +64,7 @@ accounts/{accountPublicId}/
       overlays/
         locales/
           {locale}.json
+      serve-state.json
       index.html
       styles.css
       runtime.js
@@ -76,9 +77,9 @@ Rules:
 - Instance names are labels only and must never be used as storage keys.
 - Widget codes (`FAQ`, `CTD`, `LGS`, etc.) are codebook metadata used by overlay identity and contracts. They are not storage folders and are never required to locate an instance.
 - Instance locale values are addressed by Tokyo operations using `{instanceId, locale}` and persist under `overlays/locales/{locale}.json`. Overlay paths are not product identity.
-- Instance listing comes from Tokyo operations backed by the `instances` DB row, not `instances/index.json`.
+- Instance listing comes from Tokyo operations backed by account R2 instance folders, not `instances/index.json` or the `instances` DB row.
 - Browser package files `index.html`, `styles.css`, and `runtime.js` are public artifacts, not identity, ownership, saved config, or product publish truth. Roma materializes them during create/save/duplicate and submits them to Tokyo-worker with the saved source. Tokyo-worker stores the exact submitted bytes.
-- Those files can exist for composition before public standalone serving. `clk.live` serving requires Tokyo serve state to be `published`; Roma/system account operations own account policy decisions that decide whether publish/unpublish should be allowed.
+- Those files can exist for composition before public standalone serving. `clk.live` serving requires `accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` to be `published`; Roma/system account operations own account policy decisions that decide whether publish/unpublish should be allowed.
 - Page package files, when present, live beside page source under `accounts/{accountPublicId}/pages/{pageId}/`. Current account page publish and public page serving are unavailable until Roma writes page packages. Save/delete of published page source requires Roma to unpublish first.
 - Page source is stored at `accounts/{accountPublicId}/pages/{pageId}/source.json`; Roma validates page source, stamps page source saves, derives account page list summaries, and decides page placement product rules. Tokyo stores and reads the exact source document under the account path.
 - Page serve state is stored as opaque bytes at `accounts/{accountPublicId}/pages/{pageId}/serve-state.json`.

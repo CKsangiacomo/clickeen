@@ -15,6 +15,10 @@ export function accountInstanceContentKey(accountId: string, widgetCode: string,
   return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/instance.content.json`;
 }
 
+export function accountInstanceServeStateKey(accountId: string, widgetCode: string, instanceId: string): string {
+  return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/serve-state.json`;
+}
+
 export function accountInstanceLocaleOverlayKey(accountId: string, widgetCode: string, instanceId: string, locale: string): string {
   return `${accountInstanceRoot(accountId, widgetCode, instanceId)}/overlays/locales/${locale}.json`;
 }

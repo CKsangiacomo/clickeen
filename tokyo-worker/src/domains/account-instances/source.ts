@@ -1,14 +1,10 @@
 import type { Env } from '../../types';
 import { normalizeLocale } from '../../asset-utils';
-import { accountInstanceConfigKey, accountInstanceContentKey } from './keys';
 import {
-  createInstanceRegistryRow,
-  listInstanceRegistryRows,
-  readInstanceRegistryRow,
-  resolveAccountInstanceLocation,
-  updateInstanceRegistryEditedAt,
-  updateInstanceRegistryPublishStatus,
-} from './registry';
+  accountInstanceConfigKey,
+  accountInstanceContentKey,
+  accountInstancesRoot,
+} from './keys';
 import {
   normalizeAccountInstanceConfigDocument,
   normalizeAccountInstanceContentDocument,
@@ -31,6 +27,10 @@ import type {
   AccountInstanceSourcePointer,
 } from './types';
 import { normalizeStorageId } from './utils';
+import {
+  createInstanceServeState,
+  readInstanceServeState,
+} from './serve-state';
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -203,12 +203,14 @@ export async function readConfigDocumentByLocation(args: {
   widgetCode: string;
   instanceId: string;
 }): Promise<AccountInstanceConfigDocument | null> {
-  return normalizeAccountInstanceConfigDocument(
-    await loadJson(
-      args.env,
-      accountInstanceConfigKey(args.accountId, args.widgetCode, args.instanceId),
-    ),
+  const raw = await loadJson<unknown>(
+    args.env,
+    accountInstanceConfigKey(args.accountId, args.widgetCode, args.instanceId),
   );
+  if (raw == null) return null;
+  const configDoc = normalizeAccountInstanceConfigDocument(raw);
+  if (!configDoc) throw new Error('coreui.errors.instance.config.invalid');
+  return configDoc;
 }
 
 export async function readContentDocumentByLocation(args: {
@@ -344,32 +346,23 @@ export async function writeAccountInstanceSource(args: {
     createdAt: existingConfig?.createdAt ?? now,
     updatedAt: now,
   };
-  const registry = await readInstanceRegistryRow({ env: args.env, accountId, instanceId });
   await putJson(args.env, accountInstanceConfigKey(accountId, widgetCode, instanceId), configDoc);
   await putJson(args.env, accountInstanceContentKey(accountId, widgetCode, instanceId), content);
-  if (registry) {
-    await updateInstanceRegistryEditedAt({
+  if (!existingConfig) {
+    await createInstanceServeState({
       env: args.env,
       accountId,
       instanceId,
-      editedAt: now,
-    });
-  } else {
-    await createInstanceRegistryRow({
-      env: args.env,
-      accountId,
-      instanceId,
-      widgetType,
-      publishStatus: 'unpublished',
-      translationStatus: 'idle',
-      createdAt: configDoc.createdAt,
-      editedAt: now,
+      widgetCode,
+      now,
     });
   }
   return {
     pointer: toAccountInstanceSourcePointer({
       configDoc,
-      publishStatus: registry?.publishStatus ?? 'unpublished',
+      publishStatus: existingConfig
+        ? await readInstanceServeState({ env: args.env, accountId, instanceId, widgetCode })
+        : 'unpublished',
       updatedAt: now,
     }),
   };
@@ -386,27 +379,29 @@ export async function readAccountInstanceSourcePointer(args: {
   if (!instanceId || !accountId) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.invalidPayload' };
   }
-  const location = await resolveAccountInstanceLocation({
+  const configDoc = await readConfigDocumentByLocation({
+    env: args.env,
+    accountId,
+    widgetCode: '',
+    instanceId,
+  });
+  if (!configDoc) {
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
+  }
+  const requestedWidgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
+  if (requestedWidgetType && configDoc.widgetType !== requestedWidgetType) {
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
+  }
+  const publishStatus = await readInstanceServeState({
     env: args.env,
     accountId,
     instanceId,
-    widgetType: args.widgetType,
+    widgetCode: configDoc.widgetCode,
   });
-  if (!location)
-    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
-  const configDoc = await readConfigDocumentByLocation({
-    env: args.env,
-    accountId: location.accountId,
-    widgetCode: location.widgetCode,
-    instanceId: location.instanceId,
-  });
-  if (!configDoc) {
-    return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.config.invalid' };
-  }
   const pointer = toAccountInstanceSourcePointer({
     configDoc,
-    publishStatus: location.publishStatus,
-    updatedAt: location.editedAt,
+    publishStatus,
+    updatedAt: configDoc.updatedAt,
   });
   if (pointer.id !== instanceId || pointer.accountId !== accountId) {
     return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
@@ -415,8 +410,8 @@ export async function readAccountInstanceSourcePointer(args: {
     ok: true,
     value: {
       ...pointer,
-      publishStatus: location.publishStatus,
-      updatedAt: location.editedAt,
+      publishStatus,
+      updatedAt: configDoc.updatedAt,
     },
   };
 }
@@ -432,29 +427,31 @@ export async function readAccountInstanceDocument(args: {
   if (!instanceId || !accountId) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.invalidPayload' };
   }
-  const location = await resolveAccountInstanceLocation({
+  const instance = await readStoredInstanceByLocation({
+    env: args.env,
+    accountId,
+    widgetCode: '',
+    instanceId,
+  });
+  if (!instance || instance.id !== instanceId || instance.accountId !== accountId) {
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
+  }
+  const requestedWidgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
+  if (requestedWidgetType && instance.widgetType !== requestedWidgetType) {
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
+  }
+  const publishStatus = await readInstanceServeState({
     env: args.env,
     accountId,
     instanceId,
-    widgetType: args.widgetType,
+    widgetCode: instance.widgetCode,
   });
-  if (!location)
-    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
-  const instance = await readStoredInstanceByLocation({
-    env: args.env,
-    accountId: location.accountId,
-    widgetCode: location.widgetCode,
-    instanceId: location.instanceId,
-  });
-  if (!instance || instance.id !== instanceId || instance.accountId !== accountId) {
-    return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.config.invalid' };
-  }
   return {
     ok: true,
     value: {
       ...instance,
-      publishStatus: location.publishStatus,
-      updatedAt: location.editedAt,
+      publishStatus,
+      updatedAt: instance.updatedAt,
     },
   };
 }
@@ -472,25 +469,21 @@ export async function readAccountInstanceContentDocument(args: {
   if (!instanceId || !accountId) {
     return { ok: false, kind: 'VALIDATION', reasonKey: 'coreui.errors.instance.invalidPayload' };
   }
-  const location = await resolveAccountInstanceLocation({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetType: args.widgetType,
-  });
-  if (!location)
-    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
   const configDoc = await readConfigDocumentByLocation({
     env: args.env,
-    accountId: location.accountId,
-    widgetCode: location.widgetCode,
-    instanceId: location.instanceId,
+    accountId,
+    widgetCode: '',
+    instanceId,
   });
+  const requestedWidgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
+  if (!configDoc || (requestedWidgetType && configDoc.widgetType !== requestedWidgetType)) {
+    return { ok: false, kind: 'NOT_FOUND', reasonKey: 'coreui.errors.instance.notFound' };
+  }
   const contentDoc = await readContentDocumentByLocation({
     env: args.env,
-    accountId: location.accountId,
-    widgetCode: location.widgetCode,
-    instanceId: location.instanceId,
+    accountId,
+    widgetCode: configDoc.widgetCode,
+    instanceId,
     configDoc,
   });
   if (!contentDoc) {
@@ -505,20 +498,44 @@ export async function listAccountInstances(args: {
 }): Promise<AccountInstanceSummary[]> {
   const accountId = normalizeStorageId(args.accountId);
   if (!accountId) throw new Error('coreui.errors.instance.invalidPayload');
-  const registryRows = await listInstanceRegistryRows({ env: args.env, accountId });
   const summaries: AccountInstanceSummary[] = [];
-  for (const row of registryRows) {
-    const summary = await readAccountInstanceSummaryByLocation({
-      env: args.env,
-      accountId,
-      widgetCode: row.widgetCode,
-      instanceId: row.id,
-      publishStatus: row.publishStatus,
-      editedAt: row.editedAt,
+  let cursor: string | undefined = undefined;
+  do {
+    const listed = await args.env.TOKYO_R2.list({
+      prefix: `${accountInstancesRoot(accountId)}/`,
+      cursor,
     });
-    if (!summary) throw new Error('coreui.errors.instance.config.invalid');
-    summaries.push(summary);
-  }
+    for (const object of listed.objects) {
+      if (!object.key.endsWith('/instance.config.json')) continue;
+      const instanceId = normalizeStorageId(object.key.split('/').at(-2));
+      if (!instanceId) throw new Error('coreui.errors.instance.config.invalid');
+      const configDoc = await readConfigDocumentByLocation({
+        env: args.env,
+        accountId,
+        widgetCode: '',
+        instanceId,
+      });
+      if (!configDoc) throw new Error('coreui.errors.instance.config.invalid');
+      const publishStatus = await readInstanceServeState({
+        env: args.env,
+        accountId,
+        instanceId,
+        widgetCode: configDoc.widgetCode,
+      });
+      const summary = await readAccountInstanceSummaryByLocation({
+        env: args.env,
+        accountId,
+        widgetCode: configDoc.widgetCode,
+        instanceId,
+        publishStatus,
+        editedAt: configDoc.updatedAt,
+      });
+      if (!summary) throw new Error('coreui.errors.instance.config.invalid');
+      summaries.push(summary);
+    }
+    cursor = listed.truncated ? listed.cursor : undefined;
+  } while (cursor);
+  summaries.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.instanceId.localeCompare(right.instanceId));
   return summaries;
 }
 
@@ -534,37 +551,26 @@ export async function renameAccountInstanceDisplay(args: {
   const displayName = normalizeDisplayName(args.displayName);
   if (!instanceId || !accountId || !displayName)
     throw new Error('coreui.errors.instance.invalidPayload');
-  const location = await resolveAccountInstanceLocation({
-    env: args.env,
-    accountId,
-    instanceId,
-    widgetType: args.widgetType,
-  });
-  if (!location) throw new Error('coreui.errors.instance.notFound');
   const configDoc = await readConfigDocumentByLocation({
     env: args.env,
-    accountId: location.accountId,
-    widgetCode: location.widgetCode,
-    instanceId: location.instanceId,
+    accountId,
+    widgetCode: '',
+    instanceId,
   });
   if (!configDoc) throw new Error('coreui.errors.instance.config.invalid');
+  const requestedWidgetType = typeof args.widgetType === 'string' ? args.widgetType.trim() : '';
+  if (requestedWidgetType && configDoc.widgetType !== requestedWidgetType) throw new Error('coreui.errors.instance.notFound');
   const updatedAt = nowIso();
   await putJson(
     args.env,
-    accountInstanceConfigKey(location.accountId, location.widgetCode, location.instanceId),
+    accountInstanceConfigKey(accountId, configDoc.widgetCode, instanceId),
     {
       ...configDoc,
       displayName,
       updatedAt,
     } satisfies AccountInstanceConfigDocument,
   );
-  await updateInstanceRegistryEditedAt({
-    env: args.env,
-    accountId: location.accountId,
-    instanceId: location.instanceId,
-    editedAt: updatedAt,
-  });
-  return { instanceId: location.instanceId, displayName, updatedAt };
+  return { instanceId, displayName, updatedAt };
 }
 
 export async function readAccountInstanceSource(args: {

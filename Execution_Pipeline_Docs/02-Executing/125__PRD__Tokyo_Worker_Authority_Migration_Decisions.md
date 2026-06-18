@@ -38,7 +38,7 @@ Roma, Bob, San Francisco, or shared product contracts.
 
 | Source                                        | Decision needed                                                                                                                        | Why PRD 124 did not finish it                                                                                             |
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| TW-02 registry/serve-state split truth        | Decide whether Supabase registry remains Tokyo-worker operational storage truth or moves to an R2 runtime record / another owner.      | Not a deletion. It changes runtime identity/status authority for instance listing, publish state, and public serving.     |
+| TW-02 registry/serve-state split truth        | Decision executed: R2 `serve-state.json` is instance publish/public-serving truth; listing reads R2 instance folders.                 | Supabase `instances.publish_status` is no longer runtime truth. Translation registry cleanup remains TW-07.              |
 | TW-04 page package/publish pipeline           | Decision executed: current account page publish is unavailable until Roma writes page packages.                                         | No current Roma page package writer exists in this PRD scope.                                                            |
 | TW-05 page source authority                   | Decision executed: Roma owns page source validation, save shaping, version stamps, summaries, and placement checks.                   | Tokyo-worker now stores/reads/lists exact page source objects and keeps storage coordinate checks.                        |
 | TW-06 instance source/content composition     | Decision executed: active locales are Roma account settings; Roma materializes and composes source artifacts; Tokyo-worker stores exact files. | Active locales are account settings. Removing Tokyo extraction/remap required Roma/Bob save payload changes first.        |
@@ -190,6 +190,30 @@ Open after this page package/publish slice, before the page source authority sli
   put/delete/list behavior. It no longer validates page product fields, mutates
   page source version/timestamps, or derives summaries.
 
-Open after this page source authority slice:
+Open after this page source authority slice, before the registry/serve-state authority slice:
 
 - TW-02 and TW-07 remain open.
+
+2026-06-17 TW-02 registry/serve-state authority slice:
+
+- Instance publish status now lives in
+  `accounts/{accountPublicId}/instances/{instanceId}/serve-state.json`.
+- Tokyo-worker instance listing, open, save live-state read, publish/unpublish,
+  delete, and public serving no longer read Supabase `instances.publish_status`.
+- Tokyo-worker normal instance create, save, rename, and delete no longer read,
+  create, touch, or delete the Supabase instance registry row. Those operations
+  mutate only the account instance R2 files.
+- Malformed stored `instance.config.json` now fails as invalid persisted state
+  instead of being treated as a missing instance.
+- Roma enforces `instances.published.max` before calling the Tokyo-worker publish
+  storage transition.
+- Existing account instance folders were migrated after `pnpm cf:preflight`:
+  `pnpm migrate:instance-serve-state -- --apply` wrote 12 R2 serve-state files,
+  and a follow-up dry-run reported `writes=0`.
+- Supabase `instances` remains only inside the open TW-07 translation
+  orchestration path until TW-07 removes translation ownership from
+  Tokyo-worker.
+
+Open after this registry/serve-state authority slice:
+
+- TW-07 remains open.

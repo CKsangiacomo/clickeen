@@ -19,7 +19,6 @@ import {
   renameAccountInstanceDisplay,
 } from '../domains/account-instances/source';
 import { normalizeAccountInstanceContentDocument } from '../domains/account-instances/normalize';
-import { accountHasInstanceRegistryRows } from '../domains/account-instances/registry';
 import { json } from '../http';
 import {
   authorizeAccountInstanceControlRequest,
@@ -70,7 +69,7 @@ export async function tryHandleInternalInstanceRoutes(
     if (authErr) return respond(authErr);
 
     try {
-      const hasInstances = await accountHasInstanceRegistryRows({ env, accountId });
+      const hasInstances = (await listAccountInstances({ env, accountId })).length > 0;
       return respond(json({ ok: true, accountId, hasInstances }));
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);

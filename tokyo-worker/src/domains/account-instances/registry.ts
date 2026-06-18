@@ -5,7 +5,6 @@ import {
 import type { Env } from '../../types';
 import { supabaseFetch } from '../../supabase';
 import { resolveWidgetCode } from '../widget-definitions';
-import type { InstanceServeState } from './types';
 import { normalizeStorageId } from './utils';
 
 export type InstanceRegistryTranslationStatus = 'idle' | 'queued' | 'running' | 'failed';
@@ -15,7 +14,6 @@ export type InstanceRegistryRow = {
   accountId: string;
   widgetType: string;
   widgetCode: string;
-  publishStatus: InstanceServeState;
   translationStatus: InstanceRegistryTranslationStatus;
   createdAt: string;
   editedAt: string;
@@ -26,7 +24,6 @@ export type AccountInstanceLocation = {
   widgetCode: string;
   widgetType: string;
   instanceId: string;
-  publishStatus: InstanceServeState;
   translationStatus: InstanceRegistryTranslationStatus;
   createdAt: string;
   editedAt: string;
@@ -36,7 +33,6 @@ type InstanceRegistryDbRow = {
   id: string;
   account_id: string;
   widget_type: string;
-  publish_status: InstanceServeState;
   translation_status: InstanceRegistryTranslationStatus;
   created_at: string;
   edited_at: string;
@@ -61,10 +57,6 @@ function assertScopedIds(
   return instanceIdRaw == null ? { accountId } : { accountId, instanceId: instanceId! };
 }
 
-function normalizePublishStatus(value: unknown): InstanceServeState | null {
-  return value === 'published' || value === 'unpublished' ? value : null;
-}
-
 function normalizeTranslationStatus(value: unknown): InstanceRegistryTranslationStatus | null {
   return value === 'idle' || value === 'queued' || value === 'running' || value === 'failed'
     ? value
@@ -78,7 +70,6 @@ function normalizeDbRow(value: unknown): InstanceRegistryRow | null {
   const accountId = normalizeStorageId(row.account_id);
   const widgetType = typeof row.widget_type === 'string' ? row.widget_type.trim() : '';
   const widgetCode = widgetType ? resolveWidgetCode(widgetType) : null;
-  const publishStatus = normalizePublishStatus(row.publish_status);
   const translationStatus = normalizeTranslationStatus(row.translation_status);
   const createdAt = typeof row.created_at === 'string' ? row.created_at : '';
   const editedAt = typeof row.edited_at === 'string' ? row.edited_at : '';
@@ -87,7 +78,6 @@ function normalizeDbRow(value: unknown): InstanceRegistryRow | null {
     !isCompactAccountPublicId(accountId) ||
     !widgetType ||
     !widgetCode ||
-    !publishStatus ||
     !translationStatus ||
     !createdAt ||
     !editedAt
@@ -99,7 +89,6 @@ function normalizeDbRow(value: unknown): InstanceRegistryRow | null {
     accountId,
     widgetType,
     widgetCode,
-    publishStatus,
     translationStatus,
     createdAt,
     editedAt,
@@ -132,49 +121,10 @@ function rowToLocation(row: InstanceRegistryRow): AccountInstanceLocation {
     widgetCode: row.widgetCode,
     widgetType: row.widgetType,
     instanceId: row.id,
-    publishStatus: row.publishStatus,
     translationStatus: row.translationStatus,
     createdAt: row.createdAt,
     editedAt: row.editedAt,
   };
-}
-
-export async function listInstanceRegistryRows(args: {
-  env: Env;
-  accountId: string;
-}): Promise<InstanceRegistryRow[]> {
-  const { accountId } = assertScopedIds(args.accountId);
-  const select = 'id,account_id,widget_type,publish_status,translation_status,created_at,edited_at';
-  const payload = await assertSupabaseOk(
-    await supabaseFetch(
-      args.env,
-      `/rest/v1/instances?account_id=${eq(accountId)}&select=${select}&order=edited_at.desc,id.asc`,
-    ),
-    'list_failed',
-  );
-  if (!Array.isArray(payload)) throw new Error('tokyo.instance.registry.list_invalid');
-  const rows = payload.map(normalizeDbRow);
-  if (rows.some((row) => !row)) throw new Error('tokyo.instance.registry.list_invalid');
-  return rows as InstanceRegistryRow[];
-}
-
-export async function accountHasInstanceRegistryRows(args: {
-  env: Env;
-  accountId: string;
-}): Promise<boolean> {
-  const { accountId } = assertScopedIds(args.accountId);
-  const select = 'id,account_id,widget_type,publish_status,translation_status,created_at,edited_at';
-  const payload = await assertSupabaseOk(
-    await supabaseFetch(
-      args.env,
-      `/rest/v1/instances?account_id=${eq(accountId)}&select=${select}&limit=1`,
-    ),
-    'fact_failed',
-  );
-  if (!Array.isArray(payload)) throw new Error('tokyo.instance.registry.fact_invalid');
-  if (payload.length === 0) return false;
-  if (!normalizeDbRow(payload[0])) throw new Error('tokyo.instance.registry.fact_invalid');
-  return true;
 }
 
 export async function readInstanceRegistryRow(args: {
@@ -183,7 +133,7 @@ export async function readInstanceRegistryRow(args: {
   instanceId: string;
 }): Promise<InstanceRegistryRow | null> {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
-  const select = 'id,account_id,widget_type,publish_status,translation_status,created_at,edited_at';
+  const select = 'id,account_id,widget_type,translation_status,created_at,edited_at';
   const payload = await assertSupabaseOk(
     await supabaseFetch(
       args.env,
@@ -216,7 +166,6 @@ export async function createInstanceRegistryRow(args: {
   accountId: string;
   instanceId: string;
   widgetType: string;
-  publishStatus?: InstanceServeState;
   translationStatus?: InstanceRegistryTranslationStatus;
   createdAt: string;
   editedAt: string;
@@ -233,7 +182,6 @@ export async function createInstanceRegistryRow(args: {
         id: instanceId,
         account_id: accountId,
         widget_type: widgetType,
-        publish_status: args.publishStatus ?? 'unpublished',
         translation_status: args.translationStatus ?? 'idle',
         created_at: args.createdAt,
         edited_at: args.editedAt,
@@ -264,25 +212,6 @@ export async function updateInstanceRegistryEditedAt(args: {
     },
   );
   await assertSupabaseOk(response, 'touch_failed');
-}
-
-export async function updateInstanceRegistryPublishStatus(args: {
-  env: Env;
-  accountId: string;
-  instanceId: string;
-  publishStatus: InstanceServeState;
-}): Promise<void> {
-  const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
-  const response = await supabaseFetch(
-    args.env,
-    `/rest/v1/instances?account_id=${eq(accountId)}&id=${eq(instanceId!)}`,
-    {
-      method: 'PATCH',
-      headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({ publish_status: args.publishStatus }),
-    },
-  );
-  await assertSupabaseOk(response, 'publish_status_failed');
 }
 
 export async function updateInstanceRegistryTranslationStatus(args: {

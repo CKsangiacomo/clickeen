@@ -149,7 +149,8 @@ Tokyo-worker so the generated browser package and the saved source use the same
 account instance identity from the start.
 
 Publish and unpublish are account product actions. Roma applies account policy
-and sends the exact product transition to Tokyo-worker for R2 state mutation.
+and sends the exact product transition to Tokyo-worker for R2 `serve-state.json`
+mutation.
 
 ## Assets Domain
 

@@ -302,7 +302,12 @@ export async function saveAccountInstanceTransition(args: {
     meta: args.hasMeta ? args.meta : existing.value.pointer.meta ?? null,
     publicPackageFingerprint: packaged.fingerprint,
   });
-  const live = (await readInstanceServeState({ env: args.env, accountId, instanceId })) === 'published';
+  const live = (await readInstanceServeState({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetCode: saved.pointer.widgetCode,
+  })) === 'published';
 
   return {
     ok: true,
@@ -334,13 +339,18 @@ export async function publishAccountInstanceTransition(args: {
     });
   }
 
-  const liveStatus = await readInstanceServeState({ env: args.env, accountId, instanceId });
+  const liveStatus = await readInstanceServeState({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetCode: existing.value.pointer.widgetCode,
+  });
   await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
   await writeInstanceServeState({
     env: args.env,
     accountId,
     instanceId,
-    widgetType: existing.value.pointer.widgetType,
+    widgetCode: existing.value.pointer.widgetCode,
     status: 'published',
   });
   return { instanceId, status: 'published', changed: liveStatus !== 'published' };
@@ -354,14 +364,19 @@ export async function unpublishAccountInstanceTransition(args: {
   const { accountId, instanceId } = assertScopedIds(args.accountId, args.instanceId);
   const existing = await readAccountInstanceSource({ env: args.env, accountId, instanceId });
   if (!existing.ok) transitionFailureFromSavedRead(existing);
-  const liveStatus = await readInstanceServeState({ env: args.env, accountId, instanceId });
+  const liveStatus = await readInstanceServeState({
+    env: args.env,
+    accountId,
+    instanceId,
+    widgetCode: existing.value.pointer.widgetCode,
+  });
   await purgeClkLiveEntryCache({ env: args.env, accountId, instanceId });
   if (liveStatus !== 'unpublished') {
     await writeInstanceServeState({
       env: args.env,
       accountId,
       instanceId,
-      widgetType: existing.value.pointer.widgetType,
+      widgetCode: existing.value.pointer.widgetCode,
       status: 'unpublished',
     });
   }

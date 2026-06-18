@@ -149,8 +149,9 @@ Cloud-dev public serving uses:
 https://dev.clk.live/{accountPublicId}/{instanceId}
 ```
 
-Serving reads generated widget package files from the account folder after the
-serve state for that instance is published. Account page public serving is
+Serving reads generated widget package files from the account folder after
+`accounts/{accountPublicId}/instances/{instanceId}/serve-state.json` is
+published. Account page public serving is
 unavailable until Roma writes page packages. Tokyo-worker does not generate page
 package files.
 
